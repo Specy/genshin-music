@@ -1,0 +1,73 @@
+:root{
+    --primary: #495466;
+    --detail: #8c7063;
+    --secondary: #8c7063;
+    --icon-color: #8c7063;
+    --note-color: #fff9ef;
+    --note-border: #d9d6c8;
+    --note-text: #63aea7;
+    --text-color: #aaaa82;
+    --clicked-note: #a8e6d5;
+}
+.keyboard{
+    display: grid;
+    flex: 1;
+    height: 100%;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    justify-items: center;
+    align-items: center;
+    width: 65%;
+    margin-left: -4rem;
+}
+.note{
+    background-color: var(--note-color);
+    border-radius: 50%;
+    width: 6vw;
+    height: 6vw;
+    border: 10px solid var(--note-border);
+    color: var(--note-text);
+    font-size: 1.5rem;
+    font-weight: bold;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.1s;
+}
+.click-event{
+    transform: scale(0.9);
+    background-color: var(--clicked-note);
+}
+.note-name{
+    font-size: 1rem;
+    position:absolute;
+    bottom: 0rem;
+    color: var(--text-color);
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+}
+.button-hitbox{
+    background-color: transparent;
+    border: none;
+    padding: 0.25rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+@media only screen and (max-width: 900px) {
+    .note{
+        width: 6.5vw;
+        height: 6.5vw;
+        font-size: 1.2rem;
+        border-width: 5px;
+    }
+    .keyboard{
+        gap:0.2rem;
+    }
+    .note-name{
+        font-size: 0.8rem;
+    }
+}

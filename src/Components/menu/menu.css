@@ -1,0 +1,44 @@
+:root{
+    --primary: #495466;
+    --detail: #8c7063;
+    --secondary: #8c7063;
+    --icon-color: #d3bd8e;
+    --note-color: #fff9ef;
+    --note-border: #d9d6c8;
+    --note-text: #63aea7;
+    --text-color: #aaaa82;
+}
+.menu{
+    width: 5rem;
+    background-color: var(--primary);
+    height: 100%;
+    border-right: solid 3px var(--detail);
+    border-left: solid 3px var(--detail);
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    padding-top: 1rem;
+    max-height: 100vh;
+    overflow-y: auto;
+}
+.menu-item{
+    background-color: var(--icon-color);
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+@media only screen and (max-width: 900px) {
+
+    .menu{
+        width: 4rem;
+    }
+    .menu-item{
+        width: 2.8rem;
+        height: 2.8rem;
+        margin-bottom: 1rem;
+    }
+}

@@ -1,0 +1,66 @@
+@font-face {
+  font-family: Bonobo;
+  src: url("assets/font/BonoboBold.ttf");
+}
+@font-face {
+  font-family: Cronos;
+  src: url("assets/font/Cronos.otf");
+}
+:root{
+  --primary: #495466;
+  --detail: #8c7063;
+  --secondary: #8c7063;
+  --icon-color: #8c7063;
+  --note-color: #fff9ef;
+  --note-border: #d9d6c8;
+  --note-text: #63aea7;
+  --text-color: #aaaa82;
+}
+html, body{
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+*{
+  box-sizing: border-box;
+  outline: none;
+  font-family: Bonobo;
+  user-select: none;
+}
+body{
+  /*  background-image: url(assets//images/bg.jpg); */
+  background-color: #394248;
+  background-position: center;
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+#root{
+  width: 100%;
+  height: 100vh;
+}
+.app{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.right-panel{
+  flex: 1;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 4fr 3fr;
+  justify-items: center;
+  padding: 5vh;
+}
+.upper-right{
+  display: flex;
+  flex:1;
+}
+@media only screen and (max-width: 900px) {
+
+}
