@@ -7,7 +7,7 @@
     --note-border: #d9d6c8;
     --note-text: #63aea7;
     --text-color: #aaaa82;
-    --clicked-note: #a8e6d5;
+    --clicked-note: #8FEDD9;
 }
 .keyboard{
     display: grid;
@@ -18,7 +18,7 @@
     justify-items: center;
     align-items: center;
     width: 65%;
-    margin-left: -4rem;
+
 }
 .note{
     background-color: var(--note-color);
@@ -34,10 +34,12 @@
     justify-content: center;
     align-items: center;
     transition: all 0.1s;
+    cursor: pointer;
 }
 .click-event{
     transform: scale(0.9);
     background-color: var(--clicked-note);
+    border-color: #73c7b5;
 }
 .note-name{
     font-size: 1rem;

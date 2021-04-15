@@ -7,6 +7,7 @@
     --note-border: #d9d6c8;
     --note-text: #63aea7;
     --text-color: #aaaa82;
+    --whitish: #ede5d8;
 }
 .menu{
     width: 5rem;
@@ -20,9 +21,95 @@
     padding-top: 1rem;
     max-height: 100vh;
     overflow-y: auto;
+    z-index: 3;
+}
+.margin-top-auto{
+    margin-top: auto;
+}
+.icon{
+    font-size: 1.8rem;
+    
+}
+.menu-wrapper{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    z-index: 2;
+}
+.side-menu{
+    width: 30vw;
+    height: 100%;
+    background-color: rgba(237, 229, 216,0.95);
+    transform: scale(0.9);
+    transition: all 0.3s;
+    opacity: 0;
+    padding: 1.5rem;
+    display: flex;
+    left: -30vw;
+    position: absolute;
+}
+.menu-open{
+    transform: scale(1);
+    left: 5rem;
+    opacity: 1;
+}
+.menu-panel{
+    width: 100%;
+    display: none;
+    flex: 1;
+    flex-direction: column;
+}
+.song-row{
+    display: flex;
+    flex:1;
+    background-color: var(--primary);
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    border-radius: 0.3rem;
+    min-height: 2.8rem;
+    color: var(--whitish);
+    justify-content: space-between;
+    align-items:center;
+}
+.panel-content-wrapper{
+    flex: 1;
+    overflow-x: auto;
+}
+.song-button{
+    background-color: #576377;
+    border-radius: 0.3rem;
+    height: 2rem;
+    width: 2rem;
+    font-size: 1rem;
+    border: none;
+    margin-right: 0.5rem;
+    color: var(--whitish);
+    cursor: pointer;
+}
+.song-name{
+    flex: 1;
+    cursor: pointer;
+}
+.song-buttons-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.menu-panel-visible{
+    display: flex;
+}
+.menu-title{
+    font-size: 2rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
 }
 .menu-item{
-    background-color: var(--icon-color);
+    background-color: #515c6f;
     width: 3.5rem;
     height: 3.5rem;
     margin-bottom: 2rem;
@@ -30,11 +117,27 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--icon-color);
+    cursor: pointer;
+}
+.menu-item:hover{
+    filter: brightness(1.2);
 }
 @media only screen and (max-width: 900px) {
 
     .menu{
         width: 4rem;
+    }
+    .side-menu{
+        padding: 1rem;
+        width: 50vw;
+        left: -50vw;
+    }
+    .menu-open{
+        left: 4rem;
+    }
+    .menu-title{
+        font-size: 1.8rem;
     }
     .menu-item{
         width: 2.8rem;

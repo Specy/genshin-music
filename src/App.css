@@ -27,6 +27,7 @@ html, body{
   outline: none;
   font-family: Bonobo;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 body{
   /*  background-image: url(assets//images/bg.jpg); */
@@ -48,6 +49,22 @@ body{
   height: 100%;
   overflow: hidden;
 }
+.genshin-button{
+  background-color: var(--primary);
+  color: white;
+  border-radius: 0.2rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  height: fit-content;
+  cursor: pointer;
+  min-width: 5rem;
+}
+.genshin-button:hover{
+  filter: brightness(1.1);
+}
+.selected{
+  background-color: var(--note-text);
+}
 .right-panel{
   flex: 1;
   height: 100%;
@@ -59,7 +76,8 @@ body{
 }
 .upper-right{
   display: flex;
-  flex:1;
+  width: 100%;
+  justify-content: center;
 }
 @media only screen and (max-width: 900px) {
 
