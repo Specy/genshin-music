@@ -35,6 +35,7 @@ body{
   background-position: center;
   background-size:contain;
   background-repeat: no-repeat;
+  overflow: hidden;
 }
 #root{
   width: 100%;
@@ -63,7 +64,7 @@ body{
   filter: brightness(1.1);
 }
 .selected{
-  background-color: var(--note-text);
+  background-color: var(--note-text) ;
 }
 .right-panel{
   flex: 1;
@@ -73,11 +74,45 @@ body{
   grid-template-rows: 4fr 3fr;
   justify-items: center;
   padding: 5vh;
+
 }
 .upper-right{
   display: flex;
   width: 100%;
   justify-content: center;
+}
+.floating-message{
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  bottom: -10rem;
+  width: 50vw;
+  min-height: 8rem;
+  border-radius: 0.5rem;
+  border: solid 2px var(--secondary);
+  background-color: var(--primary);
+  z-index: 999;
+  padding: 1rem;
+  color: white;
+  transition: all 1s;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+}
+.floating-message-title{
+  margin-top: -0.5rem;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0.2rem;
+
+}
+.floating-message-text{
+  flex: 1;
+  white-space: pre-line
+}
+.floating-message-visible{
+  bottom: 2rem;
+  opacity: 1;
 }
 @media only screen and (max-width: 900px) {
 

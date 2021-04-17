@@ -17,7 +17,7 @@
     grid-template-rows: repeat(3, 1fr);
     justify-items: center;
     align-items: center;
-    width: 65%;
+    gap: 0.5rem;
 
 }
 .note{

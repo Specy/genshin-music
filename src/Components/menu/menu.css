@@ -62,6 +62,20 @@
     flex: 1;
     flex-direction: column;
 }
+.songs-wrapper{
+    margin-top: 1rem;
+}
+.songs-buttons-wrapper{
+    display:flex;
+    justify-content: flex-end;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+}
+.songs-buttons-wrapper .genshin-button{
+    flex: 1;
+    white-space: nowrap;
+}
 .song-row{
     display: flex;
     flex:1;
@@ -76,7 +90,8 @@
 }
 .panel-content-wrapper{
     flex: 1;
-    overflow-x: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 .song-button{
     background-color: #576377;
@@ -92,6 +107,8 @@
 .song-name{
     flex: 1;
     cursor: pointer;
+    word-break: break-word;
+    padding-right: 0.6rem;
 }
 .song-buttons-wrapper{
     display: flex;
