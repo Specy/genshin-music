@@ -11,8 +11,7 @@
 }
 .keyboard{
     display: grid;
-    flex: 1;
-    height: 100%;
+    margin-top: auto;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: repeat(3, 1fr);
     justify-items: center;
@@ -40,6 +39,14 @@
     transform: scale(0.9);
     background-color: var(--clicked-note);
     border-color: #73c7b5;
+}
+.note-red{
+    background-color: #f06565;
+    border-color: #d75c5c;
+    color: white;
+}
+.note-border-click{
+    border-color: var(--note-text);
 }
 .note-name{
     font-size: 1rem;

@@ -16,15 +16,17 @@ class Recording {
   }
 }
 class Song {
-  constructor(name, notes, data) {
+  constructor(name, notes = [], data = {}) {
     this.name = name
     this.version = 1
     this.notes = notes
-    if (data === undefined) {
-      this.data = {}
-    }else{
-      this.data = data
+    this.data = {
+      isComposed: false,
+      isComposedVersion:false
     }
+    Object.entries(data).forEach((entry) => {
+      this.data[entry[0]] = entry[1]
+    })
   }
 }
 class LoggerEvent{
@@ -52,6 +54,12 @@ class NoteData {
     this.clicked = false
   }
 }
+class PlayingSong {
+  constructor(notes){
+    this.timestamp = new Date().getTime()
+    this.notes = notes
+  }
+}
 class FileDownloader {
   constructor(type) {
     if (type === undefined) type = "text/json"
@@ -68,10 +76,22 @@ class FileDownloader {
     el.remove();
   }
 }
+
+class ComposedSong extends Song{
+  constructor(name, notes = [], data = {}){
+    data.isComposed = true
+    data.isComposedVersion = true
+    super(name, notes, data)
+
+  }
+
+}
 export {
   Recording,
   Song,
   NoteData,
   FileDownloader,
-  LoggerEvent
+  LoggerEvent,
+  PlayingSong,
+  ComposedSong
 }

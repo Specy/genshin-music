@@ -3,7 +3,10 @@ import './App.css';
 import Keyboard from "./Components/audio/Keyboard"
 import Menu from "./Components/menu/Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent} from "./Components/SongUtils"
+import { Song, Recording, LoggerEvent, PlayingSong } from "./Components/SongUtils"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
+import rotateImg from "./assets/icons/rotate.svg"
 class App extends Component {
   constructor(props) {
     super(props)
@@ -18,66 +21,57 @@ class App extends Component {
         playingSong: {
           timestamp: 0,
           notes: []
+        },
+        practicingSong: {
+          timestamp: 0,
+          notes: []
         }
       },
       isRecording: false,
       songs: [],
-      floatingMessage: {
-        timestamp: 0,
-        visible: false,
-        text: "Text",
-        title: "Title"
-      }
+
+      sliderState: {
+        position: 0,
+        size: 0
+      },
+      thereIsSong: false
     }
     this.syncSongs()
   }
-  componentDidMount() {
-    window.addEventListener('logEvent', this.logEvent);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('logEvent', this.logEvent);
-  }
-  logEvent = (error) => {
-    error = error.detail
-    error.timestamp = new Date().getTime()
-    if(typeof error !== "object") return
-    this.setState({
-      floatingMessage: {
-        timestamp: error.timestamp,
-        visible: true,
-        text: error.text,
-        title: error.title
-      }
-    })
-    setTimeout(() => {
-      if (this.state.floatingMessage.timestamp !== error.timestamp) return
-      this.setState({
-        floatingMessage: {
-          timestamp: 0,
-          visible: false,
-          text: "",
-          title: ""
-        }
-      })
-    }, error.timeout)
-  }
+
   syncSongs = async () => {
     let songs = await this.dbCol.songs.find().toArray()
     this.setState({
       songs: songs
     })
   }
+  practiceSong = async (song, start = 0) => {
+    await this.stopSong()
+    let oldState = this.state.keyboardData.practicingSong
+    oldState.notes = song.notes
+    oldState.timestamp = new Date().getTime()
+    let songToPractice = JSON.parse(JSON.stringify(this.state.keyboardData.practicingSong))
+    songToPractice.start = start
+    this.setState({
+      keyboardData: this.state.keyboardData,
+      thereIsSong: true
+    }, () => {
+      let event = new CustomEvent("practiceSong", { detail: songToPractice })
+      window.dispatchEvent(event)
+    })
+  }
+  //to add the composed songs
   songExists = async (name) => {
     return await this.dbCol.songs.findOne({ name: name }) !== undefined
   }
   addSong = async (song) => {
-    if (await this.songExists(song.name)){
-      return new LoggerEvent("Warning","A song with this name already exists! \n"+ song.name).trigger()
+    if (await this.songExists(song.name)) {
+      return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
     }
     await this.dbCol.songs.insert(song)
     this.syncSongs()
   }
-  removeSong = async (name) => {
+  removeSong = (name) => {
     this.dbCol.songs.remove({ name: name }, this.syncSongs)
   }
   handleRecording = (note) => {
@@ -85,18 +79,50 @@ class App extends Component {
       this.recording.addNote(note.index)
     }
   }
-  playSong = (song) => {
+  handleSliderEvent = (event) => {
+
+    this.changeSliderState({
+      position: Number(event.target.value),
+      size: this.state.sliderState.size
+    })
+  }
+  stopSong = () => {
+    return new Promise(resolve => {
+      this.setState({
+        thereIsSong: false,
+        keyboardData: {
+          practicingSong: new PlayingSong([]),
+          playingSong: new PlayingSong([])
+        }
+      }, () => {
+        let event = new CustomEvent("playSong", { detail: new PlayingSong([]) })
+        window.dispatchEvent(event)
+        event = new CustomEvent("practiceSong", { detail: new PlayingSong([]) })
+        window.dispatchEvent(event)
+        resolve()
+      })
+    })
+  }
+  changeSliderState = (newState) => {
+    this.setState({
+      sliderState: newState
+    })
+  }
+  playSong = async (song) => {
+    await this.stopSong()
     let playingSong = {
       timestamp: new Date().getTime(),
       notes: song.notes
     }
     this.state.keyboardData.playingSong = playingSong
     this.setState({
-      keyboardData: this.state.keyboardData
+      keyboardData: this.state.keyboardData,
+      thereIsSong: true
     })
     let event = new CustomEvent("playSong", { detail: playingSong })
     window.dispatchEvent(event)
   }
+
   toggleRecord = async (override) => {
     if (typeof override !== "boolean") override = undefined
     let newState = override !== undefined ? override : !this.state.isRecording
@@ -105,6 +131,7 @@ class App extends Component {
       let promptString = "Write song name, press cancel to ignore"
       while (true) {
         songName = prompt(promptString)
+        if (songName === null) break
         if (songName !== "") {
           if (await this.songExists(songName)) {
             promptString = "This song already exists: " + songName
@@ -116,13 +143,10 @@ class App extends Component {
         }
       }
       let song = new Song(songName, this.recording.notes)
-      this.addSong(song)
+      if (songName !== null) this.addSong(song)
     } else {
       this.recording = new Recording()
-      let eventData = {
-        timestamp: new Date().getTime(),
-        notes: []
-      }
+      let eventData = new PlayingSong([])
       let event = new CustomEvent("playSong", { detail: eventData })
       window.dispatchEvent(event)
     }
@@ -134,27 +158,29 @@ class App extends Component {
   render() {
     let state = this.state
     let keyboardFunctions = {
-      handleRecording: this.handleRecording
+      handleRecording: this.handleRecording,
+      changeSliderState: this.changeSliderState,
+      stopSong: this.stopSong
     }
     let menuFunctions = {
       addSong: this.addSong,
       removeSong: this.removeSong,
-      playSong: this.playSong
+      playSong: this.playSong,
+      practiceSong: this.practiceSong,
+      stopSong: this.stopSong,
+      changePage: this.props.changePage
     }
     let menuData = {
       songs: state.songs
     }
-    let floatingMessage = this.state.floatingMessage
-    let floatingMessageClass = floatingMessage.visible ? "floating-message floating-message-visible" : "floating-message"
+    
     return <div className="app">
-      <div className={floatingMessageClass}>
-        <div className="floating-message-title">
-          {floatingMessage.title}
-        </div>
-        <div className="floating-message-text">
-          {floatingMessage.text}
-        </div>
+      <div className="rotate-screen">
+        <img src={rotateImg}>
+        </img>
+          For a better experience, add the website to the home screen, and rotate your device
       </div>
+
       <Menu functions={menuFunctions} data={menuData} />
       <div className="right-panel">
         <div className="upper-right">
@@ -165,11 +191,31 @@ class App extends Component {
             {state.isRecording ? "Stop" : "Record"}
           </GenshinButton>
         </div>
-        <Keyboard
-          data={state.keyboardData}
-          functions={keyboardFunctions}
-          isRecording={state.isRecording}
-        />
+        <div className="keyboard-wrapper">
+          <div className={this.state.thereIsSong ? "slider-wrapper" : "slider-wrapper hidden-opacity"}>
+            <button className="song-button" onClick={this.stopSong}>
+              <FontAwesomeIcon icon={faStop} />
+            </button>
+            <input
+              type="range"
+              className="slider"
+              min={0}
+              onChange={this.handleSliderEvent}
+              max={state.sliderState.size}
+              value={state.sliderState.position}
+            ></input>
+            <button className="song-button" onClick={() => this.practiceSong(state.keyboardData.practicingSong, state.sliderState.position)}>
+              <FontAwesomeIcon icon={faSyncAlt} />
+            </button>
+          </div>
+
+          <Keyboard
+            data={state.keyboardData}
+            functions={keyboardFunctions}
+            isRecording={state.isRecording}
+          />
+        </div>
+
       </div>
 
     </div>

@@ -37,6 +37,12 @@ body{
   background-repeat: no-repeat;
   overflow: hidden;
 }
+
+.keyboard-wrapper{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 #root{
   width: 100%;
   height: 100vh;
@@ -69,12 +75,40 @@ body{
 .right-panel{
   flex: 1;
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 4fr 3fr;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content: space-between;
   padding: 5vh;
-
+}
+.index{
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.hidden{
+  display: none;
+}
+.slider{
+  width: 50%;
+  margin: 0 1.5rem;
+}
+.slider-wrapper{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  opacity: 1;
+  margin-bottom: 2rem;
+}
+.hidden-opacity{
+  opacity: 0;
+  pointer-events: none;
+}
+.slider-wrapper button{
+  margin: 0;
 }
 .upper-right{
   display: flex;
@@ -82,7 +116,7 @@ body{
   justify-content: center;
 }
 .floating-message{
-  position: absolute;
+  position: fixed;
   margin-left: auto;
   margin-right: auto;
   bottom: -10rem;

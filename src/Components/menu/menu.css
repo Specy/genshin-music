@@ -12,7 +12,7 @@
 .menu{
     width: 5rem;
     background-color: var(--primary);
-    height: 100%;
+    height: 100vh;
     border-right: solid 3px var(--detail);
     border-left: solid 3px var(--detail);
     align-items: center;
@@ -28,7 +28,27 @@
 }
 .icon{
     font-size: 1.8rem;
-    
+}
+.rotate-screen{
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+    position: absolute;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    flex-direction: column;
+    background-color: var(--primary);
+    color: var(--icon-color);
+    font-size: 1.5rem;
+}
+.rotate-screen img{
+    width: 60vw;
+    margin-bottom: 3rem;
+    background-color: #515c6f;
+    padding: 1.5rem;
+    border-radius: 1rem;
 }
 .menu-wrapper{
     position: absolute;
@@ -46,7 +66,7 @@
     transform: scale(0.9);
     transition: all 0.3s;
     opacity: 0;
-    padding: 1.5rem;
+    padding: 1rem;
     display: flex;
     left: -30vw;
     position: absolute;
@@ -62,9 +82,6 @@
     flex: 1;
     flex-direction: column;
 }
-.songs-wrapper{
-    margin-top: 1rem;
-}
 .songs-buttons-wrapper{
     display:flex;
     justify-content: flex-end;
@@ -72,15 +89,47 @@
     flex-wrap: wrap;
     gap: 0.2rem;
 }
-.songs-buttons-wrapper .genshin-button{
+
+.songs-wrapper{
+    border-bottom-left-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
+    padding: 0.5rem;
+    background-color: #ae9a7e;
+    padding-top: 1rem;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: 4.3rem;
+}
+.tab-selector-wrapper{
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    margin-top: 1rem;
+    gap: 0.2rem;
+}
+.tab-selector{
     flex: 1;
     white-space: nowrap;
+    border: none;
+    border-top-left-radius: 0.3rem;
+    border-top-right-radius: 0.3rem;
+    background-color: #d3bd8e;
+    color: white;
+    padding: 0.4rem;
+    cursor: pointer;
+}
+.tab-selected{
+    background-color: #ae9a7e;
+}
+.inverted{
+    filter: invert(1);
 }
 .song-row{
     display: flex;
     flex:1;
     background-color: var(--primary);
-    margin-bottom: 0.5rem;
     padding-left: 1rem;
     border-radius: 0.3rem;
     min-height: 2.8rem;
@@ -129,19 +178,22 @@
     background-color: #515c6f;
     width: 3.5rem;
     height: 3.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     border-radius: 0.5rem;
     display: flex;
     justify-content: center;
     align-items: center;
     color: var(--icon-color);
     cursor: pointer;
+    transition: all 0.3s;
 }
 .menu-item:hover{
     filter: brightness(1.2);
 }
 @media only screen and (max-width: 900px) {
-
+    .icon{
+        font-size: 1.6rem;
+    }
     .menu{
         width: 4rem;
     }
@@ -154,11 +206,17 @@
         left: 4rem;
     }
     .menu-title{
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
     }
     .menu-item{
         width: 2.8rem;
         height: 2.8rem;
         margin-bottom: 1rem;
+    }
+}
+@media screen and (orientation:portrait) {
+    .rotate-screen{
+        display: flex;
     }
 }

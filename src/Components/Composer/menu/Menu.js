@@ -1,19 +1,18 @@
 import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
-import "./menu.css"
-import {FileDownloader, LoggerEvent} from "../SongUtils"
-import {FilePicker} from "react-file-picker"
+import "../../menu/menu.css"
+
+import { FileDownloader, LoggerEvent } from "../../SongUtils"
 class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
             open: false,
             selectedMenu: "Songs",
-            selectedSongType: "recorded",
-            settings:{
+            selectedSongType: "composed",
+            settings: {
                 keyboardSize: 1,
-
             }
         }
     }
@@ -27,6 +26,11 @@ class Menu extends Component {
             open: newState,
         })
     }
+    changeSelectedSongType = (name) => {
+        this.setState({
+            selectedSongType: name
+        })
+    }
     selectSideMenu = (selection) => {
         if (selection === this.state.selectedMenu && this.state.open) {
             return this.setState({
@@ -38,39 +42,21 @@ class Menu extends Component {
             open: true
         })
     }
-    changeSelectedSongType = (name) => {
-        this.setState({
-            selectedSongType: name
-        })
-    }
-    importSong = (file) => {
-        const reader = new FileReader();
-        reader.addEventListener('load', (event) => {
-
-            try{
-                let song = JSON.parse(event.target.result)
-                this.props.functions.addSong(song)
-            }catch(e){
-                new LoggerEvent("Error","Error importing song").trigger()
-                console.error(e)
-            }
-
-        });
-        reader.readAsText(file)
-    }
     downloadSong = (song) => {
-        if(song._id) delete song._id
+        if (song._id) delete song._id
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name+".json")
+        fileDownloader.download(json, song.name + ".json")
     }
     render() {
+        let data = this.props.data
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
-        let data = this.props.data
-        let functions = this.props.functions
-        functions.toggleMenu = this.toggleMenu
-        functions.downloadSong = this.downloadSong
+        let songFunctions = {
+            loadSong: this.props.functions.loadSong,
+            removeSong: this.props.functions.removeSong,
+            toggleMenu: this.toggleMenu
+        }
         let changePage = this.props.functions.changePage
         let songs = data.songs.filter(song => !song.data.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
@@ -83,7 +69,7 @@ class Menu extends Component {
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FontAwesomeIcon icon={faCog} className="icon" />
                 </MenuItem>
-                <MenuItem type="Composer" action={() => changePage("Composer")}>
+                <MenuItem type="Composer" action={() => changePage("App")} className="inverted">
                     <FontAwesomeIcon icon={faCompactDisc} className="icon" />
                 </MenuItem>
             </div>
@@ -92,14 +78,9 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
-                        <FilePicker
-                            onChange={(file) => this.importSong(file)}
-                        >
-                            <button className="genshin-button">
-                                Import song
-                            </button>
-                        </FilePicker>
-
+                        <button className="genshin-button" onClick={this.props.functions.createNewSong}>
+                            Create new song
+                        </button>
                     </div>
                     <div className="tab-selector-wrapper">
                         <button 
@@ -115,13 +96,13 @@ class Menu extends Component {
                             Composed
                         </button>
                     </div>
-                    <div className="songs-wrapper">
-                    {this.state.selectedSongType === "recorded"
+                    <div className="songs-wrapper no-margin">
+                        {this.state.selectedSongType === "recorded"
                             ? songs.map(song => {
                                 return <SongRow
                                     data={song}
                                     key={song.name}
-                                    functions={functions}
+                                    functions={songFunctions}
                                 >
                                 </SongRow>
                             })
@@ -130,11 +111,12 @@ class Menu extends Component {
                                 return <SongRow
                                     data={song}
                                     key={song.name}
-                                    functions={functions}
+                                    functions={songFunctions}
                                 >
                                 </SongRow>
                             })
                         }
+
                     </div>
 
                 </MenuPanel>
@@ -168,29 +150,16 @@ function CloseMenu(props) {
 function SongRow(props) {
     let data = props.data
     let deleteSong = props.functions.removeSong
-    let playSong = props.functions.playSong
-    let practiceSong = props.functions.practiceSong
     let toggleMenu = props.functions.toggleMenu
-    let downloadSong = props.functions.downloadSong
+    let loadSong = props.functions.loadSong
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            playSong(data)
+            loadSong(data)
             toggleMenu(false)
         }}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => {
-                    practiceSong(data)
-                    toggleMenu(false)
-                }}
-            >
-                <FontAwesomeIcon icon={faCrosshairs} />
-            </button>
-            <button className="song-button" onClick={() => downloadSong(data)}>
-                <FontAwesomeIcon icon={faDownload} />
-
-            </button>
             <button className="song-button" onClick={() => deleteSong(data.name)}>
                 <FontAwesomeIcon icon={faTrash} color="#ed4557" />
             </button>

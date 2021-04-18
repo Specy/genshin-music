@@ -7,6 +7,9 @@ class Note extends Component {
     render() {
         let data = this.props.data
         let className = data.clicked ? "note click-event" : "note"
+        let toBeClicked = this.props.toBeClicked ? " note-red" : ""
+        let toBeClickedNext = this.props.toBeClickedNext ? " note-border-click" : ""
+        className += toBeClicked + toBeClickedNext
         return <button onPointerDown={() => this.props.clickAction(data)} className="button-hitbox">
             <div className={className} >
                 {data.noteNames.keyboard}
