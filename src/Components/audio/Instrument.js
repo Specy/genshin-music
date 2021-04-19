@@ -15,7 +15,7 @@ class Instrument{
         if(instrumentName === undefined) return
         for(const noteName of this.keyboardLayout){
             let noteNames = {
-                keyboard: this.keyboardLayout[i],
+                keyboard: noteName,
                 mobile: this.mobileLayout[i]
             }
             let url = `${window.location.origin}/assets/audio/${instrumentName}/${i}.mp3`

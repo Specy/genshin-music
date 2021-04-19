@@ -1,3 +1,4 @@
+import { faTintSlash } from "@fortawesome/free-solid-svg-icons"
 
 class Recording {
   constructor() {
@@ -77,14 +78,41 @@ class FileDownloader {
   }
 }
 
-class ComposedSong extends Song{
+class ComposedSong{
   constructor(name, notes = [], data = {}){
     data.isComposed = true
     data.isComposedVersion = true
-    super(name, notes, data)
-
+    this.data = data
+    this.name = name
+    this.notes = notes
+    this.columns = []
+    this.selected = 0
+    new Array(40).fill().forEach((e) => {
+      this.columns.push(new Column())
+    })
+    console.log("created new composed song",this.columns)
   }
 
+}
+class Column{
+  constructor(color = 0x515c6f){
+    this.notes = []
+    this.color = color
+    new Array(randomNum(0,5)).fill().forEach(e => {
+      this.notes.push(new ColumnNote(randomNum(0,21)))
+    })
+  }
+}
+class ColumnNote{
+  constructor(index, layer = 0, color = 0xd3bd8e){
+    this.index = index
+    this.layer = layer 
+    this.color = color
+  }
+}
+
+function randomNum(min,max){
+  return Math.floor(Math.random() * max ) + min
 }
 export {
   Recording,
@@ -93,5 +121,6 @@ export {
   FileDownloader,
   LoggerEvent,
   PlayingSong,
-  ComposedSong
+  ComposedSong,
+  ColumnNote
 }

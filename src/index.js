@@ -85,6 +85,7 @@ class Index extends Component {
 ReactDOM.render(
   <React.StrictMode>
     <Index/>
+
   </React.StrictMode>,
   document.getElementById('root')
 );

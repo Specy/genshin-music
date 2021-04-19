@@ -58,8 +58,8 @@ class Menu extends Component {
             toggleMenu: this.toggleMenu
         }
         let changePage = this.props.functions.changePage
-        let songs = data.songs.filter(song => !song.data.isComposedVersion)
-        let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
+        let songs = data.songs.filter(song => !song.data?.isComposedVersion)
+        let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
         return <div className="menu-wrapper">
             <div className="menu">
                 <CloseMenu action={this.toggleMenu} />

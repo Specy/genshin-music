@@ -1,0 +1,23 @@
+.canvas-wrapper{
+    background-color: #495466;
+    padding: 0.5rem;
+    justify-content: center;
+    display: flex;
+    border-radius: 0.5rem;
+    align-items: center;
+}
+.right-panel-composer{
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content: space-between;
+    padding: 1vh;
+  }
+.songName{
+    position: absolute;
+    bottom: 1rem;
+    left: 6rem;
+    color: white;
+}

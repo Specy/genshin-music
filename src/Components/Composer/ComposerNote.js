@@ -1,15 +1,15 @@
 import React, { Component } from 'react'
 import isMobile from "is-mobile"
-class Note extends Component {
-    constructor(props) {
+class ComposerNote extends Component{
+    constructor(props){
         super(props)
+        this.state = {
+            
+        }
     }
     render() {
         let data = this.props.data
-        let className = data.clicked ? "note click-event" : "note"
-        let toBeClicked = this.props.toBeClicked ? " note-red" : ""
-        let toBeClickedNext = this.props.toBeClickedNext ? " note-border-click" : ""
-        className += toBeClicked + toBeClickedNext
+        let className = this.props.selected ? "note-composer click-event" : "note-composer"
         let noteText = isMobile() ? data.noteNames.mobile : data.noteNames.keyboard
         return <button onPointerDown={() => this.props.clickAction(data)} className="button-hitbox">
             <div className={className} >
@@ -26,4 +26,4 @@ class Note extends Component {
 
 
 
-export default Note
+export default ComposerNote
