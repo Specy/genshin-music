@@ -1,9 +1,12 @@
 import React, { Component } from 'react'
-import { Stage, Container, Graphics } from '@inlet/react-pixi';
+
+import {TextStyle} from "pixi.js"
+import { Stage, Container, Graphics , Text } from '@inlet/react-pixi';
 import "./Composer.css"
 const NumOfColumnsPerCanvas = 50
 const noteMargin = window.screen.availWidth < 800 ? 2 : 4
-const selectedColor = 0x414a59
+const selectedColor = 0x1a968b//0x414a59
+const columnBackgrounds = [0x515c6f,0x414a59]
 const noteBorder = window.screen.availWidth < 800 ? 2 : 3
 class ComposerCanvas extends Component {
     constructor(props) {
@@ -28,6 +31,9 @@ class ComposerCanvas extends Component {
         const { data, functions } = this.props
         let sizes = this.state.column
         let xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
+        let timeLineWidth = 30
+        let counter = 0
+        let switcher = false
         return <div className="canvas-wrapper">
             <Stage
                 width={s.width}
@@ -39,24 +45,95 @@ class ComposerCanvas extends Component {
                     x={xPos}
                 >
                     {data.columns.map((column, i) => {
+                        counter ++
+                        if(counter === 16){
+                            switcher = !switcher 
+                            counter = 0
+                        }
                         if(!isVisible(i,data.selected)) return null
+                        let standardBg = columnBackgrounds[Number(switcher)] // boolean is 1 or 0
+                        let bgColor = column.tempoDivider === 1 ? standardBg : column.color
                         return <Column
                             data={column}
                             index={i}
                             sizes={sizes}
+                            bgColor={bgColor}
                             click={functions.selectColumn}
                             isSelected={i === data.selected}
                         />
                     })}
                 </Container>
             </Stage>
+            <Stage
+                width={s.width}
+                height={timeLineWidth}
+            >
+                <Timeline
+                    windowWidth={s.width}
+                    xPos={xPos}
+                    height={timeLineWidth}
+                    totalWidth={sizes.width * data.columns.length}
+                    breakPointsThreshold={16}
+                    numOfColumns={data.columns.length}
+                >
+
+                </Timeline>
+            </Stage>
+
         </div>
     }
 }
 
+
+//Thanks Rubikium
+function Timeline(props){
+    const {windowWidth, xPos, totalWidth, height, numOfColumns , breakPointsThreshold} = props
+    let stageSize = Math.floor(windowWidth / (totalWidth / windowWidth))
+    if(stageSize > windowWidth) stageSize = windowWidth
+    let stagePos = ((- xPos + windowWidth / 2) / totalWidth) * (windowWidth - stageSize ) + 1
+    function drawStage(g){
+        g.clear()
+        g.lineStyle(3, 0x1a968b, 0.8)
+        g.drawRoundedRect(stagePos,2,stageSize - 2,height - 4,6)
+    }
+
+    function drawBg(g){
+        g.beginFill(0x515c6f, 1)
+        g.drawRect(0,0,windowWidth,height)
+    }
+    let numOfBreakpoints = Math.floor(numOfColumns / breakPointsThreshold)
+    let sections = windowWidth / numOfBreakpoints
+    let breakpoints = new Array(numOfBreakpoints).fill().map((e,i) => {
+        return {
+            x: sections * i,
+            num: i
+        }
+    })
+    let textStyle = new TextStyle({
+        fontSize: 8,
+        fill: "white"
+    })
+    return <Container
+        width={windowWidth}
+        height={30}
+    >
+        <Graphics draw={drawBg}/>
+        {breakpoints.map(e => <Text 
+                                text={e.num}
+                                x={e.x}
+                                y={(height - textStyle.fontSize) / 2}
+                                style={textStyle}
+                            />
+        
+        )}
+        <Graphics draw={drawStage}/>
+    </Container>
+}
+
+
 function Column(props) {
-    let { data, index, sizes, click, isSelected, isVisible } = props
-    let color = isSelected ? selectedColor : data.color
+    let { data, index, sizes, click, isSelected, bgColor} = props
+    let color = isSelected ? selectedColor : bgColor
     function drawBg(g) {
         g.clear()
         g.beginFill(color, 1)
@@ -71,7 +148,6 @@ function Column(props) {
     let noteHeight = sizes.height / 21 - (noteMargin * 2)
     let noteWidth = sizes.width - (noteMargin * 2)
     function drawNote(g, note) {
-        g.clear()
         g.beginFill(note.color, 1)
         g.drawRoundedRect(noteMargin, positions[note.index] * sizes.height / 21, noteWidth, noteHeight, noteBorder)
         g.endFill()
