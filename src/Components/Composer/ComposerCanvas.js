@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Stage, Container, Graphics } from '@inlet/react-pixi';
 import "./Composer.css"
-const NumOfColumnsPerCanvas = 40
+const NumOfColumnsPerCanvas = 50
 const noteMargin = window.screen.availWidth < 800 ? 2 : 4
 const selectedColor = 0x414a59
 const noteBorder = window.screen.availWidth < 800 ? 2 : 3
@@ -9,7 +9,7 @@ class ComposerCanvas extends Component {
     constructor(props) {
         super(props)
         let width = nearestEven(window.screen.availWidth * 0.7)
-        let height = nearestEven(window.screen.availHeight * 0.5)
+        let height = nearestEven(window.screen.availHeight * 0.45)
         this.state = {
             width: width,
             height: height,
@@ -27,29 +27,36 @@ class ComposerCanvas extends Component {
         }
         const { data, functions } = this.props
         let sizes = this.state.column
+        let xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
         return <div className="canvas-wrapper">
             <Stage
                 width={s.width}
                 height={s.height}
                 options={pixiOptions}
             >
-                {data.columns.map((column, i) => {
-                    return <Column
-                        data={column}
-                        index={i}
-                        sizes={sizes}
-                        click={functions.selectColumn}
-                        isSelected={i === data.selected}
-                    />
-                })}
+                <Container
+                    anchor={[0.5, 0.5]}
+                    x={xPos}
+                >
+                    {data.columns.map((column, i) => {
+                        if(!isVisible(i,data.selected)) return null
+                        return <Column
+                            data={column}
+                            index={i}
+                            sizes={sizes}
+                            click={functions.selectColumn}
+                            isSelected={i === data.selected}
+                        />
+                    })}
+                </Container>
             </Stage>
         </div>
     }
 }
 
 function Column(props) {
-    let { data, index, sizes, click, isSelected } = props
-    let color = isSelected ? selectedColor: data.color
+    let { data, index, sizes, click, isSelected, isVisible } = props
+    let color = isSelected ? selectedColor : data.color
     function drawBg(g) {
         g.clear()
         g.beginFill(color, 1)
@@ -66,7 +73,7 @@ function Column(props) {
     function drawNote(g, note) {
         g.clear()
         g.beginFill(note.color, 1)
-        g.drawRoundedRect(noteMargin, note.index * sizes.height / 21, noteWidth, noteHeight, noteBorder)
+        g.drawRoundedRect(noteMargin, positions[note.index] * sizes.height / 21, noteWidth, noteHeight, noteBorder)
         g.endFill()
     }
     //index color
@@ -87,4 +94,10 @@ function calcMinColumnWidth(parentWidth) {
 function nearestEven(num) {
     return 2 * Math.round(num / 2);
 }
+function isVisible(pos,currentPos){
+    let threshold = NumOfColumnsPerCanvas / 2 + 2
+    let boundaries = [currentPos - threshold, currentPos + threshold]
+    return boundaries[0] < pos && pos < boundaries[1]
+}
+const positions = [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6]
 export default ComposerCanvas

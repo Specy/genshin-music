@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
+import { faSave, faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
 import "../../menu/menu.css"
 
 import { FileDownloader, LoggerEvent } from "../../SongUtils"
@@ -57,13 +57,17 @@ class Menu extends Component {
             removeSong: this.props.functions.removeSong,
             toggleMenu: this.toggleMenu
         }
+        let updateSong = this.props.functions.updateSong
         let changePage = this.props.functions.changePage
         let songs = data.songs.filter(song => !song.data?.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
         return <div className="menu-wrapper">
             <div className="menu">
                 <CloseMenu action={this.toggleMenu} />
-                <MenuItem type="Songs" action={this.selectSideMenu} className="margin-top-auto">
+                <MenuItem type="Save" action={() => updateSong(data.currentSong)} className="margin-top-auto">
+                    <FontAwesomeIcon icon={faSave} className="icon" />
+                </MenuItem>
+                <MenuItem type="Songs" action={this.selectSideMenu}>
                     <FontAwesomeIcon icon={faMusic} className="icon" />
                 </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>

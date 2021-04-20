@@ -87,7 +87,7 @@ class ComposedSong{
     this.notes = notes
     this.columns = []
     this.selected = 0
-    new Array(40).fill().forEach((e) => {
+    new Array(5).fill().forEach((e) => {
       this.columns.push(new Column())
     })
     console.log("created new composed song",this.columns)
@@ -98,9 +98,6 @@ class Column{
   constructor(color = 0x515c6f){
     this.notes = []
     this.color = color
-    new Array(randomNum(0,5)).fill().forEach(e => {
-      this.notes.push(new ColumnNote(randomNum(0,21)))
-    })
   }
 }
 class ColumnNote{
@@ -122,5 +119,6 @@ export {
   LoggerEvent,
   PlayingSong,
   ComposedSong,
-  ColumnNote
+  ColumnNote,
+  Column
 }

@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
-import { ComposedSong, LoggerEvent, ColumnNote } from "./Components/SongUtils"
+import { ComposedSong, LoggerEvent, ColumnNote,Column } from "./Components/SongUtils"
+import {faPlay , faPlus, faPause} from "@fortawesome/free-solid-svg-icons"
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
 import ComposerCanvas from "./Components/Composer/ComposerCanvas"
 import Instrument from "./Components/audio/Instrument"
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 class Composer extends Component {
     constructor(props) {
         super(props)
@@ -15,20 +16,25 @@ class Composer extends Component {
             songs: this.db.collection("songs")
 
         }
+        this.playbackInterval = undefined
         this.state = {
             instrument: new Instrument(),
             audioContext: new (window.AudioContext || window.webkitAudioContext)(),
             songs: [],
-            song: new ComposedSong("")
+            isPlaying: false,
+            song: new ComposedSong("Untitled"),
+            settings: {
+                bpm: 400
+            }
         }
         this.syncSongs()
         this.loadInstrument("lyre")
     }
     componentDidMount() {
-        window.addEventListener('keydown', this.handleKeyboard)
+        window.addEventListener("keydown", this.handleKeyboard)
     }
     componentWillUnmount() {
-        window.removeEventListener('click', this.handleKeyboard)
+        window.removeEventListener('keydown', this.handleKeyboard)
     }
     loadInstrument = async (name) => {
         let newInstrument = new Instrument(name)
@@ -56,6 +62,12 @@ class Composer extends Component {
         let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
         if (note !== undefined) {
             this.handleClick(note)
+        }
+        switch(letter){
+            case "ARROWRIGHT": this.selectColumn(this.state.song.selected + 1)
+                break; 
+            case "ARROWLEFT": this.selectColumn(this.state.song.selected - 1)
+                break; 
         }
     }
     playSound = (note) => {
@@ -95,6 +107,21 @@ class Composer extends Component {
         await this.dbCol.songs.insert(song)
         this.syncSongs()
     }
+    updateSong = async (song) => {
+        return new Promise(async resolve => {
+            if(this.songExists(song.name)){
+                await this.dbCol.songs.update({name: song.name},song)
+                console.log("song saved:",song.name)
+                this.syncSongs()
+            }else{
+                console.log("song doesn't exist")
+            } 
+            resolve()
+        })
+    }
+    handleScroll = () => {
+
+    }
     songExists = async (name) => {
         return await this.dbCol.songs.findOne({ name: name }) !== undefined
     }
@@ -108,14 +135,52 @@ class Composer extends Component {
     removeSong = (name) => {
         this.dbCol.songs.remove({ name: name }, this.syncSongs)
     }
-    loadSong = (song) => {
+    loadSong = async (song) => {
+        let stateSong = this.state.song
+        if(stateSong.notes.length > 0){
+            await this.updateSong(stateSong)
+        }
         this.setState({
             song: song
         },() => console.log(this.state))
     }
+    addColumns = (amount = 1, position = "end") => {
+        let columns = new Array(amount).fill().map(() => new Column())
+        let songColumns = this.state.song.columns
+        if(position === "end"){
+            songColumns.push(...columns)
+        }else{
+            songColumns.splice(position, 0, ...columns);
+        }
+        this.setState({
+            song: this.state.song
+        })
+    }
     //----------------------------------------------//
+
+    togglePlay = (override) => {
+        let interval = this.playbackInterval
+        window.clearInterval(interval)
+        let msPerBPM = Math.floor(60000 / this.state.settings.bpm)
+        let newState = typeof override === "boolean" ? override : !this.state.isPlaying
+        if(newState){
+            this.selectColumn(this.state.song.selected)
+            this.playbackInterval = setInterval(this.handleTick, msPerBPM)
+        }
+        this.setState({
+            isPlaying: newState
+        })
+    }
+    handleTick = () => {
+        let newIndex = this.state.song.selected + 1
+        if(this.state.isPlaying && newIndex > this.state.song.columns.length - 1){
+           return  this.togglePlay(false)
+        }
+        this.selectColumn(this.state.song.selected + 1)
+    }
     selectColumn = (index) => {
         let song = this.state.song
+        if(index < 0 || index > song.columns.length - 1) return
         let keyboard = this.state.instrument.layout
         keyboard.forEach(note => {
             note.clicked = false
@@ -135,13 +200,15 @@ class Composer extends Component {
     render() {
         let song = this.state.song
         let menuData = {
-            songs: this.state.songs
+            songs: this.state.songs,
+            currentSong: this.state.song
         }
         let menuFunctions = {
             loadSong: this.loadSong,
             removeSong: this.removeSong,
             createNewSong: this.createNewSong,
-            changePage: this.props.changePage
+            changePage: this.props.changePage,
+            updateSong: this.updateSong
         }
         let keyboardFunctions = {
             handleClick: this.handleClick
@@ -157,6 +224,8 @@ class Composer extends Component {
             columns: song.columns,
             selected: song.selected
         }
+        let msPerBPM = Math.floor(60000 / this.state.settings.bpm)
+        let scrollPosition = 0
         return <div className="app">
             <div className="rotate-screen">
                 <img src={rotateImg}>
@@ -164,10 +233,32 @@ class Composer extends Component {
                     For a better experience, add the website to the home screen, and rotate your device
             </div>
             <div className="right-panel-composer">
-                <ComposerCanvas
-                    functions = {canvasFunctions}
-                    data = {canvasData}
-                />
+                <div className="column">
+                    
+                    <div className="top-panel-composer">
+                    <div className="buttons-composer-wrapper">
+                            <div className="tool" onClick={this.togglePlay}>
+                                <FontAwesomeIcon  icon={this.state.isPlaying ? faPause : faPlay}/>
+                            </div>
+                        </div>
+                        <ComposerCanvas
+                            functions = {canvasFunctions}
+                            data = {canvasData}
+                        />
+                        <div className="buttons-composer-wrapper">
+                            <div className="tool-slim" onClick={() => this.addColumns(40,"end")}>
+                                    <FontAwesomeIcon  icon={faPlus}/>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="scroll-bar-outer">
+                        <div className="scroll-bar-inner" style={{width : scrollPosition}}>
+
+                        </div>
+                    </div>
+                </div>
+
+
                 <ComposerKeyboard
                     functions = {keyboardFunctions}
                     data = {keyboardData}
@@ -177,13 +268,25 @@ class Composer extends Component {
                 data={menuData}
                 functions={menuFunctions}
             />
-            <div className="songName">
-                {song.name}
+            <div className="song-info">
+                <div>
+                    {song.name}
+                </div>
+                <div>
+                    {formatMillis(this.state.song.selected * msPerBPM) + " "}
+                     / 
+                    {" " + formatMillis(this.state.song.columns.length * msPerBPM)}
+                </div>
             </div>
         </div>
     }
 }
-
+function formatMillis(millis) {
+    var minutes = Math.floor(millis / 60000);
+    var seconds = ((millis % 60000) / 1000).toFixed(0);
+    return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+  }
+  
 
 
 export default Composer

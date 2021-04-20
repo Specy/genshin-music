@@ -1,6 +1,6 @@
 .canvas-wrapper{
     background-color: #495466;
-    padding: 0.5rem;
+    padding: 0.2rem;
     justify-content: center;
     display: flex;
     border-radius: 0.5rem;
@@ -14,10 +14,52 @@
     align-items:center;
     justify-content: space-between;
     padding: 1vh;
+    margin-left: 5rem;
   }
-.songName{
+.scroll-bar-outer{
+    background-color: var(--primary);
+    margin-top: 0.2rem;
+    width: 100%;
+    height: 4px;
+    border-radius: 1px;
+}
+.scroll-bar-inner{
+    background-color: blue;
+    width: 0%;
+}
+.song-info{
     position: absolute;
     bottom: 1rem;
     left: 6rem;
     color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.top-panel-composer{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+.tool-slim, .tool{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.3rem;
+    border-radius: 0.3rem;
+    color: #d3bd8e;
+    background-color: var(--primary);
+    cursor: pointer;
+}
+.tool{
+    min-width: 2rem;
+}
+.buttons-composer-wrapper{
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        margin: 0 0.2rem;
+        gap: 0.2rem;
 }
