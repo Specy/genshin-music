@@ -9,7 +9,7 @@ class ComposerNote extends Component{
     }
     render() {
         let data = this.props.data
-        let className = this.props.selected ? "note-composer click-event" : "note-composer"
+        let className = this.props.selected ? "note-composer note-red" : "note-composer"
         let noteText = isMobile() ? data.noteNames.mobile : data.noteNames.keyboard
         return <button onPointerDown={() => this.props.clickAction(data)} className="button-hitbox">
             <div className={className} >

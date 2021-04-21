@@ -17,6 +17,7 @@
     "react-dom": "^17.0.2",
     "react-file-picker": "0.0.6",
     "react-scripts": "4.0.3",
+    "react-swipeable": "^6.1.0",
     "three": "^0.127.0",
     "web-vitals": "^0.2.4",
     "workbox-background-sync": "^5.1.3",

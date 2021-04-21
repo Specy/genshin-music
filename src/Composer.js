@@ -108,10 +108,8 @@ class Composer extends Component {
         this.syncSongs()
     }
     updateSong = async (song) => {
-        console.log(song)
         if (song.name === "Untitled") {
             let name = await this.askForSongName()
-            console.log(name)
             if(name === null) return
             song.name = name
             return this.addSong(song)
@@ -208,7 +206,7 @@ class Composer extends Component {
         }
         this.selectColumn(this.state.song.selected + 1)
     }
-    selectColumn = (index) => {
+    selectColumn = (index,ignoreAudio) => {
         let song = this.state.song
         if (index < 0 || index > song.columns.length - 1) return
         let keyboard = this.state.instrument.layout
@@ -222,6 +220,7 @@ class Composer extends Component {
             song: song,
             instrument: this.state.instrument
         }, () => {
+            if(ignoreAudio) return
             currentColumn.notes.forEach(note => {
                 this.playSound(keyboard[note.index])
             })
