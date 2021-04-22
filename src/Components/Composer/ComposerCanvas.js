@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import * as PIXI from "pixi.js"
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
 import "./Composer.css"
+import {TempoChangers} from "../SongUtils"
 const NumOfColumnsPerCanvas = 40
 const noteMargin = window.screen.availWidth < 800 ? 2 : 4
 const selectedColor = 0x1a968b//0x414a59
@@ -103,6 +104,7 @@ class ComposerCanvas extends Component {
         const { data, functions } = this.props
         let sizes = this.state.column
         let xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
+        let xOffset = this.state.xOffset
         let timeLineWidth = 30
         let counter = 0
         let switcher = false
@@ -127,7 +129,7 @@ class ComposerCanvas extends Component {
                         counter++
                         if (!isVisible(i, data.selected)) return null
                         let standardBg = columnBackgrounds[Number(switcher)] // boolean is 1 or 0
-                        let bgColor = column.tempoDivider === 1 ? standardBg : column.color
+                        let bgColor = column.TempoChangers === 0 ? standardBg : TempoChangers[column.TempoChangers].color
                         return <Column
                         cache={this.cache}
                         key={i}
@@ -194,7 +196,7 @@ function Timeline(props) {
         width={windowWidth}
         height={30}
         interactive={true}
-        click={(e) => handleClick(e,"click")}
+        pointertap={(e) => handleClick(e,"click")}
         pointerdown={(e) => handleClick(e,"down")}
         pointerup={(e) => handleClick(e,"up")}
         pointermove={handleSlide}

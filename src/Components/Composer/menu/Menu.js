@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSave, faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
 import "../../menu/menu.css"
@@ -49,16 +49,15 @@ class Menu extends Component {
         fileDownloader.download(json, song.name + ".json")
     }
     render() {
-        let data = this.props.data
+        const {data, functions} = this.props
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
+        const { loadSong, removeSong, updateSong, changePage, handleSettingChange} = functions
         let songFunctions = {
-            loadSong: this.props.functions.loadSong,
-            removeSong: this.props.functions.removeSong,
+            loadSong: loadSong,
+            removeSong: removeSong,
             toggleMenu: this.toggleMenu
         }
-        let updateSong = this.props.functions.updateSong
-        let changePage = this.props.functions.changePage
         let songs = data.songs.filter(song => !song.data?.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
         return <div className="menu-wrapper">
@@ -125,7 +124,16 @@ class Menu extends Component {
 
                 </MenuPanel>
                 <MenuPanel title="Settings" visible={selectedMenu}>
+                        {Object.entries(data.settings).map(([key,data]) => {
+                           return <SettingsRow
+                                key={key}
+                                objKey={key}
+                                data={data}
+                                update={handleSettingChange}
+                           >
 
+                           </SettingsRow>
+                        })}
                 </MenuPanel>
             </div>
         </div>
@@ -152,10 +160,8 @@ function CloseMenu(props) {
 }
 
 function SongRow(props) {
-    let data = props.data
-    let deleteSong = props.functions.removeSong
-    let toggleMenu = props.functions.toggleMenu
-    let loadSong = props.functions.loadSong
+    const {data, functions} = props
+    const {removeSong, toggleMenu, loadSong} = functions
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             loadSong(data)
@@ -164,10 +170,46 @@ function SongRow(props) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => deleteSong(data.name)}>
+            <button className="song-button" onClick={() => removeSong(data.name)}>
                 <FontAwesomeIcon icon={faTrash} color="#ed4557" />
             </button>
         </div>
+    </div>
+}
+
+function SettingsRow(props){
+    const {data, update, objKey } = props
+    const [value,setter] = useState(data.value)
+    function handleChange(e){
+        let el = e.target
+        let value = el.value
+        if(data.type === "number"){
+            value = Number(value)
+            e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
+            if(value < data.threshold[0] || value > data.threshold[1]){
+                return
+            }
+        }
+        setter(value)
+    }
+    function sendChange(){
+        let obj = {
+            key: objKey,
+            value: value
+        }
+        update(obj)
+    }
+    if(objKey === "settingVesion") return null
+    return <div className="settings-row">
+        <div>
+            {data.name}
+        </div>
+        <input 
+            
+            value={value}
+            onChange={handleChange}
+            onBlur={sendChange}    
+        />
     </div>
 }
 class MenuItem extends Component {

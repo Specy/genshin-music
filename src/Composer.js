@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
-import { ComposedSong, LoggerEvent, ColumnNote, Column } from "./Components/SongUtils"
+import { ComposedSong, LoggerEvent, ColumnNote, Column,TempoChangers } from "./Components/SongUtils"
 import { faPlay, faPlus, faPause } from "@fortawesome/free-solid-svg-icons"
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
 import ComposerCanvas from "./Components/Composer/ComposerCanvas"
 import Instrument from "./Components/audio/Instrument"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {ComposerSettings } from "./Components/Composer/SettingsObj"
 class Composer extends Component {
     constructor(props) {
         super(props)
@@ -16,6 +17,7 @@ class Composer extends Component {
             songs: this.db.collection("songs")
 
         }
+        let settings = this.getSettings()
         this.playbackInterval = undefined
         this.state = {
             instrument: new Instrument(),
@@ -23,9 +25,7 @@ class Composer extends Component {
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
-            settings: {
-                bpm: 400
-            }
+            settings: settings
         }
         this.syncSongs()
         this.loadInstrument("lyre")
@@ -35,6 +35,39 @@ class Composer extends Component {
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
+    }
+    getSettings = () => {
+        let storedSettings = localStorage.getItem("Composer_Settings")
+        try{
+            storedSettings = JSON.parse(storedSettings)
+        }catch (e){
+            storedSettings = null
+        }
+        if(storedSettings !== null){
+            if(storedSettings.settingVesion !== ComposerSettings.settingVesion){
+                this.updateSettings(ComposerSettings)
+                return ComposerSettings
+            }
+            return storedSettings
+        }
+        return ComposerSettings
+    }
+    updateSettings = (override) => {
+        let state
+        if(override !== undefined){
+            state = override
+        }else{
+            state = this.state.settings
+        }
+        localStorage.setItem("Composer_Settings",JSON.stringify(state))
+    }
+    handleSettingChange = (setting) => {
+        let state = this.state.settings
+        state[setting.key].value = setting.value
+        this.setState({
+            settings: this.state.settings
+        },() => this.updateSettings())
+
     }
     loadInstrument = async (name) => {
         let newInstrument = new Instrument(name)
@@ -147,9 +180,7 @@ class Composer extends Component {
         })
 
     }
-    handleScroll = () => {
 
-    }
     songExists = async (name) => {
         return await this.dbCol.songs.findOne({ name: name }) !== undefined
     }
@@ -189,7 +220,7 @@ class Composer extends Component {
     togglePlay = (override) => {
         let interval = this.playbackInterval
         window.clearInterval(interval)
-        let msPerBPM = Math.floor(60000 / this.state.settings.bpm)
+        let msPerBPM = Math.floor(60000 / this.state.settings.bpm.value)
         let newState = typeof override === "boolean" ? override : !this.state.isPlaying
         if (newState) {
             this.selectColumn(this.state.song.selected)
@@ -205,6 +236,13 @@ class Composer extends Component {
             return this.togglePlay(false)
         }
         this.selectColumn(this.state.song.selected + 1)
+    }
+    handleTempoChanger = (changer) => {
+        let song = this.state.song
+        song.columns[this.state.song.selected].TempoChangers = changer.id
+        this.setState({
+            song: song
+        })
     }
     selectColumn = (index,ignoreAudio) => {
         let song = this.state.song
@@ -230,21 +268,25 @@ class Composer extends Component {
         let song = this.state.song
         let menuData = {
             songs: this.state.songs,
-            currentSong: this.state.song
+            currentSong: this.state.song,
+            settings: this.state.settings,
         }
         let menuFunctions = {
             loadSong: this.loadSong,
             removeSong: this.removeSong,
             createNewSong: this.createNewSong,
             changePage: this.props.changePage,
-            updateSong: this.updateSong
+            updateSong: this.updateSong,
+            handleSettingChange: this.handleSettingChange
         }
         let keyboardFunctions = {
-            handleClick: this.handleClick
+            handleClick: this.handleClick,
+            handleTempoChanger: this.handleTempoChanger
         }
         let keyboardData = {
             keyboard: this.state.instrument,
-            currentColumn: this.state.song.columns[this.state.song.selected]
+            currentColumn: this.state.song.columns[this.state.song.selected],
+            TempoChangers: TempoChangers
         }
         let canvasFunctions = {
             selectColumn: this.selectColumn
@@ -253,7 +295,7 @@ class Composer extends Component {
             columns: song.columns,
             selected: song.selected
         }
-        let msPerBPM = Math.floor(60000 / this.state.settings.bpm)
+        let msPerBPM = Math.floor(60000 / this.state.settings.bpm.value)
         let scrollPosition = 0
         return <div className="app">
             <div className="rotate-screen">

@@ -23,24 +23,26 @@ class Song {
     this.notes = notes
     this.data = {
       isComposed: false,
-      isComposedVersion:false
+      isComposedVersion: false
     }
     Object.entries(data).forEach((entry) => {
       this.data[entry[0]] = entry[1]
     })
   }
 }
-class LoggerEvent{
-  constructor(title,text,timeout){
+class LoggerEvent {
+  constructor(title, text, timeout) {
     this.title = title
     this.timeout = timeout
     this.text = text
-    if(timeout === undefined) this.timeout = 3000
-    this.event = new CustomEvent("logEvent",{detail:{
-      title: this.title,
-      text: this.text,
-      timeout: this.timeout
-    }})
+    if (timeout === undefined) this.timeout = 3000
+    this.event = new CustomEvent("logEvent", {
+      detail: {
+        title: this.title,
+        text: this.text,
+        timeout: this.timeout
+      }
+    })
   }
   trigger = () => {
     window.dispatchEvent(this.event)
@@ -56,7 +58,7 @@ class NoteData {
   }
 }
 class PlayingSong {
-  constructor(notes){
+  constructor(notes) {
     this.timestamp = new Date().getTime()
     this.notes = notes
   }
@@ -78,39 +80,65 @@ class FileDownloader {
   }
 }
 
-class ComposedSong{
-  constructor(name, notes = [], data = {}){
+let TempoChangers = [
+  {
+    id: 0,
+    text: "1",
+    changer: 1,
+    color: 0x515c6f
+  },{
+    id: 1,
+    text: "1/2",
+    changer: 1/2,
+    color: 0x4d694e
+  },{
+    id: 2,
+    text: "1/4",
+    changer: 1/3,
+    color: 0x434c7d
+  },{
+    id: 3,
+    text: "1/8",
+    changer: 1/4,
+    color: 0x6f5168
+  }
+]
+class ComposedSong {
+  constructor(name, notes = [], data = {}) {
     data.isComposed = true
     data.isComposedVersion = true
     this.data = data
     this.name = name
+    this.bpm = 220
     this.notes = notes
     this.columns = []
     this.selected = 0
     new Array(100).fill().forEach((e) => {
       this.columns.push(new Column())
     })
-    console.log("created new composed song",this.columns)
+    console.log("created new composed song")
   }
 
 }
-class Column{
-  constructor(color = 0x515c6f){
+class Column {
+  constructor(color = 0x515c6f) {
     this.notes = []
     this.color = color
-    this.tempoDivider = 1
+    this.TempoChangers = 0
   }
 }
-class ColumnNote{
-  constructor(index, layer = 0, color = 0xd3bd8e){
+
+
+class ColumnNote {
+  constructor(index, layer = 0, color = 0xd3bd8e) {
     this.index = index
-    this.layer = layer 
+    this.layer = layer
     this.color = color
   }
 }
 
-function randomNum(min,max){
-  return Math.floor(Math.random() * max ) + min
+function randomNum(min, max) {
+  return Math.floor(Math.random() * max) + min
 }
 export {
   Recording,
@@ -121,5 +149,6 @@ export {
   PlayingSong,
   ComposedSong,
   ColumnNote,
-  Column
+  Column,
+  TempoChangers
 }
