@@ -116,6 +116,7 @@ class ComposedSong {
     new Array(100).fill().forEach((e) => {
       this.columns.push(new Column())
     })
+    console.log(this.columns)
     console.log("created new composed song")
   }
 
@@ -124,7 +125,8 @@ class Column {
   constructor(color = 0x515c6f) {
     this.notes = []
     this.color = color
-    this.TempoChangers = 0
+    this.tempoChanger = 0
+
   }
 }
 

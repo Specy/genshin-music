@@ -8,6 +8,7 @@ class ComposerKeyboard extends Component {
         }
 
     }
+
     render() {
         const { data, functions } = this.props
         let notesIndexes = data.currentColumn.notes.map((e) => e.index)

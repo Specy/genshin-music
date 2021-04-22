@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import * as PIXI from "pixi.js"
-import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
+import { Stage, Container, Graphics, Sprite, ParticleContainer} from '@inlet/react-pixi';
+import { ComposerCache } from "./ComposerCache"
 import "./Composer.css"
 import {TempoChangers} from "../SongUtils"
 const NumOfColumnsPerCanvas = 40
@@ -21,19 +22,11 @@ class ComposerCanvas extends Component {
                 height: height
             }
         }
-        this.cache = {
-            columns:{
-        
-            },
-            notes:{
-                "0x515c6f": new PIXI.Sprite()
-            }
-        }
+        this.cache = new ComposerCache(this.state.column.width,height).cache
         this.stageSelected = false
         this.sliderSelected = false
         this.stagePreviousPositon = 0
         this.throttleStage = 0
-        this.initCache()
     }
     resetPointerDown = (e) => {
         this.stageSelected = false
@@ -91,9 +84,6 @@ class ComposerCanvas extends Component {
             this.props.functions.selectColumn(relativePos,true)
         }
     }
-    initCache = () => {
-
-    }
 
     render() {
         let s = this.state
@@ -104,10 +94,10 @@ class ComposerCanvas extends Component {
         const { data, functions } = this.props
         let sizes = this.state.column
         let xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
-        let xOffset = this.state.xOffset
         let timeLineWidth = 30
         let counter = 0
         let switcher = false
+        let cache = this.cache
         return <div className="canvas-wrapper">
             <Stage
                 width={s.width}
@@ -128,15 +118,16 @@ class ComposerCanvas extends Component {
                         }
                         counter++
                         if (!isVisible(i, data.selected)) return null
-                        let standardBg = columnBackgrounds[Number(switcher)] // boolean is 1 or 0
-                        let bgColor = column.TempoChangers === 0 ? standardBg : TempoChangers[column.TempoChangers].color
+                        let standardBg = cache.standard[Number(switcher)] // boolean is 1 or 0
+                        let background = column.tempoChanger === 0 ? standardBg : TempoChangers[column.tempoChanger].color
+                        background = data.selected === i ? cache.standard[2] : background
                         return <Column
-                        cache={this.cache}
+                        cache={cache}
                         key={i}
                         data={column}
                         index={i}
                         sizes={sizes}
-                        bgColor={bgColor}
+                        backgroundCache={background}
                         click={functions.selectColumn}
                         isSelected={i === data.selected}
                     />
@@ -221,42 +212,35 @@ function Timeline(props) {
 
 */
 function Column(props) {
-    let { data, index, sizes, click, isSelected, bgColor,cache } = props
-    let color = isSelected ? selectedColor : bgColor
-    function drawBg(g) {
-        g.clear()
-        g.beginFill(color, 1)
-        g.drawRect(0, 0, sizes.width, sizes.height)
-        data.notes.forEach(note => {
-            g.beginFill(note.color, 1)
-            g.drawRoundedRect(noteMargin, positions[note.index] * sizes.height / 21, noteWidth, noteHeight, noteBorder)
-            g.endFill()
-        })
-        g.lineStyle(1, 0x00000, 0.8)
-        g.moveTo(sizes.width, 0)
-        g.lineTo(sizes.width, sizes.height)
-        g.moveTo(0, 0)
-        g.lineTo(0, sizes.height)
-    }
+    let { data, index, sizes, click ,cache,backgroundCache } = props
     let noteHeight = sizes.height / 21 - (noteMargin * 2)
     let noteWidth = sizes.width - (noteMargin * 2)
-    function drawNote(g, note) {
-        g.clear()
-        g.beginFill(note.color, 1)
-        g.drawRoundedRect(noteMargin, positions[note.index] * sizes.height / 21, noteWidth, noteHeight, noteBorder)
-        g.endFill()
-    }
-    //index color
     return <Container
         pointertap={() => click(index)}
         interactive={true}
         x={sizes.width * index}
+        
     >
-        <Graphics draw={drawBg} />
+        <Sprite
+            image={backgroundCache}
+            interactiveChildren={false}
+        >
+        </Sprite>
+        {data.notes.map((note) => {
+            return <Sprite
+            image={cache.notes[0]}
+            x={noteMargin}
+            y={positions[note.index] * sizes.height / 21}
+            >
+
+            </Sprite>
+        })}
     </Container>
 }
 
 /*
+        <Graphics draw={drawBg} />
+
         {data.notes.map((note) => {
             return <Graphics draw={(g) => drawNote(g, note)} />
         })}

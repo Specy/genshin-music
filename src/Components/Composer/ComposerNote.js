@@ -7,6 +7,9 @@ class ComposerNote extends Component{
             
         }
     }
+    shouldComponentUpdate(next,prev){
+      return this.props.selected !== next.selected
+    }
     render() {
         let data = this.props.data
         let className = this.props.selected ? "note-composer note-red" : "note-composer"

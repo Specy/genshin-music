@@ -108,9 +108,7 @@ class Composer extends Component {
         source.buffer = note.buffer
         source.connect(this.state.audioContext.destination)
         source.start(0)
-        this.setState({
-            instrument: this.state.instrument
-        })
+
     }
     handleClick = (note) => {
         let instrument = this.state.instrument
@@ -124,6 +122,9 @@ class Composer extends Component {
             column.notes.splice(index, 1)
         }
         instrument.layout[note.index].clicked = true
+        this.setState({
+            instrument: this.state.instrument
+        })
         this.playSound(note)
     }
     syncSongs = async () => {
@@ -217,18 +218,22 @@ class Composer extends Component {
     }
     //----------------------------------------------//
 
-    togglePlay = (override) => {
-        let interval = this.playbackInterval
-        window.clearInterval(interval)
-        let msPerBPM = Math.floor(60000 / this.state.settings.bpm.value)
+    togglePlay = async (override) => {
         let newState = typeof override === "boolean" ? override : !this.state.isPlaying
-        if (newState) {
-            this.selectColumn(this.state.song.selected)
-            this.playbackInterval = setInterval(this.handleTick, msPerBPM)
-        }
         this.setState({
             isPlaying: newState
+        }, async () => {
+                while(this.state.isPlaying){
+                    let state = this.state
+                    const {song, settings} = state
+                    let tempoChanger = TempoChangers[song.columns[song.selected + 1]?.tempoChanger]
+                    let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger?.changer) 
+                    this.handleTick()
+                    await delayMs(msPerBPM)
+                }
         })
+
+
     }
     handleTick = () => {
         let newIndex = this.state.song.selected + 1
@@ -239,7 +244,7 @@ class Composer extends Component {
     }
     handleTempoChanger = (changer) => {
         let song = this.state.song
-        song.columns[this.state.song.selected].TempoChangers = changer.id
+        song.columns[this.state.song.selected].tempoChanger = changer.id
         this.setState({
             song: song
         })
@@ -358,6 +363,10 @@ function formatMillis(millis) {
     return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 }
 
-
+function delayMs(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve,ms)
+    })
+}
 
 export default Composer
