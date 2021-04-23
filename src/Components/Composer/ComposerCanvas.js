@@ -3,8 +3,9 @@ import * as PIXI from "pixi.js"
 import { Stage, Container, Graphics, Sprite, ParticleContainer} from '@inlet/react-pixi';
 import { ComposerCache } from "./ComposerCache"
 import "./Composer.css"
+import isMobile from "is-mobile"
 import {TempoChangers} from "../SongUtils"
-const NumOfColumnsPerCanvas = 40
+const NumOfColumnsPerCanvas = 35
 const noteMargin = window.screen.availWidth < 800 ? 2 : 4
 const selectedColor = 0x1a968b//0x414a59
 const columnBackgrounds = [0x515c6f, 0x414a59]
@@ -20,7 +21,8 @@ class ComposerCanvas extends Component {
             column: {
                 width: calcMinColumnWidth(nearestEven(width)),
                 height: height
-            }
+            },
+            timelineHeight: isMobile() ? 20 : 30
         }
         this.cache = new ComposerCache(this.state.column.width,height).cache
         this.stageSelected = false
@@ -94,7 +96,7 @@ class ComposerCanvas extends Component {
         const { data, functions } = this.props
         let sizes = this.state.column
         let xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
-        let timeLineWidth = 30
+        let timelineHeight = this.state.timelineHeight
         let counter = 0
         let switcher = false
         let cache = this.cache
@@ -119,7 +121,7 @@ class ComposerCanvas extends Component {
                         counter++
                         if (!isVisible(i, data.selected)) return null
                         let standardBg = cache.standard[Number(switcher)] // boolean is 1 or 0
-                        let background = column.tempoChanger === 0 ? standardBg : TempoChangers[column.tempoChanger].color
+                        let background = column.tempoChanger === 0 ? standardBg : cache.columns[column.tempoChanger]
                         background = data.selected === i ? cache.standard[2] : background
                         return <Column
                         cache={cache}
@@ -137,14 +139,14 @@ class ComposerCanvas extends Component {
             </Stage>
             <Stage
                 width={s.width}
-                height={timeLineWidth}
+                height={timelineHeight}
             >
                 <Timeline
                     handleClick={this.handleClick}
                     handleSlide={this.handleSlide}
                     windowWidth={s.width}
                     xPos={xPos}
-                    height={timeLineWidth}
+                    height={timelineHeight}
                     totalWidth={sizes.width * data.columns.length}
                     breakPointsThreshold={16}
                     numOfColumns={data.columns.length}
@@ -185,7 +187,7 @@ function Timeline(props) {
     })
     return <Container
         width={windowWidth}
-        height={30}
+        height={height}
         interactive={true}
         pointertap={(e) => handleClick(e,"click")}
         pointerdown={(e) => handleClick(e,"down")}
@@ -213,8 +215,6 @@ function Timeline(props) {
 */
 function Column(props) {
     let { data, index, sizes, click ,cache,backgroundCache } = props
-    let noteHeight = sizes.height / 21 - (noteMargin * 2)
-    let noteWidth = sizes.width - (noteMargin * 2)
     return <Container
         pointertap={() => click(index)}
         interactive={true}
@@ -228,6 +228,7 @@ function Column(props) {
         </Sprite>
         {data.notes.map((note) => {
             return <Sprite
+            key={note.index}
             image={cache.notes[0]}
             x={noteMargin}
             y={positions[note.index] * sizes.height / 21}

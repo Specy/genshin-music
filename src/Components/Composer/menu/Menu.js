@@ -16,9 +16,6 @@ class Menu extends Component {
             }
         }
     }
-    changeSetting = () => {
-
-    }
     toggleMenu = (override) => {
         if (typeof override !== "boolean") override = undefined
         let newState = override !== undefined ? override : !this.state.open
@@ -126,7 +123,7 @@ class Menu extends Component {
                 <MenuPanel title="Settings" visible={selectedMenu}>
                         {Object.entries(data.settings).map(([key,data]) => {
                            return <SettingsRow
-                                key={key}
+                                key={key+data.value}
                                 objKey={key}
                                 data={data}
                                 update={handleSettingChange}
@@ -193,9 +190,10 @@ function SettingsRow(props){
         setter(value)
     }
     function sendChange(){
+        data.value = value
         let obj = {
             key: objKey,
-            value: value
+            data: data
         }
         update(obj)
     }

@@ -11,6 +11,8 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "hydux": "^0.5.11",
+    "hydux-pixi": "^0.1.1",
     "is-mobile": "^3.0.0",
     "pixi.js": "^6.0.2",
     "react": "^17.0.2",

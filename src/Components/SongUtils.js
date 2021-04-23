@@ -21,6 +21,7 @@ class Song {
     this.name = name
     this.version = 1
     this.notes = notes
+    this.bpm = 220
     this.data = {
       isComposed: false,
       isComposedVersion: false
@@ -86,20 +87,20 @@ let TempoChangers = [
     text: "1",
     changer: 1,
     color: 0x515c6f
-  },{
+  }, {
     id: 1,
     text: "1/2",
-    changer: 1/2,
+    changer: 1 / 2,
     color: 0x4d694e
-  },{
+  }, {
     id: 2,
     text: "1/4",
-    changer: 1/3,
+    changer: 1 / 3,
     color: 0x434c7d
-  },{
+  }, {
     id: 3,
     text: "1/8",
-    changer: 1/4,
+    changer: 1 / 4,
     color: 0x6f5168
   }
 ]
@@ -107,6 +108,7 @@ class ComposedSong {
   constructor(name, notes = [], data = {}) {
     data.isComposed = true
     data.isComposedVersion = true
+    this.version = 1
     this.data = data
     this.name = name
     this.bpm = 220
@@ -114,12 +116,62 @@ class ComposedSong {
     this.columns = []
     this.selected = 0
     new Array(100).fill().forEach((e) => {
-      this.columns.push(new Column())
+      let column = new Column()
+      column.tempoChanger = 0
+      this.columns.push(column)
     })
-    console.log(this.columns)
-    console.log("created new composed song")
   }
+}
 
+function ComposerSongSerialization(song) {
+  let obj = {}
+  obj.data = song.data
+  obj.name = song.name
+  obj.bpm = song.bpm
+  obj.columns = []
+  /*
+      notes = [tempoChanger,notes] ----> note = [index,layer]
+      tempoChanger = Number
+  */
+  song.columns.forEach(column => {
+    let columnArr = [column.tempoChanger]
+    let notes = column.notes.map(note => {
+      return [note.index, note.layer]
+    })
+    columnArr[1] = notes
+    obj.columns.push(columnArr)
+  })
+  return obj
+}
+function ComposerSongDeSerialization(song) {
+  let obj = {}
+  obj.data = song.data
+  obj.name = song.name
+  obj.bpm = song.bpm
+  obj.notes = []
+  obj.selected = 0
+  obj.columns = []
+  song.columns.forEach(column => {
+    let columnObj = new Column()
+    columnObj.tempoChanger = column[0]
+    column[1].forEach(note => {
+      columnObj.notes.push(new ColumnNote(note[0], note[1]))
+    })
+    obj.columns.push(columnObj)
+  })
+  return obj
+}
+function ComposerToRecording(song){
+  let recordedSong = new Song(song.name)
+  let bpmPerMs = Math.floor(60000 / song.bpm )
+  let totalTime = 100
+  song.columns.forEach(column => {
+    column[1].forEach(note => {
+      recordedSong.notes.push([note[0],totalTime])
+    })
+    totalTime += Math.floor(bpmPerMs * TempoChangers[column[0]].changer)
+  })
+  return recordedSong
 }
 class Column {
   constructor(color = 0x515c6f) {
@@ -152,5 +204,8 @@ export {
   ComposedSong,
   ColumnNote,
   Column,
-  TempoChangers
+  TempoChangers,
+  ComposerSongSerialization,
+  ComposerSongDeSerialization,
+  ComposerToRecording
 }

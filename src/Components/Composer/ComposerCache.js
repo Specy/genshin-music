@@ -35,6 +35,7 @@ class ComposerCache{
         this.generate()
     }
     generate = () => {
+        let roundNess = this.width < 20 ? 2: 4
         TempoChangers.forEach(tempoChanger => {
             let canvas = drawColumn(tempoChanger,this)
             this.cache.columns.push(canvas.toDataURL())
@@ -49,7 +50,7 @@ class ComposerCache{
             canvas.width = this.width - 8
             let ctx = canvas.getContext("2d")
             ctx.fillStyle = note.color
-            roundRect(ctx,0,0,canvas.width,canvas.height,4,true,false)
+            roundRect(ctx,0,0,canvas.width,canvas.height,roundNess,true,false)
 
 
             this.cache.notes.push(canvas.toDataURL())

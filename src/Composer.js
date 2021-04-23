@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
-import { ComposedSong, LoggerEvent, ColumnNote, Column,TempoChangers } from "./Components/SongUtils"
+import { ComposedSong, LoggerEvent, ColumnNote, Column,TempoChangers,ComposerSongSerialization,ComposerSongDeSerialization } from "./Components/SongUtils"
 import { faPlay, faPlus, faPause } from "@fortawesome/free-solid-svg-icons"
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
@@ -62,11 +62,19 @@ class Composer extends Component {
         localStorage.setItem("Composer_Settings",JSON.stringify(state))
     }
     handleSettingChange = (setting) => {
-        let state = this.state.settings
-        state[setting.key].value = setting.value
+        let settings = this.state.settings
+        let data = setting.data
+        settings[setting.key].value = data.value
+        if(data.songSetting){
+            this.state.song[setting.key] = data.value
+        }
         this.setState({
-            settings: this.state.settings
-        },() => this.updateSettings())
+            settings: settings,
+            song: this.state.song
+        },() => {
+            this.updateSettings()
+            if(data.songSetting) this.updateSong(this.state.song)
+        })
 
     }
     loadInstrument = async (name) => {
@@ -129,6 +137,12 @@ class Composer extends Component {
     }
     syncSongs = async () => {
         let songs = await this.dbCol.songs.find().toArray()
+        songs = songs.map(song =>{
+            if(song.data.isComposedVersion){
+                return  ComposerSongDeSerialization(song)
+            }
+            return song
+        })
         this.setState({
             composedSongs: songs,
             songs: songs
@@ -138,7 +152,7 @@ class Composer extends Component {
         if (await this.songExists(song.name)) {
             return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
         }
-        await this.dbCol.songs.insert(song)
+        await this.dbCol.songs.insert(ComposerSongSerialization(song))
         this.syncSongs()
     }
     updateSong = async (song) => {
@@ -151,7 +165,7 @@ class Composer extends Component {
         }
         return new Promise(async resolve => {
             if (await this.songExists(song.name)) {
-                await this.dbCol.songs.update({ name: song.name }, song)
+                await this.dbCol.songs.update({ name: song.name }, ComposerSongSerialization(song))
                 console.log("song saved:", song.name)
                 this.syncSongs()
             } else {
@@ -185,8 +199,9 @@ class Composer extends Component {
     songExists = async (name) => {
         return await this.dbCol.songs.findOne({ name: name }) !== undefined
     }
-    createNewSong = () => {
-        let name = prompt("Write song name:")
+    createNewSong = async () => {
+        let name = await this.askForSongName()
+        if(name === null) return
         let song = new ComposedSong(name)
         this.setState({
             song: song
@@ -200,8 +215,11 @@ class Composer extends Component {
         if (stateSong.notes.length > 0) {
             await this.updateSong(stateSong)
         }
+        let settings = this.state.settings
+        settings.bpm.value = song.bpm
         this.setState({
-            song: song
+            song: song,
+            settings: settings
         })
     }
     addColumns = (amount = 1, position = "end") => {
@@ -223,13 +241,14 @@ class Composer extends Component {
         this.setState({
             isPlaying: newState
         }, async () => {
+                this.selectColumn(this.state.song.selected)
                 while(this.state.isPlaying){
                     let state = this.state
                     const {song, settings} = state
-                    let tempoChanger = TempoChangers[song.columns[song.selected + 1]?.tempoChanger]
+                    let tempoChanger = TempoChangers[song.columns[song.selected]?.tempoChanger]
                     let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger?.changer) 
-                    this.handleTick()
                     await delayMs(msPerBPM)
+                    this.handleTick()
                 }
         })
 
@@ -241,6 +260,7 @@ class Composer extends Component {
             return this.togglePlay(false)
         }
         this.selectColumn(this.state.song.selected + 1)
+
     }
     handleTempoChanger = (changer) => {
         let song = this.state.song
@@ -300,7 +320,6 @@ class Composer extends Component {
             columns: song.columns,
             selected: song.selected
         }
-        let msPerBPM = Math.floor(60000 / this.state.settings.bpm.value)
         let scrollPosition = 0
         return <div className="app">
             <div className="rotate-screen">
@@ -349,9 +368,9 @@ class Composer extends Component {
                     {song.name}
                 </div>
                 <div>
-                    {formatMillis(this.state.song.selected * msPerBPM) + " "}
+                    {formatMillis(calculateLength(this.state.song,this.state.song.selected))}
                      /
-                    {" " + formatMillis(this.state.song.columns.length * msPerBPM)}
+                    {formatMillis(calculateLength(this.state.song,this.state.song.columns.length))}
                 </div>
             </div>
         </div>
@@ -362,7 +381,16 @@ function formatMillis(millis) {
     var seconds = ((millis % 60000) / 1000).toFixed(0);
     return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 }
-
+function calculateLength(song,end){
+    let columns = song.columns
+    let bpmPerMs = Math.floor(60000 / song.bpm)
+    let totalLength = 0
+    columns.forEach((column,i) =>{
+        if(i > end) return
+        totalLength += bpmPerMs * TempoChangers[column.tempoChanger].changer
+    })
+    return totalLength
+}
 function delayMs(ms) {
     return new Promise(resolve => {
         setTimeout(resolve,ms)

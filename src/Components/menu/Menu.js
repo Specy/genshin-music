@@ -17,9 +17,7 @@ class Menu extends Component {
             }
         }
     }
-    changeSetting = () => {
 
-    }
     toggleMenu = (override) => {
         if (typeof override !== "boolean") override = undefined
         let newState = override !== undefined ? override : !this.state.open

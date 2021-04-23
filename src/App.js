@@ -3,7 +3,7 @@ import './App.css';
 import Keyboard from "./Components/audio/Keyboard"
 import Menu from "./Components/menu/Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, PlayingSong } from "./Components/SongUtils"
+import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording } from "./Components/SongUtils"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
 import rotateImg from "./assets/icons/rotate.svg"
@@ -110,6 +110,10 @@ class App extends Component {
   }
   playSong = async (song) => {
     await this.stopSong()
+
+    if(song.data.isComposedVersion){
+      song = ComposerToRecording(song)
+    }
     let playingSong = {
       timestamp: new Date().getTime(),
       notes: song.notes

@@ -24,7 +24,7 @@
     border-width: 5px;
 }
 .song-info{
-    position: absolute;
+    position: fixed;
     bottom: 1rem;
     left: 6rem;
     color: white;
@@ -81,7 +81,7 @@
         gap: 0.2rem;
 }
 .tempo-changers-wrapper{
-    position: absolute;
+    position: fixed;
     right: 1rem;
     bottom: 1rem;
     flex-direction: column;
@@ -94,11 +94,17 @@
     border-radius: 0.2rem;
     border: none;
     color: white;
+    padding: 0.2rem;
     filter: brightness(1.1);
 }
 @media only screen and (max-width: 900px) {
     .note-composer{
         width: 5vw;
         height: 5vw;
+    }
+    .keyboard{
+        gap: 0.1rem;
+        grid-gap: 0.1rem;
+
     }
 }

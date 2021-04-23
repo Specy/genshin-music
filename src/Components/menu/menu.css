@@ -69,7 +69,7 @@
     padding: 1rem;
     display: flex;
     left: -30vw;
-    position: absolute;
+    position: fixed;
 }
 .menu-open{
     transform: scale(1);
