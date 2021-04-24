@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
-import { ComposedSong, LoggerEvent, ColumnNote, Column,TempoChangers,ComposerSongSerialization,ComposerSongDeSerialization } from "./Components/SongUtils"
+import { ComposedSong, LoggerEvent, ColumnNote, Column,TempoChangers,ComposerSongSerialization,ComposerSongDeSerialization, getPitchChanger} from "./Components/SongUtils"
 import { faPlay, faPlus, faPause } from "@fortawesome/free-solid-svg-icons"
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
@@ -27,6 +27,7 @@ class Composer extends Component {
             song: new ComposedSong("Untitled"),
             settings: settings
         }
+        this.hasChanges = true
         this.syncSongs()
         this.loadInstrument("lyre")
     }
@@ -67,6 +68,9 @@ class Composer extends Component {
         settings[setting.key].value = data.value
         if(data.songSetting){
             this.state.song[setting.key] = data.value
+        }
+        if(setting.key === "instrument"){
+            this.loadInstrument(data.value)
         }
         this.setState({
             settings: settings,
@@ -114,6 +118,7 @@ class Composer extends Component {
     playSound = (note) => {
         const source = this.state.audioContext.createBufferSource()
         source.buffer = note.buffer
+        source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
         source.connect(this.state.audioContext.destination)
         source.start(0)
 
@@ -133,6 +138,7 @@ class Composer extends Component {
         this.setState({
             instrument: this.state.instrument
         })
+        this.hasChanges = true
         this.playSound(note)
     }
     syncSongs = async () => {
@@ -167,6 +173,7 @@ class Composer extends Component {
             if (await this.songExists(song.name)) {
                 await this.dbCol.songs.update({ name: song.name }, ComposerSongSerialization(song))
                 console.log("song saved:", song.name)
+                this.hasChanges = false
                 this.syncSongs()
             } else {
                 console.log("song doesn't exist")
@@ -195,14 +202,26 @@ class Composer extends Component {
         })
 
     }
-
+    askForSongUpdate = () => {
+        return new Promise(resolve => {
+            let prompt = window.confirm(`You have unsaved changes to the song: ${this.state.song.name} do you want to save now?`)
+            resolve(prompt)
+        })
+    }
     songExists = async (name) => {
         return await this.dbCol.songs.findOne({ name: name }) !== undefined
     }
     createNewSong = async () => {
+        if(this.state.song.name !== "Untitled" && this.hasChanges){
+            let wantsToSave = this.askForSongUpdate()
+            if(wantsToSave){
+                await this.updateSong(this.state.song)
+            }
+        }
         let name = await this.askForSongName()
         if(name === null) return
         let song = new ComposedSong(name)
+        this.hasChanges = false
         this.setState({
             song: song
         }, () => this.addSong(song))
@@ -217,6 +236,8 @@ class Composer extends Component {
         }
         let settings = this.state.settings
         settings.bpm.value = song.bpm
+        settings.pitch.value = song.pitch
+        this.hasChanges = false
         this.setState({
             song: song,
             settings: settings
@@ -230,6 +251,7 @@ class Composer extends Component {
         } else {
             songColumns.splice(position, 0, ...columns);
         }
+        this.hasChanges = true
         this.setState({
             song: this.state.song
         })
@@ -265,6 +287,7 @@ class Composer extends Component {
     handleTempoChanger = (changer) => {
         let song = this.state.song
         song.columns[this.state.song.selected].tempoChanger = changer.id
+        this.hasChanges = true
         this.setState({
             song: song
         })
@@ -295,6 +318,7 @@ class Composer extends Component {
             songs: this.state.songs,
             currentSong: this.state.song,
             settings: this.state.settings,
+            hasChanges: this.hasChanges
         }
         let menuFunctions = {
             loadSong: this.loadSong,
@@ -318,7 +342,8 @@ class Composer extends Component {
         }
         let canvasData = {
             columns: song.columns,
-            selected: song.selected
+            selected: song.selected,
+            settings: this.state.settings
         }
         let scrollPosition = 0
         return <div className="app">

@@ -22,6 +22,7 @@ class Song {
     this.version = 1
     this.notes = notes
     this.bpm = 220
+    this.pitch = "C"
     this.data = {
       isComposed: false,
       isComposedVersion: false
@@ -112,6 +113,7 @@ class ComposedSong {
     this.data = data
     this.name = name
     this.bpm = 220
+    this.pitch = "C"
     this.notes = notes
     this.columns = []
     this.selected = 0
@@ -128,6 +130,7 @@ function ComposerSongSerialization(song) {
   obj.data = song.data
   obj.name = song.name
   obj.bpm = song.bpm
+  obj.pitch = song.pitch
   obj.columns = []
   /*
       notes = [tempoChanger,notes] ----> note = [index,layer]
@@ -148,6 +151,7 @@ function ComposerSongDeSerialization(song) {
   obj.data = song.data
   obj.name = song.name
   obj.bpm = song.bpm
+  obj.pitch = song.pitch
   obj.notes = []
   obj.selected = 0
   obj.columns = []
@@ -161,13 +165,13 @@ function ComposerSongDeSerialization(song) {
   })
   return obj
 }
-function ComposerToRecording(song){
+function ComposerToRecording(song) {
   let recordedSong = new Song(song.name)
-  let bpmPerMs = Math.floor(60000 / song.bpm )
+  let bpmPerMs = Math.floor(60000 / song.bpm)
   let totalTime = 100
   song.columns.forEach(column => {
     column[1].forEach(note => {
-      recordedSong.notes.push([note[0],totalTime])
+      recordedSong.notes.push([note[0], totalTime])
     })
     totalTime += Math.floor(bpmPerMs * TempoChangers[column[0]].changer)
   })
@@ -190,7 +194,12 @@ class ColumnNote {
     this.color = color
   }
 }
-
+function getPitchChanger(pitch) {
+  let pitchArr = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
+  let index = pitchArr.indexOf(pitch)
+  if(index < 0) index = 0
+  return Number( Math.pow(2, index / 12).toFixed(2))
+}
 function randomNum(min, max) {
   return Math.floor(Math.random() * max) + min
 }
@@ -207,5 +216,6 @@ export {
   TempoChangers,
   ComposerSongSerialization,
   ComposerSongDeSerialization,
-  ComposerToRecording
+  ComposerToRecording,
+  getPitchChanger
 }

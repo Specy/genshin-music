@@ -8,15 +8,14 @@ let notes = [
 
 ]
 let standards = [
-
     {
-        color: 0x515c6f
+        color: 0x515c6f //lighter
     },
     {
-        color: 0x414a59
+        color: 0x414a59 //darker
     },
     {
-        color: 0x1a968b
+        color: 0x1a968b //selected
     }
 ]
 class ComposerCache{
@@ -26,7 +25,9 @@ class ComposerCache{
         this.cache = {
             columns: [],
             notes: [],
-            standard: []
+            standard: [],
+            columnsLarger:[],
+            standardLarger: []
         }
         this.app = new PIXI.Application({
             width: width,
@@ -37,12 +38,16 @@ class ComposerCache{
     generate = () => {
         let roundNess = this.width < 20 ? 2: 4
         TempoChangers.forEach(tempoChanger => {
-            let canvas = drawColumn(tempoChanger,this)
+            let canvas = drawColumn(tempoChanger,this,1)
             this.cache.columns.push(canvas.toDataURL())
         })
         standards.forEach(standardColumn => {
-            let canvas = drawColumn(standardColumn,this)
+            let canvas = drawColumn(standardColumn,this,1)
             this.cache.standard.push(canvas.toDataURL())
+        })
+        standards.forEach(standardColumn => {
+            let canvas = drawColumn(standardColumn,this,2)
+            this.cache.standardLarger.push(canvas.toDataURL())
         })
         notes.forEach(note => {
             let canvas = document.createElement("canvas")
@@ -51,13 +56,15 @@ class ComposerCache{
             let ctx = canvas.getContext("2d")
             ctx.fillStyle = note.color
             roundRect(ctx,0,0,canvas.width,canvas.height,roundNess,true,false)
-
-
             this.cache.notes.push(canvas.toDataURL())
+        })
+        TempoChangers.forEach(tempoChanger => {
+            let canvas = drawColumn(tempoChanger,this,2)
+            this.cache.columnsLarger.push(canvas.toDataURL())
         })
     }
 }
-function drawColumn(tempoChanger,self){
+function drawColumn(tempoChanger,self,borderWidth=1){
     let canvas = document.createElement("canvas")
     canvas.height = self.height
     canvas.width = self.width
@@ -65,12 +72,11 @@ function drawColumn(tempoChanger,self){
     ctx.fillStyle = "#"+tempoChanger.color.toString(16)
     ctx.fillRect(0, 0, self.width, self.height)
     ctx.strokeStyle = "black"
-    ctx.lineWidth = 0.5
+    ctx.lineWidth = borderWidth
     ctx.beginPath()
     ctx.moveTo(self.width, 0)
     ctx.lineTo(self.width, self.height)
-    ctx.moveTo(0, 0)
-    ctx.lineTo(0, self.height)
+
     ctx.stroke()
     return canvas
 }

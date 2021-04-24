@@ -18,7 +18,7 @@ class Instrument{
                 keyboard: noteName,
                 mobile: this.mobileLayout[i]
             }
-            let url = `${window.location.origin}/assets/audio/${instrumentName}/${i}.mp3`
+            let url = `./assets/audio/${instrumentName}/${i}.mp3`
             let note = new NoteData(i,noteNames,url)
             this.layout.push(note)
             i++

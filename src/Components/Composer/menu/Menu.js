@@ -8,8 +8,8 @@ class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            open: false,
-            selectedMenu: "Songs",
+            open: true,
+            selectedMenu: "Settings",
             selectedSongType: "composed",
             settings: {
                 keyboardSize: 1,
@@ -46,10 +46,10 @@ class Menu extends Component {
         fileDownloader.download(json, song.name + ".json")
     }
     render() {
-        const {data, functions} = this.props
+        const { data, functions } = this.props
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
-        const { loadSong, removeSong, updateSong, changePage, handleSettingChange} = functions
+        const { loadSong, removeSong, updateSong, changePage, handleSettingChange } = functions
         let songFunctions = {
             loadSong: loadSong,
             removeSong: removeSong,
@@ -57,10 +57,12 @@ class Menu extends Component {
         }
         let songs = data.songs.filter(song => !song.data?.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
+        console.log(data.hasChanges)
+        let hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
         return <div className="menu-wrapper">
             <div className="menu">
                 <CloseMenu action={this.toggleMenu} />
-                <MenuItem type="Save" action={() => updateSong(data.currentSong)} className="margin-top-auto">
+                <MenuItem type="Save" action={() => updateSong(data.currentSong)} className={hasUnsaved}>
                     <FontAwesomeIcon icon={faSave} className="icon" />
                 </MenuItem>
                 <MenuItem type="Songs" action={this.selectSideMenu}>
@@ -83,16 +85,16 @@ class Menu extends Component {
                         </button>
                     </div>
                     <div className="tab-selector-wrapper">
-                        <button 
-                            className={this.state.selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector" }
+                        <button
+                            className={this.state.selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
                             onClick={() => this.changeSelectedSongType("recorded")}
                         >
                             Recorded
                         </button>
-                        <button 
-                             className={this.state.selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector" }
+                        <button
+                            className={this.state.selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector"}
                             onClick={() => this.changeSelectedSongType("composed")}
-                        >    
+                        >
                             Composed
                         </button>
                     </div>
@@ -121,16 +123,16 @@ class Menu extends Component {
 
                 </MenuPanel>
                 <MenuPanel title="Settings" visible={selectedMenu}>
-                        {Object.entries(data.settings).map(([key,data]) => {
-                           return <SettingsRow
-                                key={key+data.value}
-                                objKey={key}
-                                data={data}
-                                update={handleSettingChange}
-                           >
+                    {Object.entries(data.settings).map(([key, data]) => {
+                        return <SettingsRow
+                            key={key + data.value}
+                            objKey={key}
+                            data={data}
+                            update={handleSettingChange}
+                        >
 
-                           </SettingsRow>
-                        })}
+                        </SettingsRow>
+                    })}
                 </MenuPanel>
             </div>
         </div>
@@ -157,8 +159,8 @@ function CloseMenu(props) {
 }
 
 function SongRow(props) {
-    const {data, functions} = props
-    const {removeSong, toggleMenu, loadSong} = functions
+    const { data, functions } = props
+    const { removeSong, toggleMenu, loadSong } = functions
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             loadSong(data)
@@ -174,22 +176,32 @@ function SongRow(props) {
     </div>
 }
 
-function SettingsRow(props){
-    const {data, update, objKey } = props
-    const [value,setter] = useState(data.value)
-    function handleChange(e){
+function SettingsRow(props) {
+    const { data, update, objKey } = props
+    const [valueHook, setter] = useState(data.value)
+    function handleChange(e) {
         let el = e.target
         let value = el.value
-        if(data.type === "number"){
+        if (data.type === "number") {
             value = Number(value)
             e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
-            if(value < data.threshold[0] || value > data.threshold[1]){
+            if (value < data.threshold[0] || value > data.threshold[1] ) {
                 return
             }
         }
         setter(value)
     }
-    function sendChange(){
+    function sendChange() {
+        if(data.value === valueHook) return
+        data.value = valueHook
+        let obj = {
+            key: objKey,
+            data: data
+        }
+        update(obj)
+    }
+    function sendChangeSelect(e){
+        let value = e.target.value
         data.value = value
         let obj = {
             key: objKey,
@@ -197,17 +209,25 @@ function SettingsRow(props){
         }
         update(obj)
     }
-    if(objKey === "settingVesion") return null
+    if (objKey === "settingVesion") return null
     return <div className="settings-row">
         <div>
             {data.name}
         </div>
-        <input 
-            
-            value={value}
-            onChange={handleChange}
-            onBlur={sendChange}    
-        />
+        {data.type === "select"
+            ? <select value={data.value}
+                onChange={sendChangeSelect}
+            >
+                {data.options.map(e => {
+                    return <option value={e} key={e}>{e}</option>
+                })}
+            </select>
+            : <input
+                type={data.type}
+                value={valueHook}
+                onChange={handleChange}
+                onBlur={sendChange}
+            />}
     </div>
 }
 class MenuItem extends Component {

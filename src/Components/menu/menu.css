@@ -61,7 +61,7 @@
 }
 .side-menu{
     width: 30vw;
-    height: 100%;
+    height: 100vh;
     background-color: rgba(237, 229, 216,0.95);
     transform: scale(0.9);
     transition: all 0.3s;

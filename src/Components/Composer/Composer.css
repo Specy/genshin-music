@@ -59,16 +59,22 @@
     background-color: #d3bd8e;
     color: black;
     align-items: center;
+    margin-bottom: 0.4rem;
 }
 .settings-row div{
     display: flex;
     align-items: center;
 }
-.settings-row input{
+.not-saved{
+    background-color: #ac5d65 !important;
+}
+.settings-row :is(input,select){
     background-color: var(--primary);
     color: white;
     border: none;
     text-align: center;
+    width: fit-content;
+    width: 8rem;
     padding: 0.2rem;
     border-radius: 0.2rem;
 }

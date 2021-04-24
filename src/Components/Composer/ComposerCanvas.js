@@ -1,20 +1,20 @@
 import React, { Component } from 'react'
-import * as PIXI from "pixi.js"
 import { Stage, Container, Graphics, Sprite, ParticleContainer} from '@inlet/react-pixi';
 import { ComposerCache } from "./ComposerCache"
 import "./Composer.css"
 import isMobile from "is-mobile"
-import {TempoChangers} from "../SongUtils"
 const NumOfColumnsPerCanvas = 35
 const noteMargin = window.screen.availWidth < 800 ? 2 : 4
-const selectedColor = 0x1a968b//0x414a59
-const columnBackgrounds = [0x515c6f, 0x414a59]
-const noteBorder = window.screen.availWidth < 800 ? 2 : 3
 class ComposerCanvas extends Component {
     constructor(props) {
         super(props)
-        let width = nearestEven(window.screen.availWidth * 0.7)
-        let height = nearestEven(window.screen.availHeight * 0.45)
+        let width = nearestEven(window.screen.width * 0.7)
+        let height = nearestEven(window.screen.height * 0.45)
+
+        if(window.screen.width < window.screen.height){
+            width = nearestEven(window.screen.height * 0.7)
+            height = nearestEven(window.screen.width * 0.45)
+        }
         this.state = {
             width: width,
             height: height,
@@ -41,6 +41,7 @@ class ComposerCanvas extends Component {
     componentWillUnmount(){
         window.removeEventListener("pointerup",this.resetPointerDown)
     }
+
     handleClick = (e,type) => {
         let x = e.data.global.x
         if(type === "click"){
@@ -100,11 +101,14 @@ class ComposerCanvas extends Component {
         let counter = 0
         let switcher = false
         let cache = this.cache
+        let beatMarks = Number(data.settings.beatMarks.value)
+        let counterLimit = beatMarks === 0 ? 14 : beatMarks * 5 -1 
         return <div className="canvas-wrapper">
             <Stage
                 width={s.width}
                 height={s.height}
                 options={pixiOptions}
+                key={this.state.width}
             >
                 <Container
                     anchor={[0.5, 0.5]}
@@ -114,15 +118,17 @@ class ComposerCanvas extends Component {
                     pointermove = {(e) => this.handleStageSlide(e)}
                 >
                     {data.columns.map((column, i) => {
-                        if (counter > 15) {
+                        if (counter > counterLimit ) {
                             switcher = !switcher
                             counter = 0
                         }
                         counter++
                         if (!isVisible(i, data.selected)) return null
-                        let standardBg = cache.standard[Number(switcher)] // boolean is 1 or 0
-                        let background = column.tempoChanger === 0 ? standardBg : cache.columns[column.tempoChanger]
-                        background = data.selected === i ? cache.standard[2] : background
+                        let tempoChangersCache = (i + 1) % beatMarks === 0 ? cache.columnsLarger : cache.columns
+                        let standardCache = (i + 1) % beatMarks === 0 ? cache.standardLarger : cache.standard 
+                        let standardBg = standardCache[Number(switcher)] // boolean is 1 or 0
+                        let background = column.tempoChanger === 0 ? standardBg : tempoChangersCache[column.tempoChanger]
+                        background = data.selected === i ? standardCache[2] : background
                         return <Column
                         cache={cache}
                         key={i}
@@ -202,15 +208,6 @@ function Timeline(props) {
 }
 
 /*
-        {breakpoints.map(e => <Text 
-                                text={e.num}
-                                x={e.x}
-                                y={(height - textStyle.fontSize) / 2}
-                                style={textStyle}
-                            />
-        
-        )}
-
 
 */
 function Column(props) {
