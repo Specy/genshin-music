@@ -1,4 +1,3 @@
-import { faTintSlash } from "@fortawesome/free-solid-svg-icons"
 
 class Recording {
   constructor() {
@@ -115,6 +114,7 @@ class ComposedSong {
     this.bpm = 220
     this.pitch = "C"
     this.notes = notes
+    this.breakpoints = [10,33,45,60,80]
     this.columns = []
     this.selected = 0
     new Array(100).fill().forEach((e) => {
@@ -131,6 +131,7 @@ function ComposerSongSerialization(song) {
   obj.name = song.name
   obj.bpm = song.bpm
   obj.pitch = song.pitch
+  obj.breakpoints = song.breakpoints
   obj.columns = []
   /*
       notes = [tempoChanger,notes] ----> note = [index,layer]
@@ -152,6 +153,7 @@ function ComposerSongDeSerialization(song) {
   obj.name = song.name
   obj.bpm = song.bpm
   obj.pitch = song.pitch
+  obj.breakpoints = song.breakpoints
   obj.notes = []
   obj.selected = 0
   obj.columns = []

@@ -16,7 +16,9 @@ class ComposerNote extends Component{
         let noteText = isMobile() ? data.noteNames.mobile : data.noteNames.keyboard
         return <button onPointerDown={() => this.props.clickAction(data)} className="button-hitbox">
             <div className={className} >
-                <img src={`${window.location.origin}/assets/icons/keys/${data.noteNames.mobile}.svg`}>
+                <img 
+                    alt={data.noteNames.mobile}
+                    src={`${window.location.origin}/assets/icons/keys/${data.noteNames.mobile}.svg`}>
 
                 </img>
                 <div className="note-name">

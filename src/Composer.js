@@ -27,7 +27,7 @@ class Composer extends Component {
             song: new ComposedSong("Untitled"),
             settings: settings
         }
-        this.hasChanges = true
+        this.hasChanges = false
         this.syncSongs()
         this.loadInstrument("lyre")
     }
@@ -38,7 +38,7 @@ class Composer extends Component {
         window.removeEventListener('keydown', this.handleKeyboard)
     }
     getSettings = () => {
-        let storedSettings = localStorage.getItem("Composer_Settings")
+        let storedSettings = localStorage.getItem("Genshin_Composer_Settings")
         try{
             storedSettings = JSON.parse(storedSettings)
         }catch (e){
@@ -60,7 +60,7 @@ class Composer extends Component {
         }else{
             state = this.state.settings
         }
-        localStorage.setItem("Composer_Settings",JSON.stringify(state))
+        localStorage.setItem("Genshin_Composer_Settings",JSON.stringify(state))
     }
     handleSettingChange = (setting) => {
         let settings = this.state.settings
@@ -79,7 +79,6 @@ class Composer extends Component {
             this.updateSettings()
             if(data.songSetting) this.updateSong(this.state.song)
         })
-
     }
     loadInstrument = async (name) => {
         let newInstrument = new Instrument(name)
@@ -104,14 +103,26 @@ class Composer extends Component {
     }
     handleKeyboard = (event) => {
         let letter = event.key.toUpperCase()
-        let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
-        if (note !== undefined) {
-            this.handleClick(note)
-        }
+        /*
+            let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
+            if (note !== undefined) {
+                this.handleClick(note)
+            }
+        */
         switch (letter) {
-            case "ARROWRIGHT": this.selectColumn(this.state.song.selected + 1)
+            case "D": this.selectColumn(this.state.song.selected + 1)
                 break;
-            case "ARROWLEFT": this.selectColumn(this.state.song.selected - 1)
+            case "A": this.selectColumn(this.state.song.selected - 1)
+                break;
+            case "1": this.handleTempoChanger(TempoChangers[0])
+                break;
+            case "2": this.handleTempoChanger(TempoChangers[1])
+                break;
+            case "3": this.handleTempoChanger(TempoChangers[2])
+                break;
+            case "4": this.handleTempoChanger(TempoChangers[3])
+                break;
+            case "": 
                 break;
         }
     }
@@ -335,7 +346,8 @@ class Composer extends Component {
         let keyboardData = {
             keyboard: this.state.instrument,
             currentColumn: this.state.song.columns[this.state.song.selected],
-            TempoChangers: TempoChangers
+            TempoChangers: TempoChangers,
+
         }
         let canvasFunctions = {
             selectColumn: this.selectColumn
@@ -343,7 +355,8 @@ class Composer extends Component {
         let canvasData = {
             columns: song.columns,
             selected: song.selected,
-            settings: this.state.settings
+            settings: this.state.settings,
+            breakpoints: this.state.song.breakpoints
         }
         let scrollPosition = 0
         return <div className="app">

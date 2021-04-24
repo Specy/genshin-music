@@ -6,22 +6,6 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./App.css"
 
 
-function Page() {
-  const [selectedPage, changePage] = useState("Composer")
-  return getPage(selectedPage, changePage)
-}
-
-function getPage(name, changePage) {
-  let page
-  switch (name) {
-    case "App": page = <App changePage={changePage} />
-      break;
-    case "Composer": page = <Composer changePage={changePage} />
-      break;
-    default: page = <App changePage={changePage} />
-  }
-  return page
-}
 class Index extends Component {
   constructor(props) {
     super(props)
@@ -31,11 +15,17 @@ class Index extends Component {
         visible: false,
         text: "Text",
         title: "Title"
-      }
+      },
+      selectedPage: "Composer"
     }
   }
   componentDidMount() {
     window.addEventListener('logEvent', this.logEvent);
+  }
+  changePage = (page) => {
+    this.setState({
+      selectedPage: page
+    })
   }
   componentWillUnmount() {
     window.removeEventListener('logEvent', this.logEvent);
@@ -77,7 +67,8 @@ class Index extends Component {
           {floatingMessage.text}
         </div>
       </div>
-      <Page />
+      {this.state.selectedPage === "App" ?<App changePage={this.changePage} /> : <></>}
+      {this.state.selectedPage === "Composer" ?<Composer changePage={this.changePage}/> : <></>}
     </div>
   }
 }

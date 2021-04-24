@@ -1,3 +1,7 @@
+:root{
+    --composer-tool: #d3bd8e;
+}
+
 .canvas-wrapper{
     background-color: #495466;
     gap: 0.2rem;
@@ -44,7 +48,7 @@
     align-items: center;
     padding: 0.3rem;
     border-radius: 0.3rem;
-    color: #d3bd8e;
+    color: var(--composer-tool);
     background-color: var(--primary);
     cursor: pointer;
 }
@@ -56,7 +60,7 @@
     justify-content: space-between;
     padding: 0.3rem;
     border-radius: 0.2rem;
-    background-color: #d3bd8e;
+    background-color: var(--composer-tool);
     color: black;
     align-items: center;
     margin-bottom: 0.4rem;
@@ -67,6 +71,28 @@
 }
 .not-saved{
     background-color: #ac5d65 !important;
+}
+.timeline-wrapper{
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    align-items: center;
+}
+.timeline-wrapper :first-child {
+    margin:  0.2rem 0;
+}
+.timeline-button{
+    height: 100%;
+    width: 100%;
+    margin: 0.2rem;
+    padding: 0 0.5rem;
+    background-color: rgb(81, 92, 111);
+    color: var(--composer-tool);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.2rem;
+    cursor: pointer;
 }
 .settings-row :is(input,select){
     background-color: var(--primary);

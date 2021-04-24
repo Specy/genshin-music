@@ -1,5 +1,5 @@
 let ComposerSettings = {
-    settingVesion: Math.floor(Math.random() * 10),
+    settingVesion: 1,
     bpm: {
         name: "Bpm",
         type: "number",
@@ -48,7 +48,46 @@ let ComposerSettings = {
         ]
     },
 }
-
+let MainPageSettings = {
+    settingVesion : 0,
+    keyboardSize: {
+        name: "Keyboard size",
+        type: "number",
+        songSetting: false,
+        value: 100,
+        threshold: [50, 200]
+    },
+    instrument: {
+        name: "Instrument",
+        type: "select",
+        songSetting: false,
+        value: 0,
+        options: [
+            "lyre"
+        ]
+    },
+    pitch: {
+        name: "Pitch",
+        type: "select",
+        songSetting: true,
+        value: "C",
+        options: [
+            "C",
+            "Db",
+            "D",
+            "Eb",
+            "E",
+            "F",
+            "Gb",
+            "G",
+            "Ab",
+            "A",
+            "Bb",
+            "B",
+        ]
+    },
+}
 export {
-    ComposerSettings
+    ComposerSettings,
+    MainPageSettings
 }

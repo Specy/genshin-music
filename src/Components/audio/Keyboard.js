@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import "./Keyboard.css"
+import {getPitchChanger} from "../SongUtils"
 import Instrument from "./Instrument"
 import Note from "./Note"
 class Keyboard extends Component {
@@ -30,7 +31,7 @@ class Keyboard extends Component {
         window.addEventListener("practiceSong", this.handlePracticeEvent)
     }
     componentWillUnmount() {
-        window.removeEventListener('click', this.handleKeyboard);
+        window.removeEventListener('keydown', this.handleKeyboard);
         window.removeEventListener("playSong", this.handlePlayEvent)
         window.removeEventListener("practiceSong", this.handlePracticeEvent)
     }
@@ -62,14 +63,19 @@ class Keyboard extends Component {
         notes.splice(0,song.start)
         let chunks = []
         for (let i = 0; notes.length > 0; i++) {
-            let chunk = [notes.shift()]
+            let chunk = {
+                notes: [notes.shift()],
+                delay: 0
+            }
+            let startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
             for (let j = 0; j < notes.length && j < 20; j++) {
-                let difference = notes[j][1] - chunk[0][1] - 100
+                let difference = notes[j][1] - chunk.notes[0][1] - song.threshold
                 if (difference < 0) {
-                    chunk.push(notes.shift())
+                    chunk.notes.push(notes.shift())
                     j--
                 }
             }
+            chunk.delay = notes.length > 0 ? notes[0][1] - startTime : 0
             chunks.push(chunk)
         }
         this.setState({
@@ -114,10 +120,10 @@ class Keyboard extends Component {
     handleClick = (note) => {
         let practiceSong = this.state.songToPractice
         if(practiceSong.length > 0){
-            let indexClicked = practiceSong[0]?.findIndex(e => e[0] === note.index)
+            let indexClicked = practiceSong[0]?.notes.findIndex(e => e[0] === note.index)
             if(indexClicked !== -1){
-                practiceSong[0].splice(indexClicked,1)
-                if(practiceSong[0].length === 0) practiceSong.shift()
+                practiceSong[0].notes.splice(indexClicked,1)
+                if(practiceSong[0].notes.length === 0) practiceSong.shift()
                 if(practiceSong.length === 0) this.props.functions.stopSong()
                 this.setState({
                     songToPractice: practiceSong
@@ -138,6 +144,7 @@ class Keyboard extends Component {
             })
         }, 200)
         const source = this.state.audioContext.createBufferSource()
+        source.playbackRate.value = getPitchChanger(this.props.settings.pitch.value)
         source.buffer = note.buffer
         source.connect(this.state.audioContext.destination)
         source.start(0)
@@ -158,13 +165,16 @@ class Keyboard extends Component {
     }
     render() {
         let state = this.state
-        return <div className="keyboard">
+        let size = this.props.settings.keyboardSize.value / 100
+        return <div className="keyboard" style={{transform: `scale(${size})`}}>
             {state.instrument.layout.map(note => {
-                let toBeClicked = state.songToPractice[0]?.find(e => e[0] === note.index) !== undefined
-                let toBeClickedNext = state.songToPractice[1]?.find(e => e[0] === note.index) !== undefined
+                let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined
+                let toBeClickedNext = state.songToPractice[1]?.notes.find(e => e[0] === note.index) !== undefined
+                let fadeTime = state.songToPractice[0]?.delay !== undefined ? state.songToPractice[0]?.delay / 1000 : 0.1
                 return <Note
                     key={note.index}
                     toBeClicked={toBeClicked}
+                    fadeTime={fadeTime}
                     toBeClickedNext={toBeClickedNext}
                     data={note}
                     clickAction={this.handleClick}

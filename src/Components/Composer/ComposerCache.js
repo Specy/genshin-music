@@ -7,6 +7,7 @@ let notes = [
     }
 
 ]
+let horizontalLineBreak = 7
 let standards = [
     {
         color: 0x515c6f //lighter
@@ -18,8 +19,18 @@ let standards = [
         color: 0x1a968b //selected
     }
 ]
+let breakpoints = [
+    {
+        type: "short",
+        color: "#c44350"
+    },
+    {
+        type: "long",
+        color: "#c44350"
+    }
+]
 class ComposerCache{
-    constructor(width,height){
+    constructor(width,height,margin=4,timelineHeight = 30){
         this.width = width
         this.height = height
         this.cache = {
@@ -27,8 +38,13 @@ class ComposerCache{
             notes: [],
             standard: [],
             columnsLarger:[],
-            standardLarger: []
+            standardLarger: [],
+            breakpoints: []
         }
+        this.timelineHeight = timelineHeight
+        this.margin = margin
+        this.noteWidth = this.width
+        this.noteHeight = this.height / 21
         this.app = new PIXI.Application({
             width: width,
             height:height,
@@ -51,32 +67,72 @@ class ComposerCache{
         })
         notes.forEach(note => {
             let canvas = document.createElement("canvas")
-            canvas.height = this.height / 21 - 2
-            canvas.width = this.width - 8
+            canvas.height = this.noteHeight
+            canvas.width = this.noteWidth
             let ctx = canvas.getContext("2d")
             ctx.fillStyle = note.color
-            roundRect(ctx,0,0,canvas.width,canvas.height,roundNess,true,false)
+            roundRect(
+                ctx,
+                this.margin / 2,
+                this.margin / 2,
+                this.noteWidth - this.margin - 1,
+                this.noteHeight - this.margin - 1,
+                roundNess,
+                true,
+                false
+            )
             this.cache.notes.push(canvas.toDataURL())
         })
         TempoChangers.forEach(tempoChanger => {
             let canvas = drawColumn(tempoChanger,this,2)
             this.cache.columnsLarger.push(canvas.toDataURL())
         })
+        breakpoints.forEach(breakpoint => {
+            let canvas = document.createElement("canvas")
+            if(breakpoint.type === "short"){
+                let size = this.timelineHeight / 6
+                canvas.height = this.timelineHeight
+                canvas.width = size * 2
+                let ctx = canvas.getContext("2d")
+                ctx.fillStyle = breakpoint.color
+                ctx.arc(size, this.timelineHeight / 2, size, 0, 2 * Math.PI);
+                ctx.fill()
+                this.cache.breakpoints.push(canvas.toDataURL())
+            }else{
+                canvas.height = this.height
+                canvas.width = this.width
+                let size = this.width / 4
+                let ctx = canvas.getContext("2d")
+                ctx.fillStyle = breakpoint.color
+                let x = this.width / 2 - this.margin / 4
+                ctx.arc(x, 0, size, 0, 2 * Math.PI);
+                ctx.arc(x, this.height, size, 0, 2 * Math.PI);
+                ctx.fill()
+                this.cache.breakpoints.push(canvas.toDataURL())
+            }
+        })
     }
 }
-function drawColumn(tempoChanger,self,borderWidth=1){
+function drawColumn(tempoChanger,self,borderWidth){
     let canvas = document.createElement("canvas")
     canvas.height = self.height
     canvas.width = self.width
     let ctx = canvas.getContext("2d")
     ctx.fillStyle = "#"+tempoChanger.color.toString(16)
     ctx.fillRect(0, 0, self.width, self.height)
-    ctx.strokeStyle = "black"
-    ctx.lineWidth = borderWidth
+    ctx.strokeStyle = borderWidth === 2 ? "black" : "#333333"
+    ctx.lineWidth = borderWidth 
     ctx.beginPath()
     ctx.moveTo(self.width, 0)
     ctx.lineTo(self.width, self.height)
-
+    ctx.stroke()
+    ctx.strokeStyle = "#333333"
+    for(let i = 1; i<3;i++){
+        ctx.lineWidth = 1
+        let y = self.noteHeight * horizontalLineBreak * i
+        ctx.moveTo(0,y)
+        ctx.lineTo(self.width,y)
+    }
     ctx.stroke()
     return canvas
 }

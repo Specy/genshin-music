@@ -1,10 +1,11 @@
 import React, { Component } from 'react'
-import { Stage, Container, Graphics, Sprite, ParticleContainer} from '@inlet/react-pixi';
+import { Stage, Container, Graphics, Sprite} from '@inlet/react-pixi';
 import { ComposerCache } from "./ComposerCache"
+import { faStepBackward, faStepForward, faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import "./Composer.css"
 import isMobile from "is-mobile"
 const NumOfColumnsPerCanvas = 35
-const noteMargin = window.screen.availWidth < 800 ? 2 : 4
 class ComposerCanvas extends Component {
     constructor(props) {
         super(props)
@@ -22,9 +23,11 @@ class ComposerCanvas extends Component {
                 width: calcMinColumnWidth(nearestEven(width)),
                 height: height
             },
-            timelineHeight: isMobile() ? 20 : 30
+            timelineHeight: isMobile() ? 20 : 30,
+            currentBreakpoint: -1
         }
-        this.cache = new ComposerCache(this.state.column.width,height).cache
+        let margin = isMobile() ? 2 : 4
+        this.cache = new ComposerCache(this.state.column.width,height,margin,this.state.timelineHeight).cache
         this.stageSelected = false
         this.sliderSelected = false
         this.stagePreviousPositon = 0
@@ -76,6 +79,23 @@ class ComposerCanvas extends Component {
             this.props.functions.selectColumn(this.props.data.selected + toAdd * amount,true)
         }
     }
+    handleBreakpoints = (direction) => {
+        let selectedColumn = this.props.data.selected
+        let columns = this.props.data.columns
+        let breakpoint
+        let breakpoints = this.props.data.breakpoints
+        if(direction === 1){//right
+            breakpoint = breakpoints.filter((v) => v > selectedColumn).sort((a, b) => a - b)
+        }else{
+            breakpoint = breakpoints.filter((v) => v < selectedColumn).sort((a, b) => b - a)
+        }
+        if(breakpoint.length >= 0){
+            if(columns.length >= breakpoint[0] && breakpoint[0] >= 0){
+                this.props.functions.selectColumn(breakpoint[0])
+            }
+        }
+
+        }
     handleSlide = (e) => {
         if(this.sliderSelected){
             this.throttleStage++
@@ -130,88 +150,103 @@ class ComposerCanvas extends Component {
                         let background = column.tempoChanger === 0 ? standardBg : tempoChangersCache[column.tempoChanger]
                         background = data.selected === i ? standardCache[2] : background
                         return <Column
-                        cache={cache}
-                        key={i}
-                        data={column}
-                        index={i}
-                        sizes={sizes}
-                        backgroundCache={background}
-                        click={functions.selectColumn}
-                        isSelected={i === data.selected}
-                    />
+                            cache={cache}
+                            key={i}
+                            data={column}
+                            index={i}
+                            sizes={sizes}
+                            backgroundCache={background}
+                            click={functions.selectColumn}
+                            isSelected={i === data.selected}
+                            isBreakpoint={this.props.data.breakpoints.includes(i)}
+                        />
 
                     })}
                 </Container>
             </Stage>
-            <Stage
-                width={s.width}
-                height={timelineHeight}
-            >
-                <Timeline
-                    handleClick={this.handleClick}
-                    handleSlide={this.handleSlide}
-                    windowWidth={s.width}
-                    xPos={xPos}
+            <div className="timeline-wrapper">
+                <div className="timeline-button" onClick={() => this.handleBreakpoints(-1)}>
+                    <FontAwesomeIcon icon={faStepBackward} />
+                </div>
+                <div className="timeline-button" onClick={() => this.handleBreakpoints(1)}>
+                    <FontAwesomeIcon icon={faStepForward} />
+                </div>
+                
+                
+                <Stage
+                    width={s.width}
                     height={timelineHeight}
-                    totalWidth={sizes.width * data.columns.length}
-                    breakPointsThreshold={16}
-                    numOfColumns={data.columns.length}
+                    options={{backgroundColor:0x515c6f,antialias: true}}
                 >
 
-                </Timeline>
-            </Stage>
+                    <Timeline
+                        handleClick={this.handleClick}
+                        handleSlide={this.handleSlide}
+                        selected={data.selected}
+                        windowWidth={s.width}
+                        height={timelineHeight}
+                        cache={this.cache}
+                        breakpoints={this.props.data.breakpoints}
+                        numOfColumns={data.columns.length}
+                    >
+
+                    </Timeline>
+                </Stage>
+            </div>
         </div>
     }
 }
 
 
 
-//Thanks Rubikium
 function Timeline(props) {
-    const { windowWidth, xPos, totalWidth, height,
-         numOfColumns, breakPointsThreshold, handleClick, handleSlide} = props
-    let stageSize = Math.floor(windowWidth / (totalWidth / windowWidth))
+    const { windowWidth, height,
+         numOfColumns, handleClick, handleSlide, breakpoints, cache, selected} = props
+    let relativeColumnWidth = windowWidth / numOfColumns
+    let stageSize = Math.floor(relativeColumnWidth * NumOfColumnsPerCanvas) 
     if (stageSize > windowWidth) stageSize = windowWidth
-    let stagePos = ((- xPos + windowWidth / 2) / totalWidth) * (windowWidth - stageSize) + 1
+    let stagePos =  relativeColumnWidth * selected - NumOfColumnsPerCanvas / 2 * relativeColumnWidth
     function drawStage(g) {
         g.clear()
         g.lineStyle(3, 0x1a968b, 0.8)
-        g.drawRoundedRect(stagePos, 2, stageSize - 2, height - 4, 6)
+        g.drawRoundedRect(0, 0, stageSize - 2, height - 4, 6)
     }
-
-    function drawBg(g) {
-        g.beginFill(0x515c6f, 1)
-        g.drawRect(0, 0, windowWidth, height)
-    }
-    let numOfBreakpoints = Math.floor(numOfColumns / breakPointsThreshold)
-    let sections = windowWidth / numOfBreakpoints
-    let breakpoints = new Array(numOfBreakpoints).fill().map((e, i) => {
-        return {
-            x: sections * i,
-            num: i
-        }
-    })
-    return <Container
-        width={windowWidth}
-        height={height}
-        interactive={true}
-        pointertap={(e) => handleClick(e,"click")}
-        pointerdown={(e) => handleClick(e,"down")}
-        pointerup={(e) => handleClick(e,"up")}
-        pointermove={handleSlide}
-    >
-        <Graphics draw={drawBg} />
+    //for whatever reason this doesn't register clicks anymore, i think it has to do with the shard
+    //TODO move this outside of the function so that it doesn't have the shard anymore and it's allowed to overflow
+    return <>
+        <Container
+            width={windowWidth}
+            height={height}
+            interactive={true}
+            zIndex={999}
+            click={() => console.log("a")}
+            pointertap={(e) => handleClick(e,"click")}
+            pointerdown={(e) => handleClick(e,"down")}
+            pointerup={(e) => handleClick(e,"up")}
+            pointermove={handleSlide}
+        >
 
 
-        <Graphics draw={drawStage} />
-    </Container>
+        </Container>
+        {breakpoints.map(breakpoint => {
+                return <Sprite
+                    image={cache.breakpoints[0]}
+                    x={relativeColumnWidth * breakpoint}
+
+                >
+
+                </Sprite>
+            })}
+        <Graphics draw={drawStage} x={stagePos} y={2}/>
+
+    </>
 }
 
 /*
 
 */
 function Column(props) {
-    let { data, index, sizes, click ,cache,backgroundCache } = props
+    let { data, index, sizes, click ,cache,backgroundCache , isBreakpoint} = props
     return <Container
         pointertap={() => click(index)}
         interactive={true}
@@ -227,12 +262,16 @@ function Column(props) {
             return <Sprite
             key={note.index}
             image={cache.notes[0]}
-            x={noteMargin}
             y={positions[note.index] * sizes.height / 21}
             >
 
             </Sprite>
         })}
+        {isBreakpoint ? <Sprite
+            image={cache.breakpoints[1]}
+        >
+
+        </Sprite> : null}
     </Container>
 }
 

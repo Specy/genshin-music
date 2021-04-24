@@ -1,6 +1,6 @@
 import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSave, faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
+import { faSave, faMusic, faTimes, faCog, faTrash, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
 import "../../menu/menu.css"
 
 import { FileDownloader, LoggerEvent } from "../../SongUtils"
@@ -8,12 +8,9 @@ class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            open: true,
+            open: false,
             selectedMenu: "Settings",
             selectedSongType: "composed",
-            settings: {
-                keyboardSize: 1,
-            }
         }
     }
     toggleMenu = (override) => {
@@ -57,7 +54,6 @@ class Menu extends Component {
         }
         let songs = data.songs.filter(song => !song.data?.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
-        console.log(data.hasChanges)
         let hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
         return <div className="menu-wrapper">
             <div className="menu">

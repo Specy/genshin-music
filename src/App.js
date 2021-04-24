@@ -3,7 +3,8 @@ import './App.css';
 import Keyboard from "./Components/audio/Keyboard"
 import Menu from "./Components/menu/Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording } from "./Components/SongUtils"
+import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording} from "./Components/SongUtils"
+import {MainPageSettings} from "./Components/Composer/SettingsObj"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
 import rotateImg from "./assets/icons/rotate.svg"
@@ -24,12 +25,13 @@ class App extends Component {
         },
         practicingSong: {
           timestamp: 0,
-          notes: []
+          notes: [],
+          threshold: 100
         }
       },
       isRecording: false,
       songs: [],
-
+      settings: this.getSettings(),
       sliderState: {
         position: 0,
         size: 0
@@ -38,7 +40,42 @@ class App extends Component {
     }
     this.syncSongs()
   }
-
+  getSettings = () => {
+    let storedSettings = localStorage.getItem("Genshin_Main_Settings")
+    try{
+        storedSettings = JSON.parse(storedSettings)
+    }catch (e){
+        storedSettings = null
+    }
+    if(storedSettings !== null){
+        if(storedSettings.settingVesion !== MainPageSettings.settingVesion){
+            this.updateSettings(MainPageSettings)
+            return MainPageSettings
+        }
+        return storedSettings
+    }
+    return MainPageSettings
+}
+updateSettings = (override) => {
+    let state
+    if(override !== undefined){
+        state = override
+    }else{
+        state = this.state.settings
+    }
+    localStorage.setItem("Genshin_Main_Settings",JSON.stringify(state))
+}
+handleSettingChange = (setting) => {
+    let settings = this.state.settings
+    let data = setting.data
+    settings[setting.key].value = data.value
+    if(setting.key === "instrument"){
+        this.loadInstrument(data.value)
+    }
+    this.setState({
+        settings: settings,
+    },this.updateSettings)
+}
   syncSongs = async () => {
     let songs = await this.dbCol.songs.find().toArray()
     this.setState({
@@ -48,6 +85,10 @@ class App extends Component {
   practiceSong = async (song, start = 0) => {
     await this.stopSong()
     let oldState = this.state.keyboardData.practicingSong
+    if(song.data.isComposedVersion){
+      song = ComposerToRecording(song)
+      oldState.threshold = 10
+    }
     oldState.notes = song.notes
     oldState.timestamp = new Date().getTime()
     let songToPractice = JSON.parse(JSON.stringify(this.state.keyboardData.practicingSong))
@@ -172,10 +213,12 @@ class App extends Component {
       playSong: this.playSong,
       practiceSong: this.practiceSong,
       stopSong: this.stopSong,
-      changePage: this.props.changePage
+      changePage: this.props.changePage,
+      handleSettingChange: this.handleSettingChange
     }
     let menuData = {
-      songs: state.songs
+      songs: state.songs,
+      settings: this.state.settings
     }
     
     return <div className="app">
@@ -215,6 +258,7 @@ class App extends Component {
 
           <Keyboard
             data={state.keyboardData}
+            settings={this.state.settings}
             functions={keyboardFunctions}
             isRecording={state.isRecording}
           />

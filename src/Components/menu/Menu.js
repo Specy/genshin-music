@@ -1,7 +1,8 @@
-import React, { Component } from 'react'
+import React, { Component , useState} from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
 import "./menu.css"
+
 import {FileDownloader, LoggerEvent} from "../SongUtils"
 import {FilePicker} from "react-file-picker"
 class Menu extends Component {
@@ -11,10 +12,7 @@ class Menu extends Component {
             open: false,
             selectedMenu: "Songs",
             selectedSongType: "recorded",
-            settings:{
-                keyboardSize: 1,
 
-            }
         }
     }
 
@@ -65,8 +63,8 @@ class Menu extends Component {
     render() {
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
-        let data = this.props.data
-        let functions = this.props.functions
+        const { data, functions} = this.props
+        const { handleSettingChange } = functions
         functions.toggleMenu = this.toggleMenu
         functions.downloadSong = this.downloadSong
         let changePage = this.props.functions.changePage
@@ -137,7 +135,16 @@ class Menu extends Component {
 
                 </MenuPanel>
                 <MenuPanel title="Settings" visible={selectedMenu}>
+                    {Object.entries(data.settings).map(([key, data]) => {
+                            return <SettingsRow
+                                key={key + data.value}
+                                objKey={key}
+                                data={data}
+                                update={handleSettingChange}
+                            >
 
+                            </SettingsRow>
+                        })}
                 </MenuPanel>
             </div>
         </div>
@@ -162,7 +169,60 @@ function CloseMenu(props) {
         <FontAwesomeIcon icon={faTimes} className="icon" />
     </div>
 }
-
+function SettingsRow(props) {
+    const { data, update, objKey } = props
+    const [valueHook, setter] = useState(data.value)
+    function handleChange(e) {
+        let el = e.target
+        let value = el.value
+        if (data.type === "number") {
+            value = Number(value)
+            e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
+            if (value < data.threshold[0] || value > data.threshold[1] ) {
+                return
+            }
+        }
+        setter(value)
+    }
+    function sendChange() {
+        if(data.value === valueHook) return
+        data.value = valueHook
+        let obj = {
+            key: objKey,
+            data: data
+        }
+        update(obj)
+    }
+    function sendChangeSelect(e){
+        let value = e.target.value
+        data.value = value
+        let obj = {
+            key: objKey,
+            data: data
+        }
+        update(obj)
+    }
+    if (objKey === "settingVesion") return null
+    return <div className="settings-row">
+        <div>
+            {data.name}
+        </div>
+        {data.type === "select"
+            ? <select value={data.value}
+                onChange={sendChangeSelect}
+            >
+                {data.options.map(e => {
+                    return <option value={e} key={e}>{e}</option>
+                })}
+            </select>
+            : <input
+                type={data.type}
+                value={valueHook}
+                onChange={handleChange}
+                onBlur={sendChange}
+            />}
+    </div>
+}
 function SongRow(props) {
     let data = props.data
     let deleteSong = props.functions.removeSong
