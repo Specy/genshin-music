@@ -151,9 +151,9 @@ function ComposerSongDeSerialization(song) {
   let obj = {}
   obj.data = song.data
   obj.name = song.name
-  obj.bpm = song.bpm
-  obj.pitch = song.pitch
-  obj.breakpoints = song.breakpoints
+  obj.bpm = song.bpm ?? 220
+  obj.pitch = song.pitch ?? "C"
+  obj.breakpoints = song.breakpoints ?? []
   obj.notes = []
   obj.selected = 0
   obj.columns = []

@@ -10,24 +10,44 @@
     --whitish: #ede5d8;
 }
 .menu{
-    width: 5rem;
+    width: 4rem;
     background-color: var(--primary);
     height: 100vh;
     border-right: solid 3px var(--detail);
     border-left: solid 3px var(--detail);
     align-items: center;
-    display: flex;
     flex-direction: column;
-    padding-top: 1rem;
+    padding-top: 2vh;
     max-height: 100vh;
     overflow-y: auto;
     z-index: 3;
+    display: flex;
+    margin-left: -4rem;
+    transition: all 0.4s;
+}
+.menu-visible{
+    margin-left: 0;
 }
 .margin-top-auto{
     margin-top: auto;
 }
+.hamburger{
+    position: fixed;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    font-size: 1.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--icon-color);
+    background-color: #515c6f;
+    border-radius: 0.3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
 .icon{
-    font-size: 1.8rem;
+    font-size: 1.5rem;
 }
 .rotate-screen{
     width: 100vw;
@@ -73,7 +93,7 @@
 }
 .menu-open{
     transform: scale(1);
-    left: 5rem;
+    left: 4rem !important;
     opacity: 1;
 }
 .menu-panel{
@@ -176,9 +196,9 @@
 }
 .menu-item{
     background-color: #515c6f;
-    width: 3.5rem;
-    height: 3.5rem;
-    margin-bottom: 1rem;
+    width: 2.8rem;
+    height: 2.8rem;
+    margin-bottom: 2vh;
     border-radius: 0.5rem;
     display: flex;
     justify-content: center;
@@ -191,19 +211,10 @@
     filter: brightness(1.2);
 }
 @media only screen and (max-width: 900px) {
-    .icon{
-        font-size: 1.6rem;
-    }
-    .menu{
-        width: 4rem;
-    }
     .side-menu{
         padding: 1rem;
         width: 50vw;
         left: -50vw;
-    }
-    .menu-open{
-        left: 4rem;
     }
     .menu-title{
         font-size: 1.5rem;
@@ -212,7 +223,7 @@
     .menu-item{
         width: 2.8rem;
         height: 2.8rem;
-        margin-bottom: 1rem;
+        margin-bottom: 2vh;
     }
 }
 @media screen and (orientation:portrait) {

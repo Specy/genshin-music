@@ -19,6 +19,9 @@ class Menu extends Component {
         this.setState({
             open: newState,
         })
+        if(newState === false){
+            this.props.functions.toggleMenuVisible()
+        }
     }
     changeSelectedSongType = (name) => {
         this.setState({
@@ -55,8 +58,9 @@ class Menu extends Component {
         let songs = data.songs.filter(song => !song.data?.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
         let hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
+        let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
         return <div className="menu-wrapper">
-            <div className="menu">
+            <div className={menuClass}>
                 <CloseMenu action={this.toggleMenu} />
                 <MenuItem type="Save" action={() => updateSong(data.currentSong)} className={hasUnsaved}>
                     <FontAwesomeIcon icon={faSave} className="icon" />

@@ -20,17 +20,16 @@
     align-items:center;
     justify-content: space-between;
     padding: 1vh;
-    margin-left: 5rem;
   }
   .note-composer{
     width: 4vw;
     height: 4vw;
-    border-width: 5px;
+    border-width: 0.4vw;
 }
 .song-info{
     position: fixed;
-    bottom: 1rem;
-    left: 6rem;
+    bottom: 0.5vw;
+    left: calc(4rem + 0.5vw);
     color: white;
     display: flex;
     flex-direction: column;
@@ -53,7 +52,7 @@
     cursor: pointer;
 }
 .tool{
-    min-width: 2rem;
+    min-width: 3rem;
 }
 .settings-row{
     display: flex;
@@ -83,7 +82,7 @@
 }
 .timeline-button{
     height: 100%;
-    width: 100%;
+    width: 2rem;
     margin: 0.2rem;
     padding: 0 0.5rem;
     background-color: rgb(81, 92, 111);
@@ -91,8 +90,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 0.2rem;
+    border-radius: 0.4rem;
     cursor: pointer;
+}
+canvas{
+    border-radius: 0.4rem;
+}
+.timeline-wrapper canvas{
+    width: calc(100% - 6.5rem) !important;
 }
 .settings-row :is(input,select){
     background-color: var(--primary);
@@ -114,8 +119,8 @@
 }
 .tempo-changers-wrapper{
     position: fixed;
-    right: 1rem;
-    bottom: 1rem;
+    right: 1vw;
+    bottom: 0.5vw;
     flex-direction: column;
     width: 4rem;
     gap: 0.2rem;
@@ -135,8 +140,8 @@
         height: 5vw;
     }
     .keyboard{
-        gap: 0.1rem;
-        grid-gap: 0.1rem;
+        gap: 0rem;
+        grid-gap: 0rem;
 
     }
 }

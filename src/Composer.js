@@ -1,14 +1,14 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
-import { ComposedSong, LoggerEvent, ColumnNote, Column,TempoChangers,ComposerSongSerialization,ComposerSongDeSerialization, getPitchChanger} from "./Components/SongUtils"
-import { faPlay, faPlus, faPause } from "@fortawesome/free-solid-svg-icons"
+import { ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers, ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger } from "./Components/SongUtils"
+import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons"
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
 import ComposerCanvas from "./Components/Composer/ComposerCanvas"
 import Instrument from "./Components/audio/Instrument"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {ComposerSettings } from "./Components/Composer/SettingsObj"
+import { ComposerSettings } from "./Components/Composer/SettingsObj"
 class Composer extends Component {
     constructor(props) {
         super(props)
@@ -25,7 +25,8 @@ class Composer extends Component {
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
-            settings: settings
+            settings: settings,
+            menuOpen: true
         }
         this.hasChanges = false
         this.syncSongs()
@@ -39,13 +40,13 @@ class Composer extends Component {
     }
     getSettings = () => {
         let storedSettings = localStorage.getItem("Genshin_Composer_Settings")
-        try{
+        try {
             storedSettings = JSON.parse(storedSettings)
-        }catch (e){
+        } catch (e) {
             storedSettings = null
         }
-        if(storedSettings !== null){
-            if(storedSettings.settingVesion !== ComposerSettings.settingVesion){
+        if (storedSettings !== null) {
+            if (storedSettings.settingVesion !== ComposerSettings.settingVesion) {
                 this.updateSettings(ComposerSettings)
                 return ComposerSettings
             }
@@ -55,29 +56,29 @@ class Composer extends Component {
     }
     updateSettings = (override) => {
         let state
-        if(override !== undefined){
+        if (override !== undefined) {
             state = override
-        }else{
+        } else {
             state = this.state.settings
         }
-        localStorage.setItem("Genshin_Composer_Settings",JSON.stringify(state))
+        localStorage.setItem("Genshin_Composer_Settings", JSON.stringify(state))
     }
     handleSettingChange = (setting) => {
         let settings = this.state.settings
         let data = setting.data
         settings[setting.key].value = data.value
-        if(data.songSetting){
+        if (data.songSetting) {
             this.state.song[setting.key] = data.value
         }
-        if(setting.key === "instrument"){
+        if (setting.key === "instrument") {
             this.loadInstrument(data.value)
         }
         this.setState({
             settings: settings,
             song: this.state.song
-        },() => {
+        }, () => {
             this.updateSettings()
-            if(data.songSetting) this.updateSong(this.state.song)
+            if (data.songSetting) this.updateSong(this.state.song)
         })
     }
     loadInstrument = async (name) => {
@@ -122,7 +123,7 @@ class Composer extends Component {
                 break;
             case "4": this.handleTempoChanger(TempoChangers[3])
                 break;
-            case "": 
+            case "":
                 break;
         }
     }
@@ -154,9 +155,9 @@ class Composer extends Component {
     }
     syncSongs = async () => {
         let songs = await this.dbCol.songs.find().toArray()
-        songs = songs.map(song =>{
-            if(song.data.isComposedVersion){
-                return  ComposerSongDeSerialization(song)
+        songs = songs.map(song => {
+            if (song.data.isComposedVersion) {
+                return ComposerSongDeSerialization(song)
             }
             return song
         })
@@ -175,10 +176,10 @@ class Composer extends Component {
     updateSong = async (song) => {
         if (song.name === "Untitled") {
             let name = await this.askForSongName()
-            if(name === null) return
+            if (name === null) return
             song.name = name
             return this.addSong(song)
-            
+
         }
         return new Promise(async resolve => {
             if (await this.songExists(song.name)) {
@@ -204,7 +205,7 @@ class Composer extends Component {
                     if (await this.songExists(songName)) {
                         promptString = "This song already exists: " + songName
                     } else {
-                         return resolve(songName)
+                        return resolve(songName)
                     }
                 } else {
                     promptString = "Write song name, press cancel to ignore"
@@ -223,14 +224,14 @@ class Composer extends Component {
         return await this.dbCol.songs.findOne({ name: name }) !== undefined
     }
     createNewSong = async () => {
-        if(this.state.song.name !== "Untitled" && this.hasChanges){
+        if (this.state.song.name !== "Untitled" && this.hasChanges) {
             let wantsToSave = this.askForSongUpdate()
-            if(wantsToSave){
+            if (wantsToSave) {
                 await this.updateSong(this.state.song)
             }
         }
         let name = await this.askForSongName()
-        if(name === null) return
+        if (name === null) return
         let song = new ComposedSong(name)
         this.hasChanges = false
         this.setState({
@@ -274,15 +275,15 @@ class Composer extends Component {
         this.setState({
             isPlaying: newState
         }, async () => {
-                this.selectColumn(this.state.song.selected)
-                while(this.state.isPlaying){
-                    let state = this.state
-                    const {song, settings} = state
-                    let tempoChanger = TempoChangers[song.columns[song.selected]?.tempoChanger]
-                    let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger?.changer) 
-                    await delayMs(msPerBPM)
-                    this.handleTick()
-                }
+            this.selectColumn(this.state.song.selected)
+            while (this.state.isPlaying) {
+                let state = this.state
+                const { song, settings } = state
+                let tempoChanger = TempoChangers[song.columns[song.selected]?.tempoChanger]
+                let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger?.changer)
+                await delayMs(msPerBPM)
+                this.handleTick()
+            }
         })
 
 
@@ -295,6 +296,26 @@ class Composer extends Component {
         this.selectColumn(this.state.song.selected + 1)
 
     }
+    toggleMenuVisible = () => {
+        this.setState({
+            menuOpen: !this.state.menuOpen
+        })
+    }
+    toggleBreakpoint = () => {
+        let song = this.state.song
+        let index = song.selected
+
+        let indexOfBreakpoint = song.breakpoints.indexOf(index)
+        console.log(indexOfBreakpoint, song.breakpoints)
+        if (indexOfBreakpoint >= 0 && song.columns.length > index) {
+            song.breakpoints.splice(indexOfBreakpoint, 1)
+        } else if (song.columns.length > index) {
+            song.breakpoints.push(index)
+        }
+        this.setState({
+            song: song
+        })
+    }
     handleTempoChanger = (changer) => {
         let song = this.state.song
         song.columns[this.state.song.selected].tempoChanger = changer.id
@@ -303,7 +324,7 @@ class Composer extends Component {
             song: song
         })
     }
-    selectColumn = (index,ignoreAudio) => {
+    selectColumn = (index, ignoreAudio) => {
         let song = this.state.song
         if (index < 0 || index > song.columns.length - 1) return
         let keyboard = this.state.instrument.layout
@@ -317,7 +338,7 @@ class Composer extends Component {
             song: song,
             instrument: this.state.instrument
         }, () => {
-            if(ignoreAudio) return
+            if (ignoreAudio) return
             currentColumn.notes.forEach(note => {
                 this.playSound(keyboard[note.index])
             })
@@ -329,7 +350,8 @@ class Composer extends Component {
             songs: this.state.songs,
             currentSong: this.state.song,
             settings: this.state.settings,
-            hasChanges: this.hasChanges
+            hasChanges: this.hasChanges,
+            menuOpen: this.state.menuOpen
         }
         let menuFunctions = {
             loadSong: this.loadSong,
@@ -337,7 +359,8 @@ class Composer extends Component {
             createNewSong: this.createNewSong,
             changePage: this.props.changePage,
             updateSong: this.updateSong,
-            handleSettingChange: this.handleSettingChange
+            handleSettingChange: this.handleSettingChange,
+            toggleMenuVisible: this.toggleMenuVisible
         }
         let keyboardFunctions = {
             handleClick: this.handleClick,
@@ -350,7 +373,8 @@ class Composer extends Component {
 
         }
         let canvasFunctions = {
-            selectColumn: this.selectColumn
+            selectColumn: this.selectColumn,
+            toggleBreakpoint: this.toggleBreakpoint
         }
         let canvasData = {
             columns: song.columns,
@@ -360,6 +384,10 @@ class Composer extends Component {
         }
         let scrollPosition = 0
         return <div className="app">
+            <div className="hamburger" onClick={this.toggleMenuVisible}>
+                <FontAwesomeIcon icon={faBars} />
+
+            </div>
             <div className="rotate-screen">
                 <img src={rotateImg}>
                 </img>
@@ -370,16 +398,23 @@ class Composer extends Component {
 
                     <div className="top-panel-composer">
                         <div className="buttons-composer-wrapper">
+                            <div className="tool" onClick={() => this.selectColumn(this.state.song.selected - 1)}>
+                                <FontAwesomeIcon icon={faChevronLeft} />
+                            </div>
+                            <div className="tool" onClick={() => this.selectColumn(this.state.song.selected + 1)}>
+                                <FontAwesomeIcon icon={faChevronRight} />
+                            </div>
                             <div className="tool" onClick={this.togglePlay}>
                                 <FontAwesomeIcon icon={this.state.isPlaying ? faPause : faPlay} />
                             </div>
                         </div>
                         <ComposerCanvas
+                            key={this.state.settings.columnsPerCanvas.value}
                             functions={canvasFunctions}
                             data={canvasData}
                         />
                         <div className="buttons-composer-wrapper">
-                            <div className="tool-slim" onClick={() => this.addColumns(40, "end")}>
+                            <div className="tool-slim" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 5 * 2, "end")}>
                                 <FontAwesomeIcon icon={faPlus} />
                             </div>
                         </div>
@@ -406,9 +441,9 @@ class Composer extends Component {
                     {song.name}
                 </div>
                 <div>
-                    {formatMillis(calculateLength(this.state.song,this.state.song.selected))}
+                    {formatMillis(calculateLength(this.state.song, this.state.song.selected))}
                      /
-                    {formatMillis(calculateLength(this.state.song,this.state.song.columns.length))}
+                    {formatMillis(calculateLength(this.state.song, this.state.song.columns.length))}
                 </div>
             </div>
         </div>
@@ -419,19 +454,19 @@ function formatMillis(millis) {
     var seconds = ((millis % 60000) / 1000).toFixed(0);
     return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 }
-function calculateLength(song,end){
+function calculateLength(song, end) {
     let columns = song.columns
     let bpmPerMs = Math.floor(60000 / song.bpm)
     let totalLength = 0
-    columns.forEach((column,i) =>{
-        if(i > end) return
+    columns.forEach((column, i) => {
+        if (i > end) return
         totalLength += bpmPerMs * TempoChangers[column.tempoChanger].changer
     })
     return totalLength
 }
 function delayMs(ms) {
     return new Promise(resolve => {
-        setTimeout(resolve,ms)
+        setTimeout(resolve, ms)
     })
 }
 

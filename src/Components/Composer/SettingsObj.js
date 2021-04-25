@@ -1,5 +1,5 @@
 let ComposerSettings = {
-    settingVesion: 1,
+    settingVesion: 2,
     bpm: {
         name: "Bpm",
         type: "number",
@@ -47,6 +47,21 @@ let ComposerSettings = {
             "B",
         ]
     },
+    columnsPerCanvas:{
+        name: "Number of visible columns",
+        type: "select",
+        songSetting: false,
+        value: 35,
+        options: [
+            20,
+            25,
+            30,
+            35,
+            40,
+            45,
+            50
+        ]
+    }
 }
 let MainPageSettings = {
     settingVesion : 0,

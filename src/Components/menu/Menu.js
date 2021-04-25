@@ -71,7 +71,7 @@ class Menu extends Component {
         let songs = data.songs.filter(song => !song.data.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
         return <div className="menu-wrapper">
-            <div className="menu">
+            <div className="menu menu-visible">
                 <CloseMenu action={this.toggleMenu} />
                 <MenuItem type="Songs" action={this.selectSideMenu} className="margin-top-auto">
                     <FontAwesomeIcon icon={faMusic} className="icon" />
