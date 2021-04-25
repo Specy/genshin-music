@@ -3,6 +3,7 @@ import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
 import { ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers, ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger } from "./Components/SongUtils"
 import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons"
+
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
 import ComposerCanvas from "./Components/Composer/ComposerCanvas"
@@ -26,7 +27,8 @@ class Composer extends Component {
             isPlaying: false,
             song: new ComposedSong("Untitled"),
             settings: settings,
-            menuOpen: true
+            menuOpen: false,
+            layer:1
         }
         this.hasChanges = false
         this.syncSongs()
@@ -122,6 +124,8 @@ class Composer extends Component {
             case "3": this.handleTempoChanger(TempoChangers[2])
                 break;
             case "4": this.handleTempoChanger(TempoChangers[3])
+                break;
+            case " ": this.togglePlay()
                 break;
             case "":
                 break;
@@ -344,33 +348,41 @@ class Composer extends Component {
             })
         })
     }
+    changeLayer = (layer) => {
+        this.setState({
+            layer: layer
+        })
+    }
     render() {
-        let song = this.state.song
+
+        const { state, props } = this
+        let song = state.song
         let menuData = {
-            songs: this.state.songs,
-            currentSong: this.state.song,
-            settings: this.state.settings,
+            songs: state.songs,
+            currentSong: state.song,
+            settings: state.settings,
             hasChanges: this.hasChanges,
-            menuOpen: this.state.menuOpen
+            menuOpen: state.menuOpen
         }
         let menuFunctions = {
             loadSong: this.loadSong,
             removeSong: this.removeSong,
             createNewSong: this.createNewSong,
-            changePage: this.props.changePage,
+            changePage: props.changePage,
             updateSong: this.updateSong,
             handleSettingChange: this.handleSettingChange,
             toggleMenuVisible: this.toggleMenuVisible
         }
         let keyboardFunctions = {
             handleClick: this.handleClick,
-            handleTempoChanger: this.handleTempoChanger
+            handleTempoChanger: this.handleTempoChanger,
+            changeLayer: this.changeLayer
         }
         let keyboardData = {
-            keyboard: this.state.instrument,
-            currentColumn: this.state.song.columns[this.state.song.selected],
+            keyboard: state.instrument,
+            currentColumn: state.song.columns[state.song.selected],
             TempoChangers: TempoChangers,
-
+            layer: state.layer
         }
         let canvasFunctions = {
             selectColumn: this.selectColumn,
@@ -379,8 +391,8 @@ class Composer extends Component {
         let canvasData = {
             columns: song.columns,
             selected: song.selected,
-            settings: this.state.settings,
-            breakpoints: this.state.song.breakpoints
+            settings: state.settings,
+            breakpoints: state.song.breakpoints
         }
         let scrollPosition = 0
         return <div className="app">
@@ -445,6 +457,8 @@ class Composer extends Component {
                      /
                     {formatMillis(calculateLength(this.state.song, this.state.song.columns.length))}
                 </div>
+
+
             </div>
         </div>
     }

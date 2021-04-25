@@ -52,7 +52,8 @@
     cursor: pointer;
 }
 .tool{
-    min-width: 3rem;
+    width: 4vw;
+    max-width: 3rem;
 }
 .settings-row{
     display: flex;
@@ -96,6 +97,7 @@
 canvas{
     border-radius: 0.4rem;
 }
+
 .timeline-wrapper canvas{
     width: calc(100% - 6.5rem) !important;
 }
@@ -117,14 +119,27 @@ canvas{
         margin: 0 0.2rem;
         gap: 0.2rem;
 }
-.tempo-changers-wrapper{
+.bottom-right-wrapper{
     position: fixed;
     right: 1vw;
     bottom: 0.5vw;
+    width: fit-content;
+    display: flex;
+    flex-direction: row;
+    gap:1.5rem;
+    color: white;
+}
+.tempo-changers-wrapper{
     flex-direction: column;
     width: 4rem;
     gap: 0.2rem;
     display: flex;
+
+}
+.bottom-right-text{
+    text-align: center;
+    width: 100%;
+    font-size: 0.8rem;
 }
 .tempo-changers-wrapper button{
     flex: 1;
@@ -133,6 +148,20 @@ canvas{
     color: white;
     padding: 0.2rem;
     filter: brightness(1.1);
+}
+.layer-button{
+    border: none;
+    padding: 0.6rem 1rem;
+    background-color: var(--primary);
+    color: white;
+    flex: 1;
+    border-radius: 0.2rem;
+}
+.layer-buttons-wrapper{
+    display: flex;
+    flex-direction: column;
+    gap:0.2rem;
+    justify-content: center;
 }
 @media only screen and (max-width: 900px) {
     .note-composer{
