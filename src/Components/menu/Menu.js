@@ -1,10 +1,10 @@
-import React, { Component , useState} from 'react'
+import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
 import "./menu.css"
 
-import {FileDownloader, LoggerEvent} from "../SongUtils"
-import {FilePicker} from "react-file-picker"
+import { FileDownloader, LoggerEvent } from "../SongUtils"
+import { FilePicker } from "react-file-picker"
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -43,11 +43,11 @@ class Menu extends Component {
         const reader = new FileReader();
         reader.addEventListener('load', (event) => {
 
-            try{
+            try {
                 let song = JSON.parse(event.target.result)
                 this.props.functions.addSong(song)
-            }catch(e){
-                new LoggerEvent("Error","Error importing song").trigger()
+            } catch (e) {
+                new LoggerEvent("Error", "Error importing song").trigger()
                 console.error(e)
             }
 
@@ -55,15 +55,15 @@ class Menu extends Component {
         reader.readAsText(file)
     }
     downloadSong = (song) => {
-        if(song._id) delete song._id
+        if (song._id) delete song._id
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name+".json")
+        fileDownloader.download(json, song.name + ".json")
     }
     render() {
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
-        const { data, functions} = this.props
+        const { data, functions } = this.props
         const { handleSettingChange } = functions
         functions.toggleMenu = this.toggleMenu
         functions.downloadSong = this.downloadSong
@@ -98,21 +98,21 @@ class Menu extends Component {
 
                     </div>
                     <div className="tab-selector-wrapper">
-                        <button 
-                            className={this.state.selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector" }
+                        <button
+                            className={this.state.selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
                             onClick={() => this.changeSelectedSongType("recorded")}
                         >
                             Recorded
                         </button>
-                        <button 
-                             className={this.state.selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector" }
+                        <button
+                            className={this.state.selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector"}
                             onClick={() => this.changeSelectedSongType("composed")}
-                        >    
+                        >
                             Composed
                         </button>
                     </div>
                     <div className="songs-wrapper">
-                    {this.state.selectedSongType === "recorded"
+                        {this.state.selectedSongType === "recorded"
                             ? songs.map(song => {
                                 return <SongRow
                                     data={song}
@@ -136,15 +136,15 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Settings" visible={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
-                            return <SettingsRow
-                                key={key + data.value}
-                                objKey={key}
-                                data={data}
-                                update={handleSettingChange}
-                            >
+                        return <SettingsRow
+                            key={key + data.value}
+                            objKey={key}
+                            data={data}
+                            update={handleSettingChange}
+                        >
 
-                            </SettingsRow>
-                        })}
+                        </SettingsRow>
+                    })}
                 </MenuPanel>
             </div>
         </div>
@@ -178,14 +178,14 @@ function SettingsRow(props) {
         if (data.type === "number") {
             value = Number(value)
             e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
-            if (value < data.threshold[0] || value > data.threshold[1] ) {
+            if (value < data.threshold[0] || value > data.threshold[1]) {
                 return
             }
         }
         setter(value)
     }
     function sendChange() {
-        if(data.value === valueHook) return
+        if (data.value === valueHook) return
         data.value = valueHook
         let obj = {
             key: objKey,
@@ -193,7 +193,7 @@ function SettingsRow(props) {
         }
         update(obj)
     }
-    function sendChangeSelect(e){
+    function sendChangeSelect(e) {
         let value = e.target.value
         data.value = value
         let obj = {
@@ -239,9 +239,9 @@ function SongRow(props) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                    practiceSong(data)
-                    toggleMenu(false)
-                }}
+                practiceSong(data)
+                toggleMenu(false)
+            }}
             >
                 <FontAwesomeIcon icon={faCrosshairs} />
             </button>

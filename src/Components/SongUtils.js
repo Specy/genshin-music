@@ -114,7 +114,7 @@ class ComposedSong {
     this.bpm = 220
     this.pitch = "C"
     this.notes = notes
-    this.breakpoints = [10,33,45,60,80]
+    this.breakpoints = [0]
     this.columns = []
     this.selected = 0
     new Array(100).fill().forEach((e) => {
@@ -190,17 +190,17 @@ class Column {
 
 
 class ColumnNote {
-  constructor(index, layer = 0, color = 0xd3bd8e) {
+  constructor(index, layer = "000", color = 0xd3bd8e) {
     this.index = index
     this.layer = layer
     this.color = color
   }
 }
 function getPitchChanger(pitch) {
-  let pitchArr = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
+  let pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
   let index = pitchArr.indexOf(pitch)
-  if(index < 0) index = 0
-  return Number( Math.pow(2, index / 12).toFixed(2))
+  if (index < 0) index = 0
+  return Number(Math.pow(2, index / 12).toFixed(2))
 }
 function randomNum(min, max) {
   return Math.floor(Math.random() * max) + min

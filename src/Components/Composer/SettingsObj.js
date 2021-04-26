@@ -1,5 +1,30 @@
+let instruments = [
+    "lyre"
+]
 let ComposerSettings = {
-    settingVesion: 2,
+    settingVesion: 0,
+
+    instrument: {
+        name: "Instrument (Layer 1)",
+        type: "select",
+        songSetting: false,
+        value: 0,
+        options: instruments
+    },
+    layer2: {
+        name: "Instrument (Layer 2)",
+        type: "select",
+        songSetting: false,
+        value: 0,
+        options: instruments
+    },
+    layer3: {
+        name: "Instrument (Layer 3)",
+        type: "select",
+        songSetting: false,
+        value: 0,
+        options: instruments
+    },
     bpm: {
         name: "Bpm",
         type: "number",
@@ -16,15 +41,6 @@ let ComposerSettings = {
             0,
             3,
             4
-        ]
-    },
-    instrument: {
-        name: "Instrument",
-        type: "select",
-        songSetting: false,
-        value: 0,
-        options: [
-            "lyre"
         ]
     },
     pitch: {
@@ -47,7 +63,7 @@ let ComposerSettings = {
             "B",
         ]
     },
-    columnsPerCanvas:{
+    columnsPerCanvas: {
         name: "Number of visible columns",
         type: "select",
         songSetting: false,
@@ -64,7 +80,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion : 0,
+    settingVesion: 0,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",

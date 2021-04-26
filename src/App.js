@@ -3,8 +3,8 @@ import './App.css';
 import Keyboard from "./Components/audio/Keyboard"
 import Menu from "./Components/menu/Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording} from "./Components/SongUtils"
-import {MainPageSettings} from "./Components/Composer/SettingsObj"
+import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording } from "./Components/SongUtils"
+import { MainPageSettings } from "./Components/Composer/SettingsObj"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
 import rotateImg from "./assets/icons/rotate.svg"
@@ -42,40 +42,40 @@ class App extends Component {
   }
   getSettings = () => {
     let storedSettings = localStorage.getItem("Genshin_Main_Settings")
-    try{
-        storedSettings = JSON.parse(storedSettings)
-    }catch (e){
-        storedSettings = null
+    try {
+      storedSettings = JSON.parse(storedSettings)
+    } catch (e) {
+      storedSettings = null
     }
-    if(storedSettings !== null){
-        if(storedSettings.settingVesion !== MainPageSettings.settingVesion){
-            this.updateSettings(MainPageSettings)
-            return MainPageSettings
-        }
-        return storedSettings
+    if (storedSettings !== null) {
+      if (storedSettings.settingVesion !== MainPageSettings.settingVesion) {
+        this.updateSettings(MainPageSettings)
+        return MainPageSettings
+      }
+      return storedSettings
     }
     return MainPageSettings
-}
-updateSettings = (override) => {
+  }
+  updateSettings = (override) => {
     let state
-    if(override !== undefined){
-        state = override
-    }else{
-        state = this.state.settings
+    if (override !== undefined) {
+      state = override
+    } else {
+      state = this.state.settings
     }
-    localStorage.setItem("Genshin_Main_Settings",JSON.stringify(state))
-}
-handleSettingChange = (setting) => {
+    localStorage.setItem("Genshin_Main_Settings", JSON.stringify(state))
+  }
+  handleSettingChange = (setting) => {
     let settings = this.state.settings
     let data = setting.data
     settings[setting.key].value = data.value
-    if(setting.key === "instrument"){
-        this.loadInstrument(data.value)
+    if (setting.key === "instrument") {
+      this.loadInstrument(data.value)
     }
     this.setState({
-        settings: settings,
-    },this.updateSettings)
-}
+      settings: settings,
+    }, this.updateSettings)
+  }
   syncSongs = async () => {
     let songs = await this.dbCol.songs.find().toArray()
     this.setState({
@@ -85,7 +85,7 @@ handleSettingChange = (setting) => {
   practiceSong = async (song, start = 0) => {
     await this.stopSong()
     let oldState = this.state.keyboardData.practicingSong
-    if(song.data.isComposedVersion){
+    if (song.data.isComposedVersion) {
       song = ComposerToRecording(song)
       oldState.threshold = 10
     }
@@ -152,7 +152,7 @@ handleSettingChange = (setting) => {
   playSong = async (song) => {
     await this.stopSong()
 
-    if(song.data.isComposedVersion){
+    if (song.data.isComposedVersion) {
       song = ComposerToRecording(song)
     }
     let playingSong = {
@@ -220,7 +220,7 @@ handleSettingChange = (setting) => {
       songs: state.songs,
       settings: this.state.settings
     }
-    
+
     return <div className="app">
       <div className="rotate-screen">
         <img src={rotateImg}>

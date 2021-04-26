@@ -126,7 +126,7 @@ canvas{
     width: fit-content;
     display: flex;
     flex-direction: row;
-    gap:1.5rem;
+    gap:2vw;
     color: white;
 }
 .tempo-changers-wrapper{
@@ -136,25 +136,56 @@ canvas{
     display: flex;
 
 }
+.layer-3-ball{
+    position: absolute;
+    background-color: #d75c5c;
+    width: 1vw;
+    height: 1vw;
+    border-radius: 50%;
+    visibility: hidden;
+}
 .bottom-right-text{
     text-align: center;
     width: 100%;
     font-size: 0.8rem;
 }
+.note-composer img{
+    z-index: 2;
+}
+.layer-1{
+    background-color: #d3bd8e;
+    border-color: #ab9361;
+}
+.layer-1 .note-name{
+    color: white;
+}
+.layer-1 img{
+    filter: brightness(10);
+}
+.layer-2{
+    border-color: #d75c5c;
+}
+.layer-3 .layer-3-ball{
+    visibility: visible;
+}
 .tempo-changers-wrapper button{
     flex: 1;
     border-radius: 0.2rem;
     border: none;
+    font-size: 1rem;
     color: white;
     padding: 0.2rem;
     filter: brightness(1.1);
 }
 .layer-button{
     border: none;
-    padding: 0.6rem 1rem;
+    width: 8vw;
+    max-width: 4rem;
+    font-size: 1rem;
+    padding: 0.6rem 0;
+    flex: 1;
     background-color: var(--primary);
     color: white;
-    flex: 1;
     border-radius: 0.2rem;
 }
 .layer-buttons-wrapper{
@@ -164,13 +195,42 @@ canvas{
     justify-content: center;
 }
 @media only screen and (max-width: 900px) {
+    .button-hitbox{
+        padding: 1vh;
+    }
+    .layer-button{
+        font-size: 0.7rem;
+
+    }
+    .tempo-changers-wrapper button{
+        font-size: 0.7rem;
+    }
     .note-composer{
-        width: 5vw;
-        height: 5vw;
+        width: 5.1vw;
+        height: 5.1vw;
     }
     .keyboard{
         gap: 0rem;
         grid-gap: 0rem;
 
+    }
+    .layer-3-ball{
+        width: 1.5vw;
+        height: 1.5vw;
+    }
+}
+@media only screen and (max-width: 600px) {
+    .song-info{
+        font-size: 0.8rem;
+    }
+    .layer-button{
+        font-size: 0.8rem;
+        padding: unset;
+    }
+    .tempo-changers-wrapper{
+        gap: 0.6vh;
+    }
+    .tempo-changers-wrapper button{
+        font-size: 0.6rem;
     }
 }

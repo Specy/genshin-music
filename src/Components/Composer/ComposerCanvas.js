@@ -28,6 +28,7 @@ class ComposerCanvas extends Component {
             timelineHeight: isMobile() ? 25 : 30,
             currentBreakpoint: -1
         }
+        this.canvasRef = React.createRef()
         let margin = isMobile() ? 1 : 4
         this.cache = new ComposerCache(this.state.column.width, height, margin, this.state.timelineHeight).cache
         this.stageSelected = false
@@ -42,11 +43,19 @@ class ComposerCanvas extends Component {
     }
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
+        this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
     }
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
+        this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
     }
-
+    handleWheel = (e) => {
+        if (e.deltaY < 0) {
+            this.props.functions.selectColumn(this.props.data.selected - 1, true)
+        } else {
+            this.props.functions.selectColumn(this.props.data.selected + 1, true)
+        }
+    }
     handleClick = (e, type) => {
         let x = e.data.global.x
         if (type === "click") {
@@ -114,7 +123,6 @@ class ComposerCanvas extends Component {
         let s = this.state
         let pixiOptions = {
             backgroundColor: 0x495466,
-            antialias: true
         }
         const { data, functions } = this.props
         let sizes = this.state.column
@@ -129,14 +137,15 @@ class ComposerCanvas extends Component {
         let relativeColumnWidth = this.state.width / data.columns.length
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > this.state.width) stageSize = this.state.width
-        let stagePos = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1)  * relativeColumnWidth
+        let stagePos = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
 
-        return <div className="canvas-wrapper" style={{width: s.width + 6}}>
+        return <div className="canvas-wrapper" style={{ width: s.width + 6 }}>
             <Stage
                 width={s.width}
                 height={s.height}
                 options={pixiOptions}
                 key={this.state.width}
+                ref={this.canvasRef}
             >
                 <Container
                     anchor={[0.5, 0.5]}
@@ -172,7 +181,7 @@ class ComposerCanvas extends Component {
                     })}
                 </Container>
             </Stage>
-            <div className="timeline-wrapper" style={{height: this.state.timelineHeight}}>
+            <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
                 <div className="timeline-button" onClick={() => this.handleBreakpoints(-1)}>
                     <FontAwesomeIcon icon={faStepBackward} />
                 </div>
@@ -184,7 +193,7 @@ class ComposerCanvas extends Component {
                 <Stage
                     width={s.width}
                     height={timelineHeight}
-                    options={{antialias: true , autoDensity: true}}
+                    options={{ antialias: true, autoDensity: true }}
                 >
                     <Container
                         width={this.state.width}
@@ -195,7 +204,7 @@ class ComposerCanvas extends Component {
                         pointerup={(e) => this.handleClick(e, "up")}
                         pointermove={this.handleSlide}
                     >
-                        <Graphics draw={(e)  => {fillX(e, this.state.width, this.state.timelineHeight)}}/>
+                        <Graphics draw={(e) => { fillX(e, this.state.width, this.state.timelineHeight) }} />
                         {data.breakpoints.map(breakpoint => {
                             return <Sprite
                                 image={cache.breakpoints[0]}
@@ -219,26 +228,17 @@ class ComposerCanvas extends Component {
     }
 }
 
-function fillX(g,width,height){
+function fillX(g, width, height) {
     g.clear()
-    g.beginFill(0x515c6f,1)
-    g.drawRect(0,0,width,height)
+    g.beginFill(0x515c6f, 1)
+    g.drawRect(0, 0, width, height)
 }
-/*
-                        click={() => console.log("a")}
-
-
-*/
 function drawStage(g, width, height) {
     g.clear()
     g.lineStyle(3, 0x1a968b, 0.8)
     g.drawRoundedRect(0, 0, width - 2, height - 4, 6)
 }
 
-
-/*
-
-*/
 function Column(props) {
     let { data, index, sizes, click, cache, backgroundCache, isBreakpoint } = props
     return <Container
@@ -255,7 +255,7 @@ function Column(props) {
         {data.notes.map((note) => {
             return <Sprite
                 key={note.index}
-                image={cache.notes[0]}
+                image={cache.notes[note.layer]}
                 y={positions[note.index] * sizes.height / 21}
             >
 
@@ -268,15 +268,6 @@ function Column(props) {
         </Sprite> : null}
     </Container>
 }
-
-/*
-        <Graphics draw={drawBg} />
-
-        {data.notes.map((note) => {
-            return <Graphics draw={(g) => drawNote(g, note)} />
-        })}
-
-*/
 function calcMinColumnWidth(parentWidth) {
     return nearestEven(parentWidth / NumOfColumnsPerCanvas)
 }

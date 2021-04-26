@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
 import { ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers, ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger } from "./Components/SongUtils"
-import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons"
+import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faLayerGroup } from "@fortawesome/free-solid-svg-icons"
 
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
@@ -22,17 +22,20 @@ class Composer extends Component {
         this.playbackInterval = undefined
         this.state = {
             instrument: new Instrument(),
+            layers: [new Instrument(), new Instrument()],
             audioContext: new (window.AudioContext || window.webkitAudioContext)(),
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
             settings: settings,
             menuOpen: false,
-            layer:1
+            layer: 1
         }
         this.hasChanges = false
         this.syncSongs()
-        this.loadInstrument("lyre")
+        this.loadInstrument("lyre", 1)
+        this.loadInstrument("lyre", 2)
+        this.loadInstrument("lyre", 3)
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
@@ -72,9 +75,9 @@ class Composer extends Component {
         if (data.songSetting) {
             this.state.song[setting.key] = data.value
         }
-        if (setting.key === "instrument") {
-            this.loadInstrument(data.value)
-        }
+        if (setting.key === "instrument") this.loadInstrument(data.value, 1)
+        if (setting.key === "layer2") this.loadInstrument(data.value, 2)
+        if (setting.key === "layer3") this.loadInstrument(data.value, 3)
         this.setState({
             settings: settings,
             song: this.state.song
@@ -83,27 +86,26 @@ class Composer extends Component {
             if (data.songSetting) this.updateSong(this.state.song)
         })
     }
-    loadInstrument = async (name) => {
-        let newInstrument = new Instrument(name)
-        let urls = newInstrument.layout.map(e => e.url)
-        let buffers = await this.preload(urls)
-        newInstrument.setBuffers(buffers)
-        this.setState({
-            instrument: newInstrument
-        })
+    loadInstrument = async (name, layer) => {
+        if (layer === 1) {
+            let newInstrument = new Instrument(name)
+            await newInstrument.load(this.state.audioContext)
+            this.setState({
+                instrument: newInstrument
+            })
+        } else {
+            let newInstrument = new Instrument(name)
+            let layers = this.state.layers
+            layers[layer - 2] = newInstrument
+            await layers[layer - 2].load(this.state.audioContext)
+            this.setState({
+                layers: layers
+            })
+        }
+
 
     }
-    preload = (urls) => {
-        const requests = urls.map(url => fetch(url)
-            .then(result => result.arrayBuffer())
-            .then(buffer => {
-                return new Promise((resolve, reject) => {
-                    this.state.audioContext.decodeAudioData(buffer, resolve, reject)
-                })
-            })
-        )
-        return Promise.all(requests)
-    }
+
     handleKeyboard = (event) => {
         let letter = event.key.toUpperCase()
         /*
@@ -140,19 +142,22 @@ class Composer extends Component {
 
     }
     handleClick = (note) => {
-        let instrument = this.state.instrument
         let column = this.state.song.columns[this.state.song.selected]
         let index = column.notes.findIndex((n) => {
             return note.index === n.index
         })
-        if (index < 0) {
-            column.notes.push(new ColumnNote(note.index))
-        } else {
-            column.notes.splice(index, 1)
+        let layerIndex = this.state.layer - 1
+        if (index < 0) { //if it doesn't exist, create a new one
+            let columnNote = new ColumnNote(note.index)
+            columnNote.layer = replaceAt(columnNote.layer, layerIndex, "1")
+            column.notes.push(columnNote)
+        } else { //if it exists, toggle the current layer and if it's 000 delete it
+            let currentNote = column.notes[index]
+            currentNote.layer = replaceAt(currentNote.layer, layerIndex, currentNote.layer[layerIndex] === "0" ? "1" : "0")
+            if (currentNote.layer === "000") column.notes.splice(index, 1)
         }
-        instrument.layout[note.index].clicked = true
         this.setState({
-            instrument: this.state.instrument
+            song: this.state.song
         })
         this.hasChanges = true
         this.playSound(note)
@@ -310,7 +315,6 @@ class Composer extends Component {
         let index = song.selected
 
         let indexOfBreakpoint = song.breakpoints.indexOf(index)
-        console.log(indexOfBreakpoint, song.breakpoints)
         if (indexOfBreakpoint >= 0 && song.columns.length > index) {
             song.breakpoints.splice(indexOfBreakpoint, 1)
         } else if (song.columns.length > index) {
@@ -329,22 +333,21 @@ class Composer extends Component {
         })
     }
     selectColumn = (index, ignoreAudio) => {
-        let song = this.state.song
+        const state = this.state
+        let song = state.song
         if (index < 0 || index > song.columns.length - 1) return
-        let keyboard = this.state.instrument.layout
-        keyboard.forEach(note => {
-            note.clicked = false
-        })
-        let currentColumn = this.state.song.columns[index]
-
+        let keyboard = state.instrument.layout
+        let layers = state.layers.map(e => e.layout)
+        let currentColumn = state.song.columns[index]
         song.selected = index
         this.setState({
-            song: song,
-            instrument: this.state.instrument
+            song: song
         }, () => {
             if (ignoreAudio) return
             currentColumn.notes.forEach(note => {
-                this.playSound(keyboard[note.index])
+                if (note.layer[0] === "1") this.playSound(keyboard[note.index])
+                if (note.layer[1] === "1") this.playSound(layers[0][note.index])
+                if (note.layer[2] === "1") this.playSound(layers[1][note.index])
             })
         })
     }
@@ -483,5 +486,11 @@ function delayMs(ms) {
         setTimeout(resolve, ms)
     })
 }
+function replaceAt(string, index, replacement) {
+    if (index >= string.length) {
+        return string.valueOf();
+    }
 
+    return string.substring(0, index) + replacement + string.substring(index + 1);
+}
 export default Composer

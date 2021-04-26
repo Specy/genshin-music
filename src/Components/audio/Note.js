@@ -4,7 +4,7 @@ class Note extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            
+
         }
     }
     render() {
@@ -14,14 +14,14 @@ class Note extends Component {
         let toBeClickedNext = this.props.toBeClickedNext ? " note-border-click" : ""
         className += toBeClicked + toBeClickedNext
         let noteText = isMobile() ? data.noteNames.mobile : data.noteNames.keyboard
-        let animation = {transition : `all ${this.props.fadeTime}s`}
-        return <button 
-            onPointerDown={() => this.props.clickAction(data)} 
+        let animation = { transition: `all ${this.props.fadeTime}s` }
+        return <button
+            onPointerDown={() => this.props.clickAction(data)}
             className="button-hitbox"
-            
+
         >
             <div className={className} style={animation}>
-                <img 
+                <img
                     alt={data.noteNames.mobile}
                     src={`${window.location.origin}/assets/icons/keys/${data.noteNames.mobile}.svg`}>
 

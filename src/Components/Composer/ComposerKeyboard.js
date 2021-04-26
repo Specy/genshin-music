@@ -16,9 +16,10 @@ class ComposerKeyboard extends Component {
         return <div>
             <div className="keyboard">
                 {data.keyboard.layout.map((note, i) => {
+                    let index = notesIndexes.indexOf(i)
                     return <ComposerNote
                         key={note.index}
-                        selected={notesIndexes.includes(i)}
+                        layers={index >= 0 ? data.currentColumn.notes[index].layer : "000"}
                         data={note}
                         clickAction={functions.handleClick}
                     />

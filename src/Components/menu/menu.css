@@ -38,6 +38,8 @@
     font-size: 1.5rem;
     width: 2.5rem;
     height: 2.5rem;
+    max-width: 6vw;
+    max-height: 6vw;
     color: var(--icon-color);
     background-color: #515c6f;
     border-radius: 0.3rem;

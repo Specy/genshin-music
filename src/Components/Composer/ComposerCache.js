@@ -1,24 +1,23 @@
-import {TempoChangers} from "../SongUtils"
+import { TempoChangers } from "../SongUtils"
 import * as PIXI from "pixi.js"
-let notes = [
-    {   
-        id:0,
-        color: "#d3bd8e"
-    }
-
-]
+let noteData = {
+    background: "#d3bd8e",
+    border: "#de4545",
+    center: "#de4545"
+}
 let horizontalLineBreak = 7
 let standards = [
     {
         color: 0x515c6f //lighter
     },
     {
-        color: 0x414a59 //darker
+        color: 0x485363 //darker
     },
     {
         color: 0x1a968b //selected
     }
 ]
+let notes = ["000", "001", "010", "011", "100", "101", "110", "111"]
 let breakpoints = [
     {
         type: "short",
@@ -29,67 +28,91 @@ let breakpoints = [
         color: "#c44350"
     }
 ]
-class ComposerCache{
-    constructor(width,height,margin=4,timelineHeight = 30){
+class ComposerCache {
+    constructor(width, height, margin = 4, timelineHeight = 30) {
         this.width = width
         this.height = height
         this.cache = {
             columns: [],
-            notes: [],
+            notes: {},
             standard: [],
-            columnsLarger:[],
+            columnsLarger: [],
             standardLarger: [],
             breakpoints: []
         }
+        this.notesFigures = []
         this.timelineHeight = timelineHeight
         this.margin = margin
         this.noteWidth = this.width
         this.noteHeight = this.height / 21
         this.app = new PIXI.Application({
             width: width,
-            height:height,
+            height: height,
         })
         this.generate()
     }
     generate = () => {
-        let roundNess = this.width < 20 ? 2: 4
+
         TempoChangers.forEach(tempoChanger => {
-            let canvas = drawColumn(tempoChanger,this,1)
+            let canvas = drawColumn(tempoChanger, this, 1)
             this.cache.columns.push(canvas.toDataURL())
         })
         standards.forEach(standardColumn => {
-            let canvas = drawColumn(standardColumn,this,1)
+            let canvas = drawColumn(standardColumn, this, 1)
             this.cache.standard.push(canvas.toDataURL())
         })
         standards.forEach(standardColumn => {
-            let canvas = drawColumn(standardColumn,this,2)
+            let canvas = drawColumn(standardColumn, this, 2)
             this.cache.standardLarger.push(canvas.toDataURL())
         })
         notes.forEach(note => {
+            let roundNess = this.noteWidth > 20 ? 4 : 2
             let canvas = document.createElement("canvas")
             canvas.height = this.noteHeight
             canvas.width = this.noteWidth
             let ctx = canvas.getContext("2d")
-            ctx.fillStyle = note.color
-            roundRect(
-                ctx,
-                this.margin / 2,
-                this.margin / 2,
-                this.noteWidth - this.margin - 1,
-                this.noteHeight - this.margin - 1,
-                roundNess,
-                true,
-                false
-            )
-            this.cache.notes.push(canvas.toDataURL())
+            if (note[0] === "1") {
+                ctx.fillStyle = noteData.background
+                roundRect(
+                    ctx,
+                    this.margin / 2,
+                    this.margin / 2,
+                    this.noteWidth - this.margin - 1,
+                    this.noteHeight - this.margin - 1,
+                    roundNess,
+                    true,
+                    false
+                )
+            }
+            if (note[1] === "1") {
+                ctx.strokeStyle = noteData.border
+                ctx.lineWidth = 2
+                roundRect(
+                    ctx,
+                    this.margin / 2,
+                    this.margin / 2,
+                    this.noteWidth - this.margin - 1,
+                    this.noteHeight - this.margin - 1,
+                    roundNess,
+                    false,
+                    true
+                )
+            }
+            if (note[2] === "1") {
+                ctx.beginPath()
+                ctx.fillStyle = noteData.center
+                ctx.arc(this.noteWidth / 2 - 0.5, this.noteHeight / 2 - 0.5, this.noteHeight / 5, 0, 2 * Math.PI);
+                ctx.fill()
+            }
+            this.cache.notes[note] = canvas.toDataURL()
         })
         TempoChangers.forEach(tempoChanger => {
-            let canvas = drawColumn(tempoChanger,this,2)
+            let canvas = drawColumn(tempoChanger, this, 2)
             this.cache.columnsLarger.push(canvas.toDataURL())
         })
         breakpoints.forEach(breakpoint => {
             let canvas = document.createElement("canvas")
-            if(breakpoint.type === "short"){
+            if (breakpoint.type === "short") {
                 let size = this.timelineHeight / 6
                 canvas.height = this.timelineHeight
                 canvas.width = size * 2
@@ -98,7 +121,7 @@ class ComposerCache{
                 ctx.arc(size, this.timelineHeight / 2, size, 0, 2 * Math.PI);
                 ctx.fill()
                 this.cache.breakpoints.push(canvas.toDataURL())
-            }else{
+            } else {
                 canvas.height = this.height
                 canvas.width = this.width
                 let size = this.width / 4
@@ -113,43 +136,46 @@ class ComposerCache{
         })
     }
 }
-function drawColumn(tempoChanger,self,borderWidth){
+
+
+function drawColumn(tempoChanger, self, borderWidth) {
     let canvas = document.createElement("canvas")
     canvas.height = self.height
     canvas.width = self.width
     let ctx = canvas.getContext("2d")
-    ctx.fillStyle = "#"+tempoChanger.color.toString(16)
+    ctx.fillStyle = "#" + tempoChanger.color.toString(16)
     ctx.fillRect(0, 0, self.width, self.height)
     ctx.strokeStyle = borderWidth === 2 ? "black" : "#333333"
-    ctx.lineWidth = borderWidth 
+    ctx.lineWidth = borderWidth
     ctx.beginPath()
     ctx.moveTo(self.width, 0)
     ctx.lineTo(self.width, self.height)
     ctx.stroke()
     ctx.strokeStyle = "#333333"
-    for(let i = 1; i<3;i++){
+    for (let i = 1; i < 3; i++) {
         ctx.lineWidth = 1
         let y = self.noteHeight * horizontalLineBreak * i
-        ctx.moveTo(0,y)
-        ctx.lineTo(self.width,y)
+        ctx.moveTo(0, y)
+        ctx.lineTo(self.width, y)
     }
     ctx.stroke()
     return canvas
 }
+
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     if (typeof stroke === 'undefined') {
-      stroke = true;
+        stroke = true;
     }
     if (typeof radius === 'undefined') {
-      radius = 5;
+        radius = 5;
     }
     if (typeof radius === 'number') {
-      radius = {tl: radius, tr: radius, br: radius, bl: radius};
+        radius = { tl: radius, tr: radius, br: radius, bl: radius };
     } else {
-      var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
-      for (var side in defaultRadius) {
-        radius[side] = radius[side] || defaultRadius[side];
-      }
+        var defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
+        for (var side in defaultRadius) {
+            radius[side] = radius[side] || defaultRadius[side];
+        }
     }
     ctx.beginPath();
     ctx.moveTo(x + radius.tl, y);
@@ -163,13 +189,13 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.quadraticCurveTo(x, y, x + radius.tl, y);
     ctx.closePath();
     if (fill) {
-      ctx.fill();
+        ctx.fill();
     }
     if (stroke) {
-      ctx.stroke();
+        ctx.stroke();
     }
-  
-  }
+
+}
 export {
     ComposerCache
 }

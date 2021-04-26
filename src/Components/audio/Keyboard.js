@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import "./Keyboard.css"
-import {getPitchChanger} from "../SongUtils"
+import { getPitchChanger } from "../SongUtils"
 import Instrument from "./Instrument"
 import Note from "./Note"
 class Keyboard extends Component {
@@ -35,7 +35,7 @@ class Keyboard extends Component {
         window.removeEventListener("playSong", this.handlePlayEvent)
         window.removeEventListener("practiceSong", this.handlePracticeEvent)
     }
- 
+
     handlePlayEvent = (event) => {
         let data = event.detail
         this.setState({
@@ -59,8 +59,8 @@ class Keyboard extends Component {
     practiceSong = (song) => {
         let notes = song.notes
         let songLength = notes.length
-        if(song.start === undefined) song.start = 0
-        notes.splice(0,song.start)
+        if (song.start === undefined) song.start = 0
+        notes.splice(0, song.start)
         let chunks = []
         for (let i = 0; notes.length > 0; i++) {
             let chunk = {
@@ -91,21 +91,21 @@ class Keyboard extends Component {
         sliderState.position += position
         this.setState({
             sliderState: sliderState
-        },() => this.props.functions.changeSliderState(this.state.sliderState))
+        }, () => this.props.functions.changeSliderState(this.state.sliderState))
     }
     setSlider = (state) => {
         this.setState({
             sliderState: state
-        },this.props.functions.changeSliderState(state))
+        }, this.props.functions.changeSliderState(state))
     }
     playSong = async (song) => {
         let notes = song.notes
         let previous = 0
         this.setSlider({
-            size:notes.length,
+            size: notes.length,
             position: 0
         })
-        if(notes.length === 0) return
+        if (notes.length === 0) return
         for (let i = 0; i < notes.length; i++) {
             let delay = notes[i][1] - previous
             previous = notes[i][1]
@@ -119,12 +119,12 @@ class Keyboard extends Component {
     }
     handleClick = (note) => {
         let practiceSong = this.state.songToPractice
-        if(practiceSong.length > 0){
+        if (practiceSong.length > 0) {
             let indexClicked = practiceSong[0]?.notes.findIndex(e => e[0] === note.index)
-            if(indexClicked !== -1){
-                practiceSong[0].notes.splice(indexClicked,1)
-                if(practiceSong[0].notes.length === 0) practiceSong.shift()
-                if(practiceSong.length === 0) this.props.functions.stopSong()
+            if (indexClicked !== -1) {
+                practiceSong[0].notes.splice(indexClicked, 1)
+                if (practiceSong[0].notes.length === 0) practiceSong.shift()
+                if (practiceSong.length === 0) this.props.functions.stopSong()
                 this.setState({
                     songToPractice: practiceSong
                 }, () => this.changeSliderPosition(1))
@@ -166,7 +166,7 @@ class Keyboard extends Component {
     render() {
         let state = this.state
         let size = this.props.settings.keyboardSize.value / 100
-        return <div className="keyboard" style={{transform: `scale(${size})`}}>
+        return <div className="keyboard" style={{ transform: `scale(${size})` }}>
             {state.instrument.layout.map(note => {
                 let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined
                 let toBeClickedNext = state.songToPractice[1]?.notes.find(e => e[0] === note.index) !== undefined

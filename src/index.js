@@ -57,7 +57,7 @@ class Index extends Component {
   render() {
     let floatingMessage = this.state.floatingMessage
     let floatingMessageClass = floatingMessage.visible ? "floating-message floating-message-visible" : "floating-message"
-  
+
     return <div className="index">
       <div className={floatingMessageClass}>
         <div className="floating-message-title">
@@ -67,15 +67,15 @@ class Index extends Component {
           {floatingMessage.text}
         </div>
       </div>
-      {this.state.selectedPage === "App" ?<App changePage={this.changePage} /> : <></>}
-      {this.state.selectedPage === "Composer" ?<Composer changePage={this.changePage}/> : <></>}
+      {this.state.selectedPage === "App" ? <App changePage={this.changePage} /> : <></>}
+      {this.state.selectedPage === "Composer" ? <Composer changePage={this.changePage} /> : <></>}
     </div>
   }
 }
 
 ReactDOM.render(
   <React.StrictMode>
-    <Index/>
+    <Index />
 
   </React.StrictMode>,
   document.getElementById('root')
