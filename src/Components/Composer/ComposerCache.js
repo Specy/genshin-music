@@ -62,7 +62,7 @@ class ComposerCache {
             this.cache.standard.push(canvas.toDataURL())
         })
         standards.forEach(standardColumn => {
-            let canvas = drawColumn(standardColumn, this, 2)
+            let canvas = drawColumn(standardColumn, this, 3)
             this.cache.standardLarger.push(canvas.toDataURL())
         })
         notes.forEach(note => {

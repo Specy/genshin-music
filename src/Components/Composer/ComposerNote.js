@@ -21,7 +21,7 @@ class ComposerNote extends Component {
             <div className={className} >
                 <img
                     alt={data.noteNames.mobile}
-                    src={`${window.location.origin}/assets/icons/keys/${data.noteNames.mobile}.svg`}>
+                    src={`./assets/icons/keys/${data.noteNames.mobile}.svg`}>
 
                 </img>
                 <div className="layer-3-ball">

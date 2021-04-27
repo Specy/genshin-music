@@ -39,7 +39,9 @@ class App extends Component {
       thereIsSong: false
     }
     this.syncSongs()
+
   }
+
   getSettings = () => {
     let storedSettings = localStorage.getItem("Genshin_Main_Settings")
     try {

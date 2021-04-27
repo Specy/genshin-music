@@ -30,12 +30,7 @@ html, body{
   -webkit-tap-highlight-color: transparent;
 }
 body{
-  /*  background-image: url(assets//images/bg.jpg); */
   background-color: #394248;
-  background-position: center;
-  background-size:contain;
-  background-repeat: no-repeat;
-  overflow: hidden;
 }
 
 .keyboard-wrapper{

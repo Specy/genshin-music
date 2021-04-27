@@ -9,6 +9,7 @@ class Keyboard extends Component {
         this.state = {
             instrument: new Instrument(),
             audioContext: new (window.AudioContext || window.webkitAudioContext)(),
+            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
             playTimestamp: new Date().getTime(),
             songToPractice: [],
             sliderState: {
@@ -17,6 +18,11 @@ class Keyboard extends Component {
             }
         }
         this.loadInstrument(props.data.instrument)
+        try{
+            this.loadReverb()
+        }catch{
+            console.log("Error with reverb")
+        }
     }
     handleKeyboard = (event) => {
         let letter = event.key.toUpperCase()
@@ -34,8 +40,27 @@ class Keyboard extends Component {
         window.removeEventListener('keydown', this.handleKeyboard);
         window.removeEventListener("playSong", this.handlePlayEvent)
         window.removeEventListener("practiceSong", this.handlePracticeEvent)
+        let state = this.state
+        state.playTimestamp = new Date().getTime()
     }
-
+    loadReverb() {
+        let audioCtx = this.state.audioContext
+        fetch("./assets/audio/reverb4.wav")
+        .then(r => r.arrayBuffer().catch(function(){console.log("Error with reverb ")}))
+        .then(b => audioCtx.decodeAudioData(b, (impulse_response) => { 
+            let convolver = audioCtx.createConvolver()
+            let gainNode = audioCtx.createGain()
+            gainNode.gain.value = 2.5
+            convolver.buffer = impulse_response
+            convolver.connect(gainNode)
+            gainNode.connect(audioCtx.destination)
+            this.setState({
+                reverbAudioContext:convolver
+            })
+        })).catch(function(){
+            console.log("Error with reverb")
+        })
+    }
     handlePlayEvent = (event) => {
         let data = event.detail
         this.setState({
@@ -146,7 +171,11 @@ class Keyboard extends Component {
         const source = this.state.audioContext.createBufferSource()
         source.playbackRate.value = getPitchChanger(this.props.settings.pitch.value)
         source.buffer = note.buffer
-        source.connect(this.state.audioContext.destination)
+        if (this.props.settings.caveMode.value) {
+            source.connect(this.state.reverbAudioContext)
+        } else {
+            source.connect(this.state.audioContext.destination)
+        }
         source.start(0)
         this.setState({
             instrument: this.state.instrument
@@ -166,6 +195,8 @@ class Keyboard extends Component {
     render() {
         let state = this.state
         let size = this.props.settings.keyboardSize.value / 100
+        if(size < 0.5) size = 0.5
+        if(size > 1.5) size = 1.5
         return <div className="keyboard" style={{ transform: `scale(${size})` }}>
             {state.instrument.layout.map(note => {
                 let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined

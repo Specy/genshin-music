@@ -58,7 +58,7 @@ class Menu extends Component {
         if (song._id) delete song._id
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name + ".json")
+        fileDownloader.download(json, song.name + ".gensheet")
     }
     render() {
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
@@ -72,7 +72,7 @@ class Menu extends Component {
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
         return <div className="menu-wrapper">
             <div className="menu menu-visible">
-                <CloseMenu action={this.toggleMenu} />
+                {this.state.open && <CloseMenu action={this.toggleMenu} />}
                 <MenuItem type="Songs" action={this.selectSideMenu} className="margin-top-auto">
                     <FontAwesomeIcon icon={faMusic} className="icon" />
                 </MenuItem>
@@ -174,7 +174,7 @@ function SettingsRow(props) {
     const [valueHook, setter] = useState(data.value)
     function handleChange(e) {
         let el = e.target
-        let value = el.value
+        let value = data.type === "checkbox" ? el.checked : el.value
         if (data.type === "number") {
             value = Number(value)
             e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
@@ -182,6 +182,7 @@ function SettingsRow(props) {
                 return
             }
         }
+
         setter(value)
     }
     function sendChange() {
@@ -218,6 +219,7 @@ function SettingsRow(props) {
             : <input
                 type={data.type}
                 value={valueHook}
+                checked={valueHook}
                 onChange={handleChange}
                 onBlur={sendChange}
             />}

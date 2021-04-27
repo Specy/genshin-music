@@ -10,6 +10,8 @@ import ComposerCanvas from "./Components/Composer/ComposerCanvas"
 import Instrument from "./Components/audio/Instrument"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ComposerSettings } from "./Components/Composer/SettingsObj"
+import addCell from "./assets/icons/addCell.svg"
+import removeCell from "./assets/icons/removeCell.svg"
 class Composer extends Component {
     constructor(props) {
         super(props)
@@ -24,6 +26,7 @@ class Composer extends Component {
             instrument: new Instrument(),
             layers: [new Instrument(), new Instrument()],
             audioContext: new (window.AudioContext || window.webkitAudioContext)(),
+            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(), 
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
@@ -36,12 +39,36 @@ class Composer extends Component {
         this.loadInstrument("lyre", 1)
         this.loadInstrument("lyre", 2)
         this.loadInstrument("lyre", 3)
+        try{
+            this.loadReverb()
+        }catch{
+            console.log("Error with reverb")
+        }
+
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
+    }
+    loadReverb() {
+        let audioCtx = this.state.audioContext
+        fetch("./assets/audio/reverb4.wav")
+        .then(r => r.arrayBuffer().catch(function(){console.log("Error with reverb ")}))
+        .then(b => audioCtx.decodeAudioData(b, (impulse_response) => { 
+            let convolver = audioCtx.createConvolver()
+            let gainNode = audioCtx.createGain()
+            gainNode.gain.value = 2.5
+            convolver.buffer = impulse_response
+            convolver.connect(gainNode)
+            gainNode.connect(audioCtx.destination)
+            this.setState({
+                reverbAudioContext:convolver
+            })
+        })).catch(function(){
+            console.log("Error with reverb")
+        })
     }
     getSettings = () => {
         let storedSettings = localStorage.getItem("Genshin_Composer_Settings")
@@ -137,7 +164,11 @@ class Composer extends Component {
         const source = this.state.audioContext.createBufferSource()
         source.buffer = note.buffer
         source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
-        source.connect(this.state.audioContext.destination)
+        if (this.state.settings.caveMode.value) {
+            source.connect(this.state.reverbAudioContext)
+        } else {
+            source.connect(this.state.audioContext.destination)
+        }
         source.start(0)
 
     }
@@ -251,6 +282,9 @@ class Composer extends Component {
         this.dbCol.songs.remove({ name: name }, this.syncSongs)
     }
     loadSong = async (song) => {
+        if(!song.data.isComposedVersion){
+            return new LoggerEvent("Error","You cannot edit recorded songs in the composer (yet)").trigger()
+        }
         let stateSong = this.state.song
         if (stateSong.notes.length > 0) {
             await this.updateSong(stateSong)
@@ -270,11 +304,22 @@ class Composer extends Component {
         if (position === "end") {
             songColumns.push(...columns)
         } else {
-            songColumns.splice(position, 0, ...columns);
+            songColumns.splice(position + 1, 0, ...columns)
         }
+        if(amount === 1) this.selectColumn(this.state.song.selected + 1)
         this.hasChanges = true
         this.setState({
             song: this.state.song
+        })
+    }
+    removeColumns = (amount, position) => {
+        let song = this.state.song
+        if(song.columns.length < 16) return
+        song.columns.splice(position, amount)
+        if(song.columns.length <= song.selected) this.selectColumn(song.selected - 1)
+        this.hasChanges = true
+        this.setState({
+            song: song
         })
     }
     //----------------------------------------------//
@@ -397,7 +442,6 @@ class Composer extends Component {
             settings: state.settings,
             breakpoints: state.song.breakpoints
         }
-        let scrollPosition = 0
         return <div className="app">
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <FontAwesomeIcon icon={faBars} />
@@ -409,16 +453,17 @@ class Composer extends Component {
                     For a better experience, add the website to the home screen, and rotate your device
             </div>
             <div className="right-panel-composer">
-                <div className="column">
+                <div className="column fill-x">
 
                     <div className="top-panel-composer">
                         <div className="buttons-composer-wrapper">
-                            <div className="tool" onClick={() => this.selectColumn(this.state.song.selected - 1)}>
-                                <FontAwesomeIcon icon={faChevronLeft} />
-                            </div>
-                            <div className="tool" onClick={() => this.selectColumn(this.state.song.selected + 1)}>
+                            <div className="tool" onClick={() => this.selectColumn(song.selected + 1)}>
                                 <FontAwesomeIcon icon={faChevronRight} />
                             </div>
+                            <div className="tool" onClick={() => this.selectColumn(song.selected - 1)}>
+                                <FontAwesomeIcon icon={faChevronLeft} />
+                            </div>
+
                             <div className="tool" onClick={this.togglePlay}>
                                 <FontAwesomeIcon icon={this.state.isPlaying ? faPause : faPlay} />
                             </div>
@@ -429,14 +474,16 @@ class Composer extends Component {
                             data={canvasData}
                         />
                         <div className="buttons-composer-wrapper">
-                            <div className="tool-slim" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 5 * 2, "end")}>
+
+                            <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
+                                <img src={addCell} className="tool-icon" />
+                            </div>
+                            <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
+                                <img src={removeCell} className="tool-icon" />
+                            </div>
+                            <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value === 4 ? 20 : 15, "end")}>
                                 <FontAwesomeIcon icon={faPlus} />
                             </div>
-                        </div>
-                    </div>
-                    <div className="scroll-bar-outer">
-                        <div className="scroll-bar-inner" style={{ width: scrollPosition }}>
-
                         </div>
                     </div>
                 </div>

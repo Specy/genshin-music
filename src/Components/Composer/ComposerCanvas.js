@@ -11,11 +11,11 @@ class ComposerCanvas extends Component {
     constructor(props) {
         super(props)
         NumOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
-        let width = nearestEven(window.screen.width * 0.8)
+        let width = nearestEven(window.screen.width * 0.82)
         let height = nearestEven(window.screen.height * 0.45)
 
         if (window.screen.width < window.screen.height) {
-            width = nearestEven(window.screen.height * 0.8)
+            width = nearestEven(window.screen.height * 0.82)
             height = nearestEven(window.screen.width * 0.45)
         }
         this.state = {

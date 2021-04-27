@@ -181,7 +181,7 @@ function SettingsRow(props) {
     const [valueHook, setter] = useState(data.value)
     function handleChange(e) {
         let el = e.target
-        let value = el.value
+        let value = data.type === "checkbox" ? el.checked : el.value
         if (data.type === "number") {
             value = Number(value)
             e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
@@ -225,6 +225,7 @@ function SettingsRow(props) {
             : <input
                 type={data.type}
                 value={valueHook}
+                checked={valueHook}
                 onChange={handleChange}
                 onBlur={sendChange}
             />}

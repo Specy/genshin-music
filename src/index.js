@@ -16,7 +16,7 @@ class Index extends Component {
         text: "Text",
         title: "Title"
       },
-      selectedPage: "Composer"
+      selectedPage: "App"
     }
   }
   componentDidMount() {

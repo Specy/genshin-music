@@ -24,7 +24,7 @@
     border-radius: 50%;
     width: 6vw;
     height: 6vw;
-    border: 10px solid var(--note-border);
+    border: 0.6vw solid var(--note-border);
     color: var(--note-text);
     font-size: 1.5rem;
     font-weight: bold;
@@ -36,7 +36,7 @@
     cursor: pointer;
 }
 
-.note img{
+.note img, .note-composer img{
     width: 100%;
     height: 100%;
 }

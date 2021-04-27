@@ -119,7 +119,7 @@
     background-color: #ae9a7e;
     padding-top: 1rem;
     margin: 0;
-    display: flex;
+    display: grid;
     flex-direction: column;
     gap: 0.3rem;
     min-height: 4.3rem;
@@ -127,7 +127,6 @@
 .tab-selector-wrapper{
     display: flex;
     flex: 1;
-    justify-content: space-between;
     margin-top: 1rem;
     gap: 0.2rem;
 }
@@ -141,6 +140,7 @@
     color: white;
     padding: 0.4rem;
     cursor: pointer;
+    margin: 0;
 }
 .tab-selected{
     background-color: #ae9a7e;
@@ -165,6 +165,9 @@
     overflow-x: hidden;
 }
 .song-button{
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: #576377;
     border-radius: 0.3rem;
     height: 2rem;

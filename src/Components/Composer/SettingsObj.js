@@ -2,7 +2,7 @@ let instruments = [
     "lyre"
 ]
 let ComposerSettings = {
-    settingVesion: 0,
+    settingVesion: 2,
 
     instrument: {
         name: "Instrument (Layer 1)",
@@ -77,16 +77,22 @@ let ComposerSettings = {
             45,
             50
         ]
+    },
+    caveMode:{
+        name: "Reverb (cave mode)",
+        type: "checkbox",
+        songSetting: false,
+        value: false,
     }
 }
 let MainPageSettings = {
-    settingVesion: 0,
+    settingVesion: 1,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
         songSetting: false,
         value: 100,
-        threshold: [50, 200]
+        threshold: [0, 200]
     },
     instrument: {
         name: "Instrument",
@@ -117,6 +123,12 @@ let MainPageSettings = {
             "B",
         ]
     },
+    caveMode:{
+        name: "Reverb (cave mode)",
+        type: "checkbox",
+        songSetting: false,
+        value: false,
+    }
 }
 export {
     ComposerSettings,
