@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
-import { ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers, ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger } from "./Components/SongUtils"
+import { ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
+     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger,RecordingToComposed } from "./Components/SongUtils"
 import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faLayerGroup } from "@fortawesome/free-solid-svg-icons"
 
 import rotateImg from "./assets/icons/rotate.svg"
@@ -44,7 +45,7 @@ class Composer extends Component {
         }catch{
             console.log("Error with reverb")
         }
-
+        this.previousTime = new Date().getTime()
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
@@ -283,7 +284,7 @@ class Composer extends Component {
     }
     loadSong = async (song) => {
         if(!song.data.isComposedVersion){
-            return new LoggerEvent("Error","You cannot edit recorded songs in the composer (yet)").trigger()
+            song = RecordingToComposed(song)
         }
         let stateSong = this.state.song
         if (stateSong.notes.length > 0) {
@@ -336,6 +337,7 @@ class Composer extends Component {
                 let tempoChanger = TempoChangers[song.columns[song.selected]?.tempoChanger]
                 let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger?.changer)
                 await delayMs(msPerBPM)
+                this.previousTime = new Date().getTime()
                 this.handleTick()
             }
         })
@@ -387,13 +389,12 @@ class Composer extends Component {
         song.selected = index
         this.setState({
             song: song
-        }, () => {
-            if (ignoreAudio) return
-            currentColumn.notes.forEach(note => {
-                if (note.layer[0] === "1") this.playSound(keyboard[note.index])
-                if (note.layer[1] === "1") this.playSound(layers[0][note.index])
-                if (note.layer[2] === "1") this.playSound(layers[1][note.index])
-            })
+        })
+        if (ignoreAudio) return
+        currentColumn.notes.forEach(note => {
+            if (note.layer[0] === "1") this.playSound(keyboard[note.index])
+            if (note.layer[1] === "1") this.playSound(layers[0][note.index])
+            if (note.layer[2] === "1") this.playSound(layers[1][note.index])
         })
     }
     changeLayer = (layer) => {

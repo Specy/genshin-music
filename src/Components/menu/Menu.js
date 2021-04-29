@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
 import "./menu.css"
 
-import { FileDownloader, LoggerEvent } from "../SongUtils"
+import { FileDownloader, LoggerEvent,getSongType,SkyToGenshin } from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 class Menu extends Component {
     constructor(props) {
@@ -45,6 +45,14 @@ class Menu extends Component {
 
             try {
                 let song = JSON.parse(event.target.result)
+                let type = getSongType(song)
+                if(type === "none"){
+                    return new LoggerEvent("Error", "Invalid song").trigger() 
+                }
+                if(["skyRecorded","skyComposed"].includes(type)){
+                    song = SkyToGenshin(song)
+                }
+                console.log(type,song)
                 this.props.functions.addSong(song)
             } catch (e) {
                 new LoggerEvent("Error", "Error importing song").trigger()

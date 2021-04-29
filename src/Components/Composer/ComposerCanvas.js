@@ -279,5 +279,5 @@ function isVisible(pos, currentPos) {
     let boundaries = [currentPos - threshold, currentPos + threshold]
     return boundaries[0] < pos && pos < boundaries[1]
 }
-const positions = [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6]
+const positions = [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse()
 export default ComposerCanvas
