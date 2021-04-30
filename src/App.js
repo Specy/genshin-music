@@ -7,6 +7,7 @@ import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording } from "
 import { MainPageSettings } from "./Components/Composer/SettingsObj"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
+import {asyncConfirm,asyncPrompt} from "./Components/AsyncPrompts"
 import rotateImg from "./assets/icons/rotate.svg"
 class App extends Component {
   constructor(props) {
@@ -114,8 +115,15 @@ class App extends Component {
     await this.dbCol.songs.insert(song)
     this.syncSongs()
   }
-  removeSong = (name) => {
-    this.dbCol.songs.remove({ name: name }, this.syncSongs)
+  componentDidCatch(){
+    new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
+    this.stopSong()
+  }
+  removeSong = async (name) => {
+    let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
+    if(result){
+      this.dbCol.songs.remove({ name: name }, this.syncSongs)
+    }
   }
   handleRecording = (note) => {
     if (this.state.isRecording) {
@@ -177,7 +185,7 @@ class App extends Component {
       let songName
       let promptString = "Write song name, press cancel to ignore"
       while (true) {
-        songName = prompt(promptString)
+        songName = await asyncPrompt(promptString)
         if (songName === null) break
         if (songName !== "") {
           if (await this.songExists(songName)) {

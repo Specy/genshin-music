@@ -1,6 +1,6 @@
 import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
+import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc, } from '@fortawesome/free-solid-svg-icons'
 import "./menu.css"
 
 import { FileDownloader, LoggerEvent,getSongType,SkyToGenshin } from "../SongUtils"
@@ -9,8 +9,8 @@ class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            open: false,
-            selectedMenu: "Songs",
+            open: true,
+            selectedMenu: "Settings",
             selectedSongType: "recorded",
 
         }
@@ -153,6 +153,10 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
+                    <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
+                        Support me
+                    </a>
+
                 </MenuPanel>
             </div>
         </div>

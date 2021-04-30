@@ -133,6 +133,9 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
+                    <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
+                        Support me
+                    </a>
                 </MenuPanel>
             </div>
         </div>

@@ -143,6 +143,61 @@ body{
   flex: 1;
   white-space: pre-line
 }
+.floating-prompt{
+  position: absolute;
+  margin-right: auto;
+  margin-left: auto;
+  top: 2rem;
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  right: 0;
+  width: 30vw;
+  padding: 0.8rem;
+  background-color: var(--primary);
+  border: 2px solid var(--detail);
+  color: white;
+  border-radius: 0.5rem;
+  opacity: 1;
+  transition: 0.5s all;
+}
+.floating-prompt-hidden{
+  opacity: 0;
+}
+.prompt-button{
+  background-color: #576377;
+  color: white;
+  border: none;
+  padding: 0.5rem 2rem;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+.prompt-input{
+  margin-top: 0.5rem;
+  border-radius: 0.3rem;
+  border: none;
+  padding: 0.3rem;
+}
+a{
+  text-decoration: none;
+}
+.donate-button{
+  margin-top: auto;
+  width: 100%;
+  background-color: var(--note-text);
+  padding: 0.8rem;
+  color: white;
+  border-radius: 0.5rem;
+  text-align: center;
+  text-decoration: none;
+  font-size: 1.2rem;
+}
+.prompt-row{
+  display: flex;
+  width: 100%;
+  margin-top: 0.5rem;
+  justify-content: space-between;
+}
 .floating-message-visible{
   bottom: 2rem;
   opacity: 1;

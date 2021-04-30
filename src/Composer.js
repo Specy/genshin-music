@@ -12,6 +12,7 @@ import Instrument from "./Components/audio/Instrument"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ComposerSettings } from "./Components/Composer/SettingsObj"
 import addCell from "./assets/icons/addCell.svg"
+import {asyncConfirm,asyncPrompt} from "./Components/AsyncPrompts"
 import removeCell from "./assets/icons/removeCell.svg"
 class Composer extends Component {
     constructor(props) {
@@ -52,6 +53,12 @@ class Composer extends Component {
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
+    }
+    componentDidCatch(){
+        this.setState({
+            song: new ComposedSong("Untitled")
+        })
+        new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
     }
     loadReverb() {
         let audioCtx = this.state.audioContext
@@ -142,6 +149,7 @@ class Composer extends Component {
                 this.handleClick(note)
             }
         */
+       if(document.activeElement.tagName === "INPUT") return
         switch (letter) {
             case "D": this.selectColumn(this.state.song.selected + 1)
                 break;
@@ -240,7 +248,7 @@ class Composer extends Component {
         return new Promise(async resolve => {
             let promptString = "Write song name, press cancel to ignore"
             while (true) {
-                let songName = prompt(promptString)
+                let songName = await asyncPrompt(promptString)
                 if (songName === null) return resolve(null)
                 if (songName !== "") {
                     if (await this.songExists(songName)) {
@@ -256,9 +264,9 @@ class Composer extends Component {
 
     }
     askForSongUpdate = () => {
-        return new Promise(resolve => {
-            let prompt = window.confirm(`You have unsaved changes to the song: ${this.state.song.name} do you want to save now?`)
-            resolve(prompt)
+        return new Promise(async resolve => {
+            let result = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`) 
+            resolve(result)
         })
     }
     songExists = async (name) => {
@@ -266,7 +274,7 @@ class Composer extends Component {
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.hasChanges) {
-            let wantsToSave = this.askForSongUpdate()
+            let wantsToSave = await this.askForSongUpdate()
             if (wantsToSave) {
                 await this.updateSong(this.state.song)
             }
@@ -285,6 +293,7 @@ class Composer extends Component {
     loadSong = async (song) => {
         if(!song.data.isComposedVersion){
             song = RecordingToComposed(song)
+            song.name += " - Composed"
         }
         let stateSong = this.state.song
         if (stateSong.notes.length > 0) {
