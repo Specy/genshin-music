@@ -10,13 +10,15 @@ let NumOfColumnsPerCanvas = 35
 class ComposerCanvas extends Component {
     constructor(props) {
         super(props)
+        let sizes = document.body.getBoundingClientRect()
+        this.sizes = sizes
         NumOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
-        let width = nearestEven(window.screen.width * 0.82)
-        let height = nearestEven(window.screen.height * 0.45)
+        let width = nearestEven(sizes.width * 0.82)
+        let height = nearestEven(sizes.height * 0.45)
 
-        if (window.screen.width < window.screen.height) {
-            width = nearestEven(window.screen.height * 0.82)
-            height = nearestEven(window.screen.width * 0.45)
+        if (window.screen.width < sizes.height) {
+            width = nearestEven(sizes.height * 0.82)
+            height = nearestEven(sizes.width * 0.45)
         }
         this.state = {
             width: width,
@@ -44,10 +46,21 @@ class ComposerCanvas extends Component {
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
         this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
+        window.addEventListener("keydown",this.handleKeyboard)
     }
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
+        window.removeEventListener("keydown",this.handleKeyboard)
         this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
+    }
+    handleKeyboard = (event) => {
+        let key = event.keyCode
+        switch(key){
+            case 39: this.handleBreakpoints(1)
+                break;
+            case 37:this.handleBreakpoints(-1)
+                break;
+        }
     }
     handleWheel = (e) => {
         if (e.deltaY < 0) {
@@ -251,6 +264,11 @@ function Column(props) {
             image={backgroundCache}
             interactiveChildren={false}
         >
+            {isBreakpoint ? <Sprite
+                image={cache.breakpoints[1]}
+            >
+
+            </Sprite> : null}
         </Sprite>
         {data.notes.map((note) => {
             return <Sprite
@@ -261,11 +279,7 @@ function Column(props) {
 
             </Sprite>
         })}
-        {isBreakpoint ? <Sprite
-            image={cache.breakpoints[1]}
-        >
 
-        </Sprite> : null}
     </Container>
 }
 function calcMinColumnWidth(parentWidth) {

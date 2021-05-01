@@ -6,7 +6,7 @@
 // code you'd like.
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
-const CACHE = "V1";
+const CACHE = "V1.2";
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
@@ -28,7 +28,6 @@ const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
 registerRoute(
   // Return false to exempt requests from being fulfilled by index.html.
   ({ request, url }) => {
-    console.log(url)
     // If this isn't a navigation, skip.
     if (request.mode !== 'navigate') {
       return false;
@@ -41,7 +40,6 @@ registerRoute(
     if (url.pathname.match(fileExtensionRegexp)) {
       return false;
     } // Return true to signal that we want to use the handler.
-    console.log(true)
     return true;
   },
   createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
@@ -61,7 +59,7 @@ registerRoute(
   // Add in any other file extensions or routing criteria as needed.
   ({ url }) => url.origin === self.location.origin && cachedPaths.includes(url.pathname), // Customize this strategy as needed, e.g., by changing to CacheFirst.
   new StaleWhileRevalidate({
-    cacheName: 'files',
+    cacheName: CACHE,
     plugins: [
       // Ensure that once this runtime cache reaches a maximum size the
       // least-recently used images are removed.
@@ -69,7 +67,15 @@ registerRoute(
     ],
   })
 );
-
+serviceWorker.register({
+  onUpdate: registration => {
+    alert('New version available!  Ready to update?');
+    if (registration && registration.waiting) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+    window.location.reload();
+  }
+});
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', (event) => {
@@ -77,5 +83,19 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
-
+self.addEventListener('activate', (evt) => {
+  console.log('[ServiceWorker] Activate');
+  //Remove previous cached data from disk.
+  evt.waitUntil(
+      caches.keys().then((keyList) => {
+          return Promise.all(keyList.map((key) => {
+              if (key !== CACHE) {
+                  console.log('[ServiceWorker] Removing old cache', key);
+                  return caches.delete(key);
+              }
+          }));
+      })
+  );
+  self.clients.claim();
+});
 // Any other custom service worker logic can go here.

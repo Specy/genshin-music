@@ -21,11 +21,11 @@ let notes = ["000", "001", "010", "011", "100", "101", "110", "111"]
 let breakpoints = [
     {
         type: "short",
-        color: "#c44350"
+        color: "#282875"
     },
     {
         type: "long",
-        color: "#c44350"
+        color: "#282875"
     }
 ]
 class ComposerCache {
@@ -101,7 +101,8 @@ class ComposerCache {
             if (note[2] === "1") {
                 ctx.beginPath()
                 ctx.fillStyle = noteData.center
-                ctx.arc(this.noteWidth / 2 - 0.5, this.noteHeight / 2 - 0.5, this.noteHeight / 5, 0, 2 * Math.PI);
+                let ballHeight =  this.noteHeight / 4
+                ctx.arc(this.noteWidth / 2 - 0.5, this.noteHeight / 2 - 0.5, ballHeight, 0, 2 * Math.PI);
                 ctx.fill()
             }
             this.cache.notes[note] = canvas.toDataURL()
@@ -127,10 +128,32 @@ class ComposerCache {
                 let size = this.width / 4
                 let ctx = canvas.getContext("2d")
                 ctx.fillStyle = breakpoint.color
-                let x = this.width / 2 - this.margin / 4
-                ctx.arc(x, 0, size, 0, 2 * Math.PI);
-                ctx.arc(x, this.height, size, 0, 2 * Math.PI);
-                ctx.fill()
+                /*
+               ctx.strokeStyle = breakpoint.color
+               ctx.lineWidth = 3
+                ctx.strokeRect(1,1,this.width - 3,this.height - 2)
+                */
+                ctx.beginPath();
+                ctx.moveTo(0,this.height)
+                ctx.lineTo(this.noteWidth/2,this.height)
+                ctx.lineTo(0, this.height - this.noteHeight)
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(this.width,this.height)
+                ctx.lineTo(this.noteWidth/2,this.height)
+                ctx.lineTo(this.width, this.height - this.noteHeight)
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(0,0)
+                ctx.lineTo(this.noteWidth/2,0)
+                ctx.lineTo(0, this.noteHeight)
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(this.width,0)
+                ctx.lineTo(this.noteWidth/2,0)
+                ctx.lineTo(this.width, this.noteHeight )
+                ctx.fill();
+
                 this.cache.breakpoints.push(canvas.toDataURL())
             }
         })

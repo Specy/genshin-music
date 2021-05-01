@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import Composer from "./Composer"
@@ -16,7 +16,7 @@ class Index extends Component {
         text: "Text",
         title: "Title"
       },
-      selectedPage: "App"
+      selectedPage: "Composer"
     }
   }
   componentDidMount() {

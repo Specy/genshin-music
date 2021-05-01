@@ -9,7 +9,7 @@ class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            open: true,
+            open: false,
             selectedMenu: "Settings",
             selectedSongType: "recorded",
 
@@ -52,7 +52,6 @@ class Menu extends Component {
                 if(["skyRecorded","skyComposed"].includes(type)){
                     song = SkyToGenshin(song)
                 }
-                console.log(type,song)
                 this.props.functions.addSong(song)
             } catch (e) {
                 new LoggerEvent("Error", "Error importing song").trigger()
@@ -96,6 +95,9 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
+                        <button className="genshin-button">
+                            Compose song
+                        </button>
                         <FilePicker
                             onChange={(file) => this.importSong(file)}
                         >

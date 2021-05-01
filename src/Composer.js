@@ -142,7 +142,9 @@ class Composer extends Component {
     }
 
     handleKeyboard = (event) => {
-        let letter = event.key.toUpperCase()
+        let key = event.keyCode
+        let ctrlPressed = event.ctrlKey
+        console.log(key)
         /*
             let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
             if (note !== undefined) {
@@ -150,21 +152,26 @@ class Composer extends Component {
             }
         */
        if(document.activeElement.tagName === "INPUT") return
-        switch (letter) {
-            case "D": this.selectColumn(this.state.song.selected + 1)
+        switch (key) {
+            case 68: this.selectColumn(this.state.song.selected + 1)
                 break;
-            case "A": this.selectColumn(this.state.song.selected - 1)
+            case 65: this.selectColumn(this.state.song.selected - 1)
                 break;
-            case "1": this.handleTempoChanger(TempoChangers[0])
+            case 49: this.handleTempoChanger(TempoChangers[0])
                 break;
-            case "2": this.handleTempoChanger(TempoChangers[1])
+            case 50: this.handleTempoChanger(TempoChangers[1])
                 break;
-            case "3": this.handleTempoChanger(TempoChangers[2])
+            case 51: this.handleTempoChanger(TempoChangers[2])
                 break;
-            case "4": this.handleTempoChanger(TempoChangers[3])
+            case 52: this.handleTempoChanger(TempoChangers[3])
                 break;
-            case " ": this.togglePlay()
+            case 32: this.togglePlay()
                 break;
+            case 81: this.removeColumns(1,this.state.song.selected )
+                break;
+            case 69: this.addColumns(1,this.state.song.selected)
+                break;
+
             case "":
                 break;
         }
