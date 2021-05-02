@@ -77,6 +77,7 @@ class Menu extends Component {
         let changePage = this.props.functions.changePage
         let songs = data.songs.filter(song => !song.data.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
+
         return <div className="menu-wrapper">
             <div className="menu menu-visible">
                 {this.state.open && <CloseMenu action={this.toggleMenu} />}
@@ -95,7 +96,9 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
-                        <button className="genshin-button">
+                        <button className="genshin-button"
+                        onClick={() => changePage("Composer")}
+                        >
                             Compose song
                         </button>
                         <FilePicker

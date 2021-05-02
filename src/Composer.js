@@ -143,8 +143,6 @@ class Composer extends Component {
 
     handleKeyboard = (event) => {
         let key = event.keyCode
-        let ctrlPressed = event.ctrlKey
-        console.log(key)
         /*
             let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
             if (note !== undefined) {

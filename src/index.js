@@ -2,13 +2,24 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import Composer from "./Composer"
+import ErrorPage from "./Components/ErrorPage"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./App.css"
+import { BrowserRouter, Route, Redirect } from "react-router-dom";
 
 
+const getBasename = path => path.substr(0, path.lastIndexOf('/'));
+let pages = ["","Composer","ErrorPage"]
 class Index extends Component {
   constructor(props) {
     super(props)
+    let path = window.location.pathname.split("/")
+    if(path.length !== 0){
+      path = path[path.length - 1]
+    }else{
+      path = ""
+    }
+    if(!pages.includes(path)) path = ""
     this.state = {
       floatingMessage: {
         timestamp: 0,
@@ -16,8 +27,9 @@ class Index extends Component {
         text: "Text",
         title: "Title"
       },
-      selectedPage: "Composer"
+      selectedPage: path
     }
+
   }
   componentDidMount() {
     window.addEventListener('logEvent', this.logEvent);
@@ -25,6 +37,11 @@ class Index extends Component {
   changePage = (page) => {
     this.setState({
       selectedPage: page
+    })
+  }
+  componentDidCatch() {
+    this.setState({
+      selectedPage: "ErrorPage"
     })
   }
   componentWillUnmount() {
@@ -57,7 +74,7 @@ class Index extends Component {
   render() {
     let floatingMessage = this.state.floatingMessage
     let floatingMessageClass = floatingMessage.visible ? "floating-message floating-message-visible" : "floating-message"
-
+    let baseName = getBasename(window.location.pathname).replace("//","/")
     return <div className="index">
       <div className={floatingMessageClass}>
         <div className="floating-message-title">
@@ -67,8 +84,25 @@ class Index extends Component {
           {floatingMessage.text}
         </div>
       </div>
-      {this.state.selectedPage === "App" ? <App changePage={this.changePage} /> : <></>}
-      {this.state.selectedPage === "Composer" ? <Composer changePage={this.changePage} /> : <></>}
+      <BrowserRouter basename={baseName}>
+        <Redirect to={"/" + this.state.selectedPage}></Redirect>
+        {this.state.selectedPage === "ErrorPage"
+          ? <Route exact path={"/ErrorPage"}>
+            <ErrorPage changePage={this.changePage}/>
+          </Route>
+          : <>
+            <Route exact path="/">
+              <App changePage={this.changePage} />
+            </Route>
+
+            <Route exact path="/Composer">
+              <Composer changePage={this.changePage} />
+            </Route>
+
+          </>
+        }
+
+      </BrowserRouter>
     </div>
   }
 }

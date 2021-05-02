@@ -33,6 +33,7 @@ body{
   background-color: #394248;
 }
 
+
 .keyboard-wrapper{
   display: flex;
   flex-direction: column;
@@ -201,6 +202,49 @@ a{
 .floating-message-visible{
   bottom: 2rem;
   opacity: 1;
+}
+.error-page{
+  background-color: #863545;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 20vh;
+}
+.error-buttons-wrapper{
+  display: flex;
+  width: 50vw;
+  flex-direction: row;
+  margin-top: 4vhz;
+}
+.error-songs-wrapper{
+  padding:0.4rem;
+  margin-top: 4vh;
+  background-color: #394248;
+  border-radius: 0.5rem;
+  display: grid;
+  width: 50vw;
+  gap: 0.4rem;
+  max-height: 40vh;
+  overflow-y: auto;
+  min-height: 3.6rem;
+}
+.error-go-back{
+  position: absolute;
+  left: 1rem;
+  top:1rem;
+}
+.error-text-wrapper{
+  width: 50vw;
+  text-align: center;
+}
+@media only screen and (orientation:portrait){
+  .error-songs-wrapper,
+  .error-text-wrapper,
+  .error-buttons-wrapper
+  {
+    width: 90vw;
+  }
 }
 @media only screen and (max-width: 900px) {
 

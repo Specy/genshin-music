@@ -71,7 +71,7 @@ class Menu extends Component {
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FontAwesomeIcon icon={faCog} className="icon" />
                 </MenuItem>
-                <MenuItem type="Composer" action={() => changePage("App")} className="inverted">
+                <MenuItem type="Composer" action={() => changePage("")} className="inverted">
                     <FontAwesomeIcon icon={faCompactDisc} className="icon" />
                 </MenuItem>
             </div>

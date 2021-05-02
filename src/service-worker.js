@@ -6,7 +6,7 @@
 // code you'd like.
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
-const CACHE = "V1.2";
+const CACHE = "V1.4";
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
@@ -59,23 +59,9 @@ registerRoute(
   // Add in any other file extensions or routing criteria as needed.
   ({ url }) => url.origin === self.location.origin && cachedPaths.includes(url.pathname), // Customize this strategy as needed, e.g., by changing to CacheFirst.
   new StaleWhileRevalidate({
-    cacheName: CACHE,
-    plugins: [
-      // Ensure that once this runtime cache reaches a maximum size the
-      // least-recently used images are removed.
-      new ExpirationPlugin({ maxEntries: 50 }),
-    ],
+    cacheName: CACHE
   })
 );
-serviceWorker.register({
-  onUpdate: registration => {
-    alert('New version available!  Ready to update?');
-    if (registration && registration.waiting) {
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    }
-    window.location.reload();
-  }
-});
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', (event) => {
@@ -92,7 +78,7 @@ self.addEventListener('activate', (evt) => {
               if (key !== CACHE) {
                   console.log('[ServiceWorker] Removing old cache', key);
                   return caches.delete(key);
-              }
+                }
           }));
       })
   );
