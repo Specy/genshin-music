@@ -137,7 +137,7 @@ class Keyboard extends Component {
             previous = notes[i][1]
             let note = notes[i][0]
             if (this.state.playTimestamp !== song.timestamp) break
-            await delayMs(delay)
+            if(delay > 10) await delayMs(delay)
             this.changeSliderPosition(1)
             this.playSound(this.state.instrument.layout[note])
         }

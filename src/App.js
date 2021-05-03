@@ -37,8 +37,9 @@ class App extends Component {
         position: 0,
         size: 0
       },
-      thereIsSong: false
+      thereIsSong: "none"
     }
+    this.lastPlayedSong = new Recording()
     this.syncSongs()
 
   }
@@ -98,7 +99,7 @@ class App extends Component {
     songToPractice.start = start
     this.setState({
       keyboardData: this.state.keyboardData,
-      thereIsSong: true
+      thereIsSong: "practicing"
     }, () => {
       let event = new CustomEvent("practiceSong", { detail: songToPractice })
       window.dispatchEvent(event)
@@ -114,6 +115,7 @@ class App extends Component {
     }
     await this.dbCol.songs.insert(song)
     this.syncSongs()
+    new LoggerEvent("Success",`Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`,4000).trigger()
   }
   componentDidCatch(){
     new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
@@ -140,7 +142,7 @@ class App extends Component {
   stopSong = () => {
     return new Promise(resolve => {
       this.setState({
-        thereIsSong: false,
+        thereIsSong: "none",
         keyboardData: {
           practicingSong: new PlayingSong([]),
           playingSong: new PlayingSong([])
@@ -150,7 +152,7 @@ class App extends Component {
         window.dispatchEvent(event)
         event = new CustomEvent("practiceSong", { detail: new PlayingSong([]) })
         window.dispatchEvent(event)
-        resolve()
+        setTimeout(resolve,300)
       })
     })
   }
@@ -172,10 +174,12 @@ class App extends Component {
     this.state.keyboardData.playingSong = playingSong
     this.setState({
       keyboardData: this.state.keyboardData,
-      thereIsSong: true
+      thereIsSong: "playing"
     })
+
     let event = new CustomEvent("playSong", { detail: playingSong })
     window.dispatchEvent(event)
+    this.lastPlayedSong = song
   }
 
   toggleRecord = async (override) => {
@@ -249,7 +253,7 @@ class App extends Component {
           </GenshinButton>
         </div>
         <div className="keyboard-wrapper">
-          <div className={this.state.thereIsSong ? "slider-wrapper" : "slider-wrapper hidden-opacity"}>
+          <div className={this.state.thereIsSong !== "none" ? "slider-wrapper" : "slider-wrapper hidden-opacity"}>
             <button className="song-button" onClick={this.stopSong}>
               <FontAwesomeIcon icon={faStop} />
             </button>
@@ -261,7 +265,16 @@ class App extends Component {
               max={state.sliderState.size}
               value={state.sliderState.position}
             ></input>
-            <button className="song-button" onClick={() => this.practiceSong(state.keyboardData.practicingSong, state.sliderState.position)}>
+            <button className="song-button" onClick={async () => {
+              if(this.state.thereIsSong === "practicing"){
+                this.practiceSong(state.keyboardData.practicingSong, state.sliderState.position)
+              }else{
+                await this.stopSong()
+                this.playSong(this.lastPlayedSong)
+
+              
+              }
+               }}>
               <FontAwesomeIcon icon={faSyncAlt} />
             </button>
           </div>

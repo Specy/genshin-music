@@ -91,17 +91,17 @@ let TempoChangers = [
     id: 1,
     text: "1/2",
     changer: 1 / 2,
-    color: 0x4d694e
+    color: 0x517553
   }, {
     id: 2,
     text: "1/4",
-    changer: 1 / 3,
+    changer: 1 / 4,
     color: 0x434c7d
   }, {
     id: 3,
     text: "1/8",
-    changer: 1 / 4,
-    color: 0x6f5168
+    changer: 1 / 8,
+    color: 0x774D6D
   }
 ]
 class ComposedSong {
@@ -229,7 +229,7 @@ function getSongType(song) {
   }
   return "none"
 }
-let genshinLayout = [7,8,9,10,11,12,13,0,1,2,3,4,5,6,6]
+let genshinLayout = [14,15,16,17,18,19,20,7,8,9,10,11,12,13,0]
 function SkyToGenshin(song) {
   let result = new Song("Error")
   try{
@@ -239,9 +239,10 @@ function SkyToGenshin(song) {
     result.pitch = pitchArr[song.pitch || 0]
     let songNotes = song.songNotes
     songNotes.forEach(note => {
-      let index = note.key.split("Key")[1]
-      result.notes.push([genshinLayout[index], note.time,note.l || 1])
+      let data = note.key.split("Key")
+      result.notes.push([genshinLayout[data[1]], note.time,note.l ?? Number(data[0])])
     })
+
     if([true,"true"].includes(song.isComposed)){
       result = ComposerSongSerialization(RecordingToComposed(result))
     }else{
@@ -268,6 +269,7 @@ function RecordingToComposed(song){
     let column = new Column()
     column.notes = grouped[i].map(note => {
       let columnNote = new ColumnNote(note[0])
+      if(note[2] === 0) columnNote.layer = "100"
       if(note[2] === 1) columnNote.layer = "100"
       if(note[2] === 2) columnNote.layer = "010"
       if(note[2] === 3) columnNote.layer = "110"

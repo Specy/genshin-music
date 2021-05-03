@@ -348,8 +348,8 @@ class Composer extends Component {
             while (this.state.isPlaying) {
                 let state = this.state
                 const { song, settings } = state
-                let tempoChanger = TempoChangers[song.columns[song.selected]?.tempoChanger]
-                let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger?.changer)
+                let tempoChanger = TempoChangers[song.columns[song.selected].tempoChanger]
+                let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger.changer)
                 await delayMs(msPerBPM)
                 this.previousTime = new Date().getTime()
                 this.handleTick()

@@ -46,19 +46,19 @@ class ComposerCanvas extends Component {
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
         this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
-        window.addEventListener("keydown",this.handleKeyboard)
+        window.addEventListener("keydown", this.handleKeyboard)
     }
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
-        window.removeEventListener("keydown",this.handleKeyboard)
+        window.removeEventListener("keydown", this.handleKeyboard)
         this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
     }
     handleKeyboard = (event) => {
         let key = event.keyCode
-        switch(key){
+        switch (key) {
             case 39: this.handleBreakpoints(1)
                 break;
-            case 37:this.handleBreakpoints(-1)
+            case 37: this.handleBreakpoints(-1)
                 break;
         }
     }
@@ -151,7 +151,6 @@ class ComposerCanvas extends Component {
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > this.state.width) stageSize = this.state.width
         let stagePos = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
-
         return <div className="canvas-wrapper" style={{ width: s.width + 6 }}>
             <Stage
                 width={s.width}
@@ -178,7 +177,6 @@ class ComposerCanvas extends Component {
                         let standardCache = (i + 1) % beatMarks === 0 ? cache.standardLarger : cache.standard
                         let standardBg = standardCache[Number(switcher)] // boolean is 1 or 0
                         let background = column.tempoChanger === 0 ? standardBg : tempoChangersCache[column.tempoChanger]
-                        background = data.selected === i ? standardCache[2] : background
                         return <Column
                             cache={cache}
                             key={i}
@@ -192,6 +190,7 @@ class ComposerCanvas extends Component {
                         />
 
                     })}
+
                 </Container>
             </Stage>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
@@ -253,7 +252,7 @@ function drawStage(g, width, height) {
 }
 
 function Column(props) {
-    let { data, index, sizes, click, cache, backgroundCache, isBreakpoint } = props
+    let { data, index, sizes, click, cache, backgroundCache, isBreakpoint, isSelected } = props
     return <Container
         pointertap={() => click(index)}
         interactive={true}
@@ -264,12 +263,21 @@ function Column(props) {
             image={backgroundCache}
             interactiveChildren={false}
         >
+            {isSelected ? <Sprite
+                image={cache.standard[2]}
+                alpha={0.6}
+                zIndex={1}
+            >
+
+            </Sprite> : null}
             {isBreakpoint ? <Sprite
                 image={cache.breakpoints[1]}
             >
 
             </Sprite> : null}
+
         </Sprite>
+
         {data.notes.map((note) => {
             return <Sprite
                 key={note.index}
