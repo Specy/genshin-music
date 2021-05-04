@@ -6,20 +6,20 @@ import ErrorPage from "./Components/ErrorPage"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./App.css"
 import { BrowserRouter, Route, Redirect } from "react-router-dom";
-
+import {LoggerEvent} from "./Components/SongUtils"
 
 const getBasename = path => path.substr(0, path.lastIndexOf('/'));
-let pages = ["","Composer","ErrorPage"]
+let pages = ["", "Composer", "ErrorPage"]
 class Index extends Component {
   constructor(props) {
     super(props)
     let path = window.location.pathname.split("/")
-    if(path.length !== 0){
+    if (path.length !== 0) {
       path = path[path.length - 1]
-    }else{
+    } else {
       path = ""
     }
-    if(!pages.includes(path)) path = ""
+    if (!pages.includes(path)) path = ""
     this.state = {
       floatingMessage: {
         timestamp: 0,
@@ -27,6 +27,8 @@ class Index extends Component {
         text: "Text",
         title: "Title"
       },
+      hasVisited: localStorage.getItem("Genshin_Visited"),
+      hasPersistentStorage: navigator.storage && navigator.storage.persist,
       selectedPage: path
     }
 
@@ -46,6 +48,35 @@ class Index extends Component {
   }
   componentWillUnmount() {
     window.removeEventListener('logEvent', this.logEvent);
+  }
+  askForStorage = async () => {
+    try{
+      if (navigator.storage && navigator.storage.persist){
+        let result = await navigator.storage.persist()
+        if(result){
+          new LoggerEvent("Success","Storage permission allowed").trigger()
+        }else{
+          new LoggerEvent("Denied","Storage permission refused, reload if you want to try again").trigger()
+        }
+      }
+    }catch (e){
+      console.log(e)
+      new LoggerEvent("Error","There was an error with setting up persistent storage").trigger()
+    }
+    this.closeWelcomeScreen()
+  }
+  closeWelcomeScreen =  () => {
+    localStorage.setItem("Genshin_Visited",true)
+    this.setState({
+      hasVisited: true
+    })
+  }
+  hideMessage = () => {
+    let state = this.state
+    state.floatingMessage.visible = false
+    this.setState({
+      floatingMessage: state.floatingMessage
+    })
   }
   logEvent = (error) => {
     error = error.detail
@@ -74,9 +105,9 @@ class Index extends Component {
   render() {
     let floatingMessage = this.state.floatingMessage
     let floatingMessageClass = floatingMessage.visible ? "floating-message floating-message-visible" : "floating-message"
-    let baseName = getBasename(window.location.pathname).replace("//","/")
+    let baseName = getBasename(window.location.pathname).replace("//", "/")
     return <div className="index">
-      <div className={floatingMessageClass}>
+      <div className={floatingMessageClass} onClick={this.hideMessage}>
         <div className="floating-message-title">
           {floatingMessage.title}
         </div>
@@ -84,11 +115,41 @@ class Index extends Component {
           {floatingMessage.text}
         </div>
       </div>
+      {[null, false, "false"].includes(this.state.hasVisited) ?
+        <div className="welcome-message">
+          <div className={"welcome-message-title"}>Welcome to Genshin music</div>
+          <div>
+            This is a webapp which is run in your browser, if you currently are on one, please add
+            the website to the homescreen to have a fullscreen view and a more "app" feel.
+            <br /><br />
+            <div className="red-text">WARNING</div>: Clearing your browser cache / storage might also delete your songs, make sure to
+            make a backup sometimes.
+            <br /><br />
+            {this.state.hasPersistentStorage ?
+              <div>
+                To prevent your browser from automatically clearing the app storage, click the button below, if asked,
+                allow permission to keep the website data (Persistent storage).
+                        <br />
+                <button className="welcome-message-button" onClick={this.askForStorage}>
+                  Allow
+                </button>
+              </div>
+
+              : null}
+
+
+          <button className="welcome-close" onClick={this.closeWelcomeScreen}>
+            Close
+          </button>
+          </div>
+
+        </div> : null
+      }
       <BrowserRouter basename={baseName}>
         <Redirect to={"/" + this.state.selectedPage}></Redirect>
         {this.state.selectedPage === "ErrorPage"
           ? <Route exact path={"/ErrorPage"}>
-            <ErrorPage changePage={this.changePage}/>
+            <ErrorPage changePage={this.changePage} />
           </Route>
           : <>
             <Route exact path="/">

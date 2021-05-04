@@ -26,11 +26,13 @@ class Keyboard extends Component {
     }
     handleKeyboard = (event) => {
         let letter = event.key.toUpperCase()
-        if(document.activeElement.tagName === "INPUT") return
-        let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
-        if (note !== undefined) {
-            this.handleClick(note)
+        if(!document.activeElement.tagName === "INPUT"){
+            let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
+            if (note !== undefined) {
+                this.handleClick(note)
+            }
         }
+
     }
     componentDidMount() {
         window.addEventListener('keydown', this.handleKeyboard)

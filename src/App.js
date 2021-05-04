@@ -41,6 +41,24 @@ class App extends Component {
     }
     this.lastPlayedSong = new Recording()
     this.syncSongs()
+    this.checkUpdate()
+  }
+  checkUpdate = () => {
+    setTimeout(() => {
+      let currentVersion = 1
+      let updateMessage = 
+      `
+        Performance improvements
+        Fixed iOS bugs
+        Fixed composer bugs and small changes to composer
+      `
+      let storedVersion = localStorage.getItem("Genshin_Version")
+      if(currentVersion != storedVersion){
+        console.log("update")
+        new LoggerEvent("Update V"+currentVersion,updateMessage,8000).trigger()
+        localStorage.setItem("Genshin_Version",currentVersion)
+      }
+    },500)
 
   }
 

@@ -13,6 +13,7 @@ class ComposerKeyboard extends Component {
     render() {
         const { data, functions } = this.props
         let notesIndexes = data.currentColumn.notes.map((e) => e.index)
+        let hiddenSideMenu = data.isPlaying ? " hidden" : ""
         return <div>
             <div className="keyboard">
                 {data.keyboard.layout.map((note, i) => {
@@ -25,7 +26,7 @@ class ComposerKeyboard extends Component {
                     />
                 })}
             </div>
-            <div className="bottom-right-wrapper">
+            <div className={"bottom-right-wrapper"+hiddenSideMenu}>
                 <div className={"layer-buttons-wrapper"}>
                     <div className="bottom-right-text">
                         Layer

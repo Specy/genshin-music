@@ -12,13 +12,21 @@ async function asyncPrompt(question) {
         let cancel = document.createElement("button")
         let ok = document.createElement("button")
         cancel.className = "prompt-button"
-        ok.className = "prompt-button"
+        ok.className = "prompt-button disabled"
         row.className = "prompt-row"
         ok.innerText = "Ok"
         cancel.innerText = "Cancel"
         row.append(cancel, ok)
         container.append(text, input, row)
         document.body.appendChild(container)
+        input.addEventListener("input",() => {
+            if(input.value.trim() === ""){
+                ok.classList.add("disabled")
+            }else{
+                ok.classList.remove("disabled")
+            }
+
+        })
         cancel.addEventListener("click", () => {
             container.classList.add("floating-prompt-hidden")
             resolve(null)
@@ -26,7 +34,7 @@ async function asyncPrompt(question) {
         })
         ok.addEventListener("click", () => {
             container.classList.add("floating-prompt-hidden")
-            resolve(input.value)
+            resolve(input.value.trim())
             setTimeout(() => container.remove(),200)
         })
     })
@@ -41,6 +49,7 @@ async function asyncConfirm(question) {
         let row = document.createElement("div")
         let cancel = document.createElement("button")
         let ok = document.createElement("button")
+
         cancel.className = "prompt-button"
         ok.className = "prompt-button"
         row.className = "prompt-row"

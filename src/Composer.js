@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import Menu from "./Components/Composer/menu/Menu"
-import { ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
-     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger,RecordingToComposed } from "./Components/SongUtils"
+import {
+    ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
+    ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed
+} from "./Components/SongUtils"
 import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faLayerGroup } from "@fortawesome/free-solid-svg-icons"
-
+import * as workerTimers from 'worker-timers';
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
 import ComposerCanvas from "./Components/Composer/ComposerCanvas"
@@ -12,7 +14,7 @@ import Instrument from "./Components/audio/Instrument"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ComposerSettings } from "./Components/Composer/SettingsObj"
 import addCell from "./assets/icons/addCell.svg"
-import {asyncConfirm,asyncPrompt} from "./Components/AsyncPrompts"
+import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
 import removeCell from "./assets/icons/removeCell.svg"
 class Composer extends Component {
     constructor(props) {
@@ -28,7 +30,7 @@ class Composer extends Component {
             instrument: new Instrument(),
             layers: [new Instrument(), new Instrument()],
             audioContext: new (window.AudioContext || window.webkitAudioContext)(),
-            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(), 
+            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
@@ -41,20 +43,22 @@ class Composer extends Component {
         this.loadInstrument("lyre", 1)
         this.loadInstrument("lyre", 2)
         this.loadInstrument("lyre", 3)
-        try{
+        try {
             this.loadReverb()
-        }catch{
+        } catch {
             console.log("Error with reverb")
         }
-        this.previousTime = new Date().getTime()
+
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
+        let state = this.state
+        state.isPlaying = false
     }
-    componentDidCatch(){
+    componentDidCatch() {
         this.setState({
             song: new ComposedSong("Untitled")
         })
@@ -63,20 +67,20 @@ class Composer extends Component {
     loadReverb() {
         let audioCtx = this.state.audioContext
         fetch("./assets/audio/reverb4.wav")
-        .then(r => r.arrayBuffer().catch(function(){console.log("Error with reverb ")}))
-        .then(b => audioCtx.decodeAudioData(b, (impulse_response) => { 
-            let convolver = audioCtx.createConvolver()
-            let gainNode = audioCtx.createGain()
-            gainNode.gain.value = 2.5
-            convolver.buffer = impulse_response
-            convolver.connect(gainNode)
-            gainNode.connect(audioCtx.destination)
-            this.setState({
-                reverbAudioContext:convolver
+            .then(r => r.arrayBuffer().catch(function () { console.log("Error with reverb ") }))
+            .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
+                let convolver = audioCtx.createConvolver()
+                let gainNode = audioCtx.createGain()
+                gainNode.gain.value = 2.5
+                convolver.buffer = impulse_response
+                convolver.connect(gainNode)
+                gainNode.connect(audioCtx.destination)
+                this.setState({
+                    reverbAudioContext: convolver
+                })
+            })).catch(function () {
+                console.log("Error with reverb")
             })
-        })).catch(function(){
-            console.log("Error with reverb")
-        })
     }
     getSettings = () => {
         let storedSettings = localStorage.getItem("Genshin_Composer_Settings")
@@ -149,7 +153,7 @@ class Composer extends Component {
                 this.handleClick(note)
             }
         */
-       if(document.activeElement.tagName === "INPUT") return
+        if (document.activeElement.tagName === "INPUT") return
         switch (key) {
             case 68: this.selectColumn(this.state.song.selected + 1)
                 break;
@@ -165,9 +169,9 @@ class Composer extends Component {
                 break;
             case 32: this.togglePlay()
                 break;
-            case 81: this.removeColumns(1,this.state.song.selected )
+            case 81: this.removeColumns(1, this.state.song.selected)
                 break;
-            case 69: this.addColumns(1,this.state.song.selected)
+            case 69: this.addColumns(1, this.state.song.selected)
                 break;
 
             case "":
@@ -270,7 +274,7 @@ class Composer extends Component {
     }
     askForSongUpdate = () => {
         return new Promise(async resolve => {
-            let result = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`) 
+            let result = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`)
             resolve(result)
         })
     }
@@ -296,7 +300,7 @@ class Composer extends Component {
         this.dbCol.songs.remove({ name: name }, this.syncSongs)
     }
     loadSong = async (song) => {
-        if(!song.data.isComposedVersion){
+        if (!song.data.isComposedVersion) {
             song = RecordingToComposed(song)
             song.name += " - Composed"
         }
@@ -321,7 +325,7 @@ class Composer extends Component {
         } else {
             songColumns.splice(position + 1, 0, ...columns)
         }
-        if(amount === 1) this.selectColumn(this.state.song.selected + 1)
+        if (amount === 1) this.selectColumn(this.state.song.selected + 1)
         this.hasChanges = true
         this.setState({
             song: this.state.song
@@ -329,9 +333,9 @@ class Composer extends Component {
     }
     removeColumns = (amount, position) => {
         let song = this.state.song
-        if(song.columns.length < 16) return
+        if (song.columns.length < 16) return
         song.columns.splice(position, amount)
-        if(song.columns.length <= song.selected) this.selectColumn(song.selected - 1)
+        if (song.columns.length <= song.selected) this.selectColumn(song.selected - 1)
         this.hasChanges = true
         this.setState({
             song: song
@@ -344,15 +348,18 @@ class Composer extends Component {
         this.setState({
             isPlaying: newState
         }, async () => {
-            this.selectColumn(this.state.song.selected)
+            if(this.state.isPlaying) this.selectColumn(this.state.song.selected)
+            let pastError = 0
+            let previousTime = new Date().getTime()
             while (this.state.isPlaying) {
-                let state = this.state
-                const { song, settings } = state
+                const { song, settings } = this.state
                 let tempoChanger = TempoChangers[song.columns[song.selected].tempoChanger]
-                let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger.changer)
-                await delayMs(msPerBPM)
-                this.previousTime = new Date().getTime()
+                let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger.changer) + pastError
+                previousTime = new Date().getTime()
+                await delayMs(msPerBPM)   
+                if(!this.state.isPlaying) break
                 this.handleTick()
+                pastError = previousTime + msPerBPM - new Date().getTime()
             }
         })
 
@@ -445,7 +452,8 @@ class Composer extends Component {
             keyboard: state.instrument,
             currentColumn: state.song.columns[state.song.selected],
             TempoChangers: TempoChangers,
-            layer: state.layer
+            layer: state.layer,
+            isPlaying: state.isPlaying
         }
         let canvasFunctions = {
             selectColumn: this.selectColumn,
@@ -545,7 +553,7 @@ function calculateLength(song, end) {
 }
 function delayMs(ms) {
     return new Promise(resolve => {
-        setTimeout(resolve, ms)
+        workerTimers.setTimeout(resolve, ms)
     })
 }
 function replaceAt(string, index, replacement) {

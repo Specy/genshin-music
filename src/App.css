@@ -22,7 +22,12 @@ html, body{
   margin: 0;
   padding: 0;
 }
-*{
+*:not(input) {    
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   box-sizing: border-box;
   outline: none;
   font-family: Bonobo;
@@ -32,7 +37,9 @@ html, body{
 body{
   background-color: #394248;
 }
-
+.disabled{
+  filter: brightness(0.7);
+}
 
 .keyboard-wrapper{
   display: flex;
@@ -85,7 +92,7 @@ body{
   justify-content: center;
 }
 .hidden{
-  display: none;
+  display: none !important;
 }
 .slider{
   width: 50%;
@@ -183,6 +190,44 @@ body{
 a{
   text-decoration: none;
 }
+.welcome-message{
+  position: absolute;
+  width: 60vw;
+  min-height: 60vh;
+  background-color: var(--primary);
+  z-index: 500;
+  align-self: center;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  color: white;
+}
+.welcome-close{
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 0.2rem;
+  cursor: pointer;
+}
+.welcome-message-title{
+  font-size:1.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.welcome-message-button{
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 0.2rem;
+  background-color: limegreen;
+  color: white;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+.red-text{
+  color: rgb(255, 51, 74);
+  display: inline-block;
+}
 .donate-button{
   margin-top: auto;
   width: 100%;
@@ -193,6 +238,7 @@ a{
   text-align: center;
   text-decoration: none;
   font-size: 1.2rem;
+  cursor: pointer;
 }
 .prompt-row{
   display: flex;

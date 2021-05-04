@@ -16,6 +16,7 @@ class MultiSwitch extends Component {
                     style={{ backgroundColor: e === props.selected ? props.selectedColor : "" }}
                     className={props.buttonsClass}
                     onClick={() => props.onSelect(e)}
+                    key={e}
                 >
                     {e}
                 </button>

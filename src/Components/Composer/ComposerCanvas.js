@@ -92,15 +92,18 @@ class ComposerCanvas extends Component {
         let x = e.data.global.x
         if (this.stageSelected === true) {
             this.throttleStage++
-            if (this.throttleStage < 4) return
+            if (this.throttleStage < 5) return
             this.throttleStage = 0
             let isMovingLeft = this.stagePreviousPositon < x
-            let amount = Math.floor(Math.abs(this.stagePreviousPositon - x) / 4)
+            let amount = Math.ceil(Math.abs(this.stagePreviousPositon - x) / 8)
             if (amount > 4) amount = 4
             let toAdd = isMovingLeft ? -1 : 1
             this.stagePreviousPositon = x
-            if (this.props.data.selected === this.props.data.selected + toAdd * amount) return
-            this.props.functions.selectColumn(this.props.data.selected + toAdd * amount, true)
+            let finalPos = this.props.data.selected + toAdd * amount
+            if (this.props.data.selected === finalPos) return
+            if(finalPos < 0) finalPos = 0
+            if(finalPos > this.props.data.columns.length) finalPos = this.props.data.columns.length - 1
+            this.props.functions.selectColumn(finalPos, true)
         }
     }
     handleBreakpoints = (direction) => {
