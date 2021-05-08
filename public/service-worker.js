@@ -1,5 +1,6 @@
 
-const CACHE = "V1";
+console.log(self.__WB_MANIFEST)
+const CACHE = "V6.7";
 
 const FILES_TO_CACHE = [
 
