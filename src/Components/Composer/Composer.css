@@ -12,6 +12,17 @@
     align-items: center;
     flex-direction: column;
 }
+select{
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='white'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; 
+    background-position: 100%;
+}
+.instrument-picker{
+    display: flex;
+    flex-direction: column;
+    width: 8rem;
+}
 .right-panel-composer{
     flex: 1;
     height: 100%;
@@ -75,7 +86,7 @@ select{
 .settings-row{
     display: flex;
     justify-content: space-between;
-    padding: 0.3rem;
+    padding: 0.4rem;
     border-radius: 0.2rem;
     background-color: var(--composer-tool);
     color: black;
@@ -125,11 +136,16 @@ canvas{
     color: white;
     border: none;
     text-align: center;
-    width: fit-content;
+
     width: 8rem;
     padding: 0.2rem;
     border-radius: 0.2rem;
 }
+.settings-row :is(input[type=number]){
+    width: calc(8rem - 7px);
+}
+
+
 .buttons-composer-wrapper{
         display: grid;
         grid-template-rows: repeat(3 , 1fr);
@@ -156,8 +172,8 @@ canvas{
 .layer-3-ball{
     position: absolute;
     background-color: #d75c5c;
-    width: 1vw;
-    height: 1vw;
+    width: 1.5vw;
+    height: 1.5vw;
     border-radius: 50%;
     visibility: hidden;
 }
@@ -199,10 +215,10 @@ canvas{
     cursor: pointer;
 }
 .tempo-changers-wrapper button:hover, .layer-button:hover{
-    filter: brightness(1.3);
+    filter: brightness(1.1);
 }
 .tempo-changers-wrapper button:focus{
-    filter: brightness(1.5);
+    filter: brightness(1.3);
 }
 .layer-button{
     border: none;

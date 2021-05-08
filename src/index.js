@@ -6,7 +6,7 @@ import ErrorPage from "./Components/ErrorPage"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./App.css"
 import { BrowserRouter, Route, Redirect } from "react-router-dom";
-import {LoggerEvent} from "./Components/SongUtils"
+import { LoggerEvent } from "./Components/SongUtils"
 
 const getBasename = path => path.substr(0, path.lastIndexOf('/'));
 let pages = ["", "Composer", "ErrorPage"]
@@ -31,7 +31,7 @@ class Index extends Component {
       hasPersistentStorage: navigator.storage && navigator.storage.persist,
       selectedPage: path
     }
-
+    this.checkUpdate()
   }
   componentDidMount() {
     window.addEventListener('logEvent', this.logEvent);
@@ -50,23 +50,23 @@ class Index extends Component {
     window.removeEventListener('logEvent', this.logEvent);
   }
   askForStorage = async () => {
-    try{
-      if (navigator.storage && navigator.storage.persist){
+    try {
+      if (navigator.storage && navigator.storage.persist) {
         let result = await navigator.storage.persist()
-        if(result){
-          new LoggerEvent("Success","Storage permission allowed").trigger()
-        }else{
-          new LoggerEvent("Denied","Storage permission refused, reload if you want to try again").trigger()
+        if (result) {
+          new LoggerEvent("Success", "Storage permission allowed").trigger()
+        } else {
+          new LoggerEvent("Denied", "Storage permission refused, reload if you want to try again").trigger()
         }
       }
-    }catch (e){
+    } catch (e) {
       console.log(e)
-      new LoggerEvent("Error","There was an error with setting up persistent storage").trigger()
+      new LoggerEvent("Error", "There was an error with setting up persistent storage").trigger()
     }
     this.closeWelcomeScreen()
   }
-  closeWelcomeScreen =  () => {
-    localStorage.setItem("Genshin_Visited",true)
+  closeWelcomeScreen = () => {
+    localStorage.setItem("Genshin_Visited", true)
     this.setState({
       hasVisited: true
     })
@@ -77,6 +77,21 @@ class Index extends Component {
     this.setState({
       floatingMessage: state.floatingMessage
     })
+  }
+  checkUpdate = () => {
+    setTimeout(() => {
+      let currentVersion = 1.0
+      let updateMessage =
+        `
+          First release
+        `
+      let storedVersion = localStorage.getItem("Genshin_Version")
+      if (currentVersion != storedVersion) {
+        console.log("update")
+        new LoggerEvent("Update V" + currentVersion, updateMessage, 8000).trigger()
+        localStorage.setItem("Genshin_Version", currentVersion)
+      }
+    }, 1000)
   }
   logEvent = (error) => {
     error = error.detail
@@ -127,22 +142,20 @@ class Index extends Component {
             <br /><br />
             {this.state.hasPersistentStorage ?
               <div>
-                To prevent your browser from automatically clearing the app storage, click the button below, if asked,
+                To prevent your browser from automatically clearing the app storage, click the "confirm" button below, if asked,
                 allow permission to keep the website data (Persistent storage).
-                        <br />
-                <button className="welcome-message-button" onClick={this.askForStorage}>
-                  Allow
-                </button>
               </div>
 
               : null}
 
 
-          <button className="welcome-close" onClick={this.closeWelcomeScreen}>
-            Close
-          </button>
-          </div>
 
+          </div>
+          <div className="welcome-message-button-wrapper">
+            <button className="welcome-message-button" onClick={this.askForStorage}>
+              Confirm
+                </button>
+          </div>
         </div> : null
       }
       <BrowserRouter basename={baseName}>

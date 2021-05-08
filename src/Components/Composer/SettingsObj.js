@@ -2,27 +2,30 @@ let instruments = [
     "lyre"
 ]
 let ComposerSettings = {
-    settingVesion: 2,
+    settingVesion: 0,
 
     instrument: {
         name: "Instrument (Layer 1)",
-        type: "select",
+        type: "instrument",
         songSetting: false,
         value: 0,
+        volume: 100,
         options: instruments
     },
     layer2: {
         name: "Instrument (Layer 2)",
-        type: "select",
+        type: "instrument",
         songSetting: false,
         value: 0,
+        volume: 100,
         options: instruments
     },
     layer3: {
         name: "Instrument (Layer 3)",
-        type: "select",
+        type: "instrument",
         songSetting: false,
         value: 0,
+        volume: 100,
         options: instruments
     },
     bpm: {
@@ -78,15 +81,21 @@ let ComposerSettings = {
             50
         ]
     },
-    caveMode:{
+    caveMode: {
         name: "Reverb (cave mode)",
+        type: "checkbox",
+        songSetting: false,
+        value: false,
+    },
+    autosave: {
+        name: "Autosave changes",
         type: "checkbox",
         songSetting: false,
         value: false,
     }
 }
 let MainPageSettings = {
-    settingVesion: 1,
+    settingVesion: 0,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
@@ -123,7 +132,7 @@ let MainPageSettings = {
             "B",
         ]
     },
-    caveMode:{
+    caveMode: {
         name: "Reverb (cave mode)",
         type: "checkbox",
         songSetting: false,

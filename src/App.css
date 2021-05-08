@@ -19,6 +19,7 @@
 html, body{
   width: 100%;
   height: 100vh;
+  min-height: 100%;
   margin: 0;
   padding: 0;
 }
@@ -194,18 +195,23 @@ a{
   position: absolute;
   width: 60vw;
   min-height: 60vh;
+  max-height: 90vh;
+  overflow-y: auto;
   background-color: var(--primary);
   z-index: 500;
   align-self: center;
   border-radius: 1rem;
   padding: 1.5rem;
   color: white;
+  display: flex;
+    flex-direction: column;
 }
 .welcome-close{
   position: absolute;
   bottom: 1rem;
   right: 1rem;
   border: none;
+  background-color: lightgray;
   padding: 0.4rem 1rem;
   border-radius: 0.2rem;
   cursor: pointer;
@@ -213,7 +219,12 @@ a{
 .welcome-message-title{
   font-size:1.5rem;
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+.welcome-message-button-wrapper{
+  display: flex;
+  margin-top: auto;
+  justify-content: flex-end;
 }
 .welcome-message-button{
   border: none;
@@ -294,5 +305,7 @@ a{
   }
 }
 @media only screen and (max-width: 900px) {
-
+  .floating-prompt{
+    width: 45vw;
+  }
 }

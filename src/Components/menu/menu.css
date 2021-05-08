@@ -13,12 +13,13 @@
     width: 4rem;
     background-color: var(--primary);
     height: 100vh;
-    border-right: solid 3px var(--detail);
-    border-left: solid 3px var(--detail);
+    border-right: solid 2px var(--detail);
+    border-left: solid 2px var(--detail);
     align-items: center;
     flex-direction: column;
     padding-top: 2vh;
     max-height: 100vh;
+    min-height: 100%;
     overflow-y: auto;
     z-index: 3;
     display: flex;
@@ -73,16 +74,17 @@
     border-radius: 1rem;
 }
 .menu-wrapper{
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
     height: 100%;
+    min-height: 100%;
     display: flex;
     flex-direction: row;
     z-index: 2;
 }
 .side-menu{
-    width: 30vw;
+    width: 40vw;
     height: 100vh;
     background-color: rgba(237, 229, 216,0.95);
     transform: scale(0.9);
@@ -90,7 +92,7 @@
     opacity: 0;
     padding: 1rem;
     display: flex;
-    left: -30vw;
+    left: -40vw;
     position: fixed;
 }
 .menu-open{
@@ -116,13 +118,14 @@
     border-bottom-left-radius: 0.3rem;
     border-bottom-right-radius: 0.3rem;
     padding: 0.5rem;
-    background-color: #ae9a7e;
+    background-color: #c0ad93;
     padding-top: 1rem;
     margin: 0;
     display: grid;
     flex-direction: column;
     gap: 0.3rem;
     min-height: 4.3rem;
+    overflow-y: auto;
 }
 .tab-selector-wrapper{
     display: flex;
@@ -136,13 +139,14 @@
     border-top-left-radius: 0.3rem;
     border-top-right-radius: 0.3rem;
     background-color: #d3bd8e;
-    color: white;
+    color: #393939;
+    font-size: 1rem;
     padding: 0.4rem;
     cursor: pointer;
     margin: 0;
 }
 .tab-selected{
-    background-color: #ae9a7e;
+    background-color: #c0ad93;
 }
 .inverted{
     filter: invert(1);
@@ -219,8 +223,8 @@
 @media only screen and (max-width: 900px) {
     .side-menu{
         padding: 1rem;
-        width: 50vw;
-        left: -50vw;
+        width: 60vw;
+        left: -60vw;
     }
     .menu-title{
         font-size: 1.5rem;

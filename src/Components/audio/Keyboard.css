@@ -19,6 +19,14 @@
     gap: 0.5rem;
 
 }
+.keyboard-5{
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+.keyboard-4{
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+}
 .note, .note-composer{
     background-color: var(--note-color);
     border-radius: 50%;

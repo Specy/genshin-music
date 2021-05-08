@@ -3,6 +3,7 @@ import "./Keyboard.css"
 import { getPitchChanger } from "../SongUtils"
 import Instrument from "./Instrument"
 import Note from "./Note"
+import * as workerTimers from 'worker-timers';
 class Keyboard extends Component {
     constructor(props) {
         super(props)
@@ -18,19 +19,21 @@ class Keyboard extends Component {
             }
         }
         this.loadInstrument(props.data.instrument)
-        try{
+        try {
             this.loadReverb()
-        }catch{
+        } catch {
             console.log("Error with reverb")
         }
     }
     handleKeyboard = (event) => {
-        let letter = event.key.toUpperCase()
-        if(!document.activeElement.tagName === "INPUT"){
-            let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
-            if (note !== undefined) {
-                this.handleClick(note)
-            }
+        if (document.activeElement.tagName === "INPUT") return
+        let index = this.state.instrument.getNoteFromCode(event.keyCode)
+        let note
+        if (index !== null) {
+            note = this.state.instrument.layout[index]
+        }
+        if (note !== undefined) {
+            this.handleClick(note)
         }
 
     }
@@ -49,20 +52,20 @@ class Keyboard extends Component {
     loadReverb() {
         let audioCtx = this.state.audioContext
         fetch("./assets/audio/reverb4.wav")
-        .then(r => r.arrayBuffer().catch(function(){console.log("Error with reverb ")}))
-        .then(b => audioCtx.decodeAudioData(b, (impulse_response) => { 
-            let convolver = audioCtx.createConvolver()
-            let gainNode = audioCtx.createGain()
-            gainNode.gain.value = 2.5
-            convolver.buffer = impulse_response
-            convolver.connect(gainNode)
-            gainNode.connect(audioCtx.destination)
-            this.setState({
-                reverbAudioContext:convolver
+            .then(r => r.arrayBuffer().catch(function () { console.log("Error with reverb ") }))
+            .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
+                let convolver = audioCtx.createConvolver()
+                let gainNode = audioCtx.createGain()
+                gainNode.gain.value = 2.5
+                convolver.buffer = impulse_response
+                convolver.connect(gainNode)
+                gainNode.connect(audioCtx.destination)
+                this.setState({
+                    reverbAudioContext: convolver
+                })
+            })).catch(function () {
+                console.log("Error with reverb")
             })
-        })).catch(function(){
-            console.log("Error with reverb")
-        })
     }
     handlePlayEvent = (event) => {
         let data = event.detail
@@ -139,7 +142,7 @@ class Keyboard extends Component {
             previous = notes[i][1]
             let note = notes[i][0]
             if (this.state.playTimestamp !== song.timestamp) break
-            if(delay > 10) await delayMs(delay)
+            if (delay > 10) await delayMs(delay)
             this.changeSliderPosition(1)
             this.playSound(this.state.instrument.layout[note])
         }
@@ -198,9 +201,12 @@ class Keyboard extends Component {
     render() {
         let state = this.state
         let size = this.props.settings.keyboardSize.value / 100
-        if(size < 0.5) size = 0.5
-        if(size > 1.5) size = 1.5
-        return <div className="keyboard" style={{ transform: `scale(${size})` }}>
+        if (size < 0.5) size = 0.5
+        if (size > 1.5) size = 1.5
+        let keyboardClass = "keyboard"
+        if (state.instrument.layout.length === 15) keyboardClass += " keyboard-5"
+        if (state.instrument.layout.length === 8) keyboardClass += " keyboard-4"
+        return <div className={keyboardClass} style={{ transform: `scale(${size})` }}>
             {state.instrument.layout.map(note => {
                 let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined
                 let toBeClickedNext = state.songToPractice[1]?.notes.find(e => e[0] === note.index) !== undefined
@@ -219,5 +225,9 @@ class Keyboard extends Component {
         </div>
     }
 }
-const delayMs = ms => new Promise(res => setTimeout(res, ms))
+function delayMs(ms) {
+    return new Promise(resolve => {
+        workerTimers.setTimeout(resolve, ms)
+    })
+}
 export default Keyboard

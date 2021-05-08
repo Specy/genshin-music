@@ -185,40 +185,40 @@ function ComposerSongSerialization(song) {
 }
 function getSongType(song) {
   try {
-    if(Array.isArray(song) && song.length > 0) song = song[0]
-    if(Array.isArray(song.songNotes) && song.bitsPerPage !== undefined){
+    if (Array.isArray(song) && song.length > 0) song = song[0]
+    if (Array.isArray(song.songNotes) && song.bitsPerPage !== undefined) {
       //sky
-      if([true,"true"].includes(song.isComposed)){
+      if ([true, "true"].includes(song.isComposed)) {
         return "skyComposed"
-      }else{
+      } else {
         return "skyRecorded"
       }
-    }else{
+    } else {
       //genshin
-      if(song.data.isComposedVersion){
-        if(typeof song.name !== "string") return "none"
-        if(typeof song.bpm !== "number") return "none"
-        if(!pitchArr.includes(song.pitch)) return "none"
-        if(Array.isArray(song.breakpoints)){
-          if(song.breakpoints.length > 0 ){
-            if(typeof song.breakpoints[0] !== "number") return "none"
+      if (song.data.isComposedVersion) {
+        if (typeof song.name !== "string") return "none"
+        if (typeof song.bpm !== "number") return "none"
+        if (!pitchArr.includes(song.pitch)) return "none"
+        if (Array.isArray(song.breakpoints)) {
+          if (song.breakpoints.length > 0) {
+            if (typeof song.breakpoints[0] !== "number") return "none"
           }
-        }else{
+        } else {
           return "none"
         }
-        if(Array.isArray(song.columns)){
-          if(song.columns.length > 0 ){
+        if (Array.isArray(song.columns)) {
+          if (song.columns.length > 0) {
             let column = song.columns[0]
-            if(typeof column[0] !== "number") return "none"
+            if (typeof column[0] !== "number") return "none"
           }
-        }else{
+        } else {
           return "none"
         }
         return "genshinComposed"
-      }else{
-        if(typeof song.name !== "string") return "none"
-        if(typeof song.bpm !== "number") return "none"
-        if(!pitchArr.includes(song.pitch)) return "none"
+      } else {
+        if (typeof song.name !== "string") return "none"
+        if (typeof song.bpm !== "number") return "none"
+        if (!pitchArr.includes(song.pitch)) return "none"
         return "genshinRecorded"
       }
     }
@@ -229,10 +229,10 @@ function getSongType(song) {
   }
   return "none"
 }
-let genshinLayout = [14,15,16,17,18,19,20,7,8,9,10,11,12,13,0]
+let genshinLayout = [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0]
 function SkyToGenshin(song) {
   let result = new Song("Error")
-  try{
+  try {
     song = song[0]
     result = new Song(song.name)
     result.bpm = song.bpm || 220
@@ -240,68 +240,68 @@ function SkyToGenshin(song) {
     let songNotes = song.songNotes
     songNotes.forEach(note => {
       let data = note.key.split("Key")
-      result.notes.push([genshinLayout[data[1]], note.time,note.l ?? Number(data[0])])
+      result.notes.push([genshinLayout[data[1]], note.time, note.l ?? Number(data[0])])
     })
 
-    if([true,"true"].includes(song.isComposed)){
+    if ([true, "true"].includes(song.isComposed)) {
       result = ComposerSongSerialization(RecordingToComposed(result))
-    }else{
-      result.notes = result.notes.map(e => [e[0],e[1]])
+    } else {
+      result.notes = result.notes.map(e => [e[0], e[1]])
     }
 
 
-  }catch (e){
+  } catch (e) {
     console.log(e)
     return new Song("Error importing")
   }
   return result
 }
-function RecordingToComposed(song){
+function RecordingToComposed(song) {
   let bpmToMs = Math.floor(60000 / song.bpm)
-  let composed = new ComposedSong(song.name,[])
+  let composed = new ComposedSong(song.name, [])
   composed.bpm = song.bpm
   composed.pitch = song.pitch
   let notes = song.notes
   let converted = []
-  let grouped = groupByNotes(notes,bpmToMs/9)
+  let grouped = groupByNotes(notes, bpmToMs / 9)
   let combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
-  for(let i = 0; i< grouped.length; i++){
+  for (let i = 0; i < grouped.length; i++) {
     let column = new Column()
     column.notes = grouped[i].map(note => {
       let columnNote = new ColumnNote(note[0])
-      if(note[2] === 0) columnNote.layer = "100"
-      if(note[2] === 1) columnNote.layer = "100"
-      if(note[2] === 2) columnNote.layer = "010"
-      if(note[2] === 3) columnNote.layer = "110"
-      if(note[2] === undefined) columnNote.layer = "100"
+      if (note[2] === 0) columnNote.layer = "100"
+      if (note[2] === 1) columnNote.layer = "100"
+      if (note[2] === 2) columnNote.layer = "010"
+      if (note[2] === 3) columnNote.layer = "110"
+      if (note[2] === undefined) columnNote.layer = "100"
       return columnNote
     })
-    let next = grouped[i + 1] || [[0,0,0]]
-    let difference = next[0][1] - grouped[i][0][1] 
+    let next = grouped[i + 1] || [[0, 0, 0]]
+    let difference = next[0][1] - grouped[i][0][1]
     let paddingColumns = []
-    while(difference >= combinations[3]){
-      if(difference / combinations[0] >= 1){
+    while (difference >= combinations[3]) {
+      if (difference / combinations[0] >= 1) {
         difference -= combinations[0]
         paddingColumns.push(0)
-      }else if(difference / combinations[1] >= 1){
+      } else if (difference / combinations[1] >= 1) {
         difference -= combinations[1]
         paddingColumns.push(1)
-      }else if(difference / combinations[2] >= 1){
+      } else if (difference / combinations[2] >= 1) {
         difference -= combinations[2]
         paddingColumns.push(2)
-      }else if(difference / combinations[3] >= 1){
+      } else if (difference / combinations[3] >= 1) {
         difference -= combinations[3]
         paddingColumns.push(3)
       }
     }
     let finalPadding = []
     column.tempoChanger = paddingColumns.shift() || 0
-    paddingColumns = paddingColumns.forEach((col,i) => {
+    paddingColumns = paddingColumns.forEach((col, i) => {
       let column = new Column()
       column.tempoChanger = col
       finalPadding.push(column)
     })
-    converted.push(column,...finalPadding)
+    converted.push(column, ...finalPadding)
   }
   composed.columns = converted
   return composed
@@ -314,15 +314,15 @@ class Column {
 
   }
 }
-function groupByNotes(notes,threshold ) {
+function groupByNotes(notes, threshold) {
   let result = []
-  while(notes.length > 0){
+  while (notes.length > 0) {
     let row = [notes.shift()]
     let amount = 0
-    for(let i = 0; i< notes.length; i++){
-      if(row[0][1] > notes[i][1] - threshold) amount++
+    for (let i = 0; i < notes.length; i++) {
+      if (row[0][1] > notes[i][1] - threshold) amount++
     }
-    result.push([...row,...notes.splice(0,amount)])
+    result.push([...row, ...notes.splice(0, amount)])
   }
   return result
 }

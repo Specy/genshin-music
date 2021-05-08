@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc, } from '@fortawesome/free-solid-svg-icons'
 import "./menu.css"
 
-import { FileDownloader, LoggerEvent,getSongType,SkyToGenshin } from "../SongUtils"
+import { FileDownloader, LoggerEvent, getSongType, SkyToGenshin } from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 class Menu extends Component {
     constructor(props) {
@@ -46,10 +46,10 @@ class Menu extends Component {
             try {
                 let song = JSON.parse(event.target.result)
                 let type = getSongType(song)
-                if(type === "none"){
-                    return new LoggerEvent("Error", "Invalid song").trigger() 
+                if (type === "none") {
+                    return new LoggerEvent("Error", "Invalid song").trigger()
                 }
-                if(["skyRecorded","skyComposed"].includes(type)){
+                if (["skyRecorded", "skyComposed"].includes(type)) {
                     song = SkyToGenshin(song)
                 }
                 this.props.functions.addSong(song)
@@ -65,7 +65,8 @@ class Menu extends Component {
         if (song._id) delete song._id
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name + ".gensheet")
+        fileDownloader.download(json, song.name + ".gensheet.json")
+        new LoggerEvent("Success", "Song downloaded").trigger()
     }
     render() {
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
@@ -97,7 +98,7 @@ class Menu extends Component {
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
                         <button className="genshin-button"
-                        onClick={() => changePage("Composer")}
+                            onClick={() => changePage("Composer")}
                         >
                             Compose song
                         </button>

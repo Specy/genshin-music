@@ -101,8 +101,8 @@ class ComposerCanvas extends Component {
             this.stagePreviousPositon = x
             let finalPos = this.props.data.selected + toAdd * amount
             if (this.props.data.selected === finalPos) return
-            if(finalPos < 0) finalPos = 0
-            if(finalPos > this.props.data.columns.length) finalPos = this.props.data.columns.length - 1
+            if (finalPos < 0) finalPos = 0
+            if (finalPos > this.props.data.columns.length) finalPos = this.props.data.columns.length - 1
             this.props.functions.selectColumn(finalPos, true)
         }
     }

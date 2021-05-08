@@ -1,3 +1,5 @@
+import { LoggerEvent } from "./SongUtils"
+
 async function asyncPrompt(question) {
     return new Promise(resolve => {
         let container = document.createElement("div")
@@ -19,10 +21,10 @@ async function asyncPrompt(question) {
         row.append(cancel, ok)
         container.append(text, input, row)
         document.body.appendChild(container)
-        input.addEventListener("input",() => {
-            if(input.value.trim() === ""){
+        input.addEventListener("input", () => {
+            if (input.value.trim() === "") {
                 ok.classList.add("disabled")
-            }else{
+            } else {
                 ok.classList.remove("disabled")
             }
 
@@ -30,12 +32,17 @@ async function asyncPrompt(question) {
         cancel.addEventListener("click", () => {
             container.classList.add("floating-prompt-hidden")
             resolve(null)
-            setTimeout(() => container.remove(),200)
+            setTimeout(() => container.remove(), 200)
         })
         ok.addEventListener("click", () => {
+            if (input.value.trim() === "Untitled") {
+                input.value = ""
+                return new LoggerEvent("Warning", '"Untitled" is a reserved word, use another').trigger()
+            }
             container.classList.add("floating-prompt-hidden")
             resolve(input.value.trim())
-            setTimeout(() => container.remove(),200)
+
+            setTimeout(() => container.remove(), 200)
         })
     })
 }
@@ -61,12 +68,12 @@ async function asyncConfirm(question) {
         cancel.addEventListener("click", () => {
             container.classList.add("floating-prompt-hidden")
             resolve(false)
-            setTimeout(() => container.remove(),200)
+            setTimeout(() => container.remove(), 200)
         })
         ok.addEventListener("click", () => {
             container.classList.add("floating-prompt-hidden")
             resolve(true)
-            setTimeout(() => container.remove(),200)
+            setTimeout(() => container.remove(), 200)
         })
     })
 }

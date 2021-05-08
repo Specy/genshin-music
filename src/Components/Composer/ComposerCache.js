@@ -101,7 +101,7 @@ class ComposerCache {
             if (note[2] === "1") {
                 ctx.beginPath()
                 ctx.fillStyle = noteData.center
-                let ballHeight =  this.noteHeight / 4
+                let ballHeight = this.noteHeight / 4
                 ctx.arc(this.noteWidth / 2 - 0.5, this.noteHeight / 2 - 0.5, ballHeight, 0, 2 * Math.PI);
                 ctx.fill()
             }
@@ -134,24 +134,24 @@ class ComposerCache {
                 ctx.strokeRect(1,1,this.width - 3,this.height - 2)
                 */
                 ctx.beginPath();
-                ctx.moveTo(0,this.height)
-                ctx.lineTo(this.noteWidth/2,this.height)
+                ctx.moveTo(0, this.height)
+                ctx.lineTo(this.noteWidth / 2, this.height)
                 ctx.lineTo(0, this.height - this.noteHeight)
                 ctx.fill();
                 ctx.beginPath();
-                ctx.moveTo(this.width,this.height)
-                ctx.lineTo(this.noteWidth/2,this.height)
+                ctx.moveTo(this.width, this.height)
+                ctx.lineTo(this.noteWidth / 2, this.height)
                 ctx.lineTo(this.width, this.height - this.noteHeight)
                 ctx.fill();
                 ctx.beginPath();
-                ctx.moveTo(0,0)
-                ctx.lineTo(this.noteWidth/2,0)
+                ctx.moveTo(0, 0)
+                ctx.lineTo(this.noteWidth / 2, 0)
                 ctx.lineTo(0, this.noteHeight)
                 ctx.fill();
                 ctx.beginPath();
-                ctx.moveTo(this.width,0)
-                ctx.lineTo(this.noteWidth/2,0)
-                ctx.lineTo(this.width, this.noteHeight )
+                ctx.moveTo(this.width, 0)
+                ctx.lineTo(this.noteWidth / 2, 0)
+                ctx.lineTo(this.width, this.noteHeight)
                 ctx.fill();
 
                 this.cache.breakpoints.push(canvas.toDataURL())

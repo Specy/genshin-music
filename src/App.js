@@ -7,7 +7,7 @@ import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording } from "
 import { MainPageSettings } from "./Components/Composer/SettingsObj"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
-import {asyncConfirm,asyncPrompt} from "./Components/AsyncPrompts"
+import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
 import rotateImg from "./assets/icons/rotate.svg"
 class App extends Component {
   constructor(props) {
@@ -41,26 +41,8 @@ class App extends Component {
     }
     this.lastPlayedSong = new Recording()
     this.syncSongs()
-    this.checkUpdate()
   }
-  checkUpdate = () => {
-    setTimeout(() => {
-      let currentVersion = 1
-      let updateMessage = 
-      `
-        Performance improvements
-        Fixed iOS bugs
-        Fixed composer bugs and small changes to composer
-      `
-      let storedVersion = localStorage.getItem("Genshin_Version")
-      if(currentVersion != storedVersion){
-        console.log("update")
-        new LoggerEvent("Update V"+currentVersion,updateMessage,8000).trigger()
-        localStorage.setItem("Genshin_Version",currentVersion)
-      }
-    },500)
 
-  }
 
   getSettings = () => {
     let storedSettings = localStorage.getItem("Genshin_Main_Settings")
@@ -133,15 +115,15 @@ class App extends Component {
     }
     await this.dbCol.songs.insert(song)
     this.syncSongs()
-    new LoggerEvent("Success",`Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`,4000).trigger()
+    new LoggerEvent("Success", `Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000).trigger()
   }
-  componentDidCatch(){
+  componentDidCatch() {
     new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
     this.stopSong()
   }
   removeSong = async (name) => {
     let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
-    if(result){
+    if (result) {
       this.dbCol.songs.remove({ name: name }, this.syncSongs)
     }
   }
@@ -170,7 +152,7 @@ class App extends Component {
         window.dispatchEvent(event)
         event = new CustomEvent("practiceSong", { detail: new PlayingSong([]) })
         window.dispatchEvent(event)
-        setTimeout(resolve,300)
+        setTimeout(resolve, 300)
       })
     })
   }
@@ -284,15 +266,15 @@ class App extends Component {
               value={state.sliderState.position}
             ></input>
             <button className="song-button" onClick={async () => {
-              if(this.state.thereIsSong === "practicing"){
+              if (this.state.thereIsSong === "practicing") {
                 this.practiceSong(state.keyboardData.practicingSong, state.sliderState.position)
-              }else{
+              } else {
                 await this.stopSong()
                 this.playSong(this.lastPlayedSong)
 
-              
+
               }
-               }}>
+            }}>
               <FontAwesomeIcon icon={faSyncAlt} />
             </button>
           </div>

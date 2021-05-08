@@ -38,7 +38,7 @@ class Composer extends Component {
             menuOpen: false,
             layer: 1
         }
-        this.hasChanges = false
+        this.changes = 0
         this.syncSongs()
         this.loadInstrument("lyre", 1)
         this.loadInstrument("lyre", 2)
@@ -52,6 +52,10 @@ class Composer extends Component {
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
+        window.addEventListener("beforeunload",(event) => {
+            event.preventDefault()
+            event.returnValue = ''
+        })
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
@@ -63,6 +67,15 @@ class Composer extends Component {
             song: new ComposedSong("Untitled")
         })
         new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
+    }
+    handleAutoSave =() => {
+        this.changes++
+        if(this.changes > 5 && this.state.settings.autosave.value){
+            if(this.state.song.name !== "Untitled"){
+                this.updateSong(this.state.song)
+            }
+            
+        }
     }
     loadReverb() {
         let audioCtx = this.state.audioContext
@@ -136,7 +149,7 @@ class Composer extends Component {
             let newInstrument = new Instrument(name)
             let layers = this.state.layers
             layers[layer - 2] = newInstrument
-            await layers[layer - 2].load(this.state.audioContext)
+            await newInstrument.load(this.state.audioContext)
             this.setState({
                 layers: layers
             })
@@ -144,7 +157,24 @@ class Composer extends Component {
 
 
     }
-
+    changeVolume = (obj) => {
+        let settings = this.state.settings
+        if(obj.key === "instrument"){
+            settings.instrument.volume = obj.value
+            this.state.instrument.changeVolume(obj.value)
+        } 
+        if(obj.key === "layer2"){
+            settings.layer2.volume = obj.value
+            this.state.layers[0].changeVolume(obj.value)
+        } 
+        if(obj.key === "layer3"){
+            settings.layer3.volume = obj.value
+            this.state.layers[1].changeVolume(obj.value)
+        } 
+        this.setState({
+            settings: settings
+        }, () => this.updateSettings())
+    }
     handleKeyboard = (event) => {
         let key = event.keyCode
         /*
@@ -178,14 +208,16 @@ class Composer extends Component {
                 break;
         }
     }
-    playSound = (note) => {
+    playSound = (instrument,index) => {
         const source = this.state.audioContext.createBufferSource()
+        let note = instrument.layout[index]
         source.buffer = note.buffer
         source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
+        source.connect(instrument.gain)
         if (this.state.settings.caveMode.value) {
-            source.connect(this.state.reverbAudioContext)
+            instrument.gain.connect(this.state.reverbAudioContext)
         } else {
-            source.connect(this.state.audioContext.destination)
+            instrument.gain.connect(this.state.audioContext.destination)
         }
         source.start(0)
 
@@ -208,8 +240,12 @@ class Composer extends Component {
         this.setState({
             song: this.state.song
         })
-        this.hasChanges = true
-        this.playSound(note)
+        this.handleAutoSave()
+        let instrument = this.state.instrument
+        if(this.state.layer > 1){
+            instrument = this.state.layers[this.state.layer - 2]
+        }
+        this.playSound(instrument,note.index)
     }
     syncSongs = async () => {
         let songs = await this.dbCol.songs.find().toArray()
@@ -243,7 +279,7 @@ class Composer extends Component {
             if (await this.songExists(song.name)) {
                 await this.dbCol.songs.update({ name: song.name }, ComposerSongSerialization(song))
                 console.log("song saved:", song.name)
-                this.hasChanges = false
+                this.changes = 0
                 this.syncSongs()
             } else {
                 console.log("song doesn't exist")
@@ -282,7 +318,7 @@ class Composer extends Component {
         return await this.dbCol.songs.findOne({ name: name }) !== undefined
     }
     createNewSong = async () => {
-        if (this.state.song.name !== "Untitled" && this.hasChanges) {
+        if (this.state.song.name !== "Untitled" && this.changes > 0) {
             let wantsToSave = await this.askForSongUpdate()
             if (wantsToSave) {
                 await this.updateSong(this.state.song)
@@ -291,27 +327,34 @@ class Composer extends Component {
         let name = await this.askForSongName()
         if (name === null) return
         let song = new ComposedSong(name)
-        this.hasChanges = false
+        this.changes = 0
         this.setState({
             song: song
         }, () => this.addSong(song))
     }
-    removeSong = (name) => {
-        this.dbCol.songs.remove({ name: name }, this.syncSongs)
+    removeSong = async(name) => {
+        let confirm = await asyncConfirm("Are you sure you want to delete the song: "+name)
+        if(confirm) this.dbCol.songs.remove({ name: name }, this.syncSongs)
     }
     loadSong = async (song) => {
+        const state = this.state
         if (!song.data.isComposedVersion) {
             song = RecordingToComposed(song)
             song.name += " - Composed"
         }
-        let stateSong = this.state.song
-        if (stateSong.notes.length > 0) {
-            await this.updateSong(stateSong)
+        if(this.changes !== 0){
+            let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
+            console.log(confirm)
+            if(!confirm && state.song.columns.length > 0){
+                confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save now?`)
+            }
+            if(confirm) await this.updateSong(state.song)
         }
+
         let settings = this.state.settings
         settings.bpm.value = song.bpm
         settings.pitch.value = song.pitch
-        this.hasChanges = false
+        this.changes = 0
         this.setState({
             song: song,
             settings: settings
@@ -326,7 +369,7 @@ class Composer extends Component {
             songColumns.splice(position + 1, 0, ...columns)
         }
         if (amount === 1) this.selectColumn(this.state.song.selected + 1)
-        this.hasChanges = true
+        this.handleAutoSave()
         this.setState({
             song: this.state.song
         })
@@ -334,9 +377,13 @@ class Composer extends Component {
     removeColumns = (amount, position) => {
         let song = this.state.song
         if (song.columns.length < 16) return
+        let indexes = new Array(amount).fill().map((e,i) => position + i)
+        indexes.forEach(index => {
+            if(song.breakpoints.includes(index))this.toggleBreakpoint(index)
+        })
         song.columns.splice(position, amount)
         if (song.columns.length <= song.selected) this.selectColumn(song.selected - 1)
-        this.hasChanges = true
+        this.handleAutoSave()
         this.setState({
             song: song
         })
@@ -378,10 +425,9 @@ class Composer extends Component {
             menuOpen: !this.state.menuOpen
         })
     }
-    toggleBreakpoint = () => {
+    toggleBreakpoint = (override) => {
         let song = this.state.song
-        let index = song.selected
-
+        let index = typeof override === "number" ? override: song.selected
         let indexOfBreakpoint = song.breakpoints.indexOf(index)
         if (indexOfBreakpoint >= 0 && song.columns.length > index) {
             song.breakpoints.splice(indexOfBreakpoint, 1)
@@ -395,17 +441,25 @@ class Composer extends Component {
     handleTempoChanger = (changer) => {
         let song = this.state.song
         song.columns[this.state.song.selected].tempoChanger = changer.id
-        this.hasChanges = true
+        this.handleAutoSave()
         this.setState({
             song: song
         })
+    }
+    changePage = async (page) => {
+        if(this.changes !== 0){
+            let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`)
+            if(confirm){
+                await this.updateSong(this.state.song)
+            }
+        }
+
+        this.props.changePage(page)
     }
     selectColumn = (index, ignoreAudio) => {
         const state = this.state
         let song = state.song
         if (index < 0 || index > song.columns.length - 1) return
-        let keyboard = state.instrument.layout
-        let layers = state.layers.map(e => e.layout)
         let currentColumn = state.song.columns[index]
         song.selected = index
         this.setState({
@@ -413,9 +467,9 @@ class Composer extends Component {
         })
         if (ignoreAudio) return
         currentColumn.notes.forEach(note => {
-            if (note.layer[0] === "1") this.playSound(keyboard[note.index])
-            if (note.layer[1] === "1") this.playSound(layers[0][note.index])
-            if (note.layer[2] === "1") this.playSound(layers[1][note.index])
+            if (note.layer[0] === "1") this.playSound(state.instrument,note.index)
+            if (note.layer[1] === "1") this.playSound(state.layers[0],note.index)
+            if (note.layer[2] === "1") this.playSound(state.layers[1],note.index)
         })
     }
     changeLayer = (layer) => {
@@ -431,17 +485,18 @@ class Composer extends Component {
             songs: state.songs,
             currentSong: state.song,
             settings: state.settings,
-            hasChanges: this.hasChanges,
+            hasChanges: this.changes,
             menuOpen: state.menuOpen
         }
         let menuFunctions = {
             loadSong: this.loadSong,
             removeSong: this.removeSong,
             createNewSong: this.createNewSong,
-            changePage: props.changePage,
+            changePage: this.changePage,
             updateSong: this.updateSong,
             handleSettingChange: this.handleSettingChange,
-            toggleMenuVisible: this.toggleMenuVisible
+            toggleMenuVisible: this.toggleMenuVisible,
+            changeVolume: this.changeVolume
         }
         let keyboardFunctions = {
             handleClick: this.handleClick,

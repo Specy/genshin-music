@@ -22,6 +22,7 @@ class Note extends Component {
         >
             <div className={className} style={animation}>
                 <img
+                    draggable="false"
                     alt={data.noteNames.mobile}
                     src={`./assets/icons/keys/${data.noteNames.mobile}.svg`}>
 
