@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import Composer from "./Composer"
 import ErrorPage from "./Components/ErrorPage"
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./App.css"
 import { BrowserRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent } from "./Components/SongUtils"
@@ -188,17 +189,8 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
-try{
-  if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-          .then((reg) => {
-            console.log('Service worker registered.', reg);
-          });
-    });
-  }
-}catch(e){
-  console.log("Error setting up service worker")
-  console.log(e)
-}
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: https://cra.link/PWA
+serviceWorkerRegistration.register();
 
