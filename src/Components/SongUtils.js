@@ -307,9 +307,8 @@ function RecordingToComposed(song) {
   return composed
 }
 class Column {
-  constructor(color = 0x515c6f) {
+  constructor() {
     this.notes = []
-    this.color = color
     this.tempoChanger = 0
 
   }
@@ -327,10 +326,9 @@ function groupByNotes(notes, threshold) {
   return result
 }
 class ColumnNote {
-  constructor(index, layer = "000", color = 0xd3bd8e) {
+  constructor(index, layer = "000") {
     this.index = index
     this.layer = layer
-    this.color = color
   }
 }
 let pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]

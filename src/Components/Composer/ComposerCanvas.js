@@ -187,6 +187,7 @@ class ComposerCanvas extends Component {
                             index={i}
                             sizes={sizes}
                             backgroundCache={background}
+                            isToolsSelected={data.toolsColumns.includes(i)}
                             click={functions.selectColumn}
                             isSelected={i === data.selected}
                             isBreakpoint={this.props.data.breakpoints.includes(i)}
@@ -255,7 +256,7 @@ function drawStage(g, width, height) {
 }
 
 function Column(props) {
-    let { data, index, sizes, click, cache, backgroundCache, isBreakpoint, isSelected } = props
+    let { data, index, sizes, click, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected } = props
     return <Container
         pointertap={() => click(index)}
         interactive={true}
@@ -266,9 +267,9 @@ function Column(props) {
             image={backgroundCache}
             interactiveChildren={false}
         >
-            {isSelected ? <Sprite
-                image={cache.standard[2]}
-                alpha={0.6}
+            {isSelected || isToolsSelected ? <Sprite
+                image={isToolsSelected && !isSelected? cache.standard[3] : cache.standard[2]}
+                alpha={isToolsSelected ?0.4 : 0.6}
                 zIndex={1}
             >
 

@@ -80,10 +80,11 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = 1.0
+      let currentVersion = 1.1
       let updateMessage =
         `
-          First release
+          Added tools in composer
+          Fixed song loading bugs and others fixes
         `
       let storedVersion = localStorage.getItem("Genshin_Version")
       if (currentVersion != storedVersion) {

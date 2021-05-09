@@ -5,7 +5,7 @@ import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed
 } from "./Components/SongUtils"
-import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faLayerGroup } from "@fortawesome/free-solid-svg-icons"
+import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faTools } from "@fortawesome/free-solid-svg-icons"
 import * as workerTimers from 'worker-timers';
 import rotateImg from "./assets/icons/rotate.svg"
 import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
@@ -16,6 +16,7 @@ import { ComposerSettings } from "./Components/Composer/SettingsObj"
 import addCell from "./assets/icons/addCell.svg"
 import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
 import removeCell from "./assets/icons/removeCell.svg"
+import ComposerTools from "./Components/Composer/ComposerTools"
 class Composer extends Component {
     constructor(props) {
         super(props)
@@ -36,8 +37,11 @@ class Composer extends Component {
             song: new ComposedSong("Untitled"),
             settings: settings,
             menuOpen: false,
-            layer: 1
+            layer: 1,
+            toolsColumns:[],
+            toolsVisible: false
         }
+        this.copiedColums = []
         this.changes = 0
         this.syncSongs()
         this.loadInstrument("lyre", 1)
@@ -336,6 +340,7 @@ class Composer extends Component {
         let confirm = await asyncConfirm("Are you sure you want to delete the song: "+name)
         if(confirm) this.dbCol.songs.remove({ name: name }, this.syncSongs)
     }
+
     loadSong = async (song) => {
         const state = this.state
         if (!song.data.isComposedVersion) {
@@ -344,7 +349,6 @@ class Composer extends Component {
         }
         if(this.changes !== 0){
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
-            console.log(confirm)
             if(!confirm && state.song.columns.length > 0){
                 confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save now?`)
             }
@@ -357,22 +361,27 @@ class Composer extends Component {
         this.changes = 0
         this.setState({
             song: song,
-            settings: settings
+            settings: settings,
+            toolsColumns: []
         })
     }
+
     addColumns = (amount = 1, position = "end") => {
-        let columns = new Array(amount).fill().map(() => new Column())
-        let songColumns = this.state.song.columns
-        if (position === "end") {
-            songColumns.push(...columns)
-        } else {
-            songColumns.splice(position + 1, 0, ...columns)
-        }
-        if (amount === 1) this.selectColumn(this.state.song.selected + 1)
-        this.handleAutoSave()
-        this.setState({
-            song: this.state.song
+        return new Promise(resolve => {
+            let columns = new Array(amount).fill().map(() => new Column())
+            let songColumns = this.state.song.columns
+            if (position === "end") {
+                songColumns.push(...columns)
+            } else {
+                songColumns.splice(position + 1, 0, ...columns)
+            }
+            if (amount === 1) this.selectColumn(this.state.song.selected + 1)
+            this.handleAutoSave()
+            this.setState({
+                song: this.state.song
+            },resolve)
         })
+
     }
     removeColumns = (amount, position) => {
         let song = this.state.song
@@ -462,9 +471,18 @@ class Composer extends Component {
         if (index < 0 || index > song.columns.length - 1) return
         let currentColumn = state.song.columns[index]
         song.selected = index
+        let toolsColumns = state.toolsColumns
+        if(state.toolsVisible && this.copiedColums.length === 0){
+            toolsColumns.push(index)
+            let min = Math.min(...toolsColumns)
+            let max = Math.max(...toolsColumns)
+            toolsColumns = new Array(max - min + 1).fill().map((e,i) => min+i)
+         }
         this.setState({
-            song: song
+            song: song,
+            toolsColumns: toolsColumns
         })
+
         if (ignoreAudio) return
         currentColumn.notes.forEach(note => {
             if (note.layer[0] === "1") this.playSound(state.instrument,note.index)
@@ -476,6 +494,61 @@ class Composer extends Component {
         this.setState({
             layer: layer
         })
+    }
+    //-----------------------TOOLS---------------------//
+    toggleTools = () => {
+        this.setState({
+            toolsVisible: !this.state.toolsVisible,
+            toolsColumns: []
+        })
+        this.copiedColums = []
+    }
+    copyColumns = () => {
+        this.copiedColums = []
+        this.state.toolsColumns.forEach((index) => {
+            let column = this.state.song.columns[index]
+            if(column !== undefined) this.copiedColums.push(column)
+        })
+        this.copiedColums = JSON.parse(JSON.stringify(this.copiedColums)) // removing reference
+        this.setState({
+            toolsColumns: []
+        })
+    }
+    pasteColumns = () => {
+        let song = this.state.song
+        song.columns.splice(song.selected,0,...this.copiedColums)
+        this.setState({
+            song: song
+        })
+    }
+    eraseColumns = () => {
+        let song = this.state.song
+        this.state.toolsColumns.forEach(columnIndex => {
+            let column = song.columns[columnIndex]
+            if(column !== undefined) song.columns[columnIndex].notes = []
+        })
+        this.setState({
+            song: song
+        })
+    }
+    validateBreakpoints = () =>{
+        let breakpoints = this.state.song.breakpoints.filter(breakpoint => breakpoint < this.state.song.columns.length)
+        let song = this.state.song
+        song.breakpoints = breakpoints
+        this.setState({
+            song: song
+        })
+    }
+    deleteColumns = async () => {
+        let song = this.state.song
+        song.columns = song.columns.filter((e,i) => !this.state.toolsColumns.includes(i))
+        if(song.selected > song.columns.length - 1) song.selected = song.columns.length - 1
+        if(song.selected <= 0) song.selected = 0
+        if(song.columns.length === 0) await this.addColumns(16,0)
+        this.setState({
+            song: song,
+            toolsColumns: []
+        },this.validateBreakpoints)
     }
     render() {
 
@@ -518,7 +591,19 @@ class Composer extends Component {
             columns: song.columns,
             selected: song.selected,
             settings: state.settings,
-            breakpoints: state.song.breakpoints
+            breakpoints: state.song.breakpoints,
+            toolsColumns: state.toolsColumns
+        }
+        let toolsData = {
+            visible: this.state.toolsVisible,
+            copiedColumns: this.copiedColums
+        }
+        let toolsFunctions = {
+            toggleTools: this.toggleTools,
+            eraseColumns: this.eraseColumns,
+            deleteColumns: this.deleteColumns,
+            copyColumns: this.copyColumns,
+            pasteColumns: this.pasteColumns
         }
         return <div className="app">
             <div className="hamburger" onClick={this.toggleMenuVisible}>
@@ -530,7 +615,9 @@ class Composer extends Component {
                 </img>
                     For a better experience, add the website to the home screen, and rotate your device
             </div>
+
             <div className="right-panel-composer">
+
                 <div className="column fill-x">
 
                     <div className="top-panel-composer">
@@ -551,7 +638,7 @@ class Composer extends Component {
                             functions={canvasFunctions}
                             data={canvasData}
                         />
-                        <div className="buttons-composer-wrapper">
+                        <div className="buttons-composer-wrapper-right">
 
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
                                 <img src={addCell} className="tool-icon" />
@@ -562,6 +649,10 @@ class Composer extends Component {
                             <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value === 4 ? 20 : 15, "end")}>
                                 <FontAwesomeIcon icon={faPlus} />
                             </div>
+                            <div className="tool" onClick={this.toggleTools}>
+                                <FontAwesomeIcon icon={faTools} />
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -575,6 +666,10 @@ class Composer extends Component {
             <Menu
                 data={menuData}
                 functions={menuFunctions}
+            />
+            <ComposerTools 
+                    data={toolsData}
+                    functions={toolsFunctions}
             />
             <div className="song-info">
                 <div>

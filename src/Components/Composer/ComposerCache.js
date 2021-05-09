@@ -15,6 +15,9 @@ let standards = [
     },
     {
         color: 0x1a968b //selected
+    },
+    {
+        color: 0xd6722f
     }
 ]
 let notes = ["000", "001", "010", "011", "100", "101", "110", "111"]
