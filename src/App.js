@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
 import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
 import rotateImg from "./assets/icons/rotate.svg"
-import {appName} from "./appConfig"
+import { appName } from "./appConfig"
 class App extends Component {
   constructor(props) {
     super(props)
@@ -47,7 +47,7 @@ class App extends Component {
 
 
   getSettings = () => {
-    let storedSettings = localStorage.getItem(appName+"_Main_Settings")
+    let storedSettings = localStorage.getItem(appName + "_Main_Settings")
     try {
       storedSettings = JSON.parse(storedSettings)
     } catch (e) {
@@ -69,7 +69,7 @@ class App extends Component {
     } else {
       state = this.state.settings
     }
-    localStorage.setItem(appName+"_Main_Settings", JSON.stringify(state))
+    localStorage.setItem(appName + "_Main_Settings", JSON.stringify(state))
   }
   handleSettingChange = (setting) => {
     let settings = this.state.settings
@@ -96,9 +96,10 @@ class App extends Component {
     })
   }
   practiceSong = async (song, start = 0) => {
+
     await this.stopSong()
     let oldState = this.state.keyboardData.practicingSong
-    if (song.data.isComposedVersion) {
+    if (song.data?.isComposedVersion) {
       song = ComposerToRecording(song)
       oldState.threshold = 10
     }
@@ -254,37 +255,44 @@ class App extends Component {
       <Menu functions={menuFunctions} data={menuData} />
       <div className="right-panel">
         <div className="upper-right">
-          <GenshinButton
-            active={state.isRecording}
-            click={this.toggleRecord}
-          >
-            {state.isRecording ? "Stop" : "Record"}
-          </GenshinButton>
+          {this.state.thereIsSong !== "none"
+            ? <div className="slider-wrapper">
+              <button className="song-button" onClick={this.stopSong}>
+                <FontAwesomeIcon icon={faStop} />
+              </button>
+              <input
+                type="range"
+                className="slider"
+                min={0}
+                onChange={this.handleSliderEvent}
+                max={state.sliderState.size}
+                value={state.sliderState.position}
+              ></input>
+              <button className="song-button" onClick={async () => {
+                if (this.state.thereIsSong === "practicing") {
+                  this.practiceSong(state.keyboardData.practicingSong, state.sliderState.position)
+                } else {
+                  await this.stopSong()
+                  this.playSong(this.lastPlayedSong)
+                }
+              }}>
+                <FontAwesomeIcon icon={faSyncAlt} />
+              </button>
+            </div>
+            :
+            <GenshinButton
+              active={state.isRecording}
+              click={this.toggleRecord}
+            >
+              {state.isRecording ? "Stop" : "Record"}
+            </GenshinButton>
+
+          }
+
+
+
         </div>
         <div className="keyboard-wrapper">
-          <div className={this.state.thereIsSong !== "none" ? "slider-wrapper" : "slider-wrapper hidden-opacity"}>
-            <button className="song-button" onClick={this.stopSong}>
-              <FontAwesomeIcon icon={faStop} />
-            </button>
-            <input
-              type="range"
-              className="slider"
-              min={0}
-              onChange={this.handleSliderEvent}
-              max={state.sliderState.size}
-              value={state.sliderState.position}
-            ></input>
-            <button className="song-button" onClick={async () => {
-              if (this.state.thereIsSong === "practicing") {
-                this.practiceSong(state.keyboardData.practicingSong, state.sliderState.position)
-              } else {
-                await this.stopSong()
-                this.playSong(this.lastPlayedSong)
-              }
-            }}>
-              <FontAwesomeIcon icon={faSyncAlt} />
-            </button>
-          </div>
 
           <Keyboard
             key={state.keyboardData.instrument}
@@ -304,7 +312,7 @@ class App extends Component {
 
 
 function GenshinButton(props) {
-  let className = "genshin-button " + (props.active ? "selected" : "")
+  let className = "genshin-button record-btn " + (props.active ? "selected" : "")
   return <button className={className} onClick={props.click}>
     {props.children}
   </button>

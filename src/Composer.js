@@ -582,6 +582,7 @@ class Composer extends Component {
             currentColumn: state.song.columns[state.song.selected],
             TempoChangers: TempoChangers,
             layer: state.layer,
+            pitch: state.settings.pitch.value,
             isPlaying: state.isPlaying
         }
         let canvasFunctions = {

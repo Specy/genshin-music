@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import ComposerNote from "./ComposerNote"
 import MultiSwitch from "./MultiSwitch"
+import { keyNames, pitchArr , skyImages, appName} from "../../appConfig"
 class ComposerKeyboard extends Component {
     constructor(props) {
         super(props)
@@ -21,10 +22,19 @@ class ComposerKeyboard extends Component {
             <div className={keyboardClass}>
                 {data.keyboard.layout.map((note, i) => {
                     let index = notesIndexes.indexOf(i)
+                    let skyText = ""
+                    let skyImg = ""
+                    try{
+                        skyText = keyNames[pitchArr.indexOf(data.pitch)][note.index]
+                        skyImg = skyImages[data.keyboard.layout.length][note.index]     
+                    }catch(e){}
+
                     return <ComposerNote
                         key={note.index}
                         layers={index >= 0 ? data.currentColumn.notes[index].layer : "000"}
                         data={note}
+                        skyText={skyText}
+                        skyImg={skyImg}
                         clickAction={functions.handleClick}
                     />
                 })}

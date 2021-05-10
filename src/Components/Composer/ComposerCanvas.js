@@ -5,7 +5,7 @@ import { faStepBackward, faStepForward, faPlusCircle, faMinusCircle } from "@for
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import "./Composer.css"
 import isMobile from "is-mobile"
-import { composerNotePositions, notesPerColumn } from "../../appConfig"
+import { composerNotePositions, notesPerColumn, appName } from "../../appConfig"
 let NumOfColumnsPerCanvas = 35
 
 class ComposerCanvas extends Component {
@@ -21,6 +21,7 @@ class ComposerCanvas extends Component {
             width = nearestEven(sizes.height * 0.82)
             height = nearestEven(sizes.width * 0.45)
         }
+        if(appName === "Sky") height = nearestEven(height * 0.9)
         this.state = {
             width: width,
             height: height,

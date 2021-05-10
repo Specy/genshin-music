@@ -111,7 +111,7 @@ body {
 	justify-content: center;
 	transition: all 0.3s;
 	opacity: 1;
-	margin-bottom: 2rem;
+	margin-top: 1.5rem;
 }
 .hidden-opacity {
 	opacity: 0;
@@ -308,6 +308,9 @@ a {
 	}
 }
 @media only screen and (max-width: 900px) {
+	.right-panel {
+		padding-bottom: 2vh;
+	}
 	.floating-prompt {
 		width: 45vw;
 	}

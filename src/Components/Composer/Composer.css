@@ -238,7 +238,7 @@ canvas{
     display: flex;
 
 }
-.layer-3-ball{
+.layer-3-ball, .layer-3-ball-bigger{
     position: absolute;
     background-color: #d75c5c;
     width: 1.5vw;
@@ -267,8 +267,12 @@ canvas{
 .layer-2{
     border-color: #d75c5c;
 }
-.layer-3 .layer-3-ball{
+.layer-3 .layer-3-ball, .layer-3-ball-bigger{
     visibility: visible;
+}
+.layer-3-ball-bigger{
+    width: 2.5vw;
+    height: 2.5vw;
 }
 canvas{
     cursor: pointer !important;

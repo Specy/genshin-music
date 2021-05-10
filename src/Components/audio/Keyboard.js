@@ -4,6 +4,7 @@ import { getPitchChanger } from "../SongUtils"
 import Instrument from "./Instrument"
 import Note from "./Note"
 import * as workerTimers from 'worker-timers';
+import { keyNames, pitchArr , skyImages, appName} from "../../appConfig"
 class Keyboard extends Component {
     constructor(props) {
         super(props)
@@ -208,12 +209,21 @@ class Keyboard extends Component {
                 let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined
                 let toBeClickedNext = state.songToPractice[1]?.notes.find(e => e[0] === note.index) !== undefined
                 let fadeTime = state.songToPractice[0]?.delay !== undefined ? state.songToPractice[0]?.delay / 1000 : 0.1
+                let skyText = ""
+                let skyImg = ""
+                try{
+                    skyText = keyNames[pitchArr.indexOf(this.props.settings.pitch.value)][note.index]
+                    skyImg = skyImages[state.instrument.layout.length][note.index]
+                }catch(e){}
+
                 return <Note
                     key={note.index}
                     toBeClicked={toBeClicked}
                     fadeTime={fadeTime}
                     toBeClickedNext={toBeClickedNext}
                     data={note}
+                    skyText={skyText}
+                    skyImg={skyImg}
                     clickAction={this.handleClick}
                 >
 

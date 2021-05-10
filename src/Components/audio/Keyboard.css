@@ -33,14 +33,15 @@
     cursor: pointer;
 }
 .note-sky, .note-composer-sky{
-    border-radius: 1.5rem;
+    border-radius: 1.5vw;
     background-color: var(--primary);
     border: 0.4vw solid var(--primary);
 }
+
 .note-composer, .note-composer-sky{
     transition: none;
 }
-.note img, .note-composer img, .note-sky img{
+.note img, .note-composer img, .note-sky img, .note-composer-sky img{
     width: 100%;
     height: 100%;
 }
@@ -71,6 +72,11 @@
     right: 0;
     
 }
+.note-name-sky{
+    position:absolute;
+    font-size: 1rem;
+    color: white;
+}
 .button-hitbox{
     background-color: transparent;
     border: none;
@@ -79,16 +85,33 @@
     justify-content: center;
     align-items: center;
 }
+.upper-right{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.record-btn{
+    width: fit-content;
+
+}
 @media only screen and (max-width: 900px) {
     .note{
         width: 6.5vw;
         height: 6.5vw;
         font-size: 1rem;
         border-width:4px;
-        
+    }
+    .note-sky{
+        width: 8.5vw;
+        height: 8.5vw;
+        border-radius: 2vw;
     }
     .keyboard{
         gap:0.2rem;
+    }
+    .note-name-sky{
+        font-size: 0.8rem;
     }
     .note-name{
         font-size: 0.6rem;
