@@ -7,7 +7,7 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./App.css"
 import { BrowserRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent } from "./Components/SongUtils"
-
+import {appName} from "./appConfig"
 const getBasename = path => path.substr(0, path.lastIndexOf('/'));
 let pages = ["", "Composer", "ErrorPage"]
 class Index extends Component {
@@ -27,7 +27,7 @@ class Index extends Component {
         text: "Text",
         title: "Title"
       },
-      hasVisited: localStorage.getItem("Genshin_Visited"),
+      hasVisited: localStorage.getItem(appName+"_Visited"),
       hasPersistentStorage: navigator.storage && navigator.storage.persist,
       selectedPage: path
     }
@@ -66,7 +66,7 @@ class Index extends Component {
     this.closeWelcomeScreen()
   }
   closeWelcomeScreen = () => {
-    localStorage.setItem("Genshin_Visited", true)
+    localStorage.setItem(appName+"_Visited", true)
     this.setState({
       hasVisited: true
     })
@@ -86,11 +86,11 @@ class Index extends Component {
           Added tools in composer
           Fixed song loading bugs and others fixes
         `
-      let storedVersion = localStorage.getItem("Genshin_Version")
+      let storedVersion = localStorage.getItem(appName+"_Version")
       if (currentVersion != storedVersion) {
         console.log("update")
         new LoggerEvent("Update V" + currentVersion, updateMessage, 8000).trigger()
-        localStorage.setItem("Genshin_Version", currentVersion)
+        localStorage.setItem(appName+"_Version", currentVersion)
       }
     }, 1000)
   }
@@ -133,7 +133,7 @@ class Index extends Component {
       </div>
       {[null, false, "false"].includes(this.state.hasVisited) ?
         <div className="welcome-message">
-          <div className={"welcome-message-title"}>Welcome to Genshin music</div>
+          <div className={"welcome-message-title"}>Welcome to {appName} music {appName==="Sky" ? "nightly" : ""}</div>
           <div>
             This is a webapp which is run in your browser, if you currently are on one, please add
             the website to the homescreen to have a fullscreen view and a more "app" feel.

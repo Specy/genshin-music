@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import isMobile from "is-mobile"
+import { cssClasses } from "../../appConfig"
 class Note extends Component {
     constructor(props) {
         super(props)
@@ -9,7 +10,7 @@ class Note extends Component {
     }
     render() {
         let data = this.props.data
-        let className = data.clicked ? "note click-event" : "note"
+        let className = data.clicked ? (cssClasses.note + " click-event") : cssClasses.note
         let toBeClicked = this.props.toBeClicked ? " note-red" : ""
         let toBeClickedNext = this.props.toBeClickedNext ? " note-border-click" : ""
         className += toBeClicked + toBeClickedNext

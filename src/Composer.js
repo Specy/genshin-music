@@ -17,10 +17,11 @@ import addCell from "./assets/icons/addCell.svg"
 import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
 import removeCell from "./assets/icons/removeCell.svg"
 import ComposerTools from "./Components/Composer/ComposerTools"
+import {appName} from "./appConfig"
 class Composer extends Component {
     constructor(props) {
         super(props)
-        this.db = new ZangoDb.Db("Genshin", { songs: [] })
+        this.db = new ZangoDb.Db(appName, { songs: [] })
         this.dbCol = {
             songs: this.db.collection("songs")
 
@@ -44,9 +45,9 @@ class Composer extends Component {
         this.copiedColums = []
         this.changes = 0
         this.syncSongs()
-        this.loadInstrument("lyre", 1)
-        this.loadInstrument("lyre", 2)
-        this.loadInstrument("lyre", 3)
+        this.loadInstrument(settings.instrument.value, 1)
+        this.loadInstrument(settings.layer2.value, 2)
+        this.loadInstrument(settings.layer3.value, 3)
         try {
             this.loadReverb()
         } catch {
@@ -100,7 +101,7 @@ class Composer extends Component {
             })
     }
     getSettings = () => {
-        let storedSettings = localStorage.getItem("Genshin_Composer_Settings")
+        let storedSettings = localStorage.getItem(appName+"_Composer_Settings")
         try {
             storedSettings = JSON.parse(storedSettings)
         } catch (e) {
@@ -122,7 +123,7 @@ class Composer extends Component {
         } else {
             state = this.state.settings
         }
-        localStorage.setItem("Genshin_Composer_Settings", JSON.stringify(state))
+        localStorage.setItem(appName+"_Composer_Settings", JSON.stringify(state))
     }
     handleSettingChange = (setting) => {
         let settings = this.state.settings

@@ -1,4 +1,4 @@
-
+import { importNotePositions, appName } from "../appConfig"
 class Recording {
   constructor() {
     this.start = new Date().getTime()
@@ -24,7 +24,8 @@ class Song {
     this.pitch = "C"
     this.data = {
       isComposed: false,
-      isComposedVersion: false
+      isComposedVersion: false,
+      appName: appName
     }
     Object.entries(data).forEach((entry) => {
       this.data[entry[0]] = entry[1]
@@ -168,7 +169,7 @@ function ComposerSongSerialization(song) {
     breakpoints: song.breakpoints,
     columns: []
   }
-
+  obj.data.appName = appName
   /*
       notes = [tempoChanger,notes] ----> note = [index,layer]
       tempoChanger = Number
@@ -195,6 +196,7 @@ function getSongType(song) {
       }
     } else {
       //genshin
+      if (song.data.appName !== appName) return "none"
       if (song.data.isComposedVersion) {
         if (typeof song.name !== "string") return "none"
         if (typeof song.bpm !== "number") return "none"
@@ -229,7 +231,7 @@ function getSongType(song) {
   }
   return "none"
 }
-let genshinLayout = [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0]
+let genshinLayout = importNotePositions
 function SkyToGenshin(song) {
   let result = new Song("Error")
   try {

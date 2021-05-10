@@ -18,6 +18,7 @@ class Keyboard extends Component {
                 size: 0
             }
         }
+        console.log("created")
         this.loadInstrument(props.data.instrument)
         try {
             this.loadReverb()
@@ -190,11 +191,7 @@ class Keyboard extends Component {
     preload = (urls) => {
         const requests = urls.map(url => fetch(url)
             .then(result => result.arrayBuffer())
-            .then(buffer => {
-                return new Promise((resolve, reject) => {
-                    this.state.audioContext.decodeAudioData(buffer, resolve, reject)
-                })
-            })
+            .then(buffer => this.state.audioContext.decodeAudioData(buffer).catch(e => { return new AudioBuffer({length:1, sampleRate:48000})}))
         )
         return Promise.all(requests)
     }

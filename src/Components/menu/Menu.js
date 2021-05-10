@@ -5,6 +5,7 @@ import "./menu.css"
 
 import { FileDownloader, LoggerEvent, getSongType, SkyToGenshin } from "../SongUtils"
 import { FilePicker } from "react-file-picker"
+import {appName} from "../../appConfig"
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -65,7 +66,7 @@ class Menu extends Component {
         if (song._id) delete song._id
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name + ".gensheet.json")
+        fileDownloader.download(json, song.name + `.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
     render() {

@@ -1,21 +1,15 @@
+import {instrumentsData, layoutData, instruments} from "../../appConfig"
 class Instrument {
     constructor(instrumentName) {
         this.instrumentName = instrumentName
+        let instrumentNameTemp = instrumentName === undefined ? instruments[0] : instrumentName
         this.layout = []
         this.gain = GainNode
-        this.keyboardLayout =
-            ("Q W E R T Y U " +
-            "A S D F G H J " +
-            "Z X C V B N M").split(" ")
+        let instrumentData = instrumentsData[instrumentNameTemp]
+        this.keyboardLayout = layoutData[instrumentData.notes].keyboardLayout
 
-        this.mobileLayout =
-            ("do re mi fa so la ti " +
-            "do re mi fa so la ti " +
-            "do re mi fa so la ti").split(" ")
-        this.keyboardCodes = 
-            ("81 87 69 82 84 89 85 " +
-            "65 83 68 70 71 72 74 " +
-            "90 88 67 86 66 78 77").split(" ")
+        this.mobileLayout = layoutData[instrumentData.notes].mobileLayout
+        this.keyboardCodes = layoutData[instrumentData.notes].keyboardCodes
         let i = 0
         if (instrumentName === undefined) return
         for (const noteName of this.keyboardLayout) {
@@ -47,11 +41,14 @@ class Instrument {
         this.gain.gain.value = 1
         const requests = this.layout.map(e => fetch(e.url)
             .then(result => result.arrayBuffer())
-            .then(buffer => {
-                return new Promise((resolve, reject) => {
-                    audioContext.decodeAudioData(buffer, resolve, reject)
+            .then(buffer => audioContext.decodeAudioData(buffer)
+                .catch(e => { 
+                    return new AudioBuffer({
+                        length:1, 
+                        sampleRate:48000
+                    })
                 })
-            }))
+            ))
         let buffers = await Promise.all(requests)
         this.setBuffers(buffers)
         return true

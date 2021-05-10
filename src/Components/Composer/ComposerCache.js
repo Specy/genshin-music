@@ -1,11 +1,13 @@
 import { TempoChangers } from "../SongUtils"
 import * as PIXI from "pixi.js"
+import {notesPerColumn } from "../../appConfig"
 let noteData = {
     background: "#d3bd8e",
     border: "#de4545",
     center: "#de4545"
 }
-let horizontalLineBreak = 7
+
+let horizontalLineBreak = notesPerColumn / 3
 let standards = [
     {
         color: 0x515c6f //lighter
@@ -47,7 +49,7 @@ class ComposerCache {
         this.timelineHeight = timelineHeight
         this.margin = margin
         this.noteWidth = this.width
-        this.noteHeight = this.height / 21
+        this.noteHeight = this.height / notesPerColumn
         this.app = new PIXI.Application({
             width: width,
             height: height,
@@ -128,7 +130,6 @@ class ComposerCache {
             } else {
                 canvas.height = this.height
                 canvas.width = this.width
-                let size = this.width / 4
                 let ctx = canvas.getContext("2d")
                 ctx.fillStyle = breakpoint.color
                 /*

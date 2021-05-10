@@ -5,6 +5,7 @@ import { faStepBackward, faStepForward, faPlusCircle, faMinusCircle } from "@for
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import "./Composer.css"
 import isMobile from "is-mobile"
+import { composerNotePositions, notesPerColumn } from "../../appConfig"
 let NumOfColumnsPerCanvas = 35
 
 class ComposerCanvas extends Component {
@@ -286,7 +287,7 @@ function Column(props) {
             return <Sprite
                 key={note.index}
                 image={cache.notes[note.layer]}
-                y={positions[note.index] * sizes.height / 21}
+                y={positions[note.index] * sizes.height / notesPerColumn}
             >
 
             </Sprite>
@@ -305,5 +306,5 @@ function isVisible(pos, currentPos) {
     let boundaries = [currentPos - threshold, currentPos + threshold]
     return boundaries[0] < pos && pos < boundaries[1]
 }
-const positions = [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse()
+const positions = composerNotePositions
 export default ComposerCanvas

@@ -1,14 +1,12 @@
-let instruments = [
-    "lyre"
-]
+import {instruments, appName} from "../../appConfig"
 let ComposerSettings = {
-    settingVesion: 0,
+    settingVesion: appName + 0,
 
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
         songSetting: false,
-        value: 0,
+        value: instruments[0],
         volume: 100,
         options: instruments
     },
@@ -16,7 +14,7 @@ let ComposerSettings = {
         name: "Instrument (Layer 2)",
         type: "instrument",
         songSetting: false,
-        value: 0,
+        value: instruments[0],
         volume: 100,
         options: instruments
     },
@@ -24,7 +22,7 @@ let ComposerSettings = {
         name: "Instrument (Layer 3)",
         type: "instrument",
         songSetting: false,
-        value: 0,
+        value: instruments[0],
         volume: 100,
         options: instruments
     },
@@ -95,7 +93,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion: 0,
+    settingVesion:appName + 0,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
@@ -107,10 +105,8 @@ let MainPageSettings = {
         name: "Instrument",
         type: "select",
         songSetting: false,
-        value: 0,
-        options: [
-            "lyre"
-        ]
+        value: instruments[0],
+        options: instruments
     },
     pitch: {
         name: "Pitch",

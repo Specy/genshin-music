@@ -9,17 +9,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
 import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
 import rotateImg from "./assets/icons/rotate.svg"
+import {appName} from "./appConfig"
 class App extends Component {
   constructor(props) {
     super(props)
-    this.db = new ZangoDb.Db("Genshin", { songs: [] })
+    this.db = new ZangoDb.Db(appName, { songs: [] })
     this.recording = new Recording()
+    let settings = this.getSettings()
     this.dbCol = {
       songs: this.db.collection("songs")
     }
     this.state = {
       keyboardData: {
-        instrument: "lyre",
+        instrument: settings.instrument.value,
         playingSong: {
           timestamp: 0,
           notes: []
@@ -32,7 +34,7 @@ class App extends Component {
       },
       isRecording: false,
       songs: [],
-      settings: this.getSettings(),
+      settings: settings,
       sliderState: {
         position: 0,
         size: 0
@@ -45,7 +47,7 @@ class App extends Component {
 
 
   getSettings = () => {
-    let storedSettings = localStorage.getItem("Genshin_Main_Settings")
+    let storedSettings = localStorage.getItem(appName+"_Main_Settings")
     try {
       storedSettings = JSON.parse(storedSettings)
     } catch (e) {
@@ -67,7 +69,7 @@ class App extends Component {
     } else {
       state = this.state.settings
     }
-    localStorage.setItem("Genshin_Main_Settings", JSON.stringify(state))
+    localStorage.setItem(appName+"_Main_Settings", JSON.stringify(state))
   }
   handleSettingChange = (setting) => {
     let settings = this.state.settings
@@ -84,6 +86,13 @@ class App extends Component {
     let songs = await this.dbCol.songs.find().toArray()
     this.setState({
       songs: songs
+    })
+  }
+  loadInstrument = (instrument) => {
+    let state = this.state
+    state.keyboardData.instrument = instrument
+    this.setState({
+      keyboardData: state.keyboardData
     })
   }
   practiceSong = async (song, start = 0) => {
@@ -141,12 +150,12 @@ class App extends Component {
   }
   stopSong = () => {
     return new Promise(resolve => {
+      let keyboardData = this.state.keyboardData
+      keyboardData.practicingSong = new PlayingSong([])
+      keyboardData.playingSong = new PlayingSong([])
       this.setState({
         thereIsSong: "none",
-        keyboardData: {
-          practicingSong: new PlayingSong([]),
-          playingSong: new PlayingSong([])
-        }
+        keyboardData: keyboardData
       }, () => {
         let event = new CustomEvent("playSong", { detail: new PlayingSong([]) })
         window.dispatchEvent(event)
@@ -228,7 +237,7 @@ class App extends Component {
       practiceSong: this.practiceSong,
       stopSong: this.stopSong,
       changePage: this.props.changePage,
-      handleSettingChange: this.handleSettingChange
+      handleSettingChange: this.handleSettingChange,
     }
     let menuData = {
       songs: state.songs,
@@ -271,8 +280,6 @@ class App extends Component {
               } else {
                 await this.stopSong()
                 this.playSong(this.lastPlayedSong)
-
-
               }
             }}>
               <FontAwesomeIcon icon={faSyncAlt} />
@@ -280,6 +287,7 @@ class App extends Component {
           </div>
 
           <Keyboard
+            key={state.keyboardData.instrument}
             data={state.keyboardData}
             settings={this.state.settings}
             functions={keyboardFunctions}

@@ -1,14 +1,3 @@
-:root{
-    --primary: #495466;
-    --detail: #8c7063;
-    --secondary: #8c7063;
-    --icon-color: #8c7063;
-    --note-color: #fff9ef;
-    --note-border: #d9d6c8;
-    --note-text: #63aea7;
-    --text-color: #aaaa82;
-    --clicked-note: #8FEDD9;
-}
 .keyboard{
     display: grid;
     margin-top: auto;
@@ -27,7 +16,7 @@
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(2, 1fr);
 }
-.note, .note-composer{
+.note, .note-composer, .note-sky, .note-composer-sky{
     background-color: var(--note-color);
     border-radius: 50%;
     width: 6vw;
@@ -43,10 +32,15 @@
     transition: all 0.1s;
     cursor: pointer;
 }
-.note-composer{
+.note-sky, .note-composer-sky{
+    border-radius: 1.5rem;
+    background-color: var(--primary);
+    border: 0.4vw solid var(--primary);
+}
+.note-composer, .note-composer-sky{
     transition: none;
 }
-.note img, .note-composer img{
+.note img, .note-composer img, .note-sky img{
     width: 100%;
     height: 100%;
 }

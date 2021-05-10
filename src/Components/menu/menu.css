@@ -1,14 +1,4 @@
-:root{
-    --primary: #495466;
-    --detail: #8c7063;
-    --secondary: #8c7063;
-    --icon-color: #d3bd8e;
-    --note-color: #fff9ef;
-    --note-border: #d9d6c8;
-    --note-text: #63aea7;
-    --text-color: #aaaa82;
-    --whitish: #ede5d8;
-}
+
 .menu{
     width: 4rem;
     background-color: var(--primary);

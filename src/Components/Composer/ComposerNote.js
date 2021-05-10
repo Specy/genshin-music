@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import isMobile from "is-mobile"
+import { cssClasses } from "../../appConfig" 
 class ComposerNote extends Component {
     constructor(props) {
         super(props)
@@ -12,7 +12,7 @@ class ComposerNote extends Component {
     }
     render() {
         const { data, layers } = this.props
-        let className = "note-composer "
+        let className = cssClasses.noteComposer
         if (layers[0] === "1") className += " layer-1"
         if (layers[1] === "1") className += " layer-2"
         if (layers[2] === "1") className += " layer-3"
