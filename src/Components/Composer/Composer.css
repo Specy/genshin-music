@@ -267,7 +267,7 @@ canvas{
 .layer-2{
     border-color: #d75c5c;
 }
-.layer-3 .layer-3-ball, .layer-3-ball-bigger{
+.layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
     visibility: visible;
 }
 .layer-3-ball-bigger{

@@ -21,6 +21,7 @@ class ComposerNote extends Component {
         let svgUrl = `./assets/icons/keys/${data.noteNames.mobile}.svg`
         if(appName === "Sky") svgUrl = `./assets/icons/keys/${props.skyImg}.svg`
         if(appName === "Sky") noteText = props.skyText
+        let layer3Class = "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"
         return <button onPointerDown={() => this.props.clickAction(data)} className="button-hitbox">
             <div className={className} >
                 <img
@@ -29,7 +30,7 @@ class ComposerNote extends Component {
                     src={svgUrl}>
 
                 </img>
-                <div className={appName === "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"}>
+                <div className={layer3Class}>
                 </div>
                 <div className={appName === "Sky" ? "note-name-sky" : "note-name"}>
                     {noteText}
