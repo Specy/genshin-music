@@ -20,19 +20,37 @@ class ComposerTools extends Component{
                 </button>
             </div>
             <div className="tools-buttons-wrapper">
-                <button 
+                <div className='tools-half'>
+                    <button 
+                        disabled={data.copiedColumns.length !== 0}
+                        onClick={() => functions.copyColumns('all')}
+                        className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}    
+                    >
+                        Copy
+                    </button>
+                    <button 
                     disabled={data.copiedColumns.length !== 0}
-                    onClick={functions.copyColumns}
-                    className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}    
-                >
-                    Copy
-                </button>
+                        onClick={() => functions.copyColumns(data.layer)}
+                        className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}    
+                    >
+                        Copy layer {data.layer}
+                    </button>
+                </div>
+                <div className='tools-half'>
                 <button 
                     disabled={data.copiedColumns.length === 0}
-                    onClick={functions.pasteColumns}
+                    onClick={() => functions.pasteColumns(false)}
                 >
                     Paste
                 </button>
+                <button 
+                    disabled={data.copiedColumns.length === 0}
+                    onClick={() => functions.pasteColumns(true)}
+                >
+                    Insert
+                </button>
+                </div>
+
                 <button 
                     disabled={data.copiedColumns.length !== 0}
                     onClick={functions.eraseColumns}

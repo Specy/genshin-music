@@ -152,6 +152,11 @@ canvas{
     grid-template-rows: repeat(4, 1fr);
 }
 
+.tools-half {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.2rem;
+}
 .tools-buttons-wrapper button{
     background-color: #59667b;
     color: white;

@@ -1,4 +1,4 @@
-const appName = ["Sky","Genshin"][1]
+const appName = ["Sky","Genshin"][0]
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
     note: appName === "Genshin" ? "note" : "note-sky"
@@ -8,19 +8,19 @@ const instruments = appName === "Genshin" ? [
     "DunDun"
     ]:[
         "Piano",
-        "Bells",
         "Contrabass",
-        "Drum",
-        "DunDun",
-        "Flute",
         "Guitar",
-        "HandPan",
         "Harp",
         "Horn",
-        
+        "Trumpet",
         "Pipa",
         "WinterPiano",
-        "Xylophone"
+        "Xylophone",
+        "Drum",
+        "Bells",
+        "DunDun",
+        "HandPan",
+        "Flute",
     ]
 const notesPerColumn = appName === "Genshin" ? 21 : 15
 const instrumentsData = {
@@ -32,6 +32,9 @@ const instrumentsData = {
     },
     Bells: {
         notes: 8
+    },
+    Trumpet:{
+        notes: 15
     },
     Contrabass: {
         notes: 15

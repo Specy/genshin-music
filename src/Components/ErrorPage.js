@@ -8,7 +8,7 @@ import { appName} from "../appConfig"
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
-        this.db = new ZangoDb.Db("Genshin", { songs: [] })
+        this.db = new ZangoDb.Db(appName, { songs: [] })
         this.dbCol = {
             songs: this.db.collection("songs")
 
