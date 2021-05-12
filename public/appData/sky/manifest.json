@@ -1,6 +1,6 @@
 {
-  "short_name": "Sky Music Nightly",
-  "name": "A program to record, practice and share music",
+  "name": "Sky Music Nightly",
+  "description": "A program to record, practice and share music",
   "icons": [
     {
       "src": "favicon.ico",

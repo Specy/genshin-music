@@ -205,6 +205,7 @@ class Keyboard extends Component {
         if (state.instrument.layout.length === 15) keyboardClass += " keyboard-5"
         if (state.instrument.layout.length === 8) keyboardClass += " keyboard-4"
         return <div className={keyboardClass} style={{ transform: `scale(${size})` }}>
+             {state.instrument.layout.length === 0 ? <div class="loading">Loading...</div> : null}
             {state.instrument.layout.map(note => {
                 let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined
                 let toBeClickedNext = state.songToPractice[1]?.notes.find(e => e[0] === note.index) !== undefined

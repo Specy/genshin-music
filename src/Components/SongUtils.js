@@ -232,13 +232,14 @@ function getSongType(song) {
   return "none"
 }
 let genshinLayout = importNotePositions
+
 function SkyToGenshin(song) {
   let result = new Song("Error")
   try {
     song = song[0]
     result = new Song(song.name)
     result.bpm = song.bpm || 220
-    result.pitch = pitchArr[song.pitch || 0]
+    result.pitch = (pitchArr[song.pitchLevel || 0]) || "C"
     let songNotes = song.songNotes
     songNotes.forEach(note => {
       let data = note.key.split("Key")

@@ -1,7 +1,6 @@
 import {instruments, appName} from "../../appConfig"
 let ComposerSettings = {
     settingVesion: appName + 0,
-
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",

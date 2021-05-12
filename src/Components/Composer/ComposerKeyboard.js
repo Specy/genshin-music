@@ -20,6 +20,7 @@ class ComposerKeyboard extends Component {
         if (data.keyboard.layout.length === 8) keyboardClass += " keyboard-4"
         return <div>
             <div className={keyboardClass}>
+            {data.keyboard.layout.length === 0 ? <div class="loading">Loading...</div> : null}
                 {data.keyboard.layout.map((note, i) => {
                     let index = notesIndexes.indexOf(i)
                     let skyText = ""

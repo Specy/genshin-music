@@ -19,7 +19,12 @@
 	font-family: Cronos;
 	src: url("assets/font/Cronos.otf");
 }
-
+.loading{
+	color: white;
+	font-size: 2rem;
+	grid-row: 1;
+    grid-column: 2/-1;
+}
 html,
 body {
 	width: 100%;

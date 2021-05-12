@@ -173,7 +173,8 @@ class App extends Component {
   }
   playSong = async (song) => {
     await this.stopSong()
-
+    let settings = this.state.settings
+    settings.pitch.value = song.pitch
     if (song.data.isComposedVersion) {
       song = ComposerToRecording(song)
     }
@@ -184,7 +185,8 @@ class App extends Component {
     this.state.keyboardData.playingSong = playingSong
     this.setState({
       keyboardData: this.state.keyboardData,
-      thereIsSong: "playing"
+      thereIsSong: "playing",
+      settings:settings
     })
 
     let event = new CustomEvent("playSong", { detail: playingSong })

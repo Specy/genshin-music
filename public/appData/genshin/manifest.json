@@ -1,6 +1,6 @@
 {
-  "short_name": "Genshin Music",
-  "name": "A program to record, practice and share music",
+  "name": "Genshin Music",
+  "description": "A program to record, practice and share music",
   "icons": [
     {
       "src": "favicon.ico",

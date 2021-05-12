@@ -4,6 +4,7 @@ import { faTrash, faDownload } from '@fortawesome/free-solid-svg-icons'
 import ZangoDb from "zangodb"
 import { FileDownloader, LoggerEvent } from "./SongUtils"
 import { asyncConfirm } from "./AsyncPrompts"
+import { appName} from "../appConfig"
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
@@ -30,8 +31,8 @@ class ErrorPage extends Component {
 
     }
     resetSettings = () => {
-        localStorage.removeItem("Genshin_Composer_Settings")
-        localStorage.removeItem("Genshin_Main_Settings")
+        localStorage.removeItem(appName+"_Composer_Settings")
+        localStorage.removeItem(appName+"_Main_Settings")
         new LoggerEvent("Success", "Settings have been reset").trigger()
     }
     downloadSong = (song) => {

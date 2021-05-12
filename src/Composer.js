@@ -57,10 +57,13 @@ class Composer extends Component {
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
-        window.addEventListener("beforeunload",(event) => {
-            event.preventDefault()
-            event.returnValue = ''
-        })
+        if(window.location.hostname !== "localhost"){
+            window.addEventListener("beforeunload",(event) => {
+                event.preventDefault()
+                event.returnValue = ''
+            })
+        }
+
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
@@ -140,7 +143,6 @@ class Composer extends Component {
             song: this.state.song
         }, () => {
             this.updateSettings()
-            if (data.songSetting) this.updateSong(this.state.song)
         })
     }
     loadInstrument = async (name, layer) => {
@@ -500,7 +502,7 @@ class Composer extends Component {
     toggleTools = () => {
         this.setState({
             toolsVisible: !this.state.toolsVisible,
-            toolsColumns: []
+            toolsColumns: [this.state.song.selected]
         })
         this.copiedColums = []
     }
@@ -545,7 +547,7 @@ class Composer extends Component {
         song.columns = song.columns.filter((e,i) => !this.state.toolsColumns.includes(i))
         if(song.selected > song.columns.length - 1) song.selected = song.columns.length - 1
         if(song.selected <= 0) song.selected = 0
-        if(song.columns.length === 0) await this.addColumns(16,0)
+        if(song.columns.length === 0) await this.addColumns(12,0)
         this.setState({
             song: song,
             toolsColumns: []
@@ -648,7 +650,7 @@ class Composer extends Component {
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
                                 <img src={removeCell} className="tool-icon" />
                             </div>
-                            <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value === 4 ? 20 : 15, "end")}>
+                            <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value === 4 ? 16 : 12, "end")}>
                                 <FontAwesomeIcon icon={faPlus} />
                             </div>
                             <div className="tool" onClick={this.toggleTools}>

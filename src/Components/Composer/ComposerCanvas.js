@@ -21,7 +21,7 @@ class ComposerCanvas extends Component {
             width = nearestEven(sizes.height * 0.82)
             height = nearestEven(sizes.width * 0.45)
         }
-        if(appName === "Sky") height = nearestEven(height * 0.9)
+        if(appName === "Sky") height = nearestEven(height * 0.95)
         this.state = {
             width: width,
             height: height,
@@ -150,8 +150,7 @@ class ComposerCanvas extends Component {
         let switcher = false
         let cache = this.cache
         let beatMarks = Number(data.settings.beatMarks.value)
-        let counterLimit = beatMarks === 0 ? 14 : beatMarks * 5 - 1
-
+        let counterLimit = beatMarks === 0 ? 12 : beatMarks * 4 - 1
         let relativeColumnWidth = this.state.width / data.columns.length
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > this.state.width) stageSize = this.state.width
