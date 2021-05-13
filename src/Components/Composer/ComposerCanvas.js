@@ -150,7 +150,7 @@ class ComposerCanvas extends Component {
         let switcher = false
         let cache = this.cache
         let beatMarks = Number(data.settings.beatMarks.value)
-        let counterLimit = beatMarks === 0 ? 12 : beatMarks * 4 - 1
+        let counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks - 1
         let relativeColumnWidth = this.state.width / data.columns.length
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > this.state.width) stageSize = this.state.width
@@ -177,8 +177,8 @@ class ComposerCanvas extends Component {
                         }
                         counter++
                         if (!isVisible(i, data.selected)) return null
-                        let tempoChangersCache = (i + 1) % beatMarks === 0 ? cache.columnsLarger : cache.columns
-                        let standardCache = (i + 1) % beatMarks === 0 ? cache.standardLarger : cache.standard
+                        let tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
+                        let standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
                         let standardBg = standardCache[Number(switcher)] // boolean is 1 or 0
                         let background = column.tempoChanger === 0 ? standardBg : tempoChangersCache[column.tempoChanger]
                         return <Column
@@ -191,7 +191,7 @@ class ComposerCanvas extends Component {
                             isToolsSelected={data.toolsColumns.includes(i)}
                             click={functions.selectColumn}
                             isSelected={i === data.selected}
-                            isBreakpoint={this.props.data.breakpoints.includes(i)}
+                            isBreakpoint={data.breakpoints.includes(i)}
                         />
 
                     })}
@@ -225,6 +225,7 @@ class ComposerCanvas extends Component {
                         {data.breakpoints.map(breakpoint => {
                             return <Sprite
                                 image={cache.breakpoints[0]}
+                                key={breakpoint}
                                 x={relativeColumnWidth * breakpoint}
 
                             >
@@ -273,16 +274,12 @@ function Column(props) {
                 alpha={isToolsSelected ?0.4 : 0.6}
                 zIndex={1}
             >
-
             </Sprite> : null}
             {isBreakpoint ? <Sprite
                 image={cache.breakpoints[1]}
             >
-
             </Sprite> : null}
-
         </Sprite>
-
         {data.notes.map((note) => {
             return <Sprite
                 key={note.index}

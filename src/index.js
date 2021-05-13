@@ -80,11 +80,12 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = 1.1
+      let currentVersion = 1
       let updateMessage =
         `
-          Added tools in composer
-          Fixed song loading bugs and others fixes
+          Fixed song import bug
+          Improved composer tools
+          Fixed general bugs and UI
         `
       let storedVersion = localStorage.getItem(appName+"_Version")
       if (currentVersion != storedVersion) {

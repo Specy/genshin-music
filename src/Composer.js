@@ -218,6 +218,7 @@ class Composer extends Component {
     playSound = (instrument, index) => {
         const source = this.state.audioContext.createBufferSource()
         let note = instrument.layout[index]
+        if(note === undefined) return
         source.buffer = note.buffer
         source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
         source.connect(instrument.gain)
@@ -283,7 +284,11 @@ class Composer extends Component {
 
         }
         return new Promise(async resolve => {
+            let settings = this.state.settings
             if (await this.songExists(song.name)) {
+                song.instruments[0] = settings.instrument.value
+                song.instruments[1] = settings.layer2.value
+                song.instruments[2] = settings.layer3.value
                 await this.dbCol.songs.update({ name: song.name }, ComposerSongSerialization(song))
                 console.log("song saved:", song.name)
                 this.changes = 0
@@ -361,6 +366,18 @@ class Composer extends Component {
         let settings = this.state.settings
         settings.bpm.value = song.bpm
         settings.pitch.value = song.pitch
+        if (settings.instrument.value !== song.instruments[0]) {
+            this.loadInstrument(song.instruments[0], 1)
+            settings.instrument.value = song.instruments[0]
+        }
+        if (settings.layer2.value !== song.instruments[1]) {
+            this.loadInstrument(song.instruments[1], 2)
+            settings.layer2.value = song.instruments[1]
+        }
+        if (settings.layer3.value !== song.instruments[2]) {
+            this.loadInstrument(song.instruments[2], 3)
+            settings.layer3.value = song.instruments[2]
+        }
         this.changes = 0
         this.setState({
             song: song,
@@ -446,6 +463,7 @@ class Composer extends Component {
         } else if (song.columns.length > index) {
             song.breakpoints.push(index)
         }
+        this.validateBreakpoints()
         this.setState({
             song: song
         })
@@ -528,23 +546,23 @@ class Composer extends Component {
             toolsColumns: []
         })
     }
-    pasteColumns =async (insert) => {
+    pasteColumns = async (insert) => {
         let song = this.state.song
         let copiedColumns = JSON.parse(JSON.stringify(this.copiedColums))
-        if(!insert){
-            song.columns.splice(song.selected,0,...copiedColumns)
-        }else{
-            copiedColumns.map((copiedColumn,i) =>{
-                let column = song.columns[song.selected+i]
-                if(column !== undefined){
+        if (!insert) {
+            song.columns.splice(song.selected, 0, ...copiedColumns)
+        } else {
+            copiedColumns.forEach((copiedColumn, i) => {
+                let column = song.columns[song.selected + i]
+                if (column !== undefined) {
                     copiedColumn.notes.forEach(copiedNote => {
                         let index = column.notes.findIndex(note => copiedNote.index === note.index)
-                        if(index < 0){
+                        if (index < 0) {
                             column.notes.push(copiedNote)
-                        }else{
-                            for(let j = 0;j<3;j++){
-                                if(copiedNote.layer[j] === '1'){
-                                    column.notes[index].layer = replaceAt(column.notes[index].layer,j,1)
+                        } else {
+                            for (let j = 0; j < 3; j++) {
+                                if (copiedNote.layer[j] === '1') {
+                                    column.notes[index].layer = replaceAt(column.notes[index].layer, j, 1)
                                 }
                             }
                         }
@@ -684,7 +702,7 @@ class Composer extends Component {
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
                                 <img src={removeCell} className="tool-icon" />
                             </div>
-                            <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value === 4 ? 16 : 12, "end")}>
+                            <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 4, "end")}>
                                 <FontAwesomeIcon icon={faPlus} />
                             </div>
                             <div className="tool" onClick={this.toggleTools}>
@@ -752,3 +770,4 @@ function replaceAt(string, index, replacement) {
     return string.substring(0, index) + replacement + string.substring(index + 1);
 }
 export default Composer
+

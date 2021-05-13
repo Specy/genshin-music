@@ -1,4 +1,4 @@
-import { importNotePositions, appName } from "../appConfig"
+import { importNotePositions, appName, instruments } from "../appConfig"
 class Recording {
   constructor() {
     this.start = new Date().getTime()
@@ -115,6 +115,7 @@ class ComposedSong {
     this.bpm = 220
     this.pitch = "C"
     this.notes = notes
+    this.instruments = [instruments[0], instruments[0], instruments[0]]
     this.breakpoints = [0]
     this.columns = []
     this.selected = 0
@@ -133,6 +134,7 @@ function ComposerSongDeSerialization(song) {
     name: song.name,
     bpm: song.bpm ?? 220,
     pitch: song.pitch ?? "C",
+    instruments: song.instruments || [instruments[0], instruments[0], instruments[0]],
     breakpoints: song.breakpoints ?? [],
     notes: [],
     selected: 0,
@@ -167,6 +169,7 @@ function ComposerSongSerialization(song) {
     bpm: song.bpm,
     pitch: song.pitch,
     breakpoints: song.breakpoints,
+    instruments: song.instruments,
     columns: []
   }
   obj.data.appName = appName
@@ -240,6 +243,12 @@ function SkyToGenshin(song) {
     result = new Song(song.name)
     result.bpm = song.bpm || 220
     result.pitch = (pitchArr[song.pitchLevel || 0]) || "C"
+    //remove duplicate notes
+    song.songNotes = song.songNotes.filter((note, index, self) =>
+      index === self.findIndex((n) => {
+        return n.key.split('Key')[1] === note.key.split('Key')[1] && n.time === note.time
+      })
+    )
     let songNotes = song.songNotes
     songNotes.forEach(note => {
       let data = note.key.split("Key")
@@ -265,6 +274,8 @@ function RecordingToComposed(song) {
   composed.bpm = song.bpm
   composed.pitch = song.pitch
   let notes = song.notes
+  //remove duplicates
+
   let converted = []
   let grouped = groupByNotes(notes, bpmToMs / 9)
   let combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]

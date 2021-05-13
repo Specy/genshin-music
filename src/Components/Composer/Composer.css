@@ -118,13 +118,13 @@ select{
     cursor: pointer;
 }
 canvas{
-    border-radius: 0.4rem;
+    border-radius: 0.2rem;
 }
 .fill-x{
     width: 100%;
 }
 .timeline-wrapper canvas{
-    width: calc(100% - 6.5rem) !important;
+    width: calc(100% - 6.4rem) !important;
 }
 .settings-row :is(input,select){
     background-color: var(--primary);
@@ -209,6 +209,7 @@ canvas{
     margin-right: auto;
     margin-left: auto;
     height: 45vh;
+    overflow: auto;
     width: 60vw;
     border-radius: 0.5rem;
     background-color: var(--primary);
@@ -321,8 +322,11 @@ canvas{
     .buttons-composer-wrapper, .buttons-composer-wrapper-right {
         flex: 1;
     }
+    .floating-tools{
+        height: 50vh;
+    }
     .tools-buttons-wrapper button{
-        font-size: 0.9rem;
+        font-size: 0.8rem;
     }
     .song-info div{
         max-width: 20vw;
@@ -345,6 +349,7 @@ canvas{
     }
     .tempo-changers-wrapper button{
         font-size: 0.7rem;
+        padding: 0.5rem;
     }
     .note-composer{
         width: 5.1vw;

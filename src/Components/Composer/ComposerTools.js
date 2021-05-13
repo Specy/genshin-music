@@ -13,7 +13,7 @@ class ComposerTools extends Component{
         return <div className={className}>
             <div className="tools-row">
                 <div>
-                    Scroll to the left / right to select the columns (warning, there is no undo yet)
+                    Scroll to the left / right to select the columns
                 </div>
                 <button onClick={functions.toggleTools}>
                     Close
