@@ -1,6 +1,6 @@
 import {instruments, appName} from "../../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 0,
+    settingVesion: appName + 1,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -92,7 +92,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion:appName + 0,
+    settingVesion:appName + 1,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",

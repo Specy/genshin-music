@@ -96,7 +96,6 @@ class App extends Component {
     })
   }
   practiceSong = async (song, start = 0) => {
-
     await this.stopSong()
     let oldState = this.state.keyboardData.practicingSong
     if (song.data?.isComposedVersion) {
@@ -193,27 +192,32 @@ class App extends Component {
     window.dispatchEvent(event)
     this.lastPlayedSong = song
   }
+  askForSongName = () => {
+    return new Promise(async resolve => {
+        let promptString = "Write song name, press cancel to ignore"
+        while (true) {
+            let songName = await asyncPrompt(promptString)
+            if (songName === null) return resolve(null)
+            if (songName !== "") {
+                if (await this.songExists(songName)) {
+                    promptString = "This song already exists: " + songName
+                } else {
+                    return resolve(songName)
+                }
+            } else {
+                promptString = "Write song name, press cancel to ignore"
+            }
+        }
+    })
 
+}
   toggleRecord = async (override) => {
     if (typeof override !== "boolean") override = undefined
     let newState = override !== undefined ? override : !this.state.isRecording
     if (!newState && this.recording.notes.length > 0) {
-      let songName
-      let promptString = "Write song name, press cancel to ignore"
-      while (true) {
-        songName = await asyncPrompt(promptString)
-        if (songName === null) break
-        if (songName !== "") {
-          if (await this.songExists(songName)) {
-            promptString = "This song already exists: " + songName
-          } else {
-            break
-          }
-        } else {
-          promptString = "Write song name, press cancel to ignore"
-        }
-      }
+      let songName = await this.askForSongName()
       let song = new Song(songName, this.recording.notes)
+      song.pitch = this.state.settings.pitch.value
       if (songName !== null) this.addSong(song)
     } else {
       this.recording = new Recording()
