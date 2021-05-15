@@ -7,7 +7,7 @@
 	--note-border: #d9d6c8;
 	--note-text: #63aea7;
 	--text-color: #aaaa82;
-	--composer-tool: #d3bd8e;
+	--composer-tool: #d4c199;
 	--clicked-note: #8fedd9;
   --whitish: #ede5d8;
 }
@@ -37,6 +37,44 @@ body {
 body{
 	position: absolute;
 }
+.help-icon{
+	width: 3rem;
+	height: 3rem;
+	color: var(--primary);
+}
+.help-icon-wrapper{
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	margin-top: 1vh;
+	justify-content: space-around;
+}
+.help-title{
+	width: 100%;
+	margin-top: 3vh;
+	padding: 1rem;
+	font-size: 1.4rem;
+	border-top: 2px solid var(--primary);
+}
+.help-img{
+	width: 100%;
+}
+.keyboard-key{
+	padding:0.2rem 0.4rem;
+	border-radius: 0.2rem;
+	min-width: 2rem;
+	text-align: center;
+	margin-bottom: 0.1rem;
+	background-color: var(--primary);
+	color: white;
+	width: fit-content;
+	display: inline-block;
+}
+.column{
+	display: flex;
+	flex-direction: column;
+}
+
 *:not(input) {
 	-webkit-user-select: none;
 	-khtml-user-select: none;
@@ -282,6 +320,26 @@ a {
 	justify-content: flex-start;
 	padding-top: 20vh;
 }
+/* width */
+::-webkit-scrollbar {
+	width: 5px;
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+	background: none;
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+	background: var(--primary);
+	border-radius: 2px;
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+	background: #555;
+  }
 .error-buttons-wrapper {
 	display: flex;
 	width: 50vw;

@@ -168,6 +168,7 @@ class Keyboard extends Component {
 
     }
     playSound = (note) => {
+        if(note === undefined) return
         if (this.props.isRecording) this.props.functions.handleRecording(note)
         note.clicked = true
         setTimeout(() => {

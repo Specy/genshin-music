@@ -150,7 +150,7 @@ class ComposerCanvas extends Component {
         let switcher = false
         let cache = this.cache
         let beatMarks = Number(data.settings.beatMarks.value)
-        let counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks - 1
+        let counterLimit = beatMarks === 0 ? 11 : 4 * beatMarks - 1
         let relativeColumnWidth = this.state.width / data.columns.length
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > this.state.width) stageSize = this.state.width

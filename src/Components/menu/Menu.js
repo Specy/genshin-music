@@ -1,17 +1,19 @@
 import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faCompactDisc, } from '@fortawesome/free-solid-svg-icons'
+import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, } from '@fortawesome/free-solid-svg-icons'
+import { FaDiscord, FaGooglePlay , FaGithub} from 'react-icons/fa';
 import "./menu.css"
-
+import mainPageImg from '../../assets/images/mainpage.png'
+import composerImg from '../../assets/images/composer.png'
 import { FileDownloader, LoggerEvent, getSongType, SkyToGenshin } from "../SongUtils"
 import { FilePicker } from "react-file-picker"
-import {appName} from "../../appConfig"
+import { appName } from "../../appConfig"
 class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
             open: false,
-            selectedMenu: "Settings",
+            selectedMenu: "Songs",
             selectedSongType: "recorded",
 
         }
@@ -83,12 +85,16 @@ class Menu extends Component {
         return <div className="menu-wrapper">
             <div className="menu menu-visible">
                 {this.state.open && <CloseMenu action={this.toggleMenu} />}
-                <MenuItem type="Songs" action={this.selectSideMenu} className="margin-top-auto">
+                <MenuItem type="Help" action={this.selectSideMenu} className="margin-top-auto">
+                    <FontAwesomeIcon icon={faInfo} className="icon" />
+                </MenuItem>
+                <MenuItem type="Songs" action={this.selectSideMenu} >
                     <FontAwesomeIcon icon={faMusic} className="icon" />
                 </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FontAwesomeIcon icon={faCog} className="icon" />
                 </MenuItem>
+
                 <MenuItem type="Composer" action={() => changePage("Composer")}>
                     <FontAwesomeIcon icon={faCompactDisc} className="icon" />
                 </MenuItem>
@@ -165,12 +171,76 @@ class Menu extends Component {
                     </a>
 
                 </MenuPanel>
+                <MenuPanel title="Help" visible={selectedMenu}>
+                    <div className='help-icon-wrapper'>
+                        <a href='https://discord.gg/Rj8V5gkZPc' >
+                            <FaDiscord className='help-icon' />
+                        </a>
+                        <a href='https://github.com/Specy/genshin-music' >
+                            <FaGithub className='help-icon' />
+                        </a>
+                        
+                    </div>
+                    <div className='help-title'>
+                        Main page
+                    </div>
+                    <div>
+                        <img src={mainPageImg} className='help-img' />
+                        <ol>
+                            <li>Keyboard</li>
+                            <li>Record your keyboard</li>
+                            <li>Open the composer</li>
+                            <li>Open the settings</li>
+                            <li>Open the saved songs</li>
+                        </ol>
+                        <div className="column">
+                            <div>
+                                <FontAwesomeIcon icon={faCrosshairs} /> = practice the song
+                            </div>
+                            <div>
+                                <FontAwesomeIcon icon={faDownload} /> = download the song
+                            </div>
+
+                        </div>
+                    </div>
+                    <div className='help-title'>
+                        Composer
+                    </div>
+                    <div>
+                        <img src={composerImg} className='help-img' />
+                        <ol>
+                            <li>Go to the next / previous breakpoint</li>
+                            <li>Timeline of the breakpoints</li>
+                            <li>Open the tools</li>
+                            <li>Add 16 columns to the end</li>
+                            <li>Remove the current selected column</li>
+                            <li>Add column after the current one</li>
+                        </ol>
+                        The composer has tools for PC users: <br/><br/>
+                            <div style={{marginLeft:'1rem'}}>
+                                <Key>A / D</Key> = move left / right <br/>
+                                <Key>1 / 2 / 3 / 4</Key> = change tempo <br/>
+                                <Key>Space bar</Key> = play / pause song <br/>
+                                <Key>Arrow left</Key> = go to previous breakpoint<br/>
+                                <Key>Arrow right</Key> = go to next breakpoint <br/>
+                                <Key>Q</Key> = remove current column<br/>
+                                <Key>E</Key> = add column <br/>
+                            </div>
+                    </div>
+                    <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
+                        Support me
+                    </a>
+                </MenuPanel>
             </div>
         </div>
     }
 }
 
-
+function Key(props){
+    return <div className='keyboard-key'>
+        {props.children}
+    </div>
+}
 
 function MenuPanel(props) {
     let className = props.visible === props.title ? "menu-panel menu-panel-visible" : "menu-panel"
