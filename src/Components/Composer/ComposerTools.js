@@ -1,14 +1,14 @@
 import React, { Component } from 'react'
 
-class ComposerTools extends Component{
-    constructor(props){
+class ComposerTools extends Component {
+    constructor(props) {
         super(props)
         this.state = {
-            
+
         }
     }
-    render(){
-        const {data, functions} = this.props
+    render() {
+        const { data, functions } = this.props
         let className = data.visible ? "floating-tools tools-visible" : "floating-tools"
         return <div className={className}>
             <div className="tools-row">
@@ -21,43 +21,51 @@ class ComposerTools extends Component{
             </div>
             <div className="tools-buttons-wrapper">
                 <div className='tools-half'>
-                    <button 
+                    <button
                         disabled={data.copiedColumns.length !== 0}
                         onClick={() => functions.copyColumns('all')}
-                        className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}    
+                        className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}
                     >
                         Copy
                     </button>
-                    <button 
-                    disabled={data.copiedColumns.length !== 0}
+                    <button
+                        disabled={data.copiedColumns.length !== 0}
                         onClick={() => functions.copyColumns(data.layer)}
-                        className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}    
+                        className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}
                     >
                         Copy layer {data.layer}
                     </button>
                 </div>
                 <div className='tools-half'>
-                <button 
-                    disabled={data.copiedColumns.length === 0}
-                    onClick={() => functions.pasteColumns(false)}
-                >
-                    Paste
+                    <button
+                        disabled={data.copiedColumns.length === 0}
+                        onClick={() => functions.pasteColumns(false)}
+                    >
+                        Paste
                 </button>
-                <button 
-                    disabled={data.copiedColumns.length === 0}
-                    onClick={() => functions.pasteColumns(true)}
-                >
-                    Insert
+                    <button
+                        disabled={data.copiedColumns.length === 0}
+                        onClick={() => functions.pasteColumns(true)}
+                    >
+                        Insert
                 </button>
                 </div>
+                <div className='tools-half'>
+                    <button
+                        disabled={data.copiedColumns.length !== 0}
+                        onClick={() => functions.eraseColumns('all')}
+                    >
+                        Erase
+                    </button>
+                    <button
+                        disabled={data.copiedColumns.length !== 0}
+                        onClick={() => functions.eraseColumns(data.layer)}
+                    >
+                        Erase layer {data.layer}
+                    </button>
+                </div>
 
-                <button 
-                    disabled={data.copiedColumns.length !== 0}
-                    onClick={functions.eraseColumns}
-                >
-                    Erase
-                </button>
-                <button 
+                <button
                     disabled={data.copiedColumns.length !== 0}
                     onClick={functions.deleteColumns}
                 >

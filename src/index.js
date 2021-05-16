@@ -52,7 +52,7 @@ class Index extends Component {
         if (result) {
           new LoggerEvent("Success", "Storage permission allowed").trigger()
         } else {
-          new LoggerEvent("Denied", "Storage permission refused, reload if you want to try again").trigger()
+          new LoggerEvent("Warning", "Storage permission refused, if you weren't prompt, your browser denied it for you. Don't worry, it will still work fine",6000).trigger()
         }
       }
     } catch (e) {
@@ -76,7 +76,7 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = 0
+      let currentVersion = 1
       let updateMessage =
         `
           Release
@@ -84,7 +84,7 @@ class Index extends Component {
       let storedVersion = localStorage.getItem(appName+"_Version")
       if (currentVersion != storedVersion) {
         console.log("update")
-        new LoggerEvent("Update V" + currentVersion, updateMessage, 8000).trigger()
+        new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
         localStorage.setItem(appName+"_Version", currentVersion)
       }
     }, 1000)

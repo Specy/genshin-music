@@ -358,7 +358,8 @@ a {
 	display: flex;
 	width: 50vw;
 	flex-direction: row;
-	margin-top: 4vhz;
+	justify-content: space-between;
+	margin-top: 4vh;
 }
 .error-songs-wrapper {
 	padding: 0.4rem;

@@ -1,4 +1,4 @@
-import {instrumentsData, layoutData, instruments} from "../../appConfig"
+import { instrumentsData, layoutData, instruments } from "../../appConfig"
 class Instrument {
     constructor(instrumentName) {
         this.instrumentName = instrumentName
@@ -39,16 +39,27 @@ class Instrument {
     load = async (audioContext) => {
         this.gain = audioContext.createGain()
         this.gain.gain.value = 1
+
+        //thanks safari, i have to do this ugly thing
         const requests = this.layout.map(e => fetch(e.url)
             .then(result => result.arrayBuffer())
-            .then(buffer => audioContext.decodeAudioData(buffer)
-                .catch(e => { 
-                    return new AudioBuffer({
-                        length:1, 
-                        sampleRate:48000
-                    })
-                })
-            ))
+            .then(buffer => new Promise(resolve => {
+                try {
+                    audioContext.decodeAudioData(buffer, resolve)
+                        .catch(e => {
+                            resolve(new AudioBuffer({
+                                length: 1,
+                                sampleRate: 48000
+                            }))
+                        })
+                } catch (e) {
+                    resolve(new AudioBuffer({
+                        length: 1,
+                        sampleRate: 48000
+                    }))
+                }
+            })
+        ))
         let buffers = await Promise.all(requests)
         this.setBuffers(buffers)
         return true

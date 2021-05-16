@@ -31,6 +31,12 @@ class ErrorPage extends Component {
         }
 
     }
+    deleteAllSongs = async () =>{
+        if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
+            
+            this.dbCol.songs.remove({}, this.syncSongs)
+        }
+    }
     resetSettings = () => {
         localStorage.removeItem(appName+"_Composer_Settings")
         localStorage.removeItem(appName+"_Main_Settings")
@@ -52,6 +58,9 @@ class ErrorPage extends Component {
             <div className="error-buttons-wrapper">
                 <button className="genshin-button" onClick={this.resetSettings}>
                     Reset settings
+                </button>
+                <button className="genshin-button" onClick={this.deleteAllSongs}>
+                    Delete all songs
                 </button>
             </div>
             <div className="error-songs-wrapper">

@@ -575,12 +575,24 @@ class Composer extends Component {
             song: song
         })
     }
-    eraseColumns = () => {
+    eraseColumns = (layer) => {
         let song = this.state.song
-        this.state.toolsColumns.forEach(columnIndex => {
-            let column = song.columns[columnIndex]
-            if (column !== undefined) song.columns[columnIndex].notes = []
-        })
+        if(layer === 'all'){
+            this.state.toolsColumns.forEach(columnIndex => {
+                let column = song.columns[columnIndex]
+                if (column !== undefined) song.columns[columnIndex].notes = []
+            })
+        }else{
+            this.state.toolsColumns.forEach(columnIndex => {
+                let column = song.columns[columnIndex]
+                if (column !== undefined){
+                    song.columns[columnIndex].notes.forEach(note =>{
+                        note.layer = replaceAt(note.layer,layer-1,'0')
+                    })
+                }
+            })
+        }
+
         this.setState({
             song: song
         })
