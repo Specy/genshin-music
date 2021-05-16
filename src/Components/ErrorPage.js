@@ -26,6 +26,7 @@ class ErrorPage extends Component {
     }
     deleteSong = async (name) => {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
+            
             this.dbCol.songs.remove({ name: name }, this.syncSongs)
         }
 

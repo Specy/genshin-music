@@ -39,13 +39,50 @@ class App extends Component {
         position: 0,
         size: 0
       },
-      thereIsSong: "none"
+      thereIsSong: "none",
+      isDragging: false
     }
     this.lastPlayedSong = new Recording()
     this.syncSongs()
   }
-
-
+  
+  componentDidMount(){
+    document.body.addEventListener('dragenter',this.handleDrag)
+    document.body.addEventListener('dragleave',this.resetDrag)
+    document.body.addEventListener('dragover',this.handleDragOver)
+    document.body.addEventListener('drop',this.handleDrop)
+  }
+  componentWillUnmount(){
+    document.body.removeEventListener('dragenter',this.handleDrag)
+    document.body.removeEventListener('dragleave',this.resetDrag)
+    document.body.removeEventListener('drop',this.handleDrop)
+    document.body.addEventListener('dragover',this.handleDragOver)
+  }
+  resetDrag = (e) =>{
+    this.setState({
+      isDragging:false
+    })
+  }
+  handleDragOver= (e) =>{
+    e.preventDefault()
+    this.setState({
+      isDragging:true
+    })
+  }
+  handleDrag = (e) =>{
+    e.preventDefault()
+    this.setState({
+      isDragging:true
+    })
+  }
+  handleDrop = async(e) =>{
+    this.resetDrag()
+    e.preventDefault()
+    let songs = await Promise.all(Array.from(e.dataTransfer.files).map(file => file.text()))
+    for(let i = 0; i<songs.length;i++){
+      await this.addSong(JSON.parse(songs[i]))
+    }
+  }
   getSettings = () => {
     let storedSettings = localStorage.getItem(appName + "_Main_Settings")
     try {
@@ -119,12 +156,19 @@ class App extends Component {
     return await this.dbCol.songs.findOne({ name: name }) !== undefined
   }
   addSong = async (song) => {
-    if (await this.songExists(song.name)) {
-      return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
+    try{
+      if (await this.songExists(song.name)) {
+        return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
+      }
+      await this.dbCol.songs.insert(song)
+      this.syncSongs()
+      new LoggerEvent("Success", `Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000).trigger()
+   
+    }catch(e){
+      console.error(e)
+      return new LoggerEvent("Error", 'There was an error importing the song').trigger()
     }
-    await this.dbCol.songs.insert(song)
-    this.syncSongs()
-    new LoggerEvent("Success", `Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000).trigger()
+    
   }
   componentDidCatch() {
     new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
@@ -257,7 +301,9 @@ class App extends Component {
         </img>
           For a better experience, add the website to the home screen, and rotate your device
       </div>
-
+      {state.isDragging && <div className='drag-n-drop'>
+          Drop file here
+      </div>}
       <Menu functions={menuFunctions} data={menuData} />
       <div className="right-panel">
         <div className="upper-right">

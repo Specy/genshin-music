@@ -5,7 +5,7 @@ import Composer from "./Composer"
 import ErrorPage from "./Components/ErrorPage"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./App.css"
-import { BrowserRouter, Route, Redirect } from "react-router-dom";
+import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent } from "./Components/SongUtils"
 import {appName} from "./appConfig"
 const getBasename = path => path.substr(0, path.lastIndexOf('/'));
@@ -13,12 +13,8 @@ let pages = ["", "Composer", "ErrorPage"]
 class Index extends Component {
   constructor(props) {
     super(props)
-    let path = window.location.pathname.split("/")
-    if (path.length !== 0) {
-      path = path[path.length - 1]
-    } else {
-      path = ""
-    }
+    let path = window.location.href.split("/")
+    path = path.length === 0 ? "" : path = path[path.length - 1]
     if (!pages.includes(path)) path = ""
     this.state = {
       floatingMessage: {
@@ -158,8 +154,8 @@ class Index extends Component {
           </div>
         </div> : null
       }
-      <BrowserRouter basename={baseName}>
-        <Redirect to={"/" + this.state.selectedPage}></Redirect>
+      <HashRouter basename={baseName}>
+      <Redirect to={"/" + this.state.selectedPage}></Redirect>
         {this.state.selectedPage === "ErrorPage"
           ? <Route exact path={"/ErrorPage"}>
             <ErrorPage changePage={this.changePage} />
@@ -176,7 +172,7 @@ class Index extends Component {
           </>
         }
 
-      </BrowserRouter>
+      </HashRouter>
     </div>
   }
 }
