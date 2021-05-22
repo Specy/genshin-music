@@ -23,8 +23,8 @@ class Keyboard extends Component {
         this.loadInstrument(props.data.instrument)
         try {
             this.loadReverb()
-        } catch {
-            console.log("Error with reverb")
+        } catch(e) {
+            console.log("Error with reverb0",e)
         }
     }
     handleKeyboard = (event) => {
@@ -54,19 +54,21 @@ class Keyboard extends Component {
     loadReverb() {
         let audioCtx = this.state.audioContext
         fetch("./assets/audio/reverb4.wav")
-            .then(r => r.arrayBuffer().catch(function () { console.log("Error with reverb ") }))
-            .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
-                let convolver = audioCtx.createConvolver()
-                let gainNode = audioCtx.createGain()
-                gainNode.gain.value = 2.5
-                convolver.buffer = impulse_response
-                convolver.connect(gainNode)
-                gainNode.connect(audioCtx.destination)
-                this.setState({
-                    reverbAudioContext: convolver
+            .then(r => r.arrayBuffer())
+            .then(b => {
+                audioCtx.decodeAudioData(b, (impulse_response) => {
+                    let convolver = audioCtx.createConvolver()
+                    let gainNode = audioCtx.createGain()
+                    gainNode.gain.value = 2.5
+                    convolver.buffer = impulse_response
+                    convolver.connect(gainNode)
+                    gainNode.connect(audioCtx.destination)
+                    this.setState({
+                        reverbAudioContext: convolver
+                    })
                 })
-            })).catch(function () {
-                console.log("Error with reverb")
+            }).catch((e) => { 
+                console.log("Error with reverb1",e)
             })
     }
     handlePlayEvent = (event) => {
@@ -81,9 +83,8 @@ class Keyboard extends Component {
     }
     loadInstrument = async (name) => {
         let newInstrument = new Instrument(name)
-        let urls = newInstrument.layout.map(e => e.url)
-        let buffers = await this.preload(urls)
-        newInstrument.setBuffers(buffers)
+        await newInstrument.load(this.state.audioContext)
+
         this.setState({
             instrument: newInstrument
         })
@@ -190,13 +191,6 @@ class Keyboard extends Component {
             instrument: this.state.instrument
         })
     }
-    preload = (urls) => {
-        const requests = urls.map(url => fetch(url)
-            .then(result => result.arrayBuffer())
-            .then(buffer => this.state.audioContext.decodeAudioData(buffer).catch(e => { return new AudioBuffer({length:1, sampleRate:48000})}))
-        )
-        return Promise.all(requests)
-    }
     render() {
         let state = this.state
         let size = this.props.settings.keyboardSize.value / 100
@@ -205,7 +199,13 @@ class Keyboard extends Component {
         let keyboardClass = "keyboard"
         if (state.instrument.layout.length === 15) keyboardClass += " keyboard-5"
         if (state.instrument.layout.length === 8) keyboardClass += " keyboard-4"
-        return <div className={keyboardClass} style={{ transform: `scale(${size})` }}>
+        return <div 
+                    className={keyboardClass} 
+                    style={{ 
+                        transform: `scale(${size})`,
+                        marginBottom:size * 30
+                    }}
+                >
              {state.instrument.layout.length === 0 ? <div className="loading">Loading...</div> : null}
             {state.instrument.layout.map(note => {
                 let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined

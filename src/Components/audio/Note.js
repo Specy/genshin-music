@@ -22,7 +22,10 @@ class Note extends Component {
         if(appName === "Sky") svgUrl = `./assets/icons/keys/${props.skyImg}.svg`
         if(appName === "Sky") noteText = props.skyText
         return <button
-            onPointerDown={() => props.clickAction(data)}
+            onPointerDown={(e) => {
+                e.preventDefault()
+                props.clickAction(data)
+            }}
             className="button-hitbox"
 
         >

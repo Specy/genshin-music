@@ -39,32 +39,31 @@ class Instrument {
     load = async (audioContext) => {
         this.gain = audioContext.createGain()
         this.gain.gain.value = 1
-
+        let emptyBuffer = audioContext.createBuffer(2, audioContext.sampleRate, audioContext.sampleRate)
         //thanks safari, i have to do this ugly thing
-        const requests = this.layout.map(e => fetch(e.url)
-            .then(result => result.arrayBuffer())
-            .then(buffer => new Promise(resolve => {
-                try {
-                    audioContext.decodeAudioData(buffer, resolve)
-                        .catch(e => {
-                            resolve(new AudioBuffer({
-                                length: 1,
-                                sampleRate: 48000
-                            }))
+        const requests = this.layout.map(e => {
+            return new Promise(resolve => {
+                fetch(e.url)
+                    .then(result => result.arrayBuffer())
+                    .then(buffer => {
+                        audioContext.decodeAudioData(buffer, resolve, () => {
+                            resolve(emptyBuffer)
                         })
-                } catch (e) {
-                    resolve(new AudioBuffer({
-                        length: 1,
-                        sampleRate: 48000
-                    }))
-                }
+                            .catch(e => {
+                                resolve(emptyBuffer)
+                            })
+                    }).catch(e => {
+                        resolve(emptyBuffer)
+                    })
             })
-        ))
+        })
         let buffers = await Promise.all(requests)
         this.setBuffers(buffers)
         return true
     }
 }
+
+
 
 class NoteData {
     constructor(index, noteNames, url) {

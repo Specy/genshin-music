@@ -5,7 +5,6 @@
     grid-template-rows: repeat(3, 1fr);
     justify-items: center;
     align-items: center;
-    gap: 0.5rem;
 
 }
 .keyboard-5{
@@ -16,6 +15,7 @@
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(2, 1fr);
 }
+
 .note, .note-composer, .note-sky, .note-composer-sky{
     background-color: var(--note-color);
     border-radius: 50%;
@@ -31,6 +31,7 @@
     align-items: center;
     transition: all 0.1s;
     cursor: pointer;
+    touch-action: none;
 }
 .note-sky, .note-composer-sky{
     border-radius: 1.5vw;

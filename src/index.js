@@ -154,8 +154,8 @@ class Index extends Component {
           </div>
         </div> : null
       }
-      <HashRouter basename={baseName}>
-      <Redirect to={"/" + this.state.selectedPage}></Redirect>
+      <HashRouter>
+        <Redirect to={"/" + this.state.selectedPage}></Redirect>
         {this.state.selectedPage === "ErrorPage"
           ? <Route exact path={"/ErrorPage"}>
             <ErrorPage changePage={this.changePage} />

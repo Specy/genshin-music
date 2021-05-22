@@ -1,9 +1,10 @@
 import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSave, faMusic, faTimes, faCog, faTrash, faCompactDisc } from '@fortawesome/free-solid-svg-icons'
+import { faSave, faMusic, faTimes, faCog, faTrash, faCompactDisc, faDownload } from '@fortawesome/free-solid-svg-icons'
 import "../../menu/menu.css"
 
-import { FileDownloader, LoggerEvent } from "../../SongUtils"
+import { FileDownloader, LoggerEvent,ComposerSongSerialization } from "../../SongUtils"
+import {appName} from '../../../appConfig'
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -41,9 +42,13 @@ class Menu extends Component {
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
+        if(song.data.isComposedVersion){
+            song = ComposerSongSerialization(song)
+        }
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name + ".json")
+        fileDownloader.download(json, song.name + `.${appName.toLowerCase()}sheet.json`)
+        new LoggerEvent("Success", "Song downloaded").trigger()
     }
     render() {
         const { data, functions } = this.props
@@ -53,7 +58,8 @@ class Menu extends Component {
         let songFunctions = {
             loadSong: loadSong,
             removeSong: removeSong,
-            toggleMenu: this.toggleMenu
+            toggleMenu: this.toggleMenu,
+            downloadSong: this.downloadSong
         }
         let songs = data.songs.filter(song => !song.data?.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
@@ -164,7 +170,7 @@ function CloseMenu(props) {
 
 function SongRow(props) {
     const { data, functions } = props
-    const { removeSong, toggleMenu, loadSong } = functions
+    const { removeSong, toggleMenu, loadSong, downloadSong } = functions
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             loadSong(data)
@@ -173,6 +179,9 @@ function SongRow(props) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
+            <button className="song-button" onClick={() => downloadSong(data)}>
+                <FontAwesomeIcon icon={faDownload} />
+            </button>
             <button className="song-button" onClick={() => removeSong(data.name)}>
                 <FontAwesomeIcon icon={faTrash} color="#ed4557" />
             </button>

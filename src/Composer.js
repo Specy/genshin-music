@@ -50,8 +50,8 @@ class Composer extends Component {
         this.loadInstrument(settings.layer3.value, 3)
         try {
             this.loadReverb()
-        } catch {
-            console.log("Error with reverb")
+        } catch(e) {
+            console.log("Error with reverb1")
         }
 
     }
@@ -88,7 +88,7 @@ class Composer extends Component {
     loadReverb() {
         let audioCtx = this.state.audioContext
         fetch("./assets/audio/reverb4.wav")
-            .then(r => r.arrayBuffer().catch(function () { console.log("Error with reverb ") }))
+            .then(r => r.arrayBuffer().catch((e) => { console.log("Error with reverb1",e) }))
             .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
                 let convolver = audioCtx.createConvolver()
                 let gainNode = audioCtx.createGain()
@@ -99,8 +99,8 @@ class Composer extends Component {
                 this.setState({
                     reverbAudioContext: convolver
                 })
-            })).catch(function () {
-                console.log("Error with reverb")
+            })).catch((e) => {
+                console.log("Error with reverb2",e)
             })
     }
     getSettings = () => {
