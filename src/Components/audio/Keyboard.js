@@ -28,6 +28,9 @@ class Keyboard extends Component {
         }
     }
     handleKeyboard = (event) => {
+        if(event.repeat) return
+
+        
         if (document.activeElement.tagName === "INPUT") return
         let index = this.state.instrument.getNoteFromCode(event.keyCode)
         let note

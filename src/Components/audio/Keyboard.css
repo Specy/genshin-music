@@ -45,6 +45,7 @@
 .note img, .note-composer img, .note-sky img, .note-composer-sky img{
     width: 100%;
     height: 100%;
+    pointer-events: none;
 }
 .click-event{
     transform: scale(0.9);
@@ -108,14 +109,17 @@
         height: 8.5vw;
         border-radius: 2vw;
     }
-    .keyboard{
-        gap:0.2rem;
-    }
     .note-name-sky{
         font-size: 0.8rem;
     }
     .note-name{
         font-size: 0.6rem;
         bottom: 0rem;
+    }
+}
+@media only screen and (max-width: 800px) {
+    .note-name-sky{
+        font-size: 0.7rem;
+
     }
 }

@@ -16,6 +16,7 @@ const instruments = appName === "Genshin" ? [
         "Pipa",
         "WinterPiano",
         "Xylophone",
+        "ToyUkulele",
         "Drum",
         "Bells",
         "DunDun",
@@ -50,6 +51,9 @@ const instrumentsData = {
     },
     HandPan: {
         notes: 8
+    },
+    ToyUkulele:{
+        notes:15
     },
     Harp: {
         notes: 15
