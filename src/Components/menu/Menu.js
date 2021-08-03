@@ -5,7 +5,7 @@ import { FaDiscord, FaGooglePlay , FaGithub} from 'react-icons/fa';
 import "./menu.css"
 import mainPageImg from '../../assets/images/mainpage.png'
 import composerImg from '../../assets/images/composer.png'
-import { FileDownloader, LoggerEvent, getSongType, SkyToGenshin } from "../SongUtils"
+import { FileDownloader, LoggerEvent, getSongType, oldSkyToNewFormat, prepareSongDownload } from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 import { appName } from "../../appConfig"
 class Menu extends Component {
@@ -45,15 +45,17 @@ class Menu extends Component {
     importSong = (file) => {
         const reader = new FileReader();
         reader.addEventListener('load', (event) => {
-
             try {
                 let song = JSON.parse(event.target.result)
+                if (Array.isArray(song) && song.length > 0) song = song[0]
+                console.log(song)
                 let type = getSongType(song)
+                console.log(type)
                 if (type === "none") {
                     return new LoggerEvent("Error", "Invalid song").trigger()
                 }
-                if (["skyRecorded", "skyComposed"].includes(type)) {
-                    song = SkyToGenshin(song)
+                if (type === "oldSky") {
+                    song = oldSkyToNewFormat(song)
                 }
                 this.props.functions.addSong(song)
             } catch (e) {
@@ -66,9 +68,14 @@ class Menu extends Component {
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
+        let songName = song.name
+        if(appName === "Sky"){
+            //adds old format into the sheet
+            song = prepareSongDownload(song)
+        }
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name + `.${appName.toLowerCase()}sheet.json`)
+        fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
     render() {

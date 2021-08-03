@@ -210,7 +210,6 @@ class Composer extends Component {
                 break;
             case 69: this.addColumns(1, this.state.song.selected)
                 break;
-
             case "":
                 break;
         }

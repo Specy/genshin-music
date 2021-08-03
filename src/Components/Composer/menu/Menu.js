@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSave, faMusic, faTimes, faCog, faTrash, faCompactDisc, faDownload } from '@fortawesome/free-solid-svg-icons'
 import "../../menu/menu.css"
 
-import { FileDownloader, LoggerEvent,ComposerSongSerialization } from "../../SongUtils"
+import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "../../SongUtils"
 import {appName} from '../../../appConfig'
 class Menu extends Component {
     constructor(props) {
@@ -45,9 +45,15 @@ class Menu extends Component {
         if(song.data.isComposedVersion){
             song = ComposerSongSerialization(song)
         }
+        let songName = song.name
+        if(appName === "Sky"){
+            //adds old format into the sheet
+            song = prepareSongDownload(song)
+        }
+        
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name + `.${appName.toLowerCase()}sheet.json`)
+        fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
     render() {

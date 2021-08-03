@@ -187,18 +187,59 @@ function ComposerSongSerialization(song) {
   })
   return obj
 }
+function prepareSongDownload(song){
+  let finalSong = JSON.parse(JSON.stringify(song)) //lose reference
+  let oldFormatNotes = {}
+  if(finalSong.data?.isComposedVersion){
+    oldFormatNotes = composedToOldFormat(finalSong)
+  }else{
+    oldFormatNotes = recordedToOldFormat(finalSong)
+  }
+  finalSong.isComposed = finalSong.data.isComposedVersion
+  finalSong.pitchLevel = pitchArr.indexOf(finalSong.pitch)
+  finalSong.songNotes = oldFormatNotes
+  finalSong.bitsPerPage = 16
+  return [finalSong] //for compatibility, add back to an array, it will be ignored when importing
+  //from this app
+}
+
+function composedToOldFormat(song){
+  let convertedNotes = []
+  let bpmPerMs = Math.floor(60000 / song.bpm)
+  let totalTime = 100
+  song.columns.forEach(column => {
+    column[1].forEach(note => {
+      let layer = 1
+      if(note[1] === '010') layer = 2
+      convertedNotes.push({
+        key:layer+'Key'+note[0],
+        time:totalTime
+      })
+    })
+    totalTime += Math.floor(bpmPerMs * TempoChangers[column[0]].changer)
+  })
+  return convertedNotes
+}
+
+function recordedToOldFormat(song){
+  let convertedNotes = []
+  song.notes.forEach(note =>{
+    convertedNotes.push({
+      time: note[1],
+      key: "1Key"+note[0]
+    })
+  })
+  return convertedNotes
+}
 function getSongType(song) {
   try {
-    if (Array.isArray(song) && song.length > 0) song = song[0]
-    if (Array.isArray(song.songNotes) && song.bitsPerPage !== undefined) {
-      //sky
-      if ([true, "true"].includes(song.isComposed)) {
-        return "skyComposed"
-      } else {
-        return "skyRecorded"
+    if (song.data === undefined) {
+      //oldSky format
+      if(song.songNotes !== undefined && song.pitchLevel !== undefined){
+        return "oldSky"
       }
     } else {
-      //genshin
+      //current format
       if (song.data.appName !== appName) return "none"
       if (song.data.isComposedVersion) {
         if (typeof song.name !== "string") return "none"
@@ -219,12 +260,12 @@ function getSongType(song) {
         } else {
           return "none"
         }
-        return "genshinComposed"
+        return "newComposed"
       } else {
         if (typeof song.name !== "string") return "none"
         if (typeof song.bpm !== "number") return "none"
         if (!pitchArr.includes(song.pitch)) return "none"
-        return "genshinRecorded"
+        return "newRecorded"
       }
     }
 
@@ -236,10 +277,9 @@ function getSongType(song) {
 }
 let genshinLayout = importNotePositions
 
-function SkyToGenshin(song) {
+function oldSkyToNewFormat(song) {
   let result = new Song("Error")
   try {
-    song = song[0]
     result = new Song(song.name)
     result.bpm = song.bpm || 220
     result.pitch = (pitchArr[song.pitchLevel || 0]) || "C"
@@ -353,7 +393,7 @@ function getPitchChanger(pitch) {
 }
 function randomNum(min, max) {
   return Math.floor(Math.random() * max) + min
-}
+} 
 export {
   Recording,
   Song,
@@ -370,6 +410,7 @@ export {
   ComposerToRecording,
   getPitchChanger,
   getSongType,
-  SkyToGenshin,
-  RecordingToComposed
+  oldSkyToNewFormat,
+  RecordingToComposed,
+  prepareSongDownload
 }

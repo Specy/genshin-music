@@ -7,6 +7,7 @@ class ComposerTools extends Component {
 
         }
     }
+
     render() {
         const { data, functions } = this.props
         let className = data.visible ? "floating-tools tools-visible" : "floating-tools"
@@ -23,14 +24,20 @@ class ComposerTools extends Component {
                 <div className='tools-half'>
                     <button
                         disabled={data.copiedColumns.length !== 0}
-                        onClick={() => functions.copyColumns('all')}
+                        onClick={(e) => { 
+                            e.currentTarget.blur()
+                            functions.copyColumns('all')
+                        }}
                         className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}
                     >
                         Copy
                     </button>
                     <button
                         disabled={data.copiedColumns.length !== 0}
-                        onClick={() => functions.copyColumns(data.layer)}
+                        onClick={(e) => { 
+                            e.currentTarget.blur()
+                            functions.copyColumns(data.layer)
+                        }}
                         className={data.copiedColumns.length !== 0 ? "tools-button-highlighted" : ""}
                     >
                         Copy layer {data.layer}
@@ -39,13 +46,19 @@ class ComposerTools extends Component {
                 <div className='tools-half'>
                     <button
                         disabled={data.copiedColumns.length === 0}
-                        onClick={() => functions.pasteColumns(false)}
+                        onClick={(e) => { 
+                            e.currentTarget.blur()
+                            functions.pasteColumns(false)
+                        }}
                     >
                         Paste
                 </button>
                     <button
                         disabled={data.copiedColumns.length === 0}
-                        onClick={() => functions.pasteColumns(true)}
+                        onClick={(e) => { 
+                            e.currentTarget.blur()
+                            functions.pasteColumns(true)
+                        }}
                     >
                         Insert
                 </button>
@@ -53,13 +66,19 @@ class ComposerTools extends Component {
                 <div className='tools-half'>
                     <button
                         disabled={data.copiedColumns.length !== 0}
-                        onClick={() => functions.eraseColumns('all')}
+                        onClick={(e) => { 
+                            e.currentTarget.blur()
+                            functions.eraseColumns('all')
+                        }}
                     >
                         Erase
                     </button>
                     <button
                         disabled={data.copiedColumns.length !== 0}
-                        onClick={() => functions.eraseColumns(data.layer)}
+                        onClick={(e) => { 
+                            e.currentTarget.blur()
+                            functions.eraseColumns(data.layer)
+                        }}
                     >
                         Erase layer {data.layer}
                     </button>

@@ -4,7 +4,7 @@ import { faTrash, faDownload } from '@fortawesome/free-solid-svg-icons'
 import ZangoDb from "zangodb"
 import { FileDownloader, LoggerEvent } from "./SongUtils"
 import { asyncConfirm } from "./AsyncPrompts"
-import { appName} from "../appConfig"
+import { appName } from "../appConfig"
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
@@ -26,14 +26,12 @@ class ErrorPage extends Component {
     }
     deleteSong = async (name) => {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
-            
             this.dbCol.songs.remove({ name: name }, this.syncSongs)
         }
 
     }
     deleteAllSongs = async () =>{
         if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
-            
             this.dbCol.songs.remove({}, this.syncSongs)
         }
     }
@@ -46,7 +44,7 @@ class ErrorPage extends Component {
         if (song._id) delete song._id
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, song.name + ".gensheet")
+        fileDownloader.download(json, `${song.name}.${appName.toLowerCase()}sheet.json`)
     }
     render() {
         return <div className="error-page app">
