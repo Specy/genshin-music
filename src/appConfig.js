@@ -1,4 +1,4 @@
-const appName = ["Sky","Genshin"][0]
+const appName = ["Sky","Genshin"][1]
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
     note: appName === "Genshin" ? "note" : "note-sky"

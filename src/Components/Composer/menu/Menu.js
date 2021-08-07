@@ -50,7 +50,10 @@ class Menu extends Component {
             //adds old format into the sheet
             song = prepareSongDownload(song)
         }
-        
+        if(!Array.isArray(song)) song = [song]
+        song.forEach(song1 => {
+            song1.data.appName = appName
+        })
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
         fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)

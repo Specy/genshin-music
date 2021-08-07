@@ -210,11 +210,19 @@ function composedToOldFormat(song){
   song.columns.forEach(column => {
     column[1].forEach(note => {
       let layer = 1
+      if(note[1] === '111') layer = 3
+      if(note[1] === '011') layer = 2
+      if(note[1] === '101') layer = 3
+      if(note[1] === '001') layer = 2
+      if(note[1] === '110') layer = 3
       if(note[1] === '010') layer = 2
-      convertedNotes.push({
-        key:layer+'Key'+note[0],
+      if(note[1] === '100') layer = 1
+      let noteObj = {
+        key:(layer > 2 ? 2 : layer)+'Key'+note[0],
         time:totalTime
-      })
+      }
+      if(layer > 2) noteObj.l = 3
+      convertedNotes.push(noteObj)
     })
     totalTime += Math.floor(bpmPerMs * TempoChangers[column[0]].changer)
   })
@@ -240,7 +248,6 @@ function getSongType(song) {
       }
     } else {
       //current format
-      if (song.data.appName !== appName) return "none"
       if (song.data.isComposedVersion) {
         if (typeof song.name !== "string") return "none"
         if (typeof song.bpm !== "number") return "none"
@@ -276,6 +283,25 @@ function getSongType(song) {
   return "none"
 }
 let genshinLayout = importNotePositions
+
+function newSkyFormatToGenshin(song){
+  if(song.data.isComposedVersion){
+    song.instruments = song.instruments.map(instrument => 'Lyre')
+    song.columns.forEach(column =>{
+      column[1] = column[1].map(note => {
+        return [genshinLayout[note[0]] , note[1]]
+      })
+
+    })
+  }
+  if(!song.data.isComposedVersion){
+    song.notes = song.notes.map(note => {
+      note[0] = genshinLayout[note[0]]
+      return note
+    })
+  }
+  return song
+}
 
 function oldSkyToNewFormat(song) {
   let result = new Song("Error")
@@ -412,5 +438,6 @@ export {
   getSongType,
   oldSkyToNewFormat,
   RecordingToComposed,
-  prepareSongDownload
+  prepareSongDownload,
+  newSkyFormatToGenshin
 }

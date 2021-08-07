@@ -1,0 +1,5 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target" : { "namespace": "android_app", "package_name": "genshinnightly.specy.twa",
+                   "sha256_cert_fingerprints": ["06:BC:03:15:5E:E4:67:28:3B:F6:7C:DE:54:C8:A3:7A:AA:20:FB:F3:93:9A:14:D9:1E:8C:31:30:C1:1C:5E:9B"] }
+    }]
