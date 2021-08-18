@@ -1,10 +1,11 @@
 {
-  "name": "Genshin Music Nightly",
-  "description": "A program to record, practice and share music",
+  "name": "Sky Music Nightly",
+  "short_name": "Sky Music Nightly",
+  "description": "A program to record, practice and share music. \nBy downloading the app, you get fullscreen and better overall experience",
   "icons": [
     {
       "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "sizes": "48x48",
       "type": "image/x-icon"
     },
     {
@@ -16,6 +17,27 @@
       "src": "logo512.png",
       "type": "image/png",
       "sizes": "512x512"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open composer",
+      "short_name": "Composer",
+      "description": "Open the composer page",
+      "url": "./#/Composer",
+      "icons": [{ "src": "manifestData/composerIcon.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "manifestData/main.png",
+      "type": "image/png",
+      "sizes": "1706x960"
+    },
+    {
+      "src": "manifestData/composer.png",
+      "type": "image/png",
+      "sizes": "1706x960"
     }
   ],
   "start_url": ".",

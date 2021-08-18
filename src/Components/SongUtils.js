@@ -199,6 +199,7 @@ function prepareSongDownload(song){
   finalSong.pitchLevel = pitchArr.indexOf(finalSong.pitch)
   finalSong.songNotes = oldFormatNotes
   finalSong.bitsPerPage = 16
+  finalSong.isEncrypted = false
   return [finalSong] //for compatibility, add back to an array, it will be ignored when importing
   //from this app
 }
