@@ -24,7 +24,7 @@
       "name": "Open composer",
       "short_name": "Composer",
       "description": "Open the composer page",
-      "url": "./#/Composer",
+      "url": "/Composer",
       "icons": [{ "src": "manifestData/composerIcon.png", "sizes": "192x192" }]
     }
   ],

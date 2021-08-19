@@ -204,6 +204,27 @@ function prepareSongDownload(song){
   //from this app
 }
 
+function prepareSongImport(song){
+  //TODO add multi songs in the same file
+  if (Array.isArray(song) && song.length > 0) song = song[0]
+  let type = getSongType(song)
+  if (type === "none") {
+      new LoggerEvent("Error", "Invalid song").trigger()
+      throw new Error("Error Invalid song")
+  }
+  if (type === "oldSky") {
+      song = oldSkyToNewFormat(song)
+  }
+  if(appName === 'Sky' && song.data?.appName !== 'Sky'){
+      new LoggerEvent("Error", "Invalid song").trigger()
+      throw new Error("Error Invalid song")
+  }
+  if(appName === 'Genshin' && song.data?.appName === 'Sky'){
+      song = newSkyFormatToGenshin(song)
+  }
+  return song
+}
+
 function composedToOldFormat(song){
   let convertedNotes = []
   let bpmPerMs = Math.floor(60000 / song.bpm)
@@ -440,5 +461,6 @@ export {
   oldSkyToNewFormat,
   RecordingToComposed,
   prepareSongDownload,
-  newSkyFormatToGenshin
+  newSkyFormatToGenshin,
+  prepareSongImport
 }

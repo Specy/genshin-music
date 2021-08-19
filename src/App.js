@@ -3,7 +3,7 @@ import './App.css';
 import Keyboard from "./Components/audio/Keyboard"
 import Menu from "./Components/menu/Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording } from "./Components/SongUtils"
+import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording, prepareSongImport} from "./Components/SongUtils"
 import { MainPageSettings } from "./Components/Composer/SettingsObj"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
@@ -80,7 +80,13 @@ class App extends Component {
     e.preventDefault()
     let songs = await Promise.all(Array.from(e.dataTransfer.files).map(file => file.text()))
     for(let i = 0; i<songs.length;i++){
-      await this.addSong(JSON.parse(songs[i]))
+      try{
+        let song = prepareSongImport(JSON.parse(songs[i]))
+        await this.addSong(song)
+      }catch(e){
+        console.error(e)
+      }
+
     }
   }
   getSettings = () => {
@@ -163,7 +169,6 @@ class App extends Component {
       await this.dbCol.songs.insert(song)
       this.syncSongs()
       new LoggerEvent("Success", `Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000).trigger()
-   
     }catch(e){
       console.error(e)
       return new LoggerEvent("Error", 'There was an error importing the song').trigger()
