@@ -13,11 +13,11 @@
 }
 @font-face {
 	font-family: Bonobo;
-	src: url("assets/font/BonoboBold.ttf");
+	src: url("../../assets/font/BonoboBold.ttf");
 }
 @font-face {
 	font-family: Cronos;
-	src: url("assets/font/Cronos.otf");
+	src: url("../../assets/font/Cronos.otf");
 }
 .loading{
 	color: white;

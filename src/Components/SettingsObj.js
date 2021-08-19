@@ -1,4 +1,4 @@
-import {instruments, appName} from "../../appConfig"
+import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
     settingVesion: appName + 3,
     instrument: {

@@ -1,23 +1,28 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
-import Menu from "./Components/Composer/menu/Menu"
+import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faTools } from "@fortawesome/free-solid-svg-icons"
+import * as workerTimers from 'worker-timers';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
+import rotateImg from "../../assets/icons/rotate.svg"
+import addCell from "../../assets/icons/addCell.svg"
+import removeCell from "../../assets/icons/removeCell.svg"
+import { appName } from "../../appConfig"
+
+
+import ComposerTools from "./ComposerTools"
+import ComposerKeyboard from "./ComposerKeyboard"
+import ComposerCanvas from "./ComposerCanvas"
+import Menu from "./Menu"
+
+import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
+import { ComposerSettings } from "../SettingsObj"
+import Instrument from "../Instrument"
 import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed
-} from "./Components/SongUtils"
-import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faTools } from "@fortawesome/free-solid-svg-icons"
-import * as workerTimers from 'worker-timers';
-import rotateImg from "./assets/icons/rotate.svg"
-import ComposerKeyboard from "./Components/Composer/ComposerKeyboard"
-import ComposerCanvas from "./Components/Composer/ComposerCanvas"
-import Instrument from "./Components/audio/Instrument"
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { ComposerSettings } from "./Components/Composer/SettingsObj"
-import addCell from "./assets/icons/addCell.svg"
-import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
-import removeCell from "./assets/icons/removeCell.svg"
-import ComposerTools from "./Components/Composer/ComposerTools"
-import { appName } from "./appConfig"
+} from "../SongUtils"
+
 class Composer extends Component {
     constructor(props) {
         super(props)

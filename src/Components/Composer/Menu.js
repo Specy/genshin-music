@@ -1,10 +1,10 @@
 import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSave, faMusic, faTimes, faCog, faTrash, faCompactDisc, faDownload } from '@fortawesome/free-solid-svg-icons'
-import "../../menu/menu.css"
+import "../mainPage/menu.css"
 
-import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "../../SongUtils"
-import {appName} from '../../../appConfig'
+import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "../SongUtils"
+import {appName} from '../../appConfig'
 class Menu extends Component {
     constructor(props) {
         super(props)

@@ -1,4 +1,4 @@
-import { instrumentsData, layoutData, instruments } from "../../appConfig"
+import { instrumentsData, layoutData, instruments } from "../appConfig"
 class Instrument {
     constructor(instrumentName) {
         this.instrumentName = instrumentName

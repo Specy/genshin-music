@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
-import Composer from "./Composer"
+import App from './Components/mainPage/App';
+import Composer from "./Components/Composer/Composer"
 import ErrorPage from "./Components/ErrorPage"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
-import "./App.css"
+import "./Components/mainPage/App.css"
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent } from "./Components/SongUtils"
 import {appName} from "./appConfig"

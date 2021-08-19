@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
 import './App.css';
-import Keyboard from "./Components/audio/Keyboard"
-import Menu from "./Components/menu/Menu"
+import Keyboard from "./Keyboard"
+import Menu from "./Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording, prepareSongImport} from "./Components/SongUtils"
-import { MainPageSettings } from "./Components/Composer/SettingsObj"
+import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording, prepareSongImport} from "../SongUtils"
+import { MainPageSettings } from "../SettingsObj"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
-import { asyncConfirm, asyncPrompt } from "./Components/AsyncPrompts"
-import rotateImg from "./assets/icons/rotate.svg"
-import { appName } from "./appConfig"
+import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
+import rotateImg from "../../assets/icons/rotate.svg"
+import { appName } from "../../appConfig"
 class App extends Component {
   constructor(props) {
     super(props)
