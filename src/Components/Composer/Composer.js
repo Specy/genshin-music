@@ -220,19 +220,22 @@ class Composer extends Component {
         }
     }
     playSound = (instrument, index) => {
-        const source = this.state.audioContext.createBufferSource()
-        let note = instrument.layout[index]
-        if(note === undefined) return
-        source.buffer = note.buffer
-        source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
-        source.connect(instrument.gain)
-        if (this.state.settings.caveMode.value) {
-            instrument.gain.connect(this.state.reverbAudioContext)
-        } else {
-            instrument.gain.connect(this.state.audioContext.destination)
-        }
-        source.start(0)
+        try{
+            const source = this.state.audioContext.createBufferSource()
+            let note = instrument.layout[index]
+            if(note === undefined) return
+            source.buffer = note.buffer
+            source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
+            source.connect(instrument.gain)
+            if (this.state.settings.caveMode.value) {
+                instrument.gain.connect(this.state.reverbAudioContext)
+            } else {
+                instrument.gain.connect(this.state.audioContext.destination)
+            }
+            source.start(0)
+        }catch(e){
 
+        }
     }
     handleClick = (note) => {
         let column = this.state.song.columns[this.state.song.selected]
