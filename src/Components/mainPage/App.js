@@ -366,8 +366,17 @@ class App extends Component {
   }
 }
 
+function checkIfTWA(){
+  let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
+  return isTwa
+}
 
-
+function setIfInTWA(){
+  if(checkIfTWA()) return console.log('inTWA')
+  let isTwa = document.referrer.includes('android-app://')
+  sessionStorage.setItem('isTwa',isTwa)
+}
+setIfInTWA()
 function GenshinButton(props) {
   let className = "genshin-button record-btn " + (props.active ? "selected" : "")
   return <button className={className} onClick={props.click}>

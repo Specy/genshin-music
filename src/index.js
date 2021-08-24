@@ -184,7 +184,18 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
+function checkIfTWA(){
+  let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
+  return isTwa
+}
 
+function setIfInTWA(){
+  if(checkIfTWA()) return console.log('inTWA')
+  let isTwa = document.referrer.includes('android-app://')
+  sessionStorage.setItem('isTwa',isTwa)
+}
+
+setIfInTWA()
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://cra.link/PWA

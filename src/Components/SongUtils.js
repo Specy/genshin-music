@@ -437,7 +437,7 @@ let pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 function getPitchChanger(pitch) {
   let index = pitchArr.indexOf(pitch)
   if (index < 0) index = 0
-  return Number(Math.pow(2, index / 12).toFixed(2))
+  return Number(Math.pow(2, index / 12).toFixed(4))
 }
 function randomNum(min, max) {
   return Math.floor(Math.random() * max) + min
