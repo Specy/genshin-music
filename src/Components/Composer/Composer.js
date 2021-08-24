@@ -283,6 +283,7 @@ class Composer extends Component {
         this.syncSongs()
     }
     updateSong = async (song) => {
+        console.log(song.name,1)
         if (song.name === "Untitled") {
             let name = await this.askForSongName()
             if (name === null) return
@@ -301,6 +302,14 @@ class Composer extends Component {
                 this.changes = 0
                 this.syncSongs()
             } else {
+                if(song.name.includes("- Composed")){
+                    let name = await this.askForSongName()
+                    if (name === null) return resolve()
+                    song.name = name
+                    await this.dbCol.songs.insert(ComposerSongSerialization(song))
+                    this.syncSongs()
+                    return resolve()
+                }
                 console.log("song doesn't exist")
                 song.name = "Untitled"
                 this.updateSong(song)
@@ -358,6 +367,7 @@ class Composer extends Component {
 
     loadSong = async (song) => {
         const state = this.state
+        song = JSON.parse(JSON.stringify(song)) //lose reference
         if (!song.data.isComposedVersion) {
             song = RecordingToComposed(song)
             song.name += " - Composed"
@@ -365,7 +375,7 @@ class Composer extends Component {
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
             if (!confirm && state.song.columns.length > 0) {
-                confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save now?`)
+                confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`)
             }
             if (confirm) await this.updateSong(state.song)
         }
@@ -485,7 +495,7 @@ class Composer extends Component {
     }
     changePage = async (page) => {
         if (this.changes !== 0) {
-            let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`)
+            let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`)
             if (confirm) {
                 await this.updateSong(this.state.song)
             }

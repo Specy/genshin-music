@@ -61,6 +61,8 @@ async function asyncConfirm(question) {
         ok.className = "prompt-button"
         row.className = "prompt-row"
         ok.innerText = "Yes"
+        ok.style.background = '#628c83'
+        cancel.style.background = '#a9525a'
         cancel.innerText = "No"
         row.append(cancel, ok)
         container.append(text, row)
