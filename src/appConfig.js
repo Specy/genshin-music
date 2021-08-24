@@ -16,13 +16,13 @@ const instruments = appName === "Genshin" ? [
         "Pipa",
         "WinterPiano",
         "Xylophone",
+        "Flute",
+        "Ocarina",
         "ToyUkulele",
         "Drum",
         "Bells",
         "DunDun",
-        "HandPan",
-        "Flute",
-        "Ocarina"
+        "HandPan"
     ]
 const notesPerColumn = appName === "Genshin" ? 21 : 15
 const instrumentsData = {

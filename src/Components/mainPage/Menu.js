@@ -168,9 +168,9 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
-                    <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
+                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
                         Support me
-                    </a>
+                    </a>}
 
                 </MenuPanel>
                 <MenuPanel title="Help" visible={selectedMenu}>
