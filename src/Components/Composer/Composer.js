@@ -283,7 +283,6 @@ class Composer extends Component {
         this.syncSongs()
     }
     updateSong = async (song) => {
-        console.log(song.name,1)
         if (song.name === "Untitled") {
             let name = await this.askForSongName()
             if (name === null) return

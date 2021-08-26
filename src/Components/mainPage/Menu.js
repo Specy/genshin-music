@@ -1,7 +1,8 @@
 import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, } from '@fortawesome/free-solid-svg-icons'
+import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FaDiscord, FaGooglePlay , FaGithub} from 'react-icons/fa';
+import { RiPlayListFill } from 'react-icons/ri'
 import "./menu.css"
 import mainPageImg from '../../assets/images/mainpage.png'
 import composerImg from '../../assets/images/composer.png'
@@ -15,10 +16,33 @@ class Menu extends Component {
             open: false,
             selectedMenu: "Songs",
             selectedSongType: "recorded",
-
+            searchInput:'',
+            searchedSongs:[]
         }
     }
-
+    handleSearchInput = (text) =>{
+        this.setState({
+            searchInput: text
+        })
+    }
+    clearSearch = () =>{
+        this.setState({
+            searchInput: '',
+            searchedSongs:[]
+        })
+        this.props.functions.stopSong()
+    }
+    searchSongs = async () =>{
+        let search = this.state.searchInput
+        
+        let fetchedSongs = await fetch('http://localhost:8080/api/songs?search='+encodeURI(search)).then(data => data.json())
+        if(fetchedSongs.error){
+            return new LoggerEvent("Error", fetchedSongs.error).trigger()
+        }
+        this.setState({
+            searchedSongs:fetchedSongs
+        })
+    }
     toggleMenu = (override) => {
         if (typeof override !== "boolean") override = undefined
         let newState = override !== undefined ? override : !this.state.open
@@ -83,12 +107,19 @@ class Menu extends Component {
         let changePage = this.props.functions.changePage
         let songs = data.songs.filter(song => !song.data.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
-
+        let searchedSongs = this.state.searchedSongs
+        let searchedSongFunctions = {
+            playSong: functions.playSong,
+            importSong: functions.addSong,
+        }
         return <div className="menu-wrapper">
             <div className="menu menu-visible">
                 {this.state.open && <CloseMenu action={this.toggleMenu} />}
                 <MenuItem type="Help" action={this.selectSideMenu} className="margin-top-auto">
                     <FontAwesomeIcon icon={faInfo} className="icon" />
+                </MenuItem>
+                <MenuItem type="Library" action={this.selectSideMenu}>
+                    <RiPlayListFill className='icon'/>
                 </MenuItem>
                 <MenuItem type="Songs" action={this.selectSideMenu} >
                     <FontAwesomeIcon icon={faMusic} className="icon" />
@@ -172,6 +203,40 @@ class Menu extends Component {
                         Support me
                     </a>}
 
+                </MenuPanel>
+                <MenuPanel title="Library" visible={selectedMenu}>
+                    <div>
+                        Here you can find songs to learn, they are provided by the sky-music library.
+                    </div>
+                    <div className='library-search-row'>
+                        <input 
+                            className='library-search-input' 
+                            placeholder='Song name'
+                            onInput={(e) => this.handleSearchInput(e.target.value)}
+                            value={this.state.searchInput}
+                        />
+                        <button className='library-search-btn' onClick={this.clearSearch}>
+                            <FontAwesomeIcon icon={faTimes}/>
+                        </button>
+                        <button className='library-search-btn' onClick={this.searchSongs}>
+                            <FontAwesomeIcon icon={faSearch}/>
+                        </button>
+                    </div>
+                    <div className='library-search-songs-wrapper'>
+                        {searchedSongs.length > 0 
+                            ?   searchedSongs.map(song => 
+                                <SearchedSong
+                                    key={song.file}
+                                    data={song}
+                                    functions={searchedSongFunctions}
+                                >
+                                    {song.name}
+                                </SearchedSong>)   
+                            :   <div className='library-search-result-text'>
+                                    No results
+                                </div>
+                    }
+                    </div>
                 </MenuPanel>
                 <MenuPanel title="Help" visible={selectedMenu}>
                     <div className='help-icon-wrapper'>
@@ -361,6 +426,43 @@ class MenuItem extends Component {
             {this.props.children}
         </div>
     }
+}
+
+function SearchedSong(props){
+    const { functions, data} = props
+    const { playSong, importSong} = functions
+    const download = async function(){
+        try{
+            let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
+            song = prepareSongImport(song)
+            importSong(song)
+        }catch(e){
+            console.error(e)
+            new LoggerEvent("Error", "Error downloading song").trigger()
+        }
+    }
+    const play = async function(){
+        try{
+            let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
+            song = prepareSongImport(song)
+            playSong(song)
+        }catch(e){
+            console.error(e)
+            new LoggerEvent("Error", "Error downloading song").trigger()
+        }
+    }
+    return <div className="song-row">
+    <div className="song-name" onClick={() => {
+        play(data)
+    }}>
+        {data.name}
+    </div>
+    <div className="song-buttons-wrapper">
+        <button className="song-button" onClick={download}>
+            <FontAwesomeIcon icon={faDownload} />
+        </button>
+    </div>
+</div>
 }
 function checkIfTWA(){
     let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))

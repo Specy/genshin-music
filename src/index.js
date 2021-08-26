@@ -76,10 +76,10 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = 1.1
+      let currentVersion = 1.2
       let updateMessage =
         `
-          Bug fixes, songs are backwards compatible with other programs
+          Added song library integration with 700 songs from the sky music library
         `
       let storedVersion = localStorage.getItem(appName+"_Version")
       if (currentVersion != storedVersion) {

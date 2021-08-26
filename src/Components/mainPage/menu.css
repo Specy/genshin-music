@@ -72,6 +72,13 @@
     flex-direction: row;
     z-index: 2;
 }
+.library-search-result-text{
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
 .side-menu{
     width: 40vw;
     height: 100%;
@@ -102,8 +109,37 @@
     flex-wrap: wrap;
     gap: 0.2rem;
 }
-
-.songs-wrapper{
+.library-search-row{
+    display: flex;
+    width: 100%;
+    margin: 1rem 0 0.2rem 0;
+}
+.library-search-input{
+    box-sizing: border-box;
+    padding: 0 1rem;
+    outline: none;
+    background-color: #d3bd8e;
+    display: flex;
+    flex:1;
+    height: 2.2rem;
+    border: none;
+    border-radius: 0.3rem;
+}
+.library-search-btn{
+    background-color: #d3bd8e;
+    height:2.2rem;
+    width: 2.2rem;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.2rem;
+    border-radius: 0.3rem;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+.library-search-btn:hover{
+    filter: brightness(1.05);
+}
+.songs-wrapper,.library-search-songs-wrapper{
     border-bottom-left-radius: 0.3rem;
     border-bottom-right-radius: 0.3rem;
     padding: 0.5rem;
@@ -113,8 +149,12 @@
     display: grid;
     flex-direction: column;
     gap: 0.3rem;
-    min-height: 4.3rem;
+    min-height: 4rem;
     overflow-y: auto;
+}
+.library-search-songs-wrapper{
+    border-radius: 0.3rem;
+    padding-top: 0.5rem;
 }
 .tab-selector-wrapper{
     display: flex;
@@ -146,10 +186,15 @@
     background-color: var(--primary);
     padding-left: 1rem;
     border-radius: 0.3rem;
-    min-height: 2.8rem;
     color: var(--whitish);
     justify-content: space-between;
-    align-items:center;
+    align-items: flex-start;
+    padding: 0.45rem;
+    padding-right: 0;
+    transition: all 0.2s;
+}
+.song-row:hover{
+    filter: brightness(1.1);
 }
 .panel-content-wrapper{
     display: flex;
@@ -169,7 +214,7 @@
     width: 2rem;
     font-size: 1rem;
     border: none;
-    margin-right: 0.5rem;
+    margin-right: 0.45rem;
     color: var(--whitish);
     cursor: pointer;
 }
@@ -177,7 +222,11 @@
     flex: 1;
     cursor: pointer;
     word-break: break-word;
-    padding-right: 0.6rem;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    padding-right: 0.45rem;
+    padding-left:  0.2rem;
 }
 .song-buttons-wrapper{
     display: flex;
@@ -194,11 +243,19 @@
     justify-content: center;
     margin-bottom: 1rem;
 }
+.menu::-webkit-scrollbar-thumb {
+	background: var(--icon-color);
+	border-radius: 2px;
+  }
+.menu::-webkit-scrollbar {
+	width: 3px;
+  }
 .menu-item{
     background-color: #515c6f;
     width: 2.8rem;
     height: 2.8rem;
-    margin-bottom: 2vh;
+    min-height: 2.8rem;
+    margin-bottom: 0.6rem;
     border-radius: 0.5rem;
     display: flex;
     justify-content: center;

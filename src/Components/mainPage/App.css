@@ -220,6 +220,7 @@ body {
 	border-radius: 0.5rem;
 	opacity: 1;
 	z-index: 1000;
+	word-break: break-word;
 	transition: 0.5s all;
 }
 .floating-prompt-hidden {
