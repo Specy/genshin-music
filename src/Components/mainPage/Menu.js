@@ -35,7 +35,7 @@ class Menu extends Component {
     searchSongs = async () =>{
         let search = this.state.searchInput
         
-        let fetchedSongs = await fetch('http://localhost:8080/api/songs?search='+encodeURI(search)).then(data => data.json())
+        let fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search='+encodeURI(search)).then(data => data.json())
         if(fetchedSongs.error){
             return new LoggerEvent("Error", fetchedSongs.error).trigger()
         }
