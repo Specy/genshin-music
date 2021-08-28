@@ -20,6 +20,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
     "react-swipeable": "^6.1.0",
+    "recursive-copy": "^2.0.13",
     "web-vitals": "^0.2.4",
     "workbox-background-sync": "^5.1.3",
     "workbox-broadcast-update": "^5.1.3",
@@ -40,7 +41,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "buildSky": "node ./scripts/buildApp.js sky",
+    "buildGenshin": "node ./scripts/buildApp.js genshin"
   },
   "eslintConfig": {
     "extends": [
