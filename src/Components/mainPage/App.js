@@ -10,6 +10,7 @@ import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import rotateImg from "../../assets/icons/rotate.svg"
 import { appName } from "../../appConfig"
+
 class App extends Component {
   constructor(props) {
     super(props)

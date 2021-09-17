@@ -42,8 +42,10 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "buildSky": "node ./scripts/buildApp.js sky",
-    "buildGenshin": "node ./scripts/buildApp.js genshin"
+    "buildSky": "node ./scripts/buildApp.js Sky",
+    "buildGenshin": "node ./scripts/buildApp.js Genshin",
+    "startSky": "node ./scripts/startApp.js Sky",
+    "startGenshin": "node ./scripts/startApp.js Genshin"
   },
   "eslintConfig": {
     "extends": [

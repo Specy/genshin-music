@@ -1,11 +1,10 @@
+const {execSync} = require('child_process')
 const fs = require('fs/promises')
-const copyDir = require('recursive-copy')
+const publicPath = './public'
 const skyPath = './src/appData/sky'
 const genshinPath = './src/appData/genshin'
-const publicPath = './public'
+const copyDir = require('recursive-copy')
 const chosenApp = process.argv[2]
-const {execSync} = require('child_process')
-
 if(!['Genshin','Sky'].includes(chosenApp)){
     console.error('Please specify an app name [Sky/Genshin]')
     process.exit(1)
@@ -23,24 +22,16 @@ function deleteAssets(){
         }))
     })
 }
-
 async function execute(){
     await deleteAssets()
     await copyDir(chosenApp === "Sky" ? skyPath : genshinPath,publicPath)
-    console.log("\x1b[33m",'Building ' + chosenApp + '...')
-    try{
-        if(process.platform === 'win32') {
-            console.log("Building on windows")
-            execSync(`set REACT_APP_NAME=${chosenApp}&& npm run build`)
-        } else {
-            console.log("Building on Linux")
-            execSync(`REACT_APP_NAME=${chosenApp} npm run build`)
-        }
-        console.log("\x1b[32m",'Build complete')  
-    }catch(e){
-        console.error("\x1b[0m",e)
+    if(process.platform === 'win32') {
+        console.log("Starting on windows")
+        execSync(`set REACT_APP_NAME=${chosenApp}&&npm run start`)
+    } else {
+        console.log("Starting on Linux")
+        execSync(`REACT_APP_NAME=${chosenApp} npm run start`)
     }
-    console.log("\x1b[0m")
 }
 
 execute()

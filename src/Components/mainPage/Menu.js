@@ -9,6 +9,7 @@ import composerImg from '../../assets/images/composer.png'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 import { appName } from "../../appConfig"
+
 class Menu extends Component {
     constructor(props) {
         super(props)

@@ -1,4 +1,5 @@
-const appName = ["Sky","Genshin"][1]
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
+console.log("App name:",appName)
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
     note: appName === "Genshin" ? "note" : "note-sky"
