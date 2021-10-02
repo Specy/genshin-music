@@ -439,9 +439,7 @@ function getPitchChanger(pitch) {
   if (index < 0) index = 0
   return Number(Math.pow(2, index / 12).toFixed(4))
 }
-function randomNum(min, max) {
-  return Math.floor(Math.random() * max) + min
-} 
+
 export {
   Recording,
   Song,

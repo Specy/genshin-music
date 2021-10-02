@@ -303,7 +303,7 @@ class App extends Component {
 
     return <div className="app">
       <div className="rotate-screen">
-        <img src={rotateImg}>
+        <img src={rotateImg} alt="icon for the rotating screen">
         </img>
           For a better experience, add the website to the home screen, and rotate your device
       </div>

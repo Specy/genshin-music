@@ -1,7 +1,7 @@
 import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch } from '@fortawesome/free-solid-svg-icons'
-import { FaDiscord, FaGooglePlay , FaGithub} from 'react-icons/fa';
+import { FaDiscord, FaGithub} from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
 import "./menu.css"
 import mainPageImg from '../../assets/images/mainpage.png'
@@ -200,10 +200,9 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
-                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
+                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}
-
                 </MenuPanel>
                 <MenuPanel title="Library" visible={selectedMenu}>
                     <div>
@@ -253,7 +252,7 @@ class Menu extends Component {
                         Main page
                     </div>
                     <div>
-                        <img src={mainPageImg} className='help-img' />
+                        <img src={mainPageImg} className='help-img' alt='icon for the main page' />
                         <ol>
                             <li>Keyboard</li>
                             <li>Record your keyboard</li>
@@ -275,7 +274,7 @@ class Menu extends Component {
                         Composer
                     </div>
                     <div>
-                        <img src={composerImg} className='help-img' />
+                        <img src={composerImg} className='help-img' alt="the icon for the help menu"/>
                         <ol>
                             <li>Go to the next / previous breakpoint</li>
                             <li>Timeline of the breakpoints</li>
@@ -295,7 +294,7 @@ class Menu extends Component {
                                 <Key>E</Key> = add column <br/>
                             </div>
                     </div>
-                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
+                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}
                 </MenuPanel>
@@ -415,9 +414,6 @@ function SongRow(props) {
     </div>
 }
 class MenuItem extends Component {
-    constructor(props) {
-        super(props)
-    }
     render() {
         let className = this.props.className ? `menu-item ${this.props.className}` : "menu-item"
         return <div
@@ -469,10 +465,5 @@ function checkIfTWA(){
     let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
     return isTwa
   }
-function setIfInTWA(){
-    if(checkIfTWA()) return true
-    let isTwa = document.referrer.includes('android-app://')
-    sessionStorage.setItem('isTwa',isTwa)
-    return isTwa
-}
+
 export default Menu
