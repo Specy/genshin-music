@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import ComposerNote from "./ComposerNote"
 import MultiSwitch from "./MultiSwitch"
-import { keyNames, pitchArr , skyImages, appName} from "../../appConfig"
+import { keyNames, pitchArr , skyImages } from "../../appConfig"
 class ComposerKeyboard extends Component {
     constructor(props) {
         super(props)

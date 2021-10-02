@@ -695,7 +695,7 @@ class Composer extends Component {
 
             </div>
             <div className="rotate-screen">
-                <img src={rotateImg}>
+                <img src={rotateImg} alt="a rotating screen">
                 </img>
                     For a better experience, add the website to the home screen, and rotate your device
             </div>
@@ -725,10 +725,10 @@ class Composer extends Component {
                         <div className="buttons-composer-wrapper-right">
 
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
-                                <img src={addCell} className="tool-icon" />
+                                <img src={addCell} className="tool-icon" alt="clicking on this adds a new cell"/>
                             </div>
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
-                                <img src={removeCell} className="tool-icon" />
+                                <img src={removeCell} className="tool-icon" alt="clicking on this removes a cell"/>
                             </div>
                             <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 4, "end")}>
                                 <FontAwesomeIcon icon={faPlus} />

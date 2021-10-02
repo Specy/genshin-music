@@ -8,7 +8,6 @@ import "./Components/mainPage/App.css"
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent } from "./Components/SongUtils"
 import {appName} from "./appConfig"
-const getBasename = path => path.substr(0, path.lastIndexOf('/'));
 let pages = ["", "Composer", "ErrorPage"]
 class Index extends Component {
   constructor(props) {
@@ -82,7 +81,7 @@ class Index extends Component {
           Added song library integration with 700 songs from the sky music library
         `
       let storedVersion = localStorage.getItem(appName+"_Version")
-      if (currentVersion != storedVersion) {
+      if (currentVersion !== storedVersion) {
         console.log("update")
         new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
         localStorage.setItem(appName+"_Version", currentVersion)
@@ -116,7 +115,6 @@ class Index extends Component {
   render() {
     let floatingMessage = this.state.floatingMessage
     let floatingMessageClass = floatingMessage.visible ? "floating-message floating-message-visible" : "floating-message"
-    let baseName = getBasename(window.location.pathname).replace("//", "/")
     return <div className="index">
       <div className={floatingMessageClass} onClick={this.hideMessage}>
         <div className="floating-message-title">

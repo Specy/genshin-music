@@ -149,7 +149,7 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
-                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank">
+                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}
                 </MenuPanel>
@@ -294,16 +294,8 @@ function checkIfTWA(){
     let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
     return isTwa
   }
-function setIfInTWA(){
-    if(checkIfTWA()) return true
-    let isTwa = document.referrer.includes('android-app://')
-    sessionStorage.setItem('isTwa',isTwa)
-    return isTwa
-}
+
 class MenuItem extends Component {
-    constructor(props) {
-        super(props)
-    }
     render() {
         let className = this.props.className ? `menu-item ${this.props.className}` : "menu-item"
         return <div
