@@ -31,7 +31,7 @@ async function execute(){
     try{
         if(process.platform === 'win32') {
             console.log("Building on windows")
-            execSync(`set REACT_APP_NAME=${chosenApp} && yarn build`)
+            execSync(`set REACT_APP_NAME=${chosenApp}&& yarn build`)
         } else {
             console.log("Building on Linux")
             execSync(`REACT_APP_NAME=${chosenApp} yarn build`)

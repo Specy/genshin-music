@@ -27,7 +27,7 @@ async function execute(){
     await copyDir(chosenApp === "Sky" ? skyPath : genshinPath,publicPath)
     if(process.platform === 'win32') {
         console.log("Starting on windows")
-        execSync(`set REACT_APP_NAME=${chosenApp} && yarn start`)
+        execSync(`set REACT_APP_NAME=${chosenApp}&& yarn start`)
     } else {
         console.log("Starting on Linux")
         execSync(`REACT_APP_NAME=${chosenApp} yarn start`)
