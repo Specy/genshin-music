@@ -725,10 +725,10 @@ class Composer extends Component {
                         <div className="buttons-composer-wrapper-right">
 
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
-                                <img src={addCell} className="tool-icon" alt="clicking on this adds a new cell"/>
+                                <img src={addCell} className="tool-icon" alt="Add a new cell"/>
                             </div>
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
-                                <img src={removeCell} className="tool-icon" alt="clicking on this removes a cell"/>
+                                <img src={removeCell} className="tool-icon" alt="Remove a cell"/>
                             </div>
                             <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 4, "end")}>
                                 <FontAwesomeIcon icon={faPlus} />

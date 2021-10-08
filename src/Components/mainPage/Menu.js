@@ -18,7 +18,8 @@ class Menu extends Component {
             selectedMenu: "Songs",
             selectedSongType: "recorded",
             searchInput:'',
-            searchedSongs:[]
+            searchedSongs:[],
+            searchStatus: 'Write a song name then search!'
         }
     }
     handleSearchInput = (text) =>{
@@ -29,19 +30,31 @@ class Menu extends Component {
     clearSearch = () =>{
         this.setState({
             searchInput: '',
-            searchedSongs:[]
+            searchedSongs:[],
+            searchStatus: 'Write a song name then search!'
         })
         this.props.functions.stopSong()
     }
     searchSongs = async () =>{
         let search = this.state.searchInput
-        
+        if(search.trim().length === 0){
+            return this.setState({
+                searchStatus: 'Please write a non empty name'
+            })
+        }
+        this.setState({
+            searchStatus: 'Searching...'
+        })
         let fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search='+encodeURI(search)).then(data => data.json())
         if(fetchedSongs.error){
+            this.setState({
+                searchStatus: 'Please write a non empty name'
+            })
             return new LoggerEvent("Error", fetchedSongs.error).trigger()
         }
         this.setState({
-            searchedSongs:fetchedSongs
+            searchedSongs: fetchedSongs,
+            searchStatus: 'success'
         })
     }
     toggleMenu = (override) => {
@@ -100,7 +113,6 @@ class Menu extends Component {
     }
     render() {
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
-        let selectedMenu = this.state.selectedMenu
         const { data, functions } = this.props
         const { handleSettingChange } = functions
         functions.toggleMenu = this.toggleMenu
@@ -108,7 +120,7 @@ class Menu extends Component {
         let changePage = this.props.functions.changePage
         let songs = data.songs.filter(song => !song.data.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
-        let searchedSongs = this.state.searchedSongs
+        const { searchStatus , searchedSongs, selectedMenu } = this.state
         let searchedSongFunctions = {
             playSong: functions.playSong,
             importSong: functions.addSong,
@@ -176,7 +188,6 @@ class Menu extends Component {
                                 >
                                 </SongRow>
                             })
-
                             : composedSongs.map(song => {
                                 return <SongRow
                                     data={song}
@@ -223,19 +234,23 @@ class Menu extends Component {
                         </button>
                     </div>
                     <div className='library-search-songs-wrapper'>
-                        {searchedSongs.length > 0 
-                            ?   searchedSongs.map(song => 
-                                <SearchedSong
-                                    key={song.file}
-                                    data={song}
-                                    functions={searchedSongFunctions}
-                                >
-                                    {song.name}
-                                </SearchedSong>)   
+                        {searchStatus === "success" ?
+                            searchedSongs.length > 0 
+                                ?   searchedSongs.map(song => 
+                                        <SearchedSong
+                                            key={song.file}
+                                            data={song}
+                                            functions={searchedSongFunctions}
+                                        >
+                                            {song.name}
+                                        </SearchedSong>)   
+                                :   <div className='library-search-result-text'>
+                                        No results
+                                    </div>
                             :   <div className='library-search-result-text'>
-                                    No results
+                                    {searchStatus}
                                 </div>
-                    }
+                        }
                     </div>
                 </MenuPanel>
                 <MenuPanel title="Help" visible={selectedMenu}>

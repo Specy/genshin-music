@@ -75,14 +75,16 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = 1.2
+      let currentVersion = 1.3
       let updateMessage =
         `
-          Added song library integration with 700 songs from the sky music library
+          Improved library search UI, fixed bugs, (for sky) added kalimba
         `
       let storedVersion = localStorage.getItem(appName+"_Version")
+      if(!this.state.hasVisited){
+        return localStorage.setItem(appName+"_Version", currentVersion)
+      }
       if (currentVersion !== storedVersion) {
-        console.log("update")
         new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
         localStorage.setItem(appName+"_Version", currentVersion)
       }
@@ -139,11 +141,8 @@ class Index extends Component {
                 To prevent your browser from automatically clearing the app storage, click the "confirm" button below, if asked,
                 allow permission to keep the website data (Persistent storage).
               </div>
-
-              : null}
-
-
-
+              : null
+            }
           </div>
           <div className="welcome-message-button-wrapper">
             <button className="welcome-message-button" onClick={this.askForStorage}>
