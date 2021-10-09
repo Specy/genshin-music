@@ -439,6 +439,33 @@ function getPitchChanger(pitch) {
   if (index < 0) index = 0
   return Number(Math.pow(2, index / 12).toFixed(4))
 }
+function numberToLayer(number){
+  let layer = "100"
+  if (number === 0) layer = "100"
+  if (number === 1) layer = "010"
+  if (number === 2) layer = "001"
+  return layer
+}
+function mergeLayers(notes){
+  let final = "000".split("")
+  notes.forEach(notes => {
+    notes.layer.split("").forEach((e, i) => {
+      if(e === "1") final[i] = "1"
+    })
+  })
+  return final.join("")
+}
+function groupByIndex(column){
+  let notes = []
+  column.notes.forEach(note => {
+      if(notes[note.index]){
+          notes[note.index].push(note)
+      }else{
+          notes[note.index] = [note]
+      }
+  })
+  return notes.filter(e => Array.isArray(e))
+}
 
 export {
   Recording,
@@ -460,5 +487,10 @@ export {
   RecordingToComposed,
   prepareSongDownload,
   newSkyFormatToGenshin,
-  prepareSongImport
+  prepareSongImport,
+  pitchArr,
+  groupByNotes,
+  numberToLayer,
+  mergeLayers,
+  groupByIndex
 }

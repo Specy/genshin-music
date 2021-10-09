@@ -63,7 +63,7 @@ class Menu extends Component {
         const { data, functions } = this.props
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
-        const { loadSong, removeSong, updateSong, changePage, handleSettingChange, changeVolume } = functions
+        const { loadSong, removeSong, updateSong, changePage, handleSettingChange, changeVolume,createNewSong,changeMidiVisibility } = functions
         let songFunctions = {
             loadSong: loadSong,
             removeSong: removeSong,
@@ -95,7 +95,10 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
-                        <button className="genshin-button" onClick={this.props.functions.createNewSong}>
+                    <button className="genshin-button" onClick={() => {changeMidiVisibility(true); this.toggleMenu()}}>
+                            Create from MIDI
+                        </button>
+                        <button className="genshin-button" onClick={createNewSong}>
                             Create new song
                         </button>
                     </div>

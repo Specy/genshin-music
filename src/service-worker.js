@@ -7,7 +7,7 @@
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 import { appName } from './appConfig';
-const CACHE = appName+"-V2"
+const CACHE = appName+"-V2.4"
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
@@ -44,8 +44,8 @@ self.addEventListener('activate', (evt) => {
   evt.waitUntil(
       caches.keys().then((keyList) => {
           return Promise.all(keyList.map((key) => {
-            console.log(key, CACHE);
-              if (key.includes(appName) && key !== CACHE) {
+            console.log(key,appName,(key.includes(appName) && key !== CACHE) || key.includes('workbox'))
+              if ((key.includes(appName) && key !== CACHE) || key.includes('workbox')) {
                   console.log('[ServiceWorker] Removing old cache', key);
                   return caches.delete(key);
                 }

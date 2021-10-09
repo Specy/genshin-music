@@ -8,6 +8,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/react-fontawesome": "^0.1.14",
     "@inlet/react-pixi": "^6.5.1",
+    "@tonejs/midi": "^2.0.27",
     "is-mobile": "^3.0.0",
     "pixi.js": "^6.0.2",
     "react": "^17.0.2",

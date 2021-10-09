@@ -318,6 +318,111 @@ canvas{
     margin-right: 2vw;
     justify-content: center;
 }
+
+.floating-midi{
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    bottom: 0.5rem;
+    height: 48vh;
+    border-radius: 0.5rem;
+    padding: 0.8rem;
+    background-color: var(--primary);
+    border: solid 2px var(--secondary);
+    color: white;
+    max-width: 60vw;
+    min-width: 40vw;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    overflow:auto;
+
+}
+.floating-midi *{
+    font-size: 0.9rem;
+}
+.floating-midi::-webkit-scrollbar-thumb {
+	background: var(--composer-tool);
+	border-radius: 2px;
+  }
+  /* Handle on hover */
+.floating-midi::-webkit-scrollbar-thumb:hover {
+	background: #555;
+}
+.midi-btn,.midi-btn-small,.midi-btn-green{
+    background-color: #576377;
+    color: white;
+    border-radius: 0.2rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    height: -moz-fit-content;
+    height: fit-content;
+    cursor: pointer;
+    min-width: 5rem;
+}
+.midi-btn-small{
+    min-width: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-weight: bold;
+    height: 2rem;
+    font-size: 1.2rem;
+}
+.midi-btn-green{
+    background-color: rgb(98, 140, 131);
+}
+.midi-btn-green:disabled{
+    opacity: 0.8;
+    filter: brightness(0.8);
+    cursor: not-allowed;
+}
+
+.midi-track-wrapper{
+    display: grid;
+    margin-top: 0.3rem;
+    gap:0.2rem;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    justify-items: flex-end;
+    width: 100%;
+    background: #576377;
+    padding: 0.4rem;
+    border-radius: 0.2rem;
+    align-items: center;
+}
+.midi-track-wrapper div{
+    width: 100%;
+    padding-left: 0.4rem;
+}
+.midi-row, .midi-column{
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+}
+.separator-border{
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: solid 2px var(--secondary);
+}
+.midi-column{
+    flex-direction: column;
+}
+.midi-input, .midi-select{
+    width: 4rem;
+    padding:0.5rem;
+    background-color: #576377;
+    border: none;
+    border-radius: 0.2rem;
+    color: white;
+    text-align:center;
+}
+.midi-select{
+    width:  5.6rem;
+    background-color: #485263; 
+    text-align:left;
+}
 @media only screen and (max-width: 900px) {
     .buttons-composer-wrapper, .buttons-composer-wrapper-right {
         flex: 1;
@@ -331,7 +436,13 @@ canvas{
     .song-info div{
         max-width: 20vw;
     }
-    
+    .floating-midi{
+        padding:0.4rem;
+        bottom:0.2rem;
+        height: 50vh;
+        max-width: 70vw;
+        width:70vw;
+    }
     .song-info{
         font-size: 0.9rem;
     }

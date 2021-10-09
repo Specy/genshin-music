@@ -75,15 +75,16 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = 1.3
+      let currentVersion = "1.4"
       let updateMessage =
         `
-          Improved library search UI, fixed bugs, (for sky) added kalimba
+          Improved library search UI, fixed bugs, (for sky) added kalimba, FIXED PC KEYBOARD
         `
       let storedVersion = localStorage.getItem(appName+"_Version")
       if(!this.state.hasVisited){
         return localStorage.setItem(appName+"_Version", currentVersion)
       }
+
       if (currentVersion !== storedVersion) {
         new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
         localStorage.setItem(appName+"_Version", currentVersion)

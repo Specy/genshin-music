@@ -25,7 +25,7 @@ class Instrument {
 
     }
     getNoteFromCode = (code) => {
-        let index = this.keyboardCodes.findIndex(e => e === code)
+        let index = this.keyboardCodes.findIndex(e => e === String(code))
         return index !== -1 ? index : null
     }
     setBuffers = (bufferArray) => {

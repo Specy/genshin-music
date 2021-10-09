@@ -9,7 +9,7 @@ import addCell from "../../assets/icons/addCell.svg"
 import removeCell from "../../assets/icons/removeCell.svg"
 import { appName } from "../../appConfig"
 
-
+import MidiImport from "./MidiParser"
 import ComposerTools from "./ComposerTools"
 import ComposerKeyboard from "./ComposerKeyboard"
 import ComposerCanvas from "./ComposerCanvas"
@@ -45,7 +45,8 @@ class Composer extends Component {
             menuOpen: false,
             layer: 1,
             toolsColumns: [],
-            toolsVisible: false
+            toolsVisible: false,
+            midiVisible: false,
         }
         this.copiedColums = []
         this.changes = 0
@@ -395,6 +396,7 @@ class Composer extends Component {
             settings.layer3.value = song.instruments[2]
         }
         this.changes = 0
+        console.log("song loaded:", song)
         this.setState({
             song: song,
             settings: settings,
@@ -632,9 +634,15 @@ class Composer extends Component {
             toolsColumns: []
         }, this.validateBreakpoints)
     }
+    changeMidiVisibility = (visibility) =>{
+        this.setState({
+            midiVisible: visibility
+        })
+    }
     render() {
 
         const { state, props } = this
+        const { midiVisible } = state
         let song = state.song
         let menuData = {
             songs: state.songs,
@@ -651,7 +659,8 @@ class Composer extends Component {
             updateSong: this.updateSong,
             handleSettingChange: this.handleSettingChange,
             toggleMenuVisible: this.toggleMenuVisible,
-            changeVolume: this.changeVolume
+            changeVolume: this.changeVolume,
+            changeMidiVisibility: this.changeMidiVisibility
         }
         let keyboardFunctions = {
             handleClick: this.handleClick,
@@ -689,7 +698,12 @@ class Composer extends Component {
             copyColumns: this.copyColumns,
             pasteColumns: this.pasteColumns
         }
+        let midiParserFunctions = {
+            loadSong: this.loadSong,
+            changeMidiVisibility: this.changeMidiVisibility,
+        }
         return <div className="app">
+            {midiVisible && <MidiImport functions={midiParserFunctions}/>}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <FontAwesomeIcon icon={faBars} />
 
