@@ -225,6 +225,7 @@ class Composer extends Component {
             const source = this.state.audioContext.createBufferSource()
             let note = instrument.layout[index]
             if(note === undefined) return
+            //TODO export below to Instrument.js
             source.buffer = note.buffer
             source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
             source.connect(instrument.gain)
@@ -702,8 +703,12 @@ class Composer extends Component {
             loadSong: this.loadSong,
             changeMidiVisibility: this.changeMidiVisibility,
         }
+        let midiParserData = {
+            instruments: [state.instrument, ...state.layers].map(layer => layer.instrumentName),
+            selectedColumn: song.selected
+        }
         return <div className="app">
-            {midiVisible && <MidiImport functions={midiParserFunctions}/>}
+            {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData}/>}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <FontAwesomeIcon icon={faBars} />
 

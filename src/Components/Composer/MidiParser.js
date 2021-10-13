@@ -1,8 +1,9 @@
-import React, { Component } from 'react'
+import React, { Component, useState } from 'react'
 import { FilePicker } from "react-file-picker"
 import { Midi } from '@tonejs/midi'
-import { LoggerEvent, pitchArr,ColumnNote, Column,numberToLayer,ComposedSong,groupByIndex,mergeLayers } from '../SongUtils'
+import { LoggerEvent, pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from '../SongUtils'
 import { appName } from '../../appConfig'
+import { FaInfoCircle } from 'react-icons/fa'
 class MidiImport extends Component {
     constructor(props) {
         super(props)
@@ -10,11 +11,12 @@ class MidiImport extends Component {
             fileName: '',
             midi: null,
             bpm: 220,
-            offset: 16,
+            offset: 0,
             pitch: 'C',
             accidentals: 0,
             outOfRange: 0,
             totalNotes: 0,
+            includeAccidentals: true
         }
         this.handleFile = (file) => {
             const reader = new FileReader();
@@ -37,7 +39,7 @@ class MidiImport extends Component {
                     midi: midi,
                     fileName: file.name,
                     bpm: Math.floor(bpm * 4) || 220,
-                    offset: 16,
+                    offset: 0,
                     pitch: pitchArr.includes(key) ? key : 'C',
                 })
             })
@@ -45,7 +47,7 @@ class MidiImport extends Component {
         }
 
         this.convertMidi = () => {
-            const { midi, bpm, offset } = this.state
+            const { midi, bpm, offset, includeAccidentals } = this.state
             let tracks = midi.tracks.filter(track => track.selected)
             let notes = []
             let numberOfAccidentals = 0
@@ -53,6 +55,7 @@ class MidiImport extends Component {
             let totalNotes = 0
             tracks.forEach(track => {
                 track.notes.forEach(midiNote => {
+                    totalNotes++
                     let convertedNote = convertMidiNote(midiNote.midi - offset)
                     let note = {
                         time: Math.floor(midiNote.time * 1000),
@@ -60,10 +63,11 @@ class MidiImport extends Component {
                         layer: track.layer
                     }
                     numberOfAccidentals += convertedNote.isAccidental ? 1 : 0
-                    totalNotes++
-                    if(note.note !== null){
-                        notes.push(note)
-                    }else{
+                    if (note.note !== null) {
+                        if (includeAccidentals || !convertedNote.isAccidental) {
+                            notes.push(note)
+                        }
+                    } else {
                         outOfRange++
                     }
                 })
@@ -72,22 +76,22 @@ class MidiImport extends Component {
             let bpmToMs = Math.floor(60000 / bpm)
             let groupedNotes = []
             while (notes.length > 0) {
-              let row = [notes.shift()]
-              let amount = 0
-              for (let i = 0; i < notes.length; i++) {
-                if (row[0].time > notes[i].time - bpmToMs / 9) amount++
-              }
-              groupedNotes.push([...row, ...notes.splice(0, amount)])
+                let row = [notes.shift()]
+                let amount = 0
+                for (let i = 0; i < notes.length; i++) {
+                    if (row[0].time > notes[i].time - bpmToMs / 9) amount++
+                }
+                groupedNotes.push([...row, ...notes.splice(0, amount)])
             }
             let columns = []
             let previousTime = 0
             groupedNotes.forEach(notes => {
                 let note = notes[0]
-                if(!note) return
+                if (!note) return
                 let elapsedTime = note.time - previousTime
                 previousTime = note.time
                 let emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
-                if(emptyColumns > -1) new Array(emptyColumns ).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
+                if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
                 let noteColumn = new Column()
                 noteColumn.notes = notes.map(note => {
                     return new ColumnNote(note.note, numberToLayer(note.layer))
@@ -104,8 +108,11 @@ class MidiImport extends Component {
             let song = new ComposedSong("Untitled")
             song.columns = columns
             song.bpm = bpm
-            if(song.columns.length === 0){
-                return new LoggerEvent("Error","There are no notes",2000).trigger()
+            song.instruments = this.props.data.instruments
+            let lastColumn = this.props.data.selectedColumn 
+            song.selected = lastColumn < song.columns.length ? lastColumn : 0
+            if (song.columns.length === 0) {
+                return new LoggerEvent("Error", "There are no notes", 2000).trigger()
             }
             this.props.functions.loadSong(song)
             this.setState({
@@ -130,7 +137,7 @@ class MidiImport extends Component {
         }
         this.changeOffset = (value) => {
             value = parseInt(value)
-            if(!Number.isInteger(value)) value = 0
+            if (!Number.isInteger(value)) value = 0
             this.setState({
                 offset: value
             })
@@ -142,7 +149,7 @@ class MidiImport extends Component {
         }
         this.changeBpm = (value) => {
             value = parseInt(value)
-            if(!Number.isInteger(value)) value = 0
+            if (!Number.isInteger(value)) value = 0
             this.setState({
                 bpm: value
             })
@@ -150,13 +157,13 @@ class MidiImport extends Component {
     }
     render() {
         const { handleFile, editTrack, state, changeBpm, changeOffset, convertMidi, changePitch } = this
-        const { fileName, midi, bpm, offset, pitch, accidentals, outOfRange, totalNotes } = state
+        const { fileName, midi, bpm, offset, pitch, accidentals, outOfRange, totalNotes, includeAccidentals } = state
         const { functions } = this.props
         const { changeMidiVisibility } = functions
         return <div className='floating-midi'>
-            <div 
-                className='midi-row separator-border' 
-                style={{ width: '100%'}}
+            <div
+                className='midi-row separator-border'
+                style={{ width: '100%' }}
             >
                 <FilePicker onChange={handleFile}>
                     <button className="midi-btn">
@@ -182,7 +189,7 @@ class MidiImport extends Component {
                     Load
                 </button>
             </div>
-            <table className='separator-border' style={{width: "100%"}}>
+            <table className='separator-border' style={{ width: "100%" }}>
                 <tr>
                     <td>
                         <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
@@ -192,16 +199,16 @@ class MidiImport extends Component {
                             onClick={() => changeBpm(bpm - 5)}
                             className='midi-btn-small'
                         >-</button>
-                        <input 
-                            type='text' 
-                            value={bpm} 
-                            onChange={(e) => changeBpm(e.target.value)} 
-                            className='midi-input' 
+                        <input
+                            type='text'
+                            value={bpm}
+                            onChange={(e) => changeBpm(e.target.value)}
+                            className='midi-input'
                             style={{ margin: '0 0.3rem' }}
                         />
                         <button
-                                onClick={() => changeBpm(bpm + 5)}
-                                className='midi-btn-small'
+                            onClick={() => changeBpm(bpm + 5)}
+                            className='midi-btn-small'
                         >+</button>
                     </td>
                 </tr>
@@ -255,61 +262,95 @@ class MidiImport extends Component {
                         </select>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <div style={{ marginRight: '0.5rem' }}>Include accidentals:</div>
+                    </td>
+                    <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <input type='checkbox'
+                            checked={includeAccidentals}
+                            onClick={() => this.setState({ includeAccidentals: !includeAccidentals })}
+                        />
+                    </td>
+                </tr>
             </table>
-            {midi !== null && <div className='midi-column separator-border' style={{width:'100%'}}>
-                    <div className='midi-column' style={{ width:'100%'}}>
-                        <div>Select midi tracks</div>
-                        {midi?.tracks.map((track, i) =>
-                            <Track
-                                data={track}
-                                key={i}
-                                index={i}
-                                editTrack={editTrack}
-                            />
-                        )}
-                    </div>
+            {midi !== null && <div className='midi-column separator-border' style={{ width: '100%' }}>
+                <div className='midi-column' style={{ width: '100%' }}>
+                    <div>Select midi tracks</div>
+                    {midi?.tracks.map((track, i) =>
+                        <Track
+                            data={track}
+                            key={i}
+                            index={i}
+                            editTrack={editTrack}
+                        />
+                    )}
                 </div>
+            </div>
             }
-        {midi !== null && <table>
+            {midi !== null && <table>
                 <tr>
                     <td>Total notes: </td>
-                    <td/>
+                    <td />
                     <td>{totalNotes}</td>
                 </tr>
                 <tr>
                     <td>Accidentals: </td>
-                    <td/>
+                    <td />
                     <td>{accidentals}</td>
                 </tr>
                 <tr>
                     <td>Out of range: </td>
-                    <td/>
+                    <td />
                     <td>{outOfRange}</td>
                 </tr>
             </table>
-        }
+            }
         </div>
     }
 }
 
 function Track(props) {
     const { data, index, editTrack } = props
-    return <div className='midi-track-wrapper'>
-        <div>
-            {data.name}
+    const [dataShown, setDataShown] = useState(false)
+    return <div className='midi-track-column'>
+        <div className='midi-track-wrapper'>
+            <div className='midi-track-center'>
+                <input type='checkbox' onChange={() => editTrack("index", { index: index })} checked={data.selected} />
+                {data.name} ({data.notes.length})
+            </div>
+            <div className='midi-track-center'>
+                <div style={{ textAlign: 'center' }}>
+                    {data.instrument.family}
+                </div>
+                <select
+                    onChange={(event) => editTrack('layer', { index: index, layer: Number(event.target.value) })}
+                    value={data.layer}
+                    className='midi-select'
+                >
+                    <option value='0'>Layer 1</option>
+                    <option value='1'>Layer 2</option>
+                    <option value='2'>Layer 3</option>
+                </select>
+
+                <FaInfoCircle
+                    size={22}
+                    color={dataShown ? "rgb(207, 122, 130)" : "white"}
+                    onClick={() => setDataShown(!dataShown)}
+                    cursor='pointer'
+                />
+            </div>
+
         </div>
-        <input type='checkbox' onChange={() => editTrack("index", { index: index })} checked={data.selected} />
-        <select
-            onChange={(event) => editTrack('layer', { index: index, layer: Number(event.target.value) })}
-            value={data.layer}
-            className='midi-select'
-        >
-            <option value='0'>Layer 1</option>
-            <option value='1'>Layer 2</option>
-            <option value='2'>Layer 3</option>
-        </select>
-        <div style={{ textAlign: 'center' }}>
-            {data.instrument.family}
+        <div className='midi-track-data' style={{ display: dataShown ? "flex" : "none" }}>
+            <div className='midi-track-data-row'>
+                <div>Instrument:</div>
+                <div>{data.instrument.name}</div>
+            </div>
+            <div className='midi-track-data-row'>
+                <div>Number of notes:</div>
+                <div>{data.notes.length}</div>
+            </div>
         </div>
     </div>
 }
@@ -320,38 +361,75 @@ export default MidiImport
 function convertMidiNote(midiNote) {
     let note = null
     let isAccidental = false
-    if(appName === 'Sky'){
+    if (appName === 'Sky') {
         switch (midiNote) {
-            case 36: note = 0; break;
-            case 37: note = 0; isAccidental = true; break;
-            case 38: note = 1; break;
-            case 39: note = 1; isAccidental = true; break;
-            case 40: note = 2; break;
-            case 41: note = 3; break;
-            case 42: note = 3; isAccidental = true; break;
-            case 43: note = 4; break;
-            case 44: note = 4; isAccidental = true; break;
-            case 45: note = 5; break;
-            case 46: note = 5; isAccidental = true; break;
-            case 47: note = 6; break;
-            case 48: note = 7; break;
-            case 49: note = 7; isAccidental = true; break;
-            case 50: note = 8; break;
-            case 51: note = 8; isAccidental = true; break;
-            case 52: note = 9; break;
-            case 53: note = 10; break;
-            case 54: note = 10; isAccidental = true; break;
-            case 55: note = 11; break;
-            case 56: note = 11; isAccidental = true; break;
-            case 57: note = 12; break;
-            case 58: note = 12; isAccidental = true; break;
-            case 59: note = 13; break;
-            case 60: note = 14; break;
+            case 60: note = 0; break;
+            case 61: note = 0; isAccidental = true; break;
+            case 62: note = 1; break;
+            case 63: note = 1; isAccidental = true; break;
+            case 64: note = 2; break;
+            case 65: note = 3; break;
+            case 66: note = 3; isAccidental = true; break;
+            case 67: note = 4; break;
+            case 68: note = 4; isAccidental = true; break;
+            case 69: note = 5; break;
+            case 70: note = 5; isAccidental = true; break;
+            case 71: note = 6; break;
+            case 72: note = 7; break;
+            case 73: note = 7; isAccidental = true; break;
+            case 74: note = 8; break;
+            case 75: note = 8; isAccidental = true; break;
+            case 76: note = 9; break;
+            case 77: note = 10; break;
+            case 78: note = 10; isAccidental = true; break;
+            case 79: note = 11; break;
+            case 80: note = 11; isAccidental = true; break;
+            case 81: note = 12; break;
+            case 82: note = 12; isAccidental = true; break;
+            case 83: note = 13; break;
+            case 84: note = 14; break;
             default: note = null
         }
     }
-    if(appName === 'genshin'){
-        //TODO add genshin notes
+    if (appName === 'Genshin') {
+        switch (midiNote) {
+            case 48: note = 14; break;
+            case 49: note = 14; isAccidental = true; break;
+            case 50: note = 15; break;
+            case 51: note = 15; isAccidental = true; break;
+            case 52: note = 16; break;
+            case 53: note = 17; break;
+            case 54: note = 17; isAccidental = true; break;
+            case 55: note = 18; break;
+            case 56: note = 18; isAccidental = true; break;
+            case 57: note = 19; break;
+            case 58: note = 19; isAccidental = true; break;
+            case 59: note = 20; break;
+            case 60: note = 7; break;
+            case 61: note = 7; isAccidental = true; break;
+            case 62: note = 8; break;
+            case 63: note = 8; isAccidental = true; break;
+            case 64: note = 9; break;
+            case 65: note = 10; break;
+            case 66: note = 10; isAccidental = true; break;
+            case 67: note = 11; break;
+            case 68: note = 11; isAccidental = true; break;
+            case 69: note = 12; break;
+            case 70: note = 12; isAccidental = true; break;
+            case 71: note = 13; break;
+            case 72: note = 0; break;
+            case 73: note = 0; isAccidental = true; break;
+            case 74: note = 1; break;
+            case 75: note = 1; isAccidental = true; break;
+            case 76: note = 2; break;
+            case 77: note = 3; break;
+            case 78: note = 3; isAccidental = true; break;
+            case 79: note = 4; break;
+            case 80: note = 4; isAccidental = true; break;
+            case 81: note = 5; break;
+            case 82: note = 5; isAccidental = true; break;
+            case 83: note = 6; break;
+        }
     }
     return {
         note: note,
