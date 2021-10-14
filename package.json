@@ -41,6 +41,7 @@
     "eject": "react-scripts eject",
     "buildSky": "node ./scripts/buildApp.js Sky",
     "buildGenshin": "node ./scripts/buildApp.js Genshin",
+    "buildAll": "node ./scripts/buildApp.js All",
     "startSky": "node ./scripts/startApp.js Sky",
     "startGenshin": "node ./scripts/startApp.js Genshin"
   },
