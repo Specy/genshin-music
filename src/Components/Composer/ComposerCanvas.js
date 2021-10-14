@@ -210,7 +210,7 @@ class ComposerCanvas extends Component {
                 <Stage
                     width={s.width}
                     height={timelineHeight}
-                    options={{ antialias: true, autoDensity: true }}
+                    options={{ antialias: true, autoDensity: true,backgroundColor: 0x515c6f }}
                 >
                     <Container
                         width={this.state.width}
@@ -220,6 +220,7 @@ class ComposerCanvas extends Component {
                         pointerdown={(e) => this.handleClick(e, "down")}
                         pointerup={(e) => this.handleClick(e, "up")}
                         pointermove={this.handleSlide}
+                        
                     >
                         <Graphics draw={(e) => { fillX(e, this.state.width, this.state.timelineHeight) }} />
                         {data.breakpoints.map(breakpoint => {
@@ -229,7 +230,6 @@ class ComposerCanvas extends Component {
                                 x={relativeColumnWidth * breakpoint}
 
                             >
-
                             </Sprite>
                         })}
                     </Container>

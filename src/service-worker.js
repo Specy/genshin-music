@@ -7,7 +7,8 @@
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 import { appName } from './appConfig';
-const CACHE = appName+"-V2.5"
+const CACHE = appName+"-V2.6"
+console.log("CACHE Version: ",CACHE)
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';

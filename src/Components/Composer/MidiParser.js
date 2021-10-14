@@ -1,9 +1,10 @@
-import React, { Component, useState } from 'react'
+import React, { Component, useEffect, useState } from 'react'
 import { FilePicker } from "react-file-picker"
 import { Midi } from '@tonejs/midi'
 import { LoggerEvent, pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from '../SongUtils'
 import { appName } from '../../appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
+import useDebounce from './useDebounce'
 class MidiImport extends Component {
     constructor(props) {
         super(props)
@@ -34,6 +35,8 @@ class MidiImport extends Component {
                     track.selected = true
                     track.layer = 0
                     track.name = track.name || `Track n.${i + 1}`
+                    track.numberOfAccidentals = 0
+                    track.numberOfOutOfRange = 0
                 })
                 this.setState({
                     midi: midi,
@@ -41,19 +44,21 @@ class MidiImport extends Component {
                     bpm: Math.floor(bpm * 4) || 220,
                     offset: 0,
                     pitch: pitchArr.includes(key) ? key : 'C',
-                })
+                }, () => { if (this.state.midi !== null) this.convertMidi()})
             })
             reader.readAsArrayBuffer(file)
         }
 
         this.convertMidi = () => {
-            const { midi, bpm, offset, includeAccidentals } = this.state
+            const { midi, bpm, offset, includeAccidentals,pitch } = this.state
             let tracks = midi.tracks.filter(track => track.selected)
             let notes = []
             let numberOfAccidentals = 0
             let outOfRange = 0
             let totalNotes = 0
             tracks.forEach(track => {
+                track.numberOfAccidentals = 0
+                track.numberOfOutOfRange = 0
                 track.notes.forEach(midiNote => {
                     totalNotes++
                     let convertedNote = convertMidiNote(midiNote.midi - offset)
@@ -62,13 +67,17 @@ class MidiImport extends Component {
                         note: convertedNote.note,
                         layer: track.layer
                     }
-                    numberOfAccidentals += convertedNote.isAccidental ? 1 : 0
+                    if(convertedNote.isAccidental){
+                        numberOfAccidentals ++
+                        track.numberOfAccidentals ++
+                    }
                     if (note.note !== null) {
                         if (includeAccidentals || !convertedNote.isAccidental) {
                             notes.push(note)
                         }
                     } else {
                         outOfRange++
+                        track.numberOfOutOfRange ++
                     }
                 })
             })
@@ -109,7 +118,8 @@ class MidiImport extends Component {
             song.columns = columns
             song.bpm = bpm
             song.instruments = this.props.data.instruments
-            let lastColumn = this.props.data.selectedColumn 
+            song.pitch = pitch
+            let lastColumn = this.props.data.selectedColumn
             song.selected = lastColumn < song.columns.length ? lastColumn : 0
             if (song.columns.length === 0) {
                 return new LoggerEvent("Error", "There are no notes", 2000).trigger()
@@ -131,28 +141,37 @@ class MidiImport extends Component {
             if (command === 'layer') {
                 tracks[data.index].layer = data.layer
             }
+
             this.setState({
                 midi: this.state.midi
-            })
+            }, () => { if (this.state.midi !== null) this.convertMidi() })
         }
         this.changeOffset = (value) => {
             value = parseInt(value)
             if (!Number.isInteger(value)) value = 0
+            if(this.state.offset === value) return
             this.setState({
                 offset: value
-            })
+            }, () => { if (this.state.midi !== null) this.convertMidi() })
         }
         this.changePitch = (value) => {
+            this.props.functions.changePitch(value)
             this.setState({
                 pitch: value
             })
         }
+        this.toggleAccidentals = () => {
+            this.setState({
+                includeAccidentals: !this.state.includeAccidentals
+            }, () => { if (this.state.midi !== null) this.convertMidi() })
+        }
         this.changeBpm = (value) => {
             value = parseInt(value)
             if (!Number.isInteger(value)) value = 0
+            if(this.state.bpm === value) return
             this.setState({
                 bpm: value
-            })
+            }, () => { if (this.state.midi !== null) this.convertMidi() })
         }
     }
     render() {
@@ -170,7 +189,7 @@ class MidiImport extends Component {
                         Click to load midi file
                     </button>
                 </FilePicker>
-                <div style={{ marginLeft: '0.5rem', maxWidth: '7rem', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                <div style={{ margin: '0 0.5rem', maxWidth: '8rem', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                     {fileName}
                 </div>
                 <button
@@ -180,14 +199,6 @@ class MidiImport extends Component {
                 >
                     Close
                 </button>
-                <button
-                    className='midi-btn-green'
-                    style={{ marginLeft: '0.5rem' }}
-                    disabled={midi === null}
-                    onClick={convertMidi}
-                >
-                    Load
-                </button>
             </div>
             <table className='separator-border' style={{ width: "100%" }}>
                 <tr>
@@ -195,21 +206,12 @@ class MidiImport extends Component {
                         <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
                     </td>
                     <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <button
-                            onClick={() => changeBpm(bpm - 5)}
-                            className='midi-btn-small'
-                        >-</button>
-                        <input
-                            type='text'
+                    <NumberInput
                             value={bpm}
-                            onChange={(e) => changeBpm(e.target.value)}
-                            className='midi-input'
-                            style={{ margin: '0 0.3rem' }}
+                            changeValue={changeBpm}
+                            delay={600}
+                            step={5}
                         />
-                        <button
-                            onClick={() => changeBpm(bpm + 5)}
-                            className='midi-btn-small'
-                        >+</button>
                     </td>
                 </tr>
                 <tr>
@@ -217,23 +219,12 @@ class MidiImport extends Component {
                         <div style={{ marginRight: '0.5rem' }}>Scale notes by: </div>
                     </td>
                     <td>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end' }} >
-                            <button
-                                onClick={() => changeOffset(offset - 1)}
-                                className='midi-btn-small'
-                            >-</button>
-                            <input
-                                type="text"
-                                value={offset}
-                                onChange={(e) => changeOffset(e.target.value)}
-                                className='midi-input'
-                                style={{ margin: '0 0.3rem' }}
-                            />
-                            <button
-                                onClick={() => changeOffset(offset + 1)}
-                                className='midi-btn-small'
-                            >+</button>
-                        </div>
+                        <NumberInput
+                            value={offset}
+                            changeValue={changeOffset}
+                            delay={600}
+                            step={1}
+                        />
                     </td>
                 </tr>
                 <tr>
@@ -269,7 +260,7 @@ class MidiImport extends Component {
                     <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <input type='checkbox'
                             checked={includeAccidentals}
-                            onClick={() => this.setState({ includeAccidentals: !includeAccidentals })}
+                            onChange={this.toggleAccidentals}
                         />
                     </td>
                 </tr>
@@ -351,12 +342,48 @@ function Track(props) {
                 <div>Number of notes:</div>
                 <div>{data.notes.length}</div>
             </div>
+            <div className='midi-track-data-row'>
+                <div>Accidentals:</div>
+                <div>{data.numberOfAccidentals}</div>
+            </div>
+            <div className='midi-track-data-row'>
+                <div>Out of range:</div>
+                <div>{data.numberOfOutOfRange}</div>
+            </div>
         </div>
     </div>
 }
 
 export default MidiImport
 
+function NumberInput(props) {
+    const { changeValue, value, delay = 500, step = 1 } = props
+    const [elementValue, setElementValue] = useState(value)
+    const debounced = useDebounce(elementValue, delay) 
+    useEffect(() => {
+        changeValue(debounced)
+    }, [debounced]);
+    useEffect(() => {
+        setElementValue(value)
+    }, [value])
+    return <div style={{ display: 'flex', justifyContent: 'flex-end' }} >
+        <button
+            onClick={() => setElementValue(elementValue - step)}
+            className='midi-btn-small'
+        >-</button>
+        <input
+            type="text"
+            value={elementValue}
+            onChange={(e) => setElementValue(e.target.value)}
+            className='midi-input'
+            style={{ margin: '0 0.3rem' }}
+        />
+        <button
+            onClick={() => setElementValue(elementValue + step)}
+            className='midi-btn-small'
+        >+</button>
+    </div>
+}
 
 function convertMidiNote(midiNote) {
     let note = null

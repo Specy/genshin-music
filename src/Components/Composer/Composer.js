@@ -239,6 +239,13 @@ class Composer extends Component {
 
         }
     }
+    changePitch = (value) => {
+        const {settings} = this.state
+        settings.pitch.value = value
+        this.setState({
+            settings: settings
+        }, () => this.updateSettings())
+    }
     handleClick = (note) => {
         let column = this.state.song.columns[this.state.song.selected]
         let index = column.notes.findIndex((n) => {
@@ -702,10 +709,12 @@ class Composer extends Component {
         let midiParserFunctions = {
             loadSong: this.loadSong,
             changeMidiVisibility: this.changeMidiVisibility,
+            changePitch: this.changePitch,
         }
         let midiParserData = {
             instruments: [state.instrument, ...state.layers].map(layer => layer.instrumentName),
-            selectedColumn: song.selected
+            selectedColumn: song.selected,
+
         }
         return <div className="app">
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData}/>}

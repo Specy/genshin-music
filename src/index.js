@@ -75,10 +75,10 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = "1.4"
+      let currentVersion = "1.5"
       let updateMessage =
         `
-          Improved library search UI, fixed bugs, (for sky) added kalimba, FIXED PC KEYBOARD
+          Added MIDI import in the composer, in the song menu you can now import a MIDI file.
         `
       let storedVersion = localStorage.getItem(appName+"_Version")
       if(!this.state.hasVisited){
