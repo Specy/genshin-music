@@ -56,11 +56,11 @@ class ComposerCanvas extends Component {
         this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
     }
     handleKeyboard = (event) => {
-        let key = event.keyCode
+        let key = event.code
         switch (key) {
-            case 39: this.handleBreakpoints(1)
+            case "ArrowRight": this.handleBreakpoints(1)
                 break;
-            case 37: this.handleBreakpoints(-1)
+            case "ArrowLeft": this.handleBreakpoints(-1)
                 break;
         }
     }
@@ -159,6 +159,8 @@ class ComposerCanvas extends Component {
             <Stage
                 width={s.width}
                 height={s.height}
+                raf={false}
+                renderOnComponentChange={true}
                 options={pixiOptions}
                 key={this.state.width}
                 ref={this.canvasRef}
@@ -211,6 +213,8 @@ class ComposerCanvas extends Component {
                     width={s.width}
                     height={timelineHeight}
                     options={{ antialias: true, autoDensity: true,backgroundColor: 0x515c6f }}
+                    raf={false}
+                    renderOnComponentChange={true}
                 >
                     <Container
                         width={this.state.width}

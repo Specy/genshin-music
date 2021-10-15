@@ -36,8 +36,9 @@ class Menu extends Component {
         this.props.functions.stopSong()
     }
     searchSongs = async () =>{
-        let search = this.state.searchInput
-        if(search.trim().length === 0){
+        const { searchInput, searchStatus } = this.state
+        if(searchStatus === "Searching...") return
+        if(searchInput.trim().length === 0){
             return this.setState({
                 searchStatus: 'Please write a non empty name'
             })
@@ -45,7 +46,7 @@ class Menu extends Component {
         this.setState({
             searchStatus: 'Searching...'
         })
-        let fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search='+encodeURI(search)).then(data => data.json())
+        let fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search='+encodeURI(searchInput)).then(data => data.json())
         if(fetchedSongs.error){
             this.setState({
                 searchStatus: 'Please write a non empty name'
@@ -219,10 +220,13 @@ class Menu extends Component {
                     <div>
                         Here you can find songs to learn, they are provided by the sky-music library.
                     </div>
-                    <div className='library-search-row'>
+                    <div className='library-search-row' >
                         <input 
                             className='library-search-input' 
                             placeholder='Song name'
+                            onKeyDown={(e) => {
+                                if(e.code === "Enter") this.searchSongs()
+                            }}
                             onInput={(e) => this.handleSearchInput(e.target.value)}
                             value={this.state.searchInput}
                         />

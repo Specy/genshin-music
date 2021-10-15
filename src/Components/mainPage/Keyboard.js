@@ -4,7 +4,7 @@ import { getPitchChanger } from "../SongUtils"
 import Instrument from "../Instrument"
 import Note from "./Note"
 import * as workerTimers from 'worker-timers';
-import { keyNames, pitchArr , skyImages} from "../../appConfig"
+import { keyNames, pitchArr , layoutImages, appName,layoutData} from "../../appConfig"
 class Keyboard extends Component {
     constructor(props) {
         super(props)
@@ -30,7 +30,8 @@ class Keyboard extends Component {
     handleKeyboard = (event) => {
         if(event.repeat) return
         if (document.activeElement.tagName === "INPUT") return
-        let index = this.state.instrument.getNoteFromCode(event.keyCode)
+        let code = event.code?.replace("Key","")
+        let index = this.state.instrument.getNoteFromCode(code)
         let note
         if (index !== null) {
             note = this.state.instrument.layout[index]
@@ -170,31 +171,33 @@ class Keyboard extends Component {
 
     }
     playSound = (note) => {
+        const {state, props} = this
         if(note === undefined) return
-        if (this.props.isRecording) this.props.functions.handleRecording(note)
+        if (props.isRecording) props.functions.handleRecording(note)
         note.clicked = true
         setTimeout(() => {
             note.clicked = false
             this.setState({
-                instrument: this.state.instrument
+                instrument: state.instrument
             })
         }, 200)
-        const source = this.state.audioContext.createBufferSource()
-        source.playbackRate.value = getPitchChanger(this.props.settings.pitch.value)
+        const source = state.audioContext.createBufferSource()
+        source.playbackRate.value = getPitchChanger(props.data.pitch)
         source.buffer = note.buffer
-        if (this.props.settings.caveMode.value) {
-            source.connect(this.state.reverbAudioContext)
+        if (props.data.caveMode) {
+            source.connect(state.reverbAudioContext)
         } else {
-            source.connect(this.state.audioContext.destination)
+            source.connect(state.audioContext.destination)
         }
         source.start(0)
         this.setState({
-            instrument: this.state.instrument
+            instrument: state.instrument
         })
     }
     render() {
-        let state = this.state
-        let size = this.props.settings.keyboardSize.value / 100
+        const {state, props} = this
+        const {data} = props
+        let size = data.keyboardSize / 100
         if (size < 0.5) size = 0.5
         if (size > 1.5) size = 1.5
         let keyboardClass = "keyboard"
@@ -212,11 +215,12 @@ class Keyboard extends Component {
                 let toBeClicked = state.songToPractice[0]?.notes.find(e => e[0] === note.index) !== undefined
                 let toBeClickedNext = state.songToPractice[1]?.notes.find(e => e[0] === note.index) !== undefined
                 let fadeTime = state.songToPractice[0]?.delay !== undefined ? state.songToPractice[0]?.delay / 1000 : 0.1
-                let skyText = ""
-                let skyImg = ""
+                let noteText = ""
+                let noteImage = ""
                 try{
-                    skyText = keyNames[pitchArr.indexOf(this.props.settings.pitch.value)][note.index]
-                    skyImg = skyImages[state.instrument.layout.length][note.index]
+                    noteImage = layoutImages[state.instrument.layout.length][note.index]
+                    if(data.noteNameType === "Note name") noteText = keyNames[appName][pitchArr.indexOf(data.pitch)][note.index]                           
+                    if(data.noteNameType === "Keyboard layout") noteText = layoutData[state.instrument.layout.length].keyboardLayout[note.index]
                 }catch(e){}
 
                 return <Note
@@ -225,8 +229,8 @@ class Keyboard extends Component {
                     fadeTime={fadeTime}
                     toBeClickedNext={toBeClickedNext}
                     data={note}
-                    skyText={skyText}
-                    skyImg={skyImg}
+                    noteText={noteText}
+                    noteImage={`./assets/icons/keys/${noteImage}.svg`}
                     clickAction={this.handleClick}
                 >
 
@@ -235,6 +239,7 @@ class Keyboard extends Component {
         </div>
     }
 }
+
 function delayMs(ms) {
     return new Promise(resolve => {
         workerTimers.setTimeout(resolve, ms)

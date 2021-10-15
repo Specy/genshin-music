@@ -54,6 +54,7 @@ class Composer extends Component {
         this.loadInstrument(settings.instrument.value, 1)
         this.loadInstrument(settings.layer2.value, 2)
         this.loadInstrument(settings.layer3.value, 3)
+
         try {
             this.loadReverb()
         } catch(e) {
@@ -152,9 +153,11 @@ class Composer extends Component {
         })
     }
     loadInstrument = async (name, layer) => {
+        const {settings} = this.state
         if (layer === 1) {
             let newInstrument = new Instrument(name)
             await newInstrument.load(this.state.audioContext)
+            newInstrument.changeVolume(settings.instrument.volume)
             this.setState({
                 instrument: newInstrument
             })
@@ -163,6 +166,7 @@ class Composer extends Component {
             let layers = this.state.layers
             layers[layer - 2] = newInstrument
             await newInstrument.load(this.state.audioContext)
+            newInstrument.changeVolume(settings[`layer${layer}`].volume)
             this.setState({
                 layers: layers
             })
@@ -189,32 +193,26 @@ class Composer extends Component {
         }, () => this.updateSettings())
     }
     handleKeyboard = (event) => {
-        let key = event.keyCode
-        /*
-            let note = this.state.instrument.layout.find(e => e.noteNames.keyboard === letter)
-            if (note !== undefined) {
-                this.handleClick(note)
-            }
-        */
+        let key = event.code
         if (document.activeElement.tagName === "INPUT") return
         switch (key) {
-            case 68: this.selectColumn(this.state.song.selected + 1)
+            case "KeyD": this.selectColumn(this.state.song.selected + 1)
                 break;
-            case 65: this.selectColumn(this.state.song.selected - 1)
+            case "KeyA": this.selectColumn(this.state.song.selected - 1)
                 break;
-            case 49: this.handleTempoChanger(TempoChangers[0])
+            case "Digit1": this.handleTempoChanger(TempoChangers[0])
                 break;
-            case 50: this.handleTempoChanger(TempoChangers[1])
+            case "Digit2": this.handleTempoChanger(TempoChangers[1])
                 break;
-            case 51: this.handleTempoChanger(TempoChangers[2])
+            case "Digit3": this.handleTempoChanger(TempoChangers[2])
                 break;
-            case 52: this.handleTempoChanger(TempoChangers[3])
+            case "Digit4": this.handleTempoChanger(TempoChangers[3])
                 break;
-            case 32: this.togglePlay()
+            case "Space": this.togglePlay()
                 break;
-            case 81: this.removeColumns(1, this.state.song.selected)
+            case "KeyQ": this.removeColumns(1, this.state.song.selected)
                 break;
-            case 69: this.addColumns(1, this.state.song.selected)
+            case "KeyE": this.addColumns(1, this.state.song.selected)
                 break;
             case "":
                 break;
@@ -226,6 +224,7 @@ class Composer extends Component {
             let note = instrument.layout[index]
             if(note === undefined) return
             //TODO export below to Instrument.js
+            console.log(instrument.gain.gain)
             source.buffer = note.buffer
             source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
             source.connect(instrument.gain)
@@ -681,7 +680,8 @@ class Composer extends Component {
             TempoChangers: TempoChangers,
             layer: state.layer,
             pitch: state.settings.pitch.value,
-            isPlaying: state.isPlaying
+            isPlaying: state.isPlaying,
+            noteNameType: state.settings.noteNameType.value,
         }
         let canvasFunctions = {
             selectColumn: this.selectColumn,

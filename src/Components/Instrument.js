@@ -25,7 +25,7 @@ class Instrument {
 
     }
     getNoteFromCode = (code) => {
-        let index = this.keyboardCodes.findIndex(e => e === String(code))
+        let index = this.keyboardLayout.findIndex(e => e === String(code))
         return index !== -1 ? index : null
     }
     setBuffers = (bufferArray) => {
@@ -34,7 +34,9 @@ class Instrument {
         })
     }
     changeVolume = (amount) => {
-        this.gain.gain.value = amount / 100
+        let newVolume = Number((amount / 100).toFixed(2))
+        if(amount < 5) newVolume = 0
+        this.gain.gain.value = newVolume
     }
     load = async (audioContext) => {
         this.gain = audioContext.createGain()

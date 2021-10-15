@@ -1,6 +1,6 @@
 import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 5,
+    settingVesion: appName + 7,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -40,6 +40,16 @@ let ComposerSettings = {
         options: [
             3,
             4
+        ]
+    },
+    noteNameType:{
+        name: "Note name type",
+        type: "select",
+        songSetting: false,
+        value: appName === "Genshin" ? "Keyboard layout": "Note name",
+        options: [
+            "Note name",
+            "Keyboard layout"
         ]
     },
     pitch: {
@@ -91,7 +101,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion:appName + 5,
+    settingVesion:appName + 7,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
@@ -105,6 +115,16 @@ let MainPageSettings = {
         songSetting: false,
         value: instruments[0],
         options: instruments
+    },
+    noteNameType:{
+        name: "Note name type",
+        type: "select",
+        songSetting: false,
+        value: appName === "Genshin" ? "Keyboard layout": "Note name",
+        options: [
+            "Note name",
+            "Keyboard layout"
+        ]
     },
     pitch: {
         name: "Pitch",

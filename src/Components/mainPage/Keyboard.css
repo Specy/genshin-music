@@ -1,125 +1,129 @@
-.keyboard{
-    display: grid;
-    margin-top: auto;
-    grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    justify-items: center;
-    align-items: center;
-
+.keyboard {
+	display: grid;
+	margin-top: auto;
+	grid-template-columns: repeat(7, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	justify-items: center;
+	align-items: center;
 }
-.keyboard-5{
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+.keyboard-5 {
+	grid-template-columns: repeat(5, 1fr);
+	grid-template-rows: repeat(3, 1fr);
 }
-.keyboard-4{
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-}
-
-.note, .note-composer, .note-sky, .note-composer-sky{
-    background-color: var(--note-color);
-    border-radius: 50%;
-    width: 6vw;
-    height: 6vw;
-    border: 0.6vw solid var(--note-border);
-    color: var(--note-text);
-    font-size: 1.5rem;
-    font-weight: bold;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.1s;
-    cursor: pointer;
-    touch-action: none;
-}
-.note-sky, .note-composer-sky{
-    border-radius: 1.5vw;
-    background-color: var(--primary);
-    border: 0.4vw solid var(--primary);
+.keyboard-4 {
+	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(2, 1fr);
 }
 
-.note-composer, .note-composer-sky{
-    transition: none;
+.note,
+.note-composer,
+.note-sky,
+.note-composer-sky {
+	background-color: var(--note-color);
+	border-radius: 50%;
+	width: 6vw;
+	height: 6vw;
+	border: 0.5vw solid var(--note-border);
+	color: var(--note-text);
+	font-size: 1.5rem;
+	font-weight: bold;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: all 0.1s;
+	cursor: pointer;
+	touch-action: none;
 }
-.note img, .note-composer img, .note-sky img, .note-composer-sky img{
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+.note-sky,
+.note-composer-sky {
+	border-radius: 1.5vw;
+	background-color: var(--primary);
+	border: 0.4vw solid var(--primary);
 }
-.click-event{
-    transform: scale(0.9);
-    background-color: var(--clicked-note);
-    border-color: #73c7b5;
-}
-.note-red{
-    background-color: #f06565;
-    border-color: #d75c5c;
-    color: white;
-}
-.note-red img{
-    filter: brightness(10);
-}
-.note-border-click{
-    border-color: var(--note-text);
-}
-.note-name{
-    font-size: 0.8rem;
-    position:absolute;
-    bottom: 0.1rem;
-    color: var(--text-color);
-    margin-left: auto;
-    margin-right: auto;
-    left: 0;
-    right: 0;
-    
-}
-.note-name-sky{
-    position:absolute;
-    font-size: 1rem;
-    color: white;
-}
-.button-hitbox{
-    background-color: transparent;
-    border: none;
-    padding: 0.25rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.upper-right{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-.record-btn{
-    width: fit-content;
 
+.note-composer,
+.note-composer-sky {
+	transition: none;
+}
+.note img,
+.note-composer img,
+.note-sky img,
+.note-composer-sky img {
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+.click-event {
+	transform: scale(0.9);
+	background-color: var(--clicked-note);
+	border-color: #73c7b5;
+}
+.note-red {
+	background-color: #f06565;
+	border-color: #d75c5c;
+	color: white;
+}
+.note-red img {
+	filter: brightness(10);
+}
+.note-border-click {
+	border-color: var(--note-text);
+}
+.note-name {
+	font-size: 0.8rem;
+	position: absolute;
+	bottom: 0;
+	color: var(--text-color);
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+}
+.note-name-sky {
+	position: absolute;
+	font-size: 1rem;
+	color: white;
+}
+.button-hitbox {
+	background-color: transparent;
+	border: none;
+	padding: 0.25rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.upper-right {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+.record-btn {
+	width: fit-content;
 }
 @media only screen and (max-width: 900px) {
-    .note{
-        width: 6.5vw;
-        height: 6.5vw;
-        font-size: 1rem;
-        border-width:4px;
-    }
-    .note-sky{
-        width: 8.5vw;
-        height: 8.5vw;
-        border-radius: 2vw;
-    }
-    .note-name-sky{
-        font-size: 0.8rem;
-    }
-    .note-name{
-        font-size: 0.6rem;
-        bottom: 0rem;
-    }
+	.note {
+		width: 6.5vw;
+		height: 6.5vw;
+		font-size: 1rem;
+		border-width: 4px;
+	}
+	.note-sky {
+		width: 8.5vw;
+		height: 8.5vw;
+		border-radius: 2vw;
+	}
+	.note-name-sky {
+		font-size: 0.8rem;
+	}
+	.note-name {
+		font-size: 0.6rem;
+		bottom: 0rem;
+	}
 }
 @media only screen and (max-width: 800px) {
-    .note-name-sky{
-        font-size: 0.7rem;
-
-    }
+	.note-name-sky {
+		font-size: 0.7rem;
+	}
 }

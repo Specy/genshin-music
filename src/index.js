@@ -75,10 +75,11 @@ class Index extends Component {
   }
   checkUpdate = () => {
     setTimeout(() => {
-      let currentVersion = "1.5"
+      let currentVersion = "1.6"
       let updateMessage =
         `
           Added MIDI import in the composer, in the song menu you can now import a MIDI file.
+          Improved performance by x2, added note name selection, fixed bugs.
         `
       let storedVersion = localStorage.getItem(appName+"_Version")
       if(!this.state.hasVisited){

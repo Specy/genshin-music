@@ -8,7 +8,7 @@ class ComposerNote extends Component {
         }
     }
     shouldComponentUpdate(next, prev) {
-        return this.props.layers !== next.layers || this.props.skyText !== next.skyText
+        return this.props.layers !== next.layers || this.props.noteText !== next.noteText
     }
     render() {
         const {props} = this
@@ -17,23 +17,18 @@ class ComposerNote extends Component {
         if (layers[0] === "1") className += " layer-1"
         if (layers[1] === "1") className += " layer-2"
         if (layers[2] === "1") className += " layer-3"
-        let noteText = data.noteNames.mobile
-        let svgUrl = `./assets/icons/keys/${data.noteNames.mobile}.svg`
-        if(appName === "Sky") svgUrl = `./assets/icons/keys/${props.skyImg}.svg`
-        if(appName === "Sky") noteText = props.skyText
         let layer3Class = "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"
         return <button onPointerDown={() => this.props.clickAction(data)} className="button-hitbox">
             <div className={className} >
                 <img
                     draggable="false"
                     alt={data.noteNames.mobile}
-                    src={svgUrl}>
-
+                    src={props.noteImage}>
                 </img>
                 <div className={layer3Class}>
                 </div>
                 <div className={appName === "Sky" ? "note-name-sky" : "note-name"}>
-                    {noteText}
+                    {props.noteText}
                 </div>
             </div>
         </button>
