@@ -4,7 +4,7 @@ import { faSave, faMusic, faTimes, faCog, faTrash, faCompactDisc, faDownload } f
 import "../mainPage/menu.css"
 
 import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "../SongUtils"
-import {appName} from '../../appConfig'
+import { appName } from '../../appConfig'
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -42,28 +42,28 @@ class Menu extends Component {
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
-        if(song.data.isComposedVersion){
+        if (song.data.isComposedVersion) {
             song = ComposerSongSerialization(song)
         }
         let songName = song.name
-        if(appName === "Sky"){
+        if (appName === "Sky") {
             //adds old format into the sheet
             song = prepareSongDownload(song)
         }
-        if(!Array.isArray(song)) song = [song]
+        if (!Array.isArray(song)) song = [song]
         song.forEach(song1 => {
             song1.data.appName = appName
         })
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)
+        fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
     render() {
         const { data, functions } = this.props
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
-        const { loadSong, removeSong, updateSong, changePage, handleSettingChange, changeVolume,createNewSong,changeMidiVisibility } = functions
+        const { loadSong, removeSong, updateSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility } = functions
         let songFunctions = {
             loadSong: loadSong,
             removeSong: removeSong,
@@ -95,7 +95,7 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
-                    <button className="genshin-button" onClick={() => {changeMidiVisibility(true); this.toggleMenu()}}>
+                        <button className="genshin-button" onClick={() => { changeMidiVisibility(true); this.toggleMenu() }}>
                             Create from MIDI
                         </button>
                         <button className="genshin-button" onClick={createNewSong}>
@@ -293,10 +293,10 @@ function SettingsRow(props) {
     </div>
 }
 
-function checkIfTWA(){
+function checkIfTWA() {
     let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
     return isTwa
-  }
+}
 
 class MenuItem extends Component {
     render() {

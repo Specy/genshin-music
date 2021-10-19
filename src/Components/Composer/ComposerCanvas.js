@@ -62,6 +62,8 @@ class ComposerCanvas extends Component {
                 break;
             case "ArrowLeft": this.handleBreakpoints(-1)
                 break;
+            default : 
+                break;
         }
     }
     handleWheel = (e) => {

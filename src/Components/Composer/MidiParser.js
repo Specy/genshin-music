@@ -175,7 +175,7 @@ class MidiImport extends Component {
         }
     }
     render() {
-        const { handleFile, editTrack, state, changeBpm, changeOffset, convertMidi, changePitch } = this
+        const { handleFile, editTrack, state, changeBpm, changeOffset, changePitch } = this
         const { fileName, midi, bpm, offset, pitch, accidentals, outOfRange, totalNotes, includeAccidentals } = state
         const { functions } = this.props
         const { changeMidiVisibility } = functions
@@ -415,7 +415,7 @@ function convertMidiNote(midiNote) {
             case 82: note = 12; isAccidental = true; break;
             case 83: note = 13; break;
             case 84: note = 14; break;
-            default: note = null
+            default: note = null;
         }
     }
     if (appName === 'Genshin') {
@@ -456,6 +456,7 @@ function convertMidiNote(midiNote) {
             case 81: note = 5; break;
             case 82: note = 5; isAccidental = true; break;
             case 83: note = 6; break;
+            default: note = null;
         }
     }
     return {

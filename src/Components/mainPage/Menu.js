@@ -14,13 +14,23 @@ class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            open: false,
+            open: true,
             selectedMenu: "Songs",
             selectedSongType: "recorded",
             searchInput:'',
             searchedSongs:[],
-            searchStatus: 'Write a song name then search!'
+            searchStatus: 'Write a song name then search!',
+            isPersistentStorage: false
         }
+        this.checkPersistentStorage()
+    }
+
+    checkPersistentStorage = async () => {
+        if (navigator.storage && navigator.storage.persist) {
+            let isPersisted = await navigator.storage.persisted()
+            if(!isPersisted) isPersisted = await navigator.storage.persist()
+            this.setState({isPersistentStorage: isPersisted})
+          }
     }
     handleSearchInput = (text) =>{
         this.setState({
@@ -83,17 +93,19 @@ class Menu extends Component {
     }
     importSong = (file) => {
         const reader = new FileReader();
-        reader.addEventListener('load', (event) => {
+        reader.addEventListener('load',async (event) => {
             try {
-                let song = JSON.parse(event.target.result)
-                song = prepareSongImport(song)
-                this.props.functions.addSong(song)
+                let songsInput = JSON.parse(event.target.result)
+                if(!Array.isArray(songsInput)) songsInput = [songsInput]
+                for(let song of songsInput){
+                    song = prepareSongImport(song)
+                    await this.props.functions.addSong(song)
+                }
             } catch (e) {
                 new LoggerEvent("Error", "Error importing song").trigger()
                 console.error(e)
             }
-
-        });
+        })
         reader.readAsText(file)
     }
     downloadSong = (song) => {
@@ -112,6 +124,23 @@ class Menu extends Component {
         fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
+
+    downloadAllSongs = () => {
+        let toDownload = []
+        this.props.data.songs.forEach(song => {
+            if (song._id) delete song._id
+            if(appName === "Sky"){
+                song = prepareSongDownload(song)
+            }
+            Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
+        })
+        let fileDownloader = new FileDownloader()
+        let json = JSON.stringify(toDownload)
+        let date = new Date().toISOString().split('T')[0]
+        fileDownloader.download(json,`${appName}_Backup_${date}.json`)
+        new LoggerEvent("Success", "Song backup downloaded").trigger()
+    }
+
     render() {
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         const { data, functions } = this.props
@@ -199,7 +228,15 @@ class Menu extends Component {
                             })
                         }
                     </div>
-
+                    <div style={{marginTop:"auto", paddingTop:'0.5rem', width:'100%',display:'flex',justifyContent:'flex-end'}}>
+                        <button 
+                            className='genshin-button'
+                            style={{marginLeft:'auto'}}
+                            onClick={this.downloadAllSongs}
+                        >
+                            Download song backup
+                        </button>
+                    </div>
                 </MenuPanel>
                 <MenuPanel title="Settings" visible={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
@@ -212,6 +249,9 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
+                    <div style={{marginTop:'1rem'}}>
+                        {this.state.isPersistentStorage ?"Storage is persisted" : "Storage is not persisted"}
+                    </div>
                     {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}

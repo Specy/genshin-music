@@ -136,11 +136,12 @@ class Composer extends Component {
         localStorage.setItem(appName + "_Composer_Settings", JSON.stringify(state))
     }
     handleSettingChange = (setting) => {
-        let settings = this.state.settings
+        const {state} = this
+        let settings = state.settings
         let data = setting.data
         settings[setting.key].value = data.value
         if (data.songSetting) {
-            this.state.song[setting.key] = data.value
+            state.song[setting.key] = data.value
         }
         if (setting.key === "instrument") this.loadInstrument(data.value, 1)
         if (setting.key === "layer2") this.loadInstrument(data.value, 2)
@@ -214,7 +215,7 @@ class Composer extends Component {
                 break;
             case "KeyE": this.addColumns(1, this.state.song.selected)
                 break;
-            case "":
+            default :
                 break;
         }
     }
@@ -224,7 +225,7 @@ class Composer extends Component {
             let note = instrument.layout[index]
             if(note === undefined) return
             //TODO export below to Instrument.js
-            console.log(instrument.gain.gain)
+            
             source.buffer = note.buffer
             source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
             source.connect(instrument.gain)
@@ -648,7 +649,7 @@ class Composer extends Component {
     }
     render() {
 
-        const { state, props } = this
+        const { state } = this
         const { midiVisible } = state
         let song = state.song
         let menuData = {

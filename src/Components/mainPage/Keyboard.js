@@ -19,7 +19,7 @@ class Keyboard extends Component {
                 size: 0
             }
         }
-        console.log("created")
+        console.log("Loaded:",props.data.instrument)
         this.loadInstrument(props.data.instrument)
         try {
             this.loadReverb()

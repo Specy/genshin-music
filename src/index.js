@@ -74,7 +74,7 @@ class Index extends Component {
     })
   }
   checkUpdate = () => {
-    setTimeout(() => {
+    setTimeout(async () => {
       let currentVersion = "1.6"
       let updateMessage =
         `
@@ -89,6 +89,11 @@ class Index extends Component {
       if (currentVersion !== storedVersion) {
         new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
         localStorage.setItem(appName+"_Version", currentVersion)
+      }
+      if (navigator.storage && navigator.storage.persist) {
+        let isPersisted = await navigator.storage.persisted()
+        if(!isPersisted) isPersisted = await navigator.storage.persist()
+        console.log(isPersisted? "Storage Persisted" : "Storage Not persisted")
       }
     }, 1000)
   }
@@ -140,8 +145,8 @@ class Index extends Component {
             <br /><br />
             {this.state.hasPersistentStorage ?
               <div>
-                To prevent your browser from automatically clearing the app storage, click the "confirm" button below, if asked,
-                allow permission to keep the website data (Persistent storage).
+                <div className="red-text">WARNING</div>To prevent your browser from automatically clearing the app storage, click the "confirm" button below, if asked,
+                allow permission to keep the website data (Persistent storage). If it doesn't work, the program will try to request it again at every launch.
               </div>
               : null
             }
