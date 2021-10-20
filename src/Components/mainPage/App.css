@@ -57,7 +57,10 @@ body{
 	border-top: 2px solid var(--primary);
 }
 .help-img{
-	width: 100%;
+	width: 95%;
+	border-radius: 0.4rem;
+	margin-left: 2.5%;
+	box-shadow: 0 0 0px 2px var(--primary);
 }
 .keyboard-key{
 	padding:0.2rem 0.4rem;

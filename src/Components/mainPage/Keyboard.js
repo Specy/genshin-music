@@ -221,6 +221,7 @@ class Keyboard extends Component {
                     noteImage = layoutImages[state.instrument.layout.length][note.index]
                     if(data.noteNameType === "Note name") noteText = keyNames[appName][pitchArr.indexOf(data.pitch)][note.index]                           
                     if(data.noteNameType === "Keyboard layout") noteText = layoutData[state.instrument.layout.length].keyboardLayout[note.index]
+                    if(data.noteNameType === "Do Re Mi") noteText = layoutData[state.instrument.layout.length].mobileLayout[note.index]
                 }catch(e){}
 
                 return <Note
@@ -246,3 +247,4 @@ function delayMs(ms) {
     })
 }
 export default Keyboard
+

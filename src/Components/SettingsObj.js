@@ -1,6 +1,7 @@
+import { isMobile } from "is-mobile"
 import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 7,
+    settingVesion: appName + 9,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -29,7 +30,7 @@ let ComposerSettings = {
         name: "Bpm",
         type: "number",
         songSetting: true,
-        threshold: [0, 1000],
+        threshold: [0, 1600],
         value: 220
     },
     beatMarks: {
@@ -46,8 +47,18 @@ let ComposerSettings = {
         name: "Note name type",
         type: "select",
         songSetting: false,
-        value: appName === "Genshin" ? "Keyboard layout": "Note name",
-        options: [
+        value: appName === "Genshin" 
+                                ? isMobile() 
+                                    ? "Do Re Mi" 
+                                    : "Keyboard layout"
+                                : "Note name",
+        options: appName === "Genshin"
+        ? [
+            "Note name",
+            "Keyboard layout",
+            "Do Re Mi"
+        ]
+        : [
             "Note name",
             "Keyboard layout"
         ]
@@ -101,7 +112,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion:appName + 7,
+    settingVesion:appName + 9,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
@@ -120,8 +131,19 @@ let MainPageSettings = {
         name: "Note name type",
         type: "select",
         songSetting: false,
-        value: appName === "Genshin" ? "Keyboard layout": "Note name",
-        options: [
+        value: appName === "Genshin" 
+                                ? isMobile() 
+                                    ? "Do Re Mi" 
+                                    : "Keyboard layout"
+                                : "Note name",
+                                
+        options: appName === "Genshin"
+        ? [
+            "Note name",
+            "Keyboard layout",
+            "Do Re Mi"
+        ]
+        : [
             "Note name",
             "Keyboard layout"
         ]

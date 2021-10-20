@@ -6,6 +6,7 @@ import { RiPlayListFill } from 'react-icons/ri'
 import "./menu.css"
 import mainPageImg from '../../assets/images/mainpage.png'
 import composerImg from '../../assets/images/composer.png'
+import songsImg from '../../assets/images/songs.png'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 import { appName } from "../../appConfig"
@@ -311,7 +312,7 @@ class Menu extends Component {
                         Main page
                     </div>
                     <div>
-                        <img src={mainPageImg} className='help-img' alt='icon for the main page' />
+                        <img src={mainPageImg} className='help-img' alt='tutorial for the main page' />
                         <ol>
                             <li>Keyboard</li>
                             <li>Record your keyboard</li>
@@ -333,7 +334,7 @@ class Menu extends Component {
                         Composer
                     </div>
                     <div>
-                        <img src={composerImg} className='help-img' alt="the icon for the help menu"/>
+                        <img src={composerImg} className='help-img' alt="tutorial for composer"/>
                         <ol>
                             <li>Go to the next / previous breakpoint</li>
                             <li>Timeline of the breakpoints</li>
@@ -352,6 +353,29 @@ class Menu extends Component {
                                 <Key>Q</Key> = remove current column<br/>
                                 <Key>E</Key> = add column <br/>
                             </div>
+                    </div>
+                    <div className='help-title'>
+                        Songs menu
+                    </div>
+                    <div>
+                        <img src={songsImg} className='help-img' alt='tutorial for songs page' />
+                        <ol>
+                            <li>Practice song</li>
+                            <li>Download song as json</li>
+                            <li>Delete song </li>
+                            <li>Open the composer</li>
+                            <li>Import a song as json</li>
+                            <li>Browse song library</li>
+                        </ol>
+                        <div className="column">
+                            <div>
+                                <FontAwesomeIcon icon={faCrosshairs} /> = practice the song
+                            </div>
+                            <div>
+                                <FontAwesomeIcon icon={faDownload} /> = download the song
+                            </div>
+
+                        </div>
                     </div>
                     {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me

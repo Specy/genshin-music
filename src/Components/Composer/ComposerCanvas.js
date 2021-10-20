@@ -226,7 +226,6 @@ class ComposerCanvas extends Component {
                         pointerdown={(e) => this.handleClick(e, "down")}
                         pointerup={(e) => this.handleClick(e, "up")}
                         pointermove={this.handleSlide}
-                        
                     >
                         <Graphics draw={(e) => { fillX(e, this.state.width, this.state.timelineHeight) }} />
                         {data.breakpoints.map(breakpoint => {
