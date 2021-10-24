@@ -1,0 +1,35 @@
+name: Manual Deploy
+
+on: [workflow_dispatch]
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install yarn
+      run: npm install yarn
+
+    - name: Install Packages
+      run: yarn install
+
+    - name: Build apps
+      run: yarn run buildAll
+      
+    - name: Copy repository contents via scp
+      uses: appleboy/scp-action@master
+      env:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+        PORT: ${{ secrets.PORT }}
+        KEY: ${{ secrets.SSH_KEY }}
+      with:
+        source: "./build"
+        target: "~/web/genshin-music"

@@ -29,6 +29,7 @@ class ComposerKeyboard extends Component {
                         noteImage = layoutImages[data.keyboard.layout.length][note.index]  
                         if(data.noteNameType === "Note name") noteText = keyNames[appName][pitchArr.indexOf(data.pitch)][note.index]
                         if(data.noteNameType === "Keyboard layout") noteText = layoutData[data.keyboard.layout.length].keyboardLayout[note.index]
+                        if(data.noteNameType === "Do Re Mi") noteText = layoutData[data.keyboard.layout.length].mobileLayout[note.index]
                     }catch(e){}
                     return <ComposerNote
                         key={note.index}

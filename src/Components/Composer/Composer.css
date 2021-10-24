@@ -19,6 +19,11 @@ select{
     flex-direction: column;
     width: 8rem;
 }
+.instrument-picker input[type="range"]{
+    padding: 0;
+    margin:0;
+    margin-top: 0.2rem;
+}
 .right-panel-composer{
     flex: 1;
     height: 100%;

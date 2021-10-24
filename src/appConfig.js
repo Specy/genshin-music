@@ -6,7 +6,7 @@ const cssClasses = {
 }
 const instruments = appName === "Genshin" ? [
     "Lyre",
-    "DunDun"
+    "DunDun" 
     ]:[
         "Piano",
         "Contrabass",
@@ -29,6 +29,9 @@ const instruments = appName === "Genshin" ? [
 const notesPerColumn = appName === "Genshin" ? 21 : 15
 const instrumentsData = {
     Lyre: {
+        notes: 21
+    },
+    Zither:{
         notes: 21
     },
     DunDun: {

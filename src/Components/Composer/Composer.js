@@ -167,7 +167,7 @@ class Composer extends Component {
             let layers = this.state.layers
             layers[layer - 2] = newInstrument
             await newInstrument.load(this.state.audioContext)
-            newInstrument.changeVolume(settings[`layer${layer}`].volume)
+            newInstrument.changeVolume(settings[`layer${layer}`]?.volume)
             this.setState({
                 layers: layers
             })
@@ -225,7 +225,6 @@ class Composer extends Component {
             let note = instrument.layout[index]
             if(note === undefined) return
             //TODO export below to Instrument.js
-            
             source.buffer = note.buffer
             source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
             source.connect(instrument.gain)
