@@ -15,7 +15,7 @@ class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            open: true,
+            open: false,
             selectedMenu: "Songs",
             selectedSongType: "recorded",
             searchInput:'',

@@ -362,6 +362,7 @@ function NumberInput(props) {
     const debounced = useDebounce(elementValue, delay) 
     useEffect(() => {
         changeValue(debounced)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debounced]);
     useEffect(() => {
         setElementValue(value)
