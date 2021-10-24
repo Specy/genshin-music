@@ -31,4 +31,3 @@ jobs:
       with:
         source: "./build"
         target: "~/web/genshin-music"
-"
