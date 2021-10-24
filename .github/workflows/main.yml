@@ -30,7 +30,7 @@ jobs:
         host: ${{ secrets.HOST }}
         USERNAME: ${{ secrets.USERNAME }}
         PORT: ${{ secrets.PORT }}
-        KEY: ${{ secrets.SSHKEY }}
+        KEY: ${{ secrets.SSH_KEY }}
         script: |
                 yarn install
                 yarn run buildAll
