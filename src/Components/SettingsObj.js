@@ -1,7 +1,7 @@
 import { isMobile } from "is-mobile"
 import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 9,
+    settingVesion: appName + 10,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -112,7 +112,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion:appName + 9,
+    settingVesion:appName + 10,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",

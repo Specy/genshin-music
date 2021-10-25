@@ -231,6 +231,7 @@ class Keyboard extends Component {
                     toBeClickedNext={toBeClickedNext}
                     data={note}
                     noteText={noteText}
+                    instrument={state.instrument.instrumentName}
                     noteImage={`./assets/icons/keys/${noteImage}.svg`}
                     clickAction={this.handleClick}
                 >

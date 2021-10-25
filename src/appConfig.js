@@ -6,7 +6,8 @@ const cssClasses = {
 }
 const instruments = appName === "Genshin" ? [
     "Lyre",
-    "DunDun" 
+    "DunDun",
+    "Zither"
     ]:[
         "Piano",
         "Contrabass",
@@ -32,7 +33,10 @@ const instrumentsData = {
         notes: 21
     },
     Zither:{
-        notes: 21
+        notes: 21,
+        effects: {
+            filter: 'sepia(100%)'
+        }
     },
     DunDun: {
         notes: 8

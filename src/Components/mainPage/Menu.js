@@ -235,7 +235,7 @@ class Menu extends Component {
                             style={{marginLeft:'auto'}}
                             onClick={this.downloadAllSongs}
                         >
-                            Download song backup
+                            Download all songs (backup)
                         </button>
                     </div>
                 </MenuPanel>
@@ -300,7 +300,7 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Help" visible={selectedMenu}>
                     <div className='help-icon-wrapper'>
-                        <a href='https://discord.gg/Rj8V5gkZPc' >
+                        <a href='https://discord.gg/Arsf65YYHq' >
                             <FaDiscord className='help-icon' />
                         </a>
                         <a href='https://github.com/Specy/genshin-music' >

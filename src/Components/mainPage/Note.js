@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { cssClasses, appName} from "../../appConfig"
+import { cssClasses, appName,instrumentsData} from "../../appConfig"
 
 class Note extends Component {
     constructor(props) {
@@ -16,6 +16,7 @@ class Note extends Component {
         let toBeClickedNext = props.toBeClickedNext ? " note-border-click" : ""
         className += toBeClicked + toBeClickedNext
         let animation = { transition: `all ${props.fadeTime}s` }
+        let effects = instrumentsData[props.instrument]?.effects || {}
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
@@ -28,8 +29,10 @@ class Note extends Component {
                 <img
                     draggable="false"
                     alt={data.noteNames.mobile}
-                    src={props.noteImage}>
-
+                    src={props.noteImage}
+                    style={effects}   
+                >
+                    
                 </img>
                 <div className={appName === "Sky" ? "note-name-sky" : "note-name"}>
                     {props.noteText}
