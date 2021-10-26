@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="Layer_1"
+   data-name="Layer 1"
+   viewBox="0 0 311.9 311.9"
+   version="1.1"
+   sodipodi:docname="la.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview2301"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="29.091357"
+     inkscape:cx="222.21376"
+     inkscape:cy="96.196955"
+     inkscape:window-width="1920"
+     inkscape:window-height="991"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Layer_1" />
+  <defs
+     id="defs2296">
+    <style
+       id="style2294">
+            .cls-3 {
+                fill: #30a49f;
+            }
+        </style>
+  </defs>
+  <path
+     id="Path_6"
+     data-name="Path 6"
+     class="cls-3"
+     d="m 226.7,190.83 h -37.58 c 17.06075,-9.37792 27.66156,-27.3017 27.66156,-46.77 0,-19.4683 -10.60081,-37.39208 -27.66156,-46.77 l 38.16442,-0.103123 c 1.89602,0.01666 6.16361,1.290455 6.18558,-3.296877 -0.0439,-3.699641 -3.0702,-6.66779 -6.77,-6.64 H 81.9 c -1.898256,-0.02221 -3.453526,1.501686 -3.47,3.4 0.02747,3.702712 3.05739,6.678846 6.76,6.64 h 37.59 c -17.06075,9.37792 -27.661558,27.3017 -27.661558,46.77 0,19.4683 10.600808,37.39208 27.661558,46.77 H 81.86 c -1.902136,-0.0222 -3.459038,1.50777 -3.47,3.41 0.04394,3.69964 3.070203,6.66779 6.77,6.64 H 230 c 1.90152,0.0111 3.4535,-1.51852 3.47,-3.42 -0.0385,-3.70039 -3.06961,-6.66886 -6.77,-6.63 z M 113.37,108.9 c 13.67,-16.56 43.81,-14.23 67.34,5.19 23.53,19.42 31.49,48.59 17.82,65.14 -13.67,16.55 -43.82,14.23 -67.33,-5.23 -23.51,-19.46 -31.51,-48.55 -17.83,-65.1 z"
+     sodipodi:nodetypes="ccsccccccccsccccccccsssc" />
+  <path
+     id="Path_7"
+     data-name="Path 7"
+     class="cls-3"
+     d="M226.7,214.61H81.9a3.44,3.44,0,0,0-3.47,3.4,6.69,6.69,0,0,0,6.76,6.64H230a3.44,3.44,0,0,0,3.47-3.4A6.72,6.72,0,0,0,226.7,214.61Z" />
+</svg>
