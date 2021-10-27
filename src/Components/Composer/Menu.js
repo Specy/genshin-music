@@ -31,6 +31,7 @@ class Menu extends Component {
                 this.setState({ open: false })
                 break
             }
+            default: break;
         }
     }
     toggleMenu = (override) => {
