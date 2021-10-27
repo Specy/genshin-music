@@ -13,6 +13,26 @@ class Menu extends Component {
             selectedMenu: "Settings",
             selectedSongType: "composed",
         }
+        
+    }
+    componentDidMount() {
+        window.addEventListener("keydown", this.handleKeyboard)
+    }
+    componentWillUnmount(){
+        window.removeEventListener("keydown", this.handleKeyboard)
+    }
+    handleKeyboard = (event) => {
+        let key = event.code
+        if (document.activeElement.tagName === "INPUT") return
+
+        switch (key) {
+            case "Escape": {
+                if(this.state.open) this.props.functions.toggleMenuVisible()
+                this.setState({ open: false })
+                break
+            }
+            default: break;
+        }
     }
     toggleMenu = (override) => {
         if (typeof override !== "boolean") override = undefined

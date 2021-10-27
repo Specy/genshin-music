@@ -273,7 +273,7 @@ canvas{
     color: white;
 }
 .layer-1 img{
-    filter: brightness(10);
+    filter: brightness(10) !important;
 }
 .layer-2{
     border-color: #d75c5c;
