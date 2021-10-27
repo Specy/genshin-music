@@ -36,6 +36,7 @@ class ComposerKeyboard extends Component {
                         layers={index >= 0 ? data.currentColumn.notes[index].layer : "000"}
                         data={note}
                         noteText={noteText}
+                        instrument={data.keyboard.instrumentName}
                         noteImage={`./assets/icons/keys/${noteImage}.svg`}
                         clickAction={functions.handleClick}
                     />
