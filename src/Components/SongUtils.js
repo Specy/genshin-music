@@ -1,4 +1,5 @@
 import { importNotePositions, appName, instruments } from "../appConfig"
+import * as workerTimers from 'worker-timers';
 class Recording {
 	constructor() {
 		this.start = new Date().getTime()
@@ -467,6 +468,12 @@ function groupByIndex(column) {
 	return notes.filter(e => Array.isArray(e))
 }
 
+function delayMs(ms) {
+    return new Promise(resolve => {
+        workerTimers.setTimeout(resolve, ms)
+    })
+}
+
 export {
 	Recording,
 	Song,
@@ -492,5 +499,6 @@ export {
 	groupByNotes,
 	numberToLayer,
 	mergeLayers,
-	groupByIndex
+	groupByIndex,
+	delayMs
 }

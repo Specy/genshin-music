@@ -1,9 +1,8 @@
 import React, { Component } from 'react'
 import "./Keyboard.css"
-import { getPitchChanger } from "../SongUtils"
+import { getPitchChanger, delayMs } from "../SongUtils"
 import Instrument from "../Instrument"
 import Note from "./Note"
-import * as workerTimers from 'worker-timers';
 import { keyNames, pitchArr , layoutImages, appName,layoutData} from "../../appConfig"
 class Keyboard extends Component {
     constructor(props) {
@@ -242,10 +241,5 @@ class Keyboard extends Component {
     }
 }
 
-function delayMs(ms) {
-    return new Promise(resolve => {
-        workerTimers.setTimeout(resolve, ms)
-    })
-}
 export default Keyboard
 

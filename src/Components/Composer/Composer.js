@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faTools } from "@fortawesome/free-solid-svg-icons"
-import * as workerTimers from 'worker-timers';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import rotateImg from "../../assets/icons/rotate.svg"
@@ -20,7 +20,7 @@ import { ComposerSettings } from "../SettingsObj"
 import Instrument from "../Instrument"
 import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
-    ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed
+    ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
 } from "../SongUtils"
 
 class Composer extends Component {
@@ -813,11 +813,7 @@ function calculateLength(song, end) {
     })
     return totalLength
 }
-function delayMs(ms) {
-    return new Promise(resolve => {
-        workerTimers.setTimeout(resolve, ms)
-    })
-}
+
 function replaceAt(string, index, replacement) {
     if (index >= string.length) {
         return string.valueOf();

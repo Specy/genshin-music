@@ -6,9 +6,10 @@ import ErrorPage from "./Components/ErrorPage"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./Components/mainPage/App.css"
 import { HashRouter, Route, Redirect } from "react-router-dom";
-import { LoggerEvent } from "./Components/SongUtils"
+import { LoggerEvent, delayMs } from "./Components/SongUtils"
 import { appName } from "./appConfig"
 let pages = ["", "Composer", "ErrorPage"]
+let updateChecked = false
 class Index extends Component {
 	constructor(props) {
 		super(props)
@@ -22,6 +23,7 @@ class Index extends Component {
 				text: "Text",
 				title: "Title"
 			},
+			updateChecked: false,
 			hasVisited: localStorage.getItem(appName + "_Visited"),
 			hasPersistentStorage: navigator.storage && navigator.storage.persist,
 			selectedPage: path
@@ -73,30 +75,32 @@ class Index extends Component {
 			floatingMessage: state.floatingMessage
 		})
 	}
-	checkUpdate = () => {
-		setTimeout(async () => {
-			let currentVersion = "1.7"
-			let updateMessage =
-				`
-         (For genshin) Added Zither, Added back "do re mi" format
-         (For all) Added song backup download 
-        `
-			let storedVersion = localStorage.getItem(appName + "_Version")
-			if (!this.state.hasVisited) {
-				return localStorage.setItem(appName + "_Version", currentVersion)
-			}
+	checkUpdate = async () => {
+		await delayMs(1500) //wait for page to render
+		if (updateChecked) return
+		let currentVersion = "1.7"
+		let updateMessage =
+			`
+				(For genshin) Added Zither, Added back "do re mi" format
+				(For all) Added song backup download 
+			`
+		let storedVersion = localStorage.getItem(appName + "_Version")
+		if (!this.state.hasVisited) {
+			return localStorage.setItem(appName + "_Version", currentVersion)
+		}
 
-			if (currentVersion !== storedVersion) {
-				new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
-				localStorage.setItem(appName + "_Version", currentVersion)
-			}
-			if (navigator.storage && navigator.storage.persist) {
-				let isPersisted = await navigator.storage.persisted()
-				if (!isPersisted) isPersisted = await navigator.storage.persist()
-				console.log(isPersisted ? "Storage Persisted" : "Storage Not persisted")
-			}
-		}, 1000)
+		if (currentVersion !== storedVersion) {
+			new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
+			localStorage.setItem(appName + "_Version", currentVersion)
+		}
+		updateChecked = true
+		if (navigator.storage && navigator.storage.persist) {
+			let isPersisted = await navigator.storage.persisted()
+			if (!isPersisted) isPersisted = await navigator.storage.persist()
+			console.log(isPersisted ? "Storage Persisted" : "Storage Not persisted")
+		}
 	}
+
 	logEvent = (error) => {
 		error = error.detail
 		error.timestamp = new Date().getTime()
