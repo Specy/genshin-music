@@ -4,6 +4,8 @@ import { getPitchChanger, delayMs } from "../SongUtils"
 import Instrument from "../Instrument"
 import Note from "./Note"
 import { keyNames, pitchArr , layoutImages, appName,layoutData} from "../../appConfig"
+import {songStore} from './SongStore'
+import { observe } from 'mobx'
 class Keyboard extends Component {
     constructor(props) {
         super(props)
@@ -20,6 +22,7 @@ class Keyboard extends Component {
         }
         console.log("Loaded:",props.data.instrument)
         this.loadInstrument(props.data.instrument)
+
         try {
             this.loadReverb()
         } catch(e) {
@@ -38,17 +41,21 @@ class Keyboard extends Component {
         if (note !== undefined) {
             this.handleClick(note)
         }
-
     }
     componentDidMount() {
         window.addEventListener('keydown', this.handleKeyboard)
-        window.addEventListener("playSong", this.handlePlayEvent)
-        window.addEventListener("practiceSong", this.handlePracticeEvent)
+        this.disposeStore = observe(songStore,(data) => {
+            let value = data.object.data
+            let type = value.eventType
+            let lostReference = JSON.parse(JSON.stringify(value.song))
+            lostReference.timestamp = new Date().getTime()
+            if(type === 'play') this.handlePlayEvent(lostReference)
+            if(type === 'practice') this.handlePracticeEvent(lostReference)
+        })
     }
     componentWillUnmount() {
-        window.removeEventListener('keydown', this.handleKeyboard);
-        window.removeEventListener("playSong", this.handlePlayEvent)
-        window.removeEventListener("practiceSong", this.handlePracticeEvent)
+        window.removeEventListener('keydown', this.handleKeyboard)
+        this.disposeStore()
         let state = this.state
         state.playTimestamp = new Date().getTime()
     }
@@ -72,15 +79,13 @@ class Keyboard extends Component {
                 console.log("Error with reverb1",e)
             })
     }
-    handlePlayEvent = (event) => {
-        let data = event.detail
+    handlePlayEvent = (data) => {
         this.setState({
             playTimestamp: data.timestamp
         }, () => this.playSong(data))
     }
-    handlePracticeEvent = (event) => {
-        let data = event.detail
-        this.practiceSong(JSON.parse(JSON.stringify(data)))
+    handlePracticeEvent = (data) => {
+        this.practiceSong(data)
     }
     loadInstrument = async (name) => {
         let newInstrument = new Instrument(name)

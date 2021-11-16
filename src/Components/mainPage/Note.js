@@ -5,30 +5,30 @@ class Note extends Component {
     constructor(props) {
         super(props)
         this.state = {
-
         }
+    }
+    shouldComponentUpdate(next, prev) {
+        let shouldUpdate = false
+        if(next.status !== prev.status) shouldUpdate = true
+        return shouldUpdate
     }
     render() {
         const { props } = this
-        let data = props.data
-        let className = data.clicked ? (cssClasses.note + " click-event") : cssClasses.note
-        let toBeClicked = props.toBeClicked ? " note-red" : ""
-        let toBeClickedNext = props.toBeClickedNext ? " note-border-click" : ""
-        className += toBeClicked + toBeClickedNext
-        let animation = { transition: `all ${props.fadeTime}s` }
+        const { data, status} = props
+        let animation = { transition: `background-color ${props.fadeTime}s, transform 0.1s` }
+        let className = parseClass(status)
         let effects = instrumentsData[props.instrument]?.effects || {}
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
-                props.clickAction(data)
+                props.handleClick(data)
             }}
             className="button-hitbox"
-
         >
             <div className={className} style={animation}>
                 <img
                     draggable="false"
-                    alt={data.noteNames.mobile}
+                    alt='note'
                     src={props.noteImage}
                     style={effects}   
                 >
@@ -42,6 +42,13 @@ class Note extends Component {
     }
 }
 
-
+function parseClass(status){
+    let className = cssClasses.note
+    if(status === "clicked") className += " click-event"
+    if(status === 'toClick') className += " note-red"
+    if(status === 'toClickNext') className += " note-border-click"
+    if(status === 'toClickAndNext') className += " note-red note-border-click"
+    return className
+}
 
 export default Note

@@ -172,8 +172,6 @@ class Composer extends Component {
                 layers: layers
             })
         }
-
-
     }
     changeVolume = (obj) => {
         let settings = this.state.settings

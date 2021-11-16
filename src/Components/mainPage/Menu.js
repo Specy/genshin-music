@@ -10,6 +10,7 @@ import songsImg from '../../assets/images/songs.png'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 import { appName } from "../../appConfig"
+import {songStore} from './SongStore'
 
 class Menu extends Component {
     constructor(props) {
@@ -23,6 +24,7 @@ class Menu extends Component {
             searchStatus: 'Write a song name then search!',
             isPersistentStorage: false
         }
+ 
         this.checkPersistentStorage()
     }
 
@@ -153,7 +155,6 @@ class Menu extends Component {
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
         const { searchStatus , searchedSongs, selectedMenu } = this.state
         let searchedSongFunctions = {
-            playSong: functions.playSong,
             importSong: functions.addSong,
         }
         return <div className="menu-wrapper">
@@ -467,20 +468,27 @@ function SettingsRow(props) {
 function SongRow(props) {
     let data = props.data
     let deleteSong = props.functions.removeSong
-    let playSong = props.functions.playSong
-    let practiceSong = props.functions.practiceSong
     let toggleMenu = props.functions.toggleMenu
     let downloadSong = props.functions.downloadSong
+ 
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            playSong(data)
+            songStore.data = {
+                eventType: 'play',
+                song: data,
+                start: 0
+            }
             toggleMenu(false)
         }}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                practiceSong(data)
+                songStore.data = {
+                    eventType: 'practice',
+                    song: data,
+                    start: 0
+                }
                 toggleMenu(false)
             }}
             >
@@ -510,7 +518,7 @@ class MenuItem extends Component {
 
 function SearchedSong(props){
     const { functions, data} = props
-    const { playSong, importSong} = functions
+    const { importSong } = functions
     const download = async function(){
         try{
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
@@ -525,7 +533,11 @@ function SearchedSong(props){
         try{
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
             song = prepareSongImport(song)
-            playSong(song)
+            songStore.data = {
+                eventType: 'play',
+                song: song,
+                start: 0
+            }
         }catch(e){
             console.error(e)
             new LoggerEvent("Error", "Error downloading song").trigger()
