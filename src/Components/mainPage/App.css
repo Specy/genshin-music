@@ -387,6 +387,12 @@ a {
 	width: 50vw;
 	text-align: center;
 }
+.approaching-accuracy{
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	color: var(--whitish)
+}
 @media only screen and (orientation: portrait) {
 	.error-songs-wrapper,
 	.error-text-wrapper,

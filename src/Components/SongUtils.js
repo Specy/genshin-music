@@ -128,7 +128,9 @@ class ComposedSong {
 	}
 }
 
-
+function ApproachingSong(length){
+	return new Array(length).fill().map(() => {return []})
+}
 function ComposerSongDeSerialization(song) {
 	let obj = {
 		data: song.data,
@@ -500,5 +502,6 @@ export {
 	numberToLayer,
 	mergeLayers,
 	groupByIndex,
-	delayMs
+	delayMs,
+	ApproachingSong
 }

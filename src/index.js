@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import App from './Components/mainPage/App';
-import App2 from './Components/mainPage/App2';
 import Composer from "./Components/Composer/Composer"
 import ErrorPage from "./Components/ErrorPage"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
@@ -171,7 +170,7 @@ class Index extends Component {
 					</Route>
 					: <>
 						<Route exact path="/">
-							<App2 changePage={this.changePage} />
+							<App changePage={this.changePage} />
 						</Route>
 
 						<Route exact path="/Composer">

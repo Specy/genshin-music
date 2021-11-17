@@ -92,6 +92,35 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	position: relative;
+}
+.approach-circle {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	border: 2px solid #3da399;
+	mix-blend-mode: screen;
+	border-radius: 50%;
+	animation: approach 1s linear;
+	transform-origin: 50% 50%;
+	pointer-events: none;
+	opacity: 0;
+}
+
+@keyframes approach {
+	0% {
+		transform: scale(2.5);
+		opacity: 0.3;
+	}
+	99% {
+		transform: scale(0.8);
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
 }
 .upper-right {
 	display: flex;

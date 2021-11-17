@@ -3,14 +3,14 @@ import './App.css';
 import Keyboard from "./Keyboard"
 import Menu from "./Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, PlayingSong, ComposerToRecording, prepareSongImport } from "../SongUtils"
+import { Song, Recording, LoggerEvent, prepareSongImport,getPitchChanger } from "../SongUtils"
 import { MainPageSettings } from "../SettingsObj"
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
+
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import rotateImg from "../../assets/icons/rotate.svg"
 import { appName } from "../../appConfig"
-
+import Instrument from "../Instrument"
+import { songStore } from './SongStore'
 class App extends Component {
 	constructor(props) {
 		super(props)
@@ -21,29 +21,17 @@ class App extends Component {
 			songs: this.db.collection("songs")
 		}
 		this.state = {
-			keyboardData: {
-				instrument: settings.instrument.value,
-				playingSong: {
-					timestamp: 0,
-					notes: []
-				},
-				practicingSong: {
-					timestamp: 0,
-					notes: [],
-					threshold: 100
-				}
-			},
+            instrument: new Instrument(),
+            audioContext: new (window.AudioContext || window.webkitAudioContext)(),
+            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
 			isRecording: false,
 			songs: [],
 			settings: settings,
-			sliderState: {
-				position: 0,
-				size: 0
-			},
-			thereIsSong: "none",
-			isDragging: false
+
+			isDragging: false,
+			thereIsSong: false
 		}
-		this.lastPlayedSong = new Recording()
+        this.loadInstrument(settings.instrument.value)
 		this.syncSongs()
 	}
 
@@ -76,6 +64,11 @@ class App extends Component {
 			isDragging: true
 		})
 	}
+	setHasSong = (data) => {
+		this.setState({
+			thereIsSong: data
+		})
+	}
 	handleDrop = async (e) => {
 		this.resetDrag()
 		e.preventDefault()
@@ -106,6 +99,48 @@ class App extends Component {
 		}
 		return MainPageSettings
 	}
+    loadInstrument = async (name) => {
+        let newInstrument = new Instrument(name)
+        await newInstrument.load(this.state.audioContext)
+        this.setState({
+            instrument: newInstrument
+        })
+    }    
+    loadReverb() {
+        let audioCtx = this.state.audioContext
+        fetch("./assets/audio/reverb4.wav")
+            .then(r => r.arrayBuffer())
+            .then(b => {
+                audioCtx.decodeAudioData(b, (impulse_response) => {
+                    let convolver = audioCtx.createConvolver()
+                    let gainNode = audioCtx.createGain()
+                    gainNode.gain.value = 2.5
+                    convolver.buffer = impulse_response
+                    convolver.connect(gainNode)
+                    gainNode.connect(audioCtx.destination)
+                    this.setState({
+                        reverbAudioContext: convolver
+                    })
+                })
+            }).catch((e) => { 
+                console.log("Error with reverb1",e)
+            })
+    }
+    playSound = (note) => {
+        const {state} = this
+		const { settings } = state
+        if(note === undefined) return
+        if(state.isRecording) this.handleRecording(note)
+        const source = state.audioContext.createBufferSource()
+        source.playbackRate.value = getPitchChanger(settings.pitch.value)
+        source.buffer = note.buffer
+        if (settings.caveMode.value) {
+            source.connect(state.reverbAudioContext)
+        } else {
+            source.connect(state.audioContext.destination)
+        }
+        source.start(0)
+    }
 	updateSettings = (override) => {
 		let state
 		if (override !== undefined) {
@@ -132,33 +167,7 @@ class App extends Component {
 			songs: songs
 		})
 	}
-	loadInstrument = (instrument) => {
-		let state = this.state
-		state.keyboardData.instrument = instrument
-		this.setState({
-			keyboardData: state.keyboardData
-		})
-	}
-	practiceSong = async (song, start = 0) => {
-		await this.stopSong()
-		let oldState = this.state.keyboardData.practicingSong
-		if (song.data?.isComposedVersion) {
-			song = ComposerToRecording(song)
-			oldState.threshold = 10
-		}
-		oldState.notes = song.notes
-		oldState.timestamp = new Date().getTime()
-		let songToPractice = JSON.parse(JSON.stringify(this.state.keyboardData.practicingSong))
-		songToPractice.start = start
-		this.setState({
-			keyboardData: this.state.keyboardData,
-			thereIsSong: "practicing"
-		}, () => {
-			let event = new CustomEvent("practiceSong", { detail: songToPractice })
-			window.dispatchEvent(event)
-		})
-	}
-	//to add the composed songs
+
 	songExists = async (name) => {
 		return await this.dbCol.songs.findOne({ name: name }) !== undefined
 	}
@@ -178,7 +187,9 @@ class App extends Component {
 	}
 	componentDidCatch() {
 		new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
-		this.stopSong()
+		songStore.data = {
+			song: {},eventType:'stop',start:0
+		}
 	}
 	removeSong = async (name) => {
 		let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
@@ -191,56 +202,14 @@ class App extends Component {
 			this.recording.addNote(note.index)
 		}
 	}
-	handleSliderEvent = (event) => {
 
-		this.changeSliderState({
-			position: Number(event.target.value),
-			size: this.state.sliderState.size
-		})
-	}
+
 	stopSong = () => {
-		return new Promise(resolve => {
-			let keyboardData = this.state.keyboardData
-			keyboardData.practicingSong = new PlayingSong([])
-			keyboardData.playingSong = new PlayingSong([])
-			this.setState({
-				thereIsSong: "none",
-				keyboardData: keyboardData
-			}, () => {
-				let event = new CustomEvent("playSong", { detail: new PlayingSong([]) })
-				window.dispatchEvent(event)
-				event = new CustomEvent("practiceSong", { detail: new PlayingSong([]) })
-				window.dispatchEvent(event)
-				setTimeout(resolve, 300)
-			})
-		})
-	}
-	changeSliderState = (newState) => {
-		this.setState({
-			sliderState: newState
-		})
-	}
-	playSong = async (song) => {
-		await this.stopSong()
-		let settings = this.state.settings
-		settings.pitch.value = song.pitch
-		if (song.data.isComposedVersion) {
-			song = ComposerToRecording(song)
+		songStore.data = {
+			song: {},
+			start:0,
+			eventType: 'stop'
 		}
-		let playingSong = {
-			timestamp: new Date().getTime(),
-			notes: song.notes
-		}
-		this.state.keyboardData.playingSong = playingSong
-		this.setState({
-			keyboardData: this.state.keyboardData,
-			thereIsSong: "playing",
-			settings: settings
-		})
-
-		let event = new CustomEvent("playSong", { detail: playingSong })
-		window.dispatchEvent(event)
-		this.lastPlayedSong = song
 	}
 	askForSongName = () => {
 		return new Promise(async resolve => {
@@ -264,16 +233,13 @@ class App extends Component {
 	toggleRecord = async (override) => {
 		if (typeof override !== "boolean") override = undefined
 		let newState = override !== undefined ? override : !this.state.isRecording
-		if (!newState && this.recording.notes.length > 0) {
+		if (!newState && this.recording.notes.length > 0) { //if there was a song recording
 			let songName = await this.askForSongName()
 			let song = new Song(songName, this.recording.notes)
 			song.pitch = this.state.settings.pitch.value
 			if (songName !== null) this.addSong(song)
 		} else {
 			this.recording = new Recording()
-			let eventData = new PlayingSong([])
-			let event = new CustomEvent("playSong", { detail: eventData })
-			window.dispatchEvent(event)
 		}
 		this.state.isRecording = newState
 		this.setState({
@@ -283,30 +249,30 @@ class App extends Component {
 	render() {
 		const { state } = this
 		let keyboardFunctions = {
-			handleRecording: this.handleRecording,
 			changeSliderState: this.changeSliderState,
-			stopSong: this.stopSong
+            playSound: this.playSound,
+			setHasSong: this.setHasSong
+		}
+        let keyboardData = {
+            keyboard: state.instrument,
+			pitch: state.settings.pitch.value,
+			keyboardSize: state.settings.keyboardSize.value,
+			noteNameType: state.settings.noteNameType.value,
+			hasSong: state.thereIsSong,
+			approachRate: state.settings.approachSpeed.value
 		}
 		let menuFunctions = {
 			addSong: this.addSong,
 			removeSong: this.removeSong,
-			playSong: this.playSong,
-			practiceSong: this.practiceSong,
-			stopSong: this.stopSong,
 			changePage: this.props.changePage,
 			handleSettingChange: this.handleSettingChange,
+
 		}
 		let menuData = {
 			songs: state.songs,
 			settings: state.settings
 		}
-		let keyboardData = {
-			...state.keyboardData,
-			keyboardSize: state.settings.keyboardSize.value,
-			noteNameType: state.settings.noteNameType.value,
-			pitch: state.settings.pitch.value,
-			caveMode: state.settings.caveMode.value,
-		}
+
 		return <div className="app">
 			<div className="rotate-screen">
 				<img src={rotateImg} alt="icon for the rotating screen">
@@ -318,51 +284,22 @@ class App extends Component {
 			</div>}
 			<Menu functions={menuFunctions} data={menuData} />
 			<div className="right-panel">
-				<div className="upper-right">
-					{this.state.thereIsSong !== "none"
-						? <div className="slider-wrapper">
-							<button className="song-button" onClick={this.stopSong}>
-								<FontAwesomeIcon icon={faStop} />
-							</button>
-							<input
-								type="range"
-								className="slider"
-								min={0}
-								onChange={this.handleSliderEvent}
-								max={state.sliderState.size}
-								value={state.sliderState.position}
-							></input>
-							<button className="song-button" onClick={async () => {
-								if (this.state.thereIsSong === "practicing") {
-									this.practiceSong(state.keyboardData.practicingSong, state.sliderState.position)
-								} else {
-									await this.stopSong()
-									this.playSong(this.lastPlayedSong)
-								}
-							}}>
-								<FontAwesomeIcon icon={faSyncAlt} />
-							</button>
-						</div>
-						:
+				<div className="upper-right"> 
+					{ !this.state.thereIsSong
+						&&
 						<GenshinButton
 							active={state.isRecording}
 							click={this.toggleRecord}
 						>
 							{state.isRecording ? "Stop" : "Record"}
 						</GenshinButton>
-
 					}
-
-
-
 				</div>
 				<div className="keyboard-wrapper">
-
 					<Keyboard
-						key={state.keyboardData.instrument}
+						key={state.instrument.instrumentName}
 						data={keyboardData}
 						functions={keyboardFunctions}
-						isRecording={state.isRecording}
 					/>
 				</div>
 

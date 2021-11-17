@@ -112,7 +112,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion:appName + 10,
+    settingVesion:appName + 11,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
@@ -147,6 +147,13 @@ let MainPageSettings = {
             "Note name",
             "Keyboard layout"
         ]
+    },
+    approachSpeed: {
+        name: "Approach Rate (AR)",
+        type: "number",
+        songSetting: false,
+        value: 2000,
+        threshold: [0, 5000]
     },
     pitch: {
         name: "Pitch",

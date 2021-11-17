@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { cssClasses, appName,instrumentsData} from "../../appConfig"
+import { cssClasses, appName, instrumentsData } from "../../appConfig"
 
 class Note extends Component {
     constructor(props) {
@@ -9,12 +9,12 @@ class Note extends Component {
     }
     shouldComponentUpdate(next, prev) {
         let shouldUpdate = false
-        if(next.status !== prev.status) shouldUpdate = true
+        if (next.status !== prev.status) shouldUpdate = true
         return shouldUpdate
     }
     render() {
         const { props } = this
-        const { data, status} = props
+        const { data, status, approachingNotes } = props
         let animation = { transition: `background-color ${props.fadeTime}s, transform 0.1s` }
         let className = parseClass(status)
         let effects = instrumentsData[props.instrument]?.effects || {}
@@ -25,15 +25,20 @@ class Note extends Component {
             }}
             className="button-hitbox"
         >
+            {approachingNotes.map((note) => {
+                return <ApproachCircle
+                    key={note.id}
+                    approachRate={props.approachRate}
+                />
+            })}
             <div className={className} style={animation}>
                 <img
                     draggable="false"
                     alt='note'
                     src={props.noteImage}
-                    style={effects}   
-                >
-                    
-                </img>
+                    style={effects}
+                />
+
                 <div className={appName === "Sky" ? "note-name-sky" : "note-name"}>
                     {props.noteText}
                 </div>
@@ -42,12 +47,19 @@ class Note extends Component {
     }
 }
 
-function parseClass(status){
+function ApproachCircle(props) {
+    return <div
+        className='approach-circle'
+        style={{ animation: `approach ${props.approachRate}ms linear` }}
+    >
+    </div>
+}
+function parseClass(status) {
     let className = cssClasses.note
-    if(status === "clicked") className += " click-event"
-    if(status === 'toClick') className += " note-red"
-    if(status === 'toClickNext') className += " note-border-click"
-    if(status === 'toClickAndNext') className += " note-red note-border-click"
+    if (status === "clicked") className += " click-event"
+    if (status === 'toClick') className += " note-red"
+    if (status === 'toClickNext') className += " note-border-click"
+    if (status === 'toClickAndNext') className += " note-red note-border-click"
     return className
 }
 

@@ -2,6 +2,7 @@ import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FaDiscord, FaGithub} from 'react-icons/fa';
+import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import "./menu.css"
 import mainPageImg from '../../assets/images/mainpage.png'
@@ -484,15 +485,27 @@ function SongRow(props) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                songStore.data = {
-                    eventType: 'practice',
-                    song: data,
-                    start: 0
-                }
-                toggleMenu(false)
-            }}
+                    songStore.data = {
+                        eventType: 'practice',
+                        song: data,
+                        start: 0
+                    }
+                    toggleMenu(false)
+                }}
             >
                 <FontAwesomeIcon icon={faCrosshairs} />
+            </button>
+            
+            <button className="song-button" onClick={() => {
+                    songStore.data = {
+                        eventType: 'approaching',
+                        song: data,
+                        start: 0
+                    }
+                    toggleMenu(false)
+                }}
+            >
+                <BsCircle />
             </button>
             <button className="song-button" onClick={() => downloadSong(data)}>
                 <FontAwesomeIcon icon={faDownload} />
