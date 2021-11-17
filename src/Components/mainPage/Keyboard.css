@@ -111,7 +111,7 @@
 
 @keyframes approach {
 	0% {
-		transform: scale(2.5);
+		transform: scale(2.7);
 		opacity: 0.3;
 	}
 	99% {
