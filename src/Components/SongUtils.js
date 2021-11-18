@@ -268,7 +268,8 @@ function getSongType(song) {
 	try {
 		if (song.data === undefined) {
 			//oldSky format
-			if (song.songNotes !== undefined && song.pitchLevel !== undefined) {
+			song.pitchLevel = song.pitchLevel || 0
+			if (song.songNotes !== undefined) {
 				return "oldSky"
 			}
 		} else {

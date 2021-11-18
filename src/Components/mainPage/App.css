@@ -391,7 +391,21 @@ a {
 	position: absolute;
 	top: 1rem;
 	right: 1rem;
-	color: var(--whitish)
+	color: var(--whitish);
+	font-weight:bold;
+}
+.approaching-accuracy table{
+	background-color: #495466;
+	padding: 0.4rem;
+	font-size: 0.8rem;
+	border-radius: 0.4rem;
+}
+.sc-2{
+	padding-left: 0.5rem;
+	border-left:solid 2px var(--secondary);
+}
+.sc-1{
+	padding-right: 0.5rem;
 }
 @media only screen and (orientation: portrait) {
 	.error-songs-wrapper,

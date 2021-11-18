@@ -24,10 +24,12 @@ class Keyboard extends Component {
             },
             approachingScore: {
                 correct: 1,
-                wrong: 1
+                wrong: 1,
+                score: 0,
+                combo: 0
             }
         }
-        this.approachRate = 1500    
+        this.approachRate = 1500
         this.approachingNotesList = []
         this.songTimestamp = 0
         this.nextChunkDelay = 0
@@ -38,8 +40,8 @@ class Keyboard extends Component {
 
     componentDidMount() {
         window.addEventListener('keydown', this.handleKeyboard)
-        this.tickInterval = setInterval(this.tick,this.tickTime)
-        this.disposeStore = observe(songStore,async (data) => {
+        this.tickInterval = setInterval(this.tick, this.tickTime)
+        this.disposeStore = observe(songStore, async (data) => {
             let value = data.object.data
             let type = value.eventType
             let lostReference = JSON.parse(JSON.stringify(value.song))
@@ -58,7 +60,7 @@ class Keyboard extends Component {
                 this.practiceSong(lostReference, value.start)
                 hasSong = true
             }
-            if(type === 'approaching'){
+            if (type === 'approaching') {
                 await this.stopSong()
                 this.approachingSong(lostReference, value.start)
                 hasSong = true
@@ -88,17 +90,19 @@ class Keyboard extends Component {
         this.setState({
             approachingNotes: ApproachingSong(appName === 'Sky' ? 15 : 21),
             approachingScore: {
+                correct: 1,
                 wrong: 1,
-                correct: 1
+                score: 0,
+                combo: 0
             }
         })
-        this.changeSliderState(0,notes.length)
+        this.changeSliderState(0, notes.length)
         this.approachingNotesList = notes
     }
 
     tick = () => {
-        if(!this.props.data.hasSong) return
-        const { approachingNotes, sliderState , approachingScore} = this.state
+        if (!this.props.data.hasSong) return
+        const { approachingNotes, sliderState, approachingScore } = this.state
         let stateNotes = approachingNotes
         let notes = this.approachingNotesList
         notes.forEach(note => {
@@ -106,43 +110,49 @@ class Keyboard extends Component {
         })
         let hasChanges = false
         let removed = 0
-        for(let i = 0; i< notes.length; i++){
-            if(notes[i].time < this.approachRate){
+        for (let i = 0; i < notes.length; i++) {
+            if (notes[i].time < this.approachRate) {
                 stateNotes[notes[i].index].push({
                     clicked: false,
                     time: this.approachRate,
                     id: Math.floor(Math.random() * 10000)
                 })
-                notes.splice(i,1)
+                notes.splice(i, 1)
                 i--
                 hasChanges = true
-            }else{
+            } else {
                 break
             }
         }
         stateNotes.forEach(note => {
-            for(let i = 0; i< note.length; i++){
+            for (let i = 0; i < note.length; i++) {
                 let apNote = note[i]
                 apNote.time -= this.tickTime
-                if(apNote.clicked){ 
-                    if(apNote.time < this.approachRate / 3){
+                if (apNote.clicked) {
+                    if (apNote.time < this.approachRate / 3) {
                         approachingScore.correct++
-                    }else{
+                        approachingScore.combo++
+                        approachingScore.score += approachingScore.combo * 10
+                    } else {
                         approachingScore.wrong++
+                        approachingScore.combo = 0
                     }
                     apNote.time = -1 //so that it can be removed after
                 }
-                if(apNote.time < 0){
-                    if(!apNote.clicked) approachingScore.wrong++
-                    note.splice(i,1)
+                if (apNote.time < 0) {
+                    if (!apNote.clicked) {
+                        approachingScore.wrong++
+                        approachingScore.combo = 0
+                    }
+                    note.splice(i, 1)
                     i--
                     hasChanges = true
-                    removed ++
+                    removed++
                 }
             }
         })
-        if(!hasChanges) return
-        this.changeSliderState(sliderState.position + removed)  
+        if (!hasChanges) return
+        this.changeSliderState(sliderState.position + removed)
         this.setState({
             approachingNotes: stateNotes,
             approachingScore: approachingScore
@@ -225,7 +235,7 @@ class Keyboard extends Component {
         this.stopSong()
         setTimeout(() => {
             let start = songStore.data.start
-            if(songStore.data.eventType === 'practice')
+            if (songStore.data.eventType === 'practice')
                 start = this.state.sliderState.position
             songStore.data = {
                 ...lostReference,
@@ -237,16 +247,16 @@ class Keyboard extends Component {
         return new Promise(res => {
             this.songTimestamp = 0
             const { keyboard } = this.state
-            keyboard.forEach(note => { 
-                note.status = '' 
+            keyboard.forEach(note => {
+                note.status = ''
                 note.delay = 200
             })
             this.approachingNotesList = []
-            this.setState({ 
+            this.setState({
                 keyboard,
                 songToPractice: [],
                 approachingNotes: ApproachingSong(appName === 'Sky' ? 15 : 21)
-            },res)
+            }, res)
 
             this.props.functions.setHasSong(false)
         })
@@ -276,7 +286,7 @@ class Keyboard extends Component {
     handleApproachClick = (note) => {
         const { approachingNotes } = this.state
         let approachingNote = approachingNotes[note.index][0]
-        if(approachingNote){
+        if (approachingNote) {
             approachingNote.clicked = true
         }
     }
@@ -338,12 +348,13 @@ class Keyboard extends Component {
         let keyboardClass = "keyboard"
         if (keyboard.length === 15) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
-        return <>   
+        return <>
             {data.hasSong &&
                 <div className="upper-right">
-                    <div className='approaching-accuracy'>
-                        Accuracy: %{(approachingScore.correct / ( approachingScore.correct + approachingScore.wrong - 1) * 100 ).toFixed(1)}
-                    </div>
+                    {songStore.data.eventType === 'approaching' &&
+                        <Score data={approachingScore} />
+                    }
+
                     <div className="slider-wrapper">
                         <button className="song-button" onClick={() => {
                             this.stopSong()
@@ -399,6 +410,32 @@ class Keyboard extends Component {
 
     }
 }
+function Score(props) {
+    const { combo, score, correct, wrong} = props.data
+    return <div className='approaching-accuracy'>
+        <table>
+            <tbody>
+                <tr>
+                    <td className='sc-1'>%{(correct / (correct + wrong - 1) * 100 ).toFixed(1)}</td>
+                    <td className='sc-2'>Accuracy</td>
+                </tr>
+                <tr>
+                    <td className='sc-1'>{score}</td>
+                    <td className='sc-2'>Score</td>
+
+                </tr>
+                <tr>
+                    <td className='sc-1'>{combo}</td>
+                    <td className='sc-2'>Combo</td>
+
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+
+}
 function returnStopSong() {
     return {
         song: {},
@@ -412,7 +449,7 @@ function getNoteText(noteNameType, index, pitch, layoutLength) {
         if (noteNameType === "Note name") return keyNames[appName][pitchArr.indexOf(pitch)][index]
         if (noteNameType === "Keyboard layout") return layoutData[layoutLength].keyboardLayout[index]
         if (noteNameType === "Do Re Mi") return layoutData[layoutLength].mobileLayout[index]
-    } catch (e) {}
+    } catch (e) { }
     return ''
 }
 export default Keyboard
