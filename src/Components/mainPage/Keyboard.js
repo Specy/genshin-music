@@ -30,6 +30,7 @@ class Keyboard extends Component {
         this.approachRate = 1500    
         this.approachingNotesList = []
         this.songTimestamp = 0
+        this.nextChunkDelay = 0
         this.disposeStore = () => { }
         this.tickTime = 50
         this.tickInterval = 0
@@ -201,6 +202,7 @@ class Keyboard extends Component {
         }
         if (chunks.length === 0) return
         let firstChunk = chunks[0]
+        this.nextChunkDelay = firstChunk.delay
         let secondChunk = chunks[1]
         firstChunk.notes.forEach(note => { keyboard[note[0]].status = 'toClick' })
         secondChunk?.notes.forEach(note => {
@@ -235,7 +237,10 @@ class Keyboard extends Component {
         return new Promise(res => {
             this.songTimestamp = 0
             const { keyboard } = this.state
-            keyboard.forEach(note => { note.status = '' })
+            keyboard.forEach(note => { 
+                note.status = '' 
+                note.delay = 200
+            })
             this.approachingNotesList = []
             this.setState({ 
                 keyboard,
@@ -288,9 +293,13 @@ class Keyboard extends Component {
                 } else {
                     let nextChunk = songToPractice[0]
                     let nextNextChunk = songToPractice[1]
-                    nextChunk.notes.forEach(note => keyboard[note[0]].status = 'toClick')
+                    nextChunk.notes.forEach(note => {
+                        keyboard[note[0]].status = 'toClick'
+                    })
+                    this.nextChunkDelay = nextChunk.delay
                     nextNextChunk?.notes.forEach(note => {
                         let keyboardNote = keyboard[note[0]]
+                        keyboard[note[0]].delay = nextChunk.delay
                         if (keyboardNote.status === 'toClick') return keyboardNote.status = 'toClickAndNext'
                         keyboardNote.status = 'toClickNext'
                     })
@@ -308,6 +317,7 @@ class Keyboard extends Component {
     handleClick = (note, onlySound) => {
         const { keyboard } = this.state
         keyboard[note.index].status = 'clicked'
+        keyboard[note.index].delay = 200
         this.handlePracticeClick(note)
         this.handleApproachClick(note)
         this.setState({ keyboard })
@@ -362,17 +372,16 @@ class Keyboard extends Component {
                 className={keyboardClass}
                 style={{
                     transform: `scale(${size})`,
-                    marginBottom: size * 30
+                    marginBottom: size * 30 - 15
                 }}
             >
                 {keyboard.length === 0 ? <div className="loading">Loading...</div> : null}
                 {keyboard.map(note => {
                     let noteImage = layoutImages[keyboard.length][note.index]
                     let approachingNotes = state.approachingNotes[note.index]
-                   
                     return <Note
                         key={note.index}
-                        fadeTime={0}
+                        fadeTime={note.delay || 200}
                         data={note}
                         status={note.status}
                         handleClick={this.handleClick}

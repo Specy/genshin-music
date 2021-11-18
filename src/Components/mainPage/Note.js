@@ -15,7 +15,7 @@ class Note extends Component {
     render() {
         const { props } = this
         const { data, status, approachingNotes } = props
-        let animation = { transition: `background-color ${props.fadeTime}s, transform 0.1s` }
+        let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.1s` }
         let className = parseClass(status)
         let effects = instrumentsData[props.instrument]?.effects || {}
         return <button
@@ -23,11 +23,12 @@ class Note extends Component {
                 e.preventDefault()
                 props.handleClick(data)
             }}
-            className="button-hitbox"
+            className="button-hitbox-bigger"
         >
             {approachingNotes.map((note) => {
                 return <ApproachCircle
                     key={note.id}
+                    index={data.index}
                     approachRate={props.approachRate}
                 />
             })}
@@ -46,11 +47,19 @@ class Note extends Component {
         </button>
     }
 }
-
+function getApproachCircleColor(index){
+    let numOfNotes = appName === "Sky" ? 5 : 7
+    let row = Math.floor(index / numOfNotes)
+    let colors = ["#3da399","#ffb347","#3da399"]
+    return colors[row]
+}
 function ApproachCircle(props) {
     return <div
         className='approach-circle'
-        style={{ animation: `approach ${props.approachRate}ms linear` }}
+        style={{ 
+            animation: `approach ${props.approachRate}ms linear`,
+            borderColor:getApproachCircleColor(props.index)
+        }}
     >
     </div>
 }

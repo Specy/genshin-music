@@ -85,7 +85,9 @@
 	font-size: 1rem;
 	color: white;
 }
-.button-hitbox {
+.button-hitbox,
+.button-hitbox-bigger
+{
 	background-color: transparent;
 	border: none;
 	padding: 0.25rem;
@@ -94,13 +96,16 @@
 	align-items: center;
 	position: relative;
 }
+.button-hitbox-bigger{
+	padding: 0.35rem;
+}
 .approach-circle {
 	position: absolute;
 	left: 0;
 	right: 0;
 	top: 0;
 	bottom: 0;
-	border: 2px solid #3da399;
+	border: 3px solid #3da399;
 	mix-blend-mode: screen;
 	border-radius: 50%;
 	animation: approach 1s linear;
@@ -112,11 +117,14 @@
 @keyframes approach {
 	0% {
 		transform: scale(2.7);
+		opacity: 0;
+	}
+	50%{
 		opacity: 0.3;
 	}
 	99% {
 		transform: scale(0.8);
-		opacity: 1;
+		opacity: 0.8;
 	}
 	100% {
 		opacity: 0;
