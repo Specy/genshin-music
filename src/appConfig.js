@@ -1,5 +1,6 @@
 const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
 console.log("App name:",appName)
+const appVersion = '1.8'
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
     note: appName === "Genshin" ? "note" : "note-sky"
@@ -185,5 +186,6 @@ export {
     notesPerColumn,
     keyNames,
     pitchArr,
-    layoutImages
+    layoutImages,
+    appVersion
 }

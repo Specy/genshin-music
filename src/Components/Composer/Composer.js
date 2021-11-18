@@ -193,21 +193,31 @@ class Composer extends Component {
     }
     handleKeyboard = (event) => {
         let key = event.code
+        const { instrument } = this.state
         if (document.activeElement.tagName === "INPUT") return
-
-        switch (key) {
-            case "KeyD": this.selectColumn(this.state.song.selected + 1); break;
-            case "KeyA": this.selectColumn(this.state.song.selected - 1); break;
-            case "Digit1": this.handleTempoChanger(TempoChangers[0]);     break;
-            case "Digit2": this.handleTempoChanger(TempoChangers[1]);     break;
-            case "Digit3": this.handleTempoChanger(TempoChangers[2]);     break;
-            case "Digit4": this.handleTempoChanger(TempoChangers[3]);     break;
-            case "Space": this.togglePlay();                              break;
-            case "KeyQ": this.removeColumns(1, this.state.song.selected); break;
-            case "KeyE": this.addColumns(1, this.state.song.selected);    break;
-            default :
-                break;
+        if(this.state.isPlaying){
+            let letter = key?.replace("Key", "")
+            let note = instrument.getNoteFromCode(letter)
+            if(note !== null) this.handleClick(instrument.layout[note])
+            switch(key){
+                case "Space": this.togglePlay();                              break;
+                default :                                                     break;
+            }
+        }else{
+            switch (key) {
+                case "KeyD": this.selectColumn(this.state.song.selected + 1); break;
+                case "KeyA": this.selectColumn(this.state.song.selected - 1); break;
+                case "Digit1": this.handleTempoChanger(TempoChangers[0]);     break;
+                case "Digit2": this.handleTempoChanger(TempoChangers[1]);     break;
+                case "Digit3": this.handleTempoChanger(TempoChangers[2]);     break;
+                case "Digit4": this.handleTempoChanger(TempoChangers[3]);     break;
+                case "Space": this.togglePlay();                              break;
+                case "KeyQ": this.removeColumns(1, this.state.song.selected); break;
+                case "KeyE": this.addColumns(1, this.state.song.selected);    break;
+                default :                                                     break;
+            }
         }
+
     }
     playSound = (instrument, index) => {
         try{

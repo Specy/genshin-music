@@ -35,7 +35,7 @@ class Note extends Component {
             <div className={className} style={animation}>
                 <img
                     draggable="false"
-                    alt='note'
+                    alt=''
                     src={props.noteImage}
                     style={effects}
                 />

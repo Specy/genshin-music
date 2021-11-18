@@ -241,6 +241,7 @@ class Menu extends Component {
                         </button>
                     </div>
                 </MenuPanel>
+
                 <MenuPanel title="Settings" visible={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
                         return <SettingsRow
@@ -259,6 +260,7 @@ class Menu extends Component {
                         Support me
                     </a>}
                 </MenuPanel>
+                
                 <MenuPanel title="Library" visible={selectedMenu}>
                     <div>
                         Here you can find songs to learn, they are provided by the sky-music library.
@@ -309,6 +311,12 @@ class Menu extends Component {
                             <FaGithub className='help-icon' />
                         </a>
                         
+                    </div>
+                    <div 
+                        className='go-to-changelog genshin-button'
+                        onClick={() => changePage('Changelog')}
+                    >
+                        Go to changelog
                     </div>
                     <div className='help-title'>
                         Main page

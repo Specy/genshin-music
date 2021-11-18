@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom';
 import App from './Components/mainPage/App';
 import Composer from "./Components/Composer/Composer"
 import ErrorPage from "./Components/ErrorPage"
+import Changelogpage from './Components/ChangelogPage'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./Components/mainPage/App.css"
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "./Components/SongUtils"
-import { appName } from "./appConfig"
-let pages = ["", "Composer", "ErrorPage"]
+import { appName ,appVersion} from "./appConfig"
+let pages = ["", "Composer", "ErrorPage","Changelog"]
 let updateChecked = false
 class Index extends Component {
 	constructor(props) {
@@ -78,11 +79,13 @@ class Index extends Component {
 	checkUpdate = async () => {
 		await delayMs(1500) //wait for page to render
 		if (updateChecked) return
-		let currentVersion = "1.7"
+		let currentVersion = appVersion
 		let updateMessage =
 			`
-				(For genshin) Added Zither, Added back "do re mi" format
-				(For all) Added song backup download 
+				- Added Approaching cirlces mode, a new way to learn a song
+				- Better performance in the main page
+				- On pc, you can now add notes with your keyboard while playing
+				- Added changelog page
 			`
 		let storedVersion = localStorage.getItem(appName + "_Version")
 		if (!this.state.hasVisited) {
@@ -177,6 +180,9 @@ class Index extends Component {
 							<Composer changePage={this.changePage} />
 						</Route>
 
+						<Route exact path="/Changelog">
+							<Changelogpage changePage={this.changePage} />
+						</Route>
 					</>
 				}
 
