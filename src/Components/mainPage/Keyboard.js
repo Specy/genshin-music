@@ -288,7 +288,9 @@ class Keyboard extends Component {
         let approachingNote = approachingNotes[note.index][0]
         if (approachingNote) {
             approachingNote.clicked = true
+            if(approachingNote.time < this.approachRate / 3) return "approach-correct"
         }
+        return "approach-wrong"
     }
     handlePracticeClick = (note) => {
         const { keyboard, songToPractice, sliderState } = this.state
@@ -329,10 +331,13 @@ class Keyboard extends Component {
         keyboard[note.index].status = 'clicked'
         keyboard[note.index].delay = 200
         this.handlePracticeClick(note)
-        this.handleApproachClick(note)
+        let approachStatus = this.handleApproachClick(note)
+        if(songStore.data.eventType === 'approaching'){
+            keyboard[note.index].status = approachStatus
+        }
         this.setState({ keyboard })
         setTimeout(() => {
-            if (keyboard[note.index].status  !== 'clicked') return
+            if (!['clicked','approach-wrong','approach-correct'].includes(keyboard[note.index].status)) return
             keyboard[note.index].status = ''
             this.setState({ keyboard })
         }, this.props.data.hasAnimation ? 300 : 200)

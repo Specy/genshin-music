@@ -191,6 +191,16 @@
 		bottom: 0rem;
 	}
 }
+
+.approach-wrong{
+	background-color:#d66969;
+	border-color:#b35555
+}
+
+.approach-correct{
+	background-color: #60ad7e;
+	border-color: #358a55;
+}
 @media only screen and (max-width: 800px) {
 	.note-name-sky {
 		font-size: 0.7rem;

@@ -1,7 +1,7 @@
 import { isMobile } from "is-mobile"
 import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 13,
+    settingVesion: appName + 14,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -117,6 +117,12 @@ let ComposerSettings = {
         value: "",
         placeholder: "Write here"
     },
+    syncTabs:{
+        name: "Autoplay in all tabs (pc only)",
+        type: "checkbox",
+        songSetting:false,
+        value: false
+    }
 }
 let MainPageSettings = {
     settingVesion:appName + 12,

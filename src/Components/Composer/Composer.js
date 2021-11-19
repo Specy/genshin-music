@@ -54,7 +54,7 @@ class Composer extends Component {
         this.loadInstrument(settings.instrument.value, 1)
         this.loadInstrument(settings.layer2.value, 2)
         this.loadInstrument(settings.layer3.value, 3)
-
+        this.broadcastChannel = {}
         try {
             this.loadReverb()
         } catch(e) {
@@ -64,6 +64,12 @@ class Composer extends Component {
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
+        this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(appName+'_composer') : {}
+        this.broadcastChannel.onmessage = (event) => {
+            if(!this.state.settings.syncTabs.value) return
+            if(!['play','stop'].includes(event?.data)) return
+            this.togglePlay(event.data === 'play')
+        }
         if (window.location.hostname !== "localhost") {
             window.addEventListener("beforeunload", (event) => {
                 event.preventDefault()
@@ -74,6 +80,7 @@ class Composer extends Component {
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
+        this.broadcastChannel?.close?.()
         let state = this.state
         state.isPlaying = false
     }
@@ -200,8 +207,13 @@ class Composer extends Component {
             let note = instrument.getNoteFromCode(letter)
             if(note !== null) this.handleClick(instrument.layout[note])
             switch(key){
-                case "Space": this.togglePlay();                              break;
-                default :                                                     break;
+                case "Space":{
+                    this.togglePlay()
+                    if(!this.state.settings.syncTabs.value) break;
+                    this.broadcastChannel?.postMessage?.("stop")
+                    break;
+                }
+                default : break;
             }
         }else{
             switch (key) {
@@ -211,7 +223,12 @@ class Composer extends Component {
                 case "Digit2": this.handleTempoChanger(TempoChangers[1]);     break;
                 case "Digit3": this.handleTempoChanger(TempoChangers[2]);     break;
                 case "Digit4": this.handleTempoChanger(TempoChangers[3]);     break;
-                case "Space": this.togglePlay();                              break;
+                case "Space": {
+                    this.togglePlay()
+                    if(!this.state.settings.syncTabs.value) break;
+                    this.broadcastChannel?.postMessage?.("play")
+                    break;
+                }
                 case "KeyQ": this.removeColumns(1, this.state.song.selected); break;
                 case "KeyE": this.addColumns(1, this.state.song.selected);    break;
                 default :                                                     break;

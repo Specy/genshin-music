@@ -39,6 +39,9 @@ select{
     border-width: 0.4vw;
     z-index: 2;
 }
+.note-composer-sky{
+    z-index: 2;
+}
 .song-info{
     position: fixed;
     bottom: 0.5vw;

@@ -15,6 +15,7 @@ class Note extends Component {
         let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.15s` }
         let className = parseClass(status)
         let effects = instrumentsData[instrument]?.effects || {}
+        let squaredCircle = appName === 'Sky' ? {borderRadius: '2vw'} : {}
         let noteAnimation = status === 'clicked' &&  isAnimated? "note-animation" : "note-animation-hidden"
         return <button
             onPointerDown={(e) => {
@@ -27,10 +28,11 @@ class Note extends Component {
                 return <ApproachCircle
                     key={note.id}
                     index={data.index}
+                    style={squaredCircle}
                     approachRate={approachRate}
                 />
             })}
-            <div className={noteAnimation} />
+            <div className={noteAnimation} style={squaredCircle}/>
             <div className={className} style={animation}>
                 <img
                     draggable="false"
@@ -57,7 +59,8 @@ function ApproachCircle(props) {
         className='approach-circle'
         style={{ 
             animation: `approach ${props.approachRate}ms linear`,
-            borderColor:getApproachCircleColor(props.index)
+            borderColor:getApproachCircleColor(props.index),
+            ...(props.style || {})
         }}
     >
     </div>
@@ -68,6 +71,8 @@ function parseClass(status) {
     if (status === 'toClick') className += " note-red"
     if (status === 'toClickNext') className += " note-border-click"
     if (status === 'toClickAndNext') className += " note-red note-border-click"
+    if (status === 'approach-wrong') className += ' click-event approach-wrong'
+    if (status === 'approach-correct') className += ' click-event approach-correct'
     return className
 }
 
