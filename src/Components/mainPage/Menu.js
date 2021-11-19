@@ -47,7 +47,11 @@ class Menu extends Component {
             searchedSongs:[],
             searchStatus: 'Write a song name then search!'
         })
-        this.props.functions.stopSong()
+        songStore.data = {
+            eventType: "stop",
+            song:{},
+            start: 0
+        }
     }
     searchSongs = async () =>{
         const { searchInput, searchStatus } = this.state
@@ -85,6 +89,7 @@ class Menu extends Component {
                 open: false,
             })
         }
+        this.clearSearch()
         this.setState({
             selectedMenu: selection,
             open: true

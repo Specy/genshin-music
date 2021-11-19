@@ -7,7 +7,7 @@
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 import { appName } from './appConfig';
-const CACHE = appName+"-3.7"
+const CACHE = appName+"-3.8"
 console.log("CACHE Version: ",CACHE)
 import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute } from 'workbox-precaching';

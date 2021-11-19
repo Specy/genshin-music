@@ -1,7 +1,7 @@
 import { isMobile } from "is-mobile"
 import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 12,
+    settingVesion: appName + 13,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -109,7 +109,14 @@ let ComposerSettings = {
         type: "checkbox",
         songSetting: false,
         value: false,
-    }
+    },
+    backgroundImage:{
+        name: "Background image (url)",
+        type: "text",
+        songSetting: false,
+        value: "",
+        placeholder: "Write here"
+    },
 }
 let MainPageSettings = {
     settingVesion:appName + 12,
@@ -152,7 +159,7 @@ let MainPageSettings = {
         name: "Approach Rate (AR)",
         type: "number",
         songSetting: false,
-        value: 2000,
+        value: 1500,
         threshold: [0, 5000]
     },
     pitch: {

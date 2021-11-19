@@ -171,7 +171,7 @@ class Keyboard extends Component {
             let delay = notes[i][1] - previous
             previous = notes[i][1]
             let note = notes[i][0]
-            if (this.songTimestamp !== song.timestamp) break
+            if (this.songTimestamp !== song.timestamp) return
             previousTime = new Date().getTime()
             if (delay > 16) await delayMs(delay - pastError)
             keyboard[note].status = 'clicked'

@@ -716,7 +716,7 @@ class Composer extends Component {
             selectedColumn: song.selected,
 
         }
-        return <div className="app">
+        return <div className="app bg-image" style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData}/>}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <FontAwesomeIcon icon={faBars} />
