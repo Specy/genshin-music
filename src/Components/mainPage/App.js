@@ -274,41 +274,37 @@ class App extends Component {
 			settings: state.settings
 		}
 
-		return <div className='app-wrapper'>
-			<div className='bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
-				<div className="app">
-					<div className="rotate-screen">
-						<img src={rotateImg} alt="icon for the rotating screen">
-						</img>
-						For a better experience, add the website to the home screen, and rotate your device
-					</div>
-					{state.isDragging && <div className='drag-n-drop'>
-						Drop file here
-					</div>}
-					<Menu functions={menuFunctions} data={menuData} />
-					<div className="right-panel">
-						<div className="upper-right">
-							{!this.state.thereIsSong
-								&&
-								<GenshinButton
-									active={state.isRecording}
-									click={this.toggleRecord}
-								>
-									{state.isRecording ? "Stop" : "Record"}
-								</GenshinButton>
-							}
-						</div>
-						<div className="keyboard-wrapper">
-							<Keyboard
-								key={state.instrument.instrumentName}
-								data={keyboardData}
-								functions={keyboardFunctions}
-							/>
-						</div>
-
-					</div>
+		return <div className='app bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
+				<div className="rotate-screen">
+					<img src={rotateImg} alt="icon for the rotating screen">
+					</img>
+					For a better experience, add the website to the home screen, and rotate your device
 				</div>
-			</div>
+				{state.isDragging && <div className='drag-n-drop'>
+					Drop file here	
+				</div>}
+				<Menu functions={menuFunctions} data={menuData} />
+				<div className="right-panel">
+					<div className="upper-right">
+						{!this.state.thereIsSong
+							&&
+							<GenshinButton
+								active={state.isRecording}
+								click={this.toggleRecord}
+							>
+								{state.isRecording ? "Stop" : "Record"}
+							</GenshinButton>
+						}
+					</div>
+					<div className="keyboard-wrapper">
+						<Keyboard
+							key={state.instrument.instrumentName}
+							data={keyboardData}
+							functions={keyboardFunctions}
+						/>
+					</div>
+
+				</div>
 		</div>
 
 

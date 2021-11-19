@@ -107,7 +107,7 @@ body {
 	width: 100%;
 	height: 100%;
 }
-.app,.app-wrapper {
+.app, .app-content {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
@@ -116,8 +116,8 @@ body {
 	height: 100%;
 	overflow: hidden;
 }
-.app-wrapper{
-	z-index: 0;
+.app-content{
+	z-index: 2;
 }
 .genshin-button {
 	background-color: var(--primary);
@@ -256,25 +256,18 @@ a {
 	width: 60vw;
 	min-height: 60vh;
 	max-height: 90vh;
-	overflow-y: auto;
 	background-color: var(--primary);
 	z-index: 500;
+	border: solid 1px var(--secondary);
 	align-self: center;
-	border-radius: 1rem;
-	padding: 1.5rem;
+	border-radius: 0.8rem;
+	padding: 0.8rem;
 	color: white;
 	display: flex;
 	flex-direction: column;
 }
-.welcome-close {
-	position: absolute;
-	bottom: 1rem;
-	right: 1rem;
-	border: none;
-	background-color: lightgray;
-	padding: 0.4rem 1rem;
-	border-radius: 0.2rem;
-	cursor: pointer;
+.welcome-overflow{
+	overflow-y: auto;
 }
 .welcome-message-title {
 	font-size: 1.5rem;
@@ -406,10 +399,7 @@ a {
 	border-radius: 0.4rem;
 }
 .bg-image{
-	position: absolute;
-	height: 100%;
 	background-size: cover;
-	width: 100%;
 	background-repeat: no-repeat;
 }
 .sc-2{
