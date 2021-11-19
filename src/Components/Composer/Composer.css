@@ -141,7 +141,9 @@ canvas{
     padding: 0.2rem;
     border-radius: 0.2rem;
 }
-.settings-row :is(input[type=number]){
+.settings-row :is(input[type=number]),
+.settings-row :is(input[type=text])
+{
     width: calc(8rem - 7px);
 }
 

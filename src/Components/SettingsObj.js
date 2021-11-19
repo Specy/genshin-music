@@ -1,7 +1,7 @@
 import { isMobile } from "is-mobile"
 import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 10,
+    settingVesion: appName + 12,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -112,7 +112,7 @@ let ComposerSettings = {
     }
 }
 let MainPageSettings = {
-    settingVesion:appName + 11,
+    settingVesion:appName + 12,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
@@ -180,6 +180,19 @@ let MainPageSettings = {
         type: "checkbox",
         songSetting: false,
         value: false,
+    },
+    backgroundImage:{
+        name: "Background image (url)",
+        type: "text",
+        songSetting: false,
+        value: "",
+        placeholder: "Write here"
+    },
+    noteAnimation:{
+        name: "Note animation",
+        type: "checkbox",
+        songSetting: false,
+        value: false
     }
 }
 export {

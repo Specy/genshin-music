@@ -3,7 +3,7 @@ import './App.css';
 import Keyboard from "./Keyboard"
 import Menu from "./Menu"
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, prepareSongImport,getPitchChanger } from "../SongUtils"
+import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "../SongUtils"
 import { MainPageSettings } from "../SettingsObj"
 
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
@@ -21,9 +21,9 @@ class App extends Component {
 			songs: this.db.collection("songs")
 		}
 		this.state = {
-            instrument: new Instrument(),
-            audioContext: new (window.AudioContext || window.webkitAudioContext)(),
-            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
+			instrument: new Instrument(),
+			audioContext: new (window.AudioContext || window.webkitAudioContext)(),
+			reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
 			isRecording: false,
 			songs: [],
 			settings: settings,
@@ -31,7 +31,7 @@ class App extends Component {
 			isDragging: false,
 			thereIsSong: false
 		}
-        this.loadInstrument(settings.instrument.value)
+		this.loadInstrument(settings.instrument.value)
 		this.syncSongs()
 	}
 
@@ -99,48 +99,48 @@ class App extends Component {
 		}
 		return MainPageSettings
 	}
-    loadInstrument = async (name) => {
-        let newInstrument = new Instrument(name)
-        await newInstrument.load(this.state.audioContext)
-        this.setState({
-            instrument: newInstrument
-        })
-    }    
-    loadReverb() {
-        let audioCtx = this.state.audioContext
-        fetch("./assets/audio/reverb4.wav")
-            .then(r => r.arrayBuffer())
-            .then(b => {
-                audioCtx.decodeAudioData(b, (impulse_response) => {
-                    let convolver = audioCtx.createConvolver()
-                    let gainNode = audioCtx.createGain()
-                    gainNode.gain.value = 2.5
-                    convolver.buffer = impulse_response
-                    convolver.connect(gainNode)
-                    gainNode.connect(audioCtx.destination)
-                    this.setState({
-                        reverbAudioContext: convolver
-                    })
-                })
-            }).catch((e) => { 
-                console.log("Error with reverb1",e)
-            })
-    }
-    playSound = (note) => {
-        const {state} = this
+	loadInstrument = async (name) => {
+		let newInstrument = new Instrument(name)
+		await newInstrument.load(this.state.audioContext)
+		this.setState({
+			instrument: newInstrument
+		})
+	}
+	loadReverb() {
+		let audioCtx = this.state.audioContext
+		fetch("./assets/audio/reverb4.wav")
+			.then(r => r.arrayBuffer())
+			.then(b => {
+				audioCtx.decodeAudioData(b, (impulse_response) => {
+					let convolver = audioCtx.createConvolver()
+					let gainNode = audioCtx.createGain()
+					gainNode.gain.value = 2.5
+					convolver.buffer = impulse_response
+					convolver.connect(gainNode)
+					gainNode.connect(audioCtx.destination)
+					this.setState({
+						reverbAudioContext: convolver
+					})
+				})
+			}).catch((e) => {
+				console.log("Error with reverb1", e)
+			})
+	}
+	playSound = (note) => {
+		const { state } = this
 		const { settings } = state
-        if(note === undefined) return
-        if(state.isRecording) this.handleRecording(note)
-        const source = state.audioContext.createBufferSource()
-        source.playbackRate.value = getPitchChanger(settings.pitch.value)
-        source.buffer = note.buffer
-        if (settings.caveMode.value) {
-            source.connect(state.reverbAudioContext)
-        } else {
-            source.connect(state.audioContext.destination)
-        }
-        source.start(0)
-    }
+		if (note === undefined) return
+		if (state.isRecording) this.handleRecording(note)
+		const source = state.audioContext.createBufferSource()
+		source.playbackRate.value = getPitchChanger(settings.pitch.value)
+		source.buffer = note.buffer
+		if (settings.caveMode.value) {
+			source.connect(state.reverbAudioContext)
+		} else {
+			source.connect(state.audioContext.destination)
+		}
+		source.start(0)
+	}
 	updateSettings = (override) => {
 		let state
 		if (override !== undefined) {
@@ -188,7 +188,7 @@ class App extends Component {
 	componentDidCatch() {
 		new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
 		songStore.data = {
-			song: {},eventType:'stop',start:0
+			song: {}, eventType: 'stop', start: 0
 		}
 	}
 	removeSong = async (name) => {
@@ -207,7 +207,7 @@ class App extends Component {
 	stopSong = () => {
 		songStore.data = {
 			song: {},
-			start:0,
+			start: 0,
 			eventType: 'stop'
 		}
 	}
@@ -250,15 +250,16 @@ class App extends Component {
 		const { state } = this
 		let keyboardFunctions = {
 			changeSliderState: this.changeSliderState,
-            playSound: this.playSound,
+			playSound: this.playSound,
 			setHasSong: this.setHasSong
 		}
-        let keyboardData = {
-            keyboard: state.instrument,
+		let keyboardData = {
+			keyboard: state.instrument,
 			pitch: state.settings.pitch.value,
 			keyboardSize: state.settings.keyboardSize.value,
 			noteNameType: state.settings.noteNameType.value,
 			hasSong: state.thereIsSong,
+			hasAnimation: state.settings.noteAnimation.value,
 			approachRate: state.settings.approachSpeed.value
 		}
 		let menuFunctions = {
@@ -273,39 +274,44 @@ class App extends Component {
 			settings: state.settings
 		}
 
-		return <div className="app">
-			<div className="rotate-screen">
-				<img src={rotateImg} alt="icon for the rotating screen">
-				</img>
-				For a better experience, add the website to the home screen, and rotate your device
-			</div>
-			{state.isDragging && <div className='drag-n-drop'>
-				Drop file here
-			</div>}
-			<Menu functions={menuFunctions} data={menuData} />
-			<div className="right-panel">
-				<div className="upper-right"> 
-					{ !this.state.thereIsSong
-						&&
-						<GenshinButton
-							active={state.isRecording}
-							click={this.toggleRecord}
-						>
-							{state.isRecording ? "Stop" : "Record"}
-						</GenshinButton>
-					}
-				</div>
-				<div className="keyboard-wrapper">
-					<Keyboard
-						key={state.instrument.instrumentName}
-						data={keyboardData}
-						functions={keyboardFunctions}
-					/>
-				</div>
+		return <div className='app-wrapper'>
+			<div className='bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
+				<div className="app">
+					<div className="rotate-screen">
+						<img src={rotateImg} alt="icon for the rotating screen">
+						</img>
+						For a better experience, add the website to the home screen, and rotate your device
+					</div>
+					{state.isDragging && <div className='drag-n-drop'>
+						Drop file here
+					</div>}
+					<Menu functions={menuFunctions} data={menuData} />
+					<div className="right-panel">
+						<div className="upper-right">
+							{!this.state.thereIsSong
+								&&
+								<GenshinButton
+									active={state.isRecording}
+									click={this.toggleRecord}
+								>
+									{state.isRecording ? "Stop" : "Record"}
+								</GenshinButton>
+							}
+						</div>
+						<div className="keyboard-wrapper">
+							<Keyboard
+								key={state.instrument.instrumentName}
+								data={keyboardData}
+								functions={keyboardFunctions}
+							/>
+						</div>
 
+					</div>
+				</div>
 			</div>
-
 		</div>
+
+
 	}
 }
 

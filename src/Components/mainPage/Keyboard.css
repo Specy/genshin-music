@@ -33,6 +33,7 @@
 	align-items: center;
 	transition: all 0.1s;
 	cursor: pointer;
+	z-index: 10;
 	touch-action: none;
 }
 .note-sky,
@@ -130,6 +131,37 @@
 		opacity: 0;
 	}
 }
+
+.note-animation{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	border: 3px solid #3da399;
+	mix-blend-mode: screen;
+	border-radius: 50%;
+	animation: note-animation 0.3s ease-out;
+	transform-origin: 50% 50%;
+	pointer-events: none;
+	opacity: 1;
+	z-index: 1;
+	transform: scale(0.8);
+}
+@keyframes note-animation {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	60% {
+		transform: scale(1.2);
+		opacity: 0.4;
+	}
+	100% {
+		transform: scale(1.4);
+		opacity: 0;
+	}
+}
 .upper-right {
 	display: flex;
 	flex-direction: column;
@@ -162,5 +194,8 @@
 @media only screen and (max-width: 800px) {
 	.note-name-sky {
 		font-size: 0.7rem;
+	}
+	.note-animation{
+		border: 2px solid #3da399;
 	}
 }

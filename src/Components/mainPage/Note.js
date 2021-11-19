@@ -6,18 +6,16 @@ class Note extends Component {
         super(props)
         this.state = {
         }
-    }
-    shouldComponentUpdate(next, prev) {
-        let shouldUpdate = false
-        if (next.status !== prev.status) shouldUpdate = true
-        return shouldUpdate
+        this.previous = ''
     }
     render() {
         const { props } = this
-        const { data, status, approachingNotes } = props
-        let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.1s` }
+        const { data, approachingNotes} = props
+        const { status , approachRate, instrument, isAnimated} = data
+        let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.15s` }
         let className = parseClass(status)
-        let effects = instrumentsData[props.instrument]?.effects || {}
+        let effects = instrumentsData[instrument]?.effects || {}
+        let noteAnimation = status === 'clicked' &&  isAnimated? "note-animation" : "note-animation-hidden"
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
@@ -29,9 +27,10 @@ class Note extends Component {
                 return <ApproachCircle
                     key={note.id}
                     index={data.index}
-                    approachRate={props.approachRate}
+                    approachRate={approachRate}
                 />
             })}
+            <div className={noteAnimation} />
             <div className={className} style={animation}>
                 <img
                     draggable="false"

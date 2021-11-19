@@ -332,10 +332,10 @@ class Keyboard extends Component {
         this.handleApproachClick(note)
         this.setState({ keyboard })
         setTimeout(() => {
-            if (note.status !== 'clicked') return
+            if (keyboard[note.index].status  !== 'clicked') return
             keyboard[note.index].status = ''
             this.setState({ keyboard })
-        }, 200)
+        }, this.props.data.hasAnimation ? 300 : 200)
         this.props.functions.playSound(note)
     }
     render() {
@@ -390,15 +390,17 @@ class Keyboard extends Component {
                 {keyboard.map(note => {
                     let noteImage = layoutImages[keyboard.length][note.index]
                     let approachingNotes = state.approachingNotes[note.index]
+                    let noteData = {
+                        ...note,
+                        approachRate:this.approachRate,
+                        instrument: this.props.data.keyboard.instrumentName,
+                        isAnimated: songStore.data.eventType === 'approaching' ? false : this.props.data.hasAnimation
+                    }
                     return <Note
                         key={note.index}
-                        fadeTime={note.delay || 200}
-                        data={note}
-                        status={note.status}
-                        handleClick={this.handleClick}
+                        data={noteData}
                         approachingNotes={approachingNotes}
-                        approachRate={this.approachRate}
-                        instrument={this.props.data.keyboard.instrumentName}
+                        handleClick={this.handleClick}
                         noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
                         noteImage={`./assets/icons/keys/${noteImage}.svg`}
                     />

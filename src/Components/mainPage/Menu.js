@@ -467,6 +467,7 @@ function SettingsRow(props) {
             </select>
             : <input
                 type={data.type}
+                placeholder={data.placeholder || ""}
                 value={valueHook}
                 checked={valueHook}
                 onChange={handleChange}
