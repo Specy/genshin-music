@@ -113,7 +113,6 @@ class Menu extends Component {
                 }
             } catch (e) {
                 let fileName = file.name
-                console.log(fileName)
                 console.error(e)
                 if(fileName?.includes?.(".mid")){
                     return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
@@ -445,13 +444,11 @@ function SettingsRow(props) {
         }
 
         if(el.type === 'checkbox'){
-            console.log(value)
             data.value = value
             let obj = {
                 key: objKey,
                 data
             }
-            console.log("Updated in onChange")
             update(obj)
         }
         setter(value)
