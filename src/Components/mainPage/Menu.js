@@ -435,7 +435,6 @@ function SettingsRow(props) {
     const [valueHook, setter] = useState(data.value)
     function handleChange(e) {
         let el = e.target
-        console.log("handleChange:",e)
         let value = data.type === "checkbox" ? el.checked : el.value
         if (data.type === "number") {
             value = Number(value)
@@ -444,18 +443,26 @@ function SettingsRow(props) {
                 return
             }
         }
-        console.log("setter()")
+
+        if(el.type === 'checkbox'){
+            console.log(value)
+            data.value = value
+            let obj = {
+                key: objKey,
+                data
+            }
+            console.log("Updated in onChange")
+            update(obj)
+        }
         setter(value)
     }
     function sendChange() {
-        console.log("sendChange:",data.value, valueHook)
         if (data.value === valueHook) return
         data.value = valueHook
         let obj = {
             key: objKey,
             data: data
         }
-        console.log("Updated settings", obj)
         update(obj)
     }
     function sendChangeSelect(e) {

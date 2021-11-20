@@ -346,7 +346,6 @@ class Keyboard extends Component {
         },() => {
             setTimeout(() => {
                 if(!hasAnimation || songStore.data.eventType === 'approaching') return
-                console.log('removed')
                 const {outgoingAnimation} = this.state
                 outgoingAnimation[note.index].shift()
                 this.setState({outgoingAnimation})
