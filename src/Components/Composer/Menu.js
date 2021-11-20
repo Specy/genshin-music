@@ -235,6 +235,14 @@ function SettingsRow(props) {
                 return
             }
         }
+        if(el.type === 'checkbox'){
+            data.value = value
+            let obj = {
+                key: objKey,
+                data
+            }
+            update(obj)
+        }
         setter(value)
     }
     function sendChange() {

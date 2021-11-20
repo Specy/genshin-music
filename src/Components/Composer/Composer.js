@@ -51,16 +51,20 @@ class Composer extends Component {
         this.copiedColums = []
         this.changes = 0
         this.syncSongs()
-        this.loadInstrument(settings.instrument.value, 1)
-        this.loadInstrument(settings.layer2.value, 2)
-        this.loadInstrument(settings.layer3.value, 3)
-        this.broadcastChannel = {}
-        try {
-            this.loadReverb()
-        } catch(e) {
-            console.log("Error with reverb1")
-        }
 
+        this.broadcastChannel = {}
+        this.init()
+    }
+    init = async () =>{
+        const { settings } = this.state
+        const promises = [
+            this.loadInstrument(settings.instrument.value, 1),
+            this.loadInstrument(settings.layer2.value, 2),
+            this.loadInstrument(settings.layer3.value, 3)
+        ]
+        await Promise.all(promises)
+        await this.loadReverb()
+        this.setupAudioDestination(settings.caveMode.value)
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
@@ -99,23 +103,27 @@ class Composer extends Component {
 
         }
     }
-    loadReverb() {
-        let audioCtx = this.state.audioContext
-        fetch("./assets/audio/reverb4.wav")
-            .then(r => r.arrayBuffer().catch((e) => { console.log("Error with reverb1",e) }))
-            .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
-                let convolver = audioCtx.createConvolver()
-                let gainNode = audioCtx.createGain()
-                gainNode.gain.value = 2.5
-                convolver.buffer = impulse_response
-                convolver.connect(gainNode)
-                gainNode.connect(audioCtx.destination)
-                this.setState({
-                    reverbAudioContext: convolver
+    loadReverb =async  () => {
+        return new Promise((resolve) => {
+            let audioCtx = this.state.audioContext
+            fetch("./assets/audio/reverb4.wav")
+                .then(r => r.arrayBuffer().catch((e) => { console.log("Error with reverb1",e) }))
+                .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
+                    let convolver = audioCtx.createConvolver()
+                    let gainNode = audioCtx.createGain()
+                    gainNode.gain.value = 2.5
+                    convolver.buffer = impulse_response
+                    convolver.connect(gainNode)
+                    gainNode.connect(audioCtx.destination)
+                    resolve()
+                    this.setState({
+                        reverbAudioContext: convolver
+                    })
+                })).catch((e) => {
+                    console.log("Error with reverb2",e)
                 })
-            })).catch((e) => {
-                console.log("Error with reverb2",e)
-            })
+        })
+
     }
     getSettings = () => {
         let storedSettings = localStorage.getItem(appName + "_Composer_Settings")
@@ -153,6 +161,7 @@ class Composer extends Component {
         if (setting.key === "instrument") this.loadInstrument(data.value, 1)
         if (setting.key === "layer2") this.loadInstrument(data.value, 2)
         if (setting.key === "layer3") this.loadInstrument(data.value, 3)
+        if (setting.key === "caveMode") this.setupAudioDestination(data.value)
         this.setState({
             settings: settings,
             song: this.state.song
@@ -179,6 +188,7 @@ class Composer extends Component {
                 layers: layers
             })
         }
+        this.setupAudioDestination(settings.caveMode.value)
     }
     changeVolume = (obj) => {
         let settings = this.state.settings
@@ -197,6 +207,20 @@ class Composer extends Component {
         this.setState({
             settings: settings
         }, () => this.updateSettings())
+    }
+    setupAudioDestination = (hasReverb) => {
+        const { instrument, layers  } = this.state
+        const instruments = [instrument,layers[0],layers[1]]
+        instruments.forEach(ins => {
+            if(!ins.gain.connect) return
+            if (hasReverb) {
+                ins.gain.disconnect()
+                ins.gain.connect(this.state.reverbAudioContext)
+            } else {
+                ins.gain.disconnect()
+                ins.gain.connect(this.state.audioContext.destination)
+            }
+        })
     }
     handleKeyboard = (event) => {
         let key = event.code
@@ -245,11 +269,6 @@ class Composer extends Component {
             source.buffer = note.buffer
             source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
             source.connect(instrument.gain)
-            if (this.state.settings.caveMode.value) {
-                instrument.gain.connect(this.state.reverbAudioContext)
-            } else {
-                instrument.gain.connect(this.state.audioContext.destination)
-            }
             source.start(0)
         }catch(e){
 
@@ -520,10 +539,15 @@ class Composer extends Component {
     }
     changePage = async (page) => {
         if (this.changes !== 0) {
-            let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`)
-            if (confirm) {
+            if(this.state.settings.autosave.value){
                 await this.updateSong(this.state.song)
+            }else{
+                let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`)
+                if (confirm) {
+                    await this.updateSong(this.state.song)
+                }
             }
+
         }
 
         this.props.changePage(page)
