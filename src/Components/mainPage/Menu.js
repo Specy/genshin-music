@@ -105,14 +105,21 @@ class Menu extends Component {
         reader.addEventListener('load',async (event) => {
             try {
                 let songsInput = JSON.parse(event.target.result)
+                
                 if(!Array.isArray(songsInput)) songsInput = [songsInput]
                 for(let song of songsInput){
                     song = prepareSongImport(song)
                     await this.props.functions.addSong(song)
                 }
             } catch (e) {
-                new LoggerEvent("Error", "Error importing song").trigger()
+                let fileName = file.name
+                console.log(fileName)
                 console.error(e)
+                if(fileName?.includes?.(".mid")){
+                    return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
+                }   
+                new LoggerEvent("Error", "Error importing song").trigger()
+                
             }
         })
         reader.readAsText(file)
