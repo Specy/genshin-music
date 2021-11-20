@@ -128,7 +128,7 @@ class ComposedSong {
 	}
 }
 
-function ApproachingSong(length){
+function NotesTable(length){
 	return new Array(length).fill().map(() => {return []})
 }
 function ComposerSongDeSerialization(song) {
@@ -504,5 +504,5 @@ export {
 	mergeLayers,
 	groupByIndex,
 	delayMs,
-	ApproachingSong
+	NotesTable
 }

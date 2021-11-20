@@ -41,6 +41,9 @@
 	border-radius: 1.5vw;
 	background-color: var(--primary);
 	border: 0.4vw solid var(--primary);
+    transform: translate3d(0, 0, 0);
+    transform-origin: 50% 50%;
+    user-select: none;
 }
 
 .note-composer,
@@ -107,7 +110,6 @@
 	top: 0;
 	bottom: 0;
 	border: 3px solid #3da399;
-	mix-blend-mode: screen;
 	border-radius: 50%;
 	animation: approach 1s linear;
 	transform-origin: 50% 50%;
@@ -139,9 +141,9 @@
 	top: 0;
 	bottom: 0;
 	border: 3px solid #3da399;
-	mix-blend-mode: screen;
 	border-radius: 50%;
-	animation: note-animation 0.3s ease-out;
+	animation: note-animation 0.75s cubic-bezier(.25,.46,.45,.94);
+	animation-delay: 0.1s;
 	transform-origin: 50% 50%;
 	pointer-events: none;
 	opacity: 1;
@@ -149,18 +151,19 @@
 	transform: scale(0.8);
 }
 @keyframes note-animation {
-	0% {
-		transform: scale(1);
-		opacity: 1;
-	}
-	60% {
-		transform: scale(1.2);
-		opacity: 0.4;
-	}
-	100% {
-		transform: scale(1.4);
-		opacity: 0;
-	}
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+        border-width: 3px;
+    }
+    70% {
+        transform: scale(1.45);
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+        border-width: 2px;
+    }
 }
 .upper-right {
 	display: flex;
@@ -196,10 +199,15 @@
 	background-color:#d66969;
 	border-color:#b35555
 }
-
+.approach-wrong img{
+	filter: brightness(999);
+}
 .approach-correct{
 	background-color: #60ad7e;
 	border-color: #358a55;
+}
+.approach-correct img{
+	filter: brightness(999);
 }
 @media only screen and (max-width: 800px) {
 	.note-name-sky {

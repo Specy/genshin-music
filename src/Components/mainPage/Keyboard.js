@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import "./Keyboard.css"
-import { delayMs, ComposerToRecording, ApproachingSong } from "../SongUtils"
+import { delayMs, ComposerToRecording, NotesTable } from "../SongUtils"
 import Note from "./Note"
 import { keyNames, pitchArr, layoutImages, appName, layoutData } from "../../appConfig"
 import { songStore } from './SongStore'
@@ -16,7 +16,8 @@ class Keyboard extends Component {
         this.state = {
             playTimestamp: new Date().getTime(),
             songToPractice: [],
-            approachingNotes: ApproachingSong(appName === 'Sky' ? 15 : 21),
+            approachingNotes: NotesTable(appName === 'Sky' ? 15 : 21),
+            outgoingAnimation: NotesTable(appName === 'Sky' ? 15 : 21),
             keyboard: propKeyboard.layout,
             sliderState: {
                 position: 0,
@@ -88,7 +89,7 @@ class Keyboard extends Component {
             notes.push(obj)
         })
         this.setState({
-            approachingNotes: ApproachingSong(appName === 'Sky' ? 15 : 21),
+            approachingNotes: NotesTable(appName === 'Sky' ? 15 : 21),
             approachingScore: {
                 correct: 1,
                 wrong: 1,
@@ -255,7 +256,7 @@ class Keyboard extends Component {
             this.setState({
                 keyboard,
                 songToPractice: [],
-                approachingNotes: ApproachingSong(appName === 'Sky' ? 15 : 21)
+                approachingNotes: NotesTable(appName === 'Sky' ? 15 : 21)
             }, res)
 
             this.props.functions.setHasSong(false)
@@ -327,7 +328,8 @@ class Keyboard extends Component {
         }
     }
     handleClick = (note, onlySound) => {
-        const { keyboard } = this.state
+        const { keyboard, outgoingAnimation} = this.state
+        const hasAnimation = this.props.data.hasAnimation
         keyboard[note.index].status = 'clicked'
         keyboard[note.index].delay = 200
         this.handlePracticeClick(note)
@@ -335,12 +337,26 @@ class Keyboard extends Component {
         if(songStore.data.eventType === 'approaching'){
             keyboard[note.index].status = approachStatus
         }
-        this.setState({ keyboard })
+        if(hasAnimation && songStore.data.eventType !=='approaching'){
+            let key = Math.floor(Math.random() * 10000) + new Date().getTime()
+            outgoingAnimation[note.index].push({key})
+        }
+        this.setState({ keyboard,
+            ...(hasAnimation? outgoingAnimation : {})
+        },() => {
+            setTimeout(() => {
+                if(!hasAnimation || songStore.data.eventType === 'approaching') return
+                console.log('removed')
+                const {outgoingAnimation} = this.state
+                outgoingAnimation[note.index].shift()
+                this.setState({outgoingAnimation})
+            },750)
+        })
         setTimeout(() => {
             if (!['clicked','approach-wrong','approach-correct'].includes(keyboard[note.index].status)) return
             keyboard[note.index].status = ''
             this.setState({ keyboard })
-        }, this.props.data.hasAnimation ? 300 : 200)
+        },appName === 'Sky' ? 250 : 100)
         this.props.functions.playSound(note)
     }
     render() {
@@ -394,7 +410,6 @@ class Keyboard extends Component {
                 {keyboard.length === 0 ? <div className="loading">Loading...</div> : null}
                 {keyboard.map(note => {
                     let noteImage = layoutImages[keyboard.length][note.index]
-                    let approachingNotes = state.approachingNotes[note.index]
                     let noteData = {
                         ...note,
                         approachRate:this.approachRate,
@@ -404,7 +419,8 @@ class Keyboard extends Component {
                     return <Note
                         key={note.index}
                         data={noteData}
-                        approachingNotes={approachingNotes}
+                        approachingNotes={state.approachingNotes[note.index]}
+                        outgoingAnimation={state.outgoingAnimation[note.index]}
                         handleClick={this.handleClick}
                         noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
                         noteImage={`./assets/icons/keys/${noteImage}.svg`}
@@ -460,4 +476,6 @@ function getNoteText(noteNameType, index, pitch, layoutLength) {
     return ''
 }
 export default Keyboard
+
+
 

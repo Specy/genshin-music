@@ -10,13 +10,12 @@ class Note extends Component {
     }
     render() {
         const { props } = this
-        const { data, approachingNotes} = props
-        const { status , approachRate, instrument, isAnimated} = data
+        const { data, approachingNotes,outgoingAnimation} = props
+        const { status , approachRate, instrument} = data
         let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.15s` }
         let className = parseClass(status)
         let effects = instrumentsData[instrument]?.effects || {}
         let squaredCircle = appName === 'Sky' ? {borderRadius: '2vw'} : {}
-        let noteAnimation = status === 'clicked' &&  isAnimated? "note-animation" : "note-animation-hidden"
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
@@ -32,7 +31,13 @@ class Note extends Component {
                     approachRate={approachRate}
                 />
             })}
-            <div className={noteAnimation} style={squaredCircle}/>
+            {outgoingAnimation.map(e => {
+                return <div 
+                    key={e.key}
+                    className='note-animation' 
+                    style={squaredCircle}
+                />
+            })}
             <div className={className} style={animation}>
                 <img
                     draggable="false"

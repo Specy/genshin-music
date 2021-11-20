@@ -1,4 +1,4 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][0]
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
 console.log("App name:",appName)
 const appVersion = '1.8'
 const cssClasses = {
