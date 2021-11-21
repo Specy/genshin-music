@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import "./Keyboard.css"
 import { delayMs, ComposerToRecording, NotesTable } from "../SongUtils"
 import Note from "./Note"
-import { keyNames, pitchArr, layoutImages, appName, layoutData } from "../../appConfig"
+import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } from "../../appConfig"
 import { songStore } from './SongStore'
 import { observe } from 'mobx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,7 +12,6 @@ class Keyboard extends Component {
         super(props)
         let propKeyboard = this.props.data.keyboard
         propKeyboard.layout.forEach(note => { note.status = '' })
-
         this.state = {
             playTimestamp: new Date().getTime(),
             songToPractice: [],
@@ -28,7 +27,8 @@ class Keyboard extends Component {
                 wrong: 1,
                 score: 0,
                 combo: 0
-            }
+            },
+			speedChanger: speedChangers.find(e => e.name === 'x1'),
         }
         this.approachRate = 1500
         this.approachingNotesList = []
@@ -83,7 +83,7 @@ class Keyboard extends Component {
         let startDelay = this.approachRate
         song.notes.forEach(note => {
             let obj = {
-                time: note[1] + startDelay,
+                time: note[1] / this.state.speedChanger.value + startDelay,
                 index: note[0]
             }
             notes.push(obj)
@@ -103,7 +103,7 @@ class Keyboard extends Component {
 
     tick = () => {
         if (!this.props.data.hasSong) return
-        const { approachingNotes, sliderState, approachingScore } = this.state
+        const { approachingNotes, sliderState, approachingScore , speedChanger} = this.state
         let stateNotes = approachingNotes
         let notes = this.approachingNotesList
         notes.forEach(note => {
@@ -133,7 +133,7 @@ class Keyboard extends Component {
                     if (apNote.time < this.approachRate / 3) {
                         approachingScore.correct++
                         approachingScore.combo++
-                        approachingScore.score += approachingScore.combo * 10
+                        approachingScore.score += (approachingScore.combo * 10) * speedChanger.value
                     } else {
                         approachingScore.wrong++
                         approachingScore.combo = 0
@@ -163,7 +163,7 @@ class Keyboard extends Component {
     playSong = async (song, start = 0) => {
         this.songTimestamp = song.timestamp
         const { keyboard } = this.state
-        let notes = song.notes
+        let notes = this.applySpeedChange(song.notes)
         if (notes.length === 0) return
         let previous = notes[0][1]
         let pastError = 0
@@ -188,10 +188,15 @@ class Keyboard extends Component {
         }
         songStore.data = returnStopSong()
     }
-
+    applySpeedChange = (notes) => {
+        return notes.map(note => {
+            note[1] = note[1] / this.state.speedChanger.value
+            return note
+        })
+    }
     practiceSong = (song, start = 0) => {
         const { keyboard } = this.state
-        let notes = song.notes
+        let notes = this.applySpeedChange(song.notes)
         let songLength = notes.length
         notes.splice(0, start)
         let chunks = []
@@ -230,6 +235,12 @@ class Keyboard extends Component {
                 size: songLength
             }
         })
+    }
+    handleSpeedChanger = (value) =>{
+        let changer = speedChangers.find(e => e.name === value)
+        this.setState({
+            speedChanger: changer
+        },this.restartSong)
     }
     restartSong = () => {
         let lostReference = JSON.parse(JSON.stringify(songStore.data))
@@ -396,6 +407,18 @@ class Keyboard extends Component {
                         }}>
                             <FontAwesomeIcon icon={faSyncAlt} />
                         </button>
+                        <select 
+                            className='slider-select'
+                            onChange={(e) => this.handleSpeedChanger(e.target.value)}
+                            value={state.speedChanger.name}
+                        >
+                            <option disabled>Speed</option>
+                            {speedChangers.map(e => {
+                                return <option value={e.name}>
+                                    {e.name}
+                                </option>
+                            })}
+                        </select>
                     </div>
                 </div>
             }

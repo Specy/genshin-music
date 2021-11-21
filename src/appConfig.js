@@ -162,7 +162,12 @@ const keyNames = {
         11: ["B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B"]
     }
 }
-
+const speedChangers = [0.25,0.5,0.75,1,1.25,1.5,2].map(e => {
+    return {
+        name: `x${e}`,
+        value: e
+    }
+})
 
 const pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] 
 
@@ -187,5 +192,6 @@ export {
     keyNames,
     pitchArr,
     layoutImages,
-    appVersion
+    appVersion,
+    speedChangers
 }

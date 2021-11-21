@@ -5,7 +5,6 @@ import Menu from "./Menu"
 import ZangoDb from "zangodb"
 import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "../SongUtils"
 import { MainPageSettings } from "../SettingsObj"
-
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import rotateImg from "../../assets/icons/rotate.svg"
 import { appName } from "../../appConfig"
@@ -27,7 +26,6 @@ class App extends Component {
 			isRecording: false,
 			songs: [],
 			settings: settings,
-
 			isDragging: false,
 			thereIsSong: false
 		}

@@ -166,6 +166,23 @@ body {
 	transition: all 0.3s;
 	opacity: 1;
 	margin-top: 1.5rem;
+	margin-left: 3.5rem;
+}
+.slider-select{
+	width: 3rem;
+	font-size: 0.8rem;
+	height: 2rem;
+	text-align: center;
+	color: var(--whitish);
+	font-weight: bold;
+	border: none;
+  	-moz-appearance: none;
+	appearance: none;
+ 	 -webkit-appearance: none;
+	background-image: none;
+	border-radius: 0.3rem;
+	background-color: #576377;
+	margin-left: 0.5rem;
 }
 .hidden-opacity {
 	opacity: 0;
