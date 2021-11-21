@@ -19,27 +19,20 @@ class App extends Component {
 		this.dbCol = {
 			songs: this.db.collection("songs")
 		}
-		let audioContext = new (window.AudioContext || window.webkitAudioContext)()
 		this.state = {
 			instrument: new Instrument(),
-			audioContext: audioContext,
-			reverbAudioContext: new ConvolverNode(audioContext),
+			audioContext: new (window.AudioContext || window.webkitAudioContext)(),
+			reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
 			isRecording: false,
 			songs: [],
 			settings: settings,
 			isDragging: false,
 			thereIsSong: false
 		}
-		this.init()
+		this.loadInstrument(settings.instrument.value)
 		this.syncSongs()
 	}
 
-	init = async () => {
-		const { settings } = this.state
-		await this.loadInstrument(settings.instrument.value)
-		await this.loadReverb()
-		this.setupAudioDestination(settings.caveMode.value)
-	}
 	componentDidMount() {
 		document.body.addEventListener('dragenter', this.handleDrag)
 		document.body.addEventListener('dragleave', this.resetDrag)
@@ -109,54 +102,41 @@ class App extends Component {
 		await newInstrument.load(this.state.audioContext)
 		this.setState({
 			instrument: newInstrument
-		},() => this.setupAudioDestination(this.state.settings.caveMode.value))
+		})
 	}
-	setupAudioDestination = (hasReverb) => {
-        const { instrument  } = this.state
-        const instruments = [instrument]
-        instruments.forEach(ins => {
-            if(!ins.gain.connect) return
-            if (hasReverb) {
-                ins.gain.disconnect()
-                ins.gain.connect(this.state.reverbAudioContext)
-            } else {
-                ins.gain.disconnect()
-                ins.gain.connect(this.state.audioContext.destination)
-            }
-        })
-    }
-    loadReverb =async  () => {
-        return new Promise((resolve) => {
-            let audioCtx = this.state.audioContext
-            fetch("./assets/audio/reverb4.wav")
-                .then(r => r.arrayBuffer().catch((e) => { console.log("Error with reverb1",e) }))
-                .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
-                    let convolver = audioCtx.createConvolver()
-                    let gainNode = audioCtx.createGain()
-                    gainNode.gain.value = 2.5
-                    convolver.buffer = impulse_response
-                    convolver.connect(gainNode)
-                    gainNode.connect(audioCtx.destination)
-                    this.setState({
-                        reverbAudioContext: convolver
-                    },() => {
-
-						resolve()
+	loadReverb() {
+		let audioCtx = this.state.audioContext
+		fetch("./assets/audio/reverb4.wav")
+			.then(r => r.arrayBuffer())
+			.then(b => {
+				audioCtx.decodeAudioData(b, (impulse_response) => {
+					let convolver = audioCtx.createConvolver()
+					let gainNode = audioCtx.createGain()
+					gainNode.gain.value = 2.5
+					convolver.buffer = impulse_response
+					convolver.connect(gainNode)
+					gainNode.connect(audioCtx.destination)
+					this.setState({
+						reverbAudioContext: convolver
 					})
-                })).catch((e) => {
-                    console.log("Error with reverb2",e)
-                })
-        })
-    }
+				})
+			}).catch((e) => {
+				console.log("Error with reverb1", e)
+			})
+	}
 	playSound = (note) => {
 		const { state } = this
-		const { settings, instrument } = state
+		const { settings } = state
 		if (note === undefined) return
 		if (state.isRecording) this.handleRecording(note)
 		const source = state.audioContext.createBufferSource()
 		source.playbackRate.value = getPitchChanger(settings.pitch.value)
 		source.buffer = note.buffer
-		source.connect(instrument.gain)
+		if (settings.caveMode.value) {
+			source.connect(state.reverbAudioContext)
+		} else {
+			source.connect(state.audioContext.destination)
+		}
 		source.start(0)
 	}
 	updateSettings = (override) => {
@@ -175,7 +155,6 @@ class App extends Component {
 		if (setting.key === "instrument") {
 			this.loadInstrument(data.value)
 		}
-		if (setting.key === 'caveMode') this.setupAudioDestination(data.value)
 		this.setState({
 			settings: settings,
 		}, this.updateSettings)

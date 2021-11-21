@@ -33,12 +33,11 @@ class Composer extends Component {
         }
         let settings = this.getSettings()
         this.playbackInterval = undefined
-        let audioContext = new (window.AudioContext || window.webkitAudioContext)()
         this.state = {
             instrument: new Instrument(),
             layers: [new Instrument(), new Instrument()],
-            audioContext: audioContext,
-            reverbAudioContext: new ConvolverNode(audioContext),
+            audioContext: new (window.AudioContext || window.webkitAudioContext)(),
+            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
@@ -124,6 +123,7 @@ class Composer extends Component {
                     console.log("Error with reverb2",e)
                 })
         })
+
     }
     getSettings = () => {
         let storedSettings = localStorage.getItem(appName + "_Composer_Settings")
