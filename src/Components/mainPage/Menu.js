@@ -445,13 +445,11 @@ function SettingsRow(props) {
         }
 
         if(el.type === 'checkbox'){
-            console.log(value)
             data.value = value
             let obj = {
                 key: objKey,
                 data
             }
-            console.log("Updated in onChange")
             update(obj)
         }
         setter(value)

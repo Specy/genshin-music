@@ -5,6 +5,7 @@ const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
     note: appName === "Genshin" ? "note" : "note-sky"
 }
+const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 const instruments = appName === "Genshin" ? [
     "Lyre",
     "DunDun",
@@ -193,5 +194,6 @@ export {
     pitchArr,
     layoutImages,
     appVersion,
-    speedChangers
+    speedChangers,
+    audioContext
 }

@@ -7,8 +7,9 @@ import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from
 import { MainPageSettings } from "../SettingsObj"
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import rotateImg from "../../assets/icons/rotate.svg"
-import { appName } from "../../appConfig"
+import { appName,audioContext } from "../../appConfig"
 import Instrument from "../Instrument"
+import Instrument3 from '../Instrument3';
 import { songStore } from './SongStore'
 class App extends Component {
 	constructor(props) {
@@ -20,17 +21,18 @@ class App extends Component {
 			songs: this.db.collection("songs")
 		}
 		this.state = {
-			instrument: new Instrument(),
-			audioContext: new (window.AudioContext || window.webkitAudioContext)(),
-			reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
+			instrument: new Instrument3(),
 			isRecording: false,
 			songs: [],
 			settings: settings,
 			isDragging: false,
 			thereIsSong: false
 		}
+		this.reverbNode = undefined
+		this.audioContext = audioContext
 		this.loadInstrument(settings.instrument.value)
 		this.syncSongs()
+		this.loadReverb()
 	}
 
 	componentDidMount() {
@@ -81,6 +83,17 @@ class App extends Component {
 
 		}
 	}
+	toggleReverbNodes = (hasReverb) => {
+		const {instrument } = this.state
+		if(!this.reverbNode) return
+		if(hasReverb){
+			instrument.disconnect()
+			instrument.connect(this.reverbNode)
+		}else{
+			instrument.disconnect()
+			instrument.connect(this.audioContext.destination)
+		}
+	}
 	getSettings = () => {
 		let storedSettings = localStorage.getItem(appName + "_Main_Settings")
 		try {
@@ -98,30 +111,28 @@ class App extends Component {
 		return MainPageSettings
 	}
 	loadInstrument = async (name) => {
-		let newInstrument = new Instrument(name)
-		await newInstrument.load(this.state.audioContext)
+		let newInstrument = new Instrument3(name)
+		await newInstrument.load()
+		newInstrument.connect(this.audioContext.destination)
 		this.setState({
 			instrument: newInstrument
 		})
 	}
 	loadReverb() {
-		let audioCtx = this.state.audioContext
 		fetch("./assets/audio/reverb4.wav")
 			.then(r => r.arrayBuffer())
 			.then(b => {
-				audioCtx.decodeAudioData(b, (impulse_response) => {
-					let convolver = audioCtx.createConvolver()
-					let gainNode = audioCtx.createGain()
+				this.audioContext.decodeAudioData(b, (impulse_response) => {
+					let convolver = this.audioContext.createConvolver()
+					let gainNode = this.audioContext.createGain()
 					gainNode.gain.value = 2.5
 					convolver.buffer = impulse_response
 					convolver.connect(gainNode)
-					gainNode.connect(audioCtx.destination)
-					this.setState({
-						reverbAudioContext: convolver
-					})
+					gainNode.connect(this.audioContext.destination)
+					this.reverbNode = convolver
 				})
 			}).catch((e) => {
-				console.log("Error with reverb1", e)
+				console.log("Error with reverb", e)
 			})
 	}
 	playSound = (note) => {
@@ -129,15 +140,7 @@ class App extends Component {
 		const { settings } = state
 		if (note === undefined) return
 		if (state.isRecording) this.handleRecording(note)
-		const source = state.audioContext.createBufferSource()
-		source.playbackRate.value = getPitchChanger(settings.pitch.value)
-		source.buffer = note.buffer
-		if (settings.caveMode.value) {
-			source.connect(state.reverbAudioContext)
-		} else {
-			source.connect(state.audioContext.destination)
-		}
-		source.start(0)
+		this.state.instrument.play(note.index,getPitchChanger(settings.pitch.value))
 	}
 	updateSettings = (override) => {
 		let state
@@ -154,6 +157,9 @@ class App extends Component {
 		settings[setting.key].value = data.value
 		if (setting.key === "instrument") {
 			this.loadInstrument(data.value)
+		}
+		if(setting.key === 'caveMode'){
+			this.toggleReverbNodes(data.value)
 		}
 		this.setState({
 			settings: settings,

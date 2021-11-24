@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import rotateImg from "../../assets/icons/rotate.svg"
 import addCell from "../../assets/icons/addCell.svg"
 import removeCell from "../../assets/icons/removeCell.svg"
-import { appName } from "../../appConfig"
+import { appName, audioContext } from "../../appConfig"
 
 import MidiImport from "./MidiParser"
 import ComposerTools from "./ComposerTools"
@@ -17,7 +17,7 @@ import Menu from "./Menu"
 
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import { ComposerSettings } from "../SettingsObj"
-import Instrument from "../Instrument"
+import Instrument from "../Instrument3"
 import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
@@ -33,11 +33,11 @@ class Composer extends Component {
         }
         let settings = this.getSettings()
         this.playbackInterval = undefined
+        this.audioContext = audioContext
+        this.reverbNode = undefined
         this.state = {
             instrument: new Instrument(),
             layers: [new Instrument(), new Instrument()],
-            audioContext: new (window.AudioContext || window.webkitAudioContext)(),
-            reverbAudioContext: new (window.AudioContext || window.webkitAudioContext)(),
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
@@ -103,28 +103,23 @@ class Composer extends Component {
 
         }
     }
-    loadReverb =async  () => {
-        return new Promise((resolve) => {
-            let audioCtx = this.state.audioContext
-            fetch("./assets/audio/reverb4.wav")
-                .then(r => r.arrayBuffer().catch((e) => { console.log("Error with reverb1",e) }))
-                .then(b => audioCtx.decodeAudioData(b, (impulse_response) => {
-                    let convolver = audioCtx.createConvolver()
-                    let gainNode = audioCtx.createGain()
-                    gainNode.gain.value = 2.5
-                    convolver.buffer = impulse_response
-                    convolver.connect(gainNode)
-                    gainNode.connect(audioCtx.destination)
-                    resolve()
-                    this.setState({
-                        reverbAudioContext: convolver
-                    })
-                })).catch((e) => {
-                    console.log("Error with reverb2",e)
-                })
-        })
-
-    }
+	loadReverb() {
+		fetch("./assets/audio/reverb4.wav")
+			.then(r => r.arrayBuffer())
+			.then(b => {
+				this.audioContext.decodeAudioData(b, (impulse_response) => {
+					let convolver = this.audioContext.createConvolver()
+					let gainNode = this.audioContext.createGain()
+					gainNode.gain.value = 2.5
+					convolver.buffer = impulse_response
+					convolver.connect(gainNode)
+					gainNode.connect(this.audioContext.destination)
+					this.reverbNode = convolver
+				})
+			}).catch((e) => {
+				console.log("Error with reverb", e)
+			})
+	}
     getSettings = () => {
         let storedSettings = localStorage.getItem(appName + "_Composer_Settings")
         try {
@@ -173,7 +168,7 @@ class Composer extends Component {
         const {settings} = this.state
         if (layer === 1) {
             let newInstrument = new Instrument(name)
-            await newInstrument.load(this.state.audioContext)
+            await newInstrument.load()
             newInstrument.changeVolume(settings.instrument.volume)
             this.setState({
                 instrument: newInstrument
@@ -182,7 +177,7 @@ class Composer extends Component {
             let newInstrument = new Instrument(name)
             let layers = this.state.layers
             layers[layer - 2] = newInstrument
-            await newInstrument.load(this.state.audioContext)
+            await newInstrument.load()
             newInstrument.changeVolume(settings[`layer${layer}`]?.volume)
             this.setState({
                 layers: layers
@@ -212,13 +207,12 @@ class Composer extends Component {
         const { instrument, layers  } = this.state
         const instruments = [instrument,layers[0],layers[1]]
         instruments.forEach(ins => {
-            if(!ins.gain.connect) return
-            if (hasReverb) {
-                ins.gain.disconnect()
-                ins.gain.connect(this.state.reverbAudioContext)
-            } else {
-                ins.gain.disconnect()
-                ins.gain.connect(this.state.audioContext.destination)
+            if(hasReverb){
+                ins.disconnect()
+                ins.connect(this.reverbNode)
+            }else{
+                ins.disconnect()
+                ins.connect(this.audioContext.destination)
             }
         })
     }
@@ -262,14 +256,9 @@ class Composer extends Component {
     }
     playSound = (instrument, index) => {
         try{
-            const source = this.state.audioContext.createBufferSource()
             let note = instrument.layout[index]
             if(note === undefined) return
-            //TODO export below to Instrument.js
-            source.buffer = note.buffer
-            source.playbackRate.value = getPitchChanger(this.state.settings.pitch.value)
-            source.connect(instrument.gain)
-            source.start(0)
+            instrument.play(note.index,getPitchChanger(this.state.settings.pitch.value))
         }catch(e){
 
         }
