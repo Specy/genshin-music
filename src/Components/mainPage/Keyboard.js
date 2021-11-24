@@ -79,11 +79,11 @@ class Keyboard extends Component {
 
     approachingSong = async (song) => {
         let notes = []
-        this.approachRate = this.props.data.approachRate || 1500
+        this.approachRate = this.props.data.approachRate || 1500 
         let startDelay = this.approachRate
         song.notes.forEach(note => {
             let obj = {
-                time: note[1] / this.state.speedChanger.value + startDelay,
+                time: Math.floor(note[1] / this.state.speedChanger.value + startDelay),
                 index: note[0]
             }
             notes.push(obj)

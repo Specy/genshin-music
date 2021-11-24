@@ -393,6 +393,10 @@ a {
 	overflow-y: auto;
 	min-height: 3.6rem;
 }
+.recorder-wrapper{
+	display: flex;
+	flex-direction: row;
+}
 .error-go-back {
 	position: absolute;
 	left: 1rem;
@@ -440,4 +444,8 @@ a {
 	.floating-prompt {
 		width: 45vw;
 	}
+	.slider-wrapper{
+		margin-left: 0;
+	}
 }
+

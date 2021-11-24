@@ -7,9 +7,8 @@ import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from
 import { MainPageSettings } from "../SettingsObj"
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import rotateImg from "../../assets/icons/rotate.svg"
-import { appName,audioContext } from "../../appConfig"
-import Instrument from "../Instrument"
-import Instrument3 from '../Instrument3';
+import { appName, audioContext } from "../../appConfig"
+import Instrument from '../Instrument3';
 import { songStore } from './SongStore'
 class App extends Component {
 	constructor(props) {
@@ -21,15 +20,22 @@ class App extends Component {
 			songs: this.db.collection("songs")
 		}
 		this.state = {
-			instrument: new Instrument3(),
+			instrument: new Instrument(),
 			isRecording: false,
+			isRecordingAudio: false,
 			songs: [],
 			settings: settings,
 			isDragging: false,
 			thereIsSong: false
 		}
 		this.reverbNode = undefined
+		this.reverbVolumeNode = undefined
 		this.audioContext = audioContext
+		const recorderStream = audioContext.createMediaStreamDestination()
+		this.recorder = {
+			recorder: new MediaRecorder(recorderStream.stream),
+			stream: recorderStream
+		}
 		this.loadInstrument(settings.instrument.value)
 		this.syncSongs()
 		this.loadReverb()
@@ -84,12 +90,12 @@ class App extends Component {
 		}
 	}
 	toggleReverbNodes = (hasReverb) => {
-		const {instrument } = this.state
-		if(!this.reverbNode) return
-		if(hasReverb){
+		const { instrument } = this.state
+		if (!this.reverbNode) return
+		if (hasReverb) {
 			instrument.disconnect()
 			instrument.connect(this.reverbNode)
-		}else{
+		} else {
 			instrument.disconnect()
 			instrument.connect(this.audioContext.destination)
 		}
@@ -111,12 +117,12 @@ class App extends Component {
 		return MainPageSettings
 	}
 	loadInstrument = async (name) => {
-		let newInstrument = new Instrument3(name)
+		let newInstrument = new Instrument(name)
 		await newInstrument.load()
 		newInstrument.connect(this.audioContext.destination)
 		this.setState({
 			instrument: newInstrument
-		})
+		},() => this.toggleReverbNodes(this.state.settings.caveMode.value))
 	}
 	loadReverb() {
 		fetch("./assets/audio/reverb4.wav")
@@ -129,6 +135,7 @@ class App extends Component {
 					convolver.buffer = impulse_response
 					convolver.connect(gainNode)
 					gainNode.connect(this.audioContext.destination)
+					this.reverbVolumeNode = gainNode
 					this.reverbNode = convolver
 				})
 			}).catch((e) => {
@@ -140,7 +147,7 @@ class App extends Component {
 		const { settings } = state
 		if (note === undefined) return
 		if (state.isRecording) this.handleRecording(note)
-		this.state.instrument.play(note.index,getPitchChanger(settings.pitch.value))
+		this.state.instrument.play(note.index, getPitchChanger(settings.pitch.value))
 	}
 	updateSettings = (override) => {
 		let state
@@ -158,7 +165,7 @@ class App extends Component {
 		if (setting.key === "instrument") {
 			this.loadInstrument(data.value)
 		}
-		if(setting.key === 'caveMode'){
+		if (setting.key === 'caveMode') {
 			this.toggleReverbNodes(data.value)
 		}
 		this.setState({
@@ -250,6 +257,43 @@ class App extends Component {
 			open: this.state.isRecording
 		})
 	}
+	toggleRecordAudio = async (override) => {
+		if (typeof override !== "boolean") override = undefined
+		const { instrument } = this.state
+		const hasReverb = this.state.settings.caveMode.value
+		const newState = override !== undefined ? override : !this.state.isRecordingAudio
+		if (newState) {
+			this.recorder.recorder.start()
+			if (hasReverb) {
+				this.reverbVolumeNode.connect(this.recorder.stream)
+			} else {
+				instrument.connect(this.recorder.stream)
+			}
+		} else {
+			if (hasReverb) {
+				this.reverbVolumeNode.disconnect()
+				this.reverbVolumeNode.connect(this.audioContext.destination)
+			} else {
+				instrument.disconnect()
+				instrument.connect(this.audioContext.destination)
+			}
+			this.recorder.recorder.stop();
+			this.recorder.recorder.addEventListener('dataavailable', function (e) {
+				const recording = e.data
+				const url = URL.createObjectURL(recording);
+				const anchor = document.createElement("a");
+				const date = new Date()
+				const fileName = `Genshin_${date.getMonth()}-${date.getDay()}-${date.getHours()}:${date.getMinutes()}.webm`
+				anchor.download = fileName
+				anchor.href = url;
+				anchor.click();
+			}, { once: true })
+
+		}
+		this.setState({
+			isRecordingAudio: newState
+		})
+	}
 	render() {
 		const { state } = this
 		let keyboardFunctions = {
@@ -279,36 +323,46 @@ class App extends Component {
 		}
 
 		return <div className='app bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
-				<div className="rotate-screen">
-					<img src={rotateImg} alt="icon for the rotating screen">
-					</img>
-					For a better experience, add the website to the home screen, and rotate your device
-				</div>
-				{state.isDragging && <div className='drag-n-drop'>
-					Drop file here	
-				</div>}
-				<Menu functions={menuFunctions} data={menuData} />
-				<div className="right-panel">
-					<div className="upper-right">
-						{!this.state.thereIsSong
-							&&
+			<div className="rotate-screen">
+				<img src={rotateImg} alt="icon for the rotating screen">
+				</img>
+				For a better experience, add the website to the home screen, and rotate your device
+			</div>
+			{state.isDragging && <div className='drag-n-drop'>
+				Drop file here
+			</div>}
+			<Menu functions={menuFunctions} data={menuData} />
+			<div className="right-panel">
+				<div className="upper-right">
+					{!this.state.thereIsSong
+						&& <div className='recorder-wrapper'>
 							<GenshinButton
 								active={state.isRecording}
 								click={this.toggleRecord}
 							>
 								{state.isRecording ? "Stop" : "Record"}
 							</GenshinButton>
-						}
-					</div>
-					<div className="keyboard-wrapper">
-						<Keyboard
-							key={state.instrument.instrumentName}
-							data={keyboardData}
-							functions={keyboardFunctions}
-						/>
-					</div>
 
+							<GenshinButton
+								active={state.isRecordingAudio}
+								click={this.toggleRecordAudio}
+								style={{ marginLeft: '1rem' }}
+							>
+								{state.isRecordingAudio ? "Finish recording" : "Record audio"}
+							</GenshinButton>
+						</div>
+
+					}
 				</div>
+				<div className="keyboard-wrapper">
+					<Keyboard
+						key={state.instrument.instrumentName}
+						data={keyboardData}
+						functions={keyboardFunctions}
+					/>
+				</div>
+
+			</div>
 		</div>
 
 
@@ -328,7 +382,7 @@ function setIfInTWA() {
 setIfInTWA()
 function GenshinButton(props) {
 	let className = "genshin-button record-btn " + (props.active ? "selected" : "")
-	return <button className={className} onClick={props.click}>
+	return <button className={className} onClick={props.click} style={{ ...(props.style || {}) }}>
 		{props.children}
 	</button>
 }
