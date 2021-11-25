@@ -74,6 +74,7 @@ const changelogs = [
             You can find it in the main page, next to the practice button`,
             `Rewrite of the main page to increase overall performance`,
             `Added changelog page`,
+            `Added audio recording feature in main page and composer`,
             `Added tabs autoplay (composer) on pc as a setting`,
             `Added note animations when pressing the note`,
             `Added possibility to change background image from URL`,

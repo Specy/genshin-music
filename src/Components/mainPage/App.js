@@ -33,11 +33,17 @@ class App extends Component {
 		this.reverbVolumeNode = undefined
 		this.audioContext = audioContext
 		this.recorder = new AudioRecorder()
-		this.loadInstrument(settings.instrument.value)
 		this.syncSongs()
 		this.loadReverb()
+		this.init()
 	}
 
+	init = async () => {
+		const { settings } = this.state
+		await this.loadInstrument(settings.instrument.value)
+		await this.loadReverb()
+		this.toggleReverbNodes(settings.caveMode.value)
+	}
 	componentDidMount() {
 		document.body.addEventListener('dragenter', this.handleDrag)
 		document.body.addEventListener('dragleave', this.resetDrag)
@@ -88,8 +94,8 @@ class App extends Component {
 	}
 	toggleReverbNodes = (hasReverb) => {
 		const { instrument } = this.state
-		if (!this.reverbNode) return
 		if (hasReverb) {
+			if(!this.reverbNode) return console.log("Couldn't connect to reverb")
 			instrument.disconnect()
 			instrument.connect(this.reverbNode)
 		} else {
@@ -122,7 +128,8 @@ class App extends Component {
 		}, () => this.toggleReverbNodes(this.state.settings.caveMode.value))
 	}
 	loadReverb() {
-		fetch("./assets/audio/reverb4.wav")
+		return new Promise(resolve => {
+			fetch("./assets/audio/reverb4.wav")
 			.then(r => r.arrayBuffer())
 			.then(b => {
 				this.audioContext.decodeAudioData(b, (impulse_response) => {
@@ -134,10 +141,13 @@ class App extends Component {
 					gainNode.connect(this.audioContext.destination)
 					this.reverbVolumeNode = gainNode
 					this.reverbNode = convolver
+					resolve()
 				})
 			}).catch((e) => {
 				console.log("Error with reverb", e)
 			})
+		})
+
 	}
 	playSound = (note) => {
 		const { state } = this
@@ -269,11 +279,12 @@ class App extends Component {
 			recorder.start()
 		} else {
 			let recording = await recorder.stop()
-			let fileName = await asyncPrompt("Write the file name, press cancel to ignore")
-			if (fileName) {
-				recorder.download(recording.toUrl(), fileName + '.webm')
-				this.toggleReverbNodes(hasReverb)
-			}
+			let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
+			if (fileName) recorder.download(recording.toUrl(), fileName + '.webm')
+			this.toggleReverbNodes(hasReverb)
+			this.reverbVolumeNode.disconnect()
+			this.reverbVolumeNode.connect(audioContext.destination)
+
 		}
 		this.setState({
 			isRecordingAudio: newState
@@ -309,12 +320,12 @@ class App extends Component {
 
 		return <div className='app bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
 			<div className='record-button'>
-				<GenshinButton
+				<AppButton
 					active={state.isRecordingAudio}
 					click={this.toggleRecordAudio}
 				>
 					{state.isRecordingAudio ? "Finish recording" : "Record audio"}
-				</GenshinButton>
+				</AppButton>
 			</div>
 			<div className="rotate-screen">
 				<img src={rotateImg} alt="icon for the rotating screen">
@@ -329,12 +340,12 @@ class App extends Component {
 				<div className="upper-right">
 					{!this.state.thereIsSong
 						&&
-						<GenshinButton
+						<AppButton
 							active={state.isRecording}
 							click={this.toggleRecord}
 						>
 							{state.isRecording ? "Stop" : "Record"}
-						</GenshinButton>
+						</AppButton>
 
 					}
 				</div>
@@ -364,7 +375,7 @@ function setIfInTWA() {
 	sessionStorage.setItem('isTwa', isTwa)
 }
 setIfInTWA()
-function GenshinButton(props) {
+function AppButton(props) {
 	let className = "genshin-button record-btn " + (props.active ? "selected" : "")
 	return <button className={className} onClick={props.click} style={{ ...(props.style || {}) }}>
 		{props.children}

@@ -136,7 +136,7 @@ class Menu extends Component {
                             Composed
                         </button>
                     </div>
-                    <div className="songs-wrapper no-margin">
+                    <div className="songs-wrapper" style={{marginBottom: '0.5rem'}}>
                         {this.state.selectedSongType === "recorded"
                             ? songs.map(song => {
                                 return <SongRow
@@ -157,6 +157,14 @@ class Menu extends Component {
                             })
                         }
 
+                    </div>
+                    <div className="songs-buttons-wrapper" style={{marginTop: 'auto'}}>
+                        <button 
+                            className={`genshin-button record-btn ${data.isRecordingAudio ? "selected" : ""}`}
+                            onClick={() => functions.startRecordingAudio(!data.isRecordingAudio)}
+                        >
+                                {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
+                        </button>
                     </div>
 
                 </MenuPanel>
