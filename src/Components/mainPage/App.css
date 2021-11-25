@@ -393,9 +393,10 @@ a {
 	overflow-y: auto;
 	min-height: 3.6rem;
 }
-.recorder-wrapper{
-	display: flex;
-	flex-direction: row;
+.record-button{
+	position: absolute;
+	left: 4.5rem;
+	top: 0.5rem;
 }
 .error-go-back {
 	position: absolute;

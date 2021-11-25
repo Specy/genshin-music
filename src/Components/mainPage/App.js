@@ -10,6 +10,7 @@ import rotateImg from "../../assets/icons/rotate.svg"
 import { appName, audioContext } from "../../appConfig"
 import Instrument from '../Instrument3';
 import { songStore } from './SongStore'
+import AudioRecorder from '../AudioRecorder';
 class App extends Component {
 	constructor(props) {
 		super(props)
@@ -31,11 +32,7 @@ class App extends Component {
 		this.reverbNode = undefined
 		this.reverbVolumeNode = undefined
 		this.audioContext = audioContext
-		const recorderStream = audioContext.createMediaStreamDestination()
-		this.recorder = {
-			recorder: new MediaRecorder(recorderStream.stream),
-			stream: recorderStream
-		}
+		this.recorder = new AudioRecorder()
 		this.loadInstrument(settings.instrument.value)
 		this.syncSongs()
 		this.loadReverb()
@@ -122,7 +119,7 @@ class App extends Component {
 		newInstrument.connect(this.audioContext.destination)
 		this.setState({
 			instrument: newInstrument
-		},() => this.toggleReverbNodes(this.state.settings.caveMode.value))
+		}, () => this.toggleReverbNodes(this.state.settings.caveMode.value))
 	}
 	loadReverb() {
 		fetch("./assets/audio/reverb4.wav")
@@ -260,35 +257,23 @@ class App extends Component {
 	toggleRecordAudio = async (override) => {
 		if (typeof override !== "boolean") override = undefined
 		const { instrument } = this.state
+		const { recorder } = this
 		const hasReverb = this.state.settings.caveMode.value
 		const newState = override !== undefined ? override : !this.state.isRecordingAudio
 		if (newState) {
-			this.recorder.recorder.start()
 			if (hasReverb) {
-				this.reverbVolumeNode.connect(this.recorder.stream)
+				this.reverbVolumeNode.connect(recorder.node)
 			} else {
-				instrument.connect(this.recorder.stream)
+				instrument.connect(recorder.node)
 			}
+			recorder.start()
 		} else {
-			if (hasReverb) {
-				this.reverbVolumeNode.disconnect()
-				this.reverbVolumeNode.connect(this.audioContext.destination)
-			} else {
-				instrument.disconnect()
-				instrument.connect(this.audioContext.destination)
+			let recording = await recorder.stop()
+			let fileName = await asyncPrompt("Write the file name, press cancel to ignore")
+			if (fileName) {
+				recorder.download(recording.toUrl(), fileName + '.webm')
+				this.toggleReverbNodes(hasReverb)
 			}
-			this.recorder.recorder.stop();
-			this.recorder.recorder.addEventListener('dataavailable', function (e) {
-				const recording = e.data
-				const url = URL.createObjectURL(recording);
-				const anchor = document.createElement("a");
-				const date = new Date()
-				const fileName = `Genshin_${date.getMonth()}-${date.getDay()}-${date.getHours()}:${date.getMinutes()}.webm`
-				anchor.download = fileName
-				anchor.href = url;
-				anchor.click();
-			}, { once: true })
-
 		}
 		this.setState({
 			isRecordingAudio: newState
@@ -323,6 +308,14 @@ class App extends Component {
 		}
 
 		return <div className='app bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
+			<div className='record-button'>
+				<GenshinButton
+					active={state.isRecordingAudio}
+					click={this.toggleRecordAudio}
+				>
+					{state.isRecordingAudio ? "Finish recording" : "Record audio"}
+				</GenshinButton>
+			</div>
 			<div className="rotate-screen">
 				<img src={rotateImg} alt="icon for the rotating screen">
 				</img>
@@ -335,22 +328,13 @@ class App extends Component {
 			<div className="right-panel">
 				<div className="upper-right">
 					{!this.state.thereIsSong
-						&& <div className='recorder-wrapper'>
-							<GenshinButton
-								active={state.isRecording}
-								click={this.toggleRecord}
-							>
-								{state.isRecording ? "Stop" : "Record"}
-							</GenshinButton>
-
-							<GenshinButton
-								active={state.isRecordingAudio}
-								click={this.toggleRecordAudio}
-								style={{ marginLeft: '1rem' }}
-							>
-								{state.isRecordingAudio ? "Finish recording" : "Record audio"}
-							</GenshinButton>
-						</div>
+						&&
+						<GenshinButton
+							active={state.isRecording}
+							click={this.toggleRecord}
+						>
+							{state.isRecording ? "Stop" : "Record"}
+						</GenshinButton>
 
 					}
 				</div>

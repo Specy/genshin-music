@@ -28,7 +28,7 @@ class Instrument3 {
     }
 
     changeVolume = (amount) => {
-        let newVolume = Number((amount / 130).toFixed(2))
+        let newVolume = Number((amount / 135).toFixed(2))
         if(amount < 5) newVolume = 0
         this.volumeNode.gain.value = newVolume
     }
