@@ -33,6 +33,7 @@
 	align-items: center;
 	transition: all 0.1s;
 	cursor: pointer;
+	z-index: 10;
 	touch-action: none;
 }
 .note-sky,
@@ -40,6 +41,9 @@
 	border-radius: 1.5vw;
 	background-color: var(--primary);
 	border: 0.4vw solid var(--primary);
+    transform: translate3d(0, 0, 0);
+    transform-origin: 50% 50%;
+    user-select: none;
 }
 
 .note-composer,
@@ -85,13 +89,90 @@
 	font-size: 1rem;
 	color: white;
 }
-.button-hitbox {
+.button-hitbox,
+.button-hitbox-bigger
+{
 	background-color: transparent;
 	border: none;
 	padding: 0.25rem;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	position: relative;
+}
+.button-hitbox-bigger{
+	padding: 0.35rem;
+}
+.approach-circle, .approach-circle-sky {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	border: 3px solid #3da399;
+	border-radius: 50%;
+	animation: approach 1s linear;
+	transform-origin: 50% 50%;
+	pointer-events: none;
+	opacity: 0;
+	transform: scale(2.7);
+
+}
+.approach-circle-sky{
+	transform: scale(1.8);
+	border-radius: 2vw;
+}
+@keyframes approach {
+	0% {
+		
+		opacity: 0;
+	}
+	50%{
+		opacity: 0.3;
+	}
+	99% {
+		transform: scale(0.8);
+		opacity: 0.8;
+	}
+	100% {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+}
+
+.note-animation,.note-animation-sky{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	border: 3px solid #3da399;
+	border-radius: 50%;
+	animation: note-animation 0.75s cubic-bezier(.25,.46,.45,.94);
+	animation-delay: 0.1s;
+	transform-origin: 50% 50%;
+	pointer-events: none;
+	opacity: 1;
+	z-index: 1;
+	transform: scale(0.8);
+}
+.note-animation-sky{
+	border-radius: 2vw;
+}
+@keyframes note-animation {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+        border-width: 3px;
+    }
+    70% {
+        transform: scale(1.45);
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+        border-width: 2px;
+    }
 }
 .upper-right {
 	display: flex;
@@ -122,8 +203,26 @@
 		bottom: 0rem;
 	}
 }
+
+.approach-wrong{
+	background-color:#d66969;
+	border-color:#b35555
+}
+.approach-wrong img{
+	filter: brightness(999);
+}
+.approach-correct{
+	background-color: #60ad7e;
+	border-color: #358a55;
+}
+.approach-correct img{
+	filter: brightness(999);
+}
 @media only screen and (max-width: 800px) {
 	.note-name-sky {
 		font-size: 0.7rem;
+	}
+	.note-animation{
+		border: 2px solid #3da399;
 	}
 }

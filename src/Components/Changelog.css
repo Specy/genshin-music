@@ -1,0 +1,84 @@
+.changelog-page{
+    padding: 2rem;
+    width: 60vw;
+}
+.changelog-page-title{
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--whitish);
+}
+.changelog-wrapper{
+    color: var(--whitish);
+}
+
+.changelog-title{
+    display: flex;
+    width: 100%;
+    align-items: center;
+    margin: 0.4rem;
+    margin-left: 0;
+}
+.clt-1{
+    background-color: var(--note-text);
+    color: #232933;
+    padding: 0.2rem;
+    border-radius: 0.2rem;
+    width: 5rem;
+    text-align: center;
+}
+.clt-2{
+    margin-left: 1rem;
+    color: var(--whitish);
+}
+.cll-1{
+    font-size: 1.5rem;
+    color: var(--icon-color);
+}
+.changelog-list{
+    margin:0;
+    margin-left: 2.5rem;
+    border-left: solid 2px var(--secondary);
+    padding: 1rem 2rem;
+}
+.changelog-list ul li{
+    margin-top: 0.4rem;
+}
+.absolute-changelog-btn{
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    background-color: #576377;
+    border-radius: 0.3rem;
+    width: 4rem;
+    height: 3rem;
+    display: flex;
+    justify-content: center;
+    color: var(--whitish);
+    cursor: pointer;
+    align-items: center;
+}
+.cll-new-line{
+    margin: 0;
+    margin-top: 0.2rem;
+    margin-left: 1rem;
+}
+.go-to-changelog{
+    margin-top: 1rem;
+    text-align: center;
+    height: 3rem;
+    width: 100%;
+}
+.changelog-ending{
+    height: 2.5rem;
+    border-left: dashed 2px var(--secondary);
+    margin-left: 2.5rem;
+    margin-bottom: 3rem;
+}
+@media only screen and (max-width: 900px) {
+    .changelog-page{
+        width: calc(100% - 8rem);
+        padding: 0;
+        padding-top: 1.5rem;
+        padding-left: 1rem;
+    }
+}

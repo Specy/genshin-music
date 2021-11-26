@@ -1,7 +1,7 @@
 import { isMobile } from "is-mobile"
 import {instruments, appName} from "../appConfig"
 let ComposerSettings = {
-    settingVesion: appName + 10,
+    settingVesion: appName + 14,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -109,10 +109,23 @@ let ComposerSettings = {
         type: "checkbox",
         songSetting: false,
         value: false,
+    },
+    backgroundImage:{
+        name: "Background image (url)",
+        type: "text",
+        songSetting: false,
+        value: "",
+        placeholder: "Write here"
+    },
+    syncTabs:{
+        name: "Autoplay in all tabs (pc only)",
+        type: "checkbox",
+        songSetting:false,
+        value: false
     }
 }
 let MainPageSettings = {
-    settingVesion:appName + 10,
+    settingVesion:appName + 12,
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
@@ -148,6 +161,13 @@ let MainPageSettings = {
             "Keyboard layout"
         ]
     },
+    approachSpeed: {
+        name: "Approach Rate (AR)",
+        type: "number",
+        songSetting: false,
+        value: 1500,
+        threshold: [0, 5000]
+    },
     pitch: {
         name: "Pitch",
         type: "select",
@@ -173,6 +193,19 @@ let MainPageSettings = {
         type: "checkbox",
         songSetting: false,
         value: false,
+    },
+    backgroundImage:{
+        name: "Background image (url)",
+        type: "text",
+        songSetting: false,
+        value: "",
+        placeholder: "Write here"
+    },
+    noteAnimation:{
+        name: "Note animation",
+        type: "checkbox",
+        songSetting: false,
+        value: false
     }
 }
 export {

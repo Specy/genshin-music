@@ -9,7 +9,7 @@
 	--text-color: #aaaa82;
 	--composer-tool: #d4c199;
 	--clicked-note: #8fedd9;
-  --whitish: #ede5d8;
+    --whitish: #ede5d8;
 }
 @font-face {
 	font-family: Bonobo;
@@ -101,12 +101,13 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	flex: 1;
 }
 #root {
 	width: 100%;
 	height: 100%;
 }
-.app {
+.app, .app-content {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
@@ -114,6 +115,9 @@ body {
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
+}
+.app-content{
+	z-index: 2;
 }
 .genshin-button {
 	background-color: var(--primary);
@@ -162,6 +166,23 @@ body {
 	transition: all 0.3s;
 	opacity: 1;
 	margin-top: 1.5rem;
+	margin-left: 3.5rem;
+}
+.slider-select{
+	width: 3rem;
+	font-size: 0.8rem;
+	height: 2rem;
+	text-align: center;
+	color: var(--whitish);
+	font-weight: bold;
+	border: none;
+  	-moz-appearance: none;
+	appearance: none;
+ 	 -webkit-appearance: none;
+	background-image: none;
+	border-radius: 0.3rem;
+	background-color: #576377;
+	margin-left: 0.5rem;
 }
 .hidden-opacity {
 	opacity: 0;
@@ -188,10 +209,11 @@ body {
 	z-index: 999;
 	padding: 1rem;
 	color: white;
-	transition: all 1s;
+	transition: all 0.6s;
 	display: flex;
 	flex-direction: column;
 	opacity: 0;
+	transform: scale(0.8);
 }
 .red {
 	background-color: red;
@@ -251,25 +273,18 @@ a {
 	width: 60vw;
 	min-height: 60vh;
 	max-height: 90vh;
-	overflow-y: auto;
 	background-color: var(--primary);
 	z-index: 500;
+	border: solid 1px var(--secondary);
 	align-self: center;
-	border-radius: 1rem;
-	padding: 1.5rem;
+	border-radius: 0.8rem;
+	padding: 0.8rem;
 	color: white;
 	display: flex;
 	flex-direction: column;
 }
-.welcome-close {
-	position: absolute;
-	bottom: 1rem;
-	right: 1rem;
-	border: none;
-	background-color: lightgray;
-	padding: 0.4rem 1rem;
-	border-radius: 0.2rem;
-	cursor: pointer;
+.welcome-overflow{
+	overflow-y: auto;
 }
 .welcome-message-title {
 	font-size: 1.5rem;
@@ -327,8 +342,9 @@ a {
 	justify-content: space-between;
 }
 .floating-message-visible {
-	bottom: 2rem;
+	bottom: 1rem;
 	opacity: 1;
+	transform: scale(1);
 }
 .error-page {
 	background-color: #863545;
@@ -377,6 +393,11 @@ a {
 	overflow-y: auto;
 	min-height: 3.6rem;
 }
+.record-button{
+	position: absolute;
+	left: 4.5rem;
+	top: 0.5rem;
+}
 .error-go-back {
 	position: absolute;
 	left: 1rem;
@@ -385,6 +406,34 @@ a {
 .error-text-wrapper {
 	width: 50vw;
 	text-align: center;
+}
+.approaching-accuracy{
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	color: var(--whitish);
+	padding: 0.4rem;
+	background-color: #495466;
+	font-weight:bold;
+	border-radius: 0.4rem;
+
+}
+.approaching-accuracy table{
+	font-size: 0.8rem;
+	border-collapse: collapse;
+}
+.bg-image{
+	background-size: cover;
+	background-repeat: no-repeat;
+}
+.sc-2{
+	padding-right: 0.5rem;
+}
+.sc-1{
+	padding-left: 0.5rem;
+	min-width: 3.5rem;
+	
+	border-left:solid 2px var(--secondary);
 }
 @media only screen and (orientation: portrait) {
 	.error-songs-wrapper,
@@ -400,4 +449,8 @@ a {
 	.floating-prompt {
 		width: 45vw;
 	}
+	.slider-wrapper{
+		margin-left: 0;
+	}
 }
+

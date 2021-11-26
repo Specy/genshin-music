@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom';
 import App from './Components/mainPage/App';
 import Composer from "./Components/Composer/Composer"
 import ErrorPage from "./Components/ErrorPage"
+import Changelogpage from './Components/ChangelogPage'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import "./Components/mainPage/App.css"
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "./Components/SongUtils"
-import { appName } from "./appConfig"
-let pages = ["", "Composer", "ErrorPage"]
+import { appName, appVersion } from "./appConfig"
+let pages = ["", "Composer", "ErrorPage", "Changelog"]
 let updateChecked = false
 class Index extends Component {
 	constructor(props) {
@@ -16,6 +17,8 @@ class Index extends Component {
 		let path = window.location.href.split("/")
 		path = path.length === 0 ? "" : path = path[path.length - 1]
 		if (!pages.includes(path)) path = ""
+		let hasVisited = localStorage.getItem(appName + "_Visited")
+		hasVisited = hasVisited === null ? false : Boolean(hasVisited)
 		this.state = {
 			floatingMessage: {
 				timestamp: 0,
@@ -24,9 +27,9 @@ class Index extends Component {
 				title: "Title"
 			},
 			updateChecked: false,
-			hasVisited: localStorage.getItem(appName + "_Visited"),
 			hasPersistentStorage: navigator.storage && navigator.storage.persist,
-			selectedPage: path
+			selectedPage: path,
+			hasVisited: hasVisited
 		}
 		this.checkUpdate()
 	}
@@ -78,12 +81,12 @@ class Index extends Component {
 	checkUpdate = async () => {
 		await delayMs(1500) //wait for page to render
 		if (updateChecked) return
-		let currentVersion = "1.7"
+		let currentVersion = appVersion
 		let updateMessage =
-			`
-				(For genshin) Added Zither, Added back "do re mi" format
-				(For all) Added song backup download 
-			`
+			`   - Added Approaching circles mode, a new way to learn a song
+				- Better performance in the main page
+				- On pc, you can now add notes with your keyboard while playing
+				- Added changelog page`
 		let storedVersion = localStorage.getItem(appName + "_Version")
 		if (!this.state.hasVisited) {
 			return localStorage.setItem(appName + "_Version", currentVersion)
@@ -94,6 +97,7 @@ class Index extends Component {
 			localStorage.setItem(appName + "_Version", currentVersion)
 		}
 		updateChecked = true
+		if(!this.state.hasVisited) return
 		if (navigator.storage && navigator.storage.persist) {
 			let isPersisted = await navigator.storage.persisted()
 			if (!isPersisted) isPersisted = await navigator.storage.persist()
@@ -137,23 +141,25 @@ class Index extends Component {
 					{floatingMessage.text}
 				</div>
 			</div>
-			{[null, false, "false"].includes(this.state.hasVisited) ?
+			{!this.state.hasVisited ?
 				<div className="welcome-message">
-					<div className={"welcome-message-title"}>Welcome to {appName} music {appName === "Sky" ? "nightly" : ""}</div>
-					<div>
-						This is a webapp which is run in your browser, if you currently are on one, please add
-						the website to the homescreen to have a fullscreen view and a more "app" feel.
-						<br /><br />
-						<div className="red-text">WARNING</div>: Clearing your browser cache / storage might also delete your songs, make sure to
-						make a backup sometimes.
-						<br /><br />
-						{this.state.hasPersistentStorage ?
-							<div>
-								<div className="red-text">WARNING</div>: To prevent your browser from automatically clearing the app storage, click the "confirm" button below, if asked,
-								allow permission to keep the website data (Persistent storage). If it doesn't work, the program will try to request it again at every launch.
-							</div>
-							: null
-						}
+					<div className='welcome-overflow'>
+						<div className={"welcome-message-title"}>Welcome to {appName} music {appName === "Sky" ? "nightly" : ""}</div>
+						<div>
+							This is a webapp which is run in your browser, if you currently are on one, please add
+							the website to the homescreen to have a fullscreen view and a more "app" feel.
+							<br /><br />
+							<div className="red-text">WARNING</div>: Clearing your browser cache / storage might also delete your songs, make sure to
+							make a backup sometimes.
+							<br /><br />
+							{this.state.hasPersistentStorage ?
+								<div>
+									<div className="red-text">WARNING</div>: To prevent your browser from automatically clearing the app storage, click the "confirm" button below, if asked,
+									allow permission to keep the website data (Persistent storage). If it doesn't work, the program will try to request it again at every launch.
+								</div>
+								: null
+							}
+						</div>
 					</div>
 					<div className="welcome-message-button-wrapper">
 						<button className="welcome-message-button" onClick={this.askForStorage}>
@@ -177,6 +183,9 @@ class Index extends Component {
 							<Composer changePage={this.changePage} />
 						</Route>
 
+						<Route exact path="/Changelog">
+							<Changelogpage changePage={this.changePage} />
+						</Route>
 					</>
 				}
 

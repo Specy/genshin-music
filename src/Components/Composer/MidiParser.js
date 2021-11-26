@@ -205,7 +205,7 @@ class MidiImport extends Component {
                     <td>
                         <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
                     </td>
-                    <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems:"center" }}>
                     <NumberInput
                             value={bpm}
                             changeValue={changeBpm}
@@ -231,7 +231,7 @@ class MidiImport extends Component {
                     <td>
                         <div style={{ marginRight: '0.5rem' }}>Pitch:</div>
                     </td>
-                    <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems:"center" }}>
                         <select
                             className='midi-select'
                             value={pitch}

@@ -128,7 +128,9 @@ class ComposedSong {
 	}
 }
 
-
+function NotesTable(length){
+	return new Array(length).fill().map(() => {return []})
+}
 function ComposerSongDeSerialization(song) {
 	let obj = {
 		data: song.data,
@@ -266,7 +268,8 @@ function getSongType(song) {
 	try {
 		if (song.data === undefined) {
 			//oldSky format
-			if (song.songNotes !== undefined && song.pitchLevel !== undefined) {
+			song.pitchLevel = song.pitchLevel || 0
+			if (song.songNotes !== undefined) {
 				return "oldSky"
 			}
 		} else {
@@ -500,5 +503,6 @@ export {
 	numberToLayer,
 	mergeLayers,
 	groupByIndex,
-	delayMs
+	delayMs,
+	NotesTable
 }

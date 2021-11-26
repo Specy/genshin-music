@@ -2,6 +2,7 @@ import React, { Component, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FaDiscord, FaGithub} from 'react-icons/fa';
+import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import "./menu.css"
 import mainPageImg from '../../assets/images/mainpage.png'
@@ -10,6 +11,7 @@ import songsImg from '../../assets/images/songs.png'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 import { appName } from "../../appConfig"
+import {songStore} from './SongStore'
 
 class Menu extends Component {
     constructor(props) {
@@ -23,6 +25,7 @@ class Menu extends Component {
             searchStatus: 'Write a song name then search!',
             isPersistentStorage: false
         }
+ 
         this.checkPersistentStorage()
     }
 
@@ -44,7 +47,6 @@ class Menu extends Component {
             searchedSongs:[],
             searchStatus: 'Write a song name then search!'
         })
-        this.props.functions.stopSong()
     }
     searchSongs = async () =>{
         const { searchInput, searchStatus } = this.state
@@ -82,6 +84,7 @@ class Menu extends Component {
                 open: false,
             })
         }
+        this.clearSearch()
         this.setState({
             selectedMenu: selection,
             open: true
@@ -97,14 +100,20 @@ class Menu extends Component {
         reader.addEventListener('load',async (event) => {
             try {
                 let songsInput = JSON.parse(event.target.result)
+                
                 if(!Array.isArray(songsInput)) songsInput = [songsInput]
                 for(let song of songsInput){
                     song = prepareSongImport(song)
                     await this.props.functions.addSong(song)
                 }
             } catch (e) {
-                new LoggerEvent("Error", "Error importing song").trigger()
+                let fileName = file.name
                 console.error(e)
+                if(fileName?.includes?.(".mid")){
+                    return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
+                }   
+                new LoggerEvent("Error", "Error importing song").trigger()
+                
             }
         })
         reader.readAsText(file)
@@ -153,7 +162,6 @@ class Menu extends Component {
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
         const { searchStatus , searchedSongs, selectedMenu } = this.state
         let searchedSongFunctions = {
-            playSong: functions.playSong,
             importSong: functions.addSong,
         }
         return <div className="menu-wrapper">
@@ -239,6 +247,7 @@ class Menu extends Component {
                         </button>
                     </div>
                 </MenuPanel>
+
                 <MenuPanel title="Settings" visible={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
                         return <SettingsRow
@@ -257,6 +266,7 @@ class Menu extends Component {
                         Support me
                     </a>}
                 </MenuPanel>
+                
                 <MenuPanel title="Library" visible={selectedMenu}>
                     <div>
                         Here you can find songs to learn, they are provided by the sky-music library.
@@ -307,6 +317,12 @@ class Menu extends Component {
                             <FaGithub className='help-icon' />
                         </a>
                         
+                    </div>
+                    <div 
+                        className='go-to-changelog genshin-button'
+                        onClick={() => changePage('Changelog')}
+                    >
+                        Go to changelog
                     </div>
                     <div className='help-title'>
                         Main page
@@ -422,6 +438,14 @@ function SettingsRow(props) {
             }
         }
 
+        if(el.type === 'checkbox'){
+            data.value = value
+            let obj = {
+                key: objKey,
+                data
+            }
+            update(obj)
+        }
         setter(value)
     }
     function sendChange() {
@@ -457,6 +481,7 @@ function SettingsRow(props) {
             </select>
             : <input
                 type={data.type}
+                placeholder={data.placeholder || ""}
                 value={valueHook}
                 checked={valueHook}
                 onChange={handleChange}
@@ -467,24 +492,43 @@ function SettingsRow(props) {
 function SongRow(props) {
     let data = props.data
     let deleteSong = props.functions.removeSong
-    let playSong = props.functions.playSong
-    let practiceSong = props.functions.practiceSong
     let toggleMenu = props.functions.toggleMenu
     let downloadSong = props.functions.downloadSong
+ 
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            playSong(data)
+            songStore.data = {
+                eventType: 'play',
+                song: data,
+                start: 0
+            }
             toggleMenu(false)
         }}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                practiceSong(data)
-                toggleMenu(false)
-            }}
+                    songStore.data = {
+                        eventType: 'practice',
+                        song: data,
+                        start: 0
+                    }
+                    toggleMenu(false)
+                }}
             >
                 <FontAwesomeIcon icon={faCrosshairs} />
+            </button>
+            
+            <button className="song-button" onClick={() => {
+                    songStore.data = {
+                        eventType: 'approaching',
+                        song: data,
+                        start: 0
+                    }
+                    toggleMenu(false)
+                }}
+            >
+                <BsCircle />
             </button>
             <button className="song-button" onClick={() => downloadSong(data)}>
                 <FontAwesomeIcon icon={faDownload} />
@@ -510,7 +554,7 @@ class MenuItem extends Component {
 
 function SearchedSong(props){
     const { functions, data} = props
-    const { playSong, importSong} = functions
+    const { importSong } = functions
     const download = async function(){
         try{
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
@@ -525,7 +569,11 @@ function SearchedSong(props){
         try{
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
             song = prepareSongImport(song)
-            playSong(song)
+            songStore.data = {
+                eventType: 'play',
+                song: song,
+                start: 0
+            }
         }catch(e){
             console.error(e)
             new LoggerEvent("Error", "Error downloading song").trigger()

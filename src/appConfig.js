@@ -1,9 +1,13 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
-console.log("App name:",appName)
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][0]
+const appVersion = '2'
+console.log(`${appName}-V${appVersion}`)
+
+
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
     note: appName === "Genshin" ? "note" : "note-sky"
 }
+const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 const instruments = appName === "Genshin" ? [
     "Lyre",
     "DunDun",
@@ -161,7 +165,12 @@ const keyNames = {
         11: ["B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B"]
     }
 }
-
+const speedChangers = [0.25,0.5,0.75,1,1.25,1.5,2].map(e => {
+    return {
+        name: `x${e}`,
+        value: e
+    }
+})
 
 const pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] 
 
@@ -185,5 +194,8 @@ export {
     notesPerColumn,
     keyNames,
     pitchArr,
-    layoutImages
+    layoutImages,
+    appVersion,
+    speedChangers,
+    audioContext
 }

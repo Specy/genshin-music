@@ -1,67 +1,79 @@
-import { instrumentsData, layoutData, instruments } from "../appConfig"
+import { instrumentsData, layoutData, instruments,audioContext } from "../appConfig"
 class Instrument {
     constructor(instrumentName) {
-        this.instrumentName = instrumentName
-        let instrumentNameTemp = instrumentName === undefined ? instruments[0] : instrumentName
+        this.instrumentName = instrumentName === undefined ? instruments[0] : instrumentName
         this.layout = []
-        this.gain = GainNode
-        let instrumentData = instrumentsData[instrumentNameTemp]
-        this.keyboardLayout = layoutData[instrumentData.notes].keyboardLayout
+        this.buffers = []
+        this.deleted = false
+        this.volumeNode = audioContext.createGain()
+        let instrumentData = instrumentsData[this.instrumentName]
 
+        this.keyboardLayout = layoutData[instrumentData.notes].keyboardLayout
         this.mobileLayout = layoutData[instrumentData.notes].mobileLayout
         this.keyboardCodes = layoutData[instrumentData.notes].keyboardCodes
-        let i = 0
-        if (instrumentName === undefined) return
-        for (const noteName of this.keyboardLayout) {
+        
+        this.keyboardLayout.forEach((noteName, i) => {
             let noteNames = {
                 keyboard: noteName,
                 mobile: this.mobileLayout[i]
             }
             let url = `./assets/audio/${instrumentName}/${i}.mp3`
-            let note = new NoteData(i, noteNames, url)
-            this.layout.push(note)
-            i++
-        }
+            this.layout.push(new NoteData(i, noteNames, url))
+        })
 
+        this.volumeNode.gain.value = 0.8
     }
     getNoteFromCode = (code) => {
         let index = this.keyboardLayout.findIndex(e => e === String(code))
         return index !== -1 ? index : null
     }
-    setBuffers = (bufferArray) => {
-        bufferArray.forEach((buffer, i) => {
-            this.layout[i].buffer = buffer
-        })
-    }
+
     changeVolume = (amount) => {
-        let newVolume = Number((amount / 100).toFixed(2))
+        let newVolume = Number((amount / 135).toFixed(2))
         if(amount < 5) newVolume = 0
-        this.gain.gain.value = newVolume
+        this.volumeNode.gain.value = newVolume
     }
-    load = async (audioContext) => {
-        this.gain = audioContext.createGain()
-        this.gain.gain.value = 1
+
+    play = (note, pitch) => {
+        if(this.deleted) return
+        let player = audioContext.createBufferSource()
+        player.buffer = this.buffers[note]
+        player.connect(this.volumeNode)
+        player.playbackRate.value = pitch
+        player.start(0)
+        player.onended = () => {
+            player.stop()
+            player.disconnect()
+        }
+    }
+
+    load = async () => {
         let emptyBuffer = audioContext.createBuffer(2, audioContext.sampleRate, audioContext.sampleRate)
-        //thanks safari, i have to do this ugly thing
-        const requests = this.layout.map(e => {
+        const requests = this.layout.map(note => {
             return new Promise(resolve => {
-                fetch(e.url)
+                fetch(note.url)
                     .then(result => result.arrayBuffer())
                     .then(buffer => {
                         audioContext.decodeAudioData(buffer, resolve, () => {
                             resolve(emptyBuffer)
                         })
-                            .catch(e => {
-                                resolve(emptyBuffer)
-                            })
-                    }).catch(e => {
-                        resolve(emptyBuffer)
-                    })
+                        .catch(e => {resolve(emptyBuffer)})
+                    }).catch(e => {resolve(emptyBuffer)})
             })
         })
-        let buffers = await Promise.all(requests)
-        this.setBuffers(buffers)
+        this.buffers = await Promise.all(requests)
         return true
+    }
+    disconnect = () =>{
+        this.volumeNode.disconnect()
+    }
+    connect = (node) => {
+        this.volumeNode.connect(node)
+    }
+    delete = () => {
+        this.disconnect()
+        this.deleted = true
+        this.buffers = []
     }
 }
 
