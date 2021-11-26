@@ -20,7 +20,6 @@
     "react-scripts": "4.0.3",
     "react-swipeable": "^6.2.0",
     "recursive-copy": "^2.0.13",
-    "tone": "^14.7.77",
     "web-vitals": "^2.1.2",
     "workbox-background-sync": "^6.3.0",
     "workbox-broadcast-update": "^6.3.0",
