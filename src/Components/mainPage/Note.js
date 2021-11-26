@@ -15,7 +15,7 @@ class Note extends Component {
         let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.15s` }
         let className = parseClass(status)
         let effects = instrumentsData[instrument]?.effects || {}
-        let squaredCircle = appName === 'Sky' ? {borderRadius: '2vw'} : {}
+        let noteAnimation = appName === 'Sky' ? "note-animation-sky" : "note-animation"
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
@@ -27,15 +27,13 @@ class Note extends Component {
                 return <ApproachCircle
                     key={note.id}
                     index={data.index}
-                    style={squaredCircle}
                     approachRate={approachRate}
                 />
             })}
             {outgoingAnimation.map(e => {
                 return <div 
                     key={e.key}
-                    className='note-animation' 
-                    style={squaredCircle}
+                    className={noteAnimation}
                 />
             })}
             <div className={className} style={animation}>
@@ -60,12 +58,12 @@ function getApproachCircleColor(index){
     return colors[row]
 }
 function ApproachCircle(props) {
+    let className = appName === "Sky" ? "approach-circle-sky" : "approach-circle"
     return <div
-        className='approach-circle'
+        className={className}
         style={{ 
             animation: `approach ${props.approachRate}ms linear`,
             borderColor:getApproachCircleColor(props.index),
-            ...(props.style || {})
         }}
     >
     </div>

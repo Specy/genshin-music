@@ -103,7 +103,7 @@
 .button-hitbox-bigger{
 	padding: 0.35rem;
 }
-.approach-circle {
+.approach-circle, .approach-circle-sky {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -115,11 +115,16 @@
 	transform-origin: 50% 50%;
 	pointer-events: none;
 	opacity: 0;
-}
+	transform: scale(2.7);
 
+}
+.approach-circle-sky{
+	transform: scale(1.8);
+	border-radius: 2vw;
+}
 @keyframes approach {
 	0% {
-		transform: scale(2.7);
+		
 		opacity: 0;
 	}
 	50%{
@@ -131,10 +136,11 @@
 	}
 	100% {
 		opacity: 0;
+		transform: scale(0.8);
 	}
 }
 
-.note-animation{
+.note-animation,.note-animation-sky{
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -149,6 +155,9 @@
 	opacity: 1;
 	z-index: 1;
 	transform: scale(0.8);
+}
+.note-animation-sky{
+	border-radius: 2vw;
 }
 @keyframes note-animation {
     0% {

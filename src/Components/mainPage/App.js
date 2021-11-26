@@ -8,7 +8,7 @@ import { MainPageSettings } from "../SettingsObj"
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import rotateImg from "../../assets/icons/rotate.svg"
 import { appName, audioContext } from "../../appConfig"
-import Instrument from '../Instrument3';
+import Instrument from '../Instrument';
 import { songStore } from './SongStore'
 import AudioRecorder from '../AudioRecorder';
 class App extends Component {
@@ -55,6 +55,11 @@ class App extends Component {
 		document.body.removeEventListener('dragleave', this.resetDrag)
 		document.body.removeEventListener('drop', this.handleDrop)
 		document.body.addEventListener('dragover', this.handleDragOver)
+		this.audioContext = undefined
+		this.recorder = undefined
+		this.reverbNode = undefined
+		this.reverbVolumeNode = undefined
+		this.state.instrument.delete()
 	}
 	resetDrag = (e) => {
 		this.setState({
@@ -120,6 +125,7 @@ class App extends Component {
 		return MainPageSettings
 	}
 	loadInstrument = async (name) => {
+		this.state.instrument?.delete?.()
 		let newInstrument = new Instrument(name)
 		await newInstrument.load()
 		newInstrument.connect(this.audioContext.destination)
@@ -218,15 +224,6 @@ class App extends Component {
 	handleRecording = (note) => {
 		if (this.state.isRecording) {
 			this.recording.addNote(note.index)
-		}
-	}
-
-
-	stopSong = () => {
-		songStore.data = {
-			song: {},
-			start: 0,
-			eventType: 'stop'
 		}
 	}
 	askForSongName = () => {

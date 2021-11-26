@@ -133,7 +133,7 @@ class Keyboard extends Component {
                     if (apNote.time < this.approachRate / 3) {
                         approachingScore.correct++
                         approachingScore.combo++
-                        approachingScore.score += (approachingScore.combo * 10) * speedChanger.value
+                        approachingScore.score += approachingScore.combo * speedChanger.value
                     } else {
                         approachingScore.wrong++
                         approachingScore.combo = 0
@@ -414,7 +414,7 @@ class Keyboard extends Component {
                         >
                             <option disabled>Speed</option>
                             {speedChangers.map(e => {
-                                return <option value={e.name}>
+                                return <option value={e.name} key={e.name}>
                                     {e.name}
                                 </option>
                             })}
@@ -461,18 +461,16 @@ function Score(props) {
         <table>
             <tbody>
                 <tr>
-                    <td className='sc-1'>%{(correct / (correct + wrong - 1) * 100 ).toFixed(1)}</td>
                     <td className='sc-2'>Accuracy</td>
+                    <td className='sc-1'>{(correct / (correct + wrong - 1) * 100 ).toFixed(1)}%</td>
                 </tr>
                 <tr>
-                    <td className='sc-1'>{score}</td>
                     <td className='sc-2'>Score</td>
-
+                    <td className='sc-1'>{score}</td>
                 </tr>
                 <tr>
-                    <td className='sc-1'>{combo}</td>
                     <td className='sc-2'>Combo</td>
-
+                    <td className='sc-1'>{combo}</td>
                 </tr>
             </tbody>
         </table>

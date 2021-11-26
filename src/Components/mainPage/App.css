@@ -409,27 +409,31 @@ a {
 }
 .approaching-accuracy{
 	position: absolute;
-	top: 1rem;
-	right: 1rem;
+	top: 0.5rem;
+	right: 0.5rem;
 	color: var(--whitish);
+	padding: 0.4rem;
+	background-color: #495466;
 	font-weight:bold;
+	border-radius: 0.4rem;
+
 }
 .approaching-accuracy table{
-	background-color: #495466;
-	padding: 0.4rem;
 	font-size: 0.8rem;
-	border-radius: 0.4rem;
+	border-collapse: collapse;
 }
 .bg-image{
 	background-size: cover;
 	background-repeat: no-repeat;
 }
 .sc-2{
-	padding-left: 0.5rem;
-	border-left:solid 2px var(--secondary);
+	padding-right: 0.5rem;
 }
 .sc-1{
-	padding-right: 0.5rem;
+	padding-left: 0.5rem;
+	min-width: 3.5rem;
+	
+	border-left:solid 2px var(--secondary);
 }
 @media only screen and (orientation: portrait) {
 	.error-songs-wrapper,

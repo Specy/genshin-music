@@ -47,11 +47,6 @@ class Menu extends Component {
             searchedSongs:[],
             searchStatus: 'Write a song name then search!'
         })
-        songStore.data = {
-            eventType: "stop",
-            song:{},
-            start: 0
-        }
     }
     searchSongs = async () =>{
         const { searchInput, searchStatus } = this.state
@@ -113,7 +108,6 @@ class Menu extends Component {
                 }
             } catch (e) {
                 let fileName = file.name
-                console.log(fileName)
                 console.error(e)
                 if(fileName?.includes?.(".mid")){
                     return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()

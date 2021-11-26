@@ -17,6 +17,8 @@ class Index extends Component {
 		let path = window.location.href.split("/")
 		path = path.length === 0 ? "" : path = path[path.length - 1]
 		if (!pages.includes(path)) path = ""
+		let hasVisited = localStorage.getItem(appName + "_Visited")
+		hasVisited = hasVisited === null ? false : Boolean(hasVisited)
 		this.state = {
 			floatingMessage: {
 				timestamp: 0,
@@ -25,9 +27,9 @@ class Index extends Component {
 				title: "Title"
 			},
 			updateChecked: false,
-			hasVisited: localStorage.getItem(appName + "_Visited"),
 			hasPersistentStorage: navigator.storage && navigator.storage.persist,
-			selectedPage: path
+			selectedPage: path,
+			hasVisited: hasVisited
 		}
 		this.checkUpdate()
 	}
@@ -95,6 +97,7 @@ class Index extends Component {
 			localStorage.setItem(appName + "_Version", currentVersion)
 		}
 		updateChecked = true
+		if(!this.state.hasVisited) return
 		if (navigator.storage && navigator.storage.persist) {
 			let isPersisted = await navigator.storage.persisted()
 			if (!isPersisted) isPersisted = await navigator.storage.persist()
@@ -138,7 +141,7 @@ class Index extends Component {
 					{floatingMessage.text}
 				</div>
 			</div>
-			{[null, false, "false"].includes(this.state.hasVisited) ?
+			{!this.state.hasVisited ?
 				<div className="welcome-message">
 					<div className='welcome-overflow'>
 						<div className={"welcome-message-title"}>Welcome to {appName} music {appName === "Sky" ? "nightly" : ""}</div>

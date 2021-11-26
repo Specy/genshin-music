@@ -17,7 +17,7 @@ import Menu from "./Menu"
 
 import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
 import { ComposerSettings } from "../SettingsObj"
-import Instrument from "../Instrument3"
+import Instrument from "../Instrument"
 import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
@@ -89,7 +89,13 @@ class Composer extends Component {
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
+        const {instrument, layers} = this.state
         this.broadcastChannel?.close?.()
+        const instruments = [instrument, layers[0], layers[1]]
+        instruments.forEach(instrument => instrument.delete())
+        this.reverbNode = undefined
+        this.reverbVolumeNode = undefined
+        this.audioContext = undefined   
         let state = this.state
         state.isPlaying = false
     }
@@ -179,6 +185,7 @@ class Composer extends Component {
     loadInstrument = async (name, layer) => {
         const { settings } = this.state
         if (layer === 1) {
+            this.state.instrument.delete()
             let newInstrument = new Instrument(name)
             await newInstrument.load()
             newInstrument.changeVolume(settings.instrument.volume)
@@ -188,6 +195,7 @@ class Composer extends Component {
         } else {
             let newInstrument = new Instrument(name)
             let layers = this.state.layers
+            layers[layer-2].delete()
             layers[layer - 2] = newInstrument
             await newInstrument.load()
             newInstrument.changeVolume(settings[`layer${layer}`]?.volume)
