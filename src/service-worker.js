@@ -6,9 +6,9 @@
 // code you'd like.
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
-import { appName } from './appConfig';
-const CACHE = appName+"-4.7"
-console.log("CACHE Version: ",CACHE)
+const appName = process.env.REACT_APP_NAME
+const CACHE = appName + "-4.8"
+console.log("CACHE Version: ", CACHE)
 import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
@@ -26,7 +26,7 @@ precacheAndRoute(self.__WB_MANIFEST);
 registerRoute(
   new RegExp('/*'),
   new CacheFirst({
-      cacheName: CACHE
+    cacheName: CACHE
   })
 );
 
@@ -42,15 +42,16 @@ self.addEventListener('activate', (evt) => {
   console.log('[ServiceWorker] Activate');
   //Remove previous cached data from disk.
   evt.waitUntil(
-      caches.keys().then((keyList) => {
-          return Promise.all(keyList.map((key) => {
-            console.log(key,appName,(key.includes(appName) && key !== CACHE) || key.includes('workbox'))
-              if ((key.includes(appName) && key !== CACHE) || key.includes('workbox')) {
-                  console.log('[ServiceWorker] Removing old cache', key);
-                  return caches.delete(key);
-                }
-          }));
-      })
+    caches.keys().then(async (keyList) => {
+      console.log(keyList)
+      let promises = await Promise.all(keyList.map((key) => {
+        if ((key.includes(appName) && key !== CACHE)) {
+          console.log('[ServiceWorker] Removing old cache', key);
+          return caches.delete(key)
+        }
+      }));
+      return promises
+    })
   );
   self.clients.claim();
 });
