@@ -70,7 +70,7 @@ body{
 	margin-bottom: 0.1rem;
 	background-color: var(--primary);
 	color: white;
-	width: fit-content;
+	width: 100%;
 	display: inline-block;
 }
 .column{
@@ -168,6 +168,7 @@ body {
 	margin-top: 1.5rem;
 	margin-left: 3.5rem;
 }
+
 .slider-select{
 	width: 3rem;
 	font-size: 0.8rem;

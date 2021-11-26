@@ -1,11 +1,14 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][0]
-const appVersion = '2'
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
+const appVersion = '2.0'
 console.log(`${appName}-V${appVersion}`)
 
 
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
-    note: appName === "Genshin" ? "note" : "note-sky"
+    note: appName === "Genshin" ? "note" : "note-sky",
+    noteAnimation: appName === 'Genshin' ? "note-animation" : "note-animation-sky",
+    approachCircle: appName === "Genshin" ? "approach-circle" : "approach-circle-sky",
+    noteName: appName === "Genshin" ? "note-name" : "note-name-sky"
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 const instruments = appName === "Genshin" ? [

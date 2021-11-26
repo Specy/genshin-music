@@ -5,14 +5,12 @@ import { FaDiscord, FaGithub} from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import "./menu.css"
-import mainPageImg from '../../assets/images/mainpage.png'
-import composerImg from '../../assets/images/composer.png'
-import songsImg from '../../assets/images/songs.png'
+
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "../SongUtils"
 import { FilePicker } from "react-file-picker"
 import { appName } from "../../appConfig"
 import {songStore} from './SongStore'
-
+import { HelpTab } from './HelpTab';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -324,75 +322,7 @@ class Menu extends Component {
                     >
                         Go to changelog
                     </div>
-                    <div className='help-title'>
-                        Main page
-                    </div>
-                    <div>
-                        <img src={mainPageImg} className='help-img' alt='tutorial for the main page' />
-                        <ol>
-                            <li>Keyboard</li>
-                            <li>Record your keyboard</li>
-                            <li>Open the composer</li>
-                            <li>Open the settings</li>
-                            <li>Open the saved songs</li>
-                        </ol>
-                        <div className="column">
-                            <div>
-                                <FontAwesomeIcon icon={faCrosshairs} /> = practice the song
-                            </div>
-                            <div>
-                                <FontAwesomeIcon icon={faDownload} /> = download the song
-                            </div>
-
-                        </div>
-                    </div>
-                    <div className='help-title'>
-                        Composer
-                    </div>
-                    <div>
-                        <img src={composerImg} className='help-img' alt="tutorial for composer"/>
-                        <ol>
-                            <li>Go to the next / previous breakpoint</li>
-                            <li>Timeline of the breakpoints</li>
-                            <li>Open the tools</li>
-                            <li>Add 16 columns to the end</li>
-                            <li>Remove the current selected column</li>
-                            <li>Add column after the current one</li>
-                        </ol>
-                        The composer has tools for PC users: <br/><br/>
-                            <div style={{marginLeft:'1rem'}}>
-                                <Key>A / D</Key> = move left / right <br/>
-                                <Key>1 / 2 / 3 / 4</Key> = change tempo <br/>
-                                <Key>Space bar</Key> = play / pause song <br/>
-                                <Key>Arrow left</Key> = go to previous breakpoint<br/>
-                                <Key>Arrow right</Key> = go to next breakpoint <br/>
-                                <Key>Q</Key> = remove current column<br/>
-                                <Key>E</Key> = add column <br/>
-                            </div>
-                    </div>
-                    <div className='help-title'>
-                        Songs menu
-                    </div>
-                    <div>
-                        <img src={songsImg} className='help-img' alt='tutorial for songs page' />
-                        <ol>
-                            <li>Practice song</li>
-                            <li>Download song as json</li>
-                            <li>Delete song </li>
-                            <li>Open the composer</li>
-                            <li>Import a song as json</li>
-                            <li>Browse song library</li>
-                        </ol>
-                        <div className="column">
-                            <div>
-                                <FontAwesomeIcon icon={faCrosshairs} /> = practice the song
-                            </div>
-                            <div>
-                                <FontAwesomeIcon icon={faDownload} /> = download the song
-                            </div>
-
-                        </div>
-                    </div>
+                    <HelpTab />
                     {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}
@@ -402,12 +332,7 @@ class Menu extends Component {
     }
 }
 
-function Key(props){
-    return <div className='keyboard-key'>
-        {props.children}
-    </div>
-}
-
+//TODO export all those as their own component
 function MenuPanel(props) {
     let className = props.visible === props.title ? "menu-panel menu-panel-visible" : "menu-panel"
     return <div className={className}>

@@ -66,7 +66,7 @@ function ChangelogRow(props) {
 }
 const changelogs = [
     {
-        version: '2',
+        version: '2.0',
         title: 'Approaching circles',
         date: '2021 - 26/11',
         changes: [
@@ -78,6 +78,9 @@ const changelogs = [
             `Added tabs autoplay (composer) on pc as a setting`,
             `Added note animations when pressing the note`,
             `Added possibility to change background image from URL`,
+            `Updated info page`,
+            `In the composer you can now press shift + note name to add a note`,
+            `In the composer you can press up/down keys to change layer`,
             `While in the composer on PC, you can now add new notes by simply pressing the PC keyboard while in "playing" mode`
         ]
     }, {

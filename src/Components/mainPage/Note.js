@@ -6,7 +6,6 @@ class Note extends Component {
         super(props)
         this.state = {
         }
-        this.previous = ''
     }
     render() {
         const { props } = this
@@ -15,7 +14,6 @@ class Note extends Component {
         let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.15s` }
         let className = parseClass(status)
         let effects = instrumentsData[instrument]?.effects || {}
-        let noteAnimation = appName === 'Sky' ? "note-animation-sky" : "note-animation"
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
@@ -33,7 +31,7 @@ class Note extends Component {
             {outgoingAnimation.map(e => {
                 return <div 
                     key={e.key}
-                    className={noteAnimation}
+                    className={cssClasses.noteAnimation}
                 />
             })}
             <div className={className} style={animation}>
@@ -43,8 +41,7 @@ class Note extends Component {
                     src={props.noteImage}
                     style={effects}
                 />
-
-                <div className={appName === "Sky" ? "note-name-sky" : "note-name"}>
+                <div className={cssClasses.noteName}>
                     {props.noteText}
                 </div>
             </div>
@@ -58,9 +55,8 @@ function getApproachCircleColor(index){
     return colors[row]
 }
 function ApproachCircle(props) {
-    let className = appName === "Sky" ? "approach-circle-sky" : "approach-circle"
     return <div
-        className={className}
+        className={cssClasses.approachCircle}
         style={{ 
             animation: `approach ${props.approachRate}ms linear`,
             borderColor:getApproachCircleColor(props.index),
@@ -74,8 +70,8 @@ function parseClass(status) {
     if (status === 'toClick') className += " note-red"
     if (status === 'toClickNext') className += " note-border-click"
     if (status === 'toClickAndNext') className += " note-red note-border-click"
-    if (status === 'approach-wrong') className += ' click-event approach-wrong'
-    if (status === 'approach-correct') className += ' click-event approach-correct'
+    if (status === 'approach-wrong') className += " click-event approach-wrong"
+    if (status === 'approach-correct') className += " click-event approach-correct"
     return className
 }
 
