@@ -86,7 +86,8 @@ class Index extends Component {
 			`   - Added Approaching circles mode, a new way to learn a song
 				- Better performance in the main page
 				- On pc, you can now add notes with your keyboard while playing
-				- Added changelog page`
+				- Added changelog page
+				More info in the changelog page (Info tab)`
 		let storedVersion = localStorage.getItem(appName + "_Version")
 		if (!this.state.hasVisited) {
 			return localStorage.setItem(appName + "_Version", currentVersion)

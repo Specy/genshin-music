@@ -265,10 +265,11 @@ class Composer extends Component {
         this.setState({ isRecordingAudio: false })
     }
     handleKeyboard = (event) => {
-        let key = event.code
-        const { instrument } = this.state
         if (document.activeElement.tagName === "INPUT") return
-        if (this.state.isPlaying) {
+        const { instrument,layer,layers,isPlaying } = this.state
+        let key = event.code
+        const shouldEditKeyboard = isPlaying || event.shiftKey
+        if (shouldEditKeyboard) {
             let letter = key?.replace("Key", "")
             let note = instrument.getNoteFromCode(letter)
             if (note !== null) this.handleClick(instrument.layout[note])
@@ -293,6 +294,16 @@ class Composer extends Component {
                     this.togglePlay()
                     if (!this.state.settings.syncTabs.value) break;
                     this.broadcastChannel?.postMessage?.("play")
+                    break;
+                }
+                case "ArrowUp":{
+                    let nextLayer = layer - 1
+                    if(nextLayer > 0) this.changeLayer(nextLayer)
+                    break;
+                }   
+                case "ArrowDown":{
+                    let nextLayer = layer + 1
+                    if(nextLayer < layers.length + 2) this.changeLayer(nextLayer)
                     break;
                 }
                 case "KeyQ": this.removeColumns(1, this.state.song.selected); break;
@@ -476,7 +487,7 @@ class Composer extends Component {
             settings.layer3.value = song.instruments[2]
         }
         this.changes = 0
-        console.log("song loaded:", song)
+        console.log("song loaded")
         this.setState({
             song: song,
             settings: settings,
