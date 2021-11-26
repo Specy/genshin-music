@@ -22,6 +22,7 @@ class App extends Component {
 		}
 		this.state = {
 			instrument: new Instrument(),
+			isLoadingInstrument: true,
 			isRecording: false,
 			isRecordingAudio: false,
 			songs: [],
@@ -127,10 +128,12 @@ class App extends Component {
 	loadInstrument = async (name) => {
 		this.state.instrument?.delete?.()
 		let newInstrument = new Instrument(name)
+		this.setState({isLoadingInstrument: true})
 		await newInstrument.load()
 		newInstrument.connect(this.audioContext.destination)
 		this.setState({
-			instrument: newInstrument
+			instrument: newInstrument,
+			isLoadingInstrument: false
 		}, () => this.toggleReverbNodes(this.state.settings.caveMode.value))
 	}
 	loadReverb() {
@@ -295,6 +298,7 @@ class App extends Component {
 			setHasSong: this.setHasSong
 		}
 		let keyboardData = {
+			isLoading: state.isLoadingInstrument,
 			keyboard: state.instrument,
 			pitch: state.settings.pitch.value,
 			keyboardSize: state.settings.keyboardSize.value,

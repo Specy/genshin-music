@@ -4,6 +4,7 @@ class Instrument {
         this.instrumentName = instrumentName === undefined ? instruments[0] : instrumentName
         this.layout = []
         this.buffers = []
+        this.loaded = false
         this.deleted = false
         this.volumeNode = audioContext.createGain()
         let instrumentData = instrumentsData[this.instrumentName]
@@ -62,6 +63,7 @@ class Instrument {
             })
         })
         this.buffers = await Promise.all(requests)
+        this.loaded = true
         return true
     }
     disconnect = () =>{
