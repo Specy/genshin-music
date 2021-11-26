@@ -429,26 +429,30 @@ class Keyboard extends Component {
                     marginBottom: size * 30 - 15
                 }}
             >
-                {keyboard.length === 0 ? <div className="loading">Loading...</div> : null}
-                {keyboard.map(note => {
-                    let noteImage = layoutImages[keyboard.length][note.index]
-                    let noteData = {
-                        ...note,
-                        approachRate:this.approachRate,
-                        instrument: this.props.data.keyboard.instrumentName,
-                        isAnimated: songStore.data.eventType === 'approaching' ? false : this.props.data.hasAnimation
-                    }
-                    return <Note
-                        key={note.index}
-                        data={noteData}
-                        approachingNotes={state.approachingNotes[note.index]}
-                        outgoingAnimation={state.outgoingAnimation[note.index]}
-                        handleClick={this.handleClick}
-                        noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
-                        noteImage={`./assets/icons/keys/${noteImage}.svg`}
-                    />
+                {data.isLoading 
+                    ? <div className="loading">Loading...</div> 
+                    
+                    : keyboard.map(note => {
+                        let noteImage = layoutImages[keyboard.length][note.index]
+                        let noteData = {
+                            ...note,
+                            approachRate:this.approachRate,
+                            instrument: this.props.data.keyboard.instrumentName,
+                            isAnimated: songStore.data.eventType === 'approaching' ? false : this.props.data.hasAnimation
+                        }
+                        return <Note
+                            key={note.index}
+                            data={noteData}
+                            approachingNotes={state.approachingNotes[note.index]}
+                            outgoingAnimation={state.outgoingAnimation[note.index]}
+                            handleClick={this.handleClick}
+                            noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
+                            noteImage={`./assets/icons/keys/${noteImage}.svg`}
+                        />
+    
+                    })
+                }
 
-                })}
             </div>
         </>
 
