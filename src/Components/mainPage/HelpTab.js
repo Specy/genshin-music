@@ -70,34 +70,34 @@ export function HelpTab() {
             <table className='keys-table'>
                 <tbody>
                     <tr>
-                        <td><Key>A / D</Key></td> <td> = move left / right</td>
+                        <td><Key>A / D</Key></td><td> = move left / right</td>
                     </tr>
                     <tr>
-                        <td><Key>1 / 2 / 3 / 4</Key></td> <td> = change tempo</td>
+                        <td><Key>1 / 2 / 3 / 4</Key></td><td> = change tempo</td>
                     </tr>
                     <tr>
-                        <td><Key>Space bar</Key></td> <td> = play / pause song</td>
+                        <td><Key>Space bar</Key></td><td> = play / pause song</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Left</Key></td> <td> = go to previous breakpoint</td>
+                        <td><Key>Arrow Left</Key></td><td> = go to previous breakpoint</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Right</Key></td> <td> = go to next breakpoint</td>
+                        <td><Key>Arrow Right</Key></td><td> = go to next breakpoint</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Up</Key></td> <td> = select previous layer</td>
+                        <td><Key>Arrow Up</Key></td><td> = select previous layer</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Down</Key></td> <td> = select next layer </td>
+                        <td><Key>Arrow Down</Key></td><td> = select next layer </td>
                     </tr>
                     <tr>
-                        <td><Key>Shift + Note</Key></td> <td> = Adds/remove a note in the column </td>
+                        <td><Key>Shift + Note</Key></td><td> = Adds/remove a note in the column </td>
                     </tr>
                     <tr>
-                        <td><Key>Q</Key></td> <td> = remove current column</td>
+                        <td><Key>Q</Key></td><td> = remove current column</td>
                     </tr>
                     <tr>
-                        <td><Key>E</Key></td> <td> = add column </td>
+                        <td><Key>E</Key></td><td> = add column </td>
                     </tr>
                 </tbody>
             </table>

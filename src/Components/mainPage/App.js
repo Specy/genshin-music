@@ -101,7 +101,7 @@ class App extends Component {
 	toggleReverbNodes = (hasReverb) => {
 		const { instrument } = this.state
 		if (hasReverb) {
-			if(!this.reverbNode) return console.log("Couldn't connect to reverb")
+			if (!this.reverbNode) return console.log("Couldn't connect to reverb")
 			instrument.disconnect()
 			instrument.connect(this.reverbNode)
 		} else {
@@ -128,7 +128,7 @@ class App extends Component {
 	loadInstrument = async (name) => {
 		this.state.instrument?.delete?.()
 		let newInstrument = new Instrument(name)
-		this.setState({isLoadingInstrument: true})
+		this.setState({ isLoadingInstrument: true })
 		await newInstrument.load()
 		newInstrument.connect(this.audioContext.destination)
 		this.setState({
@@ -139,22 +139,22 @@ class App extends Component {
 	loadReverb() {
 		return new Promise(resolve => {
 			fetch("./assets/audio/reverb4.wav")
-			.then(r => r.arrayBuffer())
-			.then(b => {
-				this.audioContext.decodeAudioData(b, (impulse_response) => {
-					let convolver = this.audioContext.createConvolver()
-					let gainNode = this.audioContext.createGain()
-					gainNode.gain.value = 2.5
-					convolver.buffer = impulse_response
-					convolver.connect(gainNode)
-					gainNode.connect(this.audioContext.destination)
-					this.reverbVolumeNode = gainNode
-					this.reverbNode = convolver
-					resolve()
+				.then(r => r.arrayBuffer())
+				.then(b => {
+					this.audioContext.decodeAudioData(b, (impulse_response) => {
+						let convolver = this.audioContext.createConvolver()
+						let gainNode = this.audioContext.createGain()
+						gainNode.gain.value = 2.5
+						convolver.buffer = impulse_response
+						convolver.connect(gainNode)
+						gainNode.connect(this.audioContext.destination)
+						this.reverbVolumeNode = gainNode
+						this.reverbNode = convolver
+						resolve()
+					})
+				}).catch((e) => {
+					console.log("Error with reverb", e)
 				})
-			}).catch((e) => {
-				console.log("Error with reverb", e)
-			})
 		})
 
 	}
@@ -320,14 +320,17 @@ class App extends Component {
 		}
 
 		return <div className='app bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
-			<div className='record-button'>
-				<AppButton
-					active={state.isRecordingAudio}
-					click={this.toggleRecordAudio}
-				>
-					{state.isRecordingAudio ? "Finish recording" : "Record audio"}
-				</AppButton>
-			</div>
+			{songStore.data.eventType !== 'approaching' &&
+				<div className='record-button'>
+					<AppButton
+						active={state.isRecordingAudio}
+						click={this.toggleRecordAudio}
+					>
+						{state.isRecordingAudio ? "Finish recording" : "Record audio"}
+					</AppButton>
+				</div>
+			}
+
 			<div className="rotate-screen">
 				<img src={rotateImg} alt="icon for the rotating screen">
 				</img>
@@ -344,6 +347,7 @@ class App extends Component {
 						<AppButton
 							active={state.isRecording}
 							click={this.toggleRecord}
+							style={{marginTop: "-0.5rem"}}
 						>
 							{state.isRecording ? "Stop" : "Record"}
 						</AppButton>
@@ -377,7 +381,7 @@ function setIfInTWA() {
 }
 setIfInTWA()
 function AppButton(props) {
-	let className = "genshin-button record-btn " + (props.active ? "selected" : "")
+	let className = "genshin-button " + (props.active ? "selected" : "")
 	return <button className={className} onClick={props.click} style={{ ...(props.style || {}) }}>
 		{props.children}
 	</button>
