@@ -202,6 +202,21 @@
 		font-size: 0.6rem;
 		bottom: 0rem;
 	}
+	@keyframes note-animation {
+		0% {
+			transform: scale(0.8);
+			opacity: 0.8;
+			border-width: 2px;
+		}
+		70% {
+			transform: scale(1.45);
+		}
+		100% {
+			transform: scale(1.5);
+			opacity: 0;
+			border-width: 2px;
+		}
+	}
 }
 
 .approach-wrong{

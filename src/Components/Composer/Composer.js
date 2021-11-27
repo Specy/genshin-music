@@ -394,7 +394,7 @@ class Composer extends Component {
                 this.syncSongs()
             } else {
                 if (song.name.includes("- Composed")) {
-                    let name = await this.askForSongName()
+                    let name = await this.askForSongName("Write composed song name, press cancel to ignore")
                     if (name === null) return resolve()
                     song.name = name
                     await this.dbCol.songs.insert(ComposerSongSerialization(song))
@@ -408,9 +408,9 @@ class Composer extends Component {
             resolve()
         })
     }
-    askForSongName = () => {
+    askForSongName = (question) => {
         return new Promise(async resolve => {
-            let promptString = "Write song name, press cancel to ignore"
+            let promptString = question || "Write song name, press cancel to ignore"
             while (true) {
                 let songName = await asyncPrompt(promptString)
                 if (songName === null) return resolve(null)
@@ -421,7 +421,7 @@ class Composer extends Component {
                         return resolve(songName)
                     }
                 } else {
-                    promptString = "Write song name, press cancel to ignore"
+                    promptString =question || "Write song name, press cancel to ignore"
                 }
             }
         })
@@ -443,7 +443,7 @@ class Composer extends Component {
                 await this.updateSong(this.state.song)
             }
         }
-        let name = await this.askForSongName()
+        let name = await this.askForSongName("Write new song name, press cancel to ignore")
         if (name === null) return
         let song = new ComposedSong(name)
         this.changes = 0
@@ -893,9 +893,13 @@ class Composer extends Component {
     }
 }
 function formatMillis(millis) {
-    var minutes = Math.floor(millis / 60000);
-    var seconds = ((millis % 60000) / 1000).toFixed(0);
-    return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+    let minutes = Math.floor(millis / 60000);
+    let seconds = ((millis % 60000) / 1000).toFixed(0);
+    return (
+        seconds === 60 
+        ? (minutes+1) + ":00" 
+        : minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+    )
 }
 function calculateLength(song, end) {
     let columns = song.columns

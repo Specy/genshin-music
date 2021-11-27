@@ -156,7 +156,7 @@ body {
 }
 .slider {
 	width: 50%;
-	margin: 0 1.5rem;
+	margin: 0 1rem;
 }
 .slider-wrapper {
 	width: 100%;
@@ -165,7 +165,7 @@ body {
 	justify-content: center;
 	transition: all 0.3s;
 	opacity: 1;
-	margin-top: 1.5rem;
+	margin-top: 0.3rem;
 	margin-left: 3.5rem;
 }
 
@@ -396,8 +396,8 @@ a {
 }
 .record-button{
 	position: absolute;
-	left: 4.5rem;
-	top: 0.5rem;
+	right: 0.8rem;
+	top: 0.8rem;
 }
 .error-go-back {
 	position: absolute;
@@ -449,6 +449,7 @@ a {
 	}
 	.floating-prompt {
 		width: 45vw;
+		padding: 0.5rem;
 	}
 	.slider-wrapper{
 		margin-left: 0;

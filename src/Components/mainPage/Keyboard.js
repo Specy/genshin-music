@@ -172,21 +172,21 @@ class Keyboard extends Component {
             let delay = notes[i][1] - previous
             previous = notes[i][1]
             let note = notes[i][0]
-            if (this.songTimestamp !== song.timestamp) return
             previousTime = new Date().getTime()
             if (delay > 16) await delayMs(delay - pastError)
+            if (this.songTimestamp !== song.timestamp) return
             keyboard[note].status = 'clicked'
             this.handleClick(keyboard[note])
             this.setState({
                 keyboard,
                 sliderState: {
-                    position: i,
+                    position: i+1,
                     size: notes.length
                 }
             })
             pastError = new Date().getTime() - previousTime - delay
         }
-        songStore.data = returnStopSong()
+
     }
     applySpeedChange = (notes) => {
         return notes.map(note => {
@@ -242,18 +242,19 @@ class Keyboard extends Component {
             speedChanger: changer
         },this.restartSong)
     }
-    restartSong = () => {
+    restartSong =async () => {
         let lostReference = JSON.parse(JSON.stringify(songStore.data))
-        this.stopSong()
+        await this.stopSong()
         setTimeout(() => {
             let start = songStore.data.start
-            if (songStore.data.eventType === 'practice')
+            if (songStore.data.eventType === 'practice'){
                 start = this.state.sliderState.position
+            }
             songStore.data = {
                 ...lostReference,
                 start
             }
-        }, 400)
+        }, 200)
     }
     stopSong = () => {
         return new Promise(res => {

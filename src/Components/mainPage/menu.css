@@ -269,7 +269,7 @@
 }
 @media only screen and (max-width: 900px) {
     .side-menu{
-        padding: 1rem;
+        padding: 0.5rem;
         width: 60vw;
         left: -60vw;
     }
