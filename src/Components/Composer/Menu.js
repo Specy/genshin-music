@@ -12,8 +12,7 @@ class Menu extends Component {
             open: false,
             selectedMenu: "Settings",
             selectedSongType: "composed",
-        }
-        
+        }    
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)

@@ -47,7 +47,6 @@ class Instrument {
             player.disconnect()
         }
     }
-
     load = async () => {
         let emptyBuffer = audioContext.createBuffer(2, audioContext.sampleRate, audioContext.sampleRate)
         const requests = this.layout.map(note => {
@@ -75,7 +74,7 @@ class Instrument {
     delete = () => {
         this.disconnect()
         this.deleted = true
-        this.buffers = []
+        this.buffers = null
     }
 }
 

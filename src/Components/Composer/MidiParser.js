@@ -19,160 +19,160 @@ class MidiImport extends Component {
             totalNotes: 0,
             includeAccidentals: true
         }
-        this.handleFile = (file) => {
-            const reader = new FileReader();
-            reader.addEventListener('load', (event) => {
-                let midi
-                try {
-                    midi = new Midi(event.target.result)
-                } catch (e) {
-                    console.error(e)
-                }
-                if (!midi) return new LoggerEvent('Error', 'There was an error importing this file', 2000).trigger()
-                let bpm = midi.header.tempos[0]?.bpm
-                let key = midi.header.keySignatures[0]?.key
-                midi.tracks.forEach((track, i) => {
-                    track.selected = true
-                    track.layer = 0
-                    track.name = track.name || `Track n.${i + 1}`
-                    track.numberOfAccidentals = 0
-                    track.numberOfOutOfRange = 0
-                })
-                this.setState({
-                    midi: midi,
-                    fileName: file.name,
-                    bpm: Math.floor(bpm * 4) || 220,
-                    offset: 0,
-                    pitch: pitchArr.includes(key) ? key : 'C',
-                }, () => { if (this.state.midi !== null) this.convertMidi()})
-            })
-            reader.readAsArrayBuffer(file)
-        }
-
-        this.convertMidi = () => {
-            const { midi, bpm, offset, includeAccidentals,pitch } = this.state
-            let tracks = midi.tracks.filter(track => track.selected)
-            let notes = []
-            let numberOfAccidentals = 0
-            let outOfRange = 0
-            let totalNotes = 0
-            tracks.forEach(track => {
+    }
+    handleFile = (file) => {
+        const reader = new FileReader();
+        reader.addEventListener('load', (event) => {
+            let midi
+            try {
+                midi = new Midi(event.target.result)
+            } catch (e) {
+                console.error(e)
+            }
+            if (!midi) return new LoggerEvent('Error', 'There was an error importing this file', 2000).trigger()
+            let bpm = midi.header.tempos[0]?.bpm
+            let key = midi.header.keySignatures[0]?.key
+            midi.tracks.forEach((track, i) => {
+                track.selected = true
+                track.layer = 0
+                track.name = track.name || `Track n.${i + 1}`
                 track.numberOfAccidentals = 0
                 track.numberOfOutOfRange = 0
-                track.notes.forEach(midiNote => {
-                    totalNotes++
-                    let convertedNote = convertMidiNote(midiNote.midi - offset)
-                    let note = {
-                        time: Math.floor(midiNote.time * 1000),
-                        note: convertedNote.note,
-                        layer: track.layer
-                    }
-                    if(convertedNote.isAccidental){
-                        numberOfAccidentals ++
-                        track.numberOfAccidentals ++
-                    }
-                    if (note.note !== null) {
-                        if (includeAccidentals || !convertedNote.isAccidental) {
-                            notes.push(note)
-                        }
-                    } else {
-                        outOfRange++
-                        track.numberOfOutOfRange ++
-                    }
-                })
             })
-            notes = notes.sort((a, b) => a.time - b.time)
-            let bpmToMs = Math.floor(60000 / bpm)
-            let groupedNotes = []
-            while (notes.length > 0) {
-                let row = [notes.shift()]
-                let amount = 0
-                for (let i = 0; i < notes.length; i++) {
-                    if (row[0].time > notes[i].time - bpmToMs / 9) amount++
+            this.setState({
+                midi: midi,
+                fileName: file.name,
+                bpm: Math.floor(bpm * 4) || 220,
+                offset: 0,
+                pitch: pitchArr.includes(key) ? key : 'C',
+            }, () => { if (this.state.midi !== null) this.convertMidi()})
+        })
+        reader.readAsArrayBuffer(file)
+    }
+
+    convertMidi = () => {
+        const { midi, bpm, offset, includeAccidentals,pitch } = this.state
+        let tracks = midi.tracks.filter(track => track.selected)
+        let notes = []
+        let numberOfAccidentals = 0
+        let outOfRange = 0
+        let totalNotes = 0
+        tracks.forEach(track => {
+            track.numberOfAccidentals = 0
+            track.numberOfOutOfRange = 0
+            track.notes.forEach(midiNote => {
+                totalNotes++
+                let convertedNote = convertMidiNote(midiNote.midi - offset)
+                let note = {
+                    time: Math.floor(midiNote.time * 1000),
+                    note: convertedNote.note,
+                    layer: track.layer
                 }
-                groupedNotes.push([...row, ...notes.splice(0, amount)])
+                if(convertedNote.isAccidental){
+                    numberOfAccidentals ++
+                    track.numberOfAccidentals ++
+                }
+                if (note.note !== null) {
+                    if (includeAccidentals || !convertedNote.isAccidental) {
+                        notes.push(note)
+                    }
+                } else {
+                    outOfRange++
+                    track.numberOfOutOfRange ++
+                }
+            })
+        })
+        notes = notes.sort((a, b) => a.time - b.time)
+        let bpmToMs = Math.floor(60000 / bpm)
+        let groupedNotes = []
+        while (notes.length > 0) {
+            let row = [notes.shift()]
+            let amount = 0
+            for (let i = 0; i < notes.length; i++) {
+                if (row[0].time > notes[i].time - bpmToMs / 9) amount++
             }
-            let columns = []
-            let previousTime = 0
-            groupedNotes.forEach(notes => {
-                let note = notes[0]
-                if (!note) return
-                let elapsedTime = note.time - previousTime
-                previousTime = note.time
-                let emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
-                if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
-                let noteColumn = new Column()
-                noteColumn.notes = notes.map(note => {
-                    return new ColumnNote(note.note, numberToLayer(note.layer))
-                })
-                columns.push(noteColumn)
+            groupedNotes.push([...row, ...notes.splice(0, amount)])
+        }
+        let columns = []
+        let previousTime = 0
+        groupedNotes.forEach(notes => {
+            let note = notes[0]
+            if (!note) return
+            let elapsedTime = note.time - previousTime
+            previousTime = note.time
+            let emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
+            if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
+            let noteColumn = new Column()
+            noteColumn.notes = notes.map(note => {
+                return new ColumnNote(note.note, numberToLayer(note.layer))
             })
-            columns.forEach(column => { //merges notes of different layer
-                let groupedNotes = groupByIndex(column)
-                column.notes = groupedNotes.map(group => {
-                    group[0].layer = mergeLayers(group)
-                    return group[0]
-                })
+            columns.push(noteColumn)
+        })
+        columns.forEach(column => { //merges notes of different layer
+            let groupedNotes = groupByIndex(column)
+            column.notes = groupedNotes.map(group => {
+                group[0].layer = mergeLayers(group)
+                return group[0]
             })
-            let song = new ComposedSong("Untitled")
-            song.columns = columns
-            song.bpm = bpm
-            song.instruments = this.props.data.instruments
-            song.pitch = pitch
-            let lastColumn = this.props.data.selectedColumn
-            song.selected = lastColumn < song.columns.length ? lastColumn : 0
-            if (song.columns.length === 0) {
-                return new LoggerEvent("Error", "There are no notes", 2000).trigger()
-            }
-            this.props.functions.loadSong(song)
-            this.setState({
-                accidentals: numberOfAccidentals,
-                totalNotes: totalNotes,
-                outOfRange: outOfRange
-            })
+        })
+        let song = new ComposedSong("Untitled")
+        song.columns = columns
+        song.bpm = bpm
+        song.instruments = this.props.data.instruments
+        song.pitch = pitch
+        let lastColumn = this.props.data.selectedColumn
+        song.selected = lastColumn < song.columns.length ? lastColumn : 0
+        if (song.columns.length === 0) {
+            return new LoggerEvent("Error", "There are no notes", 2000).trigger()
+        }
+        this.props.functions.loadSong(song)
+        this.setState({
+            accidentals: numberOfAccidentals,
+            totalNotes: totalNotes,
+            outOfRange: outOfRange
+        })
+    }
+
+    editTrack = (command, data) => {
+        let tracks = this.state.midi.tracks
+        if (command === 'index') {
+
+            tracks[data.index].selected = !tracks[data.index].selected
+        }
+        if (command === 'layer') {
+            tracks[data.index].layer = data.layer
         }
 
-        this.editTrack = (command, data) => {
-            let tracks = this.state.midi.tracks
-            if (command === 'index') {
-
-                tracks[data.index].selected = !tracks[data.index].selected
-            }
-            if (command === 'layer') {
-                tracks[data.index].layer = data.layer
-            }
-
-            this.setState({
-                midi: this.state.midi
-            }, () => { if (this.state.midi !== null) this.convertMidi() })
-        }
-        this.changeOffset = (value) => {
-            value = parseInt(value)
-            if (!Number.isInteger(value)) value = 0
-            if(this.state.offset === value) return
-            this.setState({
-                offset: value
-            }, () => { if (this.state.midi !== null) this.convertMidi() })
-        }
-        this.changePitch = (value) => {
-            this.props.functions.changePitch(value)
-            this.setState({
-                pitch: value
-            })
-        }
-        this.toggleAccidentals = () => {
-            this.setState({
-                includeAccidentals: !this.state.includeAccidentals
-            }, () => { if (this.state.midi !== null) this.convertMidi() })
-        }
-        this.changeBpm = (value) => {
-            value = parseInt(value)
-            if (!Number.isInteger(value)) value = 0
-            if(this.state.bpm === value) return
-            this.setState({
-                bpm: value
-            }, () => { if (this.state.midi !== null) this.convertMidi() })
-        }
+        this.setState({
+            midi: this.state.midi
+        }, () => { if (this.state.midi !== null) this.convertMidi() })
+    }
+    changeOffset = (value) => {
+        value = parseInt(value)
+        if (!Number.isInteger(value)) value = 0
+        if(this.state.offset === value) return
+        this.setState({
+            offset: value
+        }, () => { if (this.state.midi !== null) this.convertMidi() })
+    }
+    changePitch = (value) => {
+        this.props.functions.changePitch(value)
+        this.setState({
+            pitch: value
+        })
+    }
+    toggleAccidentals = () => {
+        this.setState({
+            includeAccidentals: !this.state.includeAccidentals
+        }, () => { if (this.state.midi !== null) this.convertMidi() })
+    }
+    changeBpm = (value) => {
+        value = parseInt(value)
+        if (!Number.isInteger(value)) value = 0
+        if(this.state.bpm === value) return
+        this.setState({
+            bpm: value
+        }, () => { if (this.state.midi !== null) this.convertMidi() })
     }
     render() {
         const { handleFile, editTrack, state, changeBpm, changeOffset, changePitch } = this

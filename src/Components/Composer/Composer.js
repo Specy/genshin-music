@@ -55,23 +55,11 @@ class Composer extends Component {
         }
         this.copiedColums = []
         this.changes = 0
-        this.syncSongs()
-
         this.broadcastChannel = {}
-        this.init()
     }
-    init = async () => {
-        const { settings } = this.state
-        const promises = [
-            this.loadInstrument(settings.instrument.value, 1),
-            this.loadInstrument(settings.layer2.value, 2),
-            this.loadInstrument(settings.layer3.value, 3)
-        ]
-        await Promise.all(promises)
-        await this.loadReverb()
-        this.setupAudioDestination(settings.caveMode.value)
-    }
+
     componentDidMount() {
+        this.init()
         window.addEventListener("keydown", this.handleKeyboard)
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(appName + '_composer') : {}
         this.broadcastChannel.onmessage = (event) => {
@@ -98,6 +86,19 @@ class Composer extends Component {
         this.audioContext = undefined   
         let state = this.state
         state.isPlaying = false
+    }
+    init = async () => {
+        this.syncSongs()
+
+        const { settings } = this.state
+        const promises = [
+            this.loadInstrument(settings.instrument.value, 1),
+            this.loadInstrument(settings.layer2.value, 2),
+            this.loadInstrument(settings.layer3.value, 3)
+        ]
+        await Promise.all(promises)
+        await this.loadReverb()
+        this.setupAudioDestination(settings.caveMode.value)
     }
     componentDidCatch() {
         this.setState({

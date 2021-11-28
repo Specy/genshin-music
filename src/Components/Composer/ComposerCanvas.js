@@ -47,8 +47,8 @@ class ComposerCanvas extends Component {
     }
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
-        this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
         window.addEventListener("keydown", this.handleKeyboard)
+        this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
     }
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
@@ -209,8 +209,6 @@ class ComposerCanvas extends Component {
                 <div className="timeline-button" onClick={() => this.handleBreakpoints(1)}>
                     <FontAwesomeIcon icon={faStepForward} />
                 </div>
-
-
                 <Stage
                     width={s.width}
                     height={timelineHeight}
@@ -233,7 +231,6 @@ class ComposerCanvas extends Component {
                                 image={cache.breakpoints[0]}
                                 key={breakpoint}
                                 x={relativeColumnWidth * breakpoint}
-
                             >
                             </Sprite>
                         })}
@@ -268,7 +265,6 @@ function Column(props) {
         pointertap={() => click(index)}
         interactive={true}
         x={sizes.width * index}
-
     >
         <Sprite
             image={backgroundCache}
@@ -289,9 +285,8 @@ function Column(props) {
             return <Sprite
                 key={note.index}
                 image={cache.notes[note.layer]}
-                y={positions[note.index] * sizes.height / notesPerColumn}
+                y={composerNotePositions[note.index] * sizes.height / notesPerColumn}
             >
-
             </Sprite>
         })}
 
@@ -308,5 +303,4 @@ function isVisible(pos, currentPos) {
     let boundaries = [currentPos - threshold, currentPos + threshold]
     return boundaries[0] < pos && pos < boundaries[1]
 }
-const positions = composerNotePositions
 export default ComposerCanvas

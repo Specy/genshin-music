@@ -23,10 +23,11 @@ class Menu extends Component {
             searchStatus: 'Write a song name then search!',
             isPersistentStorage: false
         }
- 
-        this.checkPersistentStorage()
     }
+    componentDidMount(){
+        this.checkPersistentStorage()
 
+    }
     checkPersistentStorage = async () => {
         if (navigator.storage && navigator.storage.persist) {
             let isPersisted = await navigator.storage.persisted()

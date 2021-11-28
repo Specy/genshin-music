@@ -34,9 +34,6 @@ class App extends Component {
 		this.reverbVolumeNode = undefined
 		this.audioContext = audioContext
 		this.recorder = new AudioRecorder()
-		this.syncSongs()
-		this.loadReverb()
-		this.init()
 	}
 
 	init = async () => {
@@ -50,6 +47,8 @@ class App extends Component {
 		document.body.addEventListener('dragleave', this.resetDrag)
 		document.body.addEventListener('dragover', this.handleDragOver)
 		document.body.addEventListener('drop', this.handleDrop)
+		this.syncSongs()
+		this.init()
 	}
 	componentWillUnmount() {
 		document.body.removeEventListener('dragenter', this.handleDrag)

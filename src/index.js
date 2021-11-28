@@ -31,10 +31,10 @@ class Index extends Component {
 			selectedPage: path,
 			hasVisited: hasVisited
 		}
-		this.checkUpdate()
 	}
 	componentDidMount() {
 		window.addEventListener('logEvent', this.logEvent);
+		this.checkUpdate()	
 	}
 	changePage = (page) => {
 		this.setState({
@@ -189,7 +189,6 @@ class Index extends Component {
 						</Route>
 					</>
 				}
-
 			</HashRouter>
 		</div>
 	}
