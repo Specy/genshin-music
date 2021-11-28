@@ -257,12 +257,12 @@ class Composer extends Component {
         this.setState({ isRecordingAudio: true })
         await this.togglePlay(true) //wait till song finishes
         let recording = await recorder.stop()
+        this.setState({ isRecordingAudio: false })
         let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
-        if (fileName)  recorder.download(recording.toUrl(), fileName + '.webm')
+        if (fileName)  recorder.download(recording.data, fileName + '.wav')
         this.reverbVolumeNode.disconnect()
         this.reverbVolumeNode.connect(audioContext.destination)
         this.setupAudioDestination(hasReverb)
-        this.setState({ isRecordingAudio: false })
     }
     handleKeyboard = (event) => {
         if (document.activeElement.tagName === "INPUT") return

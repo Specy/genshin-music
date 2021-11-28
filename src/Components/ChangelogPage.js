@@ -68,7 +68,7 @@ const changelogs = [
     {
         version: '2.0',
         title: 'Approaching circles',
-        date: '2021 - 26/11',
+        date: '2021 - 28/11',
         changes: [
             `Added Approaching cirlces mode, a new way to learn a song, or a way to challange yourself.
             You can find it in the main page, next to the practice button`,

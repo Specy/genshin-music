@@ -9,6 +9,7 @@
     "@fortawesome/react-fontawesome": "^0.1.15",
     "@inlet/react-pixi": "^6.6.5",
     "@tonejs/midi": "^2.0.27",
+    "audiobuffer-to-wav": "^1.0.0",
     "is-mobile": "^3.0.0",
     "mobx": "^6.3.7",
     "pixi.js": "^6.1.3",

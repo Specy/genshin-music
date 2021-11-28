@@ -56,6 +56,11 @@ class App extends Component {
 		document.body.removeEventListener('dragleave', this.resetDrag)
 		document.body.removeEventListener('drop', this.handleDrop)
 		document.body.addEventListener('dragover', this.handleDragOver)
+		songStore.data = {
+			song: {},
+			eventType: 'stop',
+			start: 0
+		}
 		this.audioContext = undefined
 		this.recorder = undefined
 		this.reverbNode = undefined
@@ -280,7 +285,7 @@ class App extends Component {
 		} else {
 			let recording = await recorder.stop()
 			let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
-			if (fileName) recorder.download(recording.toUrl(), fileName + '.webm')
+			if (fileName) recorder.download(recording.data, fileName + '.wav')
 			this.toggleReverbNodes(hasReverb)
 			this.reverbVolumeNode.disconnect()
 			this.reverbVolumeNode.connect(audioContext.destination)
