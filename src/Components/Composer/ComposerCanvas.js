@@ -225,7 +225,7 @@ class ComposerCanvas extends Component {
                         pointerup={(e) => this.handleClick(e, "up")}
                         pointermove={this.handleSlide}
                     >
-                        <Graphics draw={(e) => { fillX(e, this.state.width, this.state.timelineHeight) }} />
+                        <Graphics draw={(e) => { fillX(e, this.state.width, this.state.timelineHeight) }}/>
                         {data.breakpoints.map(breakpoint => {
                             return <Sprite
                                 image={cache.breakpoints[0]}
