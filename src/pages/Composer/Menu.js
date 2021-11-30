@@ -7,7 +7,7 @@ import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
-
+import SupportButton from 'components/SupportButton'
 
 class Menu extends Component {
     constructor(props) {
@@ -183,9 +183,7 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
-                    {!isTwa() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
-                        Support me
-                    </a>}
+                    {!isTwa() && <SupportButton onClick={changePage}/>}
                 </MenuPanel>
             </div>
         </div>

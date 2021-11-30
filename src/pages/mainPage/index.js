@@ -30,6 +30,7 @@ class App extends Component {
 			isDragging: false,
 			thereIsSong: false
 		}
+		this.mounted = false
 		this.reverbNode = undefined
 		this.reverbVolumeNode = undefined
 		this.audioContext = audioContext
@@ -47,6 +48,7 @@ class App extends Component {
 		document.body.addEventListener('dragleave', this.resetDrag)
 		document.body.addEventListener('dragover', this.handleDragOver)
 		document.body.addEventListener('drop', this.handleDrop)
+		this.mounted = true
 		this.syncSongs()
 		this.init()
 	}
@@ -60,6 +62,7 @@ class App extends Component {
 			eventType: 'stop',
 			start: 0
 		}
+		this.mounted = false
 		this.audioContext = undefined
 		this.recorder = undefined
 		this.reverbNode = undefined
@@ -103,6 +106,7 @@ class App extends Component {
 		}
 	}
 	toggleReverbNodes = (hasReverb) => {
+		if(!this.mounted) return
 		const { instrument } = this.state
 		if (hasReverb) {
 			if (!this.reverbNode) return console.log("Couldn't connect to reverb")
@@ -144,6 +148,7 @@ class App extends Component {
 		let newInstrument = new Instrument(name)
 		this.setState({ isLoadingInstrument: true })
 		await newInstrument.load()
+		if(!this.mounted) return 
 		newInstrument.connect(this.audioContext.destination)
 		this.setState({
 			instrument: newInstrument,
@@ -155,7 +160,9 @@ class App extends Component {
 			fetch("./assets/audio/reverb4.wav")
 				.then(r => r.arrayBuffer())
 				.then(b => {
+					if(!this.mounted) return
 					this.audioContext.decodeAudioData(b, (impulse_response) => {
+						if(!this.mounted) return
 						let convolver = this.audioContext.createConvolver()
 						let gainNode = this.audioContext.createGain()
 						gainNode.gain.value = 2.5
@@ -279,6 +286,7 @@ class App extends Component {
 		})
 	}
 	toggleRecordAudio = async (override) => {
+		if(!this.mounted) return
 		if (typeof override !== "boolean") override = undefined
 		const { instrument } = this.state
 		const { recorder } = this

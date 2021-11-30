@@ -53,12 +53,14 @@ class Composer extends Component {
             midiVisible: false,
             isRecordingAudio: false
         }
+        this.mounted = false
         this.copiedColums = []
         this.changes = 0
         this.broadcastChannel = {}
     }
 
     componentDidMount() {
+        this.mounted = true
         this.init()
         window.addEventListener("keydown", this.handleKeyboard)
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(appName + '_composer') : {}
@@ -76,6 +78,7 @@ class Composer extends Component {
 
     }
     componentWillUnmount() {
+        this.mounted = false
         window.removeEventListener('keydown', this.handleKeyboard)
         const {instrument, layers} = this.state
         this.broadcastChannel?.close?.()
@@ -87,18 +90,18 @@ class Composer extends Component {
         let state = this.state
         state.isPlaying = false
     }
+
     init = async () => {
         this.syncSongs()
-
         const { settings } = this.state
         const promises = [
             this.loadInstrument(settings.instrument.value, 1),
             this.loadInstrument(settings.layer2.value, 2),
             this.loadInstrument(settings.layer3.value, 3)
         ]
-        await Promise.all(promises)
-        await this.loadReverb()
-        this.setupAudioDestination(settings.caveMode.value)
+        if(this.mounted) await Promise.all(promises)
+        if(this.mounted) await this.loadReverb()
+        if(this.mounted) this.setupAudioDestination(settings.caveMode.value)
     }
     componentDidCatch() {
         this.setState({
@@ -120,7 +123,9 @@ class Composer extends Component {
             fetch("./assets/audio/reverb4.wav")
                 .then(r => r.arrayBuffer())
                 .then(b => {
+                    if(!this.mounted) return
                     this.audioContext.decodeAudioData(b, (impulse_response) => {
+                        if(!this.mounted) return
                         let convolver = this.audioContext.createConvolver()
                         let gainNode = this.audioContext.createGain()
                         gainNode.gain.value = 2.5
@@ -184,11 +189,13 @@ class Composer extends Component {
     }
 
     loadInstrument = async (name, layer) => {
+        if(!this.mounted) return
         const { settings } = this.state
         if (layer === 1) {
             this.state.instrument.delete()
             let newInstrument = new Instrument(name)
             await newInstrument.load()
+		    if(!this.mounted) return 
             newInstrument.changeVolume(settings.instrument.volume)
             this.setState({
                 instrument: newInstrument
@@ -199,6 +206,7 @@ class Composer extends Component {
             layers[layer-2].delete()
             layers[layer - 2] = newInstrument
             await newInstrument.load()
+		    if(!this.mounted) return 
             newInstrument.changeVolume(settings[`layer${layer}`]?.volume)
             this.setState({
                 layers: layers
@@ -225,6 +233,7 @@ class Composer extends Component {
         }, () => this.updateSettings())
     }
     setupAudioDestination = (hasReverb) => {
+        if(!this.mounted) return
         const { instrument, layers } = this.state
         const instruments = [instrument, layers[0], layers[1]]
         instruments.forEach(ins => {
@@ -239,6 +248,7 @@ class Composer extends Component {
         })
     }
     startRecordingAudio =async (override) => { //will record untill the song stops
+        if(!this.mounted) return
         if(!override){
             this.setState({ isRecordingAudio: false })
             return this.togglePlay(false)
@@ -257,10 +267,12 @@ class Composer extends Component {
         recorder.start()
         this.setState({ isRecordingAudio: true })
         await this.togglePlay(true) //wait till song finishes
+		if(!this.mounted) return 
         let recording = await recorder.stop()
         this.setState({ isRecordingAudio: false })
         let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
         if (fileName)  recorder.download(recording.data, fileName + '.wav')
+        if(!this.mounted) return
         this.reverbVolumeNode.disconnect()
         this.reverbVolumeNode.connect(audioContext.destination)
         this.setupAudioDestination(hasReverb)
@@ -357,6 +369,7 @@ class Composer extends Component {
     }
     syncSongs = async () => {
         let songs = await this.dbCol.songs.find().toArray()
+        if(!this.mounted) return
         songs = songs.map(song => {
             if (song.data.isComposedVersion) {
                 return ComposerSongDeSerialization(song)
@@ -378,10 +391,10 @@ class Composer extends Component {
     updateSong = async (song) => {
         if (song.name === "Untitled") {
             let name = await this.askForSongName()
+            if(!this.mounted) return
             if (name === null) return
             song.name = name
             return this.addSong(song)
-
         }
         return new Promise(async resolve => {
             let settings = this.state.settings
@@ -448,6 +461,7 @@ class Composer extends Component {
         if (name === null) return
         let song = new ComposedSong(name)
         this.changes = 0
+        if(!this.mounted) return
         this.setState({
             song: song
         }, () => this.addSong(song))
@@ -471,7 +485,6 @@ class Composer extends Component {
             }
             if (confirm) await this.updateSong(state.song)
         }
-
         let settings = this.state.settings
         settings.bpm.value = song.bpm
         settings.pitch.value = song.pitch
@@ -489,6 +502,7 @@ class Composer extends Component {
         }
         this.changes = 0
         console.log("song loaded")
+        if(!this.mounted) return
         this.setState({
             song: song,
             settings: settings,
@@ -544,7 +558,7 @@ class Composer extends Component {
                     let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger.changer) + pastError
                     previousTime = new Date().getTime()
                     await delayMs(msPerBPM)
-                    if (!this.state.isPlaying) break
+                    if (!this.state.isPlaying || !this.mounted) break
                     this.handleTick()
                     pastError = previousTime + msPerBPM - new Date().getTime()
                 }

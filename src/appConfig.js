@@ -12,7 +12,7 @@ const cssClasses = {
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
-const pages = ["", "Composer", "ErrorPage", "Changelog"]
+const pages = ["", "Composer", "ErrorPage", "Changelog","Support"]
 
 const instruments = appName === "Genshin" ? [
     "Lyre",
