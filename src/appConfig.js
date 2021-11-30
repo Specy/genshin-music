@@ -11,6 +11,9 @@ const cssClasses = {
     noteName: appName === "Genshin" ? "note-name" : "note-name-sky"
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+
+const pages = ["", "Composer", "ErrorPage", "Changelog"]
+
 const instruments = appName === "Genshin" ? [
     "Lyre",
     "DunDun",
@@ -186,6 +189,11 @@ const layoutImages = {
     8: appName === "Sky"? "cr dm cr dm cr dm cr dm".split(" ") : "do re mi fa do re mi fa".split(" "),
     21: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ")
 }
+
+function isTwa() {
+    let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
+    return isTwa
+}
 export {
     instruments,
     instrumentsData,
@@ -200,5 +208,7 @@ export {
     layoutImages,
     appVersion,
     speedChangers,
-    audioContext
+    audioContext,
+    pages,
+    isTwa
 }
