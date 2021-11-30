@@ -290,6 +290,22 @@ class Keyboard extends Component {
     handleKeyboard = (event) => {
         const { keyboard } = this.state
         if (event.repeat) return
+        if(event.shiftKey){
+            switch(event.code){
+                case "KeyR" : {
+                    if(!this.props.data.hasSong) return
+                    if(['practice','playing','approaching'].includes(songStore.data.eventType)){
+                        console.log("restarting")
+                       return this.restartSong()
+                    }
+                }
+                case "KeyS" : {
+                    if(!this.props.data.hasSong) return
+                    return this.stopSong()
+                }
+                default: break;
+            }
+        }
         if (document.activeElement.tagName === "INPUT") return
         let code = event.code?.replace("Key", "")
         let index = this.props.data.keyboard.getNoteFromCode(code)

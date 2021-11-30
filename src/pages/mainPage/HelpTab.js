@@ -20,6 +20,23 @@ export function HelpTab() {
                 <li>Approaching circle, click when it's close to the note</li>
             </ol>
         </div>
+                <div className='help-title'>
+                Main page shortcuts
+        </div>
+        <div style={{marginBottom:'0.5rem'}}>
+            The main page has shortcuts for PC users:
+        </div>
+        <table className='keys-table'>
+            <tbody>
+                <tr>
+                    <td><Key>Shift + R</Key></td><td>reload song </td>
+                </tr>
+                <tr>
+                    <td><Key>Shift + S</Key></td><td>stop song </td>
+                </tr>
+            </tbody>
+        </table>
+
         <div className='help-title'>
             Songs menu
         </div>
@@ -46,6 +63,7 @@ export function HelpTab() {
 
             </div>
         </div>
+
         <div className='help-title'>
             Composer
         </div>
@@ -61,48 +79,52 @@ export function HelpTab() {
                 <li>Change layer (instrument)</li>
                 <li>Change column's duration</li>
             </ol>
-            <div className='help-title'>
+        </div>
+
+        <div className='help-title'>
                 Composer shortcuts
             </div>
-            <div style={{marginTop:'1.5rem'}}>
+            <div style={{marginBottom:'0.5rem'}}>
                 The composer has shortcuts for PC users:
             </div>
             <table className='keys-table'>
                 <tbody>
                     <tr>
-                        <td><Key>A / D</Key></td><td> = move left / right</td>
+                        <td><Key>A / D</Key></td><td>move left / right</td>
                     </tr>
                     <tr>
-                        <td><Key>1 / 2 / 3 / 4</Key></td><td> = change tempo</td>
+                        <td><Key>1 / 2 / 3 / 4</Key></td><td>change tempo</td>
                     </tr>
                     <tr>
-                        <td><Key>Space bar</Key></td><td> = play / pause song</td>
+                        <td><Key>Space bar</Key></td><td>play / pause song</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Left</Key></td><td> = go to previous breakpoint</td>
+                        <td><Key>Arrow Left</Key></td><td>go to previous breakpoint</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Right</Key></td><td> = go to next breakpoint</td>
+                        <td><Key>Arrow Right</Key></td><td>go to next breakpoint</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Up</Key></td><td> = select previous layer</td>
+                        <td><Key>Arrow Up</Key></td><td>select previous layer</td>
                     </tr>
                     <tr>
-                        <td><Key>Arrow Down</Key></td><td> = select next layer </td>
+                        <td><Key>Arrow Down</Key></td><td>select next layer </td>
                     </tr>
                     <tr>
-                        <td><Key>Shift + Note</Key></td><td> = Adds/remove a note in the column </td>
+                        <td><Key>Shift + Note</Key></td><td>Adds/remove a note in the column </td>
                     </tr>
                     <tr>
-                        <td><Key>Q</Key></td><td> = remove current column</td>
+                        <td><Key>Q</Key></td><td>remove current column</td>
                     </tr>
                     <tr>
-                        <td><Key>E</Key></td><td> = add column </td>
+                        <td><Key>E</Key></td><td>add column </td>
                     </tr>
                 </tbody>
             </table>
             When playing a song, you can press on the PC keyboard to add notes
-        </div>
+            <div style={{marginBottom: "1rem"}}>
+
+            </div>
     </>
 }
 

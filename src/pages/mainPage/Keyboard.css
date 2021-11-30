@@ -162,11 +162,12 @@
 @keyframes note-animation {
     0% {
         transform: scale(0.8);
-        opacity: 0.8;
+        opacity: 1;
         border-width: 3px;
     }
     70% {
         transform: scale(1.45);
+		opacity: 0.2;
     }
     100% {
         transform: scale(1.5);
@@ -205,11 +206,12 @@
 	@keyframes note-animation {
 		0% {
 			transform: scale(0.8);
-			opacity: 0.8;
+			opacity: 1;
 			border-width: 2px;
 		}
 		70% {
 			transform: scale(1.45);
+			opacity: 0.2;
 		}
 		100% {
 			transform: scale(1.5);

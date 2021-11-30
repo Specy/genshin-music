@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import {MdKeyboardReturn } from 'react-icons/md'
+import { MdKeyboardReturn } from 'react-icons/md'
 import './Changelog.css'
 class Changelogpage extends Component {
     constructor(props) {
@@ -13,11 +13,11 @@ class Changelogpage extends Component {
             <div className='changelog-page-title'>
                 Changelog
             </div>
-            <div 
+            <div
                 className='absolute-changelog-btn'
                 onClick={() => this.props.changePage("")}
             >
-                <MdKeyboardReturn size={25}/>
+                <MdKeyboardReturn size={25} />
             </div>
             {changelogs.map(e => <ChangelogRow
                 data={e}
@@ -49,8 +49,8 @@ function ChangelogRow(props) {
             <ul>
                 {changes.map((e, i) =>
                     <li key={i}>
-                        {e.split('$l').map((item, i,arr) => {
-                            if(i === 0){
+                        {e.split('$l').map((item, i, arr) => {
+                            if (i === 0) {
                                 return <div key={i}>{item}</div>
                             }
                             return <p key={i} className='cll-new-line'>
@@ -65,6 +65,17 @@ function ChangelogRow(props) {
     </div>
 }
 const changelogs = [
+    {
+        version: '2.1',
+        title: 'Code restructure',
+        date: '2021 - 3/12',
+        changes: [
+            'Restructured code',
+            'Added shortcuts for main page',
+            'Fixed loading bug in composer and main page',
+            'Added Support page'
+        ]
+    },
     {
         version: '2.0',
         title: 'Approaching circles',
