@@ -2,9 +2,9 @@ import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash, faDownload } from '@fortawesome/free-solid-svg-icons'
 import ZangoDb from "zangodb"
-import { FileDownloader, LoggerEvent } from "./SongUtils"
-import { asyncConfirm } from "./AsyncPrompts"
-import { appName } from "../appConfig"
+import { FileDownloader, LoggerEvent } from "lib/SongUtils"
+import { asyncConfirm } from "components/AsyncPrompts"
+import { appName } from "appConfig"
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
@@ -64,6 +64,7 @@ class ErrorPage extends Component {
             <div className="error-songs-wrapper">
                 {this.state.songs.map(song => {
                     return <SongRow
+                        key={song?.name}
                         data={song}
                         functions={
                             {
@@ -72,7 +73,6 @@ class ErrorPage extends Component {
                             }
                         }
                     >
-
                     </SongRow>
                 })}
             </div>

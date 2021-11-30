@@ -1,10 +1,11 @@
 import React, { Component } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
-import { ComposerCache } from "./ComposerCache"
 import { faStepBackward, faStepForward, faPlusCircle, faMinusCircle } from "@fortawesome/free-solid-svg-icons"
+import isMobile from "is-mobile"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import "./Composer.css"
-import isMobile from "is-mobile"
+import { ComposerCache } from "./ComposerCache"
+
 import { composerNotePositions, notesPerColumn, appName } from "../../appConfig"
 let NumOfColumnsPerCanvas = 35
 

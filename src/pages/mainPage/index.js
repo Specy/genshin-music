@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
-import './App.css';
 import Keyboard from "./Keyboard"
 import Menu from "./Menu"
-import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "../SongUtils"
-import { MainPageSettings } from "../SettingsObj"
-import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
-import rotateImg from "../../assets/icons/rotate.svg"
-import { appName, audioContext } from "../../appConfig"
-import Instrument from '../Instrument';
 import { songStore } from './SongStore'
-import AudioRecorder from '../AudioRecorder';
+import ZangoDb from "zangodb"
+import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "lib/SongUtils"
+import { MainPageSettings } from "lib/SettingsObj"
+import Instrument from 'lib/Instrument';
+import AudioRecorder from 'lib/AudioRecorder';
+import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
+import rotateImg from "assets/icons/rotate.svg"
+import { appName, audioContext , isTwa} from "appConfig"
+import './App.css';
 class App extends Component {
 	constructor(props) {
 		super(props)
@@ -113,6 +113,16 @@ class App extends Component {
 			instrument.connect(this.audioContext.destination)
 		}
 	}
+	changeVolume = (obj) => {
+        let settings = this.state.settings
+        if (obj.key === "instrument") {
+            settings.instrument.volume = obj.value
+            this.state.instrument.changeVolume(obj.value)
+        }
+        this.setState({
+            settings: settings
+        }, () => this.updateSettings())
+    }
 	getSettings = () => {
 		let storedSettings = localStorage.getItem(appName + "_Main_Settings")
 		try {
@@ -316,7 +326,7 @@ class App extends Component {
 			removeSong: this.removeSong,
 			changePage: this.props.changePage,
 			handleSettingChange: this.handleSettingChange,
-
+			changeVolume: this.changeVolume
 		}
 		let menuData = {
 			songs: state.songs,
@@ -373,15 +383,11 @@ class App extends Component {
 	}
 }
 
-function checkIfTWA() {
-	let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
-	return isTwa
-}
 
 function setIfInTWA() {
-	if (checkIfTWA()) return console.log('inTWA')
-	let isTwa = document.referrer.includes('android-app://')
-	sessionStorage.setItem('isTwa', isTwa)
+	if (isTwa()) return console.log('inTWA')
+	let isInTwa = document.referrer.includes('android-app://')
+	sessionStorage.setItem('isTwa', isInTwa)
 }
 setIfInTWA()
 function AppButton(props) {

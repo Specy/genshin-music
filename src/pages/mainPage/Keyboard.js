@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
-import "./Keyboard.css"
-import { delayMs, ComposerToRecording, NotesTable } from "../SongUtils"
-import Note from "./Note"
-import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } from "../../appConfig"
-import { songStore } from './SongStore'
 import { observe } from 'mobx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
+import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } from "appConfig"
+import Note from "./Note"
+import { songStore } from './SongStore'
+import { delayMs, ComposerToRecording, NotesTable } from "lib/SongUtils"
+import "./Keyboard.css"
+
 class Keyboard extends Component {
     constructor(props) {
         super(props)

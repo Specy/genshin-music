@@ -1,4 +1,4 @@
-import { LoggerEvent } from "./SongUtils"
+import { LoggerEvent } from "lib/SongUtils"
 
 async function asyncPrompt(question) {
     return new Promise(resolve => {

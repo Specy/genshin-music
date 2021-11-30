@@ -1,4 +1,4 @@
-import { instrumentsData, layoutData, instruments,audioContext } from "../appConfig"
+import { instrumentsData, layoutData, instruments,audioContext } from "appConfig"
 class Instrument {
     constructor(instrumentName) {
         this.instrumentName = instrumentName === undefined ? instruments[0] : instrumentName

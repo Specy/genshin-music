@@ -1,16 +1,21 @@
-import React, { Component, useState } from 'react'
+import { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FaDiscord, FaGithub} from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
+import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "lib/SongUtils"
+import { FilePicker } from "react-file-picker"
+import { appName, isTwa } from "appConfig"
+import {songStore} from './SongStore'
+import { HelpTab } from './HelpTab'
+import MenuItem from 'components/MenuItem'
+import MenuPanel from 'components/MenuPanel'
+import MenuClose from 'components/MenuClose'
+import SettingsRow from 'components/SettingsRow'
+
 import "./menu.css"
 
-import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "../SongUtils"
-import { FilePicker } from "react-file-picker"
-import { appName } from "../../appConfig"
-import {songStore} from './SongStore'
-import { HelpTab } from './HelpTab';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -165,7 +170,7 @@ class Menu extends Component {
         }
         return <div className="menu-wrapper">
             <div className="menu menu-visible">
-                {this.state.open && <CloseMenu action={this.toggleMenu} />}
+                {this.state.open && <MenuClose action={this.toggleMenu} />}
                 <MenuItem type="Help" action={this.selectSideMenu} className="margin-top-auto">
                     <FontAwesomeIcon icon={faInfo} className="icon" />
                 </MenuItem>
@@ -253,6 +258,7 @@ class Menu extends Component {
                             key={key + data.value}
                             objKey={key}
                             data={data}
+                            changeVolume={functions.changeVolume}
                             update={handleSettingChange}
                         >
 
@@ -261,7 +267,7 @@ class Menu extends Component {
                     <div style={{marginTop:'1rem'}}>
                         {this.state.isPersistentStorage ?"Storage is persisted" : "Storage is not persisted"}
                     </div>
-                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
+                    {!isTwa() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}
                 </MenuPanel>
@@ -324,96 +330,13 @@ class Menu extends Component {
                         Go to changelog
                     </div>
                     <HelpTab />
-                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
+                    {!isTwa() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}
                 </MenuPanel>
             </div>
         </div>
     }
-}
-
-//TODO export all those as their own component
-function MenuPanel(props) {
-    let className = props.visible === props.title ? "menu-panel menu-panel-visible" : "menu-panel"
-    return <div className={className}>
-        <div className="menu-title">
-            {props.title}
-        </div>
-        <div className="panel-content-wrapper">
-            {props.children}
-        </div>
-    </div>
-}
-function CloseMenu(props) {
-    return <div onClick={() => props.action(false)} className="close-menu menu-item">
-        <FontAwesomeIcon icon={faTimes} className="icon" />
-    </div>
-}
-function SettingsRow(props) {
-    const { data, update, objKey } = props
-    const [valueHook, setter] = useState(data.value)
-    function handleChange(e) {
-        let el = e.target
-        let value = data.type === "checkbox" ? el.checked : el.value
-        if (data.type === "number") {
-            value = Number(value)
-            e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
-            if (value < data.threshold[0] || value > data.threshold[1]) {
-                return
-            }
-        }
-
-        if(el.type === 'checkbox'){
-            data.value = value
-            let obj = {
-                key: objKey,
-                data
-            }
-            update(obj)
-        }
-        setter(value)
-    }
-    function sendChange() {
-        if (data.value === valueHook) return
-        data.value = valueHook
-        let obj = {
-            key: objKey,
-            data: data
-        }
-        update(obj)
-    }
-    function sendChangeSelect(e) {
-        let value = e.target.value
-        data.value = value
-        let obj = {
-            key: objKey,
-            data: data
-        }
-        update(obj)
-    }
-    if (objKey === "settingVesion") return null
-    return <div className="settings-row">
-        <div>
-            {data.name}
-        </div>
-        {data.type === "select"
-            ? <select value={data.value}
-                onChange={sendChangeSelect}
-            >
-                {data.options.map(e => {
-                    return <option value={e} key={e}>{e}</option>
-                })}
-            </select>
-            : <input
-                type={data.type}
-                placeholder={data.placeholder || ""}
-                value={valueHook}
-                checked={valueHook}
-                onChange={handleChange}
-                onBlur={sendChange}
-            />}
-    </div>
 }
 function SongRow(props) {
     let data = props.data
@@ -466,17 +389,6 @@ function SongRow(props) {
         </div>
     </div>
 }
-class MenuItem extends Component {
-    render() {
-        let className = this.props.className ? `menu-item ${this.props.className}` : "menu-item"
-        return <div
-            className={className}
-            onClick={() => this.props.action(this.props.type)}
-        >
-            {this.props.children}
-        </div>
-    }
-}
 
 function SearchedSong(props){
     const { functions, data} = props
@@ -518,9 +430,5 @@ function SearchedSong(props){
     </div>
 </div>
 }
-function checkIfTWA(){
-    let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
-    return isTwa
-  }
 
 export default Menu

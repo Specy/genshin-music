@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { cssClasses, appName , instrumentsData} from "../../appConfig" 
+import { cssClasses, appName , instrumentsData} from "appConfig" 
 class ComposerNote extends Component {
     constructor(props) {
         super(props)

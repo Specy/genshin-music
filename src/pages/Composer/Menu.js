@@ -1,10 +1,14 @@
-import React, { Component, useState } from 'react'
+import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSave, faMusic, faTimes, faCog, faTrash, faCompactDisc, faDownload } from '@fortawesome/free-solid-svg-icons'
-import "../mainPage/menu.css"
+import { faSave, faMusic, faCog, faTrash, faCompactDisc, faDownload } from '@fortawesome/free-solid-svg-icons'
+import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/SongUtils"
+import { appName,isTwa } from 'appConfig'
+import MenuItem from 'components/MenuItem'
+import MenuPanel from 'components/MenuPanel'
+import MenuClose from 'components/MenuClose'
+import SettingsRow from 'components/SettingsRow'
 
-import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "../SongUtils"
-import { appName } from '../../appConfig'
+
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -95,7 +99,7 @@ class Menu extends Component {
         let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
         return <div className="menu-wrapper">
             <div className={menuClass}>
-                <CloseMenu action={this.toggleMenu} />
+                <MenuClose action={this.toggleMenu} />
                 <MenuItem type="Save" action={() => updateSong(data.currentSong)} className={hasUnsaved}>
                     <FontAwesomeIcon icon={faSave} className="icon" />
                 </MenuItem>
@@ -179,7 +183,7 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
-                    {!checkIfTWA() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
+                    {!isTwa() && <a className="donate-button" href="https://www.buymeacoffee.com/Specy" target="_blank" rel="noreferrer">
                         Support me
                     </a>}
                 </MenuPanel>
@@ -188,24 +192,6 @@ class Menu extends Component {
     }
 }
 
-
-
-function MenuPanel(props) {
-    let className = props.visible === props.title ? "menu-panel menu-panel-visible" : "menu-panel"
-    return <div className={className}>
-        <div className="menu-title">
-            {props.title}
-        </div>
-        <div className="panel-content-wrapper">
-            {props.children}
-        </div>
-    </div>
-}
-function CloseMenu(props) {
-    return <div onClick={() => props.action(false)} className="close-menu menu-item">
-        <FontAwesomeIcon icon={faTimes} className="icon" />
-    </div>
-}
 
 function SongRow(props) {
     const { data, functions } = props
@@ -228,120 +214,6 @@ function SongRow(props) {
     </div>
 }
 
-function SettingsRow(props) {
-    const { data, update, objKey, changeVolume } = props
-    const [valueHook, setter] = useState(data.value)
-    const [volumeHook, setterVolume] = useState(data.volume)
-    function handleChange(e) {
-        let el = e.target
-        let value = data.type === "checkbox" ? el.checked : el.value
-        if (data.type === "number") {
-            value = Number(value)
-            e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
-            if (value < data.threshold[0] || value > data.threshold[1]) {
-                return
-            }
-        }
-        if(el.type === 'checkbox'){
-            data.value = value
-            let obj = {
-                key: objKey,
-                data
-            }
-            update(obj)
-        }
-        setter(value)
-    }
-    function sendChange() {
-        if (data.value === valueHook) return
-        data.value = valueHook
-        let obj = {
-            key: objKey,
-            data: data
-        }
-        update(obj)
-    }
-    function sendChangeSelect(e) {
-        let value = e.target.value
-        data.value = value
-        let obj = {
-            key: objKey,
-            data: data
-        }
-        update(obj)
-    }
-    function handleVolume(e) {
-        setterVolume(Number(e.target.value))
-    }
-    function sendVolumeChange() {
-        changeVolume({
-            key: objKey,
-            value: volumeHook
-        })
-    }
-    if (objKey === "settingVesion") return null
-    return <div className="settings-row">
-        <div>
-            {data.name}
-        </div>
-        {data.type === "select"
-            ? <select value={data.value}
-                onChange={sendChangeSelect}
-            >
-                {data.options.map(e => {
-                    return <option value={e} key={e}>{e}</option>
-                })}
-            </select>
-            : null
-        }
-        {["number", "text", "checkbox"].includes(data.type) ?
-            <input
-                type={data.type}
-                value={valueHook}
-                checked={valueHook}
-                onChange={handleChange}
-                onBlur={sendChange}
-            />
-            : null
-        }
-        {data.type === "instrument"
-            ? <div className="instrument-picker">
-                <select value={data.value}
-                    onChange={sendChangeSelect}
-                >
-                    {data.options.map(e => {
-                        return <option value={e} key={e}>{e}</option>
-                    })}
-                </select>
 
-                <input
-                    type="range"
-                    min={1}
-                    max={100}
-                    value={volumeHook}
-                    onChange={handleVolume}
-                    onPointerUp={sendVolumeChange}
-                />
-            </div>
-            : null
-        }
-    </div>
-}
 
-function checkIfTWA() {
-    let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
-    return isTwa
-}
-
-class MenuItem extends Component {
-    render() {
-        let className = this.props.className ? `menu-item ${this.props.className}` : "menu-item"
-        return <div
-            className={className}
-            onClick={() => this.props.action(this.props.type)}
-        >
-            {this.props.children}
-        </div>
-    }
-}
 export default Menu

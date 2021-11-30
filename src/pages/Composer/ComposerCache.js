@@ -1,6 +1,6 @@
-import { TempoChangers } from "../SongUtils"
+import { TempoChangers } from "lib/SongUtils"
 import * as PIXI from "pixi.js"
-import {notesPerColumn } from "../../appConfig"
+import {notesPerColumn } from "appConfig"
 let noteData = {
     background: "#d3bd8e",
     border: "#de4545",

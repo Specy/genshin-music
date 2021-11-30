@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import './Changelog.css'
 import {MdKeyboardReturn } from 'react-icons/md'
+import './Changelog.css'
 class Changelogpage extends Component {
     constructor(props) {
         super(props)

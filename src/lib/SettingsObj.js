@@ -1,6 +1,7 @@
 import { isMobile } from "is-mobile"
-import {instruments, appName} from "../appConfig"
-let ComposerSettings = {
+import {instruments, appName} from "appConfig"
+
+const ComposerSettings = {
     settingVesion: appName + 14,
     instrument: {
         name: "Instrument (Layer 1)",
@@ -124,21 +125,51 @@ let ComposerSettings = {
         value: false
     }
 }
-let MainPageSettings = {
+
+
+
+const MainPageSettings = {
     settingVesion:appName + 12,
+    instrument: {
+        name: "Instrument",
+        type: "instrument",
+        songSetting: false,
+        value: instruments[0],
+        volume: 100,
+        options: instruments
+    },
+    pitch: {
+        name: "Pitch",
+        type: "select",
+        songSetting: true,
+        value: "C",
+        options: [
+            "C",
+            "Db",
+            "D",
+            "Eb",
+            "E",
+            "F",
+            "Gb",
+            "G",
+            "Ab",
+            "A",
+            "Bb",
+            "B",
+        ]
+    },
+    caveMode: {
+        name: "Reverb (cave mode)",
+        type: "checkbox",
+        songSetting: false,
+        value: false,
+    },
     keyboardSize: {
         name: "Keyboard size",
         type: "number",
         songSetting: false,
         value: 100,
         threshold: [0, 200]
-    },
-    instrument: {
-        name: "Instrument",
-        type: "select",
-        songSetting: false,
-        value: instruments[0],
-        options: instruments
     },
     noteNameType:{
         name: "Note name type",
@@ -167,32 +198,6 @@ let MainPageSettings = {
         songSetting: false,
         value: 1500,
         threshold: [0, 5000]
-    },
-    pitch: {
-        name: "Pitch",
-        type: "select",
-        songSetting: true,
-        value: "C",
-        options: [
-            "C",
-            "Db",
-            "D",
-            "Eb",
-            "E",
-            "F",
-            "Gb",
-            "G",
-            "Ab",
-            "A",
-            "Bb",
-            "B",
-        ]
-    },
-    caveMode: {
-        name: "Reverb (cave mode)",
-        type: "checkbox",
-        songSetting: false,
-        value: false,
     },
     backgroundImage:{
         name: "Background image (url)",

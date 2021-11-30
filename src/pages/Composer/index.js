@@ -4,10 +4,10 @@ import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faTools
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-import rotateImg from "../../assets/icons/rotate.svg"
-import addCell from "../../assets/icons/addCell.svg"
-import removeCell from "../../assets/icons/removeCell.svg"
-import { appName, audioContext } from "../../appConfig"
+import rotateImg from "assets/icons/rotate.svg"
+import addCell from "assets/icons/addCell.svg"
+import removeCell from "assets/icons/removeCell.svg"
+import { appName, audioContext } from "appConfig"
 
 import MidiImport from "./MidiParser"
 import ComposerTools from "./ComposerTools"
@@ -15,14 +15,14 @@ import ComposerKeyboard from "./ComposerKeyboard"
 import ComposerCanvas from "./ComposerCanvas"
 import Menu from "./Menu"
 
-import { asyncConfirm, asyncPrompt } from "../AsyncPrompts"
-import { ComposerSettings } from "../SettingsObj"
-import Instrument from "../Instrument"
+import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
+import { ComposerSettings } from "lib/SettingsObj"
+import Instrument from "lib/Instrument"
 import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
-} from "../SongUtils"
-import AudioRecorder from '../AudioRecorder'
+} from "lib/SongUtils"
+import AudioRecorder from 'lib/AudioRecorder'
 
 class Composer extends Component {
     constructor(props) {

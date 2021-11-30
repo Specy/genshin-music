@@ -1,4 +1,4 @@
-import { importNotePositions, appName, instruments } from "../appConfig"
+import { importNotePositions, appName, instruments } from "appConfig"
 import * as workerTimers from 'worker-timers';
 class Recording {
 	constructor() {

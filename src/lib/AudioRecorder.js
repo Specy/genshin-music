@@ -1,4 +1,4 @@
-import { audioContext } from "../appConfig";
+import { audioContext } from "appConfig";
 import toWav from 'audiobuffer-to-wav'
 export default class AudioRecorder {
     constructor() {
