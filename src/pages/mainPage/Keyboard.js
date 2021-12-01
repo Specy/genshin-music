@@ -298,6 +298,7 @@ class Keyboard extends Component {
                         console.log("restarting")
                        return this.restartSong()
                     }
+                    break;
                 }
                 case "KeyS" : {
                     if(!this.props.data.hasSong) return

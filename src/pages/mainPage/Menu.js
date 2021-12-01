@@ -9,7 +9,6 @@ import { FilePicker } from "react-file-picker"
 import { appName, isTwa } from "appConfig"
 import {songStore} from './SongStore'
 import { HelpTab } from './HelpTab'
-import { Link } from 'react-router-dom';
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import MenuClose from 'components/MenuClose'
@@ -170,7 +169,7 @@ class Menu extends Component {
             importSong: functions.addSong,
         }
         return <div className="menu-wrapper">
-            <div className="menu menu-visible">
+            <div className="menu menu-visible menu-main-page">
                 {this.state.open && <MenuClose action={this.toggleMenu} />}
                 <MenuItem type="Help" action={this.selectSideMenu} className="margin-top-auto">
                     <FontAwesomeIcon icon={faInfo} className="icon" />
