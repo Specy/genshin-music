@@ -369,14 +369,14 @@ class App extends Component {
 						<AppButton
 							active={state.isRecording}
 							click={this.toggleRecord}
-							style={{marginTop: "-0.5rem"}}
+							style={{marginTop: "0.8rem"}}
 						>
 							{state.isRecording ? "Stop" : "Record"}
 						</AppButton>
 
 					}
 				</div>
-				<div className="keyboard-wrapper">
+				<div className="keyboard-wrapper" style={{marginBottom: '2vh'}}>
 					<Keyboard
 						key={state.instrument.instrumentName}
 						data={keyboardData}

@@ -5,6 +5,7 @@
 	grid-template-rows: repeat(3, 1fr);
 	justify-items: center;
 	align-items: center;
+	margin-bottom: 2vh;
 }
 .keyboard-5 {
 	grid-template-columns: repeat(5, 1fr);
@@ -190,6 +191,9 @@
 		height: 6.5vw;
 		font-size: 1rem;
 		border-width: 4px;
+	}
+	.keyboard{
+		margin-bottom: 1vh;
 	}
 	.note-sky {
 		width: 8.5vw;

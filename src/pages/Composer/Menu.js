@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSave, faMusic, faCog, faTrash, faCompactDisc, faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faSave, faMusic, faCog, faTrash, faCompactDisc, faDownload, faHome} from '@fortawesome/free-solid-svg-icons'
+import { BsMusicPlayerFill } from 'react-icons/bs';
+
 import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/SongUtils"
 import { appName,isTwa } from 'appConfig'
 import MenuItem from 'components/MenuItem'
@@ -106,11 +108,14 @@ class Menu extends Component {
                 <MenuItem type="Songs" action={this.selectSideMenu}>
                     <FontAwesomeIcon icon={faMusic} className="icon" />
                 </MenuItem>
+                <MenuItem type="Home" action={() => changePage("home")}>
+                    <FontAwesomeIcon icon={faHome} className="icon" />
+                </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FontAwesomeIcon icon={faCog} className="icon" />
                 </MenuItem>
-                <MenuItem type="Composer" action={() => changePage("")} className="inverted">
-                    <FontAwesomeIcon icon={faCompactDisc} className="icon" />
+                <MenuItem type="Composer" action={() => changePage("")}>
+                    <BsMusicPlayerFill  className="icon" />
                 </MenuItem>
             </div>
             <div className={sideClass}>

@@ -1,33 +1,20 @@
-import React, { Component } from 'react'
-import { MdKeyboardReturn } from 'react-icons/md'
+import ToHome from 'components/ToHome'
+
 import './Changelog.css'
-class Changelogpage extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-
-        }
-    }
-    render() {
-        return <div className='changelog-page'>
-            <div className='changelog-page-title'>
-                Changelog
-            </div>
-            <div
-                className='absolute-changelog-btn'
-                onClick={() => this.props.changePage("")}
-            >
-                <MdKeyboardReturn size={25} />
-            </div>
-            {changelogs.map(e => <ChangelogRow
-                data={e}
-                key={e.version}
-            />)}
-            <div className='changelog-ending'>
-
-            </div>
+export default function Changelogpage(props) {
+    return <div className='changelog-page'>
+        <div className='changelog-page-title'>
+            Changelog
         </div>
-    }
+        <ToHome changePage={props.changePage} />
+        {changelogs.map(e => <ChangelogRow
+            data={e}
+            key={e.version}
+        />)}
+        <div className='changelog-ending'>
+
+        </div>
+    </div>
 }
 
 function ChangelogRow(props) {
@@ -71,6 +58,10 @@ const changelogs = [
         date: '2021 - 3/12',
         changes: [
             'Restructured code',
+            'Added opacity to some elements',
+            'Changed margins and padding of some elements',
+            'Added home page',
+            'Added Partners page',
             'Added shortcuts for main page',
             'Fixed loading bug in composer and main page',
             'Added Support page'
@@ -175,5 +166,3 @@ const changelogs = [
         ]
     }
 ]
-
-export default Changelogpage

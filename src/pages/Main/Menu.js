@@ -1,6 +1,7 @@
 import { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch , faHome} from '@fortawesome/free-solid-svg-icons'
+import {  } from 'react-icons/fa';
 import { FaDiscord, FaGithub} from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
@@ -31,7 +32,6 @@ class Menu extends Component {
     }
     componentDidMount(){
         this.checkPersistentStorage()
-
     }
     checkPersistentStorage = async () => {
         if (navigator.storage && navigator.storage.persist) {
@@ -180,10 +180,12 @@ class Menu extends Component {
                 <MenuItem type="Songs" action={this.selectSideMenu} >
                     <FontAwesomeIcon icon={faMusic} className="icon" />
                 </MenuItem>
+                <MenuItem type="Home" action={() => changePage("home")}>
+                    <FontAwesomeIcon icon={faHome} className="icon" />
+                </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FontAwesomeIcon icon={faCog} className="icon" />
                 </MenuItem>
-
                 <MenuItem type="Composer" action={() => changePage("Composer")}>
                     <FontAwesomeIcon icon={faCompactDisc} className="icon" />
                 </MenuItem>

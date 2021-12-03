@@ -1,7 +1,7 @@
 const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
 const appVersion = '2.0'
 console.log(`${appName}-V${appVersion}`)
-
+const pages = ["", "Composer", "ErrorPage", "Changelog","Support", "Partners","Home"]
 
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
@@ -11,8 +11,6 @@ const cssClasses = {
     noteName: appName === "Genshin" ? "note-name" : "note-name-sky"
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-
-const pages = ["", "Composer", "ErrorPage", "Changelog","Support"]
 
 const instruments = appName === "Genshin" ? [
     "Lyre",

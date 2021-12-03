@@ -15,17 +15,17 @@ class ComposerCanvas extends Component {
         let sizes = document.body.getBoundingClientRect()
         this.sizes = sizes
         NumOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
-        let width = nearestEven(sizes.width * 0.82)
+        let width = nearestEven(sizes.width * 0.84)
         let height = nearestEven(sizes.height * 0.45)
 
         if (window.screen.width < sizes.height) {
-            width = nearestEven(sizes.height * 0.82)
+            width = nearestEven(sizes.height * 0.84)
             height = nearestEven(sizes.width * 0.45)
         }
         if(appName === "Sky") height = nearestEven(height * 0.95)
         this.state = {
-            width: width,
-            height: height,
+            width: Math.floor(width),
+            height: Math.floor(height),
             column: {
                 width: calcMinColumnWidth(nearestEven(width)),
                 height: height
@@ -35,7 +35,7 @@ class ComposerCanvas extends Component {
         }
         this.canvasRef = React.createRef()
         let margin = isMobile() ? 1 : 4
-        this.cache = new ComposerCache(this.state.column.width, height, margin, this.state.timelineHeight).cache
+        this.cache = new ComposerCache(this.state.column.width, height, margin, this.state.timelineHeight)
         this.stageSelected = false
         this.sliderSelected = false
         this.stagePreviousPositon = 0
@@ -55,6 +55,7 @@ class ComposerCanvas extends Component {
         window.removeEventListener("pointerup", this.resetPointerDown)
         window.removeEventListener("keydown", this.handleKeyboard)
         this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
+        this.cache.destroy()
     }
     handleKeyboard = (event) => {
         let key = event.code
@@ -142,29 +143,28 @@ class ComposerCanvas extends Component {
 
     render() {
         let s = this.state
-        let pixiOptions = {
-            backgroundColor: 0x495466,
-        }
+        const { width, timelineHeight, height} = this.state
+        const cache = this.cache.cache
         const { data, functions } = this.props
         let sizes = this.state.column
         let xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
-        let timelineHeight = this.state.timelineHeight
-        let counter = 0
         let switcher = false
-        let cache = this.cache
-        let beatMarks = Number(data.settings.beatMarks.value)
-        let counterLimit = beatMarks === 0 ? 11 : 4 * beatMarks - 1
-        let relativeColumnWidth = this.state.width / data.columns.length
+        let counter = 0
+        const beatMarks = Number(data.settings.beatMarks.value)
+        const counterLimit = beatMarks === 0 ? 11 : 4 * beatMarks - 1
+        let relativeColumnWidth = width / data.columns.length
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
-        if (stageSize > this.state.width) stageSize = this.state.width
+        if (stageSize > width) stageSize = width
         let stagePos = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
-        return <div className="canvas-wrapper" style={{ width: s.width + 6 }}>
+        return <div className="canvas-wrapper" style={{ width: width + 2 }}>
             <Stage
-                width={s.width}
-                height={s.height}
+                width={width}
+                height={height}
                 raf={false}
                 renderOnComponentChange={true}
-                options={pixiOptions}
+                options={{
+                    backgroundColor: 0x495466,
+                }}
                 key={this.state.width}
                 ref={this.canvasRef}
             >
@@ -216,7 +216,7 @@ class ComposerCanvas extends Component {
                     options={{ antialias: true, autoDensity: true,backgroundColor: 0x515c6f }}
                     raf={false}
                     renderOnComponentChange={true}
-                >
+                >   
                     <Container
                         width={this.state.width}
                         height={this.state.timelineHeight}

@@ -1,17 +1,12 @@
-import {MdKeyboardReturn } from 'react-icons/md'
-import { Link } from 'react-router-dom'
+import ToHome from 'components/ToHome'
+
 import './Support.css'
 import paypalImg from 'assets/images/paypalme.png'
 import buyMeACoffeeImg from 'assets/images/buymeacoffee.svg'
 import kofiImg from 'assets/images/kofi.png'
 export default function Support(props) {
     return <div className='support-page'>
-        <div
-            className='absolute-changelog-btn'
-            onClick={() => props.changePage('')}
-        >
-            <MdKeyboardReturn size={25} />
-        </div>
+        <ToHome changePage={props.changePage}/>
         <div className="support-text">
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not

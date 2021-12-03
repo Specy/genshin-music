@@ -2,7 +2,8 @@ import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash, faDownload } from '@fortawesome/free-solid-svg-icons'
 import ZangoDb from "zangodb"
-import { FileDownloader, LoggerEvent } from "lib/SongUtils"
+import ToHome from 'components/ToHome'
+import { FileDownloader, LoggerEvent,prepareSongDownload } from "lib/SongUtils"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { appName } from "appConfig"
 class ErrorPage extends Component {
@@ -16,7 +17,26 @@ class ErrorPage extends Component {
         this.state = {
             songs: []
         }
+
+    }
+    componentDidMount(){
         this.syncSongs()
+    }
+    downloadAllSongs = () => {
+        let toDownload = []
+        const { songs } = this.state
+        songs.forEach(song => {
+            if (song._id) delete song._id
+            if(appName === "Sky"){
+                song = prepareSongDownload(song)
+            }
+            Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
+        })
+        let fileDownloader = new FileDownloader()
+        let json = JSON.stringify(toDownload)
+        let date = new Date().toISOString().split('T')[0]
+        fileDownloader.download(json,`${appName}_Backup_${date}.json`)
+        new LoggerEvent("Success", "Song backup downloaded").trigger()
     }
     syncSongs = async () => {
         let songs = await this.dbCol.songs.find().toArray()
@@ -42,12 +62,22 @@ class ErrorPage extends Component {
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
+        let songName = song.name
+        if(appName === "Sky"){
+            song = prepareSongDownload(song)
+        }
+        if(!Array.isArray(song)) song = [song]
+        song.forEach(song1 => {
+            song1.data.appName = appName
+        })
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, `${song.name}.${appName.toLowerCase()}sheet.json`)
+        fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)
+        new LoggerEvent("Success", "Song downloaded").trigger()
     }
     render() {
         return <div className="error-page app">
+            <ToHome changePage={this.props.changePage} />
             <div className="error-text-wrapper">
                 There seems to be an error. <br />
                 Here you can download or delete your songs,
@@ -62,26 +92,17 @@ class ErrorPage extends Component {
                 </button>
             </div>
             <div className="error-songs-wrapper">
-                {this.state.songs.map(song => {
-                    return <SongRow
+                {this.state.songs.map(song => 
+                    <SongRow
                         key={song?.name}
                         data={song}
-                        functions={
-                            {
-                                deleteSong: this.deleteSong,
-                                downloadSong: this.downloadSong
-                            }
-                        }
-                    >
-                    </SongRow>
-                })}
+                        functions={{
+                            deleteSong: this.deleteSong,
+                            downloadSong: this.downloadSong
+                        }}
+                    />
+                )}
             </div>
-            <button
-                className="error-go-back genshin-button"
-                onClick={() => this.props.changePage("")}
-            >
-                Go back to main page
-            </button>
         </div>
     }
 }

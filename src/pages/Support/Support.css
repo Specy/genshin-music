@@ -33,7 +33,6 @@
     padding: 0.5rem 1rem;
 }
 
-
 .paypal {
     background-color: #efefef;
     padding-left: 1rem;
@@ -44,7 +43,5 @@
     .support-page{
         width: calc(100% - 8rem);
         padding: 0;
-        padding-top: 1.5rem;
-        padding-left: 1rem;
     }
 }

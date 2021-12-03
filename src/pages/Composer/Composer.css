@@ -1,10 +1,11 @@
 .canvas-wrapper{
     background-color: #495466;
     gap: 0.2rem;
-    padding: 0.2rem;
     justify-content: center;
     display: flex;
-    border-radius: 0.5rem;
+    border-radius: 0.4rem;
+    align-items: center;
+    overflow: hidden;
     align-items: center;
     flex-direction: column;
 }
@@ -31,7 +32,7 @@ select{
     flex-direction: column;
     align-items:center;
     justify-content: space-between;
-    padding: 1vh;
+    padding-top: 0.2rem;
   }
 .note-composer{
     width: 5vw;
@@ -107,7 +108,10 @@ select{
 .timeline-wrapper{
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     height: 100%;
+    margin: 0.2rem;
+    margin-top: 0;
     align-items: center;
 }
 .timeline-wrapper :first-child {
@@ -123,11 +127,8 @@ select{
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 0.4rem;
+    border-radius: 0.3rem;
     cursor: pointer;
-}
-canvas{
-    border-radius: 0.2rem;
 }
 .fill-x{
     width: 100%;
@@ -241,8 +242,8 @@ canvas{
 }
 .bottom-right-wrapper{
     position: fixed;
-    right: 1vw;
-    bottom: 0.5vw;
+    right: 0.2rem;
+    bottom: 0.2rem;
     width: fit-content;
     display: flex;
     flex-direction: row;
@@ -487,19 +488,18 @@ canvas{
         max-width: unset;
     }
     .button-hitbox{
-        padding: 1vh;
+        padding: 0.7vh;
     }
     .layer-button{
         font-size: 0.7rem;
-
     }
     .tempo-changers-wrapper button{
         font-size: 0.7rem;
         padding: 0.5rem;
     }
     .note-composer{
-        width: 5.1vw;
-        height: 5.1vw;
+        width: 5.5vw;
+        height: 5.5vw;
     }
     .keyboard{
         gap: 0rem;

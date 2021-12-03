@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import App from 'pages/mainPage';
+import App from 'pages/Main';
 import Composer from "pages/Composer"
 import ErrorPage from "pages/ErrorPage"
 import Changelogpage from 'pages/Changelog'
+import Partners from 'pages/Partners';
+import Home from 'pages/Home';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/SongUtils"
@@ -27,6 +29,7 @@ class Index extends Component {
 				text: "Text",
 				title: "Title"
 			},
+			homeVisible: true,
 			updateChecked: false,
 			hasPersistentStorage: navigator.storage && navigator.storage.persist,
 			selectedPage: path,
@@ -38,8 +41,15 @@ class Index extends Component {
 		this.checkUpdate()	
 	}
 	changePage = (page) => {
+		if(page === 'home') return this.toggleHome(true)
 		this.setState({
-			selectedPage: page
+			selectedPage: page,
+			homeVisible:false
+		})
+	}
+	toggleHome = (override = false) =>{
+		this.setState({
+			homeVisible: override
 		})
 	}
 	componentDidCatch() {
@@ -132,7 +142,7 @@ class Index extends Component {
 		}, error.timeout)
 	}
 	render() {
-		const {floatingMessage, hasPersistentStorage} = this.state
+		const {floatingMessage, hasPersistentStorage,homeVisible} = this.state
 		return <div className="index">
 			<FloatingMessage 
 				title={floatingMessage.title}
@@ -145,6 +155,10 @@ class Index extends Component {
 					hasPersistentStorage={hasPersistentStorage}
 				/>
 			}
+			{homeVisible && <Home 
+				toggleHome={this.toggleHome}
+				changePage={this.changePage}
+			/>}
 			<HashRouter>
 				<Redirect to={"/" + this.state.selectedPage}></Redirect>
 				{this.state.selectedPage === "ErrorPage"
@@ -152,6 +166,9 @@ class Index extends Component {
 						<ErrorPage changePage={this.changePage} />
 					</Route>
 					: <>
+						<Route exact path={"/ErrorPage"}>
+							<ErrorPage changePage={this.changePage} />
+						</Route>
 						<Route exact path="/">
 							<App changePage={this.changePage} />
 						</Route>
@@ -163,8 +180,17 @@ class Index extends Component {
 						<Route exact path="/Support">
 							<Support changePage={this.changePage} />
 						</Route>
+
 						<Route exact path="/Changelog">
 							<Changelogpage changePage={this.changePage} />
+						</Route>
+
+						<Route exact path="/Partners">
+							<Partners changePage={this.changePage} />
+						</Route>
+
+						<Route exact path='/Home'>
+							<Home changePage={this.changePage} />
 						</Route>
 					</>
 				}

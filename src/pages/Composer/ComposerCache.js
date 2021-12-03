@@ -56,8 +56,10 @@ class ComposerCache {
         })
         this.generate()
     }
+    destroy = () => {
+        this.app.destroy()
+    }
     generate = () => {
-
         TempoChangers.forEach(tempoChanger => {
             let canvas = drawColumn(tempoChanger, this, 1)
             this.cache.columns.push(canvas.toDataURL())
