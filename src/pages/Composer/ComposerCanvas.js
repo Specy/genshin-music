@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
-import { faStepBackward, faStepForward, faPlusCircle, faMinusCircle } from "@fortawesome/free-solid-svg-icons"
+import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
 import isMobile from "is-mobile"
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import "./Composer.css"
 import { ComposerCache } from "./ComposerCache"
 
@@ -205,10 +204,10 @@ class ComposerCanvas extends Component {
             </Stage>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
                 <div className="timeline-button" onClick={() => this.handleBreakpoints(-1)}>
-                    <FontAwesomeIcon icon={faStepBackward} />
+                    <FaStepBackward />
                 </div>
                 <div className="timeline-button" onClick={() => this.handleBreakpoints(1)}>
-                    <FontAwesomeIcon icon={faStepForward} />
+                    <FaStepForward />
                 </div>
                 <Stage
                     width={s.width}
@@ -242,7 +241,7 @@ class ComposerCanvas extends Component {
 
                 </Stage>
                 <div className="timeline-button" onClick={functions.toggleBreakpoint}>
-                    <FontAwesomeIcon icon={data.breakpoints.includes(data.selected) ? faMinusCircle : faPlusCircle} />
+                    {data.breakpoints.includes(data.selected) ? <FaMinusCircle/> : <FaPlusCircle />}
                 </div>
             </div>
         </div>

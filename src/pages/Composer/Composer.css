@@ -134,7 +134,7 @@ select{
     width: 100%;
 }
 .timeline-wrapper canvas{
-    width: calc(100% - 6.4rem) !important;
+    width: calc(100% - 6.6rem) !important;
 }
 .settings-row :is(input,select){
     background-color: var(--primary);

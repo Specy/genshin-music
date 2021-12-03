@@ -20,8 +20,8 @@ class Index extends Component {
 		let path = window.location.href.split("/")
 		path = path.length === 0 ? "" : path = path[path.length - 1]
 		if (!pages.includes(path)) path = ""
-		let hasVisited = localStorage.getItem(appName + "_Visited")
-		hasVisited = hasVisited === null ? false : Boolean(hasVisited)
+		const hasVisited = localStorage.getItem(appName + "_Visited")
+		const canShowHome = localStorage.getItem(appName + "_ShowHome")
 		this.state = {
 			floatingMessage: {
 				timestamp: 0,
@@ -29,11 +29,15 @@ class Index extends Component {
 				text: "Text",
 				title: "Title"
 			},
-			homeVisible: true,
+			homeData: {
+				canShow: canShowHome === 'true',
+				visible: canShowHome === 'true',
+				isInPosition: false,
+			},
 			updateChecked: false,
-			hasPersistentStorage: navigator.storage && navigator.storage.persist,
+			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist),
 			selectedPage: path,
-			hasVisited: hasVisited
+			hasVisited: hasVisited === 'true'
 		}
 	}
 	componentDidMount() {
@@ -42,14 +46,35 @@ class Index extends Component {
 	}
 	changePage = (page) => {
 		if(page === 'home') return this.toggleHome(true)
+		if(this.state.homeData.visible) this.toggleHome(false)
 		this.setState({
 			selectedPage: page,
 			homeVisible:false
 		})
 	}
 	toggleHome = (override = false) =>{
+		//TODO please refactor this
+		const lastState = this.state.homeData
+		if(override){ //if its to be shown then just show it
+			return this.setState({
+				homeData: {...lastState, visible:true, isInPosition:false }
+			})
+		}
+		this.setState({ //if it needs to be hidden, first trigger the animation
+			homeData: {...lastState, isInPosition:true }
+		},() => {
+			setTimeout(() => { //then demount it
+				this.setState({
+					homeData: {...lastState, visible: false }
+				})
+			},150)
+		})
+	}
+	setDontShowHome = (override = false) => {
+		localStorage.setItem(appName + "_ShowHome",override)
+		const lastState = this.state.homeData
 		this.setState({
-			homeVisible: override
+			homeData: {...lastState, canShow:override }
 		})
 	}
 	componentDidCatch() {
@@ -142,7 +167,7 @@ class Index extends Component {
 		}, error.timeout)
 	}
 	render() {
-		const {floatingMessage, hasPersistentStorage,homeVisible} = this.state
+		const {floatingMessage, hasPersistentStorage,homeData} = this.state
 		return <div className="index">
 			<FloatingMessage 
 				title={floatingMessage.title}
@@ -153,11 +178,14 @@ class Index extends Component {
 			{!this.state.hasVisited && 
 				<WelcomePopup 
 					hasPersistentStorage={hasPersistentStorage}
+					askForStorage={this.askForStorage}
 				/>
 			}
-			{homeVisible && <Home 
+			{homeData.visible && <Home 
 				toggleHome={this.toggleHome}
 				changePage={this.changePage}
+				setDontShowHome={this.setDontShowHome}
+				data={homeData}
 			/>}
 			<HashRouter>
 				<Redirect to={"/" + this.state.selectedPage}></Redirect>

@@ -1,7 +1,7 @@
 import { appName } from "appConfig"
 
 export default function WelcomePopup(props) {
-    const { hasPersistentStorage } = props
+    const { hasPersistentStorage, askForStorage } = props
     return <div className="welcome-message">
         <div className='welcome-overflow'>
             <div className={"welcome-message-title"}>Welcome to {appName} music {appName === "Sky" ? "nightly" : ""}</div>
@@ -22,7 +22,7 @@ export default function WelcomePopup(props) {
             </div>
         </div>
         <div className="welcome-message-button-wrapper">
-            <button className="welcome-message-button" onClick={this.askForStorage}>
+            <button className="welcome-message-button" onClick={askForStorage}>
                 Confirm
             </button>
         </div>

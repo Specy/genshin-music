@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { observe } from 'mobx'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSyncAlt, faStop } from '@fortawesome/free-solid-svg-icons'
+import { FaSyncAlt, FaStop } from 'react-icons/fa'
 import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } from "appConfig"
 import Note from "./Note"
 import { songStore } from './SongStore'
@@ -411,7 +410,7 @@ class Keyboard extends Component {
                             songStore.data = returnStopSong()
                         }
                         }>
-                            <FontAwesomeIcon icon={faStop} />
+                            <FaStop />
                         </button>
                         <input
                             type="range"
@@ -424,7 +423,7 @@ class Keyboard extends Component {
                         <button className="song-button" onClick={() => {
                             this.restartSong()
                         }}>
-                            <FontAwesomeIcon icon={faSyncAlt} />
+                            <FaSyncAlt />
                         </button>
                         <select 
                             className='slider-select'

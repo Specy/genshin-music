@@ -1,4 +1,4 @@
-import ToHome from 'components/ToHome'
+import { SimpleMenu } from 'components/SimpleMenu'
 
 import './Changelog.css'
 export default function Changelogpage(props) {
@@ -6,7 +6,7 @@ export default function Changelogpage(props) {
         <div className='changelog-page-title'>
             Changelog
         </div>
-        <ToHome changePage={props.changePage} />
+        <SimpleMenu functions={{changePage: props.changePage}}/>
         {changelogs.map(e => <ChangelogRow
             data={e}
             key={e.version}
@@ -20,7 +20,6 @@ export default function Changelogpage(props) {
 function ChangelogRow(props) {
     const { version, title, changes, date } = props.data
     return <div className='changelog-wrapper'>
-
         <div className='changelog-title'>
             <div className='clt-1'>
                 {version}

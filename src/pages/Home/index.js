@@ -4,7 +4,9 @@ import { BsMusicPlayerFill } from 'react-icons/bs'
 import { appName } from 'appConfig'
 export default function Home(props) {
     const to = props.changePage
-    return <div className='home'>
+    const { data } = props
+    const homeClass = data.isInPosition ? "home" : "home home-visible"
+    return <div className={homeClass}>
         <FaTimes className='close-home' onClick={() => props.toggleHome(false)} />
         <div className='home-top'>
             <div className='home-title'>
@@ -45,6 +47,10 @@ export default function Home(props) {
                 Partners
             </PageRedirect>
         </div>
+        <div className='home-dont-show-again' onClick={() => props.setDontShowHome(!data.canShow)}>
+            <input type='checkbox' checked={!data.canShow} readOnly/>
+            Hide on open
+        </div>
     </div>
 }
 
@@ -56,7 +62,7 @@ function PageRedirect(props){
 function MainContentelement(props) {
     return <div className='home-content-element'>
         <div className='home-content-background'>
-            <img src={props.background} />
+            <img src={props.background} alt='app background'/>
         </div>
         <div className='home-content-main'>
             <div className='home-content-title'>
@@ -89,13 +95,12 @@ function Separator(props) {
                 <BsMusicPlayerFill className='redirect-icon' />
             </PageButton>
         </div>
-
+        function PageButton(props) {
+            return <button className='redirect-button' onClick={props.onClick}>
+                {props.children}
+                <div>
+                    {props.name}
+                </div>
+            </button>
+        }
 */
-function PageButton(props) {
-    return <button className='redirect-button' onClick={props.onClick}>
-        {props.children}
-        <div>
-            {props.name}
-        </div>
-    </button>
-}

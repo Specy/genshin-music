@@ -1,11 +1,10 @@
 import React, { Component } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrash, faDownload } from '@fortawesome/free-solid-svg-icons'
+import { FaTrash, FaDownload} from 'react-icons/fa';
 import ZangoDb from "zangodb"
-import ToHome from 'components/ToHome'
 import { FileDownloader, LoggerEvent,prepareSongDownload } from "lib/SongUtils"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { appName } from "appConfig"
+import { SimpleMenu } from 'components/SimpleMenu'
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
@@ -77,7 +76,7 @@ class ErrorPage extends Component {
     }
     render() {
         return <div className="error-page app">
-            <ToHome changePage={this.props.changePage} />
+            <SimpleMenu functions={{changePage: this.props.changePage}}/>
             <div className="error-text-wrapper">
                 There seems to be an error. <br />
                 Here you can download or delete your songs,
@@ -117,11 +116,11 @@ function SongRow(props) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => downloadSong(data)}>
-                <FontAwesomeIcon icon={faDownload} />
+                <FaDownload />
 
             </button>
             <button className="song-button" onClick={() => deleteSong(data.name)}>
-                <FontAwesomeIcon icon={faTrash} color="#ed4557" />
+                <FaTrash color="#ed4557" />
             </button>
         </div>
     </div>

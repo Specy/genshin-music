@@ -1,8 +1,6 @@
 import React, { Component } from 'react'
 import ZangoDb from "zangodb"
-import { faPlay, faPlus, faPause, faBars, faChevronLeft, faChevronRight, faTools } from "@fortawesome/free-solid-svg-icons"
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
 import rotateImg from "assets/icons/rotate.svg"
 import addCell from "assets/icons/addCell.svg"
@@ -828,7 +826,7 @@ class Composer extends Component {
         return <div className="app bg-image" style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData} />}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
-                <FontAwesomeIcon icon={faBars} />
+                <FaBars />
 
             </div>
             <div className="rotate-screen">
@@ -844,14 +842,14 @@ class Composer extends Component {
                     <div className="top-panel-composer">
                         <div className="buttons-composer-wrapper">
                             <div className="tool" onClick={() => this.selectColumn(song.selected + 1)}>
-                                <FontAwesomeIcon icon={faChevronRight} />
+                                <FaChevronRight />
                             </div>
                             <div className="tool" onClick={() => this.selectColumn(song.selected - 1)}>
-                                <FontAwesomeIcon icon={faChevronLeft} />
+                                <FaChevronLeft />
                             </div>
 
                             <div className="tool" onClick={this.togglePlay}>
-                                <FontAwesomeIcon icon={this.state.isPlaying ? faPause : faPlay} />
+                                {this.state.isPlaying ? <FaPause/> : <FaPlay />}
                             </div>
                         </div>
                         <ComposerCanvas
@@ -868,10 +866,10 @@ class Composer extends Component {
                                 <img src={removeCell} className="tool-icon" alt="Remove a cell" />
                             </div>
                             <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 4, "end")}>
-                                <FontAwesomeIcon icon={faPlus} />
+                                <FaPlus />
                             </div>
                             <div className="tool" onClick={this.toggleTools}>
-                                <FontAwesomeIcon icon={faTools} />
+                                <FaTools />
                             </div>
 
                         </div>

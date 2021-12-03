@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%;
+    height: calc(100vh - 9rem);
     overflow-y: auto;
     position: absolute;
     width: 100%;
@@ -11,19 +11,31 @@
     backdrop-filter: blur(4px);
     z-index: 100;
     color: var(--whitish);
-    animation: 0.2s home-appear ease-out;
+    transition: all 0.2s ease-out;
+    animation: 0.15s home-appear ease-out;
+    opacity: 0;
+    backdrop-filter: none;
+    top: 8rem;
 }
 @keyframes home-appear {
     0%{
         opacity: 0.5;
         backdrop-filter: none;
-        transform: scale(0.9);
+        top: 8rem;
+        height: calc(100vh - 9rem);
     }
     100%{
         opacity: 1;
         backdrop-filter: none;
-        transform: scale(1);
+        top: 0;
+        height: 100%;
     }
+}
+.home-visible{
+    opacity: 1;
+    backdrop-filter: none;
+    top: 0;
+    height: 100%;
 }
 .close-home{
     position: absolute;
@@ -36,6 +48,13 @@
     border-radius: 0.5rem;
     background-color: #606c82;
     cursor: pointer;
+}
+.home-dont-show-again{
+    position: fixed;
+    display: flex;
+    align-items: center;
+    bottom: 0.5rem;
+    right: 0.5rem;
 }
 .home-content{
     display: grid;
@@ -181,6 +200,9 @@
 @media only screen and (max-width: 900px) {
     .home{
         padding: 0.6rem 15vw;
+    }
+    .home-dont-show-again{
+        font-size: 0.8rem;
     }
     .home-content{
         margin-top: 0.5rem;

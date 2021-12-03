@@ -1,8 +1,7 @@
 import mainPageImg from 'assets/images/mainpage.png'
 import composerImg from 'assets/images/composer.png'
 import songsImg from 'assets/images/songs.png'
-import { faCrosshairs, faDownload } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FaCrosshairs, FaDownload } from 'react-icons/fa'
 import { BsCircle } from 'react-icons/bs'
 
 export function HelpTab() {
@@ -52,13 +51,13 @@ export function HelpTab() {
             </ol>
             <div className="column">
                 <div>
-                    <FontAwesomeIcon icon={faCrosshairs} /> = practice the song
+                    <FaCrosshairs /> = practice the song
                 </div>
                 <div>
                     <BsCircle /> = Approaching circles mode
                 </div>
                 <div>
-                    <FontAwesomeIcon icon={faDownload} /> = download the song
+                    <FaDownload /> = download the song
                 </div>
 
             </div>

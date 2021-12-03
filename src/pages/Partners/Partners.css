@@ -1,0 +1,43 @@
+.partners-page{
+    width: 100%;
+    color: var(--whitish);
+    padding-left: 4rem;
+}
+.partner-wrapper{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    overflow-x: auto;
+    padding: 1rem;
+}
+.partner{
+    width: 100%;
+    min-height: 11rem;
+    background-color: #515c6f;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.2s ease-out;
+    width: 20rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.6rem;
+    margin: 0.5rem;
+}
+.partner iframe{
+    border-radius: 0.3rem;
+    width: 18.8rem;
+    height: 10.5rem;
+}
+.partner-description{
+    width: 100%;
+    margin-top: 0.4rem;
+    border-top: 1px solid var(--icon-color);
+    padding: 0.4rem;
+
+}
+.partner-title{
+    font-size: 1.2rem;
+    color: var(--note-color);
+}

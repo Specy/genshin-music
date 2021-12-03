@@ -1,7 +1,5 @@
 import { Component } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMusic, faTimes, faCog, faTrash, faCrosshairs, faDownload, faInfo, faCompactDisc, faSearch , faHome} from '@fortawesome/free-solid-svg-icons'
-import {  } from 'react-icons/fa';
+import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaCompactDisc, FaSearch, FaHome } from 'react-icons/fa';
 import { FaDiscord, FaGithub} from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
@@ -172,22 +170,22 @@ class Menu extends Component {
             <div className="menu menu-visible menu-main-page">
                 {this.state.open && <MenuClose action={this.toggleMenu} />}
                 <MenuItem type="Help" action={this.selectSideMenu} className="margin-top-auto">
-                    <FontAwesomeIcon icon={faInfo} className="icon" />
+                    <FaInfo className="icon" />
                 </MenuItem>
                 <MenuItem type="Library" action={this.selectSideMenu}>
                     <RiPlayListFill className='icon'/>
                 </MenuItem>
                 <MenuItem type="Songs" action={this.selectSideMenu} >
-                    <FontAwesomeIcon icon={faMusic} className="icon" />
+                    <FaMusic className="icon" />
                 </MenuItem>
                 <MenuItem type="Home" action={() => changePage("home")}>
-                    <FontAwesomeIcon icon={faHome} className="icon" />
+                    <FaHome className="icon" />
                 </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
-                    <FontAwesomeIcon icon={faCog} className="icon" />
+                    <FaCog className="icon" />
                 </MenuItem>
                 <MenuItem type="Composer" action={() => changePage("Composer")}>
-                    <FontAwesomeIcon icon={faCompactDisc} className="icon" />
+                    <FaCompactDisc className="icon" />
                 </MenuItem>
             </div>
             <div className={sideClass}>
@@ -288,10 +286,10 @@ class Menu extends Component {
                             value={this.state.searchInput}
                         />
                         <button className='library-search-btn' onClick={this.clearSearch}>
-                            <FontAwesomeIcon icon={faTimes}/>
+                            <FaTimes />
                         </button>
                         <button className='library-search-btn' onClick={this.searchSongs}>
-                            <FontAwesomeIcon icon={faSearch}/>
+                            <FaSearch/>
                         </button>
                     </div>
                     <div className='library-search-songs-wrapper'>
@@ -361,7 +359,7 @@ function SongRow(props) {
                     toggleMenu(false)
                 }}
             >
-                <FontAwesomeIcon icon={faCrosshairs} />
+                <FaCrosshairs />
             </button>
             
             <button className="song-button" onClick={() => {
@@ -376,11 +374,11 @@ function SongRow(props) {
                 <BsCircle />
             </button>
             <button className="song-button" onClick={() => downloadSong(data)}>
-                <FontAwesomeIcon icon={faDownload} />
+                <FaDownload />
 
             </button>
             <button className="song-button" onClick={() => deleteSong(data.name)}>
-                <FontAwesomeIcon icon={faTrash} color="#ed4557" />
+                <FaTrash color="#ed4557" />
             </button>
         </div>
     </div>
@@ -421,7 +419,7 @@ function SearchedSong(props){
     </div>
     <div className="song-buttons-wrapper">
         <button className="song-button" onClick={download}>
-            <FontAwesomeIcon icon={faDownload} />
+            <FaDownload />
         </button>
     </div>
 </div>

@@ -1,8 +1,6 @@
 import React, { Component } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSave, faMusic, faCog, faTrash, faCompactDisc, faDownload, faHome} from '@fortawesome/free-solid-svg-icons'
 import { BsMusicPlayerFill } from 'react-icons/bs';
-
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload } from 'react-icons/fa';
 import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/SongUtils"
 import { appName,isTwa } from 'appConfig'
 import MenuItem from 'components/MenuItem'
@@ -103,18 +101,18 @@ class Menu extends Component {
             <div className={menuClass}>
                 <MenuClose action={this.toggleMenu} />
                 <MenuItem type="Save" action={() => updateSong(data.currentSong)} className={hasUnsaved}>
-                    <FontAwesomeIcon icon={faSave} className="icon" />
+                    <FaSave className="icon" />
                 </MenuItem>
                 <MenuItem type="Songs" action={this.selectSideMenu}>
-                    <FontAwesomeIcon icon={faMusic} className="icon" />
+                    <FaMusic className="icon" />
                 </MenuItem>
                 <MenuItem type="Home" action={() => changePage("home")}>
-                    <FontAwesomeIcon icon={faHome} className="icon" />
+                    <FaHome className="icon" />
                 </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
-                    <FontAwesomeIcon icon={faCog} className="icon" />
+                    <FaCog className="icon" />
                 </MenuItem>
-                <MenuItem type="Composer" action={() => changePage("")}>
+                <MenuItem type="Player" action={() => changePage("")}>
                     <BsMusicPlayerFill  className="icon" />
                 </MenuItem>
             </div>
@@ -208,10 +206,10 @@ function SongRow(props) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => downloadSong(data)}>
-                <FontAwesomeIcon icon={faDownload} />
+                <FaDownload />
             </button>
             <button className="song-button" onClick={() => removeSong(data.name)}>
-                <FontAwesomeIcon icon={faTrash} color="#ed4557" />
+                <FaTrash color="#ed4557" />
             </button>
         </div>
     </div>
