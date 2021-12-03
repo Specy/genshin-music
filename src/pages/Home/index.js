@@ -21,7 +21,7 @@ export default function Home(props) {
                 background={`./manifestData/composer.png`}
                 onClick={() => to("Composer")}
             >
-                Create or edit songs with a fully fledged music composer. Also with MIDI
+                Create or edit songs with a fully fledged music composer. Also with MIDI.
             </MainContentelement>
             <MainContentelement
                 icon={<BsMusicPlayerFill />}
@@ -33,17 +33,7 @@ export default function Home(props) {
                 mode and practice mode.
             </MainContentelement>
         </div>
-        <div className='redirect-wrapper' style={{display:'none'}}>
-            <PageButton name='Composer' onClick={() => to("/Composer")}>
-                <FaCompactDisc className='redirect-icon' />
-            </PageButton>
-            <PageButton name='Player' onClick={() => to("/Composer")}>
-                <BsMusicPlayerFill className='redirect-icon' />
-            </PageButton>
-        </div>
-        <Separator>
-            Other pages
-        </Separator>
+        <Separator> Other pages </Separator>
         <div className='page-redirect-wrapper'>
             <PageRedirect onClick={() => to("Changelog")}>
                 Changelog
@@ -59,9 +49,9 @@ export default function Home(props) {
 }
 
 function PageRedirect(props){
-    return <div onClick={props.onClick}>
+    return <button onClick={props.onClick}>
         {props.children}        
-    </div>
+    </button>
 }
 function MainContentelement(props) {
     return <div className='home-content-element'>
@@ -84,17 +74,28 @@ function MainContentelement(props) {
     </div>
 }
 
-function PageButton(props) {
-    return <div className='redirect-button' onClick={props.onClick}>
-        {props.children}
-        <div>
-            {props.name}
-        </div>
-    </div>
-}
-
 function Separator(props) {
     return <div className='home-separator'>
         {props.children}
     </div>
+}
+
+/*
+        <div className='redirect-wrapper' style={{display:'none'}}>
+            <PageButton name='Composer' onClick={() => to("/Composer")}>
+                <FaCompactDisc className='redirect-icon' />
+            </PageButton>
+            <PageButton name='Player' onClick={() => to("/Composer")}>
+                <BsMusicPlayerFill className='redirect-icon' />
+            </PageButton>
+        </div>
+
+*/
+function PageButton(props) {
+    return <button className='redirect-button' onClick={props.onClick}>
+        {props.children}
+        <div>
+            {props.name}
+        </div>
+    </button>
 }

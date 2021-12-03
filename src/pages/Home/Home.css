@@ -35,6 +35,7 @@
     color: var(--whitish);
     border-radius: 0.5rem;
     background-color: #606c82;
+    cursor: pointer;
 }
 .home-content{
     display: grid;
@@ -52,16 +53,24 @@
     border-radius: 0.5rem;
     position: relative;
     overflow: hidden;
+    transition: all 0.2s ease-out;
     max-width: 20rem;
+}
+.home-content-element:hover{
+    transform: scale(1.03);
 }
 .home-content-main{
     padding: 0.5rem;
     display: flex;
     position: absolute;
     flex-direction: column;
-    background-color: rgb(51 56 67 / 90%);
+    background-color: rgba(47, 52, 63, 0.9);
     width: 100%;
     height: 100%;
+    transition: all 0.2s ease-out;
+}
+.home-content-main:hover{
+    background-color: rgba(53, 58, 70, 0.9);
 }
 .home-content-background{
     position: absolute;
@@ -104,13 +113,20 @@
     flex-wrap: wrap;
     width: 100%;
 }
-.page-redirect-wrapper div{
+.page-redirect-wrapper button{
     background-color: #606c82;
     border-radius: 0.5rem;
+    border: none;
+    color: var(--whitish);
     padding: 0.5rem 1rem;
     font-size: 1rem;
     margin-left: 1rem;
     margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.1s linear;
+}
+.page-redirect-wrapper button:hover{
+    background-color: #6b788f;
 }
 .home-content-open button{
     padding: 0.5rem 2rem;
@@ -118,6 +134,7 @@
     border-radius: 0.5rem;
     color: #161514;
     border: none;
+    cursor: pointer;
 }
 .home-top{
     display: flex;
@@ -151,6 +168,7 @@
     align-items: center;
     justify-content: center;
     margin: 1rem 2rem;
+    cursor: pointer;
 }
 .redirect-icon{
     width: 5rem !important;
