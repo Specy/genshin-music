@@ -1,12 +1,12 @@
 import { Component } from 'react'
-import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaCompactDisc, FaSearch, FaHome } from 'react-icons/fa';
+import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome } from 'react-icons/fa';
 import { FaDiscord, FaGithub} from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "lib/SongUtils"
 import { FilePicker } from "react-file-picker"
 import { appName, isTwa } from "appConfig"
-import {songStore} from './SongStore'
+import { songStore } from './SongStore'
 import { HelpTab } from './HelpTab'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -178,14 +178,11 @@ class Menu extends Component {
                 <MenuItem type="Songs" action={this.selectSideMenu} >
                     <FaMusic className="icon" />
                 </MenuItem>
-                <MenuItem type="Home" action={() => changePage("home")}>
-                    <FaHome className="icon" />
-                </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FaCog className="icon" />
                 </MenuItem>
-                <MenuItem type="Composer" action={() => changePage("Composer")}>
-                    <FaCompactDisc className="icon" />
+                <MenuItem type="Home" action={() => changePage("home")}>
+                    <FaHome className="icon" />
                 </MenuItem>
             </div>
             <div className={sideClass}>

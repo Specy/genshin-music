@@ -13,7 +13,8 @@ import { appName, appVersion, pages,isTwa } from "appConfig"
 import FloatingMessage from 'components/FloatingMessage'
 import WelcomePopup from 'components/WelcomePopup'
 import Support from 'pages/Support';
-let updateChecked = false
+import rotateImg from "assets/icons/rotate.svg"
+
 class Index extends Component {
 	constructor(props) {
 		super(props)
@@ -21,7 +22,8 @@ class Index extends Component {
 		path = path.length === 0 ? "" : path = path[path.length - 1]
 		if (!pages.includes(path)) path = ""
 		const hasVisited = localStorage.getItem(appName + "_Visited")
-		const canShowHome = localStorage.getItem(appName + "_ShowHome")
+		let canShowHome = localStorage.getItem(appName + "_ShowHome")
+		canShowHome = canShowHome === null ? 'true' : canShowHome
 		this.state = {
 			floatingMessage: {
 				timestamp: 0,
@@ -34,11 +36,11 @@ class Index extends Component {
 				visible: canShowHome === 'true',
 				isInPosition: false,
 			},
-			updateChecked: false,
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist),
 			selectedPage: path,
 			hasVisited: hasVisited === 'true'
 		}
+		this.updateChecked = false
 	}
 	componentDidMount() {
 		window.addEventListener('logEvent', this.logEvent);
@@ -116,7 +118,7 @@ class Index extends Component {
 	}
 	checkUpdate = async () => {
 		await delayMs(1500) //wait for page to render
-		if (updateChecked) return
+		if (this.updateChecked) return
 		let currentVersion = appVersion
 		let updateMessage =
 			`   - Added Approaching circles mode, a new way to learn a song
@@ -133,7 +135,7 @@ class Index extends Component {
 			new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
 			localStorage.setItem(appName + "_Version", currentVersion)
 		}
-		updateChecked = true
+		this.updateChecked = true
 		if(!this.state.hasVisited) return
 		if (navigator.storage && navigator.storage.persist) {
 			let isPersisted = await navigator.storage.persisted()
@@ -169,6 +171,7 @@ class Index extends Component {
 	render() {
 		const {floatingMessage, hasPersistentStorage,homeData} = this.state
 		return <div className="index">
+
 			<FloatingMessage 
 				title={floatingMessage.title}
 				visible={floatingMessage.visible}
@@ -223,6 +226,11 @@ class Index extends Component {
 					</>
 				}
 			</HashRouter>
+			<div className="rotate-screen">
+				<img src={rotateImg} alt="icon for the rotating screen">
+				</img>
+				For a better experience, add the website to the home screen, and rotate your device
+			</div>
 		</div>
 	}
 }

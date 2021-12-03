@@ -8,7 +8,6 @@ import { MainPageSettings } from "lib/SettingsObj"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import rotateImg from "assets/icons/rotate.svg"
 import { appName, audioContext , isTwa} from "appConfig"
 import './App.css';
 class App extends Component {
@@ -353,11 +352,6 @@ class App extends Component {
 				</div>
 			}
 
-			<div className="rotate-screen">
-				<img src={rotateImg} alt="icon for the rotating screen">
-				</img>
-				For a better experience, add the website to the home screen, and rotate your device
-			</div>
 			{state.isDragging && <div className='drag-n-drop'>
 				Drop file here
 			</div>}

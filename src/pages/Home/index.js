@@ -1,7 +1,8 @@
 import './Home.css'
 import { FaCompactDisc, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { appName } from 'appConfig'
+import { appName, isTwa } from 'appConfig'
+
 export default function Home(props) {
     const to = props.changePage
     const { data } = props
@@ -40,9 +41,11 @@ export default function Home(props) {
             <PageRedirect onClick={() => to("Changelog")}>
                 Changelog
             </PageRedirect>
-            <PageRedirect onClick={() => to("Support")}>
-                Donate
-            </PageRedirect>
+            {!isTwa() &&
+                <PageRedirect onClick={() => to("Support")}>
+                    Donate
+                </PageRedirect>
+            }
             <PageRedirect onClick={() => to("Partners")}>
                 Partners
             </PageRedirect>
@@ -61,8 +64,7 @@ function PageRedirect(props){
 }
 function MainContentelement(props) {
     return <div className='home-content-element'>
-        <div className='home-content-background'>
-            <img src={props.background} alt='app background'/>
+        <div className='home-content-background' style={{backgroundImage: `url(${props.background})`}}>
         </div>
         <div className='home-content-main'>
             <div className='home-content-title'>

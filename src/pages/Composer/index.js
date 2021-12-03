@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import ZangoDb from "zangodb"
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import rotateImg from "assets/icons/rotate.svg"
 import addCell from "assets/icons/addCell.svg"
 import removeCell from "assets/icons/removeCell.svg"
 import { appName, audioContext } from "appConfig"
@@ -827,14 +826,7 @@ class Composer extends Component {
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData} />}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <FaBars />
-
             </div>
-            <div className="rotate-screen">
-                <img src={rotateImg} alt="a rotating screen">
-                </img>
-                For a better experience, add the website to the home screen, and rotate your device
-            </div>
-
             <div className="right-panel-composer">
 
                 <div className="column fill-x">

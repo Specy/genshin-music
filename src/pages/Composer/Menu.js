@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import { BsMusicPlayerFill } from 'react-icons/bs';
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload } from 'react-icons/fa';
 import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/SongUtils"
 import { appName,isTwa } from 'appConfig'
@@ -106,14 +105,11 @@ class Menu extends Component {
                 <MenuItem type="Songs" action={this.selectSideMenu}>
                     <FaMusic className="icon" />
                 </MenuItem>
-                <MenuItem type="Home" action={() => changePage("home")}>
-                    <FaHome className="icon" />
-                </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FaCog className="icon" />
                 </MenuItem>
-                <MenuItem type="Player" action={() => changePage("")}>
-                    <BsMusicPlayerFill  className="icon" />
+                <MenuItem type="Home" action={() => changePage("home")}>
+                    <FaHome className="icon" />
                 </MenuItem>
             </div>
             <div className={sideClass}>

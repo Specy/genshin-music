@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
-import { BsMusicPlayerFill } from 'react-icons/bs';
-import { FaHome, FaCompactDisc } from 'react-icons/fa';
+import { FaHome } from 'react-icons/fa';
 
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -45,12 +44,6 @@ export class SimpleMenu extends Component {
             <div className={menuClass}>
                 <MenuItem type="Home" action={() => changePage("home")} className='margin-top-auto'>
                     <FaHome className="icon" />
-                </MenuItem>
-                <MenuItem type="Composer" action={() => changePage("Composer")}>
-                    <FaCompactDisc  className="icon" />
-                </MenuItem>
-                <MenuItem type="Player" action={() => changePage("")}>
-                    <BsMusicPlayerFill  className="icon" />
                 </MenuItem>
             </div>
             <div className={sideClass}>

@@ -53,8 +53,8 @@ function ChangelogRow(props) {
 const changelogs = [
     {
         version: '2.1',
-        title: 'Code restructure',
-        date: '2021 - 3/12',
+        title: 'Menu and pages',
+        date: '2021 - 5/12',
         changes: [
             'Restructured code',
             'Added opacity to some elements',
