@@ -2,21 +2,44 @@ import './Home.css'
 import { FaCompactDisc, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
 import { appName, isTwa } from 'appConfig'
-
 export default function Home(props) {
     const to = props.changePage
-    const { data } = props
+    const { data, askForStorage, hasVisited } = props
     const homeClass = data.isInPosition ? "home" : "home home-visible"
+    const breakpoint = window.innerWidth > 900
     return <div className={homeClass}>
         <FaTimes className='close-home' onClick={() => props.toggleHome(false)} />
-        <div className='home-top'>
+        {(breakpoint || !hasVisited) && <div className='home-top'>
             <div className='home-title'>
                 {appName} Music Nightly
             </div>
             <div className='home-top-text'>
                 An app where you can create, practice and play songs for {appName}
             </div>
-        </div>
+        </div>  
+        }
+
+        {!hasVisited && <div className='home-welcome'>
+            <div>
+                {!isTwa() && <div className='home-spacing'>
+                    To have the webapp fullscreen and better view, please add the website to the home screen
+                </div>}
+                <div  className='home-spacing'>
+                    <div className="red-text">WARNING</div>:
+                    Clearing your browser cache / storage might delete your songs, make sure you make backups
+                </div>
+                {data.hasPersistentStorage ?
+                    <div>
+                        <div className="red-text">WARNING</div>: Click the button below to make sure that your browser won't delete your songs if you
+                        lack storage
+                    </div>
+                    : null
+                }
+            </div>
+            <button className="home-accept-storage" onClick={askForStorage}>
+                Confirm
+            </button>
+        </div>}
         <div className='home-content'>
             <MainContentelement
                 icon={<FaCompactDisc />}
@@ -51,20 +74,20 @@ export default function Home(props) {
             </PageRedirect>
         </div>
         <div className='home-dont-show-again' onClick={() => props.setDontShowHome(!data.canShow)}>
-            <input type='checkbox' checked={!data.canShow} readOnly/>
+            <input type='checkbox' checked={!data.canShow} readOnly />
             Hide on open
         </div>
     </div>
 }
 
-function PageRedirect(props){
+function PageRedirect(props) {
     return <button onClick={props.onClick}>
-        {props.children}        
+        {props.children}
     </button>
 }
 function MainContentelement(props) {
-    return <div className='home-content-element'>
-        <div className='home-content-background' style={{backgroundImage: `url(${props.background})`}}>
+    return <div className='home-content-element' onClick={props.onClick}>
+        <div className='home-content-background' style={{ backgroundImage: `url(${props.background})` }}>
         </div>
         <div className='home-content-main'>
             <div className='home-content-title'>
@@ -74,7 +97,7 @@ function MainContentelement(props) {
                 {props.children}
             </div>
             <div className='home-content-open'>
-                <button onClick={props.onClick}>
+                <button>
                     OPEN
                 </button>
             </div>

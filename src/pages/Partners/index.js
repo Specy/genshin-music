@@ -13,6 +13,15 @@ export default function Partners(props) {
                     title="Specy"
                 />
             </Partner>
+            <Partner
+                name='ChaconneScott_ACG'
+                description='YouTube pianist and arranger, features Genshin Impact OST'
+            >
+                <Iframe
+                    src='https://www.youtube.com/embed/ltE8zfGfUVo'
+                    title="ChaconneScott_ACG"
+                />
+            </Partner>
         </div>
 
     </div>

@@ -35,8 +35,8 @@ class Index extends Component {
 				canShow: canShowHome === 'true',
 				visible: canShowHome === 'true',
 				isInPosition: false,
+				hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 			},
-			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist),
 			selectedPage: path,
 			hasVisited: hasVisited === 'true'
 		}
@@ -94,7 +94,7 @@ class Index extends Component {
 				if (result) {
 					new LoggerEvent("Success", "Storage permission allowed").trigger()
 				} else {
-					new LoggerEvent("Warning", "Storage permission refused, if you weren't prompt, your browser denied it for you. Don't worry, it will still work fine", 6000).trigger()
+					new LoggerEvent("Warning", "Storage permission refused, will try next time", 6000).trigger()
 				}
 			}
 		} catch (e) {
@@ -169,7 +169,7 @@ class Index extends Component {
 		}, error.timeout)
 	}
 	render() {
-		const {floatingMessage, hasPersistentStorage,homeData} = this.state
+		const {floatingMessage, hasVisited,homeData} = this.state
 		return <div className="index">
 
 			<FloatingMessage 
@@ -178,16 +178,12 @@ class Index extends Component {
 				onClick={this.hideMessage}
 				text={floatingMessage.text}
 			/>
-			{!this.state.hasVisited && 
-				<WelcomePopup 
-					hasPersistentStorage={hasPersistentStorage}
-					askForStorage={this.askForStorage}
-				/>
-			}
 			{homeData.visible && <Home 
 				toggleHome={this.toggleHome}
 				changePage={this.changePage}
 				setDontShowHome={this.setDontShowHome}
+				askForStorage={this.askForStorage}
+				hasVisited={hasVisited}
 				data={homeData}
 			/>}
 			<HashRouter>
