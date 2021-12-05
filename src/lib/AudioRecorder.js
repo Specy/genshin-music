@@ -1,9 +1,15 @@
 import { audioContext } from "appConfig";
 import toWav from 'audiobuffer-to-wav'
+import MediaRecorderPolyfill from 'audio-recorder-polyfill'
 export default class AudioRecorder {
     constructor() {
         this.node = audioContext.createMediaStreamDestination()
-        this.recorder = new MediaRecorder(this.node.stream)
+        if(!MediaRecorder){
+            console.log("Audio recorder Polyfill")
+            this.recorder = new MediaRecorderPolyfill(this.node.stream)
+        }else{
+            this.recorder = new MediaRecorder(this.node.stream)
+        }
     }
     start() {
         this.recorder.start()

@@ -9,6 +9,7 @@
   "dependencies": {
     "@inlet/react-pixi": "^6.6.5",
     "@tonejs/midi": "^2.0.27",
+    "audio-recorder-polyfill": "^0.4.1",
     "audiobuffer-to-wav": "^1.0.0",
     "is-mobile": "^3.0.0",
     "mobx": "^6.3.7",
