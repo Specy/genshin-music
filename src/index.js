@@ -11,7 +11,6 @@ import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/SongUtils"
 import { appName, appVersion, pages,isTwa } from "appConfig"
 import FloatingMessage from 'components/FloatingMessage'
-import WelcomePopup from 'components/WelcomePopup'
 import Support from 'pages/Support';
 import rotateImg from "assets/icons/rotate.svg"
 

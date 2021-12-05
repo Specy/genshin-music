@@ -19,14 +19,14 @@ export default function Support(props) {
             development and costs.
         </div>
         <div className="donation-wrapper">
-            <a href="https://www.buymeacoffee.com/specy" target="_blank" rel="noreferrer">
-                <img src={buyMeACoffeeImg} alt="buymeacoffee" style={{ height: "4rem" }} />
-            </a>
             <a href="https://paypal.me/specyDev" target="_blank" className="paypal" rel="noreferrer">
                 <img src={paypalImg} alt="paypalme" style={{ height: "4rem" }} />
             </a>
             <a href="https://ko-fi.com/specy" target="_blank" className="kofi" rel="noreferrer">
                 <img src={kofiImg} alt="kofi" style={{ height: "3rem" }} />
+            </a>
+            <a href="https://www.buymeacoffee.com/specy" target="_blank" rel="noreferrer">
+                <img src={buyMeACoffeeImg} alt="buymeacoffee" style={{ height: "4rem" }} />
             </a>
         </div>
     </div>

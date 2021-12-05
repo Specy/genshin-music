@@ -72,9 +72,12 @@
 	border-radius: 0.5rem;
 	position: relative;
 	overflow: hidden;
-	transition: all 0.2s ease-out;
+	transition: all 0.15s ease-out;
 	max-width: 20rem;
 	cursor: pointer;
+}
+.home-content-element:hover {
+	transform: scale(1.03);
 }
 .home-welcome{
 	font-size: 0.9rem;
@@ -84,7 +87,10 @@
 	padding: 0.5rem;
 	border-radius: 0.5rem;
 	animation: welcome-flash infinite 8s;
+    outline: 2px dashed var(--secondary);
+    outline-offset: 3px;
 }
+
 @keyframes welcome-flash {
 	0%{
 		background-color: rgb(47, 52, 63);
@@ -109,9 +115,7 @@
 	cursor: pointer;
 	margin-left: auto;
 }
-.home-content-element:hover {
-	transform: scale(1.03);
-}
+
 .home-content-main {
 	padding: 0.5rem;
 	display: flex;
@@ -122,7 +126,10 @@
 	height: 100%;
 	transition: all 0.2s ease-out;
 }
-
+.home-content-element:active {
+	transform: scale(0.97);
+	transition: all 0.1s ease-out;
+}
 .home-content-main:hover {
 	background-color: rgba(53, 58, 70, 0.9);
 }
