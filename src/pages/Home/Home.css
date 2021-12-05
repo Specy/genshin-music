@@ -88,7 +88,7 @@
 	border-radius: 0.5rem;
 	animation: welcome-flash infinite 8s;
     outline: 2px dashed var(--secondary);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
 
 @keyframes welcome-flash {

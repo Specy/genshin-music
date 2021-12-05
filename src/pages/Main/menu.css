@@ -86,7 +86,7 @@
 .side-menu{
     width: 40vw;
     height: 100%;
-    background-color: rgba(234, 227, 217, 0.92);
+    background-color: rgba(237, 229, 216,0.95);
     transform: scale(0.9);
     transition: all 0.3s;
     opacity: 0;
@@ -99,7 +99,6 @@
     transform: scale(1);
     left: 4rem !important;
     opacity: 1;
-    backdrop-filter: blur(2px);
 }
 .menu-panel{
     width: 100%;
@@ -222,6 +221,7 @@
     margin-right: 0.45rem;
     color: var(--whitish);
     cursor: pointer;
+    padding: 0;
 }
 .song-name{
     flex: 1;
