@@ -40,9 +40,10 @@ export class SimpleMenu extends Component {
         let selectedMenu = this.state.selectedMenu
         const { changePage } = functions
         let menuClass = "menu menu-visible"
-        return <div className="menu-wrapper">
-            <div className={menuClass}>
-                <MenuItem type="Home" action={() => changePage("home")} className='margin-top-auto'>
+        return <div className="menu-wrapper" >
+            <div className={menuClass} style={{justifyContent: 'flex-end'}}>
+            {this.props.children}
+                <MenuItem type="Home" action={() => changePage("home")}>
                     <FaHome className="icon" />
                 </MenuItem>
             </div>

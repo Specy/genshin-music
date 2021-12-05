@@ -1,12 +1,19 @@
 import { SimpleMenu } from 'components/SimpleMenu'
-
+import MenuItem from 'components/MenuItem'
+import { FaGithub } from 'react-icons/fa'
 import './Changelog.css'
 export default function Changelogpage(props) {
     return <div className='changelog-page'>
         <div className='changelog-page-title'>
             Changelog
         </div>
-        <SimpleMenu functions={{changePage: props.changePage}}/>
+        <SimpleMenu functions={{changePage: props.changePage}}>
+            <MenuItem>
+                <a href='https://github.com/Specy/genshin-music' className='icon'>
+                    <FaGithub />
+                </a>
+            </MenuItem>
+        </SimpleMenu>
         {changelogs.map(e => <ChangelogRow
             data={e}
             key={e.version}

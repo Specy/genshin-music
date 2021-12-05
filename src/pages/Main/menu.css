@@ -269,6 +269,14 @@
     cursor: pointer;
     transition: all 0.3s;
 }
+.menu-item a{
+    color: var(--icon-color);
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
 .menu-main-page .menu-item{
     background-color: rgba(81, 92, 111, 0.8);
 }
