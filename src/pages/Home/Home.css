@@ -81,8 +81,6 @@
 }
 .home-welcome{
 	font-size: 0.9rem;
-	display: flex;
-    flex-direction: column;
 	background-color: rgb(47, 52, 63);
 	padding: 0.5rem;
 	border-radius: 0.5rem;
@@ -113,7 +111,6 @@
 	color: white;
 	margin-top: 0.5rem;
 	cursor: pointer;
-	margin-left: auto;
 }
 
 .home-content-main {
@@ -170,8 +167,7 @@
 }
 .page-redirect-wrapper {
 	margin-top: 0.5rem;
-	display: flex;
-	flex-wrap: wrap;
+
 	width: 100%;
 }
 .page-redirect-wrapper button {
@@ -199,10 +195,7 @@
 	cursor: pointer;
 }
 .home-top {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column;
+	text-align: center;
 	margin-bottom: 1rem;
 }
 .home-title {

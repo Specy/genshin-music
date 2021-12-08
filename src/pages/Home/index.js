@@ -36,9 +36,12 @@ export default function Home(props) {
                     : null
                 }
             </div>
-            <button className="home-accept-storage" onClick={askForStorage}>
-                Confirm
-            </button>
+            <div style={{display:'flex', justifyContent:'flex-end'}}>
+                <button className="home-accept-storage" onClick={askForStorage}>
+                    Confirm
+                </button>
+            </div>
+
         </div>}
         <div className='home-content'>
             <MainContentelement

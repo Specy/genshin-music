@@ -5,7 +5,7 @@ import Composer from "pages/Composer"
 import ErrorPage from "pages/ErrorPage"
 import Changelogpage from 'pages/Changelog'
 import Partners from 'pages/Partners';
-import Home from 'pages/Home';
+import Home from 'pages/Home'; 
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/SongUtils"
