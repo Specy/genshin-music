@@ -1,12 +1,12 @@
-import './Support.css'
+import './Donate.css'
 import paypalImg from 'assets/images/paypalme.png'
 import buyMeACoffeeImg from 'assets/images/buymeacoffee.svg'
 import kofiImg from 'assets/images/kofi.png'
 import { SimpleMenu } from 'components/SimpleMenu'
-export default function Support(props) {
-    return <div className='support-page'>
+export default function Donate(props) {
+    return <div className='donate-page'>
         <SimpleMenu functions={{changePage: props.changePage}}/>
-        <div className="support-text">
+        <div className="donate-text">
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not
             worry so much about how much I spend on the server, giving you the best

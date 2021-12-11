@@ -9,7 +9,7 @@ export default function Changelogpage(props) {
         </div>
         <SimpleMenu functions={{changePage: props.changePage}}>
             <MenuItem>
-                <a href='https://github.com/Specy/genshin-music' className='icon'>
+                <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
                     <FaGithub />
                 </a>
             </MenuItem>
@@ -60,8 +60,8 @@ function ChangelogRow(props) {
 const changelogs = [
     {
         version: '2.1',
-        title: 'Menu and pages',
-        date: '2021 - 5/12',
+        title: 'Home menu and pages',
+        date: '2021 - 11/12',
         changes: [
             'Restructured code',
             'Added opacity to some elements',
@@ -70,7 +70,7 @@ const changelogs = [
             'Added Partners page',
             'Added shortcuts for main page',
             'Fixed loading bug in composer and main page',
-            'Added Support page'
+            'Added Donate page'
         ]
     },
     {

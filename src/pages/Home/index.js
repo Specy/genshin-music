@@ -68,7 +68,7 @@ export default function Home(props) {
                 Changelog
             </PageRedirect>
             {!isTwa() &&
-                <PageRedirect onClick={() => to("Support")}>
+                <PageRedirect onClick={() => to("Donate")}>
                     Donate
                 </PageRedirect>
             }

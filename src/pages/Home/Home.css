@@ -4,7 +4,7 @@
 	align-items: center;
 	height: 100%;
 	overflow-y: auto;
-	position: absolute;
+	position: fixed;
 	width: 100%;
 	padding: 1rem 25vw;
 	background-color: rgba(60, 68, 83, 0.9);

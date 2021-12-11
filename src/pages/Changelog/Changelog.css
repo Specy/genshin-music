@@ -1,6 +1,9 @@
 .changelog-page{
-    padding: 2rem;
-    width: 60vw;
+    display: flex;
+    overflow-y: auto;
+    max-height: 100%;
+    padding: 2rem 20vw;
+    flex-direction: column;
 }
 .changelog-page-title{
     font-size: 2.5rem;
@@ -70,15 +73,15 @@
 }
 .changelog-ending{
     height: 2.5rem;
+    min-height: 2.5rem;
+    width: 1rem;
     border-left: dashed 2px var(--secondary);
     margin-left: 2.5rem;
-    margin-bottom: 3rem;
 }
 @media only screen and (max-width: 900px) {
     .changelog-page{
-        width: calc(100% - 8rem);
-        padding: 0;
-        padding-top: 1.5rem;
-        padding-left: 1rem;
+        padding: 1.5rem;
+        padding-right: 2rem;
+        padding-left: 5rem;
     }
 }

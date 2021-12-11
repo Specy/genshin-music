@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { FaHome } from 'react-icons/fa';
+import { FaHome, FaDiscord } from 'react-icons/fa';
 
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -43,8 +43,14 @@ export class SimpleMenu extends Component {
         return <div className="menu-wrapper" >
             <div className={menuClass} style={{justifyContent: 'flex-end'}}>
             {this.props.children}
+                
+                <MenuItem type='Discord'>
+                    <a href='https://discord.gg/Arsf65YYHq' target='_blank' rel='noreferrer' >
+                        <FaDiscord className="icon"/>
+                    </a>
+                </MenuItem>
                 <MenuItem type="Home" action={() => changePage("home")}>
-                    <FaHome className="icon" />
+                    <FaHome className="icon"/>
                 </MenuItem>
             </div>
             <div className={sideClass}>

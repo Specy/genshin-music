@@ -5,7 +5,7 @@ export default class MenuItem extends Component {
         let className = this.props.className ? `menu-item ${this.props.className}` : "menu-item"
         return <div
             className={className}
-            onClick={() => this.props.action(this.props.type)}
+            onClick={() => this.props.action?.(this.props.type)}
         >
             {this.props.children}
         </div>

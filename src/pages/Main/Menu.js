@@ -12,7 +12,7 @@ import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
-import SupportButton from 'components/SupportButton'
+import DonateButton from 'components/DonateButton'
 import "./menu.css"
 
 class Menu extends Component {
@@ -264,7 +264,7 @@ class Menu extends Component {
                     <div style={{marginTop:'1rem'}}>
                         {this.state.isPersistentStorage ?"Storage is persisted" : "Storage is not persisted"}
                     </div>
-                    {!isTwa() && <SupportButton onClick={changePage}/>}
+                    {!isTwa() && <DonateButton onClick={changePage}/>}
 
                 </MenuPanel>
                 
@@ -319,11 +319,8 @@ class Menu extends Component {
                         </a>
                         
                     </div>
-                    <div className='go-to-changelog genshin-button' to='/Changelog' onClick={() => changePage('Changelog')}>
-                        Go to changelog
-                    </div>
                     <HelpTab />
-                    {!isTwa() && <SupportButton onClick={changePage}/>}
+                    {!isTwa() && <DonateButton onClick={changePage}/>}
                 </MenuPanel>
             </div>
         </div>

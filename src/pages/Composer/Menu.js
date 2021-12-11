@@ -6,7 +6,7 @@ import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
-import SupportButton from 'components/SupportButton'
+import DonateButton from 'components/DonateButton'
 
 class Menu extends Component {
     constructor(props) {
@@ -182,7 +182,7 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
-                    {!isTwa() && <SupportButton onClick={changePage}/>}
+                    {!isTwa() && <DonateButton onClick={changePage}/>}
                 </MenuPanel>
             </div>
         </div>

@@ -22,6 +22,15 @@ export default function Partners(props) {
                     title="ChaconneScott_ACG"
                 />
             </Partner>
+            <Partner
+                name='uma✿'
+                description={`Arranges music, primarily from anime and games for Sky and Genshin.`}
+            >
+                <Iframe
+                    src='https://www.youtube.com/embed/7aIkAGvp9Y0'
+                    title="uma"
+                />
+            </Partner>
         </div>
 
     </div>

@@ -11,7 +11,7 @@ import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/SongUtils"
 import { appName, appVersion, pages,isTwa } from "appConfig"
 import FloatingMessage from 'components/FloatingMessage'
-import Support from 'pages/Support';
+import Donate from 'pages/Donate';
 import rotateImg from "assets/icons/rotate.svg"
 
 class Index extends Component {
@@ -203,8 +203,8 @@ class Index extends Component {
 							<Composer changePage={this.changePage} />
 						</Route>
 
-						<Route exact path="/Support">
-							<Support changePage={this.changePage} />
+						<Route exact path="/Donate">
+							<Donate changePage={this.changePage} />
 						</Route>
 
 						<Route exact path="/Changelog">
