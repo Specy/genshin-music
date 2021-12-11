@@ -1,6 +1,6 @@
 # Welcome to Genshin music and Sky music nightly
 
-This repository holds the code relative to the two music apps for Genshin and sky cotl, you can see the published apps at https://specy.github.io/
+This repository holds the code relative to the two music apps for Genshin and sky cotl, you can see the published apps at https://specy.app
 
 # How to run
 You need node.js and yarn installed, if you don't have yarn, just do `npm i yarn --global`
@@ -15,3 +15,6 @@ You can manually do this also by editing the src/appConfig.js and in the first l
 # How to build
 
 You can use the scripts `yarn buildGenshin` and `yarn buildSky` which will build the correct app, or `yarn buildAll` to build both
+
+# How to contribute
+Make a new issue saying what you want to work on and wait for me to assign the issue. This way we can also communicate whether or it would be a valid issue to fix/add
