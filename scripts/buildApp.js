@@ -17,7 +17,7 @@ function deleteAssets() {
         .then(files => {
             return Promise.all(files.map(file => {
                 if (file !== 'assets') {
-                    if (!file.includes('.')) return fs.rmdir(`${publicPath}/${file}`, { recursive: true })
+                    if (!file.includes('.')) return fs.rm(`${publicPath}/${file}`, { recursive: true })
                     return fs.unlink(`${publicPath}/${file}`)
                 }
             }))

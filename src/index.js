@@ -120,11 +120,11 @@ class Index extends Component {
 		if (this.updateChecked) return
 		let currentVersion = appVersion
 		let updateMessage =
-			`   - Added Approaching circles mode, a new way to learn a song
-				- Better performance in the main page
-				- On pc, you can now add notes with your keyboard while playing
-				- Added changelog page
-				More info in the changelog page (Info tab)`
+			`   - Fixed some UI issues
+				- Added Home page
+				- Added Some pages (Donate, Changelog, Partners)
+				- Added shortcuts for main page (PC)
+				`
 		let storedVersion = localStorage.getItem(appName + "_Version")
 		if (!this.state.hasVisited) {
 			return localStorage.setItem(appName + "_Version", currentVersion)

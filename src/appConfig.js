@@ -1,5 +1,5 @@
 const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
-const appVersion = '2.0'
+const appVersion = '2.1'
 console.log(`${appName}-V${appVersion}`)
 const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home"]
 
