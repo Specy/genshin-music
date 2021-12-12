@@ -69,20 +69,22 @@ function ApproachCircle(props) {
     </div>
 }
 function parseBorderFill(status){
-    let fill = '#e3ded1'
+    let fill = '#eae5ce'
     if(status === "clicked") fill = "transparent"
-    if(status === 'toClickNext') fill = '#63aea7'
+    else if(status === 'toClickNext') fill = '#63aea7'
     return fill
 }
 function parseClass(status) {
     let className = cssClasses.note
-    if (status === "clicked") className += " click-event"
-    if (status === 'toClick') className += " note-red"
-    if (status === 'toClickNext') className += " note-border-click"
-    if (status === 'toClickAndNext') className += " note-red note-border-click"
-    if (status === 'approach-wrong') className += " click-event approach-wrong"
-    if (status === 'approach-correct') className += " click-event approach-correct"
+    switch(status){
+    	case 'clicked': className += " click-event"; break;
+        case  'toClick': className += " note-red"; break;
+        case  'toClickNext': className += " note-border-click"; break;
+        case  'toClickAndNext': className += " note-red note-border-click"; break;
+        case 'approach-wrong': className += " click-event approach-wrong"; break;
+        case 'approach-correct': className += " click-event approach-correct"; break;
+        default: break;
+    }
     return className
 }
-
 export default Note

@@ -242,7 +242,7 @@ class Keyboard extends Component {
             speedChanger: changer
         },this.restartSong)
     }
-    restartSong =async () => {
+    restartSong =async (override) => {
         let lostReference = JSON.parse(JSON.stringify(songStore.data))
         await this.stopSong()
         setTimeout(() => {
@@ -252,7 +252,7 @@ class Keyboard extends Component {
             }
             songStore.data = {
                 ...lostReference,
-                start
+                start: Number.isInteger(override) ? override : start
             }
         }, 200)
     }
@@ -286,7 +286,7 @@ class Keyboard extends Component {
             }
         })
     }
-    handleKeyboard = (event) => {
+    handleKeyboard =async (event) => {
         const { keyboard } = this.state
         if (event.repeat) return
         if(event.shiftKey){
@@ -294,13 +294,14 @@ class Keyboard extends Component {
                 case "KeyR" : {
                     if(!this.props.data.hasSong) return
                     if(['practice','playing','approaching'].includes(songStore.data.eventType)){
-                       return this.restartSong()
+                       return this.restartSong(0)
                     }
                     break;
                 }
                 case "KeyS" : {
                     if(!this.props.data.hasSong) return
-                    return this.stopSong()
+                    await this.stopSong()
+                    return songStore.data = returnStopSong()
                 }
                 default: break;
             }

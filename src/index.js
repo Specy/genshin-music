@@ -93,7 +93,7 @@ class Index extends Component {
 				if (result) {
 					new LoggerEvent("Success", "Storage permission allowed").trigger()
 				} else {
-					new LoggerEvent("Warning", "Storage permission refused, will try next time", 6000).trigger()
+					//new LoggerEvent("Warning", "Storage permission refused, will try next time", 6000).trigger()
 				}
 			}
 		} catch (e) {

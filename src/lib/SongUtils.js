@@ -356,7 +356,7 @@ function oldSkyToNewFormat(song) {
 
 	} catch (e) {
 		console.log(e)
-		return new Song("Error importing")
+		return new Song("Error importing song, invalid format")
 	}
 	return result
 }

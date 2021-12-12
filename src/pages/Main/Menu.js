@@ -102,7 +102,6 @@ class Menu extends Component {
         reader.addEventListener('load',async (event) => {
             try {
                 let songsInput = JSON.parse(event.target.result)
-                
                 if(!Array.isArray(songsInput)) songsInput = [songsInput]
                 for(let song of songsInput){
                     song = prepareSongImport(song)
@@ -114,7 +113,7 @@ class Menu extends Component {
                 if(fileName?.includes?.(".mid")){
                     return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
                 }   
-                new LoggerEvent("Error", "Error importing song").trigger()
+                new LoggerEvent("Error", "Error importing song, invalid format").trigger()
                 
             }
         })

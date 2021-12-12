@@ -293,6 +293,13 @@ select{
     width: 2.5vw;
     height: 2.5vw;
 }
+.note-composer .layer-3-ball-bigger{
+    width: 3vw;
+    height: 3vw;
+}
+.layer-3 img{
+    filter: brightness(10);
+}
 canvas{
     cursor: pointer !important;
 }

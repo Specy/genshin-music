@@ -64,6 +64,7 @@ const changelogs = [
         date: '2021 - 11/12',
         changes: [
             'Restructured code',
+            'Changed note icon and animation (Genshin)',
             'Added opacity to some elements',
             'Changed margins and padding of some elements',
             'Added home page',
