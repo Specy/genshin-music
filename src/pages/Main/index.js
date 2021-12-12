@@ -240,6 +240,7 @@ class App extends Component {
 	}
 	removeSong = async (name) => {
 		let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
+		if(!this.mounted) return
 		if (result) {
 			this.dbCol.songs.remove({ name: name }, this.syncSongs)
 		}
@@ -273,6 +274,7 @@ class App extends Component {
 		let newState = override !== undefined ? override : !this.state.isRecording
 		if (!newState && this.recording.notes.length > 0) { //if there was a song recording
 			let songName = await this.askForSongName()
+			if(!this.mounted) return
 			let song = new Song(songName, this.recording.notes)
 			song.pitch = this.state.settings.pitch.value
 			if (songName !== null) this.addSong(song)
@@ -301,6 +303,7 @@ class App extends Component {
 		} else {
 			let recording = await recorder.stop()
 			let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
+			if(!this.mounted) return
 			if (fileName) recorder.download(recording.data, fileName + '.wav')
 			this.toggleReverbNodes(hasReverb)
 			this.reverbVolumeNode.disconnect()

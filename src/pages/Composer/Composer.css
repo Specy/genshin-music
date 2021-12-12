@@ -282,8 +282,9 @@ select{
 .layer-1 img{
     filter: brightness(10) !important;
 }
-.layer-2{
+.layer-2, .layer-2 svg{
     border-color: #d75c5c;
+    fill: #f06868 !important;
 }
 .layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
     visibility: visible;

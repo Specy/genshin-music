@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { cssClasses, appName, instrumentsData } from "appConfig"
-
+import GenshinNoteBorder from 'components/GenshinNoteBorder'
 class Note extends Component {
     constructor(props) {
         super(props)
@@ -41,6 +41,10 @@ class Note extends Component {
                     src={props.noteImage}
                     style={effects}
                 />
+                {appName === 'Genshin' && <GenshinNoteBorder
+                    className='genshin-border'
+                    fill={parseBorderFill(status)}
+                />}
                 <div className={cssClasses.noteName}>
                     {props.noteText}
                 </div>
@@ -63,6 +67,12 @@ function ApproachCircle(props) {
         }}
     >
     </div>
+}
+function parseBorderFill(status){
+    let fill = '#e3ded1'
+    if(status === "clicked") fill = "transparent"
+    if(status === 'toClickNext') fill = '#63aea7'
+    return fill
 }
 function parseClass(status) {
     let className = cssClasses.note

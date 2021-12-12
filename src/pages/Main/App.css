@@ -137,6 +137,7 @@ body {
 	filter: brightness(1.1);
 }
 .selected {
+	transition: all 0.3s;
 	background-color: var(--note-text);
 }
 .right-panel {
@@ -242,7 +243,7 @@ body {
 	left: 0;
 	right: 0;
 	width: 30vw;
-	padding: 0.8rem;
+	padding: 0.6rem;
 	background-color: var(--primary);
 	border: 2px solid var(--detail);
 	color: white;
@@ -250,10 +251,22 @@ body {
 	opacity: 1;
 	z-index: 1000;
 	word-break: break-word;
-	transition: 0.5s all;
+	transition: 0.3s all;
+	animation: prompt-show 0.2s linear;
+}
+@keyframes prompt-show {
+	from{
+		opacity: 0;
+		top: 1.5rem;
+	}
+	to{
+		opacity: 1;
+		top: 2rem;
+	}
 }
 .floating-prompt-hidden {
 	opacity: 0;
+	top: 1.5rem;
 }
 .prompt-button {
 	background-color: #576377;

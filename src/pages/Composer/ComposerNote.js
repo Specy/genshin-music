@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { cssClasses, appName , instrumentsData} from "appConfig" 
+import GenshinNoteBorder from 'components/GenshinNoteBorder'
 class ComposerNote extends Component {
     constructor(props) {
         super(props)
@@ -32,6 +33,9 @@ class ComposerNote extends Component {
                 >
                   
                 </img>
+                {appName === 'Genshin' && <GenshinNoteBorder
+                    className='genshin-border'
+                />}
                 <div className={layer3Class}>
                 </div>
                 <div className={appName === "Sky" ? "note-name-sky" : "note-name"}>

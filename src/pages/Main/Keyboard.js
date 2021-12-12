@@ -294,7 +294,6 @@ class Keyboard extends Component {
                 case "KeyR" : {
                     if(!this.props.data.hasSong) return
                     if(['practice','playing','approaching'].includes(songStore.data.eventType)){
-                        console.log("restarting")
                        return this.restartSong()
                     }
                     break;
