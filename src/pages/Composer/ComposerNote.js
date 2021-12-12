@@ -46,6 +46,4 @@ class ComposerNote extends Component {
     }
 }
 
-
-
 export default ComposerNote

@@ -200,6 +200,7 @@ class Keyboard extends Component {
         let songLength = notes.length
         notes.splice(0, start)
         let chunks = []
+        let previousChunkDelay = 0
         for (let i = 0; notes.length > 0; i++) {
             let chunk = {
                 notes: [notes.shift()],
@@ -213,14 +214,18 @@ class Keyboard extends Component {
                     j--
                 }
             }
-            chunk.delay = notes.length > 0 ? notes[0][1] - startTime : 0
+            chunk.delay = previousChunkDelay
+            previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
             chunks.push(chunk)
         }
         if (chunks.length === 0) return
         let firstChunk = chunks[0]
-        this.nextChunkDelay = firstChunk.delay
+        this.nextChunkDelay = 0
         let secondChunk = chunks[1]
-        firstChunk.notes.forEach(note => { keyboard[note[0]].status = 'toClick' })
+        firstChunk.notes.forEach(note => { 
+            keyboard[note[0]].status = 'toClick' 
+            keyboard[note[0]].delay = 100
+        })
         secondChunk?.notes.forEach(note => {
             let keyboardNote = keyboard[note[0]]
             if (keyboardNote.status === 'toClick') return keyboardNote.status = 'toClickAndNext'
@@ -262,7 +267,7 @@ class Keyboard extends Component {
             const { keyboard } = this.state
             keyboard.forEach(note => {
                 note.status = ''
-                note.delay = 200
+                note.delay = 100
             })
             this.approachingNotesList = []
             this.setState({
@@ -329,22 +334,21 @@ class Keyboard extends Component {
             if (indexClicked !== -1) {
                 songToPractice[0].notes.splice(indexClicked, 1)
                 if (songToPractice[0].notes.length === 0) songToPractice.shift()
-                if (songToPractice.length === 0) {
-                    this.stopSong()
-                    songStore.data = returnStopSong()
-                } else {
+                if (songToPractice.length > 0) {
                     let nextChunk = songToPractice[0]
                     let nextNextChunk = songToPractice[1]
                     nextChunk.notes.forEach(note => {
                         keyboard[note[0]].status = 'toClick'
-                    })
-                    this.nextChunkDelay = nextChunk.delay
-                    nextNextChunk?.notes.forEach(note => {
-                        let keyboardNote = keyboard[note[0]]
                         keyboard[note[0]].delay = nextChunk.delay
-                        if (keyboardNote.status === 'toClick') return keyboardNote.status = 'toClickAndNext'
-                        keyboardNote.status = 'toClickNext'
                     })
+
+                    if(nextNextChunk){
+                        nextNextChunk?.notes.forEach(note => {
+                            let keyboardNote = keyboard[note[0]]
+                            if (keyboardNote.status === 'toClick') return keyboardNote.status = 'toClickAndNext'
+                            keyboardNote.status = 'toClickNext'
+                        })
+                    }
                 }
                 this.setState({
                     songToPractice: songToPractice,
@@ -360,7 +364,7 @@ class Keyboard extends Component {
         const { keyboard, outgoingAnimation} = this.state
         const hasAnimation = this.props.data.hasAnimation
         keyboard[note.index].status = 'clicked'
-        keyboard[note.index].delay = 200
+        keyboard[note.index].delay = 100
         this.handlePracticeClick(note)
         let approachStatus = this.handleApproachClick(note)
         if(songStore.data.eventType === 'approaching'){
@@ -463,6 +467,7 @@ class Keyboard extends Component {
                             data={noteData}
                             approachingNotes={state.approachingNotes[note.index]}
                             outgoingAnimation={state.outgoingAnimation[note.index]}
+                            fadeTime={note.delay}
                             handleClick={this.handleClick}
                             noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
                             noteImage={`./assets/icons/keys/${noteImage}.svg`}

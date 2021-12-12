@@ -12,11 +12,12 @@ const cssClasses = {
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
-const instruments = appName === "Genshin" ? [
-    "Lyre",
-    "DunDun",
-    "Zither"
-    ]:[
+const instruments = appName === "Genshin" 
+    ? [
+        "Lyre",
+        "Zither",
+        "DunDun"
+   ]:[
         "Piano",
         "Contrabass",
         "Guitar",
@@ -43,8 +44,9 @@ const instrumentsData = {
     Zither:{
         notes: 21,
         effects: {
-            filter: 'sepia(100%)'
-        }
+            filter: 'sepia(100%)',
+        },
+        clickColor: '#ddcba8'
     },
     DunDun: {
         notes: 8

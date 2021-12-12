@@ -82,7 +82,7 @@
 	border-color: #73c7b5;
 }
 .click-event img{
-	filter: brightness(10);
+	filter: brightness(10) !important;
 }
 .note-red {
 	background-color: #f06565;

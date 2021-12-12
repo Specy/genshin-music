@@ -273,11 +273,14 @@ select{
     z-index: 2;
 }
 .layer-1{
-    background-color: #d3bd8e;
-    border-color: #ab9361;
+    background-color: #d3bd8e !important;
+    border-color: #ab9361 !important;
+}
+.layer-1 svg{
+    fill: #AB9361 !important;
 }
 .layer-1 .note-name{
-    color: white;
+    color: white !important;
 }
 .layer-1 img{
     filter: brightness(10) !important;

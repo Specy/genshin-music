@@ -9,11 +9,14 @@ class Note extends Component {
     }
     render() {
         const { props } = this
-        const { data, approachingNotes,outgoingAnimation} = props
+        const { data, approachingNotes,outgoingAnimation, fadeTime} = props
         const { status , approachRate, instrument} = data
-        let animation = { transition: `background-color ${(props.fadeTime/1000).toFixed(2)}s, transform 0.15s` }
+        let animation = { 
+            transition: `background-color ${props.fadeTime}ms ${fadeTime === 100 ? 'ease' : 'linear'}, transform 0.15s` 
+        }
         let className = parseClass(status)
         let effects = instrumentsData[instrument]?.effects || {}
+        let clickColor = instrumentsData[instrument]?.clickColor 
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
@@ -34,7 +37,13 @@ class Note extends Component {
                     className={cssClasses.noteAnimation}
                 />
             })}
-            <div className={className} style={animation}>
+            <div 
+                className={className} 
+                style={{
+                    ...animation,
+                    ...(clickColor && status === 'clicked' ? {backgroundColor: clickColor} : {})
+                }}
+            >
                 <img
                     draggable="false"
                     alt=''
@@ -71,7 +80,7 @@ function ApproachCircle(props) {
 function parseBorderFill(status){
     let fill = '#eae5ce'
     if(status === "clicked") fill = "transparent"
-    else if(status === 'toClickNext') fill = '#63aea7'
+    else if(status === 'toClickNext' || status === 'toClickAndNext') fill = '#63aea7'
     return fill
 }
 function parseClass(status) {
