@@ -249,11 +249,12 @@ class Keyboard extends Component {
     }
     restartSong =async (override) => {
         let lostReference = JSON.parse(JSON.stringify(songStore.data))
+        const { sliderState } = this.state
         await this.stopSong()
         setTimeout(() => {
             let start = songStore.data.start
             if (songStore.data.eventType === 'practice'){
-                start = this.state.sliderState.position
+                start = sliderState.position === sliderState.size ? 0 : sliderState.position
             }
             songStore.data = {
                 ...lostReference,

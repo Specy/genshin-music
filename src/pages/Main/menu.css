@@ -16,8 +16,7 @@
     transition: all 0.4s;
 }
 .menu-main-page{
-    background-color:rgba(73,84,102,0.8);
-    backdrop-filter: blur(2px);
+    background-color:rgba(76, 88, 107, 0.8);
 }
 .menu-visible{
     margin-left: 0;
@@ -85,6 +84,9 @@
 }
 .side-menu{
     width: 40vw;
+    border-radius: 0.3rem;
+    border-top-left-radius: unset;
+    border-bottom-left-radius: unset;
     height: 100%;
     background-color: rgba(237, 229, 216,0.95);
     transform: scale(0.9);
@@ -204,7 +206,6 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    padding-right: 0.2rem;
     overflow-y: auto;
     overflow-x: hidden;
 }
