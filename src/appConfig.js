@@ -16,6 +16,7 @@ const instruments = appName === "Genshin"
     ? [
         "Lyre",
         "Zither",
+        "Old-Zither",
         "DunDun"
    ]:[
         "Piano",
@@ -42,6 +43,13 @@ const instrumentsData = {
         notes: 21
     },
     Zither:{
+        notes: 21,
+        effects: {
+            filter: 'sepia(100%)',
+        },
+        clickColor: '#ddcba8'
+    },
+    "Old-Zither":{
         notes: 21,
         effects: {
             filter: 'sepia(100%)',

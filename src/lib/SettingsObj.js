@@ -2,7 +2,7 @@ import { isMobile } from "is-mobile"
 import {instruments, appName} from "appConfig"
 
 const ComposerSettings = {
-    settingVesion: appName + 15,
+    settingVesion: appName + 16,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -129,7 +129,7 @@ const ComposerSettings = {
 
 
 const MainPageSettings = {
-    settingVesion:appName + 15,
+    settingVesion:appName + 16,
     instrument: {
         name: "Instrument",
         type: "instrument",

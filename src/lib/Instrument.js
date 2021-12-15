@@ -2,13 +2,13 @@ import { instrumentsData, layoutData, instruments,audioContext } from "appConfig
 class Instrument {
     constructor(instrumentName) {
         this.instrumentName = instrumentName === undefined ? instruments[0] : instrumentName
+        if (!instruments.includes(this.instrumentName)) this.instrumentName = instruments[0] 
         this.layout = []
         this.buffers = []
         this.loaded = false
         this.deleted = false
         this.volumeNode = audioContext.createGain()
-        let instrumentData = instrumentsData[this.instrumentName]
-
+        const instrumentData = instrumentsData[this.instrumentName]
         this.keyboardLayout = layoutData[instrumentData.notes].keyboardLayout
         this.mobileLayout = layoutData[instrumentData.notes].mobileLayout
         this.keyboardCodes = layoutData[instrumentData.notes].keyboardCodes
@@ -18,7 +18,7 @@ class Instrument {
                 keyboard: noteName,
                 mobile: this.mobileLayout[i]
             }
-            let url = `./assets/audio/${instrumentName}/${i}.mp3`
+            let url = `./assets/audio/${this.instrumentName}/${i}.mp3`
             this.layout.push(new NoteData(i, noteNames, url))
         })
 

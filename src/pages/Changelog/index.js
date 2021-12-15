@@ -59,12 +59,21 @@ function ChangelogRow(props) {
 }
 const changelogs = [
     {
+        version: '2.1.1',
+        title: 'Zither and icons',
+        date: '2021 - 15/12',
+        changes: [
+            'Changed note icon and animation (Genshin)',
+            'Changed zither audio (Genshin)',
+            'UI improvements'
+        ]
+    },
+    {
         version: '2.1',
         title: 'Home menu and pages',
         date: '2021 - 11/12',
         changes: [
             'Restructured code',
-            'Changed note icon and animation (Genshin)',
             'Added opacity to some elements',
             'Changed margins and padding of some elements',
             'Added home page',
