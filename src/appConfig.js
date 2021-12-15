@@ -1,7 +1,7 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][0]
 const appVersion = '2.1'
 console.log(`${appName}-V${appVersion}`)
-const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home"]
+const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help"]
 
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",

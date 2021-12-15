@@ -37,31 +37,7 @@ body {
 body{
 	position: absolute;
 }
-.help-icon{
-	width: 3rem;
-	height: 3rem;
-	color: var(--primary);
-}
-.help-icon-wrapper{
-	display: flex;
-	flex-direction: row;
-	width: 100%;
-	margin-top: 1vh;
-	justify-content: space-around;
-}
-.help-title{
-	width: 100%;
-	margin-top: 3vh;
-	padding: 1rem;
-	font-size: 1.4rem;
-	border-top: 2px solid var(--primary);
-}
-.help-img{
-	width: 95%;
-	border-radius: 0.4rem;
-	margin-left: 2.5%;
-	box-shadow: 0 0 0px 2px var(--primary);
-}
+
 
 .keyboard-key{
 	padding:0.2rem 0.4rem;

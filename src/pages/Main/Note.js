@@ -12,7 +12,11 @@ class Note extends Component {
         const { data, approachingNotes,outgoingAnimation, fadeTime} = props
         const { status , approachRate, instrument} = data
         let animation = { 
-            transition: `background-color ${props.fadeTime}ms ${fadeTime === 100 ? 'ease' : 'linear'}, transform 0.15s` 
+            transition: `
+                    background-color ${props.fadeTime}ms 
+                    ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'}
+                    , transform 0.15s
+                ` 
         }
         let className = parseClass(status)
         let effects = instrumentsData[instrument]?.effects || {}

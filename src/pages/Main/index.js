@@ -47,6 +47,8 @@ class App extends Component {
 		document.body.addEventListener('dragleave', this.resetDrag)
 		document.body.addEventListener('dragover', this.handleDragOver)
 		document.body.addEventListener('drop', this.handleDrop)
+        window.addEventListener('keydown', this.handleKeyboard)
+
 		this.mounted = true
 		this.syncSongs()
 		this.init()
@@ -55,7 +57,9 @@ class App extends Component {
 		document.body.removeEventListener('dragenter', this.handleDrag)
 		document.body.removeEventListener('dragleave', this.resetDrag)
 		document.body.removeEventListener('drop', this.handleDrop)
-		document.body.addEventListener('dragover', this.handleDragOver)
+		document.body.removeEventListener('dragover', this.handleDragOver)
+        window.removeEventListener('keydown', this.handleKeyboard)
+
 		songStore.data = {
 			song: {},
 			eventType: 'stop',
@@ -68,6 +72,25 @@ class App extends Component {
 		this.reverbVolumeNode = undefined
 		this.state.instrument.delete()
 	}
+	handleKeyboard =async (event) => {
+		const { thereIsSong } = this.state
+        if (event.repeat) return
+        if (document.activeElement.tagName === "INPUT") return
+        if(event.shiftKey){
+            switch(event.code){
+                case "KeyR" : {
+                    if(!thereIsSong){
+						this.toggleRecord()
+						event.preventDefault()
+					}
+                    break;
+                }
+				default: break;
+            }
+        }
+    }
+
+
 	resetDrag = (e) => {
 		this.setState({
 			isDragging: false

@@ -75,6 +75,9 @@ export default function Home(props) {
             <PageRedirect onClick={() => to("Partners")}>
                 Partners
             </PageRedirect>
+            <PageRedirect onClick={() => to("Help")}>
+                Help
+            </PageRedirect>
         </div>
         <div className='home-dont-show-again' onClick={() => props.setDontShowHome(!data.canShow)}>
             <input type='checkbox' checked={!data.canShow} readOnly />

@@ -6,6 +6,7 @@ import ErrorPage from "pages/ErrorPage"
 import Changelogpage from 'pages/Changelog'
 import Partners from 'pages/Partners';
 import Home from 'pages/Home'; 
+import Help from 'pages/Help';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/SongUtils"
@@ -215,8 +216,8 @@ class Index extends Component {
 							<Partners changePage={this.changePage} />
 						</Route>
 
-						<Route exact path='/Home'>
-							<Home changePage={this.changePage} />
+						<Route exact path='/Help'>
+							<Help changePage={this.changePage} />
 						</Route>
 					</>
 				}

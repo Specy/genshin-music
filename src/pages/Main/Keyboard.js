@@ -224,7 +224,7 @@ class Keyboard extends Component {
         let secondChunk = chunks[1]
         firstChunk.notes.forEach(note => { 
             keyboard[note[0]].status = 'toClick' 
-            keyboard[note[0]].delay = 100
+            keyboard[note[0]].delay = appName === 'Genshin' ? 100 : 200
         })
         secondChunk?.notes.forEach(note => {
             let keyboardNote = keyboard[note[0]]
@@ -268,7 +268,7 @@ class Keyboard extends Component {
             const { keyboard } = this.state
             keyboard.forEach(note => {
                 note.status = ''
-                note.delay = 100
+                note.delay = appName === 'Genshin' ? 100 : 200
             })
             this.approachingNotesList = []
             this.setState({
@@ -295,6 +295,7 @@ class Keyboard extends Component {
     handleKeyboard =async (event) => {
         const { keyboard } = this.state
         if (event.repeat) return
+        if (document.activeElement.tagName === "INPUT") return
         if(event.shiftKey){
             switch(event.code){
                 case "KeyR" : {
@@ -311,12 +312,13 @@ class Keyboard extends Component {
                 }
                 default: break;
             }
+        }else{
+            let code = event.code?.replace("Key", "")
+            let index = this.props.data.keyboard.getNoteFromCode(code)
+            let note = keyboard[index]
+            if (note) this.handleClick(note)
         }
-        if (document.activeElement.tagName === "INPUT") return
-        let code = event.code?.replace("Key", "")
-        let index = this.props.data.keyboard.getNoteFromCode(code)
-        let note = keyboard[index]
-        if (note) this.handleClick(note)
+
     }
 
     handleApproachClick = (note) => {
@@ -365,7 +367,7 @@ class Keyboard extends Component {
         const { keyboard, outgoingAnimation} = this.state
         const hasAnimation = this.props.data.hasAnimation
         keyboard[note.index].status = 'clicked'
-        keyboard[note.index].delay = 100
+        keyboard[note.index].delay = appName === 'Genshin' ? 100 : 200
         this.handlePracticeClick(note)
         let approachStatus = this.handleApproachClick(note)
         if(songStore.data.eventType === 'approaching'){
@@ -389,7 +391,7 @@ class Keyboard extends Component {
             if (!['clicked','approach-wrong','approach-correct'].includes(keyboard[note.index].status)) return
             keyboard[note.index].status = ''
             this.setState({ keyboard })
-        },appName === 'Sky' ? 250 : 100)
+        },appName === 'Sky' ? 200 : 100)
         this.props.functions.playSound(note)
     }
     render() {

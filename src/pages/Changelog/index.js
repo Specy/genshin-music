@@ -61,9 +61,10 @@ const changelogs = [
     {
         version: '2.1.1',
         title: 'Zither and icons',
-        date: '2021 - 15/12',
+        date: '2021 - 16/12',
         changes: [
             'Changed note icon and animation (Genshin)',
+            'Added Help page',
             'Changed zither audio (Genshin)',
             'UI improvements'
         ]

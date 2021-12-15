@@ -1,0 +1,21 @@
+.help-page{
+    display: flex;
+    overflow-y: auto;
+    max-height: 100%;
+    padding: 0rem 20vw;
+    flex-direction: column;
+    color: var(--whitish);
+}
+.help-content{
+    display: flex;
+    flex-direction: column;
+    flex: 1 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    overflow-x: hidden;
+}
+@media only screen and (max-width: 900px) {
+    .help-page{
+        padding: 0rem 10vw;
+    }
+}

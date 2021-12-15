@@ -44,6 +44,7 @@
 	border: 0.4vw solid var(--primary);
     transform: translate3d(0, 0, 0);
     transform-origin: 50% 50%;
+	transition: all 0.2s;
     user-select: none;
 }
 

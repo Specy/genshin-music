@@ -5,16 +5,15 @@ import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "lib/SongUtils"
 import { FilePicker } from "react-file-picker"
-import { appName, isTwa } from "appConfig"
+import { appName, isTwa  } from "appConfig"
 import { songStore } from './SongStore'
-import { HelpTab } from './HelpTab'
+import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import "./menu.css"
-
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -30,6 +29,32 @@ class Menu extends Component {
     }
     componentDidMount(){
         this.checkPersistentStorage()
+        window.addEventListener("keydown", this.handleKeyboard)
+    }
+    componentWillUnmount(){
+        window.removeEventListener("keydown", this.handleKeyboard)
+    }
+    handleKeyboard = (event) => {
+        let key = event.code
+        if (document.activeElement.tagName === "INPUT") return
+        if(event.shiftKey){
+            switch (key) {
+                case "KeyM": {
+                    this.setState({ open: !this.state.open })
+                    break
+                }
+                default: break;
+            }
+        }else{
+            switch (key) {
+                case "Escape": {
+                    this.setState({ open: false })
+                    break
+                }
+                default: break;
+            }
+        }
+
     }
     checkPersistentStorage = async () => {
         if (navigator.storage && navigator.storage.persist) {
