@@ -35,8 +35,8 @@
     width: 100%;
     margin-top: 0.4rem;
     border-top: 1px solid var(--icon-color);
+    font-size: 0.9rem;
     padding: 0.4rem;
-
 }
 .partner-title{
     font-size: 1.2rem;

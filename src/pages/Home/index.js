@@ -80,9 +80,15 @@ export default function Home(props) {
             <input type='checkbox' checked={!data.canShow} readOnly />
             Hide on open
         </div>
+        <div className='home-bottom'> 
+            <div>
+                © All rights reserved by {appName === 'Genshin' ? 'miHoYo' : 'TGC'}. Other properties belong to their respective owners. 
+            </div>
+        </div>
+
     </div>
 }
-
+// © 2021 {appName} Music. All rights reserved.   <br />
 function PageRedirect(props) {
     return <button onClick={props.onClick}>
         {props.children}

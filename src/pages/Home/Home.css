@@ -56,6 +56,15 @@
 	bottom: 0.5rem;
 	right: 0.5rem;
 }
+.home-bottom{
+	padding-top: 0.5rem;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	justify-content: end;
+	width: 100%;
+	font-size: 0.8rem;
+}
 .home-content {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
