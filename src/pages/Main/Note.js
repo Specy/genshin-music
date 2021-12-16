@@ -17,7 +17,8 @@ class Note extends Component {
                     background-color ${props.fadeTime}ms 
                     ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'}
                     , transform 0.15s
-                ` 
+                    border-color 100ms
+            ` 
         }
         let className = parseClass(status)
         let effects = instrumentsData[instrument]?.effects || {}

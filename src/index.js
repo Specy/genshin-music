@@ -10,7 +10,7 @@ import Help from 'pages/Help';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/Utils"
-import { appName, appVersion, pages, isTwa } from "appConfig"
+import { appName, appVersion, pages, isTwa, updateMessage } from "appConfig"
 import FloatingMessage from 'components/FloatingMessage'
 import Donate from 'pages/Donate';
 import rotateImg from "assets/icons/rotate.svg"
@@ -118,22 +118,15 @@ class Index extends Component {
 	}
 	checkUpdate = async () => {
 		await delayMs(1000)
-		if (this.updateChecked) return
-		let currentVersion = appVersion
-		let updateMessage =
-			`   - Fixed some UI issues
-				- Added Home page
-				- Added Some pages (Donate, Changelog, Partners)
-				- Added shortcuts for main page (PC)
-				`
+		if (this.updateChecked) return	
 		let storedVersion = localStorage.getItem(appName + "_Version")
 		if (!this.state.hasVisited) {
-			return localStorage.setItem(appName + "_Version", currentVersion)
+			return localStorage.setItem(appName + "_Version", appVersion)
 		}
 
-		if (currentVersion !== storedVersion) {
-			new LoggerEvent("Update V" + currentVersion, updateMessage, 6000).trigger()
-			localStorage.setItem(appName + "_Version", currentVersion)
+		if (appVersion !== storedVersion) {
+			new LoggerEvent("Update V" + appVersion, updateMessage, 6000).trigger()
+			localStorage.setItem(appName + "_Version", appVersion)
 		}
 		this.updateChecked = true
 		if (!this.state.hasVisited) return

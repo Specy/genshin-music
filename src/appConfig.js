@@ -1,6 +1,18 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][0]
-const appVersion = '2.1'
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
+const appVersion = '2.1.1'
 console.log(`${appName}-V${appVersion}`)
+const updateMessage = appName === 'Genshin' 
+    ? ` - Added help page
+        - Added note icons
+        - Added back practice animation
+        - Changed zither sounds
+        - Fixed bugs and UI issues
+    `.trim()
+    : ` - Added help page
+        - Added back practice animation
+        - Fixed bugs and UI issues
+    `.trim()
+
 const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help"]
 
 const cssClasses = {
@@ -254,5 +266,6 @@ export {
     audioContext,
     pages,
     isTwa,
-    cacheData
+    cacheData,
+    updateMessage
 }

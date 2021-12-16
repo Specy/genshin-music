@@ -300,7 +300,7 @@ select{
     width: 3vw;
     height: 3vw;
 }
-.layer-3 img{
+.note-composer.layer-3 img{
     filter: brightness(10);
 }
 canvas{
