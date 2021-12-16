@@ -1,11 +1,11 @@
 import { Component } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome } from 'react-icons/fa';
-import { FaDiscord, FaGithub} from 'react-icons/fa';
+import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload} from "lib/SongUtils"
+import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
-import { appName, isTwa  } from "appConfig"
+import { appName, isTwa } from "appConfig"
 import { songStore } from './SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
@@ -13,6 +13,7 @@ import MenuPanel from 'components/MenuPanel'
 import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
+import LibrarySearchedSong from 'components/LibrarySearchedSong'
 import "./menu.css"
 class Menu extends Component {
     constructor(props) {
@@ -21,23 +22,23 @@ class Menu extends Component {
             open: false,
             selectedMenu: "Songs",
             selectedSongType: "recorded",
-            searchInput:'',
-            searchedSongs:[],
+            searchInput: '',
+            searchedSongs: [],
             searchStatus: 'Write a song name then search!',
             isPersistentStorage: false
         }
     }
-    componentDidMount(){
+    componentDidMount() {
         this.checkPersistentStorage()
         window.addEventListener("keydown", this.handleKeyboard)
     }
-    componentWillUnmount(){
+    componentWillUnmount() {
         window.removeEventListener("keydown", this.handleKeyboard)
     }
     handleKeyboard = (event) => {
         let key = event.code
         if (document.activeElement.tagName === "INPUT") return
-        if(event.shiftKey){
+        if (event.shiftKey) {
             switch (key) {
                 case "KeyM": {
                     this.setState({ open: !this.state.open })
@@ -45,7 +46,7 @@ class Menu extends Component {
                 }
                 default: break;
             }
-        }else{
+        } else {
             switch (key) {
                 case "Escape": {
                     this.setState({ open: false })
@@ -59,26 +60,26 @@ class Menu extends Component {
     checkPersistentStorage = async () => {
         if (navigator.storage && navigator.storage.persist) {
             let isPersisted = await navigator.storage.persisted()
-            if(!isPersisted) isPersisted = await navigator.storage.persist()
-            this.setState({isPersistentStorage: isPersisted})
-          }
+            if (!isPersisted) isPersisted = await navigator.storage.persist()
+            this.setState({ isPersistentStorage: isPersisted })
+        }
     }
-    handleSearchInput = (text) =>{
+    handleSearchInput = (text) => {
         this.setState({
             searchInput: text
         })
     }
-    clearSearch = () =>{
+    clearSearch = () => {
         this.setState({
             searchInput: '',
-            searchedSongs:[],
+            searchedSongs: [],
             searchStatus: 'Write a song name then search!'
         })
     }
-    searchSongs = async () =>{
+    searchSongs = async () => {
         const { searchInput, searchStatus } = this.state
-        if(searchStatus === "Searching...") return
-        if(searchInput.trim().length === 0){
+        if (searchStatus === "Searching...") return
+        if (searchInput.trim().length === 0) {
             return this.setState({
                 searchStatus: 'Please write a non empty name'
             })
@@ -86,8 +87,8 @@ class Menu extends Component {
         this.setState({
             searchStatus: 'Searching...'
         })
-        let fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search='+encodeURI(searchInput)).then(data => data.json())
-        if(fetchedSongs.error){
+        let fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search=' + encodeURI(searchInput)).then(data => data.json())
+        if (fetchedSongs.error) {
             this.setState({
                 searchStatus: 'Please write a non empty name'
             })
@@ -124,22 +125,22 @@ class Menu extends Component {
     }
     importSong = (file) => {
         const reader = new FileReader();
-        reader.addEventListener('load',async (event) => {
+        reader.addEventListener('load', async (event) => {
             try {
                 let songsInput = JSON.parse(event.target.result)
-                if(!Array.isArray(songsInput)) songsInput = [songsInput]
-                for(let song of songsInput){
+                if (!Array.isArray(songsInput)) songsInput = [songsInput]
+                for (let song of songsInput) {
                     song = prepareSongImport(song)
                     await this.props.functions.addSong(song)
                 }
             } catch (e) {
                 let fileName = file.name
                 console.error(e)
-                if(fileName?.includes?.(".mid")){
+                if (fileName?.includes?.(".mid")) {
                     return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
-                }   
+                }
                 new LoggerEvent("Error", "Error importing song, invalid format").trigger()
-                
+
             }
         })
         reader.readAsText(file)
@@ -147,17 +148,17 @@ class Menu extends Component {
     downloadSong = (song) => {
         if (song._id) delete song._id
         let songName = song.name
-        if(appName === "Sky"){
+        if (appName === "Sky") {
             //adds old format into the sheet
             song = prepareSongDownload(song)
         }
-        if(!Array.isArray(song)) song = [song]
+        if (!Array.isArray(song)) song = [song]
         song.forEach(song1 => {
             song1.data.appName = appName
         })
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)
+        fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
 
@@ -165,7 +166,7 @@ class Menu extends Component {
         let toDownload = []
         this.props.data.songs.forEach(song => {
             if (song._id) delete song._id
-            if(appName === "Sky"){
+            if (appName === "Sky") {
                 song = prepareSongDownload(song)
             }
             Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
@@ -173,7 +174,7 @@ class Menu extends Component {
         let fileDownloader = new FileDownloader()
         let json = JSON.stringify(toDownload)
         let date = new Date().toISOString().split('T')[0]
-        fileDownloader.download(json,`${appName}_Backup_${date}.json`)
+        fileDownloader.download(json, `${appName}_Backup_${date}.json`)
         new LoggerEvent("Success", "Song backup downloaded").trigger()
     }
 
@@ -186,7 +187,7 @@ class Menu extends Component {
         let changePage = this.props.functions.changePage
         let songs = data.songs.filter(song => !song.data.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
-        const { searchStatus , searchedSongs, selectedMenu } = this.state
+        const { searchStatus, searchedSongs, selectedMenu } = this.state
         let searchedSongFunctions = {
             importSong: functions.addSong,
         }
@@ -197,7 +198,7 @@ class Menu extends Component {
                     <FaInfo className="icon" />
                 </MenuItem>
                 <MenuItem type="Library" action={this.selectSideMenu}>
-                    <RiPlayListFill className='icon'/>
+                    <RiPlayListFill className='icon' />
                 </MenuItem>
                 <MenuItem type="Songs" action={this.selectSideMenu} >
                     <FaMusic className="icon" />
@@ -262,10 +263,10 @@ class Menu extends Component {
                             })
                         }
                     </div>
-                    <div style={{marginTop:"auto", paddingTop:'0.5rem', width:'100%',display:'flex',justifyContent:'flex-end'}}>
-                        <button 
+                    <div style={{ marginTop: "auto", paddingTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button
                             className='genshin-button'
-                            style={{marginLeft:'auto'}}
+                            style={{ marginLeft: 'auto' }}
                             onClick={this.downloadAllSongs}
                         >
                             Download all songs (backup)
@@ -285,23 +286,23 @@ class Menu extends Component {
 
                         </SettingsRow>
                     })}
-                    <div style={{marginTop:'1rem'}}>
-                        {this.state.isPersistentStorage ?"Storage is persisted" : "Storage is not persisted"}
+                    <div style={{ marginTop: '1rem' }}>
+                        {this.state.isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     </div>
-                    {!isTwa() && <DonateButton onClick={changePage}/>}
+                    {!isTwa() && <DonateButton onClick={changePage} />}
 
                 </MenuPanel>
-                
+
                 <MenuPanel title="Library" visible={selectedMenu}>
                     <div>
                         Here you can find songs to learn, they are provided by the sky-music library.
                     </div>
                     <div className='library-search-row' >
-                        <input 
-                            className='library-search-input' 
+                        <input
+                            className='library-search-input'
                             placeholder='Song name'
                             onKeyDown={(e) => {
-                                if(e.code === "Enter") this.searchSongs()
+                                if (e.code === "Enter") this.searchSongs()
                             }}
                             onInput={(e) => this.handleSearchInput(e.target.value)}
                             value={this.state.searchInput}
@@ -310,26 +311,27 @@ class Menu extends Component {
                             <FaTimes />
                         </button>
                         <button className='library-search-btn' onClick={this.searchSongs}>
-                            <FaSearch/>
+                            <FaSearch />
                         </button>
                     </div>
                     <div className='library-search-songs-wrapper'>
                         {searchStatus === "success" ?
-                            searchedSongs.length > 0 
-                                ?   searchedSongs.map(song => 
-                                        <SearchedSong
-                                            key={song.file}
-                                            data={song}
-                                            functions={searchedSongFunctions}
-                                        >
-                                            {song.name}
-                                        </SearchedSong>)   
-                                :   <div className='library-search-result-text'>
-                                        No results
-                                    </div>
-                            :   <div className='library-search-result-text'>
-                                    {searchStatus}
+                            searchedSongs.length > 0
+                                ? searchedSongs.map(song =>
+                                    <LibrarySearchedSong
+                                        key={song.file}
+                                        data={song}
+                                        functions={searchedSongFunctions}
+                                        songStore={songStore}
+                                    >
+                                        {song.name}
+                                    </LibrarySearchedSong>)
+                                : <div className='library-search-result-text'>
+                                    No results
                                 </div>
+                            : <div className='library-search-result-text'>
+                                {searchStatus}
+                            </div>
                         }
                     </div>
                 </MenuPanel>
@@ -341,10 +343,10 @@ class Menu extends Component {
                         <a href='https://github.com/Specy/genshin-music' >
                             <FaGithub className='help-icon' />
                         </a>
-                        
+
                     </div>
                     <HelpTab />
-                    {!isTwa() && <DonateButton onClick={changePage}/>}
+                    {!isTwa() && <DonateButton onClick={changePage} />}
                 </MenuPanel>
             </div>
         </div>
@@ -355,7 +357,7 @@ function SongRow(props) {
     let deleteSong = props.functions.removeSong
     let toggleMenu = props.functions.toggleMenu
     let downloadSong = props.functions.downloadSong
- 
+
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             songStore.data = {
@@ -369,25 +371,25 @@ function SongRow(props) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                    songStore.data = {
-                        eventType: 'practice',
-                        song: data,
-                        start: 0
-                    }
-                    toggleMenu(false)
-                }}
+                songStore.data = {
+                    eventType: 'practice',
+                    song: data,
+                    start: 0
+                }
+                toggleMenu(false)
+            }}
             >
                 <FaCrosshairs />
             </button>
-            
+
             <button className="song-button" onClick={() => {
-                    songStore.data = {
-                        eventType: 'approaching',
-                        song: data,
-                        start: 0
-                    }
-                    toggleMenu(false)
-                }}
+                songStore.data = {
+                    eventType: 'approaching',
+                    song: data,
+                    start: 0
+                }
+                toggleMenu(false)
+            }}
             >
                 <BsCircle />
             </button>
@@ -402,45 +404,6 @@ function SongRow(props) {
     </div>
 }
 
-function SearchedSong(props){
-    const { functions, data} = props
-    const { importSong } = functions
-    const download = async function(){
-        try{
-            let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
-            song = prepareSongImport(song)
-            importSong(song)
-        }catch(e){
-            console.error(e)
-            new LoggerEvent("Error", "Error downloading song").trigger()
-        }
-    }
-    const play = async function(){
-        try{
-            let song = await fetch('https://sky-music.herokuapp.com/api/songs?get='+encodeURI(data.file)).then(data => data.json())
-            song = prepareSongImport(song)
-            songStore.data = {
-                eventType: 'play',
-                song: song,
-                start: 0
-            }
-        }catch(e){
-            console.error(e)
-            new LoggerEvent("Error", "Error downloading song").trigger()
-        }
-    }
-    return <div className="song-row">
-    <div className="song-name" onClick={() => {
-        play(data)
-    }}>
-        {data.name}
-    </div>
-    <div className="song-buttons-wrapper">
-        <button className="song-button" onClick={download}>
-            <FaDownload />
-        </button>
-    </div>
-</div>
-}
+
 
 export default Menu

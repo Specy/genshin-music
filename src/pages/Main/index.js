@@ -3,7 +3,7 @@ import Keyboard from "./Keyboard"
 import Menu from "./Menu"
 import { songStore } from './SongStore'
 import ZangoDb from "zangodb"
-import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "lib/SongUtils"
+import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "lib/Utils"
 import { MainPageSettings } from "lib/SettingsObj"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
@@ -339,12 +339,12 @@ class App extends Component {
 	}
 	render() {
 		const { state } = this
-		let keyboardFunctions = {
+		const keyboardFunctions = {
 			changeSliderState: this.changeSliderState,
 			playSound: this.playSound,
 			setHasSong: this.setHasSong
 		}
-		let keyboardData = {
+		const keyboardData = {
 			isLoading: state.isLoadingInstrument,
 			keyboard: state.instrument,
 			pitch: state.settings.pitch.value,
@@ -354,14 +354,14 @@ class App extends Component {
 			hasAnimation: state.settings.noteAnimation.value,
 			approachRate: state.settings.approachSpeed.value
 		}
-		let menuFunctions = {
+		const menuFunctions = {
 			addSong: this.addSong,
 			removeSong: this.removeSong,
 			changePage: this.props.changePage,
 			handleSettingChange: this.handleSettingChange,
 			changeVolume: this.changeVolume
 		}
-		let menuData = {
+		const menuData = {
 			songs: state.songs,
 			settings: state.settings
 		}
@@ -403,7 +403,6 @@ class App extends Component {
 						functions={keyboardFunctions}
 					/>
 				</div>
-
 			</div>
 		</div>
 

@@ -2,6 +2,7 @@ import { SimpleMenu } from 'components/SimpleMenu'
 import MenuItem from 'components/MenuItem'
 import { FaGithub } from 'react-icons/fa'
 import './Changelog.css'
+
 export default function Changelogpage(props) {
     return <div className='changelog-page'>
         <div className='changelog-page-title'>

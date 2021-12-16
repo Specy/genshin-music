@@ -52,6 +52,7 @@
 .home-dont-show-again {
 	position: fixed;
 	display: flex;
+	
 	align-items: center;
 	bottom: 0.5rem;
 	right: 0.5rem;

@@ -1,8 +1,8 @@
 import { isMobile } from "is-mobile"
-import {instruments, appName} from "appConfig"
+import { instruments, appName } from "appConfig"
 
-const ComposerSettings = {
-    settingVesion: appName + 16,
+export const ComposerSettings = {
+    settingVesion: appName + 17,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -44,25 +44,25 @@ const ComposerSettings = {
             4
         ]
     },
-    noteNameType:{
+    noteNameType: {
         name: "Note name type",
         type: "select",
         songSetting: false,
-        value: appName === "Genshin" 
-                                ? isMobile() 
-                                    ? "Do Re Mi" 
-                                    : "Keyboard layout"
-                                : "Note name",
+        value: appName === "Genshin"
+            ? isMobile()
+                ? "Do Re Mi"
+                : "Keyboard layout"
+            : "Note name",
         options: appName === "Genshin"
-        ? [
-            "Note name",
-            "Keyboard layout",
-            "Do Re Mi"
-        ]
-        : [
-            "Note name",
-            "Keyboard layout"
-        ]
+            ? [
+                "Note name",
+                "Keyboard layout",
+                "Do Re Mi"
+            ]
+            : [
+                "Note name",
+                "Keyboard layout"
+            ]
     },
     pitch: {
         name: "Pitch",
@@ -111,25 +111,25 @@ const ComposerSettings = {
         songSetting: false,
         value: false,
     },
-    backgroundImage:{
+    backgroundImage: {
         name: "Background image (url)",
         type: "text",
         songSetting: false,
         value: "",
         placeholder: "Write here"
     },
-    syncTabs:{
+    syncTabs: {
         name: "Autoplay in all tabs (pc only)",
         type: "checkbox",
-        songSetting:false,
+        songSetting: false,
         value: false
     }
 }
 
 
 
-const MainPageSettings = {
-    settingVesion:appName + 16,
+export const MainPageSettings = {
+    settingVesion: appName + 17,
     instrument: {
         name: "Instrument",
         type: "instrument",
@@ -171,26 +171,26 @@ const MainPageSettings = {
         value: 100,
         threshold: [0, 200]
     },
-    noteNameType:{
+    noteNameType: {
         name: "Note name type",
         type: "select",
         songSetting: false,
-        value: appName === "Genshin" 
-                                ? isMobile() 
-                                    ? "Do Re Mi" 
-                                    : "Keyboard layout"
-                                : "Note name",
-                                
+        value: appName === "Genshin"
+            ? isMobile()
+                ? "Do Re Mi"
+                : "Keyboard layout"
+            : "Note name",
+
         options: appName === "Genshin"
-        ? [
-            "Note name",
-            "Keyboard layout",
-            "Do Re Mi"
-        ]
-        : [
-            "Note name",
-            "Keyboard layout"
-        ]
+            ? [
+                "Note name",
+                "Keyboard layout",
+                "Do Re Mi"
+            ]
+            : [
+                "Note name",
+                "Keyboard layout"
+            ]
     },
     approachSpeed: {
         name: "Approach Rate (AR)",
@@ -199,21 +199,17 @@ const MainPageSettings = {
         value: 1500,
         threshold: [0, 5000]
     },
-    backgroundImage:{
+    backgroundImage: {
         name: "Background image (url)",
         type: "text",
         songSetting: false,
         value: "",
         placeholder: "Write here"
     },
-    noteAnimation:{
+    noteAnimation: {
         name: "Note animation",
         type: "checkbox",
         songSetting: false,
         value: false
     }
-}
-export {
-    ComposerSettings,
-    MainPageSettings
 }

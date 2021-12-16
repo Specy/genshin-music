@@ -8,7 +8,7 @@ class ComposerKeyboard extends Component {
         this.state = {
 
         }
-
+        //TODO convert this into a functional component
     }
 
     render() {

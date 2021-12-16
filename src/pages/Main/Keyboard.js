@@ -4,7 +4,7 @@ import { FaSyncAlt, FaStop } from 'react-icons/fa'
 import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } from "appConfig"
 import Note from "./Note"
 import { songStore } from './SongStore'
-import { delayMs, ComposerToRecording, NotesTable } from "lib/SongUtils"
+import { delayMs, ComposerToRecording, NotesTable } from "lib/Utils"
 import "./Keyboard.css"
 
 class Keyboard extends Component {
@@ -526,6 +526,3 @@ function getNoteText(noteNameType, index, pitch, layoutLength) {
     return ''
 }
 export default Keyboard
-
-
-

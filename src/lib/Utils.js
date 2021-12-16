@@ -1,4 +1,4 @@
-import { importNotePositions, appName, instruments } from "appConfig"
+import { importNotePositions, appName, instruments, pitchArr } from "appConfig"
 import * as workerTimers from 'worker-timers';
 class Recording {
 	constructor() {
@@ -16,6 +16,7 @@ class Recording {
 		this.notes.push(note)
 	}
 }
+
 class Song {
 	constructor(name, notes = [], data = {}) {
 		this.name = name
@@ -33,6 +34,7 @@ class Song {
 		})
 	}
 }
+
 class LoggerEvent {
 	constructor(title, text, timeout) {
 		this.title = title
@@ -51,6 +53,7 @@ class LoggerEvent {
 		window.dispatchEvent(this.event)
 	}
 }
+
 class NoteData {
 	constructor(index, noteNames, url) {
 		this.index = index
@@ -60,12 +63,14 @@ class NoteData {
 		this.clicked = false
 	}
 }
+
 class PlayingSong {
 	constructor(notes) {
 		this.timestamp = new Date().getTime()
 		this.notes = notes
 	}
 }
+
 class FileDownloader {
 	constructor(type) {
 		if (type === undefined) type = "text/json"
@@ -83,7 +88,7 @@ class FileDownloader {
 	}
 }
 
-let TempoChangers = [
+const TempoChangers = [
 	{
 		id: 0,
 		text: "1",
@@ -106,6 +111,7 @@ let TempoChangers = [
 		color: 0x774D6D
 	}
 ]
+
 class ComposedSong {
 	constructor(name, notes = [], data = {}) {
 		data.isComposed = true
@@ -131,6 +137,7 @@ class ComposedSong {
 function NotesTable(length){
 	return new Array(length).fill().map(() => {return []})
 }
+
 function ComposerSongDeSerialization(song) {
 	let obj = {
 		data: song.data,
@@ -153,6 +160,7 @@ function ComposerSongDeSerialization(song) {
 	})
 	return obj
 }
+
 function ComposerToRecording(song) {
 	let recordedSong = new Song(song.name)
 	let bpmPerMs = Math.floor(60000 / song.bpm)
@@ -165,6 +173,7 @@ function ComposerToRecording(song) {
 	})
 	return recordedSong
 }
+
 function ComposerSongSerialization(song) {
 	let obj = {
 		data: song.data,
@@ -190,6 +199,7 @@ function ComposerSongSerialization(song) {
 	})
 	return obj
 }
+
 function prepareSongDownload(song) {
 	let finalSong = JSON.parse(JSON.stringify(song)) //lose reference
 	let oldFormatNotes = {}
@@ -204,11 +214,9 @@ function prepareSongDownload(song) {
 	finalSong.bitsPerPage = 16
 	finalSong.isEncrypted = false
 	return [finalSong] //for compatibility, add back to an array, it will be ignored when importing
-	//from this app
 }
 
 function prepareSongImport(song) {
-	//TODO add multi songs in the same file
 	if (Array.isArray(song) && song.length > 0) song = song[0]
 	let type = getSongType(song)
 	if (type === "none") {
@@ -264,6 +272,7 @@ function recordedToOldFormat(song) {
 	})
 	return convertedNotes
 }
+
 function getSongType(song) {
 	try {
 		if (song.data === undefined) {
@@ -308,7 +317,8 @@ function getSongType(song) {
 	}
 	return "none"
 }
-let genshinLayout = importNotePositions
+
+const genshinLayout = importNotePositions
 
 function newSkyFormatToGenshin(song) {
 	if (song.data.isComposedVersion) {
@@ -360,6 +370,7 @@ function oldSkyToNewFormat(song) {
 	}
 	return result
 }
+
 function RecordingToComposed(song) {
 	let bpmToMs = Math.floor(60000 / song.bpm)
 	let composed = new ComposedSong(song.name, [])
@@ -412,6 +423,7 @@ function RecordingToComposed(song) {
 	composed.columns = converted
 	return composed
 }
+
 class Column {
 	constructor() {
 		this.notes = []
@@ -419,6 +431,7 @@ class Column {
 
 	}
 }
+
 function groupByNotes(notes, threshold) {
 	let result = []
 	while (notes.length > 0) {
@@ -431,18 +444,20 @@ function groupByNotes(notes, threshold) {
 	}
 	return result
 }
+
 class ColumnNote {
 	constructor(index, layer = "000") {
 		this.index = index
 		this.layer = layer
 	}
 }
-let pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+
 function getPitchChanger(pitch) {
 	let index = pitchArr.indexOf(pitch)
 	if (index < 0) index = 0
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
+
 function numberToLayer(number) {
 	let layer = "100"
 	if (number === 0) layer = "100"
@@ -450,6 +465,7 @@ function numberToLayer(number) {
 	if (number === 2) layer = "001"
 	return layer
 }
+
 function mergeLayers(notes) {
 	let final = "000".split("")
 	notes.forEach(notes => {
@@ -459,6 +475,7 @@ function mergeLayers(notes) {
 	})
 	return final.join("")
 }
+
 function groupByIndex(column) {
 	let notes = []
 	column.notes.forEach(note => {

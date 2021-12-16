@@ -1,7 +1,7 @@
 import React, { Component, useEffect, useState } from 'react'
 import { FilePicker } from "react-file-picker"
 import { Midi } from '@tonejs/midi'
-import { LoggerEvent, pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/SongUtils'
+import { LoggerEvent, pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
 import { appName } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from './useDebounce'

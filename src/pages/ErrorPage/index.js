@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { FaTrash, FaDownload} from 'react-icons/fa';
 import ZangoDb from "zangodb"
-import { FileDownloader, LoggerEvent,prepareSongDownload } from "lib/SongUtils"
+import { FileDownloader, LoggerEvent,prepareSongDownload } from "lib/Utils"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { appName } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'

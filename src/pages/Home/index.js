@@ -2,6 +2,7 @@ import './Home.css'
 import { FaCompactDisc, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
 import { appName, isTwa } from 'appConfig'
+
 export default function Home(props) {
     const to = props.changePage
     const { data, askForStorage, hasVisited } = props
@@ -91,12 +92,14 @@ export default function Home(props) {
 
     </div>
 }
+
 // © 2021 {appName} Music. All rights reserved.   <br />
 function PageRedirect(props) {
     return <button onClick={props.onClick}>
         {props.children}
     </button>
 }
+
 function MainContentelement(props) {
     return <div className='home-content-element' onClick={props.onClick}>
         <div className='home-content-background' style={{ backgroundImage: `url(${props.background})` }}>
@@ -122,22 +125,3 @@ function Separator(props) {
         {props.children}
     </div>
 }
-
-/*
-        <div className='redirect-wrapper' style={{display:'none'}}>
-            <PageButton name='Composer' onClick={() => to("/Composer")}>
-                <FaCompactDisc className='redirect-icon' />
-            </PageButton>
-            <PageButton name='Player' onClick={() => to("/Composer")}>
-                <BsMusicPlayerFill className='redirect-icon' />
-            </PageButton>
-        </div>
-        function PageButton(props) {
-            return <button className='redirect-button' onClick={props.onClick}>
-                {props.children}
-                <div>
-                    {props.name}
-                </div>
-            </button>
-        }
-*/

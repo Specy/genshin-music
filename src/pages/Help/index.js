@@ -1,6 +1,7 @@
 import { HelpTab } from "components/HelpTab"
 import { SimpleMenu } from "components/SimpleMenu"
 import './Help.css'
+
 export default function Help(props){
     return <div className="help-page">
         <SimpleMenu functions={{changePage: props.changePage}}/>

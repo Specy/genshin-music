@@ -1,5 +1,6 @@
 import { instrumentsData, layoutData, instruments,audioContext } from "appConfig"
-class Instrument {
+
+export default class Instrument {
     constructor(instrumentName) {
         this.instrumentName = instrumentName === undefined ? instruments[0] : instrumentName
         if (!instruments.includes(this.instrumentName)) this.instrumentName = instruments[0] 
@@ -78,8 +79,6 @@ class Instrument {
     }
 }
 
-
-
 class NoteData {
     constructor(index, noteNames, url) {
         this.index = index
@@ -88,4 +87,3 @@ class NoteData {
         this.buffer = new ArrayBuffer(8)
     }
 }
-export default Instrument

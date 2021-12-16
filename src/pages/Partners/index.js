@@ -1,6 +1,7 @@
 import './Partners.css'
 import { SimpleMenu } from 'components/SimpleMenu'
 import WindsongDBImg from 'assets/images/partners/windsong-db.jpg'
+
 export default function Partners(props) {
     return <div className='partners-page'>
         <SimpleMenu functions={{ changePage: props.changePage }} />

@@ -5,12 +5,12 @@ import Composer from "pages/Composer"
 import ErrorPage from "pages/ErrorPage"
 import Changelogpage from 'pages/Changelog'
 import Partners from 'pages/Partners';
-import Home from 'pages/Home'; 
+import Home from 'pages/Home';
 import Help from 'pages/Help';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Redirect } from "react-router-dom";
-import { LoggerEvent, delayMs } from "lib/SongUtils"
-import { appName, appVersion, pages,isTwa } from "appConfig"
+import { LoggerEvent, delayMs } from "lib/Utils"
+import { appName, appVersion, pages, isTwa } from "appConfig"
 import FloatingMessage from 'components/FloatingMessage'
 import Donate from 'pages/Donate';
 import rotateImg from "assets/icons/rotate.svg"
@@ -44,39 +44,39 @@ class Index extends Component {
 	}
 	componentDidMount() {
 		window.addEventListener('logEvent', this.logEvent);
-		this.checkUpdate()	
+		this.checkUpdate()
 	}
 	changePage = (page) => {
-		if(page === 'home') return this.toggleHome(true)
-		if(this.state.homeData.visible) this.toggleHome(false)
+		if (page === 'home') return this.toggleHome(true)
+		if (this.state.homeData.visible) this.toggleHome(false)
 		this.setState({
 			selectedPage: page,
-			homeVisible:false
+			homeVisible: false
 		})
 	}
-	toggleHome = (override = false) =>{
+	toggleHome = (override = false) => {
 		//TODO please refactor this
 		const lastState = this.state.homeData
-		if(override){ //if its to be shown then just show it
+		if (override) { //if its to be shown then just show it
 			return this.setState({
-				homeData: {...lastState, visible:true, isInPosition:false }
+				homeData: { ...lastState, visible: true, isInPosition: false }
 			})
 		}
 		this.setState({ //if it needs to be hidden, first trigger the animation
-			homeData: {...lastState, isInPosition:true }
-		},() => {
+			homeData: { ...lastState, isInPosition: true }
+		}, () => {
 			setTimeout(() => { //then demount it
 				this.setState({
-					homeData: {...lastState, visible: false }
+					homeData: { ...lastState, visible: false }
 				})
-			},150)
+			}, 150)
 		})
 	}
 	setDontShowHome = (override = false) => {
-		localStorage.setItem(appName + "_ShowHome",override)
+		localStorage.setItem(appName + "_ShowHome", override)
 		const lastState = this.state.homeData
 		this.setState({
-			homeData: {...lastState, canShow:override }
+			homeData: { ...lastState, canShow: override }
 		})
 	}
 	componentDidCatch() {
@@ -117,7 +117,7 @@ class Index extends Component {
 		})
 	}
 	checkUpdate = async () => {
-		await delayMs(1500) //wait for page to render
+		await delayMs(1000)
 		if (this.updateChecked) return
 		let currentVersion = appVersion
 		let updateMessage =
@@ -136,7 +136,7 @@ class Index extends Component {
 			localStorage.setItem(appName + "_Version", currentVersion)
 		}
 		this.updateChecked = true
-		if(!this.state.hasVisited) return
+		if (!this.state.hasVisited) return
 		if (navigator.storage && navigator.storage.persist) {
 			let isPersisted = await navigator.storage.persisted()
 			if (!isPersisted) isPersisted = await navigator.storage.persist()
@@ -169,16 +169,16 @@ class Index extends Component {
 		}, error.timeout)
 	}
 	render() {
-		const {floatingMessage, hasVisited,homeData} = this.state
+		const { floatingMessage, hasVisited, homeData } = this.state
 		return <div className="index">
 
-			<FloatingMessage 
+			<FloatingMessage
 				title={floatingMessage.title}
 				visible={floatingMessage.visible}
 				onClick={this.hideMessage}
 				text={floatingMessage.text}
 			/>
-			{homeData.visible && <Home 
+			{homeData.visible && <Home
 				toggleHome={this.toggleHome}
 				changePage={this.changePage}
 				setDontShowHome={this.setDontShowHome}
@@ -248,6 +248,3 @@ function setIfInTWA() {
 
 setIfInTWA()
 serviceWorkerRegistration.register();
-
-
-

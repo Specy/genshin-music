@@ -198,6 +198,41 @@ const layoutImages = {
     21: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ")
 }
 
+const cacheData = {
+    noteData: {
+        background: "#d3bd8e",
+        border: "#de4545",
+        center: "#de4545"
+    },
+    horizontalLineBreak: notesPerColumn / 3,
+    standards: [
+        {
+            color: 0x515c6f //lighter
+        },
+        {
+            color: 0x485363 //darker
+        },
+        {
+            color: 0x1a968b //selected
+        },
+        {
+            color: 0xd6722f
+        }
+    ],
+    layersCombination: ["000", "001", "010", "011", "100", "101", "110", "111"],
+    breakpoints: [
+        {
+            type: "short",
+            color: "#282875"
+        },
+        {
+            type: "long",
+            color: "#282875"
+        }
+    ]
+}
+
+
 function isTwa() {
     let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
     return isTwa
@@ -218,5 +253,6 @@ export {
     speedChangers,
     audioContext,
     pages,
-    isTwa
+    isTwa,
+    cacheData
 }

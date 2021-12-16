@@ -8,7 +8,7 @@ import { ComposerCache } from "./ComposerCache"
 import { composerNotePositions, notesPerColumn, appName } from "../../appConfig"
 let NumOfColumnsPerCanvas = 35
 
-class ComposerCanvas extends Component {
+export default class ComposerCanvas extends Component {
     constructor(props) {
         super(props)
         let sizes = document.body.getBoundingClientRect()
@@ -145,16 +145,16 @@ class ComposerCanvas extends Component {
         const { width, timelineHeight, height} = this.state
         const cache = this.cache.cache
         const { data, functions } = this.props
-        let sizes = this.state.column
-        let xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
+        const sizes = this.state.column
+        const xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
         let switcher = false
         let counter = 0
         const beatMarks = Number(data.settings.beatMarks.value)
         const counterLimit = beatMarks === 0 ? 11 : 4 * beatMarks - 1
-        let relativeColumnWidth = width / data.columns.length
+        const relativeColumnWidth = width / data.columns.length
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > width) stageSize = width
-        let stagePos = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
+        const stagePosition = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
         return <div className="canvas-wrapper" style={{ width: width + 2 }}>
             <Stage
                 width={width}
@@ -236,7 +236,7 @@ class ComposerCanvas extends Component {
                         })}
                     </Container>
 
-                    <Graphics draw={(e) => drawStage(e, stageSize, this.state.timelineHeight)} x={stagePos} y={2} />
+                    <Graphics draw={(e) => drawStage(e, stageSize, this.state.timelineHeight)} x={stagePosition} y={2} />
 
 
                 </Stage>
@@ -292,15 +292,17 @@ function Column(props) {
 
     </Container>
 }
+
 function calcMinColumnWidth(parentWidth) {
     return nearestEven(parentWidth / NumOfColumnsPerCanvas)
 }
+
 function nearestEven(num) {
     return 2 * Math.round(num / 2);
 }
+
 function isVisible(pos, currentPos) {
     let threshold = NumOfColumnsPerCanvas / 2 + 2
     let boundaries = [currentPos - threshold, currentPos + threshold]
     return boundaries[0] < pos && pos < boundaries[1]
 }
-export default ComposerCanvas

@@ -1,13 +1,9 @@
-import { Component } from 'react'
-
-export default class MenuItem extends Component {
-    render() {
-        let className = this.props.className ? `menu-item ${this.props.className}` : "menu-item"
-        return <div
-            className={className}
-            onClick={() => this.props.action?.(this.props.type)}
-        >
-            {this.props.children}
-        </div>
-    }
+export default function MenuItem(props) {
+    const { className, action, children, type } = props
+    return <div
+        className={className ? `menu-item ${className}` : "menu-item"}
+        onClick={() => action?.(type)}
+    >
+        {children}
+    </div>
 }

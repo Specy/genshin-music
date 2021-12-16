@@ -1,39 +1,9 @@
-import { TempoChangers } from "lib/SongUtils"
+import { TempoChangers } from "lib/Utils"
 import * as PIXI from "pixi.js"
-import {notesPerColumn } from "appConfig"
-let noteData = {
-    background: "#d3bd8e",
-    border: "#de4545",
-    center: "#de4545"
-}
+import { cacheData, notesPerColumn } from "appConfig"
+const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = cacheData
 
-let horizontalLineBreak = notesPerColumn / 3
-let standards = [
-    {
-        color: 0x515c6f //lighter
-    },
-    {
-        color: 0x485363 //darker
-    },
-    {
-        color: 0x1a968b //selected
-    },
-    {
-        color: 0xd6722f
-    }
-]
-let notes = ["000", "001", "010", "011", "100", "101", "110", "111"]
-let breakpoints = [
-    {
-        type: "short",
-        color: "#282875"
-    },
-    {
-        type: "long",
-        color: "#282875"
-    }
-]
-class ComposerCache {
+export class ComposerCache {
     constructor(width, height, margin = 4, timelineHeight = 30) {
         this.width = width
         this.height = height
@@ -72,7 +42,7 @@ class ComposerCache {
             let canvas = drawColumn(standardColumn, this, 3)
             this.cache.standardLarger.push(canvas.toDataURL())
         })
-        notes.forEach(note => {
+        layersCombination.forEach(note => {
             let roundNess = this.noteWidth > 20 ? 4 : 2
             let canvas = document.createElement("canvas")
             canvas.height = this.noteHeight
@@ -224,7 +194,4 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
         ctx.stroke();
     }
 
-}
-export {
-    ComposerCache
 }

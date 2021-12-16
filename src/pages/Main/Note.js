@@ -6,6 +6,7 @@ class Note extends Component {
         super(props)
         this.state = {
         }
+        //TODO convert this into functional component
     }
     render() {
         const { props } = this

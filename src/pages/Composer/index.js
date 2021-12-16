@@ -18,7 +18,7 @@ import Instrument from "lib/Instrument"
 import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
-} from "lib/SongUtils"
+} from "lib/Utils"
 import AudioRecorder from 'lib/AudioRecorder'
 
 class Composer extends Component {

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload } from 'react-icons/fa';
-import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/SongUtils"
+import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
 import { appName,isTwa } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
