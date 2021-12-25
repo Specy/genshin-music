@@ -1,4 +1,4 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][0]
 const appVersion = '2.1.1'
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin' 
@@ -13,7 +13,7 @@ const updateMessage = appName === 'Genshin'
         - Fixed bugs and UI issues
     `.trim()
 
-const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help"]
+const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetDisplayer"]
 
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",

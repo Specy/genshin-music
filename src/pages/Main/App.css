@@ -10,6 +10,8 @@
 	--composer-tool: #d4c199;
 	--clicked-note: #8fedd9;
     --whitish: #ede5d8;
+	--hint-main: #949494;
+	
 }
 @font-face {
 	font-family: Bonobo;
@@ -339,14 +341,7 @@ a {
 	opacity: 1;
 	transform: scale(1);
 }
-.error-page {
-	background-color: #863545;
-	color: white;
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-start;
-	padding-top: 20vh;
-}
+
 /* width */
 ::-webkit-scrollbar {
 	width: 5px;
@@ -367,39 +362,13 @@ a {
   ::-webkit-scrollbar-thumb:hover {
 	background: #555;
   }
-.error-buttons-wrapper {
-	display: flex;
-	width: 50vw;
-	flex-direction: row;
-	justify-content: space-between;
-	margin-top: 4vh;
-}
-.error-songs-wrapper {
-	padding: 0.4rem;
-	margin-top: 4vh;
-	background-color: #394248;
-	border-radius: 0.5rem;
-	display: grid;
-	width: 50vw;
-	gap: 0.4rem;
-	max-height: 40vh;
-	overflow-y: auto;
-	min-height: 3.6rem;
-}
+
 .record-button{
 	position: absolute;
 	right: 0.8rem;
 	top: 0.8rem;
 }
-.error-go-back {
-	position: absolute;
-	left: 1rem;
-	top: 1rem;
-}
-.error-text-wrapper {
-	width: 50vw;
-	text-align: center;
-}
+
 .approaching-accuracy{
 	position: absolute;
 	top: 0.5rem;
@@ -428,13 +397,7 @@ a {
 	
 	border-left:solid 2px var(--secondary);
 }
-@media only screen and (orientation: portrait) {
-	.error-songs-wrapper,
-	.error-text-wrapper,
-	.error-buttons-wrapper {
-		width: 90vw;
-	}
-}
+
 @media only screen and (max-width: 900px) {
 	.floating-prompt {
 		width: 45vw;

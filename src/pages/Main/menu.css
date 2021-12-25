@@ -153,7 +153,7 @@
     border-bottom-left-radius: 0.3rem;
     border-bottom-right-radius: 0.3rem;
     padding: 0.5rem;
-    background-color: #c0ad93;
+    background-color: #ad9c85;
     padding-top: 1rem;
     margin: 0;
     display: grid;
@@ -185,7 +185,7 @@
     margin: 0;
 }
 .tab-selected{
-    background-color: #c0ad93;
+    background-color: #ad9c85;
 }
 .inverted{
     filter: invert(1);

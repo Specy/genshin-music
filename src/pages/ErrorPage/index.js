@@ -5,6 +5,7 @@ import { FileDownloader, LoggerEvent,prepareSongDownload } from "lib/Utils"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { appName } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
+import './ErrorPage.css'
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
