@@ -1,23 +1,18 @@
 import React, { Component } from 'react'
 import { FaTrash, FaDownload} from 'react-icons/fa';
-import ZangoDb from "zangodb"
+import { DB } from 'Database';
 import { FileDownloader, LoggerEvent,prepareSongDownload } from "lib/Utils"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { appName } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
 import './ErrorPage.css'
+
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
-        this.db = new ZangoDb.Db(appName, { songs: [] })
-        this.dbCol = {
-            songs: this.db.collection("songs")
-
-        }
         this.state = {
             songs: []
         }
-
     }
     componentDidMount(){
         this.syncSongs()
@@ -39,20 +34,21 @@ class ErrorPage extends Component {
         new LoggerEvent("Success", "Song backup downloaded").trigger()
     }
     syncSongs = async () => {
-        let songs = await this.dbCol.songs.find().toArray()
         this.setState({
-            songs: songs
+            songs: await DB.getSongs()
         })
     }
     deleteSong = async (name) => {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
-            this.dbCol.songs.remove({ name: name }, this.syncSongs)
+            await DB.removeSong({ name: name })
+            this.syncSongs()
         }
 
     }
     deleteAllSongs = async () =>{
         if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
-            this.dbCol.songs.remove({}, this.syncSongs)
+            await DB.removeSong({})
+            this.syncSongs()
         }
     }
     resetSettings = () => {

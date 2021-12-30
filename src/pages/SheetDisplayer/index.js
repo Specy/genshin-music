@@ -1,7 +1,7 @@
 import './SheetDisplayer.css'
 import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
-import ZangoDb from "zangodb"
+import { DB } from 'Database'
 import { appName } from 'appConfig'
 import { ComposerToRecording } from 'lib/Utils'
 export default function SheetDisplayer(props) {
@@ -12,9 +12,7 @@ export default function SheetDisplayer(props) {
     const [selectedSongType, setSelectedSongType] = useState('recorded')
     useEffect(() => {
         async function load() {
-            const db = new ZangoDb.Db(appName, { songs: [] })
-            let dbSongs = await db.collection('songs').find().toArray()
-            setSongs(dbSongs)
+            setSongs(await DB.getSongs())
         }
         load()
     }, [])

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import Keyboard from "./Keyboard"
 import Menu from "./Menu"
+import { DB } from 'Database';
 import { songStore } from './SongStore'
-import ZangoDb from "zangodb"
 import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "lib/Utils"
 import { MainPageSettings } from "lib/SettingsObj"
 import Instrument from 'lib/Instrument';
@@ -13,12 +13,8 @@ import './App.css';
 class App extends Component {
 	constructor(props) {
 		super(props)
-		this.db = new ZangoDb.Db(appName, { songs: [] })
 		this.recording = new Recording()
 		let settings = this.getSettings()
-		this.dbCol = {
-			songs: this.db.collection("songs")
-		}
 		this.state = {
 			instrument: new Instrument(),
 			isLoadingInstrument: true,
@@ -232,21 +228,19 @@ class App extends Component {
 		}, this.updateSettings)
 	}
 	syncSongs = async () => {
-		let songs = await this.dbCol.songs.find().toArray()
 		this.setState({
-			songs: songs
+			songs: await DB.getSongs()
 		})
 	}
-
 	songExists = async (name) => {
-		return await this.dbCol.songs.findOne({ name: name }) !== undefined
+		return await DB.existsSong({ name: name })
 	}
 	addSong = async (song) => {
 		try {
 			if (await this.songExists(song.name)) {
 				return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
 			}
-			await this.dbCol.songs.insert(song)
+			await DB.addSong(song)
 			this.syncSongs()
 			new LoggerEvent("Success", `Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000).trigger()
 		} catch (e) {
@@ -265,7 +259,8 @@ class App extends Component {
 		let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
 		if(!this.mounted) return
 		if (result) {
-			this.dbCol.songs.remove({ name: name }, this.syncSongs)
+			await DB.removeSong({ name: name })
+			this.syncSongs()
 		}
 	}
 	handleRecording = (note) => {

@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import ZangoDb from "zangodb"
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
 import addCell from "assets/icons/addCell.svg"
@@ -20,15 +19,12 @@ import {
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
 } from "lib/Utils"
 import AudioRecorder from 'lib/AudioRecorder'
+import { DB } from 'Database';
 
 class Composer extends Component {
     constructor(props) {
         super(props)
-        this.db = new ZangoDb.Db(appName, { songs: [] })
-        this.dbCol = {
-            songs: this.db.collection("songs")
-
-        }
+ 
         let settings = this.getSettings()
         this.playbackInterval = undefined
         this.audioContext = audioContext
@@ -365,7 +361,7 @@ class Composer extends Component {
         this.playSound(instrument, note.index)
     }
     syncSongs = async () => {
-        let songs = await this.dbCol.songs.find().toArray()
+        let songs = await DB.getSongs()
         if(!this.mounted) return
         songs = songs.map(song => {
             if (song.data.isComposedVersion) {
@@ -382,7 +378,7 @@ class Composer extends Component {
         if (await this.songExists(song.name)) {
             return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
         }
-        await this.dbCol.songs.insert(ComposerSongSerialization(song))
+        await DB.addSong(ComposerSongSerialization(song))
         this.syncSongs()
     }
     updateSong = async (song) => {
@@ -399,7 +395,7 @@ class Composer extends Component {
                 song.instruments[0] = settings.instrument.value
                 song.instruments[1] = settings.layer2.value
                 song.instruments[2] = settings.layer3.value
-                await this.dbCol.songs.update({ name: song.name }, ComposerSongSerialization(song))
+                await DB.updateSong({ name: song.name }, ComposerSongSerialization(song))
                 console.log("song saved:", song.name)
                 this.changes = 0
                 this.syncSongs()
@@ -408,7 +404,7 @@ class Composer extends Component {
                     let name = await this.askForSongName("Write composed song name, press cancel to ignore")
                     if (name === null) return resolve()
                     song.name = name
-                    await this.dbCol.songs.insert(ComposerSongSerialization(song))
+                    await DB.addSong(ComposerSongSerialization(song))
                     this.syncSongs()
                     return resolve()
                 }
@@ -445,7 +441,7 @@ class Composer extends Component {
         })
     }
     songExists = async (name) => {
-        return await this.dbCol.songs.findOne({ name: name }) !== undefined
+        return await DB.existsSong({ name: name })
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.changes > 0) {
@@ -465,7 +461,8 @@ class Composer extends Component {
     }
     removeSong = async (name) => {
         let confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
-        if (confirm) this.dbCol.songs.remove({ name: name }, this.syncSongs)
+        if (confirm) await DB.removeSong({name: name})
+        this.syncSongs()
     }
 
     loadSong = async (song) => {
