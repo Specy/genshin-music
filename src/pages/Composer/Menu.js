@@ -26,7 +26,7 @@ class Menu extends Component {
     handleKeyboard = (event) => {
         let key = event.code
         if (document.activeElement.tagName === "INPUT") return
-
+        document.activeElement?.blur()
         switch (key) {
             case "Escape": {
                 if(this.state.open) this.props.functions.toggleMenuVisible()

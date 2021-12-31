@@ -60,6 +60,16 @@ function ChangelogRow(props) {
 }
 const changelogs = [
     {
+        version: '2.2',
+        title: 'Sheet displayer',
+        date: '2021 - 3/12',
+        changes: [
+            'Added sheet displayer',
+            'Changed timeline behaviour when dragging the scroll bar',
+            'fixed UI issues and bug fixes',
+        ]
+    },
+    {
         version: '2.1.1',
         title: 'Zither and icons',
         date: '2021 - 16/12',

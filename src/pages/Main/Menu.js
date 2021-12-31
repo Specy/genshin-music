@@ -38,6 +38,7 @@ class Menu extends Component {
     handleKeyboard = (event) => {
         let key = event.code
         if (document.activeElement.tagName === "INPUT") return
+        document.activeElement?.blur()
         if (event.shiftKey) {
             switch (key) {
                 case "KeyM": {

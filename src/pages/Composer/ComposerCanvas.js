@@ -21,7 +21,7 @@ export default class ComposerCanvas extends Component {
             width = nearestEven(sizes.height * 0.84)
             height = nearestEven(sizes.width * 0.45)
         }
-        if(appName === "Sky") height = nearestEven(height * 0.95)
+        if (appName === "Sky") height = nearestEven(height * 0.95)
         this.state = {
             width: Math.floor(width),
             height: Math.floor(height),
@@ -37,7 +37,9 @@ export default class ComposerCanvas extends Component {
         this.cache = new ComposerCache(this.state.column.width, height, margin, this.state.timelineHeight)
         this.stageSelected = false
         this.sliderSelected = false
+        this.hasSlided = false
         this.stagePreviousPositon = 0
+        this.sliderOffset = 0
         this.throttleStage = 0
     }
     resetPointerDown = (e) => {
@@ -63,30 +65,30 @@ export default class ComposerCanvas extends Component {
                 break;
             case "ArrowLeft": this.handleBreakpoints(-1)
                 break;
-            default : 
+            default:
                 break;
         }
     }
     handleWheel = (e) => {
-        if (e.deltaY < 0) {
-            this.props.functions.selectColumn(this.props.data.selected - 1, true)
-        } else {
-            this.props.functions.selectColumn(this.props.data.selected + 1, true)
-        }
+        this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
     }
     handleClick = (e, type) => {
-        let x = e.data.global.x
-        if (type === "click") {
-            let totalWidth = this.state.column.width * this.props.data.columns.length
-
-            let relativePos = Math.floor(x / this.state.width * totalWidth / this.state.column.width)
-            this.props.functions.selectColumn(relativePos)
-        }
+        const x = e.data.global.x
+        const { width, column } = this.state
+        const { data } = this.props
         if (type === "up") {
             this.sliderSelected = false
+            if(this.hasSlided) return this.hasSlided = false
+            let totalWidth = column.width * data.columns.length
+            let relativePos = Math.floor(x / width * totalWidth / column.width)
+            this.props.functions.selectColumn(relativePos)
         }
         if (type === "down") {
             this.sliderSelected = true
+            const relativeColumnWidth = width / data.columns.length
+            const stageSize = relativeColumnWidth * (NumOfColumnsPerCanvas + 1)
+            const stagePosition = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2) * relativeColumnWidth
+            this.sliderOffset = stagePosition + stageSize / 2 - x
         }
         if (type === "downStage") {
             this.stagePreviousPositon = x
@@ -96,62 +98,60 @@ export default class ComposerCanvas extends Component {
     handleStageSlide = (e) => {
         let x = e.data.global.x
         if (this.stageSelected === true) {
-            this.throttleStage++
-            if (this.throttleStage < 5) return
+            if (this.throttleStage++ < 5) return
+            const { data } = this.props            
             this.throttleStage = 0
-            let isMovingLeft = this.stagePreviousPositon < x
+            const isMovingLeft = this.stagePreviousPositon < x
             let amount = Math.ceil(Math.abs(this.stagePreviousPositon - x) / 8)
             if (amount > 4) amount = 4
-            let toAdd = isMovingLeft ? -1 : 1
+            const toAdd = isMovingLeft ? -1 : 1
             this.stagePreviousPositon = x
             let finalPos = this.props.data.selected + toAdd * amount
             if (this.props.data.selected === finalPos) return
             if (finalPos < 0) finalPos = 0
-            if (finalPos > this.props.data.columns.length) finalPos = this.props.data.columns.length - 1
+            if (finalPos > data.columns.length) finalPos = data.columns.length - 1
             this.props.functions.selectColumn(finalPos, true)
         }
     }
     handleBreakpoints = (direction) => {
-        let selectedColumn = this.props.data.selected
-        let columns = this.props.data.columns
+        const { selected, columns, breakpoints } = this.props.data
         let breakpoint
-        let breakpoints = this.props.data.breakpoints
         if (direction === 1) {//right
-            breakpoint = breakpoints.filter((v) => v > selectedColumn).sort((a, b) => a - b)
+            breakpoint = breakpoints.filter((v) => v > selected).sort((a, b) => a - b)
         } else {
-            breakpoint = breakpoints.filter((v) => v < selectedColumn).sort((a, b) => b - a)
+            breakpoint = breakpoints.filter((v) => v < selected).sort((a, b) => b - a)
         }
         if (breakpoint.length >= 0) {
             if (columns.length >= breakpoint[0] && breakpoint[0] >= 0) {
                 this.props.functions.selectColumn(breakpoint[0])
             }
         }
-
     }
     handleSlide = (e) => {
         if (this.sliderSelected) {
-            this.throttleStage++
-            if (this.throttleStage < 4) return
+            if (this.throttleStage++ < 4) return
+            const { width, column } = this.state
+            const { data } = this.props
+            this.hasSlided = true
             this.throttleStage = 0
-            let totalWidth = this.state.column.width * this.props.data.columns.length
-            let x = e.data.global.x
-            let relativePos = Math.floor(x / this.state.width * totalWidth / this.state.column.width)
+            const totalWidth = column.width * data.columns.length
+            const x = e.data.global.x + this.sliderOffset
+            const relativePos = Math.floor(x / width * totalWidth / column.width)
             this.props.functions.selectColumn(relativePos, true)
         }
     }
 
     render() {
-        let s = this.state
-        const { width, timelineHeight, height} = this.state
-        const cache = this.cache.cache
+        const { width, timelineHeight, height } = this.state
         const { data, functions } = this.props
+        const cache = this.cache.cache
         const sizes = this.state.column
         const xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
-        let switcher = false
-        let counter = 0
         const beatMarks = Number(data.settings.beatMarks.value)
         const counterLimit = beatMarks === 0 ? 11 : 4 * beatMarks - 1
         const relativeColumnWidth = width / data.columns.length
+        let switcher = false
+        let counter = 0
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > width) stageSize = width
         const stagePosition = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
@@ -175,16 +175,14 @@ export default class ComposerCanvas extends Component {
                     pointermove={(e) => this.handleStageSlide(e)}
                 >
                     {data.columns.map((column, i) => {
-                        if (counter > counterLimit) {
+                        if (counter++ > counterLimit) {
                             switcher = !switcher
                             counter = 0
                         }
-                        counter++
                         if (!isVisible(i, data.selected)) return null
-                        let tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
-                        let standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
-                        let standardBg = standardCache[Number(switcher)] // boolean is 1 or 0
-                        let background = column.tempoChanger === 0 ? standardBg : tempoChangersCache[column.tempoChanger]
+                        const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
+                        const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
+                        const background = column.tempoChanger === 0 ? standardCache[Number(switcher)] : tempoChangersCache[column.tempoChanger]
                         return <Column
                             cache={cache}
                             key={i}
@@ -206,42 +204,40 @@ export default class ComposerCanvas extends Component {
                 <div className="timeline-button" onClick={() => this.handleBreakpoints(-1)}>
                     <FaStepBackward />
                 </div>
-                <div className="timeline-button" onClick={() => this.handleBreakpoints(1)}>
+                <div className="timeline-button" onClick={() => this.handleBreakpoints(1)} style={{marginLeft: 0}}>
                     <FaStepForward />
                 </div>
-                <Stage
-                    width={s.width}
-                    height={timelineHeight}
-                    options={{ antialias: true, autoDensity: true,backgroundColor: 0x515c6f }}
-                    raf={false}
-                    renderOnComponentChange={true}
-                >   
-                    <Container
-                        width={this.state.width}
-                        height={this.state.timelineHeight}
-                        interactive={true}
-                        pointertap={(e) => this.handleClick(e, "click")}
-                        pointerdown={(e) => this.handleClick(e, "down")}
-                        pointerup={(e) => this.handleClick(e, "up")}
-                        pointermove={this.handleSlide}
+                <div className='timeline-scroll'>
+                    <Stage
+                        width={width}
+                        height={timelineHeight}
+                        options={{ antialias: true, autoDensity: true, backgroundColor: 0x515c6f }}
+                        raf={false}
+                        renderOnComponentChange={true}
                     >
-                        <Graphics draw={(e) => { fillX(e, this.state.width, this.state.timelineHeight) }}/>
-                        {data.breakpoints.map(breakpoint => {
-                            return <Sprite
-                                image={cache.breakpoints[0]}
-                                key={breakpoint}
-                                x={relativeColumnWidth * breakpoint}
-                            >
-                            </Sprite>
-                        })}
-                    </Container>
-
-                    <Graphics draw={(e) => drawStage(e, stageSize, this.state.timelineHeight)} x={stagePosition} y={2} />
-
-
-                </Stage>
+                        <Container
+                            width={width}
+                            height={timelineHeight}
+                            interactive={true}
+                            pointerdown={(e) => this.handleClick(e, "down")}
+                            pointerup={(e) => this.handleClick(e, "up")}
+                            pointermove={this.handleSlide}
+                        >
+                            <Graphics draw={(e) => { fillX(e, width, timelineHeight) }} />
+                            {data.breakpoints.map(breakpoint => {
+                                return <Sprite
+                                    image={cache.breakpoints[0]}
+                                    key={breakpoint}
+                                    x={relativeColumnWidth * breakpoint}
+                                >
+                                </Sprite>
+                            })}
+                        </Container>
+                        <Graphics draw={(e) => drawStage(e, stageSize, timelineHeight)} x={stagePosition} y={2} />
+                    </Stage>
+                </div>
                 <div className="timeline-button" onClick={functions.toggleBreakpoint}>
-                    {data.breakpoints.includes(data.selected) ? <FaMinusCircle/> : <FaPlusCircle />}
+                    {data.breakpoints.includes(data.selected) ? <FaMinusCircle /> : <FaPlusCircle />}
                 </div>
             </div>
         </div>
@@ -253,6 +249,20 @@ function fillX(g, width, height) {
     g.beginFill(0x515c6f, 1)
     g.drawRect(0, 0, width, height)
 }
+/*
+                    <div 
+                        className='timeline-thumb' 
+                        onPointerMove={this.handleSlide2}
+                        onPointerDown={(e) => this.sliderSelected = false}
+                        onPointerUp={(e) => this.sliderSelected = true}
+                        style={
+                            {
+                                width:`${ (NumOfColumnsPerCanvas + 1) / data.columns.length  * 100}%`,
+                                left: (data.selected - (NumOfColumnsPerCanvas / 2 - 1)) / data.columns.length * 100 + '%'
+                            }}>
+                    </div>
+
+*/
 function drawStage(g, width, height) {
     g.clear()
     g.lineStyle(3, 0x1a968b, 0.8)
@@ -271,8 +281,8 @@ function Column(props) {
             interactiveChildren={false}
         >
             {isSelected || isToolsSelected ? <Sprite
-                image={isToolsSelected && !isSelected? cache.standard[3] : cache.standard[2]}
-                alpha={isToolsSelected ?0.4 : 0.6}
+                image={isToolsSelected && !isSelected ? cache.standard[3] : cache.standard[2]}
+                alpha={isToolsSelected ? 0.4 : 0.6}
                 zIndex={1}
             >
             </Sprite> : null}

@@ -110,12 +110,9 @@ select{
     flex-direction: row;
     justify-content: space-between;
     height: 100%;
-    margin: 0.2rem;
+    margin: 0.2rem 0;
     margin-top: 0;
     align-items: center;
-}
-.timeline-wrapper :first-child {
-    margin:  0.2rem 0;
 }
 .timeline-button{
     height: 100%;
@@ -133,8 +130,20 @@ select{
 .fill-x{
     width: 100%;
 }
-.timeline-wrapper canvas{
-    width: calc(100% - 6.6rem) !important;
+.timeline-scroll{
+    display: flex;
+    width: 100%;
+}
+.timeline-thumb{
+    height: 100%;
+    border-radius: 0.5rem;
+    border: solid 3px #1a968b;
+    position: absolute;
+    top: 0;
+}
+.timeline-scroll canvas{
+    width: 100% !important;
+    border-radius: 0.3rem;
 }
 .settings-row :is(input,select){
     background-color: var(--primary);
