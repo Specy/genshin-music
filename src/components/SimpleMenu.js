@@ -5,12 +5,10 @@ import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 
 
-export function SimpleMenu(props) {
+export function SimpleMenu({functions, children, className}) {
     const [open, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState("Settings")
-    const { functions, children } = props
     const { changePage, toggleMenuVisible } = functions
-    
     // eslint-disable-next-line
     const toggleMenu = (override) => {
         if (typeof override !== "boolean") override = undefined
@@ -20,7 +18,7 @@ export function SimpleMenu(props) {
     }
     // eslint-disable-next-line
     const selectSideMenu = (selection) => {
-        if (selection === this.state.selectedMenu && this.state.open) {
+        if (selection === selectedMenu && open) {
             return setOpen(false)
         }
         setSelectedMenu(selection)
@@ -28,7 +26,7 @@ export function SimpleMenu(props) {
     }
 
 
-    return <div className="menu-wrapper" >
+    return <div className={"menu-wrapper " + (className ? className : '')} >
         <div className="menu menu-visible" style={{ justifyContent: 'flex-end' }}>
 
             {children}

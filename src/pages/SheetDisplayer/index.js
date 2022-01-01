@@ -7,15 +7,25 @@ import { ComposerToRecording } from 'lib/Utils'
 export default function SheetDisplayer(props) {
     const [songs, setSongs] = useState([])
     const [sheet, setSheet] = useState([])
-    const [framesPerRow, setFramesPerRow] = useState(7)
+    const [framesPerRow, setFramesPerRow] = useState(15)
     const [currentSong, setCurrentSong] = useState({})
     const [selectedSongType, setSelectedSongType] = useState('recorded')
+
+    function setFrames(amount){
+        const newAmount = framesPerRow + amount
+        const frame = document.querySelector('.frame-outer')
+        if(!frame || newAmount < 1) return
+        const width = frame.getBoundingClientRect().width 
+        if(width < 50 && amount === 1) return
+        setFramesPerRow(newAmount)
+    }
     useEffect(() => {
         async function load() {
             setSongs(await DB.getSongs())
         }
         load()
     }, [])
+
     function handleClick(song) {
         setCurrentSong(song)
         let lostReference = JSON.parse(JSON.stringify(song))
@@ -46,9 +56,9 @@ export default function SheetDisplayer(props) {
     }
     return <div className='displayer-page'>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-            <SimpleMenu functions={{ changePage: props.changePage }} />
-            <div style={{display:'flex', flexDirection:'column'}}>
-                <div className='displayer-songs-wrapper' style={{ marginTop: '0' }}>
+            <SimpleMenu functions={{ changePage: props.changePage }} className='noprint' />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className='displayer-songs-wrapper noprint' style={{ marginTop: '0' }}>
                     <div className="tab-selector-wrapper">
                         <button
                             className={selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
@@ -78,21 +88,27 @@ export default function SheetDisplayer(props) {
 
                     </div>
                 </div>
-                <div className='displayer-per-row'>
-                    Per row: {framesPerRow}
-                    <button className='displayer-plus-minus'
-                        onClick={() => framesPerRow > 1 && setFramesPerRow(framesPerRow - 1)}>
-                        -
+                <div className='displayer-buttons-wrapper noprint'>
+                    <button onClick={() => window.print()} className='genshin-button'>
+                        Print as PDF
                     </button>
-                    <button className='displayer-plus-minus'
-                        onClick={() => setFramesPerRow(framesPerRow + 1)}>
-                        +
-                    </button>
-
+                    <div style={{display:'flex', alignItems:'center'}}>
+                        Per row: {framesPerRow}
+                        <button className='displayer-plus-minus'
+                            onClick={() => setFrames(-1)}>
+                            -
+                        </button>
+                        <button className='displayer-plus-minus'
+                            onClick={() => setFrames(1)}>
+                            +
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <div style={{ color: 'var(--whitish)' }}>
+            <h1 className='onprint'>
+                {currentSong?.name}
+            </h1>
+            <div style={{ color: 'var(--whitish)' }} className='noprint'>
                 <h2>{currentSong.name || 'No song selected'}</h2>
                 <div style={{ color: 'var(--hint-main)' }}>
                     Remember that you can learn a song with the interactive
@@ -106,6 +122,7 @@ export default function SheetDisplayer(props) {
 
                 {sheet.map((frame, i) =>
                     <SheetFrame
+
                         key={i}
                         framesPerRow={framesPerRow}
                         frame={frame}
