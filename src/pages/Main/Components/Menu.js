@@ -6,7 +6,7 @@ import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
 import { appName, isTwa } from "appConfig"
-import { songStore } from './SongStore'
+import { songStore } from '../SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'

@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { observe } from 'mobx'
 import { FaSyncAlt, FaStop } from 'react-icons/fa'
 import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } from "appConfig"
-import Note from "./Note"
+import Note from "./Components/Note"
 import { songStore } from './SongStore'
 import { delayMs, ComposerToRecording, NotesTable } from "lib/Utils"
 import "./Keyboard.css"

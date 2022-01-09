@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import ComposerNote from "./ComposerNote"
-import MultiSwitch from "./MultiSwitch"
+import ComposerNote from "./Components/ComposerNote"
+import MultiSwitch from "./Components/MultiSwitch"
 import { appName, keyNames, pitchArr , layoutImages,layoutData } from "appConfig"
 class ComposerKeyboard extends Component {
     constructor(props) {

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Keyboard from "./Keyboard"
-import Menu from "./Menu"
+import Menu from "./Components/Menu"
 import { DB } from 'Database';
 import { songStore } from './SongStore'
 import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "lib/Utils"

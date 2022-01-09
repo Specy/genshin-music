@@ -7,7 +7,7 @@
     border-left: solid 2px var(--detail);
     align-items: center;
     flex-direction: column;
-    padding-top: 2vh;
+    padding-top: 0.5rem;
     max-height: 100%;
     overflow-y: auto;
     z-index: 3;
@@ -302,6 +302,7 @@
     }
     .menu{
         width: 3.6rem;
+        padding-top: 0.3rem;
     }
     .menu-item{
         width: 2.8rem;
