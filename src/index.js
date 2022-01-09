@@ -7,7 +7,7 @@ import Changelogpage from 'pages/Changelog'
 import Partners from 'pages/Partners';
 import Home from 'pages/Home';
 import Help from 'pages/Help';
-import SheetDisplayer from 'pages/SheetDisplayer';
+import SheetVisualizer from 'pages/SheetVisualizer';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/Utils"
@@ -213,8 +213,8 @@ class Index extends Component {
 						<Route exact path='/Help'>
 							<Help changePage={this.changePage} />
 						</Route>
-						<Route exact path='/SheetDisplayer'>
-							<SheetDisplayer changePage={this.changePage} />
+						<Route exact path='/SheetVisualizer'>
+							<SheetVisualizer changePage={this.changePage} />
 						</Route>
 					</>
 				}

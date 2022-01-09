@@ -61,12 +61,13 @@ function ChangelogRow(props) {
 const changelogs = [
     {
         version: '2.2',
-        title: 'Sheet displayer',
+        title: 'Sheet visualizer',
         date: '2021 - 3/12',
         changes: [
-            'Added sheet displayer',
+            'Added sheet visualizer',
             'Changed timeline behaviour when dragging the scroll bar',
-            'fixed UI issues and bug fixes',
+            `Changed import conversion algorithm for converting recorded to composed songs`,
+            'Fixed UI issues and bug fixes'
         ]
     },
     {

@@ -1,24 +1,26 @@
-import './SheetDisplayer.css'
+import './SheetVisualizer.css'
 import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
 import { DB } from 'Database'
 import { appName } from 'appConfig'
 import { ComposerToRecording } from 'lib/Utils'
-export default function SheetDisplayer(props) {
+
+export default function SheetVisualizer(props) {
     const [songs, setSongs] = useState([])
     const [sheet, setSheet] = useState([])
-    const [framesPerRow, setFramesPerRow] = useState(15)
+    const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState({})
     const [selectedSongType, setSelectedSongType] = useState('recorded')
 
-    function setFrames(amount){
+    function setFrames(amount) {
         const newAmount = framesPerRow + amount
         const frame = document.querySelector('.frame-outer')
-        if(!frame || newAmount < 1) return
-        const width = frame.getBoundingClientRect().width 
-        if(width < 50 && amount === 1) return
+        if (!frame || newAmount < 1) return
+        const width = frame.getBoundingClientRect().width
+        if (width < 50 && amount === 1) return
         setFramesPerRow(newAmount)
     }
+
     useEffect(() => {
         async function load() {
             setSongs(await DB.getSongs())
@@ -92,7 +94,7 @@ export default function SheetDisplayer(props) {
                     <button onClick={() => window.print()} className='genshin-button'>
                         Print as PDF
                     </button>
-                    <div style={{display:'flex', alignItems:'center'}}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         Per row: {framesPerRow}
                         <button className='displayer-plus-minus'
                             onClick={() => setFrames(-1)}>

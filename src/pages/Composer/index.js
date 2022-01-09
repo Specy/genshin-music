@@ -469,7 +469,8 @@ class Composer extends Component {
         const state = this.state
         song = JSON.parse(JSON.stringify(song)) //lose reference
         if (!song.data.isComposedVersion) {
-            song = RecordingToComposed(song)
+            if(song.bpm <= 220)  song.bpm *= 2
+            song = RecordingToComposed(song,1)
             song.name += " - Composed"
         }
         if (this.changes !== 0) {

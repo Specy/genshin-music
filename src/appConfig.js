@@ -1,19 +1,19 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][0]
-const appVersion = '2.1.1'
+const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
+const appVersion = '2.2'
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin' 
-    ? ` - Added help page
-        - Added note icons
-        - Added back practice animation
-        - Changed zither sounds
-        - Fixed bugs and UI issues
+    ? ` - Added sheet visualizer
+        - Changed timeline behaviour when dragging the scroll bar
+        - Changed import conversion algorithm for converting recorded to composed songs
+        - Fixed UI issues and bug fixes
     `.trim()
-    : ` - Added help page
-        - Added back practice animation
-        - Fixed bugs and UI issues
+    : ` - Added sheet visualizer
+        - Changed timeline behaviour when dragging the scroll bar
+        - Changed import conversion algorithm for converting recorded to composed songs
+        - Fixed UI issues and bug fixes
     `.trim()
 
-const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetDisplayer"]
+const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetVisualizer"]
 
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",

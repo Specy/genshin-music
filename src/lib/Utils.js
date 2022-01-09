@@ -371,54 +371,91 @@ function oldSkyToNewFormat(song) {
 	return result
 }
 
-function RecordingToComposed(song) {
+function RecordingToComposed(song,precision = 4) {
 	let bpmToMs = Math.floor(60000 / song.bpm)
 	let composed = new ComposedSong(song.name, [])
 	composed.bpm = song.bpm
 	composed.pitch = song.pitch
 	let notes = song.notes
 	//remove duplicates
-
 	let converted = []
-	let grouped = groupByNotes(notes, bpmToMs / 9)
-	let combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
-	for (let i = 0; i < grouped.length; i++) {
-		let column = new Column()
-		column.notes = grouped[i].map(note => {
-			let columnNote = new ColumnNote(note[0])
-			if (note[2] === 0) columnNote.layer = "100"
-			if (note[2] === 1) columnNote.layer = "100"
-			if (note[2] === 2) columnNote.layer = "010"
-			if (note[2] === 3) columnNote.layer = "110"
-			if (note[2] === undefined) columnNote.layer = "100"
-			return columnNote
-		})
-		let next = grouped[i + 1] || [[0, 0, 0]]
-		let difference = next[0][1] - grouped[i][0][1]
-		let paddingColumns = []
-		while (difference >= combinations[3]) {
-			if (difference / combinations[0] >= 1) {
-				difference -= combinations[0]
-				paddingColumns.push(0)
-			} else if (difference / combinations[1] >= 1) {
-				difference -= combinations[1]
-				paddingColumns.push(1)
-			} else if (difference / combinations[2] >= 1) {
-				difference -= combinations[2]
-				paddingColumns.push(2)
-			} else if (difference / combinations[3] >= 1) {
-				difference -= combinations[3]
-				paddingColumns.push(3)
-			}
-		}
-		let finalPadding = []
-		column.tempoChanger = paddingColumns.shift() || 0
-		paddingColumns = paddingColumns.forEach((col, i) => {
+	if(precision === 1 ){
+        let groupedNotes = []
+		let previousTime = notes[0][1]
+        while (notes.length > 0) {
+            let row = [notes.shift()]
+            let amount = 0
+            for (let i = 0; i < notes.length; i++) {
+                if (row[0][1] > notes[i][1] - bpmToMs / 9) amount++
+            }
+            groupedNotes.push([...row, ...notes.splice(0, amount)])
+        }
+        let columns = []
+        groupedNotes.forEach(notes => {
+            let note = notes[0]
+            if (!note) return
+            let elapsedTime = note[1] - previousTime
+            previousTime = note[1]
+            let emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
+            if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
+            let noteColumn = new Column()
+            noteColumn.notes = notes.map(note => {
+                return new ColumnNote(note[0], numberToLayer(note[2] || 0))
+            })
+            columns.push(noteColumn)
+        })
+        columns.forEach(column => { //merges notes of different layer
+            let groupedNotes = groupByIndex(column)
+            column.notes = groupedNotes.map(group => {
+                group[0].layer = mergeLayers(group)
+                return group[0]
+            })
+        })
+		converted = columns
+	}else{
+		let grouped = groupByNotes(notes, bpmToMs / 9)
+		let combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
+		for (let i = 0; i < grouped.length; i++) {
 			let column = new Column()
-			column.tempoChanger = col
-			finalPadding.push(column)
-		})
-		converted.push(column, ...finalPadding)
+			column.notes = grouped[i].map(note => {
+				let columnNote = new ColumnNote(note[0])
+				if (note[2] === 0) columnNote.layer = "100"
+				if (note[2] === 1) columnNote.layer = "100"
+				if (note[2] === 2) columnNote.layer = "010"
+				if (note[2] === 3) columnNote.layer = "110"
+				if (note[2] === undefined) columnNote.layer = "100"
+				return columnNote
+			})
+			let next = grouped[i + 1] || [[0, 0, 0]]
+			let difference = next[0][1] - grouped[i][0][1]
+			let paddingColumns = []
+			while (difference >= combinations[3]) {
+				if (difference / combinations[0] >= 1) {
+					difference -= combinations[0]
+					paddingColumns.push(0)
+				} else if (difference / combinations[1] >= 1 ) {
+					difference -= combinations[1]
+					if(precision <= 1) continue
+					paddingColumns.push(1)	
+				} else if (difference / combinations[2] >= 1) {
+					difference -= combinations[2]
+					if(precision <= 2) continue
+					paddingColumns.push(2)
+				} else if (difference / combinations[3] >= 1) {
+					difference -= combinations[3]
+					if(precision <= 3) continue
+					paddingColumns.push(3)
+				}
+			}
+			let finalPadding = []
+			column.tempoChanger = paddingColumns.shift() || 0
+			paddingColumns = paddingColumns.forEach((col, i) => {
+				let column = new Column()
+				column.tempoChanger = col
+				finalPadding.push(column)
+			})
+			converted.push(column, ...finalPadding)
+		}
 	}
 	composed.columns = converted
 	return composed

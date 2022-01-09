@@ -79,8 +79,8 @@ export default function Home(props) {
             <PageRedirect onClick={() => to("Help")}>
                 Help
             </PageRedirect>
-            <PageRedirect onClick={() => to("SheetDisplayer")}>
-                Sheet displayer
+            <PageRedirect onClick={() => to("SheetVisualizer")}>
+                Sheet visualizer
             </PageRedirect>
         </div>
         <div className='home-dont-show-again' onClick={() => props.setDontShowHome(!data.canShow)}>
