@@ -158,7 +158,7 @@ function SheetFrame(props) {
 
 function SongRow(props) {
     const { data, current } = props
-    const selectedStyle = current ? { backgroundColor: 'rgb(85, 118, 109)' } : {}
+    const selectedStyle = current ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
     return <div
         className="song-row"
         style={selectedStyle}

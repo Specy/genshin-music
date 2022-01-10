@@ -177,7 +177,6 @@
 }
 .page-redirect-wrapper {
 	margin-top: 0.5rem;
-
 	width: 100%;
 }
 .page-redirect-wrapper button {
@@ -187,8 +186,8 @@
 	color: var(--whitish);
 	padding: 0.4rem 1rem;
 	font-size: 0.9rem;
-	margin-left: 1rem;
-	margin-bottom: 1rem;
+	margin-left: 0.8rem;
+	margin-bottom: 0.8rem;
 	cursor: pointer;
 	transition: all 0.1s linear;
 }

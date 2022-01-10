@@ -45,13 +45,13 @@ class MidiImport extends Component {
                 bpm: Math.floor(bpm * 4) || 220,
                 offset: 0,
                 pitch: pitchArr.includes(key) ? key : 'C',
-            }, () => { if (this.state.midi !== null) this.convertMidi()})
+            }, () => { if (this.state.midi !== null) this.convertMidi() })
         })
         reader.readAsArrayBuffer(file)
     }
 
     convertMidi = () => {
-        const { midi, bpm, offset, includeAccidentals,pitch } = this.state
+        const { midi, bpm, offset, includeAccidentals, pitch } = this.state
         let tracks = midi.tracks.filter(track => track.selected)
         let notes = []
         let numberOfAccidentals = 0
@@ -68,9 +68,9 @@ class MidiImport extends Component {
                     note: convertedNote.note,
                     layer: track.layer
                 }
-                if(convertedNote.isAccidental){
-                    numberOfAccidentals ++
-                    track.numberOfAccidentals ++
+                if (convertedNote.isAccidental) {
+                    numberOfAccidentals++
+                    track.numberOfAccidentals++
                 }
                 if (note.note !== null) {
                     if (includeAccidentals || !convertedNote.isAccidental) {
@@ -78,7 +78,7 @@ class MidiImport extends Component {
                     }
                 } else {
                     outOfRange++
-                    track.numberOfOutOfRange ++
+                    track.numberOfOutOfRange++
                 }
             })
         })
@@ -150,7 +150,7 @@ class MidiImport extends Component {
     changeOffset = (value) => {
         value = parseInt(value)
         if (!Number.isInteger(value)) value = 0
-        if(this.state.offset === value) return
+        if (this.state.offset === value) return
         this.setState({
             offset: value
         }, () => { if (this.state.midi !== null) this.convertMidi() })
@@ -169,7 +169,7 @@ class MidiImport extends Component {
     changeBpm = (value) => {
         value = parseInt(value)
         if (!Number.isInteger(value)) value = 0
-        if(this.state.bpm === value) return
+        if (this.state.bpm === value) return
         this.setState({
             bpm: value
         }, () => { if (this.state.midi !== null) this.convertMidi() })
@@ -201,69 +201,71 @@ class MidiImport extends Component {
                 </button>
             </div>
             <table className='separator-border' style={{ width: "100%" }}>
-                <tr>
-                    <td>
-                        <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
-                    </td>
-                    <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems:"center" }}>
-                    <NumberInput
-                            value={bpm}
-                            changeValue={changeBpm}
-                            delay={600}
-                            step={5}
-                        />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style={{ marginRight: '0.5rem' }}>Scale notes by: </div>
-                    </td>
-                    <td>
-                        <NumberInput
-                            value={offset}
-                            changeValue={changeOffset}
-                            delay={600}
-                            step={1}
-                        />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style={{ marginRight: '0.5rem' }}>Pitch:</div>
-                    </td>
-                    <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems:"center" }}>
-                        <select
-                            className='midi-select'
-                            value={pitch}
-                            onChange={(event) => changePitch(event.target.value)}
-                            style={{ backgroundColor: '#576377', width: '5rem' }}
-                        >
-                            <option value="C">C</option>
-                            <option value="Db">Db</option>
-                            <option value="D">D</option>
-                            <option value="Eb">Eb</option>
-                            <option value="E">E</option>
-                            <option value="F">F</option>
-                            <option value="Gb">Gb</option>
-                            <option value="G">G</option>
-                            <option value="Ab">Ab</option>
-                            <option value="A">A</option>
-                            <option value="Bb">Bb</option>
-                            <option value="B">B</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style={{ marginRight: '0.5rem' }}>Include accidentals:</div>
-                    </td>
-                    <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <input type='checkbox'
-                            checked={includeAccidentals}
-                            onChange={this.toggleAccidentals}
-                        />
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
+                        </td>
+                        <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems: "center" }}>
+                            <NumberInput
+                                value={bpm}
+                                changeValue={changeBpm}
+                                delay={600}
+                                step={5}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style={{ marginRight: '0.5rem' }}>Scale notes by: </div>
+                        </td>
+                        <td>
+                            <NumberInput
+                                value={offset}
+                                changeValue={changeOffset}
+                                delay={600}
+                                step={1}
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style={{ marginRight: '0.5rem' }}>Pitch:</div>
+                        </td>
+                        <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems: "center" }}>
+                            <select
+                                className='midi-select'
+                                value={pitch}
+                                onChange={(event) => changePitch(event.target.value)}
+                                style={{ backgroundColor: '#576377', width: '5rem' }}
+                            >
+                                <option value="C">C</option>
+                                <option value="Db">Db</option>
+                                <option value="D">D</option>
+                                <option value="Eb">Eb</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="Gb">Gb</option>
+                                <option value="G">G</option>
+                                <option value="Ab">Ab</option>
+                                <option value="A">A</option>
+                                <option value="Bb">Bb</option>
+                                <option value="B">B</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style={{ marginRight: '0.5rem' }}>Include accidentals:</div>
+                        </td>
+                        <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <input type='checkbox'
+                                checked={includeAccidentals}
+                                onChange={this.toggleAccidentals}
+                            />
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             {midi !== null && <div className='midi-column separator-border' style={{ width: '100%' }}>
                 <div className='midi-column' style={{ width: '100%' }}>
@@ -280,21 +282,23 @@ class MidiImport extends Component {
             </div>
             }
             {midi !== null && <table>
-                <tr>
-                    <td>Total notes: </td>
-                    <td />
-                    <td>{totalNotes}</td>
-                </tr>
-                <tr>
-                    <td>Accidentals: </td>
-                    <td />
-                    <td>{accidentals}</td>
-                </tr>
-                <tr>
-                    <td>Out of range: </td>
-                    <td />
-                    <td>{outOfRange}</td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>Total notes: </td>
+                        <td />
+                        <td>{totalNotes}</td>
+                    </tr>
+                    <tr>
+                        <td>Accidentals: </td>
+                        <td />
+                        <td>{accidentals}</td>
+                    </tr>
+                    <tr>
+                        <td>Out of range: </td>
+                        <td />
+                        <td>{outOfRange}</td>
+                    </tr>
+                </tbody>
             </table>
             }
         </div>
@@ -359,7 +363,7 @@ export default MidiImport
 function NumberInput(props) {
     const { changeValue, value, delay = 500, step = 1 } = props
     const [elementValue, setElementValue] = useState(value)
-    const debounced = useDebounce(elementValue, delay) 
+    const debounced = useDebounce(elementValue, delay)
     useEffect(() => {
         changeValue(debounced)
         // eslint-disable-next-line react-hooks/exhaustive-deps
