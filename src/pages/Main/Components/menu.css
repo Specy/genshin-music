@@ -133,6 +133,7 @@
 }
 .library-search-btn{
     background-color: #d3bd8e;
+    color: black;
     height:2.2rem;
     width: 2.2rem;
     border: none;
@@ -183,6 +184,8 @@
     padding: 0.4rem;
     cursor: pointer;
     margin: 0;
+    margin-bottom: -1px;
+    transition: all 0.2s;
 }
 .tab-selected{
     background-color: #ad9c85;

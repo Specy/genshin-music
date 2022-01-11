@@ -25,13 +25,12 @@ class Composer extends Component {
     constructor(props) {
         super(props)
 
-        let settings = this.getSettings()
+        const settings = this.getSettings()
         this.playbackInterval = undefined
         this.audioContext = audioContext
         this.reverbNode = undefined
         this.reverbVolumeNode = undefined
         this.recorder = new AudioRecorder()
-
         this.state = {
             instrument: new Instrument(),
             layers: [new Instrument(), new Instrument()],
@@ -46,6 +45,7 @@ class Composer extends Component {
             midiVisible: false,
             isRecordingAudio: false
         }
+        this.state.song.bpm = settings.bpm.value
         this.mounted = false
         this.copiedColums = []
         this.changes = 0
@@ -729,6 +729,8 @@ class Composer extends Component {
     render() {
         const { state } = this
         const { midiVisible, song } = state
+        //TODO export the menu outside this component so it doesnt get re rendered at every change
+        const songLength = calculateLength(song.columns, state.settings.bpm.value, song.selected)
         const menuData = {
             songs: state.songs,
             currentSong: state.song,
@@ -857,9 +859,9 @@ class Composer extends Component {
                     {song.name}
                 </div>
                 <div>
-                    {formatMillis(calculateLength(this.state.song, this.state.song.selected))}
+                    {formatMillis(songLength.current)}
                     /
-                    {formatMillis(calculateLength(this.state.song, this.state.song.columns.length))}
+                    {formatMillis(songLength.total)}
                 </div>
             </div>
         </div>
@@ -874,15 +876,20 @@ function formatMillis(millis) {
             : minutes + ":" + (seconds < 10 ? "0" : "") + seconds
     )
 }
-function calculateLength(song, end) {
-    let columns = song.columns
-    let bpmPerMs = Math.floor(60000 / song.bpm)
+function calculateLength(columns, bpm, end) {
+    const bpmPerMs = Math.floor(60000 / bpm)
     let totalLength = 0
-    columns.forEach((column, i) => {
-        if (i > end) return
-        totalLength += bpmPerMs * TempoChangers[column.tempoChanger].changer
-    })
-    return totalLength
+    let currentLength = 0
+    let increment = 0
+    for(let i = 0; i< columns.length; i++){
+        increment = bpmPerMs * TempoChangers[columns[i].tempoChanger].changer
+        if(i < end) currentLength += increment
+        totalLength += increment
+    }
+    return {
+        total: totalLength,
+        current: currentLength
+    }
 }
 
 function replaceAt(string, index, replacement) {

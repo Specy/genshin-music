@@ -17,7 +17,7 @@ class Database{
         return await this.collections.songs.findOne(query) !== undefined
     }
     async updateSong(query,data){
-        return this.dbCol.songs.update(query, data)
+        return this.collections.songs.update(query, data)
     }
     addSong(song){
         return this.collections.songs.insert(song)

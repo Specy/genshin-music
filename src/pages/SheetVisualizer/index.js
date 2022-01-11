@@ -59,7 +59,7 @@ export default function SheetVisualizer(props) {
     return <div className='displayer-page'>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SimpleMenu functions={{ changePage: props.changePage }} className='noprint' />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div>
                 <div className='displayer-songs-wrapper noprint' style={{ marginTop: '0' }}>
                     <div className="tab-selector-wrapper">
                         <button

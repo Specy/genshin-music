@@ -6,6 +6,7 @@
 	--note-color: #fff9ef;
 	--note-border: #d9d6c8;
 	--note-text: #63aea7;
+	--accent: #63aea7;
 	--text-color: #aaaa82;
 	--composer-tool: #d4c199;
 	--clicked-note: #8fedd9;
@@ -38,6 +39,7 @@ body {
 }
 body{
 	position: absolute;
+	-webkit-text-size-adjust: none;
 }
 
 
@@ -273,7 +275,7 @@ body {
 }
 @keyframes overlay-show {
 	0%{opacity: 0.5;}
-	100%{opacity: 1;}
+	to{opacity: 1;}
 }
 .prompt-overlay-hidden{
 	opacity: 0;

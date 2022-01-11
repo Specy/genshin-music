@@ -278,14 +278,12 @@ class Menu extends Component {
                 <MenuPanel title="Settings" visible={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
                         return <SettingsRow
-                            key={key + data.value}
+                            key={key}
                             objKey={key}
                             data={data}
                             changeVolume={functions.changeVolume}
                             update={handleSettingChange}
-                        >
-
-                        </SettingsRow>
+                        />
                     })}
                     <div style={{ marginTop: '1rem' }}>
                         {this.state.isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}

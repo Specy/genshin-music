@@ -1,27 +1,31 @@
-import {useState } from 'react'
-
-export default function SettingsRow(props) {
-    const { data, update, objKey, changeVolume } = props
+import { useState, useEffect } from 'react'
+import Switch from 'components/Switch'
+export default function SettingsRow({ data, update, objKey, changeVolume }) {
     const [valueHook, setter] = useState(data.value)
     const [volumeHook, setterVolume] = useState(data.volume)
+    
+    useEffect(() => {
+        setter(data.value)
+    },[data.value])
+
     function handleChange(e) {
-        let el = e.target
-        let value = data.type === "checkbox" ? el.checked : el.value
+        const el = e.target
+        let value = el.value
         if (data.type === "number") {
             value = Number(value)
-            e.target.value = "" //have to do this to remove a react bug that adds a 0 at the start
+            el.value = "" //have to do this to remove a react bug that adds a 0 at the start
             if (value < data.threshold[0] || value > data.threshold[1]) {
                 return
             }
         }
-        if(el.type === 'checkbox'){
-            data.value = value
-            let obj = {
-                key: objKey,
-                data
-            }
-            update(obj)
-        }
+        setter(value)
+    }
+    function handleCheckbox(value){
+        data.value = value
+        update({
+            key: objKey,
+            data
+        }) 
         setter(value)
     }
     function sendChange() {
@@ -66,16 +70,20 @@ export default function SettingsRow(props) {
             </select>
             : null
         }
-        {["number", "text", "checkbox"].includes(data.type) ?
+        {["number", "text"].includes(data.type) &&
             <input
                 type={data.type}
                 value={valueHook}
                 placeholder={data.placeholder || ""}
-                checked={valueHook}
-                onChange={handleChange}
                 onBlur={sendChange}
+                onChange={handleChange}
             />
-            : null
+        }
+        {data.type === 'checkbox' && 
+            <Switch 
+                checked={valueHook}
+                onChange={handleCheckbox}
+            />
         }
         {data.type === "instrument"
             ? <div className="instrument-picker">

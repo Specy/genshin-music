@@ -173,14 +173,12 @@ class Menu extends Component {
                 <MenuPanel title="Settings" visible={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
                         return <SettingsRow
-                            key={key + data.value}
+                            key={key}
                             objKey={key}
                             data={data}
                             changeVolume={changeVolume}
                             update={handleSettingChange}
-                        >
-
-                        </SettingsRow>
+                        />
                     })}
                     {!isTwa() && <DonateButton onClick={changePage}/>}
                 </MenuPanel>

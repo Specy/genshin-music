@@ -139,10 +139,11 @@ function NotesTable(length){
 }
 
 function ComposerSongDeSerialization(song) {
-	let obj = {
+	const bpm = Number(song.bpm)
+	const obj = {
 		data: song.data,
 		name: song.name,
-		bpm: song.bpm ?? 220,
+		bpm: isNaN(bpm) ? 220 : bpm,
 		pitch: song.pitch ?? "C",
 		instruments: song.instruments || [instruments[0], instruments[0], instruments[0]],
 		breakpoints: song.breakpoints ?? [],
@@ -151,7 +152,7 @@ function ComposerSongDeSerialization(song) {
 		columns: []
 	}
 	song.columns.forEach(column => {
-		let columnObj = new Column()
+		const columnObj = new Column()
 		columnObj.tempoChanger = column[0]
 		column[1].forEach(note => {
 			columnObj.notes.push(new ColumnNote(note[0], note[1]))
@@ -162,8 +163,8 @@ function ComposerSongDeSerialization(song) {
 }
 
 function ComposerToRecording(song) {
-	let recordedSong = new Song(song.name)
-	let bpmPerMs = Math.floor(60000 / song.bpm)
+	const recordedSong = new Song(song.name)
+	const bpmPerMs = Math.floor(60000 / song.bpm)
 	let totalTime = 100
 	song.columns.forEach(column => {
 		column[1].forEach(note => {
@@ -175,10 +176,11 @@ function ComposerToRecording(song) {
 }
 
 function ComposerSongSerialization(song) {
-	let obj = {
+	const bpm = Number(song.bpm)
+	const obj = {
 		data: song.data,
 		name: song.name,
-		bpm: song.bpm,
+		bpm: isNaN(bpm) ? 220 : bpm,
 		pitch: song.pitch,
 		breakpoints: song.breakpoints,
 		instruments: song.instruments,
@@ -342,8 +344,9 @@ function newSkyFormatToGenshin(song) {
 function oldSkyToNewFormat(song) {
 	let result = new Song("Error")
 	try {
+		const bpm = Number(song.bpm)
 		result = new Song(song.name)
-		result.bpm = song.bpm || 220
+		result.bpm = isNaN(bpm) ? 220 : bpm
 		result.pitch = (pitchArr[song.pitchLevel || 0]) || "C"
 		//remove duplicate notes
 		song.songNotes = song.songNotes.filter((note, index, self) =>

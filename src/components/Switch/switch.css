@@ -1,0 +1,18 @@
+.switch-wrapper{
+    border-radius: 10rem;
+    width: 2.8rem;
+    height: 1.4rem;
+    padding: 0.2rem;
+    background: var(--primary);
+}
+.switch-inner{
+    background-color: var(--hint-main);
+    width: 1rem;
+    height: 1rem;
+    border-radius: 100%;
+    transition: all 0.2s cubic-bezier(0, 0, 0.14, 0.88);
+}
+.switch-inner-on{
+    background-color: var(--accent);
+    margin-left: calc(100% - 1rem);
+}
