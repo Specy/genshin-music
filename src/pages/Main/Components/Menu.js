@@ -285,7 +285,7 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
-                    <div style={{ marginTop: '1rem' }}>
+                    <div style={{ marginTop: '0.2rem', marginBottom: '0.6rem' }}>
                         {this.state.isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     </div>
                     {!isTwa() && <DonateButton onClick={changePage} />}

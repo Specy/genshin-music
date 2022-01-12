@@ -4,13 +4,13 @@ import { Midi } from '@tonejs/midi'
 import { LoggerEvent, pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
 import { appName } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
-import useDebounce from './useDebounce'
+import useDebounce from 'lib/hooks/useDebounce'
 class MidiImport extends Component {
     constructor(props) {
         super(props)
         this.state = {
             fileName: '',
-            midi: null,
+            midi: null, 
             bpm: 220,
             offset: 0,
             pitch: 'C',

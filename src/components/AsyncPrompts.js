@@ -83,7 +83,7 @@ async function asyncPrompt(question) {
     })
 }
 
-async function asyncConfirm(question) {
+async function asyncConfirm(question,cancellable = true) {
     return new Promise(resolve => {
         const overlay = document.createElement("div")
         const container = document.createElement("div")
@@ -125,7 +125,7 @@ async function asyncConfirm(question) {
             if(key === 'Escape') cancelListener()
         }
         function handleOverlay(e){
-            if(e.path[0] === overlay) cancelListener()
+            if(e.path[0] === overlay && cancellable) cancelListener()
         }
         overlay.addEventListener("click",handleOverlay)
         cancel.addEventListener("click", cancelListener)

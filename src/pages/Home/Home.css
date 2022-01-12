@@ -187,8 +187,8 @@
 	color: var(--whitish);
 	padding: 0.4rem 1rem;
 	font-size: 0.9rem;
-	margin-left: 0.8rem;
-	margin-bottom: 0.8rem;
+	margin-left: 0.6rem;
+	margin-bottom: 0.6rem;
 	cursor: pointer;
 	transition: all 0.1s linear;
 }

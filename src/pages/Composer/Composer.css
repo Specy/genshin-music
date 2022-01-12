@@ -150,10 +150,12 @@ select{
     color: white;
     border: none;
     text-align: center;
-
     width: 8rem;
     padding: 0.2rem;
     border-radius: 0.2rem;
+}
+.settings-row .invalid{
+    background-color: var(--red) !important;
 }
 .settings-row :is(input[type=number]),
 .settings-row :is(input[type=text])

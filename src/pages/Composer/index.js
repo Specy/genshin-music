@@ -593,7 +593,7 @@ class Composer extends Component {
             if (this.state.settings.autosave.value) {
                 await this.updateSong(this.state.song)
             } else {
-                let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`)
+                let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`,false)
                 if (confirm) {
                     await this.updateSong(this.state.song)
                 }
@@ -807,7 +807,7 @@ class Composer extends Component {
                 <div className="column fill-x">
                     <div className="top-panel-composer">
                         <div className="buttons-composer-wrapper">
-                            <div className="tool" onClick={() => this.selectColumn(song.selected + 1)}>
+                            <div className="tool" onPointerDown={() => this.selectColumn(song.selected + 1)}>
                                 <FaChevronRight />
                             </div>
                             <div className="tool" onClick={() => this.selectColumn(song.selected - 1)}>
