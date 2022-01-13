@@ -138,7 +138,7 @@ class App extends Component {
 	changeVolume = (obj) => {
         let settings = this.state.settings
         if (obj.key === "instrument") {
-            settings.instrument.volume = obj.value
+			settings.instrument = {...settings.instrument, volume: obj.value}
             this.state.instrument.changeVolume(obj.value)
         }
         this.setState({
@@ -216,7 +216,7 @@ class App extends Component {
 	handleSettingChange = (setting) => {
 		let settings = this.state.settings
 		let data = setting.data
-		settings[setting.key].value = data.value
+		settings[setting.key] = {...settings[setting.key], value: data.value}
 		if (setting.key === "instrument") {
 			this.loadInstrument(data.value)
 		}

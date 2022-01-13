@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload } from 'react-icons/fa';
 import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
-import { appName,isTwa } from 'appConfig'
+import { appName, isTwa } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
+import Memoized from 'components/Memoized';
 
 class Menu extends Component {
     constructor(props) {
@@ -15,12 +16,12 @@ class Menu extends Component {
             open: false,
             selectedMenu: "Settings",
             selectedSongType: "composed",
-        }    
+        }
     }
     componentDidMount() {
         window.addEventListener("keydown", this.handleKeyboard)
     }
-    componentWillUnmount(){
+    componentWillUnmount() {
         window.removeEventListener("keydown", this.handleKeyboard)
     }
     handleKeyboard = (event) => {
@@ -29,7 +30,7 @@ class Menu extends Component {
         document.activeElement?.blur()
         switch (key) {
             case "Escape": {
-                if(this.state.open) this.props.functions.toggleMenuVisible()
+                if (this.state.open) this.props.functions.toggleMenuVisible()
                 this.setState({ open: false })
                 break
             }
@@ -81,11 +82,14 @@ class Menu extends Component {
         fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
+    updateSong = () => {
+      this.props.functions.updateSong(this.props.data.currentSong)  
+    }
     render() {
         const { data, functions } = this.props
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         let selectedMenu = this.state.selectedMenu
-        const { loadSong, removeSong, updateSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility } = functions
+        const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility } = functions
         let songFunctions = {
             loadSong: loadSong,
             removeSong: removeSong,
@@ -99,17 +103,25 @@ class Menu extends Component {
         return <div className="menu-wrapper">
             <div className={menuClass}>
                 <MenuClose action={this.toggleMenu} />
-                <MenuItem type="Save" action={() => updateSong(data.currentSong)} className={hasUnsaved}>
-                    <FaSave className="icon" />
+                <MenuItem type="Save" action={this.updateSong} className={hasUnsaved}>
+                    <Memoized>
+                        <FaSave className="icon" />
+                    </Memoized>
                 </MenuItem>
                 <MenuItem type="Songs" action={this.selectSideMenu}>
-                    <FaMusic className="icon" />
+                    <Memoized>
+                        <FaMusic className="icon" />
+                    </Memoized>
                 </MenuItem>
                 <MenuItem type="Settings" action={this.selectSideMenu}>
-                    <FaCog className="icon" />
+                    <Memoized>
+                        <FaCog className="icon" />
+                    </Memoized>
                 </MenuItem>
                 <MenuItem type="Home" action={() => changePage("home")}>
-                    <FaHome className="icon" />
+                    <Memoized>
+                        <FaHome className="icon" />
+                    </Memoized>
                 </MenuItem>
             </div>
             <div className={sideClass}>
@@ -138,7 +150,7 @@ class Menu extends Component {
                             Composed
                         </button>
                     </div>
-                    <div className="songs-wrapper" style={{marginBottom: '0.5rem'}}>
+                    <div className="songs-wrapper" style={{ marginBottom: '0.5rem' }}>
                         {this.state.selectedSongType === "recorded"
                             ? songs.map(song => {
                                 return <SongRow
@@ -160,12 +172,12 @@ class Menu extends Component {
                         }
 
                     </div>
-                    <div className="songs-buttons-wrapper" style={{marginTop: 'auto'}}>
-                        <button 
+                    <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
+                        <button
                             className={`genshin-button record-btn ${data.isRecordingAudio ? "selected" : ""}`}
                             onClick={() => functions.startRecordingAudio(!data.isRecordingAudio)}
                         >
-                                {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
+                            {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
                         </button>
                     </div>
 
@@ -180,7 +192,7 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
-                    {!isTwa() && <DonateButton onClick={changePage}/>}
+                    {!isTwa() && <DonateButton onClick={changePage} />}
                 </MenuPanel>
             </div>
         </div>
@@ -200,10 +212,14 @@ function SongRow(props) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => downloadSong(data)}>
-                <FaDownload />
+                <Memoized>
+                    <FaDownload />
+                </Memoized>
             </button>
             <button className="song-button" onClick={() => removeSong(data.name)}>
-                <FaTrash color="#ed4557" />
+                <Memoized>
+                    <FaTrash color="#ed4557" />
+                </Memoized>
             </button>
         </div>
     </div>

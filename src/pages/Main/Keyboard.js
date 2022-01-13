@@ -5,6 +5,7 @@ import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } f
 import Note from "./Components/Note"
 import { songStore } from './SongStore'
 import { delayMs, ComposerToRecording, NotesTable } from "lib/Utils"
+import Memoized from 'components/Memoized'
 import "./Keyboard.css"
 
 class Keyboard extends Component {
@@ -417,7 +418,9 @@ class Keyboard extends Component {
                             songStore.data = returnStopSong()
                         }
                         }>
-                            <FaStop />
+                            <Memoized>
+                                <FaStop />
+                            </Memoized>
                         </button>
                         <input
                             type="range"
@@ -430,7 +433,9 @@ class Keyboard extends Component {
                         <button className="song-button" onClick={() => {
                             this.restartSong()
                         }}>
-                            <FaSyncAlt />
+                            <Memoized>
+                                <FaSyncAlt />
+                            </Memoized>
                         </button>
                         <select 
                             className='slider-select'

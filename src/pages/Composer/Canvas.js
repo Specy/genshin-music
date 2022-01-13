@@ -6,6 +6,7 @@ import "./Composer.css"
 import { ComposerCache } from "./Cache"
 
 import { composerNotePositions, notesPerColumn, appName } from "../../appConfig"
+import Memoized from 'components/Memoized';
 let NumOfColumnsPerCanvas = 35
 
 export default class ComposerCanvas extends Component {
@@ -195,10 +196,14 @@ export default class ComposerCanvas extends Component {
             </Stage>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
                 <div className="timeline-button" onClick={() => this.handleBreakpoints(-1)}>
-                    <FaStepBackward />
+                    <Memoized>
+                        <FaStepBackward />
+                    </Memoized>
                 </div>
                 <div className="timeline-button" onClick={() => this.handleBreakpoints(1)} style={{ marginLeft: 0 }}>
-                    <FaStepForward />
+                    <Memoized>
+                        <FaStepForward />  
+                    </Memoized>
                 </div>
                 <div className='timeline-scroll'>
                     <Stage
@@ -230,7 +235,12 @@ export default class ComposerCanvas extends Component {
                     </Stage>
                 </div>
                 <div className="timeline-button" onClick={functions.toggleBreakpoint}>
-                    {data.breakpoints.includes(data.selected) ? <FaMinusCircle /> : <FaPlusCircle />}
+                    <Memoized>
+                        {data.breakpoints.includes(data.selected) 
+                            ? <FaMinusCircle key='minus'/>
+                            : <FaPlusCircle key='plus'/>
+                        }   
+                    </Memoized>
                 </div>
             </div>
         </div>

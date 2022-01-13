@@ -10,7 +10,7 @@ import ComposerTools from "./Components/ComposerTools"
 import ComposerKeyboard from "./ComposerKeyboard"
 import ComposerCanvas from "./Canvas"
 import Menu from "./Components/Menu"
-
+import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettings } from "lib/SettingsObj"
 import Instrument from "lib/Instrument"
@@ -46,6 +46,11 @@ class Composer extends Component {
             isRecordingAudio: false
         }
         this.state.song.bpm = settings.bpm.value
+        this.state.song.instruments = [
+            settings.instrument.value,
+            settings.layer2.value, 
+            settings.layer3.value
+        ]
         this.mounted = false
         this.copiedColums = []
         this.changes = 0
@@ -165,7 +170,7 @@ class Composer extends Component {
         const { state } = this
         let settings = state.settings
         let data = setting.data
-        settings[setting.key].value = data.value
+        settings[setting.key] = {...settings[setting.key], value: data.value}
         if (data.songSetting) {
             state.song[setting.key] = data.value
         }
@@ -210,15 +215,15 @@ class Composer extends Component {
     changeVolume = (obj) => {
         let settings = this.state.settings
         if (obj.key === "instrument") {
-            settings.instrument.volume = obj.value
+            settings.instrument = {...settings.instrument, volume: obj.value}
             this.state.instrument.changeVolume(obj.value)
         }
         if (obj.key === "layer2") {
-            settings.layer2.volume = obj.value
+            settings.layer2 = {...settings.layer2, volume: obj.value}
             this.state.layers[0].changeVolume(obj.value)
         }
         if (obj.key === "layer3") {
-            settings.layer3.volume = obj.value
+            settings.layer3 = {...settings.layer3, volume: obj.value}
             this.state.layers[1].changeVolume(obj.value)
         }
         this.setState({
@@ -330,7 +335,7 @@ class Composer extends Component {
     }
     changePitch = (value) => {
         const { settings } = this.state
-        settings.pitch.value = value
+        settings.pitch = {...settings.pitch, value}
         this.setState({
             settings: settings
         }, () => this.updateSettings())
@@ -384,9 +389,9 @@ class Composer extends Component {
     updateSong = async (song) => {
         if (song.name === "Untitled") {
             let name = await this.askForSongName()
-            if (!this.mounted) return
-            if (name === null) return
+            if (name === null || !this.mounted) return
             song.name = name
+            this.changes = 0
             return this.addSong(song)
         }
         return new Promise(async resolve => {
@@ -481,23 +486,23 @@ class Composer extends Component {
             if (confirm) await this.updateSong(state.song)
         }
         let settings = this.state.settings
-        settings.bpm.value = song.bpm
-        settings.pitch.value = song.pitch
+        settings.bpm = {...settings.bpm, value: song.bpm}
+        settings.pitch = {...settings.pitch, value: song.pitch}
+        if (!this.mounted) return
         if (settings.instrument.value !== song.instruments[0]) {
             this.loadInstrument(song.instruments[0], 1)
-            settings.instrument.value = song.instruments[0]
+            settings.instrument = {...settings.instrument, value: song.instruments[0]}
         }
         if (settings.layer2.value !== song.instruments[1]) {
             this.loadInstrument(song.instruments[1], 2)
-            settings.layer2.value = song.instruments[1]
+            settings.layer2 = {...settings.layer2, value: song.instruments[1]}
         }
         if (settings.layer3.value !== song.instruments[2]) {
             this.loadInstrument(song.instruments[2], 3)
-            settings.layer3.value = song.instruments[2]
+            settings.layer3 = {...settings.layer3, value: song.instruments[2]}
         }
         this.changes = 0
         console.log("song loaded")
-        if (!this.mounted) return
         this.setState({
             song: song,
             settings: settings,
@@ -801,21 +806,33 @@ class Composer extends Component {
         return <div className="app bg-image" style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData} />}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
-                <FaBars />
+                <Memoized>
+                    <FaBars />
+                </Memoized>
             </div>
             <div className="right-panel-composer">
                 <div className="column fill-x">
                     <div className="top-panel-composer">
                         <div className="buttons-composer-wrapper">
                             <div className="tool" onPointerDown={() => this.selectColumn(song.selected + 1)}>
-                                <FaChevronRight />
+                                <Memoized>
+                                    <FaChevronRight />
+
+                                </Memoized>
                             </div>
                             <div className="tool" onClick={() => this.selectColumn(song.selected - 1)}>
-                                <FaChevronLeft />
+                                <Memoized>
+                                    <FaChevronLeft />
+                                </Memoized>
                             </div>
 
                             <div className="tool" onClick={this.togglePlay}>
-                                {this.state.isPlaying ? <FaPause /> : <FaPlay />}
+                                <Memoized>
+                                    {this.state.isPlaying 
+                                        ? <FaPause key='pause'/> 
+                                        : <FaPlay key='play'/>
+                                    }
+                                </Memoized>
                             </div>
                         </div>
                         <ComposerCanvas
@@ -832,10 +849,14 @@ class Composer extends Component {
                                 <img src={removeCell} className="tool-icon" alt="Remove a cell" />
                             </div>
                             <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 4, "end")}>
-                                <FaPlus />
+                                <Memoized>
+                                    <FaPlus />
+                                </Memoized>
                             </div>
                             <div className="tool" onClick={this.toggleTools}>
-                                <FaTools />
+                                <Memoized>
+                                    <FaTools />
+                                </Memoized>
                             </div>
 
                         </div>

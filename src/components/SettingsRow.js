@@ -1,10 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect,memo } from 'react'
 import Switch from 'components/Switch'
-export default function SettingsRow({ data, update, objKey, changeVolume }) {
-    
+export default memo(function SettingsRow({ data, update, objKey, changeVolume }) {
     const [valueHook, setter] = useState(data.value)
     const [volumeHook, setterVolume] = useState(data.volume)
-    
     useEffect(() => {
         setter(data.value)
     },[data.value])
@@ -21,29 +19,26 @@ export default function SettingsRow({ data, update, objKey, changeVolume }) {
     }
 
     function handleCheckbox(value){
-        data.value = value
         update({
             key: objKey,
-            data
+            data: {...data, value}
         }) 
         setter(value)
     }
 
     function sendChange() {
         if (data.value === valueHook) return
-        data.value = valueHook
         let obj = {
             key: objKey,
-            data: data
+            data: {...data, value: valueHook}
         }
         update(obj)
     }
     function sendChangeSelect(e) {
         let value = e.target.value
-        data.value = value
         let obj = {
             key: objKey,
-            data: data
+            data: {...data, value}
         }
         update(obj)
     }
@@ -112,4 +107,8 @@ export default function SettingsRow({ data, update, objKey, changeVolume }) {
             </div>
         }
     </div>
-}
+},(p,n) => {
+    return p.data.value === n.data.value
+        && p.data.volume === n.data.volume
+        && p.update === n.update
+})

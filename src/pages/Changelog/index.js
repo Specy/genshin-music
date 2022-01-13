@@ -66,6 +66,7 @@ const changelogs = [
         changes: [
             'Added sheet visualizer',
             'Changed timeline behaviour when dragging the scroll bar',
+            'Improved performance by 2 times',
             `Changed import conversion algorithm for converting recorded to composed songs`,
             'UI improvements and bug fixes'
         ]
