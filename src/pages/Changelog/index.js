@@ -62,11 +62,11 @@ const changelogs = [
     {
         version: '2.2',
         title: 'Sheet visualizer',
-        date: '2021 - 15/12',
+        date: '2022 - 17/01',
         changes: [
             'Added sheet visualizer',
             'Changed timeline behaviour when dragging the scroll bar',
-            'Improved performance by 2 times',
+            'Improved performance by 2 times in some places',
             `Changed import conversion algorithm for converting recorded to composed songs`,
             'UI improvements and bug fixes'
         ]

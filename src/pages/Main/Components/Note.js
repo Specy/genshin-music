@@ -10,19 +10,15 @@ class Note extends Component {
     }
     render() {
         const { props } = this
-        const { data, approachingNotes,outgoingAnimation, fadeTime} = props
-        const { status , approachRate, instrument} = data
-        let animation = { 
-            transition: `
-                    background-color ${props.fadeTime}ms 
-                    ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'}
-                    , transform 0.15s
-                    border-color 100ms
-            ` 
+        const { data, approachingNotes, outgoingAnimation, fadeTime } = props
+        const { status, approachRate, instrument } = data
+        const animation = {
+            transition: `background-color ${props.fadeTime}ms  ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
         }
-        let className = parseClass(status)
-        let effects = instrumentsData[instrument]?.effects || {}
-        let clickColor = instrumentsData[instrument]?.clickColor 
+        const className = parseClass(status)
+        const effects = instrumentsData[instrument]?.effects || {}
+        const clickColor = instrumentsData[instrument]?.clickColor
+
         return <button
             onPointerDown={(e) => {
                 e.preventDefault()
@@ -38,16 +34,16 @@ class Note extends Component {
                 />
             })}
             {outgoingAnimation.map(e => {
-                return <div 
+                return <div
                     key={e.key}
                     className={cssClasses.noteAnimation}
                 />
             })}
-            <div 
-                className={className} 
+            <div
+                className={className}
                 style={{
                     ...animation,
-                    ...(clickColor && status === 'clicked' ? {backgroundColor: clickColor} : {})
+                    ...(clickColor && status === 'clicked' ? { backgroundColor: clickColor } : {})
                 }}
             >
                 <img
@@ -67,39 +63,43 @@ class Note extends Component {
         </button>
     }
 }
-function getApproachCircleColor(index){
+function getApproachCircleColor(index) {
     let numOfNotes = appName === "Sky" ? 5 : 7
     let row = Math.floor(index / numOfNotes)
-    let colors = ["#3da399","#ffb347","#3da399"]
+    let colors = ["#3da399", "#ffb347", "#3da399"]
     return colors[row]
 }
+
 function ApproachCircle(props) {
     return <div
         className={cssClasses.approachCircle}
-        style={{ 
+        style={{
             animation: `approach ${props.approachRate}ms linear`,
-            borderColor:getApproachCircleColor(props.index),
+            borderColor: getApproachCircleColor(props.index),
         }}
     >
     </div>
 }
-function parseBorderFill(status){
+
+function parseBorderFill(status) {
     let fill = '#eae5ce'
-    if(status === "clicked") fill = "transparent"
-    else if(status === 'toClickNext' || status === 'toClickAndNext') fill = '#63aea7'
+    if (status === "clicked") fill = "transparent"
+    else if (status === 'toClickNext' || status === 'toClickAndNext') fill = '#63aea7'
     return fill
 }
+
 function parseClass(status) {
     let className = cssClasses.note
-    switch(status){
-    	case 'clicked': className += " click-event"; break;
-        case  'toClick': className += " note-red"; break;
-        case  'toClickNext': className += " note-border-click"; break;
-        case  'toClickAndNext': className += " note-red note-border-click"; break;
+    switch (status) {
+        case 'clicked': className += " click-event"; break;
+        case 'toClick': className += " note-red"; break;
+        case 'toClickNext': className += " note-border-click"; break;
+        case 'toClickAndNext': className += " note-red note-border-click"; break;
         case 'approach-wrong': className += " click-event approach-wrong"; break;
         case 'approach-correct': className += " click-event approach-correct"; break;
         default: break;
     }
     return className
 }
+
 export default Note

@@ -122,7 +122,7 @@ async function asyncConfirm(question,cancellable = true) {
         function handleKeyboard(event){
             const key = event.code
             if(key === 'Enter') okListener()
-            if(key === 'Escape') cancelListener()
+            if(key === 'Escape' && cancellable) cancelListener()
         }
         function handleOverlay(e){
             if(e.path[0] === overlay && cancellable) cancelListener()

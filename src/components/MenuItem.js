@@ -9,5 +9,5 @@ export default memo(function MenuItem(props) {
     </div>
 },(prev,next) => {
     if(next.children.key !== null || prev.children.key !== null) return prev.children.key === next.children.key
-    return prev.children !== undefined
+    return prev.children !== undefined && prev.className === next.className
 })

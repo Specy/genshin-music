@@ -164,6 +164,7 @@ class App extends Component {
 	loadInstrument = async (name) => {
 		this.state.instrument?.delete?.()
 		let newInstrument = new Instrument(name)
+		newInstrument.changeVolume(this.state.settings.instrument.volume || 100)
 		this.setState({ isLoadingInstrument: true })
 		await newInstrument.load()
 		if(!this.mounted) return 

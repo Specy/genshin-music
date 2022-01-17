@@ -5,12 +5,12 @@ const updateMessage = appName === 'Genshin'
     ? ` - Added sheet visualizer
         - Changed timeline behaviour when dragging the scroll bar
         - Changed import conversion algorithm for converting recorded to composed songs
-        - Fixed UI issues and bug fixes
+        - Improved performance
     `.trim()
     : ` - Added sheet visualizer
         - Changed timeline behaviour when dragging the scroll bar
         - Changed import conversion algorithm for converting recorded to composed songs
-        - Fixed UI issues and bug fixes
+        - Improved performance
     `.trim()
 
 const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetVisualizer"]
