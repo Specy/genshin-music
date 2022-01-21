@@ -32,18 +32,14 @@ async function execute() {
         await deleteAssets()
         await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
         result = ''
-        try {
-            if (process.platform === 'win32') {
-                console.log(" Building on windows")
-                result = execSync(`set REACT_APP_NAME=${app}&& set BUILD_PATH=./build/${pathNames[app]}&& yarn build`)
-            } else {
-                console.log(" Building on Linux")
-                result = execSync(`REACT_APP_NAME=${app} BUILD_PATH=./build/${pathNames[app]} yarn build`)
-            }
-            console.log("\x1b[32m", 'Build complete')
-        } catch (e) {
-            console.error("\x1b[0m", e)
+        if (process.platform === 'win32') {
+            console.log(" Building on windows")
+            result = execSync(`set REACT_APP_NAME=${app}&& set BUILD_PATH=./build/${pathNames[app]}&& yarn build`)
+        } else {
+            console.log(" Building on Linux")
+            result = execSync(`REACT_APP_NAME=${app} BUILD_PATH=./build/${pathNames[app]} yarn build`)
         }
+        console.log("\x1b[32m", 'Build complete')
         console.log("\x1b[0m")
         console.log(result.toString())
     }
