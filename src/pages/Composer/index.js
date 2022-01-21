@@ -149,8 +149,9 @@ class Composer extends Component {
         if (!this.mounted) return
         const { instrument } = this.state
         const { data } = e
-        const [eventType, note] = data
-        if (MIDI_STATUS.down === eventType) {
+        const [eventType, note, velocity] = data
+
+        if (MIDI_STATUS.down === eventType && velocity !== 0) {
             const keyboardNotes = this.MIDISettings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.layout[keyboardNote.index])

@@ -110,14 +110,14 @@ export default class MidiSetup extends Component {
     handleMidi = (event) => {
         const { selectedNote, settings } = this.state
         const { data } = event
-        const [eventType, note] = data
-        if (MIDI_STATUS.down === eventType) {
+        const [eventType, note, velocity] = data
+
+        if (MIDI_STATUS.down === eventType && velocity !== 0) {
             if (selectedNote) {
                 selectedNote.midi = note
                 this.deselectNotes()
                 this.setState({ selectedNote: null })
                 this.saveLayout()
-
             }
             const keyboardNotes = settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {

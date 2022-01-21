@@ -1,16 +1,14 @@
 const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
-const appVersion = '2.2'
+const appVersion = '2.3'
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin' 
-    ? ` - Added sheet visualizer
-        - Changed timeline behaviour when dragging the scroll bar
-        - Changed import conversion algorithm for converting recorded to composed songs
-        - Improved performance
+    ? ` -Added MIDI Keyboard support on all pages with custom layouts
+        -Performance improvements
+        -UI improvements and bug fixes
     `.trim()
-    : ` - Added sheet visualizer
-        - Changed timeline behaviour when dragging the scroll bar
-        - Changed import conversion algorithm for converting recorded to composed songs
-        - Improved performance
+    : ` -Added MIDI Keyboard support on all pages with custom layouts
+        -Performance improvements
+        -UI improvements and bug fixes
     `.trim()
 
 const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetVisualizer", "MidiSetup"]

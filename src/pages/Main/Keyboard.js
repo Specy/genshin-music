@@ -113,7 +113,7 @@ class Keyboard extends Component {
         const instrument = this.props.data.keyboard
         const { data } = e
         const [eventType, note] = data
-        if (MIDI_STATUS.down === eventType) {
+        if (MIDI_STATUS.down === eventType && velocity !== 0) {
             const keyboardNotes = this.MIDISettings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.layout[keyboardNote.index])
