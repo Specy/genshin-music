@@ -5,7 +5,7 @@ import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
-import { appName, isTwa } from "appConfig"
+import { appName, isTwa, isMidiAvailable } from "appConfig"
 import { songStore } from '../SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
@@ -285,7 +285,13 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
-                    <div style={{ marginTop: '0.2rem', marginBottom: '0.6rem' }}>
+                    {isMidiAvailable && 
+                        <button className='genshin-button' onClick={() => changePage('MidiSetup')} style={{marginTop: '1.2rem'}}>
+                            Setup MIDI keyboard
+                        </button>
+                    }
+                    
+                    <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }}>
                         {this.state.isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     </div>
                     {!isTwa() && <DonateButton onClick={changePage} />}

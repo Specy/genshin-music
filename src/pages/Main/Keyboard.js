@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
 import { observe } from 'mobx'
 import { FaSyncAlt, FaStop } from 'react-icons/fa'
-import { keyNames, pitchArr, layoutImages, appName, layoutData,speedChangers } from "appConfig"
+import { layoutImages, appName, speedChangers, MIDI_STATUS } from "appConfig"
 import Note from "./Components/Note"
 import { songStore } from './SongStore'
-import { delayMs, ComposerToRecording, NotesTable } from "lib/Utils"
+import { delayMs, ComposerToRecording, NotesTable, getNoteText, LoggerEvent } from "lib/Utils"
 import Memoized from 'components/Memoized'
 import "./Keyboard.css"
+import { getMIDISettings } from 'lib/SettingsObj'
 
 class Keyboard extends Component {
     constructor(props) {
@@ -29,8 +30,9 @@ class Keyboard extends Component {
                 score: 0,
                 combo: 0
             },
-			speedChanger: speedChangers.find(e => e.name === 'x1'),
+            speedChanger: speedChangers.find(e => e.name === 'x1'),
         }
+        this.MIDISettings = getMIDISettings()
         this.approachRate = 1500
         this.approachingNotesList = []
         this.songTimestamp = 0
@@ -38,6 +40,7 @@ class Keyboard extends Component {
         this.disposeStore = () => { }
         this.tickTime = 50
         this.tickInterval = 0
+        this.mounted = true
     }
 
     componentDidMount() {
@@ -68,19 +71,58 @@ class Keyboard extends Component {
                 hasSong = true
             }
             if (type === 'stop') await this.stopSong()
+            if (!this.mounted) return
+
             this.props.functions.setHasSong(hasSong)
         })
+        if (this.MIDISettings.enabled) {
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(this.initMidi, () => {
+                    new LoggerEvent('Error', 'MIDI permission not accepted').trigger()
+                })
+            } else {
+                new LoggerEvent('Error', 'MIDI is not supported on this browser').trigger()
+            }
+        }
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
         this.disposeStore()
         this.songTimestamp = 0
+        this.mounted = false
+        if(this.MidiAccess) this.MidiAccess.onstatechange = null
+        if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
         clearInterval(this.tickInterval)
     }
-
+    initMidi = (e) => {
+        e.onstatechange = () => this.initMidi(this.MidiAccess)
+        this.MidiAccess = e
+        const midiInputs = this.MidiAccess.inputs.values()
+        const inputs = []
+        for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
+            inputs.push(input.value)
+        }
+        if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
+        this.currentMidiSource = inputs.find(input => {
+            return input.name + " " + input.manufacturer === this.MIDISettings.currentSource
+        })
+        if(this.currentMidiSource) this.currentMidiSource.onmidimessage = this.handleMidi
+    }
+    handleMidi = (e) => {
+        if (!this.mounted) return
+        const instrument = this.props.data.keyboard
+        const { data } = e
+        const [eventType, note] = data
+        if (MIDI_STATUS.down === eventType) {
+            const keyboardNotes = this.MIDISettings.notes.filter(e => e.midi === note)
+            keyboardNotes.forEach(keyboardNote => {
+                this.handleClick(instrument.layout[keyboardNote.index])
+            })
+        }
+    }
     approachingSong = async (song) => {
         let notes = []
-        this.approachRate = this.props.data.approachRate || 1500 
+        this.approachRate = this.props.data.approachRate || 1500
         let startDelay = this.approachRate
         song.notes.forEach(note => {
             let obj = {
@@ -104,7 +146,7 @@ class Keyboard extends Component {
 
     tick = () => {
         if (!this.props.data.hasSong) return
-        const { approachingNotes, sliderState, approachingScore , speedChanger} = this.state
+        const { approachingNotes, sliderState, approachingScore, speedChanger } = this.state
         let stateNotes = approachingNotes
         let notes = this.approachingNotesList
         notes.forEach(note => {
@@ -175,13 +217,14 @@ class Keyboard extends Component {
             let note = notes[i][0]
             previousTime = new Date().getTime()
             if (delay > 16) await delayMs(delay - pastError)
+            if (!this.mounted) return
             if (this.songTimestamp !== song.timestamp) return
             keyboard[note].status = 'clicked'
             this.handleClick(keyboard[note])
             this.setState({
                 keyboard,
                 sliderState: {
-                    position: i+1,
+                    position: i + 1,
                     size: notes.length
                 }
             })
@@ -223,8 +266,8 @@ class Keyboard extends Component {
         let firstChunk = chunks[0]
         this.nextChunkDelay = 0
         let secondChunk = chunks[1]
-        firstChunk.notes.forEach(note => { 
-            keyboard[note[0]].status = 'toClick' 
+        firstChunk.notes.forEach(note => {
+            keyboard[note[0]].status = 'toClick'
             keyboard[note[0]].delay = appName === 'Genshin' ? 100 : 200
         })
         secondChunk?.notes.forEach(note => {
@@ -242,19 +285,20 @@ class Keyboard extends Component {
             }
         })
     }
-    handleSpeedChanger = (value) =>{
+    handleSpeedChanger = (value) => {
         let changer = speedChangers.find(e => e.name === value)
         this.setState({
             speedChanger: changer
-        },this.restartSong)
+        }, this.restartSong)
     }
-    restartSong =async (override) => {
+    restartSong = async (override) => {
         let lostReference = JSON.parse(JSON.stringify(songStore.data))
         const { sliderState } = this.state
         await this.stopSong()
+        if (!this.mounted) return
         setTimeout(() => {
             let start = songStore.data.start
-            if (songStore.data.eventType === 'practice'){
+            if (songStore.data.eventType === 'practice') {
                 start = sliderState.position === sliderState.size ? 0 : sliderState.position
             }
             songStore.data = {
@@ -293,27 +337,29 @@ class Keyboard extends Component {
             }
         })
     }
-    handleKeyboard =async (event) => {
+    handleKeyboard = async (event) => {
         const { keyboard } = this.state
         if (event.repeat) return
         if (document.activeElement.tagName === "INPUT") return
-        if(event.shiftKey){
-            switch(event.code){
-                case "KeyR" : {
-                    if(!this.props.data.hasSong) return
-                    if(['practice','playing','approaching'].includes(songStore.data.eventType)){
-                       return this.restartSong(0)
+        if (event.shiftKey) {
+            switch (event.code) {
+                case "KeyR": {
+                    if (!this.props.data.hasSong) return
+                    if (['practice', 'playing', 'approaching'].includes(songStore.data.eventType)) {
+                        return this.restartSong(0)
                     }
                     break;
                 }
-                case "KeyS" : {
-                    if(!this.props.data.hasSong) return
+                case "KeyS": {
+                    if (!this.props.data.hasSong) return
                     await this.stopSong()
+                    if (!this.mounted) return
+
                     return songStore.data = returnStopSong()
                 }
                 default: break;
             }
-        }else{
+        } else {
             let code = event.code?.replace("Key", "")
             let index = this.props.data.keyboard.getNoteFromCode(code)
             let note = keyboard[index]
@@ -327,7 +373,7 @@ class Keyboard extends Component {
         let approachingNote = approachingNotes[note.index][0]
         if (approachingNote) {
             approachingNote.clicked = true
-            if(approachingNote.time < this.approachRate / 3) return "approach-correct"
+            if (approachingNote.time < this.approachRate / 3) return "approach-correct"
         }
         return "approach-wrong"
     }
@@ -346,7 +392,7 @@ class Keyboard extends Component {
                         keyboard[note[0]].delay = nextChunk.delay
                     })
 
-                    if(nextNextChunk){
+                    if (nextNextChunk) {
                         nextNextChunk?.notes.forEach(note => {
                             let keyboardNote = keyboard[note[0]]
                             if (keyboardNote.status === 'toClick') return keyboardNote.status = 'toClickAndNext'
@@ -365,34 +411,35 @@ class Keyboard extends Component {
         }
     }
     handleClick = (note, onlySound) => {
-        const { keyboard, outgoingAnimation} = this.state
+        const { keyboard, outgoingAnimation } = this.state
         const hasAnimation = this.props.data.hasAnimation
         keyboard[note.index].status = 'clicked'
         keyboard[note.index].delay = appName === 'Genshin' ? 100 : 200
         this.handlePracticeClick(note)
         let approachStatus = this.handleApproachClick(note)
-        if(songStore.data.eventType === 'approaching'){
+        if (songStore.data.eventType === 'approaching') {
             keyboard[note.index].status = approachStatus
         }
-        if(hasAnimation && songStore.data.eventType !=='approaching'){
+        if (hasAnimation && songStore.data.eventType !== 'approaching') {
             let key = Math.floor(Math.random() * 10000) + new Date().getTime()
-            outgoingAnimation[note.index].push({key})
+            outgoingAnimation[note.index].push({ key })
         }
-        this.setState({ keyboard,
-            ...(hasAnimation? outgoingAnimation : {})
-        },() => {
+        this.setState({
+            keyboard,
+            ...(hasAnimation ? outgoingAnimation : {})
+        }, () => {
             setTimeout(() => {
-                if(!hasAnimation || songStore.data.eventType === 'approaching') return
-                const {outgoingAnimation} = this.state
+                if (!hasAnimation || songStore.data.eventType === 'approaching') return
+                const { outgoingAnimation } = this.state
                 outgoingAnimation[note.index].shift()
-                this.setState({outgoingAnimation})
-            },750)
+                this.setState({ outgoingAnimation })
+            }, 750)
         })
         setTimeout(() => {
-            if (!['clicked','approach-wrong','approach-correct'].includes(keyboard[note.index].status)) return
+            if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[note.index].status)) return
             keyboard[note.index].status = ''
             this.setState({ keyboard })
-        },appName === 'Sky' ? 200 : 100)
+        }, appName === 'Sky' ? 200 : 100)
         this.props.functions.playSound(note)
     }
     render() {
@@ -437,7 +484,7 @@ class Keyboard extends Component {
                                 <FaSyncAlt />
                             </Memoized>
                         </button>
-                        <select 
+                        <select
                             className='slider-select'
                             onChange={(e) => this.handleSpeedChanger(e.target.value)}
                             value={state.speedChanger.name}
@@ -459,14 +506,14 @@ class Keyboard extends Component {
                     marginBottom: size * 30 - 15
                 }}
             >
-                {data.isLoading 
-                    ? <div className="loading">Loading...</div> 
-                    
+                {data.isLoading
+                    ? <div className="loading">Loading...</div>
+
                     : keyboard.map(note => {
                         let noteImage = layoutImages[keyboard.length][note.index]
                         let noteData = {
                             ...note,
-                            approachRate:this.approachRate,
+                            approachRate: this.approachRate,
                             instrument: this.props.data.keyboard.instrumentName,
                             isAnimated: songStore.data.eventType === 'approaching' ? false : this.props.data.hasAnimation
                         }
@@ -480,7 +527,7 @@ class Keyboard extends Component {
                             noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
                             noteImage={`./assets/icons/keys/${noteImage}.svg`}
                         />
-    
+
                     })
                 }
 
@@ -491,13 +538,13 @@ class Keyboard extends Component {
     }
 }
 function Score(props) {
-    const { combo, score, correct, wrong} = props.data
+    const { combo, score, correct, wrong } = props.data
     return <div className='approaching-accuracy'>
         <table>
             <tbody>
                 <tr>
                     <td className='sc-2'>Accuracy</td>
-                    <td className='sc-1'>{(correct / (correct + wrong - 1) * 100 ).toFixed(1)}%</td>
+                    <td className='sc-1'>{(correct / (correct + wrong - 1) * 100).toFixed(1)}%</td>
                 </tr>
                 <tr>
                     <td className='sc-2'>Score</td>
@@ -522,12 +569,4 @@ function returnStopSong() {
     }
 }
 
-function getNoteText(noteNameType, index, pitch, layoutLength) {
-    try {
-        if (noteNameType === "Note name") return keyNames[appName][pitchArr.indexOf(pitch)][index]
-        if (noteNameType === "Keyboard layout") return layoutData[layoutLength].keyboardLayout[index]
-        if (noteNameType === "Do Re Mi") return layoutData[layoutLength].mobileLayout[index]
-    } catch (e) { }
-    return ''
-}
 export default Keyboard

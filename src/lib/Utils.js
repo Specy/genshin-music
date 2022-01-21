@@ -1,4 +1,4 @@
-import { importNotePositions, appName, instruments, pitchArr } from "appConfig"
+import { importNotePositions, appName, instruments, pitchArr, keyNames, layoutData } from "appConfig"
 import * as workerTimers from 'worker-timers';
 class Recording {
 	constructor() {
@@ -132,6 +132,27 @@ class ComposedSong {
 			this.columns.push(column)
 		})
 	}
+}
+
+
+class MIDINote{
+	index = 0
+	midi = 0
+	status = 'wrong'
+	constructor(index,midi){
+		this.index = index
+		this.midi = midi
+		this.status = midi < 0 ? 'wrong' : 'right'
+	}
+}
+
+function getNoteText(noteNameType, index, pitch, layoutLength) {
+    try {
+        if (noteNameType === "Note name") return keyNames[appName][pitchArr.indexOf(pitch)][index]
+        if (noteNameType === "Keyboard layout") return layoutData[layoutLength].keyboardLayout[index]
+        if (noteNameType === "Do Re Mi") return layoutData[layoutLength].mobileLayout[index]
+    } catch (e) { }
+    return ''
 }
 
 function NotesTable(length){
@@ -561,5 +582,7 @@ export {
 	mergeLayers,
 	groupByIndex,
 	delayMs,
-	NotesTable
+	NotesTable,
+	MIDINote,
+	getNoteText
 }

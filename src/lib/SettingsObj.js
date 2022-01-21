@@ -1,6 +1,6 @@
 import { isMobile } from "is-mobile"
 import { instruments, appName } from "appConfig"
-
+import { MIDINote } from "./Utils"
 export const ComposerSettings = {
     settingVesion: appName + 17,
     instrument: {
@@ -126,8 +126,6 @@ export const ComposerSettings = {
     }
 }
 
-
-
 export const MainPageSettings = {
     settingVesion: appName + 17,
     instrument: {
@@ -212,4 +210,26 @@ export const MainPageSettings = {
         songSetting: false,
         value: false
     }
+}
+export const MIDISettings = {
+    settingVesion: appName + 2,
+    enabled: false,
+    currentSource: '',
+    notes: new Array(appName === 'Genshin' ? 21 : 15).fill(0).map((e,i) => new MIDINote(i,-1))
+}
+export function getMIDISettings(){
+    let settings = localStorage.getItem(appName + '_MIDI_Settings')
+    try {
+        settings = JSON.parse(settings)
+    } catch (e) {
+        settings = null
+    }
+    if (settings !== null) {
+        if (settings.settingVesion !== MIDISettings.settingVesion) {
+            return MIDISettings
+        }
+    } else {
+        return MIDISettings
+    }
+    return settings
 }

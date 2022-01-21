@@ -56,7 +56,7 @@ export default function SheetVisualizer(props) {
         }
         setSheet(chunks)
     }
-    return <div className='displayer-page'>
+    return <div className='default-page'>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SimpleMenu functions={{ changePage: props.changePage }} className='noprint' />
             <div>

@@ -26,6 +26,7 @@ class ComposerKeyboard extends Component {
                     let noteText = ""
                     let noteImage = ""
                     try{    
+                        //TODO there is a function exported from the utils that does this
                         noteImage = layoutImages[data.keyboard.layout.length][note.index]  
                         if(data.noteNameType === "Note name") noteText = keyNames[appName][pitchArr.indexOf(data.pitch)][note.index]
                         if(data.noteNameType === "Keyboard layout") noteText = layoutData[data.keyboard.layout.length].keyboardLayout[note.index]

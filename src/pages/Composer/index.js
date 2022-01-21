@@ -3,7 +3,7 @@ import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools
 
 import addCell from "assets/icons/addCell.svg"
 import removeCell from "assets/icons/removeCell.svg"
-import { appName, audioContext } from "appConfig"
+import { appName, audioContext, MIDI_STATUS } from "appConfig"
 
 import MidiImport from "./MidiParser"
 import ComposerTools from "./Components/ComposerTools"
@@ -12,7 +12,7 @@ import ComposerCanvas from "./Canvas"
 import Menu from "./Components/Menu"
 import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { ComposerSettings } from "lib/SettingsObj"
+import { ComposerSettings, getMIDISettings } from "lib/SettingsObj"
 import Instrument from "lib/Instrument"
 import {
     ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
@@ -45,10 +45,13 @@ class Composer extends Component {
             midiVisible: false,
             isRecordingAudio: false
         }
+        this.MIDISettings = getMIDISettings()
+        this.MidiAccess = undefined
+        this.currentMidiSource = undefined
         this.state.song.bpm = settings.bpm.value
         this.state.song.instruments = [
             settings.instrument.value,
-            settings.layer2.value, 
+            settings.layer2.value,
             settings.layer3.value
         ]
         this.mounted = false
@@ -77,6 +80,8 @@ class Composer extends Component {
     }
     componentWillUnmount() {
         this.mounted = false
+        if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
+        if(this.MidiAccess) this.MidiAccess.onstatechange = null
         window.removeEventListener('keydown', this.handleKeyboard)
         const { instrument, layers } = this.state
         this.broadcastChannel?.close?.()
@@ -85,7 +90,7 @@ class Composer extends Component {
         this.reverbNode = undefined
         this.reverbVolumeNode = undefined
         this.audioContext = undefined
-        let state = this.state
+        const state = this.state
         state.isPlaying = false
     }
 
@@ -100,6 +105,15 @@ class Composer extends Component {
         if (this.mounted) await Promise.all(promises)
         if (this.mounted) await this.loadReverb()
         if (this.mounted) this.setupAudioDestination(settings.caveMode.value)
+        if (this.MIDISettings.enabled) {
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(this.initMidi, () => {
+                    new LoggerEvent('Error', 'MIDI permission not accepted').trigger()
+                })
+            } else {
+                new LoggerEvent('Error', 'MIDI is not supported on this browser').trigger()
+            }
+        }
     }
     componentDidCatch() {
         this.setState({
@@ -114,6 +128,33 @@ class Composer extends Component {
                 this.updateSong(this.state.song)
             }
 
+        }
+    }
+    initMidi = (e) => {
+        e.onstatechange = () => this.initMidi(this.MidiAccess)
+        this.MidiAccess = e
+        const midiInputs = this.MidiAccess.inputs.values()
+        const inputs = []
+        for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
+            inputs.push(input.value)
+        }
+        if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
+        this.currentMidiSource = inputs.find(input => {
+            return input.name + " " + input.manufacturer === this.MIDISettings.currentSource
+        })
+        if(this.currentMidiSource) this.currentMidiSource.onmidimessage = this.handleMidi
+
+    }
+    handleMidi = (e) => {
+        if (!this.mounted) return
+        const { instrument } = this.state
+        const { data } = e
+        const [eventType, note] = data
+        if (MIDI_STATUS.down === eventType) {
+            const keyboardNotes = this.MIDISettings.notes.filter(e => e.midi === note)
+            keyboardNotes.forEach(keyboardNote => {
+                this.handleClick(instrument.layout[keyboardNote.index])
+            })
         }
     }
     loadReverb() {
@@ -170,7 +211,7 @@ class Composer extends Component {
         const { state } = this
         let settings = state.settings
         let data = setting.data
-        settings[setting.key] = {...settings[setting.key], value: data.value}
+        settings[setting.key] = { ...settings[setting.key], value: data.value }
         if (data.songSetting) {
             state.song[setting.key] = data.value
         }
@@ -215,15 +256,15 @@ class Composer extends Component {
     changeVolume = (obj) => {
         let settings = this.state.settings
         if (obj.key === "instrument") {
-            settings.instrument = {...settings.instrument, volume: obj.value}
+            settings.instrument = { ...settings.instrument, volume: obj.value }
             this.state.instrument.changeVolume(obj.value)
         }
         if (obj.key === "layer2") {
-            settings.layer2 = {...settings.layer2, volume: obj.value}
+            settings.layer2 = { ...settings.layer2, volume: obj.value }
             this.state.layers[0].changeVolume(obj.value)
         }
         if (obj.key === "layer3") {
-            settings.layer3 = {...settings.layer3, volume: obj.value}
+            settings.layer3 = { ...settings.layer3, volume: obj.value }
             this.state.layers[1].changeVolume(obj.value)
         }
         this.setState({
@@ -335,7 +376,7 @@ class Composer extends Component {
     }
     changePitch = (value) => {
         const { settings } = this.state
-        settings.pitch = {...settings.pitch, value}
+        settings.pitch = { ...settings.pitch, value }
         this.setState({
             settings: settings
         }, () => this.updateSettings())
@@ -486,20 +527,20 @@ class Composer extends Component {
             if (confirm) await this.updateSong(state.song)
         }
         let settings = this.state.settings
-        settings.bpm = {...settings.bpm, value: song.bpm}
-        settings.pitch = {...settings.pitch, value: song.pitch}
+        settings.bpm = { ...settings.bpm, value: song.bpm }
+        settings.pitch = { ...settings.pitch, value: song.pitch }
         if (!this.mounted) return
         if (settings.instrument.value !== song.instruments[0]) {
             this.loadInstrument(song.instruments[0], 1)
-            settings.instrument = {...settings.instrument, value: song.instruments[0]}
+            settings.instrument = { ...settings.instrument, value: song.instruments[0] }
         }
         if (settings.layer2.value !== song.instruments[1]) {
             this.loadInstrument(song.instruments[1], 2)
-            settings.layer2 = {...settings.layer2, value: song.instruments[1]}
+            settings.layer2 = { ...settings.layer2, value: song.instruments[1] }
         }
         if (settings.layer3.value !== song.instruments[2]) {
             this.loadInstrument(song.instruments[2], 3)
-            settings.layer3 = {...settings.layer3, value: song.instruments[2]}
+            settings.layer3 = { ...settings.layer3, value: song.instruments[2] }
         }
         this.changes = 0
         console.log("song loaded")
@@ -598,7 +639,7 @@ class Composer extends Component {
             if (this.state.settings.autosave.value) {
                 await this.updateSong(this.state.song)
             } else {
-                let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`,false)
+                let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
                 if (confirm) {
                     await this.updateSong(this.state.song)
                 }
@@ -828,9 +869,9 @@ class Composer extends Component {
 
                             <div className="tool" onClick={this.togglePlay}>
                                 <Memoized>
-                                    {this.state.isPlaying 
-                                        ? <FaPause key='pause'/> 
-                                        : <FaPlay key='play'/>
+                                    {this.state.isPlaying
+                                        ? <FaPause key='pause' />
+                                        : <FaPlay key='play' />
                                     }
                                 </Memoized>
                             </div>
@@ -902,9 +943,9 @@ function calculateLength(columns, bpm, end) {
     let totalLength = 0
     let currentLength = 0
     let increment = 0
-    for(let i = 0; i< columns.length; i++){
+    for (let i = 0; i < columns.length; i++) {
         increment = bpmPerMs * TempoChangers[columns[i].tempoChanger].changer
-        if(i < end) currentLength += increment
+        if (i < end) currentLength += increment
         totalLength += increment
     }
     return {

@@ -8,6 +8,7 @@ import Partners from 'pages/Partners';
 import Home from 'pages/Home';
 import Help from 'pages/Help';
 import SheetVisualizer from 'pages/SheetVisualizer';
+import MidiSetup from 'pages/MidiSetup';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Redirect } from "react-router-dom";
 import { LoggerEvent, delayMs } from "lib/Utils"
@@ -48,6 +49,7 @@ class Index extends Component {
 		this.checkUpdate()
 	}
 	changePage = (page) => {
+		//TODO manually changing page doesnt actually change page at next reroute
 		if (page === 'home') return this.toggleHome(true)
 		if (this.state.homeData.visible) this.toggleHome(false)
 		this.setState({
@@ -215,6 +217,9 @@ class Index extends Component {
 						</Route>
 						<Route exact path='/SheetVisualizer'>
 							<SheetVisualizer changePage={this.changePage} />
+						</Route>
+						<Route exact path='/MidiSetup'>
+							<MidiSetup changePage={this.changePage} />
 						</Route>
 					</>
 				}

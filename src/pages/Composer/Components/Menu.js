@@ -8,7 +8,7 @@ import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
-
+import { isMidiAvailable } from 'appConfig';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -192,6 +192,15 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
+                    {isMidiAvailable && 
+                        <button 
+                            className='genshin-button' 
+                            onClick={() => changePage('MidiSetup')} 
+                            style={{margin: '0.4rem 0', width:'fit-content'}}
+                        >
+                            Setup MIDI keyboard
+                        </button>
+                    }
                     {!isTwa() && <DonateButton onClick={changePage} />}
                 </MenuPanel>
             </div>

@@ -1,16 +1,6 @@
-.changelog-page{
-    display: flex;
-    overflow-y: auto;
-    max-height: 100%;
-    padding: 2rem 20vw;
-    flex-direction: column;
-}
 .changelog-page-title{
     font-size: 2.5rem;
     margin-bottom: 2rem;
-    color: var(--whitish);
-}
-.changelog-wrapper{
     color: var(--whitish);
 }
 
@@ -42,6 +32,7 @@
     margin-left: 2.5rem;
     border-left: solid 2px var(--secondary);
     padding: 1rem 2rem;
+    padding-right: 1rem;
 }
 .changelog-list ul li{
     margin-top: 0.4rem;
@@ -77,11 +68,4 @@
     width: 1rem;
     border-left: dashed 2px var(--secondary);
     margin-left: 2.5rem;
-}
-@media only screen and (max-width: 900px) {
-    .changelog-page{
-        padding: 1.5rem;
-        padding-right: 2rem;
-        padding-left: 5rem;
-    }
 }

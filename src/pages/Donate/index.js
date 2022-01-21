@@ -4,7 +4,7 @@ import buyMeACoffeeImg from 'assets/images/buymeacoffee.svg'
 import kofiImg from 'assets/images/kofi.png'
 import { SimpleMenu } from 'components/SimpleMenu'
 export default function Donate(props) {
-    return <div className='donate-page'>
+    return <div className='default-page'>
         <SimpleMenu functions={{changePage: props.changePage}}/>
         <div className="donate-text">
             Each App I make takes months of learning and development. Added to that
@@ -20,13 +20,13 @@ export default function Donate(props) {
         </div>
         <div className="donation-wrapper">
             <a href="https://paypal.me/specyDev" target="_blank" className="paypal" rel="noreferrer">
-                <img src={paypalImg} alt="paypalme" style={{ height: "4rem" }} />
+                <img src={paypalImg} alt="paypalme" style={{ height: "3rem" }} />
             </a>
             <a href="https://ko-fi.com/specy" target="_blank" className="kofi" rel="noreferrer">
-                <img src={kofiImg} alt="kofi" style={{ height: "3rem" }} />
+                <img src={kofiImg} alt="kofi" style={{ height: "2rem" }} />
             </a>
             <a href="https://www.buymeacoffee.com/specy" target="_blank" rel="noreferrer">
-                <img src={buyMeACoffeeImg} alt="buymeacoffee" style={{ height: "4rem" }} />
+                <img src={buyMeACoffeeImg} alt="buymeacoffee" style={{ height: "3rem" }} />
             </a>
         </div>
     </div>

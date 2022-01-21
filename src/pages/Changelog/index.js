@@ -4,7 +4,7 @@ import { FaGithub } from 'react-icons/fa'
 import './Changelog.css'
 
 export default function Changelogpage(props) {
-    return <div className='changelog-page'>
+    return <div className='default-page'>
         <div className='changelog-page-title'>
             Changelog
         </div>
@@ -27,7 +27,7 @@ export default function Changelogpage(props) {
 
 function ChangelogRow(props) {
     const { version, title, changes, date } = props.data
-    return <div className='changelog-wrapper'>
+    return <div>
         <div className='changelog-title'>
             <div className='clt-1'>
                 {version}
@@ -60,6 +60,15 @@ function ChangelogRow(props) {
 }
 const changelogs = [
     {
+        version: '2.3',
+        title: 'MIDI Keyboard support',
+        date: '2022 - 30/01',
+        changes: [
+            'Added MIDI Keyboard support on all pages with custom layouts',
+            'Performance improvements',
+            'UI improvements and bug fixes'
+        ]
+    },{
         version: '2.2',
         title: 'Sheet visualizer',
         date: '2022 - 17/01',
@@ -67,7 +76,6 @@ const changelogs = [
             'Added sheet visualizer',
             'Changed timeline behaviour when dragging the scroll bar',
             'Improved performance by 2 times in some places',
-            `Changed import conversion algorithm for converting recorded to composed songs`,
             'UI improvements and bug fixes'
         ]
     },

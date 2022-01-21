@@ -79,7 +79,7 @@
 }
 
 .displayer-frame-wrapper {
-	width: 80vw;
+	width: 100%;
 	margin-top: 1rem;
 	display: grid;
 	justify-items: center;

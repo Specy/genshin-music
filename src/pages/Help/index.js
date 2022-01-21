@@ -1,11 +1,10 @@
 import { HelpTab } from "components/HelpTab"
 import { SimpleMenu } from "components/SimpleMenu"
-import './Help.css'
 
 export default function Help(props){
-    return <div className="help-page">
+    return <div className="default-page">
         <SimpleMenu functions={{changePage: props.changePage}}/>
-        <div className="help-content">
+        <div>
             <div style={{fontSize: '2rem', margin: '1rem 0'}}>
                 Info about the app
             </div>

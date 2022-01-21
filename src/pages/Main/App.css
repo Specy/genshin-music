@@ -418,6 +418,21 @@ a {
 	border-left:solid 2px var(--secondary);
 }
 
+.default-page{
+    display: flex;
+    overflow-y: auto;
+    max-height: 100%;
+	width: 100%;
+    padding: 2rem 20vw;
+    flex-direction: column;
+    color: var(--whitish);
+}
+.default-content{
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
 @media only screen and (max-width: 900px) {
 	.floating-prompt {
 		width: 45vw;
@@ -426,5 +441,8 @@ a {
 	.slider-wrapper{
 		margin-left: 0;
 	}
+	.default-page{
+        padding: 1rem 1.4rem 1rem 5rem;
+    }
 }
 

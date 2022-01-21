@@ -13,7 +13,7 @@ const updateMessage = appName === 'Genshin'
         - Improved performance
     `.trim()
 
-const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetVisualizer"]
+const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetVisualizer", "MidiSetup"]
 
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
@@ -24,6 +24,11 @@ const cssClasses = {
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
+const MIDI_STATUS = {
+    up: 128,
+    down: 144
+}
+const isMidiAvailable = !!navigator.requestMIDIAccess
 const instruments = appName === "Genshin" 
     ? [
         "Lyre",
@@ -249,6 +254,8 @@ function isTwa() {
     let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
     return isTwa
 }
+
+
 export {
     instruments,
     instrumentsData,
@@ -267,5 +274,7 @@ export {
     pages,
     isTwa,
     cacheData,
-    updateMessage
+    updateMessage,
+    MIDI_STATUS,
+    isMidiAvailable
 }

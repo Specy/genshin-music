@@ -37,7 +37,7 @@
     "workbox-streams": "^6.3.0",
     "worker-timers": "^7.0.40",
     "zangodb": "^1.0.8"
-  }, 
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
