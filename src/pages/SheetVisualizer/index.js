@@ -3,7 +3,14 @@ import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
 import { DB } from 'Database'
 import { appName } from 'appConfig'
-import { ComposerToRecording } from 'lib/Utils'
+import { ComposerToRecording, getNoteText } from 'lib/Utils'
+import Switch from 'components/Switch'
+
+const THRESHOLDS = {
+    joined: 50,
+    pause: 400,
+}
+
 
 export default function SheetVisualizer(props) {
     const [songs, setSongs] = useState([])
@@ -11,7 +18,8 @@ export default function SheetVisualizer(props) {
     const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState({})
     const [selectedSongType, setSelectedSongType] = useState('recorded')
-
+    const [hasText, setHasText] = useState(false)
+    const [songAsText, setSongAstext] = useState('')
     function setFrames(amount) {
         const newAmount = framesPerRow + amount
         const frame = document.querySelector('.frame-outer')
@@ -28,6 +36,9 @@ export default function SheetVisualizer(props) {
         load()
     }, [])
 
+    function getChunkNoteText(i) {
+        return getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', 21).toLowerCase()
+    }
     function handleClick(song) {
         setCurrentSong(song)
         let lostReference = JSON.parse(JSON.stringify(song))
@@ -37,14 +48,12 @@ export default function SheetVisualizer(props) {
         let notes = lostReference.notes
         let chunks = []
         let previousChunkDelay = 0
+        let sheetText = ''
         for (let i = 0; notes.length > 0; i++) {
-            let chunk = {
-                notes: [notes.shift()],
-                delay: 0
-            }
+            const chunk = new Chunk([notes.shift()])
             let startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
             for (let j = 0; j < notes.length && j < 20; j++) {
-                let difference = notes[j][1] - chunk.notes[0][1] - 50 //TODO add threshold here
+                let difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
                 if (difference < 0) {
                     chunk.notes.push(notes.shift())
                     j--
@@ -53,9 +62,24 @@ export default function SheetVisualizer(props) {
             chunk.delay = previousChunkDelay
             previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
             chunks.push(chunk)
+            const emptyChunks = Math.round(chunk.delay / THRESHOLDS.pause)
+            chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
+
+            if (chunk.notes.length > 1) {
+                sheetText += `[${chunk.notes.map(e => getChunkNoteText(e[0])).join('')}] `
+            } else if (chunk.notes.length > 0) {
+                sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
+            }
+            if (emptyChunks > 2) {
+                sheetText += ' \n\n'
+            } else {
+                sheetText += new Array(emptyChunks).fill('').join("- ")
+            }
         }
+        setSongAstext(sheetText)
         setSheet(chunks)
     }
+
     return <div className='default-page'>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SimpleMenu functions={{ changePage: props.changePage }} className='noprint' />
@@ -91,9 +115,10 @@ export default function SheetVisualizer(props) {
                     </div>
                 </div>
                 <div className='displayer-buttons-wrapper noprint'>
-                    <button onClick={() => window.print()} className='genshin-button'>
-                        Print as PDF
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ marginRight: '0.5rem' }}>Note names</div>
+                        <Switch checked={hasText} onChange={setHasText} />
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         Per row: {framesPerRow}
                         <button className='displayer-plus-minus'
@@ -111,7 +136,12 @@ export default function SheetVisualizer(props) {
                 {currentSong?.name}
             </h1>
             <div style={{ color: 'var(--whitish)' }} className='noprint'>
-                <h2>{currentSong.name || 'No song selected'}</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2>{currentSong.name || 'No song selected'}</h2>
+                    <button onClick={() => window.print()} className='genshin-button'>
+                        Print as PDF
+                    </button>
+                </div>
                 <div style={{ color: 'var(--hint-main)' }}>
                     Remember that you can learn a song with the interactive
                     practice tool in the main page
@@ -124,35 +154,49 @@ export default function SheetVisualizer(props) {
 
                 {sheet.map((frame, i) =>
                     <SheetFrame
-
                         key={i}
                         framesPerRow={framesPerRow}
                         frame={frame}
                         rows={3}
+                        hasText={hasText}
                     />
                 )}
             </div>
-        </div>
+            {songAsText.trim().length > 0 && <pre className='text-notation-wrapper'>
+                {songAsText}
+            </pre>}
 
+        </div>
     </div>
 }
 
-function SheetFrame(props) {
-    const { frame, rows } = props
+class Chunk {
+    notes = []
+    delay = 0
+    constructor(notes = [], delay = 0) {
+        this.notes = notes
+        this.delay = delay
+    }
+}
+function SheetFrame({ frame, rows, hasText }) {
     const columnsPerRow = appName === 'Genshin' ? 7 : 5
     const notes = new Array(columnsPerRow * rows).fill(0)
     frame.notes.forEach(note => {
         notes[note[0]] = 1
     })
-    return <div className='frame-outer'>
-        <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
-            {notes.map((exists, i) => {
-                return <div className={exists ? 'frame-note-s' : 'frame-note-ns'} key={i}>
-
-                </div>
-            })}
+    return frame.notes.length === 0
+        ? <div className='frame-outer displayer-ball'>
+            <div></div>
         </div>
-    </div>
+        : <div className='frame-outer'>
+            <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
+                {notes.map((exists, i) => {
+                    return <div className={exists ? 'frame-note-s' : 'frame-note-ns'} key={i}>
+                        {(exists && hasText) ? getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', 21) : null}
+                    </div>
+                })}
+            </div>
+        </div>
 }
 
 

@@ -151,6 +151,7 @@ function getNoteText(noteNameType, index, pitch, layoutLength) {
         if (noteNameType === "Note name") return keyNames[appName][pitchArr.indexOf(pitch)][index]
         if (noteNameType === "Keyboard layout") return layoutData[layoutLength].keyboardLayout[index]
         if (noteNameType === "Do Re Mi") return layoutData[layoutLength].mobileLayout[index]
+		if (noteNameType === "ABC") return layoutData[layoutLength].abcLayout[index]
     } catch (e) { }
     return ''
 }

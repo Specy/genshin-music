@@ -96,7 +96,7 @@ select{
     background-color: var(--composer-tool);
     color: black;
     align-items: center;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
 }
 .settings-row div{
     display: flex;

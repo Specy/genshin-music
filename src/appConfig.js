@@ -1,17 +1,21 @@
-const appName = process.env.REACT_APP_NAME || ["Sky","Genshin"][1]
+const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][0]
 const appVersion = '2.3'
 console.log(`${appName}-V${appVersion}`)
-const updateMessage = appName === 'Genshin' 
-    ? ` -Added MIDI Keyboard support on all pages with custom layouts
-        -Performance improvements
-        -UI improvements and bug fixes
+const updateMessage = appName === 'Genshin'
+    ? ` - Added MIDI Keyboard support on all pages with custom layouts
+        - Performance improvements in main page
+        - UI improvements and bug fixes
+        - Added note names to sheet visualizer and empty cells
+        - Added ABC format
     `.trim()
-    : ` -Added MIDI Keyboard support on all pages with custom layouts
-        -Performance improvements
-        -UI improvements and bug fixes
+    : ` - Added MIDI Keyboard support on all pages with custom layouts
+        - Performance improvements
+        - UI improvements and bug fixes
+        - Added note names to sheet visualizer and empty cells
+        - Added ABC format
     `.trim()
 
-const pages = ["", "Composer", "ErrorPage", "Changelog","Donate", "Partners","Home","Help", "SheetVisualizer", "MidiSetup"]
+const pages = ["", "Composer", "ErrorPage", "Changelog", "Donate", "Partners", "Home", "Help", "SheetVisualizer", "MidiSetup"]
 
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
@@ -27,13 +31,13 @@ const MIDI_STATUS = {
     down: 144
 }
 const isMidiAvailable = !!navigator.requestMIDIAccess
-const instruments = appName === "Genshin" 
+const instruments = appName === "Genshin"
     ? [
         "Lyre",
         "Zither",
         "Old-Zither",
         "DunDun"
-   ]:[
+    ] : [
         "Piano",
         "Contrabass",
         "Guitar",
@@ -57,14 +61,14 @@ const instrumentsData = {
     Lyre: {
         notes: 21
     },
-    Zither:{
+    Zither: {
         notes: 21,
         effects: {
             filter: 'sepia(100%)',
         },
         clickColor: '#ddcba8'
     },
-    "Old-Zither":{
+    "Old-Zither": {
         notes: 21,
         effects: {
             filter: 'sepia(100%)',
@@ -77,7 +81,7 @@ const instrumentsData = {
     Bells: {
         notes: 8
     },
-    Trumpet:{
+    Trumpet: {
         notes: 15
     },
     Contrabass: {
@@ -95,8 +99,8 @@ const instrumentsData = {
     HandPan: {
         notes: 8
     },
-    ToyUkulele:{
-        notes:15
+    ToyUkulele: {
+        notes: 15
     },
     Harp: {
         notes: 15
@@ -119,48 +123,68 @@ const instrumentsData = {
     Xylophone: {
         notes: 15
     },
-    Ocarina:{
-        notes:15
+    Ocarina: {
+        notes: 15
     }
 }
 
 
 const layoutData = {
     21: {
-        keyboardLayout: ("Q W E R T Y U " +
+        keyboardLayout: (
+            "Q W E R T Y U " +
             "A S D F G H J " +
             "Z X C V B N M").split(" "),
 
-        mobileLayout: ("do re mi fa so la ti " +
+        mobileLayout: (
+            "do re mi fa so la ti " +
             "do re mi fa so la ti " +
             "do re mi fa so la ti").split(" "),
 
-        keyboardCodes: ("81 87 69 82 84 89 85 " +
+        keyboardCodes: (
+            "81 87 69 82 84 89 85 " +
             "65 83 68 70 71 72 74 " +
-            "90 88 67 86 66 78 77").split(" ")
+            "90 88 67 86 66 78 77").split(" "),
+        abcLayout: (
+            "A1 A2 A3 A4 A5 A6 A7 " +
+            "B1 B2 B3 B4 B5 B6 B7 " +
+            "C1 C2 C3 C4 C5 C6 C7").split(" ")
     },
     8: {
-        keyboardLayout: ("Q W E R " +
+        keyboardLayout: (
+            "Q W E R " +
             "A S D F").split(" "),
 
-        mobileLayout: ("do re mi fa " +
+        mobileLayout: (
+            "do re mi fa " +
             "do re mi fa").split(" "),
 
-        keyboardCodes: ("81 87 69 82 " +
-        "65 83 68 70").split(" ")
+        keyboardCodes: (
+            "81 87 69 82 " +
+            "65 83 68 70").split(" "),
+        abcLayout: (
+            "A1 A2 A3 A4" +
+            "B1 B2 B3 B4").split(" ")
     },
     15: {
-        keyboardLayout: ("Q W E R T " +
+        keyboardLayout: (
+            "Q W E R T " +
             "A S D F G " +
             "Z X C V B").split(" "),
 
-        mobileLayout: ("do re mi fa so " +
+        mobileLayout: (
+            "do re mi fa so " +
             "do re mi fa so " +
             "do re mi fa so").split(" "),
 
-        keyboardCodes: ("81 87 69 82 84 " +
+        keyboardCodes: (
+            "81 87 69 82 84 " +
             "65 83 68 70 71 " +
-            "90 88 67 86 66").split(" ")
+            "90 88 67 86 66").split(" "),
+        abcLayout: (
+            "A1 A2 A3 A4 A5 " +
+            "B1 B2 B3 B4 B5 " +
+            "C1 C2 C3 C4 C5").split(" ")
     }
 }
 
@@ -179,9 +203,9 @@ const keyNames = {
         10: ["Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
         11: ["B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B"]
     },
-    Genshin:{
+    Genshin: {
         0: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
-        1: ["Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db" , "Eb", "F", "Gb", "Ab", "Bb", "C", "Db"],
+        1: ["Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db"],
         2: ["D", "E", "F#", "G", "A", "B", "C#", "D", "E", "F#", "G", "A", "B", "C#", "D", "E", "F#", "G", "A", "B", "C#", "D"],
         3: ["Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb"],
         4: ["E", "F#", "G#", "A", "B", "C#", "D#", "E", "F#", "G#", "A", "B", "C#", "D#", "E", "F#", "G#", "A", "B", "C#", "D#", "E"],
@@ -194,22 +218,22 @@ const keyNames = {
         11: ["B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B"]
     }
 }
-const speedChangers = [0.25,0.5,0.75,1,1.25,1.5,2].map(e => {
+const speedChangers = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
     return {
         name: `x${e}`,
         value: e
     }
 })
 
-const pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] 
+const pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 
-const composerNotePositions =  appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15,16,17,18,19,20,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14].reverse()
+const composerNotePositions = appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
 
-const importNotePositions = appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] :  [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+const importNotePositions = appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
 const layoutImages = {
     15: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" "),
-    8: appName === "Sky"? "cr dm cr dm cr dm cr dm".split(" ") : "do re mi fa do re mi fa".split(" "),
+    8: appName === "Sky" ? "cr dm cr dm cr dm cr dm".split(" ") : "do re mi fa do re mi fa".split(" "),
     21: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ")
 }
 
@@ -223,14 +247,11 @@ const cacheData = {
     standards: [
         {
             color: 0x515c6f //lighter
-        },
-        {
+        },{
             color: 0x485363 //darker
-        },
-        {
+        },{
             color: 0x1a968b //selected
-        },
-        {
+        },{
             color: 0xd6722f
         }
     ],
@@ -239,8 +260,7 @@ const cacheData = {
         {
             type: "short",
             color: "#282875"
-        },
-        {
+        },{
             type: "long",
             color: "#282875"
         }

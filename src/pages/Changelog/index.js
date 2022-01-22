@@ -65,7 +65,9 @@ const changelogs = [
         date: '2022 - 30/01',
         changes: [
             'Added MIDI Keyboard support on all pages with custom layouts',
-            'Performance improvements',
+            'Performance improvements of main page',
+            'Added note names to sheet visualizer and empty cells',
+            'Added ABC format',
             'UI improvements and bug fixes'
         ]
     },{

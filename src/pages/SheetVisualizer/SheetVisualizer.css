@@ -69,6 +69,11 @@
 	border-radius: 0.2rem;
 	width: 80%;
 	height: 80%;
+	font-size: 0.6rem;
+	color: black;
+	display: flex;
+	justify-content: center;
+	align-items: center;	
 	background-color: var(--icon-color);
 }
 .frame-note-ns {
@@ -89,14 +94,44 @@
 	grid-template-columns: repeat(5, 1fr);
 	justify-content: center;
 }
+.onprint {
+	display: none;
+}
+.text-notation-wrapper{
+	background-color: var(--primary);
+	border-radius: 0.5rem;
+	border: solid 1px var(--secondary);
+	padding: 1rem;
+	width: 100%;
+	white-space: pre-wrap;
+	-webkit-user-select: text;
+	user-select: text;
+	cursor: text;
+	margin-top: 2rem;
+}
+.displayer-ball{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	padding: 0;
+	background-color: transparent;
+}
+
+.displayer-ball div{
+	width: 0.5rem;
+	height: 0.5rem;
+	background-color: #606876;
+	border-radius: 50%;
+	opacity: 0.5;
+}
+
 @media only screen and (max-width: 900px) {
 	.displayer-page {
 		padding: 1rem 5vw;
 	}
 }
-.onprint {
-	display: none;
-}
+
 @media print {
 	.frame-note-s {
 		border: solid 4px black;

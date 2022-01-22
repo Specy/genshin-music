@@ -1,68 +1,62 @@
-import React, { Component } from 'react'
+import React, { Component, memo } from 'react'
 import { cssClasses, appName, instrumentsData } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
-class Note extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-        }
-        //TODO convert this into functional component
+export default memo(function Note( { data, approachingNotes, outgoingAnimation, fadeTime, handleClick, noteImage, noteText }) {
+    const { status, approachRate, instrument } = data
+    const animation = {
+        transition: `background-color ${fadeTime}ms  ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
-    render() {
-        const { props } = this
-        const { data, approachingNotes, outgoingAnimation, fadeTime } = props
-        const { status, approachRate, instrument } = data
-        const animation = {
-            transition: `background-color ${props.fadeTime}ms  ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
-        }
-        const className = parseClass(status)
-        const effects = instrumentsData[instrument]?.effects || {}
-        const clickColor = instrumentsData[instrument]?.clickColor
+    const className = parseClass(status)
+    const effects = instrumentsData[instrument]?.effects || {}
+    const clickColor = instrumentsData[instrument]?.clickColor
 
-        return <button
-            onPointerDown={(e) => {
-                e.preventDefault()
-                props.handleClick(data)
+    return <button
+        onPointerDown={(e) => {
+            e.preventDefault()
+            handleClick(data)
+        }}
+        className="button-hitbox-bigger"
+    >
+        {approachingNotes.map((note) => {
+            return <ApproachCircle
+                key={note.id}
+                index={data.index}
+                approachRate={approachRate}
+            />
+        })}
+        {outgoingAnimation.map(e => {
+            return <div
+                key={e.key}
+                className={cssClasses.noteAnimation}
+            />
+        })}
+        <div
+            className={className}
+            style={{
+                ...animation,
+                ...(clickColor && status === 'clicked' ? { backgroundColor: clickColor } : {})
             }}
-            className="button-hitbox-bigger"
         >
-            {approachingNotes.map((note) => {
-                return <ApproachCircle
-                    key={note.id}
-                    index={data.index}
-                    approachRate={approachRate}
-                />
-            })}
-            {outgoingAnimation.map(e => {
-                return <div
-                    key={e.key}
-                    className={cssClasses.noteAnimation}
-                />
-            })}
-            <div
-                className={className}
-                style={{
-                    ...animation,
-                    ...(clickColor && status === 'clicked' ? { backgroundColor: clickColor } : {})
-                }}
-            >
-                <img
-                    draggable="false"
-                    alt=''
-                    src={props.noteImage}
-                    style={effects}
-                />
-                {appName === 'Genshin' && <GenshinNoteBorder
-                    className='genshin-border'
-                    fill={parseBorderFill(status)}
-                />}
-                <div className={cssClasses.noteName}>
-                    {props.noteText}
-                </div>
+            <img
+                draggable="false"
+                alt=''
+                src={noteImage}
+                style={effects}
+            />
+            {appName === 'Genshin' && <GenshinNoteBorder
+                className='genshin-border'
+                fill={parseBorderFill(status)}
+            />}
+            <div className={cssClasses.noteName}>
+                {noteText}
             </div>
-        </button>
-    }
-}
+        </div>
+    </button>
+},(p,n) => {
+    return p.data.status === n.data.status && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
+        && p.noteText === n.noteText && p.fadeTime === n.fadeTime && p.handleClick === n.handleClick && p.noteImage === n.noteImage
+        && p.noteText === n.noteText && p.outgoingAnimation === n.outgoingAnimation && p.approachingNotes === n.approachingNotes
+})
 function getApproachCircleColor(index) {
     let numOfNotes = appName === "Sky" ? 5 : 7
     let row = Math.floor(index / numOfNotes)
@@ -101,5 +95,3 @@ function parseClass(status) {
     }
     return className
 }
-
-export default Note

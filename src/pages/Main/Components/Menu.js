@@ -286,7 +286,11 @@ class Menu extends Component {
                         />
                     })}
                     {isMidiAvailable && 
-                        <button className='genshin-button' onClick={() => changePage('MidiSetup')} style={{marginTop: '1.2rem'}}>
+                        <button 
+                            className='genshin-button' 
+                            onClick={() => changePage('MidiSetup')} 
+                            style={{marginTop: '0.4rem', width:'fit-content', marginLeft: 'auto'}}
+                        >
                             Setup MIDI keyboard
                         </button>
                     }

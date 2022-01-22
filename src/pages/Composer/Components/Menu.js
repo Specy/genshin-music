@@ -83,7 +83,7 @@ class Menu extends Component {
         new LoggerEvent("Success", "Song downloaded").trigger()
     }
     updateSong = () => {
-      this.props.functions.updateSong(this.props.data.currentSong)  
+        this.props.functions.updateSong(this.props.data.currentSong)
     }
     render() {
         const { data, functions } = this.props
@@ -192,11 +192,11 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
-                    {isMidiAvailable && 
-                        <button 
-                            className='genshin-button' 
-                            onClick={() => changePage('MidiSetup')} 
-                            style={{margin: '0.4rem 0', width:'fit-content'}}
+                    {isMidiAvailable &&
+                        <button
+                            className='genshin-button'
+                            onClick={() => changePage('MidiSetup')}
+                            style={{ marginTop: '0.4rem', width: 'fit-content', marginLeft: 'auto' }}
                         >
                             Setup MIDI keyboard
                         </button>

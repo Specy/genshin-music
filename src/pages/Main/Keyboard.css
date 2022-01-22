@@ -70,7 +70,8 @@
 	top: 5%;
 }
 .note-composer .note-name{
-	bottom: 15% !important;
+	bottom: 14% !important;
+    font-size: 0.7rem;
 }
 .genshin-border{
 	top: unset !important;

@@ -2,7 +2,7 @@ import { isMobile } from "is-mobile"
 import { instruments, appName } from "appConfig"
 import { MIDINote } from "./Utils"
 export const ComposerSettings = {
-    settingVesion: appName + 17,
+    settingVesion: appName + 18,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -57,11 +57,13 @@ export const ComposerSettings = {
             ? [
                 "Note name",
                 "Keyboard layout",
-                "Do Re Mi"
+                "Do Re Mi",
+                "ABC"
             ]
             : [
                 "Note name",
-                "Keyboard layout"
+                "Keyboard layout",
+                "ABC"
             ]
     },
     pitch: {
@@ -127,7 +129,7 @@ export const ComposerSettings = {
 }
 
 export const MainPageSettings = {
-    settingVesion: appName + 17,
+    settingVesion: appName + 18,
     instrument: {
         name: "Instrument",
         type: "instrument",
@@ -183,11 +185,13 @@ export const MainPageSettings = {
             ? [
                 "Note name",
                 "Keyboard layout",
-                "Do Re Mi"
+                "Do Re Mi",
+                "ABC"
             ]
             : [
                 "Note name",
-                "Keyboard layout"
+                "Keyboard layout",
+                "ABC"
             ]
     },
     approachSpeed: {

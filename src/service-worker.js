@@ -7,7 +7,7 @@
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 const appName = process.env.REACT_APP_NAME
-const CACHE = appName + "-8.5"
+const CACHE = appName + "-8.6"
 console.log("CACHE Version: ", CACHE)
 import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute } from 'workbox-precaching';

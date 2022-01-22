@@ -259,8 +259,7 @@ function drawStage(g, width, height) {
     g.drawRoundedRect(0, 0, width - 2, height - 4, 6)
 }
 
-function Column(props) {
-    let { data, index, sizes, click, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected } = props
+function Column({ data, index, sizes, click, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }) {
     return <Container
         pointertap={() => click(index)}
         interactive={true}
@@ -293,6 +292,7 @@ function Column(props) {
     </Container>
 }
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
 function calcMinColumnWidth(parentWidth) {
     return nearestEven(parentWidth / NumOfColumnsPerCanvas)
 }
