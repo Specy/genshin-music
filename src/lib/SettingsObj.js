@@ -2,7 +2,7 @@ import { isMobile } from "is-mobile"
 import { instruments, appName } from "appConfig"
 import { MIDINote } from "./Utils"
 export const ComposerSettings = {
-    settingVesion: appName + 18,
+    settingVesion: appName + 19,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -129,7 +129,7 @@ export const ComposerSettings = {
 }
 
 export const MainPageSettings = {
-    settingVesion: appName + 18,
+    settingVesion: appName + 19,
     instrument: {
         name: "Instrument",
         type: "instrument",

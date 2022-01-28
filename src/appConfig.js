@@ -48,6 +48,7 @@ const instruments = appName === "Genshin"
         "WinterPiano",
         "Xylophone",
         "Flute",
+        "Panflute",
         "Ocarina",
         "Kalimba",
         "ToyUkulele",
@@ -77,6 +78,9 @@ const instrumentsData = {
     },
     DunDun: {
         notes: 8
+    },
+    Panflute: {
+        notes: 15
     },
     Bells: {
         notes: 8

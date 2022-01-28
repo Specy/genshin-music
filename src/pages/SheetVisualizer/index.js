@@ -61,10 +61,9 @@ export default function SheetVisualizer(props) {
             }
             chunk.delay = previousChunkDelay
             previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
-            chunks.push(chunk)
             const emptyChunks = Math.round(chunk.delay / THRESHOLDS.pause)
             chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
-
+            chunks.push(chunk)
             if (chunk.notes.length > 1) {
                 sheetText += `[${chunk.notes.map(e => getChunkNoteText(e[0])).join('')}] `
             } else if (chunk.notes.length > 0) {
@@ -135,7 +134,7 @@ export default function SheetVisualizer(props) {
             <h1 className='onprint'>
                 {currentSong?.name}
             </h1>
-            <div style={{ color: 'var(--whitish)' }} className='noprint'>
+            <div style={{ color: 'var(--whitish)', width: '100%' }} className='noprint'>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2>{currentSong.name || 'No song selected'}</h2>
                     <button onClick={() => window.print()} className='genshin-button'>

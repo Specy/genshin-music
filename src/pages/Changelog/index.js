@@ -68,6 +68,7 @@ const changelogs = [
             'Performance improvements of main page',
             'Added note names to sheet visualizer and empty cells',
             'Added ABC format',
+            'Added Panflute (Sky)',
             'UI improvements and bug fixes'
         ]
     },{

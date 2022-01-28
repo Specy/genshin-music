@@ -1,5 +1,4 @@
 import { TempoChangers } from "lib/Utils"
-import * as PIXI from "pixi.js"
 import { cacheData, notesPerColumn } from "appConfig"
 const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = cacheData
 
@@ -20,14 +19,18 @@ export class ComposerCache {
         this.margin = margin
         this.noteWidth = this.width
         this.noteHeight = this.height / notesPerColumn
+        //TODO reuse the same canvas instead of remaking one for each element
+        /*
         this.app = new PIXI.Application({
             width: width,
             height: height,
+            resolution: 2
         })
+        */
         this.generate()
     }
     destroy = () => {
-        this.app.destroy()
+        //this.app.destroy()
     }
     generate = () => {
         TempoChangers.forEach(tempoChanger => {
@@ -54,8 +57,8 @@ export class ComposerCache {
                     ctx,
                     this.margin / 2,
                     this.margin / 2,
-                    this.noteWidth - this.margin - 1,
-                    this.noteHeight - this.margin - 1,
+                    Math.ceil(this.noteWidth - this.margin - 1),
+                    Math.floor(this.noteHeight - this.margin - 1),
                     roundNess,
                     true,
                     false
@@ -68,8 +71,8 @@ export class ComposerCache {
                     ctx,
                     this.margin / 2,
                     this.margin / 2,
-                    this.noteWidth - this.margin - 1,
-                    this.noteHeight - this.margin - 1,
+                    Math.ceil(this.noteWidth - this.margin - 1),
+                    Math.floor(this.noteHeight - this.margin - 1),
                     roundNess,
                     false,
                     true
@@ -161,13 +164,7 @@ function drawColumn(tempoChanger, self, borderWidth) {
     return canvas
 }
 
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    if (typeof stroke === 'undefined') {
-        stroke = true;
-    }
-    if (typeof radius === 'undefined') {
-        radius = 5;
-    }
+function roundRect(ctx, x, y, width, height, radius = 5, fill, stroke = true) {
     if (typeof radius === 'number') {
         radius = { tl: radius, tr: radius, br: radius, bl: radius };
     } else {
