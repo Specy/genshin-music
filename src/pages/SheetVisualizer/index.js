@@ -37,7 +37,8 @@ export default function SheetVisualizer(props) {
     }, [])
 
     function getChunkNoteText(i) {
-        return getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', 21).toLowerCase()
+        const text =  getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', 21)
+        return appName === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
     function handleClick(song) {
         setCurrentSong(song)
@@ -45,13 +46,13 @@ export default function SheetVisualizer(props) {
         if (lostReference.data?.isComposedVersion) {
             lostReference = ComposerToRecording(lostReference)
         }
-        let notes = lostReference.notes
-        let chunks = []
+        const notes = lostReference.notes
+        const chunks = []
         let previousChunkDelay = 0
         let sheetText = ''
         for (let i = 0; notes.length > 0; i++) {
             const chunk = new Chunk([notes.shift()])
-            let startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
+            const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
             for (let j = 0; j < notes.length && j < 20; j++) {
                 let difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
                 if (difference < 0) {
@@ -65,7 +66,8 @@ export default function SheetVisualizer(props) {
             chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
             chunks.push(chunk)
             if (chunk.notes.length > 1) {
-                sheetText += `[${chunk.notes.map(e => getChunkNoteText(e[0])).join('')}] `
+                const text = chunk.notes.map(e => getChunkNoteText(e[0])).join('')
+                sheetText += appName === "Genshin" ? `[${text}] ` : `${text} `
             } else if (chunk.notes.length > 0) {
                 sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
             }

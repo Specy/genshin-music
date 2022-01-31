@@ -3,7 +3,7 @@ import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools
 
 import addCell from "assets/icons/addCell.svg"
 import removeCell from "assets/icons/removeCell.svg"
-import { appName, audioContext, MIDI_STATUS } from "appConfig"
+import { appName, audioContext, MIDI_STATUS, layersIndexes } from "appConfig"
 
 import MidiImport from "./MidiParser"
 import ComposerTools from "./Components/ComposerTools"
@@ -147,7 +147,7 @@ class Composer extends Component {
     }
     handleMidi = (e) => {
         if (!this.mounted) return
-        const { instrument } = this.state
+        const { instrument, song, layer} = this.state
         const { data } = e
         const [eventType, note, velocity] = data
 
@@ -156,6 +156,22 @@ class Composer extends Component {
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.layout[keyboardNote.index])
             })
+            const shortcut = this.MIDISettings.shortcuts.find(e => e.midi === note)
+            if(!shortcut) return
+            switch(shortcut.type){
+                case 'toggle_play': this.togglePlay(); break;
+                case 'next_column': this.selectColumn(song.selected + 1); break;
+                case 'previous_column': this.selectColumn(song.selected - 1); break;
+                case 'add_column': this.addColumns(1, song.selected); break;
+                case 'remove_column': this.removeColumns(1, song.selected); break;
+                case 'change_layer': {
+                    let nextLayer = layer + 1
+                    if(nextLayer > layersIndexes.length) nextLayer = 1
+                    this.changeLayer(nextLayer)
+                    break;
+                }
+                default: break;
+            }
         }
     }
     loadReverb() {
@@ -319,7 +335,7 @@ class Composer extends Component {
     }
     handleKeyboard = (event) => {
         if (document.activeElement.tagName === "INPUT") return
-        const { instrument, layer, layers, isPlaying } = this.state
+        const { instrument, layer, layers, isPlaying, song } = this.state
         let key = event.code
         const shouldEditKeyboard = isPlaying || event.shiftKey
         if (shouldEditKeyboard) {
@@ -359,8 +375,8 @@ class Composer extends Component {
                     if (nextLayer < layers.length + 2) this.changeLayer(nextLayer)
                     break;
                 }
-                case "KeyQ": this.removeColumns(1, this.state.song.selected); break;
-                case "KeyE": this.addColumns(1, this.state.song.selected); break;
+                case "KeyQ": this.removeColumns(1, song.selected); break;
+                case "KeyE": this.addColumns(1, song.selected); break;
                 default: break;
             }
         }

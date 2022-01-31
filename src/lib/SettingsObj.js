@@ -1,6 +1,6 @@
 import { isMobile } from "is-mobile"
 import { instruments, appName } from "appConfig"
-import { MIDINote } from "./Utils"
+import { MIDINote,MIDIShortcut } from "./Utils"
 export const ComposerSettings = {
     settingVesion: appName + 19,
     instrument: {
@@ -216,11 +216,20 @@ export const MainPageSettings = {
     }
 }
 export const MIDISettings = {
-    settingVesion: appName + 2,
+    settingVesion: appName + 4,
     enabled: false,
     currentSource: '',
-    notes: new Array(appName === 'Genshin' ? 21 : 15).fill(0).map((e,i) => new MIDINote(i,-1))
+    notes: new Array(appName === 'Genshin' ? 21 : 15).fill(0).map((e,i) => new MIDINote(i,-1)),
+    shortcuts: [
+        new MIDIShortcut('toggle_play',-1),
+        new MIDIShortcut('next_column',-1),
+        new MIDIShortcut('previous_column',-1),
+        new MIDIShortcut('add_column',-1),
+        new MIDIShortcut('remove_column',-1),
+        new MIDIShortcut('change_layer',-1)
+    ]
 }
+
 export function getMIDISettings(){
     let settings = localStorage.getItem(appName + '_MIDI_Settings')
     try {

@@ -9,7 +9,7 @@ import { layoutImages, MIDI_STATUS } from "appConfig"
 import React, { Component } from 'react'
 import { audioContext, instruments, isMidiAvailable } from "appConfig"
 import Instrument from "lib/Instrument"
-
+import Shortcut from "./Shortcut"
 export default class MidiSetup extends Component {
     constructor(props) {
         super(props)
@@ -17,6 +17,7 @@ export default class MidiSetup extends Component {
             settings: getMIDISettings(),
             instrument: new Instrument(),
             selectedNote: null,
+            selectedShortcut: null,
             sources: [],
             selectedSource: undefined
         }
@@ -31,7 +32,7 @@ export default class MidiSetup extends Component {
     componentWillUnmount() {
         const { sources } = this.state
         this.mounted = false
-        if(this.MidiAccess) this.MidiAccess.onstatechange = null
+        if (this.MidiAccess) this.MidiAccess.onstatechange = null
         sources?.forEach(source => {
             source.onmidimessage = null
         })
@@ -48,7 +49,7 @@ export default class MidiSetup extends Component {
         }
     }
     initMidi = (e) => {
-        if(!this.mounted) return
+        if (!this.mounted) return
         e.onstatechange = this.midiStateChange
         this.MidiAccess = e
         const midiInputs = this.MidiAccess.inputs.values()
@@ -59,7 +60,7 @@ export default class MidiSetup extends Component {
         this.setState({ sources: inputs })
     }
     midiStateChange = (e) => {
-        if(!this.mounted) return
+        if (!this.mounted) return
         const { sources } = this.state
         const midiInputs = this.MidiAccess.inputs.values()
         const inputs = []
@@ -74,11 +75,11 @@ export default class MidiSetup extends Component {
             new LoggerEvent('Warning', 'Device connected').trigger()
     }
     selectMidi = (e) => {
-        if(!this.mounted) return
+        if (!this.mounted) return
         const { sources, selectedSource, settings } = this.state
         const nextSource = sources.find(s => s.id === e.target.value)
         if (selectedSource) selectedSource.onmidimessage = null
-        if(!nextSource) return
+        if (!nextSource) return
         nextSource.onmidimessage = this.handleMidi
         settings.currentSource = nextSource.name + " " + nextSource.manufacturer
         this.setState({ selectedSource: nextSource, settings })
@@ -94,7 +95,7 @@ export default class MidiSetup extends Component {
     saveLayout = () => {
         const { settings } = this.state
         settings.enabled = true
-        this.setState({settings})
+        this.setState({ settings })
         localStorage.setItem(appName + '_MIDI_Settings', JSON.stringify(this.state.settings))
     }
     loadInstrument = async (name) => {
@@ -107,17 +108,44 @@ export default class MidiSetup extends Component {
             instrument: newInstrument
         })
     }
+    checkIfUsed = (midi, type) => {
+        const { shortcuts, notes } = this.state.settings
+        if (shortcuts.find(e => e.midi === midi) && ['all','shortcuts'].includes(type) ) return true
+        if(notes.find(e => e.midi === midi) && ['all','notes'].includes(type) ) return true
+        return false
+    }
     handleMidi = (event) => {
-        const { selectedNote, settings } = this.state
-        const { data } = event
-        const [eventType, note, velocity] = data
+        const { selectedNote, settings, selectedShortcut } = this.state
+        const [eventType, note, velocity] = event.data
 
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             if (selectedNote) {
+                if(this.checkIfUsed(note,'shortcuts')) return new LoggerEvent('Warning', 'Key already used').trigger()
                 selectedNote.midi = note
                 this.deselectNotes()
                 this.setState({ selectedNote: null })
                 this.saveLayout()
+            }
+            
+            if (selectedShortcut) {
+                const shortcut = settings.shortcuts.find(e => e.type === selectedShortcut)
+                if(this.checkIfUsed(note,'all')) return new LoggerEvent('Warning', 'Key already used').trigger()
+                if (shortcut) {
+                    shortcut.midi = note
+                    shortcut.status = note < 0 ? 'wrong' : 'right'
+                    this.setState({ settings: settings })
+                    this.saveLayout()
+                }
+            }
+            const shortcut = settings.shortcuts.find(e => e.midi === note)
+            if(shortcut){
+                shortcut.status = 'clicked'
+                setTimeout(() => {
+                    shortcut.status = note < 0 ? 'wrong' : 'right'
+                    this.setState({ settings: settings })
+                },150)
+                this.setState({ settings: settings })
+
             }
             const keyboardNotes = settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
@@ -134,20 +162,27 @@ export default class MidiSetup extends Component {
                 note.status = note.midi < 0 ? 'wrong' : 'right'
                 this.setState({ settings })
             }, 200)
-            this.setState({ settings })
+            this.setState({ settings, selectedShortcut: null })
         } else {
-            this.setState({ settings, selectedNote: note })
+            this.setState({ settings, selectedNote: note, selectedShortcut: null })
         }
         this.playSound(note)
     }
-
+    handleShortcutClick = (shortcut) => {
+        console.log(shortcut)
+        this.deselectNotes()
+        if (this.state.selectedShortcut === shortcut) {
+            return this.setState({ selectedShortcut: null, selectedNote: null })
+        }
+        this.setState({ selectedShortcut: shortcut, selectedNote: null })
+    }
     playSound = (note) => {
         if (note === undefined) return
         this.state.instrument.play(note.index, 1)
     }
 
     render() {
-        const { settings, sources } = this.state
+        const { settings, sources, selectedShortcut } = this.state
         const { changePage } = this.props
         return <div className="default-page">
             <SimpleMenu functions={{ changePage: changePage }} />
@@ -171,22 +206,39 @@ export default class MidiSetup extends Component {
                         Click on the note to map, then press your MIDI keyboard
                     </div>
                 </div>
-
-
-                <div
-                    className={appName === 'Genshin' ? "keyboard" : "keyboard keyboard-5"}
-                    style={{ marginTop: 'auto', width: 'fit-content' }}
-                >
-                    {settings.notes.map((note, i) => {
-                        const noteImage = layoutImages[settings.notes.length][note.index]
-                        return <BaseNote
-                            key={i}
-                            handleClick={this.handleClick}
-                            data={note}
-                            noteImage={`./assets/icons/keys/${noteImage}.svg`}
-                            noteText={note.midi < 0 ? 'NA' : note.midi}
-                        />
-                    })}
+                <div className="midi-setup-content">
+                    <div
+                        className={appName === 'Genshin' ? "keyboard" : "keyboard keyboard-5"}
+                        style={{ marginTop: 'auto', width: 'fit-content' }}
+                    >
+                        {settings.notes.map((note, i) => {
+                            const noteImage = layoutImages[settings.notes.length][note.index]
+                            return <BaseNote
+                                key={i}
+                                handleClick={this.handleClick}
+                                data={note}
+                                noteImage={`./assets/icons/keys/${noteImage}.svg`}
+                                noteText={note.midi < 0 ? 'NA' : note.midi}
+                            />
+                        })}
+                    </div>
+                    <div className="midi-shortcuts-wrapper">
+                        <div style={{ fontSize: '1.5rem' }}>
+                            Shortcuts
+                        </div>
+                        <div className="midi-shortcuts">
+                            {settings.shortcuts.map(shortcut =>
+                                <Shortcut
+                                    key={shortcut.type}
+                                    type={shortcut.type}
+                                    status={shortcut.status}
+                                    midi={shortcut.midi}
+                                    selected={selectedShortcut === shortcut.type}
+                                    onClick={this.handleShortcutClick}
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

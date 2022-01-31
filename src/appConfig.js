@@ -16,7 +16,7 @@ const updateMessage = appName === 'Genshin'
     `.trim()
 
 const pages = ["", "Composer", "ErrorPage", "Changelog", "Donate", "Partners", "Home", "Help", "SheetVisualizer", "MidiSetup"]
-
+const layersIndexes = [1,2,3]
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
     note: appName === "Genshin" ? "note" : "note-sky",
@@ -298,5 +298,6 @@ export {
     cacheData,
     updateMessage,
     MIDI_STATUS,
-    isMidiAvailable
+    isMidiAvailable,
+    layersIndexes
 }

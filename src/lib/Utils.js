@@ -145,7 +145,13 @@ class MIDINote{
 		this.status = midi < 0 ? 'wrong' : 'right'
 	}
 }
-
+class MIDIShortcut{
+    constructor(type, midi){
+        this.type = type
+        this.midi = midi
+		this.status = midi < 0 ? 'wrong' : 'right'
+    }
+}
 function getNoteText(noteNameType, index, pitch, layoutLength) {
     try {
         if (noteNameType === "Note name") return keyNames[appName][pitchArr.indexOf(pitch)][index]
@@ -585,5 +591,6 @@ export {
 	delayMs,
 	NotesTable,
 	MIDINote,
-	getNoteText
+	getNoteText,
+	MIDIShortcut
 }

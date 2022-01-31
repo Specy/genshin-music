@@ -1,9 +1,9 @@
 import ComposerNote from "./Components/ComposerNote"
 import { getNoteText } from 'lib/Utils'
 import MultiSwitch from "./Components/MultiSwitch"
-import { layoutImages } from "appConfig"
+import { layoutImages, layersIndexes } from "appConfig"
 
-export default function ComposerKeyboard({data,functions}) {
+export default function ComposerKeyboard({ data, functions }) {
     let notesIndexes = data.currentColumn.notes.map((e) => e.index)
     let hiddenSideMenu = data.isPlaying ? " hidden" : ""
     let keyboardClass = "keyboard"
@@ -39,7 +39,7 @@ export default function ComposerKeyboard({data,functions}) {
                 <MultiSwitch
                     buttonsClass={"layer-button"}
                     selectedColor={"#63aea7"}
-                    options={[1, 2, 3]}
+                    options={layersIndexes}
                     onSelect={functions.changeLayer}
                     selected={data.layer}
                 />
