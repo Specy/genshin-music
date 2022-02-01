@@ -61,11 +61,11 @@ function ChangelogRow(props) {
 const changelogs = [
     {
         version: '2.3',
-        title: 'MIDI Keyboard support',
-        date: '2022 - 30/01',
+        title: 'MIDI Keyboard and Performance',
+        date: '2022 - 2/02',
         changes: [
-            'Added MIDI Keyboard support on all pages with custom layouts',
-            'Performance improvements of main page',
+            'Added MIDI Keyboard support on all pages with custom layouts and shortcuts',
+            'Big performance improvements of main page',
             'Added note names to sheet visualizer and empty cells',
             'Added ABC format',
             'Added Panflute (Sky)',

@@ -1,8 +1,8 @@
-import React, { Component, memo } from 'react'
+import React, { memo } from 'react'
 import { cssClasses, appName, instrumentsData } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
 
-export default memo(function ComposerNote2({ data, layers, instrument, clickAction, noteText, noteImage }) {
+export default memo(function ComposerNote({ data, layers, instrument, clickAction, noteText, noteImage }) {
     let className = cssClasses.noteComposer
     if (layers[0] === "1") className += " layer-1"
     if (layers[1] === "1") className += " layer-2"

@@ -154,10 +154,11 @@ class MIDIShortcut{
 }
 function getNoteText(noteNameType, index, pitch, layoutLength) {
     try {
+		const layout = layoutData[layoutLength]
         if (noteNameType === "Note name") return keyNames[appName][pitchArr.indexOf(pitch)][index]
-        if (noteNameType === "Keyboard layout") return layoutData[layoutLength].keyboardLayout[index]
-        if (noteNameType === "Do Re Mi") return layoutData[layoutLength].mobileLayout[index]
-		if (noteNameType === "ABC") return layoutData[layoutLength].abcLayout[index]
+        if (noteNameType === "Keyboard layout") return layout.keyboardLayout[index]
+        if (noteNameType === "Do Re Mi") return layout.mobileLayout[index]
+		if (noteNameType === "ABC") return layout.abcLayout[index]
     } catch (e) { }
     return ''
 }

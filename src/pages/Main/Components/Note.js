@@ -1,4 +1,4 @@
-import React, { Component, memo } from 'react'
+import React, { memo } from 'react'
 import { cssClasses, appName, instrumentsData } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
 export default memo(function Note( { data, approachingNotes, outgoingAnimation, fadeTime, handleClick, noteImage, noteText }) {
@@ -17,19 +17,19 @@ export default memo(function Note( { data, approachingNotes, outgoingAnimation, 
         }}
         className="button-hitbox-bigger"
     >
-        {approachingNotes.map((note) => {
-            return <ApproachCircle
+        {approachingNotes.map((note) => 
+            <ApproachCircle
                 key={note.id}
                 index={data.index}
                 approachRate={approachRate}
             />
-        })}
-        {outgoingAnimation.map(e => {
-            return <div
+        )}
+        {outgoingAnimation.map(e => 
+            <div
                 key={e.key}
                 className={cssClasses.noteAnimation}
             />
-        })}
+        )}
         <div
             className={className}
             style={{
@@ -57,6 +57,7 @@ export default memo(function Note( { data, approachingNotes, outgoingAnimation, 
         && p.noteText === n.noteText && p.fadeTime === n.fadeTime && p.handleClick === n.handleClick && p.noteImage === n.noteImage
         && p.noteText === n.noteText && p.outgoingAnimation === n.outgoingAnimation && p.approachingNotes === n.approachingNotes
 })
+
 function getApproachCircleColor(index) {
     let numOfNotes = appName === "Sky" ? 5 : 7
     let row = Math.floor(index / numOfNotes)
@@ -64,16 +65,18 @@ function getApproachCircleColor(index) {
     return colors[row]
 }
 
-function ApproachCircle(props) {
+const ApproachCircle = memo(function ApproachCircle({approachRate, index}) {
     return <div
         className={cssClasses.approachCircle}
         style={{
-            animation: `approach ${props.approachRate}ms linear`,
-            borderColor: getApproachCircleColor(props.index),
+            animation: `approach ${approachRate}ms linear`,
+            borderColor: getApproachCircleColor(index),
         }}
     >
     </div>
-}
+},(prev,next)=>{
+    return prev.approachRate === next.approachRate && prev.index === next.index
+})
 
 function parseBorderFill(status) {
     let fill = '#eae5ce'

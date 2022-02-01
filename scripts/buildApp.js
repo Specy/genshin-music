@@ -31,7 +31,7 @@ async function execute() {
         console.log("\x1b[33m", 'Building ' + app + '...')
         await deleteAssets()
         await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
-        result = ''
+        let result = ''
         if (process.platform === 'win32') {
             console.log(" Building on windows")
             result = execSync(`set REACT_APP_NAME=${app}&& set BUILD_PATH=./build/${pathNames[app]}&& yarn build`)

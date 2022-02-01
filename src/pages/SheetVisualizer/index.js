@@ -36,8 +36,8 @@ export default function SheetVisualizer(props) {
         load()
     }, [])
 
-    function getChunkNoteText(i) {
-        const text =  getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', 21)
+    function getChunkNoteText(i) {  
+        const text = getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', appName === "Genshin" ? 21 : 15)
         return appName === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
     function handleClick(song) {
@@ -62,19 +62,15 @@ export default function SheetVisualizer(props) {
             }
             chunk.delay = previousChunkDelay
             previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
-            const emptyChunks = Math.round(chunk.delay / THRESHOLDS.pause)
+            const emptyChunks = Math.floor(chunk.delay / THRESHOLDS.pause)
             chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
             chunks.push(chunk)
+            sheetText += emptyChunks > 2 ? ' \n\n' : "- ".repeat(emptyChunks)
             if (chunk.notes.length > 1) {
                 const text = chunk.notes.map(e => getChunkNoteText(e[0])).join('')
                 sheetText += appName === "Genshin" ? `[${text}] ` : `${text} `
             } else if (chunk.notes.length > 0) {
                 sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
-            }
-            if (emptyChunks > 2) {
-                sheetText += ' \n\n'
-            } else {
-                sheetText += new Array(emptyChunks).fill('').join("- ")
             }
         }
         setSongAstext(sheetText)
@@ -193,7 +189,10 @@ function SheetFrame({ frame, rows, hasText }) {
             <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
                 {notes.map((exists, i) => {
                     return <div className={exists ? 'frame-note-s' : 'frame-note-ns'} key={i}>
-                        {(exists && hasText) ? getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', 21) : null}
+                        {(exists && hasText) 
+                            ? getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', appName === 'Genshin' ? 21 : 15) 
+                            : null
+                        }
                     </div>
                 })}
             </div>

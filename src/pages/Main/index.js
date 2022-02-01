@@ -68,13 +68,21 @@ class App extends Component {
 		this.reverbVolumeNode = undefined
 		this.state.instrument.delete()
 	}
+
+	componentDidCatch() {
+		new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
+		songStore.data = {
+			song: {}, eventType: 'stop', start: 0
+		}
+	}
+	
 	handleKeyboard =async (event) => {
 		const { thereIsSong } = this.state
         if (event.repeat) return
         if (document.activeElement.tagName === "INPUT") return
         if(event.shiftKey){
             switch(event.code){
-                case "KeyR" : {
+                case "KeyC" : {
                     if(!thereIsSong){
 						this.toggleRecord()
 						event.preventDefault()
@@ -86,29 +94,32 @@ class App extends Component {
         }
     }
 
-
 	resetDrag = (e) => {
 		this.setState({
 			isDragging: false
 		})
 	}
+
 	handleDragOver = (e) => {
 		e.preventDefault()
 		this.setState({
 			isDragging: true
 		})
 	}
+
 	handleDrag = (e) => {
 		e.preventDefault()
 		this.setState({
 			isDragging: true
 		})
 	}
+
 	setHasSong = (data) => {
 		this.setState({
 			thereIsSong: data
 		})
 	}
+
 	handleDrop = async (e) => {
 		this.resetDrag()
 		e.preventDefault()
@@ -123,6 +134,7 @@ class App extends Component {
 
 		}
 	}
+
 	toggleReverbNodes = (hasReverb) => {
 		if(!this.mounted) return
 		const { instrument } = this.state
@@ -135,6 +147,7 @@ class App extends Component {
 			instrument.connect(this.audioContext.destination)
 		}
 	}
+
 	changeVolume = (obj) => {
         let settings = this.state.settings
         if (obj.key === "instrument") {
@@ -145,7 +158,9 @@ class App extends Component {
             settings: settings
         }, () => this.updateSettings())
     }
+
 	getSettings = () => {
+		//TODO export this into a function / class
 		let storedSettings = localStorage.getItem(appName + "_Main_Settings")
 		try {
 			storedSettings = JSON.parse(storedSettings)
@@ -161,6 +176,7 @@ class App extends Component {
 		}
 		return MainPageSettings
 	}
+
 	loadInstrument = async (name) => {
 		this.state.instrument?.delete?.()
 		let newInstrument = new Instrument(name)
@@ -174,7 +190,9 @@ class App extends Component {
 			isLoadingInstrument: false
 		}, () => this.toggleReverbNodes(this.state.settings.caveMode.value))
 	}
+
 	loadReverb() {
+		//TODO export this to a function 
 		return new Promise(resolve => {
 			fetch("./assets/audio/reverb4.wav")
 				.then(r => r.arrayBuffer())
@@ -196,8 +214,8 @@ class App extends Component {
 					console.log("Error with reverb", e)
 				})
 		})
-
 	}
+
 	playSound = (note) => {
 		const { state } = this
 		const { settings } = state
@@ -205,7 +223,9 @@ class App extends Component {
 		if (state.isRecording) this.handleRecording(note)
 		this.state.instrument.play(note.index, getPitchChanger(settings.pitch.value))
 	}
+
 	updateSettings = (override) => {
+		//TODO make settings a global state and wrap it into a class to update it
 		let state
 		if (override !== undefined) {
 			state = override
@@ -214,6 +234,7 @@ class App extends Component {
 		}
 		localStorage.setItem(appName + "_Main_Settings", JSON.stringify(state))
 	}
+
 	handleSettingChange = (setting) => {
 		let settings = this.state.settings
 		let data = setting.data
@@ -228,14 +249,17 @@ class App extends Component {
 			settings: settings,
 		}, this.updateSettings)
 	}
+
 	syncSongs = async () => {
 		this.setState({
 			songs: await DB.getSongs()
 		})
 	}
+
 	songExists = async (name) => {
 		return await DB.existsSong({ name: name })
 	}
+
 	addSong = async (song) => {
 		try {
 			if (await this.songExists(song.name)) {
@@ -248,14 +272,8 @@ class App extends Component {
 			console.error(e)
 			return new LoggerEvent("Error", 'There was an error importing the song').trigger()
 		}
-
 	}
-	componentDidCatch() {
-		new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
-		songStore.data = {
-			song: {}, eventType: 'stop', start: 0
-		}
-	}
+	
 	removeSong = async (name) => {
 		let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
 		if(!this.mounted) return
@@ -264,11 +282,13 @@ class App extends Component {
 			this.syncSongs()
 		}
 	}
+
 	handleRecording = (note) => {
 		if (this.state.isRecording) {
 			this.recording.addNote(note.index)
 		}
 	}
+
 	askForSongName = () => {
 		return new Promise(async resolve => {
 			let promptString = "Write song name, press cancel to ignore"
@@ -286,8 +306,8 @@ class App extends Component {
 				}
 			}
 		})
-
 	}
+
 	toggleRecord = async (override) => {
 		if (typeof override !== "boolean") override = undefined
 		let newState = override !== undefined ? override : !this.state.isRecording
@@ -305,6 +325,7 @@ class App extends Component {
 			open: this.state.isRecording
 		})
 	}
+
 	toggleRecordAudio = async (override) => {
 		if(!this.mounted) return
 		if (typeof override !== "boolean") override = undefined
@@ -333,6 +354,7 @@ class App extends Component {
 			isRecordingAudio: newState
 		})
 	}
+
 	render() {
 		const { state } = this
 		const keyboardFunctions = {
