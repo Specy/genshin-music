@@ -59,7 +59,7 @@ async function asyncPrompt(question) {
         }
 
         function handleOverlay(e){
-            if(e.path[0] === overlay) cancelListener()
+            if(e?.path?.[0] === overlay) cancelListener()
         }
 
         input.focus()
@@ -125,7 +125,7 @@ async function asyncConfirm(question,cancellable = true) {
             if(key === 'Escape' && cancellable) cancelListener()
         }
         function handleOverlay(e){
-            if(e.path[0] === overlay && cancellable) cancelListener()
+            if(e?.path?.[0] === overlay && cancellable) cancelListener()
         }
         overlay.addEventListener("click",handleOverlay)
         cancel.addEventListener("click", cancelListener)

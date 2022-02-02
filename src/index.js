@@ -47,7 +47,14 @@ class Index extends Component {
 	componentDidMount() {
 		window.addEventListener('logEvent', this.logEvent);
 		this.checkUpdate()
+		Analytics.UIEvent('version', {version: appVersion})
 	}
+
+	componentWillUnmount() {
+		window.removeEventListener('logEvent', this.logEvent);
+	}
+
+
 	changePage = (page) => {
 		//TODO manually changing page doesnt actually change page at next reroute
 		if (page === 'home') return this.toggleHome(true)
@@ -91,9 +98,7 @@ class Index extends Component {
 			selectedPage: "ErrorPage"
 		})
 	}
-	componentWillUnmount() {
-		window.removeEventListener('logEvent', this.logEvent);
-	}
+
 	askForStorage = async () => {
 		try {
 			if (navigator.storage && navigator.storage.persist) {

@@ -36,6 +36,7 @@ body {
 	margin: 0;
 	padding: 0;
 	overscroll-behavior-y: contain;
+	touch-action: pan-x pan-y;
 }
 body{
 	position: absolute;

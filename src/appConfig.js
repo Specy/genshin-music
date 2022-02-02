@@ -1,4 +1,4 @@
-const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][0]
+const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
 const appVersion = '2.3'
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin'

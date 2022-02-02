@@ -1,10 +1,9 @@
 import { speedChangers } from "appConfig"
 import Memoized from "components/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
+import { memo } from "react";
 
-//memoize this
-export default function TopPage({eventType,stop,restart,sliderState, handleSliderEvent,handleSpeedChanger,speedChanger,approachingScore }) {
-
+export default memo(function TopPage({eventType,stop,restart,sliderState, handleSliderEvent,handleSpeedChanger,speedChanger,approachingScore }) {
     return <div className="upper-right">
         {eventType === 'approaching' &&
             <Score data={approachingScore} />
@@ -42,7 +41,10 @@ export default function TopPage({eventType,stop,restart,sliderState, handleSlide
             </select>
         </div>
     </div>
-}
+},(prev,next) => {
+    return prev.eventType === next.eventType && prev.speedChanger === next.speedChanger 
+        && prev.approachingScore === next.approachingScore && prev.sliderState === next.sliderState
+})
 
 
 function Score(props) {

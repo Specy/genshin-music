@@ -408,7 +408,7 @@ export default class Keyboard extends Component {
             }
         }
     }
-    handleClick = (note, onlySound) => {
+    handleClick = (note) => {
         const { keyboard, outgoingAnimation, approachingScore } = this.state
         const hasAnimation = this.props.data.hasAnimation
         keyboard[note.index].status = 'clicked'

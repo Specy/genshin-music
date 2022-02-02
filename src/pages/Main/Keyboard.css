@@ -169,7 +169,7 @@
 	right: 0;
 	top: 0;
 	bottom: 0;
-	border: 3px solid #3da399;
+	border: 2px solid #3da399;
 	border-radius: 50%;
 	animation: note-animation 0.75s cubic-bezier(.25,.46,.45,.94);
 	animation-delay: 0.1s;
@@ -180,13 +180,14 @@
 	transform: scale(0.8);
 }
 .note-animation-sky{
-	border-radius: 2vw;
+	border-radius: 2.5vw;
+	animation: note-animation-sky 0.75s cubic-bezier(.25,.46,.45,.94);
+	animation-delay: 0.15s;
 }
 @keyframes note-animation {
     0% {
         transform: scale(0.8);
         opacity: 1;
-        border-width: 3px;
     }
     70% {
         transform: scale(1.45);
@@ -195,7 +196,20 @@
     100% {
         transform: scale(1.5);
         opacity: 0;
-        border-width: 2px;
+    }
+}
+@keyframes note-animation-sky{
+    0% {
+        transform: scale(0.8);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(1.25);
+		opacity: 0.1;
+    }
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
     }
 }
 .upper-right {

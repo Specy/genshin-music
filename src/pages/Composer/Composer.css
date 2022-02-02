@@ -252,7 +252,7 @@ select{
     opacity: 1;
 }
 .bottom-right-wrapper{
-    position: fixed;
+    position: absolute;
     right: 0.2rem;
     bottom: 0.2rem;
     width: fit-content;
