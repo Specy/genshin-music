@@ -9,6 +9,7 @@ import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
 import { isMidiAvailable } from 'appConfig';
+import Analytics from 'lib/Analytics';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -62,6 +63,7 @@ class Menu extends Component {
             selectedMenu: selection,
             open: true
         })
+        Analytics.UIEvent('menu',{tab: selection})
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
@@ -81,6 +83,7 @@ class Menu extends Component {
         let fileDownloader = new FileDownloader()
         fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
+        Analytics.userSongs({name: song?.name, page: 'composer'},'download')
     }
     updateSong = () => {
         this.props.functions.updateSong(this.props.data.currentSong)

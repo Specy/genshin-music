@@ -5,6 +5,7 @@ import { DB } from 'Database'
 import { appName } from 'appConfig'
 import { ComposerToRecording, getNoteText } from 'lib/Utils'
 import Switch from 'components/Switch'
+import Analytics from 'lib/Analytics'
 
 const THRESHOLDS = {
     joined: 50,
@@ -75,6 +76,7 @@ export default function SheetVisualizer(props) {
         }
         setSongAstext(sheetText)
         setSheet(chunks)
+        Analytics.songEvent({type:'visualize'})
     }
 
     return <div className='default-page'>

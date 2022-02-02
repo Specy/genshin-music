@@ -28,7 +28,6 @@ class Database{
 }
 
 const DB = new Database()
-DB.getSongs()
 export {
     Database,
     DB

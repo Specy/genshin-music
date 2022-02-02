@@ -20,6 +20,7 @@ import {
 } from "lib/Utils"
 import AudioRecorder from 'lib/AudioRecorder'
 import { DB } from 'Database';
+import Analytics from 'lib/Analytics';
 
 class Composer extends Component {
     constructor(props) {
@@ -521,11 +522,13 @@ class Composer extends Component {
         this.setState({
             song: song
         }, () => this.addSong(song))
+        Analytics.songEvent({type: 'create'})
     }
     removeSong = async (name) => {
         let confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
         if (confirm) await DB.removeSong({ name: name })
         this.syncSongs()
+		Analytics.userSongs({name: name, page: 'composer'},'delete')
     }
 
     loadSong = async (song) => {
@@ -583,6 +586,7 @@ class Composer extends Component {
         })
 
     }
+    
     removeColumns = (amount, position) => {
         let song = this.state.song
         if (song.columns.length < 16) return
@@ -788,6 +792,7 @@ class Composer extends Component {
     }
     changeMidiVisibility = (visibility) => {
         this.setState({ midiVisible: visibility })
+        if(visibility) Analytics.songEvent({type: 'create_MIDI'})
     }
     render() {
         const { state } = this

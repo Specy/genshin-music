@@ -7,6 +7,7 @@ import { delayMs, ComposerToRecording, NotesTable, getNoteText, LoggerEvent } fr
 import "./Keyboard.css"
 import { getMIDISettings } from 'lib/SettingsObj'
 import TopPage from './Components/TopPage'
+import Analytics from 'lib/Analytics';
 
 export default class Keyboard extends Component {
     constructor(props) {
@@ -73,6 +74,7 @@ export default class Keyboard extends Component {
             if (!this.mounted) return
 
             this.props.functions.setHasSong(hasSong)
+            if(type !== 'stop') Analytics.songEvent({type})
         })
         if (this.MIDISettings.enabled) {
             if (navigator.requestMIDIAccess) {
@@ -229,7 +231,6 @@ export default class Keyboard extends Component {
             })
             pastError = new Date().getTime() - previousTime - delay
         }
-
     }
     applySpeedChange = (notes) => {
         return notes.map(note => {

@@ -15,6 +15,7 @@ import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import LibrarySearchedSong from 'components/LibrarySearchedSong'
 import "./menu.css"
+import Analytics from 'lib/Analytics';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -99,6 +100,8 @@ class Menu extends Component {
             searchedSongs: fetchedSongs,
             searchStatus: 'success'
         })
+		Analytics.songSearch({name: searchInput})
+
     }
     toggleMenu = (override) => {
         if (typeof override !== "boolean") override = undefined
@@ -118,6 +121,7 @@ class Menu extends Component {
             selectedMenu: selection,
             open: true
         })
+        Analytics.UIEvent('menu',{tab: selection})
     }
     changeSelectedSongType = (name) => {
         this.setState({
@@ -133,11 +137,11 @@ class Menu extends Component {
                 for (let song of songsInput) {
                     song = prepareSongImport(song)
                     await this.props.functions.addSong(song)
+                    Analytics.userSongs({name: song?.name, page: 'player'},'import')
                 }
             } catch (e) {
-                let fileName = file.name
                 console.error(e)
-                if (fileName?.includes?.(".mid")) {
+                if (file?.name?.includes?.(".mid")) {
                     return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
                 }
                 new LoggerEvent("Error", "Error importing song, invalid format").trigger()
@@ -161,6 +165,7 @@ class Menu extends Component {
         let fileDownloader = new FileDownloader()
         fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
         new LoggerEvent("Success", "Song downloaded").trigger()
+        Analytics.userSongs({name: song?.name, page: 'player'},'download')
     }
 
     downloadAllSongs = () => {

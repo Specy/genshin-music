@@ -10,6 +10,7 @@ import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { appName, audioContext , isTwa} from "appConfig"
 import './App.css';
+import Analytics from 'lib/Analytics';
 class App extends Component {
 	constructor(props) {
 		super(props)
@@ -281,6 +282,7 @@ class App extends Component {
 			await DB.removeSong({ name: name })
 			this.syncSongs()
 		}
+		Analytics.userSongs({name: name, page: 'player'},'delete')
 	}
 
 	handleRecording = (note) => {
@@ -316,7 +318,10 @@ class App extends Component {
 			if(!this.mounted) return
 			let song = new Song(songName, this.recording.notes)
 			song.pitch = this.state.settings.pitch.value
-			if (songName !== null) this.addSong(song)
+			if (songName !== null){ 
+				this.addSong(song)
+				Analytics.userSongs({name: songName, page: 'player'},'record')
+			}
 		} else {
 			this.recording = new Recording()
 		}
@@ -324,6 +329,7 @@ class App extends Component {
 		this.setState({
 			open: this.state.isRecording
 		})
+
 	}
 
 	toggleRecordAudio = async (override) => {

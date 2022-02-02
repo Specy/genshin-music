@@ -16,7 +16,7 @@ import { appName, appVersion, pages, isTwa, updateMessage } from "appConfig"
 import FloatingMessage from 'components/FloatingMessage'
 import Donate from 'pages/Donate';
 import rotateImg from "assets/icons/rotate.svg"
-
+import Analytics from 'lib/Analytics';
 class Index extends Component {
 	constructor(props) {
 		super(props)
@@ -56,6 +56,10 @@ class Index extends Component {
 			selectedPage: page,
 			homeVisible: false
 		})
+		Analytics.pageView({
+			page_title : page
+		})
+		document.title = page === '' ? 'Player' : page
 	}
 	toggleHome = (override = false) => {
 		//TODO please refactor this
