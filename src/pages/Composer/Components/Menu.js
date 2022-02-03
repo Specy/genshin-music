@@ -199,7 +199,7 @@ class Menu extends Component {
                         <button
                             className='genshin-button'
                             onClick={() => changePage('MidiSetup')}
-                            style={{ marginTop: '0.4rem', width: 'fit-content', marginLeft: 'auto' }}
+                            style={{ width: 'fit-content', margin: '0.4rem 0 0.7rem auto' }}
                         >
                             Setup MIDI keyboard
                         </button>

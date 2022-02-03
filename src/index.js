@@ -52,6 +52,7 @@ class Index extends Component {
 		this.checkUpdate()
 		Analytics.UIEvent('version', { version: appVersion })
 		this.pageHeight = window.innerHeight
+		document.title = this.state.selectedPage
 	}
 
 	handleResize = () => {
@@ -203,7 +204,7 @@ class Index extends Component {
 		}, error.timeout)
 	}
 	render() {
-		const { floatingMessage, hasVisited, homeData } = this.state
+		const { floatingMessage, hasVisited, homeData, selectedPage } = this.state
 		return <div className="index">
 
 			<FloatingMessage
@@ -219,6 +220,7 @@ class Index extends Component {
 				askForStorage={this.askForStorage}
 				hasVisited={hasVisited}
 				data={homeData}
+				currentPage={selectedPage}
 			/>}
 			<HashRouter>
 				<Redirect to={"/" + this.state.selectedPage}></Redirect>

@@ -62,7 +62,7 @@ const changelogs = [
     {
         version: '2.3',
         title: 'MIDI Keyboard and Performance',
-        date: '2022 - 2/02',
+        date: '2022 - 3/02',
         changes: [
             'Added MIDI Keyboard support on all pages with custom layouts and shortcuts',
             'Big performance improvements of main page',

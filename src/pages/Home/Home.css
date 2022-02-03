@@ -34,7 +34,7 @@
 	backdrop-filter: blur(4px);
 	transform: scale(1);
 }
-.home-spacing{
+.home-spacing {
 	margin-bottom: 0.3rem;
 }
 .close-home {
@@ -52,12 +52,12 @@
 .home-dont-show-again {
 	position: fixed;
 	display: flex;
-	
+
 	align-items: center;
 	bottom: 0.5rem;
 	right: 0.5rem;
 }
-.home-bottom{
+.home-bottom {
 	padding-top: 0.5rem;
 	display: flex;
 	flex: 1;
@@ -90,31 +90,31 @@
 .home-content-element:hover {
 	transform: scale(1.03);
 }
-.home-welcome{
+.home-welcome {
 	font-size: 0.9rem;
 	background-color: rgb(47, 52, 63);
 	padding: 0.5rem;
 	border-radius: 0.5rem;
 	animation: welcome-flash infinite 8s;
-    outline: 2px dashed var(--secondary);
-    outline-offset: 2px;
+	outline: 2px dashed var(--secondary);
+	outline-offset: 2px;
 }
 
 @keyframes welcome-flash {
-	0%{
+	0% {
 		background-color: rgb(47, 52, 63);
 	}
-	30%{
+	30% {
 		background-color: rgb(55, 61, 71);
 	}
-	70%{
+	70% {
 		background-color: rgb(55, 61, 71);
 	}
-	100%{
+	100% {
 		background-color: rgb(47, 52, 63);
 	}
 }
-.home-accept-storage{
+.home-accept-storage {
 	border: none;
 	padding: 0.4rem 1rem;
 	border-radius: 0.2rem;
@@ -138,7 +138,7 @@
 	transform: scale(0.97);
 	transition: all 0.1s ease-out;
 }
-.home-content-main:hover {
+.home-content-element > .home-content-main {
 	background-color: rgba(53, 58, 70, 0.9);
 }
 
@@ -192,7 +192,11 @@
 	cursor: pointer;
 	transition: all 0.1s linear;
 }
-.page-redirect-wrapper button:hover {
+.current-page {
+	/* Could be added */
+	filter: none;
+}
+.page-redirect-wrapper button {
 	background-color: #6b788f;
 }
 .home-content-open button {

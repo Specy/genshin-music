@@ -187,7 +187,7 @@ export default class MidiSetup extends Component {
         return <div className="default-page">
             <SimpleMenu functions={{ changePage: changePage }} />
             <div className="default-content" style={{ alignItems: 'center' }}>
-                <div className="column">
+                <div className="column midi-setup-column">
                     <div>
                         Select MIDI device:
                         <select
@@ -202,7 +202,7 @@ export default class MidiSetup extends Component {
                             }
                         </select>
                     </div>
-                    <div style={{ margin: '1rem 0' }}>
+                    <div style={{ margin: '0.5rem 0' }}>
                         Click on the note to map, then press your MIDI keyboard
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
 const appVersion = '2.3'
+//TODO make all those variables uppercase
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin'
     ? ` - Added MIDI Keyboard support on all pages with custom layouts
@@ -13,6 +14,7 @@ const updateMessage = appName === 'Genshin'
         - UI improvements and bug fixes
         - Added note names to sheet visualizer and empty cells
         - Added ABC format
+        - Added Panflute
     `.trim()
 
 const pages = ["", "Composer", "ErrorPage", "Changelog", "Donate", "Partners", "Home", "Help", "SheetVisualizer", "MidiSetup"]

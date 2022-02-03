@@ -10,9 +10,9 @@
 }
 .midi-setup-content{
     display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     margin-top: auto;
 }
@@ -22,6 +22,7 @@
     align-items: flex-start;
     flex: 1;
 }
+
 .midi-shortcuts{
     display: flex;
     gap: 0.2rem;
@@ -47,4 +48,10 @@
 }
 .midi-shortcut.selected{
     background-color: var(--accent);
+}
+
+@media screen and (max-width:900px) {
+    .midi-setup-column{
+        width: 100%;
+    }
 }

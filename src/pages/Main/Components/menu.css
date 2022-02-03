@@ -214,6 +214,8 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
+    margin-right: -0.5rem;
+    padding-right: 0.5rem;
 }
 .song-button{
     display: flex;
@@ -316,6 +318,10 @@
     }
     .tab-selector-wrapper{
         margin-top: 0.5rem;
+    }
+    .panel-content-wrapper{
+        margin-right: -0.3rem;
+        padding-right: 0.2rem;
     }
 }
 @media screen and (orientation:portrait) {
