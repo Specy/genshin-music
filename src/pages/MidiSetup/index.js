@@ -33,6 +33,7 @@ export default class MidiSetup extends Component {
         const { sources } = this.state
         this.mounted = false
         if (this.MidiAccess) this.MidiAccess.onstatechange = null
+        //TODO connect to saved up keyboard
         sources?.forEach(source => {
             source.onmidimessage = null
         })
@@ -169,7 +170,6 @@ export default class MidiSetup extends Component {
         this.playSound(note)
     }
     handleShortcutClick = (shortcut) => {
-        console.log(shortcut)
         this.deselectNotes()
         if (this.state.selectedShortcut === shortcut) {
             return this.setState({ selectedShortcut: null, selectedNote: null })

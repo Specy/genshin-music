@@ -179,11 +179,13 @@
 	z-index: 1;
 	transform: scale(0.8);
 }
+
 .note-animation-sky{
-	border-radius: 2.5vw;
+	border-radius: 1.7vw;
 	animation: note-animation-sky 0.75s cubic-bezier(.25,.46,.45,.94);
 	animation-delay: 0.15s;
 }
+
 @keyframes note-animation {
     0% {
         transform: scale(0.8);
@@ -227,6 +229,9 @@
 		height: 6.7vw;
 		font-size: 1rem;
 		border-width: 4px;
+	}
+	.note-animation-sky{
+		border-radius: 2.5vw;
 	}
 	.keyboard{
 		margin-bottom: 1vh;

@@ -5,7 +5,7 @@ async function callGA(fn) {
             data: await fn()
         }
     } catch (e) {
-        if (GA) console.error(e)
+        if (GA) console.log('Error with GA')
         return { error: e }
     }
 }

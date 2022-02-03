@@ -74,7 +74,6 @@ class Index extends Component {
 
 	handleBlur = () => {
 		const active = document.activeElement
-		console.log('Blurring',active)
 		if (active.tagName === 'INPUT') active?.blur()
 		this.resetHeight()
 	}

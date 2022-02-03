@@ -296,7 +296,7 @@ class Menu extends Component {
                             onClick={() => changePage('MidiSetup')} 
                             style={{marginTop: '0.4rem', width:'fit-content', marginLeft: 'auto'}}
                         >
-                            Setup MIDI keyboard
+                            Connect MIDI keyboard
                         </button>
                     }
                     
