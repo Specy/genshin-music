@@ -197,7 +197,6 @@
     display: flex;
     flex:1;
     background-color: var(--primary);
-    padding-left: 1rem;
     border-radius: 0.3rem;
     color: var(--whitish);
     justify-content: space-between;

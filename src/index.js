@@ -43,17 +43,46 @@ class Index extends Component {
 			hasVisited: hasVisited === 'true'
 		}
 		this.updateChecked = false
+		this.pageHeight = 0
 	}
 	componentDidMount() {
 		window.addEventListener('logEvent', this.logEvent);
+		window.addEventListener('resize', this.handleResize)
+		window.addEventListener('blur', this.handleBlur)
 		this.checkUpdate()
-		Analytics.UIEvent('version', {version: appVersion})
+		Analytics.UIEvent('version', { version: appVersion })
+		this.pageHeight = window.innerHeight
+	}
+
+	handleResize = () => {
+		if (document.activeElement?.tagName === 'INPUT') {
+			if (this.pageHeight === window.innerHeight || this.pageHeight !== 0) return
+			return this.setHeight(this.pageHeight)
+		}
+		this.pageHeight = window.innerHeight
+		this.resetHeight()
+	}
+	
+	setHeight = (h) => {
+		document.body.style.minHeight = h + 'px'
+	}
+
+	resetHeight = () => {
+		document.body.style = ''
+	}
+
+	handleBlur = () => {
+		const active = document.activeElement
+		console.log('Blurring',active)
+		if (active.tagName === 'INPUT') active?.blur()
+		this.resetHeight()
 	}
 
 	componentWillUnmount() {
 		window.removeEventListener('logEvent', this.logEvent);
+		window.removeEventListener('resize', this.handleResize)
+		window.removeEventListener('blur', this.handleBlur)
 	}
-
 
 	changePage = (page) => {
 		//TODO manually changing page doesnt actually change page at next reroute
@@ -64,7 +93,7 @@ class Index extends Component {
 			homeVisible: false
 		})
 		Analytics.pageView({
-			page_title : page
+			page_title: page
 		})
 		document.title = page === '' ? 'Player' : page
 	}
@@ -130,7 +159,7 @@ class Index extends Component {
 	}
 	checkUpdate = async () => {
 		await delayMs(1000)
-		if (this.updateChecked) return	
+		if (this.updateChecked) return
 		let storedVersion = localStorage.getItem(appName + "_Version")
 		if (!this.state.hasVisited) {
 			return localStorage.setItem(appName + "_Version", appVersion)
