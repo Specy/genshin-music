@@ -3,7 +3,7 @@ import { SimpleMenu } from "components/SimpleMenu"
 
 export default function Help(props){
     return <div className="default-page">
-        <SimpleMenu functions={{changePage: props.changePage}}/>
+        <SimpleMenu/>
         <div>
             <div style={{fontSize: '2rem', margin: '1rem 0'}}>
                 Info about the app

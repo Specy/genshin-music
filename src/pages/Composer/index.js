@@ -15,14 +15,16 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettings, getMIDISettings } from "lib/SettingsObj"
 import Instrument from "lib/Instrument"
 import {
-    ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
+    ComposedSong, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
 } from "lib/Utils"
 import AudioRecorder from 'lib/AudioRecorder'
 import { DB } from 'Database';
 import Analytics from 'lib/Analytics';
-
-class Composer extends Component {
+import { withRouter } from 'react-router-dom'
+import HomeStore from 'stores/HomeStore';
+import LoggerStore from 'stores/LoggerStore';
+const Composer = withRouter(class extends Component {
     constructor(props) {
         super(props)
 
@@ -109,10 +111,10 @@ class Composer extends Component {
         if (this.MIDISettings.enabled) {
             if (navigator.requestMIDIAccess) {
                 navigator.requestMIDIAccess().then(this.initMidi, () => {
-                    new LoggerEvent('Error', 'MIDI permission not accepted').trigger()
+                    LoggerStore.error('MIDI permission not accepted')
                 })
             } else {
-                new LoggerEvent('Error', 'MIDI is not supported on this browser').trigger()
+                LoggerStore.error('MIDI is not supported on this browser')
             }
         }
     }
@@ -120,7 +122,6 @@ class Composer extends Component {
         this.setState({
             song: new ComposedSong("Untitled")
         })
-        new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
     }
     handleAutoSave = () => {
         this.changes++
@@ -440,7 +441,7 @@ class Composer extends Component {
     }
     addSong = async (song) => {
         if (await this.songExists(song.name)) {
-            return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
+            LoggerStore.warn("A song with this name already exists! \n" + song.name)
         }
         await DB.addSong(ComposerSongSerialization(song))
         this.syncSongs()
@@ -667,7 +668,8 @@ class Composer extends Component {
             }
 
         }
-        this.props.changePage(page)
+        if(page === 'home') return HomeStore.open()
+        this.props.history.push(page)
     }
     selectColumn = (index, ignoreAudio) => {
         const state = this.state
@@ -950,7 +952,8 @@ class Composer extends Component {
             </div>
         </div>
     }
-}
+})
+
 function formatMillis(millis) {
     let minutes = Math.floor(millis / 60000);
     let seconds = ((millis % 60000) / 1000).toFixed(0);

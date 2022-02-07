@@ -3,11 +3,12 @@ import { observe } from 'mobx'
 import { layoutImages, appName, speedChangers, MIDI_STATUS } from "appConfig"
 import Note from './Components/Note'
 import { songStore } from './SongStore'
-import { delayMs, ComposerToRecording, NotesTable, getNoteText, LoggerEvent } from "lib/Utils"
+import { delayMs, ComposerToRecording, NotesTable, getNoteText } from "lib/Utils"
 import "./Keyboard.css"
 import { getMIDISettings } from 'lib/SettingsObj'
 import TopPage from './Components/TopPage'
 import Analytics from 'lib/Analytics';
+import LoggerStore from 'stores/LoggerStore'
 
 export default class Keyboard extends Component {
     constructor(props) {
@@ -79,10 +80,10 @@ export default class Keyboard extends Component {
         if (this.MIDISettings.enabled) {
             if (navigator.requestMIDIAccess) {
                 navigator.requestMIDIAccess().then(this.initMidi, () => {
-                    new LoggerEvent('Error', 'MIDI permission not accepted').trigger()
+                    LoggerStore.error('MIDI permission not accepted')
                 })
             } else {
-                new LoggerEvent('Error', 'MIDI is not supported on this browser').trigger()
+                LoggerStore.error('MIDI is not supported on this browser')
             }
         }
     }

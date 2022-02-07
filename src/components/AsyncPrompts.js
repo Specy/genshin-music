@@ -1,4 +1,4 @@
-import { LoggerEvent } from "lib/Utils"
+import LoggerStore from "stores/LoggerStore"
 
 async function asyncPrompt(question) {
     return new Promise(resolve => {
@@ -46,7 +46,7 @@ async function asyncPrompt(question) {
             if (input.value.trim() === '') return
             if (input.value.trim() === "Untitled") {
                 input.value = ""
-                return new LoggerEvent("Warning", '"Untitled" is a reserved word, use another').trigger()
+                LoggerStore.warn('"Untitled" is a reserved word, use another')
             }
             resolve(input.value.trim())
             dispose()

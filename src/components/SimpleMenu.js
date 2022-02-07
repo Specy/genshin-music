@@ -1,31 +1,9 @@
-import { useState} from 'react'
 import { FaHome, FaDiscord } from 'react-icons/fa';
 
 import MenuItem from 'components/MenuItem'
-import MenuPanel from 'components/MenuPanel'
+import HomeStore from 'stores/HomeStore';
 
-
-export function SimpleMenu({functions, children, className}) {
-    const [open, setOpen] = useState(false)
-    const [selectedMenu, setSelectedMenu] = useState("Settings")
-    const { changePage, toggleMenuVisible } = functions
-    // eslint-disable-next-line
-    const toggleMenu = (override) => {
-        if (typeof override !== "boolean") override = undefined
-        let newState = override !== undefined ? override : !open
-        setOpen(newState)
-        if (newState === false) toggleMenuVisible()
-    }
-    // eslint-disable-next-line
-    const selectSideMenu = (selection) => {
-        if (selection === selectedMenu && open) {
-            return setOpen(false)
-        }
-        setSelectedMenu(selection)
-        setOpen(true)
-    }
-
-
+export function SimpleMenu({children, className}) {
     return <div className={"menu-wrapper " + (className ? className : '')} >
         <div className="menu menu-visible" style={{ justifyContent: 'flex-end' }}>
 
@@ -37,14 +15,10 @@ export function SimpleMenu({functions, children, className}) {
                 </a>
             </MenuItem>
 
-            <MenuItem type="Home" action={() => changePage("home")}>
+            <MenuItem type="Home" action={HomeStore.open}>
                 <FaHome className="icon" />
             </MenuItem>
 
-        </div>
-        <div className={open ? "side-menu menu-open" : "side-menu"}>
-            <MenuPanel title="No selection" visible={selectedMenu}>
-            </MenuPanel>
         </div>
     </div>
 }

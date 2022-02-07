@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { LoggerEvent, prepareSongImport } from "lib/Utils"
+import { prepareSongImport } from "lib/Utils"
+import LoggerStore from 'stores/LoggerStore';
 
 export default function SearchedSong(props) {
     const { functions, data, songStore } = props
@@ -20,7 +21,7 @@ export default function SearchedSong(props) {
         } catch (e) {
             setFetching(false)
             console.error(e)
-            new LoggerEvent("Error", "Error downloading song").trigger()
+            LoggerStore.error("Error downloading song")
         }
     }
     const play = async function () {
@@ -46,7 +47,7 @@ export default function SearchedSong(props) {
         } catch (e) {
             console.error(e)
             setFetching(false)
-            new LoggerEvent("Error", "Error downloading song").trigger()
+            LoggerStore.error("Error downloading song")
         }
     }
     return <div className="song-row">

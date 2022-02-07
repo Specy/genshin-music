@@ -5,7 +5,7 @@ import kofiImg from 'assets/images/kofi.png'
 import { SimpleMenu } from 'components/SimpleMenu'
 export default function Donate(props) {
     return <div className='default-page'>
-        <SimpleMenu functions={{changePage: props.changePage}}/>
+        <SimpleMenu/>
         <div className="donate-text">
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not

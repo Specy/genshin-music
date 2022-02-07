@@ -3,7 +3,7 @@ import Keyboard from "./Keyboard"
 import Menu from "./Components/Menu"
 import { DB } from 'Database';
 import { songStore } from './SongStore'
-import { Song, Recording, LoggerEvent, prepareSongImport, getPitchChanger } from "lib/Utils"
+import { Song, Recording, prepareSongImport, getPitchChanger } from "lib/Utils"
 import { MainPageSettings } from "lib/SettingsObj"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
@@ -11,7 +11,9 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { appName, audioContext , isTwa} from "appConfig"
 import './App.css';
 import Analytics from 'lib/Analytics';
-class App extends Component {
+import { withRouter } from 'react-router-dom'
+import LoggerStore from 'stores/LoggerStore';
+class Main extends Component {
 	constructor(props) {
 		super(props)
 		this.recording = new Recording()
@@ -71,7 +73,7 @@ class App extends Component {
 	}
 
 	componentDidCatch() {
-		new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
+		LoggerStore.warn("There was an error with the song! Restoring default...")
 		songStore.data = {
 			song: {}, eventType: 'stop', start: 0
 		}
@@ -264,14 +266,16 @@ class App extends Component {
 	addSong = async (song) => {
 		try {
 			if (await this.songExists(song.name)) {
-				return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
+				
+				return LoggerStore.warn( "A song with this name already exists! \n" + song.name)
 			}
 			await DB.addSong(song)
 			this.syncSongs()
-			new LoggerEvent("Success", `Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000).trigger()
+			LoggerStore.success(`Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000)
 		} catch (e) {
 			console.error(e)
-			return new LoggerEvent("Error", 'There was an error importing the song').trigger()
+			
+			return new LoggerStore.error('There was an error importing the song')
 		}
 	}
 	
@@ -360,7 +364,9 @@ class App extends Component {
 			isRecordingAudio: newState
 		})
 	}
-
+	changePage = (page) => {
+		this.props.history.push(page)
+	}
 	render() {
 		const { state } = this
 		const keyboardFunctions = {
@@ -381,7 +387,7 @@ class App extends Component {
 		const menuFunctions = {
 			addSong: this.addSong,
 			removeSong: this.removeSong,
-			changePage: this.props.changePage,
+			changePage: this.changePage,
 			handleSettingChange: this.handleSettingChange,
 			changeVolume: this.changeVolume
 		}
@@ -447,4 +453,4 @@ function AppButton(props) {
 		{props.children}
 	</button>
 }
-export default App;
+export default withRouter(Main);

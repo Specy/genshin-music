@@ -1,4 +1,5 @@
 import { importNotePositions, appName, instruments, pitchArr, keyNames, layoutData } from "appConfig"
+import LoggerStore from "stores/LoggerStore";
 import * as workerTimers from 'worker-timers';
 class Recording {
 	constructor() {
@@ -35,24 +36,6 @@ class Song {
 	}
 }
 
-class LoggerEvent {
-	constructor(title, text, timeout) {
-		this.title = title
-		this.timeout = timeout
-		this.text = text
-		if (timeout === undefined) this.timeout = 3000
-		this.event = new CustomEvent("logEvent", {
-			detail: {
-				title: this.title,
-				text: this.text,
-				timeout: this.timeout
-			}
-		})
-	}
-	trigger = () => {
-		window.dispatchEvent(this.event)
-	}
-}
 
 class NoteData {
 	constructor(index, noteNames, url) {
@@ -251,14 +234,15 @@ function prepareSongImport(song) {
 	if (Array.isArray(song) && song.length > 0) song = song[0]
 	let type = getSongType(song)
 	if (type === "none") {
-		new LoggerEvent("Error", "Invalid song").trigger()
+		//TODO maybe not the best place to have these
+		LoggerStore.error("Invalid song")
 		throw new Error("Error Invalid song")
 	}
 	if (type === "oldSky") {
 		song = oldSkyToNewFormat(song)
 	}
 	if (appName === 'Sky' && song.data?.appName !== 'Sky') {
-		new LoggerEvent("Error", "Invalid song").trigger()
+		LoggerStore.error("Invalid song")
 		throw new Error("Error Invalid song")
 	}
 	if (appName === 'Genshin' && song.data?.appName === 'Sky') {
@@ -568,7 +552,6 @@ export {
 	Song,
 	NoteData,
 	FileDownloader,
-	LoggerEvent,
 	PlayingSong,
 	ComposedSong,
 	ColumnNote,

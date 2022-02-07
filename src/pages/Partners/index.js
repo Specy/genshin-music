@@ -4,7 +4,7 @@ import WindsongDBImg from 'assets/images/partners/windsong-db.jpg'
 
 export default function Partners(props) {
     return <div className='partners-page'>
-        <SimpleMenu functions={{ changePage: props.changePage }} />
+        <SimpleMenu/>
         <div className='partner-wrapper'>
             <Partner
                 name='Specy'

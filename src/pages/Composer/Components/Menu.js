@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload } from 'react-icons/fa';
-import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
+import { FileDownloader, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
 import { appName, isTwa } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -10,6 +10,7 @@ import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
 import { isMidiAvailable } from 'appConfig';
 import Analytics from 'lib/Analytics';
+import LoggerStore from 'stores/LoggerStore';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -82,7 +83,7 @@ class Menu extends Component {
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
         fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
-        new LoggerEvent("Success", "Song downloaded").trigger()
+        LoggerStore.success("Song downloaded")
         Analytics.userSongs({name: song?.name, page: 'composer'},'download')
     }
     updateSong = () => {

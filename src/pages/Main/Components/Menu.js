@@ -3,7 +3,7 @@ import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaS
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload } from "lib/Utils"
+import { FileDownloader, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
 import { appName, isTwa, isMidiAvailable } from "appConfig"
 import { songStore } from '../SongStore'
@@ -16,6 +16,8 @@ import DonateButton from 'components/DonateButton'
 import LibrarySearchedSong from 'components/LibrarySearchedSong'
 import "./menu.css"
 import Analytics from 'lib/Analytics';
+import HomeStore from 'stores/HomeStore';
+import LoggerStore from 'stores/LoggerStore';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -94,7 +96,8 @@ class Menu extends Component {
             this.setState({
                 searchStatus: 'Please write a non empty name'
             })
-            return new LoggerEvent("Error", fetchedSongs.error).trigger()
+            return LoggerStore.error(fetchedSongs.error)
+            
         }
         this.setState({
             searchedSongs: fetchedSongs,
@@ -142,10 +145,10 @@ class Menu extends Component {
             } catch (e) {
                 console.error(e)
                 if (file?.name?.includes?.(".mid")) {
-                    return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
+                    
+                    return LoggerStore.error("Midi files should be imported in the composer")
                 }
-                new LoggerEvent("Error", "Error importing song, invalid format").trigger()
-
+                new LoggerStore.error("Error importing song, invalid format")
             }
         })
         reader.readAsText(file)
@@ -164,7 +167,7 @@ class Menu extends Component {
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
         fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
-        new LoggerEvent("Success", "Song downloaded").trigger()
+        LoggerStore.success("Song downloaded")
         Analytics.userSongs({name: song?.name, page: 'player'},'download')
     }
 
@@ -181,7 +184,7 @@ class Menu extends Component {
         let json = JSON.stringify(toDownload)
         let date = new Date().toISOString().split('T')[0]
         fileDownloader.download(json, `${appName}_Backup_${date}.json`)
-        new LoggerEvent("Success", "Song backup downloaded").trigger()
+        LoggerStore.success("Song backup downloaded")
     }
 
     render() {
@@ -212,7 +215,7 @@ class Menu extends Component {
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FaCog className="icon" />
                 </MenuItem>
-                <MenuItem type="Home" action={() => changePage("home")}>
+                <MenuItem type="Home" action={HomeStore.open}>
                     <FaHome className="icon" />
                 </MenuItem>
             </div>

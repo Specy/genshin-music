@@ -8,7 +8,7 @@ export default function Changelogpage(props) {
         <div className='changelog-page-title'>
             Changelog
         </div>
-        <SimpleMenu functions={{changePage: props.changePage}}>
+        <SimpleMenu>
             <MenuItem>
                 <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
                     <FaGithub />

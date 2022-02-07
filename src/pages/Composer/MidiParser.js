@@ -1,10 +1,11 @@
 import React, { Component, useEffect, useState } from 'react'
 import { FilePicker } from "react-file-picker"
 import { Midi } from '@tonejs/midi'
-import { LoggerEvent, pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
+import { pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
 import { appName } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
+import LoggerStore from 'stores/LoggerStore'
 class MidiImport extends Component {
     constructor(props) {
         super(props)
@@ -29,7 +30,7 @@ class MidiImport extends Component {
             } catch (e) {
                 console.error(e)
             }
-            if (!midi) return new LoggerEvent('Error', 'There was an error importing this file', 2000).trigger()
+            if (!midi) return LoggerStore.error('There was an error importing this file')
             let bpm = midi.header.tempos[0]?.bpm
             let key = midi.header.keySignatures[0]?.key
             midi.tracks.forEach((track, i) => {
@@ -123,7 +124,7 @@ class MidiImport extends Component {
         let lastColumn = this.props.data.selectedColumn
         song.selected = lastColumn < song.columns.length ? lastColumn : 0
         if (song.columns.length === 0) {
-            return new LoggerEvent("Error", "There are no notes", 2000).trigger()
+            return LoggerStore.warn("There are no notes")
         }
         this.props.functions.loadSong(song)
         this.setState({
