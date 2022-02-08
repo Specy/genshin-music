@@ -5,7 +5,9 @@ type eventType = "play" | "practice" | "approaching" | "stop"
 interface SongStoreProps{
     song: object,
     eventType: eventType,
-    start: number
+    start: number,
+    end: number,
+    restarted: boolean
 }
 
 interface SongStoreData{
@@ -19,6 +21,8 @@ class SongStoreClass{
             data: {
                 song: {},
                 eventType: 'stop',
+                restarted: false,
+                end: 0,
                 start: 0
             }
         })
@@ -38,36 +42,40 @@ class SongStoreClass{
     setState = (state: Partial<SongStoreProps>) => {
         this.state.data = {...this.state.data, ...state}
     }
-    play = (song:object, start:number = 0) => {
+    play = (song:object, start:number = 0, end: number) => {
         this.setState({
             song,
             start,
-            eventType: 'play'
+            eventType: 'play',
+            end 
         })
     }
-    practice = (song: object, start:number = 0) => {
+    practice = (song: object, start:number = 0, end: number) => {
         this.setState({
             song,
             start,
-            eventType: 'practice'
+            eventType: 'practice',
+            end
         })
     }
-    approaching = (song: object, start: number = 0) => {
+    approaching = (song: object, start: number = 0, end: number) => {
         this.setState({
             song,
             start,
-            eventType: 'approaching'
+            eventType: 'approaching',
+            end
         }) 
     }
     reset = () => {
         this.setState({
             song: {},
             eventType: 'stop',
-            start: 0
+            start: 0,
+            end: 0
         })
     }
-    restart = (start:number) => {
-        this.setState({start})
+    restart = (start:number,end:number) => {
+        this.setState({start,end})
     }
 }
 

@@ -376,14 +376,14 @@ function SongRow(props) {
 
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            SongStore.play(data)
+            SongStore.play(data, 0, data?.notes?.length)
             toggleMenu(false)
         }}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                SongStore.practice(data)
+                SongStore.practice(data, 0, data?.notes?.length)
                 toggleMenu(false)
             }}
             >
@@ -391,7 +391,7 @@ function SongRow(props) {
             </button>
 
             <button className="song-button" onClick={() => {
-                SongStore.approaching(data)
+                SongStore.approaching(data, 0, data?.notes?.length)
                 toggleMenu(false)
             }}
             >

@@ -5,9 +5,13 @@ import { memo, useEffect, useState } from "react";
 import { SongStore } from "stores/SongStore";
 import { SliderStore } from "stores/SongSliderStore";
 import { observe } from "mobx";
+import { BsTriangleFill } from "react-icons/bs";
+import './Track.css'
 export default memo(function TopPage({restart,handleSpeedChanger,speedChanger,approachingScore, hasSong }) {
     const [sliderState, setSliderState] = useState(SliderStore.state.data)
+    const [sliderPosition, setSliderPosition] = useState(0)
     const [songData, setSongData] = useState(SongStore.state.data)
+    const [selectedThumb, setSelectedThumb] = useState(null)
     useEffect(() => {
         const dispose = observe(SliderStore.state,(newState) => {
             setSliderState(newState.object.data)
@@ -18,8 +22,26 @@ export default memo(function TopPage({restart,handleSpeedChanger,speedChanger,ap
         return () => {dispose(); dispose2()}
     },[])
     const handleSliderEvent = (event) => {
-        SliderStore.setPosition(Number(event.target.value))
+        const value = Number(event.target.value)
+        let currentThumb = selectedThumb
+        if(currentThumb === null){
+            const left = Math.abs(sliderState.position - value)
+            const right = Math.abs(sliderState.end - value)
+            currentThumb = left >= right ? 'right' : 'left'
+            setSelectedThumb(currentThumb)
+        }
+        if(currentThumb === 'left'){
+            if(value - sliderState.end < -1) SliderStore.setPosition(value)
+        }else{
+            if(value - sliderState.position > 1) SliderStore.setState({end: value})
+        }
+        setSliderPosition(value)
     }
+    const handleSliderClick = (event) => {
+        setSelectedThumb(null)
+    }
+    const left = sliderState.size !== 0 ? sliderState.position / sliderState.size * 100 : 0
+    const right = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
     return <div className="upper-right" style={!hasSong ? {display:'none'} : {}} >
         {songData.eventType === 'approaching' &&
             <Score data={approachingScore} />
@@ -31,15 +53,32 @@ export default memo(function TopPage({restart,handleSpeedChanger,speedChanger,ap
                 </Memoized>
             </button>
             <div className="slider-outer">
-                <div className="slider-current" style={{width: `${sliderState.current / sliderState.size * 100}%`}}/>
+                <div className="slider-full">
+                    <div className="slider-current" style={{width: `${sliderState.current / sliderState.size * 100}%`}}/>
+                </div>
                 <input
                     type="range"
-                    className="slider"
+                    className="hidden-slider"
                     min={0}
                     onChange={handleSliderEvent}
+                    onPointerUp={handleSliderClick}
                     max={sliderState.size}
-                    value={sliderState.position}
+                    value={sliderPosition}
                 />
+                <div className="two-way-slider">
+                    <div className="two-way-slider-thumb" style={{marginLeft: `calc(${left}% - 8px)`}}>
+                        <BsTriangleFill width={16}/>
+                        <div style={{fontSize: '0.8rem'}}>
+                            {sliderState.position}
+                        </div>
+                    </div>
+                    <div className="two-way-slider-thumb" style={{marginLeft: `calc(${right}% - 8px)`}}>
+                        <BsTriangleFill width={16}/>
+                        <div style={{fontSize: '0.8rem'}}>
+                            {sliderState.end}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <button className="song-button" onClick={restart}>

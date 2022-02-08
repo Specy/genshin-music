@@ -28,14 +28,14 @@ export default function SearchedSong({ functions, data }) {
         if (fetching) return
         try {
             if (cache) {
-                SongStore.play(cache)
+                SongStore.play(cache,0,cache.notes.length)
             }
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
             setFetching(false)
             song = prepareSongImport(song)
             setCache(song)
-            SongStore.play(song)
+            SongStore.play(song,0,cache.notes.length)
         } catch (e) {
             console.error(e)
             setFetching(false)

@@ -4,6 +4,7 @@ interface SongSliderStoreProps {
     position: number,
     current: number,
     size: number,
+    end: number,
 }
 interface SongSliderStoreData {
     data: SongSliderStoreProps
@@ -18,7 +19,8 @@ class SongSliderStore {
             data: {
                 position: 0,
                 current: 0,
-                size: 0
+                size: 0,
+                end: 0
             }
         })
     }
@@ -31,6 +33,10 @@ class SongSliderStore {
 
     get size(): number {
         return this.state.data.size
+    }
+
+    get end(): number {
+        return this.state.data.end
     }
 
     setSong = (song: Song) => {
@@ -52,6 +58,9 @@ class SongSliderStore {
     }
     setCurrent = (current: number) => {
         this.setState({ current })
+    }
+    setEnd = (end: number) => {
+        this.setState({end})
     }
     setSize = (size: number) => {
         this.setState({ size })

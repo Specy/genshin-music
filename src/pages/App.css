@@ -141,39 +141,6 @@ body {
 .hidden {
 	display: none !important;
 }
-.slider-outer{
-	width: 50%;
-	margin: 0 1rem;
-	position: relative;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 0.25rem 0;
-}
-.slider-current{
-	width: 100%;
-	position: absolute;
-	height: 100%;
-	background-color: #576377;
-	border-radius: 0.2rem;
-	z-index: -1;
-	left: 0;
-}
-.slider {
-	width: 100%;
-	margin: 0;
-}
-.slider-wrapper {
-	width: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: all 0.3s;
-	opacity: 1;
-	margin-top: 1.6rem;
-	margin-left: 3.5rem;
-}
-
 .slider-select{
 	width: 3rem;
 	font-size: 0.8rem;
@@ -194,6 +161,16 @@ body {
 	opacity: 0;
 	pointer-events: none;
 }
+.slider-wrapper {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	transition: all 0.3s;
+	opacity: 1;
+	margin-top: 1.6rem;
+	margin-left: 3.5rem;
+}
+
 .slider-wrapper button {
 	margin: 0;
 }

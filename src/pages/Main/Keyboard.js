@@ -56,17 +56,17 @@ export default class Keyboard extends Component {
             let hasSong = false
             if (type === 'play') {
                 await this.stopSong()
-                this.playSong(lostReference, value.start)
+                this.playSong(lostReference, value.start, value.end)
                 hasSong = true
             }
             if (type === 'practice') {
                 await this.stopSong()
-                this.practiceSong(lostReference, value.start)
+                this.practiceSong(lostReference, value.start, value.end)
                 hasSong = true
             }
             if (type === 'approaching') {
                 await this.stopSong()
-                this.approachingSong(lostReference, value.start)
+                this.approachingSong(lostReference, value.start, value.end)
                 hasSong = true
             }
             if (type === 'stop') await this.stopSong()
@@ -74,9 +74,12 @@ export default class Keyboard extends Component {
             this.props.functions.setHasSong(hasSong)
             if(type !== 'stop') {
                 Analytics.songEvent({type})
-                SliderStore.setSize(lostReference.notes.length)
-                SliderStore.setPosition(value.start)
-                SliderStore.setCurrent(value.start)
+                SliderStore.setState({
+                    size: lostReference.notes.length,
+                    position: value.start,
+                    end: value.end,
+                    current: value.start
+                })
             }
         })
         if (this.MIDISettings.enabled) {
@@ -124,11 +127,12 @@ export default class Keyboard extends Component {
             })
         }
     }
-    approachingSong = async (song,start = 0) => {
+    approachingSong = async (song,start = 0, end) => {
+        end = end ? end : song.notes.length
         let notes = []
         this.approachRate = this.props.data.approachRate || 1500
         let startDelay = this.approachRate
-        for(let i = start; i< song.notes.length; i++){
+        for(let i = start; i < end && i < song.notes.length; i++){
             const note = song.notes[i]
             let obj = {
                 time: Math.floor(note[1] / this.state.speedChanger.value + startDelay),
@@ -207,7 +211,8 @@ export default class Keyboard extends Component {
         })
     }
 
-    playSong = async (song, start = 0) => {
+    playSong = async (song, start = 0, end) => {
+        end = end ? end : song.notes.length
         this.songTimestamp = song.timestamp
         const { keyboard } = this.state
         const notes = this.applySpeedChange(song.notes)
@@ -215,7 +220,7 @@ export default class Keyboard extends Component {
         let previous = notes[start][1]
         let pastError = 0
         let previousTime = new Date().getTime()
-        for (let i = start; i < notes.length; i++) {
+        for (let i = start; i < end && i < song.notes.length; i++) {
             let delay = notes[i][1] - previous
             previous = notes[i][1]
             previousTime = new Date().getTime()
@@ -232,12 +237,13 @@ export default class Keyboard extends Component {
             return note
         })
     }
-    practiceSong = (song, start = 0) => {
+    practiceSong = (song, start = 0, end) => {
+        end = end ? end : song.notes.length
         const { keyboard } = this.state
         let notes = this.applySpeedChange(song.notes)
         let songLength = notes.length
-        notes.splice(0, start)
-        let chunks = []
+        notes = notes.slice(start, end)
+        let chunks = [] 
         let previousChunkDelay = 0
         for (let i = 0; notes.length > 0; i++) {
             let chunk = {
@@ -289,7 +295,7 @@ export default class Keyboard extends Component {
         //TODO why did i lose reference here?
         await this.stopSong()
         if (!this.mounted) return
-        SongStore.restart(Number.isInteger(override) ? override : SliderStore.position)
+        SongStore.restart(Number.isInteger(override) ? override : SliderStore.position, SliderStore.end)
     }
     stopSong = () => {
         return new Promise(res => {
