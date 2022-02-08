@@ -6,7 +6,7 @@ import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
 import { appName, isTwa, isMidiAvailable } from "appConfig"
-import { songStore } from '../SongStore'
+import { SongStore } from 'stores/SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -339,7 +339,6 @@ class Menu extends Component {
                                         key={song.file}
                                         data={song}
                                         functions={searchedSongFunctions}
-                                        songStore={songStore}
                                     >
                                         {song.name}
                                     </LibrarySearchedSong>)
@@ -377,22 +376,14 @@ function SongRow(props) {
 
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            songStore.data = {
-                eventType: 'play',
-                song: data,
-                start: 0
-            }
+            SongStore.play(data)
             toggleMenu(false)
         }}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                songStore.data = {
-                    eventType: 'practice',
-                    song: data,
-                    start: 0
-                }
+                SongStore.practice(data)
                 toggleMenu(false)
             }}
             >
@@ -400,11 +391,7 @@ function SongRow(props) {
             </button>
 
             <button className="song-button" onClick={() => {
-                songStore.data = {
-                    eventType: 'approaching',
-                    song: data,
-                    start: 0
-                }
+                SongStore.approaching(data)
                 toggleMenu(false)
             }}
             >

@@ -21,11 +21,15 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         const dispose = observe(HomeStore.state, (newState) => {
             setData(newState.object.data)
         })
+        const dispose2 = history.listen((path) => {
+            setCurrentPage(path.pathname.replace('/',''))
+        })
         setBreakpoint(window.innerWidth > 900)
         return () => {
             dispose()
+            dispose2()
         }
-    },[])
+    },[history])
     return <div className={homeClass} style={!data.visible ? {display: 'none'} : {}}>
         <FaTimes className='close-home' onClick={HomeStore.close} />
         {(breakpoint || !hasVisited) && <div className='home-top'>

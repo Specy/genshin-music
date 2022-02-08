@@ -13,6 +13,7 @@
     --whitish: #ede5d8;
 	--hint-main: #949494;
 	--red: rgb(169, 82, 90);
+	--green: #358a55;
 }
 @font-face {
 	font-family: Bonobo;
@@ -62,7 +63,9 @@ body{
 	display: flex;
 	flex-direction: column;
 }
-
+input{
+	accent-color: var(--accent);
+}
 *:not(input) {
 	-webkit-user-select: none;
 	-khtml-user-select: none;
@@ -138,9 +141,27 @@ body {
 .hidden {
 	display: none !important;
 }
-.slider {
+.slider-outer{
 	width: 50%;
 	margin: 0 1rem;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0.25rem 0;
+}
+.slider-current{
+	width: 100%;
+	position: absolute;
+	height: 100%;
+	background-color: #576377;
+	border-radius: 0.2rem;
+	z-index: -1;
+	left: 0;
+}
+.slider {
+	width: 100%;
+	margin: 0;
 }
 .slider-wrapper {
 	width: 100%;

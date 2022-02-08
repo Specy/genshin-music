@@ -1,27 +1,47 @@
 import { speedChangers } from "appConfig"
 import Memoized from "components/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
-import { memo } from "react";
-
-export default memo(function TopPage({eventType,stop,restart,sliderState, handleSliderEvent,handleSpeedChanger,speedChanger,approachingScore }) {
-    return <div className="upper-right">
-        {eventType === 'approaching' &&
+import { memo, useEffect, useState } from "react";
+import { SongStore } from "stores/SongStore";
+import { SliderStore } from "stores/SongSliderStore";
+import { observe } from "mobx";
+export default memo(function TopPage({restart,handleSpeedChanger,speedChanger,approachingScore, hasSong }) {
+    const [sliderState, setSliderState] = useState(SliderStore.state.data)
+    const [songData, setSongData] = useState(SongStore.state.data)
+    useEffect(() => {
+        const dispose = observe(SliderStore.state,(newState) => {
+            setSliderState(newState.object.data)
+        })
+        const dispose2 = observe(SongStore.state,(newState2) => {
+            setSongData(newState2.object.data)
+        })
+        return () => {dispose(); dispose2()}
+    },[])
+    const handleSliderEvent = (event) => {
+        SliderStore.setPosition(Number(event.target.value))
+    }
+    return <div className="upper-right" style={!hasSong ? {display:'none'} : {}} >
+        {songData.eventType === 'approaching' &&
             <Score data={approachingScore} />
         }
         <div className="slider-wrapper">
-            <button className="song-button" onClick={stop}>
+            <button className="song-button" onClick={SongStore.reset}>
                 <Memoized>
                     <FaStop />
                 </Memoized>
             </button>
-            <input
-                type="range"
-                className="slider"
-                min={0}
-                onChange={handleSliderEvent}
-                max={sliderState.size}
-                value={sliderState.position}
-            ></input>
+            <div className="slider-outer">
+                <div className="slider-current" style={{width: `${sliderState.current / sliderState.size * 100}%`}}/>
+                <input
+                    type="range"
+                    className="slider"
+                    min={0}
+                    onChange={handleSliderEvent}
+                    max={sliderState.size}
+                    value={sliderState.position}
+                />
+            </div>
+
             <button className="song-button" onClick={restart}>
                 <Memoized>
                     <FaSyncAlt />
@@ -42,8 +62,8 @@ export default memo(function TopPage({eventType,stop,restart,sliderState, handle
         </div>
     </div>
 },(prev,next) => {
-    return prev.eventType === next.eventType && prev.speedChanger === next.speedChanger 
-        && prev.approachingScore === next.approachingScore && prev.sliderState === next.sliderState
+    return prev.speedChanger === next.speedChanger 
+        && prev.approachingScore === next.approachingScore && prev.hasSong === next.hasSong
 })
 
 

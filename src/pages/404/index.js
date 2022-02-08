@@ -5,5 +5,8 @@ export default function Error404(){
         <div style={{fontSize: '6rem'}}>
             404
         </div>
+        <div>
+            No page found, open the menu to change page
+        </div>
     </div>
 }

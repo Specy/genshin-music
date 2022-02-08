@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Keyboard from "./Keyboard"
 import Menu from "./Components/Menu"
 import { DB } from 'Database';
-import { songStore } from './SongStore'
+import { SongStore } from 'stores/SongStore'
 import { Song, Recording, prepareSongImport, getPitchChanger } from "lib/Utils"
 import { MainPageSettings } from "lib/SettingsObj"
 import Instrument from 'lib/Instrument';
@@ -59,11 +59,7 @@ class Main extends Component {
 		document.body.removeEventListener('dragover', this.handleDragOver)
         window.removeEventListener('keydown', this.handleKeyboard)
 
-		songStore.data = {
-			song: {},
-			eventType: 'stop',
-			start: 0
-		}
+		SongStore.reset()
 		this.mounted = false
 		this.audioContext = undefined
 		this.recorder = undefined
@@ -74,9 +70,7 @@ class Main extends Component {
 
 	componentDidCatch() {
 		LoggerStore.warn("There was an error with the song! Restoring default...")
-		songStore.data = {
-			song: {}, eventType: 'stop', start: 0
-		}
+		SongStore.reset()
 	}
 	
 	handleKeyboard =async (event) => {
@@ -397,7 +391,7 @@ class Main extends Component {
 		}
 
 		return <div className='app bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
-			{songStore.data.eventType !== 'approaching' &&
+			{SongStore.eventType !== 'approaching' &&
 				<div className='record-button'>
 					<AppButton
 						active={state.isRecordingAudio}
