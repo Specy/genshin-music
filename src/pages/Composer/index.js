@@ -24,7 +24,7 @@ import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
-const Composer = withRouter(class extends Component {
+class Composer extends Component {
     constructor(props) {
         super(props)
 
@@ -798,7 +798,7 @@ const Composer = withRouter(class extends Component {
     }
     render() {
         const { state } = this
-        const { midiVisible, song } = state
+        const { midiVisible, song, isPlaying } = state
         //TODO export the menu outside this component so it doesnt get re rendered at every change
         const songLength = calculateLength(song.columns, state.settings.bpm.value, song.selected)
         const menuData = {
@@ -891,7 +891,12 @@ const Composer = withRouter(class extends Component {
                                 </Memoized>
                             </div>
 
-                            <div className="tool" onClick={this.togglePlay}>
+                            <div className="tool" onClick={() => {
+                                this.togglePlay()
+                                if (this.state.settings.syncTabs.value){
+                                    this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
+                                }
+                            }}>
                                 <Memoized>
                                     {this.state.isPlaying
                                         ? <FaPause key='pause' />
@@ -952,7 +957,7 @@ const Composer = withRouter(class extends Component {
             </div>
         </div>
     }
-})
+}
 
 function formatMillis(millis) {
     let minutes = Math.floor(millis / 60000);
@@ -985,5 +990,5 @@ function replaceAt(string, index, replacement) {
     }
     return string.substring(0, index) + replacement + string.substring(index + 1);
 }
-export default Composer
+export default withRouter(Composer)
 

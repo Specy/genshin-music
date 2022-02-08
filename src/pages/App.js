@@ -7,6 +7,7 @@ import { delayMs } from "lib/Utils"
 import { appName, appVersion, updateMessage } from "appConfig"
 import Logger from 'components/Index/Logger'
 import { withRouter } from "react-router-dom";
+import './App.css';
 class App extends Component {
 	constructor(props) {
 		super(props)

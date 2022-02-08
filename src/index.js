@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { HashRouter, Route, Switch } from "react-router-dom";
-import { isTwa } from "lib/Utils"
+import { isTwa } from "appConfig"
 import rotateImg from "assets/icons/rotate.svg"
 
 import Main from 'pages/Main';
@@ -15,7 +15,7 @@ import SheetVisualizer from 'pages/SheetVisualizer';
 import MidiSetup from 'pages/MidiSetup';
 import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
-import { App } from 'pages/App';
+import App from 'pages/App';
 
 function Index() {
 	return <div className="index">

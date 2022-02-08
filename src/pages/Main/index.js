@@ -9,7 +9,6 @@ import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { appName, audioContext , isTwa} from "appConfig"
-import './App.css';
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
