@@ -71,7 +71,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     }
     const left = sliderState.size !== 0 ? sliderState.position / sliderState.size * 100 : 0
     const right = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
-    return <div className="upper-right" style={hasSong ? { display: 'none' } : {}} >
+    return <div className="upper-right" style={!hasSong ? { display: 'none' } : {}} >
         {songData.eventType === 'approaching' &&
             <Score data={approachingScore} />
         }
