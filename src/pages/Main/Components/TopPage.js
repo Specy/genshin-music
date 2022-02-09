@@ -71,7 +71,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     }
     const left = sliderState.size !== 0 ? sliderState.position / sliderState.size * 100 : 0
     const right = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
-    return <div className="upper-right" style={!hasSong ? { display: 'none' } : {}} >
+    return <div className="upper-right" style={hasSong ? { display: 'none' } : {}} >
         {songData.eventType === 'approaching' &&
             <Score data={approachingScore} />
         }
@@ -92,13 +92,13 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                 </div>
                 <div className="two-way-slider">
                     <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${left}% - 8px)` }} ref={thumb1}>
-                        <BsTriangleFill width={16} />
+                        <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
                         <div style={{ fontSize: '0.8rem' }}>
                             {sliderState.position}
                         </div>
                     </div>
                     <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${right}% - 8px)` }} ref={thumb2}>
-                        <BsTriangleFill width={16} />
+                        <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
                         <div style={{ fontSize: '0.8rem' }}>
                             {sliderState.end}
                         </div>

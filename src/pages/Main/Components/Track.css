@@ -1,8 +1,7 @@
 .two-way-slider{
     position: absolute;
     width: 100%;
-    z-index: -1 ;
-    top: 1.2rem;
+    top: 1rem;
 }
 .two-way-slider-thumb{
     display: flex;
@@ -11,12 +10,13 @@
     align-items: center;
     color: var(--accent);
     position: absolute;
+    text-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px;
 }
 .slider-outer{
 	width: 50%;
 	margin: 0 1rem;
 	position: relative;
-	margin-top: 0.25rem;
+	margin-top: 0;
     touch-action: none;
     height: 100%;
     cursor: pointer;
@@ -26,7 +26,6 @@
     position: absolute;
 	background-color: #576377;
     height: 0.8rem;
-    z-index: -1;
 	border-radius: 0.2rem;
     overflow: hidden;
 }

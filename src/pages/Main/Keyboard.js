@@ -54,7 +54,7 @@ export default class Keyboard extends Component {
             }
             lostReference.timestamp = new Date().getTime()
             let hasSong = false
-            const end = value.end || lostReference.notes.length
+            const end = value.end || lostReference?.notes?.length || 0
             if (type === 'play') {
                 await this.stopSong()
                 this.playSong(lostReference, value.start, end)
@@ -76,7 +76,7 @@ export default class Keyboard extends Component {
             if(type !== 'stop') {
                 Analytics.songEvent({type})
                 SliderStore.setState({
-                    size: lostReference.notes.length,
+                    size: lostReference?.notes?.length || 1,
                     position: value.start,
                     end: end,
                     current: value.start
@@ -133,10 +133,11 @@ export default class Keyboard extends Component {
         let notes = []
         this.approachRate = this.props.data.approachRate || 1500
         let startDelay = this.approachRate
+        const startOffset = song.notes[start] !== undefined ? song.notes[start][1] : 0
         for(let i = start; i < end && i < song.notes.length; i++){
             const note = song.notes[i]
             let obj = {
-                time: Math.floor(note[1] / this.state.speedChanger.value + startDelay),
+                time: Math.floor((note[1] - startOffset )/ this.state.speedChanger.value + startDelay),
                 index: note[0]
             }
             notes.push(obj)
