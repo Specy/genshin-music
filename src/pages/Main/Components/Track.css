@@ -6,6 +6,7 @@
 }
 .two-way-slider-thumb{
     display: flex;
+    width: 18px;
     flex-direction: column;
     align-items: center;
     color: var(--accent);
@@ -16,8 +17,9 @@
 	margin: 0 1rem;
 	position: relative;
 	margin-top: 0.25rem;
-    
+    touch-action: none;
     height: 100%;
+    cursor: pointer;
 }
 .slider-full{
     width: 100%;
@@ -39,7 +41,6 @@
 	width: 100%;
 	margin: 0;
     height: 100%;
-    opacity: 0;
     cursor: pointer;
 }
 

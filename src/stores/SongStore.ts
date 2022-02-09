@@ -42,7 +42,7 @@ class SongStoreClass{
     setState = (state: Partial<SongStoreProps>) => {
         this.state.data = {...this.state.data, ...state}
     }
-    play = (song:object, start:number = 0, end: number) => {
+    play = (song:object, start:number = 0, end?: number) => {
         this.setState({
             song,
             start,

@@ -54,19 +54,20 @@ export default class Keyboard extends Component {
             }
             lostReference.timestamp = new Date().getTime()
             let hasSong = false
+            const end = value.end || lostReference.notes.length
             if (type === 'play') {
                 await this.stopSong()
-                this.playSong(lostReference, value.start, value.end)
+                this.playSong(lostReference, value.start, end)
                 hasSong = true
             }
             if (type === 'practice') {
                 await this.stopSong()
-                this.practiceSong(lostReference, value.start, value.end)
+                this.practiceSong(lostReference, value.start, end)
                 hasSong = true
             }
             if (type === 'approaching') {
                 await this.stopSong()
-                this.approachingSong(lostReference, value.start, value.end)
+                this.approachingSong(lostReference, value.start, end)
                 hasSong = true
             }
             if (type === 'stop') await this.stopSong()
@@ -77,7 +78,7 @@ export default class Keyboard extends Component {
                 SliderStore.setState({
                     size: lostReference.notes.length,
                     position: value.start,
-                    end: value.end,
+                    end: end,
                     current: value.start
                 })
             }

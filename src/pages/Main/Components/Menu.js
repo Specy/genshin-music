@@ -376,7 +376,7 @@ function SongRow(props) {
 
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            SongStore.play(data, 0, data?.notes?.length)
+            SongStore.play(data, 0)
             toggleMenu(false)
         }}>
             {data.name}
