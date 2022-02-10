@@ -62,8 +62,9 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
         const sliderX = inputDimension.x
         const sliderWidth = inputDimension.width
         const x = event.clientX - sliderX
-        const value = Math.round(x / sliderWidth * sliderState.size)
-        if (value < 0 || value > sliderState.size) return
+        let value = Math.round(x / sliderWidth * sliderState.size)
+        if(value < 0) value = 0
+        if(value > sliderState.size) value = sliderState.size
         if (currentThumb === 'left') {
             if (value - sliderState.end < -1) SliderStore.setPosition(value)
         } else {
