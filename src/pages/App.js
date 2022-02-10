@@ -47,7 +47,7 @@ class App extends Component {
 	}
 	handleResize = () => {
 		if (document.activeElement?.tagName === 'INPUT') {
-			if (this.pageHeight === window.innerHeight || this.pageHeight !== 0) return
+			if (this.pageHeight === window.innerHeight || this.pageHeight === 0) return
 			return this.setHeight(this.pageHeight)
 		}
 		this.pageHeight = window.innerHeight
@@ -100,7 +100,7 @@ class App extends Component {
 		}
 
 		if (appVersion !== storedVersion) {
-			LoggerStore.log("Update V" + appVersion, updateMessage, 6000).trigger()
+			LoggerStore.log("Update V" + appVersion, updateMessage, 6000)
 			localStorage.setItem(appName + "_Version", appVersion)
 		}
 		this.updateChecked = true

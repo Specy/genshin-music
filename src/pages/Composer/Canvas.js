@@ -5,7 +5,7 @@ import isMobile from "is-mobile"
 import "./Composer.css"
 import { ComposerCache } from "./Cache"
 
-import { composerNotePositions, notesPerColumn, appName } from "../../appConfig"
+import { composerNotePositions, NOTES_PER_COLUMN, appName } from "appConfig"
 import Memoized from 'components/Memoized';
 let NumOfColumnsPerCanvas = 35
 
@@ -284,7 +284,7 @@ function Column({ data, index, sizes, click, cache, backgroundCache, isBreakpoin
             return <Sprite
                 key={note.index}
                 image={cache.notes[note.layer]}
-                y={composerNotePositions[note.index] * sizes.height / notesPerColumn}
+                y={composerNotePositions[note.index] * sizes.height / NOTES_PER_COLUMN}
             >
             </Sprite>
         })}

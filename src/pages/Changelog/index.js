@@ -60,6 +60,14 @@ function ChangelogRow(props) {
 }
 const changelogs = [
     {
+        version: '2.4',
+        title: 'Multi Slider',
+        date: '2022 - 15/02',
+        changes: [
+            'Added start and end slider for selecting which part of the song to play/practice',
+            'Overall performance improvements',
+        ]
+    },{
         version: '2.3',
         title: 'MIDI Keyboard and Performance',
         date: '2022 - 3/02',

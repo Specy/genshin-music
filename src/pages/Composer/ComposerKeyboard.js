@@ -1,7 +1,7 @@
 import ComposerNote from "./Components/ComposerNote"
 import { getNoteText } from 'lib/Utils'
 import MultiSwitch from "./Components/MultiSwitch"
-import { layoutImages, layersIndexes } from "appConfig"
+import { LAYOUT_IMAGES, layersIndexes } from "appConfig"
 
 export default function ComposerKeyboard({ data, functions }) {
     let notesIndexes = data.currentColumn.notes.map((e) => e.index)
@@ -17,7 +17,7 @@ export default function ComposerKeyboard({ data, functions }) {
                 let noteText = ""
                 let noteImage = ""
                 try {
-                    noteImage = layoutImages[data.keyboard.layout.length][note.index]
+                    noteImage = LAYOUT_IMAGES[data.keyboard.layout.length][note.index]
                     noteText = getNoteText(data.noteNameType, note.index, data.pitch, data.keyboard.layout.length)
                 } catch (e) { }
                 return <ComposerNote

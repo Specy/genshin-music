@@ -1,6 +1,6 @@
 import { TempoChangers } from "lib/Utils"
-import { cacheData, notesPerColumn } from "appConfig"
-const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = cacheData
+import { CACHE_DATA, NOTES_PER_COLUMN } from "appConfig"
+const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
 
 export class ComposerCache {
     constructor(width, height, margin = 4, timelineHeight = 30) {
@@ -18,7 +18,7 @@ export class ComposerCache {
         this.timelineHeight = timelineHeight
         this.margin = margin
         this.noteWidth = this.width
-        this.noteHeight = this.height / notesPerColumn
+        this.noteHeight = this.height / NOTES_PER_COLUMN
         //TODO reuse the same canvas instead of remaking one for each element
         /*
         this.app = new PIXI.Application({

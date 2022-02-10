@@ -1,23 +1,15 @@
 const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
-const appVersion = '2.3'
+const appVersion = '2.4'
 //TODO make all those variables uppercase
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin'
-    ? ` - Added MIDI Keyboard support on all pages with custom layouts
-        - Performance improvements in main page
-        - UI improvements and bug fixes
-        - Added note names to sheet visualizer and empty cells
-        - Added ABC format
+    ? ` - Added start and end slider for selecting which part of the song to play/practice
+        - Overall performance improvements
     `.trim()
-    : ` - Added MIDI Keyboard support on all pages with custom layouts
-        - Performance improvements
-        - UI improvements and bug fixes
-        - Added note names to sheet visualizer and empty cells
-        - Added ABC format
-        - Added Panflute
+    : ` - Added start and end slider for selecting which part of the song to play/practice
+        - Overall performance improvements
     `.trim()
 
-const pages = ["", "Composer", "ErrorPage", "Changelog", "Donate", "Partners", "Home", "Help", "SheetVisualizer", "MidiSetup"]
 const layersIndexes = [1,2,3]
 const cssClasses = {
     noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
@@ -59,7 +51,7 @@ const instruments = appName === "Genshin"
         "DunDun",
         "HandPan"
     ]
-const notesPerColumn = appName === "Genshin" ? 21 : 15
+const NOTES_PER_COLUMN = appName === "Genshin" ? 21 : 15
 const instrumentsData = {
     Lyre: {
         notes: 21
@@ -237,19 +229,19 @@ const composerNotePositions = appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 2
 
 const importNotePositions = appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
-const layoutImages = {
+const LAYOUT_IMAGES = {
     15: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" "),
     8: appName === "Sky" ? "cr dm cr dm cr dm cr dm".split(" ") : "do re mi fa do re mi fa".split(" "),
     21: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ")
 }
 
-const cacheData = {
+const CACHE_DATA = {
     noteData: {
         background: "#d3bd8e",
         border: "#de4545",
         center: "#de4545"
     },
-    horizontalLineBreak: notesPerColumn / 3,
+    horizontalLineBreak: NOTES_PER_COLUMN / 3,
     standards: [
         {
             color: 0x515c6f //lighter
@@ -288,16 +280,15 @@ export {
     appName,
     layoutData,
     cssClasses,
-    notesPerColumn,
+    NOTES_PER_COLUMN,
     keyNames,
     pitchArr,
-    layoutImages,
+    LAYOUT_IMAGES,
     appVersion,
     speedChangers,
     audioContext,
-    pages,
     isTwa,
-    cacheData,
+    CACHE_DATA,
     updateMessage,
     MIDI_STATUS,
     isMidiAvailable,

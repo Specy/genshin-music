@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { observe } from 'mobx'
-import { layoutImages, appName, speedChangers, MIDI_STATUS } from "appConfig"
+import { LAYOUT_IMAGES, appName, speedChangers, MIDI_STATUS } from "appConfig"
 import Note from './Components/Note'
 import { SongStore } from 'stores/SongStore'
 import { delayMs, ComposerToRecording, NotesTable, getNoteText } from "lib/Utils"
@@ -450,7 +450,7 @@ export default class Keyboard extends Component {
                     ? <div className="loading">Loading...</div>
 
                     : keyboard.map(note => {
-                        let noteImage = layoutImages[keyboard.length][note.index]
+                        let noteImage = LAYOUT_IMAGES[keyboard.length][note.index]
                         let noteData = {
                             ...note,
                             approachRate: this.approachRate,

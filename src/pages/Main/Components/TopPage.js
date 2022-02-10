@@ -15,6 +15,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     const [inputDimension, setInputDimension] = useState({})
     const thumb1 = useRef()
     const thumb2 = useRef()
+    const slider = useRef()
     useEffect(() => {
         const dispose = observe(SliderStore.state, (newState) => {
             setSliderState(newState.object.data)
@@ -41,7 +42,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     }, [selectedThumb])
 
     const handleSliderClick = (event) => {
-        const size = event.target.getBoundingClientRect()
+        const size = slider.current.getBoundingClientRect()
         const x = event.clientX
         const thumb1X = thumb1.current.getBoundingClientRect().x
         const thumb2X = thumb2.current.getBoundingClientRect().x
@@ -83,6 +84,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             </button>
             <div
                 className="slider-outer"
+                ref={slider}
                 onPointerUp={handleSliderLeave}
                 onPointerMove={handleSliderMove}
                 onPointerDown={handleSliderClick}
