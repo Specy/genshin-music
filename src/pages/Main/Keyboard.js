@@ -5,7 +5,7 @@ import Note from './Components/Note'
 import { SongStore } from 'stores/SongStore'
 import { delayMs, ComposerToRecording, NotesTable, getNoteText } from "lib/Utils"
 import "./Keyboard.css"
-import { getMIDISettings } from 'lib/SettingsObj'
+import { getMIDISettings } from 'lib/BaseSettings'
 import TopPage from './Components/TopPage'
 import Analytics from 'lib/Analytics';
 import LoggerStore from 'stores/LoggerStore'

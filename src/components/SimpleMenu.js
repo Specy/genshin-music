@@ -3,8 +3,8 @@ import { FaHome, FaDiscord } from 'react-icons/fa';
 import MenuItem from 'components/MenuItem'
 import HomeStore from 'stores/HomeStore';
 
-export function SimpleMenu({children, className}) {
-    return <div className={"menu-wrapper " + (className ? className : '')} >
+export function SimpleMenu({children = undefined, className = ''}) {
+    return <div className={"menu-wrapper " + (className)} >
         <div className="menu menu-visible" style={{ justifyContent: 'flex-end' }}>
 
             {children}

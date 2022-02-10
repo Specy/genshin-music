@@ -201,7 +201,7 @@
 }
 .home-content-open button {
 	padding: 0.4rem 1.5rem;
-	background-color: var(--note-text);
+	background-color: var(--accent);
 	border-radius: 0.5rem;
 	font-size: 0.8rem;
 	color: #161514;

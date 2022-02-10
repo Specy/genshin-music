@@ -4,7 +4,7 @@ import Menu from "./Components/Menu"
 import { DB } from 'Database';
 import { SongStore } from 'stores/SongStore'
 import { Song, Recording, prepareSongImport, getPitchChanger } from "lib/Utils"
-import { MainPageSettings } from "lib/SettingsObj"
+import { MainPageSettings } from "lib/BaseSettings"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"

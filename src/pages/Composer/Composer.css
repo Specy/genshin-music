@@ -204,7 +204,7 @@ select{
     padding: 0.5rem 1rem;
     border: none;
     cursor: pointer;
-    background-color: var(--note-text);
+    background-color: var(--accent);
 }
 .tools-buttons-wrapper button:hover{
     filter: brightness(1.1);
@@ -214,7 +214,7 @@ select{
     filter: brightness(0.9);
 }
 .tools-button-highlighted{
-    background-color: var(--note-text) !important;
+    background-color: var(--accent) !important;
 }
 .tools-buttons-wrapper{
     display: grid;

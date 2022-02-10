@@ -231,6 +231,7 @@ export const MIDISettings = {
 }
 
 export function getMIDISettings(){
+    //TODO make this a store
     let settings = localStorage.getItem(appName + '_MIDI_Settings')
     try {
         settings = JSON.parse(settings)
@@ -245,4 +246,31 @@ export function getMIDISettings(){
         return MIDISettings
     }
     return settings
+}
+
+
+export const ThemeSettings = {
+    version: appName + 1,
+    data: {
+        primary: {
+            name: 'primary',
+            css: 'primary',
+            value: '#495466'
+        },
+        secondary: {
+            name: 'secondary',
+            css: 'secondary',
+            value: '#8c7063'
+        },
+        accent: {
+            name: 'accent',
+            css: 'accent',
+            value: '#63aea7'
+        },
+        icon_color: {
+            name: 'icon_color',
+            css: 'icon-color',
+            value: '#d3bd8e'
+        }
+    }
 }

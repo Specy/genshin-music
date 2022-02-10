@@ -112,6 +112,9 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'} onClick={handleClick}>
                 Sheet visualizer
             </PageRedirect>
+            <PageRedirect href='Theme' current={currentPage === 'Theme'} onClick={handleClick}>
+                App Theme
+            </PageRedirect>
         </div>
         <div className='home-dont-show-again' onClick={() => setDontShowHome(!data.canShow)}>
             <input type='checkbox' checked={!data.canShow} readOnly />

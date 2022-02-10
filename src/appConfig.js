@@ -20,6 +20,9 @@ const cssClasses = {
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
+const THEME = {
+
+}
 const MIDI_STATUS = {
     up: 128,
     down: 144
@@ -292,5 +295,6 @@ export {
     updateMessage,
     MIDI_STATUS,
     isMidiAvailable,
-    layersIndexes
+    layersIndexes,
+    THEME
 }

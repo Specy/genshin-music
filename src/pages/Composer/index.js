@@ -12,7 +12,7 @@ import ComposerCanvas from "./Canvas"
 import Menu from "./Components/Menu"
 import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { ComposerSettings, getMIDISettings } from "lib/SettingsObj"
+import { ComposerSettings, getMIDISettings } from "lib/BaseSettings"
 import Instrument from "lib/Instrument"
 import {
     ComposedSong, ColumnNote, Column, TempoChangers,

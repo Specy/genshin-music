@@ -169,10 +169,11 @@ export default class ComposerCanvas extends Component {
                     pointermove={(e) => this.handleStageSlide(e)}
                 >
                     {data.columns.map((column, i) => {
-                        if (counter++ > counterLimit) {
+                        if (counter > counterLimit) {
                             switcher = !switcher
                             counter = 0
                         }
+                        counter++
                         if (!isVisible(i, data.selected)) return null
                         const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
                         const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard

@@ -2,7 +2,7 @@
 import { SimpleMenu } from "components/SimpleMenu"
 import './MidiSetup.css'
 import { appName } from "appConfig"
-import { getMIDISettings } from "lib/SettingsObj"
+import { getMIDISettings } from "lib/BaseSettings"
 import BaseNote from "components/BaseNote"
 import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
 import React, { Component } from 'react'

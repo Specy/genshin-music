@@ -25,7 +25,7 @@
 	width: 6vw;
 	height: 6vw;
 	border: 0.5vw solid var(--note-border);
-	color: var(--note-text);
+	color: var(--accent);
 	font-size: 1.5rem;
 	font-weight: bold;
 	position: relative;
@@ -95,7 +95,7 @@
 	filter: brightness(10) !important;
 }
 .note-border-click {
-	border-color: var(--note-text);
+	border-color: var(--accent);
 }
 .note-name {
 	font-size: 0.8rem;

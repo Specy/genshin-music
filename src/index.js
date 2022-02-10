@@ -16,46 +16,52 @@ import MidiSetup from 'pages/MidiSetup';
 import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import App from 'pages/App';
-
+import Theme from 'pages/Theme'
+import { ThemeProvider } from 'components/ThemeProvider';
 function Index() {
 	return <div className="index">
 		<HashRouter>
 			<App />
-			<Switch>
-				<Route exact path={"/ErrorPage"}>
-					<ErrorPage />
-				</Route>
-				<Route exact path="/">
-					<Main />
-				</Route>
-				<Route exact path="/Player">
-					<Main />
-				</Route>
-				<Route exact path="/Composer">
-					<Composer />
-				</Route>
-				<Route exact path="/Donate">
-					<Donate />
-				</Route>
-				<Route exact path="/Changelog">
-					<Changelogpage />
-				</Route>
-				<Route exact path="/Partners">
-					<Partners />
-				</Route>
-				<Route exact path='/Help'>
-					<Help />
-				</Route>
-				<Route exact path='/SheetVisualizer'>
-					<SheetVisualizer />
-				</Route>
-				<Route exact path='/MidiSetup'>
-					<MidiSetup />
-				</Route>
-				<Route path='*'>
-					<Error404 />
-				</Route>
-			</Switch>
+			<ThemeProvider>
+				<Switch>
+					<Route exact path={"/ErrorPage"}>
+						<ErrorPage />
+					</Route>
+					<Route exact path="/">
+						<Main />
+					</Route>
+					<Route exact path="/Player">
+						<Main />
+					</Route>
+					<Route exact path="/Composer">
+						<Composer />
+					</Route>
+					<Route exact path="/Donate">
+						<Donate />
+					</Route>
+					<Route exact path="/Changelog">
+						<Changelogpage />
+					</Route>
+					<Route exact path="/Partners">
+						<Partners />
+					</Route>
+					<Route exact path='/Help'>
+						<Help />
+					</Route>
+					<Route exact path='/SheetVisualizer'>
+						<SheetVisualizer />
+					</Route>
+					<Route exact path='/MidiSetup'>
+						<MidiSetup />
+					</Route>
+					<Route path='/Theme'>
+						<Theme />
+					</Route>
+					<Route path='*'>
+						<Error404 />
+					</Route>
+				</Switch>
+			</ThemeProvider>
 		</HashRouter>
 		<div className="rotate-screen">
 			<img src={rotateImg} alt="icon for the rotating screen">

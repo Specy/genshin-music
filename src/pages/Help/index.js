@@ -13,7 +13,7 @@ export default function Help(props){
                 how to use them.
                 <br/><br/>
                 If you Have issues, bugs, or suggestions, please join our 
-                <a href="https://discord.gg/Arsf65YYHq" style={{color: 'var(--note-text)'}}>
+                <a href="https://discord.gg/Arsf65YYHq" style={{color: 'var(--accent)'}}>
                 <>&nbsp;</> Discord server
                 </a>
                 . <br/>

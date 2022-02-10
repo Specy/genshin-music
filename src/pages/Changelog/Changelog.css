@@ -12,7 +12,7 @@
     margin-left: 0;
 }
 .clt-1{
-    background-color: var(--note-text);
+    background-color: var(--accent);
     color: #232933;
     padding: 0.2rem;
     border-radius: 0.2rem;

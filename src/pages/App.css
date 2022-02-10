@@ -5,7 +5,6 @@
 	--icon-color: #d3bd8e;
 	--note-color: #fff9ef;
 	--note-border: #d9d6c8;
-	--note-text: #63aea7;
 	--accent: #63aea7;
 	--text-color: #aaaa82;
 	--composer-tool: #d4c199;
@@ -121,7 +120,7 @@ body {
 }
 .selected {
 	transition: all 0.3s;
-	background-color: var(--note-text);
+	background-color: var(--accent);
 }
 .right-panel {
 	flex: 1;
@@ -325,7 +324,7 @@ a {
 .donate-button {
 	margin-top: auto;
 	width: 100%;
-	background-color: var(--note-text);
+	background-color: var(--accent);
 	padding: 0.8rem;
 	color: white;
 	border-radius: 0.5rem;

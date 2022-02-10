@@ -53,7 +53,9 @@ class PlayingSong {
 		this.notes = notes
 	}
 }
-
+function capitalize(str){
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
 class FileDownloader {
 	constructor(type) {
 		if (type === undefined) type = "text/json"
@@ -576,5 +578,6 @@ export {
 	NotesTable,
 	MIDINote,
 	getNoteText,
-	MIDIShortcut
+	MIDIShortcut,
+	capitalize
 }
