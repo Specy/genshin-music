@@ -1,9 +1,10 @@
 import React, { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import addCell from "assets/icons/addCell.svg"
-import removeCell from "assets/icons/removeCell.svg"
 import { appName, audioContext, MIDI_STATUS, layersIndexes } from "appConfig"
+
+import AddColumn from 'components/icons/AddColumn';
+import RemoveColumn from "components/icons/RemoveColumn"
 
 import MidiImport from "./MidiParser"
 import ComposerTools from "./Components/ComposerTools"
@@ -913,10 +914,10 @@ class Composer extends Component {
                         <div className="buttons-composer-wrapper-right">
 
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
-                                <img src={addCell} className="tool-icon" alt="Add a new cell" />
+                                <AddColumn className="tool-icon"/>
                             </div>
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
-                                <img src={removeCell} className="tool-icon" alt="Remove a cell" />
+                                <RemoveColumn className='tool-icon' />
                             </div>
                             <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 4, "end")}>
                                 <Memoized>

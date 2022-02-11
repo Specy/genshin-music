@@ -1,13 +1,12 @@
 :root {
 	--primary: #495466;
-	--detail: #8c7063;
 	--secondary: #8c7063;
+	--background: #394248;
+	--accent: #63aea7;
+	--menu-background: rgba(237, 229, 216,0.95);
 	--icon-color: #d3bd8e;
 	--note-color: #fff9ef;
-	--note-border: #d9d6c8;
-	--accent: #63aea7;
 	--text-color: #aaaa82;
-	--composer-tool: #d4c199;
 	--clicked-note: #8fedd9;
     --whitish: #ede5d8;
 	--hint-main: #949494;
@@ -77,7 +76,7 @@ input{
 	-webkit-tap-highlight-color: transparent;
 }
 body {
-	background-color: #394248;
+	background-color: var(--background);
 }
 .disabled {
 	filter: brightness(0.7);

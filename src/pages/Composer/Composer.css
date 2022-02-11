@@ -1,5 +1,5 @@
 .canvas-wrapper{
-    background-color: #495466;
+    background-color: var(--primary);
     gap: 0.2rem;
     justify-content: center;
     display: flex;
@@ -71,7 +71,7 @@ select{
     align-items: center;
     padding: 0.3rem;
     border-radius: 0.3rem;
-    color: var(--composer-tool);
+    color: var(--icon-color);
     background-color: var(--primary);
     cursor: pointer;
 }
@@ -80,7 +80,8 @@ select{
     max-width: 3rem;
 }
 .tool-icon{
-    width: 1.5rem;
+    width: 1rem;
+    height: 100%;
 }
 .tool:hover,.tool-slim:hover{
     filter: brightness(1.1);
@@ -93,7 +94,7 @@ select{
     justify-content: space-between;
     padding: 0.4rem;
     border-radius: 0.2rem;
-    background-color: var(--composer-tool);
+    background-color: var(--icon-color);
     color: black;
     align-items: center;
     margin-bottom: 0.3rem;
@@ -119,8 +120,9 @@ select{
     width: 2rem;
     margin: 0.2rem;
     padding: 0 0.5rem;
-    background-color: rgb(81, 92, 111);
-    color: var(--composer-tool);
+    background-color: var(--primary);
+    filter: brightness(1.1);
+    color: var(--icon-color);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -377,7 +379,7 @@ canvas{
     font-size: 0.9rem;
 }
 .floating-midi::-webkit-scrollbar-thumb {
-	background: var(--composer-tool);
+	background: var(--icon-color);
 	border-radius: 2px;
   }
   /* Handle on hover */

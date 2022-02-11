@@ -5,7 +5,7 @@ import './Theme.css'
 
 import { SimpleMenu } from "components/SimpleMenu";
 import { capitalize } from "lib/Utils";
-
+import Color from "color";
 
 function Theme() {
     const [theme, setTheme] = useState(ThemeStore)
@@ -20,9 +20,15 @@ function Theme() {
     }
     return <div>
         <SimpleMenu />
-        <div className="default-page">
+        <div className="default-page" style={{justifyContent: 'center', height: '100%'}}>
+
             {theme.toArray().map(e =>
-                <ThemePropriety {...e} key={e.name} onChange={handleChange} />
+                <ThemePropriety 
+                    {...e} 
+                    key={e.name} 
+                    onChange={handleChange} 
+                    modified={e.value !== theme.baseTheme.data[e.name].value}
+                />
             )}
 
         </div>
@@ -33,34 +39,41 @@ function Theme() {
 interface ThemeProprietyProps {
     name: string,
     value: string,
+    modified: boolean,
     onChange: (name: string, value: string) => void
 }
-function ThemePropriety({ name, value, onChange }: ThemeProprietyProps) {
-    const [color, setColor] = useState(value)
+
+function ThemePropriety({ name, value, onChange, modified }: ThemeProprietyProps) {
+    const [color, setColor] = useState(Color(value))
+    
     useEffect(() => {
-        setColor(value)
+        setColor(Color(value))
     }, [value])
+
     function handleChange(e: any) {
-        setColor(e.target.value)
+        setColor(Color(e.target.value))
     }
+
     function sendEvent() {
-        onChange(name, color)
+        onChange(name, color.hex())
     }
+
     return <div className="color-row">
-        <td>
+        <div>
             {capitalize(name.split('_').join(' '))}
-        </td>
+        </div>
         <div className="color-input-wrapper">
             <input
+                style={{borderColor: Color(color).darken(0.5).hex()}}
                 type='color'
-                value={color}
+                value={color.hex()}
                 className='color-input'
                 onChange={handleChange}
                 onBlur={sendEvent}
             />
             <button
                 onClick={() => ThemeStore.reset(name)}
-                className='genshin-button theme-reset-button'
+                className={`genshin-button theme-reset-button ${modified? 'active' : ''}`}
             >
                 RESET
             </button>

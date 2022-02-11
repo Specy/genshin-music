@@ -3,7 +3,7 @@ import {ThemeSettings} from 'lib/BaseSettings'
 import {appName} from 'appConfig'
 // @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
-
+import Color from 'color'
 
 interface ThemeConfig{
     [key:string]: {
@@ -25,6 +25,7 @@ class ThemeStoreClass{
         let settings:Theme
         try {
             settings = JSON.parse(localStorage.getItem(appName + '_Theme') || 'null')
+            console.log(settings.version, this.baseTheme.version)
             if (settings === null || settings.version !== this.baseTheme.version) {
                 settings = baseTheme
             }
@@ -36,7 +37,7 @@ class ThemeStoreClass{
         this.state = observable(cloneDeep(settings))
     }
     get = (prop:string) => {
-        return this.state.data[prop]
+        return Color(this.state.data[prop].value)
     }
     getValue = (prop:string) => {
         return this.state.data[prop].value

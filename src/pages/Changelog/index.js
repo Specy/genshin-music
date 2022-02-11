@@ -61,10 +61,11 @@ function ChangelogRow(props) {
 const changelogs = [
     {
         version: '2.4',
-        title: 'Multi Slider',
+        title: 'Multi Slider and Themes',
         date: '2022 - 15/02',
         changes: [
             'Added start and end slider for selecting which part of the song to play/practice',
+            'Added app themes, fully customise the look of the app',
             'Overall performance improvements',
         ]
     },{

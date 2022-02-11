@@ -252,6 +252,11 @@ export function getMIDISettings(){
 export const ThemeSettings = {
     version: appName + 1,
     data: {
+        background:{
+            name: 'background',
+            css: 'background',
+            value: '#394248'
+        },
         primary: {
             name: 'primary',
             css: 'primary',
@@ -271,6 +276,11 @@ export const ThemeSettings = {
             name: 'icon_color',
             css: 'icon-color',
             value: '#d3bd8e'
+        },
+        menu_background: {
+            name: 'menu_background',
+            css: 'menu-background',
+            value: 'rgba(237, 229, 216,0.95)'
         }
     }
 }

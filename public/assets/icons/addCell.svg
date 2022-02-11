@@ -1,16 +1,14 @@
-<svg width="300" height="450" xmlns="http://www.w3.org/2000/svg">
- <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+<svg
+   width="187.08151"
+   height="289"
+   viewBox='0 0 289 187'
+   xmlns="http://www.w3.org/2000/svg"
+>
 
- <g>
-  <title>background</title>
-  <rect x="-1" y="-1" width="302" height="452" id="canvas_background" fill="none"/>
-  <g id="canvasGrid" display="none">
-   <rect id="svg_3" width="640" height="480" x="1" y="1" stroke-width="0" fill="url(#gridpattern)"/>
-  </g>
- </g>
- <g>
-  <title>Layer 1</title>
-  <rect fill="#dad8b3" stroke="#000" stroke-width="0" y="81" width="48" height="289" id="svg_1" rx="15" x="188.74978"/>
-  <text fill="#dad8b3" stroke-width="0" stroke-opacity="null" x="77.27346" y="274.69928" id="svg_2" font-size="250" font-family="Helvetica, Arial, sans-serif" text-anchor="start" xml:space="preserve" font-weight="normal" transform="matrix(0.7640383446247687,0,0,0.811095952987671,-0.29930810181629397,70.03546631708741) " stroke="#000">+</text>
- </g>
+  <path
+     d="m 154.08151,0 h 18 c 8.31,0 15,6.69 15,15 v 259 c 0,8.31 -6.69,15 -15,15 h -18 c -8.31,0 -15,-6.69 -15,-15 V 15 c 0,-8.31 6.69,-15 15,-15 z"
+   />
+  <path
+     d="M 48.706054,198.64307 V 159.5708 a 5,5 45 0 0 -5,-5 H 5 a 5,5 45 0 1 -5,-5 v -10.50781 a 5,5 135 0 1 5,-5 h 38.706054 a 5,5 135 0 0 5,-5 V 90.35693 a 5,5 135 0 1 5,-5 h 10.751947 a 5,5 45 0 1 5,5 v 38.70606 a 5,5 45 0 0 5,5 h 38.706059 a 5,5 45 0 1 5,5 v 10.50781 a 5,5 135 0 1 -5,5 H 74.458001 a 5,5 135 0 0 -5,5 v 39.07227 a 5,5 135 0 1 -5,5 H 53.706054 a 5,5 45 0 1 -5,-5 z"
+   />
 </svg>

@@ -225,7 +225,7 @@
 	justify-content: center;
 }
 .home-separator {
-	border-top: 1px solid var(--composer-tool);
+	border-top: 1px solid var(--icon-color);
 	margin-top: 1rem;
 	font-size: 1.1rem;
 	padding-top: 0.5rem;

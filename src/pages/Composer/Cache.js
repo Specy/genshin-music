@@ -3,7 +3,7 @@ import { CACHE_DATA, NOTES_PER_COLUMN } from "appConfig"
 const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
 
 export class ComposerCache {
-    constructor(width, height, margin = 4, timelineHeight = 30) {
+    constructor({width, height, margin = 4, timelineHeight = 30, standardsColors}) {
         this.width = width
         this.height = height
         this.cache = {
@@ -19,6 +19,7 @@ export class ComposerCache {
         this.margin = margin
         this.noteWidth = this.width
         this.noteHeight = this.height / NOTES_PER_COLUMN
+        this.standardsColors = standardsColors || standards
         //TODO reuse the same canvas instead of remaking one for each element
         /*
         this.app = new PIXI.Application({
@@ -37,11 +38,11 @@ export class ComposerCache {
             let canvas = drawColumn(tempoChanger, this, 1)
             this.cache.columns.push(canvas.toDataURL())
         })
-        standards.forEach(standardColumn => {
+        this.standardsColors.forEach(standardColumn => {
             let canvas = drawColumn(standardColumn, this, 1)
             this.cache.standard.push(canvas.toDataURL())
         })
-        standards.forEach(standardColumn => {
+        this.standardsColors.forEach(standardColumn => {
             let canvas = drawColumn(standardColumn, this, 3)
             this.cache.standardLarger.push(canvas.toDataURL())
         })

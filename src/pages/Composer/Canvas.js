@@ -7,6 +7,8 @@ import { ComposerCache } from "./Cache"
 
 import { composerNotePositions, NOTES_PER_COLUMN, appName } from "appConfig"
 import Memoized from 'components/Memoized';
+import { ThemeStore } from 'stores/ThemeStore';
+import { observe } from 'mobx';
 let NumOfColumnsPerCanvas = 35
 
 export default class ComposerCanvas extends Component {
@@ -31,11 +33,31 @@ export default class ComposerCanvas extends Component {
                 height: height
             },
             timelineHeight: isMobile() ? 25 : 30,
-            currentBreakpoint: -1
+            currentBreakpoint: -1,
+            theme: {
+                background: ThemeStore.get('primary').darken(0.1).rgbNumber(),
+                timeline: ThemeStore.get('primary').lighten(0.1).rgbNumber()
+            }
         }
         this.canvasRef = React.createRef()
         let margin = isMobile() ? 1 : 4
-        this.cache = new ComposerCache(this.state.column.width, height, margin, this.state.timelineHeight)
+        this.cache = new ComposerCache({
+            width: this.state.column.width, 
+            height: height, 
+            margin: margin, 
+            timelineHeight: this.state.timelineHeight,
+            standardsColors:  [
+                    {
+                        color: ThemeStore.get('primary').lighten(0.1).rgbNumber() //lighter
+                    },{
+                        color: ThemeStore.get('primary').darken(0.03).rgbNumber() //darker
+                    },{
+                        color: 0x1a968b //selected
+                    },{
+                        color: 0xd6722f
+                    }
+                ]
+            })
         this.stageSelected = false
         this.sliderSelected = false
         this.hasSlided = false
@@ -53,6 +75,7 @@ export default class ComposerCanvas extends Component {
         window.addEventListener("pointerup", this.resetPointerDown)
         window.addEventListener("keydown", this.handleKeyboard)
         this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
+
     }
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
@@ -136,7 +159,7 @@ export default class ComposerCanvas extends Component {
     }
 
     render() {
-        const { width, timelineHeight, height } = this.state
+        const { width, timelineHeight, height, theme } = this.state
         const { data, functions } = this.props
         const cache = this.cache.cache
         const sizes = this.state.column
@@ -156,7 +179,7 @@ export default class ComposerCanvas extends Component {
                 raf={false}
                 renderOnComponentChange={true}
                 options={{
-                    backgroundColor: 0x495466,
+                    backgroundAlpha: 0
                 }}
                 key={this.state.width}
                 ref={this.canvasRef}
@@ -210,7 +233,7 @@ export default class ComposerCanvas extends Component {
                     <Stage
                         width={width}
                         height={timelineHeight}
-                        options={{ antialias: true, autoDensity: true, backgroundColor: 0x515c6f }}
+                        options={{ antialias: true, autoDensity: true, backgroundColor: theme.timeline }}
                         raf={false}
                         renderOnComponentChange={true}
                     >
@@ -250,7 +273,6 @@ export default class ComposerCanvas extends Component {
 
 function fillX(g, width, height) {
     g.clear()
-    g.beginFill(0x515c6f, 1)
     g.drawRect(0, 0, width, height)
 }
 

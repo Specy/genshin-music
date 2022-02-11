@@ -18,6 +18,8 @@ import "./menu.css"
 import Analytics from 'lib/Analytics';
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
+import { ThemeStore } from 'stores/ThemeStore';
+import { observe } from 'mobx';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -28,15 +30,21 @@ class Menu extends Component {
             searchInput: '',
             searchedSongs: [],
             searchStatus: 'Write a song name then search!',
-            isPersistentStorage: false
+            isPersistentStorage: false,
+            theme: ThemeStore
         }
+        this.dispose = () => {}
     }
     componentDidMount() {
         this.checkPersistentStorage()
         window.addEventListener("keydown", this.handleKeyboard)
+        this.dispose = observe(ThemeStore.state.data,(newState) => {
+            this.setState({theme: {...ThemeStore}})
+        })
     }
     componentWillUnmount() {
         window.removeEventListener("keydown", this.handleKeyboard)
+        this.dispose()
     }
     handleKeyboard = (event) => {
         let key = event.code
@@ -189,11 +197,12 @@ class Menu extends Component {
 
     render() {
         let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
+        const { theme } = this.state
         const { data, functions } = this.props
         const { handleSettingChange } = functions
         functions.toggleMenu = this.toggleMenu
         functions.downloadSong = this.downloadSong
-        let changePage = this.props.functions.changePage
+        let changePage = functions.changePage
         let songs = data.songs.filter(song => !song.data.isComposedVersion)
         let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
         const { searchStatus, searchedSongs, selectedMenu } = this.state
@@ -201,7 +210,7 @@ class Menu extends Component {
             importSong: functions.addSong,
         }
         return <div className="menu-wrapper">
-            <div className="menu menu-visible menu-main-page">
+            <div className="menu menu-visible menu-main-page" >
                 {this.state.open && <MenuClose action={this.toggleMenu} />}
                 <MenuItem type="Help" action={this.selectSideMenu} className="margin-top-auto">
                     <FaInfo className="icon" />
