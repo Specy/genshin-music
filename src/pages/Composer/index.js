@@ -25,6 +25,7 @@ import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
+import { AppBackground } from 'components/AppBackground';
 class Composer extends Component {
     constructor(props) {
         super(props)
@@ -869,7 +870,7 @@ class Composer extends Component {
             selectedColumn: song.selected,
 
         }
-        return <div className="app bg-image" style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
+        return <AppBackground page='Composer'>
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData} />}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <Memoized>
@@ -956,7 +957,7 @@ class Composer extends Component {
                     {formatMillis(songLength.total)}
                 </div>
             </div>
-        </div>
+        </AppBackground>
     }
 }
 

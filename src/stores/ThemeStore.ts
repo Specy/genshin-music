@@ -1,60 +1,91 @@
 import { observable } from "mobx";
-import {ThemeSettings} from 'lib/BaseSettings'
-import {appName} from 'appConfig'
+import { ThemeSettings } from 'lib/BaseSettings'
+import { appName } from 'appConfig'
 // @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
-
-interface ThemeConfig{
-    [key:string]: {
+import { FileDownloader } from 'lib/Utils'
+import LoggerStore from 'stores/LoggerStore'
+interface ThemeConfig {
+    [key: string]: {
         name: string,
         value: string,
         css: string
     }
 }
 
-interface Theme{
+interface Theme {
     data: ThemeConfig,
-    version: string
-}
-class ThemeStoreClass{
-    state:Theme
-    baseTheme: Theme
-    constructor(baseTheme:Theme){
-        this.baseTheme = cloneDeep(baseTheme)
-        let settings:Theme
-        try {
-            settings = JSON.parse(localStorage.getItem(appName + '_Theme') || 'null')
-            console.log(settings.version, this.baseTheme.version)
-            if (settings === null || settings.version !== this.baseTheme.version) {
-                settings = baseTheme
-            }
-        } catch (e) {
-            settings = baseTheme
-        }
-        settings = cloneDeep(settings)
-
-        this.state = observable(cloneDeep(settings))
+    version: string,
+    other: {
+        [key: string]: string
     }
-    get = (prop:string) => {
+}
+class ThemeStoreClass {
+    state: Theme
+    baseTheme: Theme
+    constructor(baseTheme: Theme) {
+        this.baseTheme = cloneDeep(baseTheme)
+        this.state = observable(cloneDeep(baseTheme))
+        try {
+            const json: Theme = JSON.parse(localStorage.getItem(appName + '_Theme') || 'null')
+            if (json !== null) this.loadFromJson(json)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    get = (prop: string) => {
         return Color(this.state.data[prop].value)
     }
-    getValue = (prop:string) => {
+    getOther = (prop:string) => {
+        return this.state.other[prop]
+    }
+    getValue = (prop: string) => {
         return this.state.data[prop].value
     }
     toArray = () => {
-        return Object.keys(this.state.data).map((key) => this.state.data[key])
+        return Object.keys(this.state.data).map((key) => this.state.data[key]).filter(e => e.name !== 'other')
     }
     reset = (prop: string) => {
-        this.state.data[prop] = {...this.baseTheme.data[prop]}
-        ThemeStore.save()
+        this.state.data[prop] = { ...this.baseTheme.data[prop] }
+        this.save()
     }
-    set = (name: string, value:string) => {
-        this.state.data[name] = {...this.state.data[name], name,value}
-        ThemeStore.save()
+    download = () => {
+        new FileDownloader().download(this.toJson(), appName + '_theme.json')
+    }
+    toJson = () => {
+        return JSON.stringify(this.state)
+    }
+    setBackground = (url: string,type: 'Composer' | 'Main') => {
+        this.setOther('backgroundImage'+type, url)
+    }
+    loadFromJson = (json: any) => {
+        try{
+            Object.entries(json.data).forEach(([key, value]: [string, any]) => {
+                if (this.baseTheme.data[key] !== undefined) {
+                    this.set(key, value.value)
+                }
+            })
+            Object.entries(json.other).forEach(([key, value]: [string, any]) => {
+                if (this.baseTheme.other[key] !== undefined) {
+                    this.setOther(key, value)
+                }
+            })
+        }catch(e){
+            console.error(e)
+            LoggerStore.error("There was an error loading the theme",4000)
+        }
+    }
+    setOther = (name: string, value:string) =>{
+        this.state.other[name] = value
+        this.save()
+    }
+    set = (name: string, value: string) => {
+        this.state.data[name] = { ...this.state.data[name], name, value }
+        this.save()
     }
     save = () => {
-        localStorage.setItem(appName+'_Theme',JSON.stringify(this.state))
+        localStorage.setItem(appName + '_Theme', JSON.stringify(this.state))
     }
 }
 

@@ -1,4 +1,4 @@
-.color-row{
+.theme-row{
     margin-top: 1rem;
     display: flex;
     width: 100%;
@@ -36,4 +36,17 @@
 }
 .theme-reset-button.active{
     background-color: var(--accent);
+}
+.theme-preview{
+    position: relative;
+    margin-top: 0.5rem;
+    border: dashed 4px var(--accent);
+    border-radius: 0.4rem;
+    overflow: hidden;
+}
+.theme-preview .side-menu{
+    position: absolute;
+}
+.theme-preview .keyboard{
+    transform: scale(0.8) !important;
 }

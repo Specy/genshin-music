@@ -99,6 +99,12 @@ select{
     align-items: center;
     margin-bottom: 0.3rem;
 }
+.settings-row-wrap{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 0.4rem;
+}
 .settings-row div{
     display: flex;
     align-items: center;

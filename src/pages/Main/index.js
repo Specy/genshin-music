@@ -12,6 +12,7 @@ import { appName, audioContext , isTwa} from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
+import { AppBackground } from 'components/AppBackground';
 class Main extends Component {
 	constructor(props) {
 		super(props)
@@ -389,7 +390,7 @@ class Main extends Component {
 			settings: state.settings
 		}
 
-		return <div className='app bg-image' style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
+		return <AppBackground page='Main'>
 			{SongStore.eventType !== 'approaching' &&
 				<div className='record-button'>
 					<AppButton
@@ -427,7 +428,7 @@ class Main extends Component {
 					/>
 				</div>
 			</div>
-		</div>
+		</AppBackground>
 
 
 	}

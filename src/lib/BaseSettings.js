@@ -2,7 +2,7 @@ import { isMobile } from "is-mobile"
 import { instruments, appName } from "appConfig"
 import { MIDINote,MIDIShortcut } from "./Utils"
 export const ComposerSettings = {
-    settingVesion: appName + 19,
+    settingVesion: appName + 20,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -113,13 +113,6 @@ export const ComposerSettings = {
         songSetting: false,
         value: false,
     },
-    backgroundImage: {
-        name: "Background image (url)",
-        type: "text",
-        songSetting: false,
-        value: "",
-        placeholder: "Write here"
-    },
     syncTabs: {
         name: "Autoplay in all tabs (pc only)",
         type: "checkbox",
@@ -129,7 +122,7 @@ export const ComposerSettings = {
 }
 
 export const MainPageSettings = {
-    settingVesion: appName + 19,
+    settingVesion: appName + 20,
     instrument: {
         name: "Instrument",
         type: "instrument",
@@ -201,13 +194,6 @@ export const MainPageSettings = {
         value: 1500,
         threshold: [0, 5000]
     },
-    backgroundImage: {
-        name: "Background image (url)",
-        type: "text",
-        songSetting: false,
-        value: "",
-        placeholder: "Write here"
-    },
     noteAnimation: {
         name: "Note animation",
         type: "checkbox",
@@ -250,7 +236,11 @@ export function getMIDISettings(){
 
 
 export const ThemeSettings = {
-    version: appName + 1,
+    version: appName + 3,
+    other: {
+        backgroundImageMain: '',
+        backgroundImageComposer: ''
+    },
     data: {
         background:{
             name: 'background',

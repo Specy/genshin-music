@@ -104,7 +104,7 @@ body {
 .app-content{
 	z-index: 2;
 }
-.genshin-button {
+.genshin-button, .app-button {
 	background-color: var(--primary);
 	color: white;
 	border-radius: 0.2rem;
@@ -114,8 +114,12 @@ body {
 	cursor: pointer;
 	min-width: 5rem;
 }
-.genshin-button:hover {
+.genshin-button:hover, .app-button:hover {
 	filter: brightness(1.1);
+}
+.app-button.selected{
+	transition: all 0.3s;
+	background-color: var(--accent);
 }
 .selected {
 	transition: all 0.3s;

@@ -11,6 +11,7 @@ import Memoized from 'components/Memoized';
 import { isMidiAvailable } from 'appConfig';
 import Analytics from 'lib/Analytics';
 import LoggerStore from 'stores/LoggerStore';
+import { AppButton } from 'components/AppButton';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -196,15 +197,23 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
-                    {isMidiAvailable &&
-                        <button
-                            className='genshin-button'
-                            onClick={() => changePage('MidiSetup')}
-                            style={{ width: 'fit-content', margin: '0.4rem 0 0.7rem auto' }}
+                    <div className='settings-row-wrap'>
+                        <AppButton 
+                            onClick={() => changePage('Theme')} 
+                            style={{width:'fit-content'}}
                         >
-                            Connect MIDI keyboard
-                        </button>
-                    }
+                            Change app theme
+                        </AppButton>
+                        {isMidiAvailable && 
+                            <button 
+                                className='genshin-button' 
+                                onClick={() => changePage('MidiSetup')} 
+                                style={{width:'fit-content'}}
+                            >
+                                Connect MIDI keyboard
+                            </button>
+                        }
+                    </div>                    
                     {!isTwa() && <DonateButton onClick={changePage} />}
                 </MenuPanel>
             </div>
