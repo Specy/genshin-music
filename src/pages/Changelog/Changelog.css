@@ -1,7 +1,7 @@
 .changelog-page-title{
     font-size: 2.5rem;
     margin-bottom: 2rem;
-    color: var(--whitish);
+    color: var(--background-text);
 }
 
 .changelog-title{
@@ -13,7 +13,7 @@
 }
 .clt-1{
     background-color: var(--accent);
-    color: #232933;
+    color: var(--accent-text);
     padding: 0.2rem;
     border-radius: 0.2rem;
     width: 5rem;
@@ -21,11 +21,11 @@
 }
 .clt-2{
     margin-left: 1rem;
-    color: var(--whitish);
+    color: var(--background-text);
 }
 .cll-1{
     font-size: 1.5rem;
-    color: var(--icon-color);
+    color: var(--accent);
 }
 .changelog-list{
     margin:0;

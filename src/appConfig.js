@@ -21,8 +21,11 @@ const cssClasses = {
 }
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
-const THEME = {
-
+const BASE_THEME_CONFIG = {
+    text: {
+        light: '#ede5d8',
+        dark: '#151414'
+    }
 }
 const MIDI_STATUS = {
     up: 128,
@@ -297,5 +300,5 @@ export {
     MIDI_STATUS,
     isMidiAvailable,
     layersIndexes,
-    THEME
+    BASE_THEME_CONFIG
 }

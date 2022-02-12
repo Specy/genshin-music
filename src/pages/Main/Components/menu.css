@@ -3,8 +3,8 @@
     width: 4rem;
     background-color: var(--primary);
     height: 100%;
-    border-right: solid 2px var(--detail);
-    border-left: solid 2px var(--detail);
+    border-right: solid 2px var(--secondary);
+    border-left: solid 2px var(--secondary);
     align-items: center;
     flex-direction: column;
     padding-top: 0.5rem;
@@ -90,6 +90,7 @@
     border-bottom-left-radius: unset;
     height: 100%;
     background-color: var(--menu-background);
+    color: var(--menu-background-text);
     transform: scale(0.9);
     transition: all 0.3s;
     opacity: 0;
@@ -125,6 +126,7 @@
     box-sizing: border-box;
     padding: 0 1rem;
     outline: none;
+    color: var(--menu-background-text);
     background-color: #d3bd8e;
     display: flex;
     flex:1;
@@ -134,7 +136,7 @@
 }
 .library-search-btn{
     background-color: #d3bd8e;
-    color: black;
+    color: var(--menu-background-text);
     height:2.2rem;
     width: 2.2rem;
     border: none;
@@ -149,7 +151,7 @@
     justify-content: center;
 }
 .library-search-btn:hover{
-    filter: brightness(1.05);
+    filter: brightness(1.1);
 }
 .songs-wrapper,.library-search-songs-wrapper{
     border-bottom-left-radius: 0.3rem;
@@ -180,7 +182,7 @@
     border-top-left-radius: 0.3rem;
     border-top-right-radius: 0.3rem;
     background-color: #d3bd8e;
-    color: #393939;
+    color: var(--menu-background-text);
     font-size: 1rem;
     padding: 0.4rem;
     cursor: pointer;
@@ -199,7 +201,7 @@
     flex:1;
     background-color: var(--primary);
     border-radius: 0.3rem;
-    color: var(--whitish);
+    color: var(--primary-text);
     justify-content: space-between;
     align-items: flex-start;
     padding: 0.45rem;
@@ -223,6 +225,7 @@
     justify-content: center;
     align-items: center;
     background-color: var(--primary);
+    color: var(--primary-text);
     filter: brightness(0.85);
     border-radius: 0.3rem;
     height: 2rem;
@@ -230,7 +233,6 @@
     font-size: 1rem;
     border: none;
     margin-right: 0.45rem;
-    color: var(--whitish);
     cursor: pointer;
     padding: 0;
 }

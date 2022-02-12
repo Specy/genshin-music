@@ -6,6 +6,7 @@ import { appName } from 'appConfig'
 import { ComposerToRecording, getNoteText } from 'lib/Utils'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
+import { SongMenu } from 'components/SongMenu'
 
 const THRESHOLDS = {
     joined: 50,
@@ -83,36 +84,18 @@ export default function SheetVisualizer(props) {
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SimpleMenu className='noprint' />
             <div>
-                <div className='displayer-songs-wrapper noprint' style={{ marginTop: '0' }}>
-                    <div className="tab-selector-wrapper">
-                        <button
-                            className={selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => setSelectedSongType("recorded")}
-                        >
-                            Recorded
-                        </button>
-                        <button
-                            className={selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => setSelectedSongType("composed")}
-                        >
-                            Composed
-                        </button>
-                    </div>
-                    <div className="songs-wrapper">
-                        {songs.filter((song) => selectedSongType === 'composed' ? song.data?.isComposedVersion : !song.data?.isComposedVersion
-                        ).map((song) =>
-                            <SongRow
-                                key={song?.name}
-                                current={song === currentSong}
-                                data={song}
-                                functions={{
-                                    click: handleClick
-                                }}
-                            />
-                        )}
-
-                    </div>
-                </div>
+                <SongMenu 
+                    songs={songs}
+                    className='displayer-songs-wrapper noprint'
+                    style={{ marginTop: '0' }}
+                    SongComponent={SongRow}
+                    componentProps={{
+                        currentSong,
+                        functions: {
+                            click: handleClick
+                        }
+                    }}
+                />
                 <div className='displayer-buttons-wrapper noprint'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{ marginRight: '0.5rem' }}>Note names</div>
@@ -202,13 +185,12 @@ function SheetFrame({ frame, rows, hasText }) {
 }
 
 
-function SongRow(props) {
-    const { data, current } = props
-    const selectedStyle = current ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
+function SongRow({ data, current, functions } ) {
+    const selectedStyle = current === data?.name ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
     return <div
         className="song-row"
         style={selectedStyle}
-        onClick={() => props.functions.click(data)}>
+        onClick={() => functions.click(data)}>
         <div className="song-name">
             {data.name}
         </div>

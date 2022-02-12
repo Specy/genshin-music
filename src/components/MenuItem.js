@@ -1,5 +1,4 @@
 import { observe } from "mobx"
-import Theme from "pages/Theme"
 import { memo, useEffect, useState } from "react"
 import { ThemeStore } from "stores/ThemeStore"
 export default memo(function MenuItem(props) {

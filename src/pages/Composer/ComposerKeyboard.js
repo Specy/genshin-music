@@ -38,7 +38,6 @@ export default function ComposerKeyboard({ data, functions }) {
                 </div>
                 <MultiSwitch
                     buttonsClass={"layer-button"}
-                    selectedColor={"#63aea7"}
                     options={layersIndexes}
                     onSelect={functions.changeLayer}
                     selected={data.layer}

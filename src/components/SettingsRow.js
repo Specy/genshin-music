@@ -1,10 +1,17 @@
 import { useState, useEffect,memo } from 'react'
 import Switch from 'components/Switch'
+import { ThemeStore } from 'stores/ThemeStore'
+import { observe } from 'mobx'
 export default memo(function SettingsRow({ data, update, objKey, changeVolume }) {
     const [valueHook, setter] = useState(data.value)
     const [volumeHook, setterVolume] = useState(data.volume)
+    const [theme, setTheme] = useState(ThemeStore)
     useEffect(() => {
         setter(data.value)
+        const dispose = observe(ThemeStore.state.data,() => {
+            setTheme({...ThemeStore})
+        })
+        return dispose
     },[data.value])
 
     function handleChange(e) {
@@ -55,7 +62,7 @@ export default memo(function SettingsRow({ data, update, objKey, changeVolume })
     }
 
     if (objKey === "settingVesion") return null
-    return <div className="settings-row">
+    return <div className="settings-row" style={{backgroundColor: theme.get('menu_background').darken(0.2)}}>
         <div>
             {data.name}
         </div>

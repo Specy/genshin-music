@@ -16,7 +16,11 @@ function ThemeProvider({ children }: Props) {
     return <>
         <style>
             {`:root{
-                ${theme.toArray().map(e => `--${e.css}:${e.value};`).join('\n')}
+                ${theme.toArray().map(e => {
+                    return `--${e.css}:${e.value};
+                            --${e.css}-text: ${e.text};
+                            `
+                }).join('\n')}
             }`}
         </style>
         {children}

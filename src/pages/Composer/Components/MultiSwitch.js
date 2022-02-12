@@ -1,15 +1,15 @@
 import { memo } from "react"
 export default memo(function MultiSwitch(props){
-    const { options, selected, selectedColor, buttonsClass, onSelect } = props
+    const { options, selected, buttonsClass, onSelect } = props
     return <>
-        {options.map(e => {
+        {options.map(index => {
             return <button
-                style={{ backgroundColor: e === selected ? selectedColor : "" }}
+                style={selected === index ? {backgroundColor: 'var(--accent)', color: 'var(--accent-text)'}: {}}
                 className={buttonsClass}
-                onClick={() => onSelect(e)}
-                key={e}
+                onClick={() => onSelect(index)}
+                key={index}
             >
-                {e}
+                {index}
             </button>
         })}
     </>

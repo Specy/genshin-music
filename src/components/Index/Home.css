@@ -204,7 +204,7 @@
 	background-color: var(--accent);
 	border-radius: 0.5rem;
 	font-size: 0.8rem;
-	color: #161514;
+	color: var(--accent-text);
 	border: none;
 	cursor: pointer;
 }

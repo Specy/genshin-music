@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 import { ThemeSettings } from 'lib/BaseSettings'
-import { appName } from 'appConfig'
+import { appName, BASE_THEME_CONFIG } from 'appConfig'
 // @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
@@ -10,7 +10,8 @@ interface ThemeConfig {
     [key: string]: {
         name: string,
         value: string,
-        css: string
+        css: string,
+        text: string
     }
 }
 
@@ -36,6 +37,9 @@ class ThemeStoreClass {
     }
     get = (prop: string) => {
         return Color(this.state.data[prop].value)
+    }
+    getText = (prop: string) => {
+        return Color(this.state.data[prop].text)
     }
     getOther = (prop:string) => {
         return this.state.other[prop]
@@ -81,7 +85,12 @@ class ThemeStoreClass {
         this.save()
     }
     set = (name: string, value: string) => {
-        this.state.data[name] = { ...this.state.data[name], name, value }
+        this.state.data[name] = { 
+            ...this.state.data[name], 
+            name, 
+            value,
+            text: Color(value).isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+        }
         this.save()
     }
     save = () => {

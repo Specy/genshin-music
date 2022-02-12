@@ -1,54 +1,62 @@
 import React, { Component, useEffect, useState } from 'react'
-import { FilePicker } from "react-file-picker"
+import { FilePicker } from 'components/FilePicker'
 import { Midi } from '@tonejs/midi'
 import { pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
 import { appName } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
+import { ThemeStore } from 'stores/ThemeStore'
+import { observe } from 'mobx'
 class MidiImport extends Component {
     constructor(props) {
         super(props)
         this.state = {
             fileName: '',
-            midi: null, 
+            midi: null,
             bpm: 220,
             offset: 0,
             pitch: 'C',
             accidentals: 0,
             outOfRange: 0,
             totalNotes: 0,
-            includeAccidentals: true
+            includeAccidentals: true,
+            theme: ThemeStore
         }
+        this.dispose = () => {}
+    }
+    componentDidMount(){
+        this.dispose = observe(ThemeStore.state.data,() => {
+            this.setState({theme : {...ThemeStore}})
+        })
+    }
+    componentWillUnmount(){
+        this.dispose()
     }
     handleFile = (file) => {
-        const reader = new FileReader();
-        reader.addEventListener('load', (event) => {
-            let midi
-            try {
-                midi = new Midi(event.target.result)
-            } catch (e) {
-                console.error(e)
-            }
-            if (!midi) return LoggerStore.error('There was an error importing this file')
-            let bpm = midi.header.tempos[0]?.bpm
-            let key = midi.header.keySignatures[0]?.key
-            midi.tracks.forEach((track, i) => {
-                track.selected = true
-                track.layer = 0
-                track.name = track.name || `Track n.${i + 1}`
-                track.numberOfAccidentals = 0
-                track.numberOfOutOfRange = 0
-            })
-            this.setState({
-                midi: midi,
-                fileName: file.name,
-                bpm: Math.floor(bpm * 4) || 220,
-                offset: 0,
-                pitch: pitchArr.includes(key) ? key : 'C',
-            }, () => { if (this.state.midi !== null) this.convertMidi() })
+        let midi
+        try {
+            midi = new Midi(file[0].data)
+        } catch (e) {
+            console.error(e)
+            return LoggerStore.error('There was an error importing this file')
+        }
+        let bpm = midi.header.tempos[0]?.bpm
+        let key = midi.header.keySignatures[0]?.key
+        midi.tracks.forEach((track, i) => {
+            track.selected = true
+            track.layer = 0
+            track.name = track.name || `Track n.${i + 1}`
+            track.numberOfAccidentals = 0
+            track.numberOfOutOfRange = 0
         })
-        reader.readAsArrayBuffer(file)
+        this.setState({
+            midi: midi,
+            fileName: file.name,
+            bpm: Math.floor(bpm * 4) || 220,
+            offset: 0,
+            pitch: pitchArr.includes(key) ? key : 'C',
+        }, () => { if (this.state.midi !== null) this.convertMidi() })
     }
 
     convertMidi = () => {
@@ -177,16 +185,21 @@ class MidiImport extends Component {
     }
     render() {
         const { handleFile, editTrack, state, changeBpm, changeOffset, changePitch } = this
-        const { fileName, midi, bpm, offset, pitch, accidentals, outOfRange, totalNotes, includeAccidentals } = state
+        const { fileName, midi, bpm, offset, pitch, accidentals, outOfRange, totalNotes, includeAccidentals, theme } = state
         const { functions } = this.props
         const { changeMidiVisibility } = functions
+        const primaryColor = theme.get('primary')
+        const midiInputsStyle = {
+            backgroundColor: primaryColor.isDark() ? primaryColor.lighten(0.2) : primaryColor.darken(0.2),
+            color: theme.getText('primary')
+        }
         return <div className='floating-midi'>
             <div
                 className='midi-row separator-border'
                 style={{ width: '100%' }}
             >
-                <FilePicker onChange={handleFile}>
-                    <button className="midi-btn">
+                <FilePicker onChange={handleFile} as='buffer'>
+                    <button className="midi-btn" style={midiInputsStyle}>
                         Click to load midi file
                     </button>
                 </FilePicker>
@@ -195,7 +208,7 @@ class MidiImport extends Component {
                 </div>
                 <button
                     className='midi-btn'
-                    style={{ marginLeft: 'auto' }}
+                    style={{ marginLeft: 'auto', ...midiInputsStyle }}
                     onClick={() => changeMidiVisibility(false)}
                 >
                     Close
@@ -212,6 +225,7 @@ class MidiImport extends Component {
                                 value={bpm}
                                 changeValue={changeBpm}
                                 delay={600}
+                                style={midiInputsStyle}
                                 step={5}
                             />
                         </td>
@@ -225,6 +239,7 @@ class MidiImport extends Component {
                                 value={offset}
                                 changeValue={changeOffset}
                                 delay={600}
+                                style={midiInputsStyle}
                                 step={1}
                             />
                         </td>
@@ -238,7 +253,7 @@ class MidiImport extends Component {
                                 className='midi-select'
                                 value={pitch}
                                 onChange={(event) => changePitch(event.target.value)}
-                                style={{ backgroundColor: '#576377', width: '5rem' }}
+                                style={{ backgroundColor: '#576377', width: '5rem', ...midiInputsStyle }}
                             >
                                 <option value="C">C</option>
                                 <option value="Db">Db</option>
@@ -361,8 +376,7 @@ function Track(props) {
 
 export default MidiImport
 
-function NumberInput(props) {
-    const { changeValue, value, delay = 500, step = 1 } = props
+function NumberInput({ changeValue, value, delay = 500, step = 1, style={} }) {
     const [elementValue, setElementValue] = useState(value)
     const debounced = useDebounce(elementValue, delay)
     useEffect(() => {
@@ -376,17 +390,19 @@ function NumberInput(props) {
         <button
             onClick={() => setElementValue(elementValue - step)}
             className='midi-btn-small'
+            style={style}
         >-</button>
         <input
             type="text"
             value={elementValue}
             onChange={(e) => setElementValue(e.target.value)}
             className='midi-input'
-            style={{ margin: '0 0.3rem' }}
+            style={{ margin: '0 0.3rem', ...style }}
         />
         <button
             onClick={() => setElementValue(elementValue + step)}
             className='midi-btn-small'
+            style={style}
         >+</button>
     </div>
 }

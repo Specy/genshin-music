@@ -1,5 +1,5 @@
 import { isMobile } from "is-mobile"
-import { instruments, appName } from "appConfig"
+import { instruments, appName, BASE_THEME_CONFIG } from "appConfig"
 import { MIDINote,MIDIShortcut } from "./Utils"
 export const ComposerSettings = {
     settingVesion: appName + 20,
@@ -236,7 +236,7 @@ export function getMIDISettings(){
 
 
 export const ThemeSettings = {
-    version: appName + 3,
+    version: appName + 4,
     other: {
         backgroundImageMain: '',
         backgroundImageComposer: ''
@@ -245,32 +245,38 @@ export const ThemeSettings = {
         background:{
             name: 'background',
             css: 'background',
-            value: '#394248'
+            value: '#394248',
+            text: BASE_THEME_CONFIG.text.light
         },
         primary: {
             name: 'primary',
             css: 'primary',
-            value: '#495466'
+            value: '#495466',
+            text: BASE_THEME_CONFIG.text.light
         },
         secondary: {
             name: 'secondary',
             css: 'secondary',
-            value: '#8c7063'
+            value: '#8c7063',
+            text: BASE_THEME_CONFIG.text.dark
         },
         accent: {
             name: 'accent',
             css: 'accent',
-            value: '#63aea7'
+            value: '#63aea7',
+            text: BASE_THEME_CONFIG.text.dark
         },
         icon_color: {
             name: 'icon_color',
             css: 'icon-color',
-            value: '#d3bd8e'
+            value: '#d3bd8e',
+            text: BASE_THEME_CONFIG.text.dark
         },
         menu_background: {
             name: 'menu_background',
             css: 'menu-background',
-            value: 'rgba(237, 229, 216,0.95)'
+            value: 'rgba(237, 229, 216,0.95)',
+            text: BASE_THEME_CONFIG.text.light
         }
     }
 }

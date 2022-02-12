@@ -36,6 +36,7 @@
 }
 .theme-reset-button.active{
     background-color: var(--accent);
+    color: var(--accent-text);
 }
 .theme-preview{
     position: relative;

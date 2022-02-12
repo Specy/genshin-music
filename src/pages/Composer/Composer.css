@@ -9,9 +9,9 @@
     align-items: center;
     flex-direction: column;
 }
-select{
+select {
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='white'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='gray'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
     background-repeat:no-repeat; 
     background-position: 100%;
 }
@@ -47,7 +47,7 @@ select{
     position: fixed;
     bottom: 0.5vw;
     left: calc(4rem + 0.5vw);
-    color: white;
+    color: var(--background-text);
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
@@ -94,8 +94,8 @@ select{
     justify-content: space-between;
     padding: 0.4rem;
     border-radius: 0.2rem;
-    background-color: var(--icon-color);
-    color: black;
+    background-color: var(--menu-background);
+    color: var(--menu-background-text);
     align-items: center;
     margin-bottom: 0.3rem;
 }
@@ -110,7 +110,8 @@ select{
     align-items: center;
 }
 .not-saved{
-    background-color: #ac5d65 !important;
+    background-color: var(--accent) !important;
+    color: var(--accent-text) !important;
 }
 .timeline-wrapper{
     display: flex;
@@ -155,7 +156,7 @@ select{
 }
 .settings-row :is(input,select){
     background-color: var(--primary);
-    color: white;
+    color: var(--primary-text);
     border: none;
     text-align: center;
     width: 8rem;
@@ -286,6 +287,7 @@ select{
 .bottom-right-text{
     text-align: center;
     width: 100%;
+    color: var(--background-text);
     font-size: 0.8rem;
 }
 .note-composer img{
@@ -349,7 +351,7 @@ canvas{
     padding: 0.6rem 0;
     flex: 1;
     background-color: var(--primary);
-    color: white;
+    color: var(--primary-text);
     border-radius: 0.2rem;
     cursor: pointer;
 }
@@ -371,7 +373,7 @@ canvas{
     padding: 0.8rem;
     background-color: var(--primary);
     border: solid 2px var(--secondary);
-    color: white;
+    color: var(--primary-text);
     max-width: 60vw;
     min-width: 40vw;
     z-index: 3;

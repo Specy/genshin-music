@@ -19,14 +19,12 @@ export default function Changelogpage(props) {
             data={e}
             key={e.version}
         />)}
-        <div className='changelog-ending'>
-
-        </div>
+        <div className='changelog-ending' />
     </div>
 }
 
-function ChangelogRow(props) {
-    const { version, title, changes, date } = props.data
+function ChangelogRow({data}) {
+    const { version, title, changes, date } = data
     return <div>
         <div className='changelog-title'>
             <div className='clt-1'>
@@ -43,7 +41,7 @@ function ChangelogRow(props) {
             <ul>
                 {changes.map((e, i) =>
                     <li key={i}>
-                        {e.split('$l').map((item, i, arr) => {
+                        {e.split('$l').map((item, i) => {
                             if (i === 0) {
                                 return <div key={i}>{item}</div>
                             }

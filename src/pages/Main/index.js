@@ -13,6 +13,7 @@ import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
 import { AppBackground } from 'components/AppBackground';
+
 class Main extends Component {
 	constructor(props) {
 		super(props)

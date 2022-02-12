@@ -1,10 +1,9 @@
 import React, { Component } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload } from 'react-icons/fa';
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
 import { FileDownloader, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
 import { appName, isTwa } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
-import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
@@ -12,6 +11,7 @@ import { isMidiAvailable } from 'appConfig';
 import Analytics from 'lib/Analytics';
 import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
+import { SongMenu } from 'components/SongMenu';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -107,7 +107,9 @@ class Menu extends Component {
         let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
         return <div className="menu-wrapper">
             <div className={menuClass}>
-                <MenuClose action={this.toggleMenu} />
+                <MenuItem action={this.toggleMenu} className='close-menu'>
+                    <FaTimes className="icon" />
+                </MenuItem>
                 <MenuItem type="Save" action={this.updateSong} className={hasUnsaved}>
                     <Memoized>
                         <FaSave className="icon" />
@@ -133,6 +135,7 @@ class Menu extends Component {
                 <MenuPanel title="No selection" visible={selectedMenu}>
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
+
                     <div className="songs-buttons-wrapper">
                         <button className="genshin-button" onClick={() => { changeMidiVisibility(true); this.toggleMenu() }}>
                             Create from MIDI
@@ -141,42 +144,13 @@ class Menu extends Component {
                             Create new song
                         </button>
                     </div>
-                    <div className="tab-selector-wrapper">
-                        <button
-                            className={this.state.selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => this.changeSelectedSongType("recorded")}
-                        >
-                            Recorded
-                        </button>
-                        <button
-                            className={this.state.selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => this.changeSelectedSongType("composed")}
-                        >
-                            Composed
-                        </button>
-                    </div>
-                    <div className="songs-wrapper" style={{ marginBottom: '0.5rem' }}>
-                        {this.state.selectedSongType === "recorded"
-                            ? songs.map(song => {
-                                return <SongRow
-                                    data={song}
-                                    key={song.name}
-                                    functions={songFunctions}
-                                >
-                                </SongRow>
-                            })
-
-                            : composedSongs.map(song => {
-                                return <SongRow
-                                    data={song}
-                                    key={song.name}
-                                    functions={songFunctions}
-                                >
-                                </SongRow>
-                            })
-                        }
-
-                    </div>
+                    <SongMenu 
+                        songs={data.songs}
+                        SongComponent={SongRow}
+                        componentProps={{
+                            functions:songFunctions
+                        }}
+                    />
                     <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
                         <button
                             className={`genshin-button record-btn ${data.isRecordingAudio ? "selected" : ""}`}

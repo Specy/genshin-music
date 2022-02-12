@@ -15,8 +15,9 @@
     width: 100%;
     min-height: 11rem;
     height: fit-content;
-    background-color: #515c6f;
     border-radius: 0.5rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
     overflow: hidden;
     transition: all 0.2s ease-out;
     width: 20rem;
@@ -40,5 +41,5 @@
 }
 .partner-title{
     font-size: 1.2rem;
-    color: var(--note-color);
+    color: var(--primary-text);
 }
