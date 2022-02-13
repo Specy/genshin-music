@@ -20,7 +20,8 @@
 .note-composer,
 .note-sky,
 .note-composer-sky {
-	background-color: var(--note-color);
+	background-color: var(--note-background);
+	color: var(--note-background-text);
 	border-radius: 50%;
 	width: 6vw;
 	height: 6vw;
@@ -58,12 +59,20 @@
 .note img,
 .note-composer img,
 .note-sky img,
-.note-composer-sky img {
+.note-composer-sky img,
+.note svg,
+.note-composer svg,
+.note-sky svg,
+.note-composer-sky svg
+{
 	width: 100%;
 	height: 100%;
 	pointer-events: none;
+	fill: var(--accent);
 }
-.note img, .note-composer img{
+.note img, .note-composer img,
+.note svg, .note-composer svg
+{
 	position: absolute;
 	width: 80%;
 	height: 80%;
@@ -101,7 +110,7 @@
 	font-size: 0.8rem;
 	position: absolute;
 	bottom: 15%;
-	color: var(--text-color);
+	color: var(--note-background-text);
 	margin-left: auto;
 	margin-right: auto;
 	left: 0;
@@ -110,7 +119,7 @@
 .note-name-sky {
 	position: absolute;
 	font-size: 1rem;
-	color: white;
+	color: var(--note-background-text);
 }
 .button-hitbox,
 .button-hitbox-bigger

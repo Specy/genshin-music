@@ -1,15 +1,15 @@
 import React, { memo } from 'react'
 import { cssClasses, appName, instrumentsData } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
+import SvgNote from 'components/SvgNotes'
+
 export default memo(function Note( { data, approachingNotes, outgoingAnimation, fadeTime, handleClick, noteImage, noteText }) {
     const { status, approachRate, instrument } = data
     const animation = {
         transition: `background-color ${fadeTime}ms  ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
     const className = parseClass(status)
-    const effects = instrumentsData[instrument]?.effects || {}
     const clickColor = instrumentsData[instrument]?.clickColor
-
     return <button
         onPointerDown={(e) => {
             e.preventDefault()
@@ -37,12 +37,11 @@ export default memo(function Note( { data, approachingNotes, outgoingAnimation, 
                 ...(clickColor && status === 'clicked' ? { backgroundColor: clickColor } : {})
             }}
         >
-            <img
-                draggable="false"
-                alt=''
-                src={noteImage}
-                style={effects}
+            <SvgNote 
+                name={noteImage}
+                color={instrumentsData[instrument]?.fill}
             />
+
             {appName === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderFill(status)}

@@ -24,7 +24,8 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 const BASE_THEME_CONFIG = {
     text: {
         light: '#edeae5',
-        dark: '#151414'
+        dark: '#151414',
+        note: '#aaaa82'
     }
 }
 const MIDI_STATUS = {
@@ -65,16 +66,12 @@ const instrumentsData = {
     },
     Zither: {
         notes: 21,
-        effects: {
-            filter: 'sepia(100%)',
-        },
+        fill: '#cdb68e',
         clickColor: '#ddcba8'
     },
     "Old-Zither": {
         notes: 21,
-        effects: {
-            filter: 'sepia(100%)',
-        },
+        fill: '#cdb68e',
         clickColor: '#ddcba8'
     },
     DunDun: {

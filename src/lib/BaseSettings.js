@@ -277,6 +277,12 @@ export const ThemeSettings = {
             css: 'menu-background',
             value: 'rgba(237, 229, 216, 0.95)',
             text: BASE_THEME_CONFIG.text.dark
+        },
+        note_background: {
+            name:'note_background',
+            css: 'note-background',
+            value: appName === 'Genshin' ? '#fff9ef' : '#495466',
+            text: BASE_THEME_CONFIG.text.note
         }
     }
 }

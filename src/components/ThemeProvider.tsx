@@ -1,3 +1,4 @@
+import { BASE_THEME_CONFIG } from "appConfig";
 import { observe } from "mobx";
 import { useEffect, useState } from "react";
 import { ThemeStore } from "stores/ThemeStore";
@@ -13,6 +14,7 @@ function ThemeProvider({ children }: Props) {
         })
         return dispose
     },[])
+    const noteColor = theme.get('note_background')
     return <>
         <style>
             {`:root{
@@ -21,6 +23,7 @@ function ThemeProvider({ children }: Props) {
                             --${e.css}-text: ${e.text};
                             `
                 }).join('\n')}
+                --note-background-text:${noteColor.isDark() ? BASE_THEME_CONFIG.text.dark: BASE_THEME_CONFIG.text.note};
             }`}
         </style>
         {children}

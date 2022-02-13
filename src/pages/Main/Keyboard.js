@@ -465,7 +465,7 @@ export default class Keyboard extends Component {
                             fadeTime={note.delay}
                             handleClick={this.handleClick}
                             noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
-                            noteImage={`./assets/icons/keys/${noteImage}.svg`}
+                            noteImage={noteImage}
                         />
 
                     })
