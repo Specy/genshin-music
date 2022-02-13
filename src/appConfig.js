@@ -25,7 +25,7 @@ const BASE_THEME_CONFIG = {
     text: {
         light: '#edeae5',
         dark: '#151414',
-        note: '#aaaa82'
+        note: appName === 'Genshin' ? '#aaaa82' : '#212121'
     }
 }
 const MIDI_STATUS = {
@@ -166,7 +166,7 @@ const layoutData = {
             "65 83 68 70").split(" "),
         abcLayout: (
             "A1 A2 A3 A4" +
-            "B1 B2 B3 B4").split(" ")
+            "B1 B2 B3 B4").split(" ")    
     },
     15: {
         keyboardLayout: (

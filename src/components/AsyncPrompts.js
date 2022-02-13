@@ -1,4 +1,5 @@
 import LoggerStore from "stores/LoggerStore"
+import {ThemeStore} from 'stores/ThemeStore'
 
 async function asyncPrompt(question) {
     return new Promise(resolve => {
@@ -9,7 +10,6 @@ async function asyncPrompt(question) {
         const cancel = document.createElement("button")
         const ok = document.createElement("button")
         const input = document.createElement("input")
-
         overlay.className = 'prompt-overlay'
         input.type = "text"
         container.className = "floating-prompt"
@@ -21,6 +21,8 @@ async function asyncPrompt(question) {
         ok.innerText = "Ok"
         cancel.innerText = "Cancel"
         text.innerText = question
+        cancel.style.backgroundColor = ThemeStore.layer('primary',0.1)
+        ok.style.backgroundColor = ThemeStore.layer('primary',0.1)
 
         row.append(cancel, ok)
         container.append(text, input, row)
@@ -102,7 +104,6 @@ async function asyncConfirm(question,cancellable = true) {
         ok.style.background = '#628c83'
         cancel.style.background = '#a9525a'
         cancel.innerText = "No"
-        
         row.append(cancel, ok)
         container.append(text,row)
         overlay.append(container)

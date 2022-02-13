@@ -41,8 +41,7 @@
 .note-sky,
 .note-composer-sky {
 	border-radius: 1.5vw;
-	background-color: var(--primary);
-	border: 0.4vw solid var(--primary);
+	border: 0.4vw solid var(--note-background);
     transform: translate3d(0, 0, 0);
     transform-origin: 50% 50%;
 	transition: all 0.1s;
@@ -78,6 +77,10 @@
 	height: 80%;
 	top: 5%;
 }
+.note-sky .svg-note, .note-composer-sky .svg-note{
+	width: 80%;
+	height: 80%;
+}
 .note-composer .note-name{
 	bottom: 14% !important;
     font-size: 0.7rem;
@@ -90,18 +93,20 @@
 .click-event {
 	transform: scale(0.9);
 	background-color: var(--clicked-note);
-	border-color: #73c7b5;
+	border-color: var(--accent);
 }
-.click-event img{
-	filter: brightness(10) !important;
+.click-event .svg-note{
+	fill: white !important;
+	stroke: white !important;
 }
 .note-red {
 	background-color: #f06565;
 	border-color: #d75c5c;
 	color: white;
 }
-.note-red img {
-	filter: brightness(10) !important;
+.note-red .svg-note {
+	fill: white !important;
+	stroke: white !important;
 }
 .note-border-click {
 	border-color: var(--accent);
@@ -141,7 +146,7 @@
 	right: 0;
 	top: 0;
 	bottom: 0;
-	border: 3px solid #3da399;
+	border: 3px solid var(--accent);
 	border-radius: 50%;
 	animation: approach 1s linear;
 	transform-origin: 50% 50%;

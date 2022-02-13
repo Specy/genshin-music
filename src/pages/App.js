@@ -37,6 +37,7 @@ class App extends Component {
 			})
 		})
 		Analytics.UIEvent('version', { version: appVersion })
+		Analytics.pageView(this.props?.history?.location?.pathname.replace('/',''))
 		this.pageHeight = window.innerHeight
 
 	}
@@ -98,7 +99,6 @@ class App extends Component {
 		if (!this.state.hasVisited) {
 			return localStorage.setItem(appName + "_Version", appVersion)
 		}
-
 		if (appVersion !== storedVersion) {
 			LoggerStore.log("Update V" + appVersion, updateMessage, 6000)
 			localStorage.setItem(appName + "_Version", appVersion)

@@ -26,7 +26,7 @@ export default function ComposerKeyboard({ data, functions }) {
                     data={note}
                     noteText={noteText}
                     instrument={data.keyboard.instrumentName}
-                    noteImage={`./assets/icons/keys/${noteImage}.svg`}
+                    noteImage={noteImage}
                     clickAction={functions.handleClick}
                 />
             })}

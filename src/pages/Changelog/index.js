@@ -3,7 +3,7 @@ import MenuItem from 'components/MenuItem'
 import { FaGithub } from 'react-icons/fa'
 import './Changelog.css'
 
-export default function Changelogpage(props) {
+export default function Changelogpage() {
     return <div className='default-page'>
         <div className='changelog-page-title'>
             Changelog
@@ -62,9 +62,8 @@ const changelogs = [
         title: 'Multi Slider and Themes',
         date: '2022 - 15/02',
         changes: [
-            'Added start and end slider for selecting which part of the song to play/practice',
             'Added app themes, fully customise the look of the app',
-            'Overall performance improvements',
+            'Added start and end slider for selecting which part of the song to play/practice'
         ]
     },{
         version: '2.3',

@@ -6,21 +6,30 @@
     align-items: center;
     font-size: 1.2rem;
     min-height: 3rem;
+    border-radius: 0.4rem;
+    padding: 0 0.6rem;
+    transition: all 0.1s;
 }
-.color-input{
-    border: solid;
-    padding: 0;
-    margin: 0;
+.color-preview{
+    border: solid 3px;
     border-radius: 0.5rem;
     overflow: hidden;
     width: 5rem;
     height: 3rem;
     -webkit-appearance: none;
 }
+.color-preview{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+}
 .color-input-wrapper{
     margin-left: 2rem;
     display: flex;
     align-items: center;
+    position: relative;
 }
 .color-input::-webkit-color-swatch-wrapper {
     padding: 0;
@@ -28,14 +37,28 @@
 .color-input::-webkit-color-swatch {
     border: none;
 }
-.theme-reset-button{
-    padding: 0.2rem 0.4rem;
+.theme-reset, .theme-save{
+    padding: 0.4rem 0.6rem;
     font-size: 0.8rem;
     margin: 0;
-    min-width: unset;
+    width: 5rem;
     margin-left: 1rem;
 }
-.theme-reset-button.active{
+.theme-save{
+    animation: pulse infinite 2s;
+}
+@keyframes pulse {
+    0%{
+        background-color: var(--primary);
+    }
+    50%{
+        background-color: var(--red);
+    }
+    100%{
+        background-color: var(--primary);
+    }
+}
+.theme-reset.active{
     background-color: var(--accent);
     color: var(--accent-text);
 }
@@ -51,6 +74,22 @@
 }
 .theme-preview .keyboard{
     transform: scale(0.8) !important;
+}
+.color-picker{
+    position: absolute;
+    right: 6rem;
+    z-index: 2;
+}
+
+.react-colorful__pointer{
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+.react-colorful__pointer-fill{
+    position: unset !important;
+    width: 90%;
+    height: 90%;
 }
 
 @media  (max-width:900px) {

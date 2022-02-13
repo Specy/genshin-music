@@ -12,7 +12,7 @@ export default memo(function MenuItem(props) {
     const { className, action, children, type } = props
     return <div
         className={className ? `menu-item ${className}` : "menu-item"}
-        style={{backgroundColor: theme.get('primary').darken(0.1)}}
+        style={{backgroundColor: theme.layer('primary',0.1)}}
         onClick={() => action?.(type)}
     >
         {children}

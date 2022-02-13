@@ -41,7 +41,7 @@ class ThemeStoreClass {
     getText = (prop: string) => {
         return Color(this.state.data[prop].text)
     }
-    getOther = (prop:string) => {
+    getOther = (prop: string) => {
         return this.state.other[prop]
     }
     getValue = (prop: string) => {
@@ -57,22 +57,22 @@ class ThemeStoreClass {
     download = () => {
         new FileDownloader().download(this.toJson(), appName + '_theme.json')
     }
-    layer = (prop: string, amount: number,threshold: number) => {
+    layer = (prop: string, amount: number, threshold?: number) => {
         const value = this.get(prop)
-        if(threshold){
+        if (threshold) {
             return value.luminosity() < threshold ? value.darken(amount) : value.lighten(amount)
-        }else{
+        } else {
             return value.isDark() ? value.lighten(amount) : value.darken(amount)
         }
     }
     toJson = () => {
         return JSON.stringify(this.state)
     }
-    setBackground = (url: string,type: 'Composer' | 'Main') => {
-        this.setOther('backgroundImage'+type, url)
+    setBackground = (url: string, type: 'Composer' | 'Main') => {
+        this.setOther('backgroundImage' + type, url)
     }
     loadFromJson = (json: any) => {
-        try{
+        try {
             Object.entries(json.data).forEach(([key, value]: [string, any]) => {
                 if (this.baseTheme.data[key] !== undefined) {
                     const filtered = Color(value.value)
@@ -84,19 +84,19 @@ class ThemeStoreClass {
                     this.setOther(key, value)
                 }
             })
-        }catch(e){
+        } catch (e) {
             console.error(e)
-            LoggerStore.error("There was an error loading the theme",4000)
+            LoggerStore.error("There was an error loading the theme", 4000)
         }
     }
-    setOther = (name: string, value:string) =>{
+    setOther = (name: string, value: string) => {
         this.state.other[name] = value
         this.save()
     }
     set = (name: string, value: string) => {
-        this.state.data[name] = { 
-            ...this.state.data[name], 
-            name, 
+        this.state.data[name] = {
+            ...this.state.data[name],
+            name,
             value: value.toLowerCase(),
             text: Color(value).isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
         }

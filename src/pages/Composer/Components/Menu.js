@@ -101,8 +101,6 @@ class Menu extends Component {
             toggleMenu: this.toggleMenu,
             downloadSong: this.downloadSong
         }
-        let songs = data.songs.filter(song => !song.data?.isComposedVersion)
-        let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
         let hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
         let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
         return <div className="menu-wrapper">

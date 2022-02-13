@@ -18,8 +18,8 @@ export function SongMenu({ songs, SongComponent, componentProps, className = '',
         })
         return dispose
     }, [])
-    const selectedColor = theme.get('menu_background').darken(0.3).desaturate(0.3)
-    const unselectedColor = theme.get('menu_background').darken(0.2) 
+    const selectedColor = theme.layer('menu_background',0.32).desaturate(0.4)
+    const unselectedColor = theme.layer('menu_background',0.35).lighten(0.2)
     return <div className={`${className}`} style={style}>
         <div className="tab-selector-wrapper">
             <button

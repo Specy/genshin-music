@@ -2,6 +2,7 @@
 	width: 3rem;
 	height: 3rem;
 	color: var(--primary);
+	filter: brightness(1.1);
 }
 .help-icon-wrapper{
 	display: flex;
@@ -28,5 +29,4 @@
 	border-radius: 0.4rem;
 	margin-left: 2.5%;
 	box-shadow: 0 0 0px 2px var(--primary);
-
 }

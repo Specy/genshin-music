@@ -1,4 +1,3 @@
-import { BASE_THEME_CONFIG } from "appConfig";
 import { observe } from "mobx";
 import { useEffect, useState } from "react";
 import { ThemeStore } from "stores/ThemeStore";
@@ -9,12 +8,14 @@ type Props = {
 function ThemeProvider({ children }: Props) {
     const [theme,setTheme] = useState(ThemeStore)
     useEffect(() => {
-        const dispose = observe(ThemeStore.state.data,(newState) => {
+        const dispose = observe(ThemeStore.state.data,() => {
             setTheme({...ThemeStore})
         })
         return dispose
     },[])
-    const noteColor = theme.get('note_background')
+    const clickColor = theme.get('accent').isDark() 
+        ? theme.get('accent').lighten(0.1)
+        : theme.get('accent').saturate(0.2).lighten(0.3)
     return <>
         <style>
             {`:root{
@@ -23,7 +24,7 @@ function ThemeProvider({ children }: Props) {
                             --${e.css}-text: ${e.text};
                             `
                 }).join('\n')}
-                --note-background-text:${noteColor.isDark() ? BASE_THEME_CONFIG.text.dark: BASE_THEME_CONFIG.text.note};
+                --clicked-note:${clickColor};
             }`}
         </style>
         {children}

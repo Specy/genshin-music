@@ -19,7 +19,6 @@ export default function SheetVisualizer(props) {
     const [sheet, setSheet] = useState([])
     const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState({})
-    const [selectedSongType, setSelectedSongType] = useState('recorded')
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
     function setFrames(amount) {

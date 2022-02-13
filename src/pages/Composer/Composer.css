@@ -291,40 +291,41 @@ select{
     color: var(--background-text);
     font-size: 0.8rem;
 }
-.note-composer img{
+.note-composer svg{
     z-index: 2;
 }
 .layer-1{
     background-color: #d3bd8e !important;
     border-color: #ab9361 !important;
 }
-.layer-1 svg{
-    fill: #AB9361 !important;
+.layer-1 .svg-note{
+    fill: white !important;
+    stroke: white !important;
 }
 .layer-1 .note-name{
     color: white !important;
 }
-.layer-1 img{
-    filter: brightness(10) !important;
-}
-.layer-2, .layer-2 svg{
+.layer-2, .layer-2 .genshin-border{
     border-color: #d75c5c !important;
     fill: #f06868 !important;
+    stroke: #f06868 !important;
+}
+.note-composer.layer-3 .svg-note{
+    fill: white !important;
+    stroke: white !important;
 }
 .layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
     visibility: visible;
 }
 .layer-3-ball-bigger{
-    width: 2.5vw;
-    height: 2.5vw;
+    width: 2.6vw;
+    height: 2.6vw;
 }
 .note-composer .layer-3-ball-bigger{
     width: 3vw;
     height: 3vw;
 }
-.note-composer.layer-3 img{
-    filter: brightness(10);
-}
+
 canvas{
     cursor: pointer !important;
 }

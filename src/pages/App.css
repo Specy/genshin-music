@@ -264,8 +264,8 @@ body {
 	top: 1.5rem;
 }
 .prompt-button {
-	background-color: #576377;
-	color: white;
+	background-color: var(--primary);
+	color: var(--primary-text);
 	border: none;
 	padding: 0.5rem 2rem;
 	border-radius: 0.3rem;
@@ -411,9 +411,9 @@ a {
 	position: absolute;
 	top: 0.5rem;
 	right: 0.5rem;
-	color: var(--whitish);
+	color: var(--primary-text);
 	padding: 0.4rem;
-	background-color: #495466;
+	background-color: var(--primary);
 	font-weight: bold;
 	border-radius: 0.4rem;
 }
@@ -431,7 +431,6 @@ a {
 .sc-1 {
 	padding-left: 0.5rem;
 	min-width: 3.5rem;
-
 	border-left: solid 2px var(--secondary);
 }
 

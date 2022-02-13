@@ -11,7 +11,6 @@
 	color: var(--background-text);
 	backdrop-filter: blur(4px);
 	z-index: 100;
-	color: var(--whitish);
 	transition: all 0.2s ease-out;
 	animation: 0.15s home-appear ease-out;
 	opacity: 0;
@@ -42,12 +41,12 @@
 	position: absolute;
 	top: 0.5rem;
 	left: 0.5rem;
-	width: 2.5rem;
-	height: 2.5rem;
+	width: 2.8rem;
+	height: 2.8rem;
 	padding: 0.5rem;
-	color: var(--whitish);
+	color: var(--icon-color);
 	border-radius: 0.5rem;
-	background-color: #606c82;
+	background-color: var(--primary);
 	cursor: pointer;
 }
 .home-dont-show-again {
@@ -91,6 +90,7 @@
 }
 .home-content-element:hover {
 	transform: scale(1.03);
+	filter: brightness(1.1);
 }
 .home-welcome {
 	font-size: 0.9rem;
@@ -194,6 +194,9 @@
 	margin-bottom: 0.6rem;
 	cursor: pointer;
 	transition: all 0.1s linear;
+}
+.page-redirect-wrapper button:hover{
+	filter: brightness(1.1);
 }
 .current-page {
 	/* Could be added */

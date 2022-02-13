@@ -196,8 +196,8 @@ class Menu extends Component {
         functions.toggleMenu = this.toggleMenu
         functions.downloadSong = this.downloadSong
         const { searchStatus, searchedSongs, selectedMenu, theme } = this.state 
-        const layer1Color = theme.get('menu_background').darken(0.2) 
-        const layer2Color = theme.get('menu_background').darken(0.3).desaturate(0.3)
+        const layer1Color = theme.layer('menu_background',0.2)
+        const layer2Color = theme.layer('menu_background',0.3).desaturate(0.3)
         return <div className="menu-wrapper">
             <div className="menu menu-visible menu-main-page" >
                 {this.state.open &&                 
@@ -299,7 +299,7 @@ class Menu extends Component {
                     <div className='library-search-row' style={{}} >
                         <input
                             className='library-search-input'
-                            style={{backgroundColor: layer1Color}}
+                            style={{backgroundColor: layer1Color.hex()}}
                             placeholder='Song name'
                             onKeyDown={(e) => {
                                 if (e.code === "Enter") this.searchSongs()

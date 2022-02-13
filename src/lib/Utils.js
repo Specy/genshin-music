@@ -144,6 +144,7 @@ function getNoteText(noteNameType, index, pitch, layoutLength) {
         if (noteNameType === "Keyboard layout") return layout.keyboardLayout[index]
         if (noteNameType === "Do Re Mi") return layout.mobileLayout[index]
 		if (noteNameType === "ABC") return layout.abcLayout[index]
+		if( noteNameType === "No Text") return ''
     } catch (e) { }
     return ''
 }
