@@ -77,10 +77,33 @@
 }
 .color-picker{
     position: absolute;
+    padding: 0.3rem;
+    border-radius: 0.6rem;
+    background-color: #efeff0;
     right: 6rem;
     z-index: 2;
-}
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 1px 1px 5px #45455994;
 
+}
+.color-picker input{
+    width: 100%;
+    margin: 0;
+    padding: 0.4rem;
+    margin-top: 0.3rem;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 0.4rem;
+    background-color: #d2cfcf;
+    box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+}
+.react-colorful{
+    border-radius: 0.5rem !important;
+    box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+}
 .react-colorful__pointer{
     display: flex !important;
     justify-content: center !important;
@@ -92,6 +115,16 @@
     height: 90%;
 }
 
+@keyframes show {
+    from{
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to{
+        opacity: 1;
+        transform: scale(1);
+    }
+}
 @media  (max-width:900px) {
     .theme-row{
         margin-top: 0.5rem;

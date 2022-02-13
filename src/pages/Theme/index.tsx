@@ -7,8 +7,7 @@ import Color from "color";
 import { AppButton } from "components/AppButton";
 import { FileElement, FilePicker } from "components/FilePicker"
 import Main from "pages/Main";
-import { HexColorPicker } from "react-colorful";
-
+import { HexColorInput, HexColorPicker } from "react-colorful";
 import './Theme.css'
 import { BASE_THEME_CONFIG } from "appConfig";
 
@@ -136,6 +135,14 @@ function ThemePropriety({ name, value, onChange, modified, setSelectedProp, sele
             {selected
                 ? <div className="color-picker">
                     <HexColorPicker onChange={handleChange} color={color.hex()}/>
+                    <HexColorInput 
+                        onChange={handleChange} 
+                        color={color.hex()} 
+                        style={selected ? {
+                            backgroundColor: color.hex(),
+                            color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+                        }: {}}
+                    />
                 </div>
                 : <div
                     onClick={() => setSelectedProp(name)}
