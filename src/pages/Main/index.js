@@ -8,7 +8,7 @@ import { MainPageSettings } from "lib/BaseSettings"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { appName, audioContext , isTwa} from "appConfig"
+import { appName, audioContext, isTwa } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
@@ -47,7 +47,7 @@ class Main extends Component {
 		document.body.addEventListener('dragleave', this.resetDrag)
 		document.body.addEventListener('dragover', this.handleDragOver)
 		document.body.addEventListener('drop', this.handleDrop)
-        window.addEventListener('keydown', this.handleKeyboard)
+		window.addEventListener('keydown', this.handleKeyboard)
 
 		this.mounted = true
 		this.syncSongs()
@@ -58,7 +58,7 @@ class Main extends Component {
 		document.body.removeEventListener('dragleave', this.resetDrag)
 		document.body.removeEventListener('drop', this.handleDrop)
 		document.body.removeEventListener('dragover', this.handleDragOver)
-        window.removeEventListener('keydown', this.handleKeyboard)
+		window.removeEventListener('keydown', this.handleKeyboard)
 
 		SongStore.reset()
 		this.mounted = false
@@ -73,24 +73,24 @@ class Main extends Component {
 		LoggerStore.warn("There was an error with the song! Restoring default...")
 		SongStore.reset()
 	}
-	
-	handleKeyboard =async (event) => {
+
+	handleKeyboard = async (event) => {
 		const { thereIsSong } = this.state
-        if (event.repeat) return
-        if (document.activeElement.tagName === "INPUT") return
-        if(event.shiftKey){
-            switch(event.code){
-                case "KeyC" : {
-                    if(!thereIsSong){
+		if (event.repeat) return
+		if (document.activeElement.tagName === "INPUT") return
+		if (event.shiftKey) {
+			switch (event.code) {
+				case "KeyC": {
+					if (!thereIsSong) {
 						this.toggleRecord()
 						event.preventDefault()
 					}
-                    break;
-                }
+					break;
+				}
 				default: break;
-            }
-        }
-    }
+			}
+		}
+	}
 
 	resetDrag = (e) => {
 		this.setState({
@@ -121,20 +121,23 @@ class Main extends Component {
 	handleDrop = async (e) => {
 		this.resetDrag()
 		e.preventDefault()
-		let songs = await Promise.all(Array.from(e.dataTransfer.files).map(file => file.text()))
-		for (let i = 0; i < songs.length; i++) {
-			try {
-				let song = prepareSongImport(JSON.parse(songs[i]))
-				await this.addSong(song)
-			} catch (e) {
-				console.error(e)
+		const files = await Promise.all(Array.from(e.dataTransfer.files).map(file => file.text()))
+		try {
+			for (let i = 0; i < files.length; i++) {
+				const songs = JSON.parse(files[i])
+				for (let j = 0; j < songs.length; j++) {
+					let song = prepareSongImport(songs[j])
+					await this.addSong(song)
+				}
 			}
-
+		} catch (e) {
+			console.error(e)
 		}
+
 	}
 
 	toggleReverbNodes = (hasReverb) => {
-		if(!this.mounted) return
+		if (!this.mounted) return
 		const { instrument } = this.state
 		if (hasReverb) {
 			if (!this.reverbNode) return console.log("Couldn't connect to reverb")
@@ -147,15 +150,15 @@ class Main extends Component {
 	}
 
 	changeVolume = (obj) => {
-        let settings = this.state.settings
-        if (obj.key === "instrument") {
-			settings.instrument = {...settings.instrument, volume: obj.value}
-            this.state.instrument.changeVolume(obj.value)
-        }
-        this.setState({
-            settings: settings
-        }, () => this.updateSettings())
-    }
+		let settings = this.state.settings
+		if (obj.key === "instrument") {
+			settings.instrument = { ...settings.instrument, volume: obj.value }
+			this.state.instrument.changeVolume(obj.value)
+		}
+		this.setState({
+			settings: settings
+		}, () => this.updateSettings())
+	}
 
 	getSettings = () => {
 		//TODO export this into a function / class
@@ -181,7 +184,7 @@ class Main extends Component {
 		newInstrument.changeVolume(this.state.settings.instrument.volume || 100)
 		this.setState({ isLoadingInstrument: true })
 		await newInstrument.load()
-		if(!this.mounted) return 
+		if (!this.mounted) return
 		newInstrument.connect(this.audioContext.destination)
 		this.setState({
 			instrument: newInstrument,
@@ -195,9 +198,9 @@ class Main extends Component {
 			fetch("./assets/audio/reverb4.wav")
 				.then(r => r.arrayBuffer())
 				.then(b => {
-					if(!this.mounted) return
+					if (!this.mounted) return
 					this.audioContext.decodeAudioData(b, (impulse_response) => {
-						if(!this.mounted) return
+						if (!this.mounted) return
 						let convolver = this.audioContext.createConvolver()
 						let gainNode = this.audioContext.createGain()
 						gainNode.gain.value = 2.5
@@ -236,7 +239,7 @@ class Main extends Component {
 	handleSettingChange = (setting) => {
 		let settings = this.state.settings
 		let data = setting.data
-		settings[setting.key] = {...settings[setting.key], value: data.value}
+		settings[setting.key] = { ...settings[setting.key], value: data.value }
 		if (setting.key === "instrument") {
 			this.loadInstrument(data.value)
 		}
@@ -261,27 +264,27 @@ class Main extends Component {
 	addSong = async (song) => {
 		try {
 			if (await this.songExists(song.name)) {
-				
-				return LoggerStore.warn( "A song with this name already exists! \n" + song.name)
+
+				return LoggerStore.warn("A song with this name already exists! \n" + song.name)
 			}
 			await DB.addSong(song)
 			this.syncSongs()
 			LoggerStore.success(`Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000)
 		} catch (e) {
 			console.error(e)
-			
+
 			return new LoggerStore.error('There was an error importing the song')
 		}
 	}
-	
+
 	removeSong = async (name) => {
 		let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
-		if(!this.mounted) return
+		if (!this.mounted) return
 		if (result) {
 			await DB.removeSong({ name: name })
 			this.syncSongs()
 		}
-		Analytics.userSongs({name: name, page: 'player'},'delete')
+		Analytics.userSongs({ name: name, page: 'player' }, 'delete')
 	}
 
 	handleRecording = (note) => {
@@ -314,12 +317,12 @@ class Main extends Component {
 		let newState = override !== undefined ? override : !this.state.isRecording
 		if (!newState && this.recording.notes.length > 0) { //if there was a song recording
 			let songName = await this.askForSongName()
-			if(!this.mounted) return
+			if (!this.mounted) return
 			let song = new Song(songName, this.recording.notes)
 			song.pitch = this.state.settings.pitch.value
-			if (songName !== null){ 
+			if (songName !== null) {
 				this.addSong(song)
-				Analytics.userSongs({name: songName, page: 'player'},'record')
+				Analytics.userSongs({ name: songName, page: 'player' }, 'record')
 			}
 		} else {
 			this.recording = new Recording()
@@ -332,7 +335,7 @@ class Main extends Component {
 	}
 
 	toggleRecordAudio = async (override) => {
-		if(!this.mounted) return
+		if (!this.mounted) return
 		if (typeof override !== "boolean") override = undefined
 		const { instrument } = this.state
 		const { recorder } = this
@@ -348,7 +351,7 @@ class Main extends Component {
 		} else {
 			let recording = await recorder.stop()
 			let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
-			if(!this.mounted) return
+			if (!this.mounted) return
 			if (fileName) recorder.download(recording.data, fileName + '.wav')
 			this.toggleReverbNodes(hasReverb)
 			this.reverbVolumeNode.disconnect()
@@ -414,14 +417,14 @@ class Main extends Component {
 						<AppButton
 							active={state.isRecording}
 							click={this.toggleRecord}
-							style={{marginTop: "0.8rem"}}
+							style={{ marginTop: "0.8rem" }}
 						>
 							{state.isRecording ? "Stop" : "Record"}
 						</AppButton>
 
 					}
 				</div>
-				<div className="keyboard-wrapper" style={{marginBottom: '2vh'}}>
+				<div className="keyboard-wrapper" style={{ marginBottom: '2vh' }}>
 					<Keyboard
 						key={state.instrument.instrumentName}
 						data={keyboardData}

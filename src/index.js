@@ -5,6 +5,7 @@ import { HashRouter, Route, Switch } from "react-router-dom";
 import { isTwa } from "appConfig"
 import rotateImg from "assets/icons/rotate.svg"
 
+import App from 'pages/App';
 import Main from 'pages/Main';
 import Composer from "pages/Composer"
 import ErrorPage from "pages/ErrorPage"
@@ -15,7 +16,6 @@ import SheetVisualizer from 'pages/SheetVisualizer';
 import MidiSetup from 'pages/MidiSetup';
 import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
-import App from 'pages/App';
 import Theme from 'pages/Theme'
 import { ThemeProvider } from 'components/ThemeProvider';
 function Index() {

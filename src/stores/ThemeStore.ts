@@ -57,6 +57,14 @@ class ThemeStoreClass {
     download = () => {
         new FileDownloader().download(this.toJson(), appName + '_theme.json')
     }
+    layer = (prop: string, amount: number,threshold: number) => {
+        const value = this.get(prop)
+        if(threshold){
+            return value.luminosity() < threshold ? value.darken(amount) : value.lighten(amount)
+        }else{
+            return value.isDark() ? value.lighten(amount) : value.darken(amount)
+        }
+    }
     toJson = () => {
         return JSON.stringify(this.state)
     }
@@ -67,7 +75,8 @@ class ThemeStoreClass {
         try{
             Object.entries(json.data).forEach(([key, value]: [string, any]) => {
                 if (this.baseTheme.data[key] !== undefined) {
-                    this.set(key, value.value)
+                    const filtered = Color(value.value)
+                    this.set(key, value.value.includes('rgba') ? filtered.rgb().toString() : filtered.hex())
                 }
             })
             Object.entries(json.other).forEach(([key, value]: [string, any]) => {
@@ -88,7 +97,7 @@ class ThemeStoreClass {
         this.state.data[name] = { 
             ...this.state.data[name], 
             name, 
-            value,
+            value: value.toLowerCase(),
             text: Color(value).isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
         }
         this.save()

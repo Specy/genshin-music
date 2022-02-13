@@ -23,7 +23,7 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
 const BASE_THEME_CONFIG = {
     text: {
-        light: '#ede5d8',
+        light: '#edeae5',
         dark: '#151414'
     }
 }

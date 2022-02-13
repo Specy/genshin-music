@@ -171,7 +171,7 @@ body {
 	-webkit-appearance: none;
 	background-image: none;
 	border-radius: 0.3rem;
-	background-color: #576377;
+	background-color: var(--primary);
 	margin-left: 0.5rem;
 }
 .hidden-opacity {

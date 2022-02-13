@@ -8,7 +8,6 @@ import { ComposerCache } from "./Cache"
 import { composerNotePositions, NOTES_PER_COLUMN, appName } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeStore } from 'stores/ThemeStore';
-import { observe } from 'mobx';
 let NumOfColumnsPerCanvas = 35
 
 export default class ComposerCanvas extends Component {
@@ -41,6 +40,12 @@ export default class ComposerCanvas extends Component {
         }
         this.canvasRef = React.createRef()
         let margin = isMobile() ? 1 : 4
+        const colors = {
+            l: ThemeStore.get('primary'),
+            d: ThemeStore.get('primary')
+        }
+        colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.35) : colors.l.lighten(0.1)
+        colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.2) : colors.d.darken(0.03)
         this.cache = new ComposerCache({
             width: this.state.column.width, 
             height: height, 
@@ -48,9 +53,9 @@ export default class ComposerCanvas extends Component {
             timelineHeight: this.state.timelineHeight,
             standardsColors:  [
                     {
-                        color: ThemeStore.get('primary').lighten(0.1).rgbNumber() //lighter
+                        color: colors.l.rgbNumber() //lighter
                     },{
-                        color: ThemeStore.get('primary').darken(0.03).rgbNumber() //darker
+                        color: colors.d.rgbNumber() //darker
                     },{
                         color: 0x1a968b //selected
                     },{

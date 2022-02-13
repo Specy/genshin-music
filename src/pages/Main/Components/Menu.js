@@ -159,6 +159,7 @@ class Menu extends Component {
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
+        const name = song.name
         if (appName === "Sky") {
             //adds old format into the sheet
             song = prepareSongDownload(song)
@@ -168,9 +169,9 @@ class Menu extends Component {
             song1.data.appName = appName
         })
         const json = JSON.stringify(song)
-        new FileDownloader().download(json, `${song.name}.${appName.toLowerCase()}sheet.json`)
+        new FileDownloader().download(json, `${name}.${appName.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
-        Analytics.userSongs({name: song?.name, page: 'player'},'download')
+        Analytics.userSongs({name: name, page: 'player'},'download')
     }
 
     downloadAllSongs = () => {
@@ -359,7 +360,7 @@ class Menu extends Component {
 }
 
 function SongRow({data, functions}) {
-    const { deleteSong, toggleMenu, downloadSong} = functions
+    const { removeSong, toggleMenu, downloadSong} = functions
 
     return <div className="song-row">
         <div className="song-name" onClick={() => {
@@ -388,7 +389,7 @@ function SongRow({data, functions}) {
                 <FaDownload />
 
             </button>
-            <button className="song-button" onClick={() => deleteSong(data.name)}>
+            <button className="song-button" onClick={() => removeSong(data.name)}>
                 <FaTrash color="#ed4557" />
             </button>
         </div>

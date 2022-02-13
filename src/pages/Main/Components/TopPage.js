@@ -7,7 +7,7 @@ import { SliderStore } from "stores/SongSliderStore";
 import { observe } from "mobx";
 import { BsTriangleFill } from "react-icons/bs";
 import './Track.css'
-
+import { AppButton } from "components/AppButton";
 export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger, approachingScore, hasSong }) {
     const [sliderState, setSliderState] = useState(SliderStore.state.data)
     const [songData, setSongData] = useState(SongStore.state.data)
@@ -78,11 +78,11 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             <Score data={approachingScore} />
         }
         <div className="slider-wrapper">
-            <button className="song-button" onClick={SongStore.reset}>
+            <AppButton className="slider-button" onClick={SongStore.reset}>
                 <Memoized>
                     <FaStop />
                 </Memoized>
-            </button>
+            </AppButton>
             <div
                 className="slider-outer"
                 ref={slider}
@@ -109,11 +109,11 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                 </div>
             </div>
 
-            <button className="song-button" onClick={restart}>
+            <AppButton className="slider-button" onClick={restart}>
                 <Memoized>
                     <FaSyncAlt />
                 </Memoized>
-            </button>
+            </AppButton>
             <select
                 className='slider-select'
                 onChange={handleSpeedChanger}

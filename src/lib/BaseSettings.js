@@ -275,7 +275,7 @@ export const ThemeSettings = {
         menu_background: {
             name: 'menu_background',
             css: 'menu-background',
-            value: 'rgba(237, 229, 216,0.95)',
+            value: 'rgba(237, 229, 216, 0.95)',
             text: BASE_THEME_CONFIG.text.light
         }
     }

@@ -28,6 +28,7 @@ export function FilePicker({ children, onChange, style = {}, as }: FilePickerPro
             })
         })
         onChange(await Promise.all(promises))
+        if(input.current !== null) input.current.value = ''
     }, [as, onChange])
 
     return <>

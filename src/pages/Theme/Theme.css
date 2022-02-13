@@ -5,6 +5,7 @@
     justify-content: space-between;
     align-items: center;
     font-size: 1.2rem;
+    min-height: 3rem;
 }
 .color-input{
     border: solid;
@@ -50,4 +51,10 @@
 }
 .theme-preview .keyboard{
     transform: scale(0.8) !important;
+}
+
+@media  (max-width:900px) {
+    .theme-row{
+        margin-top: 0.5rem;
+    }
 }

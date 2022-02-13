@@ -25,7 +25,7 @@
 	height: 2rem;
 	font-size: 1.4rem;
 	background-color: var(--primary);
-	color: var(--whitish);
+	color: var(--primary-text);
 	border: none;
 	border-radius: 0.2rem;
 	cursor: pointer;
@@ -49,7 +49,6 @@
 	align-items: center;
 }
 .displayer-buttons-wrapper {
-	color: var(--whitish);
 	display: flex;
 	justify-content: space-between;
 	width: 100%;

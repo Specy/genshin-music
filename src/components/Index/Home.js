@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { observe } from 'mobx'
 import './Home.css'
+import { ThemeStore } from 'stores/ThemeStore'
 
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }) {
     const [data, setData] = useState(HomeStore.state.data)
@@ -13,6 +14,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     const [breakpoint, setBreakpoint] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
     const history = useHistory()
+    const [theme, setTheme] = useState(ThemeStore)
     function handleClick(page){
         history.push('./'+page)
         HomeStore.close()
@@ -24,13 +26,23 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         const dispose2 = history.listen((path) => {
             setCurrentPage(path.pathname.replace('/',''))
         })
+        const dispose3 = observe(ThemeStore.state.data, (newState) => {
+            setTheme({...ThemeStore})
+        })
         setBreakpoint(window.innerWidth > 900)
         return () => {
             dispose()
             dispose2()
+            dispose3()
         }
     },[history])
-    return <div className={homeClass} style={!data.visible ? {display: 'none'} : {}}>
+    return <div 
+            className={homeClass} 
+            style={{
+                ...!data.visible ? {display: 'none'} : {},
+                backgroundColor: theme.get('background').fade(0.1)
+            }}
+        >
         <FaTimes className='close-home' onClick={HomeStore.close} />
         {(breakpoint || !hasVisited) && <div className='home-top'>
             <div className='home-title'>
@@ -74,6 +86,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContentelement
                 icon={<FaCompactDisc />}
                 title='Composer'
+                style={{backgroundColor: theme.layer('background',0.15,0.2).fade(0.15)}}
                 background={`./manifestData/composer.png`}
                 href='Composer'
                 onClick={handleClick}
@@ -84,6 +97,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContentelement
                 icon={<BsMusicPlayerFill />}
                 title='Player'
+                style={{backgroundColor: theme.layer('background',0.15,0.2).fade(0.15)}}
                 background={`./manifestData/main.png`}
                 href=''
                 onClick={handleClick}
@@ -93,7 +107,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 mode and practice mode.
             </MainContentelement>
         </div>
-        <Separator> Other pages </Separator>
+        <Separator/>
         <div className='page-redirect-wrapper'>
             <PageRedirect href='Changelog' current={currentPage === 'Changelog'} onClick={handleClick}>
                 Changelog
@@ -137,11 +151,14 @@ function PageRedirect({ children, current, onClick, href}) {
 
 }
 
-function MainContentelement({ title, icon, children, background, current, onClick, href}) {
-    return <div className={`home-content-element ${current ? 'current-page' : ''}`}  onClick={() => onClick(href)}>
-            <div className='home-content-background' style={{ backgroundImage: `url(${background})` }}>
+function MainContentelement({ title, icon, children, background, current, onClick, href, style = {}}) {
+    return <div 
+            className={`home-content-element ${current ? 'current-page' : ''}`}  
+            onClick={() => onClick(href)}
+        >
+            <div className='home-content-background' style={{ backgroundImage: `url(${background})`}}>
             </div>
-            <div className='home-content-main'>
+            <div className='home-content-main' style={style}>
                 <div className='home-content-title'>
                     {icon} {title}
                 </div>

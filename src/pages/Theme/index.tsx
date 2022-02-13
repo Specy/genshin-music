@@ -59,7 +59,7 @@ function Theme() {
                 </div>
                 <input 
                     className="app-button"
-                    style={{width: '9rem'}}
+                    style={{width: '7.7rem'}}
                     placeholder="Write here"
                     value={theme.getOther('backgroundImageMain')}
                     onChange={(e) => ThemeStore.setBackground(e.target.value,'Main')}
@@ -71,7 +71,7 @@ function Theme() {
                 </div>
                 <input 
                     className="app-button"
-                    style={{width: '9rem'}}
+                    style={{width: '7.7rem'}}
                     placeholder="Write here"
                     value={theme.getOther('backgroundImageComposer')}
                     onChange={(e) => ThemeStore.setBackground(e.target.value,'Composer')}

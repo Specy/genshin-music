@@ -103,7 +103,8 @@ select{
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    margin-top: 0.4rem;
+    margin: 0.4rem 0;
+    margin-bottom: 0.7rem;
 }
 .settings-row div{
     display: flex;

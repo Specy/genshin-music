@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
-import { FaTrash, FaDownload} from 'react-icons/fa';
+import { FaTrash, FaDownload } from 'react-icons/fa';
 import { DB } from 'Database';
-import { FileDownloader,prepareSongDownload } from "lib/Utils"
+import { FileDownloader, prepareSongDownload } from "lib/Utils"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { appName } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
 import './ErrorPage.css'
 import LoggerStore from 'stores/LoggerStore';
-
+import { SongMenu } from 'components/SongMenu';
 class ErrorPage extends Component {
     constructor(props) {
         super(props)
@@ -15,7 +15,7 @@ class ErrorPage extends Component {
             songs: []
         }
     }
-    componentDidMount(){
+    componentDidMount() {
         this.syncSongs()
     }
     downloadAllSongs = () => {
@@ -23,7 +23,7 @@ class ErrorPage extends Component {
         const { songs } = this.state
         songs.forEach(song => {
             if (song._id) delete song._id
-            if(appName === "Sky"){
+            if (appName === "Sky") {
                 song = prepareSongDownload(song)
             }
             Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
@@ -31,7 +31,7 @@ class ErrorPage extends Component {
         let fileDownloader = new FileDownloader()
         let json = JSON.stringify(toDownload)
         let date = new Date().toISOString().split('T')[0]
-        fileDownloader.download(json,`${appName}_Backup_${date}.json`)
+        fileDownloader.download(json, `${appName}_Backup_${date}.json`)
         LoggerStore.success("Song backup downloaded")
     }
     syncSongs = async () => {
@@ -46,35 +46,35 @@ class ErrorPage extends Component {
         }
 
     }
-    deleteAllSongs = async () =>{
+    deleteAllSongs = async () => {
         if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
             await DB.removeSong({})
             this.syncSongs()
         }
     }
     resetSettings = () => {
-        localStorage.removeItem(appName+"_Composer_Settings")
-        localStorage.removeItem(appName+"_Main_Settings")
+        localStorage.removeItem(appName + "_Composer_Settings")
+        localStorage.removeItem(appName + "_Main_Settings")
         LoggerStore.success("Settings have been reset")
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
         let songName = song.name
-        if(appName === "Sky"){
+        if (appName === "Sky") {
             song = prepareSongDownload(song)
         }
-        if(!Array.isArray(song)) song = [song]
+        if (!Array.isArray(song)) song = [song]
         song.forEach(song1 => {
             song1.data.appName = appName
         })
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json,`${songName}.${appName.toLowerCase()}sheet.json`)
+        fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
     }
     render() {
         return <div className="error-page app">
-            <SimpleMenu/>
+            <SimpleMenu />
             <div className="error-text-wrapper">
                 There seems to be an error. <br />
                 Here you can download or delete your songs,
@@ -89,16 +89,17 @@ class ErrorPage extends Component {
                 </button>
             </div>
             <div className="error-songs-wrapper">
-                {this.state.songs.map(song => 
-                    <SongRow
-                        key={song?.name}
-                        data={song}
-                        functions={{
+                <SongMenu
+                    SongComponent={SongRow}
+                    songs={this.state.songs}
+                    componentProps={{
+                        functions: {
                             deleteSong: this.deleteSong,
                             downloadSong: this.downloadSong
-                        }}
-                    />
-                )}
+                        }
+                    }}
+
+                />
             </div>
         </div>
     }

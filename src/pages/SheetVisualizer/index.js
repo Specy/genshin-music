@@ -117,14 +117,14 @@ export default function SheetVisualizer(props) {
             <h1 className='onprint'>
                 {currentSong?.name}
             </h1>
-            <div style={{ color: 'var(--whitish)', width: '100%' }} className='noprint'>
+            <div style={{ width: '100%' }} className='noprint'>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2>{currentSong.name || 'No song selected'}</h2>
                     <button onClick={() => window.print()} className='genshin-button'>
                         Print as PDF
                     </button>
                 </div>
-                <div style={{ color: 'var(--hint-main)' }}>
+                <div style={{ color: 'var(--background-text)' }}>
                     Remember that you can learn a song with the interactive
                     practice tool in the main page
                 </div>
