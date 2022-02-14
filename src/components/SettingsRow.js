@@ -62,7 +62,7 @@ export default memo(function SettingsRow({ data, update, objKey, changeVolume })
     }
 
     if (objKey === "settingVesion") return null
-    return <div className="settings-row" style={{backgroundColor: theme.get('menu_background').darken(0.2)}}>
+    return <div className="settings-row" style={{backgroundColor: theme.layer('menu_background',0.2).hex()}}>
         <div>
             {data.name}
         </div>

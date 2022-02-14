@@ -39,6 +39,7 @@ export default memo(function ComposerNote({ data, layers, instrument, clickActio
                 color={instrumentsData[instrument]?.fill}
             />
             {appName === 'Genshin' && <GenshinNoteBorder
+                fill={ThemeStore.layer('note_background',0.13).desaturate(0.6)}
                 className='genshin-border'
             />}
             <div className={layer3Class}>
@@ -54,4 +55,5 @@ export default memo(function ComposerNote({ data, layers, instrument, clickActio
 }, (p, n) => {
     return p.noteText === n.noteText && p.clickAction === n.clickAction && p.noteImage === n.noteImage
         && p.noteText === n.noteText && p.layers === n.layers && p.instrument === n.instrument
-})
+}) 
+

@@ -107,7 +107,7 @@ const ApproachCircle = memo(function ApproachCircle({ approachRate, index }) {
 })
 
 function parseBorderFill(status) {
-    let fill = '#eae5ce'
+    let fill = ThemeStore.layer('note_background',0.13).desaturate(0.6)
     if (status === "clicked") fill = "transparent"
     else if (status === 'toClickNext' || status === 'toClickAndNext') fill = '#63aea7'
     return fill

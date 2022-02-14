@@ -299,8 +299,12 @@ select{
     border-color: #ab9361 !important;
 }
 .layer-1 .svg-note{
-    fill: white !important;
-    stroke: white !important;
+    fill: #f2ecec !important;
+    stroke: #f2ecec !important;
+}
+.layer-1 .genshin-border{
+    fill: #f2ecec !important;
+    stroke: #f2ecec !important;
 }
 .layer-1 .note-name{
     color: white !important;
@@ -311,8 +315,8 @@ select{
     stroke: #f06868 !important;
 }
 .note-composer.layer-3 .svg-note{
-    fill: white !important;
-    stroke: white !important;
+    fill: #f2ecec !important;
+    stroke: #f2ecec !important;
 }
 .layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
     visibility: visible;

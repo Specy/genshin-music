@@ -216,7 +216,7 @@ export default class MidiSetup extends Component {
                                 key={i}
                                 handleClick={this.handleClick}
                                 data={note}
-                                noteImage={`./assets/icons/keys/${noteImage}.svg`}
+                                noteImage={noteImage}
                                 noteText={note.midi < 0 ? 'NA' : note.midi}
                             />
                         })}

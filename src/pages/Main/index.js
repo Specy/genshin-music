@@ -48,7 +48,6 @@ class Main extends Component {
 		document.body.addEventListener('dragover', this.handleDragOver)
 		document.body.addEventListener('drop', this.handleDrop)
 		window.addEventListener('keydown', this.handleKeyboard)
-
 		this.mounted = true
 		this.syncSongs()
 		this.init()
@@ -56,8 +55,8 @@ class Main extends Component {
 	componentWillUnmount() {
 		document.body.removeEventListener('dragenter', this.handleDrag)
 		document.body.removeEventListener('dragleave', this.resetDrag)
-		document.body.removeEventListener('drop', this.handleDrop)
 		document.body.removeEventListener('dragover', this.handleDragOver)
+		document.body.removeEventListener('drop', this.handleDrop)
 		window.removeEventListener('keydown', this.handleKeyboard)
 
 		SongStore.reset()

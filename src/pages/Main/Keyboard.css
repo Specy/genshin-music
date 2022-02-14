@@ -287,21 +287,20 @@
 	background-color:#d66969;
 	border-color:#b35555
 }
-.approach-wrong img{
-	filter: brightness(999);
-}
+
 .approach-correct{
 	background-color: #60ad7e;
 	border-color: #358a55;
 }
-.approach-correct img{
-	filter: brightness(999);
+.approach-correct .svg-note, .approach-wrong .svg-note{
+	fill: white !important ;
+	stroke: white !important;
 }
 @media only screen and (max-width: 800px) {
 	.note-name-sky {
 		font-size: 0.7rem;
 	}
 	.note-animation{
-		border: 2px solid #3da399;
+		border: 2px solid var(--accent);
 	}
 }

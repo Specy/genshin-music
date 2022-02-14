@@ -65,7 +65,7 @@ class Menu extends Component {
             selectedMenu: selection,
             open: true
         })
-        Analytics.UIEvent('menu',{tab: selection})
+        Analytics.UIEvent('menu', { tab: selection })
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
@@ -85,7 +85,7 @@ class Menu extends Component {
         let fileDownloader = new FileDownloader()
         fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
-        Analytics.userSongs({name: song?.name, page: 'composer'},'download')
+        Analytics.userSongs({ name: song?.name, page: 'composer' }, 'download')
     }
     updateSong = () => {
         this.props.functions.updateSong(this.props.data.currentSong)
@@ -142,11 +142,11 @@ class Menu extends Component {
                             Create new song
                         </button>
                     </div>
-                    <SongMenu 
+                    <SongMenu
                         songs={data.songs}
                         SongComponent={SongRow}
                         componentProps={{
-                            functions:songFunctions
+                            functions: songFunctions
                         }}
                     />
                     <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
@@ -170,22 +170,22 @@ class Menu extends Component {
                         />
                     })}
                     <div className='settings-row-wrap'>
-                        <AppButton 
-                            onClick={() => changePage('Theme')} 
-                            style={{width:'fit-content'}}
-                        >
-                            Change app theme
-                        </AppButton>
-                        {isMidiAvailable && 
-                            <button 
-                                className='genshin-button' 
-                                onClick={() => changePage('MidiSetup')} 
-                                style={{width:'fit-content'}}
+                        {isMidiAvailable &&
+                            <button
+                                className='genshin-button'
+                                onClick={() => changePage('MidiSetup')}
+                                style={{ width: 'fit-content' }}
                             >
                                 Connect MIDI keyboard
                             </button>
                         }
-                    </div>                    
+                        <AppButton
+                            onClick={() => changePage('Theme')}
+                            style={{ width: 'fit-content' }}
+                        >
+                            Change app theme
+                        </AppButton>
+                    </div>
                     {!isTwa() && <DonateButton onClick={changePage} />}
                 </MenuPanel>
             </div>

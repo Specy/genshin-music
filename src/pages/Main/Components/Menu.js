@@ -33,13 +33,13 @@ class Menu extends Component {
             isPersistentStorage: false,
             theme: ThemeStore
         }
-        this.dispose = () => {}
+        this.dispose = () => { }
     }
     componentDidMount() {
         this.checkPersistentStorage()
         window.addEventListener("keydown", this.handleKeyboard)
-        this.dispose = observe(ThemeStore.state.data,() => {
-            this.setState({theme: {...ThemeStore}})
+        this.dispose = observe(ThemeStore.state.data, () => {
+            this.setState({ theme: { ...ThemeStore } })
         })
     }
     componentWillUnmount() {
@@ -105,13 +105,13 @@ class Menu extends Component {
                 searchStatus: 'Please write a non empty name'
             })
             return LoggerStore.error(fetchedSongs.error)
-            
+
         }
         this.setState({
             searchedSongs: fetchedSongs,
             searchStatus: 'success'
         })
-		Analytics.songSearch({name: searchInput})
+        Analytics.songSearch({ name: searchInput })
 
     }
     toggleMenu = (override) => {
@@ -132,7 +132,7 @@ class Menu extends Component {
             selectedMenu: selection,
             open: true
         })
-        Analytics.UIEvent('menu',{tab: selection})
+        Analytics.UIEvent('menu', { tab: selection })
     }
     importSong = (file) => {
         const reader = new FileReader();
@@ -143,7 +143,7 @@ class Menu extends Component {
                 for (let song of songsInput) {
                     song = prepareSongImport(song)
                     await this.props.functions.addSong(song)
-                    Analytics.userSongs({name: song?.name, page: 'player'},'import')
+                    Analytics.userSongs({ name: song?.name, page: 'player' }, 'import')
                 }
             } catch (e) {
                 console.error(e)
@@ -171,7 +171,7 @@ class Menu extends Component {
         const json = JSON.stringify(song)
         new FileDownloader().download(json, `${name}.${appName.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
-        Analytics.userSongs({name: name, page: 'player'},'download')
+        Analytics.userSongs({ name: name, page: 'player' }, 'download')
     }
 
     downloadAllSongs = () => {
@@ -195,12 +195,12 @@ class Menu extends Component {
         const { handleSettingChange, changePage, addSong } = functions
         functions.toggleMenu = this.toggleMenu
         functions.downloadSong = this.downloadSong
-        const { searchStatus, searchedSongs, selectedMenu, theme } = this.state 
-        const layer1Color = theme.layer('menu_background',0.2)
-        const layer2Color = theme.layer('menu_background',0.3).desaturate(0.3)
+        const { searchStatus, searchedSongs, selectedMenu, theme } = this.state
+        const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
+        const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
         return <div className="menu-wrapper">
             <div className="menu menu-visible menu-main-page" >
-                {this.state.open &&                 
+                {this.state.open &&
                     <MenuItem action={this.toggleMenu} className='close-menu'>
                         <FaTimes className="icon" />
                     </MenuItem>
@@ -240,7 +240,7 @@ class Menu extends Component {
                         </FilePicker>
 
                     </div>
-                    <SongMenu 
+                    <SongMenu
                         songs={data.songs}
                         SongComponent={SongRow}
                         componentProps={{
@@ -269,22 +269,23 @@ class Menu extends Component {
                         />
                     })}
                     <div className='settings-row-wrap'>
-                        <AppButton 
-                            onClick={() => changePage('Theme')} 
-                            style={{width:'fit-content'}}
-                        >
-                            Change app theme
-                        </AppButton>
-                        {isMidiAvailable && 
-                            <button 
-                                className='genshin-button' 
-                                onClick={() => changePage('MidiSetup')} 
-                                style={{width:'fit-content'}}
+                        {isMidiAvailable &&
+                            <button
+                                className='genshin-button'
+                                onClick={() => changePage('MidiSetup')}
+                                style={{ width: 'fit-content' }}
                             >
                                 Connect MIDI keyboard
                             </button>
                         }
-                    </div>                    
+                        <AppButton
+                            onClick={() => changePage('Theme')}
+                            style={{ width: 'fit-content' }}
+                        >
+                            Change app theme
+                        </AppButton>
+
+                    </div>
                     <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }}>
                         {this.state.isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     </div>
@@ -299,7 +300,7 @@ class Menu extends Component {
                     <div className='library-search-row' style={{}} >
                         <input
                             className='library-search-input'
-                            style={{backgroundColor: layer1Color.hex()}}
+                            style={{ backgroundColor: layer1Color.hex() }}
                             placeholder='Song name'
                             onKeyDown={(e) => {
                                 if (e.code === "Enter") this.searchSongs()
@@ -307,29 +308,29 @@ class Menu extends Component {
                             onInput={(e) => this.handleSearchInput(e.target.value)}
                             value={this.state.searchInput}
                         />
-                        <button 
-                            className='library-search-btn' 
+                        <button
+                            className='library-search-btn'
                             onClick={this.clearSearch}
-                            style={{backgroundColor: layer1Color.hex()}}
+                            style={{ backgroundColor: layer1Color.hex() }}
                         >
                             <FaTimes />
                         </button>
-                        <button 
-                            className='library-search-btn' 
+                        <button
+                            className='library-search-btn'
                             onClick={this.searchSongs}
-                            style={{backgroundColor: layer1Color.hex()}}
+                            style={{ backgroundColor: layer1Color.hex() }}
                         >
                             <FaSearch />
                         </button>
                     </div>
-                    <div className='library-search-songs-wrapper' style={{backgroundColor: layer2Color.hex()}}>
+                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.hex() }}>
                         {searchStatus === "success" ?
                             searchedSongs.length > 0
                                 ? searchedSongs.map(song =>
                                     <LibrarySearchedSong
                                         key={song.file}
                                         data={song}
-                                        functions={{importSong: addSong}}
+                                        functions={{ importSong: addSong }}
                                     >
                                         {song.name}
                                     </LibrarySearchedSong>)
@@ -359,8 +360,8 @@ class Menu extends Component {
     }
 }
 
-function SongRow({data, functions}) {
-    const { removeSong, toggleMenu, downloadSong} = functions
+function SongRow({ data, functions }) {
+    const { removeSong, toggleMenu, downloadSong } = functions
 
     return <div className="song-row">
         <div className="song-name" onClick={() => {

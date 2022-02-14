@@ -240,7 +240,6 @@ export function getMIDISettings(){
 
 
 export const ThemeSettings = {
-    version: appName + 4,
     other: {
         backgroundImageMain: '',
         backgroundImageComposer: ''

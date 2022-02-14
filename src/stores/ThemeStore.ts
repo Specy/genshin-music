@@ -6,22 +6,23 @@ import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import { FileDownloader } from 'lib/Utils'
 import LoggerStore from 'stores/LoggerStore'
-interface ThemeConfig {
-    [key: string]: {
-        name: string,
-        value: string,
-        css: string,
-        text: string
-    }
-}
 
-interface Theme {
+export type ThemeKeys = keyof typeof ThemeSettings.data
+export type ThemeProp = {
+    name: ThemeKeys
+    value: string,
+    css: string,
+    text: string
+} 
+export type ThemeConfig = { [key in ThemeKeys]: ThemeProp }
+
+export interface Theme {
     data: ThemeConfig,
-    version: string,
     other: {
         [key: string]: string
     }
 }
+
 class ThemeStoreClass {
     state: Theme
     baseTheme: Theme
@@ -35,29 +36,29 @@ class ThemeStoreClass {
             console.error(e)
         }
     }
-    get = (prop: string) => {
+    get = (prop: ThemeKeys) => {
         return Color(this.state.data[prop].value)
     }
-    getText = (prop: string) => {
+    getText = (prop: ThemeKeys) => {
         return Color(this.state.data[prop].text)
     }
     getOther = (prop: string) => {
         return this.state.other[prop]
     }
-    getValue = (prop: string) => {
+    getValue = (prop: ThemeKeys) => {
         return this.state.data[prop].value
     }
-    toArray = () => {
-        return Object.keys(this.state.data).map((key) => this.state.data[key]).filter(e => e.name !== 'other')
+    toArray = ():ThemeProp[] => {
+        return Object.values(this.state.data)
     }
-    reset = (prop: string) => {
+    reset = (prop: ThemeKeys) => {
         this.state.data[prop] = { ...this.baseTheme.data[prop] }
         this.save()
     }
     download = () => {
         new FileDownloader().download(this.toJson(), appName + '_theme.json')
     }
-    layer = (prop: string, amount: number, threshold?: number) => {
+    layer = (prop: ThemeKeys, amount: number, threshold?: number) => {
         const value = this.get(prop)
         if (threshold) {
             return value.luminosity() < threshold ? value.darken(amount) : value.lighten(amount)
@@ -74,8 +75,10 @@ class ThemeStoreClass {
     loadFromJson = (json: any) => {
         try {
             Object.entries(json.data).forEach(([key, value]: [string, any]) => {
+                //@ts-ignore
                 if (this.baseTheme.data[key] !== undefined) {
                     const filtered = Color(value.value)
+                    //@ts-ignore
                     this.set(key, value.value.includes('rgba') ? filtered.rgb().toString() : filtered.hex())
                 }
             })
@@ -93,7 +96,7 @@ class ThemeStoreClass {
         this.state.other[name] = value
         this.save()
     }
-    set = (name: string, value: string) => {
+    set = (name: ThemeKeys, value: string) => {
         this.state.data[name] = {
             ...this.state.data[name],
             name,
@@ -107,7 +110,7 @@ class ThemeStoreClass {
     }
 }
 
-const ThemeStore = new ThemeStoreClass(ThemeSettings)
+const ThemeStore = new ThemeStoreClass(ThemeSettings as Theme)
 
 export {
     ThemeStore

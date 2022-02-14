@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ThemeStore } from "stores/ThemeStore";
+import { ThemeKeys, ThemeStore } from "stores/ThemeStore";
 import { observe } from "mobx";
 import { SimpleMenu } from "components/SimpleMenu";
 import { capitalize } from "lib/Utils";
@@ -27,7 +27,7 @@ function Theme() {
         }
     }, [])
 
-    function handleChange(name: string, value: string) {
+    function handleChange(name: ThemeKeys, value: string) {
         ThemeStore.set(name, value)
     }
     function handleImport(file: FileElement[]) {
@@ -56,6 +56,7 @@ function Theme() {
             {theme.toArray().map(e =>
                 <ThemePropriety
                     {...e}
+                    name={e.name}
                     key={e.name}
                     selected={selected === e.name}
                     onChange={handleChange}
@@ -99,12 +100,12 @@ function Theme() {
 
 
 interface ThemeProprietyProps {
-    name: string,
+    name: ThemeKeys,
     value: string,
     modified: boolean,
-    setSelectedProp: (name: string) => void,
+    setSelectedProp: (name: ThemeKeys | '') => void,
     selected: boolean,
-    onChange: (name: string, value: string) => void
+    onChange: (name: ThemeKeys, value: string) => void
 }
 
 function ThemePropriety({ name, value, onChange, modified, setSelectedProp, selected }: ThemeProprietyProps) {

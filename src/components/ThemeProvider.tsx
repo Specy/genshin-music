@@ -15,7 +15,7 @@ function ThemeProvider({ children }: Props) {
     },[])
     const clickColor = theme.get('accent').isDark() 
         ? theme.get('accent').lighten(0.1)
-        : theme.get('accent').saturate(0.2).lighten(0.3)
+        : theme.get('accent').saturate(0.2).lighten(0.25)
     return <>
         <style>
             {`:root{

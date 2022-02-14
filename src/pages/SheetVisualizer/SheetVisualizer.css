@@ -69,17 +69,17 @@
 	width: 80%;
 	height: 80%;
 	font-size: 0.6rem;
-	color: black;
 	display: flex;
 	justify-content: center;
 	align-items: center;	
-	background-color: var(--icon-color);
+	background-color: var(--accent);
+	color: var(--accent-text);
 }
 .frame-note-ns {
 	border-radius: 50%;
 	width: 40%;
 	padding-bottom: 40%;
-	background-color: #606876;
+	background-color: var(--primary);
 }
 
 .displayer-frame-wrapper {

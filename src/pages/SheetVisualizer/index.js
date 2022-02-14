@@ -7,6 +7,7 @@ import { ComposerToRecording, getNoteText } from 'lib/Utils'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
+import { ThemeStore } from 'stores/ThemeStore'
 
 const THRESHOLDS = {
     joined: 50,
@@ -172,7 +173,11 @@ function SheetFrame({ frame, rows, hasText }) {
         : <div className='frame-outer'>
             <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
                 {notes.map((exists, i) => {
-                    return <div className={exists ? 'frame-note-s' : 'frame-note-ns'} key={i}>
+                    return <div 
+                            className={exists ? 'frame-note-s' : 'frame-note-ns'} 
+                            key={i}
+                            style={!exists ? {backgroundColor: ThemeStore.layer('primary',0.2)} : {}}
+                        >
                         {(exists && hasText) 
                             ? getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', appName === 'Genshin' ? 21 : 15) 
                             : null
