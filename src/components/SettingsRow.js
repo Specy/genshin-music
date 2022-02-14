@@ -2,6 +2,9 @@ import { useState, useEffect, memo } from 'react'
 import Switch from 'components/Switch'
 import { ThemeStore } from 'stores/ThemeStore'
 import { observe } from 'mobx'
+
+
+//TODO redo this
 export default memo(function SettingsRow({ data, update, objKey, changeVolume }) {
     const [valueHook, setter] = useState(data.value)
     const [volumeHook, setterVolume] = useState(data.volume)

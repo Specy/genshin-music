@@ -260,4 +260,7 @@
 	.home-content {
 		margin-top: 1rem;
 	}
+	.close-home{
+		right: 0.4rem;
+	}
 }
