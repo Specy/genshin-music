@@ -11,7 +11,7 @@ import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 const appName = process.env.REACT_APP_NAME
-const CACHE = appName + "-10.6" //TODO automate this
+const CACHE = appName + "-10.8" //TODO automate this
 console.log("CACHE Version: ", CACHE)
 clientsClaim();
 
@@ -47,6 +47,7 @@ self.addEventListener('activate', (evt) => {
           console.log('[ServiceWorker] Removing old cache', key);
           return caches.delete(key)
         }
+        return new Promise((r) => r())
       }));
       return promises
     })

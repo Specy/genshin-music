@@ -80,8 +80,8 @@
     padding: 0.3rem;
     border-radius: 0.6rem;
     background-color: #efeff0;
-    right: 6rem;
     z-index: 2;
+    right: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -90,10 +90,10 @@
 
 }
 .color-picker input{
-    width: 100%;
+    display: flex;
     margin: 0;
+    width: calc(100% - 2.3rem);
     padding: 0.4rem;
-    margin-top: 0.3rem;
     box-sizing: border-box;
     border: none;
     border-radius: 0.4rem;
@@ -114,7 +114,24 @@
     width: 90%;
     height: 90%;
 }
-
+.color-picker-row{
+    display: flex;
+    height: 2rem;
+    margin-top: 0.3rem;
+}
+.color-picker-check{
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.4rem;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    margin-left: 0.3rem;
+    padding: 0;
+    cursor: pointer;
+}
 @keyframes show {
     from{
         opacity: 0;

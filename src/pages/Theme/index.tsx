@@ -10,7 +10,7 @@ import Main from "pages/Main";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import './Theme.css'
 import { BASE_THEME_CONFIG } from "appConfig";
-
+import { FaCheck } from 'react-icons/fa'
 function Theme() {
     const [theme, setTheme] = useState(ThemeStore)
     const [selected, setSelected] = useState('')
@@ -48,8 +48,8 @@ function Theme() {
                     </AppButton>
                 </FilePicker>
             </div>
-            <div style={{margin: '1rem'}}>
-                Press the color that you want to choose, then press save once you are done. 
+            <div style={{ margin: '1rem' }}>
+                Press the color that you want to choose, then press save once you are done.
                 <br />
                 Use the lower slider if you only want to change the color but keep the tonality.
             </div>
@@ -122,27 +122,41 @@ function ThemePropriety({ name, value, onChange, modified, setSelectedProp, sele
     }
 
     return <div
-            className={`theme-row ${selected ? 'selected' : ''}`}
-            style={selected ? {
-                backgroundColor: color.hex(),
-                color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
-            }: {}}
-        >
+        className={`theme-row ${selected ? 'selected' : ''}`}
+        style={selected ? {
+            backgroundColor: color.hex(),
+            color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+        } : {}}
+    >
         <div>
             {capitalize(name.split('_').join(' '))}
         </div>
         <div className="color-input-wrapper">
             {selected
                 ? <div className="color-picker">
-                    <HexColorPicker onChange={handleChange} color={color.hex()}/>
-                    <HexColorInput 
-                        onChange={handleChange} 
-                        color={color.hex()} 
-                        style={selected ? {
-                            backgroundColor: color.hex(),
-                            color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
-                        }: {}}
-                    />
+                    <HexColorPicker onChange={handleChange} color={color.hex()} />
+                    <div className="color-picker-row">
+                        <HexColorInput
+                            onChange={handleChange}
+                            color={color.hex()}
+                            style={{
+                                backgroundColor: color.hex(),
+                                color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+                            }}
+                        />
+
+                        <button 
+                            className="color-picker-check"
+                            onClick={sendEvent}
+                            style={{
+                                backgroundColor: color.hex(),
+                                color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+                            }}
+                        >
+                            <FaCheck />
+                        </button>
+                    </div>
+ 
                 </div>
                 : <div
                     onClick={() => setSelectedProp(name)}
@@ -155,20 +169,12 @@ function ThemePropriety({ name, value, onChange, modified, setSelectedProp, sele
                     Text
                 </div>
             }
-            {selected
-                ? <button
-                    onClick={sendEvent}
-                    className={`genshin-button theme-save`}
-                >
-                    SAVE
-                </button>
-                : <button
-                    onClick={() => ThemeStore.reset(name)}
-                    className={`genshin-button theme-reset ${modified ? 'active' : ''}`}
-                >
-                    RESET
-                </button>
-            }
+            <button
+                onClick={() => ThemeStore.reset(name)}
+                className={`genshin-button theme-reset ${modified ? 'active' : ''}`}
+            >
+                RESET
+            </button>
 
         </div>
     </div>
