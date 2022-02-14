@@ -163,7 +163,6 @@ body {
 	font-size: 0.8rem;
 	height: 2rem;
 	text-align: center;
-	color: var(--whitish);
 	font-weight: bold;
 	border: none;
 	-moz-appearance: none;
@@ -172,6 +171,7 @@ body {
 	background-image: none;
 	border-radius: 0.3rem;
 	background-color: var(--primary);
+	color: var(--primary-text);
 	margin-left: 0.5rem;
 }
 .hidden-opacity {

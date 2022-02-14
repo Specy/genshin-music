@@ -443,7 +443,7 @@ export default class Keyboard extends Component {
                 className={keyboardClass}
                 style={{
                     transform: `scale(${size})`,
-                    marginBottom: size * 30 - 15
+                    marginBottom: `${size * 6 + (data.keyboardYPosition / 10)}vh`
                 }}
             >
                 {data.isLoading

@@ -11,6 +11,7 @@ import { HexColorInput, HexColorPicker } from "react-colorful";
 import './Theme.css'
 import { BASE_THEME_CONFIG } from "appConfig";
 import { FaCheck } from 'react-icons/fa'
+import { asyncPrompt } from "components/AsyncPrompts";
 function Theme() {
     const [theme, setTheme] = useState(ThemeStore)
     const [selected, setSelected] = useState('')
@@ -28,18 +29,27 @@ function Theme() {
     }, [])
 
     function handleChange(name: ThemeKeys, value: string) {
+        ThemeStore.setOther('name', 'custom')
         ThemeStore.set(name, value)
     }
+
     function handleImport(file: FileElement[]) {
         if (file.length) ThemeStore.loadFromJson(file[0].data)
     }
 
+    async function downloadTheme(){
+        const name = await asyncPrompt('How do you want to name the theme?')
+        if(name){
+            ThemeStore.setOther('name', name)
+            ThemeStore.download(name)
+        }
+    }
     return <div className="default-page">
         <SimpleMenu />
         <div className="default-content">
 
-            <div style={{ display: 'flex' }}>
-                <AppButton onClick={ThemeStore.download} style={{ margin: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <AppButton onClick={downloadTheme} style={{ margin: '0.25rem' }}>
                     Download Theme
                 </AppButton>
                 <FilePicker onChange={handleImport} as='json'>
@@ -47,6 +57,9 @@ function Theme() {
                         Import Theme
                     </AppButton>
                 </FilePicker>
+                <div style={{marginLeft: '1rem'}}>
+                    {ThemeStore.getOther('name')}
+                </div>
             </div>
             <div style={{ margin: '1rem' }}>
                 Press the color that you want to choose, then press save once you are done.

@@ -831,7 +831,6 @@ class Composer extends Component {
         const keyboardData = {
             keyboard: state.instrument,
             currentColumn: state.song.columns[state.song.selected],
-            TempoChangers: TempoChangers,
             layer: state.layer,
             pitch: state.settings.pitch.value,
             isPlaying: state.isPlaying,
@@ -868,7 +867,6 @@ class Composer extends Component {
         const midiParserData = {
             instruments: [state.instrument, ...state.layers].map(layer => layer.instrumentName),
             selectedColumn: song.selected,
-
         }
         return <AppBackground page='Composer'>
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData} />}
@@ -913,7 +911,6 @@ class Composer extends Component {
                             data={canvasData}
                         />
                         <div className="buttons-composer-wrapper-right">
-
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
                                 <AddColumn className="tool-icon"/>
                             </div>
@@ -962,8 +959,8 @@ class Composer extends Component {
 }
 
 function formatMillis(millis) {
-    let minutes = Math.floor(millis / 60000);
-    let seconds = ((millis % 60000) / 1000).toFixed(0);
+    const minutes = Math.floor(millis / 60000);
+    const seconds = ((millis % 60000) / 1000).toFixed(0);
     return (
         seconds === 60
             ? (minutes + 1) + ":00"

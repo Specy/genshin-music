@@ -124,7 +124,7 @@ export const ComposerSettings = {
 }
 
 export const MainPageSettings = {
-    settingVesion: appName + 21,
+    settingVesion: appName + 27,
     instrument: {
         name: "Instrument",
         type: "instrument",
@@ -159,13 +159,6 @@ export const MainPageSettings = {
         songSetting: false,
         value: false,
     },
-    keyboardSize: {
-        name: "Keyboard size",
-        type: "number",
-        songSetting: false,
-        value: 100,
-        threshold: [0, 200]
-    },
     noteNameType: {
         name: "Note name type",
         type: "select",
@@ -190,6 +183,20 @@ export const MainPageSettings = {
                 "ABC",
                 "No Text"
             ]
+    },
+    keyboardSize: {
+        name: "Keyboard size",
+        type: "slider",
+        songSetting: false,
+        value: 100,
+        threshold: [80, 150]
+    },
+    keyboardYPosition: {
+        name: "Vertical position",
+        type: "slider",
+        songSetting: false,
+        value: -20,
+        threshold: [-60, 80]
     },
     approachSpeed: {
         name: "Approach Rate (AR)",
@@ -242,7 +249,8 @@ export function getMIDISettings(){
 export const ThemeSettings = {
     other: {
         backgroundImageMain: '',
-        backgroundImageComposer: ''
+        backgroundImageComposer: '',
+        name: 'default'
     },
     data: {
         background:{

@@ -7,9 +7,11 @@ interface AppBackgroundProps{
     page: 'Composer' | 'Main'
 }
 export function AppBackground({children,page}: AppBackgroundProps){
+    //@ts-ignore
     const [background, setBackground] = useState(ThemeStore.getOther('backgroundImage'+page))
     useEffect(() => {
         const dispose = observe(ThemeStore.state.other,() => {
+            //@ts-ignore
             setBackground(ThemeStore.getOther('backgroundImage'+page))
         })
         return dispose

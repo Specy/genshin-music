@@ -2,9 +2,10 @@ import ComposerNote from "./Components/ComposerNote"
 import { getNoteText } from 'lib/Utils'
 import MultiSwitch from "./Components/MultiSwitch"
 import { LAYOUT_IMAGES, layersIndexes } from "appConfig"
+import { TempoChangers } from "lib/Utils"
+import { ThemeStore } from "stores/ThemeStore"
 
 export default function ComposerKeyboard({ data, functions }) {
-    let notesIndexes = data.currentColumn.notes.map((e) => e.index)
     let hiddenSideMenu = data.isPlaying ? " hidden" : ""
     let keyboardClass = "keyboard"
     if (data.keyboard.layout.length === 15) keyboardClass += " keyboard-5"
@@ -13,10 +14,11 @@ export default function ComposerKeyboard({ data, functions }) {
         <div className={keyboardClass}>
             {data.keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
             {data.keyboard.layout.map((note, i) => {
-                let index = notesIndexes.indexOf(i)
+                let index = -1
                 let noteText = ""
                 let noteImage = ""
                 try {
+                    index = data.currentColumn.notes.findIndex((e) => e.index === i)
                     noteImage = LAYOUT_IMAGES[data.keyboard.layout.length][note.index]
                     noteText = getNoteText(data.noteNameType, note.index, data.pitch, data.keyboard.layout.length)
                 } catch (e) { }
@@ -47,11 +49,17 @@ export default function ComposerKeyboard({ data, functions }) {
                 <div className="bottom-right-text">
                     Tempo
                 </div>
-                {data.TempoChangers.map((e) => {
+                {TempoChangers.map((e) => {
                     return <button
                         key={e.id}
                         onClick={() => functions.handleTempoChanger(e)}
-                        style={{ backgroundColor: "#" + e.color.toString(16) }}
+                        style={e.changer === 1 
+                            ? {
+                                backgroundColor: ThemeStore.get('primary'),
+                                color: ThemeStore.getText('primary')
+                            }
+                            : {backgroundColor: "#" + e.color.toString(16)}
+                        }
                     >
                         {e.text}
                     </button>

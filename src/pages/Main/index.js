@@ -379,7 +379,8 @@ class Main extends Component {
 			noteNameType: state.settings.noteNameType.value,
 			hasSong: state.thereIsSong,
 			hasAnimation: state.settings.noteAnimation.value,
-			approachRate: state.settings.approachSpeed.value
+			approachRate: state.settings.approachSpeed.value,
+			keyboardYPosition: state.settings.keyboardYPosition.value
 		}
 		const menuFunctions = {
 			addSong: this.addSong,
