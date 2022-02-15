@@ -2,7 +2,7 @@ import { isMobile } from "is-mobile"
 import { instruments, appName, BASE_THEME_CONFIG } from "appConfig"
 import { MIDINote,MIDIShortcut } from "./Utils"
 export const ComposerSettings = {
-    settingVesion: appName + 21,
+    settingVesion: appName + 31,
     instrument: {
         name: "Instrument (Layer 1)",
         type: "instrument",
@@ -31,6 +31,7 @@ export const ComposerSettings = {
         name: "Bpm",
         type: "number",
         songSetting: true,
+        increment: 5,
         threshold: [0, 1600],
         value: 220
     },
@@ -124,7 +125,7 @@ export const ComposerSettings = {
 }
 
 export const MainPageSettings = {
-    settingVesion: appName + 27,
+    settingVesion: appName + 30,
     instrument: {
         name: "Instrument",
         type: "instrument",
@@ -201,6 +202,7 @@ export const MainPageSettings = {
     approachSpeed: {
         name: "Approach Rate (AR)",
         type: "number",
+        increment: 50,
         songSetting: false,
         value: 1500,
         threshold: [0, 5000]
@@ -250,7 +252,8 @@ export const ThemeSettings = {
     other: {
         backgroundImageMain: '',
         backgroundImageComposer: '',
-        name: 'default'
+        name: 'default',
+        id: 'default'
     },
     data: {
         background:{

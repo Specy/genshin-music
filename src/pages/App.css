@@ -379,7 +379,13 @@ a {
 	opacity: 1;
 	transform: scale(1);
 }
-
+.settings-row-wrap{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 0.4rem 0;
+    margin-bottom: 0.7rem;
+}
 /* width */
 ::-webkit-scrollbar {
 	width: 5px;

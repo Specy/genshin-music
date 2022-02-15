@@ -6,6 +6,7 @@ import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import { FileDownloader } from 'lib/Utils'
 import LoggerStore from 'stores/LoggerStore'
+import { DB } from "Database";
 
 export type ThemeKeys = keyof typeof ThemeSettings.data
 export type ThemeProp = {
@@ -24,15 +25,35 @@ export interface Theme {
     }
 }
 
+export class BaseTheme{
+    state: Theme
+    constructor(name:string){
+        this.state = cloneDeep(ThemeSettings as Theme)
+        this.state.other.name = name
+    }
+    toJson = () => {
+        return JSON.stringify(this.state)
+    }
+    toObject = ():Theme => {
+        return cloneDeep(this.state)
+    }
+}
+
 class ThemeStoreClass {
     state: Theme
     baseTheme: Theme
     constructor(baseTheme: Theme) {
         this.baseTheme = cloneDeep(baseTheme)
         this.state = observable(cloneDeep(baseTheme))
+        this.load()
+    }
+    load = async () => {
         try {
-            const json: Theme = JSON.parse(localStorage.getItem(appName + '_Theme') || 'null')
-            if (json !== null) this.loadFromJson(json)
+            const themeId = localStorage.getItem(appName + '_Theme')
+            if(themeId !== null){
+                const theme = await DB.getTheme({id: themeId})
+                this.loadFromTheme(theme)
+            }
         } catch (e) {
             console.error(e)
         }
@@ -83,20 +104,26 @@ class ThemeStoreClass {
                 //@ts-ignore
                 if (this.baseTheme.data[key] !== undefined) {
                     const filtered = Color(value.value)
-                    //@ts-ignore
-                    this.set(key, value.value.includes('rgba') ? filtered.rgb().toString() : filtered.hex())
+                    this.set(key as ThemeKeys, value.value.includes('rgba') ? filtered.rgb().toString() : filtered.hex())
                 }
             })
             Object.entries(json.other).forEach(([key, value]: [string, any]) => {
                     //@ts-ignore
                 if (this.baseTheme.other[key] !== undefined) {
-                    //@ts-ignore
-                    this.setOther(key, value)
+                    this.setOther(key as OtherKeys, value)
                 }
             })
         } catch (e) {
             console.error(e)
             LoggerStore.error("There was an error loading the theme", 4000)
+        }
+    }
+    loadFromTheme = (theme:Theme) => {
+        for(const [key,value] of Object.entries(theme.data)){
+            this.set(key as ThemeKeys, value.value)
+        }
+        for(const [key,value] of Object.entries(theme.other)){
+            this.setOther(key as OtherKeys, value)
         }
     }
     setOther = (name: OtherKeys, value: string) => {
@@ -113,7 +140,8 @@ class ThemeStoreClass {
         this.save()
     }
     save = () => {
-        localStorage.setItem(appName + '_Theme', JSON.stringify(this.state))
+        localStorage.setItem(appName + '_Theme', this.state.other.id)
+        DB.updateTheme({id: this.state.other.id}, cloneDeep(this.state))
     }
 }
 

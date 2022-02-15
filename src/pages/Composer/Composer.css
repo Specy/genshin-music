@@ -15,16 +15,7 @@ select {
     background-repeat:no-repeat; 
     background-position: 100%;
 }
-.instrument-picker{
-    display: flex;
-    flex-direction: column;
-    width: 8rem;
-}
-.instrument-picker input[type="range"]{
-    padding: 0;
-    margin:0;
-    margin-top: 0.2rem;
-}
+
 .right-panel-composer{
     flex: 1;
     height: 100%;
@@ -89,27 +80,7 @@ select {
 select{
     cursor: pointer;
 }
-.settings-row{
-    display: flex;
-    justify-content: space-between;
-    padding: 0.4rem;
-    border-radius: 0.2rem;
-    background-color: var(--menu-background);
-    color: var(--menu-background-text);
-    align-items: center;
-    margin-bottom: 0.3rem;
-}
-.settings-row-wrap{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin: 0.4rem 0;
-    margin-bottom: 0.7rem;
-}
-.settings-row div{
-    display: flex;
-    align-items: center;
-}
+
 .not-saved{
     background-color: var(--accent) !important;
     color: var(--accent-text) !important;
@@ -155,23 +126,7 @@ select{
     width: 100% !important;
     border-radius: 0.3rem;
 }
-.settings-row :is(input,select){
-    background-color: var(--primary);
-    color: var(--primary-text);
-    border: none;
-    text-align: center;
-    width: 8rem;
-    padding: 0.2rem;
-    border-radius: 0.2rem;
-}
-.settings-row .invalid{
-    background-color: var(--red) !important;
-}
-.settings-row :is(input[type=number]),
-.settings-row :is(input[type=text])
-{
-    width: calc(8rem - 7px);
-}
+
 
 
 .buttons-composer-wrapper, .buttons-composer-wrapper-right{
