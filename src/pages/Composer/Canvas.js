@@ -8,6 +8,7 @@ import { ComposerCache } from "./Cache"
 import { composerNotePositions, NOTES_PER_COLUMN, appName } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeStore } from 'stores/ThemeStore';
+import { observe } from 'mobx';
 let NumOfColumnsPerCanvas = 35
 
 export default class ComposerCanvas extends Component {
@@ -34,35 +35,16 @@ export default class ComposerCanvas extends Component {
             timelineHeight: isMobile() ? 25 : 30,
             currentBreakpoint: -1,
             theme: {
-                background: ThemeStore.get('primary').darken(0.1).rgbNumber(),
-                timeline: ThemeStore.get('primary').lighten(0.1).rgbNumber()
-            }
+                timeline: ThemeStore.layer('primary',0.1)
+            },
+            cache: this.getCache(
+                calcMinColumnWidth(nearestEven(width)),
+                Math.floor(height),
+                isMobile() ? 1 : 4,
+                isMobile() ? 25 : 30
+            )
         }
         this.canvasRef = React.createRef()
-        let margin = isMobile() ? 1 : 4
-        const colors = {
-            l: ThemeStore.get('primary'),
-            d: ThemeStore.get('primary')
-        }
-        colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.35) : colors.l.lighten(0.1)
-        colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.2) : colors.d.darken(0.03)
-        this.cache = new ComposerCache({
-            width: this.state.column.width, 
-            height: height, 
-            margin: margin, 
-            timelineHeight: this.state.timelineHeight,
-            standardsColors:  [
-                    {
-                        color: colors.l.rgbNumber() //lighter
-                    },{
-                        color: colors.d.rgbNumber() //darker
-                    },{
-                        color: 0x1a968b //selected
-                    },{
-                        color: 0xd6722f
-                    }
-                ]
-            })
         this.stageSelected = false
         this.sliderSelected = false
         this.hasSlided = false
@@ -70,6 +52,7 @@ export default class ComposerCanvas extends Component {
         this.sliderOffset = 0
         this.throttleScroll = 0
         this.onSlider = false
+        this.dispose = () => { }
     }
     resetPointerDown = (e) => {
         this.stageSelected = false
@@ -80,13 +63,26 @@ export default class ComposerCanvas extends Component {
         window.addEventListener("pointerup", this.resetPointerDown)
         window.addEventListener("keydown", this.handleKeyboard)
         this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
-
+        this.dispose = observe(ThemeStore.state.data, () => {
+            this.state?.cache?.destroy?.()
+            this.setState({
+                cache: this.getCache(
+                    this.state.column.width,
+                    this.state.height,
+                    isMobile() ? 1 : 4,
+                    this.state.timelineHeight
+                ),
+                theme: {
+                    timeline: ThemeStore.layer('primary',0.1)
+                }
+            })
+        })
     }
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
         window.removeEventListener("keydown", this.handleKeyboard)
         this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
-        this.cache.destroy()
+        this.state.cache.destroy()
     }
     handleKeyboard = (event) => {
         let key = event.code
@@ -98,6 +94,31 @@ export default class ComposerCanvas extends Component {
             default:
                 break;
         }
+    }
+    getCache(width, height, margin, timelineHeight) {
+        const colors = {
+            l: ThemeStore.get('primary'),
+            d: ThemeStore.get('primary')
+        }
+        colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.35) : colors.l.lighten(0.1)
+        colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.2) : colors.d.darken(0.03)
+        return new ComposerCache({
+            width: width,
+            height: height,
+            margin: margin,
+            timelineHeight: timelineHeight,
+            standardsColors: [
+                {
+                    color: colors.l.rgbNumber() //lighter
+                }, {
+                    color: colors.d.rgbNumber() //darker
+                }, {
+                    color: 0x1a968b //selected
+                }, {
+                    color: 0xd6722f
+                }
+            ]
+        })
     }
     handleWheel = (e) => {
         this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
@@ -166,7 +187,7 @@ export default class ComposerCanvas extends Component {
     render() {
         const { width, timelineHeight, height, theme } = this.state
         const { data, functions } = this.props
-        const cache = this.cache.cache
+        const cache = this.state.cache.cache
         const sizes = this.state.column
         const xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
         const beatMarks = Number(data.settings.beatMarks.value)
@@ -224,21 +245,38 @@ export default class ComposerCanvas extends Component {
                 </Container>
             </Stage>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
-                <div className="timeline-button" onClick={() => this.handleBreakpoints(-1)}>
+                <div 
+                    className="timeline-button" 
+                    onClick={() => this.handleBreakpoints(-1)}
+                    style={{
+                        backgroundColor: theme.timeline
+                    }}
+                >
                     <Memoized>
                         <FaStepBackward />
                     </Memoized>
                 </div>
-                <div className="timeline-button" onClick={() => this.handleBreakpoints(1)} style={{ marginLeft: 0 }}>
+                <div 
+                    className="timeline-button" 
+                    onClick={() => this.handleBreakpoints(1)} 
+                    style={{ 
+                        marginLeft: 0,
+                        backgroundColor: theme.timeline
+                    }}
+                >
                     <Memoized>
-                        <FaStepForward />  
+                        <FaStepForward />
                     </Memoized>
                 </div>
-                <div className='timeline-scroll'>
+                <div className='timeline-scroll' style={{backgroundColor: theme.timeline}}>
                     <Stage
                         width={width}
                         height={timelineHeight}
-                        options={{ antialias: true, autoDensity: true, backgroundColor: theme.timeline }}
+                        options={{ 
+                            antialias: true,
+                            autoDensity: true, 
+                            backgroundAlpha: 0
+                         }}
                         raf={false}
                         renderOnComponentChange={true}
                     >
@@ -263,12 +301,18 @@ export default class ComposerCanvas extends Component {
                         <Graphics draw={(e) => drawStage(e, stageSize, timelineHeight)} x={stagePosition} y={2} />
                     </Stage>
                 </div>
-                <div className="timeline-button" onClick={functions.toggleBreakpoint}>
+                <div 
+                    className="timeline-button" 
+                    onClick={functions.toggleBreakpoint}
+                    style={{
+                        backgroundColor: theme.timeline
+                    }}
+                >
                     <Memoized>
-                        {data.breakpoints.includes(data.selected) 
-                            ? <FaMinusCircle key='minus'/>
-                            : <FaPlusCircle key='plus'/>
-                        }   
+                        {data.breakpoints.includes(data.selected)
+                            ? <FaMinusCircle key='minus' />
+                            : <FaPlusCircle key='plus' />
+                        }
                     </Memoized>
                 </div>
             </div>

@@ -100,7 +100,6 @@ select{
     margin: 0.2rem;
     padding: 0 0.5rem;
     background-color: var(--primary);
-    filter: brightness(1.1);
     color: var(--icon-color);
     display: flex;
     justify-content: center;

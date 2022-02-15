@@ -13,10 +13,11 @@ export interface ThemeProprietyProps {
     modified: boolean,
     setSelectedProp: (name: ThemeKeys | '') => void,
     selected: boolean,
-    onChange: (name: ThemeKeys, value: string) => void
+    onChange: (name: ThemeKeys, value: string) => void,
+    handlePropReset: (name: ThemeKeys) => void
 }
 
-export function ThemePropriety({ name, value, onChange, modified, setSelectedProp, selected }: ThemeProprietyProps) {
+export function ThemePropriety({ name, value, onChange, modified, setSelectedProp, selected , handlePropReset}: ThemeProprietyProps) {
     const [color, setColor] = useState(Color(value))
     useEffect(() => {
         setColor(Color(value))
@@ -79,7 +80,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                 </div>
             }
             <button
-                onClick={() => ThemeStore.reset(name)}
+                onClick={() => handlePropReset(name)}
                 className={`genshin-button theme-reset ${modified ? 'active' : ''}`}
             >
                 RESET

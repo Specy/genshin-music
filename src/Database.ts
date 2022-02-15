@@ -43,12 +43,14 @@ class Database{
     removeSong(query:any){
         return this.collections.songs.remove(query)
     }
-    async getTheme({query}:any):Promise<Theme>{
-        const theme = await this.collections.themes.findOne(query) as Theme
-        //@ts-ignore
-        delete theme.id
-        //@ts-ignore
-        delete theme._id
+    async getTheme(id:string):Promise<Theme|null>{
+        const theme = await this.collections.themes.findOne({id}) as Theme
+        if(theme){
+            //@ts-ignore
+            delete theme.id
+            //@ts-ignore
+            delete theme._id
+        }
         return theme
     }
     async getThemes(): Promise<Theme[]>{
@@ -67,8 +69,8 @@ class Database{
         await this.collections.themes.insert({...theme, id })
         return id
     }
-    updateTheme(query:any,data:Theme){
-        return this.collections.themes.update(query,data)
+    updateTheme(id:string,data:Theme){
+        return this.collections.themes.update({id},data)
     }
     removeTheme(query:any){
         return this.collections.themes.remove(query)

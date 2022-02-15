@@ -14,11 +14,12 @@ import { Theme } from "stores/ThemeStore";
 import { ThemePreview } from "./Components/ThemePreview";
 import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "stores/ThemeStore";
+import LoggerStore from "stores/LoggerStore";
 function ThemePage() {
     const [theme, setTheme] = useState(ThemeStore)
     const [userThemes, setUserThemes] = useState<Theme[]>([])
-    const [selected, setSelected] = useState('')
-    
+    const [selectedProp, setSelectedProp] = useState('')
+
     useEffect(() => {
         const dispose = observe(ThemeStore.state.data, () => {
             setTheme({ ...ThemeStore })
@@ -26,7 +27,7 @@ function ThemePage() {
         const dispose2 = observe(ThemeStore.state.other, () => {
             setTheme({ ...ThemeStore })
         })
-        async function getThemes(){
+        async function getThemes() {
             setUserThemes(await DB.getThemes())
         }
         getThemes()
@@ -36,30 +37,55 @@ function ThemePage() {
         }
     }, [])
 
-    function handleChange(name: ThemeKeys, value: string) {
+    async function handleChange(name: ThemeKeys, value: string) {
+        if (ThemeStore.getId() === ThemeStore.baseTheme.other.id) {
+            if(await addNewTheme() === null) return 
+        }
         ThemeStore.set(name, value)
+        await ThemeStore.save()
+        setUserThemes(await DB.getThemes())
+    }
+    async function handlePropReset(key: ThemeKeys) {
+        ThemeStore.reset(key)
+        await ThemeStore.save()
+        setUserThemes(await DB.getThemes())
     }
 
-    function handleImport(file: FileElement[]) {
-        if (file.length) ThemeStore.loadFromJson(file[0].data)
-    }
-
-    async function downloadTheme(){
-        ThemeStore.download(ThemeStore.getOther('name'))
-    }
-    async function addNewTheme(){
-        const name = await asyncPrompt('How do you want to name the theme?')
-        if(name){
-            const newTheme = new BaseTheme(name)
-            const id = await DB.addTheme(newTheme.toObject())
-            newTheme.state.other.id = id
-            setUserThemes(await DB.getThemes())
-            ThemeStore.loadFromJson(newTheme.toObject())
+    async function handleImport(file: FileElement[]) {
+        if (file.length) {
+            const theme = file[0].data as Theme
+            try {
+                if (theme.data && theme.other) {
+                    const id = await DB.addTheme(theme)
+                    theme.other.id = id
+                    theme.other.name = theme.other.name || 'Unnamed'
+                    ThemeStore.loadFromJson(theme)
+                    setUserThemes(await DB.getThemes())
+                } else {
+                    LoggerStore.error('There was an error importing this theme')
+                }
+            } catch (e) {
+                LoggerStore.error('There was an error importing this theme')
+            }
         }
     }
-    async function handleThemeDelete(theme: Theme){
-        if(await asyncConfirm(`Are you sure you want to delete the theme ${theme.other.name}?`)){
-            DB.removeTheme({id: theme.other.id})
+
+    async function addNewTheme() {
+        const name = await asyncPrompt('How do you want to name the theme?')
+        if (!name) return null
+        const newTheme = new BaseTheme(name)
+        const id = await DB.addTheme(newTheme.toObject())
+        newTheme.state.other.id = id
+        ThemeStore.loadFromJson(newTheme.toObject())
+        setUserThemes(await DB.getThemes())
+    }
+
+    async function handleThemeDelete(theme: Theme) {
+        if (await asyncConfirm(`Are you sure you want to delete the theme ${theme.other.name}?`)) {
+            if (ThemeStore.getId() === theme.other.id) {
+                ThemeStore.wipe()
+            }
+            await DB.removeTheme({ id: theme.other.id })
             setUserThemes(await DB.getThemes())
         }
     }
@@ -68,30 +94,23 @@ function ThemePage() {
         <div className="default-content">
 
             <div style={{ display: 'flex', alignItems: 'center' }}>
-                <AppButton onClick={downloadTheme} style={{ margin: '0.25rem' }}>
-                    Download Theme
-                </AppButton>
                 <FilePicker onChange={handleImport} as='json'>
                     <AppButton style={{ margin: '0.25rem' }}>
                         Import Theme
                     </AppButton>
                 </FilePicker>
-                <div style={{marginLeft: '1rem'}}>
+                <div style={{ marginLeft: '1rem' }}>
                     {ThemeStore.getOther('name')}
                 </div>
-            </div>
-            <div style={{ margin: '1rem' }}>
-                Press the color that you want to choose, then press save once you are done.
-                <br />
-                Use the lower slider if you only want to change the color but keep the tonality.
             </div>
             {theme.toArray().map(e =>
                 <ThemePropriety
                     {...e}
                     key={e.name}
-                    selected={selected === e.name}
+                    selected={selectedProp === e.name}
                     onChange={handleChange}
-                    setSelectedProp={setSelected}
+                    setSelectedProp={setSelectedProp}
+                    handlePropReset={handlePropReset}
                     modified={e.value !== theme.baseTheme.data[e.name].value}
                 />
             )}
@@ -119,23 +138,28 @@ function ThemePage() {
                     onChange={(e) => ThemeStore.setBackground(e.target.value, 'Composer')}
                 />
             </div>
-            <div style={{ fontSize: '1.5rem', marginTop: '3rem' }}>
+            <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
                 Your Themes
             </div>
             <div className="theme-preview-wrapper">
-                {userThemes.map(theme => 
-                        <ThemePreview 
-                            onDelete={handleThemeDelete}
-                            key={theme.other.id}
-                            theme={theme}
-                            onClick={ThemeStore.loadFromTheme}
-                        />   
-                    )}
+                {userThemes.map(theme =>
+                    <ThemePreview
+                        onDelete={handleThemeDelete}
+                        current={theme.other.id === ThemeStore.getId()}
+                        key={theme.other.id}
+                        theme={theme}
+                        onClick={(theme) => {
+                            ThemeStore.loadFromTheme(theme)
+                            ThemeStore.save()
+                        }}
+                    />
+                )}
                 <button className="new-theme" onClick={addNewTheme}>
-                    <FaPlus />            
+                    <FaPlus size={30} />
+                    New theme
                 </button>
             </div>
-            <div style={{ fontSize: '1.5rem', marginTop: '3rem' }}>
+            <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
                 Preview
             </div>
             <div className="theme-app-preview">

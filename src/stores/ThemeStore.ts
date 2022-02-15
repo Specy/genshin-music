@@ -4,7 +4,6 @@ import { appName, BASE_THEME_CONFIG } from 'appConfig'
 // @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
-import { FileDownloader } from 'lib/Utils'
 import LoggerStore from 'stores/LoggerStore'
 import { DB } from "Database";
 
@@ -51,12 +50,15 @@ class ThemeStoreClass {
         try {
             const themeId = localStorage.getItem(appName + '_Theme')
             if(themeId !== null){
-                const theme = await DB.getTheme({id: themeId})
-                this.loadFromTheme(theme)
+                const theme = await DB.getTheme(themeId)
+                if(theme) this.loadFromTheme(theme)
             }
         } catch (e) {
             console.error(e)
         }
+    }
+    getId = () => {
+        return this.state.other.id
     }
     get = (prop: ThemeKeys) => {
         return Color(this.state.data[prop].value)
@@ -75,10 +77,6 @@ class ThemeStoreClass {
     }
     reset = (prop: ThemeKeys) => {
         this.state.data[prop] = { ...this.baseTheme.data[prop] }
-        this.save()
-    }
-    download = (fileName?: string) => {
-        new FileDownloader().download(this.toJson(), `${fileName || `${appName}_Theme`}.json`)
     }
     layer = (prop: ThemeKeys, amount: number, threshold?: number) => {
         const value = this.get(prop)
@@ -94,6 +92,7 @@ class ThemeStoreClass {
     setBackground = (url: string, type: 'Composer' | 'Main') => {
         //@ts-ignore
         this.setOther(('backgroundImage' + type), url)
+        this.save()
     }
     loadFromJson = (json: any) => {
         try {
@@ -126,9 +125,13 @@ class ThemeStoreClass {
             this.setOther(key as OtherKeys, value)
         }
     }
+
+    wipe = () => {
+        this.loadFromJson(cloneDeep(this.baseTheme))
+    }
+
     setOther = (name: OtherKeys, value: string) => {
         this.state.other[name] = value
-        this.save()
     }
     set = (name: ThemeKeys, value: string) => {
         this.state.data[name] = {
@@ -137,11 +140,10 @@ class ThemeStoreClass {
             value: value.toLowerCase(),
             text: Color(value).isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
         }
-        this.save()
     }
     save = () => {
-        localStorage.setItem(appName + '_Theme', this.state.other.id)
-        DB.updateTheme({id: this.state.other.id}, cloneDeep(this.state))
+        localStorage.setItem(appName + '_Theme', this.getId())
+        return DB.updateTheme(this.state.other.id, cloneDeep(this.state))
     }
 }
 

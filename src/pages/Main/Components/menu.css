@@ -61,7 +61,8 @@
 .rotate-screen img{
     width: 60vw;
     margin-bottom: 3rem;
-    background-color: #515c6f;
+    background-color: var(--primary);
+    filter: brightness(1.1);
     padding: 1.5rem;
     border-radius: 1rem;
 }
