@@ -302,6 +302,7 @@
         padding: 0.5rem;
         width: 60vw;
         left: -60vw;
+        opacity: 1;
     }
     .menu-title{
         display: none;

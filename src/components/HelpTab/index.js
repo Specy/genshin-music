@@ -11,7 +11,7 @@ export function HelpTab() {
             Main page
         </div>
         <div>
-            <img src={mainPageImg} className='help-img' alt='tutorial for the main page' />
+            <img src={mainPageImg} className='help-img' alt='tutorial for the main page' loading='lazy'/>
             <ol>
                 <li>Record the keyboard as an audio file</li>
                 <li>Current note position, you can change it to reload</li>
@@ -57,7 +57,7 @@ export function HelpTab() {
             Songs menu
         </div>
         <div>
-            <img src={songsImg} className='help-img' alt='tutorial for songs page' />
+            <img src={songsImg} className='help-img' alt='tutorial for songs page' loading='lazy'/>
             <ol>
                 <li>Open composer to create a song</li>
                 <li>Import song (as json)</li>
@@ -84,7 +84,7 @@ export function HelpTab() {
             Composer
         </div>
         <div>
-            <img src={composerImg} className='help-img' alt="tutorial for composer" />
+            <img src={composerImg} className='help-img' alt="tutorial for composer" loading='lazy'/>
             <ol>
                 <li>Go to the next / previous breakpoint</li>
                 <li>Timeline of the breakpoints</li>

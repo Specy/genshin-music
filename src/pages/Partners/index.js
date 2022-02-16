@@ -3,9 +3,9 @@ import { SimpleMenu } from 'components/SimpleMenu'
 import WindsongDBImg from 'assets/images/partners/windsong-db.jpg'
 
 export default function Partners(props) {
-    return <div className='partners-page'>
+    return <div className='default-page'>
         <SimpleMenu/>
-        <div className='partner-wrapper'>
+        <div className='default-content partner-wrapper'>
             <Partner
                 name='Specy'
                 description='The youtube channel that collects videos created by users of this app'
@@ -57,6 +57,7 @@ function PartnerImg(props){
         rel='noreferrer'
     >
         <img 
+            loading='lazy'
             src={props.img} 
             style={{width: '100%', objectFit: 'cover'}}
             alt={props.alt}

@@ -1,15 +1,10 @@
-.partners-page{
-    width: 100%;
-    color: var(--whitish);
-    padding-left: 4rem;
-}
+
 .partner-wrapper{
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    overflow-x: auto;
-    padding: 1rem;
+    padding: 1rem;  
 }
 .partner{
     width: 100%;
