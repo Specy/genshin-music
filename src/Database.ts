@@ -31,8 +31,8 @@ class Database{
     getSongById(id:string){
         return this.collections.songs.findOne({_id: id})
     }
-    existsSong(query:any){
-        return this.collections.songs.findOne(query) !== undefined
+    async existsSong(query:any){
+        return (await this.collections.songs.findOne(query)) !== undefined
     }
     updateSong(query:any,data:any){
         return this.collections.songs.update(query, data)

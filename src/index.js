@@ -87,3 +87,4 @@ function setIfInTWA() {
 
 setIfInTWA()
 serviceWorkerRegistration.register();
+
