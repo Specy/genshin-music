@@ -21,7 +21,8 @@ export interface Theme {
     data: ThemeConfig,
     other: {
         [key in OtherKeys]: string
-    }
+    },
+    editable: boolean
 }
 
 export class BaseTheme{
@@ -29,6 +30,7 @@ export class BaseTheme{
     constructor(name:string){
         this.state = cloneDeep(ThemeSettings as Theme)
         this.state.other.name = name
+        this.state.editable = true
     }
     toJson = () => {
         return JSON.stringify(this.state)
@@ -37,7 +39,9 @@ export class BaseTheme{
         return cloneDeep(this.state)
     }
 }
-
+const defaultThemes: Theme[] = [
+    ThemeSettings as Theme
+]
 class ThemeStoreClass {
     state: Theme
     baseTheme: Theme
@@ -78,6 +82,11 @@ class ThemeStoreClass {
     reset = (prop: ThemeKeys) => {
         this.state.data[prop] = { ...this.baseTheme.data[prop] }
     }
+
+    isEditable = () => {
+        return this.state.editable
+    }
+
     layer = (prop: ThemeKeys, amount: number, threshold?: number) => {
         const value = this.get(prop)
         if (threshold) {
@@ -86,6 +95,9 @@ class ThemeStoreClass {
             return value.isDark() ? value.lighten(amount * 1.1) : value.darken(amount)
         }
     }
+
+
+
     toJson = () => {
         return JSON.stringify(this.state)
     }
@@ -112,6 +124,8 @@ class ThemeStoreClass {
                     this.setOther(key as OtherKeys, value)
                 }
             })
+            this.state.editable = Boolean(json.editable)
+
         } catch (e) {
             console.error(e)
             LoggerStore.error("There was an error loading the theme", 4000)
@@ -124,6 +138,7 @@ class ThemeStoreClass {
         for(const [key,value] of Object.entries(theme.other)){
             this.setOther(key as OtherKeys, value)
         }
+        this.state.editable = Boolean(theme.editable)
     }
 
     wipe = () => {
@@ -147,8 +162,10 @@ class ThemeStoreClass {
     }
 }
 
-const ThemeStore = new ThemeStoreClass(ThemeSettings as Theme)
+const ThemeStore = new ThemeStoreClass(defaultThemes[0])
+
 
 export {
-    ThemeStore
+    ThemeStore,
+    defaultThemes
 }

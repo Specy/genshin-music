@@ -249,11 +249,12 @@ export function getMIDISettings(){
 
 
 export const ThemeSettings = {
+    editable: false,
     other: {
         backgroundImageMain: '',
         backgroundImageComposer: '',
         name: 'default',
-        id: 'default'
+        id: 'default',
     },
     data: {
         background:{

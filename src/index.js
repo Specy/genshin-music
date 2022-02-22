@@ -18,11 +18,12 @@ import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
 import { ThemeProvider } from 'components/ThemeProvider';
+
 function Index() {
 	return <div className="index">
 		<HashRouter>
-			<App />
 			<ThemeProvider>
+				<App />
 				<Switch>
 					<Route exact path={"/ErrorPage"}>
 						<ErrorPage />
@@ -87,4 +88,7 @@ function setIfInTWA() {
 
 setIfInTWA()
 serviceWorkerRegistration.register();
+
+
+
 

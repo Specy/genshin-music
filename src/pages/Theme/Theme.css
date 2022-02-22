@@ -173,7 +173,23 @@
 .theme-preview:active{
     transform: scale(0.95);
 }
-
+.theme-input{
+    background-color: var(--primary);
+	color: var(--primary-text);
+	border-radius: 0.2rem;
+	padding: 0.5rem 1rem;
+	border: none;
+	height: fit-content;
+	cursor: text;
+	min-width: 5rem;
+}
+.theme-input:disabled{
+    filter: brightness(0.8);
+    cursor: not-allowed;
+}
+.theme-input::placeholder{
+    color: var(--primary-text);
+}
 .theme-preview-row{
     display: flex;
     justify-content: space-between;

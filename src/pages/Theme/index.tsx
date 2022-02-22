@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ThemeKeys, ThemeStore } from "stores/ThemeStore";
+import { defaultThemes, ThemeKeys, ThemeStore } from "stores/ThemeStore";
 import { observe } from "mobx";
 import { SimpleMenu } from "components/SimpleMenu";
 import { AppButton } from "components/AppButton";
@@ -15,6 +15,7 @@ import { ThemePreview } from "./Components/ThemePreview";
 import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "stores/ThemeStore";
 import LoggerStore from "stores/LoggerStore";
+import { ThemeInput } from "./Components/ThemeInput";
 function ThemePage() {
     const [theme, setTheme] = useState(ThemeStore)
     const [userThemes, setUserThemes] = useState<Theme[]>([])
@@ -38,8 +39,8 @@ function ThemePage() {
     }, [])
 
     async function handleChange(name: ThemeKeys, value: string) {
-        if (ThemeStore.getId() === ThemeStore.baseTheme.other.id) {
-            if(await addNewTheme() === null) return 
+        if (!ThemeStore.isEditable()) {
+            if (await addNewTheme() === null) return
         }
         ThemeStore.set(name, value)
         await ThemeStore.save()
@@ -114,30 +115,28 @@ function ThemePage() {
                     modified={e.value !== theme.baseTheme.data[e.name].value}
                 />
             )}
-            <div className="theme-row">
-                <div>
-                    Background image (URL)
-                </div>
-                <input
-                    className="app-button"
-                    style={{ width: '9rem' }}
-                    placeholder="Write here"
-                    value={theme.getOther('backgroundImageMain')}
-                    onChange={(e) => ThemeStore.setBackground(e.target.value, 'Main')}
-                />
-            </div>
-            <div className="theme-row">
-                <div>
-                    Composer Background image (URL)
-                </div>
-                <input
-                    className="app-button"
-                    style={{ width: '9rem' }}
-                    placeholder="Write here"
-                    value={theme.getOther('backgroundImageComposer')}
-                    onChange={(e) => ThemeStore.setBackground(e.target.value, 'Composer')}
-                />
-            </div>
+            <ThemeInput
+                name="Background image (URL)"
+                value={theme.getOther('backgroundImageMain')}
+                disabled={!ThemeStore.isEditable()}
+                onChange={(e) => ThemeStore.setBackground(e, 'Main')}
+            />
+            <ThemeInput
+                name="Composer Background image (URL)"
+                value={theme.getOther('backgroundImageComposer')}
+                disabled={!ThemeStore.isEditable()}
+                onChange={(e) => ThemeStore.setBackground(e, 'Composer')}
+            />
+            <ThemeInput
+                name="Theme name"
+                value={theme.getOther('name')}
+                disabled={!ThemeStore.isEditable()}
+                onChange={(e) => ThemeStore.setOther('name', e)}
+                onLeave={async () => {
+                    await ThemeStore.save()
+                    setUserThemes(await DB.getThemes())
+                }}
+            />
             <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
                 Your Themes
             </div>
@@ -148,6 +147,7 @@ function ThemePage() {
                         current={theme.other.id === ThemeStore.getId()}
                         key={theme.other.id}
                         theme={theme}
+                        downloadable={true}
                         onClick={(theme) => {
                             ThemeStore.loadFromTheme(theme)
                             ThemeStore.save()
@@ -158,6 +158,22 @@ function ThemePage() {
                     <FaPlus size={30} />
                     New theme
                 </button>
+            </div>
+            <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
+                Default Themes
+            </div>
+            <div className="theme-preview-wrapper">
+                {defaultThemes.map(theme =>
+                    <ThemePreview
+                        key={theme.other.id}
+                        theme={theme}
+                        current={theme.other.id === ThemeStore.getId()}
+                        onClick={(theme) => {
+                            ThemeStore.loadFromTheme(theme)
+                            ThemeStore.save()
+                        }}
+                    />
+                )}
             </div>
             <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
                 Preview
