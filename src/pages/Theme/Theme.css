@@ -80,21 +80,36 @@
     animation: show 0.2s;
 
 }
-.color-picker input{
+
+.color-picker-input{
     display: flex;
+    align-items: center;
     margin: 0;
-    width: calc(100% - 2.3rem);
+    width: calc(100% - 4.6rem);
     padding: 0.4rem;
     box-sizing: border-box;
     border: none;
     border-radius: 0.4rem;
-    background-color: #d2cfcf;
+    font-size: 1rem;
     box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+}
+.color-picker-input *{
+    transform: translateY(0.05rem);
+}
+.color-picker-input input{
+    display: flex;
+    margin: 0;
+    width: 100%;
+    padding: 0;
+    background-color: transparent;
+    box-sizing: border-box;
+    border: none;
 }
 .color-picker-row{
     display: flex;
     height: 2rem;
     margin-top: 0.3rem;
+    max-width: 100%;
 }
 .color-picker-check{
     width: 2rem;
@@ -108,6 +123,8 @@
     margin-left: 0.3rem;
     padding: 0;
     cursor: pointer;
+    box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+
 }
 
 .new-theme{
@@ -151,7 +168,7 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.8rem;
-    margin-top: 1.25rem;
+    margin-top: 1rem;
 }
 .theme-preview{
     display: flex;
@@ -194,7 +211,6 @@
     display: flex;
     justify-content: space-between;
     margin: 0 0.4rem;
-    margin-bottom: 0.4rem;
     padding: 0.4rem 0.2rem;
 }
 .theme-preview-colors{

@@ -28,6 +28,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             dispose2()
         }
     }, [])
+    
     useEffect(() => {
         if (selectedThumb === null) return
         function resetSelection() {

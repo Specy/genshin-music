@@ -1,28 +1,21 @@
 import { useState, useEffect, memo } from 'react'
 import Switch from 'components/Switch'
-import { ThemeStore } from 'stores/ThemeStore'
-import { observe } from 'mobx'
 import { InstrumentInput } from './InstrumentInput'
 import { Input } from './Input'
 import { Slider } from './Slider'
 import { Select } from './Select'
+import { useTheme } from 'lib/hooks/useTheme'
 import './Settings.css'
 function SettingsRow({ data, update, objKey, changeVolume }) {
     const [currentValue, setValue] = useState(data.value)
     const [volume, setVolume] = useState(data.volume)
-    const [theme, setTheme] = useState(ThemeStore)
+    
+    const [theme] = useTheme()
     const { type } = data
     useEffect(() => {
         setValue(data.value)
 
     }, [data.value])
-
-    useEffect(() => {
-        const dispose = observe(ThemeStore.state.data, () => {
-            setTheme({ ...ThemeStore })
-        })
-        return dispose
-    }, [])
 
     function handleCheckbox(value) {
         update({

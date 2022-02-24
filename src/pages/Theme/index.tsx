@@ -16,15 +16,13 @@ import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "stores/ThemeStore";
 import LoggerStore from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
+import { useTheme } from "lib/hooks/useTheme";
 function ThemePage() {
-    const [theme, setTheme] = useState(ThemeStore)
+    const [theme,setTheme] = useTheme() 
     const [userThemes, setUserThemes] = useState<Theme[]>([])
     const [selectedProp, setSelectedProp] = useState('')
 
     useEffect(() => {
-        const dispose = observe(ThemeStore.state.data, () => {
-            setTheme({ ...ThemeStore })
-        })
         const dispose2 = observe(ThemeStore.state.other, () => {
             setTheme({ ...ThemeStore })
         })
@@ -33,13 +31,12 @@ function ThemePage() {
         }
         getThemes()
         return () => {
-            dispose()
             dispose2()
         }
-    }, [])
-
+    }, [setTheme])
     async function handleChange(name: ThemeKeys, value: string) {
         if (!ThemeStore.isEditable()) {
+            if(value === ThemeStore.get(name).hex()) return
             if (await addNewTheme() === null) return
         }
         ThemeStore.set(name, value)
@@ -90,6 +87,7 @@ function ThemePage() {
             setUserThemes(await DB.getThemes())
         }
     }
+
     return <div className="default-page">
         <SimpleMenu />
         <div className="default-content">
@@ -103,6 +101,8 @@ function ThemePage() {
                 <div style={{ marginLeft: '1rem' }}>
                     {ThemeStore.getOther('name')}
                 </div>
+            </div>
+            <div style={{ marginTop: '2.2rem' }}>
             </div>
             {theme.toArray().map(e =>
                 <ThemePropriety

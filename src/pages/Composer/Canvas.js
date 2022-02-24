@@ -35,7 +35,10 @@ export default class ComposerCanvas extends Component {
             timelineHeight: isMobile() ? 25 : 30,
             currentBreakpoint: -1,
             theme: {
-                timeline: ThemeStore.layer('primary',0.1)
+                timeline: {
+                    hex: ThemeStore.layer('primary',0.1).hex(),
+                    hexNumber: ThemeStore.layer('primary',0.1).rgbNumber()
+                }
             },
             cache: this.getCache(
                 calcMinColumnWidth(nearestEven(width)),
@@ -73,7 +76,10 @@ export default class ComposerCanvas extends Component {
                     this.state.timelineHeight
                 ),
                 theme: {
-                    timeline: ThemeStore.layer('primary',0.1)
+                    timeline: {
+                        hex: ThemeStore.layer('primary',0.1).hex(),
+                        hexNumber: ThemeStore.layer('primary',0.1).rgbNumber()
+                    }
                 }
             })
         })
@@ -82,6 +88,7 @@ export default class ComposerCanvas extends Component {
         window.removeEventListener("pointerup", this.resetPointerDown)
         window.removeEventListener("keydown", this.handleKeyboard)
         this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
+        this.dispose()
         this.state.cache.destroy()
     }
     handleKeyboard = (event) => {
@@ -249,7 +256,7 @@ export default class ComposerCanvas extends Component {
                     className="timeline-button" 
                     onClick={() => this.handleBreakpoints(-1)}
                     style={{
-                        backgroundColor: theme.timeline
+                        backgroundColor: theme.timeline.hex
                     }}
                 >
                     <Memoized>
@@ -261,14 +268,14 @@ export default class ComposerCanvas extends Component {
                     onClick={() => this.handleBreakpoints(1)} 
                     style={{ 
                         marginLeft: 0,
-                        backgroundColor: theme.timeline
+                        backgroundColor: theme.timeline.hex
                     }}
                 >
                     <Memoized>
                         <FaStepForward />
                     </Memoized>
                 </div>
-                <div className='timeline-scroll' style={{backgroundColor: theme.timeline}}>
+                <div className='timeline-scroll' style={{backgroundColor: theme.timeline.hex}}>
                     <Stage
                         width={width}
                         height={timelineHeight}
@@ -288,7 +295,10 @@ export default class ComposerCanvas extends Component {
                             pointerup={(e) => this.handleClick(e, "up")}
                             pointermove={this.handleSlide}
                         >
-                            <Graphics draw={(e) => { fillX(e, width, timelineHeight) }} />
+                            <Graphics draw={(e) => { 
+                                    fillX(e, width, timelineHeight, theme.timeline.hexNumber) }
+                                }
+                            />
                             {data.breakpoints.map(breakpoint => {
                                 return <Sprite
                                     image={cache.breakpoints[0]}
@@ -305,7 +315,7 @@ export default class ComposerCanvas extends Component {
                     className="timeline-button" 
                     onClick={functions.toggleBreakpoint}
                     style={{
-                        backgroundColor: theme.timeline
+                        backgroundColor: theme.timeline.hex
                     }}
                 >
                     <Memoized>
@@ -320,8 +330,9 @@ export default class ComposerCanvas extends Component {
     }
 }
 
-function fillX(g, width, height) {
+function fillX(g, width, height,color) {
     g.clear()
+    g.beginFill(color, 1)
     g.drawRect(0, 0, width, height)
 }
 

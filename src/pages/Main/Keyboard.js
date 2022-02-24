@@ -36,7 +36,7 @@ export default class Keyboard extends Component {
         this.approachingNotesList = []
         this.songTimestamp = 0
         this.nextChunkDelay = 0
-        this.disposeStore = () => { }
+        this.dispose = () => { }
         this.tickTime = 50
         this.tickInterval = 0
         this.mounted = true
@@ -45,7 +45,7 @@ export default class Keyboard extends Component {
     componentDidMount() {
         window.addEventListener('keydown', this.handleKeyboard)
         this.tickInterval = setInterval(this.tick, this.tickTime)
-        this.disposeStore = observe(SongStore.state, async (data) => {
+        this.dispose = observe(SongStore.state, async (data) => {
             const value = data.object.data
             const type = value.eventType
             let lostReference = cloneDeep(value.song)
@@ -95,7 +95,7 @@ export default class Keyboard extends Component {
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
-        this.disposeStore()
+        this.dispose()
         this.songTimestamp = 0
         this.mounted = false
         if (this.MidiAccess) this.MidiAccess.onstatechange = null

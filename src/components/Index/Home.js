@@ -3,10 +3,10 @@ import { BsMusicPlayerFill } from 'react-icons/bs'
 import { appName, isTwa } from "appConfig"
 import HomeStore from 'stores/HomeStore'
 import { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
+import { useTheme } from 'lib/hooks/useTheme'
 import './Home.css'
-import { ThemeStore } from 'stores/ThemeStore'
 
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }) {
     const [data, setData] = useState(HomeStore.state.data)
@@ -14,9 +14,10 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     const [breakpoint, setBreakpoint] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
     const history = useHistory()
-    const [theme, setTheme] = useState(ThemeStore)
-    function handleClick(page){
-        history.push('./'+page)
+    const [theme] = useTheme()
+
+    function handleClick(page) {
+        //history.push('./'+page)
         HomeStore.close()
     }
     useEffect(() => {
@@ -24,25 +25,21 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             setData(newState.object.data)
         })
         const dispose2 = history.listen((path) => {
-            setCurrentPage(path.pathname.replace('/',''))
-        })
-        const dispose3 = observe(ThemeStore.state.data, (newState) => {
-            setTheme({...ThemeStore})
+            setCurrentPage(path.pathname.replace('/', ''))
         })
         setBreakpoint(window.innerWidth > 900)
         return () => {
             dispose()
             dispose2()
-            dispose3()
         }
-    },[history])
-    return <div 
-            className={homeClass} 
-            style={{
-                ...!data.visible ? {display: 'none'} : {},
-                backgroundColor: theme.get('background').fade(0.1)
-            }}
-        >
+    }, [history])
+    return <div
+        className={homeClass}
+        style={{
+            ...!data.visible ? { display: 'none' } : {},
+            backgroundColor: theme.get('background').fade(0.1)
+        }}
+    >
         <FaTimes className='close-home' onClick={HomeStore.close} />
         {(breakpoint || !hasVisited) && <div className='home-top'>
             <div className='home-title'>
@@ -65,7 +62,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 </div>
                 {data.hasPersistentStorage ?
                     <div>
-                        <div className="red-text">WARNING</div>: {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}    
+                        <div className="red-text">WARNING</div>: {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}
                     </div>
                     : null
                 }
@@ -86,10 +83,9 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContentelement
                 icon={<FaCompactDisc />}
                 title='Composer'
-                style={{backgroundColor: theme.layer('primary',0.15,0.2).fade(0.15)}}
+                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
                 background={`./manifestData/composer.png`}
                 href='Composer'
-                onClick={handleClick}
                 current={currentPage === 'Composer'}
             >
                 Create or edit songs with a fully fledged music composer. Also with MIDI.
@@ -97,36 +93,35 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContentelement
                 icon={<BsMusicPlayerFill />}
                 title='Player'
-                style={{backgroundColor: theme.layer('primary',0.15,0.2).fade(0.15)}}
+                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
                 background={`./manifestData/main.png`}
                 href=''
-                onClick={handleClick}
                 current={currentPage === '' || currentPage === 'Player'}
             >
                 Play, download, record and import songs. Learn a song with approaching circle
                 mode and practice mode.
             </MainContentelement>
         </div>
-        <Separator/>
+        <Separator />
         <div className='page-redirect-wrapper'>
-            <PageRedirect href='Changelog' current={currentPage === 'Changelog'} onClick={handleClick}>
+            <PageRedirect href='Changelog' current={currentPage === 'Changelog'}>
                 Changelog
             </PageRedirect>
             {!isTwa() &&
-                <PageRedirect href='Donate' current={currentPage === 'Donate'} onClick={handleClick}>
+                <PageRedirect href='Donate' current={currentPage === 'Donate'}>
                     Donate
                 </PageRedirect>
             }
-            <PageRedirect href='Partners' current={currentPage === 'Partners'} onClick={handleClick}>
+            <PageRedirect href='Partners' current={currentPage === 'Partners'}>
                 Partners
             </PageRedirect>
-            <PageRedirect href='Help' current={currentPage === 'Help'} onClick={handleClick}>
+            <PageRedirect href='Help' current={currentPage === 'Help'}>
                 Help
             </PageRedirect>
-            <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'} onClick={handleClick}>
+            <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'}>
                 Sheet visualizer
             </PageRedirect>
-            <PageRedirect href='Theme' current={currentPage === 'Theme'} onClick={handleClick}>
+            <PageRedirect href='Theme' current={currentPage === 'Theme'}>
                 App Theme
             </PageRedirect>
         </div>
@@ -143,35 +138,38 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     </div>
 }
 
-function PageRedirect({ children, current, onClick, href}) {
-    return <button className={current ? 'current-page' : ''} onClick={() => onClick(href)}>
+function PageRedirect({ children, current, href }) {
+    return <Link onClick={HomeStore.close} to={href}>
+        <button
+            className={current ? 'current-page' : ''}
+        >
             {children}
         </button>
-
-
+    </Link>
 }
 
-function MainContentelement({ title, icon, children, background, current, onClick, href, style = {}}) {
-    return <div 
-            className={`home-content-element ${current ? 'current-page' : ''}`}  
-            onClick={() => onClick(href)}
-        >
-            <div className='home-content-background' style={{ backgroundImage: `url(${background})`}}>
+function MainContentelement({ title, icon, children, background, current, href, style = {} }) {
+    return <Link
+        className={`home-content-element ${current ? 'current-page' : ''}`}
+        to={href}
+        onClick={HomeStore.close}
+    >
+        <div className='home-content-background' style={{ backgroundImage: `url(${background})` }}>
+        </div>
+        <div className='home-content-main' style={style}>
+            <div className='home-content-title'>
+                {icon} {title}
             </div>
-            <div className='home-content-main' style={style}>
-                <div className='home-content-title'>
-                    {icon} {title}
-                </div>
-                <div className='home-content-text'>
-                    {children}
-                </div>
-                <div className='home-content-open'>
-                    <button>
-                        OPEN
-                    </button>
-                </div>
+            <div className='home-content-text'>
+                {children}
+            </div>
+            <div className='home-content-open'>
+                <button>
+                    OPEN
+                </button>
             </div>
         </div>
+    </Link>
 }
 
 function Separator({ children }) {

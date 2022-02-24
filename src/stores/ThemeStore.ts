@@ -42,7 +42,7 @@ export class BaseTheme{
 const defaultThemes: Theme[] = [
     ThemeSettings as Theme
 ]
-class ThemeStoreClass {
+export class ThemeStoreClass {
     state: Theme
     baseTheme: Theme
     constructor(baseTheme: Theme) {

@@ -1,14 +1,7 @@
-import { observe } from "mobx"
-import { memo, useEffect, useState } from "react"
-import { ThemeStore } from "stores/ThemeStore"
+import { useTheme } from "lib/hooks/useTheme"
+import { memo } from "react"
 export default memo(function MenuItem(props) {
-    const [theme, setTheme] = useState(ThemeStore)
-    useEffect(() => {
-        const dispose = observe(ThemeStore.state.data,() => {
-            setTheme({...ThemeStore})
-        })
-        return dispose
-    })
+    const [theme] = useTheme()
     const { className, action, children, type } = props
     return <div
         className={className ? `menu-item ${className}` : "menu-item"}

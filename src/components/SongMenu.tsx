@@ -1,6 +1,5 @@
-import { observe } from "mobx";
-import { useEffect, useState } from "react"
-import { ThemeStore } from "stores/ThemeStore";
+import { useTheme } from "lib/hooks/useTheme";
+import { useState } from "react"
 
 interface SongMenuProps {
     songs: any[],
@@ -11,13 +10,8 @@ interface SongMenuProps {
 }
 export function SongMenu({ songs, SongComponent, componentProps, className = '', style = {} }: SongMenuProps) {
     const [songType, setSongType] = useState('recorded')
-    const [theme, setTheme] = useState(ThemeStore)
-    useEffect(() => {
-        const dispose = observe(ThemeStore.state.data,() => {
-            setTheme({...ThemeStore})
-        })
-        return dispose
-    }, [])
+    const [theme] = useTheme()
+
     const selectedColor = theme.layer('menu_background',0.32).desaturate(0.4)
     const unselectedColor = theme.layer('menu_background',0.35).lighten(0.2)
     return <div className={`${className}`} style={style}>

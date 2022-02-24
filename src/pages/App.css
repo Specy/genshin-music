@@ -123,6 +123,9 @@ body {
 	cursor: pointer;
 	min-width: 5rem;
 }
+.link{
+	color: var(--background-text);
+}
 .app-button::placeholder{
 	color: var(--primary-text);
 }

@@ -29,7 +29,6 @@ import { AppBackground } from 'components/AppBackground';
 class Composer extends Component {
     constructor(props) {
         super(props)
-
         const settings = this.getSettings()
         this.playbackInterval = undefined
         this.audioContext = audioContext
@@ -76,13 +75,10 @@ class Composer extends Component {
             this.togglePlay(event.data === 'play')
         }
         if (window.location.hostname !== "localhost") {
-            window.addEventListener("beforeunload", (event) => {
-                event.preventDefault()
-                event.returnValue = ''
-            })
+            window.addEventListener("beforeunload", this.handleUnload)
         }
-
     }
+
     componentWillUnmount() {
         this.mounted = false
         if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
@@ -97,6 +93,9 @@ class Composer extends Component {
         this.audioContext = undefined
         const state = this.state
         state.isPlaying = false
+        if (window.location.hostname !== "localhost") {
+            window.removeEventListener("beforeunload", this.handleUnload)
+        }
     }
 
     init = async () => {
@@ -125,6 +124,12 @@ class Composer extends Component {
             song: new ComposedSong("Untitled")
         })
     }
+
+    handleUnload = (event) => {
+        event.preventDefault()
+        event.returnValue = ''
+    }
+
     handleAutoSave = () => {
         this.changes++
         if (this.changes > 5 && this.state.settings.autosave.value) {
