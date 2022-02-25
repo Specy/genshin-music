@@ -1,4 +1,4 @@
-const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][0]
+const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
 const appVersion = '2.4'
 //TODO make all those variables uppercase
 console.log(`${appName}-V${appVersion}`)

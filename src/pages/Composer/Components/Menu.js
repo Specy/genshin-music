@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
 import { FileDownloader, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
-import { appName, isTwa } from 'appConfig'
+import { appName } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import SettingsRow from 'components/SettingsRow'

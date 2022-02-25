@@ -37,12 +37,12 @@
 	cursor: pointer;
 	z-index: 10;
 	touch-action: none;
+    transform: translate3d(0, 0, 0);
 }
 .note-sky,
 .note-composer-sky {
 	border-radius: 1.5vw;
 	border: 0.4vw solid var(--note-background);
-    transform: translate3d(0, 0, 0);
     transform-origin: 50% 50%;
 	transition: all 0.1s;
     user-select: none;
@@ -91,7 +91,7 @@
 	height: 100% !important;
 }
 .click-event {
-	transform: scale(0.9);
+	transform: translate3d(0, 0, 0) scale(0.9);
 	background-color: var(--clicked-note);
 	border-color: var(--accent);
 }
