@@ -9,6 +9,8 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
 import './Theme.css'
 import { DB } from "Database";
+// @ts-ignore
+import cloneDeep from 'lodash.clonedeep'
 
 import { Theme } from "stores/ThemeStore";
 import { ThemePreview } from "./Components/ThemePreview";
@@ -18,7 +20,7 @@ import LoggerStore from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/hooks/useTheme";
 function ThemePage() {
-    const [theme,setTheme] = useTheme() 
+    const [theme, setTheme] = useTheme()
     const [userThemes, setUserThemes] = useState<Theme[]>([])
     const [selectedProp, setSelectedProp] = useState('')
 
@@ -36,8 +38,10 @@ function ThemePage() {
     }, [setTheme])
     async function handleChange(name: ThemeKeys, value: string) {
         if (!ThemeStore.isEditable()) {
-            if(value === ThemeStore.get(name).hex()) return
-            if (await addNewTheme() === null) return
+            if (value === ThemeStore.get(name).hex()) return
+            const themeName = await asyncPrompt('Creating a new theme from this default theme, write the name:')
+            if (themeName === null) return
+            await cloneTheme(themeName)
         }
         ThemeStore.set(name, value)
         await ThemeStore.save()
@@ -54,10 +58,10 @@ function ThemePage() {
             const theme = file[0].data as Theme
             try {
                 if (theme.data && theme.other) {
-                    const id = await DB.addTheme(theme)
-                    theme.other.id = id
-                    theme.other.name = theme.other.name || 'Unnamed'
-                    ThemeStore.loadFromJson(theme)
+                    const sanitized = ThemeStore.sanitize(theme)
+                    const id = await DB.addTheme(sanitized)
+                    sanitized.other.id = id
+                    ThemeStore.loadFromJson(sanitized)
                     setUserThemes(await DB.getThemes())
                 } else {
                     LoggerStore.error('There was an error importing this theme')
@@ -68,16 +72,27 @@ function ThemePage() {
         }
     }
 
-    async function addNewTheme() {
+    async function cloneTheme(name: string) {
+        const theme = new BaseTheme(name)
+        theme.state = cloneDeep(ThemeStore.state)
+        theme.state.other.name = name
+        theme.state.editable = true
+        await addNewTheme(theme)
+    }
+    async function handleNewThemeClick() {
         const name = await asyncPrompt('How do you want to name the theme?')
-        if (!name) return null
-        const newTheme = new BaseTheme(name)
+        if (name !== null && name !== undefined) {
+            const theme = new BaseTheme(name)
+            await addNewTheme(theme)
+        }
+    }
+    async function addNewTheme(newTheme: BaseTheme) {
         const id = await DB.addTheme(newTheme.toObject())
         newTheme.state.other.id = id
         ThemeStore.loadFromJson(newTheme.toObject())
         setUserThemes(await DB.getThemes())
+        return id
     }
-
     async function handleThemeDelete(theme: Theme) {
         if (await asyncConfirm(`Are you sure you want to delete the theme ${theme.other.name}?`)) {
             if (ThemeStore.getId() === theme.other.id) {
@@ -154,7 +169,7 @@ function ThemePage() {
                         }}
                     />
                 )}
-                <button className="new-theme" onClick={addNewTheme}>
+                <button className="new-theme" onClick={handleNewThemeClick}>
                     <FaPlus size={30} />
                     New theme
                 </button>

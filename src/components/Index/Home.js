@@ -7,6 +7,7 @@ import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
 import { useTheme } from 'lib/hooks/useTheme'
 import './Home.css'
+import MenuItem from 'components/MenuItem'
 
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }) {
     const [data, setData] = useState(HomeStore.state.data)
@@ -16,23 +17,20 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     const history = useHistory()
     const [theme] = useTheme()
 
-    function handleClick(page) {
-        //history.push('./'+page)
-        HomeStore.close()
-    }
+    useEffect(() => {
+        const dispose = history.listen((path) => {
+            setCurrentPage(path.pathname.replace('/', ''))
+        })
+        setBreakpoint(window.innerWidth > 900)
+        return dispose
+    }, [history])
+
     useEffect(() => {
         const dispose = observe(HomeStore.state, (newState) => {
             setData(newState.object.data)
         })
-        const dispose2 = history.listen((path) => {
-            setCurrentPage(path.pathname.replace('/', ''))
-        })
-        setBreakpoint(window.innerWidth > 900)
-        return () => {
-            dispose()
-            dispose2()
-        }
-    }, [history])
+        return dispose
+    },[])
     return <div
         className={homeClass}
         style={{
@@ -40,7 +38,13 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             backgroundColor: theme.get('background').fade(0.1)
         }}
     >
-        <FaTimes className='close-home' onClick={HomeStore.close} />
+        <MenuItem
+            className='close-home'
+            action={HomeStore.close}
+        >
+            <FaTimes size={25}/>
+        
+        </MenuItem>
         {(breakpoint || !hasVisited) && <div className='home-top'>
             <div className='home-title'>
                 {appName} Music Nightly

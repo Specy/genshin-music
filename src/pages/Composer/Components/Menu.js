@@ -186,7 +186,7 @@ class Menu extends Component {
                             Change app theme
                         </AppButton>
                     </div>
-                    {!isTwa() && <DonateButton onClick={changePage} />}
+                    <DonateButton />
                 </MenuPanel>
             </div>
         </div>

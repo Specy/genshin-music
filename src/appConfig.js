@@ -4,12 +4,10 @@ const appVersion = '2.4'
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin'
     ? ` - Added start and end slider for selecting which part of the song to play/practice
-        - Added app themes
-        - Overall performance improvements
+        - Added app themes, fully custommize the look of your app
     `.trim()
     : ` - Added start and end slider for selecting which part of the song to play/practice
-        - Added app themes
-        - Overall performance improvements
+        - Added app themes, fully custommize the look of your app
     `.trim()
 const layersIndexes = [1,2,3]
 const cssClasses = {

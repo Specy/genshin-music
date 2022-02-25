@@ -5,7 +5,7 @@ import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
-import { appName, isTwa, isMidiAvailable } from "appConfig"
+import { appName, isMidiAvailable } from "appConfig"
 import { SongStore } from 'stores/SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
@@ -21,6 +21,7 @@ import { SongMenu } from 'components/SongMenu';
 import "./menu.css"
 import { ThemeStore } from 'stores/ThemeStore';
 import { observe } from 'mobx';
+import { Link } from 'react-router-dom'
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -150,8 +151,9 @@ class Menu extends Component {
                 if (file?.name?.includes?.(".mid")) {
                     return LoggerStore.error("Midi files should be imported in the composer")
                 }
-                new LoggerStore.error(
-                    `Error importing song, invalid format (Only supports the ${appName.toLowerCase()}sheet.json format)`
+                LoggerStore.error(
+                    `Error importing song, invalid format (Only supports the ${appName.toLowerCase()}sheet.json format)`,
+                    8000
                 )
             }
         })
@@ -226,17 +228,17 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
-                        <button className="genshin-button"
-                            onClick={() => changePage("Composer")}
-                        >
-                            Compose song
-                        </button>
+                        <Link to='Composer'>
+                            <AppButton>
+                                Compose song
+                            </AppButton>
+                        </Link>
                         <FilePicker
                             onChange={(file) => this.importSong(file)}
                         >
-                            <button className="genshin-button">
+                            <AppButton>
                                 Import song
-                            </button>
+                            </AppButton>
                         </FilePicker>
 
                     </div>
@@ -289,7 +291,7 @@ class Menu extends Component {
                     <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }}>
                         {this.state.isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     </div>
-                    {!isTwa() && <DonateButton onClick={changePage} />}
+                    <DonateButton />
 
                 </MenuPanel>
 
@@ -353,7 +355,7 @@ class Menu extends Component {
                         </a>
                     </div>
                     <HelpTab />
-                    {!isTwa() && <DonateButton onClick={changePage} />}
+                    <DonateButton />
                 </MenuPanel>
             </div>
         </div>

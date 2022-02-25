@@ -33,7 +33,7 @@
 .slider-full{
     width: 100%;
     position: absolute;
-	background-color: #576377;
+	background-color: var(--primary);
     height: 0.8rem;
 	border-radius: 0.2rem;
     overflow: hidden;

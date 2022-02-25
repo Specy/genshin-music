@@ -145,10 +145,10 @@ select{
     gap: 0.2rem;
 }
 .tools-buttons-wrapper button{
-    background-color: #59667b;
-    color: white;
+    background-color: var(--primary);
+    color: var(--primary-text);
     border-radius: 0.2rem;
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 1rem;
     border: none;
     display: flex;
     font-size: 1.2rem;

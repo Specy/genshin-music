@@ -253,7 +253,7 @@ export const ThemeSettings = {
     other: {
         backgroundImageMain: '',
         backgroundImageComposer: '',
-        name: 'default',
+        name: 'Default',
         id: 'default',
     },
     data: {

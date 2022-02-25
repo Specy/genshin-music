@@ -25,7 +25,7 @@ function Index() {
 			<ThemeProvider>
 				<App />
 				<Switch>
-					<Route exact path={"/ErrorPage"}>
+					<Route exact path="/ErrorPage">
 						<ErrorPage />
 					</Route>
 					<Route exact path="/">

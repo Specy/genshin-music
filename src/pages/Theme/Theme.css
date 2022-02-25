@@ -185,11 +185,9 @@
 
 .theme-preview:hover{
     filter: brightness(1.1);
+    transform: scale(0.97);
 }
 
-.theme-preview:active{
-    transform: scale(0.95);
-}
 .theme-input{
     background-color: var(--primary);
 	color: var(--primary-text);
