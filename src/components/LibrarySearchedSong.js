@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { LoggerEvent, prepareSongImport } from "lib/Utils"
+import { prepareSongImport } from "lib/Utils"
+import LoggerStore from 'stores/LoggerStore';
+import { SongStore } from 'stores/SongStore';
 
-export default function SearchedSong(props) {
-    const { functions, data, songStore } = props
+export default function SearchedSong({ functions, data }) {
     const { importSong } = functions
     const [fetching, setFetching] = useState(false)
     const [cache, setCache] = useState(undefined)
@@ -20,33 +21,25 @@ export default function SearchedSong(props) {
         } catch (e) {
             setFetching(false)
             console.error(e)
-            new LoggerEvent("Error", "Error downloading song").trigger()
+            LoggerStore.error("Error downloading song")
         }
     }
     const play = async function () {
         if (fetching) return
         try {
             if (cache) {
-                return songStore.data = {
-                    eventType: 'play',
-                    song: cache,
-                    start: 0
-                }
+                SongStore.play(cache,0)
             }
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
             setFetching(false)
             song = prepareSongImport(song)
             setCache(song)
-            songStore.data = {
-                eventType: 'play',
-                song: song,
-                start: 0
-            }
+            SongStore.play(song,0)
         } catch (e) {
             console.error(e)
             setFetching(false)
-            new LoggerEvent("Error", "Error downloading song").trigger()
+            LoggerStore.error("Error downloading song")
         }
     }
     return <div className="song-row">

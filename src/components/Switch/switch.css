@@ -4,6 +4,7 @@
     height: 1.4rem;
     padding: 0.2rem;
     background: var(--primary);
+	color: var(--primary-text);
 }
 .switch-inner{
     background-color: var(--hint-main);

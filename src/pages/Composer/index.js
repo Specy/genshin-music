@@ -1,9 +1,10 @@
 import React, { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import addCell from "assets/icons/addCell.svg"
-import removeCell from "assets/icons/removeCell.svg"
 import { appName, audioContext, MIDI_STATUS, layersIndexes } from "appConfig"
+
+import AddColumn from 'components/icons/AddColumn';
+import RemoveColumn from "components/icons/RemoveColumn"
 
 import MidiImport from "./MidiParser"
 import ComposerTools from "./Components/ComposerTools"
@@ -12,20 +13,22 @@ import ComposerCanvas from "./Canvas"
 import Menu from "./Components/Menu"
 import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { ComposerSettings, getMIDISettings } from "lib/SettingsObj"
+import { ComposerSettings, getMIDISettings } from "lib/BaseSettings"
 import Instrument from "lib/Instrument"
 import {
-    ComposedSong, LoggerEvent, ColumnNote, Column, TempoChangers,
+    ComposedSong, ColumnNote, Column, TempoChangers,
     ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
 } from "lib/Utils"
 import AudioRecorder from 'lib/AudioRecorder'
 import { DB } from 'Database';
 import Analytics from 'lib/Analytics';
-
+import { withRouter } from 'react-router-dom'
+import HomeStore from 'stores/HomeStore';
+import LoggerStore from 'stores/LoggerStore';
+import { AppBackground } from 'components/AppBackground';
 class Composer extends Component {
     constructor(props) {
         super(props)
-
         const settings = this.getSettings()
         this.playbackInterval = undefined
         this.audioContext = audioContext
@@ -72,13 +75,10 @@ class Composer extends Component {
             this.togglePlay(event.data === 'play')
         }
         if (window.location.hostname !== "localhost") {
-            window.addEventListener("beforeunload", (event) => {
-                event.preventDefault()
-                event.returnValue = ''
-            })
+            window.addEventListener("beforeunload", this.handleUnload)
         }
-
     }
+
     componentWillUnmount() {
         this.mounted = false
         if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
@@ -93,6 +93,9 @@ class Composer extends Component {
         this.audioContext = undefined
         const state = this.state
         state.isPlaying = false
+        if (window.location.hostname !== "localhost") {
+            window.removeEventListener("beforeunload", this.handleUnload)
+        }
     }
 
     init = async () => {
@@ -109,10 +112,10 @@ class Composer extends Component {
         if (this.MIDISettings.enabled) {
             if (navigator.requestMIDIAccess) {
                 navigator.requestMIDIAccess().then(this.initMidi, () => {
-                    new LoggerEvent('Error', 'MIDI permission not accepted').trigger()
+                    LoggerStore.error('MIDI permission not accepted')
                 })
             } else {
-                new LoggerEvent('Error', 'MIDI is not supported on this browser').trigger()
+                LoggerStore.error('MIDI is not supported on this browser')
             }
         }
     }
@@ -120,8 +123,13 @@ class Composer extends Component {
         this.setState({
             song: new ComposedSong("Untitled")
         })
-        new LoggerEvent("Warning", "There was an error with the song! Restoring default...").trigger()
     }
+
+    handleUnload = (event) => {
+        event.preventDefault()
+        event.returnValue = ''
+    }
+
     handleAutoSave = () => {
         this.changes++
         if (this.changes > 5 && this.state.settings.autosave.value) {
@@ -440,7 +448,7 @@ class Composer extends Component {
     }
     addSong = async (song) => {
         if (await this.songExists(song.name)) {
-            return new LoggerEvent("Warning", "A song with this name already exists! \n" + song.name).trigger()
+            LoggerStore.warn("A song with this name already exists! \n" + song.name)
         }
         await DB.addSong(ComposerSongSerialization(song))
         this.syncSongs()
@@ -667,7 +675,8 @@ class Composer extends Component {
             }
 
         }
-        this.props.changePage(page)
+        if(page === 'home') return HomeStore.open()
+        this.props.history.push(page)
     }
     selectColumn = (index, ignoreAudio) => {
         const state = this.state
@@ -796,7 +805,7 @@ class Composer extends Component {
     }
     render() {
         const { state } = this
-        const { midiVisible, song } = state
+        const { midiVisible, song, isPlaying } = state
         //TODO export the menu outside this component so it doesnt get re rendered at every change
         const songLength = calculateLength(song.columns, state.settings.bpm.value, song.selected)
         const menuData = {
@@ -827,7 +836,6 @@ class Composer extends Component {
         const keyboardData = {
             keyboard: state.instrument,
             currentColumn: state.song.columns[state.song.selected],
-            TempoChangers: TempoChangers,
             layer: state.layer,
             pitch: state.settings.pitch.value,
             isPlaying: state.isPlaying,
@@ -864,9 +872,8 @@ class Composer extends Component {
         const midiParserData = {
             instruments: [state.instrument, ...state.layers].map(layer => layer.instrumentName),
             selectedColumn: song.selected,
-
         }
-        return <div className="app bg-image" style={{ backgroundImage: `url(${state.settings.backgroundImage.value})` }}>
+        return <AppBackground page='Composer'>
             {midiVisible && <MidiImport functions={midiParserFunctions} data={midiParserData} />}
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <Memoized>
@@ -889,7 +896,12 @@ class Composer extends Component {
                                 </Memoized>
                             </div>
 
-                            <div className="tool" onClick={this.togglePlay}>
+                            <div className="tool" onClick={() => {
+                                this.togglePlay()
+                                if (this.state.settings.syncTabs.value){
+                                    this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
+                                }
+                            }}>
                                 <Memoized>
                                     {this.state.isPlaying
                                         ? <FaPause key='pause' />
@@ -904,12 +916,11 @@ class Composer extends Component {
                             data={canvasData}
                         />
                         <div className="buttons-composer-wrapper-right">
-
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
-                                <img src={addCell} className="tool-icon" alt="Add a new cell" />
+                                <AddColumn className="tool-icon"/>
                             </div>
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
-                                <img src={removeCell} className="tool-icon" alt="Remove a cell" />
+                                <RemoveColumn className='tool-icon' />
                             </div>
                             <div className="tool" onClick={() => this.addColumns(this.state.settings.beatMarks.value * 4, "end")}>
                                 <Memoized>
@@ -948,12 +959,13 @@ class Composer extends Component {
                     {formatMillis(songLength.total)}
                 </div>
             </div>
-        </div>
+        </AppBackground>
     }
 }
+
 function formatMillis(millis) {
-    let minutes = Math.floor(millis / 60000);
-    let seconds = ((millis % 60000) / 1000).toFixed(0);
+    const minutes = Math.floor(millis / 60000);
+    const seconds = ((millis % 60000) / 1000).toFixed(0);
     return (
         seconds === 60
             ? (minutes + 1) + ":00"
@@ -982,5 +994,5 @@ function replaceAt(string, index, replacement) {
     }
     return string.substring(0, index) + replacement + string.substring(index + 1);
 }
-export default Composer
+export default withRouter(Composer)
 

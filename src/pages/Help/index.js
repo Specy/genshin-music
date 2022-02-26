@@ -3,7 +3,7 @@ import { SimpleMenu } from "components/SimpleMenu"
 
 export default function Help(props){
     return <div className="default-page">
-        <SimpleMenu functions={{changePage: props.changePage}}/>
+        <SimpleMenu/>
         <div>
             <div style={{fontSize: '2rem', margin: '1rem 0'}}>
                 Info about the app
@@ -13,7 +13,7 @@ export default function Help(props){
                 how to use them.
                 <br/><br/>
                 If you Have issues, bugs, or suggestions, please join our 
-                <a href="https://discord.gg/Arsf65YYHq" style={{color: 'var(--note-text)'}}>
+                <a href="https://discord.gg/Arsf65YYHq" style={{color: 'var(--accent)'}}>
                 <>&nbsp;</> Discord server
                 </a>
                 . <br/>

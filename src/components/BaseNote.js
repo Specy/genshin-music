@@ -1,6 +1,30 @@
-import { cssClasses, appName } from "appConfig"
+import { cssClasses, appName, BASE_THEME_CONFIG } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
+import { observe } from "mobx"
+import { useEffect, useState } from "react"
+import { ThemeStore } from "stores/ThemeStore"
+import SvgNotes from "./SvgNotes"
+function getTextColor(){
+    const noteBg = ThemeStore.get('note_background')
+    if(appName === 'Genshin'){
+        if(noteBg.luminosity() > 0.65){
+            return BASE_THEME_CONFIG.text.note
+        }else{
+            return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+        }
+    }else{
+        return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+    }
+}
+
 export default function BaseNote( { data, noteText = 'A', handleClick, noteImage }){
+    const [textColor, setTextColor] = useState(getTextColor())
+    useEffect(() => {
+        const dispose = observe(ThemeStore.state.data, () => {
+            setTextColor(getTextColor())
+        })
+        return dispose
+    }, [])
     const className = parseClass(data.status)
     return <button
         onPointerDown={(e) => {
@@ -13,16 +37,12 @@ export default function BaseNote( { data, noteText = 'A', handleClick, noteImage
             className={className}
             style={{borderColor: parseBorderColor(data.status)}}
         >
-            <img
-                draggable="false"
-                alt=''
-                src={noteImage}
-            />
+            <SvgNotes name={noteImage}/>
             {appName === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderColor(data.status)}
             />}
-            <div className={cssClasses.noteName}>
+            <div className={cssClasses.noteName} style={{color: textColor}}>
                 {noteText}
             </div>
         </div>

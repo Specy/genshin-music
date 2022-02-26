@@ -1,15 +1,17 @@
 import React, { Component } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload } from 'react-icons/fa';
-import { FileDownloader, LoggerEvent, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
-import { appName, isTwa } from 'appConfig'
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
+import { FileDownloader, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
+import { appName } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
-import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
 import { isMidiAvailable } from 'appConfig';
 import Analytics from 'lib/Analytics';
+import LoggerStore from 'stores/LoggerStore';
+import { AppButton } from 'components/AppButton';
+import { SongMenu } from 'components/SongMenu';
 class Menu extends Component {
     constructor(props) {
         super(props)
@@ -63,7 +65,7 @@ class Menu extends Component {
             selectedMenu: selection,
             open: true
         })
-        Analytics.UIEvent('menu',{tab: selection})
+        Analytics.UIEvent('menu', { tab: selection })
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
@@ -82,8 +84,8 @@ class Menu extends Component {
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
         fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
-        new LoggerEvent("Success", "Song downloaded").trigger()
-        Analytics.userSongs({name: song?.name, page: 'composer'},'download')
+        LoggerStore.success("Song downloaded")
+        Analytics.userSongs({ name: song?.name, page: 'composer' }, 'download')
     }
     updateSong = () => {
         this.props.functions.updateSong(this.props.data.currentSong)
@@ -99,13 +101,13 @@ class Menu extends Component {
             toggleMenu: this.toggleMenu,
             downloadSong: this.downloadSong
         }
-        let songs = data.songs.filter(song => !song.data?.isComposedVersion)
-        let composedSongs = data.songs.filter(song => song.data?.isComposedVersion)
         let hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
         let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
         return <div className="menu-wrapper">
             <div className={menuClass}>
-                <MenuClose action={this.toggleMenu} />
+                <MenuItem action={this.toggleMenu} className='close-menu'>
+                    <FaTimes className="icon" />
+                </MenuItem>
                 <MenuItem type="Save" action={this.updateSong} className={hasUnsaved}>
                     <Memoized>
                         <FaSave className="icon" />
@@ -131,6 +133,7 @@ class Menu extends Component {
                 <MenuPanel title="No selection" visible={selectedMenu}>
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
+
                     <div className="songs-buttons-wrapper">
                         <button className="genshin-button" onClick={() => { changeMidiVisibility(true); this.toggleMenu() }}>
                             Create from MIDI
@@ -139,42 +142,13 @@ class Menu extends Component {
                             Create new song
                         </button>
                     </div>
-                    <div className="tab-selector-wrapper">
-                        <button
-                            className={this.state.selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => this.changeSelectedSongType("recorded")}
-                        >
-                            Recorded
-                        </button>
-                        <button
-                            className={this.state.selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => this.changeSelectedSongType("composed")}
-                        >
-                            Composed
-                        </button>
-                    </div>
-                    <div className="songs-wrapper" style={{ marginBottom: '0.5rem' }}>
-                        {this.state.selectedSongType === "recorded"
-                            ? songs.map(song => {
-                                return <SongRow
-                                    data={song}
-                                    key={song.name}
-                                    functions={songFunctions}
-                                >
-                                </SongRow>
-                            })
-
-                            : composedSongs.map(song => {
-                                return <SongRow
-                                    data={song}
-                                    key={song.name}
-                                    functions={songFunctions}
-                                >
-                                </SongRow>
-                            })
-                        }
-
-                    </div>
+                    <SongMenu
+                        songs={data.songs}
+                        SongComponent={SongRow}
+                        componentProps={{
+                            functions: songFunctions
+                        }}
+                    />
                     <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
                         <button
                             className={`genshin-button record-btn ${data.isRecordingAudio ? "selected" : ""}`}
@@ -195,16 +169,24 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
-                    {isMidiAvailable &&
-                        <button
-                            className='genshin-button'
-                            onClick={() => changePage('MidiSetup')}
-                            style={{ width: 'fit-content', margin: '0.4rem 0 0.7rem auto' }}
+                    <div className='settings-row-wrap'>
+                        {isMidiAvailable &&
+                            <button
+                                className='genshin-button'
+                                onClick={() => changePage('MidiSetup')}
+                                style={{ width: 'fit-content' }}
+                            >
+                                Connect MIDI keyboard
+                            </button>
+                        }
+                        <AppButton
+                            onClick={() => changePage('Theme')}
+                            style={{ width: 'fit-content' }}
                         >
-                            Connect MIDI keyboard
-                        </button>
-                    }
-                    {!isTwa() && <DonateButton onClick={changePage} />}
+                            Change app theme
+                        </AppButton>
+                    </div>
+                    <DonateButton />
                 </MenuPanel>
             </div>
         </div>

@@ -2,14 +2,14 @@
 import { SimpleMenu } from "components/SimpleMenu"
 import './MidiSetup.css'
 import { appName } from "appConfig"
-import { LoggerEvent } from "lib/Utils"
-import { getMIDISettings } from "lib/SettingsObj"
+import { getMIDISettings } from "lib/BaseSettings"
 import BaseNote from "components/BaseNote"
-import { layoutImages, MIDI_STATUS } from "appConfig"
+import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
 import React, { Component } from 'react'
 import { audioContext, instruments, isMidiAvailable } from "appConfig"
 import Instrument from "lib/Instrument"
 import Shortcut from "./Shortcut"
+import LoggerStore from "stores/LoggerStore"
 export default class MidiSetup extends Component {
     constructor(props) {
         super(props)
@@ -43,10 +43,10 @@ export default class MidiSetup extends Component {
         this.loadInstrument(instruments[0])
         if (isMidiAvailable) {
             navigator.requestMIDIAccess().then(this.initMidi, () => {
-                new LoggerEvent('Error', 'MIDI permission not accepted').trigger()
+                LoggerStore.error('MIDI permission not accepted')
             })
         } else {
-            new LoggerEvent('Error', 'MIDI is not supported on this browser').trigger()
+            LoggerStore.error('MIDI is not supported on this browser')
         }
     }
     initMidi = (e) => {
@@ -71,9 +71,9 @@ export default class MidiSetup extends Component {
         this.setState({ sources: inputs })
 
         if (sources.length > inputs.length)
-            new LoggerEvent('Warning', 'Device disconnected').trigger()
+            LoggerStore.warn('Device disconnected')
         else if (inputs.length > 0)
-            new LoggerEvent('Warning', 'Device connected').trigger()
+            LoggerStore.warn('Device connected')
     }
     selectMidi = (e) => {
         if (!this.mounted) return
@@ -121,7 +121,7 @@ export default class MidiSetup extends Component {
 
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             if (selectedNote) {
-                if(this.checkIfUsed(note,'shortcuts')) return new LoggerEvent('Warning', 'Key already used').trigger()
+                if(this.checkIfUsed(note,'shortcuts')) return LoggerStore.warn('Key already used')
                 selectedNote.midi = note
                 this.deselectNotes()
                 this.setState({ selectedNote: null })
@@ -130,7 +130,7 @@ export default class MidiSetup extends Component {
             
             if (selectedShortcut) {
                 const shortcut = settings.shortcuts.find(e => e.type === selectedShortcut)
-                if(this.checkIfUsed(note,'all')) return new LoggerEvent('Warning', 'Key already used').trigger()
+                if(this.checkIfUsed(note,'all')) return LoggerStore.warn('Key already used')
                 if (shortcut) {
                     shortcut.midi = note
                     shortcut.status = note < 0 ? 'wrong' : 'right'
@@ -183,9 +183,8 @@ export default class MidiSetup extends Component {
 
     render() {
         const { settings, sources, selectedShortcut } = this.state
-        const { changePage } = this.props
         return <div className="default-page">
-            <SimpleMenu functions={{ changePage: changePage }} />
+            <SimpleMenu/>
             <div className="default-content" style={{ alignItems: 'center' }}>
                 <div className="column midi-setup-column">
                     <div>
@@ -212,12 +211,12 @@ export default class MidiSetup extends Component {
                         style={{ marginTop: 'auto', width: 'fit-content' }}
                     >
                         {settings.notes.map((note, i) => {
-                            const noteImage = layoutImages[settings.notes.length][note.index]
+                            const noteImage = LAYOUT_IMAGES[settings.notes.length][note.index]
                             return <BaseNote
                                 key={i}
                                 handleClick={this.handleClick}
                                 data={note}
-                                noteImage={`./assets/icons/keys/${noteImage}.svg`}
+                                noteImage={noteImage}
                                 noteText={note.midi < 0 ? 'NA' : note.midi}
                             />
                         })}

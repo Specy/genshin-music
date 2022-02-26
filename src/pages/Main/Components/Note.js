@@ -1,15 +1,38 @@
-import React, { memo } from 'react'
-import { cssClasses, appName, instrumentsData } from "appConfig"
+import React, { memo, useEffect, useState } from 'react'
+import { cssClasses, appName, instrumentsData, BASE_THEME_CONFIG } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
-export default memo(function Note( { data, approachingNotes, outgoingAnimation, fadeTime, handleClick, noteImage, noteText }) {
+import SvgNote from 'components/SvgNotes'
+import { observe } from 'mobx'
+import { ThemeStore } from 'stores/ThemeStore'
+import Color from 'color'
+
+function getTextColor(){
+    const noteBg = ThemeStore.get('note_background')
+    if(appName === 'Genshin'){
+        if(noteBg.luminosity() > 0.65){
+            return BASE_THEME_CONFIG.text.note
+        }else{
+            return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+        }
+    }else{
+        return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
+    }
+}
+
+export default memo(function Note({ data, approachingNotes, outgoingAnimation, fadeTime, handleClick, noteImage, noteText }) {
+    const [textColor, setTextColor] = useState(getTextColor())
+    useEffect(() => {
+        const dispose = observe(ThemeStore.state.data, () => {
+            setTextColor(getTextColor())
+        })
+        return dispose
+    }, [])
     const { status, approachRate, instrument } = data
     const animation = {
         transition: `background-color ${fadeTime}ms  ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
     const className = parseClass(status)
-    const effects = instrumentsData[instrument]?.effects || {}
     const clickColor = instrumentsData[instrument]?.clickColor
-
     return <button
         onPointerDown={(e) => {
             e.preventDefault()
@@ -17,14 +40,14 @@ export default memo(function Note( { data, approachingNotes, outgoingAnimation, 
         }}
         className="button-hitbox-bigger"
     >
-        {approachingNotes.map((note) => 
+        {approachingNotes.map((note) =>
             <ApproachCircle
                 key={note.id}
                 index={data.index}
                 approachRate={approachRate}
             />
         )}
-        {outgoingAnimation.map(e => 
+        {outgoingAnimation.map(e =>
             <div
                 key={e.key}
                 className={cssClasses.noteAnimation}
@@ -37,35 +60,40 @@ export default memo(function Note( { data, approachingNotes, outgoingAnimation, 
                 ...(clickColor && status === 'clicked' ? { backgroundColor: clickColor } : {})
             }}
         >
-            <img
-                draggable="false"
-                alt=''
-                src={noteImage}
-                style={effects}
+            <SvgNote
+                name={noteImage}
+                color={instrumentsData[instrument]?.fill}
             />
+
             {appName === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderFill(status)}
             />}
-            <div className={cssClasses.noteName}>
+            <div className={cssClasses.noteName} style={{ color: textColor }}>
                 {noteText}
             </div>
         </div>
     </button>
-},(p,n) => {
+}, (p, n) => {
     return p.data.status === n.data.status && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
         && p.noteText === n.noteText && p.fadeTime === n.fadeTime && p.handleClick === n.handleClick && p.noteImage === n.noteImage
         && p.noteText === n.noteText && p.outgoingAnimation === n.outgoingAnimation && p.approachingNotes === n.approachingNotes
 })
 
+const toMix = Color('#ffb347')
+
 function getApproachCircleColor(index) {
     let numOfNotes = appName === "Sky" ? 5 : 7
     let row = Math.floor(index / numOfNotes)
-    let colors = ["#3da399", "#ffb347", "#3da399"]
+    let colors = [
+        "var(--accent)", 
+        ThemeStore.get('accent').mix(toMix),
+        "var(--accent)"
+    ]
     return colors[row]
 }
 
-const ApproachCircle = memo(function ApproachCircle({approachRate, index}) {
+const ApproachCircle = memo(function ApproachCircle({ approachRate, index }) {
     return <div
         className={cssClasses.approachCircle}
         style={{
@@ -74,12 +102,12 @@ const ApproachCircle = memo(function ApproachCircle({approachRate, index}) {
         }}
     >
     </div>
-},(prev,next)=>{
+}, (prev, next) => {
     return prev.approachRate === next.approachRate && prev.index === next.index
 })
 
 function parseBorderFill(status) {
-    let fill = '#eae5ce'
+    let fill = ThemeStore.layer('note_background',0.13).desaturate(0.6)
     if (status === "clicked") fill = "transparent"
     else if (status === 'toClickNext' || status === 'toClickAndNext') fill = '#63aea7'
     return fill

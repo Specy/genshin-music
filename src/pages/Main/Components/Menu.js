@@ -3,38 +3,49 @@ import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaS
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, LoggerEvent, prepareSongImport, prepareSongDownload } from "lib/Utils"
+import { FileDownloader, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
-import { appName, isTwa, isMidiAvailable } from "appConfig"
-import { songStore } from '../SongStore'
+import { appName, isMidiAvailable } from "appConfig"
+import { SongStore } from 'stores/SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
-import MenuClose from 'components/MenuClose'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import LibrarySearchedSong from 'components/LibrarySearchedSong'
-import "./menu.css"
 import Analytics from 'lib/Analytics';
+import HomeStore from 'stores/HomeStore';
+import LoggerStore from 'stores/LoggerStore';
+import { AppButton } from 'components/AppButton';
+import { SongMenu } from 'components/SongMenu';
+import "./menu.css"
+import { ThemeStore } from 'stores/ThemeStore';
+import { observe } from 'mobx';
+import { Link } from 'react-router-dom'
 class Menu extends Component {
     constructor(props) {
         super(props)
         this.state = {
             open: false,
             selectedMenu: "Songs",
-            selectedSongType: "recorded",
             searchInput: '',
             searchedSongs: [],
             searchStatus: 'Write a song name then search!',
-            isPersistentStorage: false
+            isPersistentStorage: false,
+            theme: ThemeStore
         }
+        this.dispose = () => { }
     }
     componentDidMount() {
         this.checkPersistentStorage()
         window.addEventListener("keydown", this.handleKeyboard)
+        this.dispose = observe(ThemeStore.state.data, () => {
+            this.setState({ theme: { ...ThemeStore } })
+        })
     }
     componentWillUnmount() {
         window.removeEventListener("keydown", this.handleKeyboard)
+        this.dispose()
     }
     handleKeyboard = (event) => {
         let key = event.code
@@ -94,13 +105,14 @@ class Menu extends Component {
             this.setState({
                 searchStatus: 'Please write a non empty name'
             })
-            return new LoggerEvent("Error", fetchedSongs.error).trigger()
+            return LoggerStore.error(fetchedSongs.error)
+
         }
         this.setState({
             searchedSongs: fetchedSongs,
             searchStatus: 'success'
         })
-		Analytics.songSearch({name: searchInput})
+        Analytics.songSearch({ name: searchInput })
 
     }
     toggleMenu = (override) => {
@@ -121,12 +133,7 @@ class Menu extends Component {
             selectedMenu: selection,
             open: true
         })
-        Analytics.UIEvent('menu',{tab: selection})
-    }
-    changeSelectedSongType = (name) => {
-        this.setState({
-            selectedSongType: name
-        })
+        Analytics.UIEvent('menu', { tab: selection })
     }
     importSong = (file) => {
         const reader = new FileReader();
@@ -137,22 +144,24 @@ class Menu extends Component {
                 for (let song of songsInput) {
                     song = prepareSongImport(song)
                     await this.props.functions.addSong(song)
-                    Analytics.userSongs({name: song?.name, page: 'player'},'import')
+                    Analytics.userSongs({ name: song?.name, page: 'player' }, 'import')
                 }
             } catch (e) {
                 console.error(e)
                 if (file?.name?.includes?.(".mid")) {
-                    return new LoggerEvent("Error", "Midi files should be imported in the composer").trigger()
+                    return LoggerStore.error("Midi files should be imported in the composer")
                 }
-                new LoggerEvent("Error", "Error importing song, invalid format").trigger()
-
+                LoggerStore.error(
+                    `Error importing song, invalid format (Only supports the ${appName.toLowerCase()}sheet.json format)`,
+                    8000
+                )
             }
         })
         reader.readAsText(file)
     }
     downloadSong = (song) => {
         if (song._id) delete song._id
-        let songName = song.name
+        const name = song.name
         if (appName === "Sky") {
             //adds old format into the sheet
             song = prepareSongDownload(song)
@@ -161,15 +170,14 @@ class Menu extends Component {
         song.forEach(song1 => {
             song1.data.appName = appName
         })
-        let json = JSON.stringify(song)
-        let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
-        new LoggerEvent("Success", "Song downloaded").trigger()
-        Analytics.userSongs({name: song?.name, page: 'player'},'download')
+        const json = JSON.stringify(song)
+        new FileDownloader().download(json, `${name}.${appName.toLowerCase()}sheet.json`)
+        LoggerStore.success("Song downloaded")
+        Analytics.userSongs({ name: name, page: 'player' }, 'download')
     }
 
     downloadAllSongs = () => {
-        let toDownload = []
+        const toDownload = []
         this.props.data.songs.forEach(song => {
             if (song._id) delete song._id
             if (appName === "Sky") {
@@ -177,29 +185,28 @@ class Menu extends Component {
             }
             Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
         })
-        let fileDownloader = new FileDownloader()
-        let json = JSON.stringify(toDownload)
-        let date = new Date().toISOString().split('T')[0]
-        fileDownloader.download(json, `${appName}_Backup_${date}.json`)
-        new LoggerEvent("Success", "Song backup downloaded").trigger()
+        const json = JSON.stringify(toDownload)
+        const date = new Date().toISOString().split('T')[0]
+        new FileDownloader().download(json, `${appName}_Backup_${date}.json`)
+        LoggerStore.success("Song backup downloaded")
     }
 
     render() {
-        let sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
+        const sideClass = this.state.open ? "side-menu menu-open" : "side-menu"
         const { data, functions } = this.props
-        const { handleSettingChange } = functions
+        const { handleSettingChange, changePage, addSong } = functions
         functions.toggleMenu = this.toggleMenu
         functions.downloadSong = this.downloadSong
-        let changePage = this.props.functions.changePage
-        let songs = data.songs.filter(song => !song.data.isComposedVersion)
-        let composedSongs = data.songs.filter(song => song.data.isComposedVersion)
-        const { searchStatus, searchedSongs, selectedMenu } = this.state
-        let searchedSongFunctions = {
-            importSong: functions.addSong,
-        }
+        const { searchStatus, searchedSongs, selectedMenu, theme } = this.state
+        const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
+        const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
         return <div className="menu-wrapper">
-            <div className="menu menu-visible menu-main-page">
-                {this.state.open && <MenuClose action={this.toggleMenu} />}
+            <div className="menu menu-visible menu-main-page" >
+                {this.state.open &&
+                    <MenuItem action={this.toggleMenu} className='close-menu'>
+                        <FaTimes className="icon" />
+                    </MenuItem>
+                }
                 <MenuItem type="Help" action={this.selectSideMenu} className="margin-top-auto">
                     <FaInfo className="icon" />
                 </MenuItem>
@@ -212,7 +219,7 @@ class Menu extends Component {
                 <MenuItem type="Settings" action={this.selectSideMenu}>
                     <FaCog className="icon" />
                 </MenuItem>
-                <MenuItem type="Home" action={() => changePage("home")}>
+                <MenuItem type="Home" action={HomeStore.open}>
                     <FaHome className="icon" />
                 </MenuItem>
             </div>
@@ -221,54 +228,27 @@ class Menu extends Component {
                 </MenuPanel>
                 <MenuPanel title="Songs" visible={selectedMenu}>
                     <div className="songs-buttons-wrapper">
-                        <button className="genshin-button"
-                            onClick={() => changePage("Composer")}
-                        >
-                            Compose song
-                        </button>
+                        <Link to='Composer'>
+                            <AppButton>
+                                Compose song
+                            </AppButton>
+                        </Link>
                         <FilePicker
                             onChange={(file) => this.importSong(file)}
                         >
-                            <button className="genshin-button">
+                            <AppButton>
                                 Import song
-                            </button>
+                            </AppButton>
                         </FilePicker>
 
                     </div>
-                    <div className="tab-selector-wrapper">
-                        <button
-                            className={this.state.selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => this.changeSelectedSongType("recorded")}
-                        >
-                            Recorded
-                        </button>
-                        <button
-                            className={this.state.selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => this.changeSelectedSongType("composed")}
-                        >
-                            Composed
-                        </button>
-                    </div>
-                    <div className="songs-wrapper">
-                        {this.state.selectedSongType === "recorded"
-                            ? songs.map(song => {
-                                return <SongRow
-                                    data={song}
-                                    key={song.name}
-                                    functions={functions}
-                                >
-                                </SongRow>
-                            })
-                            : composedSongs.map(song => {
-                                return <SongRow
-                                    data={song}
-                                    key={song.name}
-                                    functions={functions}
-                                >
-                                </SongRow>
-                            })
-                        }
-                    </div>
+                    <SongMenu
+                        songs={data.songs}
+                        SongComponent={SongRow}
+                        componentProps={{
+                            functions
+                        }}
+                    />
                     <div style={{ marginTop: "auto", paddingTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                         <button
                             className='genshin-button'
@@ -290,20 +270,28 @@ class Menu extends Component {
                             update={handleSettingChange}
                         />
                     })}
-                    {isMidiAvailable && 
-                        <button 
-                            className='genshin-button' 
-                            onClick={() => changePage('MidiSetup')} 
-                            style={{marginTop: '0.4rem', width:'fit-content', marginLeft: 'auto'}}
+                    <div className='settings-row-wrap'>
+                        {isMidiAvailable &&
+                            <button
+                                className='genshin-button'
+                                onClick={() => changePage('MidiSetup')}
+                                style={{ width: 'fit-content' }}
+                            >
+                                Connect MIDI keyboard
+                            </button>
+                        }
+                        <AppButton
+                            onClick={() => changePage('Theme')}
+                            style={{ width: 'fit-content' }}
                         >
-                            Connect MIDI keyboard
-                        </button>
-                    }
-                    
+                            Change app theme
+                        </AppButton>
+
+                    </div>
                     <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }}>
                         {this.state.isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     </div>
-                    {!isTwa() && <DonateButton onClick={changePage} />}
+                    <DonateButton />
 
                 </MenuPanel>
 
@@ -311,9 +299,10 @@ class Menu extends Component {
                     <div>
                         Here you can find songs to learn, they are provided by the sky-music library.
                     </div>
-                    <div className='library-search-row' >
+                    <div className='library-search-row' style={{}} >
                         <input
                             className='library-search-input'
+                            style={{ backgroundColor: layer1Color.hex() }}
                             placeholder='Song name'
                             onKeyDown={(e) => {
                                 if (e.code === "Enter") this.searchSongs()
@@ -321,22 +310,29 @@ class Menu extends Component {
                             onInput={(e) => this.handleSearchInput(e.target.value)}
                             value={this.state.searchInput}
                         />
-                        <button className='library-search-btn' onClick={this.clearSearch}>
+                        <button
+                            className='library-search-btn'
+                            onClick={this.clearSearch}
+                            style={{ backgroundColor: layer1Color.hex() }}
+                        >
                             <FaTimes />
                         </button>
-                        <button className='library-search-btn' onClick={this.searchSongs}>
+                        <button
+                            className='library-search-btn'
+                            onClick={this.searchSongs}
+                            style={{ backgroundColor: layer1Color.hex() }}
+                        >
                             <FaSearch />
                         </button>
                     </div>
-                    <div className='library-search-songs-wrapper'>
+                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.hex() }}>
                         {searchStatus === "success" ?
                             searchedSongs.length > 0
                                 ? searchedSongs.map(song =>
                                     <LibrarySearchedSong
                                         key={song.file}
                                         data={song}
-                                        functions={searchedSongFunctions}
-                                        songStore={songStore}
+                                        functions={{ importSong: addSong }}
                                     >
                                         {song.name}
                                     </LibrarySearchedSong>)
@@ -357,39 +353,28 @@ class Menu extends Component {
                         <a href='https://github.com/Specy/genshin-music' >
                             <FaGithub className='help-icon' />
                         </a>
-
                     </div>
                     <HelpTab />
-                    {!isTwa() && <DonateButton onClick={changePage} />}
+                    <DonateButton />
                 </MenuPanel>
             </div>
         </div>
     }
 }
-function SongRow(props) {
-    let data = props.data
-    let deleteSong = props.functions.removeSong
-    let toggleMenu = props.functions.toggleMenu
-    let downloadSong = props.functions.downloadSong
+
+function SongRow({ data, functions }) {
+    const { removeSong, toggleMenu, downloadSong } = functions
 
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            songStore.data = {
-                eventType: 'play',
-                song: data,
-                start: 0
-            }
+            SongStore.play(data, 0)
             toggleMenu(false)
         }}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                songStore.data = {
-                    eventType: 'practice',
-                    song: data,
-                    start: 0
-                }
+                SongStore.practice(data, 0, data?.notes?.length)
                 toggleMenu(false)
             }}
             >
@@ -397,11 +382,7 @@ function SongRow(props) {
             </button>
 
             <button className="song-button" onClick={() => {
-                songStore.data = {
-                    eventType: 'approaching',
-                    song: data,
-                    start: 0
-                }
+                SongStore.approaching(data, 0, data?.notes?.length)
                 toggleMenu(false)
             }}
             >
@@ -411,7 +392,7 @@ function SongRow(props) {
                 <FaDownload />
 
             </button>
-            <button className="song-button" onClick={() => deleteSong(data.name)}>
+            <button className="song-button" onClick={() => removeSong(data.name)}>
                 <FaTrash color="#ed4557" />
             </button>
         </div>

@@ -6,6 +6,8 @@ import { appName } from 'appConfig'
 import { ComposerToRecording, getNoteText } from 'lib/Utils'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
+import { SongMenu } from 'components/SongMenu'
+import { ThemeStore } from 'stores/ThemeStore'
 
 const THRESHOLDS = {
     joined: 50,
@@ -18,7 +20,6 @@ export default function SheetVisualizer(props) {
     const [sheet, setSheet] = useState([])
     const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState({})
-    const [selectedSongType, setSelectedSongType] = useState('recorded')
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
     function setFrames(amount) {
@@ -81,38 +82,20 @@ export default function SheetVisualizer(props) {
 
     return <div className='default-page'>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-            <SimpleMenu functions={{ changePage: props.changePage }} className='noprint' />
+            <SimpleMenu className='noprint' />
             <div>
-                <div className='displayer-songs-wrapper noprint' style={{ marginTop: '0' }}>
-                    <div className="tab-selector-wrapper">
-                        <button
-                            className={selectedSongType === "recorded" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => setSelectedSongType("recorded")}
-                        >
-                            Recorded
-                        </button>
-                        <button
-                            className={selectedSongType === "composed" ? "tab-selector tab-selected" : "tab-selector"}
-                            onClick={() => setSelectedSongType("composed")}
-                        >
-                            Composed
-                        </button>
-                    </div>
-                    <div className="songs-wrapper">
-                        {songs.filter((song) => selectedSongType === 'composed' ? song.data?.isComposedVersion : !song.data?.isComposedVersion
-                        ).map((song) =>
-                            <SongRow
-                                key={song?.name}
-                                current={song === currentSong}
-                                data={song}
-                                functions={{
-                                    click: handleClick
-                                }}
-                            />
-                        )}
-
-                    </div>
-                </div>
+                <SongMenu 
+                    songs={songs}
+                    className='displayer-songs-wrapper noprint'
+                    style={{ marginTop: '0' }}
+                    SongComponent={SongRow}
+                    componentProps={{
+                        currentSong,
+                        functions: {
+                            click: handleClick
+                        }
+                    }}
+                />
                 <div className='displayer-buttons-wrapper noprint'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{ marginRight: '0.5rem' }}>Note names</div>
@@ -134,14 +117,14 @@ export default function SheetVisualizer(props) {
             <h1 className='onprint'>
                 {currentSong?.name}
             </h1>
-            <div style={{ color: 'var(--whitish)', width: '100%' }} className='noprint'>
+            <div style={{ width: '100%' }} className='noprint'>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2>{currentSong.name || 'No song selected'}</h2>
                     <button onClick={() => window.print()} className='genshin-button'>
                         Print as PDF
                     </button>
                 </div>
-                <div style={{ color: 'var(--hint-main)' }}>
+                <div style={{ color: 'var(--background-text)' }}>
                     Remember that you can learn a song with the interactive
                     practice tool in the main page
                 </div>
@@ -190,7 +173,11 @@ function SheetFrame({ frame, rows, hasText }) {
         : <div className='frame-outer'>
             <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
                 {notes.map((exists, i) => {
-                    return <div className={exists ? 'frame-note-s' : 'frame-note-ns'} key={i}>
+                    return <div 
+                            className={exists ? 'frame-note-s' : 'frame-note-ns'} 
+                            key={i}
+                            style={!exists ? {backgroundColor: ThemeStore.layer('primary',0.2)} : {}}
+                        >
                         {(exists && hasText) 
                             ? getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', appName === 'Genshin' ? 21 : 15) 
                             : null
@@ -202,13 +189,12 @@ function SheetFrame({ frame, rows, hasText }) {
 }
 
 
-function SongRow(props) {
-    const { data, current } = props
-    const selectedStyle = current ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
+function SongRow({ data, current, functions } ) {
+    const selectedStyle = current === data?.name ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
     return <div
         className="song-row"
         style={selectedStyle}
-        onClick={() => props.functions.click(data)}>
+        onClick={() => functions.click(data)}>
         <div className="song-name">
             {data.name}
         </div>

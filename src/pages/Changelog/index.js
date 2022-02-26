@@ -3,12 +3,12 @@ import MenuItem from 'components/MenuItem'
 import { FaGithub } from 'react-icons/fa'
 import './Changelog.css'
 
-export default function Changelogpage(props) {
+export default function Changelogpage() {
     return <div className='default-page'>
         <div className='changelog-page-title'>
             Changelog
         </div>
-        <SimpleMenu functions={{changePage: props.changePage}}>
+        <SimpleMenu>
             <MenuItem>
                 <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
                     <FaGithub />
@@ -19,14 +19,12 @@ export default function Changelogpage(props) {
             data={e}
             key={e.version}
         />)}
-        <div className='changelog-ending'>
-
-        </div>
+        <div className='changelog-ending' />
     </div>
 }
 
-function ChangelogRow(props) {
-    const { version, title, changes, date } = props.data
+function ChangelogRow({data}) {
+    const { version, title, changes, date } = data
     return <div>
         <div className='changelog-title'>
             <div className='clt-1'>
@@ -43,7 +41,7 @@ function ChangelogRow(props) {
             <ul>
                 {changes.map((e, i) =>
                     <li key={i}>
-                        {e.split('$l').map((item, i, arr) => {
+                        {e.split('$l').map((item, i) => {
                             if (i === 0) {
                                 return <div key={i}>{item}</div>
                             }
@@ -60,6 +58,14 @@ function ChangelogRow(props) {
 }
 const changelogs = [
     {
+        version: '2.4',
+        title: 'Multi Slider and Themes',
+        date: '2022 - 15/02',
+        changes: [
+            'Added app themes, fully customise the look of the app',
+            'Added start and end slider for selecting which part of the song to play/practice'
+        ]
+    },{
         version: '2.3',
         title: 'MIDI Keyboard and Performance',
         date: '2022 - 3/02',

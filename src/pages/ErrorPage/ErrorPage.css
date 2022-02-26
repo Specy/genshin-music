@@ -16,8 +16,7 @@
 .error-songs-wrapper {
 	padding: 0.4rem;
 	margin-top: 4vh;
-	background-color: #394248;
-	border-radius: 0.5rem;
+		border-radius: 0.5rem;
 	display: grid;
 	width: 50vw;
 	gap: 0.4rem;
