@@ -1,13 +1,15 @@
 const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
-const appVersion = '2.4'
+const appVersion = '2.4.1'
 //TODO make all those variables uppercase
 console.log(`${appName}-V${appVersion}`)
 const updateMessage = appName === 'Genshin'
     ? ` - Added start and end slider for selecting which part of the song to play/practice
         - Added app themes, fully custommize the look of your app
+        - Bug fixes
     `.trim()
     : ` - Added start and end slider for selecting which part of the song to play/practice
         - Added app themes, fully custommize the look of your app
+        - Bug fixes
     `.trim()
 const layersIndexes = [1,2,3]
 const cssClasses = {

@@ -1,7 +1,12 @@
 import { appName } from "appConfig"
+import React from "react"
 
-export default function WelcomePopup(props) {
-    const { hasPersistentStorage, askForStorage } = props
+
+interface WelcomePopupProps{
+    hasPersistentStorage: boolean,
+    askForStorage: (e: any) => void
+}
+export default function WelcomePopup({ hasPersistentStorage, askForStorage }: WelcomePopupProps) {
     return <div className="welcome-message">
         <div className='welcome-overflow'>
             <div className={"welcome-message-title"}>Welcome to {appName} music {appName === "Sky" ? "nightly" : ""}</div>

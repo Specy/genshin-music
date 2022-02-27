@@ -130,9 +130,9 @@ class Menu extends Component {
                 </MenuItem>
             </div>
             <div className={sideClass}>
-                <MenuPanel title="No selection" visible={selectedMenu}>
+                <MenuPanel title="No selection" current={selectedMenu}>
                 </MenuPanel>
-                <MenuPanel title="Songs" visible={selectedMenu}>
+                <MenuPanel title="Songs" current={selectedMenu}>
 
                     <div className="songs-buttons-wrapper">
                         <button className="genshin-button" onClick={() => { changeMidiVisibility(true); this.toggleMenu() }}>
@@ -145,6 +145,7 @@ class Menu extends Component {
                     <SongMenu
                         songs={data.songs}
                         SongComponent={SongRow}
+                        baseType='composed'
                         componentProps={{
                             functions: songFunctions
                         }}
@@ -159,7 +160,7 @@ class Menu extends Component {
                     </div>
 
                 </MenuPanel>
-                <MenuPanel title="Settings" visible={selectedMenu}>
+                <MenuPanel title="Settings" current={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
                         return <SettingsRow
                             key={key}

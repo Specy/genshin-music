@@ -224,9 +224,9 @@ class Menu extends Component {
                 </MenuItem>
             </div>
             <div className={sideClass}>
-                <MenuPanel title="No selection" visible={selectedMenu}>
+                <MenuPanel title="No selection" current={selectedMenu}>
                 </MenuPanel>
-                <MenuPanel title="Songs" visible={selectedMenu}>
+                <MenuPanel title="Songs" current={selectedMenu}>
                     <div className="songs-buttons-wrapper">
                         <Link to='Composer'>
                             <AppButton>
@@ -244,6 +244,7 @@ class Menu extends Component {
                     </div>
                     <SongMenu
                         songs={data.songs}
+                        baseType='recorded'
                         SongComponent={SongRow}
                         componentProps={{
                             functions
@@ -260,7 +261,7 @@ class Menu extends Component {
                     </div>
                 </MenuPanel>
 
-                <MenuPanel title="Settings" visible={selectedMenu}>
+                <MenuPanel title="Settings" current={selectedMenu}>
                     {Object.entries(data.settings).map(([key, data]) => {
                         return <SettingsRow
                             key={key}
@@ -295,7 +296,7 @@ class Menu extends Component {
 
                 </MenuPanel>
 
-                <MenuPanel title="Library" visible={selectedMenu}>
+                <MenuPanel title="Library" current={selectedMenu}>
                     <div>
                         Here you can find songs to learn, they are provided by the sky-music library.
                     </div>
@@ -345,7 +346,7 @@ class Menu extends Component {
                         }
                     </div>
                 </MenuPanel>
-                <MenuPanel title="Help" visible={selectedMenu}>
+                <MenuPanel title="Help" current={selectedMenu}>
                     <div className='help-icon-wrapper'>
                         <a href='https://discord.gg/Arsf65YYHq' >
                             <FaDiscord className='help-icon' />
