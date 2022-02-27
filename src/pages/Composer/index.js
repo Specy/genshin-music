@@ -763,23 +763,23 @@ class Composer extends Component {
         this.setState({ song: song })
     }
     eraseColumns = (layer) => {
-        let song = this.state.song
+        const { song, toolsColumns } = this.state
         if (layer === 'all') {
-            this.state.toolsColumns.forEach(columnIndex => {
-                let column = song.columns[columnIndex]
+            toolsColumns.forEach(columnIndex => {
+                const column = song.columns[columnIndex]
                 if (column !== undefined) song.columns[columnIndex].notes = []
             })
         } else {
-            this.state.toolsColumns.forEach(columnIndex => {
-                let column = song.columns[columnIndex]
+            toolsColumns.forEach(columnIndex => {
+                const column = song.columns[columnIndex]
                 if (column !== undefined) {
-                    song.columns[columnIndex].notes.forEach(note => {
+                    column.notes.forEach(note => {
                         note.layer = replaceAt(note.layer, layer - 1, '0')
                     })
+                    column.notes = column.notes.filter(note => !note.layer.match(/^0+$/g))
                 }
             })
         }
-
         this.setState({ song: song })
     }
     validateBreakpoints = () => {
@@ -789,7 +789,7 @@ class Composer extends Component {
         this.setState({ song: song })
     }
     deleteColumns = async () => {
-        const song = this.state.song
+        const { song } = this.state
         song.columns = song.columns.filter((e, i) => !this.state.toolsColumns.includes(i))
         if (song.selected > song.columns.length - 1) song.selected = song.columns.length - 1
         if (song.selected <= 0) song.selected = 0

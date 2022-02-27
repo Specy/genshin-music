@@ -1,17 +1,22 @@
 import { useTheme } from "lib/hooks/useTheme";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
+
+type songType = 'recorded' | 'composed'
 interface SongMenuProps {
     songs: any[],
     SongComponent: any,
     componentProps: any,
     className?: string,
-    style?: any
+    style?: any,
+    baseType: songType
 }
-export function SongMenu({ songs, SongComponent, componentProps, className = '', style = {} }: SongMenuProps) {
-    const [songType, setSongType] = useState('recorded')
+export function SongMenu({ songs, SongComponent, componentProps, className = '', style = {}, baseType = 'recorded' }: SongMenuProps) {
+    const [songType, setSongType] = useState<songType>('recorded')
     const [theme] = useTheme()
-
+    useEffect(() => {
+        setSongType(baseType)
+    },[baseType])
     const selectedColor = theme.layer('menu_background',0.32).desaturate(0.4)
     const unselectedColor = theme.layer('menu_background',0.35).lighten(0.2)
     return <div className={`${className}`} style={style}>

@@ -1,5 +1,9 @@
-export default function NoteBorder(props) {
-    const { fill, className } = props
+interface NoteBorderProps {
+    fill?: string,
+    className?:string
+}
+
+export default function NoteBorder({ fill, className }:NoteBorderProps) {
     return <svg
         width="156mm"
         height="156mm"

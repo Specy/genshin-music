@@ -1,7 +1,7 @@
 import LoggerStore from "stores/LoggerStore"
-import {ThemeStore} from 'stores/ThemeStore'
+import { ThemeStore } from 'stores/ThemeStore'
 import isMobile from 'is-mobile'
-async function asyncPrompt(question) {
+async function asyncPrompt(question: string):Promise<string | null> {
     return new Promise(resolve => {
         const overlay = document.createElement("div")
         const container = document.createElement("div")
@@ -21,8 +21,8 @@ async function asyncPrompt(question) {
         ok.innerText = "Ok"
         cancel.innerText = "Cancel"
         text.innerText = question
-        cancel.style.backgroundColor = ThemeStore.layer('primary',0.1)
-        ok.style.backgroundColor = ThemeStore.layer('primary',0.1)
+        cancel.style.backgroundColor = ThemeStore.layer('primary', 0.1).hex()
+        ok.style.backgroundColor = ThemeStore.layer('primary', 0.1).hex()
 
         row.append(cancel, ok)
         container.append(text, input, row)
@@ -30,21 +30,21 @@ async function asyncPrompt(question) {
         document.body.appendChild(overlay)
 
         let disposed = false
-        function inputListener(){
-            if(disposed) return
+        function inputListener() {
+            if (disposed) return
             if (input.value.trim() === "") {
                 ok.classList.add("disabled")
             } else {
                 ok.classList.remove("disabled")
             }
         }
-        function cancelListener(){
-            if(disposed) return
+        function cancelListener() {
+            if (disposed) return
             resolve(null)
             dispose()
         }
-        function okListener(){
-            if(disposed) return
+        function okListener() {
+            if (disposed) return
             if (input.value.trim() === '') return
             if (input.value.trim() === "Untitled") {
                 input.value = ""
@@ -54,29 +54,29 @@ async function asyncPrompt(question) {
             dispose()
         }
 
-        function handleKeyboard(event){
+        function handleKeyboard(event: any) {
             const key = event.code
-            if(key === 'Enter') okListener()
-            if(key === 'Escape') cancelListener()
+            if (key === 'Enter') okListener()
+            if (key === 'Escape') cancelListener()
         }
 
-        function handleOverlay(e){
-            if(e?.path?.[0] === overlay) cancelListener()
+        function handleOverlay(e: any) {
+            if (e?.path?.[0] === overlay) cancelListener()
         }
 
-        if(!isMobile()) input.focus()
-        overlay.addEventListener("click",handleOverlay)
+        if (!isMobile()) input.focus()
+        overlay.addEventListener("click", handleOverlay)
         cancel.addEventListener("click", cancelListener)
         ok.addEventListener("click", okListener)
-        window.addEventListener('keydown',handleKeyboard)
+        window.addEventListener('keydown', handleKeyboard)
         input.addEventListener("input", inputListener)
 
-        function dispose(){
-            overlay.removeEventListener("click",handleOverlay)
-            ok.removeEventListener('click',okListener)
-            cancel.removeEventListener('click',cancelListener)
-            window.removeEventListener('keydown',handleKeyboard)
-            input.removeEventListener('input',inputListener)
+        function dispose() {
+            overlay.removeEventListener("click", handleOverlay)
+            ok.removeEventListener('click', okListener)
+            cancel.removeEventListener('click', cancelListener)
+            window.removeEventListener('keydown', handleKeyboard)
+            input.removeEventListener('input', inputListener)
             disposed = true
             overlay.classList.add("prompt-overlay-hidden")
             container.classList.add("floating-prompt-hidden")
@@ -85,7 +85,7 @@ async function asyncPrompt(question) {
     })
 }
 
-async function asyncConfirm(question,cancellable = true) {
+async function asyncConfirm(question: string, cancellable = true): Promise<boolean> {
     return new Promise(resolve => {
         const overlay = document.createElement("div")
         const container = document.createElement("div")
@@ -107,40 +107,41 @@ async function asyncConfirm(question,cancellable = true) {
         cancel.style.color = 'white'
         cancel.innerText = "No"
         row.append(cancel, ok)
-        container.append(text,row)
+        container.append(text, row)
         overlay.append(container)
         document.body.appendChild(overlay)
 
         let disposed = false
-        function okListener(){
-            if(disposed) return
+        function okListener() {
+            if (disposed) return
             resolve(true)
             dispose()
         }
-        function cancelListener(){
-            if(disposed) return
+        function cancelListener() {
+            if (disposed) return
             resolve(false)
             dispose()
         }
-        function handleKeyboard(event){
+        function handleKeyboard(event:any) {
             const key = event.code
-            if(key === 'Enter') okListener()
-            if(key === 'Escape' && cancellable) cancelListener()
+            if (key === 'Enter') okListener()
+            if (key === 'Escape' && cancellable) cancelListener()
         }
-        function handleOverlay(e){
-            if(e?.path?.[0] === overlay && cancellable) cancelListener()
+        function handleOverlay(e:any) {
+            if (e?.path?.[0] === overlay && cancellable) cancelListener()
         }
-        overlay.addEventListener("click",handleOverlay)
+        overlay.addEventListener("click", handleOverlay)
         cancel.addEventListener("click", cancelListener)
         ok.addEventListener("click", okListener)
-        window.addEventListener('keydown',handleKeyboard)
+        window.addEventListener('keydown', handleKeyboard)
+        //@ts-ignore
         document.activeElement.blur()
-        function dispose(){
+        function dispose() {
             disposed = true
-            cancel.removeEventListener('click',cancelListener)
-            ok.removeEventListener('click',okListener)
-            window.removeEventListener('keydown',handleKeyboard)
-            overlay.removeEventListener("click",handleOverlay)
+            cancel.removeEventListener('click', cancelListener)
+            ok.removeEventListener('click', okListener)
+            window.removeEventListener('keydown', handleKeyboard)
+            overlay.removeEventListener("click", handleOverlay)
             overlay.classList.add("prompt-overlay-hidden")
             container.classList.add("floating-prompt-hidden")
             setTimeout(() => clearDOM(overlay), 200)
@@ -148,7 +149,7 @@ async function asyncConfirm(question,cancellable = true) {
     })
 }
 
-function clearDOM(element){
+function clearDOM(element: HTMLElement) {
     element.querySelectorAll('*').forEach(el => el.remove())
     element.remove()
 }

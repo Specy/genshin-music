@@ -88,6 +88,7 @@ export default function SheetVisualizer(props) {
                     songs={songs}
                     className='displayer-songs-wrapper noprint'
                     style={{ marginTop: '0' }}
+                    baseType='recorded'
                     SongComponent={SongRow}
                     componentProps={{
                         currentSong,

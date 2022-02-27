@@ -92,6 +92,7 @@ class ErrorPage extends Component {
                 <SongMenu
                     SongComponent={SongRow}
                     songs={this.state.songs}
+                    baseType='recorded'
                     componentProps={{
                         functions: {
                             deleteSong: this.deleteSong,

@@ -2,21 +2,21 @@ import { observe } from "mobx"
 import { useEffect, useState } from "react"
 import { ThemeStore } from "stores/ThemeStore"
 
-interface AppBackgroundProps{
+interface AppBackgroundProps {
     children: JSX.Element | JSX.Element[],
     page: 'Composer' | 'Main'
 }
-export function AppBackground({children,page}: AppBackgroundProps){
+export function AppBackground({ children, page }: AppBackgroundProps) {
     //@ts-ignore
-    const [background, setBackground] = useState(ThemeStore.getOther('backgroundImage'+page))
+    const [background, setBackground] = useState(ThemeStore.getOther('backgroundImage' + page))
     useEffect(() => {
-        const dispose = observe(ThemeStore.state.other,() => {
+        const dispose = observe(ThemeStore.state.other, () => {
             //@ts-ignore
-            setBackground(ThemeStore.getOther('backgroundImage'+page))
+            setBackground(ThemeStore.getOther('backgroundImage' + page))
         })
         return dispose
-    },[page])
-    return <div className='app bg-image' style={{backgroundImage: `url(${background}`}}>
+    }, [page])
+    return <div className='app bg-image' style={{ backgroundImage: `url(${background}` }}>
         {children}
     </div>
 }
