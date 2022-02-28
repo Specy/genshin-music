@@ -105,7 +105,7 @@ class Menu extends Component {
         let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
         return <div className="menu-wrapper">
             <div className={menuClass}>
-                <MenuItem action={this.toggleMenu} className='close-menu'>
+                <MenuItem action={() => this.toggleMenu(false)} className='close-menu'>
                     <FaTimes className="icon" />
                 </MenuItem>
                 <MenuItem type="Save" action={this.updateSong} className={hasUnsaved}>
