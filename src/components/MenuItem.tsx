@@ -3,16 +3,16 @@ import { memo } from "react"
 
 interface MenuItemProps {
     className?: string,
-    action?: (type: string) => void
+    action?: (type?: string) => void
     children?: JSX.Element | JSX.Element[] | string,
-    type: string
+    type?: string
 }
 
 export default memo(function MenuItem({ className, action, children, type }: MenuItemProps) {
     const [theme] = useTheme()
     return <div
         className={className ? `menu-item ${className}` : "menu-item"}
-        style={{ backgroundColor: theme.layer('primary', 0.1).hex() }}
+        style={{ backgroundColor: theme.layer('primary', 0.1).toString() }}
         onClick={() => action?.(type)}
     >
         {children}

@@ -1,6 +1,6 @@
 import { FaCompactDisc, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { appName, isTwa } from "appConfig"
+import { APP_NAME, isTwa } from "appConfig"
 import HomeStore from 'stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
@@ -9,7 +9,14 @@ import { useTheme } from 'lib/hooks/useTheme'
 import './Home.css'
 import MenuItem from 'components/MenuItem'
 
-export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }) {
+interface HomeProps{
+    askForStorage: () => void,
+    setDontShowHome: (override: boolean) => void,
+    closeWelcomeScreen: () => void,
+    hasVisited: boolean, 
+}
+
+export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }:HomeProps) {
     const [data, setData] = useState(HomeStore.state.data)
     const [currentPage, setCurrentPage] = useState('')
     const [breakpoint, setBreakpoint] = useState(false)
@@ -35,7 +42,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         className={homeClass}
         style={{
             ...!data.visible ? { display: 'none' } : {},
-            backgroundColor: theme.get('background').fade(0.1)
+            backgroundColor: theme.get('background').fade(0.1).toString()
         }}
     >
         <MenuItem
@@ -43,14 +50,13 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             action={HomeStore.close}
         >
             <FaTimes size={25}/>
-        
         </MenuItem>
         {(breakpoint || !hasVisited) && <div className='home-top'>
             <div className='home-title'>
-                {appName} Music Nightly
+                {APP_NAME} Music Nightly
             </div>
             <div className='home-top-text'>
-                An app where you can create, practice and play songs for {appName}
+                An app where you can create, practice and play songs for {APP_NAME}
             </div>
         </div>
         }
@@ -84,7 +90,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
 
         </div>}
         <div className='home-content'>
-            <MainContentelement
+            <MainContntElement
                 icon={<FaCompactDisc />}
                 title='Composer'
                 style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
@@ -93,8 +99,8 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 current={currentPage === 'Composer'}
             >
                 Create or edit songs with a fully fledged music composer. Also with MIDI.
-            </MainContentelement>
-            <MainContentelement
+            </MainContntElement>
+            <MainContntElement
                 icon={<BsMusicPlayerFill />}
                 title='Player'
                 style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
@@ -104,7 +110,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             >
                 Play, download, record and import songs. Learn a song with approaching circle
                 mode and practice mode.
-            </MainContentelement>
+            </MainContntElement>
         </div>
         <Separator />
         <div className='page-redirect-wrapper'>
@@ -135,14 +141,19 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         </div>
         <div className='home-bottom'>
             <div>
-                © All rights reserved by {appName === 'Genshin' ? 'miHoYo' : 'TGC'}. Other properties belong to their respective owners.
+                © All rights reserved by {APP_NAME === 'Genshin' ? 'miHoYo' : 'TGC'}. Other properties belong to their respective owners.
             </div>
         </div>
 
     </div>
 }
 
-function PageRedirect({ children, current, href }) {
+interface PageRedirectProps{
+    children: React.ReactChild,
+    current: boolean,
+    href: string
+}
+function PageRedirect({ children, current, href }: PageRedirectProps) {
     return <Link onClick={HomeStore.close} to={href}>
         <button
             className={current ? 'current-page' : ''}
@@ -152,7 +163,18 @@ function PageRedirect({ children, current, href }) {
     </Link>
 }
 
-function MainContentelement({ title, icon, children, background, current, href, style = {} }) {
+
+interface MainContntElementProps{
+    title: string, 
+    icon: React.ReactChild, 
+    children: React.ReactChild,
+    background: string, 
+    current: boolean, 
+    href: string, 
+    style?: any 
+
+}
+function MainContntElement({ title, icon, children, background, current, href, style = {} }: MainContntElementProps) {
     return <Link
         className={`home-content-element ${current ? 'current-page' : ''}`}
         to={href}
@@ -176,7 +198,10 @@ function MainContentelement({ title, icon, children, background, current, href, 
     </Link>
 }
 
-function Separator({ children }) {
+interface SeparatorProps{
+    children?: React.ReactChild
+}
+function Separator({ children }:SeparatorProps) {
     return <div className='home-separator'>
         {children}
     </div>

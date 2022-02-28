@@ -1,6 +1,14 @@
 import { memo } from "react"
-export default memo(function MultiSwitch(props){
-    const { options, selected, buttonsClass, onSelect } = props
+
+interface MultiSwitchProps{
+    options: number[] | string[]
+    selected: number | string
+    buttonsClass: string
+    onSelect: (index: number | string) => void
+}
+
+
+export default memo(function MultiSwitch({ options, selected, buttonsClass, onSelect }: MultiSwitchProps){
     return <>
         {options.map(index => {
             return <button

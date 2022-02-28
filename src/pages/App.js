@@ -4,15 +4,15 @@ import Home from 'components/Index/Home';
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
 import { delayMs } from "lib/Utils"
-import { appName, appVersion, updateMessage } from "appConfig"
+import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "appConfig"
 import Logger from 'components/Index/Logger'
 import { withRouter } from "react-router-dom";
 import './App.css';
 class App extends Component {
 	constructor(props) {
 		super(props)
-		const hasVisited = localStorage.getItem(appName + "_Visited")
-		let canShowHome = localStorage.getItem(appName + "_ShowHome")
+		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
+		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
 		canShowHome = canShowHome === null ? 'true' : canShowHome
 		HomeStore.setState({
 			canShow: canShowHome === 'true',
@@ -36,7 +36,7 @@ class App extends Component {
 				page_title: path.pathName
 			})
 		})
-		Analytics.UIEvent('version', { version: appVersion })
+		Analytics.UIEvent('version', { version: APP_VERSION })
 		Analytics.pageView(this.props?.history?.location?.pathname.replace('/',''))
 		this.pageHeight = window.innerHeight
 
@@ -70,7 +70,7 @@ class App extends Component {
 	}
 
 	setDontShowHome = (override = false) => {
-		localStorage.setItem(appName + "_ShowHome", override)
+		localStorage.setItem(APP_NAME + "_ShowHome", override)
 		HomeStore.setState({ canShow: override })
 	}
 
@@ -89,19 +89,19 @@ class App extends Component {
 		this.closeWelcomeScreen()
 	}
 	closeWelcomeScreen = () => {
-		localStorage.setItem(appName + "_Visited", true)
+		localStorage.setItem(APP_NAME + "_Visited", true)
 		this.setState({ hasVisited: true })
 	}
 	checkUpdate = async () => {
 		await delayMs(1000)
 		if (this.updateChecked) return
-		let storedVersion = localStorage.getItem(appName + "_Version")
+		let storedVersion = localStorage.getItem(APP_NAME + "_Version")
 		if (!this.state.hasVisited) {
-			return localStorage.setItem(appName + "_Version", appVersion)
+			return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
-		if (appVersion !== storedVersion) {
-			LoggerStore.log("Update V" + appVersion, updateMessage, 6000)
-			localStorage.setItem(appName + "_Version", appVersion)
+		if (APP_VERSION !== storedVersion) {
+			LoggerStore.log("Update V" + APP_VERSION, UPDATE_MESSAGE, 6000)
+			localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
 		this.updateChecked = true
 		if (!this.state.hasVisited) return

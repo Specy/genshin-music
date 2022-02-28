@@ -27,14 +27,14 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
         setColor(Color(e))
     }
     function sendEvent() {
-        onChange(name, color.hex())
+        onChange(name, color.toString())
         setSelectedProp('')
     }
 
     return <div
         className={`theme-row ${selected ? 'selected' : ''}`}
         style={selected ? {
-            backgroundColor: color.hex(),
+            backgroundColor: color.toString(),
             color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
         } : {}}
     >
@@ -49,7 +49,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                         <div
                             className="color-picker-input"
                             style={{
-                                backgroundColor: color.hex(),
+                                backgroundColor: color.toString(),
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark,
                             }}
                         >
@@ -71,7 +71,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                                 setSelectedProp('')
                             }}
                             style={{
-                                backgroundColor: color.hex(),
+                                backgroundColor: color.toString(),
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
                             }}
                         >
@@ -81,7 +81,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                             className="color-picker-check"
                             onClick={sendEvent}
                             style={{
-                                backgroundColor: color.hex(),
+                                backgroundColor: color.toString(),
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
                             }}
                         >
@@ -94,8 +94,8 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                     onClick={() => setSelectedProp(name)}
                     className='color-preview'
                     style={{
-                        backgroundColor: ThemeStore.get(name).hex(),
-                        color: ThemeStore.getText(name).hex()
+                        backgroundColor: ThemeStore.get(name).toString(),
+                        color: ThemeStore.getText(name).toString()
                     }}
                 >
                     Text

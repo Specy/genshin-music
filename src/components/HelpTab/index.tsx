@@ -152,9 +152,11 @@ export function HelpTab() {
     </>
 }
 
-
-function Key(props) {
+interface KeyProps{
+    children: React.ReactChild
+}
+function Key({children}: KeyProps) {
     return <div className='keyboard-key'>
-        {props.children}
+        {children}
     </div>
 }

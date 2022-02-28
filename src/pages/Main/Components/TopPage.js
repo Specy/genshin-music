@@ -1,4 +1,4 @@
-import { speedChangers } from "appConfig"
+import { SPEED_CHANGERS } from "appConfig"
 import Memoized from "components/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
 import { memo, useEffect, useState, useRef } from "react";
@@ -121,7 +121,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                 value={speedChanger.name}
             >
                 <option disabled>Speed</option>
-                {speedChangers.map(e => {
+                {SPEED_CHANGERS.map(e => {
                     return <option value={e.name} key={e.name}>
                         {e.name}
                     </option>

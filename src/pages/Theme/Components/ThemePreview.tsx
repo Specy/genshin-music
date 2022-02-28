@@ -1,4 +1,4 @@
-import { appName } from "appConfig";
+import { APP_NAME } from "appConfig";
 import { FileDownloader } from "lib/Utils";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import { Theme } from "stores/ThemeStore";
@@ -35,7 +35,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                             e.stopPropagation()
                             new FileDownloader('json').download(
                                 JSON.stringify(theme),
-                                `${theme.other.name || appName}.theme.json`
+                                `${theme.other.name || APP_NAME}.theme.json`
                             )
                         }}
                         size={18}

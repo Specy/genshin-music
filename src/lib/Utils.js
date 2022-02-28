@@ -1,4 +1,4 @@
-import { importNotePositions, appName, instruments, pitchArr, keyNames, layoutData } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, NOTE_NAMES, LAYOUT_DATA } from "appConfig"
 import LoggerStore from "stores/LoggerStore";
 import * as workerTimers from 'worker-timers';
 class Recording {
@@ -28,7 +28,7 @@ class Song {
 		this.data = {
 			isComposed: false,
 			isComposedVersion: false,
-			appName: appName
+			appName: APP_NAME
 		}
 		Object.entries(data).forEach((entry) => {
 			this.data[entry[0]] = entry[1]
@@ -107,7 +107,7 @@ class ComposedSong {
 		this.bpm = 220
 		this.pitch = "C"
 		this.notes = notes
-		this.instruments = [instruments[0], instruments[0], instruments[0]]
+		this.instruments = [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
 		this.breakpoints = [0]
 		this.columns = []
 		this.selected = 0
@@ -139,8 +139,8 @@ class MIDIShortcut{
 }
 function getNoteText(noteNameType, index, pitch, layoutLength) {
     try {
-		const layout = layoutData[layoutLength]
-        if (noteNameType === "Note name") return keyNames[appName][pitchArr.indexOf(pitch)][index]
+		const layout = LAYOUT_DATA[layoutLength]
+        if (noteNameType === "Note name") return NOTE_NAMES[APP_NAME][PITCHES.indexOf(pitch)][index]
         if (noteNameType === "Keyboard layout") return layout.keyboardLayout[index]
         if (noteNameType === "Do Re Mi") return layout.mobileLayout[index]
 		if (noteNameType === "ABC") return layout.abcLayout[index]
@@ -160,7 +160,7 @@ function ComposerSongDeSerialization(song) {
 		name: song.name,
 		bpm: isNaN(bpm) ? 220 : bpm,
 		pitch: song.pitch ?? "C",
-		instruments: song.instruments || [instruments[0], instruments[0], instruments[0]],
+		instruments: song.instruments || [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]],
 		breakpoints: song.breakpoints ?? [],
 		notes: [],
 		selected: 0,
@@ -201,7 +201,7 @@ function ComposerSongSerialization(song) {
 		instruments: song.instruments,
 		columns: []
 	}
-	obj.data.appName = appName
+	obj.data.appName = APP_NAME
 	/*
 		notes = [tempoChanger,notes] ----> note = [index,layer]
 		tempoChanger = Number
@@ -226,7 +226,7 @@ function prepareSongDownload(song) {
 		oldFormatNotes = recordedToOldFormat(finalSong)
 	}
 	finalSong.isComposed = finalSong.data.isComposedVersion
-	finalSong.pitchLevel = pitchArr.indexOf(finalSong.pitch)
+	finalSong.pitchLevel = PITCHES.indexOf(finalSong.pitch)
 	finalSong.songNotes = oldFormatNotes
 	finalSong.bitsPerPage = 16
 	finalSong.isEncrypted = false
@@ -244,11 +244,11 @@ function prepareSongImport(song) {
 	if (type === "oldSky") {
 		song = oldSkyToNewFormat(song)
 	}
-	if (appName === 'Sky' && song.data?.appName !== 'Sky') {
+	if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
 		LoggerStore.error("Invalid song")
 		throw new Error("Error Invalid song")
 	}
-	if (appName === 'Genshin' && song.data?.appName === 'Sky') {
+	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
 		song = newSkyFormatToGenshin(song)
 	}
 	return song
@@ -304,7 +304,7 @@ function getSongType(song) {
 			if (song.data.isComposedVersion) {
 				if (typeof song.name !== "string") return "none"
 				if (typeof song.bpm !== "number") return "none"
-				if (!pitchArr.includes(song.pitch)) return "none"
+				if (!PITCHES.includes(song.pitch)) return "none"
 				if (Array.isArray(song.breakpoints)) {
 					if (song.breakpoints.length > 0) {
 						if (typeof song.breakpoints[0] !== "number") return "none"
@@ -324,7 +324,7 @@ function getSongType(song) {
 			} else {
 				if (typeof song.name !== "string") return "none"
 				if (typeof song.bpm !== "number") return "none"
-				if (!pitchArr.includes(song.pitch)) return "none"
+				if (!PITCHES.includes(song.pitch)) return "none"
 				return "newRecorded"
 			}
 		}
@@ -336,21 +336,20 @@ function getSongType(song) {
 	return "none"
 }
 
-const genshinLayout = importNotePositions
 
 function newSkyFormatToGenshin(song) {
 	if (song.data.isComposedVersion) {
-		song.instruments = song.instruments.map(instrument => 'Lyre')
+		song.instruments = song.instruments.map(instrument => INSTRUMENTS[0])
 		song.columns.forEach(column => {
 			column[1] = column[1].map(note => {
-				return [genshinLayout[note[0]], note[1]]
+				return [IMPORT_NOTE_POSITIONS[note[0]], note[1]]
 			})
 
 		})
 	}
 	if (!song.data.isComposedVersion) {
 		song.notes = song.notes.map(note => {
-			note[0] = genshinLayout[note[0]]
+			note[0] = IMPORT_NOTE_POSITIONS[note[0]]
 			return note
 		})
 	}
@@ -363,7 +362,7 @@ function oldSkyToNewFormat(song) {
 		const bpm = Number(song.bpm)
 		result = new Song(song.name)
 		result.bpm = isNaN(bpm) ? 220 : bpm
-		result.pitch = (pitchArr[song.pitchLevel || 0]) || "C"
+		result.pitch = (PITCHES[song.pitchLevel || 0]) || "C"
 		//remove duplicate notes
 		song.songNotes = song.songNotes.filter((note, index, self) =>
 			index === self.findIndex((n) => {
@@ -373,7 +372,7 @@ function oldSkyToNewFormat(song) {
 		let songNotes = song.songNotes
 		songNotes.forEach(note => {
 			let data = note.key.split("Key")
-			result.notes.push([genshinLayout[data[1]], note.time, note.l ?? Number(data[0])])
+			result.notes.push([IMPORT_NOTE_POSITIONS[data[1]], note.time, note.l ?? Number(data[0])])
 		})
 
 		if ([true, "true"].includes(song.isComposed)) {
@@ -509,7 +508,7 @@ class ColumnNote {
 }
 
 function getPitchChanger(pitch) {
-	let index = pitchArr.indexOf(pitch)
+	let index = PITCHES.indexOf(pitch)
 	if (index < 0) index = 0
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
@@ -570,7 +569,6 @@ export {
 	prepareSongDownload,
 	newSkyFormatToGenshin,
 	prepareSongImport,
-	pitchArr,
 	groupByNotes,
 	numberToLayer,
 	mergeLayers,

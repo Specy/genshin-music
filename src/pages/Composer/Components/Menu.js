@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
 import { FileDownloader, ComposerSongSerialization, prepareSongDownload } from "lib/Utils"
-import { appName } from 'appConfig'
+import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
-import { isMidiAvailable } from 'appConfig';
+import { IS_MIDI_AVAILABLE } from 'appConfig';
 import Analytics from 'lib/Analytics';
 import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
@@ -73,19 +73,19 @@ class Menu extends Component {
             song = ComposerSongSerialization(song)
         }
         let songName = song.name
-        if (appName === "Sky") {
+        if (APP_NAME === "Sky") {
             //adds old format into the sheet
             song = prepareSongDownload(song)
         }
         if (!Array.isArray(song)) song = [song]
         song.forEach(song1 => {
-            song1.data.appName = appName
+            song1.data.appName = APP_NAME
         })
         let json = JSON.stringify(song)
         let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, `${songName}.${appName.toLowerCase()}sheet.json`)
+        fileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
-        Analytics.userSongs({ name: song?.name, page: 'composer' }, 'download')
+        Analytics.userSongs('download',{ name: song?.name, page: 'composer' })
     }
     updateSong = () => {
         this.props.functions.updateSong(this.props.data.currentSong)
@@ -171,7 +171,7 @@ class Menu extends Component {
                         />
                     })}
                     <div className='settings-row-wrap'>
-                        {isMidiAvailable &&
+                        {IS_MIDI_AVAILABLE &&
                             <button
                                 className='genshin-button'
                                 onClick={() => changePage('MidiSetup')}

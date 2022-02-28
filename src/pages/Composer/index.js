@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import { appName, audioContext, MIDI_STATUS, layersIndexes } from "appConfig"
+import { APP_NAME, AUDIO_CONTEXT, MIDI_STATUS, LAYERS_INDEXES } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -26,12 +26,13 @@ import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
 import { AppBackground } from 'components/AppBackground';
+import cloneDeep from 'lodash.clonedeep'
 class Composer extends Component {
     constructor(props) {
         super(props)
         const settings = this.getSettings()
         this.playbackInterval = undefined
-        this.audioContext = audioContext
+        this.audioContext = AUDIO_CONTEXT
         this.reverbNode = undefined
         this.reverbVolumeNode = undefined
         this.recorder = new AudioRecorder()
@@ -68,7 +69,7 @@ class Composer extends Component {
         this.mounted = true
         this.init()
         window.addEventListener("keydown", this.handleKeyboard)
-        this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(appName + '_composer') : {}
+        this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : {}
         this.broadcastChannel.onmessage = (event) => {
             if (!this.state.settings.syncTabs.value) return
             if (!['play', 'stop'].includes(event?.data)) return
@@ -175,7 +176,7 @@ class Composer extends Component {
                 case 'remove_column': this.removeColumns(1, song.selected); break;
                 case 'change_layer': {
                     let nextLayer = layer + 1
-                    if(nextLayer > layersIndexes.length) nextLayer = 1
+                    if(nextLayer > LAYERS_INDEXES.length) nextLayer = 1
                     this.changeLayer(nextLayer)
                     break;
                 }
@@ -207,30 +208,28 @@ class Composer extends Component {
         })
     }
     getSettings = () => {
-        let storedSettings = localStorage.getItem(appName + "_Composer_Settings")
+        let storedSettings = localStorage.getItem(APP_NAME + "_Composer_Settings")
         try {
             storedSettings = JSON.parse(storedSettings)
         } catch (e) {
             storedSettings = null
         }
         if (storedSettings !== null) {
-            if (storedSettings.settingVesion !== ComposerSettings.settingVesion) {
-                this.updateSettings(ComposerSettings)
-                return ComposerSettings
+            if (storedSettings.other?.settingVesion !== ComposerSettings.other.settingVesion) {
+                this.updateSettings(ComposerSettings.data)
+                return ComposerSettings.data
             }
-            return storedSettings
+            return storedSettings.data
         }
-        return ComposerSettings
+        return ComposerSettings.data
     }
 
     updateSettings = (override) => {
-        let state
-        if (override !== undefined) {
-            state = override
-        } else {
-            state = this.state.settings
+        const state = {
+            other: ComposerSettings.other,
+            data: override !== undefined ? override : this.state.settings
         }
-        localStorage.setItem(appName + "_Composer_Settings", JSON.stringify(state))
+        localStorage.setItem(APP_NAME + "_Composer_Settings", JSON.stringify(state))
     }
 
     handleSettingChange = (setting) => {
@@ -339,7 +338,7 @@ class Composer extends Component {
         if (fileName) recorder.download(recording.data, fileName + '.wav')
         if (!this.mounted) return
         this.reverbVolumeNode.disconnect()
-        this.reverbVolumeNode.connect(audioContext.destination)
+        this.reverbVolumeNode.connect(this.audioContext.destination)
         this.setupAudioDestination(hasReverb)
     }
     handleKeyboard = (event) => {
@@ -536,7 +535,7 @@ class Composer extends Component {
         let confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
         if (confirm) await DB.removeSong({ name: name })
         this.syncSongs()
-		Analytics.userSongs({name: name, page: 'composer'},'delete')
+		Analytics.userSongs('delete',{name: name, page: 'composer'})
     }
 
     loadSong = async (song) => {
@@ -721,8 +720,8 @@ class Composer extends Component {
         this.state.toolsColumns.forEach((index) => {
             let column = this.state.song.columns[index]
             if (column !== undefined) this.copiedColums.push(column)
-        })
-        this.copiedColums = JSON.parse(JSON.stringify(this.copiedColums)) // removing reference
+        })  
+        this.copiedColums = cloneDeep(this.copiedColums)
         if (layer !== 'all') {
             this.copiedColums = this.copiedColums.map(column => {
                 column.notes = column.notes.filter(e => e.layer[layer - 1] === '1')
@@ -738,15 +737,15 @@ class Composer extends Component {
     }
     pasteColumns = async (insert) => {
         let song = this.state.song
-        let copiedColumns = JSON.parse(JSON.stringify(this.copiedColums))
+        const copiedColumns = cloneDeep(this.copiedColums)
         if (!insert) {
             song.columns.splice(song.selected, 0, ...copiedColumns)
         } else {
             copiedColumns.forEach((copiedColumn, i) => {
-                let column = song.columns[song.selected + i]
+                const column = song.columns[song.selected + i]
                 if (column !== undefined) {
                     copiedColumn.notes.forEach(copiedNote => {
-                        let index = column.notes.findIndex(note => copiedNote.index === note.index)
+                        const index = column.notes.findIndex(note => copiedNote.index === note.index)
                         if (index < 0) {
                             column.notes.push(copiedNote)
                         } else {

@@ -1,5 +1,5 @@
 import ZangoDb from "zangodb"
-import { appName } from "appConfig"
+import { APP_NAME } from "appConfig"
 import { Theme } from "stores/ThemeStore"
 
 function generateId(){
@@ -19,7 +19,7 @@ class Database{
     }
     constructor(){
         //@ts-ignore
-        this.db = new ZangoDb.Db(appName,2, { songs: [], themes: [] })
+        this.db = new ZangoDb.Db(APP_NAME,2, { songs: [], themes: [] })
         this.collections = {
             songs: this.db.collection("songs"),
             themes: this.db.collection("themes")

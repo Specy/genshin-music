@@ -1,13 +1,9 @@
 import { ChangeEvent } from "react"
 import { FaPlus, FaMinus } from 'react-icons/fa'
+import { SettingsNumber, SettingsText } from "types/SettingsPropriety"
+
 interface InputProps {
-    data: {
-        type: string,
-        value: string | number,
-        placeholder: string,
-        threshold?: [number, number],
-        increment?: number
-    },
+    data: SettingsText | SettingsNumber,
     objectKey: string,
     value: string | number,
     onChange: (value: string | number) => void,
@@ -31,12 +27,14 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
     }
 
     function handleIncrement(sign: number){
-        let nextValue = Number(value) + (data.increment || 0) * sign
-        if (!data.threshold || nextValue < data.threshold[0] || nextValue > data.threshold[1]) return
-        onComplete({
-            key: objectKey,
-            data: { ...data, value: nextValue }
-        })
+        if(data.type === 'number'){
+            let nextValue = Number(value) + (data.increment || 0) * sign
+            if (!data.threshold || nextValue < data.threshold[0] || nextValue > data.threshold[1]) return
+            onComplete({
+                key: objectKey,
+                data: { ...data, value: nextValue }
+            })
+        }
     }
 
     function handleBlur() {

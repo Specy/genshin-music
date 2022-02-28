@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from 'react'
-import { cssClasses, appName, instrumentsData, BASE_THEME_CONFIG } from "appConfig"
+import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
 import SvgNote from 'components/SvgNotes'
 import { observe } from 'mobx'
@@ -8,7 +8,7 @@ import Color from 'color'
 
 function getTextColor(){
     const noteBg = ThemeStore.get('note_background')
-    if(appName === 'Genshin'){
+    if(APP_NAME === 'Genshin'){
         if(noteBg.luminosity() > 0.65){
             return BASE_THEME_CONFIG.text.note
         }else{
@@ -29,10 +29,10 @@ export default memo(function Note({ data, approachingNotes, outgoingAnimation, f
     }, [])
     const { status, approachRate, instrument } = data
     const animation = {
-        transition: `background-color ${fadeTime}ms  ${fadeTime === (appName === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
+        transition: `background-color ${fadeTime}ms  ${fadeTime === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
     const className = parseClass(status)
-    const clickColor = instrumentsData[instrument]?.clickColor
+    const clickColor = INSTRUMENTS_DATA[instrument]?.clickColor
     return <button
         onPointerDown={(e) => {
             e.preventDefault()
@@ -50,7 +50,7 @@ export default memo(function Note({ data, approachingNotes, outgoingAnimation, f
         {outgoingAnimation.map(e =>
             <div
                 key={e.key}
-                className={cssClasses.noteAnimation}
+                className={NOTES_CSS_CLASSES.noteAnimation}
             />
         )}
         <div
@@ -62,14 +62,14 @@ export default memo(function Note({ data, approachingNotes, outgoingAnimation, f
         >
             <SvgNote
                 name={noteImage}
-                color={instrumentsData[instrument]?.fill}
+                color={INSTRUMENTS_DATA[instrument]?.fill}
             />
 
-            {appName === 'Genshin' && <GenshinNoteBorder
+            {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderFill(status)}
             />}
-            <div className={cssClasses.noteName} style={{ color: textColor }}>
+            <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
                 {noteText}
             </div>
         </div>
@@ -83,9 +83,9 @@ export default memo(function Note({ data, approachingNotes, outgoingAnimation, f
 const toMix = Color('#ffb347')
 
 function getApproachCircleColor(index) {
-    let numOfNotes = appName === "Sky" ? 5 : 7
-    let row = Math.floor(index / numOfNotes)
-    let colors = [
+    const numOfNotes = APP_NAME === "Sky" ? 5 : 7
+    const row = Math.floor(index / numOfNotes)
+    const colors = [
         "var(--accent)", 
         ThemeStore.get('accent').mix(toMix),
         "var(--accent)"
@@ -95,7 +95,7 @@ function getApproachCircleColor(index) {
 
 const ApproachCircle = memo(function ApproachCircle({ approachRate, index }) {
     return <div
-        className={cssClasses.approachCircle}
+        className={NOTES_CSS_CLASSES.approachCircle}
         style={{
             animation: `approach ${approachRate}ms linear`,
             borderColor: getApproachCircleColor(index),
@@ -114,7 +114,7 @@ function parseBorderFill(status) {
 }
 
 function parseClass(status) {
-    let className = cssClasses.note
+    let className = NOTES_CSS_CLASSES.note
     switch (status) {
         case 'clicked': className += " click-event"; break;
         case 'toClick': className += " note-red"; break;

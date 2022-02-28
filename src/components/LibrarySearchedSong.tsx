@@ -2,10 +2,17 @@ import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
 import { prepareSongImport } from "lib/Utils"
 import LoggerStore from 'stores/LoggerStore';
-import { SongStore } from 'stores/SongStore';
 
-export default function SearchedSong({ functions, data }) {
-    const { importSong } = functions
+interface SearchedSongProps{
+    onClick: (song: any, start: number) => void,
+    importSong: (song: any) => void, 
+    data: {
+        file: string,
+        name: string
+    }
+}
+
+export default function SearchedSong({ onClick, data, importSong }:SearchedSongProps) {
     const [fetching, setFetching] = useState(false)
     const [cache, setCache] = useState(undefined)
     const download = async function () {
@@ -13,7 +20,7 @@ export default function SearchedSong({ functions, data }) {
         try {
             if (cache) return importSong(cache)
             setFetching(true)
-            let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
+            let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(res => res.json())
             setFetching(false)
             song = prepareSongImport(song)
             setCache(song)
@@ -28,14 +35,14 @@ export default function SearchedSong({ functions, data }) {
         if (fetching) return
         try {
             if (cache) {
-                SongStore.play(cache,0)
+                onClick(cache,0)
             }
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
             setFetching(false)
             song = prepareSongImport(song)
             setCache(song)
-            SongStore.play(song,0)
+            onClick(cache,0)
         } catch (e) {
             console.error(e)
             setFetching(false)
@@ -43,9 +50,7 @@ export default function SearchedSong({ functions, data }) {
         }
     }
     return <div className="song-row">
-        <div className="song-name" onClick={() => {
-            play(data)
-        }}>
+        <div className="song-name" onClick={play}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">

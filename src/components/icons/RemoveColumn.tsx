@@ -1,4 +1,8 @@
-export default function RemoveColumn({ className }) {
+interface RemoveColumnProps{
+    className?: string
+}
+
+export default function RemoveColumn({ className }: RemoveColumnProps) {
     return <svg
         width="194.40327mm"
         height="290.853mm"

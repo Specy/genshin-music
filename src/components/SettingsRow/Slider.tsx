@@ -1,9 +1,7 @@
 import { ChangeEvent } from "react"
-
+import { SettingsSlider } from "types/SettingsPropriety"
 interface SliderProps{
-    data: {
-        threshold: [number, number]
-    },
+    data: SettingsSlider,
     objectKey: string,
     value: number, 
     onChange: (data: {

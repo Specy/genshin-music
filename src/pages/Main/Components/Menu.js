@@ -5,7 +5,7 @@ import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, prepareSongImport, prepareSongDownload } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
-import { appName, isMidiAvailable } from "appConfig"
+import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { SongStore } from 'stores/SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
@@ -100,7 +100,8 @@ class Menu extends Component {
         this.setState({
             searchStatus: 'Searching...'
         })
-        let fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search=' + encodeURI(searchInput)).then(data => data.json())
+        const fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search=' + encodeURI(searchInput)).then(data => data.json())
+        console.log(fetchedSongs)
         if (fetchedSongs.error) {
             this.setState({
                 searchStatus: 'Please write a non empty name'
@@ -144,7 +145,7 @@ class Menu extends Component {
                 for (let song of songsInput) {
                     song = prepareSongImport(song)
                     await this.props.functions.addSong(song)
-                    Analytics.userSongs({ name: song?.name, page: 'player' }, 'import')
+                    Analytics.userSongs('import',{ name: song?.name, page: 'player' })
                 }
             } catch (e) {
                 console.error(e)
@@ -152,7 +153,7 @@ class Menu extends Component {
                     return LoggerStore.error("Midi files should be imported in the composer")
                 }
                 LoggerStore.error(
-                    `Error importing song, invalid format (Only supports the ${appName.toLowerCase()}sheet.json format)`,
+                    `Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
                     8000
                 )
             }
@@ -162,32 +163,32 @@ class Menu extends Component {
     downloadSong = (song) => {
         if (song._id) delete song._id
         const name = song.name
-        if (appName === "Sky") {
+        if (APP_NAME === "Sky") {
             //adds old format into the sheet
             song = prepareSongDownload(song)
         }
         if (!Array.isArray(song)) song = [song]
         song.forEach(song1 => {
-            song1.data.appName = appName
+            song1.data.appName = APP_NAME
         })
         const json = JSON.stringify(song)
-        new FileDownloader().download(json, `${name}.${appName.toLowerCase()}sheet.json`)
+        new FileDownloader().download(json, `${name}.${APP_NAME.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
-        Analytics.userSongs({ name: name, page: 'player' }, 'download')
+        Analytics.userSongs('download',{ name: name, page: 'player' })
     }
 
     downloadAllSongs = () => {
         const toDownload = []
         this.props.data.songs.forEach(song => {
             if (song._id) delete song._id
-            if (appName === "Sky") {
+            if (APP_NAME === "Sky") {
                 song = prepareSongDownload(song)
             }
             Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
         })
         const json = JSON.stringify(toDownload)
         const date = new Date().toISOString().split('T')[0]
-        new FileDownloader().download(json, `${appName}_Backup_${date}.json`)
+        new FileDownloader().download(json, `${APP_NAME}_Backup_${date}.json`)
         LoggerStore.success("Song backup downloaded")
     }
 
@@ -272,7 +273,7 @@ class Menu extends Component {
                         />
                     })}
                     <div className='settings-row-wrap'>
-                        {isMidiAvailable &&
+                        {IS_MIDI_AVAILABLE &&
                             <button
                                 className='genshin-button'
                                 onClick={() => changePage('MidiSetup')}
@@ -303,7 +304,7 @@ class Menu extends Component {
                     <div className='library-search-row' style={{}} >
                         <input
                             className='library-search-input'
-                            style={{ backgroundColor: layer1Color.hex() }}
+                            style={{ backgroundColor: layer1Color.toString() }}
                             placeholder='Song name'
                             onKeyDown={(e) => {
                                 if (e.code === "Enter") this.searchSongs()
@@ -314,25 +315,27 @@ class Menu extends Component {
                         <button
                             className='library-search-btn'
                             onClick={this.clearSearch}
-                            style={{ backgroundColor: layer1Color.hex() }}
+                            style={{ backgroundColor: layer1Color.toString() }}
                         >
                             <FaTimes />
                         </button>
                         <button
                             className='library-search-btn'
                             onClick={this.searchSongs}
-                            style={{ backgroundColor: layer1Color.hex() }}
+                            style={{ backgroundColor: layer1Color.toString() }}
                         >
                             <FaSearch />
                         </button>
                     </div>
-                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.hex() }}>
+                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.toString() }}>
                         {searchStatus === "success" ?
                             searchedSongs.length > 0
                                 ? searchedSongs.map(song =>
                                     <LibrarySearchedSong
                                         key={song.file}
                                         data={song}
+                                        importSong={addSong}
+                                        onClick={SongStore.play}
                                         functions={{ importSong: addSong }}
                                     >
                                         {song.name}

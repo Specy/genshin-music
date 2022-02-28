@@ -1,14 +1,12 @@
 import { ChangeEvent } from "react"
+import { SettingsInstrument } from "types/SettingsPropriety"
 
 interface InstrumentInputProps{
-    data: {
-        value: string,
-        options: string[]
-    },
+    data: SettingsInstrument,
     volume: number, 
     instrument: string,
     objectKey: string,
-    onVolumeChange: (event: any) => void,
+    onVolumeChange: (value: number) => void,
     onVolumeComplete: (event: any) => void,
     onInstrumentPick: (event: any) => void
 }

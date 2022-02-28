@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { observe } from 'mobx'
-import { LAYOUT_IMAGES, appName, speedChangers, MIDI_STATUS } from "appConfig"
+import { LAYOUT_IMAGES, APP_NAME, SPEED_CHANGERS, MIDI_STATUS } from "appConfig"
 import Note from './Components/Note'
 import { SongStore } from 'stores/SongStore'
 import { delayMs, ComposerToRecording, NotesTable, getNoteText } from "lib/Utils"
@@ -19,8 +19,8 @@ export default class Keyboard extends Component {
         this.state = {
             playTimestamp: new Date().getTime(),
             songToPractice: [],
-            approachingNotes: NotesTable(appName === 'Sky' ? 15 : 21),
-            outgoingAnimation: NotesTable(appName === 'Sky' ? 15 : 21),
+            approachingNotes: NotesTable(APP_NAME === 'Sky' ? 15 : 21),
+            outgoingAnimation: NotesTable(APP_NAME === 'Sky' ? 15 : 21),
             keyboard: propKeyboard.layout,
             approachingScore: {
                 correct: 1,
@@ -28,7 +28,7 @@ export default class Keyboard extends Component {
                 score: 0,
                 combo: 0
             },
-            speedChanger: speedChangers.find(e => e.name === 'x1'),
+            speedChanger: SPEED_CHANGERS.find(e => e.name === 'x1'),
             
         }
         this.MIDISettings = getMIDISettings()
@@ -143,7 +143,7 @@ export default class Keyboard extends Component {
             notes.push(obj)
         }
         this.setState({
-            approachingNotes: NotesTable(appName === 'Sky' ? 15 : 21),
+            approachingNotes: NotesTable(APP_NAME === 'Sky' ? 15 : 21),
             approachingScore: {
                 correct: 1,
                 wrong: 1,
@@ -270,7 +270,7 @@ export default class Keyboard extends Component {
         let secondChunk = chunks[1]
         firstChunk.notes.forEach(note => {
             keyboard[note[0]].status = 'toClick'
-            keyboard[note[0]].delay = appName === 'Genshin' ? 100 : 200
+            keyboard[note[0]].delay = APP_NAME === 'Genshin' ? 100 : 200
         })
         secondChunk?.notes.forEach(note => {
             let keyboardNote = keyboard[note[0]]
@@ -288,7 +288,7 @@ export default class Keyboard extends Component {
         })
     }
     handleSpeedChanger = (e) => {
-        let changer = speedChangers.find(el => el.name === e.target.value)
+        const changer = SPEED_CHANGERS.find(el => el.name === e.target.value)
         this.setState({
             speedChanger: changer
         }, this.restartSong)
@@ -305,13 +305,13 @@ export default class Keyboard extends Component {
             const { keyboard } = this.state
             keyboard.forEach(note => {
                 note.status = ''
-                note.delay = appName === 'Genshin' ? 100 : 200
+                note.delay = APP_NAME === 'Genshin' ? 100 : 200
             })
             this.approachingNotesList = []
             this.setState({
                 keyboard,
                 songToPractice: [],
-                approachingNotes: NotesTable(appName === 'Sky' ? 15 : 21)
+                approachingNotes: NotesTable(APP_NAME === 'Sky' ? 15 : 21)
             }, res)
             this.props.functions.setHasSong(false)
         })
@@ -389,7 +389,7 @@ export default class Keyboard extends Component {
         const hasAnimation = this.props.data.hasAnimation
         const prevStatus = keyboard[note.index].status
         keyboard[note.index].status = 'clicked'
-        keyboard[note.index].delay = appName === 'Genshin' ? 100 : 200
+        keyboard[note.index].delay = APP_NAME === 'Genshin' ? 100 : 200
         this.handlePracticeClick(note)
         this.props.functions.playSound(note)
         const approachStatus = this.handleApproachClick(note)
@@ -419,7 +419,7 @@ export default class Keyboard extends Component {
             if(prevStatus === 'toClickNext') keyboard[note.index].status = prevStatus
             else keyboard[note.index].status = ''
             this.setState({ keyboard })
-        }, appName === 'Sky' ? 200 : 100)
+        }, APP_NAME === 'Sky' ? 200 : 100)
     }
     render() {
         const { state, props } = this

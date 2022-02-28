@@ -6,10 +6,20 @@ import { Slider } from './Slider'
 import { Select } from './Select'
 import { useTheme } from 'lib/hooks/useTheme'
 import './Settings.css'
-function SettingsRow({ data, update, objKey, changeVolume }) {
+import { SettingsPropriety } from 'types/SettingsPropriety'
+interface SettingsRowProps {
+    data: SettingsPropriety,
+    update: (data:{
+        key: string, 
+        data: SettingsPropriety
+    }) => void,
+    objKey: string, 
+    changeVolume: () => void
+}
+
+function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
     const [currentValue, setValue] = useState(data.value)
-    const [volume, setVolume] = useState(data.volume)
-    
+    const [volume, setVolume] = useState(data.type === 'instrument' ? data.volume : 0)
     const [theme] = useTheme()
     const { type } = data
     useEffect(() => {
@@ -17,15 +27,17 @@ function SettingsRow({ data, update, objKey, changeVolume }) {
 
     }, [data.value])
 
-    function handleCheckbox(value) {
-        update({
-            key: objKey,
-            data: { ...data, value }
-        })
+    function handleCheckbox(value: boolean) {
+        if(type === 'checkbox'){
+            update({
+                key: objKey,
+                data: { ...data, value }
+            })
+        }
     }
 
     if (objKey === "settingVesion") return null
-    return <div className="settings-row" style={{ backgroundColor: theme.layer('menu_background', 0.15).hex() }}>
+    return <div className="settings-row" style={{ backgroundColor: theme.layer('menu_background', 0.15).toString() }}>
         <div>
             {data.name}
         </div>
@@ -44,6 +56,7 @@ function SettingsRow({ data, update, objKey, changeVolume }) {
         {(type === 'number' || type === 'text') &&
             <Input
                 data={data}
+                //@ts-ignore
                 value={currentValue}
                 onChange={setValue}
                 onComplete={update}
@@ -52,6 +65,7 @@ function SettingsRow({ data, update, objKey, changeVolume }) {
         }
         {type === 'checkbox' &&
             <Switch
+                //@ts-ignore
                 checked={currentValue}
                 onChange={handleCheckbox}
             />
@@ -60,6 +74,7 @@ function SettingsRow({ data, update, objKey, changeVolume }) {
             <Slider
                 objectKey={objKey}
                 data={data}
+                //@ts-ignore
                 value={currentValue}
                 onChange={update}
             />
@@ -79,6 +94,7 @@ function SettingsRow({ data, update, objKey, changeVolume }) {
 }
 export default memo(SettingsRow, (p, n) => {
     return p.data.value === n.data.value
+        //@ts-ignore
         && p.data.volume === n.data.volume
         && p.update === n.update
 })

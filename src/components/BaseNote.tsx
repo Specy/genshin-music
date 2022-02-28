@@ -1,8 +1,9 @@
-import { cssClasses, appName, BASE_THEME_CONFIG } from "appConfig"
+import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
 import { ThemeStore } from "stores/ThemeStore"
+import { NoteImages } from "types/Keyboard"
 import SvgNotes from "./SvgNotes"
 
 
@@ -10,7 +11,7 @@ interface BaseNoteProps{
     data: any, //TODO do this
     noteText: string,
     handleClick: (data:any) => void,
-    noteImage: string
+    noteImage: NoteImages
 }
 export default function BaseNote({ data, noteText = 'A', handleClick, noteImage }:BaseNoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
@@ -33,11 +34,11 @@ export default function BaseNote({ data, noteText = 'A', handleClick, noteImage 
             style={{ borderColor: parseBorderColor(data.status) }}
         >
             <SvgNotes name={noteImage} />
-            {appName === 'Genshin' && <GenshinNoteBorder
+            {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderColor(data.status)}
             />}
-            <div className={cssClasses.noteName} style={{ color: textColor }}>
+            <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
                 {noteText}
             </div>
         </div>
@@ -45,7 +46,7 @@ export default function BaseNote({ data, noteText = 'A', handleClick, noteImage 
 }
 
 function parseClass(status: string) {
-    let className = cssClasses.note
+    let className = NOTES_CSS_CLASSES.note
     switch (status) {
         case 'clicked': className += " click-event"; break;
         default: break;
@@ -64,7 +65,7 @@ function parseBorderColor(status:string) {
 
 function getTextColor() {
     const noteBg = ThemeStore.get('note_background')
-    if (appName === 'Genshin') {
+    if (APP_NAME === 'Genshin') {
         if (noteBg.luminosity() > 0.65) {
             return BASE_THEME_CONFIG.text.note
         } else {

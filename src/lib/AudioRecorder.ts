@@ -1,9 +1,12 @@
-import { audioContext } from "appConfig";
+import { AUDIO_CONTEXT } from "appConfig";
+//@ts-ignore
 import toWav from 'audiobuffer-to-wav'
 import MediaRecorderPolyfill from 'audio-recorder-polyfill'
 export default class AudioRecorder {
+    node: MediaStreamAudioDestinationNode
+    recorder: MediaRecorder
     constructor() {
-        this.node = audioContext.createMediaStreamDestination()
+        this.node = AUDIO_CONTEXT.createMediaStreamDestination()
         if(!window.MediaRecorder){
             console.log("Audio recorder Polyfill")
             this.recorder = new MediaRecorderPolyfill(this.node.stream)
@@ -14,7 +17,10 @@ export default class AudioRecorder {
     start() {
         this.recorder.start()
     }
-    stop() {
+    stop(): Promise<{
+        data: Blob,
+        toUrl: () => string 
+    }> {
         return new Promise(resolve => {
             this.recorder.addEventListener('dataavailable', function (e) {
                 resolve({
@@ -28,7 +34,7 @@ export default class AudioRecorder {
         })
     }
 
-    async download(urlBlob, fileName) {
+    async download(urlBlob:Blob, fileName:string) {
         const anchor = document.createElement("a")
         const wav = toWav(await blobToAudio(urlBlob))
         var blob = new Blob([new DataView(wav)], {
@@ -40,15 +46,16 @@ export default class AudioRecorder {
     }
 }
 
-function blobToAudio(blob) {
+function blobToAudio(blob:Blob): Promise<AudioBuffer> {
     return new Promise(resolve => {
         const audioContext = new AudioContext();
         const fileReader = new FileReader();
         fileReader.onloadend = () => {
+            //@ts-ignore
             audioContext.decodeAudioData(fileReader.result, (audioBuffer) => {
                 resolve(audioBuffer)
-            });
-        };
+            })
+        }
         fileReader.readAsArrayBuffer(blob);
     })
 }

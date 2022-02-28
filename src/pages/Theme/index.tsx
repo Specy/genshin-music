@@ -38,7 +38,7 @@ function ThemePage() {
     }, [setTheme])
     async function handleChange(name: ThemeKeys, value: string) {
         if (!ThemeStore.isEditable()) {
-            if (value === ThemeStore.get(name).hex()) return
+            if (value === ThemeStore.get(name).toString()) return
             const themeName = await asyncPrompt('Creating a new theme from this default theme, write the name:')
             if (themeName === null) return
             await cloneTheme(themeName)

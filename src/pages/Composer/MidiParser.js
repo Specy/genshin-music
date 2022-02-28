@@ -1,8 +1,8 @@
 import React, { Component, useEffect, useState } from 'react'
 import { FilePicker } from 'components/FilePicker'
 import { Midi } from '@tonejs/midi'
-import { pitchArr, ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
-import { appName } from 'appConfig'
+import { ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
+import { APP_NAME,PITCHES } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
@@ -55,7 +55,7 @@ class MidiImport extends Component {
             fileName: file.name,
             bpm: Math.floor(bpm * 4) || 220,
             offset: 0,
-            pitch: pitchArr.includes(key) ? key : 'C',
+            pitch: PITCHES.includes(key) ? key : 'C',
         }, () => { if (this.state.midi !== null) this.convertMidi() })
     }
 
@@ -410,7 +410,7 @@ function NumberInput({ changeValue, value, delay = 500, step = 1, style={} }) {
 function convertMidiNote(midiNote) {
     let note = null
     let isAccidental = false
-    if (appName === 'Sky') {
+    if (APP_NAME === 'Sky') {
         switch (midiNote) {
             case 60: note = 0; break;
             case 61: note = 0; isAccidental = true; break;
@@ -440,7 +440,7 @@ function convertMidiNote(midiNote) {
             default: note = null;
         }
     }
-    if (appName === 'Genshin') {
+    if (APP_NAME === 'Genshin') {
         switch (midiNote) {
             case 48: note = 14; break;
             case 49: note = 14; isAccidental = true; break;

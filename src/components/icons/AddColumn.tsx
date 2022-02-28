@@ -1,4 +1,8 @@
-export default function AddColumn({ className }) {
+interface AddColumnProps{
+    className?: string
+}
+
+export default function AddColumn({ className }: AddColumnProps) {
     return <svg
         width="194.40327mm"
         height="290.853mm"

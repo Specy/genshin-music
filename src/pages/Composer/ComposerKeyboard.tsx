@@ -1,11 +1,29 @@
 import ComposerNote from "./Components/ComposerNote"
-import { getNoteText } from 'lib/Utils'
+import { Column, getNoteText } from 'lib/Utils'
 import MultiSwitch from "./Components/MultiSwitch"
-import { LAYOUT_IMAGES, layersIndexes } from "appConfig"
+import { LAYOUT_IMAGES, LAYERS_INDEXES } from "appConfig"
 import { TempoChangers } from "lib/Utils"
 import { ThemeStore } from "stores/ThemeStore"
+import Instrument from "lib/Instrument"
 
-export default function ComposerKeyboard({ data, functions }) {
+
+interface ComposerKeyboardProps{
+    data: {
+        keyboard: Instrument,
+        currentColumn: Column, 
+        layer: number, 
+        pitch: string, 
+        isPlaying: boolean, 
+        noteNameType: string
+    },
+    functions: {
+        handleClick: () => void
+        handleTempoChanger: (tempoChanger: typeof TempoChangers[number]) => void
+        changeLayer: () => void
+    }
+}
+
+export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
     let hiddenSideMenu = data.isPlaying ? " hidden" : ""
     let keyboardClass = "keyboard"
     if (data.keyboard.layout.length === 15) keyboardClass += " keyboard-5"
@@ -19,6 +37,7 @@ export default function ComposerKeyboard({ data, functions }) {
                 let noteImage = ""
                 try {
                     index = data.currentColumn.notes.findIndex((e) => e.index === i)
+                    //@ts-ignore
                     noteImage = LAYOUT_IMAGES[data.keyboard.layout.length][note.index]
                     noteText = getNoteText(data.noteNameType, note.index, data.pitch, data.keyboard.layout.length)
                 } catch (e) { }
@@ -28,6 +47,7 @@ export default function ComposerKeyboard({ data, functions }) {
                     data={note}
                     noteText={noteText}
                     instrument={data.keyboard.instrumentName}
+                    //@ts-ignore
                     noteImage={noteImage}
                     clickAction={functions.handleClick}
                 />
@@ -39,8 +59,8 @@ export default function ComposerKeyboard({ data, functions }) {
                     Layer
                 </div>
                 <MultiSwitch
-                    buttonsClass={"layer-button"}
-                    options={layersIndexes}
+                    buttonsClass="layer-button"
+                    options={LAYERS_INDEXES}
                     onSelect={functions.changeLayer}
                     selected={data.layer}
                 />
@@ -49,19 +69,19 @@ export default function ComposerKeyboard({ data, functions }) {
                 <div className="bottom-right-text">
                     Tempo
                 </div>
-                {TempoChangers.map((e) => {
+                {TempoChangers.map((tempoChanger) => {
                     return <button
-                        key={e.id}
-                        onClick={() => functions.handleTempoChanger(e)}
-                        style={e.changer === 1 
+                        key={tempoChanger.id}
+                        onClick={() => functions.handleTempoChanger(tempoChanger)}
+                        style={tempoChanger.changer === 1 
                             ? {
-                                backgroundColor: ThemeStore.get('primary'),
-                                color: ThemeStore.getText('primary')
+                                backgroundColor: ThemeStore.get('primary').toString(),
+                                color: ThemeStore.getText('primary').toString()
                             }
-                            : {backgroundColor: "#" + e.color.toString(16)}
+                            : {backgroundColor: "#" + tempoChanger.color.toString(16)}
                         }
                     >
-                        {e.text}
+                        {tempoChanger.text}
                     </button>
                 })}
             </div>

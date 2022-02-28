@@ -1,5 +1,6 @@
+//@ts-ignore
 const GA = window?.gtag
-async function callGA(fn) {
+async function callGA(fn: () => Promise<void>) {
     try {
         return {
             data: await fn()
@@ -10,27 +11,27 @@ async function callGA(fn) {
     }
 }
 
-function event(action, params) {
+function event(action:any, params:any) {
     return callGA(() => GA('event', action, params))
 }
 
-function userSongs(params, type) {
+function userSongs(type:string, params:any) {
     return event('songs_' + type, params)
 }
 
-function songSearch(params) {
+function songSearch(params:any) {
     return event('song_search', params)
 }
 
-function UIEvent(type, params) {
+function UIEvent(type:string, params:any) {
     return event('UI_' + type, params)
 }
 
-function songEvent(params) {
+function songEvent(params:any) {
     return event('song_event', params)
 }
 
-function pageView(page) {
+function pageView(page: string) {
     return event('page_view', page)
 }
 

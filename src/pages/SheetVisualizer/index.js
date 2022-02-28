@@ -2,7 +2,7 @@ import './SheetVisualizer.css'
 import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
 import { DB } from 'Database'
-import { appName } from 'appConfig'
+import { APP_NAME } from 'appConfig'
 import { ComposerToRecording, getNoteText } from 'lib/Utils'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
@@ -39,8 +39,8 @@ export default function SheetVisualizer(props) {
     }, [])
 
     function getChunkNoteText(i) {  
-        const text = getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', appName === "Genshin" ? 21 : 15)
-        return appName === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
+        const text = getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === "Genshin" ? 21 : 15)
+        return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
     function handleClick(song) {
         setCurrentSong(song)
@@ -70,7 +70,7 @@ export default function SheetVisualizer(props) {
             sheetText += emptyChunks > 2 ? ' \n\n' : "- ".repeat(emptyChunks)
             if (chunk.notes.length > 1) {
                 const text = chunk.notes.map(e => getChunkNoteText(e[0])).join('')
-                sheetText += appName === "Genshin" ? `[${text}] ` : `${text} `
+                sheetText += APP_NAME === "Genshin" ? `[${text}] ` : `${text} `
             } else if (chunk.notes.length > 0) {
                 sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
             }
@@ -162,7 +162,7 @@ class Chunk {
     }
 }
 function SheetFrame({ frame, rows, hasText }) {
-    const columnsPerRow = appName === 'Genshin' ? 7 : 5
+    const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const notes = new Array(columnsPerRow * rows).fill(0)
     frame.notes.forEach(note => {
         notes[note[0]] = 1
@@ -180,7 +180,7 @@ function SheetFrame({ frame, rows, hasText }) {
                             style={!exists ? {backgroundColor: ThemeStore.layer('primary',0.2)} : {}}
                         >
                         {(exists && hasText) 
-                            ? getNoteText(appName === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', appName === 'Genshin' ? 21 : 15) 
+                            ? getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === 'Genshin' ? 21 : 15) 
                             : null
                         }
                     </div>

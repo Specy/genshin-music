@@ -1,12 +1,12 @@
 
 import { SimpleMenu } from "components/SimpleMenu"
 import './MidiSetup.css'
-import { appName } from "appConfig"
+import { APP_NAME } from "appConfig"
 import { getMIDISettings } from "lib/BaseSettings"
 import BaseNote from "components/BaseNote"
 import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
 import React, { Component } from 'react'
-import { audioContext, instruments, isMidiAvailable } from "appConfig"
+import { AUDIO_CONTEXT, INSTRUMENTS, IS_MIDI_AVAILABLE } from "appConfig"
 import Instrument from "lib/Instrument"
 import Shortcut from "./Shortcut"
 import LoggerStore from "stores/LoggerStore"
@@ -21,7 +21,7 @@ export default class MidiSetup extends Component {
             sources: [],
             selectedSource: undefined
         }
-        this.audioContext = audioContext
+        this.audioContext = AUDIO_CONTEXT
         this.mounted = true
         this.MidiAccess = undefined
     }
@@ -40,8 +40,8 @@ export default class MidiSetup extends Component {
         if (this.selectedSource) this.selectedSource.onmidimessage = null
     }
     init = () => {
-        this.loadInstrument(instruments[0])
-        if (isMidiAvailable) {
+        this.loadInstrument(INSTRUMENTS[0])
+        if (IS_MIDI_AVAILABLE) {
             navigator.requestMIDIAccess().then(this.initMidi, () => {
                 LoggerStore.error('MIDI permission not accepted')
             })
@@ -97,7 +97,7 @@ export default class MidiSetup extends Component {
         const { settings } = this.state
         settings.enabled = true
         this.setState({ settings })
-        localStorage.setItem(appName + '_MIDI_Settings', JSON.stringify(this.state.settings))
+        localStorage.setItem(APP_NAME + '_MIDI_Settings', JSON.stringify(this.state.settings))
     }
     loadInstrument = async (name) => {
         this.state.instrument?.delete?.()
@@ -207,7 +207,7 @@ export default class MidiSetup extends Component {
                 </div>
                 <div className="midi-setup-content">
                     <div
-                        className={appName === 'Genshin' ? "keyboard" : "keyboard keyboard-5"}
+                        className={APP_NAME === 'Genshin' ? "keyboard" : "keyboard keyboard-5"}
                         style={{ marginTop: 'auto', width: 'fit-content' }}
                     >
                         {settings.notes.map((note, i) => {

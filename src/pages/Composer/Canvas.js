@@ -5,7 +5,7 @@ import isMobile from "is-mobile"
 import "./Composer.css"
 import { ComposerCache } from "./Cache"
 
-import { composerNotePositions, NOTES_PER_COLUMN, appName } from "appConfig"
+import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN, APP_NAME } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeStore } from 'stores/ThemeStore';
 import { observe } from 'mobx';
@@ -24,7 +24,7 @@ export default class ComposerCanvas extends Component {
             width = nearestEven(sizes.height * 0.84)
             height = nearestEven(sizes.width * 0.45)
         }
-        if (appName === "Sky") height = nearestEven(height * 0.95)
+        if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
         this.state = {
             width: Math.floor(width),
             height: Math.floor(height),
@@ -36,7 +36,7 @@ export default class ComposerCanvas extends Component {
             currentBreakpoint: -1,
             theme: {
                 timeline: {
-                    hex: ThemeStore.layer('primary',0.1).hex(),
+                    hex: ThemeStore.layer('primary',0.1).toString(),
                     hexNumber: ThemeStore.layer('primary',0.1).rgbNumber()
                 }
             },
@@ -77,7 +77,7 @@ export default class ComposerCanvas extends Component {
                 ),
                 theme: {
                     timeline: {
-                        hex: ThemeStore.layer('primary',0.1).hex(),
+                        hex: ThemeStore.layer('primary',0.1).toString(),
                         hexNumber: ThemeStore.layer('primary',0.1).rgbNumber()
                     }
                 }
@@ -367,7 +367,7 @@ function Column({ data, index, sizes, click, cache, backgroundCache, isBreakpoin
             return <Sprite
                 key={note.index}
                 image={cache.notes[note.layer]}
-                y={composerNotePositions[note.index] * sizes.height / NOTES_PER_COLUMN}
+                y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
             >
             </Sprite>
         })}

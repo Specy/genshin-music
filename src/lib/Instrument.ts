@@ -1,21 +1,30 @@
-import { instrumentsData, layoutData, instruments,audioContext } from "appConfig"
+import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS,AUDIO_CONTEXT } from "appConfig"
 
 export default class Instrument {
-    constructor(instrumentName) {
-        this.instrumentName = instrumentName === undefined ? instruments[0] : instrumentName
-        if (!instruments.includes(this.instrumentName)) this.instrumentName = instruments[0] 
+    instrumentName: typeof INSTRUMENTS[number]
+    layout: NoteData[]
+    buffers: AudioBuffer[]
+    loaded: boolean
+    deleted: boolean
+    volumeNode: GainNode
+    keyboardLayout: string[]
+    mobileLayout: string[]
+    keyboardCodes: string[]
+    constructor(instrumentName: typeof INSTRUMENTS[number]) {
+        this.instrumentName = instrumentName === undefined ? INSTRUMENTS[0] : instrumentName
+        if (!INSTRUMENTS.includes(this.instrumentName)) this.instrumentName = INSTRUMENTS[0] 
         this.layout = []
         this.buffers = []
         this.loaded = false
         this.deleted = false
-        this.volumeNode = audioContext.createGain()
-        const instrumentData = instrumentsData[this.instrumentName]
-        this.keyboardLayout = layoutData[instrumentData.notes].keyboardLayout
-        this.mobileLayout = layoutData[instrumentData.notes].mobileLayout
-        this.keyboardCodes = layoutData[instrumentData.notes].keyboardCodes
+        this.volumeNode = AUDIO_CONTEXT.createGain()
+        const instrumentData = INSTRUMENTS_DATA[this.instrumentName as keyof typeof INSTRUMENTS_DATA]
+        this.keyboardLayout = LAYOUT_DATA[instrumentData.notes].keyboardLayout
+        this.mobileLayout = LAYOUT_DATA[instrumentData.notes].mobileLayout
+        this.keyboardCodes = LAYOUT_DATA[instrumentData.notes].keyboardCodes
         
         this.keyboardLayout.forEach((noteName, i) => {
-            let noteNames = {
+            const noteNames = {
                 keyboard: noteName,
                 mobile: this.mobileLayout[i]
             }
@@ -25,20 +34,20 @@ export default class Instrument {
 
         this.volumeNode.gain.value = 0.8
     }
-    getNoteFromCode = (code) => {
+    getNoteFromCode = (code:number | string) => {
         let index = this.keyboardLayout.findIndex(e => e === String(code))
         return index !== -1 ? index : null
     }
 
-    changeVolume = (amount) => {
+    changeVolume = (amount:number ) => {
         let newVolume = Number((amount / 135).toFixed(2))
         if(amount < 5) newVolume = 0
         this.volumeNode.gain.value = newVolume
     }
 
-    play = (note, pitch) => {
+    play = (note: number, pitch:number) => {
         if(this.deleted) return
-        let player = audioContext.createBufferSource()
+        const player = AUDIO_CONTEXT.createBufferSource()
         player.buffer = this.buffers[note]
         player.connect(this.volumeNode)
         player.playbackRate.value = pitch
@@ -49,13 +58,14 @@ export default class Instrument {
         }
     }
     load = async () => {
-        let emptyBuffer = audioContext.createBuffer(2, audioContext.sampleRate, audioContext.sampleRate)
-        const requests = this.layout.map(note => {
+        let emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
+        const requests: Promise<AudioBuffer>[] = this.layout.map(note => {
+            //dont change any of this, safari bug
             return new Promise(resolve => {
                 fetch(note.url)
                     .then(result => result.arrayBuffer())
                     .then(buffer => {
-                        audioContext.decodeAudioData(buffer, resolve, () => {
+                        AUDIO_CONTEXT.decodeAudioData(buffer, resolve, () => {
                             resolve(emptyBuffer)
                         })
                         .catch(e => {resolve(emptyBuffer)})
@@ -69,18 +79,27 @@ export default class Instrument {
     disconnect = () =>{
         this.volumeNode.disconnect()
     }
-    connect = (node) => {
+    connect = (node: AudioNode) => {
         this.volumeNode.connect(node)
     }
     delete = () => {
         this.disconnect()
         this.deleted = true
-        this.buffers = null
+        this.buffers = []
     }
 }
 
+
+interface NoteName{
+        keyboard: string, 
+        mobile: string
+}
 class NoteData {
-    constructor(index, noteNames, url) {
+    index: number
+    noteNames: NoteName
+    url: string
+    buffer: ArrayBuffer
+    constructor(index:number, noteNames: NoteName, url: string) {
         this.index = index
         this.noteNames = noteNames
         this.url = url

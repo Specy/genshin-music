@@ -1,8 +1,8 @@
-const appName = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
-const appVersion = '2.4.1'
-//TODO make all those variables uppercase
-console.log(`${appName}-V${appVersion}`)
-const updateMessage = appName === 'Genshin'
+const APP_NAME = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
+const APP_VERSION = '2.4.1'
+
+console.log(`${APP_NAME}-V${APP_VERSION}`)
+const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? ` - Added start and end slider for selecting which part of the song to play/practice
         - Added app themes, fully custommize the look of your app
         - Bug fixes
@@ -11,29 +11,31 @@ const updateMessage = appName === 'Genshin'
         - Added app themes, fully custommize the look of your app
         - Bug fixes
     `.trim()
-const layersIndexes = [1,2,3]
-const cssClasses = {
-    noteComposer: appName === "Genshin" ? "note-composer" : "note-composer-sky",
-    note: appName === "Genshin" ? "note" : "note-sky",
-    noteAnimation: appName === 'Genshin' ? "note-animation" : "note-animation-sky",
-    approachCircle: appName === "Genshin" ? "approach-circle" : "approach-circle-sky",
-    noteName: appName === "Genshin" ? "note-name" : "note-name-sky"
+const LAYERS_INDEXES = [1,2,3]
+const NOTES_CSS_CLASSES = {
+    noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
+    note: APP_NAME === "Genshin" ? "note" : "note-sky",
+    noteAnimation: APP_NAME === 'Genshin' ? "note-animation" : "note-animation-sky",
+    approachCircle: APP_NAME === "Genshin" ? "approach-circle" : "approach-circle-sky",
+    noteName: APP_NAME === "Genshin" ? "note-name" : "note-name-sky"
 }
-const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+//@ts-ignore
+const AUDIO_CONTEXT = new (window.AudioContext || window.webkitAudioContext)()
 
 const BASE_THEME_CONFIG = {
     text: {
         light: '#edeae5',
         dark: '#151414',
-        note: appName === 'Genshin' ? '#aaaa82' : '#212121'
+        note: APP_NAME === 'Genshin' ? '#aaaa82' : '#212121'
     }
 }
 const MIDI_STATUS = {
     up: 128,
     down: 144
 }
-const isMidiAvailable = !!navigator.requestMIDIAccess
-const instruments = appName === "Genshin"
+//@ts-ignore
+const IS_MIDI_AVAILABLE = !!navigator.requestMIDIAccess
+const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
         "Lyre",
         "Zither",
@@ -59,8 +61,8 @@ const instruments = appName === "Genshin"
         "DunDun",
         "HandPan"
     ]
-const NOTES_PER_COLUMN = appName === "Genshin" ? 21 : 15
-const instrumentsData = {
+const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
+const BaseinstrumentsData = {
     Lyre: {
         notes: 21
     },
@@ -129,9 +131,24 @@ const instrumentsData = {
         notes: 15
     }
 }
+type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
+type InstrumentsDataProps = {
+    [key in InstrumentsDataKeys]: {
+        notes: 8 | 15 | 21
+        fill?: string
+        clickColor?: string
+    }
+}
+//@ts-ignore
+const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
+interface LayoutDataType{
+    keyboardLayout: string[],
+    mobileLayout: string[],
+    keyboardCodes: string[],
+    abcLayout: string[]
+}
 
-
-const layoutData = {
+const LAYOUT_DATA = {
     21: {
         keyboardLayout: (
             "Q W E R T Y U " +
@@ -188,9 +205,13 @@ const layoutData = {
             "B1 B2 B3 B4 B5 " +
             "C1 C2 C3 C4 C5").split(" ")
     }
+} as {
+    8: LayoutDataType,
+    15: LayoutDataType
+    21: LayoutDataType,
 }
 
-const keyNames = {
+const NOTE_NAMES = {
     Sky: {
         0: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
         1: ["Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db"],
@@ -220,22 +241,22 @@ const keyNames = {
         11: ["B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B"]
     }
 }
-const speedChangers = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
+const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
     return {
         name: `x${e}`,
         value: e
     }
 })
 
-const pitchArr = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 
-const composerNotePositions = appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
+const COMPOSER_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
 
-const importNotePositions = appName === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+const IMPORT_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
 const LAYOUT_IMAGES = {
     15: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" "),
-    8: appName === "Sky" ? "cr dm cr dm cr dm cr dm".split(" ") : "do re mi fa do re mi fa".split(" "),
+    8: APP_NAME === "Sky" ? "cr dm cr dm cr dm cr dm".split(" ") : "do re mi fa do re mi fa".split(" "),
     21: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ")
 }
 
@@ -271,31 +292,31 @@ const CACHE_DATA = {
 
 
 function isTwa() {
-    let isTwa = JSON.parse(sessionStorage.getItem('isTwa'))
+    let isTwa = JSON.parse(sessionStorage.getItem('isTwa') || 'null')
     return isTwa
 }
 
 
 export {
-    instruments,
-    instrumentsData,
-    composerNotePositions,
-    importNotePositions,
-    appName,
-    layoutData,
-    cssClasses,
+    INSTRUMENTS,
+    INSTRUMENTS_DATA,
+    COMPOSER_NOTE_POSITIONS,
+    IMPORT_NOTE_POSITIONS,
+    APP_NAME,
+    LAYOUT_DATA,
+    NOTES_CSS_CLASSES,
     NOTES_PER_COLUMN,
-    keyNames,
-    pitchArr,
+    NOTE_NAMES,
+    PITCHES,
     LAYOUT_IMAGES,
-    appVersion,
-    speedChangers,
-    audioContext,
+    APP_VERSION,
+    SPEED_CHANGERS,
+    AUDIO_CONTEXT,
     isTwa,
     CACHE_DATA,
-    updateMessage,
+    UPDATE_MESSAGE,
     MIDI_STATUS,
-    isMidiAvailable,
-    layersIndexes,
+    IS_MIDI_AVAILABLE,
+    LAYERS_INDEXES,
     BASE_THEME_CONFIG
 }

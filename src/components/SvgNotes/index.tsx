@@ -11,11 +11,11 @@ import laNote from "./genshin/la";
 import tiNote from "./genshin/ti";
 
 import { memo } from "react";
+import { NoteImages } from "types/Keyboard";
 const notes = {
     cr: crNote,
     dm: dmNote,
     dmcr: dmcrNote,
-
     do: doNote,
     re: reNote,
     mi: miNote,
@@ -24,12 +24,16 @@ const notes = {
     la: laNote,
     ti: tiNote
 }
-
-function SvgNote({name,color = 'currentColor'}){
+interface SvgNoteProps{
+    name: NoteImages,
+    color?: string
+    fill?: string
+}
+function SvgNote({name,color = 'currentColor'}: SvgNoteProps){
     const NoteComponent = notes[name]
     return <NoteComponent style={{fill: color,stroke: color}}/>
 }
 
 export default memo(SvgNote,(p,n) => {
-    return p.fill === n.fill
+    return p.color === n.color
 })

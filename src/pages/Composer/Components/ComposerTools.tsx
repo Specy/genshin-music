@@ -1,13 +1,28 @@
 import { useTheme } from "lib/hooks/useTheme"
+import { Column } from "lib/Utils"
 
-export default function ComposerTools(props) {
+interface ComposerToolsProps{
+    data: {
+        visible: boolean
+        copiedColumns: Column[]
+        layer: any,
+    }
+    functions: {
+        toggleTools: () => void
+        copyColumns: (layer: any) => void
+        eraseColumns: (layer: any) => void
+        pasteColumns: (insert: boolean) => void
+        deleteColumns: () => void
+    }
+}
+
+export default function ComposerTools({ data, functions }: ComposerToolsProps) {
     const [theme] = useTheme()
-    const { data, functions } = props
     const { toggleTools, copyColumns, eraseColumns, pasteColumns, deleteColumns } = functions
     const { visible, copiedColumns } = data
     const hasCopiedColumns = copiedColumns.length > 0
     const themeStyle = {
-        backgroundColor: theme.layer('primary',0.2).hex()
+        backgroundColor: theme.layer('primary',0.2).toString()
     }
     return <div className={visible ? "floating-tools tools-visible" : "floating-tools"}>
         <div className="tools-row">
@@ -34,7 +49,7 @@ export default function ComposerTools(props) {
                     active={hasCopiedColumns}
                     style={themeStyle}
                 >
-                    Copy layer {data.layer}
+                   {`Copy layer ${data.layer}`}
                 </ToolButton>
             </div>
             <div className='tools-half'>
@@ -66,7 +81,7 @@ export default function ComposerTools(props) {
                     onClick={() => eraseColumns(data.layer)}
                     style={themeStyle}
                 >
-                    Erase layer {data.layer}
+                    {`Erase layer ${data.layer}`}
                 </ToolButton>
             </div>
 
@@ -81,7 +96,14 @@ export default function ComposerTools(props) {
     </div>
 }
 
-function ToolButton({ disabled, onClick, active, style, children }) {
+interface ToolButtonprops{
+    disabled: boolean
+    onClick: () => void
+    active?: boolean
+    style: any
+    children: React.ReactChild
+}
+function ToolButton({ disabled, onClick, active, style, children }: ToolButtonprops) {
     return <button
         disabled={disabled}
         onClick={(e) => {

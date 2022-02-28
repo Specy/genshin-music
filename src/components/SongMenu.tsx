@@ -24,7 +24,7 @@ export function SongMenu({ songs, SongComponent, componentProps, className = '',
             <button
                 className={'tab-selector'}
                 style={{
-                    backgroundColor: songType === 'recorded' ? selectedColor.hex() : unselectedColor.hex()
+                    backgroundColor: songType === 'recorded' ? selectedColor.toString() : unselectedColor.toString()
                 }}
                 onClick={() => setSongType("recorded")}
             >
@@ -33,14 +33,14 @@ export function SongMenu({ songs, SongComponent, componentProps, className = '',
             <button
                 className={'tab-selector'}
                 style={{
-                    backgroundColor: songType !== 'recorded' ? selectedColor.hex() : unselectedColor.hex()
+                    backgroundColor: songType !== 'recorded' ? selectedColor.toString() : unselectedColor.toString()
                 }}
                 onClick={() => setSongType("composed")}
             >
                 Composed
             </button>
         </div>
-        <div className="songs-wrapper" style={{backgroundColor: selectedColor.hex()}}>
+        <div className="songs-wrapper" style={{backgroundColor: selectedColor.toString()}}>
             {songs.filter((song) => 
                 songType === 'composed' ? song.data?.isComposedVersion : !song.data?.isComposedVersion
             ).map((song) =>

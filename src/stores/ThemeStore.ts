@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 import { ThemeSettings } from 'lib/BaseSettings'
-import { appName, BASE_THEME_CONFIG } from 'appConfig'
+import { APP_NAME, BASE_THEME_CONFIG } from 'appConfig'
 // @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
@@ -53,7 +53,7 @@ export class ThemeStoreClass {
     }
     load = async () => {
         try {
-            const themeId = localStorage.getItem(appName + '_Theme')
+            const themeId = localStorage.getItem(APP_NAME + '_Theme')
             if (themeId !== null) {
                 const theme = await DB.getTheme(themeId)
                 if (theme) this.loadFromTheme(theme)
@@ -113,7 +113,7 @@ export class ThemeStoreClass {
                 //@ts-ignore
                 if (this.baseTheme.data[key] !== undefined) {
                     const filtered = Color(value.value)
-                    this.set(key as ThemeKeys, value.value.includes('rgba') ? filtered.rgb().toString() : filtered.hex())
+                    this.set(key as ThemeKeys, value.value.includes('rgba') ? filtered.rgb().toString() : filtered.toString())
                 }
             })
             Object.entries(json.other).forEach(([key, value]: [string, any]) => {
@@ -143,7 +143,7 @@ export class ThemeStoreClass {
         Object.entries(obj.data).forEach(([key, value]: [string, any]) => {
             if (sanitized.data[key] !== undefined) {
                 const filtered = Color(value.value)
-                sanitized.data[key].value = filtered.hex()
+                sanitized.data[key].value = filtered.toString()
                 sanitized.data[key].text = filtered.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
             }
         })
@@ -171,7 +171,7 @@ export class ThemeStoreClass {
         }
     }
     save = () => {
-        localStorage.setItem(appName + '_Theme', this.getId())
+        localStorage.setItem(APP_NAME + '_Theme', this.getId())
         return DB.updateTheme(this.state.other.id, cloneDeep(this.state))
     }
 }

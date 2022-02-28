@@ -8,7 +8,7 @@ import { MainPageSettings } from "lib/BaseSettings"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { appName, audioContext, isTwa } from "appConfig"
+import { APP_NAME, AUDIO_CONTEXT, isTwa } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
@@ -32,7 +32,7 @@ class Main extends Component {
 		this.mounted = false
 		this.reverbNode = undefined
 		this.reverbVolumeNode = undefined
-		this.audioContext = audioContext
+		this.audioContext = AUDIO_CONTEXT
 		this.recorder = new AudioRecorder()
 	}
 
@@ -161,20 +161,20 @@ class Main extends Component {
 
 	getSettings = () => {
 		//TODO export this into a function / class
-		let storedSettings = localStorage.getItem(appName + "_Main_Settings")
+		let storedSettings = localStorage.getItem(APP_NAME + "_Main_Settings")
 		try {
 			storedSettings = JSON.parse(storedSettings)
 		} catch (e) {
 			storedSettings = null
 		}
 		if (storedSettings !== null) {
-			if (storedSettings.settingVesion !== MainPageSettings.settingVesion) {
-				this.updateSettings(MainPageSettings)
-				return MainPageSettings
+			if (storedSettings.other?.settingVesion !== MainPageSettings.other.settingVesion) {
+				this.updateSettings(MainPageSettings.data)
+				return MainPageSettings.data
 			}
-			return storedSettings
+			return storedSettings.data
 		}
-		return MainPageSettings
+		return MainPageSettings.data
 	}
 
 	loadInstrument = async (name) => {
@@ -226,18 +226,16 @@ class Main extends Component {
 
 	updateSettings = (override) => {
 		//TODO make settings a global state and wrap it into a class to update it
-		let state
-		if (override !== undefined) {
-			state = override
-		} else {
-			state = this.state.settings
+		const state = {
+			other: MainPageSettings.other,
+			data: override !== undefined ? override : this.state.settings
 		}
-		localStorage.setItem(appName + "_Main_Settings", JSON.stringify(state))
+		localStorage.setItem(APP_NAME + "_Main_Settings", JSON.stringify(state))
 	}
 
 	handleSettingChange = (setting) => {
-		let settings = this.state.settings
-		let data = setting.data
+		const { settings } = this.state
+		const { data } = setting
 		settings[setting.key] = { ...settings[setting.key], value: data.value }
 		if (setting.key === "instrument") {
 			this.loadInstrument(data.value)
@@ -283,7 +281,7 @@ class Main extends Component {
 			await DB.removeSong({ name: name })
 			this.syncSongs()
 		}
-		Analytics.userSongs({ name: name, page: 'player' }, 'delete')
+		Analytics.userSongs('delete',{ name: name, page: 'player' })
 	}
 
 	handleRecording = (note) => {
@@ -321,7 +319,7 @@ class Main extends Component {
 			song.pitch = this.state.settings.pitch.value
 			if (songName !== null) {
 				this.addSong(song)
-				Analytics.userSongs({ name: songName, page: 'player' }, 'record')
+				Analytics.userSongs('record',{ name: songName, page: 'player' })
 			}
 		} else {
 			this.recording = new Recording()
@@ -354,7 +352,7 @@ class Main extends Component {
 			if (fileName) recorder.download(recording.data, fileName + '.wav')
 			this.toggleReverbNodes(hasReverb)
 			this.reverbVolumeNode.disconnect()
-			this.reverbVolumeNode.connect(audioContext.destination)
+			this.reverbVolumeNode.connect(this.audioContext.destination)
 
 		}
 		this.setState({
