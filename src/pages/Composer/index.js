@@ -798,9 +798,9 @@ class Composer extends Component {
             toolsColumns: []
         }, this.validateBreakpoints)
     }
-    changeMidiVisibility = (visibility) => {
-        this.setState({ midiVisible: visibility })
-        if(visibility) Analytics.songEvent({type: 'create_MIDI'})
+    changeMidiVisibility = (visible) => {
+        this.setState({ midiVisible: visible })
+        if(visible) Analytics.songEvent({type: 'create_MIDI'})
     }
     render() {
         const { state } = this

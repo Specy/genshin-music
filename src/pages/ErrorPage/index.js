@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { FaTrash, FaDownload } from 'react-icons/fa';
 import { DB } from 'Database';
-import { FileDownloader, prepareSongDownload } from "lib/Utils"
+import { FileDownloader } from "lib/Utils"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { APP_NAME } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
@@ -19,19 +19,13 @@ class ErrorPage extends Component {
         this.syncSongs()
     }
     downloadAllSongs = () => {
-        let toDownload = []
         const { songs } = this.state
-        songs.forEach(song => {
-            if (song._id) delete song._id
-            if (APP_NAME === "Sky") {
-                song = prepareSongDownload(song)
-            }
-            Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
+        const toDownload = songs.map(song => {
+            return APP_NAME === 'Sky'? song.toOldFormat() : song.serialize()
         })
-        let fileDownloader = new FileDownloader()
-        let json = JSON.stringify(toDownload)
-        let date = new Date().toISOString().split('T')[0]
-        fileDownloader.download(json, `${APP_NAME}_Backup_${date}.json`)
+        const json = JSON.stringify(toDownload)
+        const date = new Date().toISOString().split('T')[0]
+        FileDownloader.download(json, `${APP_NAME}_Backup_${date}.json`)
         LoggerStore.success("Song backup downloaded")
     }
     syncSongs = async () => {
@@ -58,18 +52,10 @@ class ErrorPage extends Component {
         LoggerStore.success("Settings have been reset")
     }
     downloadSong = (song) => {
-        if (song._id) delete song._id
-        let songName = song.name
-        if (APP_NAME === "Sky") {
-            song = prepareSongDownload(song)
-        }
-        if (!Array.isArray(song)) song = [song]
-        song.forEach(song1 => {
-            song1.data.appName = APP_NAME
-        })
-        let json = JSON.stringify(song)
-        let fileDownloader = new FileDownloader()
-        fileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
+        const songName = song.name
+        const converted = [APP_NAME === 'Sky'? song.toOldFormat() : song.serialize()]
+        const json = JSON.stringify(converted)
+        FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
     }
     render() {

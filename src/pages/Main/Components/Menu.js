@@ -3,7 +3,7 @@ import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaS
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, prepareSongImport, prepareSongDownload } from "lib/Utils"
+import { FileDownloader, prepareSongImport } from "lib/Utils"
 import { FilePicker } from "react-file-picker"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { SongStore } from 'stores/SongStore'
@@ -137,6 +137,7 @@ class Menu extends Component {
         Analytics.UIEvent('menu', { tab: selection })
     }
     importSong = (file) => {
+        //TODO change this to the custom file picker
         const reader = new FileReader();
         reader.addEventListener('load', async (event) => {
             try {
@@ -161,34 +162,21 @@ class Menu extends Component {
         reader.readAsText(file)
     }
     downloadSong = (song) => {
-        if (song._id) delete song._id
-        const name = song.name
-        if (APP_NAME === "Sky") {
-            //adds old format into the sheet
-            song = prepareSongDownload(song)
-        }
-        if (!Array.isArray(song)) song = [song]
-        song.forEach(song1 => {
-            song1.data.appName = APP_NAME
-        })
-        const json = JSON.stringify(song)
-        new FileDownloader().download(json, `${name}.${APP_NAME.toLowerCase()}sheet.json`)
+        const songName = song.name
+        const converted = [APP_NAME === 'Sky'? song.toOldFormat() : song.serialize()]
+        const json = JSON.stringify(converted)
+        FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
-        Analytics.userSongs('download',{ name: name, page: 'player' })
+        Analytics.userSongs('download',{ name: songName, page: 'player' })
     }
 
     downloadAllSongs = () => {
-        const toDownload = []
-        this.props.data.songs.forEach(song => {
-            if (song._id) delete song._id
-            if (APP_NAME === "Sky") {
-                song = prepareSongDownload(song)
-            }
-            Array.isArray(song) ? toDownload.push(...song) : toDownload.push(song)
+        const toDownload = this.props.data.songs.map(song => {
+            return APP_NAME === 'Sky'? song.toOldFormat() : song.serialize()
         })
         const json = JSON.stringify(toDownload)
         const date = new Date().toISOString().split('T')[0]
-        new FileDownloader().download(json, `${APP_NAME}_Backup_${date}.json`)
+        FileDownloader.download(json, `${APP_NAME}_Backup_${date}.json`)
         LoggerStore.success("Song backup downloaded")
     }
 

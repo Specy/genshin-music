@@ -3,7 +3,10 @@ import Keyboard from "./Keyboard"
 import Menu from "./Components/Menu"
 import { DB } from 'Database';
 import { SongStore } from 'stores/SongStore'
-import { Song, Recording, prepareSongImport, getPitchChanger } from "lib/Utils"
+import { prepareSongImport, getPitchChanger } from "lib/Utils"
+import { Song } from 'lib/Utils/Song';
+import { ComposedSong } from 'lib/Utils/ComposedSong';
+import { Recording } from 'lib/Utils/SongClasses';
 import { MainPageSettings } from "lib/BaseSettings"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
@@ -249,8 +252,12 @@ class Main extends Component {
 	}
 
 	syncSongs = async () => {
+		const songs = (await DB.getSongs()).map((song) => {
+			if(song.data?.isComposedVersion) return ComposedSong.deserialize(song)
+			return Song.deserialize(song)
+		})
 		this.setState({
-			songs: await DB.getSongs()
+			songs: songs
 		})
 	}
 
@@ -261,7 +268,6 @@ class Main extends Component {
 	addSong = async (song) => {
 		try {
 			if (await this.songExists(song.name)) {
-
 				return LoggerStore.warn("A song with this name already exists! \n" + song.name)
 			}
 			await DB.addSong(song)
@@ -315,7 +321,7 @@ class Main extends Component {
 		if (!newState && this.recording.notes.length > 0) { //if there was a song recording
 			let songName = await this.askForSongName()
 			if (!this.mounted) return
-			let song = new Song(songName, this.recording.notes)
+			const song = new Song(songName, this.recording.notes)
 			song.pitch = this.state.settings.pitch.value
 			if (songName !== null) {
 				this.addSong(song)

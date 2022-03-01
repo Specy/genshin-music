@@ -13,25 +13,25 @@ const BaseComposerSettings = {
             name: "Instrument (Layer 1)",
             type: "instrument",
             songSetting: false,
-            value:INSTRUMENTS[0],
+            value: INSTRUMENTS[0],
             volume: 100,
-            options:INSTRUMENTS
+            options: INSTRUMENTS
         },
         layer2: {
             name: "Instrument (Layer 2)",
             type: "instrument",
             songSetting: false,
-            value:INSTRUMENTS[0],
+            value: INSTRUMENTS[0],
             volume: 100,
-            options:INSTRUMENTS
+            options: INSTRUMENTS
         },
         layer3: {
             name: "Instrument (Layer 3)",
             type: "instrument",
             songSetting: false,
-            value:INSTRUMENTS[0],
+            value: INSTRUMENTS[0],
             volume: 100,
-            options:INSTRUMENTS
+            options: INSTRUMENTS
         },
         bpm: {
             name: "Bpm",
@@ -134,18 +134,21 @@ const BaseComposerSettings = {
 
 export type ComposerSettingsKeysOther = keyof typeof BaseComposerSettings.other
 export type ComposerSettingsKeysData = keyof typeof BaseComposerSettings.data
+export type ComposerSettingsDataType =
+    {
+        [key in ComposerSettingsKeysData]: SettingsPropriety
+    }
 
-
-//its complaining because i forced the type of threshold to be [number, number]
-//@ts-ignore
-export const ComposerSettings = BaseComposerSettings as {
+export type ComposerSettingsType = {
     other: {
         [key in ComposerSettingsKeysOther]: string
     },
-    data: {
-        [key in ComposerSettingsKeysData]: SettingsPropriety
-    }
+    data: ComposerSettingsDataType
 }
+
+//its complaining because i forced the type of threshold to be [number, number]
+//@ts-ignore
+export const ComposerSettings = BaseComposerSettings as ComposerSettingsType
 const BaseMainPageSettings = {
     other: {
         settingVesion: APP_NAME + 32
@@ -155,9 +158,9 @@ const BaseMainPageSettings = {
             name: "Instrument",
             type: "instrument",
             songSetting: false,
-            value:INSTRUMENTS[0],
+            value: INSTRUMENTS[0],
             volume: 100,
-            options:INSTRUMENTS
+            options: INSTRUMENTS
         },
         pitch: {
             name: "Pitch",
@@ -239,18 +242,19 @@ const BaseMainPageSettings = {
             value: false
         }
     }
-} 
+}
 export type MainPageSettingsKeysOther = keyof typeof BaseMainPageSettings.other
 export type MainPageSettingsKeysData = keyof typeof BaseMainPageSettings.data
-
-export const MainPageSettings = BaseMainPageSettings as {
+export type MainPageSettingsDataType =  {
+    [key in MainPageSettingsKeysData]: SettingsPropriety
+}
+export type MainPageSettingsType = {
     other: {
         [key in MainPageSettingsKeysOther]: string
     },
-    data: {
-        [key in MainPageSettingsKeysData]: SettingsPropriety
-    }
+    data: MainPageSettingsDataType
 }
+export const MainPageSettings = BaseMainPageSettings as MainPageSettingsType
 
 export const MIDISettings = {
     settingVesion: APP_NAME + 4,

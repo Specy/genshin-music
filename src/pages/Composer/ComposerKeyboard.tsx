@@ -1,7 +1,7 @@
 import ComposerNote from "./Components/ComposerNote"
-import { Column, getNoteText } from 'lib/Utils'
+import { Column, getNoteText, NoteNameTypes } from 'lib/Utils'
 import MultiSwitch from "./Components/MultiSwitch"
-import { LAYOUT_IMAGES, LAYERS_INDEXES } from "appConfig"
+import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType } from "appConfig"
 import { TempoChangers } from "lib/Utils"
 import { ThemeStore } from "stores/ThemeStore"
 import Instrument from "lib/Instrument"
@@ -12,9 +12,9 @@ interface ComposerKeyboardProps{
         keyboard: Instrument,
         currentColumn: Column, 
         layer: number, 
-        pitch: string, 
+        pitch: PitchesType, 
         isPlaying: boolean, 
-        noteNameType: string
+        noteNameType: NoteNameTypes
     },
     functions: {
         handleClick: () => void
@@ -39,7 +39,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     index = data.currentColumn.notes.findIndex((e) => e.index === i)
                     //@ts-ignore
                     noteImage = LAYOUT_IMAGES[data.keyboard.layout.length][note.index]
-                    noteText = getNoteText(data.noteNameType, note.index, data.pitch, data.keyboard.layout.length)
+                    noteText = getNoteText(data.noteNameType, note.index, data.pitch, data.keyboard.layout.length as 8 | 15 | 21)
                 } catch (e) { }
                 return <ComposerNote
                     key={note.index}

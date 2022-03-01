@@ -1,5 +1,5 @@
-const APP_NAME = process.env.REACT_APP_NAME || ["Sky", "Genshin"][1]
-const APP_VERSION = '2.4.1'
+const APP_NAME: 'Sky'| 'Genshin' = process.env.REACT_APP_NAME as 'Sky'| 'Genshin' || ["Sky", "Genshin"][1]
+const APP_VERSION = '2.4.1' as const
 
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
@@ -11,7 +11,7 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         - Added app themes, fully custommize the look of your app
         - Bug fixes
     `.trim()
-const LAYERS_INDEXES = [1,2,3]
+const LAYERS_INDEXES = [1,2,3] as const
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
@@ -41,7 +41,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Zither",
         "Old-Zither",
         "DunDun"
-    ] : [
+    ] as const: [
         "Piano",
         "Contrabass",
         "Guitar",
@@ -60,7 +60,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Bells",
         "DunDun",
         "HandPan"
-    ]
+    ] as const
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const BaseinstrumentsData = {
     Lyre: {
@@ -246,10 +246,10 @@ const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
         name: `x${e}`,
         value: e
     }
-})
+}) 
 
-const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
-
+const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] 
+type PitchesType = typeof PITCHES[number]
 const COMPOSER_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
 
 const IMPORT_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
@@ -290,6 +290,29 @@ const CACHE_DATA = {
     ]
 }
 
+const TEMPO_CHANGERS = [
+	{
+		id: 0,
+		text: "1",
+		changer: 1,
+		color: 0x515c6f
+	}, {
+		id: 1,
+		text: "1/2",
+		changer: 1 / 2,
+		color: 0x517553
+	}, {
+		id: 2,
+		text: "1/4",
+		changer: 1 / 4,
+		color: 0x434c7d
+	}, {
+		id: 3,
+		text: "1/8",
+		changer: 1 / 8,
+		color: 0x774D6D
+	}
+] as const
 
 function isTwa() {
     let isTwa = JSON.parse(sessionStorage.getItem('isTwa') || 'null')
@@ -318,5 +341,9 @@ export {
     MIDI_STATUS,
     IS_MIDI_AVAILABLE,
     LAYERS_INDEXES,
-    BASE_THEME_CONFIG
+    BASE_THEME_CONFIG,
+    TEMPO_CHANGERS
+}
+export type {
+    PitchesType
 }

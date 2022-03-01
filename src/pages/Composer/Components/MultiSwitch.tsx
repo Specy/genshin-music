@@ -1,7 +1,7 @@
 import { memo } from "react"
 
 interface MultiSwitchProps{
-    options: number[] | string[]
+    options: readonly number[] | readonly string[]
     selected: number | string
     buttonsClass: string
     onSelect: (index: number | string) => void

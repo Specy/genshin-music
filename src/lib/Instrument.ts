@@ -10,8 +10,10 @@ export default class Instrument {
     keyboardLayout: string[]
     mobileLayout: string[]
     keyboardCodes: string[]
+
     constructor(instrumentName: typeof INSTRUMENTS[number]) {
         this.instrumentName = instrumentName === undefined ? INSTRUMENTS[0] : instrumentName
+        //@ts-ignore //TODO check this?
         if (!INSTRUMENTS.includes(this.instrumentName)) this.instrumentName = INSTRUMENTS[0] 
         this.layout = []
         this.buffers = []
@@ -94,11 +96,12 @@ interface NoteName{
         keyboard: string, 
         mobile: string
 }
-class NoteData {
+export class NoteData {
     index: number
     noteNames: NoteName
     url: string
     buffer: ArrayBuffer
+
     constructor(index:number, noteNames: NoteName, url: string) {
         this.index = index
         this.noteNames = noteNames
