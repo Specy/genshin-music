@@ -171,7 +171,7 @@ class Main extends Component {
 			storedSettings = null
 		}
 		if (storedSettings !== null) {
-			if (storedSettings.other?.settingVesion !== MainPageSettings.other.settingVesion) {
+			if (storedSettings.other?.settingVersion !== MainPageSettings.other.settingVersion) {
 				this.updateSettings(MainPageSettings.data)
 				return MainPageSettings.data
 			}
@@ -260,7 +260,6 @@ class Main extends Component {
 			songs: songs
 		})
 	}
-
 	songExists = async (name) => {
 		return await DB.existsSong({ name: name })
 	}
@@ -270,7 +269,7 @@ class Main extends Component {
 			if (await this.songExists(song.name)) {
 				return LoggerStore.warn("A song with this name already exists! \n" + song.name)
 			}
-			await DB.addSong(song)
+			await DB.addSong(song.serialize())
 			this.syncSongs()
 			LoggerStore.success(`Song added to the ${song.data.isComposedVersion ? "Composed" : "Recorded"} tab!`, 4000)
 		} catch (e) {

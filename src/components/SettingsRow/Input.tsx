@@ -1,14 +1,14 @@
 import { ChangeEvent } from "react"
 import { FaPlus, FaMinus } from 'react-icons/fa'
-import { SettingsNumber, SettingsText } from "types/SettingsPropriety"
+import { SettingsNumber, SettingsText, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface InputProps {
     data: SettingsText | SettingsNumber,
-    objectKey: string,
+    objectKey: SettingUpdateKey,
     value: string | number,
     onChange: (value: string | number) => void,
     onComplete: (data: {
-        key: string,
+        key: SettingUpdateKey,
         data: any
     }) => void
 }

@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import { APP_NAME, AUDIO_CONTEXT, MIDI_STATUS, LAYERS_INDEXES } from "appConfig"
+import { APP_NAME, AUDIO_CONTEXT, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -13,12 +13,11 @@ import ComposerCanvas from "./Canvas"
 import Menu from "./Components/Menu"
 import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { ComposerSettings, getMIDISettings } from "lib/BaseSettings"
+import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, getMIDISettings, MIDISettings} from "lib/BaseSettings"
 import Instrument from "lib/Instrument"
-import {
-    ComposedSong, ColumnNote, Column, TempoChangers,
-    ComposerSongSerialization, ComposerSongDeSerialization, getPitchChanger, RecordingToComposed, delayMs
-} from "lib/Utils"
+import { getPitchChanger, delayMs } from "lib/Utils"
+import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
+import { ColumnNote, Column } from 'lib/Utils/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 import { DB } from 'Database';
 import Analytics from 'lib/Analytics';
@@ -27,15 +26,43 @@ import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
 import { AppBackground } from 'components/AppBackground';
 import cloneDeep from 'lodash.clonedeep'
+import { SerializedSong, Song } from 'lib/Utils/Song';
+import { SerializedSongType } from 'types/SongTypes';
+import { SettingsPropriety, SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
+import { InstrumentKeys } from 'types/GeneralTypes';
+
+interface ComposerProps {
+    history: History
+}
 class Composer extends Component {
-    constructor(props) {
+    state: {
+        instrument: Instrument
+        layers: [Instrument, Instrument]
+        songs: SerializedSongType[]
+        isPlaying: boolean
+        song: ComposedSong
+        settings: ComposerSettingsDataType
+        menuOpen: boolean
+        layer: number
+        toolsColumns: number[]
+        toolsVisible: boolean
+        midiVisible: boolean
+        isRecordingAudio: boolean
+    }
+    reverbNode: ConvolverNode | null
+    reverbVolumeNode: GainNode | null
+    MIDIAccess: WebMidi.MIDIAccess | null
+    currentMidiSource: WebMidi.MIDIInput | null
+    broadcastChannel: BroadcastChannel | null
+    audioContext: AudioContext | null
+    recorder: AudioRecorder
+    MIDISettings: typeof MIDISettings
+    mounted: boolean
+    copiedColumns: Column[]
+    changes: number
+    constructor(props: ComposerProps) {
         super(props)
         const settings = this.getSettings()
-        this.playbackInterval = undefined
-        this.audioContext = AUDIO_CONTEXT
-        this.reverbNode = undefined
-        this.reverbVolumeNode = undefined
-        this.recorder = new AudioRecorder()
         this.state = {
             instrument: new Instrument(),
             layers: [new Instrument(), new Instrument()],
@@ -50,9 +77,9 @@ class Composer extends Component {
             midiVisible: false,
             isRecordingAudio: false
         }
+        this.audioContext = AUDIO_CONTEXT
+        this.recorder = new AudioRecorder()
         this.MIDISettings = getMIDISettings()
-        this.MidiAccess = undefined
-        this.currentMidiSource = undefined
         this.state.song.bpm = settings.bpm.value
         this.state.song.instruments = [
             settings.instrument.value,
@@ -60,20 +87,26 @@ class Composer extends Component {
             settings.layer3.value
         ]
         this.mounted = false
-        this.copiedColums = []
+        this.copiedColumns = []
         this.changes = 0
-        this.broadcastChannel = {}
+        this.broadcastChannel = null
+        this.MIDIAccess = null
+        this.currentMidiSource = null
+        this.reverbNode = null
+        this.reverbVolumeNode = null
     }
 
     componentDidMount() {
         this.mounted = true
         this.init()
         window.addEventListener("keydown", this.handleKeyboard)
-        this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : {}
-        this.broadcastChannel.onmessage = (event) => {
-            if (!this.state.settings.syncTabs.value) return
-            if (!['play', 'stop'].includes(event?.data)) return
-            this.togglePlay(event.data === 'play')
+        this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : null
+        if(this.broadcastChannel){
+            this.broadcastChannel.onmessage = (event) => {
+                if (!this.state.settings.syncTabs.value) return
+                if (!['play', 'stop'].includes(event?.data)) return
+                this.togglePlay(event.data === 'play')
+            }
         }
         if (window.location.hostname !== "localhost") {
             window.addEventListener("beforeunload", this.handleUnload)
@@ -82,16 +115,18 @@ class Composer extends Component {
 
     componentWillUnmount() {
         this.mounted = false
-        if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
-        if(this.MidiAccess) this.MidiAccess.onstatechange = null
+        
+        //@ts-ignore //TODO check this
+        if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage',this.handleMidi)
+        if (this.MIDIAccess) this.MIDIAccess.removeEventListener('statechange',this.reloadMidiAccess)
         window.removeEventListener('keydown', this.handleKeyboard)
         const { instrument, layers } = this.state
         this.broadcastChannel?.close?.()
         const instruments = [instrument, layers[0], layers[1]]
         instruments.forEach(instrument => instrument.delete())
-        this.reverbNode = undefined
-        this.reverbVolumeNode = undefined
-        this.audioContext = undefined
+        this.reverbNode = null
+        this.reverbVolumeNode = null
+        this.audioContext = null
         const state = this.state
         state.isPlaying = false
         if (window.location.hostname !== "localhost") {
@@ -126,7 +161,7 @@ class Composer extends Component {
         })
     }
 
-    handleUnload = (event) => {
+    handleUnload = (event: BeforeUnloadEvent) => {
         event.preventDefault()
         event.returnValue = ''
     }
@@ -140,35 +175,40 @@ class Composer extends Component {
 
         }
     }
-    initMidi = (e) => {
-        e.onstatechange = () => this.initMidi(this.MidiAccess)
-        this.MidiAccess = e
-        const midiInputs = this.MidiAccess.inputs.values()
+    reloadMidiAccess = () => {
+        if(this.MIDIAccess) this.initMidi(this.MIDIAccess)
+    }
+    initMidi = (e: WebMidi.MIDIAccess) => {
+        e.addEventListener('statechange',this.reloadMidiAccess)
+        this.MIDIAccess = e
+        const midiInputs = this.MIDIAccess.inputs.values()
         const inputs = []
         for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
             inputs.push(input.value)
         }
-        if (this.currentMidiSource) this.currentMidiSource.onmidimessage = null
+        //@ts-ignore //TODO check this
+        if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage',this.handleMidi)
         this.currentMidiSource = inputs.find(input => {
             return input.name + " " + input.manufacturer === this.MIDISettings.currentSource
-        })
-        if(this.currentMidiSource) this.currentMidiSource.onmidimessage = this.handleMidi
+        }) || null
+        if (this.currentMidiSource) this.currentMidiSource.addEventListener('midimessage',this.handleMidi)
 
     }
-    handleMidi = (e) => {
+    handleMidi = (e: WebMidi.MIDIMessageEvent) => {
         if (!this.mounted) return
-        const { instrument, song, layer} = this.state
+        const { instrument, song, layer } = this.state
         const { data } = e
-        const [eventType, note, velocity] = data
-
+        const eventType = data[0]
+        const note = data[1]
+        const velocity = data[2]
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             const keyboardNotes = this.MIDISettings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.layout[keyboardNote.index])
             })
             const shortcut = this.MIDISettings.shortcuts.find(e => e.midi === note)
-            if(!shortcut) return
-            switch(shortcut.type){
+            if (!shortcut) return
+            switch (shortcut.type) {
                 case 'toggle_play': this.togglePlay(); break;
                 case 'next_column': this.selectColumn(song.selected + 1); break;
                 case 'previous_column': this.selectColumn(song.selected - 1); break;
@@ -176,7 +216,7 @@ class Composer extends Component {
                 case 'remove_column': this.removeColumns(1, song.selected); break;
                 case 'change_layer': {
                     let nextLayer = layer + 1
-                    if(nextLayer > LAYERS_INDEXES.length) nextLayer = 1
+                    if (nextLayer > LAYERS_INDEXES.length) nextLayer = 1
                     this.changeLayer(nextLayer)
                     break;
                 }
@@ -184,47 +224,49 @@ class Composer extends Component {
             }
         }
     }
-    loadReverb() {
+    loadReverb(): Promise<void> {
         return new Promise(resolve => {
             fetch("./assets/audio/reverb4.wav")
                 .then(r => r.arrayBuffer())
                 .then(b => {
                     if (!this.mounted) return
-                    this.audioContext.decodeAudioData(b, (impulse_response) => {
-                        if (!this.mounted) return
-                        let convolver = this.audioContext.createConvolver()
-                        let gainNode = this.audioContext.createGain()
-                        gainNode.gain.value = 2.5
-                        convolver.buffer = impulse_response
-                        convolver.connect(gainNode)
-                        gainNode.connect(this.audioContext.destination)
-                        this.reverbNode = convolver
-                        this.reverbVolumeNode = gainNode
-                        resolve()
-                    })
+                    if(this.audioContext){
+                        this.audioContext.decodeAudioData(b, (impulse_response) => {
+                            if (!this.mounted || !this.audioContext) return
+                            let convolver = this.audioContext.createConvolver()
+                            let gainNode = this.audioContext.createGain()
+                            gainNode.gain.value = 2.5
+                            convolver.buffer = impulse_response
+                            convolver.connect(gainNode)
+                            gainNode.connect(this.audioContext.destination)
+                            this.reverbNode = convolver
+                            this.reverbVolumeNode = gainNode
+                            resolve()
+                        })
+                    }
                 }).catch((e) => {
                     console.log("Error with reverb", e)
                 })
         })
     }
-    getSettings = () => {
-        let storedSettings = localStorage.getItem(APP_NAME + "_Composer_Settings")
+    getSettings = (): ComposerSettingsDataType => {
+        const json = localStorage.getItem(APP_NAME + "_Composer_Settings")
         try {
-            storedSettings = JSON.parse(storedSettings)
-        } catch (e) {
-            storedSettings = null
-        }
-        if (storedSettings !== null) {
-            if (storedSettings.other?.settingVesion !== ComposerSettings.other.settingVesion) {
-                this.updateSettings(ComposerSettings.data)
-                return ComposerSettings.data
+            const storedSettings = JSON.parse(json || 'null') as ComposerSettingsType | null
+            if (storedSettings) {
+                if (storedSettings.other?.settingVersion !== ComposerSettings.other.settingVersion) {
+                    this.updateSettings(ComposerSettings.data)
+                    return ComposerSettings.data
+                }
+                return storedSettings.data
             }
-            return storedSettings.data
+            return ComposerSettings.data
+        } catch (e) {
+            return ComposerSettings.data
         }
-        return ComposerSettings.data
     }
 
-    updateSettings = (override) => {
+    updateSettings = (override?: ComposerSettingsDataType) => {
         const state = {
             other: ComposerSettings.other,
             data: override !== undefined ? override : this.state.settings
@@ -232,12 +274,14 @@ class Composer extends Component {
         localStorage.setItem(APP_NAME + "_Composer_Settings", JSON.stringify(state))
     }
 
-    handleSettingChange = (setting) => {
+    handleSettingChange = (setting: SettingUpdate) => {
         const { state } = this
-        let settings = state.settings
+        const settings = state.settings
         let data = setting.data
+        //@ts-ignore
         settings[setting.key] = { ...settings[setting.key], value: data.value }
         if (data.songSetting) {
+            //@ts-ignore
             state.song[setting.key] = data.value
         }
         if (setting.key === "instrument") this.loadInstrument(data.value, 1)
@@ -251,8 +295,8 @@ class Composer extends Component {
             this.updateSettings()
         })
     }
-
-    loadInstrument = async (name, layer) => {
+    //TODO change layer to type
+    loadInstrument = async (name: InstrumentKeys, layer: 1 | 2 | 3) => {
         if (!this.mounted) return
         const { settings } = this.state
         if (layer === 1) {
@@ -278,7 +322,7 @@ class Composer extends Component {
         }
         this.setupAudioDestination(settings.caveMode.value)
     }
-    changeVolume = (obj) => {
+    changeVolume = (obj: SettingVolumeUpdate) => {
         let settings = this.state.settings
         if (obj.key === "instrument") {
             settings.instrument = { ...settings.instrument, volume: obj.value }
@@ -294,9 +338,9 @@ class Composer extends Component {
         }
         this.setState({
             settings: settings
-        }, () => this.updateSettings())
+        }, this.updateSettings)
     }
-    setupAudioDestination = (hasReverb) => {
+    setupAudioDestination = (hasReverb: boolean) => {
         if (!this.mounted) return
         const { instrument, layers } = this.state
         const instruments = [instrument, layers[0], layers[1]]
@@ -307,11 +351,12 @@ class Composer extends Component {
                 ins.connect(this.reverbNode)
             } else {
                 ins.disconnect()
-                ins.connect(this.audioContext.destination)
+                if(this.audioContext) ins.connect(this.audioContext.destination)
+
             }
         })
     }
-    startRecordingAudio = async (override) => { //will record untill the song stops
+    startRecordingAudio = async (override: boolean) => { //will record untill the song stops
         if (!this.mounted) return
         if (!override) {
             this.setState({ isRecordingAudio: false })
@@ -322,7 +367,7 @@ class Composer extends Component {
         const hasReverb = this.state.settings.caveMode.value
         const { recorder } = this
         if (hasReverb) {
-            this.reverbVolumeNode.connect(recorder.node)
+            if(this.reverbVolumeNode) this.reverbVolumeNode.connect(recorder.node)
         } else {
             instruments.forEach(instrument => {
                 instrument.connect(recorder.node)
@@ -337,11 +382,14 @@ class Composer extends Component {
         let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
         if (fileName) recorder.download(recording.data, fileName + '.wav')
         if (!this.mounted) return
-        this.reverbVolumeNode.disconnect()
-        this.reverbVolumeNode.connect(this.audioContext.destination)
+        if(this.reverbVolumeNode){
+            this.reverbVolumeNode.disconnect()
+            this.reverbVolumeNode.connect(this.audioContext.destination)
+        }
         this.setupAudioDestination(hasReverb)
     }
-    handleKeyboard = (event) => {
+    handleKeyboard = (event: KeyboardEvent) => {
+        //@ts-ignore
         if (document.activeElement.tagName === "INPUT") return
         const { instrument, layer, layers, isPlaying, song } = this.state
         let key = event.code
@@ -363,10 +411,10 @@ class Composer extends Component {
             switch (key) {
                 case "KeyD": this.selectColumn(this.state.song.selected + 1); break;
                 case "KeyA": this.selectColumn(this.state.song.selected - 1); break;
-                case "Digit1": this.handleTempoChanger(TempoChangers[0]); break;
-                case "Digit2": this.handleTempoChanger(TempoChangers[1]); break;
-                case "Digit3": this.handleTempoChanger(TempoChangers[2]); break;
-                case "Digit4": this.handleTempoChanger(TempoChangers[3]); break;
+                case "Digit1": this.handleTempoChanger(TEMPO_CHANGERS[0]); break;
+                case "Digit2": this.handleTempoChanger(TEMPO_CHANGERS[1]); break;
+                case "Digit3": this.handleTempoChanger(TEMPO_CHANGERS[2]); break;
+                case "Digit4": this.handleTempoChanger(TEMPO_CHANGERS[3]); break;
                 case "Space": {
                     this.togglePlay()
                     if (!this.state.settings.syncTabs.value) break;
@@ -404,7 +452,7 @@ class Composer extends Component {
         settings.pitch = { ...settings.pitch, value }
         this.setState({
             settings: settings
-        }, () => this.updateSettings())
+        }, this.updateSettings)
     }
     handleClick = (note) => {
         let column = this.state.song.columns[this.state.song.selected]
@@ -432,14 +480,8 @@ class Composer extends Component {
         this.playSound(instrument, note.index)
     }
     syncSongs = async () => {
-        let songs = await DB.getSongs()
+        const songs = await DB.getSongs()
         if (!this.mounted) return
-        songs = songs.map(song => {
-            if (song.data.isComposedVersion) {
-                return ComposerSongDeSerialization(song)
-            }
-            return song
-        })
         this.setState({
             composedSongs: songs,
             songs: songs
@@ -449,7 +491,7 @@ class Composer extends Component {
         if (await this.songExists(song.name)) {
             LoggerStore.warn("A song with this name already exists! \n" + song.name)
         }
-        await DB.addSong(ComposerSongSerialization(song))
+        await DB.addSong(song.serialize())
         this.syncSongs()
     }
     updateSong = async (song) => {
@@ -466,7 +508,7 @@ class Composer extends Component {
                 song.instruments[0] = settings.instrument.value
                 song.instruments[1] = settings.layer2.value
                 song.instruments[2] = settings.layer3.value
-                await DB.updateSong({ name: song.name }, ComposerSongSerialization(song))
+                await DB.updateSong({ name: song.name }, song.serialize())
                 console.log("song saved:", song.name)
                 this.changes = 0
                 this.syncSongs()
@@ -475,7 +517,7 @@ class Composer extends Component {
                     let name = await this.askForSongName("Write composed song name, press cancel to ignore")
                     if (name === null) return resolve()
                     song.name = name
-                    await DB.addSong(ComposerSongSerialization(song))
+                    await DB.addSong(song.serialize())
                     this.syncSongs()
                     return resolve()
                 }
@@ -486,7 +528,7 @@ class Composer extends Component {
             resolve()
         })
     }
-    askForSongName = (question) => {
+    askForSongName = (question: string): Promise<string | null> => {
         return new Promise(async resolve => {
             let promptString = question || "Write song name, press cancel to ignore"
             while (true) {
@@ -511,7 +553,7 @@ class Composer extends Component {
             resolve(result)
         })
     }
-    songExists = async (name) => {
+    songExists = async (name: string) => {
         return await DB.existsSong({ name: name })
     }
     createNewSong = async () => {
@@ -529,22 +571,23 @@ class Composer extends Component {
         this.setState({
             song: song
         }, () => this.addSong(song))
-        Analytics.songEvent({type: 'create'})
+        Analytics.songEvent({ type: 'create' })
     }
-    removeSong = async (name) => {
+    removeSong = async (name: string) => {
         let confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
         if (confirm) await DB.removeSong({ name: name })
         this.syncSongs()
-		Analytics.userSongs('delete',{name: name, page: 'composer'})
+        Analytics.userSongs('delete', { name: name, page: 'composer' })
     }
 
-    loadSong = async (song) => {
+    loadSong = async (song: SerializedSongType) => {
         const state = this.state
         song = JSON.parse(JSON.stringify(song)) //lose reference
-        if (!song.data.isComposedVersion) {
-            //if(song.bpm <= 220)  song.bpm *= 2
-            song = RecordingToComposed(song, 4)
-            song.name += " - Composed"
+        const parsed = song.data.isComposedVersion 
+            ? ComposedSong.deserialize(song as SerializedComposedSong) 
+            : Song.deserialize(song as SerializedSong).toComposed(4)
+        if (!parsed.data.isComposedVersion) {
+            parsed.name += " - Composed"
         }
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
@@ -557,22 +600,22 @@ class Composer extends Component {
         settings.bpm = { ...settings.bpm, value: song.bpm }
         settings.pitch = { ...settings.pitch, value: song.pitch }
         if (!this.mounted) return
-        if (settings.instrument.value !== song.instruments[0]) {
-            this.loadInstrument(song.instruments[0], 1)
-            settings.instrument = { ...settings.instrument, value: song.instruments[0] }
+        if (settings.instrument.value !== parsed.instruments[0]) {
+            this.loadInstrument(parsed.instruments[0], 1)
+            settings.instrument = { ...settings.instrument, value: parsed.instruments[0] }
         }
-        if (settings.layer2.value !== song.instruments[1]) {
-            this.loadInstrument(song.instruments[1], 2)
-            settings.layer2 = { ...settings.layer2, value: song.instruments[1] }
+        if (settings.layer2.value !== parsed.instruments[1]) {
+            this.loadInstrument(parsed.instruments[1], 2)
+            settings.layer2 = { ...settings.layer2, value: parsed.instruments[1] }
         }
-        if (settings.layer3.value !== song.instruments[2]) {
-            this.loadInstrument(song.instruments[2], 3)
-            settings.layer3 = { ...settings.layer3, value: song.instruments[2] }
+        if (settings.layer3.value !== parsed.instruments[2]) {
+            this.loadInstrument(parsed.instruments[2], 3)
+            settings.layer3 = { ...settings.layer3, value: parsed.instruments[2] }
         }
         this.changes = 0
         console.log("song loaded")
         this.setState({
-            song: song,
+            song: parsed,
             settings: settings,
             toolsColumns: []
         })
@@ -593,7 +636,7 @@ class Composer extends Component {
         })
 
     }
-    
+
     removeColumns = (amount, position) => {
         let song = this.state.song
         if (song.columns.length < 16) return
@@ -619,7 +662,7 @@ class Composer extends Component {
                 let previousTime = new Date().getTime()
                 while (this.state.isPlaying) {
                     const { song, settings } = this.state
-                    let tempoChanger = TempoChangers[song.columns[song.selected].tempoChanger]
+                    let tempoChanger = TEMPO_CHANGERS[song.columns[song.selected].tempoChanger]
                     let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger.changer) + pastError
                     previousTime = new Date().getTime()
                     await delayMs(msPerBPM)
@@ -674,7 +717,7 @@ class Composer extends Component {
             }
 
         }
-        if(page === 'home') return HomeStore.open()
+        if (page === 'home') return HomeStore.open()
         this.props.history.push(page)
     }
     selectColumn = (index, ignoreAudio) => {
@@ -684,7 +727,7 @@ class Composer extends Component {
         let currentColumn = state.song.columns[index]
         song.selected = index
         let toolsColumns = state.toolsColumns
-        if (state.toolsVisible && this.copiedColums.length === 0) {
+        if (state.toolsVisible && this.copiedColumns.length === 0) {
             toolsColumns.push(index)
             let min = Math.min(...toolsColumns)
             let max = Math.max(...toolsColumns)
@@ -713,17 +756,17 @@ class Composer extends Component {
             toolsVisible: !this.state.toolsVisible,
             toolsColumns: this.state.toolsVisible ? [] : [this.state.song.selected]
         })
-        this.copiedColums = []
+        this.copiedColumns = []
     }
     copyColumns = (layer) => {
-        this.copiedColums = []
+        this.copiedColumns = []
         this.state.toolsColumns.forEach((index) => {
             let column = this.state.song.columns[index]
-            if (column !== undefined) this.copiedColums.push(column)
-        })  
-        this.copiedColums = cloneDeep(this.copiedColums)
+            if (column !== undefined) this.copiedColumns.push(column)
+        })
+        this.copiedColumns = cloneDeep(this.copiedColumns)
         if (layer !== 'all') {
-            this.copiedColums = this.copiedColums.map(column => {
+            this.copiedColumns = this.copiedColumns.map(column => {
                 column.notes = column.notes.filter(e => e.layer[layer - 1] === '1')
                 column.notes = column.notes.map(e => {
                     e.layer = '000'
@@ -737,7 +780,7 @@ class Composer extends Component {
     }
     pasteColumns = async (insert) => {
         let song = this.state.song
-        const copiedColumns = cloneDeep(this.copiedColums)
+        const copiedColumns = cloneDeep(this.copiedColumns)
         if (!insert) {
             song.columns.splice(song.selected, 0, ...copiedColumns)
         } else {
@@ -800,7 +843,7 @@ class Composer extends Component {
     }
     changeMidiVisibility = (visible) => {
         this.setState({ midiVisible: visible })
-        if(visible) Analytics.songEvent({type: 'create_MIDI'})
+        if (visible) Analytics.songEvent({ type: 'create_MIDI' })
     }
     render() {
         const { state } = this
@@ -853,7 +896,7 @@ class Composer extends Component {
         }
         const toolsData = {
             visible: this.state.toolsVisible,
-            copiedColumns: this.copiedColums,
+            copiedColumns: this.copiedColumns,
             layer: this.state.layer
         }
         const toolsFunctions = {
@@ -897,7 +940,7 @@ class Composer extends Component {
 
                             <div className="tool" onClick={() => {
                                 this.togglePlay()
-                                if (this.state.settings.syncTabs.value){
+                                if (this.state.settings.syncTabs.value) {
                                     this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
                                 }
                             }}>
@@ -916,7 +959,7 @@ class Composer extends Component {
                         />
                         <div className="buttons-composer-wrapper-right">
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
-                                <AddColumn className="tool-icon"/>
+                                <AddColumn className="tool-icon" />
                             </div>
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
                                 <RemoveColumn className='tool-icon' />
@@ -977,7 +1020,7 @@ function calculateLength(columns, bpm, end) {
     let currentLength = 0
     let increment = 0
     for (let i = 0; i < columns.length; i++) {
-        increment = bpmPerMs * TempoChangers[columns[i].tempoChanger].changer
+        increment = bpmPerMs * TEMPO_CHANGERS[columns[i].tempoChanger].changer
         if (i < end) currentLength += increment
         totalLength += increment
     }

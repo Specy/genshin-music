@@ -43,3 +43,10 @@ export class Recording {
 		this.notes.push(note)
 	}
 }
+
+
+export type SongDataType = {
+    isComposed: boolean
+    isComposedVersion: boolean,
+    appName: string
+}

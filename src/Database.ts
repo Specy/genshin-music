@@ -1,6 +1,7 @@
 import ZangoDb from "zangodb"
 import { APP_NAME } from "appConfig"
 import { Theme } from "stores/ThemeStore"
+import { SerializedSongType } from "types/SongTypes"
 
 function generateId(){
     const s4 = () => {
@@ -25,11 +26,11 @@ class Database{
             themes: this.db.collection("themes")
         }
     }
-    getSongs(){
-        return this.collections.songs.find({}).toArray()
+    getSongs(): Promise<SerializedSongType[]>{
+        return this.collections.songs.find({}).toArray() as Promise<SerializedSongType[]>
     }
-    getSongById(id:string){
-        return this.collections.songs.findOne({_id: id})
+    getSongById(id:string): Promise<SerializedSongType>{
+        return this.collections.songs.findOne({_id: id}) as Promise<SerializedSongType>
     }
     async existsSong(query:any){
         return (await this.collections.songs.findOne(query)) !== undefined
@@ -37,7 +38,7 @@ class Database{
     updateSong(query:any,data:any){
         return this.collections.songs.update(query, data)
     }
-    addSong(song:any){
+    addSong(song:SerializedSongType){
         return this.collections.songs.insert(song)
     }
     removeSong(query:any){

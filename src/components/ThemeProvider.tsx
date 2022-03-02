@@ -1,6 +1,6 @@
 import { useTheme } from 'lib/hooks/useTheme'
 type Props = {
-    children?: JSX.Element | JSX.Element[];
+    children?: React.ReactNode;
 }
 function ThemeProvider({ children }: Props) {
     const [theme] = useTheme()

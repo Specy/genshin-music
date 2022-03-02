@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { ThemeStore } from "stores/ThemeStore"
 
 interface AppBackgroundProps {
-    children: JSX.Element | JSX.Element[],
+    children: React.ReactNode,
     page: 'Composer' | 'Main'
 }
 export function AppBackground({ children, page }: AppBackgroundProps) {

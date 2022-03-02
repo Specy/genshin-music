@@ -4,7 +4,7 @@ import MenuItem from 'components/MenuItem'
 import HomeStore from 'stores/HomeStore';
 
 interface SimpleMenuProps{
-    children?: React.ReactChild, 
+    children?: React.ReactNode, 
     className?: string
 }
 export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuProps) {

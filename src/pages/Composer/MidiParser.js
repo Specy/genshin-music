@@ -1,13 +1,16 @@
 import React, { Component, useEffect, useState } from 'react'
 import { FilePicker } from 'components/FilePicker'
 import { Midi } from '@tonejs/midi'
-import { ColumnNote, Column, numberToLayer, ComposedSong, groupByIndex, mergeLayers } from 'lib/Utils'
+import { numberToLayer, groupByIndex, mergeLayers } from 'lib/Utils'
+import { ColumnNote, Column } from 'lib/Utils/SongClasses'
+import { ComposedSong } from 'lib/Utils/ComposedSong'
 import { APP_NAME,PITCHES } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
 import { ThemeStore } from 'stores/ThemeStore'
 import { observe } from 'mobx'
+
 class MidiImport extends Component {
     constructor(props) {
         super(props)

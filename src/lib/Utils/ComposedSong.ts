@@ -1,23 +1,17 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, PitchesType } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
 import { Song } from "./Song"
-import clonedeep from 'lodash.clonedeep'
-import { Column, ColumnNote } from "./SongClasses"
+import { Column, ColumnNote, RecordedNote, SongDataType } from "./SongClasses"
 
-interface SongDataType {
-    isComposed: boolean
-    isComposedVersion: boolean,
-    appName: string
-}
 interface OldFormatNoteType{
     key: string, 
     time: number
     l?: number
 }
 //TODO add layer type
-type SerializedNote = [index: number, layer: string]
-type SerializedColumn = [tempoChanger: number, notes: SerializedNote[]]
-interface SerializedSong {
+export type SerializedNote = [index: number, layer: string]
+export type SerializedColumn = [tempoChanger: number, notes: SerializedNote[]]
+export interface SerializedComposedSong {
     //TODO add tempo changer type
     name: string
     data: SongDataType
@@ -27,7 +21,7 @@ interface SerializedSong {
     breakpoints: number[]
     columns: SerializedColumn[]
 }
-type OldFormatComposed = SerializedSong & {
+type OldFormatComposed = SerializedComposedSong & {
     isComposed: boolean,
     pitchLevel: number,
     songNotes: any,
@@ -40,7 +34,7 @@ export class ComposedSong {
     version: number
     bpm: number
     pitch: PitchesType
-    notes: any //TODO idk what is here
+    notes: RecordedNote[] //TODO idk what is here
     instruments: [typeof INSTRUMENTS[number], typeof INSTRUMENTS[number], typeof INSTRUMENTS[number]]
     breakpoints: number[]
     columns: Column[]
@@ -67,14 +61,14 @@ export class ComposedSong {
             this.columns.push(column)
         })
     }
-    static deserialize = (song: SerializedSong) => {
+    static deserialize = (song: SerializedComposedSong): ComposedSong => {
         const bpm = Number(song.bpm)
         const newSong = new ComposedSong(song.name)
-        newSong.data = song.data || 'Untitled'
+        newSong.data = {...newSong.data, ...song.data} 
         newSong.bpm = isNaN(bpm) ? 220 : bpm
         newSong.pitch = song.pitch ?? "C"
-        newSong.instruments = song.instruments || [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
-        newSong.breakpoints = song.breakpoints ?? []
+        newSong.instruments = [...song.instruments] || [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
+        newSong.breakpoints = [...song.breakpoints ?? []] 
         newSong.columns = song.columns.map(column => {
             const columnObj = new Column()
             columnObj.tempoChanger = column[0]
@@ -85,6 +79,9 @@ export class ComposedSong {
         })
 
         return newSong
+    }
+    get isComposed(): boolean{
+        return this.data.isComposedVersion
     }
     toSong = () => {
         const recordedSong = new Song(this.name)
@@ -98,21 +95,21 @@ export class ComposedSong {
         })
         return recordedSong
     }
-    serialize = (): SerializedSong => {
+    serialize = (): SerializedComposedSong => {
         const bpm = Number(this.bpm)
-        const obj: SerializedSong = {
+        const obj: SerializedComposedSong = {
             data: this.data,
             name: this.name,
             bpm: isNaN(bpm) ? 220 : bpm,
             pitch: this.pitch,
-            breakpoints: this.breakpoints,
-            instruments: this.instruments,
+            breakpoints: [...this.breakpoints],
+            instruments: [...this.instruments],
             columns: []
         } 
         obj.data.appName = APP_NAME
         this.columns.forEach(column => {
             const notes = column.notes.map(note => {
-                return [note.index, note.layer] 
+                return [note.index, note.layer]
             })
             const columnArr = [column.tempoChanger, notes]
             //@ts-ignore
@@ -154,6 +151,20 @@ export class ComposedSong {
         })
         return convertedNotes
     }
+    toGenshin = () => {
+        const clone = this.clone()
+        //@ts-ignore
+        clone.instruments = this.instruments.map(_ => INSTRUMENTS[0])
+        clone.columns = clone.columns.map(column => {
+            column.notes = column.notes.map(note => {
+                note.index = IMPORT_NOTE_POSITIONS[note.index]
+                return note
+            })
+            return column
+		})
+        return clone
+    }
+
     clone = () => {
         const clone = new ComposedSong(this.name)
         clone.data = {...this.data}

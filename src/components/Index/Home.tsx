@@ -149,7 +149,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
 }
 
 interface PageRedirectProps{
-    children: React.ReactChild,
+    children: React.ReactNode,
     current: boolean,
     href: string
 }
@@ -166,8 +166,8 @@ function PageRedirect({ children, current, href }: PageRedirectProps) {
 
 interface MainContntElementProps{
     title: string, 
-    icon: React.ReactChild, 
-    children: React.ReactChild,
+    icon: React.ReactNode, 
+    children: React.ReactNode,
     background: string, 
     current: boolean, 
     href: string, 
@@ -199,7 +199,7 @@ function MainContntElement({ title, icon, children, background, current, href, s
 }
 
 interface SeparatorProps{
-    children?: React.ReactChild
+    children?: React.ReactNode
 }
 function Separator({ children }:SeparatorProps) {
     return <div className='home-separator'>

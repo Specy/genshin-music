@@ -4,7 +4,7 @@ import { memo } from "react"
 interface MenuItemProps {
     className?: string,
     action?: (type?: string) => void
-    children?: JSX.Element | JSX.Element[] | string,
+    children?: React.ReactNode,
     type?: string
 }
 

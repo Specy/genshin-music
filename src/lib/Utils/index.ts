@@ -1,20 +1,20 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType } from "appConfig"
 import LoggerStore from "stores/LoggerStore";
 import * as workerTimers from 'worker-timers';
-import cloneDeep from 'lodash.clonedeep'
-import { Column } from "./SongClasses";
-
-
+import { Column, RecordedNote } from "./SongClasses";
+import { ComposedSong } from "./ComposedSong";
+import { Song } from "./Song";
+import { ColumnNote } from "./SongClasses";
 function capitalize(str:string){
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 class FileDownloader {
-	dataType: string
+	type: string
 	constructor(type:string = "text/json") {
-		this.dataType = "data:" + type + ";charset=utf-8,"
+		this.type = type
 	}
 	download = (file:any, name:string) => {
-		let data = this.dataType + encodeURIComponent(file)
+		const data = `data:${this.type};charset=utf-8${encodeURIComponent(file)}`
 		const el = document.createElement("a")
 		el.style.display = 'none'
 		document.body.appendChild(el)
@@ -24,7 +24,7 @@ class FileDownloader {
 		el.remove();
 	}
 	static download = (file:any, name:string, as: string = "text/json") => {
-		const data = as + encodeURIComponent(file)
+		const data = `data:${as};charset=utf-8${encodeURIComponent(file)}`
 		const el = document.createElement("a")
 		el.style.display = 'none'
 		document.body.appendChild(el)
@@ -35,29 +35,7 @@ class FileDownloader {
 	}
 }
 
-const TempoChangers = [
-	{
-		id: 0,
-		text: "1",
-		changer: 1,
-		color: 0x515c6f
-	}, {
-		id: 1,
-		text: "1/2",
-		changer: 1 / 2,
-		color: 0x517553
-	}, {
-		id: 2,
-		text: "1/4",
-		changer: 1 / 4,
-		color: 0x434c7d
-	}, {
-		id: 3,
-		text: "1/8",
-		changer: 1 / 8,
-		color: 0x774D6D
-	}
-]
+
 
 
 
@@ -115,19 +93,27 @@ function prepareSongImport(song: any): Song | ComposedSong {
 		throw new Error("Error Invalid song")
 	}
 	if (type === "oldSky") {
-		song = oldSkyToNewFormat(song)
+		const parsed = Song.fromOldFormat(song)
+		if(parsed === null) {
+			LoggerStore.error("Invalid song")
+			throw new Error("Error Invalid song")
+		}
+		return parsed
 	}
 	if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
 		LoggerStore.error("Invalid song")
 		throw new Error("Error Invalid song")
 	}
-	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
-		song = newSkyFormatToGenshin(song)
+	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {  
+		if(song.data?.isComposedVersion) return ComposedSong.deserialize(song).toGenshin()
+		return Song.deserialize(song).toGenshin()
 	}
-	return song
+	if(type === 'newComposed') return ComposedSong.deserialize(song)
+	if(type === 'newRecorded') return Song.deserialize(song)
+	throw new Error("Error Invalid song")
 }
 
-
+//TODO improve this detection
 function getSongType(song:any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' {
 	try {
 		if (song.data === undefined) {
@@ -154,10 +140,10 @@ function getSongType(song:any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded
 						let column = song.columns[0]
 						if (typeof column[0] !== "number") return "none"
 					}
+					return "newComposed"
 				} else {
 					return "none"
 				}
-				return "newComposed"
 			} else {
 				if (typeof song.name !== "string") return "none"
 				if (typeof song.bpm !== "number") return "none"
@@ -165,7 +151,6 @@ function getSongType(song:any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded
 				return "newRecorded"
 			}
 		}
-
 	} catch (e) {
 		console.log(e)
 		return "none"
@@ -173,32 +158,11 @@ function getSongType(song:any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded
 	return "none"
 }
 
-function newSkyFormatToGenshin(song: Song | ComposedSong) {
-	if (song.data.isComposedVersion) {
-		//TODO add these to the classes of the songs
-		song.instruments = song.instruments.map(instrument => INSTRUMENTS[0])
-		song.columns.forEach(column => {
-			column[1] = column[1].map(note => {
-				return [IMPORT_NOTE_POSITIONS[note[0]], note[1]]
-			})
 
-		})
-	}
-	if (!song.data.isComposedVersion) {
-		song.notes = song.notes.map(note => {
-			note[0] = IMPORT_NOTE_POSITIONS[note[0]]
-			return note
-		})
-	}
-	return song
-}
-
-
-
-function groupByNotes(notes, threshold) {
-	let result = []
+function groupByNotes(notes: RecordedNote[], threshold: number) {
+	const result = []
 	while (notes.length > 0) {
-		let row = [notes.shift()]
+		const row = [notes.shift() as RecordedNote]
 		let amount = 0
 		for (let i = 0; i < notes.length; i++) {
 			if (row[0][1] > notes[i][1] - threshold) amount++
@@ -237,7 +201,7 @@ function mergeLayers(notes: ColumnNote[]) {
 
 //TODO do this
 function groupByIndex(column: Column) {
-	const notes = []
+	const notes: ColumnNote[][] = []
 	column.notes.forEach(note => {
 		if (notes[note.index]) {
 			notes[note.index].push(note)
@@ -256,10 +220,8 @@ function delayMs(ms: number) {
 
 export {
 	FileDownloader,
-	TempoChangers,
 	getPitchChanger,
 	getSongType,
-	newSkyFormatToGenshin,
 	prepareSongImport,
 	groupByNotes,
 	numberToLayer,

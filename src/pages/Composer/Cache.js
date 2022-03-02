@@ -1,5 +1,4 @@
-import { TempoChangers } from "lib/Utils"
-import { CACHE_DATA, NOTES_PER_COLUMN } from "appConfig"
+import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "appConfig"
 const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
 
 export class ComposerCache {
@@ -34,7 +33,7 @@ export class ComposerCache {
         //this.app.destroy()
     }
     generate = () => {
-        TempoChangers.forEach(tempoChanger => {
+        TEMPO_CHANGERS.forEach(tempoChanger => {
             let canvas = drawColumn(tempoChanger, this, 1)
             this.cache.columns.push(canvas.toDataURL())
         })
@@ -88,7 +87,7 @@ export class ComposerCache {
             }
             this.cache.notes[note] = canvas.toDataURL()
         })
-        TempoChangers.forEach(tempoChanger => {
+        TEMPO_CHANGERS.forEach(tempoChanger => {
             let canvas = drawColumn(tempoChanger, this, 2)
             this.cache.columnsLarger.push(canvas.toDataURL())
         })

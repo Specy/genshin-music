@@ -1,6 +1,5 @@
 import { useTheme } from "lib/hooks/useTheme"
-import { Column } from "lib/Utils"
-
+import { Column } from "lib/Utils/SongClasses"
 interface ComposerToolsProps{
     data: {
         visible: boolean
@@ -101,7 +100,7 @@ interface ToolButtonprops{
     onClick: () => void
     active?: boolean
     style: any
-    children: React.ReactChild
+    children: React.ReactNode
 }
 function ToolButton({ disabled, onClick, active, style, children }: ToolButtonprops) {
     return <button

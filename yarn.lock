@@ -2080,6 +2080,11 @@
   "resolved" "https://registry.npmjs.org/@types/trusted-types/-/trusted-types-2.0.2.tgz"
   "version" "2.0.2"
 
+"@types/webmidi@^2.0.6":
+  "integrity" "sha512-sfS0A5IryqmBrUpcGPipEPeFdpqmZzP6b6lZFxHKgz5n2Vhzh4yJ5P2TvoDUhDjqJyv0Y25ng0Qodgo2Vu08ug=="
+  "resolved" "https://registry.npmjs.org/@types/webmidi/-/webmidi-2.0.6.tgz"
+  "version" "2.0.6"
+
 "@types/ws@^8.2.2":
   "integrity" "sha512-NOn5eIcgWLOo6qW8AcuLZ7G8PycXu0xTxxkS6Q18VWFxgPUSOwV0pBj2a/4viNZVu25i7RIB7GttdkAIUUXOOg=="
   "resolved" "https://registry.npmjs.org/@types/ws/-/ws-8.2.2.tgz"

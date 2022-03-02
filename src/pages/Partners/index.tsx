@@ -2,7 +2,7 @@ import './Partners.css'
 import { SimpleMenu } from 'components/SimpleMenu'
 import WindsongDBImg from 'assets/images/partners/windsong-db.jpg'
 
-export default function Partners(props) {
+export default function Partners() {
     return <div className='default-page'>
         <SimpleMenu/>
         <div className='default-content partner-wrapper'>
@@ -49,39 +49,53 @@ export default function Partners(props) {
     </div>
 }
 
-function PartnerImg(props){
+interface PartnerImgProps{
+    to: string
+    img: string
+    alt: string
+}
+function PartnerImg({to, img, alt}: PartnerImgProps){
     return <a 
-        href={props.to}
+        href={to}
         style={{width: '18.8rem', height: '10.5rem', overflow: 'hidden', borderRadius: '0.3rem'}}
         target='_blank'
         rel='noreferrer'
     >
         <img 
             loading='lazy'
-            src={props.img} 
+            src={img} 
             style={{width: '100%', objectFit: 'cover'}}
-            alt={props.alt}
+            alt={alt}
         />
     </a>
 }
-function Iframe(props) {
+interface IframeProps{
+    src: string
+    title: string
+}
+function Iframe({src, title}: IframeProps) {
     return <iframe
-        src={props.src}
-        title={props.src}
+        src={src}
+        title={title}
         frameBorder="0"
         allow="autoplay; picture-in-picture"
         allowFullScreen
     >
     </iframe>
 }
-function Partner(props) {
+interface PartnerProps{
+    name: string
+    description: string
+    children: React.ReactNode
+}
+function Partner({name, description, children}: PartnerProps) {
     return <div className='partner'>
         <div className='partner-title'>
-            {props.name}
+            {name}
         </div>
         <div className='partner-description'>
-            {props.description}
+            {description}
         </div>
-        {props.children}
+        {children}
     </div>
 }

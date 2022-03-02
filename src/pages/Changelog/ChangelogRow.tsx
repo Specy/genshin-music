@@ -1,7 +1,7 @@
 interface ChangelogRowProps{
     version: string  | number,
     title: string, 
-    changes: [string],
+    changes: string[],
     date: string
 }
 

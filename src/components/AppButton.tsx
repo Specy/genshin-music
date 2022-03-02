@@ -4,7 +4,7 @@ interface AppButtonprops {
     style?: object,
     className?: string,
     onClick?: () => void,
-    children?: JSX.Element | JSX.Element[] | string,
+    children?: React.ReactNode,
     toggled?: boolean
 }
 export function AppButton({ style, className = '', children, toggled = false, onClick }: AppButtonprops) {

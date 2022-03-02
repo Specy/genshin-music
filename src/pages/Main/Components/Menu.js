@@ -101,7 +101,6 @@ class Menu extends Component {
             searchStatus: 'Searching...'
         })
         const fetchedSongs = await fetch('https://sky-music.herokuapp.com/api/songs?search=' + encodeURI(searchInput)).then(data => data.json())
-        console.log(fetchedSongs)
         if (fetchedSongs.error) {
             this.setState({
                 searchStatus: 'Please write a non empty name'

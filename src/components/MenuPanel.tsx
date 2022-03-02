@@ -1,7 +1,7 @@
 interface MenuPanelProps{
     title: string,
     current: string,
-    children: JSX.Element[] | JSX.Element | string
+    children: React.ReactNode
 }
 
 export default function MenuPanel({title, current, children}: MenuPanelProps) {

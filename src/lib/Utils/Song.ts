@@ -1,13 +1,9 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType } from "appConfig"
-import { Column, ColumnNote, RecordedNote } from "./SongClasses"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, PitchesType } from "appConfig"
+import { Column, ColumnNote, RecordedNote,SongDataType } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
 import { numberToLayer, groupByIndex, mergeLayers, groupByNotes } from 'lib/Utils'
 import clonedeep from 'lodash.clonedeep'
-interface SongDataType {
-	isComposed: boolean
-	isComposedVersion: boolean,
-	appName: string
-}
+
 type OldNote = {
     key: string
     time: number
@@ -22,7 +18,8 @@ interface SongProps {
     version: number,
     notes: RecordedNote[]
 }
-type OldFormatSong = SongProps & {
+export type SerializedSong = SongProps 
+export type OldFormatSong = SongProps & {
     isComposed: boolean,
     pitchLevel: number,
     songNotes: any,
@@ -48,6 +45,9 @@ export class Song {
 			appName: APP_NAME
 		}
 	}
+    get isComposed(): boolean{
+        return this.data.isComposedVersion
+    }
     toOldFormat = () => {
         const song: OldFormatSong = {
             ...this.serialize(),
@@ -64,7 +64,7 @@ export class Song {
         } 
         return song
     }
-    static deserialize(obj:any){
+    static deserialize(obj:SerializedSong): Song{
         const { version, data, pitch, bpm, notes, name} = obj
         const song = new Song(name || 'Untitled')
         song.version = version || song.version
@@ -72,6 +72,7 @@ export class Song {
         song.pitch = pitch || song.pitch
         song.bpm = bpm || song.bpm
         song.notes = Array.isArray(notes) ? clonedeep(notes) : []
+        return song
     }
     serialize = () => {
         return {
@@ -134,10 +135,10 @@ export class Song {
                 column.notes = grouped[i].map(note => {
                     let columnNote = new ColumnNote(note[0])
                     if (note[2] === 0) columnNote.layer = "100"
-                    if (note[2] === 1) columnNote.layer = "100"
-                    if (note[2] === 2) columnNote.layer = "010"
-                    if (note[2] === 3) columnNote.layer = "110"
-                    if (note[2] === undefined) columnNote.layer = "100"
+                    else if (note[2] === 1) columnNote.layer = "100"
+                    else if (note[2] === 2) columnNote.layer = "010"
+                    //if (note[2] === 3) columnNote.layer = "110" //TODO check if layer 3 exists
+                    else columnNote.layer = "100"
                     return columnNote
                 })
                 let next = grouped[i + 1] || [[0, 0, 0]]
@@ -202,6 +203,13 @@ export class Song {
             return null
         }
     }
+    toGenshin = () => {
+        this.notes = this.notes.map(note => {
+			note[0] = IMPORT_NOTE_POSITIONS[note[0]]
+			return note
+		})
+        return this
+    }
     clone = () => {
         const clone = new Song(this.name)
         clone.version = this.version
@@ -209,5 +217,6 @@ export class Song {
         clone.pitch = this.pitch
         clone.data = {...this.data}
         clone.notes = clonedeep(this.notes)
+        return clone
     }
 }

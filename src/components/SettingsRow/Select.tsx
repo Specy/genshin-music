@@ -1,13 +1,13 @@
 import { ChangeEvent, ReactNode } from "react"
-import { SettingsSelect } from "types/SettingsPropriety"
+import { SettingsSelect, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface SelectProps {
-    value: string,
+    value: string | number,
     data: SettingsSelect,
-    objectKey: string,
+    objectKey: SettingUpdateKey,
     children: ReactNode
     onChange: (data: {
-        key: string,
+        key: SettingUpdateKey,
         data: any
     }) => void
 }

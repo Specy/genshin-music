@@ -1,8 +1,8 @@
 import ComposerNote from "./Components/ComposerNote"
-import { Column, getNoteText, NoteNameTypes } from 'lib/Utils'
+import { getNoteText, NoteNameTypes } from 'lib/Utils'
+import { Column } from "lib/Utils/SongClasses"
 import MultiSwitch from "./Components/MultiSwitch"
-import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType } from "appConfig"
-import { TempoChangers } from "lib/Utils"
+import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS } from "appConfig"
 import { ThemeStore } from "stores/ThemeStore"
 import Instrument from "lib/Instrument"
 
@@ -18,7 +18,7 @@ interface ComposerKeyboardProps{
     },
     functions: {
         handleClick: () => void
-        handleTempoChanger: (tempoChanger: typeof TempoChangers[number]) => void
+        handleTempoChanger: (tempoChanger: typeof TEMPO_CHANGERS[number]) => void
         changeLayer: () => void
     }
 }
@@ -69,7 +69,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                 <div className="bottom-right-text">
                     Tempo
                 </div>
-                {TempoChangers.map((tempoChanger) => {
+                {TEMPO_CHANGERS.map((tempoChanger) => {
                     return <button
                         key={tempoChanger.id}
                         onClick={() => functions.handleTempoChanger(tempoChanger)}

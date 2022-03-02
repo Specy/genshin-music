@@ -1,3 +1,5 @@
+import { INSTRUMENTS } from 'appConfig'
+import { ComposerSettings, MainPageSettings } from 'lib/BaseSettings'
 interface BaseSettingsProp {
     name: string,
     songSetting: boolean,
@@ -8,8 +10,8 @@ export type SettingsPropriety = SettingsInstrument | SettingsSelect | SettingsSl
 export type SettingsInstrument = BaseSettingsProp & {
     type: 'instrument'
     volume: number
-    value: string
-    options: string[]
+    value: typeof INSTRUMENTS[number]
+    options: typeof INSTRUMENTS[number][]
 }
 export type SettingsCheckbox = BaseSettingsProp & {
     type: 'checkbox'
@@ -35,6 +37,16 @@ export type SettingsSlider = BaseSettingsProp & {
 }
 export type SettingsSelect = BaseSettingsProp & {
     type: 'select'
-    value: string
-    options: string[]
+    value: string | number
+    options: string[] | number[]
+}
+
+export type SettingUpdateKey = keyof typeof ComposerSettings.data | keyof typeof MainPageSettings.data
+export type SettingUpdate = {
+    key: SettingUpdateKey, 
+    data: SettingsPropriety
+}
+export type SettingVolumeUpdate = {
+    key: SettingUpdateKey
+    value: number
 }

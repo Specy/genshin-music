@@ -1,7 +1,7 @@
 import { HelpTab } from "components/HelpTab"
 import { SimpleMenu } from "components/SimpleMenu"
 
-export default function Help(props){
+export default function Help(){
     return <div className="default-page">
         <SimpleMenu/>
         <div>

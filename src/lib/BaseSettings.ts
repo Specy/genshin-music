@@ -1,12 +1,30 @@
 import { isMobile } from "is-mobile"
 import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
 import { MIDINote, MIDIShortcut } from "./Utils"
-import { SettingsPropriety } from "types/SettingsPropriety"
+import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
 
-
-const BaseComposerSettings = {
+export type ComposerSettingsDataType = {
+    instrument: SettingsInstrument
+    layer2: SettingsInstrument
+    layer3: SettingsInstrument
+    bpm: SettingsNumber
+    beatMarks: SettingsSelect
+    noteNameType: SettingsSelect
+    pitch: SettingsSelect
+    columnsPerCanvas: SettingsSelect
+    caveMode: SettingsCheckbox
+    autosave: SettingsCheckbox
+    syncTabs: SettingsCheckbox
+}
+export type ComposerSettingsType = {
     other: {
-        settingVesion: APP_NAME + 32,
+        settingVersion: string
+    }
+    data: ComposerSettingsDataType
+}
+export const ComposerSettings: ComposerSettingsType = {
+    other: {
+        settingVersion: APP_NAME + 32,
     },
     data: {
         instrument: {
@@ -15,7 +33,7 @@ const BaseComposerSettings = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: INSTRUMENTS
+            options: [...INSTRUMENTS]
         },
         layer2: {
             name: "Instrument (Layer 2)",
@@ -23,7 +41,7 @@ const BaseComposerSettings = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: INSTRUMENTS
+            options: [...INSTRUMENTS]
         },
         layer3: {
             name: "Instrument (Layer 3)",
@@ -31,7 +49,7 @@ const BaseComposerSettings = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: INSTRUMENTS
+            options: [...INSTRUMENTS]
         },
         bpm: {
             name: "Bpm",
@@ -132,26 +150,25 @@ const BaseComposerSettings = {
 
 }
 
-export type ComposerSettingsKeysOther = keyof typeof BaseComposerSettings.other
-export type ComposerSettingsKeysData = keyof typeof BaseComposerSettings.data
-export type ComposerSettingsDataType =
-    {
-        [key in ComposerSettingsKeysData]: SettingsPropriety
-    }
-
-export type ComposerSettingsType = {
-    other: {
-        [key in ComposerSettingsKeysOther]: string
-    },
-    data: ComposerSettingsDataType
+export type MainPageSettingsDataType = {
+    instrument: SettingsInstrument
+    pitch: SettingsSelect
+    caveMode: SettingsCheckbox
+    noteNameType: SettingsSelect
+    keyboardSize: SettingsSlider
+    keyboardYPosition: SettingsSlider
+    approachSpeed: SettingsNumber
+    noteAnimation: SettingsCheckbox
 }
-
-//its complaining because i forced the type of threshold to be [number, number]
-//@ts-ignore
-export const ComposerSettings = BaseComposerSettings as ComposerSettingsType
-const BaseMainPageSettings = {
+export type MainPageSettingsType = {
     other: {
-        settingVesion: APP_NAME + 32
+        settingVersion: string,
+    },
+    data: MainPageSettingsDataType
+}
+export const MainPageSettings: MainPageSettingsType = {
+    other: {
+        settingVersion: APP_NAME + 32
     },
     data: {
         instrument: {
@@ -160,7 +177,7 @@ const BaseMainPageSettings = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: INSTRUMENTS
+            options: [...INSTRUMENTS]
         },
         pitch: {
             name: "Pitch",
@@ -243,21 +260,9 @@ const BaseMainPageSettings = {
         }
     }
 }
-export type MainPageSettingsKeysOther = keyof typeof BaseMainPageSettings.other
-export type MainPageSettingsKeysData = keyof typeof BaseMainPageSettings.data
-export type MainPageSettingsDataType =  {
-    [key in MainPageSettingsKeysData]: SettingsPropriety
-}
-export type MainPageSettingsType = {
-    other: {
-        [key in MainPageSettingsKeysOther]: string
-    },
-    data: MainPageSettingsDataType
-}
-export const MainPageSettings = BaseMainPageSettings as MainPageSettingsType
 
 export const MIDISettings = {
-    settingVesion: APP_NAME + 4,
+    settingVersion: APP_NAME + 4,
     enabled: false,
     currentSource: '',
     notes: new Array(APP_NAME === 'Genshin' ? 21 : 15).fill(0).map((e, i) => new MIDINote(i, -1)),
@@ -280,7 +285,7 @@ export function getMIDISettings() {
         settings = null
     }
     if (settings !== null) {
-        if (settings.settingVesion !== MIDISettings.settingVesion) {
+        if (settings.settingVersion !== MIDISettings.settingVersion) {
             return MIDISettings
         }
     } else {

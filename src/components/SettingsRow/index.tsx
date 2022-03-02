@@ -6,15 +6,13 @@ import { Slider } from './Slider'
 import { Select } from './Select'
 import { useTheme } from 'lib/hooks/useTheme'
 import './Settings.css'
-import { SettingsPropriety } from 'types/SettingsPropriety'
+import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety'
+
 interface SettingsRowProps {
     data: SettingsPropriety,
-    update: (data:{
-        key: string, 
-        data: SettingsPropriety
-    }) => void,
-    objKey: string, 
-    changeVolume: () => void
+    update: (data: SettingUpdate) => void,
+    objKey: SettingUpdateKey, 
+    changeVolume: (data: SettingVolumeUpdate) => void
 }
 
 function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
@@ -36,8 +34,10 @@ function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
         }
     }
 
-    if (objKey === "settingVesion") return null
-    return <div className="settings-row" style={{ backgroundColor: theme.layer('menu_background', 0.15).toString() }}>
+    return <div 
+            className="settings-row" 
+            style={{ backgroundColor: theme.layer('menu_background', 0.15).toString() }}
+        >
         <div>
             {data.name}
         </div>

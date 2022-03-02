@@ -1,4 +1,4 @@
-import React, {  useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
 import { FileDownloader } from "lib/Utils"
 import { ComposedSong } from 'lib/Utils/ComposedSong';
@@ -22,8 +22,8 @@ interface MenuProps {
         songs: ComposedSong[] | Song[]
         currentSong: ComposedSong | Song
         settings: ComposerSettingsDataType,
-        hasChanges: boolean, 
-        menuOpen: boolean, 
+        hasChanges: boolean,
+        menuOpen: boolean,
         isRecordingAudio: boolean
     }
     functions: {
@@ -32,10 +32,13 @@ interface MenuProps {
         createNewSong: () => void
         changePage: (page: string) => void
         updateSong: (song: ComposedSong | Song) => void
-        handleSettingChange: (setting: SettingsPropriety) => void
+        handleSettingChange: (data:{
+            key: string,
+            data: SettingsPropriety
+        }) => void
         toggleMenuVisible: () => void
         changeVolume: (data: {
-            key: string, 
+            key: string,
             value: number
         }) => void
         changeMidiVisibility: (visible: boolean) => void
@@ -70,14 +73,14 @@ function Menu({ data, functions }: MenuProps) {
         return () => window.removeEventListener('keydown', handleKeyboard)
     }, [handleKeyboard])
 
-    const toggleMenu = (override: boolean | undefined) => {
+    const toggleMenu = (override?: boolean) => {
         if (typeof override !== "boolean") override = undefined
         const newState = override !== undefined ? override : !open
         setOpen(newState)
         if (newState === false) toggleMenuVisible()
 
     }
-    const selectSideMenu = (selection:MenuTabs) => {
+    const selectSideMenu = (selection: MenuTabs) => {
         if (selection === selectedMenu && open) {
             return setOpen(false)
         }
@@ -88,14 +91,14 @@ function Menu({ data, functions }: MenuProps) {
     const downloadSong = (song: ComposedSong | Song) => {
         song.data.appName = APP_NAME
         const songName = song.name
-        const converted = [APP_NAME === 'Sky'? song.toOldFormat() : song.serialize()]
+        const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
         const json = JSON.stringify(converted)
         FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
         Analytics.userSongs('download', { name: song?.name, page: 'composer' })
     }
     const updateSong = () => {
-        this.props.functions.updateSong(this.props.data.currentSong)
+        functions.updateSong(data.currentSong)
     }
     const sideClass = open ? "side-menu menu-open" : "side-menu"
     const songFunctions = {
@@ -116,12 +119,12 @@ function Menu({ data, functions }: MenuProps) {
                     <FaSave className="icon" />
                 </Memoized>
             </MenuItem>
-            <MenuItem type="Songs" action={selectSideMenu}>
+            <MenuItem type="Songs" action={() => selectSideMenu('Songs')}>
                 <Memoized>
                     <FaMusic className="icon" />
                 </Memoized>
             </MenuItem>
-            <MenuItem type="Settings" action={selectSideMenu}>
+            <MenuItem type="Settings" action={() => selectSideMenu('Settings')}>
                 <Memoized>
                     <FaCog className="icon" />
                 </Memoized>
@@ -133,12 +136,10 @@ function Menu({ data, functions }: MenuProps) {
             </MenuItem>
         </div>
         <div className={sideClass}>
-            <MenuPanel title="No selection" current={selectedMenu}>
-            </MenuPanel>
-            <MenuPanel title="Songs" current={selectedMenu}>
 
+            <MenuPanel title="Songs" current={selectedMenu}>
                 <div className="songs-buttons-wrapper">
-                    <button className="genshin-button" onClick={() => { changeMidiVisibility(true); this.toggleMenu() }}>
+                    <button className="genshin-button" onClick={() => { changeMidiVisibility(true); toggleMenu() }}>
                         Create from MIDI
                     </button>
                     <button className="genshin-button" onClick={createNewSong}>
@@ -164,15 +165,15 @@ function Menu({ data, functions }: MenuProps) {
 
             </MenuPanel>
             <MenuPanel title="Settings" current={selectedMenu}>
-                {Object.entries(data.settings).map(([key, data]) => {
-                    return <SettingsRow
+                {Object.entries(data.settings).map(([key, data]) => 
+                    <SettingsRow
                         key={key}
                         objKey={key}
                         data={data}
                         changeVolume={changeVolume}
                         update={handleSettingChange}
                     />
-                })}
+                )}
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
                         <button
@@ -197,9 +198,17 @@ function Menu({ data, functions }: MenuProps) {
 }
 
 
+interface SongRowProps {
+    data: Song | ComposedSong
+    functions: {
+        removeSong: (name: string) => void
+        toggleMenu: (override: boolean) => void
+        loadSong: (song: Song | ComposedSong) => void
+        downloadSong: (song: Song | ComposedSong) => void
+    }
+}
 
-function SongRow(props) {
-    const { data, functions } = props
+function SongRow({ data, functions }: SongRowProps) {
     const { removeSong, toggleMenu, loadSong, downloadSong } = functions
     return <div className="song-row">
         <div className="song-name" onClick={() => {

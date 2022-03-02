@@ -1,6 +1,6 @@
 import { useRef, useCallback } from "react"
 interface FilePickerProps {
-    children: JSX.Element | JSX.Element[] | string,
+    children: React.ReactNode,
     as: 'json' | 'text' | 'buffer'
     onChange: (file: FileElement[]) => void,
     style?: object,

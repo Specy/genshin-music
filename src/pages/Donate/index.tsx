@@ -3,7 +3,7 @@ import paypalImg from 'assets/images/paypalme.png'
 import buyMeACoffeeImg from 'assets/images/buymeacoffee.svg'
 import kofiImg from 'assets/images/kofi.png'
 import { SimpleMenu } from 'components/SimpleMenu'
-export default function Donate(props) {
+export default function Donate() {
     return <div className='default-page'>
         <SimpleMenu/>
         <div className="donate-text">

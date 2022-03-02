@@ -1,14 +1,21 @@
 import { ChangeEvent } from "react"
-import { SettingsInstrument } from "types/SettingsPropriety"
+import { InstrumentKeys } from "types/GeneralTypes"
+import { SettingsInstrument, SettingsPropriety, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface InstrumentInputProps{
     data: SettingsInstrument,
     volume: number, 
     instrument: string,
-    objectKey: string,
+    objectKey: SettingUpdateKey,
     onVolumeChange: (value: number) => void,
-    onVolumeComplete: (event: any) => void,
-    onInstrumentPick: (event: any) => void
+    onVolumeComplete: (data: {
+        value: number
+        key: SettingUpdateKey
+    }) => void,
+    onInstrumentPick: (data: {
+        key: SettingUpdateKey, 
+        data: SettingsInstrument
+    }) => void
 }
 
 export function InstrumentInput({data,volume, onVolumeChange, onVolumeComplete, onInstrumentPick, objectKey, instrument}: InstrumentInputProps) {
@@ -24,7 +31,7 @@ export function InstrumentInput({data,volume, onVolumeChange, onVolumeComplete, 
     function handleInstrument(e: ChangeEvent<HTMLSelectElement>){
         onInstrumentPick({
             key: objectKey,
-            data: { ...data, value: e.target.value }
+            data: { ...data, value: e.target.value as InstrumentKeys }
         })
     }
 

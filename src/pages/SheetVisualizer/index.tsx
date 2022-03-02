@@ -3,11 +3,15 @@ import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
 import { DB } from 'Database'
 import { APP_NAME } from 'appConfig'
-import { ComposerToRecording, getNoteText } from 'lib/Utils'
+import { getNoteText } from 'lib/Utils'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
 import { ThemeStore } from 'stores/ThemeStore'
+import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong'
+import { SerializedSongType } from 'types/SongTypes'
+import { SerializedSong, Song } from 'lib/Utils/Song'
+import { RecordedNote } from 'lib/Utils/SongClasses'
 
 const THRESHOLDS = {
     joined: 50,
@@ -15,14 +19,15 @@ const THRESHOLDS = {
 }
 
 
-export default function SheetVisualizer(props) {
-    const [songs, setSongs] = useState([])
-    const [sheet, setSheet] = useState([])
+export default function SheetVisualizer() {
+    const [songs, setSongs] = useState<SerializedSongType[]>([])
+    const [sheet, setSheet] = useState<Chunk[]>([])
     const [framesPerRow, setFramesPerRow] = useState(7)
-    const [currentSong, setCurrentSong] = useState({})
+    const [currentSong, setCurrentSong] = useState<SerializedSongType | null>(null)
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
-    function setFrames(amount) {
+
+    function setFrames(amount: number) {
         const newAmount = framesPerRow + amount
         const frame = document.querySelector('.frame-outer')
         if (!frame || newAmount < 1) return
@@ -38,27 +43,27 @@ export default function SheetVisualizer(props) {
         load()
     }, [])
 
-    function getChunkNoteText(i) {  
+    function getChunkNoteText(i: number) {  
         const text = getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === "Genshin" ? 21 : 15)
         return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
-    function handleClick(song) {
+    function handleClick(song: SerializedSongType) {
         setCurrentSong(song)
-        let lostReference = JSON.parse(JSON.stringify(song))
-        if (lostReference.data?.isComposedVersion) {
-            lostReference = ComposerToRecording(lostReference)
-        }
+        const lostReference = song.data.isComposedVersion 
+            ? ComposedSong.deserialize(song as SerializedComposedSong).toSong()
+            : Song.deserialize(song as SerializedSong)
+
         const notes = lostReference.notes
-        const chunks = []
+        const chunks: Chunk[] = []
         let previousChunkDelay = 0
         let sheetText = ''
         for (let i = 0; notes.length > 0; i++) {
-            const chunk = new Chunk([notes.shift()])
+            const chunk = new Chunk([notes.shift() as RecordedNote])
             const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
             for (let j = 0; j < notes.length && j < 20; j++) {
                 let difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
                 if (difference < 0) {
-                    chunk.notes.push(notes.shift())
+                    chunk.notes.push(notes.shift() as RecordedNote)
                     j--
                 }
             }
@@ -92,9 +97,7 @@ export default function SheetVisualizer(props) {
                     SongComponent={SongRow}
                     componentProps={{
                         currentSong,
-                        functions: {
-                            click: handleClick
-                        }
+                        onClick: handleClick
                     }}
                 />
                 <div className='displayer-buttons-wrapper noprint'>
@@ -116,11 +119,11 @@ export default function SheetVisualizer(props) {
                 </div>
             </div>
             <h1 className='onprint'>
-                {currentSong?.name}
+                {currentSong ? currentSong?.name : ''}
             </h1>
             <div style={{ width: '100%' }} className='noprint'>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2>{currentSong.name || 'No song selected'}</h2>
+                    <h2>{currentSong ? currentSong.name : 'No song selected'}</h2>
                     <button onClick={() => window.print()} className='genshin-button'>
                         Print as PDF
                     </button>
@@ -138,7 +141,6 @@ export default function SheetVisualizer(props) {
                 {sheet.map((frame, i) =>
                     <SheetFrame
                         key={i}
-                        framesPerRow={framesPerRow}
                         frame={frame}
                         rows={3}
                         hasText={hasText}
@@ -154,14 +156,20 @@ export default function SheetVisualizer(props) {
 }
 
 class Chunk {
-    notes = []
+    notes: RecordedNote[] = []
     delay = 0
-    constructor(notes = [], delay = 0) {
+    constructor(notes:RecordedNote[]  = [], delay:number = 0) {
         this.notes = notes
         this.delay = delay
     }
 }
-function SheetFrame({ frame, rows, hasText }) {
+
+interface SheetFrameProps{
+    frame: Chunk
+    rows: number
+    hasText: boolean
+}
+function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const notes = new Array(columnsPerRow * rows).fill(0)
     frame.notes.forEach(note => {
@@ -177,7 +185,7 @@ function SheetFrame({ frame, rows, hasText }) {
                     return <div 
                             className={exists ? 'frame-note-s' : 'frame-note-ns'} 
                             key={i}
-                            style={!exists ? {backgroundColor: ThemeStore.layer('primary',0.2)} : {}}
+                            style={!exists ? {backgroundColor: ThemeStore.layer('primary',0.2).toString()} : {}}
                         >
                         {(exists && hasText) 
                             ? getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === 'Genshin' ? 21 : 15) 
@@ -189,13 +197,17 @@ function SheetFrame({ frame, rows, hasText }) {
         </div>
 }
 
-
-function SongRow({ data, current, functions } ) {
-    const selectedStyle = current === data?.name ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
+interface SongRowProps{
+    data: SerializedSongType
+    current: SerializedSongType | null
+    onClick: (song: SerializedSongType) => void
+}
+function SongRow({ data, current, onClick }: SongRowProps ) {
+    const selectedStyle = current === data ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
     return <div
         className="song-row"
         style={selectedStyle}
-        onClick={() => functions.click(data)}>
+        onClick={() => onClick(data)}>
         <div className="song-name">
             {data.name}
         </div>
