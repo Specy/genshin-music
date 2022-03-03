@@ -1,10 +1,13 @@
 import { useTheme } from "lib/hooks/useTheme";
+import { ComposedSong } from "lib/Utils/ComposedSong";
+import { Song } from "lib/Utils/Song";
 import { useEffect, useState } from "react"
+import { SerializedSongType } from "types/SongTypes";
 
 
 type songType = 'recorded' | 'composed'
 interface SongMenuProps {
-    songs: any[],
+    songs: SerializedSongType[] | Song[] | ComposedSong[],
     SongComponent: any,
     componentProps: any,
     className?: string,

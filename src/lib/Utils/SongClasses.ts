@@ -1,3 +1,5 @@
+import { LayerIndexes } from "types/GeneralTypes"
+
 export class Column {
 	notes: ColumnNote[] //TODO make sure its this
 	tempoChanger : number //TODO put the keys of the tempo changers here
@@ -24,7 +26,7 @@ export class ColumnNote {
     }
 }
 
-export type RecordedNote = [index:number, time:number,layer: 0 | 1 | 2] //TODO make this better
+export type RecordedNote = [index:number, time:number,layer: LayerIndexes] //TODO make this better
 export class Recording {
 	start: number
 	notes: RecordedNote[] //TODO not sure

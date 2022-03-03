@@ -1,25 +1,26 @@
 import ComposerNote from "./Components/ComposerNote"
-import { getNoteText, NoteNameTypes } from 'lib/Utils'
+import { getNoteText, NoteNameType } from 'lib/Utils'
 import { Column } from "lib/Utils/SongClasses"
 import MultiSwitch from "./Components/MultiSwitch"
 import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS } from "appConfig"
 import { ThemeStore } from "stores/ThemeStore"
-import Instrument from "lib/Instrument"
+import Instrument, { NoteData } from "lib/Instrument"
+import { LayerType } from "types/GeneralTypes"
 
 
 interface ComposerKeyboardProps{
     data: {
         keyboard: Instrument,
         currentColumn: Column, 
-        layer: number, 
+        layer: LayerType, 
         pitch: PitchesType, 
         isPlaying: boolean, 
-        noteNameType: NoteNameTypes
+        noteNameType: NoteNameType
     },
     functions: {
-        handleClick: () => void
+        handleClick: (note: NoteData) => void
         handleTempoChanger: (tempoChanger: typeof TEMPO_CHANGERS[number]) => void
-        changeLayer: () => void
+        changeLayer: (layer: LayerType) => void
     }
 }
 
@@ -58,7 +59,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                 <div className="bottom-right-text">
                     Layer
                 </div>
-                <MultiSwitch
+                <MultiSwitch<LayerType>
                     buttonsClass="layer-button"
                     options={LAYERS_INDEXES}
                     onSelect={functions.changeLayer}

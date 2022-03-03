@@ -5,6 +5,7 @@ import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
 import { Song } from "./Song";
 import { ColumnNote } from "./SongClasses";
+import { LayerIndexes } from "types/GeneralTypes";
 function capitalize(str:string){
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -60,9 +61,9 @@ class MIDIShortcut{
 		this.status = midi < 0 ? 'wrong' : 'right'
     }
 }
-export type NoteNameTypes = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text'
+export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text'
 function getNoteText(
-		noteNameType:NoteNameTypes, 
+		noteNameType:NoteNameType, 
 		index: number, 
 		pitch: PitchesType, 
 		layoutLength: keyof typeof LAYOUT_DATA
@@ -180,8 +181,8 @@ function getPitchChanger(pitch: PitchesType) {
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
 
-//TODO make this return actual type of layers
-function numberToLayer(number: 0 | 1 | 2) : string {
+
+function numberToLayer(number: LayerIndexes) : string {
 	let layer = "100"
 	if (number === 0) layer = "100"
 	if (number === 1) layer = "010"

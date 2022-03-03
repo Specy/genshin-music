@@ -391,7 +391,7 @@ canvas{
     display: flex;
     flex-direction: column;
     margin-top: 0.5rem;
-    background-color: #515c6e;
+    background: var(--primary);
     padding: 0.4rem;
     border-radius: 0.2rem;
 }
@@ -408,7 +408,7 @@ canvas{
     align-items: center;
 }
 .midi-track-column{
-    background: #576377;
+    background: var(--primary);
     padding: 0.3rem 0.5rem;
     border-radius: 0.2rem;
     display: flex;

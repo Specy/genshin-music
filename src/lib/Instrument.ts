@@ -1,7 +1,8 @@
 import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS,AUDIO_CONTEXT } from "appConfig"
+import { InstrumentKeys } from "types/GeneralTypes"
 
 export default class Instrument {
-    instrumentName: typeof INSTRUMENTS[number]
+    instrumentName: InstrumentKeys
     layout: NoteData[]
     buffers: AudioBuffer[]
     loaded: boolean
@@ -11,9 +12,9 @@ export default class Instrument {
     mobileLayout: string[]
     keyboardCodes: string[]
 
-    constructor(instrumentName?: typeof INSTRUMENTS[number]) {
-        this.instrumentName = instrumentName === undefined ? INSTRUMENTS[0] : instrumentName
-        //@ts-ignore //TODO check this?
+    constructor(instrumentName: InstrumentKeys = INSTRUMENTS[0]) {
+        this.instrumentName = instrumentName
+        //@ts-ignore
         if (!INSTRUMENTS.includes(this.instrumentName)) this.instrumentName = INSTRUMENTS[0] 
         this.layout = []
         this.buffers = []

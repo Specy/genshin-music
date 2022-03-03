@@ -1,28 +1,28 @@
 import { memo } from "react"
 
-interface MultiSwitchProps{
-    options: readonly number[] | readonly string[]
-    selected: number | string
+interface MultiSwitchProps<T> {
+    options: readonly T[]
+    selected: T
     buttonsClass: string
-    onSelect: (index: number | string) => void
+    onSelect: (selected: T) => void
 }
 
-
-export default memo(function MultiSwitch({ options, selected, buttonsClass, onSelect }: MultiSwitchProps){
+const MultiSwitch = <T,>({ options, selected, buttonsClass, onSelect }: MultiSwitchProps<T>) => {
     return <>
-        {options.map(index => {
+        {options.map((value, i) => {
             return <button
-                style={selected === index ? {backgroundColor: 'var(--accent)', color: 'var(--accent-text)'}: {}}
+                style={selected === value ? { backgroundColor: 'var(--accent)', color: 'var(--accent-text)' } : {}}
                 className={buttonsClass}
-                onClick={() => onSelect(index)}
-                key={index}
+                onClick={() => onSelect(value)}
+                key={i}
             >
-                {index}
+                {value}
             </button>
         })}
     </>
-},(p,n)=>{
-    return p.options?.length === n.options?.length 
+}
+export default memo(MultiSwitch, (p, n) => {
+    return p.options?.length === n.options?.length
         && p.selected === n.selected
         && p.onSelect === n.onSelect
-})
+}) as typeof MultiSwitch

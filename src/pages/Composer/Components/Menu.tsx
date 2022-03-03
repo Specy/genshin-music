@@ -15,32 +15,28 @@ import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { ComposerSettingsDataType } from 'lib/BaseSettings';
-import { SettingsPropriety } from 'types/SettingsPropriety';
+import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
+import { Pages } from 'types/GeneralTypes';
+import { SerializedSongType } from 'types/SongTypes';
 
 interface MenuProps {
     data: {
-        songs: ComposedSong[] | Song[]
-        currentSong: ComposedSong | Song
+        songs: SerializedSongType[]
+        currentSong: ComposedSong
         settings: ComposerSettingsDataType,
         hasChanges: boolean,
         menuOpen: boolean,
         isRecordingAudio: boolean
     }
     functions: {
-        loadSong: (song: ComposedSong | Song) => void
+        loadSong: (song: SerializedSongType) => void
         removeSong: (name: string) => void
         createNewSong: () => void
-        changePage: (page: string) => void
-        updateSong: (song: ComposedSong | Song) => void
-        handleSettingChange: (data:{
-            key: string,
-            data: SettingsPropriety
-        }) => void
+        changePage: (page: Pages | 'Home') => void
+        updateSong: (song: ComposedSong) => void
+        handleSettingChange: (data:SettingUpdate) => void
         toggleMenuVisible: () => void
-        changeVolume: (data: {
-            key: string,
-            value: number
-        }) => void
+        changeVolume: (data: SettingVolumeUpdate) => void
         changeMidiVisibility: (visible: boolean) => void
         startRecordingAudio: (override?: boolean) => void
     }
@@ -129,7 +125,7 @@ function Menu({ data, functions }: MenuProps) {
                     <FaCog className="icon" />
                 </Memoized>
             </MenuItem>
-            <MenuItem type="Home" action={() => changePage("home")}>
+            <MenuItem type="Home" action={() => changePage("Home")}>
                 <Memoized>
                     <FaHome className="icon" />
                 </Memoized>
@@ -168,7 +164,7 @@ function Menu({ data, functions }: MenuProps) {
                 {Object.entries(data.settings).map(([key, data]) => 
                     <SettingsRow
                         key={key}
-                        objKey={key}
+                        objKey={key as SettingUpdateKey}
                         data={data}
                         changeVolume={changeVolume}
                         update={handleSettingChange}

@@ -3,6 +3,7 @@ import { Column, ColumnNote, RecordedNote,SongDataType } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
 import { numberToLayer, groupByIndex, mergeLayers, groupByNotes } from 'lib/Utils'
 import clonedeep from 'lodash.clonedeep'
+import { LayerIndexes } from "types/GeneralTypes"
 
 type OldNote = {
     key: string
@@ -190,7 +191,7 @@ export class Song {
             )
             notes.forEach((note) => {
                 const data = note.key.split("Key")
-                const layer = (note.l ?? Number(data[0])) as 0 | 1 | 2
+                const layer = (note.l ?? Number(data[0])) as LayerIndexes
                 converted.notes.push([IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer])
             })
     
