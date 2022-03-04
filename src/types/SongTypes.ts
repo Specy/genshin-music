@@ -1,4 +1,4 @@
-import { SerializedSong } from "lib/Utils/Song";
-import { SerializedComposedSong } from "lib/Utils/ComposedSong";
+import type { SerializedSong } from "lib/Utils/Song";
+import type { SerializedComposedSong } from "lib/Utils/ComposedSong";
 
 export type SerializedSongType = SerializedSong | SerializedComposedSong

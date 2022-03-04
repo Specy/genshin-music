@@ -3,7 +3,7 @@ import Keyboard from "./Keyboard"
 import Menu from "./Components/Menu"
 import { DB } from 'Database';
 import { SongStore } from 'stores/SongStore'
-import { prepareSongImport, getPitchChanger } from "lib/Utils"
+import { prepareSongImport, getPitchChanger } from "lib/Utils/Tools"
 import { Song } from 'lib/Utils/Song';
 import { ComposedSong } from 'lib/Utils/ComposedSong';
 import { Recording } from 'lib/Utils/SongClasses';
@@ -370,7 +370,6 @@ class Main extends Component {
 	render() {
 		const { state } = this
 		const keyboardFunctions = {
-			changeSliderState: this.changeSliderState,
 			playSound: this.playSound,
 			setHasSong: this.setHasSong
 		}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { prepareSongImport } from "lib/Utils"
+import { prepareSongImport } from "lib/Utils/Tools"
 import LoggerStore from 'stores/LoggerStore';
 
 interface SearchedSongProps{

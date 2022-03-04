@@ -11,27 +11,27 @@ async function callGA(fn: () => Promise<void>) {
     }
 }
 
-function event(action:any, params:any) {
+function event(action: any, params: any) {
     return callGA(() => GA('event', action, params))
 }
 
-function userSongs(type:string, params:any) {
+function userSongs(type: string, params: any) {
     return event('songs_' + type, params)
 }
 
-function songSearch(params:any) {
+function songSearch(params: any) {
     return event('song_search', params)
 }
 
-function UIEvent(type:string, params:any) {
+function UIEvent(type: string, params: any) {
     return event('UI_' + type, params)
 }
 
-function songEvent(params:any) {
+function songEvent(params: any) {
     return event('song_event', params)
 }
 
-function pageView(page: string) {
+function pageView(page: { page_title: string }) {
     return event('page_view', page)
 }
 

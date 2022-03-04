@@ -1,7 +1,7 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, PitchesType } from "appConfig"
 import { Column, ColumnNote, RecordedNote,SongDataType } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
-import { numberToLayer, groupByIndex, mergeLayers, groupByNotes } from 'lib/Utils'
+import { numberToLayer, groupByIndex, mergeLayers, groupByNotes } from 'lib/Utils/Tools'
 import clonedeep from 'lodash.clonedeep'
 import { LayerIndexes } from "types/GeneralTypes"
 
@@ -34,6 +34,7 @@ export class Song {
 	bpm: number
 	pitch: PitchesType
 	data: SongDataType
+    timestamp: number
 	constructor(name: string, notes = []) {
 		this.name = name
 		this.version = 1
@@ -45,9 +46,10 @@ export class Song {
 			isComposedVersion: false,
 			appName: APP_NAME
 		}
+        this.timestamp = 0
 	}
-    get isComposed(): boolean{
-        return this.data.isComposedVersion
+    get isComposed(): false{
+        return false
     }
     toOldFormat = () => {
         const song: OldFormatSong = {

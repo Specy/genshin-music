@@ -9,12 +9,57 @@ import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN, APP_NAME } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeStore } from 'stores/ThemeStore';
 import { observe } from 'mobx';
+import { ComposerSettingsDataType } from 'lib/BaseSettings';
+import { Column as ColumnClass, ColumnNote} from 'lib/Utils/SongClasses';
+import { clamp, nearestEven } from 'lib/Utils/Tools';
 let NumOfColumnsPerCanvas = 35
 
-export default class ComposerCanvas extends Component {
-    constructor(props) {
+interface ComposerCanvasProps{
+    data: {
+        columns: ColumnClass[],
+        selected: number,
+        settings: ComposerSettingsDataType,
+        breakpoints: number[],
+        toolsColumns: number[]
+    }
+    functions: {
+        selectColumn: (index: number, ignoreAudio?: boolean) => void,
+        toggleBreakpoint: () => void
+    }
+
+}
+type ClickEventType = 'up' | 'down' | 'downStage'
+export default class ComposerCanvas extends Component<ComposerCanvasProps> {
+    state: {
+        width: number
+        height: number
+        column: {
+            width: number
+            height: number
+        }
+        timelineHeight: number
+        currentBreakpoint: number
+        theme: {
+            timeline: {
+                hex: string
+                hexNumber: number
+            }
+        }
+        cache: ComposerCache
+    }
+    sizes: DOMRect
+    canvasRef: any
+    stageSelected: boolean
+    sliderSelected: boolean
+    hasSlided: boolean
+    stagePreviousPositon: number
+    sliderOffset: number
+    throttleScroll: number
+    onSlider: boolean
+    dispose: () => void
+    constructor(props: ComposerCanvasProps) {
         super(props)
-        let sizes = document.body.getBoundingClientRect()
+        const sizes = document.body.getBoundingClientRect()
         this.sizes = sizes
         NumOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
         let width = nearestEven(sizes.width * 0.84)
@@ -57,7 +102,7 @@ export default class ComposerCanvas extends Component {
         this.onSlider = false
         this.dispose = () => { }
     }
-    resetPointerDown = (e) => {
+    resetPointerDown = () => {
         this.stageSelected = false
         this.sliderSelected = false
         this.stagePreviousPositon = 0
@@ -65,7 +110,7 @@ export default class ComposerCanvas extends Component {
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
         window.addEventListener("keydown", this.handleKeyboard)
-        this.canvasRef.current._canvas.addEventListener("wheel", this.handleWheel)
+        this.canvasRef.current!._canvas.addEventListener("wheel", this.handleWheel)
         this.dispose = observe(ThemeStore.state.data, () => {
             this.state?.cache?.destroy?.()
             this.setState({
@@ -91,7 +136,7 @@ export default class ComposerCanvas extends Component {
         this.dispose()
         this.state.cache.destroy()
     }
-    handleKeyboard = (event) => {
+    handleKeyboard = (event: KeyboardEvent) => {
         let key = event.code
         switch (key) {
             case "ArrowRight": this.handleBreakpoints(1)
@@ -102,7 +147,7 @@ export default class ComposerCanvas extends Component {
                 break;
         }
     }
-    getCache(width, height, margin, timelineHeight) {
+    getCache(width: number, height: number, margin: number, timelineHeight: number) {
         const colors = {
             l: ThemeStore.get('primary'),
             d: ThemeStore.get('primary')
@@ -127,10 +172,10 @@ export default class ComposerCanvas extends Component {
             ]
         })
     }
-    handleWheel = (e) => {
+    handleWheel = (e: WheelEvent) => {
         this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
     }
-    handleClick = (e, type) => {
+    handleClick = (e: any, type: ClickEventType) => {
         const x = e.data.global.x
         const { width } = this.state
         const { data } = this.props
@@ -152,7 +197,7 @@ export default class ComposerCanvas extends Component {
             this.stageSelected = true
         }
     }
-    handleStageSlide = (e) => {
+    handleStageSlide = (e: any) => {
         let x = e.data.global.x
         if (this.stageSelected === true) {
             if (this.throttleScroll++ < 5) return
@@ -166,7 +211,7 @@ export default class ComposerCanvas extends Component {
             functions.selectColumn(clamp(newPosition, 0, data.columns.length - 1), true)
         }
     }
-    handleBreakpoints = (direction) => {
+    handleBreakpoints = (direction: 1 | -1) => {
         const { selected, columns, breakpoints } = this.props.data
         let breakpoint = direction === 1 //1 = right, -1 = left
             ? breakpoints.filter((v) => v > selected).sort((a, b) => a - b)
@@ -176,7 +221,7 @@ export default class ComposerCanvas extends Component {
             this.props.functions.selectColumn(breakpoint[0])
         }
     }
-    handleSlide = (e) => {
+    handleSlide = (e: any) => {
         const globalX = e.data.global.x
         if (this.sliderSelected) {
             if (this.throttleScroll++ < 4) return
@@ -198,10 +243,8 @@ export default class ComposerCanvas extends Component {
         const sizes = this.state.column
         const xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
         const beatMarks = Number(data.settings.beatMarks.value)
-        const counterLimit = beatMarks === 0 ? 11 : 4 * beatMarks - 1
+        const counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks
         const relativeColumnWidth = width / data.columns.length
-        let switcher = false
-        let counter = 0
         let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
         if (stageSize > width) stageSize = width
         const stagePosition = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
@@ -225,16 +268,13 @@ export default class ComposerCanvas extends Component {
                     pointermove={(e) => this.handleStageSlide(e)}
                 >
                     {data.columns.map((column, i) => {
-                        if (counter > counterLimit) {
-                            switcher = !switcher
-                            counter = 0
-                        }
-                        counter++
                         if (!isVisible(i, data.selected)) return null
                         const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
                         const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
-                        const background = column.tempoChanger === 0 ? standardCache[Number(switcher)] : tempoChangersCache[column.tempoChanger]
-                        return <Column
+                        const background = column.tempoChanger === 0 
+                            ? standardCache[Number(i % (counterLimit * 2) >= counterLimit)] 
+                            : tempoChangersCache[column.tempoChanger]
+                        return <RenderColumn
                             cache={cache}
                             key={i}
                             data={column}
@@ -242,7 +282,7 @@ export default class ComposerCanvas extends Component {
                             sizes={sizes}
                             backgroundCache={background}
                             isToolsSelected={data.toolsColumns.includes(i)}
-                            click={functions.selectColumn}
+                            onClick={functions.selectColumn}
                             isSelected={i === data.selected}
                             isBreakpoint={data.breakpoints.includes(i)}
                         />
@@ -295,9 +335,11 @@ export default class ComposerCanvas extends Component {
                             pointerup={(e) => this.handleClick(e, "up")}
                             pointermove={this.handleSlide}
                         >
-                            <Graphics draw={(e) => { 
-                                    fillX(e, width, timelineHeight, theme.timeline.hexNumber) }
-                                }
+                            <Graphics draw={(g) => { 
+                                    g.clear()
+                                    g.beginFill(theme.timeline.hexNumber, 1)
+                                    g.drawRect(0, 0, width, timelineHeight)
+                                }}
                             />
                             {data.breakpoints.map(breakpoint => {
                                 return <Sprite
@@ -308,7 +350,13 @@ export default class ComposerCanvas extends Component {
                                 </Sprite>
                             })}
                         </Container>
-                        <Graphics draw={(e) => drawStage(e, stageSize, timelineHeight)} x={stagePosition} y={2} />
+                        <Graphics 
+                            draw={(g) => {
+                                g.clear()
+                                g.lineStyle(3, 0x1a968b, 0.8)
+                                g.drawRoundedRect(0, 0, stageSize - 2, timelineHeight - 4, 6)
+                            }} 
+                        x={stagePosition} y={2} />
                     </Stage>
                 </div>
                 <div 
@@ -330,21 +378,26 @@ export default class ComposerCanvas extends Component {
     }
 }
 
-function fillX(g, width, height,color) {
-    g.clear()
-    g.beginFill(color, 1)
-    g.drawRect(0, 0, width, height)
+interface RenderColumnProps{
+    data: {
+        notes: ColumnNote[]
+    }
+    index: number
+    sizes: {
+        width: number
+        height: number
+    }
+    cache: any
+    backgroundCache: string
+    isBreakpoint: boolean
+    isSelected: boolean
+    isToolsSelected: boolean
+    onClick: (index: number) => void 
 }
 
-function drawStage(g, width, height) {
-    g.clear()
-    g.lineStyle(3, 0x1a968b, 0.8)
-    g.drawRoundedRect(0, 0, width - 2, height - 4, 6)
-}
-
-function Column({ data, index, sizes, click, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }) {
+function RenderColumn({ data, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }: RenderColumnProps) {
     return <Container
-        pointertap={() => click(index)}
+        pointertap={() => onClick(index)}
         interactive={true}
         x={sizes.width * index}
     >
@@ -363,7 +416,8 @@ function Column({ data, index, sizes, click, cache, backgroundCache, isBreakpoin
             >
             </Sprite> : null}
         </Sprite>
-        {data.notes.map((note) => {
+        
+        {data.notes.map((note: any) => {
             return <Sprite
                 key={note.index}
                 image={cache.notes[note.layer]}
@@ -374,18 +428,13 @@ function Column({ data, index, sizes, click, cache, backgroundCache, isBreakpoin
 
     </Container>
 }
-const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
-function calcMinColumnWidth(parentWidth) {
+function calcMinColumnWidth(parentWidth: number) {
     return nearestEven(parentWidth / NumOfColumnsPerCanvas)
 }
 
-function nearestEven(num) {
-    return 2 * Math.round(num / 2);
-}
 
-function isVisible(pos, currentPos) {
-    let threshold = NumOfColumnsPerCanvas / 2 + 2
-    let boundaries = [currentPos - threshold, currentPos + threshold]
-    return boundaries[0] < pos && pos < boundaries[1]
+function isVisible(pos: number, currentPos: number) {
+    const threshold = NumOfColumnsPerCanvas / 2 + 2
+    return (currentPos - threshold) < pos && pos < (currentPos + threshold)
 }

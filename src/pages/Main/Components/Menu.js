@@ -3,7 +3,7 @@ import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaS
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, prepareSongImport } from "lib/Utils"
+import { FileDownloader, prepareSongImport } from "lib/Utils/Tools"
 import { FilePicker } from "react-file-picker"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { SongStore } from 'stores/SongStore'

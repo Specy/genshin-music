@@ -5,10 +5,8 @@ import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
 import { Song } from "./Song";
 import { ColumnNote } from "./SongClasses";
-import { LayerIndexes } from "types/GeneralTypes";
-function capitalize(str:string){
-	return str.charAt(0).toUpperCase() + str.slice(1);
-}
+import { LayerIndexes, NoteNameType } from "types/GeneralTypes";
+
 class FileDownloader {
 	type: string
 	constructor(type:string = "text/json") {
@@ -43,7 +41,7 @@ class FileDownloader {
 class MIDINote{
 	index:number
 	midi:number
-	status: 'wrong' | 'right'
+	status: 'wrong' | 'right' | 'clicked'
 	constructor(index: number = 0,midi:number = 0){
 		this.index = index
 		this.midi = midi
@@ -54,14 +52,20 @@ class MIDINote{
 class MIDIShortcut{
 	type: any //TODO what is this
 	midi:number
-	status: 'wrong' | 'right'
+	status: 'wrong' | 'right' | 'clicked'
     constructor(type: any, midi:number){
         this.type = type
         this.midi = midi
 		this.status = midi < 0 ? 'wrong' : 'right'
     }
 }
-export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text'
+
+
+
+function capitalize(str:string){
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 function getNoteText(
 		noteNameType:NoteNameType, 
 		index: number, 
@@ -80,10 +84,11 @@ function getNoteText(
     return ''
 }
 
-function NotesTable(length: number){
-	return new Array(length).fill(0).map(() => {return []})
+class Array2d{
+	static from(height: number){
+		return new Array(height).fill(0).map(() => {return []})
+	}
 }
-
 
 function prepareSongImport(song: any): Song | ComposedSong {
 	if (Array.isArray(song) && song.length > 0) song = song[0]
@@ -173,14 +178,11 @@ function groupByNotes(notes: RecordedNote[], threshold: number) {
 	return result
 }
 
-
-
 function getPitchChanger(pitch: PitchesType) {
 	let index = PITCHES.indexOf(pitch)
 	if (index < 0) index = 0
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
-
 
 function numberToLayer(number: LayerIndexes) : string {
 	let layer = "100"
@@ -200,7 +202,6 @@ function mergeLayers(notes: ColumnNote[]) {
 	return final.join("")
 }
 
-//TODO do this
 function groupByIndex(column: Column) {
 	const notes: ColumnNote[][] = []
 	column.notes.forEach(note => {
@@ -213,11 +214,18 @@ function groupByIndex(column: Column) {
 	return notes.filter(e => Array.isArray(e))
 }
 
-function delayMs(ms: number) {
+function delay(ms: number) {
     return new Promise(resolve => {
         workerTimers.setTimeout(resolve, ms)
     })
 }
+
+function nearestEven(num: number) {
+    return 2 * Math.round(num / 2);
+}
+
+const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
+
 
 export {
 	FileDownloader,
@@ -228,10 +236,12 @@ export {
 	numberToLayer,
 	mergeLayers,
 	groupByIndex,
-	delayMs,
-	NotesTable,
+	delay,
+	Array2d,
 	MIDINote,
 	getNoteText,
 	MIDIShortcut,
-	capitalize
+	capitalize,
+	clamp,
+	nearestEven
 }

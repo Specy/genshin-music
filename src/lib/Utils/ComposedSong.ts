@@ -80,8 +80,8 @@ export class ComposedSong {
 
         return newSong
     }
-    get isComposed(): boolean{
-        return this.data.isComposedVersion
+    get isComposed(): true{
+        return true
     }
     toSong = () => {
         const recordedSong = new Song(this.name)

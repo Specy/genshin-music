@@ -1,19 +1,19 @@
 import React, { ChangeEvent, Component, useEffect, useState } from 'react'
 import { FileElement, FilePicker } from 'components/FilePicker'
 import { Midi, Track } from '@tonejs/midi'
-import { numberToLayer, groupByIndex, mergeLayers } from 'lib/Utils'
+import { numberToLayer, groupByIndex, mergeLayers } from 'lib/Utils/Tools'
 import { ColumnNote, Column } from 'lib/Utils/SongClasses'
 import { ComposedSong } from 'lib/Utils/ComposedSong'
-import { APP_NAME,PITCHES, PitchesType } from 'appConfig'
+import { APP_NAME, PITCHES, PitchesType } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
 import { ThemeStore, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
 import { InstrumentKeys, LayerIndexes } from 'types/GeneralTypes'
-interface MidiImportProps{
+interface MidiImportProps {
     data: {
-        instruments: [InstrumentKeys,InstrumentKeys,InstrumentKeys]
+        instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys]
         selectedColumn: number
     }
     functions: {
@@ -30,7 +30,7 @@ type CustomTrack = Track & {
     numberOfOutOfRange: number
 }
 
-interface MidiImport{
+interface MidiImport {
     dispose: () => void
     state: {
         fileName: string
@@ -61,19 +61,19 @@ class MidiImport extends Component {
             includeAccidentals: true,
             theme: ThemeStore
         }
-        this.dispose = () => {}
+        this.dispose = () => { }
     }
-    componentDidMount(){
-        this.dispose = observe(ThemeStore.state.data,() => {
-            this.setState({theme : {...ThemeStore}})
+    componentDidMount() {
+        this.dispose = observe(ThemeStore.state.data, () => {
+            this.setState({ theme: { ...ThemeStore } })
         })
     }
-    componentWillUnmount(){
+    componentWillUnmount() {
         this.dispose()
     }
     handleFile = (files: FileElement[]) => {
         try {
-            if(files.length === 0) return
+            if (files.length === 0) return
             const file = files[0]
             const midi = new Midi(file.data as ArrayBuffer)
             const bpm = midi.header.tempos[0]?.bpm
@@ -84,7 +84,7 @@ class MidiImport extends Component {
                     selected: true,
                     layer: 0,
                     name: track.name || `Track n.${i + 1}`,
-                    numberOfAccidentals:0,
+                    numberOfAccidentals: 0,
                     numberOfOutOfRange: 0
                 }
             }) as CustomTrack[]
@@ -122,7 +122,7 @@ class MidiImport extends Component {
                     numberOfAccidentals++
                     track.numberOfAccidentals++
                 }
-                if (note.data.note !== null) {
+                if (note.data.note !== -1) {
                     if (includeAccidentals || !note.data.isAccidental) {
                         notes.push(note)
                     }
@@ -183,7 +183,7 @@ class MidiImport extends Component {
         })
     }
 
-    editTrack = (index: number, data: Partial<CustomTrack> ) => {
+    editTrack = (index: number, data: Partial<CustomTrack>) => {
         const tracks = this.state.tracks
         Object.assign(tracks[index], data)
         this.setState({
@@ -221,7 +221,7 @@ class MidiImport extends Component {
         const { functions } = this.props
         const { changeMidiVisibility } = functions
         const midiInputsStyle = {
-            backgroundColor: theme.layer('primary',0.2).toString(),
+            backgroundColor: theme.layer('primary', 0.2).toString(),
             color: theme.getText('primary').toString()
         }
         return <div className='floating-midi'>
@@ -353,19 +353,19 @@ class MidiImport extends Component {
     }
 }
 
-interface TrackProps{
+interface TrackProps {
     data: CustomTrack
     index: number
-    editTrack: (index: number, data: Partial<CustomTrack>) => void 
+    editTrack: (index: number, data: Partial<CustomTrack>) => void
     theme: ThemeStoreClass
 }
 
-function TrackInfo({ data, index, editTrack, theme }: TrackProps ) {
+function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
     const [dataShown, setDataShown] = useState(false)
-    return <div className='midi-track-column' style={{ backgroundColor: theme.layer('primary',0.2).toString()}}>
+    return <div className='midi-track-column' style={{ backgroundColor: theme.layer('primary', 0.2).toString() }}>
         <div className='midi-track-wrapper'>
             <div className='midi-track-center'>
-                <input type='checkbox' onChange={() => editTrack(index, {selected: !data.selected})} checked={data.selected} />
+                <input type='checkbox' onChange={() => editTrack(index, { selected: !data.selected })} checked={data.selected} />
                 {data.name} ({data.notes.length})
             </div>
             <div className='midi-track-center'>
@@ -373,7 +373,7 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps ) {
                     {data.instrument.family}
                 </div>
                 <select
-                    onChange={(event) => editTrack(index, {  layer: Number(event.target.value) as LayerIndexes })}
+                    onChange={(event) => editTrack(index, { layer: Number(event.target.value) as LayerIndexes })}
                     value={data.layer}
                     className='midi-select'
                 >
@@ -390,13 +390,13 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps ) {
                 />
             </div>
         </div>
-        <div 
-            className='midi-track-data' 
-            style={{ 
-                display: dataShown ? "flex" : "none", 
-                backgroundColor: theme.layer('primary',0.3).toString() 
-                }}
-            >
+        <div
+            className='midi-track-data'
+            style={{
+                display: dataShown ? "flex" : "none",
+                backgroundColor: theme.layer('primary', 0.3).toString()
+            }}
+        >
             <div className='midi-track-data-row'>
                 <div>Instrument:</div>
                 <div>{data.instrument.name}</div>
@@ -420,20 +420,19 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps ) {
 export default MidiImport
 
 
-interface NumberInputProps{
+interface NumberInputProps {
     onChange: (value: number) => void
     value: number
     delay: number
     step: number
     style: any
 }
-function NumberInput({ onChange, value, delay = 500, step = 1, style={} }: NumberInputProps) {
+function NumberInput({ onChange, value, delay = 500, step = 1, style = {} }: NumberInputProps) {
     const [elementValue, setElementValue] = useState(value)
-    const debounced = useDebounce(elementValue, delay)
+    const debounced = useDebounce<number>(elementValue, delay)
     useEffect(() => {
         onChange(debounced)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debounced]);
+    }, [debounced, onChange]);
     useEffect(() => {
         setElementValue(value)
     }, [value])
@@ -463,11 +462,11 @@ type ParsedMidiNote = {
     note: number
     isAccidental: boolean
 }
-class MidiNote{
+class MidiNote {
     time: number
     data: ParsedMidiNote
     layer: LayerIndexes
-    constructor(time: number,layer: LayerIndexes, data?: ParsedMidiNote, ){
+    constructor(time: number, layer: LayerIndexes, data?: ParsedMidiNote,) {
         this.time = time
         this.data = data || {
             note: -1,
@@ -475,7 +474,7 @@ class MidiNote{
         }
         this.layer = layer
     }
-    static fromMidi = ( layer: LayerIndexes, time: number, midiNote: number) => {
+    static fromMidi = (layer: LayerIndexes, time: number, midiNote: number) => {
         const toReturn = new MidiNote(time, layer)
         let note = -1
         let isAccidental = false

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
-import { FileDownloader } from "lib/Utils"
+import { FileDownloader } from "lib/Utils/Tools"
 import { ComposedSong } from 'lib/Utils/ComposedSong';
 import { Song } from 'lib/Utils/Song';
 import { APP_NAME } from 'appConfig'

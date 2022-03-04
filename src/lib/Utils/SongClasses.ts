@@ -26,6 +26,24 @@ export class ColumnNote {
     }
 }
 
+interface ApproachingNoteProps{
+	time: number
+	index: number
+	clicked?: boolean
+	id?: number
+}
+export class ApproachingNote{
+	time: number
+	index: number
+	clicked: boolean
+	id: number
+	constructor({time, index, clicked = false, id = 0}: ApproachingNoteProps){
+		this.time = time
+		this.index = index
+		this.clicked = clicked
+		this.id = id
+	}
+}
 export type RecordedNote = [index:number, time:number,layer: LayerIndexes] //TODO make this better
 export class Recording {
 	start: number

@@ -1,21 +1,33 @@
 import { SPEED_CHANGERS } from "appConfig"
 import Memoized from "components/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
-import { memo, useEffect, useState, useRef } from "react";
+import React, { memo, useEffect, useState, useRef, ChangeEvent } from "react";
 import { SongStore } from "stores/SongStore";
 import { SliderStore } from "stores/SongSliderStore";
 import { observe } from "mobx";
 import { BsTriangleFill } from "react-icons/bs";
 import './Track.css'
 import { AppButton } from "components/AppButton";
-export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger, approachingScore, hasSong }) {
+import { ApproachingScore } from "types/GeneralTypes";
+
+interface TopPageProps {
+    restart: () => void
+    handleSpeedChanger: (event: ChangeEvent<HTMLSelectElement>) => void
+    speedChanger: typeof SPEED_CHANGERS[number]
+    approachingScore: ApproachingScore
+    hasSong: boolean
+}
+export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger, approachingScore, hasSong }: TopPageProps) {
     const [sliderState, setSliderState] = useState(SliderStore.state.data)
     const [songData, setSongData] = useState(SongStore.state.data)
-    const [selectedThumb, setSelectedThumb] = useState(null)
-    const [inputDimension, setInputDimension] = useState({})
-    const thumb1 = useRef()
-    const thumb2 = useRef()
-    const slider = useRef()
+    const [selectedThumb, setSelectedThumb] = useState<'left' | 'right' | null>(null)
+    const [inputDimension, setInputDimension] = useState({
+        x: 0,
+        width: 0
+    })
+    const thumb1 = useRef<HTMLDivElement>(null)
+    const thumb2 = useRef<HTMLDivElement>(null)
+    const slider = useRef<HTMLDivElement>(null)
     useEffect(() => {
         const dispose = observe(SliderStore.state, (newState) => {
             setSliderState(newState.object.data)
@@ -28,7 +40,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             dispose2()
         }
     }, [])
-    
+
     useEffect(() => {
         if (selectedThumb === null) return
         function resetSelection() {
@@ -42,30 +54,33 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
         }
     }, [selectedThumb])
 
-    const handleSliderClick = (event) => {
-        const size = slider.current.getBoundingClientRect()
-        const x = event.clientX
-        const thumb1X = thumb1.current.getBoundingClientRect().x
-        const thumb2X = thumb2.current.getBoundingClientRect().x
-        const left = Math.abs(thumb1X - x)
-        const right = Math.abs(thumb2X - x)
-        setInputDimension(size)
-        const currentThumb = left >= right ? 'right' : 'left'
-        setSelectedThumb(left >= right ? 'right' : 'left')
-        handleSliderMove(event, currentThumb)
+    const handleSliderClick = (event: React.PointerEvent<HTMLDivElement>) => {
+        if(slider.current && thumb1.current && thumb2.current){
+            const size = slider.current.getBoundingClientRect()
+            const x = event.clientX
+            const thumb1X = thumb1.current.getBoundingClientRect().x
+            const thumb2X = thumb2.current.getBoundingClientRect().x
+            const left = Math.abs(thumb1X - x)
+            const right = Math.abs(thumb2X - x)
+            setInputDimension(size)
+            const currentThumb = left >= right ? 'right' : 'left'
+            setSelectedThumb(left >= right ? 'right' : 'left')
+            handleSliderMove(event, currentThumb)
+        }
+
     }
-    const handleSliderLeave = (event) => {
+    const handleSliderLeave = () => {
         setSelectedThumb(null)
     }
-    const handleSliderMove = (event, override) => {
+    const handleSliderMove = (event: React.PointerEvent<HTMLDivElement>, override?:'left' | 'right') => {
         if (selectedThumb === null && !override) return
         const currentThumb = override || selectedThumb
         const sliderX = inputDimension.x
         const sliderWidth = inputDimension.width
         const x = event.clientX - sliderX
         let value = Math.round(x / sliderWidth * sliderState.size)
-        if(value < 0) value = 0
-        if(value > sliderState.size) value = sliderState.size
+        if (value < 0) value = 0
+        if (value > sliderState.size) value = sliderState.size
         if (currentThumb === 'left') {
             if (value - sliderState.end < -1) SliderStore.setPosition(value)
         } else {
@@ -76,7 +91,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     const right = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
     return <div className="upper-right" style={!hasSong ? { display: 'none' } : {}} >
         {songData.eventType === 'approaching' &&
-            <Score data={approachingScore} />
+            <Score {...approachingScore} />
         }
         <div className="slider-wrapper">
             <AppButton className="slider-button" onClick={SongStore.reset}>
@@ -96,13 +111,13 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                 </div>
                 <div className="two-way-slider">
                     <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${left}% - 8px)` }} ref={thumb1}>
-                        <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
+                        <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
                         <div style={{ fontSize: '0.8rem' }}>
                             {sliderState.position}
                         </div>
                     </div>
                     <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${right}% - 8px)` }} ref={thumb2}>
-                        <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
+                        <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
                         <div style={{ fontSize: '0.8rem' }}>
                             {sliderState.end}
                         </div>
@@ -135,8 +150,8 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
 })
 
 
-function Score(props) {
-    const { combo, score, correct, wrong } = props.data
+
+function Score({ combo, score, correct, wrong }: ApproachingScore) {
     return <div className='approaching-accuracy'>
         <table>
             <tbody>

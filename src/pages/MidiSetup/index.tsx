@@ -2,16 +2,32 @@
 import { SimpleMenu } from "components/SimpleMenu"
 import './MidiSetup.css'
 import { APP_NAME } from "appConfig"
-import { getMIDISettings } from "lib/BaseSettings"
+import { getMIDISettings, MIDISettings } from "lib/BaseSettings"
 import BaseNote from "components/BaseNote"
 import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
-import React, { Component } from 'react'
+import React, { ChangeEvent, Component } from 'react'
 import { AUDIO_CONTEXT, INSTRUMENTS, IS_MIDI_AVAILABLE } from "appConfig"
-import Instrument from "lib/Instrument"
+import Instrument, { NoteData } from "lib/Instrument"
 import Shortcut from "./Shortcut"
 import LoggerStore from "stores/LoggerStore"
+import type { MIDINote, MIDIShortcut } from "lib/Utils/Tools"
+import { InstrumentKeys } from "types/GeneralTypes"
+
+
+
 export default class MidiSetup extends Component {
-    constructor(props) {
+    state: {
+        settings: typeof MIDISettings
+        instrument: Instrument
+        selectedNote: MIDINote | null
+        selectedShortcut: string | null
+        sources: WebMidi.MIDIInput[]
+        selectedSource: WebMidi.MIDIInput | null
+    }
+    audioContext: AudioContext
+    mounted: boolean
+    MIDIAccess: WebMidi.MIDIAccess | null
+    constructor(props: any) {
         super(props)
         this.state = {
             settings: getMIDISettings(),
@@ -19,25 +35,27 @@ export default class MidiSetup extends Component {
             selectedNote: null,
             selectedShortcut: null,
             sources: [],
-            selectedSource: undefined
+            selectedSource: null
         }
         this.audioContext = AUDIO_CONTEXT
         this.mounted = true
-        this.MidiAccess = undefined
+        this.MIDIAccess = null
     }
 
     componentDidMount() {
         this.init()
     }
     componentWillUnmount() {
-        const { sources } = this.state
+        const { sources, selectedSource } = this.state
         this.mounted = false
-        if (this.MidiAccess) this.MidiAccess.onstatechange = null
+        if (this.MIDIAccess) this.MIDIAccess.removeEventListener('statechange', this.midiStateChange)
         //TODO connect to saved up keyboard
         sources?.forEach(source => {
-            source.onmidimessage = null
+            //@ts-ignore
+            source.removeEventListener('midimessage',this.handleMidi)
         })
-        if (this.selectedSource) this.selectedSource.onmidimessage = null
+        //@ts-ignore
+        if (selectedSource) selectedSource.removeEventListener('midimessage',this.handleMidi)
     }
     init = () => {
         this.loadInstrument(INSTRUMENTS[0])
@@ -49,39 +67,43 @@ export default class MidiSetup extends Component {
             LoggerStore.error('MIDI is not supported on this browser')
         }
     }
-    initMidi = (e) => {
+    initMidi = (e: WebMidi.MIDIAccess) => {
         if (!this.mounted) return
-        e.onstatechange = this.midiStateChange
-        this.MidiAccess = e
-        const midiInputs = this.MidiAccess.inputs.values()
+        this.MIDIAccess = e
+        this.MIDIAccess.addEventListener('statechange', this.midiStateChange)
+        const midiInputs = this.MIDIAccess.inputs.values()
         const inputs = []
         for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
             inputs.push(input.value)
         }
         this.setState({ sources: inputs })
     }
-    midiStateChange = (e) => {
+    midiStateChange = () => {
         if (!this.mounted) return
         const { sources } = this.state
-        const midiInputs = this.MidiAccess.inputs.values()
-        const inputs = []
-        for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
-            inputs.push(input.value)
+        if(this.MIDIAccess){
+            const midiInputs = this.MIDIAccess.inputs.values()
+            const inputs = []
+            for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
+                inputs.push(input.value)
+            }
+            this.setState({ sources: inputs })
+    
+            if (sources.length > inputs.length)
+                LoggerStore.warn('Device disconnected')
+            else if (inputs.length > 0)
+                LoggerStore.warn('Device connected')
         }
-        this.setState({ sources: inputs })
 
-        if (sources.length > inputs.length)
-            LoggerStore.warn('Device disconnected')
-        else if (inputs.length > 0)
-            LoggerStore.warn('Device connected')
     }
-    selectMidi = (e) => {
+    selectMidi = (e: ChangeEvent<HTMLSelectElement>) => {
         if (!this.mounted) return
         const { sources, selectedSource, settings } = this.state
         const nextSource = sources.find(s => s.id === e.target.value)
-        if (selectedSource) selectedSource.onmidimessage = null
+        //@ts-ignore
+        if (selectedSource) selectedSource.removeEventListener('midimessage', this.handleMidi)
         if (!nextSource) return
-        nextSource.onmidimessage = this.handleMidi
+        nextSource.addEventListener('midimessage', this.handleMidi)
         settings.currentSource = nextSource.name + " " + nextSource.manufacturer
         this.setState({ selectedSource: nextSource, settings })
         this.saveLayout()
@@ -99,7 +121,7 @@ export default class MidiSetup extends Component {
         this.setState({ settings })
         localStorage.setItem(APP_NAME + '_MIDI_Settings', JSON.stringify(this.state.settings))
     }
-    loadInstrument = async (name) => {
+    loadInstrument = async (name: InstrumentKeys) => {
         this.state.instrument?.delete?.()
         const newInstrument = new Instrument(name)
         await newInstrument.load()
@@ -109,16 +131,17 @@ export default class MidiSetup extends Component {
             instrument: newInstrument
         })
     }
-    checkIfUsed = (midi, type) => {
+    checkIfUsed = (midi: number, type: 'all' | 'shortcuts' | 'notes') => {
         const { shortcuts, notes } = this.state.settings
         if (shortcuts.find(e => e.midi === midi) && ['all','shortcuts'].includes(type) ) return true
         if(notes.find(e => e.midi === midi) && ['all','notes'].includes(type) ) return true
         return false
     }
-    handleMidi = (event) => {
+    handleMidi = (event: WebMidi.MIDIMessageEvent) => {
         const { selectedNote, settings, selectedShortcut } = this.state
-        const [eventType, note, velocity] = event.data
-
+        const eventType = event.data[0]
+        const note = event.data[1]
+        const velocity = event.data[2]
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             if (selectedNote) {
                 if(this.checkIfUsed(note,'shortcuts')) return LoggerStore.warn('Key already used')
@@ -154,7 +177,7 @@ export default class MidiSetup extends Component {
             })
         }
     }
-    handleClick = (note, animate = false) => {
+    handleClick = (note: MIDINote, animate = false) => {
         const { settings } = this.state
         if (!animate) this.deselectNotes()
         note.status = 'clicked'
@@ -169,14 +192,14 @@ export default class MidiSetup extends Component {
         }
         this.playSound(note)
     }
-    handleShortcutClick = (shortcut) => {
+    handleShortcutClick = (shortcut: string) => {
         this.deselectNotes()
         if (this.state.selectedShortcut === shortcut) {
             return this.setState({ selectedShortcut: null, selectedNote: null })
         }
         this.setState({ selectedShortcut: shortcut, selectedNote: null })
     }
-    playSound = (note) => {
+    playSound = (note: MIDINote) => {
         if (note === undefined) return
         this.state.instrument.play(note.index, 1)
     }
@@ -211,13 +234,14 @@ export default class MidiSetup extends Component {
                         style={{ marginTop: 'auto', width: 'fit-content' }}
                     >
                         {settings.notes.map((note, i) => {
+                            //@ts-ignore
                             const noteImage = LAYOUT_IMAGES[settings.notes.length][note.index]
                             return <BaseNote
                                 key={i}
                                 handleClick={this.handleClick}
                                 data={note}
                                 noteImage={noteImage}
-                                noteText={note.midi < 0 ? 'NA' : note.midi}
+                                noteText={note.midi < 0 ? 'NA' : String(note.midi)}
                             />
                         })}
                     </div>

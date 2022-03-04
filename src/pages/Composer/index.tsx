@@ -13,9 +13,9 @@ import ComposerCanvas from "./Canvas"
 import Menu from "./Components/Menu"
 import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, getMIDISettings, MIDISettings} from "lib/BaseSettings"
+import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, getMIDISettings, MIDISettings } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
-import { getPitchChanger, delayMs, NoteNameType } from "lib/Utils"
+import { getPitchChanger, delay } from "lib/Utils/Tools"
 import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
 import { ColumnNote, Column } from 'lib/Utils/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
@@ -29,12 +29,12 @@ import cloneDeep from 'lodash.clonedeep'
 import { SerializedSong, Song } from 'lib/Utils/Song';
 import { SerializedSongType } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { InstrumentKeys, LayerType, Pages } from 'types/GeneralTypes';
+import { InstrumentKeys, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
 
 interface ComposerProps {
-    history: History
+    history: any
 }
-class Composer extends Component {
+class Composer extends Component<ComposerProps>{
     state: {
         instrument: Instrument
         layers: [Instrument, Instrument]
@@ -101,7 +101,7 @@ class Composer extends Component {
         this.init()
         window.addEventListener("keydown", this.handleKeyboard)
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : null
-        if(this.broadcastChannel){
+        if (this.broadcastChannel) {
             this.broadcastChannel.onmessage = (event) => {
                 if (!this.state.settings.syncTabs.value) return
                 if (!['play', 'stop'].includes(event?.data)) return
@@ -115,10 +115,10 @@ class Composer extends Component {
 
     componentWillUnmount() {
         this.mounted = false
-        
+
         //@ts-ignore //TODO check this
-        if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage',this.handleMidi)
-        if (this.MIDIAccess) this.MIDIAccess.removeEventListener('statechange',this.reloadMidiAccess)
+        if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage', this.handleMidi)
+        if (this.MIDIAccess) this.MIDIAccess.removeEventListener('statechange', this.reloadMidiAccess)
         window.removeEventListener('keydown', this.handleKeyboard)
         const { instrument, layers } = this.state
         this.broadcastChannel?.close?.()
@@ -176,10 +176,10 @@ class Composer extends Component {
         }
     }
     reloadMidiAccess = () => {
-        if(this.MIDIAccess) this.initMidi(this.MIDIAccess)
+        if (this.MIDIAccess) this.initMidi(this.MIDIAccess)
     }
     initMidi = (e: WebMidi.MIDIAccess) => {
-        e.addEventListener('statechange',this.reloadMidiAccess)
+        e.addEventListener('statechange', this.reloadMidiAccess)
         this.MIDIAccess = e
         const midiInputs = this.MIDIAccess.inputs.values()
         const inputs = []
@@ -187,11 +187,11 @@ class Composer extends Component {
             inputs.push(input.value)
         }
         //@ts-ignore //TODO check this
-        if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage',this.handleMidi)
+        if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage', this.handleMidi)
         this.currentMidiSource = inputs.find(input => {
             return input.name + " " + input.manufacturer === this.MIDISettings.currentSource
         }) || null
-        if (this.currentMidiSource) this.currentMidiSource.addEventListener('midimessage',this.handleMidi)
+        if (this.currentMidiSource) this.currentMidiSource.addEventListener('midimessage', this.handleMidi)
 
     }
     handleMidi = (e: WebMidi.MIDIMessageEvent) => {
@@ -230,7 +230,7 @@ class Composer extends Component {
                 .then(r => r.arrayBuffer())
                 .then(b => {
                     if (!this.mounted) return
-                    if(this.audioContext){
+                    if (this.audioContext) {
                         this.audioContext.decodeAudioData(b, (impulse_response) => {
                             if (!this.mounted || !this.audioContext) return
                             const convolver = this.audioContext.createConvolver()
@@ -351,7 +351,7 @@ class Composer extends Component {
                 ins.connect(this.reverbNode)
             } else {
                 ins.disconnect()
-                if(this.audioContext) ins.connect(this.audioContext.destination)
+                if (this.audioContext) ins.connect(this.audioContext.destination)
 
             }
         })
@@ -367,7 +367,7 @@ class Composer extends Component {
         const hasReverb = this.state.settings.caveMode.value
         const { recorder } = this
         if (hasReverb) {
-            if(this.reverbVolumeNode) this.reverbVolumeNode.connect(recorder.node)
+            if (this.reverbVolumeNode) this.reverbVolumeNode.connect(recorder.node)
         } else {
             instruments.forEach(instrument => {
                 instrument.connect(recorder.node)
@@ -382,7 +382,7 @@ class Composer extends Component {
         const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
         if (fileName) recorder.download(recording.data, fileName + '.wav')
         if (!this.mounted) return
-        if(this.reverbVolumeNode && this.audioContext){
+        if (this.reverbVolumeNode && this.audioContext) {
             this.reverbVolumeNode.disconnect()
             this.reverbVolumeNode.connect(this.audioContext.destination)
         }
@@ -438,7 +438,7 @@ class Composer extends Component {
         }
 
     }
-    playSound = (instrument : Instrument, index: number) => {
+    playSound = (instrument: Instrument, index: number) => {
         try {
             const note = instrument.layout[index]
             if (note === undefined) return
@@ -475,7 +475,7 @@ class Composer extends Component {
         })
         this.handleAutoSave()
         this.playSound(
-            layer > 1 ? layers[this.state.layer - 2] :  instrument, 
+            layer > 1 ? layers[this.state.layer - 2] : instrument,
             note.index
         )
     }
@@ -582,10 +582,10 @@ class Composer extends Component {
 
     loadSong = async (song: SerializedSongType | ComposedSong) => {
         const state = this.state
-        const parsed = song instanceof ComposedSong 
+        const parsed = song instanceof ComposedSong
             ? song.clone()
-            : song.data.isComposedVersion 
-                ? ComposedSong.deserialize(song as SerializedComposedSong) 
+            : song.data.isComposedVersion
+                ? ComposedSong.deserialize(song as SerializedComposedSong)
                 : Song.deserialize(song as SerializedSong).toComposed(4)
         if (!parsed.data.isComposedVersion) {
             parsed.name += " - Composed"
@@ -666,7 +666,7 @@ class Composer extends Component {
                     let tempoChanger = TEMPO_CHANGERS[song.columns[song.selected].tempoChanger]
                     let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger.changer) + pastError
                     previousTime = new Date().getTime()
-                    await delayMs(msPerBPM)
+                    await delay(msPerBPM)
                     if (!this.state.isPlaying || !this.mounted) break
                     this.handleTick()
                     pastError = previousTime + msPerBPM - new Date().getTime()
@@ -915,14 +915,14 @@ class Composer extends Component {
         }
         const midiParserData = {
             instruments: [state.instrument, ...state.layers]
-                            .map(layer => layer.instrumentName) as [InstrumentKeys,InstrumentKeys,InstrumentKeys],
+                .map(layer => layer.instrumentName) as [InstrumentKeys, InstrumentKeys, InstrumentKeys],
             selectedColumn: song.selected,
         }
         return <AppBackground page='Composer'>
-            {midiVisible && 
-                <MidiImport 
-                    functions={midiParserFunctions} 
-                    data={midiParserData} 
+            {midiVisible &&
+                <MidiImport
+                    functions={midiParserFunctions}
+                    data={midiParserData}
                 />
             }
             <div className="hamburger" onClick={this.toggleMenuVisible}>

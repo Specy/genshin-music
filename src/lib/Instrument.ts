@@ -1,5 +1,5 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS,AUDIO_CONTEXT } from "appConfig"
-import { InstrumentKeys } from "types/GeneralTypes"
+import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT } from "appConfig"
+import { InstrumentKeys, NoteStatus } from "types/GeneralTypes"
 
 export default class Instrument {
     instrumentName: InstrumentKeys
@@ -15,7 +15,7 @@ export default class Instrument {
     constructor(instrumentName: InstrumentKeys = INSTRUMENTS[0]) {
         this.instrumentName = instrumentName
         //@ts-ignore
-        if (!INSTRUMENTS.includes(this.instrumentName)) this.instrumentName = INSTRUMENTS[0] 
+        if (!INSTRUMENTS.includes(this.instrumentName)) this.instrumentName = INSTRUMENTS[0]
         this.layout = []
         this.buffers = []
         this.loaded = false
@@ -25,7 +25,7 @@ export default class Instrument {
         this.keyboardLayout = LAYOUT_DATA[instrumentData.notes].keyboardLayout
         this.mobileLayout = LAYOUT_DATA[instrumentData.notes].mobileLayout
         this.keyboardCodes = LAYOUT_DATA[instrumentData.notes].keyboardCodes
-        
+
         this.keyboardLayout.forEach((noteName, i) => {
             const noteNames = {
                 keyboard: noteName,
@@ -37,19 +37,19 @@ export default class Instrument {
 
         this.volumeNode.gain.value = 0.8
     }
-    getNoteFromCode = (code:number | string) => {
+    getNoteFromCode = (code: number | string) => {
         let index = this.keyboardLayout.findIndex(e => e === String(code))
         return index !== -1 ? index : null
     }
 
-    changeVolume = (amount:number ) => {
+    changeVolume = (amount: number) => {
         let newVolume = Number((amount / 135).toFixed(2))
-        if(amount < 5) newVolume = 0
+        if (amount < 5) newVolume = 0
         this.volumeNode.gain.value = newVolume
     }
 
-    play = (note: number, pitch:number) => {
-        if(this.deleted) return
+    play = (note: number, pitch: number) => {
+        if (this.deleted) return
         const player = AUDIO_CONTEXT.createBufferSource()
         player.buffer = this.buffers[note]
         player.connect(this.volumeNode)
@@ -71,15 +71,15 @@ export default class Instrument {
                         AUDIO_CONTEXT.decodeAudioData(buffer, resolve, () => {
                             resolve(emptyBuffer)
                         })
-                        .catch(e => {resolve(emptyBuffer)})
-                    }).catch(e => {resolve(emptyBuffer)})
+                            .catch(e => { resolve(emptyBuffer) })
+                    }).catch(e => { resolve(emptyBuffer) })
             })
         })
         this.buffers = await Promise.all(requests)
         this.loaded = true
         return true
     }
-    disconnect = () =>{
+    disconnect = () => {
         this.volumeNode.disconnect()
     }
     connect = (node: AudioNode) => {
@@ -93,20 +93,50 @@ export default class Instrument {
 }
 
 
-interface NoteName{
-        keyboard: string, 
-        mobile: string
+interface NoteName {
+    keyboard: string,
+    mobile: string
 }
+
 export class NoteData {
     index: number
     noteNames: NoteName
     url: string
     buffer: ArrayBuffer
+    data: {
+        status: NoteStatus
+        delay: number
+    }
 
-    constructor(index:number, noteNames: NoteName, url: string) {
+    constructor(index: number, noteNames: NoteName, url: string) {
         this.index = index
         this.noteNames = noteNames
         this.url = url
         this.buffer = new ArrayBuffer(8)
+        this.data = {
+            status: '',
+            delay: 0
+        }
+    }
+    get status(): NoteStatus{
+        return this.data.status
+    }
+
+    setStatus(status: NoteStatus){
+        return this.setState({status})
+    }   
+    setState(data: Partial<{
+        status: NoteStatus
+        delay: number
+    }>){
+        const clone = this.clone()
+        clone.data = {...this.data, ...data}
+        return clone
+    }
+    clone(){
+        const obj = new NoteData(this.index, this.noteNames, this.url)
+        obj.buffer = this.buffer
+        obj.data = {...this.data}
+        return obj
     }
 }
