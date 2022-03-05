@@ -47,7 +47,7 @@ export class ApproachingNote{
 export type RecordedNote = [index:number, time:number,layer: LayerIndexes] //TODO make this better
 export class Recording {
 	start: number
-	notes: RecordedNote[] //TODO not sure
+	notes: RecordedNote[]
 	constructor() {
 		this.start = new Date().getTime()
 		this.notes = []

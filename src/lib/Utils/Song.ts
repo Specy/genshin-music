@@ -35,10 +35,10 @@ export class Song {
 	pitch: PitchesType
 	data: SongDataType
     timestamp: number
-	constructor(name: string, notes = []) {
+	constructor(name: string, notes? : RecordedNote[]) {
 		this.name = name
 		this.version = 1
-		this.notes = notes
+		this.notes = notes || []
 		this.bpm = 220
 		this.pitch = "C"
 		this.data = {

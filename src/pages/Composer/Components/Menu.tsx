@@ -15,7 +15,7 @@ import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { ComposerSettingsDataType } from 'lib/BaseSettings';
-import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
+import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
 import { SerializedSongType } from 'types/SongTypes';
 
@@ -41,7 +41,7 @@ interface MenuProps {
         startRecordingAudio: (override?: boolean) => void
     }
 }
-type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
+export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 function Menu({ data, functions }: MenuProps) {
     const [open, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
@@ -50,8 +50,7 @@ function Menu({ data, functions }: MenuProps) {
 
     const handleKeyboard = useCallback((event: KeyboardEvent) => {
         let key = event.code
-        //@ts-ignore
-        if (document.activeElement.tagName === "INPUT") return
+        if (document.activeElement?.tagName === "INPUT") return
         //@ts-ignore
         document.activeElement?.blur()
         switch (key) {
@@ -76,13 +75,15 @@ function Menu({ data, functions }: MenuProps) {
         if (newState === false) toggleMenuVisible()
 
     }
-    const selectSideMenu = (selection: MenuTabs) => {
+    const selectSideMenu = (selection?: MenuTabs) => {
         if (selection === selectedMenu && open) {
             return setOpen(false)
         }
         setOpen(true)
-        setSelectedMenu(selection)
-        Analytics.UIEvent('menu', { tab: selection })
+        if(selection){
+            setSelectedMenu(selection)
+            Analytics.UIEvent('menu', { tab: selection })
+        }
     }
     const downloadSong = (song: ComposedSong | Song) => {
         song.data.appName = APP_NAME
@@ -107,25 +108,25 @@ function Menu({ data, functions }: MenuProps) {
     let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
     return <div className="menu-wrapper">
         <div className={menuClass}>
-            <MenuItem action={() => toggleMenu(false)} className='close-menu'>
+            <MenuItem<MenuTabs> action={() => toggleMenu(false)} className='close-menu'>
                 <FaTimes className="icon" />
             </MenuItem>
-            <MenuItem type="Save" action={updateSong} className={hasUnsaved}>
+            <MenuItem<MenuTabs> action={updateSong} className={hasUnsaved}>
                 <Memoized>
                     <FaSave className="icon" />
                 </Memoized>
             </MenuItem>
-            <MenuItem type="Songs" action={() => selectSideMenu('Songs')}>
+            <MenuItem<MenuTabs> data="Songs" action={selectSideMenu}>
                 <Memoized>
                     <FaMusic className="icon" />
                 </Memoized>
             </MenuItem>
-            <MenuItem type="Settings" action={() => selectSideMenu('Settings')}>
+            <MenuItem<MenuTabs> data="Settings" action={selectSideMenu}>
                 <Memoized>
                     <FaCog className="icon" />
                 </Memoized>
             </MenuItem>
-            <MenuItem type="Home" action={() => changePage("Home")}>
+            <MenuItem<MenuTabs> action={() => changePage('Home')}>
                 <Memoized>
                     <FaHome className="icon" />
                 </Memoized>

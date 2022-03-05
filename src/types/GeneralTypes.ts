@@ -17,3 +17,10 @@ export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' 
 
 export type NoteStatus = 'clicked' | 'toClick' | 'toClickNext' | 'toClickAndNext' | 'approach-wrong' | 'approach-correct' | ''
 
+
+
+export type SearchedSongType = {
+    name: string
+    file: string
+    error: string
+}

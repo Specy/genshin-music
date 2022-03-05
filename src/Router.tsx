@@ -1,6 +1,6 @@
 import { HashRouter, Route, Switch } from "react-router-dom";
 import App from 'pages/App';
-import Main from 'pages/Main';
+import Main from 'pages/Player';
 import Composer from "pages/Composer"
 import ErrorPage from "pages/ErrorPage"
 import Changelogpage from 'pages/Changelog'

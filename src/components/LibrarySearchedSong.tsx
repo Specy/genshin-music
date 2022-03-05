@@ -2,23 +2,23 @@ import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
 import { prepareSongImport } from "lib/Utils/Tools"
 import LoggerStore from 'stores/LoggerStore';
+import type { SearchedSongType } from 'types/GeneralTypes';
+import { ComposedSong } from 'lib/Utils/ComposedSong';
+import type {  Song } from 'lib/Utils/Song';
 
 interface SearchedSongProps{
-    onClick: (song: any, start: number) => void,
-    importSong: (song: any) => void, 
-    data: {
-        file: string,
-        name: string
-    }
+    onClick: (song: ComposedSong | Song, start: number) => void,
+    importSong: (song: ComposedSong | Song) => void, 
+    data: SearchedSongType
 }
 
 export default function SearchedSong({ onClick, data, importSong }:SearchedSongProps) {
     const [fetching, setFetching] = useState(false)
-    const [cache, setCache] = useState(undefined)
+    const [cache, setCache] = useState<Song | ComposedSong | null>(null)
     const download = async function () {
         if (fetching) return
         try {
-            if (cache) return importSong(cache)
+            if (cache) return importSong(cache.clone())
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(res => res.json())
             setFetching(false)
@@ -34,15 +34,12 @@ export default function SearchedSong({ onClick, data, importSong }:SearchedSongP
     const play = async function () {
         if (fetching) return
         try {
-            if (cache) {
-                onClick(cache,0)
-            }
+            if (cache) return onClick(cache,0)
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
             setFetching(false)
             song = prepareSongImport(song)
             setCache(song)
-            onClick(cache,0)
         } catch (e) {
             console.error(e)
             setFetching(false)

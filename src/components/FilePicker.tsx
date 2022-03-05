@@ -1,19 +1,19 @@
 import { useRef, useCallback } from "react"
-interface FilePickerProps {
+interface FilePickerProps<T> {
     children: React.ReactNode,
     as: 'json' | 'text' | 'buffer'
-    onChange: (file: FileElement[]) => void,
+    onChange: (files: FileElement<T>[]) => void,
     style?: object,
 }
-export interface FileElement {
-    data: Buffer | object | string,
+export interface FileElement<T> {
+    data: Buffer | object | string | T,
     file: File
 }
-export function FilePicker({ children, onChange, style = {}, as }: FilePickerProps) {
+export function FilePicker<T>({ children, onChange, style = {}, as }: FilePickerProps<T>) {
     const input = useRef<HTMLInputElement>(null)
 
     const handleEvent = useCallback(async (event: any) => {
-        const promises: Promise<FileElement>[] = [...event.target.files].map((file: any) => {
+        const promises: Promise<FileElement<T>>[] = [...event.target.files].map((file: any) => {
             return new Promise(resolve => {
                 const fileReader = new FileReader()
                 fileReader.onloadend = () => {

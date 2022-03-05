@@ -4,7 +4,7 @@ import { observe } from "mobx";
 import { SimpleMenu } from "components/SimpleMenu";
 import { AppButton } from "components/AppButton";
 import { FileElement, FilePicker } from "components/FilePicker"
-import Main from "pages/Main";
+import Main from "pages/Player";
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
 import './Theme.css'
@@ -53,7 +53,7 @@ function ThemePage() {
         setUserThemes(await DB.getThemes())
     }
 
-    async function handleImport(file: FileElement[]) {
+    async function handleImport(file: FileElement<Theme>[]) {
         if (file.length) {
             const theme = file[0].data as Theme
             try {

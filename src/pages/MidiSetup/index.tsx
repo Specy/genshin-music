@@ -7,10 +7,10 @@ import BaseNote from "components/BaseNote"
 import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
 import React, { ChangeEvent, Component } from 'react'
 import { AUDIO_CONTEXT, INSTRUMENTS, IS_MIDI_AVAILABLE } from "appConfig"
-import Instrument, { NoteData } from "lib/Instrument"
+import Instrument from "lib/Instrument"
 import Shortcut from "./Shortcut"
 import LoggerStore from "stores/LoggerStore"
-import type { MIDINote, MIDIShortcut } from "lib/Utils/Tools"
+import type { MIDINote } from "lib/Utils/Tools"
 import { InstrumentKeys } from "types/GeneralTypes"
 
 

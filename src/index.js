@@ -1,9 +1,10 @@
+
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { isTwa } from "appConfig"
 import { Router } from './Router'
-
 ReactDOM.render(
 	<React.StrictMode>
 		<Router />
@@ -20,6 +21,8 @@ function setIfInTWA() {
 
 setIfInTWA()
 serviceWorkerRegistration.register();
+
+
 
 
 

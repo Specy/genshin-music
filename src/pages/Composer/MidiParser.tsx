@@ -71,7 +71,7 @@ class MidiImport extends Component {
     componentWillUnmount() {
         this.dispose()
     }
-    handleFile = (files: FileElement[]) => {
+    handleFile = (files: FileElement<ArrayBuffer>[]) => {
         try {
             if (files.length === 0) return
             const file = files[0]

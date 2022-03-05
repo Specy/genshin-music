@@ -1,6 +1,6 @@
 import { ChangeEvent } from "react"
 import { InstrumentKeys } from "types/GeneralTypes"
-import { SettingsInstrument, SettingsPropriety, SettingUpdateKey } from "types/SettingsPropriety"
+import { SettingsInstrument, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface InstrumentInputProps{
     data: SettingsInstrument,
