@@ -6,6 +6,7 @@ import Color from "color";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { BASE_THEME_CONFIG } from "appConfig";
 import { FaCheck, FaTimes } from 'react-icons/fa'
+import { AppButton } from "components/AppButton";
 
 export interface ThemeProprietyProps {
     name: ThemeKeys,
@@ -101,13 +102,9 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                     Text
                 </div>
             }
-            <button
-                onClick={() => handlePropReset(name)}
-                className={`genshin-button theme-reset ${modified ? 'active' : ''}`}
-            >
+            <AppButton onClick={() => handlePropReset(name)} toggled={modified} className='theme-reset'>
                 RESET
-            </button>
-
+            </AppButton>
         </div>
     </div>
 }

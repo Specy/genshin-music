@@ -452,7 +452,7 @@ class Player extends Component{
 				</div>
 				<div className="keyboard-wrapper" style={{ marginBottom: '2vh' }}>
 					<Keyboard
-						key={state.instrument.instrumentName}
+						key={state.instrument.layout.length}
 						data={keyboardData}
 						functions={keyboardFunctions}
 					/>

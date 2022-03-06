@@ -67,8 +67,9 @@ export default class Keyboard extends Component<KeyboardProps> {
             approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
             outgoingAnimation: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
             keyboard: this.props.data.keyboard.layout.map(note => { 
-                note.data.status = ''
-                return note
+                const cloned = note.clone()
+                cloned.data.status = ''
+                return cloned
             }),
             approachingScore: {
                 correct: 1,
@@ -125,7 +126,7 @@ export default class Keyboard extends Component<KeyboardProps> {
                 SliderStore.setState({
                     size: lostReference?.notes?.length || 1,
                     position: value.start,
-                    end: end,
+                    end,
                     current: value.start
                 })
 
@@ -186,7 +187,7 @@ export default class Keyboard extends Component<KeyboardProps> {
     }
     approachingSong = async (song: Song, start = 0, end?: number) => {
         end = end ? end : song.notes.length
-        let notes = []
+        const notes = []
         this.approachRate = this.props.data.approachRate || 1500
         let startDelay = this.approachRate
         const startOffset = song.notes[start] !== undefined ? song.notes[start][1] : 0
@@ -363,13 +364,13 @@ export default class Keyboard extends Component<KeyboardProps> {
         return new Promise(res => {
             const { keyboard } = this.state
             this.songTimestamp = 0
-            keyboard.map(note => note.setState({
+            const resetNotes = keyboard.map(note => note.setState({
                 status: '',
                 delay: APP_NAME === 'Genshin' ? 100 : 200
             }))
             this.approachingNotesList = []
             this.setState({
-                keyboard,
+                keyboard: resetNotes,
                 songToPractice: [],
                 approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21)
             }, res)
@@ -524,7 +525,7 @@ export default class Keyboard extends Component<KeyboardProps> {
                             data={{
                                 approachRate: this.approachRate,
                                 instrument: this.props.data.keyboard.instrumentName,
-                                isAnimated: SongStore.eventType === 'approaching' ? false : this.props.data.hasAnimation
+                                isAnimated: SongStore.eventType === 'approaching' ? false : data.hasAnimation
                             }}
                             approachingNotes={state.approachingNotes[note.index]}
                             outgoingAnimation={state.outgoingAnimation[note.index]}

@@ -34,7 +34,7 @@ interface MenuProps {
         createNewSong: () => void
         changePage: (page: Pages | 'Home') => void
         updateSong: (song: ComposedSong) => void
-        handleSettingChange: (data:SettingUpdate) => void
+        handleSettingChange: (data: SettingUpdate) => void
         toggleMenuVisible: () => void
         changeVolume: (data: SettingVolumeUpdate) => void
         changeMidiVisibility: (visible: boolean) => void
@@ -80,7 +80,7 @@ function Menu({ data, functions }: MenuProps) {
             return setOpen(false)
         }
         setOpen(true)
-        if(selection){
+        if (selection) {
             setSelectedMenu(selection)
             Analytics.UIEvent('menu', { tab: selection })
         }
@@ -136,12 +136,12 @@ function Menu({ data, functions }: MenuProps) {
 
             <MenuPanel title="Songs" current={selectedMenu}>
                 <div className="songs-buttons-wrapper">
-                    <button className="genshin-button" onClick={() => { changeMidiVisibility(true); toggleMenu() }}>
+                    <AppButton onClick={() => { changeMidiVisibility(true); toggleMenu() }}>
                         Create from MIDI
-                    </button>
-                    <button className="genshin-button" onClick={createNewSong}>
+                    </AppButton>
+                    <AppButton onClick={createNewSong}>
                         Create new song
-                    </button>
+                    </AppButton>
                 </div>
                 <SongMenu
                     songs={data.songs}
@@ -152,17 +152,19 @@ function Menu({ data, functions }: MenuProps) {
                     }}
                 />
                 <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
-                    <button
-                        className={`genshin-button record-btn ${data.isRecordingAudio ? "selected" : ""}`}
+                    <AppButton
+                        className={`record-btn`}
                         onClick={() => functions.startRecordingAudio(!data.isRecordingAudio)}
+                        toggled={data.isRecordingAudio}
                     >
                         {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
-                    </button>
+
+                    </AppButton>
                 </div>
 
             </MenuPanel>
             <MenuPanel title="Settings" current={selectedMenu}>
-                {Object.entries(data.settings).map(([key, data]) => 
+                {Object.entries(data.settings).map(([key, data]) =>
                     <SettingsRow
                         key={key}
                         objKey={key as SettingUpdateKey}
@@ -173,13 +175,13 @@ function Menu({ data, functions }: MenuProps) {
                 )}
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <button
-                            className='genshin-button'
+                        <AppButton
                             onClick={() => changePage('MidiSetup')}
                             style={{ width: 'fit-content' }}
                         >
                             Connect MIDI keyboard
-                        </button>
+
+                        </AppButton>
                     }
                     <AppButton
                         onClick={() => changePage('Theme')}

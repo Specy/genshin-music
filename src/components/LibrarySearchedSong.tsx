@@ -39,6 +39,7 @@ export default function SearchedSong({ onClick, data, importSong }:SearchedSongP
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
             setFetching(false)
             song = prepareSongImport(song)
+            onClick(song,0)
             setCache(song)
         } catch (e) {
             console.error(e)

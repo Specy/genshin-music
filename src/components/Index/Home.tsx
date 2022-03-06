@@ -144,7 +144,6 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'miHoYo' : 'TGC'}. Other properties belong to their respective owners.
             </div>
         </div>
-
     </div>
 }
 

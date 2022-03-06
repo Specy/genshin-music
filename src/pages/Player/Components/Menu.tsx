@@ -126,13 +126,13 @@ function Menu({ functions, data }: MenuProps) {
             return setOpen(false)
         }
         clearSearch()
-        if(selection) setSelectedMenu(selection)
+        if (selection) setSelectedMenu(selection)
         setOpen(true)
         Analytics.UIEvent('menu', { tab: selection })
     }
     const importSong = (files: FileElement<SerializedSongType[] | SerializedSongType>[]) => {
         //TODO change this to the custom file picker
-        for(const file of files){
+        for (const file of files) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSongType[]
                 for (const song of songs) {
@@ -226,7 +226,7 @@ function Menu({ functions, data }: MenuProps) {
                             toggleMenu,
                             downloadSong
                         }
-                        
+
                     }}
                 />
                 <div style={{ marginTop: "auto", paddingTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
@@ -252,13 +252,12 @@ function Menu({ functions, data }: MenuProps) {
                 })}
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <button
-                            className='genshin-button'
+                        <AppButton
                             onClick={() => changePage('MidiSetup')}
-                            style={{ width: 'fit-content' }}
-                        >
+                            style={{ width: 'fit-content' }}>
                             Connect MIDI keyboard
-                        </button>
+
+                        </AppButton>
                     }
                     <AppButton
                         onClick={() => changePage('Theme')}

@@ -12,6 +12,7 @@ import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong'
 import { SerializedSongType } from 'types/SongTypes'
 import { SerializedSong, Song } from 'lib/Utils/Song'
 import { RecordedNote } from 'lib/Utils/SongClasses'
+import { AppButton } from 'components/AppButton'
 
 const THRESHOLDS = {
     joined: 50,
@@ -124,9 +125,9 @@ export default function SheetVisualizer() {
             <div style={{ width: '100%' }} className='noprint'>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2>{currentSong ? currentSong.name : 'No song selected'}</h2>
-                    <button onClick={() => window.print()} className='genshin-button'>
+                    <AppButton onClick={() => window.print()}>
                         Print as PDF
-                    </button>
+                    </AppButton>
                 </div>
                 <div style={{ color: 'var(--background-text)' }}>
                     Remember that you can learn a song with the interactive

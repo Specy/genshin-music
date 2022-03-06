@@ -79,7 +79,7 @@ export class ComposerCache {
             if (note[0] === "1") { //layer 1
                 g.beginFill(new Color(noteData.background).rgbNumber())
                 g.drawRoundedRect(
-                    this.margin / 2 - 0.5,
+                    this.margin / 2 - 0.25,
                     this.margin / 2,
                     Math.ceil(this.noteWidth - this.margin),
                     Math.ceil(this.noteHeight - this.margin),
@@ -92,7 +92,7 @@ export class ComposerCache {
                     color: new Color(noteData.border).rgbNumber()
                 })
                 g.drawRoundedRect(
-                    this.margin / 2 - 0.5,
+                    this.margin / 2 - 0.25,
                     this.margin / 2,
                     Math.ceil(this.noteWidth - this.margin),
                     Math.ceil(this.noteHeight - this.margin),
@@ -102,7 +102,7 @@ export class ComposerCache {
             if (note[2] === "1") { //layer 3
                 g.beginFill(new Color(noteData.center).rgbNumber())
                 g.drawCircle(
-                    this.noteWidth / 2 - 0.5,
+                    this.noteWidth / 2 - 0.25,
                     this.noteHeight / 2,
                     this.noteHeight / 3
                 ).endFill()

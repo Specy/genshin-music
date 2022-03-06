@@ -112,7 +112,6 @@ body {
 .app-content {
 	z-index: 2;
 }
-.genshin-button,
 .app-button {
 	background-color: var(--primary);
 	color: var(--primary-text);
@@ -122,6 +121,7 @@ body {
 	height: fit-content;
 	cursor: pointer;
 	min-width: 5rem;
+	transition: background-color 0.2s, color 0.2s;
 }
 .link{
 	color: var(--background-text);
@@ -129,12 +129,10 @@ body {
 .app-button::placeholder{
 	color: var(--primary-text);
 }
-.genshin-button:hover,
 .app-button:hover {
 	filter: brightness(1.1);
 }
-.app-button.selected {
-	transition: all 0.3s;
+.app-button.active {
 	background-color: var(--accent);
 	color: var(--accent-text);
 }

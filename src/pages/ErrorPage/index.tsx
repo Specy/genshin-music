@@ -12,6 +12,7 @@ import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
 import { SerializedSong, Song } from 'lib/Utils/Song';
 
 import './ErrorPage.css'
+import { AppButton } from 'components/AppButton';
 
 export function ErrorPage() {
     const [songs, setSongs] = useState<SerializedSongType[]>([])
@@ -58,12 +59,13 @@ export function ErrorPage() {
             try to find what song caused the error and remove it.
         </div>
         <div className="error-buttons-wrapper">
-            <button className="genshin-button" onClick={resetSettings}>
+            <AppButton onClick={resetSettings}>
                 Reset settings
-            </button>
-            <button className="genshin-button" onClick={deleteAllSongs}>
+            </AppButton>
+            <AppButton onClick={deleteAllSongs}>
                 Delete all songs
-            </button>
+
+            </AppButton>
         </div>
         <div className="error-songs-wrapper">
             <SongMenu
