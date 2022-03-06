@@ -135,7 +135,7 @@ async function asyncConfirm(question: string, cancellable = true): Promise<boole
         ok.addEventListener("click", okListener)
         window.addEventListener('keydown', handleKeyboard)
         //@ts-ignore
-        document.activeElement.blur()
+        document.activeElement?.blur()
         function dispose() {
             disposed = true
             cancel.removeEventListener('click', cancelListener)

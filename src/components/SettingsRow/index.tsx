@@ -56,8 +56,7 @@ function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
         {(type === 'number' || type === 'text') &&
             <Input
                 data={data}
-                //@ts-ignore
-                value={currentValue}
+                value={currentValue as string | number}
                 onChange={setValue}
                 onComplete={update}
                 objectKey={objKey}
@@ -65,8 +64,7 @@ function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
         }
         {type === 'checkbox' &&
             <Switch
-                //@ts-ignore
-                checked={currentValue}
+                checked={currentValue as boolean}
                 onChange={handleCheckbox}
             />
         }
@@ -74,8 +72,7 @@ function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
             <Slider
                 objectKey={objKey}
                 data={data}
-                //@ts-ignore
-                value={currentValue}
+                value={currentValue as number}
                 onChange={update}
             />
         }

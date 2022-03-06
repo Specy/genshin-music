@@ -5,7 +5,7 @@ import { APP_NAME } from "appConfig"
 import { getMIDISettings, MIDISettings } from "lib/BaseSettings"
 import BaseNote from "components/BaseNote"
 import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
-import React, { ChangeEvent, Component } from 'react'
+import { ChangeEvent, Component } from 'react'
 import { AUDIO_CONTEXT, INSTRUMENTS, IS_MIDI_AVAILABLE } from "appConfig"
 import Instrument from "lib/Instrument"
 import Shortcut from "./Shortcut"

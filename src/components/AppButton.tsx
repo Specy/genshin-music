@@ -1,5 +1,3 @@
-import React from "react"
-
 interface AppButtonprops {
     style?: object,
     className?: string,

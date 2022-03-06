@@ -1,4 +1,4 @@
-import React, { ChangeEvent, Component, useEffect, useState } from 'react'
+import { ChangeEvent, Component, useEffect, useState } from 'react'
 import { FileElement, FilePicker } from 'components/FilePicker'
 import { Midi, Track } from '@tonejs/midi'
 import { numberToLayer, groupByIndex, mergeLayers } from 'lib/Utils/Tools'
@@ -10,7 +10,7 @@ import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
 import { ThemeStore, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
-import { InstrumentKeys, LayerIndexes } from 'types/GeneralTypes'
+import { InstrumentKeys, LayerIndex } from 'types/GeneralTypes'
 interface MidiImportProps {
     data: {
         instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys]
@@ -24,7 +24,7 @@ interface MidiImportProps {
 }
 type CustomTrack = Track & {
     selected: boolean
-    layer: LayerIndexes
+    layer: LayerIndex
     name: string
     numberOfAccidentals: number
     numberOfOutOfRange: number
@@ -373,7 +373,7 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
                     {data.instrument.family}
                 </div>
                 <select
-                    onChange={(event) => editTrack(index, { layer: Number(event.target.value) as LayerIndexes })}
+                    onChange={(event) => editTrack(index, { layer: Number(event.target.value) as LayerIndex })}
                     value={data.layer}
                     className='midi-select'
                 >
@@ -465,8 +465,8 @@ type ParsedMidiNote = {
 class MidiNote {
     time: number
     data: ParsedMidiNote
-    layer: LayerIndexes
-    constructor(time: number, layer: LayerIndexes, data?: ParsedMidiNote,) {
+    layer: LayerIndex
+    constructor(time: number, layer: LayerIndex, data?: ParsedMidiNote,) {
         this.time = time
         this.data = data || {
             note: -1,
@@ -474,7 +474,7 @@ class MidiNote {
         }
         this.layer = layer
     }
-    static fromMidi = (layer: LayerIndexes, time: number, midiNote: number) => {
+    static fromMidi = (layer: LayerIndex, time: number, midiNote: number) => {
         const toReturn = new MidiNote(time, layer)
         let note = -1
         let isAccidental = false

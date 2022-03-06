@@ -1,7 +1,6 @@
 import { observable } from "mobx";
 import { ThemeSettings } from 'lib/BaseSettings'
 import { APP_NAME, BASE_THEME_CONFIG } from 'appConfig'
-// @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import LoggerStore from 'stores/LoggerStore'

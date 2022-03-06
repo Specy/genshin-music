@@ -1,7 +1,4 @@
 import { APP_NAME } from "appConfig"
-import React from "react"
-
-
 interface WelcomePopupProps{
     hasPersistentStorage: boolean,
     askForStorage: (e: any) => void

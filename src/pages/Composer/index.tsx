@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
 import { APP_NAME, AUDIO_CONTEXT, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, PitchesType, TempoChanger } from "appConfig"
@@ -25,11 +25,10 @@ import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
 import { AppBackground } from 'components/AppBackground';
-import cloneDeep from 'lodash.clonedeep'
 import { SerializedSong, Song } from 'lib/Utils/Song';
 import { SerializedSongType } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { InstrumentKeys, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
+import { InstrumentKeys, LayerIndex, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
 
 interface ComposerProps {
     history: any
@@ -115,8 +114,7 @@ class Composer extends Component<ComposerProps>{
 
     componentWillUnmount() {
         this.mounted = false
-
-        //@ts-ignore //TODO check this
+        //@ts-ignore
         if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage', this.handleMidi)
         if (this.MIDIAccess) this.MIDIAccess.removeEventListener('statechange', this.reloadMidiAccess)
         window.removeEventListener('keydown', this.handleKeyboard)
@@ -156,9 +154,7 @@ class Composer extends Component<ComposerProps>{
         }
     }
     componentDidCatch() {
-        this.setState({
-            song: new ComposedSong("Untitled")
-        })
+        this.setState({ song: new ComposedSong("Untitled") })
     }
 
     handleUnload = (event: BeforeUnloadEvent) => {
@@ -186,7 +182,7 @@ class Composer extends Component<ComposerProps>{
         for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
             inputs.push(input.value)
         }
-        //@ts-ignore //TODO check this
+        //@ts-ignore
         if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage', this.handleMidi)
         this.currentMidiSource = inputs.find(input => {
             return input.name + " " + input.manufacturer === this.MIDISettings.currentSource
@@ -274,51 +270,39 @@ class Composer extends Component<ComposerProps>{
         localStorage.setItem(APP_NAME + "_Composer_Settings", JSON.stringify(state))
     }
 
-    handleSettingChange = (setting: SettingUpdate) => {
-        const { state } = this
-        const settings = state.settings
-        const data = setting.data
+    handleSettingChange = ({ data, key }: SettingUpdate) => {
+        const { song, settings } = this.state
         //@ts-ignore
-        settings[setting.key] = { ...settings[setting.key], value: data.value }
+        settings[key] = { ...settings[key], value: data.value }
         if (data.songSetting) {
             //@ts-ignore
-            state.song[setting.key] = data.value
+            song[setting.key] = data.value
         }
-        if (setting.key === "instrument") this.loadInstrument(data.value as InstrumentKeys, 1)
-        if (setting.key === "layer2") this.loadInstrument(data.value as InstrumentKeys, 2)
-        if (setting.key === "layer3") this.loadInstrument(data.value as InstrumentKeys, 3)
-        if (setting.key === "caveMode") this.setupAudioDestination(data.value as boolean)
-        this.setState({
-            settings: settings,
-            song: this.state.song
-        }, () => {
-            this.updateSettings()
-        })
+        if (key === "instrument") this.loadInstrument(data.value as InstrumentKeys, 1)
+        if (key === "layer2") this.loadInstrument(data.value as InstrumentKeys, 2)
+        if (key === "layer3") this.loadInstrument(data.value as InstrumentKeys, 3)
+        if (key === "caveMode") this.setupAudioDestination(data.value as boolean)
+        this.setState({ settings, song }, this.updateSettings)
     }
-    //TODO change layer to type
-    loadInstrument = async (name: InstrumentKeys, layer: 1 | 2 | 3) => {
+    loadInstrument = async (name: InstrumentKeys, layer: LayerType) => {
         if (!this.mounted) return
         const { settings } = this.state
         if (layer === 1) {
             this.state.instrument.delete()
-            const newInstrument = new Instrument(name)
-            await newInstrument.load()
+            const instrument = new Instrument(name)
+            await instrument.load()
             if (!this.mounted) return
-            newInstrument.changeVolume(settings.instrument.volume)
-            this.setState({
-                instrument: newInstrument
-            })
+            instrument.changeVolume(settings.instrument.volume)
+            this.setState({ instrument })
         } else {
-            const newInstrument = new Instrument(name)
+            const instrument = new Instrument(name)
             const layers = this.state.layers
             layers[layer - 2].delete()
-            layers[layer - 2] = newInstrument
-            await newInstrument.load()
+            layers[layer - 2] = instrument
+            await instrument.load()
             if (!this.mounted) return
-            newInstrument.changeVolume(settings[`layer${layer}`]?.volume)
-            this.setState({
-                layers
-            })
+            instrument.changeVolume(settings[`layer${layer}`]?.volume)
+            this.setState({ layers })
         }
         this.setupAudioDestination(settings.caveMode.value)
     }
@@ -336,9 +320,7 @@ class Composer extends Component<ComposerProps>{
             settings.layer3 = { ...settings.layer3, volume: obj.value }
             this.state.layers[1].changeVolume(obj.value)
         }
-        this.setState({
-            settings: settings
-        }, this.updateSettings)
+        this.setState({ settings }, this.updateSettings)
     }
     setupAudioDestination = (hasReverb: boolean) => {
         if (!this.mounted) return
@@ -352,7 +334,6 @@ class Composer extends Component<ComposerProps>{
             } else {
                 ins.disconnect()
                 if (this.audioContext) ins.connect(this.audioContext.destination)
-
             }
         })
     }
@@ -450,29 +431,23 @@ class Composer extends Component<ComposerProps>{
     changePitch = (value: PitchesType) => {
         const { settings } = this.state
         settings.pitch = { ...settings.pitch, value }
-        this.setState({
-            settings: settings
-        }, this.updateSettings)
+        this.setState({ settings }, this.updateSettings)
     }
     handleClick = (note: NoteData) => {
         const { instrument, layers, song, layer } = this.state
         const column = song.columns[song.selected]
-        const index = column.notes.findIndex((n) => {
-            return note.index === n.index
-        })
-        const layerIndex = layer - 1
-        if (index < 0) { //if it doesn't exist, create a new one
+        const index = column.getNoteIndex(note.index)
+        const layerIndex = layer - 1 as LayerIndex
+        if (index === null) { //if it doesn't exist, create a new one
             const columnNote = new ColumnNote(note.index)
-            columnNote.layer = replaceAt(columnNote.layer, layerIndex, "1")
+            columnNote.setLayer(layerIndex, '1')
             column.notes.push(columnNote)
         } else { //if it exists, toggle the current layer and if it's 000 delete it
             const currentNote = column.notes[index]
-            currentNote.layer = replaceAt(currentNote.layer, layerIndex, currentNote.layer[layerIndex] === "0" ? "1" : "0")
+            currentNote.toggleLayer(layerIndex)
             if (currentNote.layer === "000") column.notes.splice(index, 1)
         }
-        this.setState({
-            song
-        })
+        this.setState({ song })
         this.handleAutoSave()
         this.playSound(
             layer > 1 ? layers[this.state.layer - 2] : instrument,
@@ -482,10 +457,7 @@ class Composer extends Component<ComposerProps>{
     syncSongs = async () => {
         const songs = await DB.getSongs()
         if (!this.mounted) return
-        this.setState({
-            composedSongs: songs,
-            songs: songs
-        })
+        this.setState({ songs })
     }
     addSong = async (song: ComposedSong) => {
         if (await this.songExists(song.name)) {
@@ -563,18 +535,16 @@ class Composer extends Component<ComposerProps>{
                 await this.updateSong(this.state.song)
             }
         }
-        let name = await this.askForSongName("Write new song name, press cancel to ignore")
+        const name = await this.askForSongName("Write new song name, press cancel to ignore")
         if (name === null) return
-        let song = new ComposedSong(name)
+        const song = new ComposedSong(name)
         this.changes = 0
         if (!this.mounted) return
-        this.setState({
-            song: song
-        }, () => this.addSong(song))
+        this.setState({ song }, () => this.addSong(song))
         Analytics.songEvent({ type: 'create' })
     }
     removeSong = async (name: string) => {
-        let confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
+        const confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
         if (confirm) await DB.removeSong({ name: name })
         this.syncSongs()
         Analytics.userSongs('delete', { name: name, page: 'composer' })
@@ -617,40 +587,28 @@ class Composer extends Component<ComposerProps>{
         console.log("song loaded")
         this.setState({
             song: parsed,
-            settings: settings,
+            settings,
             toolsColumns: []
         })
     }
 
     addColumns = (amount = 1, position: number | 'end' = "end"): Promise<void> => {
         return new Promise(resolve => {
-            let columns = new Array(amount).fill(0).map(() => new Column())
-            let songColumns = this.state.song.columns
-            if (position === "end") {
-                songColumns.push(...columns)
-            } else {
-                songColumns.splice(position + 1, 0, ...columns)
-            }
-            if (amount === 1) this.selectColumn(this.state.song.selected + 1)
+            const { song } = this.state
+            song.addColumns(amount, position)
+            if (amount === 1) this.selectColumn(song.selected + 1)
             this.handleAutoSave()
-            this.setState({ song: this.state.song }, resolve)
+            this.setState({ song }, resolve)
         })
-
     }
 
     removeColumns = (amount: number, position: number) => {
         const { song } = this.state
-        if (song.columns.length < 16) return
-        let indexes = new Array(amount).fill(0).map((e, i) => position + i)
-        indexes.forEach(index => {
-            if (song.breakpoints.includes(index)) this.toggleBreakpoint(index)
-        })
-        song.columns.splice(position, amount)
+        song.removeColumns(amount, position)
         if (song.columns.length <= song.selected) this.selectColumn(song.selected - 1)
         this.handleAutoSave()
-        this.setState({ song: song })
+        this.setState({ song })
     }
-    //----------------------------------------------//
 
     togglePlay = async (override?: boolean): Promise<void> => {
         return new Promise(resolve => {
@@ -663,8 +621,8 @@ class Composer extends Component<ComposerProps>{
                 let previousTime = new Date().getTime()
                 while (this.state.isPlaying) {
                     const { song, settings } = this.state
-                    let tempoChanger = TEMPO_CHANGERS[song.columns[song.selected].tempoChanger]
-                    let msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger.changer) + pastError
+                    const tempoChanger = song.selectedColumn.getTempoChanger().changer
+                    const msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger) + pastError
                     previousTime = new Date().getTime()
                     await delay(msPerBPM)
                     if (!this.state.isPlaying || !this.mounted) break
@@ -678,79 +636,63 @@ class Composer extends Component<ComposerProps>{
 
 
     handleTick = () => {
-        let newIndex = this.state.song.selected + 1
+        const newIndex = this.state.song.selected + 1
         if (this.state.isPlaying && newIndex > this.state.song.columns.length - 1) {
             return this.togglePlay(false)
         }
         this.selectColumn(this.state.song.selected + 1)
-
     }
     toggleMenuVisible = () => {
         this.setState({ menuOpen: !this.state.menuOpen })
     }
     toggleBreakpoint = (override?: number) => {
-        let song = this.state.song
-        let index = typeof override === "number" ? override : song.selected
-        let indexOfBreakpoint = song.breakpoints.indexOf(index)
-        if (indexOfBreakpoint >= 0 && song.columns.length > index) {
-            song.breakpoints.splice(indexOfBreakpoint, 1)
-        } else if (song.columns.length > index) {
-            song.breakpoints.push(index)
-        }
+        const { song } = this.state
+        song.toggleBreakpoint(override)
         this.validateBreakpoints()
-        this.setState({ song: song })
+        this.setState({ song })
     }
     handleTempoChanger = (changer: TempoChanger) => {
-        let song = this.state.song
-        song.columns[this.state.song.selected].tempoChanger = changer.id
+        const { song } = this.state
+        song.selectedColumn.setTempoChanger(changer)
         this.handleAutoSave()
-        this.setState({ song: song })
+        this.setState({ song })
     }
     changePage = async (page: Pages | 'Home') => {
         if (this.changes !== 0) {
             if (this.state.settings.autosave.value) {
                 await this.updateSong(this.state.song)
             } else {
-                let confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                const confirm = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
                 if (confirm) {
                     await this.updateSong(this.state.song)
                 }
             }
-
         }
         if (page === 'Home') return HomeStore.open()
         //@ts-ignore
         this.props.history.push(page)
     }
     selectColumn = (index: number, ignoreAudio?: boolean) => {
-        const state = this.state
-        let song = state.song
+        const { song, toolsVisible, instrument, layers } = this.state
+        let toolsColumns = this.state.toolsColumns
         if (index < 0 || index > song.columns.length - 1) return
-        let currentColumn = state.song.columns[index]
         song.selected = index
-        let toolsColumns = state.toolsColumns
-        if (state.toolsVisible && this.copiedColumns.length === 0) {
+        if (toolsVisible && this.copiedColumns.length === 0) {
             toolsColumns.push(index)
-            let min = Math.min(...toolsColumns)
-            let max = Math.max(...toolsColumns)
+            const min = Math.min(...toolsColumns)
+            const max = Math.max(...toolsColumns)
             toolsColumns = new Array(max - min + 1).fill(0).map((e, i) => min + i)
         }
-        this.setState({
-            song: song,
-            toolsColumns: toolsColumns
-        })
-
+        this.setState({ song, toolsColumns })
         if (ignoreAudio) return
-        currentColumn.notes.forEach(note => {
-            if (note.layer[0] === "1") this.playSound(state.instrument, note.index)
-            if (note.layer[1] === "1") this.playSound(state.layers[0], note.index)
-            if (note.layer[2] === "1") this.playSound(state.layers[1], note.index)
+        song.selectedColumn.notes.forEach(note => {
+            if (note.isLayerToggled(0)) this.playSound(instrument, note.index)
+            if (note.isLayerToggled(1)) this.playSound(layers[0], note.index)
+            if (note.isLayerToggled(2)) this.playSound(layers[1], note.index)
         })
     }
     changeLayer = (layer: LayerType) => {
-        this.setState({
-            layer: layer
-        })
+        this.setState({ layer })
     }
     //-----------------------TOOLS---------------------//
     toggleTools = () => {
@@ -763,16 +705,15 @@ class Composer extends Component<ComposerProps>{
     copyColumns = (layer: LayerType | 'all') => {
         this.copiedColumns = []
         this.state.toolsColumns.forEach((index) => {
-            let column = this.state.song.columns[index]
-            if (column !== undefined) this.copiedColumns.push(column)
+            const column = this.state.song.columns[index]
+            if (column !== undefined) this.copiedColumns.push(column.clone())
         })
-        this.copiedColumns = cloneDeep(this.copiedColumns)
         if (layer !== 'all') {
             this.copiedColumns = this.copiedColumns.map(column => {
                 column.notes = column.notes.filter(e => e.layer[layer - 1] === '1')
                 column.notes = column.notes.map(e => {
                     e.layer = '000'
-                    e.layer = replaceAt(e.layer, layer - 1, '1')
+                    e.setLayer(layer as LayerIndex, '1')
                     return e
                 })
                 return column
@@ -781,8 +722,8 @@ class Composer extends Component<ComposerProps>{
         this.setState({ toolsColumns: [] })
     }
     pasteColumns = async (insert: boolean) => {
-        let song = this.state.song
-        const copiedColumns: Column[] = cloneDeep(this.copiedColumns)
+        const song = this.state.song
+        const copiedColumns: Column[] = this.copiedColumns.map(column => column.clone())
         if (!insert) {
             song.columns.splice(song.selected, 0, ...copiedColumns)
         } else {
@@ -796,7 +737,7 @@ class Composer extends Component<ComposerProps>{
                         } else {
                             for (let j = 0; j < 3; j++) {
                                 if (copiedNote.layer[j] === '1') {
-                                    column.notes[index].layer = replaceAt(column.notes[index].layer, j, 1)
+                                    column.notes[index].setLayer(j as LayerIndex, '1')
                                 }
                             }
                         }
@@ -804,33 +745,17 @@ class Composer extends Component<ComposerProps>{
                 }
             })
         }
-        this.setState({ song: song })
+        this.setState({ song })
     }
     eraseColumns = (layer: LayerType | 'all') => {
         const { song, toolsColumns } = this.state
-        if (layer === 'all') {
-            toolsColumns.forEach(columnIndex => {
-                const column = song.columns[columnIndex]
-                if (column !== undefined) song.columns[columnIndex].notes = []
-            })
-        } else {
-            toolsColumns.forEach(columnIndex => {
-                const column = song.columns[columnIndex]
-                if (column !== undefined) {
-                    column.notes.forEach(note => {
-                        note.layer = replaceAt(note.layer, layer - 1, '0')
-                    })
-                    column.notes = column.notes.filter(note => !note.layer.match(/^0+$/g))
-                }
-            })
-        }
-        this.setState({ song: song })
+        song.eraseColumns(toolsColumns, layer)
+        this.setState({ song })
     }
     validateBreakpoints = () => {
-        const breakpoints = this.state.song.breakpoints.filter(breakpoint => breakpoint < this.state.song.columns.length)
-        const song = this.state.song
-        song.breakpoints = breakpoints
-        this.setState({ song: song })
+        const { song } = this.state
+        song.validateBreakpoints()
+        this.setState({ song })
     }
     deleteColumns = async () => {
         const { song } = this.state
@@ -839,7 +764,7 @@ class Composer extends Component<ComposerProps>{
         if (song.selected <= 0) song.selected = 0
         if (song.columns.length === 0) await this.addColumns(12, 0)
         this.setState({
-            song: song,
+            song,
             toolsColumns: []
         }, this.validateBreakpoints)
     }
@@ -1038,12 +963,6 @@ function calculateLength(columns: Column[], bpm: number, end: number) {
     }
 }
 
-function replaceAt(string: string, index: number, replacement: string | number) {
-    if (index >= string.length) {
-        return string.valueOf();
-    }
-    return string.substring(0, index) + replacement + string.substring(index + 1);
-}
 //@ts-ignore
 export default withRouter(Composer)
 

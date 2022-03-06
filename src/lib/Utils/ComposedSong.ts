@@ -1,5 +1,6 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, PitchesType } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
+import { CombinedLayer, LayerIndex, LayerType } from "types/GeneralTypes"
 import { Song } from "./Song"
 import { Column, ColumnNote, RecordedNote, SongDataType } from "./SongClasses"
 
@@ -8,11 +9,9 @@ interface OldFormatNoteType{
     time: number
     l?: number
 }
-//TODO add layer type
-export type SerializedNote = [index: number, layer: string]
+export type SerializedNote = [index: number, layer: CombinedLayer]
 export type SerializedColumn = [tempoChanger: number, notes: SerializedNote[]]
 export interface SerializedComposedSong {
-    //TODO add tempo changer type
     name: string
     data: SongDataType
     bpm: number
@@ -34,7 +33,7 @@ export class ComposedSong {
     version: number
     bpm: number
     pitch: PitchesType
-    notes: RecordedNote[] //TODO idk what is here
+    notes: RecordedNote[] 
     instruments: [typeof INSTRUMENTS[number], typeof INSTRUMENTS[number], typeof INSTRUMENTS[number]]
     breakpoints: number[]
     columns: Column[]
@@ -111,9 +110,8 @@ export class ComposedSong {
             const notes = column.notes.map(note => {
                 return [note.index, note.layer]
             })
-            const columnArr = [column.tempoChanger, notes]
             //@ts-ignore
-            obj.columns.push(columnArr)
+            obj.columns.push([column.tempoChanger, notes])
         })
         return obj
     }
@@ -150,6 +148,55 @@ export class ComposedSong {
             totalTime += Math.floor(bpmPerMs * TEMPO_CHANGERS[column[0]].changer)
         })
         return convertedNotes
+    }
+    get selectedColumn(){
+        return this.columns[this.selected]
+    }
+    addColumns(amount: number, position: number | 'end'){
+        const columns = new Array(amount).fill(0).map(() => new Column())
+        if (position === "end") {
+            this.columns.push(...columns)
+        } else {
+            this.columns.splice(position + 1, 0, ...columns)
+        }
+    }
+    removeColumns(amount: number, position: number){
+        if (this.columns.length < 16) return
+        const indexes = new Array(amount).fill(0).map((_, i) => position + i)
+        indexes.forEach(index => {
+            if (this.breakpoints.includes(index)) this.toggleBreakpoint(index)
+        })
+        this.columns.splice(position, amount)
+    }
+    toggleBreakpoint(override?: number){
+        const index = typeof override === "number" ? override : this.selected
+        const breakpointIndex = this.breakpoints.indexOf(index)
+        if (breakpointIndex >= 0 && this.columns.length > index) {
+            this.breakpoints.splice(breakpointIndex, 1)
+        } else if (this.columns.length > index) {
+            this.breakpoints.push(index)
+        }
+    }
+    eraseColumns(columns: number[], layer: LayerType | 'all'){
+        if (layer === 'all') {
+            columns.forEach(index => {
+                const column = this.columns[index]
+                if (column !== undefined) this.columns[index].notes = []
+            })
+        } else {
+            columns.forEach(index => {
+                const column = this.columns[index]
+                if (column !== undefined) {
+                    column.notes.forEach(note => {
+                        note.setLayer(layer - 1 as LayerIndex, '0')
+                    })
+                    column.notes = column.notes.filter(note => !note.layer.match(/^0+$/g))
+                }
+            })
+        }
+    }
+    validateBreakpoints(){
+        this.breakpoints = this.breakpoints.filter(breakpoint => breakpoint < this.columns.length)
     }
     toGenshin = () => {
         const clone = this.clone()

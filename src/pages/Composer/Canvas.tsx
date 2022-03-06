@@ -1,22 +1,23 @@
-import React, { Component } from 'react'
+import { Component, createRef } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
 import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
 import isMobile from "is-mobile"
-import "./Composer.css"
-import { ComposerCache } from "./Cache"
-
+import { ComposerCache } from "./TextureCache"
 import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN, APP_NAME } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeStore } from 'stores/ThemeStore';
 import { observe } from 'mobx';
-import { ComposerSettingsDataType } from 'lib/BaseSettings';
-import { Column as ColumnClass, ColumnNote} from 'lib/Utils/SongClasses';
 import { clamp, nearestEven } from 'lib/Utils/Tools';
+import type{ Column, ColumnNote } from 'lib/Utils/SongClasses';
+import type{ Texture } from 'pixi.js';
+import type{ ComposerSettingsDataType } from 'lib/BaseSettings';
+
+import "./Composer.css"
 let NumOfColumnsPerCanvas = 35
 
-interface ComposerCanvasProps{
+interface ComposerCanvasProps {
     data: {
-        columns: ColumnClass[],
+        columns: Column[],
         selected: number,
         settings: ComposerSettingsDataType,
         breakpoints: number[],
@@ -45,10 +46,11 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                 hexNumber: number
             }
         }
-        cache: ComposerCache
+        cache: ComposerCache | null
     }
     sizes: DOMRect
-    canvasRef: any
+    notesStageRef: any
+    breakpointsStageRef: any
     stageSelected: boolean
     sliderSelected: boolean
     hasSlided: boolean
@@ -81,18 +83,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
             currentBreakpoint: -1,
             theme: {
                 timeline: {
-                    hex: ThemeStore.layer('primary',0.1).toString(),
-                    hexNumber: ThemeStore.layer('primary',0.1).rgbNumber()
+                    hex: ThemeStore.layer('primary', 0.1).toString(),
+                    hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber()
                 }
             },
-            cache: this.getCache(
-                calcMinColumnWidth(nearestEven(width)),
-                Math.floor(height),
-                isMobile() ? 1 : 4,
-                isMobile() ? 25 : 30
-            )
+            cache: null
         }
-        this.canvasRef = React.createRef()
+        this.notesStageRef = createRef()
+        this.breakpointsStageRef = createRef()
         this.stageSelected = false
         this.sliderSelected = false
         this.hasSlided = false
@@ -110,20 +108,28 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
         window.addEventListener("keydown", this.handleKeyboard)
-        this.canvasRef.current!._canvas.addEventListener("wheel", this.handleWheel)
+        this.notesStageRef.current!._canvas.addEventListener("wheel", this.handleWheel)
+        this.setState({
+            cache: this.getCache(
+                this.state.column.width,
+                this.state.height,
+                isMobile() ? 2 : 4,
+                this.state.timelineHeight
+            )
+        })
         this.dispose = observe(ThemeStore.state.data, () => {
             this.state?.cache?.destroy?.()
             this.setState({
                 cache: this.getCache(
                     this.state.column.width,
                     this.state.height,
-                    isMobile() ? 1 : 4,
+                    isMobile() ? 2 : 4,
                     this.state.timelineHeight
                 ),
                 theme: {
                     timeline: {
-                        hex: ThemeStore.layer('primary',0.1).toString(),
-                        hexNumber: ThemeStore.layer('primary',0.1).rgbNumber()
+                        hex: ThemeStore.layer('primary', 0.1).toString(),
+                        hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber()
                     }
                 }
             })
@@ -132,9 +138,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
         window.removeEventListener("keydown", this.handleKeyboard)
-        this.canvasRef.current._canvas.removeEventListener("wheel", this.handleWheel)
+        this.notesStageRef.current._canvas.removeEventListener("wheel", this.handleWheel)
         this.dispose()
-        this.state.cache.destroy()
+        this.state.cache?.destroy()
     }
     handleKeyboard = (event: KeyboardEvent) => {
         let key = event.code
@@ -154,11 +160,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
         }
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.35) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.2) : colors.d.darken(0.03)
+        if (!this.notesStageRef?.current && !this.breakpointsStageRef?.current) return null
         return new ComposerCache({
             width: width,
             height: height,
             margin: margin,
             timelineHeight: timelineHeight,
+            app: this.notesStageRef.current.app,
+            breakpointsApp: this.breakpointsStageRef.current.app,
             standardsColors: [
                 {
                     color: colors.l.rgbNumber() //lighter
@@ -171,6 +180,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                 }
             ]
         })
+
     }
     handleWheel = (e: WheelEvent) => {
         this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
@@ -239,7 +249,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
     render() {
         const { width, timelineHeight, height, theme } = this.state
         const { data, functions } = this.props
-        const cache = this.state.cache.cache
+        const cache = this.state.cache?.cache
         const sizes = this.state.column
         const xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
         const beatMarks = Number(data.settings.beatMarks.value)
@@ -255,12 +265,15 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                 raf={false}
                 renderOnComponentChange={true}
                 options={{
-                    backgroundAlpha: 0
+                    backgroundAlpha: 0,
+                    antialias: true,
+                    autoDensity: true,
+                    resolution: window.devicePixelRatio || 1
                 }}
                 key={this.state.width}
-                ref={this.canvasRef}
+                ref={this.notesStageRef}
             >
-                <Container
+                {cache && <Container
                     anchor={[0.5, 0.5]}
                     x={xPos}
                     interactive={true}
@@ -271,13 +284,13 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                         if (!isVisible(i, data.selected)) return null
                         const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
                         const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
-                        const background = column.tempoChanger === 0 
-                            ? standardCache[Number(i % (counterLimit * 2) >= counterLimit)] 
+                        const background = column.tempoChanger === 0
+                            ? standardCache[Number(i % (counterLimit * 2) >= counterLimit)]
                             : tempoChangersCache[column.tempoChanger]
                         return <RenderColumn
                             cache={cache}
                             key={i}
-                            data={column}
+                            notes={column.notes}
                             index={i}
                             sizes={sizes}
                             backgroundCache={background}
@@ -286,14 +299,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                             isSelected={i === data.selected}
                             isBreakpoint={data.breakpoints.includes(i)}
                         />
-
                     })}
-
                 </Container>
+                }
+
             </Stage>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
-                <div 
-                    className="timeline-button" 
+                <div
+                    className="timeline-button"
                     onClick={() => this.handleBreakpoints(-1)}
                     style={{
                         backgroundColor: theme.timeline.hex
@@ -303,10 +316,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                         <FaStepBackward />
                     </Memoized>
                 </div>
-                <div 
-                    className="timeline-button" 
-                    onClick={() => this.handleBreakpoints(1)} 
-                    style={{ 
+                <div
+                    className="timeline-button"
+                    onClick={() => this.handleBreakpoints(1)}
+                    style={{
                         marginLeft: 0,
                         backgroundColor: theme.timeline.hex
                     }}
@@ -315,19 +328,20 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                         <FaStepForward />
                     </Memoized>
                 </div>
-                <div className='timeline-scroll' style={{backgroundColor: theme.timeline.hex}}>
+                <div className='timeline-scroll' style={{ backgroundColor: theme.timeline.hex }}>
                     <Stage
                         width={width}
                         height={timelineHeight}
-                        options={{ 
-                            antialias: true,
-                            autoDensity: true, 
-                            backgroundAlpha: 0
-                         }}
+                        options={{
+                            backgroundAlpha: 0,
+                            autoDensity: true,
+                            resolution: window.devicePixelRatio || 1
+                        }}
                         raf={false}
+                        ref={this.breakpointsStageRef}
                         renderOnComponentChange={true}
                     >
-                        <Container
+                        {cache && <Container
                             width={width}
                             height={timelineHeight}
                             interactive={true}
@@ -335,32 +349,36 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
                             pointerup={(e) => this.handleClick(e, "up")}
                             pointermove={this.handleSlide}
                         >
-                            <Graphics draw={(g) => { 
+                            <Graphics
+                                draw={(g) => {
                                     g.clear()
-                                    g.beginFill(theme.timeline.hexNumber, 1)
+                                    g.beginFill(theme.timeline.hexNumber)
                                     g.drawRect(0, 0, width, timelineHeight)
                                 }}
                             />
                             {data.breakpoints.map(breakpoint => {
                                 return <Sprite
-                                    image={cache.breakpoints[0]}
+                                    texture={cache.breakpoints[0]}
                                     key={breakpoint}
                                     x={relativeColumnWidth * breakpoint}
                                 >
                                 </Sprite>
                             })}
                         </Container>
-                        <Graphics 
+                        }
+                        <Graphics
                             draw={(g) => {
                                 g.clear()
                                 g.lineStyle(3, 0x1a968b, 0.8)
                                 g.drawRoundedRect(0, 0, stageSize - 2, timelineHeight - 4, 6)
-                            }} 
-                        x={stagePosition} y={2} />
+                            }}
+                            x={stagePosition}
+                            y={2}
+                        />
                     </Stage>
                 </div>
-                <div 
-                    className="timeline-button" 
+                <div
+                    className="timeline-button"
                     onClick={functions.toggleBreakpoint}
                     style={{
                         backgroundColor: theme.timeline.hex
@@ -378,49 +396,49 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
     }
 }
 
-interface RenderColumnProps{
-    data: {
-        notes: ColumnNote[]
-    }
+interface RenderColumnProps {
+    notes: ColumnNote[]
     index: number
     sizes: {
         width: number
         height: number
     }
     cache: any
-    backgroundCache: string
+    backgroundCache: Texture
     isBreakpoint: boolean
     isSelected: boolean
     isToolsSelected: boolean
-    onClick: (index: number) => void 
+    onClick: (index: number) => void
 }
 
-function RenderColumn({ data, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }: RenderColumnProps) {
+function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }: RenderColumnProps) {
     return <Container
         pointertap={() => onClick(index)}
         interactive={true}
         x={sizes.width * index}
     >
         <Sprite
-            image={backgroundCache}
+            texture={backgroundCache}
             interactiveChildren={false}
         >
-            {isSelected || isToolsSelected ? <Sprite
-                image={isToolsSelected && !isSelected ? cache.standard[3] : cache.standard[2]}
-                alpha={isToolsSelected ? 0.4 : 0.6}
-                zIndex={1}
-            >
-            </Sprite> : null}
-            {isBreakpoint ? <Sprite
-                image={cache.breakpoints[1]}
-            >
-            </Sprite> : null}
+            {(isSelected || isToolsSelected) &&
+                <Sprite
+                    texture={isToolsSelected && !isSelected ? cache.standard[3] : cache.standard[2]}
+                    alpha={isToolsSelected ? 0.4 : 0.6}
+                    zIndex={1}
+                />
+            }
+            {isBreakpoint &&
+                <Sprite
+                    texture={cache.breakpoints[1]}
+                />
+            }
         </Sprite>
-        
-        {data.notes.map((note: any) => {
+
+        {notes.map((note: any) => {
             return <Sprite
                 key={note.index}
-                image={cache.notes[note.layer]}
+                texture={cache.notes[note.layer]}
                 y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
             >
             </Sprite>

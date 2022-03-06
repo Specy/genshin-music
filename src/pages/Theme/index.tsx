@@ -7,11 +7,8 @@ import { FileElement, FilePicker } from "components/FilePicker"
 import Main from "pages/Player";
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
-import './Theme.css'
 import { DB } from "Database";
-// @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
-
 import { Theme } from "stores/ThemeStore";
 import { ThemePreview } from "./Components/ThemePreview";
 import { FaPlus } from "react-icons/fa";
@@ -19,6 +16,9 @@ import { BaseTheme } from "stores/ThemeStore";
 import LoggerStore from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/hooks/useTheme";
+import './Theme.css'
+
+
 function ThemePage() {
     const [theme, setTheme] = useTheme()
     const [userThemes, setUserThemes] = useState<Theme[]>([])

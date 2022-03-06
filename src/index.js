@@ -1,14 +1,15 @@
 
 
-import React from 'react';
-import ReactDOM from 'react-dom';
+import { StrictMode} from 'react';
+import {render} from 'react-dom';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { isTwa } from "appConfig"
 import { Router } from './Router'
-ReactDOM.render(
-	<React.StrictMode>
+
+render(
+	<StrictMode>
 		<Router />
-	</React.StrictMode>,
+	</StrictMode>,
 	document.getElementById('root')
 );
 

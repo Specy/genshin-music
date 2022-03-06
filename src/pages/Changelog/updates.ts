@@ -1,4 +1,20 @@
-export const updates = [
+type Update = {
+    version: string
+    title: string
+    date: string
+    changes: string[]
+}
+
+export const updates: Update[] = [
+    {
+        version: '2.5',
+        title: 'Composer improvements',
+        date: '2022- 06/03',
+        changes: [
+            'Improved the rendering of the composer to be more sharp and easier to see on mobile',
+            'App rewrite in TypeScript',
+        ]
+    },
     {
         version: '2.4',
         title: 'Multi Slider and Themes',

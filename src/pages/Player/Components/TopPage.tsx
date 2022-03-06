@@ -1,7 +1,7 @@
 import { SPEED_CHANGERS } from "appConfig"
 import Memoized from "components/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
-import React, { memo, useEffect, useState, useRef, ChangeEvent } from "react";
+import { memo, useEffect, useState, useRef, ChangeEvent } from "react";
 import { SongStore } from "stores/SongStore";
 import { SliderStore } from "stores/SongSliderStore";
 import { observe } from "mobx";

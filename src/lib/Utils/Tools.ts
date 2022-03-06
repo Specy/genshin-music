@@ -5,7 +5,7 @@ import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
 import { Song } from "./Song";
 import { ColumnNote } from "./SongClasses";
-import { LayerIndexes, NoteNameType } from "types/GeneralTypes";
+import { CombinedLayer, LayerIndex, NoteNameType } from "types/GeneralTypes";
 
 class FileDownloader {
 	type: string
@@ -50,10 +50,10 @@ class MIDINote{
 }
 
 class MIDIShortcut{
-	type: any //TODO what is this
+	type: string
 	midi:number
 	status: 'wrong' | 'right' | 'clicked'
-    constructor(type: any, midi:number){
+    constructor(type: string, midi:number){
         this.type = type
         this.midi = midi
 		this.status = midi < 0 ? 'wrong' : 'right'
@@ -184,22 +184,22 @@ function getPitchChanger(pitch: PitchesType) {
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
 
-function numberToLayer(number: LayerIndexes) : string {
-	let layer = "100"
+function numberToLayer(number: LayerIndex) : CombinedLayer {
+	let layer: CombinedLayer = "100"
 	if (number === 0) layer = "100"
 	if (number === 1) layer = "010"
 	if (number === 2) layer = "001"
 	return layer
 }
 
-function mergeLayers(notes: ColumnNote[]) {
+function mergeLayers(notes: ColumnNote[]): CombinedLayer {
 	let final = "000".split("")
 	notes.forEach(note => {
 		note.layer.split("").forEach((e, i) => {
 			if (e === "1") final[i] = "1"
 		})
 	})
-	return final.join("")
+	return final.join("") as CombinedLayer
 }
 
 function groupByIndex(column: Column) {

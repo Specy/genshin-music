@@ -3,7 +3,7 @@ import { Column, ColumnNote, RecordedNote,SongDataType } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
 import { numberToLayer, groupByIndex, mergeLayers, groupByNotes } from 'lib/Utils/Tools'
 import clonedeep from 'lodash.clonedeep'
-import { LayerIndexes } from "types/GeneralTypes"
+import { LayerIndex } from "types/GeneralTypes"
 
 type OldNote = {
     key: string
@@ -30,7 +30,7 @@ export type OldFormatSong = SongProps & {
 export class Song {
 	name: string
 	version: number
-	notes: RecordedNote[] //TODO not sure what notes are here
+	notes: RecordedNote[] 
 	bpm: number
 	pitch: PitchesType
 	data: SongDataType
@@ -177,23 +177,23 @@ export class Song {
         composed.columns = converted
         return composed
     }
+    toPracticeMode(){
+
+    }
     static fromOldFormat = (song: any) => {
         try {
             const converted = new Song(song.name || "Untitled")
             const bpm = Number(song.bpm)
             converted.bpm = isNaN(bpm) ? 220 : bpm
             converted.pitch = (PITCHES[song.pitchLevel || 0]) || "C"
-
-            //@ts-ignore
-            const notes: OldNote[] = song.songNotes.filter((note, index, self) =>
-                //@ts-ignore
-                index === self.findIndex((n) => {
+            const notes: OldNote[] = song.songNotes.filter((note: OldNote, index: number, self: any) =>
+                index === self.findIndex((n: OldNote) => {
                     return n.key.split('Key')[1] === note.key.split('Key')[1] && n.time === note.time
                 })
             )
             notes.forEach((note) => {
                 const data = note.key.split("Key")
-                const layer = (note.l ?? Number(data[0])) as LayerIndexes
+                const layer = (note.l ?? Number(data[0])) as LayerIndex
                 converted.notes.push([IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer])
             })
     

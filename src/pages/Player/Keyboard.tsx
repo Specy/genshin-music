@@ -1,4 +1,4 @@
-import React, { ChangeEvent, Component } from 'react'
+import { ChangeEvent, Component } from 'react'
 import { observe } from 'mobx'
 import { LAYOUT_IMAGES, APP_NAME, SPEED_CHANGERS, MIDI_STATUS, PitchesType } from "appConfig"
 import Note from './Components/Note'
