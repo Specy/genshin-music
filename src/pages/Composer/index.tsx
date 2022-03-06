@@ -276,7 +276,7 @@ class Composer extends Component<ComposerProps>{
         settings[key] = { ...settings[key], value: data.value }
         if (data.songSetting) {
             //@ts-ignore
-            song[setting.key] = data.value
+            song[key] = data.value
         }
         if (key === "instrument") this.loadInstrument(data.value as InstrumentKeys, 1)
         if (key === "layer2") this.loadInstrument(data.value as InstrumentKeys, 2)
