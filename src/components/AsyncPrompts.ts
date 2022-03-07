@@ -54,7 +54,7 @@ async function asyncPrompt(question: string):Promise<string | null> {
             dispose()
         }
 
-        function handleKeyboard(event: any) {
+        function handleKeyboard(event: KeyboardEvent) {
             const key = event.code
             if (key === 'Enter') okListener()
             if (key === 'Escape') cancelListener()

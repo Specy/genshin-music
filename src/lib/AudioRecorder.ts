@@ -50,11 +50,12 @@ function blobToAudio(blob:Blob): Promise<AudioBuffer> {
     return new Promise(resolve => {
         const audioContext = new AudioContext();
         const fileReader = new FileReader();
-        fileReader.onloadend = () => {
+        function handleLoad(){
             audioContext.decodeAudioData(fileReader.result as ArrayBuffer, (audioBuffer) => {
                 resolve(audioBuffer)
             })
         }
+        fileReader.addEventListener('loadend',handleLoad, {once: true})
         fileReader.readAsArrayBuffer(blob);
     })
 }

@@ -1,7 +1,7 @@
 import { APP_NAME } from "appConfig"
 interface WelcomePopupProps{
     hasPersistentStorage: boolean,
-    askForStorage: (e: any) => void
+    askForStorage: () => void
 }
 export default function WelcomePopup({ hasPersistentStorage, askForStorage }: WelcomePopupProps) {
     return <div className="welcome-message">

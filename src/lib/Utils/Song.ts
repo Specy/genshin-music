@@ -23,7 +23,11 @@ export type SerializedSong = SongProps
 export type OldFormatSong = SongProps & {
     isComposed: boolean,
     pitchLevel: number,
-    songNotes: any,
+    songNotes: {
+        key: string
+        time: number
+        l?: number
+    }[],
     bitsPerPage: number,
     isEncrypted: boolean
 }

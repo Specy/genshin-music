@@ -23,7 +23,11 @@ export interface SerializedComposedSong {
 type OldFormatComposed = SerializedComposedSong & {
     isComposed: boolean,
     pitchLevel: number,
-    songNotes: any,
+    songNotes: {
+        key: string
+        time: number
+        l?: number
+    }[],
     bitsPerPage: number,
     isEncrypted: boolean
 }

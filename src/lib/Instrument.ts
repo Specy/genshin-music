@@ -55,10 +55,11 @@ export default class Instrument {
         player.connect(this.volumeNode)
         player.playbackRate.value = pitch
         player.start(0)
-        player.onended = () => {
+        function handleEnd(){
             player.stop()
             player.disconnect()
         }
+        player.addEventListener('ended',handleEnd,{once: true})
     }
     load = async () => {
         let emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)

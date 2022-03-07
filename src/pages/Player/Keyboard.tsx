@@ -34,19 +34,19 @@ interface KeyboardProps {
         setHasSong: (override: boolean) => void
     }
 }
-
-export default class Keyboard extends Component<KeyboardProps> {
-    state: {
-        playTimestamp: number
-        songToPractice: Chunk[]
-        approachingNotes: ApproachingNote[][]
-        outgoingAnimation: {
-            key: number
-        }[][]
-        keyboard: NoteData[]
-        approachingScore: ApproachingScore
-        speedChanger: typeof SPEED_CHANGERS[number]
-    }
+interface KeyboardState{
+    playTimestamp: number
+    songToPractice: Chunk[]
+    approachingNotes: ApproachingNote[][]
+    outgoingAnimation: {
+        key: number
+    }[][]
+    keyboard: NoteData[]
+    approachingScore: ApproachingScore
+    speedChanger: typeof SPEED_CHANGERS[number]
+}
+export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
+    state: KeyboardState
     MIDISettings: typeof MIDISettings
     approachRate: number
     approachingNotesList: ApproachingNote[]
@@ -301,10 +301,8 @@ export default class Keyboard extends Component<KeyboardProps> {
         //TODO move this to the song class
         end = end ? end : song.notes.length
         const { keyboard } = this.state
-        let notes = this.applySpeedChange(song.notes)
-        let songLength = notes.length
-        notes = notes.slice(start, end)
-        let chunks = []
+        const notes = this.applySpeedChange(song.notes).slice(start, end)
+        const chunks = []
         let previousChunkDelay = 0
         for (let i = 0; notes.length > 0; i++) {
             const chunk = new Chunk(
@@ -341,15 +339,12 @@ export default class Keyboard extends Component<KeyboardProps> {
         this.props.functions.setHasSong(true)
         this.setState({
             songToPractice: chunks,
-            keyboard,
-            sliderState: {
-                position: start,
-                size: songLength
-            }
+            keyboard
         })
     }
     handleSpeedChanger = (e: ChangeEvent<HTMLSelectElement>) => {
         const changer = SPEED_CHANGERS.find(el => el.name === e.target.value)
+        if(!changer) return
         this.setState({
             speedChanger: changer
         }, this.restartSong)
@@ -470,8 +465,8 @@ export default class Keyboard extends Component<KeyboardProps> {
         }
         this.setState({
             keyboard,
-            ...(SongStore.eventType === 'approaching' ? approachingScore : {}),
-            ...(hasAnimation ? outgoingAnimation : {})
+            approachingScore,
+            outgoingAnimation
         }, () => {
             if (!hasAnimation || SongStore.eventType === 'approaching') return
             setTimeout(() => {

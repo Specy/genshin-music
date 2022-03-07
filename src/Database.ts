@@ -4,7 +4,7 @@ import { Theme } from "stores/ThemeStore"
 import { SerializedSongType } from "types/SongTypes"
 
 function generateId(){
-    const s4 = () => {
+    function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
             .toString(16) 
             .substring(1)

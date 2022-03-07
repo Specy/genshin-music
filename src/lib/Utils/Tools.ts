@@ -8,22 +8,8 @@ import { ColumnNote } from "./SongClasses";
 import { CombinedLayer, LayerIndex, NoteNameType } from "types/GeneralTypes";
 
 class FileDownloader {
-	type: string
-	constructor(type:string = "text/json") {
-		this.type = type
-	}
-	download = (file:any, name:string) => {
-		const data = `data:${this.type};charset=utf-8${encodeURIComponent(file)}`
-		const el = document.createElement("a")
-		el.style.display = 'none'
-		document.body.appendChild(el)
-		el.setAttribute("href", data)
-		el.setAttribute("download", name)
-		el.click();
-		el.remove();
-	}
-	static download = (file:any, name:string, as: string = "text/json") => {
-		const data = `data:${as};charset=utf-8${encodeURIComponent(file)}`
+	static download = (file:string, name:string, as: string = "text/json") => {
+		const data = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
 		const el = document.createElement("a")
 		el.style.display = 'none'
 		document.body.appendChild(el)

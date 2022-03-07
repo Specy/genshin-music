@@ -17,13 +17,14 @@ export class ComposerCache {
     height: number
     cache: {
         columns: Texture[]
-        notes: any
+        notes: {
+            [key in string] : Texture
+        }
         standard: Texture[]
         columnsLarger: Texture[]
         standardLarger: Texture[]
         breakpoints: Texture[]
     }
-    notesFigures: any[]
     timelineHeight: number
     margin: number
     noteWidth: number
@@ -51,7 +52,6 @@ export class ComposerCache {
         }
         this.width = width
         this.height = height
-        this.notesFigures = []
         this.timelineHeight = timelineHeight
         this.margin = margin
         this.noteWidth = this.width

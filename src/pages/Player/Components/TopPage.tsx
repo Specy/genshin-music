@@ -69,7 +69,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
         }
 
     }
-    const handleSliderLeave = () => {
+    function handleSliderLeave() {
         setSelectedThumb(null)
     }
     const handleSliderMove = (event: React.PointerEvent<HTMLDivElement>, override?:'left' | 'right') => {

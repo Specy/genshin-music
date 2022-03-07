@@ -21,18 +21,18 @@ import { InstrumentKeys, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
 
 
-
-class Player extends Component{
-	state: {
-		songs: ComposedSong[] | Song[]
-		settings: MainPageSettingsDataType
-		instrument: Instrument
-		isDragging: boolean
-		isLoadingInstrument: boolean
-		isRecordingAudio: boolean
-		isRecording: boolean
-		thereIsSong: boolean
-	}
+interface PlayerState{
+	songs: (ComposedSong | Song)[]
+	settings: MainPageSettingsDataType
+	instrument: Instrument
+	isDragging: boolean
+	isLoadingInstrument: boolean
+	isRecordingAudio: boolean
+	isRecording: boolean
+	thereIsSong: boolean
+}
+class Player extends Component<any,PlayerState>{
+	state: PlayerState
 	recording: Recording
 	mounted: boolean
 	reverbNode: ConvolverNode | null
@@ -117,29 +117,21 @@ class Player extends Component{
 	}
 
 	resetDrag = () => {
-		this.setState({
-			isDragging: false
-		})
+		this.setState({ isDragging: false })
 	}
 
 	handleDragOver = (e: DragEvent) => {
 		e.preventDefault()
-		this.setState({
-			isDragging: true
-		})
+		this.setState({ isDragging: true })
 	}
 
 	handleDrag = (e: DragEvent) => {
 		e.preventDefault()
-		this.setState({
-			isDragging: true
-		})
+		this.setState({ isDragging: true })
 	}
 
 	setHasSong = (data: boolean) => {
-		this.setState({
-			thereIsSong: data
-		})
+		this.setState({ thereIsSong: data })
 	}
 
 	handleDrop = async (e: DragEvent) => {
@@ -278,9 +270,7 @@ class Player extends Component{
 			if(song.data?.isComposedVersion) return ComposedSong.deserialize(song as SerializedComposedSong)
 			return Song.deserialize(song as SerializedSong)
 		})
-		this.setState({
-			songs: songs
-		})
+		this.setState({ songs })
 	}
 	songExists = async (name: string) => {
 		return await DB.existsSong({ name: name })
@@ -350,10 +340,7 @@ class Player extends Component{
 		} else {
 			this.recording = new Recording()
 		}
-		this.state.isRecording = newState
-		this.setState({
-			open: this.state.isRecording
-		})
+		this.setState({ isRecording: newState })
 
 	}
 

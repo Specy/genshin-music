@@ -8,7 +8,9 @@ import SvgNotes from "./SvgNotes"
 
 
 interface BaseNoteProps{
-    data: any, //TODO do this
+    data: {
+        status: 'clicked' | string
+    }, //TODO do this
     noteText: string,
     handleClick: (data:any) => void,
     noteImage: NoteImages

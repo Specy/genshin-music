@@ -29,25 +29,23 @@ import { SerializedSong, Song } from 'lib/Utils/Song';
 import { SerializedSongType } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { InstrumentKeys, LayerIndex, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
-
-interface ComposerProps {
-    history: any
+import "./Composer.css"
+interface ComposerState{
+    instrument: Instrument
+    layers: [Instrument, Instrument]
+    songs: SerializedSongType[]
+    isPlaying: boolean
+    song: ComposedSong
+    settings: ComposerSettingsDataType
+    menuOpen: boolean
+    layer: LayerType
+    toolsColumns: number[]
+    toolsVisible: boolean
+    midiVisible: boolean
+    isRecordingAudio: boolean
 }
-class Composer extends Component<ComposerProps>{
-    state: {
-        instrument: Instrument
-        layers: [Instrument, Instrument]
-        songs: SerializedSongType[]
-        isPlaying: boolean
-        song: ComposedSong
-        settings: ComposerSettingsDataType
-        menuOpen: boolean
-        layer: LayerType
-        toolsColumns: number[]
-        toolsVisible: boolean
-        midiVisible: boolean
-        isRecordingAudio: boolean
-    }
+class Composer extends Component<any,ComposerState>{
+    state: ComposerState
     reverbNode: ConvolverNode | null
     reverbVolumeNode: GainNode | null
     MIDIAccess: WebMidi.MIDIAccess | null
@@ -59,7 +57,7 @@ class Composer extends Component<ComposerProps>{
     mounted: boolean
     copiedColumns: Column[]
     changes: number
-    constructor(props: ComposerProps) {
+    constructor(props: any) {
         super(props)
         const settings = this.getSettings()
         this.state = {

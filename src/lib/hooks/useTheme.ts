@@ -11,6 +11,6 @@ export function useTheme(): UseTheme{
             setTheme({...ThemeStore})
         })
         return dispose
-    },[])
+    },[]) 
     return [theme,setTheme]
 }

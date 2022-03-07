@@ -94,7 +94,7 @@ function Menu({ data, functions }: MenuProps) {
         LoggerStore.success("Song downloaded")
         Analytics.userSongs('download', { name: song?.name, page: 'composer' })
     }
-    const updateSong = () => {
+    function updateSong(){
         functions.updateSong(data.currentSong)
     }
     const sideClass = open ? "side-menu menu-open" : "side-menu"

@@ -13,17 +13,17 @@ import LoggerStore from "stores/LoggerStore"
 import type { MIDINote } from "lib/Utils/Tools"
 import { InstrumentKeys } from "types/GeneralTypes"
 
+interface MidiSetupState{
+    settings: typeof MIDISettings
+    instrument: Instrument
+    selectedNote: MIDINote | null
+    selectedShortcut: string | null
+    sources: WebMidi.MIDIInput[]
+    selectedSource: WebMidi.MIDIInput | null
+}
 
-
-export default class MidiSetup extends Component {
-    state: {
-        settings: typeof MIDISettings
-        instrument: Instrument
-        selectedNote: MIDINote | null
-        selectedShortcut: string | null
-        sources: WebMidi.MIDIInput[]
-        selectedSource: WebMidi.MIDIInput | null
-    }
+export default class MidiSetup extends Component<any, MidiSetupState> {
+    state: MidiSetupState
     audioContext: AudioContext
     mounted: boolean
     MIDIAccess: WebMidi.MIDIAccess | null

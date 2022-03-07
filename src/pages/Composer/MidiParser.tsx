@@ -30,23 +30,21 @@ type CustomTrack = Track & {
     numberOfOutOfRange: number
 }
 
-interface MidiImport {
-    dispose: () => void
-    state: {
-        fileName: string
-        tracks: CustomTrack[]
-        bpm: number
-        offset: number
-        pitch: PitchesType
-        accidentals: number
-        outOfRange: number
-        totalNotes: number
-        includeAccidentals: boolean
-        theme: ThemeStoreClass
-    }
-    props: MidiImportProps
+interface MidiImportState {
+    fileName: string
+    tracks: CustomTrack[]
+    bpm: number
+    offset: number
+    pitch: PitchesType
+    accidentals: number
+    outOfRange: number
+    totalNotes: number
+    includeAccidentals: boolean
+    theme: ThemeStoreClass
 }
-class MidiImport extends Component {
+
+class MidiImport extends Component<MidiImportProps, MidiImportState> {
+    dispose: () => void
     constructor(props: MidiImportProps) {
         super(props)
         this.state = {
@@ -93,7 +91,7 @@ class MidiImport extends Component {
                 fileName: file.file.name,
                 bpm: Math.floor(bpm * 4) || 220,
                 offset: 0,
-                pitch: PITCHES.includes(key as never) ? key : 'C',
+                pitch: (PITCHES.includes(key as never) ? key : 'C') as PitchesType,
             }, () => { if (this.state.tracks.length) this.convertMidi() })
         } catch (e) {
             console.error(e)

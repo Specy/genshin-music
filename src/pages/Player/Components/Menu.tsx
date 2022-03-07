@@ -38,7 +38,7 @@ interface MenuProps {
     }
     data: {
         settings: MainPageSettingsDataType
-        songs: ComposedSong[] | Song[]
+        songs: (ComposedSong | Song)[]
     }
 }
 
@@ -92,11 +92,10 @@ function Menu({ functions, data }: MenuProps) {
         return () => window.removeEventListener('keydown', handleKeyboard)
     }, [handleKeyboard])
 
-    const clearSearch = () => {
+    function clearSearch(){
         setSearchInput('')
         setSearchStatus('')
         setSearchedSongs([])
-
     }
     const searchSongs = async () => {
         if (searchStatus === "Searching...") return
@@ -160,7 +159,7 @@ function Menu({ functions, data }: MenuProps) {
         Analytics.userSongs('download', { name: songName, page: 'player' })
     }
 
-    const downloadAllSongs = () => {
+    function downloadAllSongs(){
         const toDownload = data.songs.map(song => {
             return APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()
         })
@@ -208,7 +207,9 @@ function Menu({ functions, data }: MenuProps) {
                         </AppButton>
                     </Link>
                     <FilePicker<SerializedSongType | SerializedSongType[]>
-                        onChange={importSong} as='json'
+                        onChange={importSong} 
+                        as='json'
+                        multiple={true}
                     >
                         <AppButton>
                             Import song

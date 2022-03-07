@@ -1,15 +1,11 @@
 const APP_NAME: 'Sky'| 'Genshin' = process.env.REACT_APP_NAME as 'Sky'| 'Genshin' || ["Sky", "Genshin"][1]
-const APP_VERSION = '2.4.1' as const
+const APP_VERSION = '2.5' as const
 
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ? ` - Added start and end slider for selecting which part of the song to play/practice
-        - Added app themes, fully custommize the look of your app
-        - Bug fixes
+    ? ` - Improved the rendering of the composer to be more sharp and easier to see on mobile
     `.trim()
-    : ` - Added start and end slider for selecting which part of the song to play/practice
-        - Added app themes, fully custommize the look of your app
-        - Bug fixes
+    : ` - Improved the rendering of the composer to be more sharp and easier to see on mobile
     `.trim()
 const LAYERS_INDEXES = [1,2,3] as const
 const NOTES_CSS_CLASSES = {
@@ -33,7 +29,7 @@ const MIDI_STATUS = {
     up: 128,
     down: 144
 }
-//@ts-ignore
+
 const IS_MIDI_AVAILABLE = !!navigator.requestMIDIAccess
 const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
@@ -289,7 +285,7 @@ const CACHE_DATA = {
         }
     ]
 }
-
+type LayerCombinations = "000" | "001" | "010" | "011" | "100" | "101" | "110" | "111"
 const TEMPO_CHANGERS = [
 	{
 		id: 0,
@@ -344,5 +340,6 @@ export {
     TEMPO_CHANGERS
 }
 export type {
-    PitchesType
+    PitchesType,
+    LayerCombinations
 }

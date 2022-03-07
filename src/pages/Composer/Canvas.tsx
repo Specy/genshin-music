@@ -12,9 +12,9 @@ import type{ Column, ColumnNote } from 'lib/Utils/SongClasses';
 import type{ Texture } from 'pixi.js';
 import type{ ComposerSettingsDataType } from 'lib/BaseSettings';
 
-import "./Composer.css"
 let NumOfColumnsPerCanvas = 35
 
+type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
     data: {
         columns: Column[],
@@ -29,25 +29,25 @@ interface ComposerCanvasProps {
     }
 
 }
-type ClickEventType = 'up' | 'down' | 'downStage'
-export default class ComposerCanvas extends Component<ComposerCanvasProps> {
-    state: {
+interface ComposerCanvasState{
+    width: number
+    height: number
+    column: {
         width: number
         height: number
-        column: {
-            width: number
-            height: number
-        }
-        timelineHeight: number
-        currentBreakpoint: number
-        theme: {
-            timeline: {
-                hex: string
-                hexNumber: number
-            }
-        }
-        cache: ComposerCache | null
     }
+    timelineHeight: number
+    currentBreakpoint: number
+    theme: {
+        timeline: {
+            hex: string
+            hexNumber: number
+        }
+    }
+    cache: ComposerCache | null
+}
+export default class ComposerCanvas extends Component<ComposerCanvasProps,ComposerCanvasState> {
+    state: ComposerCanvasState
     sizes: DOMRect
     notesStageRef: any
     breakpointsStageRef: any
@@ -108,7 +108,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
         window.addEventListener("keydown", this.handleKeyboard)
-        this.notesStageRef.current!._canvas.addEventListener("wheel", this.handleWheel)
+        this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
         this.setState({
             cache: this.getCache(
                 this.state.column.width,
@@ -138,7 +138,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps> {
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
         window.removeEventListener("keydown", this.handleKeyboard)
-        this.notesStageRef.current._canvas.removeEventListener("wheel", this.handleWheel)
+        this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
         this.dispose()
         this.state.cache?.destroy()
     }

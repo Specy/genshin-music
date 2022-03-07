@@ -1,15 +1,16 @@
 import { useTheme } from "lib/hooks/useTheme"
 import { Column } from "lib/Utils/SongClasses"
+import { LayerType } from "types/GeneralTypes"
 interface ComposerToolsProps{
     data: {
         visible: boolean
         copiedColumns: Column[]
-        layer: any,
+        layer: LayerType,
     }
     functions: {
         toggleTools: () => void
-        copyColumns: (layer: any) => void
-        eraseColumns: (layer: any) => void
+        copyColumns: (layer: LayerType | 'all') => void
+        eraseColumns: (layer: LayerType | 'all') => void
         pasteColumns: (insert: boolean) => void
         deleteColumns: () => void
     }
