@@ -296,7 +296,7 @@ canvas{
     border: none;
     font-size: 1rem;
     color: white;
-    padding: 0.2rem;
+    padding: 0.4rem 0;
     filter: brightness(1.1);
     cursor: pointer;
 }
@@ -311,6 +311,7 @@ canvas{
     width: 8vw;
     max-width: 4rem;
     font-size: 1rem;
+    padding: 0.4rem 0;
     flex: 1;
     background-color: var(--primary);
     color: var(--primary-text);

@@ -8,13 +8,13 @@ import Instrument, { NoteData } from "lib/Instrument"
 import { LayerType, NoteNameType } from "types/GeneralTypes"
 import { NoteImages } from "types/Keyboard"
 
-interface ComposerKeyboardProps{
+interface ComposerKeyboardProps {
     data: {
         keyboard: Instrument,
-        currentColumn: Column, 
-        layer: LayerType, 
-        pitch: PitchesType, 
-        isPlaying: boolean, 
+        currentColumn: Column,
+        layer: LayerType,
+        pitch: PitchesType,
+        isPlaying: boolean,
         noteNameType: NoteNameType
     },
     functions: {
@@ -29,7 +29,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
     let keyboardClass = "keyboard"
     if (data.keyboard.layout.length === 15) keyboardClass += " keyboard-5"
     if (data.keyboard.layout.length === 8) keyboardClass += " keyboard-4"
-    return <div>
+    return <>
         <div className={keyboardClass}>
             {data.keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
             {data.keyboard.layout.map((note, i) => {
@@ -73,12 +73,12 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     return <button
                         key={tempoChanger.id}
                         onClick={() => functions.handleTempoChanger(tempoChanger)}
-                        style={tempoChanger.changer === 1 
+                        style={tempoChanger.changer === 1
                             ? {
                                 backgroundColor: ThemeStore.get('primary').toString(),
                                 color: ThemeStore.getText('primary').toString()
                             }
-                            : {backgroundColor: "#" + tempoChanger.color.toString(16)}
+                            : { backgroundColor: "#" + tempoChanger.color.toString(16) }
                         }
                     >
                         {tempoChanger.text}
@@ -86,5 +86,5 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                 })}
             </div>
         </div>
-    </div>
+    </>
 }
