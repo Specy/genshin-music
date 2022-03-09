@@ -7,7 +7,8 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     `.trim()
     : ` - Improved the rendering of the composer to be more sharp and easier to see on mobile
     `.trim()
-const LAYERS_INDEXES = [1,2,3] as const
+const LAYERS_INDEXES = [1,2,3,4] as const
+const EMPTY_LAYER = '0000'
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
@@ -274,7 +275,7 @@ const CACHE_DATA = {
             color: 0xd6722f
         }
     ],
-    layersCombination: ["000", "001", "010", "011", "100", "101", "110", "111"],
+    layersCombination: ["0000" , "0001" , "0010" , "0011" , "0100" , "0101" , "0110" , "0111" ,"1000" , "1001" , "1010" , "1011" , "1100" , "1101" , "1110" , "1111"],
     breakpoints: [
         {
             type: "short",
@@ -285,7 +286,6 @@ const CACHE_DATA = {
         }
     ]
 }
-type LayerCombinations = "000" | "001" | "010" | "011" | "100" | "101" | "110" | "111"
 const TEMPO_CHANGERS = [
 	{
 		id: 0,
@@ -337,9 +337,9 @@ export {
     IS_MIDI_AVAILABLE,
     LAYERS_INDEXES,
     BASE_THEME_CONFIG,
-    TEMPO_CHANGERS
+    TEMPO_CHANGERS,
+    EMPTY_LAYER
 }
 export type {
-    PitchesType,
-    LayerCombinations
+    PitchesType
 }

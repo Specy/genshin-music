@@ -41,6 +41,7 @@ export default memo(function ComposerNote({ data, layers, instrument, clickActio
     if (layers[0] === "1") className += " layer-1"
     if (layers[1] === "1") className += " layer-2"
     if (layers[2] === "1") className += " layer-3"
+    if (layers[3] === "1") className += " layer-4"
     let layer3Class = "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"
     return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
         <div className={className} >
@@ -54,6 +55,9 @@ export default memo(function ComposerNote({ data, layers, instrument, clickActio
                 className='genshin-border'
             />}
             <div className={layer3Class}>
+            </div>
+            <div className='layer-4-line'>
+
             </div>
             <div 
                 className={APP_NAME === "Sky" ? "note-name-sky" : "note-name"}

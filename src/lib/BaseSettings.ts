@@ -7,6 +7,7 @@ export type ComposerSettingsDataType = {
     instrument: SettingsInstrument
     layer2: SettingsInstrument
     layer3: SettingsInstrument
+    layer4: SettingsInstrument
     bpm: SettingsNumber
     beatMarks: SettingsSelect
     noteNameType: SettingsSelect
@@ -24,7 +25,7 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 32,
+        settingVersion: APP_NAME + 33,
     },
     data: {
         instrument: {
@@ -45,6 +46,14 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         layer3: {
             name: "Instrument (Layer 3)",
+            type: "instrument",
+            songSetting: false,
+            value: INSTRUMENTS[0],
+            volume: 100,
+            options: [...INSTRUMENTS]
+        },
+        layer4: {
+            name: "Instrument (Layer 4)",
             type: "instrument",
             songSetting: false,
             value: INSTRUMENTS[0],

@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType, EMPTY_LAYER } from "appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
@@ -166,15 +166,16 @@ function getPitchChanger(pitch: PitchesType) {
 }
 
 function numberToLayer(number: LayerIndex) : CombinedLayer {
-	let layer: CombinedLayer = "100"
-	if (number === 0) layer = "100"
-	if (number === 1) layer = "010"
-	if (number === 2) layer = "001"
+	let layer: CombinedLayer = "1000"
+	if (number === 0) layer = "1000"
+	if (number === 1) layer = "0100"
+	if (number === 2) layer = "0010"
+	if (number === 3) layer = "0001"
 	return layer
 }
 
 function mergeLayers(notes: ColumnNote[]): CombinedLayer {
-	let final = "000".split("")
+	let final = EMPTY_LAYER.split("")
 	notes.forEach(note => {
 		note.layer.split("").forEach((e, i) => {
 			if (e === "1") final[i] = "1"

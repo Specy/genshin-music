@@ -2,7 +2,7 @@ import ComposerNote from "./Components/ComposerNote"
 import { getNoteText } from 'lib/Utils/Tools'
 import { Column } from "lib/Utils/SongClasses"
 import MultiSwitch from "./Components/MultiSwitch"
-import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS } from "appConfig"
+import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS, EMPTY_LAYER } from "appConfig"
 import { ThemeStore } from "stores/ThemeStore"
 import Instrument, { NoteData } from "lib/Instrument"
 import { LayerType, NoteNameType } from "types/GeneralTypes"
@@ -44,7 +44,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                 } catch (e) { }
                 return <ComposerNote
                     key={note.index}
-                    layers={index >= 0 ? data.currentColumn.notes[index].layer : "000"}
+                    layers={index >= 0 ? data.currentColumn.notes[index].layer : EMPTY_LAYER}
                     data={note}
                     noteText={noteText}
                     instrument={data.keyboard.instrumentName}

@@ -4,7 +4,7 @@ import { Midi, Track } from '@tonejs/midi'
 import { numberToLayer, groupByIndex, mergeLayers } from 'lib/Utils/Tools'
 import { ColumnNote, Column } from 'lib/Utils/SongClasses'
 import { ComposedSong } from 'lib/Utils/ComposedSong'
-import { APP_NAME, PITCHES, PitchesType } from 'appConfig'
+import { APP_NAME, LAYERS_INDEXES, PITCHES, PitchesType } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
@@ -13,7 +13,7 @@ import { observe } from 'mobx'
 import { InstrumentKeys, LayerIndex } from 'types/GeneralTypes'
 interface MidiImportProps {
     data: {
-        instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys]
+        instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys, InstrumentKeys]
         selectedColumn: number
     }
     functions: {
@@ -148,7 +148,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             if (!note) return
             let elapsedTime = note.time - previousTime
             previousTime = note.time
-            let emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
+            const emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
             if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
             let noteColumn = new Column()
             noteColumn.notes = notes.map(note => {
@@ -157,7 +157,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             columns.push(noteColumn)
         })
         columns.forEach(column => { //merges notes of different layer
-            let groupedNotes = groupByIndex(column)
+            const groupedNotes = groupByIndex(column)
             column.notes = groupedNotes.map(group => {
                 group[0].layer = mergeLayers(group)
                 return group[0]
@@ -375,9 +375,11 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
                     value={data.layer}
                     className='midi-select'
                 >
-                    <option value='0'>Layer 1</option>
-                    <option value='1'>Layer 2</option>
-                    <option value='2'>Layer 3</option>
+                    {LAYERS_INDEXES.map(layer => 
+                        <option value={layer - 1} key={layer}>
+                            Layer {layer}
+                        </option>    
+                    )}
                 </select>
 
                 <FaInfoCircle

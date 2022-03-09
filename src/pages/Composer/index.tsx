@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import { APP_NAME, AUDIO_CONTEXT, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, PitchesType, TempoChanger } from "appConfig"
+import { APP_NAME, AUDIO_CONTEXT, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, PitchesType, TempoChanger, EMPTY_LAYER } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -32,7 +32,7 @@ import { InstrumentKeys, LayerIndex, LayerType, NoteNameType, Pages } from 'type
 import "./Composer.css"
 interface ComposerState{
     instrument: Instrument
-    layers: [Instrument, Instrument]
+    layers: [Instrument, Instrument, Instrument]
     songs: SerializedSongType[]
     isPlaying: boolean
     song: ComposedSong
@@ -62,7 +62,7 @@ class Composer extends Component<any,ComposerState>{
         const settings = this.getSettings()
         this.state = {
             instrument: new Instrument(),
-            layers: [new Instrument(), new Instrument()],
+            layers: [new Instrument(), new Instrument(),new Instrument()],
             songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
@@ -82,7 +82,8 @@ class Composer extends Component<any,ComposerState>{
         this.state.song.instruments = [
             settings.instrument.value,
             settings.layer2.value,
-            settings.layer3.value
+            settings.layer3.value,
+            settings.layer4.value
         ]
         this.mounted = false
         this.changes = 0
@@ -133,10 +134,12 @@ class Composer extends Component<any,ComposerState>{
     init = async () => {
         this.syncSongs()
         const { settings } = this.state
+        //TODO if new layer is added
         const promises = [
             this.loadInstrument(settings.instrument.value, 1),
             this.loadInstrument(settings.layer2.value, 2),
-            this.loadInstrument(settings.layer3.value, 3)
+            this.loadInstrument(settings.layer3.value, 3),
+            this.loadInstrument(settings.layer4.value, 4)
         ]
         if (this.mounted) await Promise.all(promises)
         if (this.mounted) await this.loadReverb()
@@ -276,15 +279,17 @@ class Composer extends Component<any,ComposerState>{
             //@ts-ignore
             song[key] = data.value
         }
+        //TODO if new layer is added
         if (key === "instrument") this.loadInstrument(data.value as InstrumentKeys, 1)
         if (key === "layer2") this.loadInstrument(data.value as InstrumentKeys, 2)
         if (key === "layer3") this.loadInstrument(data.value as InstrumentKeys, 3)
+        if (key === "layer4") this.loadInstrument(data.value as InstrumentKeys, 4)
         if (key === "caveMode") this.setupAudioDestination(data.value as boolean)
         this.setState({ settings, song }, this.updateSettings)
     }
     loadInstrument = async (name: InstrumentKeys, layer: LayerType) => {
         if (!this.mounted) return
-        const { settings } = this.state
+        const { settings, layers } = this.state
         if (layer === 1) {
             this.state.instrument.delete()
             const instrument = new Instrument(name)
@@ -294,7 +299,6 @@ class Composer extends Component<any,ComposerState>{
             this.setState({ instrument })
         } else {
             const instrument = new Instrument(name)
-            const layers = this.state.layers
             layers[layer - 2].delete()
             layers[layer - 2] = instrument
             await instrument.load()
@@ -306,6 +310,7 @@ class Composer extends Component<any,ComposerState>{
     }
     changeVolume = (obj: SettingVolumeUpdate) => {
         const settings = this.state.settings
+        //TODO if new instrument is added
         if (obj.key === "instrument") {
             settings.instrument = { ...settings.instrument, volume: obj.value }
             this.state.instrument.changeVolume(obj.value)
@@ -318,12 +323,16 @@ class Composer extends Component<any,ComposerState>{
             settings.layer3 = { ...settings.layer3, volume: obj.value }
             this.state.layers[1].changeVolume(obj.value)
         }
+        if (obj.key === "layer4") {
+            settings.layer4 = { ...settings.layer4, volume: obj.value }
+            this.state.layers[2].changeVolume(obj.value)
+        }
         this.setState({ settings }, this.updateSettings)
     }
     setupAudioDestination = (hasReverb: boolean) => {
         if (!this.mounted) return
         const { instrument, layers } = this.state
-        const instruments = [instrument, layers[0], layers[1]]
+        const instruments = [instrument, ...layers]
         instruments.forEach(ins => {
             if (hasReverb) {
                 if (!this.reverbNode) return console.log("Couldn't connect to reverb")
@@ -342,7 +351,7 @@ class Composer extends Component<any,ComposerState>{
             return this.togglePlay(false)
         }
         const { instrument, layers } = this.state
-        const instruments = [instrument, layers[0], layers[1]]
+        const instruments = [instrument, ...layers]
         const hasReverb = this.state.settings.caveMode.value
         const { recorder } = this
         if (hasReverb) {
@@ -423,7 +432,6 @@ class Composer extends Component<any,ComposerState>{
             if (note === undefined) return
             instrument.play(note.index, getPitchChanger(this.state.settings.pitch.value as PitchesType))
         } catch (e) {
-
         }
     }
     changePitch = (value: PitchesType) => {
@@ -443,7 +451,7 @@ class Composer extends Component<any,ComposerState>{
         } else { //if it exists, toggle the current layer and if it's 000 delete it
             const currentNote = column.notes[index]
             currentNote.toggleLayer(layerIndex)
-            if (currentNote.layer === "000") column.notes.splice(index, 1)
+            if (currentNote.layer === EMPTY_LAYER) column.notes.splice(index, 1)
         }
         this.setState({ song })
         this.handleAutoSave()
@@ -581,6 +589,10 @@ class Composer extends Component<any,ComposerState>{
             this.loadInstrument(parsed.instruments[2], 3)
             settings.layer3 = { ...settings.layer3, value: parsed.instruments[2] }
         }
+        if (settings.layer4.value !== parsed.instruments[2]) {
+            this.loadInstrument(parsed.instruments[3], 4)
+            settings.layer4 = { ...settings.layer4, value: parsed.instruments[3] }
+        }
         this.changes = 0
         console.log("song loaded")
         this.setState({
@@ -714,7 +726,7 @@ class Composer extends Component<any,ComposerState>{
             copiedColumns = copiedColumns.map(column => {
                 column.notes = column.notes.filter(e => e.layer[layer - 1] === '1')
                 column.notes = column.notes.map(e => {
-                    e.layer = '000'
+                    e.layer = EMPTY_LAYER
                     e.setLayer(layer - 1 as LayerIndex, '1')
                     return e
                 })
@@ -847,7 +859,7 @@ class Composer extends Component<any,ComposerState>{
         }
         const midiParserData = {
             instruments: [state.instrument, ...state.layers]
-                .map(layer => layer.instrumentName) as [InstrumentKeys, InstrumentKeys, InstrumentKeys],
+                .map(layer => layer.instrumentName) as [InstrumentKeys, InstrumentKeys, InstrumentKeys, InstrumentKeys],
             selectedColumn: song.selected,
         }
         return <AppBackground page='Composer'>

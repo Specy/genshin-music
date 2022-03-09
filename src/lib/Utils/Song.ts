@@ -141,11 +141,11 @@ export class Song {
                 let column = new Column()
                 column.notes = grouped[i].map(note => {
                     let columnNote = new ColumnNote(note[0])
-                    if (note[2] === 0) columnNote.layer = "100"
-                    else if (note[2] === 1) columnNote.layer = "100"
-                    else if (note[2] === 2) columnNote.layer = "010"
+                    if (note[2] === 0) columnNote.layer = "1000"
+                    else if (note[2] === 1) columnNote.layer = "1000"
+                    else if (note[2] === 2) columnNote.layer = "0100"
                     //if (note[2] === 3) columnNote.layer = "110" //TODO check if layer 3 exists
-                    else columnNote.layer = "100"
+                    else columnNote.layer = "1000"
                     return columnNote
                 })
                 let next = grouped[i + 1] || [[0, 0, 0]]

@@ -1,4 +1,4 @@
-import { TempoChanger, TEMPO_CHANGERS } from "appConfig"
+import { EMPTY_LAYER, TempoChanger, TEMPO_CHANGERS } from "appConfig"
 import { CombinedLayer, LayerIndex } from "types/GeneralTypes"
 
 export class Column {
@@ -35,7 +35,7 @@ export class Column {
 export class ColumnNote {
 	index: number
 	layer: CombinedLayer
-	constructor(index: number, layer: CombinedLayer = "000") {
+	constructor(index: number, layer: CombinedLayer = EMPTY_LAYER) {
 		this.index = index
 		this.layer = layer
 	}

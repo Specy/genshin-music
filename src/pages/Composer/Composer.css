@@ -231,6 +231,14 @@ select{
     border-radius: 50%;
     visibility: hidden;
 }
+.layer-4-line{
+    height: 20%;
+    width: 100%;
+    position: absolute;
+    background-color: #d75c5c;
+    border-radius: 0.2vw;
+    visibility: hidden;
+}
 .bottom-right-text{
     text-align: center;
     width: 100%;
@@ -267,6 +275,9 @@ select{
 .layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
     visibility: visible;
 }
+.layer-4 .layer-4-line{
+    visibility: visible;
+}
 .layer-3-ball-bigger{
     width: 2.6vw;
     height: 2.6vw;
@@ -300,7 +311,6 @@ canvas{
     width: 8vw;
     max-width: 4rem;
     font-size: 1rem;
-    padding: 0.6rem 0;
     flex: 1;
     background-color: var(--primary);
     color: var(--primary-text);

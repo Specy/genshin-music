@@ -1,6 +1,6 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, PitchesType } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, PitchesType, EMPTY_LAYER } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
-import { CombinedLayer, LayerIndex, LayerType } from "types/GeneralTypes"
+import { CombinedLayer, InstrumentKeys, LayerIndex, LayerType } from "types/GeneralTypes"
 import { Song } from "./Song"
 import { Column, ColumnNote, RecordedNote, SongDataType } from "./SongClasses"
 
@@ -16,7 +16,7 @@ export interface SerializedComposedSong {
     data: SongDataType
     bpm: number
     pitch: PitchesType
-    instruments: [typeof INSTRUMENTS[number], typeof INSTRUMENTS[number], typeof INSTRUMENTS[number]]
+    instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys, InstrumentKeys]
     breakpoints: number[]
     columns: SerializedColumn[]
 }
@@ -38,7 +38,7 @@ export class ComposedSong {
     bpm: number
     pitch: PitchesType
     notes: RecordedNote[] 
-    instruments: [typeof INSTRUMENTS[number], typeof INSTRUMENTS[number], typeof INSTRUMENTS[number]]
+    instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys, InstrumentKeys]
     breakpoints: number[]
     columns: Column[]
     selected: number
@@ -54,7 +54,7 @@ export class ComposedSong {
         this.pitch =
             this.pitch = "C"
         this.notes = notes
-        this.instruments = [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
+        this.instruments = [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
         this.breakpoints = [0]
         this.columns = []
         this.selected = 0
@@ -70,14 +70,24 @@ export class ComposedSong {
         newSong.data = {...newSong.data, ...song.data} 
         newSong.bpm = isNaN(bpm) ? 220 : bpm
         newSong.pitch = song.pitch ?? "C"
-        newSong.instruments = [...song.instruments] || [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
+        const parsedInstruments = [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
+        parsedInstruments.forEach((_, i) => {
+            const toParse = song.instruments[i] as any
+            if(toParse !== undefined){
+                if(INSTRUMENTS.includes(toParse)) parsedInstruments[i] = toParse
+                else parsedInstruments[i] = INSTRUMENTS[0]
+            }
+        })
+        //@ts-ignore
+        newSong.instruments = parsedInstruments
         newSong.breakpoints = [...song.breakpoints ?? []] 
         newSong.columns = song.columns.map(column => {
             const columnObj = new Column()
             columnObj.tempoChanger = column[0]
             column[1].forEach(note => {
-                if(note[1].match(/^0+$/g)) return
-                columnObj.notes.push(new ColumnNote(note[0], note[1]))
+                const deserializedNote = ComposedSong.deserializeLayer(note[1])
+                if(deserializedNote.match(/^0+$/g)) return
+                columnObj.notes.push(new ColumnNote(note[0], deserializedNote))
             })
             return columnObj
         })
@@ -134,13 +144,21 @@ export class ComposedSong {
         song.columns.forEach(column => {
             column[1].forEach(note => {
                 let layer = 1
-                if (note[1] === '111') layer = 3
-                if (note[1] === '011') layer = 2
-                if (note[1] === '101') layer = 3
-                if (note[1] === '001') layer = 2
-                if (note[1] === '110') layer = 3
-                if (note[1] === '010') layer = 2
-                if (note[1] === '100') layer = 1
+                if (note[1] === '0010') layer = 2
+                if (note[1] === '0110') layer = 2
+                if (note[1] === '0100') layer = 2
+                if (note[1] === '1010') layer = 3
+                if (note[1] === '1000') layer = 1
+                if (note[1] === '1110') layer = 3
+                if (note[1] === '1100') layer = 3
+                
+                if (note[1] === '0011') layer = 2
+                if (note[1] === '0111') layer = 2
+                if (note[1] === '0101') layer = 2
+                if (note[1] === '1011') layer = 3
+                if (note[1] === '1001') layer = 1
+                if (note[1] === '1111') layer = 3
+                if (note[1] === '1101') layer = 3
                 const noteObj:OldFormatNoteType = {
                     key: (layer > 2 ? 2 : layer) + 'Key' + note[0],
                     time: totalTime,
@@ -198,6 +216,13 @@ export class ComposedSong {
                 }
             })
         }
+    }
+    static deserializeLayer = (layer: string): CombinedLayer => {
+        const split = EMPTY_LAYER.split('')
+        for(let i = 0; i<layer.length;i++){
+            split[i] = layer[i]
+        }
+        return split.join('') as CombinedLayer
     }
     validateBreakpoints(){
         this.breakpoints = this.breakpoints.filter(breakpoint => breakpoint < this.columns.length)
