@@ -76,11 +76,11 @@ export class ComposedSong {
             const columnObj = new Column()
             columnObj.tempoChanger = column[0]
             column[1].forEach(note => {
+                if(note[1].match(/^0+$/g)) return
                 columnObj.notes.push(new ColumnNote(note[0], note[1]))
             })
             return columnObj
         })
-
         return newSong
     }
     get isComposed(): true{

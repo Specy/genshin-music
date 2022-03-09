@@ -10,7 +10,7 @@ import rotateImg from "assets/icons/rotate.svg"
 
 import { withRouter } from "react-router-dom";
 import './App.css';
-
+import './Utility.css'
 
 class App extends Component<any>{
 	state: {

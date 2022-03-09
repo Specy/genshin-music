@@ -181,9 +181,6 @@ export class Song {
         composed.columns = converted
         return composed
     }
-    toPracticeMode(){
-
-    }
     static fromOldFormat = (song: any) => {
         try {
             const converted = new Song(song.name || "Untitled")

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { prepareSongImport } from "lib/Utils/Tools"
+import { parseSong } from "lib/Utils/Tools"
 import LoggerStore from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
 import { ComposedSong } from 'lib/Utils/ComposedSong';
@@ -22,7 +22,7 @@ export default function SearchedSong({ onClick, data, importSong }:SearchedSongP
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(res => res.json())
             setFetching(false)
-            song = prepareSongImport(song)
+            song = parseSong(song)
             setCache(song)
             importSong(song)
         } catch (e) {
@@ -38,7 +38,7 @@ export default function SearchedSong({ onClick, data, importSong }:SearchedSongP
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
             setFetching(false)
-            song = prepareSongImport(song)
+            song = parseSong(song)
             onClick(song,0)
             setCache(song)
         } catch (e) {

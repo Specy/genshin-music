@@ -10,7 +10,7 @@
     padding-top: 0.5rem;
     max-height: 100%;
     overflow-y: auto;
-    z-index: 3;
+    z-index: 15;
     display: flex;
     margin-left: -4rem;
     transition: all 0.4s;

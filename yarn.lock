@@ -1024,10 +1024,10 @@
     "core-js-pure" "^3.20.2"
     "regenerator-runtime" "^0.13.4"
 
-"@babel/runtime@^7.1.2", "@babel/runtime@^7.10.2", "@babel/runtime@^7.11.2", "@babel/runtime@^7.12.1", "@babel/runtime@^7.12.13", "@babel/runtime@^7.12.5", "@babel/runtime@^7.16.3", "@babel/runtime@^7.16.7", "@babel/runtime@^7.17.0", "@babel/runtime@^7.8.4":
-  "integrity" "sha512-etcO/ohMNaNA2UBdaXBBSX/3aEzFMRrVfaPv8Ptc0k+cWpWW0QFiGZ2XnVqQZI1Cf734LbPGmqBKWESfW4x/dQ=="
-  "resolved" "https://registry.npmjs.org/@babel/runtime/-/runtime-7.17.0.tgz"
-  "version" "7.17.0"
+"@babel/runtime@^7.1.2", "@babel/runtime@^7.10.2", "@babel/runtime@^7.11.2", "@babel/runtime@^7.12.1", "@babel/runtime@^7.12.13", "@babel/runtime@^7.12.5", "@babel/runtime@^7.16.3", "@babel/runtime@^7.17.2", "@babel/runtime@^7.8.4":
+  "integrity" "sha512-hzeyJyMA1YGdJTuWU0e/j4wKXrU4OMFvY2MSlaI9B7VQb0r5cxTE3EAIS2Q7Tn2RIcDkRvTA/v2JsAEhxe99uw=="
+  "resolved" "https://registry.npmjs.org/@babel/runtime/-/runtime-7.17.2.tgz"
+  "version" "7.17.2"
   dependencies:
     "regenerator-runtime" "^0.13.4"
 
@@ -4447,12 +4447,12 @@
   "resolved" "https://registry.npmjs.org/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz"
   "version" "2.0.6"
 
-"fast-unique-numbers@^6.0.11":
-  "integrity" "sha512-HIY5gqgeKPMZRDhs9o66ZE/hstN/AVKjeqy77QJCB7n6DoBy9cdN1PaTDKhXkcsy8nfes15GCU9t1xHLPO7Ofw=="
-  "resolved" "https://registry.npmjs.org/fast-unique-numbers/-/fast-unique-numbers-6.0.12.tgz"
-  "version" "6.0.12"
+"fast-unique-numbers@^6.0.13":
+  "integrity" "sha512-8+3Nlu7E4wOIGTaLZsHWR+iXj74PthlAYSrGl1j37p9Vtjoj6TlguJaCKtqjrfB4yjIwSQJ9R9pF6b/1NWvUGA=="
+  "resolved" "https://registry.npmjs.org/fast-unique-numbers/-/fast-unique-numbers-6.0.13.tgz"
+  "version" "6.0.13"
   dependencies:
-    "@babel/runtime" "^7.17.0"
+    "@babel/runtime" "^7.17.2"
     "tslib" "^2.3.1"
 
 "fastq@^1.6.0":
@@ -7630,11 +7630,6 @@
   "resolved" "https://registry.npmjs.org/react-error-overlay/-/react-error-overlay-6.0.10.tgz"
   "version" "6.0.10"
 
-"react-file-picker@0.0.6":
-  "integrity" "sha512-EnRQCEeC5YpSaCm/pbUi7zroP6lMgT7SqQTFS0ZNJXlcA8Cw2zDvEIoP/SkQ8u5Lbp+L2cyoxiy7ZBVtXk5hGw=="
-  "resolved" "https://registry.npmjs.org/react-file-picker/-/react-file-picker-0.0.6.tgz"
-  "version" "0.0.6"
-
 "react-icons@^4.3.1":
   "integrity" "sha512-cB10MXLTs3gVuXimblAdI71jrJx8njrJZmNMEMC+sQu5B/BIOmlsAjskdqpn81y8UBVEGuHODd7/ci5DvoSzTQ=="
   "resolved" "https://registry.npmjs.org/react-icons/-/react-icons-4.3.1.tgz"
@@ -7739,12 +7734,7 @@
   optionalDependencies:
     "fsevents" "^2.3.2"
 
-"react-swipeable@^6.2.0":
-  "integrity" "sha512-nWQ8dEM8e/uswZLSIkXUsAnQmnX4MTcryOHBQIQYRMJFDpgDBSiVbKsz/BZVCIScF4NtJh16oyxwaNOepR6xSw=="
-  "resolved" "https://registry.npmjs.org/react-swipeable/-/react-swipeable-6.2.0.tgz"
-  "version" "6.2.0"
-
-"react@*", "react@^0.14.0 || ^15.0.0 || ^16.0.0 || ^17.0.0", "react@^16.8.3 || ^17", "react@^17.0.1", "react@^17.0.2", "react@>= 16", "react@>=15", "react@>=16.8.0", "react@17.0.2":
+"react@*", "react@^0.14.0 || ^15.0.0 || ^16.0.0 || ^17.0.0", "react@^17.0.1", "react@^17.0.2", "react@>= 16", "react@>=15", "react@>=16.8.0", "react@17.0.2":
   "integrity" "sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA=="
   "resolved" "https://registry.npmjs.org/react/-/react-17.0.2.tgz"
   "version" "17.0.2"
@@ -9243,7 +9233,7 @@
   "resolved" "https://registry.npmjs.org/word-wrap/-/word-wrap-1.2.3.tgz"
   "version" "1.2.3"
 
-"workbox-background-sync@^6.3.0", "workbox-background-sync@6.4.2":
+"workbox-background-sync@6.4.2":
   "integrity" "sha512-P7c8uG5X2k+DMICH9xeSA9eUlCOjHHYoB42Rq+RtUpuwBxUOflAXR1zdsMWj81LopE4gjKXlTw7BFd1BDAHo7g=="
   "resolved" "https://registry.npmjs.org/workbox-background-sync/-/workbox-background-sync-6.4.2.tgz"
   "version" "6.4.2"
@@ -9251,7 +9241,7 @@
     "idb" "^6.1.4"
     "workbox-core" "6.4.2"
 
-"workbox-broadcast-update@^6.3.0", "workbox-broadcast-update@6.4.2":
+"workbox-broadcast-update@6.4.2":
   "integrity" "sha512-qnBwQyE0+PWFFc/n4ISXINE49m44gbEreJUYt2ldGH3+CNrLmJ1egJOOyUqqu9R4Eb7QrXcmB34ClXG7S37LbA=="
   "resolved" "https://registry.npmjs.org/workbox-broadcast-update/-/workbox-broadcast-update-6.4.2.tgz"
   "version" "6.4.2"
@@ -9302,7 +9292,7 @@
     "workbox-sw" "6.4.2"
     "workbox-window" "6.4.2"
 
-"workbox-cacheable-response@^6.3.0", "workbox-cacheable-response@6.4.2":
+"workbox-cacheable-response@6.4.2":
   "integrity" "sha512-9FE1W/cKffk1AJzImxgEN0ceWpyz1tqNjZVtA3/LAvYL3AC5SbIkhc7ZCO82WmO9IjTfu8Vut2X/C7ViMSF7TA=="
   "resolved" "https://registry.npmjs.org/workbox-cacheable-response/-/workbox-cacheable-response-6.4.2.tgz"
   "version" "6.4.2"
@@ -9314,7 +9304,7 @@
   "resolved" "https://registry.npmjs.org/workbox-core/-/workbox-core-6.4.2.tgz"
   "version" "6.4.2"
 
-"workbox-expiration@^6.3.0", "workbox-expiration@6.4.2":
+"workbox-expiration@6.4.2":
   "integrity" "sha512-0hbpBj0tDnW+DZOUmwZqntB/8xrXOgO34i7s00Si/VlFJvvpRKg1leXdHHU8ykoSBd6+F2KDcMP3swoCi5guLw=="
   "resolved" "https://registry.npmjs.org/workbox-expiration/-/workbox-expiration-6.4.2.tgz"
   "version" "6.4.2"
@@ -9322,7 +9312,7 @@
     "idb" "^6.1.4"
     "workbox-core" "6.4.2"
 
-"workbox-google-analytics@^6.3.0", "workbox-google-analytics@6.4.2":
+"workbox-google-analytics@6.4.2":
   "integrity" "sha512-u+gxs3jXovPb1oul4CTBOb+T9fS1oZG+ZE6AzS7l40vnyfJV79DaLBvlpEZfXGv3CjMdV1sT/ltdOrKzo7HcGw=="
   "resolved" "https://registry.npmjs.org/workbox-google-analytics/-/workbox-google-analytics-6.4.2.tgz"
   "version" "6.4.2"
@@ -9332,7 +9322,7 @@
     "workbox-routing" "6.4.2"
     "workbox-strategies" "6.4.2"
 
-"workbox-navigation-preload@^6.3.0", "workbox-navigation-preload@6.4.2":
+"workbox-navigation-preload@6.4.2":
   "integrity" "sha512-viyejlCtlKsbJCBHwhSBbWc57MwPXvUrc8P7d+87AxBGPU+JuWkT6nvBANgVgFz6FUhCvRC8aYt+B1helo166g=="
   "resolved" "https://registry.npmjs.org/workbox-navigation-preload/-/workbox-navigation-preload-6.4.2.tgz"
   "version" "6.4.2"
@@ -9348,7 +9338,7 @@
     "workbox-routing" "6.4.2"
     "workbox-strategies" "6.4.2"
 
-"workbox-range-requests@^6.3.0", "workbox-range-requests@6.4.2":
+"workbox-range-requests@6.4.2":
   "integrity" "sha512-SowF3z69hr3Po/w7+xarWfzxJX/3Fo0uSG72Zg4g5FWWnHpq2zPvgbWerBZIa81zpJVUdYpMa3akJJsv+LaO1Q=="
   "resolved" "https://registry.npmjs.org/workbox-range-requests/-/workbox-range-requests-6.4.2.tgz"
   "version" "6.4.2"
@@ -9381,7 +9371,7 @@
   dependencies:
     "workbox-core" "6.4.2"
 
-"workbox-streams@^6.3.0", "workbox-streams@6.4.2":
+"workbox-streams@6.4.2":
   "integrity" "sha512-ROEGlZHGVEgpa5bOZefiJEVsi5PsFjJG9Xd+wnDbApsCO9xq9rYFopF+IRq9tChyYzhBnyk2hJxbQVWphz3sog=="
   "resolved" "https://registry.npmjs.org/workbox-streams/-/workbox-streams-6.4.2.tgz"
   "version" "6.4.2"
@@ -9414,33 +9404,33 @@
     "@types/trusted-types" "^2.0.2"
     "workbox-core" "6.4.2"
 
-"worker-timers-broker@^6.0.65":
-  "integrity" "sha512-wp8WFGON4Q8/EgjMZoF0rkW8+FZd197Eg0VVMZi2f4tsEZh+63sURJu11bXrw/hsqL/eYYlogvv4A4E9IHJidg=="
-  "resolved" "https://registry.npmjs.org/worker-timers-broker/-/worker-timers-broker-6.0.66.tgz"
-  "version" "6.0.66"
+"worker-timers-broker@^6.0.67":
+  "integrity" "sha512-u9MlF8wE0vpLy6YMsllAu34n1XFNWddhB65g2ahRo3+wr5glGfw5kSJlYbY9BIZ/222JRpotGjKHXryl4SH5zg=="
+  "resolved" "https://registry.npmjs.org/worker-timers-broker/-/worker-timers-broker-6.0.67.tgz"
+  "version" "6.0.67"
   dependencies:
-    "@babel/runtime" "^7.17.0"
-    "fast-unique-numbers" "^6.0.11"
+    "@babel/runtime" "^7.17.2"
+    "fast-unique-numbers" "^6.0.13"
     "tslib" "^2.3.1"
-    "worker-timers-worker" "^7.0.33"
+    "worker-timers-worker" "^7.0.34"
 
-"worker-timers-worker@^7.0.32", "worker-timers-worker@^7.0.33":
-  "integrity" "sha512-aIoCiCdUKadMv/arr8CbestZRqdp9/1uxNyc6Wq1folvVPFuuRymW1sdcDbZROqUv/aDPPoYZoT9bX0N2dmhRA=="
-  "resolved" "https://registry.npmjs.org/worker-timers-worker/-/worker-timers-worker-7.0.33.tgz"
-  "version" "7.0.33"
+"worker-timers-worker@^7.0.34":
+  "integrity" "sha512-mSruaE31l5jhjj6XD5RgYII4Owt1nXyfco2ij8rTlwkcs8okQmlOCU0u6LS53bX38z8LXMqVfTT9aMHhIdLofQ=="
+  "resolved" "https://registry.npmjs.org/worker-timers-worker/-/worker-timers-worker-7.0.34.tgz"
+  "version" "7.0.34"
   dependencies:
-    "@babel/runtime" "^7.17.0"
+    "@babel/runtime" "^7.17.2"
     "tslib" "^2.3.1"
 
-"worker-timers@^7.0.40":
-  "integrity" "sha512-OEsfilXvFU60/fjJu+ygWEsVaKi7otvfB9TD8YJRqepeTzDGA5TdVXCxUWXRin10nucSYBQWBytvHJk5kidSOg=="
-  "resolved" "https://registry.npmjs.org/worker-timers/-/worker-timers-7.0.44.tgz"
-  "version" "7.0.44"
+"worker-timers@^7.0.45":
+  "integrity" "sha512-XZly16cHJDXe64CSgVk7FUdQknRwX+YskOGhzsWlv+YRPHrF9kp3S8ChOE7Te4LnXKuBEjhkNbcH9qgXzpgEXQ=="
+  "resolved" "https://registry.npmjs.org/worker-timers/-/worker-timers-7.0.45.tgz"
+  "version" "7.0.45"
   dependencies:
-    "@babel/runtime" "^7.16.7"
+    "@babel/runtime" "^7.17.2"
     "tslib" "^2.3.1"
-    "worker-timers-broker" "^6.0.65"
-    "worker-timers-worker" "^7.0.32"
+    "worker-timers-broker" "^6.0.67"
+    "worker-timers-worker" "^7.0.34"
 
 "wrap-ansi@^7.0.0":
   "integrity" "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q=="

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
-import { FileDownloader } from "lib/Utils/Tools"
+import { FileDownloader, parseSong } from "lib/Utils/Tools"
 import { ComposedSong } from 'lib/Utils/ComposedSong';
-import { Song } from 'lib/Utils/Song';
 import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -47,9 +46,8 @@ function Menu({ data, functions }: MenuProps) {
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible } = functions
 
-
     const handleKeyboard = useCallback((event: KeyboardEvent) => {
-        let key = event.code
+        const key = event.code
         if (document.activeElement?.tagName === "INPUT") return
         //@ts-ignore
         document.activeElement?.blur()
@@ -68,14 +66,14 @@ function Menu({ data, functions }: MenuProps) {
         return () => window.removeEventListener('keydown', handleKeyboard)
     }, [handleKeyboard])
 
-    const toggleMenu = (override?: boolean) => {
+    const toggleMenu = useCallback((override?: boolean) => {
         if (typeof override !== "boolean") override = undefined
         const newState = override !== undefined ? override : !open
         setOpen(newState)
         if (newState === false) toggleMenuVisible()
+    },[open,toggleMenuVisible])
 
-    }
-    const selectSideMenu = (selection?: MenuTabs) => {
+    const selectSideMenu = useCallback((selection?: MenuTabs) => {
         if (selection === selectedMenu && open) {
             return setOpen(false)
         }
@@ -84,17 +82,25 @@ function Menu({ data, functions }: MenuProps) {
             setSelectedMenu(selection)
             Analytics.UIEvent('menu', { tab: selection })
         }
-    }
-    const downloadSong = (song: ComposedSong | Song) => {
-        song.data.appName = APP_NAME
-        const songName = song.name
-        const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
-        const json = JSON.stringify(converted)
-        FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
-        LoggerStore.success("Song downloaded")
-        Analytics.userSongs('download', { name: song?.name, page: 'composer' })
-    }
-    function updateSong(){
+    },[open,selectedMenu])
+
+    const downloadSong = useCallback((song: SerializedSongType) => {
+        try{
+            song.data.appName = APP_NAME
+            const songName = song.name
+            const parsed = parseSong(song)
+            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
+            const json = JSON.stringify(converted)
+            FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
+            LoggerStore.success("Song downloaded")
+            Analytics.userSongs('download', { name: parsed.name, page: 'composer' })
+        }catch(e){
+            console.log(e)
+            LoggerStore.error('Error downloading song')
+        }
+    },[])
+
+    const updateSong = () => {
         functions.updateSong(data.currentSong)
     }
     const sideClass = open ? "side-menu menu-open" : "side-menu"
@@ -104,8 +110,8 @@ function Menu({ data, functions }: MenuProps) {
         toggleMenu,
         downloadSong
     }
-    let hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
-    let menuClass = data.menuOpen ? "menu menu-visible" : "menu"
+    const hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
+    const menuClass = data.menuOpen ? "menu menu-visible" : "menu"
     return <div className="menu-wrapper">
         <div className={menuClass}>
             <MenuItem<MenuTabs> action={() => toggleMenu(false)} className='close-menu'>
@@ -198,12 +204,12 @@ function Menu({ data, functions }: MenuProps) {
 
 
 interface SongRowProps {
-    data: Song | ComposedSong
+    data: SerializedSongType
     functions: {
         removeSong: (name: string) => void
         toggleMenu: (override: boolean) => void
-        loadSong: (song: Song | ComposedSong) => void
-        downloadSong: (song: Song | ComposedSong) => void
+        loadSong: (song: SerializedSongType) => void
+        downloadSong: (song: SerializedSongType) => void
     }
 }
 

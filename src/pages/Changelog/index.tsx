@@ -4,11 +4,12 @@ import { FaGithub } from 'react-icons/fa'
 import { ChangelogRow } from './ChangelogRow'
 import './Changelog.css'
 import { updates } from './updates'
+import { APP_VERSION } from 'appConfig'
 
 export default function Changelogpage() {
     return <div className='default-page'>
         <div className='changelog-page-title'>
-            Changelog
+            Changelog <span style={{fontSize: '1.2rem'}}>v{APP_VERSION}</span>
         </div>
         <SimpleMenu>
             <MenuItem>

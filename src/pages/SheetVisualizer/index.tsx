@@ -3,16 +3,16 @@ import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
 import { DB } from 'Database'
 import { APP_NAME } from 'appConfig'
-import { getNoteText } from 'lib/Utils/Tools'
+import { getNoteText, parseSong } from 'lib/Utils/Tools'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
 import { ThemeStore } from 'stores/ThemeStore'
-import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong'
 import { SerializedSongType } from 'types/SongTypes'
-import { SerializedSong, Song } from 'lib/Utils/Song'
+import { Song } from 'lib/Utils/Song'
 import { RecordedNote } from 'lib/Utils/SongClasses'
 import { AppButton } from 'components/AppButton'
+import LoggerStore from 'stores/LoggerStore'
 
 const THRESHOLDS = {
     joined: 50,
@@ -50,39 +50,43 @@ export default function SheetVisualizer() {
     }
     function handleClick(song: SerializedSongType) {
         setCurrentSong(song)
-        const lostReference = song.data.isComposedVersion 
-            ? ComposedSong.deserialize(song as SerializedComposedSong).toSong()
-            : Song.deserialize(song as SerializedSong)
-
-        const notes = lostReference.notes
-        const chunks: Chunk[] = []
-        let previousChunkDelay = 0
-        let sheetText = ''
-        for (let i = 0; notes.length > 0; i++) {
-            const chunk = new Chunk([notes.shift() as RecordedNote])
-            const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
-            for (let j = 0; j < notes.length && j < 20; j++) {
-                let difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
-                if (difference < 0) {
-                    chunk.notes.push(notes.shift() as RecordedNote)
-                    j--
+        try{
+            const temp = parseSong(song)
+            const lostReference = temp instanceof Song ? temp : temp.toSong()
+            const notes = lostReference.notes
+            const chunks: Chunk[] = []
+            let previousChunkDelay = 0
+            let sheetText = ''
+            for (let i = 0; notes.length > 0; i++) {
+                const chunk = new Chunk([notes.shift() as RecordedNote])
+                const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
+                for (let j = 0; j < notes.length && j < 20; j++) {
+                    let difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
+                    if (difference < 0) {
+                        chunk.notes.push(notes.shift() as RecordedNote)
+                        j--
+                    }
+                }
+                chunk.delay = previousChunkDelay
+                previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
+                const emptyChunks = Math.floor(chunk.delay / THRESHOLDS.pause)
+                chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
+                chunks.push(chunk)
+                sheetText += emptyChunks > 2 ? ' \n\n' : "- ".repeat(emptyChunks)
+                if (chunk.notes.length > 1) {
+                    const text = chunk.notes.map(e => getChunkNoteText(e[0])).join('')
+                    sheetText += APP_NAME === "Genshin" ? `[${text}] ` : `${text} `
+                } else if (chunk.notes.length > 0) {
+                    sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
                 }
             }
-            chunk.delay = previousChunkDelay
-            previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
-            const emptyChunks = Math.floor(chunk.delay / THRESHOLDS.pause)
-            chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
-            chunks.push(chunk)
-            sheetText += emptyChunks > 2 ? ' \n\n' : "- ".repeat(emptyChunks)
-            if (chunk.notes.length > 1) {
-                const text = chunk.notes.map(e => getChunkNoteText(e[0])).join('')
-                sheetText += APP_NAME === "Genshin" ? `[${text}] ` : `${text} `
-            } else if (chunk.notes.length > 0) {
-                sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
-            }
+            setSongAstext(sheetText)
+            setSheet(chunks)
+        }catch(e){
+            console.error(e)
+            LoggerStore.error('Error visualizing song')
         }
-        setSongAstext(sheetText)
-        setSheet(chunks)
+
         Analytics.songEvent({type:'visualize'})
     }
 

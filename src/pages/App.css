@@ -64,10 +64,7 @@ body {
 .keys-table :nth-child(2) {
 	width: 100%;
 }
-.column {
-	display: flex;
-	flex-direction: column;
-}
+
 input {
 	accent-color: var(--accent);
 }
@@ -133,8 +130,12 @@ body {
 	filter: brightness(1.1);
 }
 .app-button.active {
-	background-color: var(--accent);
-	color: var(--accent-text);
+	background-color: var(--accent) !important;
+	color: var(--accent-text) !important;
+}
+.app-button:disabled{
+	filter: brightness(0.8);
+	cursor: not-allowed;
 }
 .selected {
 	transition: all 0.3s;

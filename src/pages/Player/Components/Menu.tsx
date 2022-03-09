@@ -3,7 +3,7 @@ import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaS
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, prepareSongImport } from "lib/Utils/Tools"
+import { FileDownloader, parseSong } from "lib/Utils/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { SongStore } from 'stores/SongStore'
 import { HelpTab } from 'components/HelpTab'
@@ -135,7 +135,7 @@ function Menu({ functions, data }: MenuProps) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSongType[]
                 for (const song of songs) {
-                    addSong(prepareSongImport(song))
+                    addSong(parseSong(song))
                     Analytics.userSongs('import', { name: song?.name, page: 'player' })
                 }
             } catch (e) {
@@ -279,7 +279,7 @@ function Menu({ functions, data }: MenuProps) {
                 <div>
                     Here you can find songs to learn, they are provided by the sky-music library.
                 </div>
-                <div className='library-search-row' style={{}} >
+                <div className='library-search-row' >
                     <input
                         className='library-search-input'
                         style={{ backgroundColor: layer1Color.toString() }}

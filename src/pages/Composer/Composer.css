@@ -162,14 +162,6 @@ select{
     justify-content: space-between;
     align-items: center;
 }
-.tools-row button{
-    color: white;
-    border-radius: 0.2rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    cursor: pointer;
-    background-color: var(--accent);
-}
 .tools-buttons-wrapper button:hover{
     filter: brightness(1.1);
   }

@@ -22,5 +22,5 @@ export default memo(MenuItem, (prev, next) => {
     //@ts-ignore
     if (next.children.key !== null || prev.children.key !== null) return prev.children.key === next.children.key
     //@ts-ignore
-    return prev.children !== undefined && prev.className === next.className
+    return prev.children !== undefined && prev.className === next.className && prev.action === next.action
 }) as typeof MenuItem

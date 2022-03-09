@@ -3,7 +3,7 @@ import Keyboard from "./Keyboard"
 import Menu from "./Components/Menu"
 import { DB } from 'Database';
 import { SongStore } from 'stores/SongStore'
-import { prepareSongImport, getPitchChanger } from "lib/Utils/Tools"
+import { parseSong, getPitchChanger } from "lib/Utils/Tools"
 import { SerializedSong, Song } from 'lib/Utils/Song';
 import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
 import { Recording } from 'lib/Utils/SongClasses';
@@ -137,16 +137,21 @@ class Player extends Component<any,PlayerState>{
 	handleDrop = async (e: DragEvent) => {
 		this.resetDrag()
 		e.preventDefault()
-		const files = await Promise.all(Array.from(e.dataTransfer?.files || []).map(file => file.text()))
 		try {
+			const files = await Promise.all(Array.from(e.dataTransfer?.files || []).map(file => file.text()))
 			for (let i = 0; i < files.length; i++) {
 				const songs = JSON.parse(files[i])
-				for (let j = 0; j < songs.length; j++) {
-					await this.addSong(prepareSongImport(songs[j]))
+				const parsed = Array.isArray(songs) ? songs : [songs]
+				for (let j = 0; j < parsed.length; j++) {
+					await this.addSong(parseSong(parsed[j]))
 				}
 			}
 		} catch (e) {
 			console.error(e)
+			LoggerStore.error(
+				`Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
+				8000
+			)
 		}
 
 	}

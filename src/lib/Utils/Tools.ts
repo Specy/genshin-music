@@ -1,5 +1,4 @@
 import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType } from "appConfig"
-import LoggerStore from "stores/LoggerStore";
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
@@ -76,24 +75,20 @@ class Array2d{
 	}
 }
 
-function prepareSongImport(song: any): Song | ComposedSong {
+function parseSong(song: any): Song | ComposedSong {
 	if (Array.isArray(song) && song.length > 0) song = song[0]
 	const type = getSongType(song)
 	if (type === "none") {
-		//TODO maybe not the best place to have these
-		LoggerStore.error("Invalid song")
 		throw new Error("Error Invalid song")
 	}
 	if (type === "oldSky") {
 		const parsed = Song.fromOldFormat(song)
 		if(parsed === null) {
-			LoggerStore.error("Invalid song")
 			throw new Error("Error Invalid song")
 		}
 		return parsed
 	}
 	if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
-		LoggerStore.error("Invalid song")
 		throw new Error("Error Invalid song")
 	}
 	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {  
@@ -217,7 +212,7 @@ export {
 	FileDownloader,
 	getPitchChanger,
 	getSongType,
-	prepareSongImport,
+	parseSong,
 	groupByNotes,
 	numberToLayer,
 	mergeLayers,

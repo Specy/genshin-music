@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
 import { FaTrash, FaDownload } from 'react-icons/fa';
 import { DB } from 'Database';
-import { FileDownloader } from "lib/Utils/Tools"
+import { FileDownloader, parseSong } from "lib/Utils/Tools"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { APP_NAME } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
 import LoggerStore from 'stores/LoggerStore';
 import { SongMenu } from 'components/SongMenu';
 import { SerializedSongType } from 'types/SongTypes';
-import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
-import { SerializedSong, Song } from 'lib/Utils/Song';
+
 
 import './ErrorPage.css'
 import { AppButton } from 'components/AppButton';
@@ -42,14 +41,18 @@ export function ErrorPage() {
         LoggerStore.success("Settings have been reset")
     }
     const downloadSong = (song: SerializedSongType) => {
-        const songName = song.name
-        const parsed = song.data.isComposedVersion
-            ? ComposedSong.deserialize(song as SerializedComposedSong)
-            : Song.deserialize(song as SerializedSong)
-        const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
-        const json = JSON.stringify(converted)
-        FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
-        LoggerStore.success("Song downloaded")
+        try{
+            const songName = song.name
+            const parsed = parseSong(song)
+            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
+            const json = JSON.stringify(converted)
+            FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
+            LoggerStore.success("Song downloaded")
+        }catch(e){
+            console.error(e)
+            LoggerStore.error('Error downloading song')
+        }
+
     }
     return <div className="default-page error-page">
         <SimpleMenu />

@@ -39,10 +39,11 @@ interface ComposerState{
     settings: ComposerSettingsDataType
     menuOpen: boolean
     layer: LayerType
-    toolsColumns: number[]
+    selectedColumns: number[]
     toolsVisible: boolean
     midiVisible: boolean
     isRecordingAudio: boolean
+    copiedColumns: Column[]
 }
 class Composer extends Component<any,ComposerState>{
     state: ComposerState
@@ -55,7 +56,6 @@ class Composer extends Component<any,ComposerState>{
     recorder: AudioRecorder
     MIDISettings: typeof MIDISettings
     mounted: boolean
-    copiedColumns: Column[]
     changes: number
     constructor(props: any) {
         super(props)
@@ -69,10 +69,11 @@ class Composer extends Component<any,ComposerState>{
             settings: settings,
             menuOpen: false,
             layer: 1,
-            toolsColumns: [],
+            selectedColumns: [],
             toolsVisible: false,
             midiVisible: false,
-            isRecordingAudio: false
+            isRecordingAudio: false,
+            copiedColumns: []
         }
         this.audioContext = AUDIO_CONTEXT
         this.recorder = new AudioRecorder()
@@ -84,7 +85,6 @@ class Composer extends Component<any,ComposerState>{
             settings.layer3.value
         ]
         this.mounted = false
-        this.copiedColumns = []
         this.changes = 0
         this.broadcastChannel = null
         this.MIDIAccess = null
@@ -586,7 +586,7 @@ class Composer extends Component<any,ComposerState>{
         this.setState({
             song: parsed,
             settings,
-            toolsColumns: []
+            selectedColumns: []
         })
     }
 
@@ -671,17 +671,17 @@ class Composer extends Component<any,ComposerState>{
         this.props.history.push(page)
     }
     selectColumn = (index: number, ignoreAudio?: boolean) => {
-        const { song, toolsVisible, instrument, layers } = this.state
-        let toolsColumns = this.state.toolsColumns
+        const { song, toolsVisible, instrument, layers, copiedColumns } = this.state
+        let selectedColumns = this.state.selectedColumns
         if (index < 0 || index > song.columns.length - 1) return
         song.selected = index
-        if (toolsVisible && this.copiedColumns.length === 0) {
-            toolsColumns.push(index)
-            const min = Math.min(...toolsColumns)
-            const max = Math.max(...toolsColumns)
-            toolsColumns = new Array(max - min + 1).fill(0).map((e, i) => min + i)
+        if (toolsVisible && copiedColumns.length === 0) {
+            selectedColumns.push(index)
+            const min = Math.min(...selectedColumns)
+            const max = Math.max(...selectedColumns)
+            selectedColumns = new Array(max - min + 1).fill(0).map((e, i) => min + i)
         }
-        this.setState({ song, toolsColumns })
+        this.setState({ song, selectedColumns })
         if (ignoreAudio) return
         song.selectedColumn.notes.forEach(note => {
             if (note.isLayerToggled(0)) this.playSound(instrument, note.index)
@@ -696,45 +696,50 @@ class Composer extends Component<any,ComposerState>{
     toggleTools = () => {
         this.setState({
             toolsVisible: !this.state.toolsVisible,
-            toolsColumns: this.state.toolsVisible ? [] : [this.state.song.selected]
+            selectedColumns: this.state.toolsVisible ? [] : [this.state.song.selected],
+            copiedColumns: []
         })
-        this.copiedColumns = []
+    }
+    resetSelection = () => {
+        this.setState({copiedColumns: [], selectedColumns: []})
     }
     copyColumns = (layer: LayerType | 'all') => {
-        this.copiedColumns = []
-        this.state.toolsColumns.forEach((index) => {
+        const { selectedColumns } = this.state
+        let copiedColumns: Column[] = []
+        selectedColumns.forEach((index) => {
             const column = this.state.song.columns[index]
-            if (column !== undefined) this.copiedColumns.push(column.clone())
+            if (column !== undefined) copiedColumns.push(column.clone())
         })
         if (layer !== 'all') {
-            this.copiedColumns = this.copiedColumns.map(column => {
+            copiedColumns = copiedColumns.map(column => {
                 column.notes = column.notes.filter(e => e.layer[layer - 1] === '1')
                 column.notes = column.notes.map(e => {
                     e.layer = '000'
-                    e.setLayer(layer as LayerIndex, '1')
+                    e.setLayer(layer - 1 as LayerIndex, '1')
                     return e
                 })
                 return column
             })
         }
-        this.setState({ toolsColumns: [] })
+        this.changes++
+        this.setState({ selectedColumns: [], copiedColumns })
     }
     pasteColumns = async (insert: boolean) => {
-        const song = this.state.song
-        const copiedColumns: Column[] = this.copiedColumns.map(column => column.clone())
+        const { song, copiedColumns } = this.state
+        const cloned: Column[] = copiedColumns.map(column => column.clone())
         if (!insert) {
             song.columns.splice(song.selected, 0, ...copiedColumns)
         } else {
-            copiedColumns.forEach((copiedColumn, i) => {
+            cloned.forEach((clonedColumn, i) => {
                 const column = song.columns[song.selected + i]
                 if (column !== undefined) {
-                    copiedColumn.notes.forEach(copiedNote => {
-                        const index = column.notes.findIndex(note => copiedNote.index === note.index)
+                    clonedColumn.notes.forEach(clonedNote => {
+                        const index = column.notes.findIndex(note => clonedNote.index === note.index)
                         if (index < 0) {
-                            column.notes.push(copiedNote)
+                            column.notes.push(clonedNote)
                         } else {
                             for (let j = 0; j < 3; j++) {
-                                if (copiedNote.layer[j] === '1') {
+                                if (clonedNote.isLayerToggled(j as LayerIndex)) {
                                     column.notes[index].setLayer(j as LayerIndex, '1')
                                 }
                             }
@@ -743,12 +748,14 @@ class Composer extends Component<any,ComposerState>{
                 }
             })
         }
+        this.changes++
         this.setState({ song })
     }
     eraseColumns = (layer: LayerType | 'all') => {
-        const { song, toolsColumns } = this.state
-        song.eraseColumns(toolsColumns, layer)
-        this.setState({ song })
+        const { song, selectedColumns } = this.state
+        song.eraseColumns(selectedColumns, layer)
+        this.changes++
+        this.setState({ song, selectedColumns: [] })
     }
     validateBreakpoints = () => {
         const { song } = this.state
@@ -756,14 +763,15 @@ class Composer extends Component<any,ComposerState>{
         this.setState({ song })
     }
     deleteColumns = async () => {
-        const { song } = this.state
-        song.columns = song.columns.filter((e, i) => !this.state.toolsColumns.includes(i))
+        const { song, selectedColumns } = this.state
+        song.columns = song.columns.filter((e, i) => !selectedColumns.includes(i))
         if (song.selected > song.columns.length - 1) song.selected = song.columns.length - 1
         if (song.selected <= 0) song.selected = 0
         if (song.columns.length === 0) await this.addColumns(12, 0)
+        this.changes++
         this.setState({
             song,
-            toolsColumns: []
+            selectedColumns: []
         }, this.validateBreakpoints)
     }
     changeMidiVisibility = (visible: boolean) => {
@@ -772,7 +780,7 @@ class Composer extends Component<any,ComposerState>{
     }
     render() {
         const { state } = this
-        const { midiVisible, song, isPlaying } = state
+        const { midiVisible, song, isPlaying, copiedColumns } = state
         //TODO export the menu outside this component so it doesnt get re rendered at every change
         const songLength = calculateLength(song.columns, state.settings.bpm.value, song.selected)
         const menuData = {
@@ -817,11 +825,11 @@ class Composer extends Component<any,ComposerState>{
             selected: song.selected,
             settings: state.settings,
             breakpoints: state.song.breakpoints,
-            toolsColumns: state.toolsColumns
+            toolsColumns: state.selectedColumns
         }
         const toolsData = {
             visible: this.state.toolsVisible,
-            copiedColumns: this.copiedColumns,
+            copiedColumns: copiedColumns,
             layer: this.state.layer
         }
         const toolsFunctions = {
@@ -829,7 +837,8 @@ class Composer extends Component<any,ComposerState>{
             eraseColumns: this.eraseColumns,
             deleteColumns: this.deleteColumns,
             copyColumns: this.copyColumns,
-            pasteColumns: this.pasteColumns
+            pasteColumns: this.pasteColumns,
+            resetSelection: this.resetSelection
         }
         const midiParserFunctions = {
             loadSong: this.loadSong,

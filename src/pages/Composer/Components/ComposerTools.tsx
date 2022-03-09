@@ -1,3 +1,4 @@
+import { AppButton } from "components/AppButton"
 import { useTheme } from "lib/hooks/useTheme"
 import { Column } from "lib/Utils/SongClasses"
 import { LayerType } from "types/GeneralTypes"
@@ -13,13 +14,14 @@ interface ComposerToolsProps{
         eraseColumns: (layer: LayerType | 'all') => void
         pasteColumns: (insert: boolean) => void
         deleteColumns: () => void
+        resetSelection: () => void
     }
 }
 
 export default function ComposerTools({ data, functions }: ComposerToolsProps) {
     const [theme] = useTheme()
-    const { toggleTools, copyColumns, eraseColumns, pasteColumns, deleteColumns } = functions
-    const { visible, copiedColumns } = data
+    const { toggleTools, copyColumns, eraseColumns, pasteColumns, deleteColumns, resetSelection } = functions
+    const { visible, copiedColumns, layer } = data
     const hasCopiedColumns = copiedColumns.length > 0
     const themeStyle = {
         backgroundColor: theme.layer('primary',0.2).toString()
@@ -27,11 +29,21 @@ export default function ComposerTools({ data, functions }: ComposerToolsProps) {
     return <div className={visible ? "floating-tools tools-visible" : "floating-tools"}>
         <div className="tools-row">
             <div>
-                Scroll to the left / right to select the columns
+                Scroll to select the columns
             </div>
-            <button onClick={toggleTools}>
-                Close
-            </button>
+            <div className='row'>
+                <AppButton 
+                    visible={hasCopiedColumns} 
+                    toggled={hasCopiedColumns} 
+                    onClick={resetSelection}
+                    style={{...themeStyle, marginRight: '0.2rem'}}
+                >
+                    Reset
+                </AppButton>
+                <AppButton onClick={toggleTools} style={themeStyle}>
+                    Close
+                </AppButton>
+            </div>
         </div>
         <div className="tools-buttons-wrapper">
             <div className='tools-half'>
@@ -45,11 +57,11 @@ export default function ComposerTools({ data, functions }: ComposerToolsProps) {
                 </ToolButton>
                 <ToolButton
                     disabled={hasCopiedColumns}
-                    onClick={() => copyColumns(data.layer)}
+                    onClick={() => copyColumns(layer)}
                     active={hasCopiedColumns}
                     style={themeStyle}
                 >
-                   {`Copy layer ${data.layer}`}
+                   {`Copy layer ${layer}`}
                 </ToolButton>
             </div>
             <div className='tools-half'>
@@ -78,10 +90,10 @@ export default function ComposerTools({ data, functions }: ComposerToolsProps) {
                 </ToolButton>
                 <ToolButton
                     disabled={hasCopiedColumns}
-                    onClick={() => eraseColumns(data.layer)}
+                    onClick={() => eraseColumns(layer)}
                     style={themeStyle}
                 >
-                    {`Erase layer ${data.layer}`}
+                    {`Erase layer ${layer}`}
                 </ToolButton>
             </div>
 
