@@ -41,7 +41,7 @@
 }
 .note-sky,
 .note-composer-sky {
-	border-radius: 1.5vw;
+	border-radius: 1.3vw;
 	border: 0.4vw solid var(--note-background);
     transform-origin: 50% 50%;
 	transition: all 0.1s;
@@ -253,7 +253,7 @@
 	.note-sky {
 		width: 8.5vw;
 		height: 8.5vw;
-		border-radius: 2vw;
+		border-radius: 1.8vw;
 	}
 	.note-name-sky {
 		font-size: 0.8rem;

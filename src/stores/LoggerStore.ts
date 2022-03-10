@@ -5,30 +5,36 @@ interface LoggerDataProps{
     visible: boolean,
     text: string,
     title: string
+    timeout: number
 }
 type LoggerData = {
     data: LoggerDataProps
 }
 class LoggerStore {
     state: LoggerData
+    timeout: any
     constructor() {
         this.state = observable({
             data: {
                 timestamp: 0,
                 visible: false,
                 text: "Text",
-                title: "Title"
+                title: "Title",
+                timeout: 3000
             }
         })
+        this.timeout = undefined
     }
     log = (status: string, text: string, timeout: number = 3500) => {
         this.state.data = {
             title: status,
             text,
             timestamp: new Date().getTime(),
-            visible: true
+            visible: true,
+            timeout
         }
-        setTimeout(this.close, timeout)
+        if(this.timeout !== undefined) clearTimeout(this.timeout)
+        this.timeout = setTimeout(this.close, timeout)
     }
     error = (text: string, timeout?: number) => {
         this.log('Error', text, timeout)

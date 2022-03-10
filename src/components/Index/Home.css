@@ -29,6 +29,57 @@
 		transform: scale(1);
 	}
 }
+
+.logger {
+	position: fixed;
+	margin-left: auto;
+	margin-right: auto;
+	bottom: -20rem;
+	width: 50vw;
+	min-height: 8rem;
+	border-radius: 0.5rem;
+	border: solid 2px var(--secondary);
+	background-color: var(--primary);
+	color: var(--primary-text);
+	z-index: 999;
+	transition: all 0.6s;
+	display: flex;
+	flex-direction: column;
+	opacity: 0;
+	transform: scale(0.8);
+}
+
+.logger-content{
+	display: flex;
+	flex: 1;
+	padding: 1rem;
+}
+
+.logger-visible {
+	bottom: 1rem;
+	opacity: 1;
+	transform: scale(1);
+}
+.logger-progress-bar-base{
+	height: 6px;
+	width: 100%;
+	border-bottom-left-radius: 4px;
+	background-color: var(--accent);
+}
+.logger-progress-bar-visible{
+	width: 0% !important;
+}
+.logger-title {
+	margin-top: -0.5rem;
+	display: flex;
+	justify-content: center;
+	padding-bottom: 0.2rem;
+}
+.logger-text {
+	flex: 1;
+	white-space: pre-line;
+}
+
 .home-visible {
 	opacity: 1;
 	backdrop-filter: blur(4px);
