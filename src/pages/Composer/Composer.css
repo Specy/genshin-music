@@ -265,8 +265,8 @@ select{
 }
 .layer-2, .layer-2 .genshin-border{
     border-color: #d75c5c !important;
-    fill: #f06868 !important;
-    stroke: #f06868 !important;
+    fill: #d75c5c !important;
+    stroke: #d75c5c !important;
 }
 .note-composer.layer-3 .svg-note{
     fill: #f2ecec !important;

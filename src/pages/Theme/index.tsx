@@ -127,7 +127,7 @@ function ThemePage() {
                     onChange={handleChange}
                     setSelectedProp={setSelectedProp}
                     handlePropReset={handlePropReset}
-                    modified={e.value !== theme.baseTheme.data[e.name].value}
+                    modified={!theme.isDefault(e.name)}
                 />
             )}
             <ThemeInput

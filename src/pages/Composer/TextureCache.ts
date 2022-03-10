@@ -1,7 +1,9 @@
 import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "appConfig"
 import Color from "color"
-import { Application, Graphics, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
+import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
+import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
 
+settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
 interface ComposerCacheProps {
     width: number
@@ -78,6 +80,7 @@ export class ComposerCache {
             const g = new Graphics()
             if (note[0] === "1") { //layer 1
                 g.beginFill(new Color(noteData.background).rgbNumber())
+                .lineStyle(1, new Color(noteData.background).rgbNumber())
                     .drawRoundedRect(
                         this.margin / 2 - 0.25,
                         this.margin / 2,
@@ -87,17 +90,14 @@ export class ComposerCache {
                     ).endFill()
             }
             if (note[1] === "1") { //layer 2
-                g.lineStyle({
-                    width: this.margin === 4 ? 3 : 2,
-                    color: new Color(noteData.border).rgbNumber()
-                })
+                g.lineStyle(this.margin === 4 ? 3 : 2,new Color(noteData.border).rgbNumber())
                     .drawRoundedRect(
                         this.margin / 2 - 0.25,
                         this.margin / 2,
                         Math.ceil(this.noteWidth - this.margin),
                         Math.ceil(this.noteHeight - this.margin),
                         radius
-                    ).endFill().lineStyle()
+                    ).endFill()//.lineStyle()
             }
             if (note[2] === "1") { //layer 3
                 g.beginFill(new Color(noteData.center).rgbNumber())
@@ -109,12 +109,9 @@ export class ComposerCache {
             }
             if (note[3] === "1") { //layer 4
                 const lineWidth = this.margin === 4 ? 3 : 2
-                g.lineStyle({
-                    width: lineWidth,
-                    color: new Color(noteData.border).rgbNumber()
-                })
+                g.lineStyle(lineWidth, new Color(noteData.border).rgbNumber())
                     .moveTo(this.margin / 2 + 0.5, this.noteHeight / 2)
-                    .lineTo(this.noteWidth - this.margin, this.noteHeight / 2)
+                    .lineTo(this.noteWidth - this.margin + 0.5, this.noteHeight / 2)
                     .endFill()
             }
             const texture = this.app.renderer.generateTexture(g, {
@@ -177,15 +174,10 @@ export class ComposerCache {
 
         g.beginFill(data.color)
         g.drawRect(0, 0, this.width, this.height)
-        g.lineStyle({
-            color: borderWidth === 2 ? 0x333333 : 0x333333,
-            width: borderWidth
-        }).moveTo(this.width, 0)
+        g.lineStyle(borderWidth, borderWidth === 2 ? 0x333333 : 0x333333)
+            .moveTo(this.width, 0)
             .lineTo(this.width, this.height)
-        g.lineStyle({
-            color: 0x333333,
-            width: 1
-        })
+        g.lineStyle(1,0x333333)
         for (let i = 1; i < 3; i++) {
             const y = this.noteHeight * horizontalLineBreak * i
             g.moveTo(0, y)

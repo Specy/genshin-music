@@ -5,6 +5,8 @@ import SvgNote from 'components/SvgNotes'
 import { ThemeStore } from 'stores/ThemeStore'
 import { observe } from 'mobx'
 import { NoteImages } from 'types/Keyboard'
+import { NoteData } from 'lib/Instrument'
+import { CombinedLayer, InstrumentKeys } from 'types/GeneralTypes'
 
 function getTextColor(){
     const noteBg = ThemeStore.get('note_background')
@@ -20,15 +22,14 @@ function getTextColor(){
 }
 
 interface ComposerNoteProps{
-    data: any
-    layers: string
-    instrument: string
-    clickAction: (data: any) => void
+    data: NoteData
+    layer: CombinedLayer
+    instrument: InstrumentKeys
+    clickAction: (data: NoteData) => void
     noteText: string
     noteImage: NoteImages
-
 }
-export default memo(function ComposerNote({ data, layers, instrument, clickAction, noteText, noteImage }: ComposerNoteProps) {
+export default memo(function ComposerNote({ data, layer, instrument, clickAction, noteText, noteImage }: ComposerNoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
         const dispose = observe(ThemeStore.state.data,() => {
@@ -38,17 +39,17 @@ export default memo(function ComposerNote({ data, layers, instrument, clickActio
     },[])
 
     let className = NOTES_CSS_CLASSES.noteComposer
-    if (layers[0] === "1") className += " layer-1"
-    if (layers[1] === "1") className += " layer-2"
-    if (layers[2] === "1") className += " layer-3"
-    if (layers[3] === "1") className += " layer-4"
-    let layer3Class = "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"
+    if (layer[0] === "1") className += " layer-1"
+    if (layer[1] === "1") className += " layer-2"
+    if (layer[2] === "1") className += " layer-3"
+    if (layer[3] === "1") className += " layer-4"
+
+    const layer3Class = "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"
     return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
         <div className={className} >
             <SvgNote
                 name={noteImage}
-                //@ts-ignore
-                color={INSTRUMENTS_DATA[instrument]?.fill}
+                color={ThemeStore.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
             />
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 fill={ThemeStore.layer('note_background',0.13).desaturate(0.6).toString()}
@@ -69,6 +70,6 @@ export default memo(function ComposerNote({ data, layers, instrument, clickActio
     </button>
 }, (p, n) => {
     return p.noteText === n.noteText && p.clickAction === n.clickAction && p.noteImage === n.noteImage
-        && p.noteText === n.noteText && p.layers === n.layers && p.instrument === n.instrument
+        && p.noteText === n.noteText && p.layer === n.layer && p.instrument === n.instrument
 }) 
 

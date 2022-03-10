@@ -1375,17 +1375,17 @@
   "resolved" "https://registry.npmjs.org/@pixi/compressed-textures/-/compressed-textures-6.2.2.tgz"
   "version" "6.2.2"
 
-"@pixi/constants@6.2.2":
+"@pixi/constants@^6.0.4", "@pixi/constants@6.2.2":
   "integrity" "sha512-BKSoj/5SI+pQEatuCG5kXXWtCZmZZNMhfhXeqvYO/WNZ+LDxm6F4pllf0t7KjGs1ZBpNxVf6fyngF9Q5r3MgJQ=="
   "resolved" "https://registry.npmjs.org/@pixi/constants/-/constants-6.2.2.tgz"
   "version" "6.2.2"
 
-"@pixi/core@6.2.2":
+"@pixi/core@^6.0.4", "@pixi/core@6.2.2":
   "integrity" "sha512-XAqgdJ1w9k1ZUBXECm19rcnN2ngm+tOP74HkGw4qQay0biM3JS+wtX4fWQmZNGr8krf6lJrNbsghbtUy70uUaw=="
   "resolved" "https://registry.npmjs.org/@pixi/core/-/core-6.2.2.tgz"
   "version" "6.2.2"
 
-"@pixi/display@6.2.2":
+"@pixi/display@^6.0.4", "@pixi/display@6.2.2":
   "integrity" "sha512-8a0R+9rjlUUjb13nBA6ZNj9gygJqt38B63uIZ2inkhxpIQf0CLo2hNxkqCqXiMeRuGmOw1n6neEDMnHO1Ks+xA=="
   "resolved" "https://registry.npmjs.org/@pixi/display/-/display-6.2.2.tgz"
   "version" "6.2.2"
@@ -1425,7 +1425,12 @@
   "resolved" "https://registry.npmjs.org/@pixi/filter-noise/-/filter-noise-6.2.2.tgz"
   "version" "6.2.2"
 
-"@pixi/graphics@6.2.2":
+"@pixi/graphics-smooth@^0.0.22":
+  "integrity" "sha512-qq2u+BJBIDBuuSTc2Xzm1D/8RiiKBdxnVDiMb7Go5v8achnV5ctC6m+rf8Mq0sWm66mbOqu1aq/9efT4A4sPrA=="
+  "resolved" "https://registry.npmjs.org/@pixi/graphics-smooth/-/graphics-smooth-0.0.22.tgz"
+  "version" "0.0.22"
+
+"@pixi/graphics@^6.0.4", "@pixi/graphics@6.2.2":
   "integrity" "sha512-mQyd6ef6/EF5nt7M1OObBEb9FCXxIP6AT30H01Z2wnnCgu4qj8MHrJxTkQxSHynQ+eVVPswzpVizUQZHlIYZNw=="
   "resolved" "https://registry.npmjs.org/@pixi/graphics/-/graphics-6.2.2.tgz"
   "version" "6.2.2"
@@ -1440,7 +1445,7 @@
   "resolved" "https://registry.npmjs.org/@pixi/loaders/-/loaders-6.2.2.tgz"
   "version" "6.2.2"
 
-"@pixi/math@6.2.2":
+"@pixi/math@^6.0.4", "@pixi/math@6.2.2":
   "integrity" "sha512-TtsaooRRMc/WAZ4LKUDhP/d14BZElLjRNa2gopwTKUtrDa1KvzAMr8WJ8P+gaXl4DJ8B/MlgESdPhRUqVSUw0A=="
   "resolved" "https://registry.npmjs.org/@pixi/math/-/math-6.2.2.tgz"
   "version" "6.2.2"
@@ -1535,7 +1540,7 @@
   "resolved" "https://registry.npmjs.org/@pixi/ticker/-/ticker-6.2.2.tgz"
   "version" "6.2.2"
 
-"@pixi/utils@6.2.2":
+"@pixi/utils@^6.0.4", "@pixi/utils@6.2.2":
   "integrity" "sha512-rpS6QolFuRmm/QcKm5PYHOCkX6okl9a00u2osaMbmPP+l7XLATTxSsFhw64UbSNR+zmzsrhreRFBVFn3tf8K6w=="
   "resolved" "https://registry.npmjs.org/@pixi/utils/-/utils-6.2.2.tgz"
   "version" "6.2.2"

@@ -83,6 +83,10 @@ export class ThemeStoreClass {
         this.state.data[prop] = { ...this.baseTheme.data[prop] }
     }
 
+    isDefault = (name: ThemeKeys) => {
+        return this.state.data[name].value.toLowerCase() === this.baseTheme.data[name].value.toLowerCase()
+    }
+
     isEditable = () => {
         return this.state.editable
     }

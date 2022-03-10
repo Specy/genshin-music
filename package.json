@@ -8,6 +8,7 @@
   "homepage": "./",
   "dependencies": {
     "@inlet/react-pixi": "^6.6.5",
+    "@pixi/graphics-smooth": "^0.0.22",
     "@tonejs/midi": "^2.0.27",
     "@types/color": "^3.0.3",
     "@types/jest": "^27.4.0",

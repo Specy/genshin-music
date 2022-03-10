@@ -77,12 +77,14 @@ function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick
             className={className}
             style={{
                 ...animation,
-                ...(clickColor && note.status === 'clicked' ? { backgroundColor: clickColor } : {})
+                ...(clickColor && note.status === 'clicked' && ThemeStore.isDefault('accent')
+                    ? { backgroundColor: clickColor } : {}
+                )
             }}
         >
             <SvgNote
                 name={noteImage}
-                color={INSTRUMENTS_DATA[instrument]?.fill}
+                color={ThemeStore.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
             />
 
             {APP_NAME === 'Genshin' && <GenshinNoteBorder

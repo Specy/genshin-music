@@ -44,7 +44,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                 } catch (e) { }
                 return <ComposerNote
                     key={note.index}
-                    layers={index >= 0 ? data.currentColumn.notes[index].layer : EMPTY_LAYER}
+                    layer={index >= 0 ? data.currentColumn.notes[index].layer : EMPTY_LAYER}
                     data={note}
                     noteText={noteText}
                     instrument={data.keyboard.instrumentName}

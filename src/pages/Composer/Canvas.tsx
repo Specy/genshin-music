@@ -268,7 +268,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps,Compos
                     backgroundAlpha: 0,
                     antialias: true,
                     autoDensity: true,
-                    resolution: window.devicePixelRatio || 1
+                    resolution: window.devicePixelRatio || 1.4
                 }}
                 key={this.state.width}
                 ref={this.notesStageRef}
