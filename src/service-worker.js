@@ -11,7 +11,7 @@ import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 const APP_NAME = process.env.REACT_APP_NAME
-const CACHE = APP_NAME + "-12.8" //TODO automate this
+const CACHE = APP_NAME + "-12.9" //TODO automate this
 console.log("CACHE Version: ", CACHE)
 clientsClaim();
 

@@ -76,7 +76,7 @@ export class ComposerCache {
             this.cache.standardLarger.push(this.drawColumn(standardColumn, 3))
         })
         layersCombination.forEach(note => {
-            const radius = this.noteWidth > 20 ? 4 : 2
+            const radius = this.noteWidth > 20 ? 3 : 2
             const g = new Graphics()
             if (note[0] === "1") { //layer 1
                 g.beginFill(new Color(noteData.background).rgbNumber())
@@ -97,14 +97,15 @@ export class ComposerCache {
                         Math.ceil(this.noteWidth - this.margin),
                         Math.ceil(this.noteHeight - this.margin),
                         radius
-                    ).endFill()//.lineStyle()
+                    ).endFill()
             }
             if (note[2] === "1") { //layer 3
                 g.beginFill(new Color(noteData.center).rgbNumber())
+                    .lineStyle(1,new Color(noteData.center).rgbNumber())
                     .drawCircle(
                         this.noteWidth / 2 - 0.25,
                         this.noteHeight / 2,
-                        this.noteHeight / 3
+                        this.noteHeight / 3 - 1
                     ).endFill()
             }
             if (note[3] === "1") { //layer 4
