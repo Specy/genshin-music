@@ -1,4 +1,4 @@
-const APP_NAME: 'Sky'| 'Genshin' = process.env.REACT_APP_NAME as 'Sky'| 'Genshin' || ["Sky", "Genshin"][0]
+const APP_NAME: 'Sky'| 'Genshin' = process.env.REACT_APP_NAME as 'Sky'| 'Genshin' || ["Sky", "Genshin"][1]
 const APP_VERSION = '2.5' as const
 
 console.log(`${APP_NAME}-V${APP_VERSION}`)

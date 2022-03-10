@@ -699,6 +699,7 @@ class Composer extends Component<any,ComposerState>{
             if (note.isLayerToggled(0)) this.playSound(instrument, note.index)
             if (note.isLayerToggled(1)) this.playSound(layers[0], note.index)
             if (note.isLayerToggled(2)) this.playSound(layers[1], note.index)
+            if (note.isLayerToggled(3)) this.playSound(layers[2], note.index)
         })
     }
     changeLayer = (layer: LayerType) => {
