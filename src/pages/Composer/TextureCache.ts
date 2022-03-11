@@ -109,7 +109,7 @@ export class ComposerCache {
                     .drawCircle(
                         this.noteWidth / 2 - 0.25,
                         this.noteHeight / 2,
-                        this.noteHeight / 3 - 1
+                        this.noteHeight / 3 - 0.5
                     ).endFill()
             }
             if (note[3] === "1") { //layer 4

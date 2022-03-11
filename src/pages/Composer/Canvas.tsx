@@ -281,7 +281,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 ref={this.notesStageRef}
             >
                 {cache && <Container
-                    anchor={[0.5, 0.5]}
                     x={xPos}
                     interactive={true}
                     pointerdown={(e) => this.handleClick(e, "downStage")}

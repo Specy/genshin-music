@@ -1,11 +1,15 @@
-const APP_NAME: 'Sky'| 'Genshin' = process.env.REACT_APP_NAME as 'Sky'| 'Genshin' || ["Sky", "Genshin"][0]
+const APP_NAME: 'Sky'| 'Genshin' = process.env.REACT_APP_NAME as 'Sky'| 'Genshin' || ["Sky", "Genshin"][1]
 const APP_VERSION = '2.5' as const
 
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? ` - Improved the rendering of the composer to be more sharp and easier to see on mobile
+        - Added 4th layer in the composer
+        - Added more theming in the composer
     `.trim()
     : ` - Improved the rendering of the composer to be more sharp and easier to see on mobile
+        - Added 4th layer in the composer
+        - Added more theming in the composer
     `.trim()
 const LAYERS_INDEXES = [1,2,3,4] as const
 const EMPTY_LAYER = '0000'

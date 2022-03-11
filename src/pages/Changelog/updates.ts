@@ -12,6 +12,8 @@ export const updates: Update[] = [
         date: '2022- 06/03',
         changes: [
             'Improved the rendering of the composer to be more sharp and easier to see on mobile',
+            'Added 4th layer in the composer',
+            'Added theming of more parts of the composer',
             'App rewrite in TypeScript',
         ]
     },

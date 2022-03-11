@@ -33,7 +33,6 @@ export default function ComposerTools({ data, functions }: ComposerToolsProps) {
             </div>
             <div className='row'>
                 <AppButton 
-                    visible={hasCopiedColumns} 
                     toggled={hasCopiedColumns} 
                     onClick={resetSelection}
                     style={{...themeStyle, marginRight: '0.2rem'}}
