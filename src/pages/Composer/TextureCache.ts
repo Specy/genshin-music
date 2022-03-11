@@ -164,7 +164,7 @@ export class ComposerCache {
                     .endFill();
                 const texture = this.app.renderer.generateTexture(g, {
                     scaleMode: SCALE_MODES.LINEAR,
-                    resolution: window.devicePixelRatio || 1
+                    resolution: 2
                 });
                 this.cache.breakpoints.push(texture)
             }

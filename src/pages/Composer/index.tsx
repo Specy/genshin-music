@@ -838,7 +838,7 @@ class Composer extends Component<any,ComposerState>{
             selected: song.selected,
             settings: state.settings,
             breakpoints: state.song.breakpoints,
-            toolsColumns: state.selectedColumns
+            selectedColumns: state.selectedColumns
         }
         const toolsData = {
             visible: this.state.toolsVisible,

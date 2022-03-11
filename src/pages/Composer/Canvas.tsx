@@ -8,9 +8,9 @@ import Memoized from 'components/Memoized';
 import { ThemeStore } from 'stores/ThemeStore';
 import { observe } from 'mobx';
 import { clamp, nearestEven } from 'lib/Utils/Tools';
-import type{ Column, ColumnNote } from 'lib/Utils/SongClasses';
-import type{ Texture } from 'pixi.js';
-import type{ ComposerSettingsDataType } from 'lib/BaseSettings';
+import type { Column, ColumnNote } from 'lib/Utils/SongClasses';
+import type { Texture } from 'pixi.js';
+import type { ComposerSettingsDataType } from 'lib/BaseSettings';
 
 let NumOfColumnsPerCanvas = 35
 
@@ -21,7 +21,7 @@ interface ComposerCanvasProps {
         selected: number,
         settings: ComposerSettingsDataType,
         breakpoints: number[],
-        toolsColumns: number[]
+        selectedColumns: number[]
     }
     functions: {
         selectColumn: (index: number, ignoreAudio?: boolean) => void,
@@ -29,7 +29,7 @@ interface ComposerCanvasProps {
     }
 
 }
-interface ComposerCanvasState{
+interface ComposerCanvasState {
     width: number
     height: number
     column: {
@@ -42,11 +42,12 @@ interface ComposerCanvasState{
         timeline: {
             hex: string
             hexNumber: number
+            selected: number
         }
     }
     cache: ComposerCache | null
 }
-export default class ComposerCanvas extends Component<ComposerCanvasProps,ComposerCanvasState> {
+export default class ComposerCanvas extends Component<ComposerCanvasProps, ComposerCanvasState> {
     state: ComposerCanvasState
     sizes: DOMRect
     notesStageRef: any
@@ -84,7 +85,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps,Compos
             theme: {
                 timeline: {
                     hex: ThemeStore.layer('primary', 0.1).toString(),
-                    hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber()
+                    hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
+                    selected: 0xd6722f
                 }
             },
             cache: null
@@ -129,7 +131,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps,Compos
                 theme: {
                     timeline: {
                         hex: ThemeStore.layer('primary', 0.1).toString(),
-                        hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber()
+                        hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
+                        selected: 0xd6722f
                     }
                 }
             })
@@ -255,7 +258,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps,Compos
         const beatMarks = Number(data.settings.beatMarks.value)
         const counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks
         const relativeColumnWidth = width / data.columns.length
-        let stageSize = Math.floor(relativeColumnWidth * (NumOfColumnsPerCanvas + 1))
+        let stageSize = Math.floor(relativeColumnWidth * NumOfColumnsPerCanvas)
         if (stageSize > width) stageSize = width
         const stagePosition = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
         return <div className="canvas-wrapper" style={{ width: width + 2 }}>
@@ -294,7 +297,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps,Compos
                             index={i}
                             sizes={sizes}
                             backgroundCache={background}
-                            isToolsSelected={data.toolsColumns.includes(i)}
+                            isToolsSelected={data.selectedColumns.includes(i)}
                             onClick={functions.selectColumn}
                             isSelected={i === data.selected}
                             isBreakpoint={data.breakpoints.includes(i)}
@@ -349,13 +352,28 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps,Compos
                             pointerup={(e) => this.handleClick(e, "up")}
                             pointermove={this.handleSlide}
                         >
-                            <Graphics
+                            <Graphics //to fill the space
                                 draw={(g) => {
                                     g.clear()
                                     g.beginFill(theme.timeline.hexNumber)
                                     g.drawRect(0, 0, width, timelineHeight)
                                 }}
                             />
+                            {data.selectedColumns.length 
+                                ? <Graphics
+                                    draw={(g) => {
+                                        const first = data.selectedColumns[0] || 0
+                                        const last = data.selectedColumns[data.selectedColumns.length - 1]
+                                        const x = first * relativeColumnWidth
+                                        const xEnd = last * relativeColumnWidth
+                                        const width = xEnd - x
+                                        g.clear()
+                                        g.beginFill(theme.timeline.selected, 0.6)
+                                        g.drawRect(x, 0,width, timelineHeight)
+                                    }}
+                                />
+                                : null
+                            }
                             {data.breakpoints.map(breakpoint => {
                                 return <Sprite
                                     texture={cache.breakpoints[0]}
@@ -366,14 +384,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps,Compos
                             })}
                         </Container>
                         }
-                        <Graphics
+                        <Graphics //current visible columns
                             draw={(g) => {
                                 g.clear()
                                 g.lineStyle(3, 0x1a968b, 0.8)
-                                g.drawRoundedRect(0, 0, stageSize - 2, timelineHeight - 4, 6)
+                                g.drawRoundedRect(0, 0, stageSize - 6, timelineHeight - 3, 6)
                             }}
                             x={stagePosition}
-                            y={2}
+                            y={1.5}
                         />
                     </Stage>
                 </div>
