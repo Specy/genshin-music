@@ -169,7 +169,8 @@ export class ComposedSong {
             })
             totalTime += Math.floor(bpmPerMs * TEMPO_CHANGERS[column[0]].changer)
         })
-        return convertedNotes
+        song.songNotes = convertedNotes
+        return song
     }
     get selectedColumn(){
         return this.columns[this.selected]

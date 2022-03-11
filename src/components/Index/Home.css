@@ -61,7 +61,7 @@
 	transform: scale(1);
 }
 .logger-progress-bar-base{
-	height: 6px;
+	height: 4px;
 	width: 100%;
 	border-bottom-left-radius: 4px;
 	background-color: var(--accent);
