@@ -113,7 +113,6 @@ function Menu({ functions, data }: MenuProps) {
         setSearchStatus('success')
         setSearchedSongs(fetchedSongs as SearchedSongType[])
         Analytics.songSearch({ name: searchInput })
-
     }
     const toggleMenu = (override?: boolean | null) => {
         if (typeof override !== "boolean") override = null
@@ -130,7 +129,6 @@ function Menu({ functions, data }: MenuProps) {
         Analytics.UIEvent('menu', { tab: selection })
     }
     const importSong = (files: FileElement<SerializedSongType[] | SerializedSongType>[]) => {
-        //TODO change this to the custom file picker
         for (const file of files) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSongType[]

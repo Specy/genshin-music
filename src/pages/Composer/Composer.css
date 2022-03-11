@@ -49,6 +49,7 @@ select {
     text-overflow: ellipsis;
     overflow: hidden;
     max-width: 23vw;
+    text-shadow: rgb(129 129 129) 0px 1px 5px;
 }
 .top-panel-composer{
     display: flex;
@@ -243,6 +244,7 @@ select{
     text-align: center;
     width: 100%;
     color: var(--background-text);
+    text-shadow: rgb(129 129 129) 0px 1px 5px;
     font-size: 0.8rem;
 }
 .note-composer svg{

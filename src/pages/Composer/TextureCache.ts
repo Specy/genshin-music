@@ -13,6 +13,7 @@ interface ComposerCacheProps {
     standardsColors: typeof standards
     app: Application
     breakpointsApp: Application
+    composerAccent: Color
 }
 export class ComposerCache {
     width: number
@@ -34,6 +35,7 @@ export class ComposerCache {
     standardsColors: typeof standards
     app: Application
     breakpointsApp: Application
+    composerAccent: Color
     constructor({
         width,
         height,
@@ -41,7 +43,8 @@ export class ComposerCache {
         timelineHeight = 30,
         standardsColors,
         app,
-        breakpointsApp
+        breakpointsApp,
+        composerAccent
     }: ComposerCacheProps) {
 
         this.cache = {
@@ -61,6 +64,7 @@ export class ComposerCache {
         this.standardsColors = standardsColors || standards
         this.app = app
         this.breakpointsApp = breakpointsApp
+        this.composerAccent = composerAccent
         this.generate()
     }
     destroy = () => {
@@ -129,7 +133,7 @@ export class ComposerCache {
             const g = new Graphics()
             const size = this.timelineHeight / 6
             if (breakpoint.type === "short") {
-                g.beginFill(new Color(breakpoint.color).rgbNumber())
+                g.beginFill(this.composerAccent.rgbNumber())
                 g.drawCircle(
                     size,
                     this.timelineHeight / 2,
@@ -142,22 +146,22 @@ export class ComposerCache {
                 });
                 this.cache.breakpoints.push(texture)
             } else {
-                g.beginFill(new Color(breakpoint.color).rgbNumber())
+                g.beginFill(this.composerAccent.rgbNumber())
                     .moveTo(0, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(0, this.height - this.noteHeight)
                     .endFill();
-                g.beginFill(new Color(breakpoint.color).rgbNumber())
+                g.beginFill(this.composerAccent.rgbNumber())
                     .moveTo(this.width, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(this.width, this.height - this.noteHeight)
                     .endFill();
-                g.beginFill(new Color(breakpoint.color).rgbNumber())
+                g.beginFill(this.composerAccent.rgbNumber())
                     .moveTo(0, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(0, this.noteHeight)
                     .endFill();
-                g.beginFill(new Color(breakpoint.color).rgbNumber())
+                g.beginFill(this.composerAccent.rgbNumber())
                     .moveTo(this.width, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(this.width, this.noteHeight)

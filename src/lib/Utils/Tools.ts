@@ -76,7 +76,6 @@ class Array2d{
 }
 
 function parseSong(song: any): Song | ComposedSong {
-	if (Array.isArray(song) && song.length > 0) song = song[0]
 	const type = getSongType(song)
 	if (type === "none") {
 		throw new Error("Error Invalid song")

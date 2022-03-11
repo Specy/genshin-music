@@ -43,6 +43,7 @@ interface ComposerCanvasState {
             hex: string
             hexNumber: number
             selected: number
+            border: number
         }
     }
     cache: ComposerCache | null
@@ -86,7 +87,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 timeline: {
                     hex: ThemeStore.layer('primary', 0.1).toString(),
                     hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
-                    selected: 0xd6722f
+                    selected:  ThemeStore.get('composer_accent').negate().rgbNumber(),
+                    border: ThemeStore.get('composer_accent').rgbNumber()
                 }
             },
             cache: null
@@ -132,7 +134,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     timeline: {
                         hex: ThemeStore.layer('primary', 0.1).toString(),
                         hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
-                        selected: 0xd6722f
+                        selected:  ThemeStore.get('composer_accent').negate().rgbNumber(),
+                        border: ThemeStore.get('composer_accent').rgbNumber()
                     }
                 }
             })
@@ -171,15 +174,16 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             timelineHeight: timelineHeight,
             app: this.notesStageRef.current.app,
             breakpointsApp: this.breakpointsStageRef.current.app,
+            composerAccent: ThemeStore.get('composer_accent').rotate(20).darken(0.5),
             standardsColors: [
                 {
                     color: colors.l.rgbNumber() //lighter
                 }, {
                     color: colors.d.rgbNumber() //darker
                 }, {
-                    color: 0x1a968b //selected
+                    color: ThemeStore.get('composer_accent').rgbNumber() //current
                 }, {
-                    color: 0xd6722f
+                    color: ThemeStore.get('composer_accent').negate().rgbNumber()
                 }
             ]
         })
@@ -387,7 +391,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         <Graphics //current visible columns
                             draw={(g) => {
                                 g.clear()
-                                g.lineStyle(3, 0x1a968b, 0.8)
+                                g.lineStyle(3, theme.timeline.border, 0.8)
                                 g.drawRoundedRect(0, 0, stageSize - 6, timelineHeight - 3, 6)
                             }}
                             x={stagePosition}
@@ -442,7 +446,7 @@ function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, is
             {(isSelected || isToolsSelected) &&
                 <Sprite
                     texture={isToolsSelected && !isSelected ? cache.standard[3] : cache.standard[2]}
-                    alpha={isToolsSelected ? 0.4 : 0.6}
+                    alpha={isToolsSelected && !isSelected ? 0.4 : 0.8}
                     zIndex={1}
                 />
             }

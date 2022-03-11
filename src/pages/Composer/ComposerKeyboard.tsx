@@ -73,13 +73,18 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     return <button
                         key={tempoChanger.id}
                         onClick={() => functions.handleTempoChanger(tempoChanger)}
-                        style={tempoChanger.changer === 1
+                        style={{
+                            ...(tempoChanger.changer === 1
                             ? {
                                 backgroundColor: ThemeStore.get('primary').toString(),
                                 color: ThemeStore.getText('primary').toString()
                             }
-                            : { backgroundColor: "#" + tempoChanger.color.toString(16) }
-                        }
+                            : { backgroundColor: "#" + tempoChanger.color.toString(16) }),
+                            outline: data.currentColumn.tempoChanger === tempoChanger.id 
+                                ? `4px ${ThemeStore.get('composer_accent').toString()} solid` 
+                                : '',
+                            outlineOffset: '-4px'
+                        }}
                     >
                         {tempoChanger.text}
                     </button>

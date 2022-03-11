@@ -337,6 +337,12 @@ export const ThemeSettings = {
             value: '#63aea7',
             text: BASE_THEME_CONFIG.text.dark
         },
+        composer_accent: {
+            name: 'composer_accent',
+            css: 'composer-accent',
+            value: '#2A8C84',
+            text: BASE_THEME_CONFIG.text.dark
+        },
         icon_color: {
             name: 'icon_color',
             css: 'icon-color',
