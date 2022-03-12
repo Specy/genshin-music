@@ -12,7 +12,6 @@ export default function Switch({checked, onChange}: SwitchProps){
             className={`switch-inner ${checked ? 'switch-inner-on' : ''}`}
             style={{backgroundColor: (checked ? theme.get('accent') : theme.layer('primary',0.4)).toString()}}
         >
-
         </div>
     </div>
 }

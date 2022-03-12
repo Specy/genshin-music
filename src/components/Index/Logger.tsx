@@ -9,9 +9,8 @@ export default function FloatingMessage() {
         })
         return dispose
     }, [])
-    const { title, text, visible, timeout } = data
+    const { title, text, visible, timeout, id, color } = data
     const classes = visible ? "logger logger-visible" : "logger"
-    const barClass = (visible ? "logger-progress-bar-visible" : "") + " logger-progress-bar-base"
     return <div className={classes} onClick={LoggerStore.close}>
         <div className="column logger-content">
             <div className="logger-title">
@@ -21,8 +20,12 @@ export default function FloatingMessage() {
                 {text}
             </div>
             </div>
-        <div className={barClass} style={{transition: `width ${visible ? timeout : 0}ms linear`}}>
-
-        </div>
+        {visible && 
+            <div 
+                className="logger-progress-bar" 
+                style={{animation: `logger-animation ${timeout}ms linear`, backgroundColor: color}}
+                key={id}
+            />
+        }
     </div>
 }

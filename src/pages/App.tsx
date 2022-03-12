@@ -112,7 +112,7 @@ class App extends Component<any>{
 			return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
 		if (APP_VERSION !== storedVersion) {
-			LoggerStore.log("Update V" + APP_VERSION, UPDATE_MESSAGE, 6000)
+			LoggerStore.log("Update V" + APP_VERSION, UPDATE_MESSAGE, 6000 )
 			localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
 		this.updateChecked = true

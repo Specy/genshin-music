@@ -68,15 +68,20 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         }
     }
     initMidi = (e: WebMidi.MIDIAccess) => {
+        const { settings } = this.state
         if (!this.mounted) return
         this.MIDIAccess = e
         this.MIDIAccess.addEventListener('statechange', this.midiStateChange)
         const midiInputs = this.MIDIAccess.inputs.values()
-        const inputs = []
+        const inputs: WebMidi.MIDIInput[] = []
         for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
             inputs.push(input.value)
         }
-        this.setState({ sources: inputs })
+        const selectedSource = inputs.find((input) => {
+            return (input.name + " " + input.manufacturer) === settings.currentSource
+        }) || inputs.length ? inputs[0] : null
+        if(selectedSource) this.selectSource(selectedSource)
+        this.setState({ sources: inputs, selectedSource})
     }
     midiStateChange = () => {
         if (!this.mounted) return
@@ -98,16 +103,20 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
     }
     selectMidi = (e: ChangeEvent<HTMLSelectElement>) => {
         if (!this.mounted) return
-        const { sources, selectedSource, settings } = this.state
+        const { sources, settings } = this.state
         const nextSource = sources.find(s => s.id === e.target.value)
-        //@ts-ignore
-        if (selectedSource) selectedSource.removeEventListener('midimessage', this.handleMidi)
         if (!nextSource) return
-        nextSource.addEventListener('midimessage', this.handleMidi)
+        this.selectSource(nextSource)
         settings.currentSource = nextSource.name + " " + nextSource.manufacturer
         this.setState({ selectedSource: nextSource, settings })
         this.saveLayout()
     }
+    selectSource = (source: WebMidi.MIDIInput) => {
+        const { selectedSource } = this.state
+        //@ts-ignore
+        if (selectedSource) selectedSource.removeEventListener('midimessage', this.handleMidi)
+        source.addEventListener('midimessage', this.handleMidi)
+    } 
     deselectNotes = () => {
         const { settings } = this.state
         settings.notes.forEach(note => {
@@ -205,7 +214,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
     }
 
     render() {
-        const { settings, sources, selectedShortcut } = this.state
+        const { settings, sources, selectedShortcut, selectedSource } = this.state
         return <div className="default-page">
             <SimpleMenu/>
             <div className="default-content" style={{ alignItems: 'center' }}>
@@ -214,7 +223,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                         Select MIDI device:
                         <select
                             className="midi-select"
-                            defaultValue={'None'}
+                            value={selectedSource?.name || 'None'}
                             onChange={this.selectMidi}
                         >
                             <option disabled value={'None'}> None</option>

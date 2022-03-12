@@ -60,14 +60,19 @@
 	opacity: 1;
 	transform: scale(1);
 }
-.logger-progress-bar-base{
+.logger-progress-bar{
 	height: 4px;
-	width: 100%;
+	width: 0%;
 	border-bottom-left-radius: 4px;
 	background-color: var(--accent);
+	animation: logger-animation linear 1s;
 }
-.logger-progress-bar-visible{
-	width: 0% !important;
+@keyframes logger-animation {
+	from{
+		width: 100%;
+	}to{
+		width: 0%;
+	}
 }
 .logger-title {
 	margin-top: -0.5rem;

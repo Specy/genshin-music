@@ -81,9 +81,9 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                             }
                             : { backgroundColor: "#" + tempoChanger.color.toString(16) }),
                             outline: data.currentColumn.tempoChanger === tempoChanger.id 
-                                ? `4px ${ThemeStore.get('composer_accent').toString()} solid` 
+                                ? `3px ${ThemeStore.get('composer_accent').toString()} solid` 
                                 : '',
-                            outlineOffset: '-4px'
+                            outlineOffset: '-3px'
                         }}
                     >
                         {tempoChanger.text}

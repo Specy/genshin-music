@@ -273,7 +273,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 renderOnComponentChange={true}
                 options={{
                     backgroundAlpha: 0,
-                    antialias: true,
                     autoDensity: true,
                     resolution: window.devicePixelRatio || 1.4
                 }}
