@@ -114,6 +114,7 @@ select{
 .timeline-scroll{
     display: flex;
     width: 100%;
+    border-radius: 0.1rem;
 }
 .timeline-thumb{
     height: 100%;
@@ -124,10 +125,8 @@ select{
 }
 .timeline-scroll canvas{
     width: 100% !important;
-    border-radius: 0.3rem;
+    border-radius: 0.1rem;
 }
-
-
 
 .buttons-composer-wrapper, .buttons-composer-wrapper-right{
         display: grid;

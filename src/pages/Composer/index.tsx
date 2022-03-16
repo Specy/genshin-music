@@ -153,7 +153,8 @@ class Composer extends Component<any, ComposerState>{
         }
     }
     componentDidCatch() {
-        this.setState({ song: new ComposedSong("Untitled") })
+        LoggerStore.error("There was an error with the Composer, reloading the page...")
+        this.props.history.push('Composer')
     }
 
     handleUnload = (event: BeforeUnloadEvent) => {
@@ -393,7 +394,7 @@ class Composer extends Component<any, ComposerState>{
                 }
                 case "ArrowDown": {
                     const nextLayer = layer + 1
-                    if (nextLayer < layers.length + 2) this.changeLayer(nextLayer as LayerType)
+                    if (nextLayer < layers.length + 1) this.changeLayer(nextLayer as LayerType)
                     break;
                 }
                 case "KeyQ": this.removeColumns(1, song.selected); break;
