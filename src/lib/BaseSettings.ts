@@ -25,7 +25,7 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 34,
+        settingVersion: APP_NAME + 35,
     },
     data: {
         layer1: {
@@ -68,6 +68,26 @@ export const ComposerSettings: ComposerSettingsType = {
             threshold: [0, 1600],
             value: 220
         },
+        pitch: {
+            name: "Pitch",
+            type: "select",
+            songSetting: true,
+            value: "C",
+            options: [
+                "C",
+                "Db",
+                "D",
+                "Eb",
+                "E",
+                "F",
+                "Gb",
+                "G",
+                "Ab",
+                "A",
+                "Bb",
+                "B",
+            ]
+        },
         beatMarks: {
             name: "Beat marks",
             type: "select",
@@ -101,26 +121,6 @@ export const ComposerSettings: ComposerSettingsType = {
                     "ABC",
                     "No Text"
                 ]
-        },
-        pitch: {
-            name: "Pitch",
-            type: "select",
-            songSetting: true,
-            value: "C",
-            options: [
-                "C",
-                "Db",
-                "D",
-                "Eb",
-                "E",
-                "F",
-                "Gb",
-                "G",
-                "Ab",
-                "A",
-                "Bb",
-                "B",
-            ]
         },
         columnsPerCanvas: {
             name: "Number of visible columns",

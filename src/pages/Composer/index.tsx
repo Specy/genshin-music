@@ -302,10 +302,10 @@ class Composer extends Component<any, ComposerState>{
     }
     changeVolume = (obj: SettingVolumeUpdate) => {
         const settings = this.state.settings
+        const layer = Number(obj.key.split("layer")[1]) - 1 
         //@ts-ignore
         settings[obj.key] = { ...settings[obj.key], volume: obj.value }
-        //@ts-ignore
-        this.state[obj.key].changeVolume(obj.value)
+        this.state.layers[layer].changeVolume(obj.value)
         this.setState({ settings }, this.updateSettings)
     }
     setupAudioDestination = (hasReverb: boolean) => {
@@ -551,11 +551,12 @@ class Composer extends Component<any, ComposerState>{
         settings.bpm = { ...settings.bpm, value: song.bpm }
         settings.pitch = { ...settings.pitch, value: song.pitch }
         if (!this.mounted) return
-        const layres = parsed.instruments
-        layres.forEach((layer, i) => {
+        const layers = parsed.instruments
+        layers.forEach((layer, i) => {
             //@ts-ignore
             if (settings[`layer${i + 1}`].value !== layer) {
-                this.loadInstrument(parsed.instruments[0], 1)
+                //@ts-ignore
+                this.loadInstrument(parsed.instruments[i], i+1)
                 //@ts-ignore
                 settings[`layer${i + 1}`] = { ...settings[`layer${i + 1}`], value: layer }
             }
@@ -681,7 +682,7 @@ class Composer extends Component<any, ComposerState>{
         })
     }
     resetSelection = () => {
-        this.setState({ copiedColumns: [], selectedColumns: [] })
+        this.setState({ copiedColumns: [], selectedColumns: [this.state.song.selected] })
     }
     copyColumns = (layer: LayerType | 'all') => {
         const { selectedColumns } = this.state
@@ -735,7 +736,7 @@ class Composer extends Component<any, ComposerState>{
         const { song, selectedColumns } = this.state
         song.eraseColumns(selectedColumns, layer)
         this.changes++
-        this.setState({ song, selectedColumns: [] })
+        this.setState({ song, selectedColumns: [song.selected] })
     }
     validateBreakpoints = () => {
         const { song } = this.state
@@ -751,7 +752,7 @@ class Composer extends Component<any, ComposerState>{
         this.changes++
         this.setState({
             song,
-            selectedColumns: []
+            selectedColumns: [song.selected]
         }, this.validateBreakpoints)
     }
     changeMidiVisibility = (visible: boolean) => {
