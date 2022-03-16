@@ -1,4 +1,7 @@
-
+.partners-page{
+    padding: 1rem;
+    padding-left: 4rem;
+}
 .partner-wrapper{
     display: flex;
     flex-direction: row;

@@ -3,7 +3,7 @@ import { SimpleMenu } from 'components/SimpleMenu'
 import WindsongDBImg from 'assets/images/partners/windsong-db.jpg'
 
 export default function Partners() {
-    return <div className='default-page'>
+    return <div className='default-page partners-page'>
         <SimpleMenu/>
         <div className='default-content partner-wrapper'>
             <Partner

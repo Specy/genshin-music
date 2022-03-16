@@ -19,6 +19,10 @@ export class Column {
 		this.notes.push(note)
 		return note
 	}
+	removeAtIndex = (index: number) => {
+		this.notes.splice(index, 1)
+	}
+
 	setTempoChanger(changer:TempoChanger){
 		this.tempoChanger = changer.id
 	}

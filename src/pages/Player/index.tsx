@@ -11,7 +11,7 @@ import { MainPageSettings, MainPageSettingsDataType, MainPageSettingsType } from
 import Instrument, { NoteData } from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { APP_NAME, AUDIO_CONTEXT, isTwa, PitchesType } from "appConfig"
+import { APP_NAME, AUDIO_CONTEXT, isTwa, PITCHES, PitchesType } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';

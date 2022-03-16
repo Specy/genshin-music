@@ -53,6 +53,7 @@ export default class Instrument {
         const player = AUDIO_CONTEXT.createBufferSource()
         player.buffer = this.buffers[note]
         player.connect(this.volumeNode)
+        //player.detune.value = pitch * 100, pitch should be 0 indexed from C
         player.playbackRate.value = pitch
         player.start(0)
         function handleEnd(){

@@ -17,7 +17,6 @@ import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, getMI
 import Instrument, { NoteData } from "lib/Instrument"
 import { getPitchChanger, delay } from "lib/Utils/Tools"
 import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
-import { ColumnNote, Column } from 'lib/Utils/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 import { DB } from 'Database';
 import Analytics from 'lib/Analytics';
@@ -119,8 +118,9 @@ class Composer extends Component<any,ComposerState>{
         window.removeEventListener('keydown', this.handleKeyboard)
         const { instrument, layers } = this.state
         this.broadcastChannel?.close?.()
-        const instruments = [instrument, layers[0], layers[1]]
+        const instruments = [instrument, ...layers]
         instruments.forEach(instrument => instrument.delete())
+        //TODO disconnect all those nodes before removing the reference
         this.reverbNode = null
         this.reverbVolumeNode = null
         this.audioContext = null
@@ -379,7 +379,7 @@ class Composer extends Component<any,ComposerState>{
     handleKeyboard = (event: KeyboardEvent) => {
         //@ts-ignore
         if (document.activeElement.tagName === "INPUT") return
-        const { instrument, layer, layers, isPlaying, song } = this.state
+        const { instrument, layer, layers, isPlaying, song, settings } = this.state
         const key = event.code
         const shouldEditKeyboard = isPlaying || event.shiftKey
         if (shouldEditKeyboard) {
@@ -389,7 +389,7 @@ class Composer extends Component<any,ComposerState>{
             switch (key) {
                 case "Space": {
                     this.togglePlay()
-                    if (!this.state.settings.syncTabs.value) break;
+                    if (!settings.syncTabs.value) break;
                     this.broadcastChannel?.postMessage?.("stop")
                     break;
                 }
@@ -397,25 +397,25 @@ class Composer extends Component<any,ComposerState>{
             }
         } else {
             switch (key) {
-                case "KeyD": this.selectColumn(this.state.song.selected + 1); break;
-                case "KeyA": this.selectColumn(this.state.song.selected - 1); break;
+                case "KeyD": this.selectColumn(song.selected + 1); break;
+                case "KeyA": this.selectColumn(song.selected - 1); break;
                 case "Digit1": this.handleTempoChanger(TEMPO_CHANGERS[0]); break;
                 case "Digit2": this.handleTempoChanger(TEMPO_CHANGERS[1]); break;
                 case "Digit3": this.handleTempoChanger(TEMPO_CHANGERS[2]); break;
                 case "Digit4": this.handleTempoChanger(TEMPO_CHANGERS[3]); break;
                 case "Space": {
                     this.togglePlay()
-                    if (!this.state.settings.syncTabs.value) break;
+                    if (!settings.syncTabs.value) break;
                     this.broadcastChannel?.postMessage?.("play")
                     break;
                 }
                 case "ArrowUp": {
-                    let nextLayer = layer - 1
+                    const nextLayer = layer - 1
                     if (nextLayer > 0) this.changeLayer(nextLayer as LayerType)
                     break;
                 }
                 case "ArrowDown": {
-                    let nextLayer = layer + 1
+                    const nextLayer = layer + 1
                     if (nextLayer < layers.length + 2) this.changeLayer(nextLayer as LayerType)
                     break;
                 }
@@ -441,17 +441,16 @@ class Composer extends Component<any,ComposerState>{
     }
     handleClick = (note: NoteData) => {
         const { instrument, layers, song, layer } = this.state
-        const column = song.columns[song.selected]
+        const column = song.selectedColumn
         const index = column.getNoteIndex(note.index)
         const layerIndex = layer - 1 as LayerIndex
         if (index === null) { //if it doesn't exist, create a new one
-            const columnNote = new ColumnNote(note.index)
+            const columnNote = column.addNote(note.index)
             columnNote.setLayer(layerIndex, '1')
-            column.notes.push(columnNote)
         } else { //if it exists, toggle the current layer and if it's 000 delete it
             const currentNote = column.notes[index]
             currentNote.toggleLayer(layerIndex)
-            if (currentNote.layer === EMPTY_LAYER) column.notes.splice(index, 1)
+            if (currentNote.layer === EMPTY_LAYER) column.removeAtIndex(index)
         }
         this.setState({ song })
         this.handleAutoSave()
@@ -486,6 +485,7 @@ class Composer extends Component<any,ComposerState>{
                 song.instruments[0] = settings.instrument.value
                 song.instruments[1] = settings.layer2.value
                 song.instruments[2] = settings.layer3.value
+                song.instruments[3] = settings.layer4.value
                 await DB.updateSong({ name: song.name }, song.serialize())
                 console.log("song saved:", song.name)
                 this.changes = 0
@@ -510,7 +510,7 @@ class Composer extends Component<any,ComposerState>{
         return new Promise(async resolve => {
             let promptString = question || "Write song name, press cancel to ignore"
             while (true) {
-                let songName = await asyncPrompt(promptString)
+                const songName = await asyncPrompt(promptString)
                 if (songName === null) return resolve(null)
                 if (songName !== "") {
                     if (await this.songExists(songName)) {
@@ -525,19 +525,15 @@ class Composer extends Component<any,ComposerState>{
         })
 
     }
-    askForSongUpdate = () => {
-        return new Promise(async resolve => {
-            let result = await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`)
-            resolve(result)
-        })
+    askForSongUpdate = async () => {
+        return await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`)
     }
     songExists = async (name: string) => {
         return await DB.existsSong({ name: name })
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.changes > 0) {
-            let wantsToSave = await this.askForSongUpdate()
-            if (wantsToSave) {
+            if (await this.askForSongUpdate()) {
                 await this.updateSong(this.state.song)
             }
         }
