@@ -17,6 +17,7 @@ import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, getMI
 import Instrument, { NoteData } from "lib/Instrument"
 import { getPitchChanger, delay } from "lib/Utils/Tools"
 import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
+import { Column } from 'lib/Utils/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 import { DB } from 'Database';
 import Analytics from 'lib/Analytics';
