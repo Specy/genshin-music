@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType, EMPTY_LAYER } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType, EMPTY_LAYER, TEMPO_CHANGERS } from "appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
@@ -73,6 +73,17 @@ class Array2d{
 	static from(height: number){
 		return new Array(height).fill(0).map(() => {return []})
 	}
+}
+
+
+function formatMs(ms: number) {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Number(((ms % 60000) / 1000).toFixed(0))
+    return (
+        seconds === 60
+            ? (minutes + 1) + ":00"
+            : minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+    )
 }
 
 function parseSong(song: any): Song | ComposedSong {
@@ -164,7 +175,21 @@ function getPitchChanger(pitch: PitchesType) {
 	if (index < 0) index = 0
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
-
+function calculateSongLength(columns: Column[], bpm: number, end: number) {
+    const bpmPerMs = Math.floor(60000 / bpm)
+    let totalLength = 0
+    let currentLength = 0
+    let increment = 0 
+    for (let i = 0; i < columns.length; i++) {
+        increment = bpmPerMs * TEMPO_CHANGERS[columns[i].tempoChanger].changer
+        if (i < end) currentLength += increment
+        totalLength += increment
+    }
+    return {
+        total: totalLength,
+        current: currentLength
+    }
+}
 function numberToLayer(number: LayerIndex) : CombinedLayer {
 	let layer: CombinedLayer = "1000"
 	if (number === 0) layer = "1000"
@@ -225,5 +250,7 @@ export {
 	MIDIShortcut,
 	capitalize,
 	clamp,
-	nearestEven
+	nearestEven,
+	formatMs,
+	calculateSongLength
 }

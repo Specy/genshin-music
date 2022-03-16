@@ -4,7 +4,7 @@ import { MIDINote, MIDIShortcut } from "./Utils/Tools"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
 
 export type ComposerSettingsDataType = {
-    instrument: SettingsInstrument
+    layer1: SettingsInstrument
     layer2: SettingsInstrument
     layer3: SettingsInstrument
     layer4: SettingsInstrument
@@ -25,10 +25,10 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 33,
+        settingVersion: APP_NAME + 34,
     },
     data: {
-        instrument: {
+        layer1: {
             name: "Instrument (Layer 1)",
             type: "instrument",
             songSetting: false,

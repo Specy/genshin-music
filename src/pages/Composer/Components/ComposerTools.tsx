@@ -1,11 +1,11 @@
 import { AppButton } from "components/AppButton"
 import { useTheme } from "lib/hooks/useTheme"
-import { Column } from "lib/Utils/SongClasses"
+import { memo } from "react"
 import { LayerType } from "types/GeneralTypes"
 interface ComposerToolsProps{
     data: {
         visible: boolean
-        copiedColumns: Column[]
+        hasCopiedColumns: boolean
         layer: LayerType,
     }
     functions: {
@@ -17,15 +17,14 @@ interface ComposerToolsProps{
         resetSelection: () => void
     }
 }
-
-export default function ComposerTools({ data, functions }: ComposerToolsProps) {
+//MEMOISED
+function ComposerTools({ data, functions }: ComposerToolsProps) {
     const [theme] = useTheme()
     const { toggleTools, copyColumns, eraseColumns, pasteColumns, deleteColumns, resetSelection } = functions
-    const { visible, copiedColumns, layer } = data
-    const hasCopiedColumns = copiedColumns.length > 0
+    const { visible, hasCopiedColumns, layer } = data
     const themeStyle = {
         backgroundColor: theme.layer('primary',0.2).toString()
-    }
+    } 
     return <div className={visible ? "floating-tools tools-visible" : "floating-tools"}>
         <div className="tools-row">
             <div>
@@ -106,6 +105,10 @@ export default function ComposerTools({ data, functions }: ComposerToolsProps) {
         </div>
     </div>
 }
+
+export default memo(ComposerTools,(p,n) => {
+    return p.data.visible === n.data.visible && p.data.hasCopiedColumns === n.data.hasCopiedColumns && p.data.layer === n.data.layer
+})
 
 interface ToolButtonprops{
     disabled: boolean
