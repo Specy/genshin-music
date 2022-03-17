@@ -282,7 +282,11 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                                 className='midi-select'
                                 value={pitch}
                                 onChange={(event: ChangeEvent<HTMLSelectElement>) => changePitch(event.target.value as PitchesType)}
-                                style={{ width: '5rem', ...midiInputsStyle }}
+                                style={{ 
+                                    backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#','%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`,
+                                    width: '5rem', 
+                                    ...midiInputsStyle 
+                                }}
                             >
                                 <option value="C">C</option>
                                 <option value="Db">Db</option>
@@ -374,6 +378,9 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
                     onChange={(event) => editTrack(index, { layer: Number(event.target.value) as LayerIndex })}
                     value={data.layer}
                     className='midi-select'
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#','%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
+                    }}
                 >
                     {LAYERS_INDEXES.map(layer => 
                         <option value={layer - 1} key={layer}>

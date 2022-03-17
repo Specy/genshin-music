@@ -191,7 +191,6 @@
     padding: 0.4rem;
     cursor: pointer;
     margin: 0;
-    margin-bottom: -1px;
     transition: all 0.2s;
 }
 .tab-selected{

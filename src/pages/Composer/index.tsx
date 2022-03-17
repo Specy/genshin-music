@@ -110,19 +110,20 @@ class Composer extends Component<any, ComposerState>{
     }
 
     componentWillUnmount() {
+        const { state } = this
+        const { layers } = state
         this.mounted = false
         //@ts-ignore
         if (this.currentMidiSource) this.currentMidiSource.removeEventListener('midimessage', this.handleMidi)
         if (this.MIDIAccess) this.MIDIAccess.removeEventListener('statechange', this.reloadMidiAccess)
         window.removeEventListener('keydown', this.handleKeyboard)
-        const { layers } = this.state
         this.broadcastChannel?.close?.()
         layers.forEach(instrument => instrument.delete())
-        //TODO disconnect all those nodes before removing the reference
+        this.reverbNode?.disconnect?.()
+        this.reverbVolumeNode?.disconnect?.()
         this.reverbNode = null
         this.reverbVolumeNode = null
         this.audioContext = null
-        const state = this.state
         state.isPlaying = false
         if (window.location.hostname !== "localhost") {
             window.removeEventListener("beforeunload", this.handleUnload)

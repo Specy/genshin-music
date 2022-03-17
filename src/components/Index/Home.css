@@ -183,6 +183,7 @@
 	display: flex;
 	position: absolute;
 	flex-direction: column;
+	align-items: center;
 	background-color: var(--primary);
 	color: var(--primary-text);
 	width: 100%;
@@ -210,7 +211,7 @@
 	align-items: center;
 	justify-content: center;
 	border-bottom: solid 1px var(--secondary);
-	width: 100%;
+	width: 94%;
 	padding-bottom: 0.3rem;
 	font-size: 1.2rem;
 }
@@ -233,21 +234,22 @@
 }
 .page-redirect-wrapper {
 	margin-top: 0.5rem;
+	display: flex;
+	flex-wrap: wrap;
 	width: 100%;
+	gap: 0.4rem;
 }
-.page-redirect-wrapper button {
+.page-redirect-wrapper a {
 	background-color: var(--primary);
 	color: var(--primary-text);
 	border-radius: 0.5rem;
 	border: none;
 	padding: 0.4rem 1rem;
 	font-size: 0.9rem;
-	margin-left: 0.6rem;
-	margin-bottom: 0.6rem;
 	cursor: pointer;
 	transition: all 0.1s linear;
 }
-.page-redirect-wrapper button:hover{
+.page-redirect-wrapper a:hover{
 	filter: brightness(1.1);
 }
 .current-page {

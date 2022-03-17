@@ -134,6 +134,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                 className='slider-select'
                 onChange={handleSpeedChanger}
                 value={speedChanger.name}
+                style={{backgroundImage: 'none'}}
             >
                 <option disabled>Speed</option>
                 {SPEED_CHANGERS.map(e => {

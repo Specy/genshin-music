@@ -103,9 +103,9 @@ const toMix = Color('#ffb347')
 function getApproachCircleColor(index: number) {
     const numOfNotes = APP_NAME === "Sky" ? 5 : 7
     const row = Math.floor(index / numOfNotes)
-    if(row === 1) return 'var(--accent)'
-    if(row === 2) return ThemeStore.get('accent').mix(toMix).hex()
-    if(row === 3) return "var(--accent)"
+    if(row === 0) return 'var(--accent)'
+    if(row === 1) return ThemeStore.get('accent').rotate(180).hex()
+    if(row === 2) return "var(--accent)"
     return "var(--accent)"
 }
 

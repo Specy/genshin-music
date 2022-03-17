@@ -9,14 +9,14 @@ import { useTheme } from 'lib/hooks/useTheme'
 import './Home.css'
 import MenuItem from 'components/MenuItem'
 
-interface HomeProps{
+interface HomeProps {
     askForStorage: () => void,
     setDontShowHome: (override: boolean) => void,
     closeWelcomeScreen: () => void,
-    hasVisited: boolean, 
+    hasVisited: boolean,
 }
 
-export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }:HomeProps) {
+export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }: HomeProps) {
     const [data, setData] = useState(HomeStore.state.data)
     const [currentPage, setCurrentPage] = useState('')
     const [breakpoint, setBreakpoint] = useState(false)
@@ -37,7 +37,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             setData(newState.object.data)
         })
         return dispose
-    },[])
+    }, [])
     return <div
         className={homeClass}
         style={{
@@ -49,7 +49,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             className='close-home'
             action={HomeStore.close}
         >
-            <FaTimes size={25}/>
+            <FaTimes size={25} />
         </MenuItem>
         {(breakpoint || !hasVisited) && <div className='home-top'>
             <div className='home-title'>
@@ -147,30 +147,25 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     </div>
 }
 
-interface PageRedirectProps{
+interface PageRedirectProps {
     children: React.ReactNode,
     current: boolean,
     href: string
 }
 function PageRedirect({ children, current, href }: PageRedirectProps) {
-    return <Link onClick={HomeStore.close} to={href}>
-        <button
-            className={current ? 'current-page' : ''}
-        >
-            {children}
-        </button>
+    return <Link onClick={HomeStore.close} to={href} className={current ? 'current-page' : ''}>
+        {children}
     </Link>
 }
 
-
-interface MainContntElementProps{
-    title: string, 
-    icon: React.ReactNode, 
+interface MainContntElementProps {
+    title: string,
+    icon: React.ReactNode,
     children: React.ReactNode,
-    background: string, 
-    current: boolean, 
-    href: string, 
-    style?: any 
+    background: string,
+    current: boolean,
+    href: string,
+    style?: any
 
 }
 function MainContntElement({ title, icon, children, background, current, href, style = {} }: MainContntElementProps) {
@@ -197,10 +192,10 @@ function MainContntElement({ title, icon, children, background, current, href, s
     </Link>
 }
 
-interface SeparatorProps{
+interface SeparatorProps {
     children?: React.ReactNode
 }
-function Separator({ children }:SeparatorProps) {
+function Separator({ children }: SeparatorProps) {
     return <div className='home-separator'>
         {children}
     </div>

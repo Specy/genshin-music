@@ -43,6 +43,7 @@ function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
         </div>
         {type === "select" &&
             <Select
+                theme={theme}
                 onChange={update}
                 value={data.value}
                 objectKey={objKey}
@@ -78,6 +79,7 @@ function SettingsRow({ data, update, objKey, changeVolume }:SettingsRowProps) {
         }
         {type === "instrument" &&
             <InstrumentInput
+                theme={theme}
                 volume={volume}
                 onInstrumentPick={update}
                 onVolumeChange={setVolume}
