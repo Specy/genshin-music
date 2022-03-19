@@ -185,11 +185,8 @@ export class ComposedSong {
     }
     removeColumns(amount: number, position: number){
         if (this.columns.length < 16) return
-        const indexes = new Array(amount).fill(0).map((_, i) => position + i)
-        indexes.forEach(index => {
-            if (this.breakpoints.includes(index)) this.toggleBreakpoint(index)
-        })
         this.columns.splice(position, amount)
+        this.validateBreakpoints()
     }
     toggleBreakpoint(override?: number){
         const index = typeof override === "number" ? override : this.selected

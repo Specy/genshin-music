@@ -78,7 +78,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             width: Math.floor(width),
             height: Math.floor(height),
             column: {
-                width: calcMinColumnWidth(nearestEven(width)),
+                width: nearestEven(width / NumOfColumnsPerCanvas),
+                
                 height: height
             },
             timelineHeight: isMobile() ? 25 : 30,
@@ -258,13 +259,12 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const { data, functions } = this.props
         const cache = this.state.cache?.cache
         const sizes = this.state.column
-        const xPos = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
+        const xPosition = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
         const beatMarks = Number(data.settings.beatMarks.value)
         const counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks
         const relativeColumnWidth = width / data.columns.length
-        let stageSize = Math.floor(relativeColumnWidth * NumOfColumnsPerCanvas)
-        if (stageSize > width) stageSize = width
-        const stagePosition = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2 - 1) * relativeColumnWidth
+        const timelineWidth = Math.floor(relativeColumnWidth * NumOfColumnsPerCanvas)
+        const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (NumOfColumnsPerCanvas / 2)
         return <div className="canvas-wrapper" style={{ width: width + 2 }}>
             <Stage
                 width={width}
@@ -280,7 +280,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 ref={this.notesStageRef}
             >
                 {cache && <Container
-                    x={xPos}
+                    x={xPosition}
                     interactive={true}
                     pointerdown={(e) => this.handleClick(e, "downStage")}
                     pointermove={(e) => this.handleStageSlide(e)}
@@ -358,7 +358,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                 draw={(g) => {
                                     g.clear()
                                     g.beginFill(theme.timeline.hexNumber)
-                                    g.drawRect(0, 0, width, timelineHeight)
+                                    g.drawRect(0, 0,width, timelineHeight)
                                 }}
                             />
                             {data.selectedColumns.length 
@@ -376,23 +376,24 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                 />
                                 : null
                             }
-                            {data.breakpoints.map(breakpoint => {
-                                return <Sprite
+                            {data.breakpoints.map(breakpoint => 
+                                <Sprite
                                     texture={cache.breakpoints[0]}
                                     key={breakpoint}
-                                    x={relativeColumnWidth * breakpoint}
+                                    anchor={[0.5, 0]}
+                                    x={(width / (data.columns.length-1)) * breakpoint}
                                 >
                                 </Sprite>
-                            })}
+                            )}
                         </Container>
                         }
                         <Graphics //current visible columns
                             draw={(g) => {
                                 g.clear()
                                 g.lineStyle(3, theme.timeline.border, 0.8)
-                                g.drawRoundedRect(0, 0, stageSize - 6, timelineHeight - 3, 6)
+                                g.drawRoundedRect(0, 0, timelineWidth, timelineHeight - 3, 6)
                             }}
-                            x={stagePosition}
+                            x={timelinePosition}
                             y={1.5}
                         />
                     </Stage>
@@ -465,10 +466,6 @@ function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, is
         })}
 
     </Container>
-}
-
-function calcMinColumnWidth(parentWidth: number) {
-    return nearestEven(parentWidth / NumOfColumnsPerCanvas)
 }
 
 

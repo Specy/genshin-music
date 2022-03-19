@@ -433,7 +433,6 @@ class Composer extends Component<any, ComposerState>{
         }
         this.setState({ song })
         this.handleAutoSave()
-        //TODO to check
         this.playSound(
             layers[layerIndex],
             note.index
@@ -793,7 +792,7 @@ class Composer extends Component<any, ComposerState>{
             changeLayer: this.changeLayer
         }
         const keyboardData = {
-            keyboard: this.currentInstrument,
+            keyboard: state.layers[0],
             currentColumn: state.song.columns[state.song.selected],
             layer: state.layer,
             pitch: state.settings.pitch.value as PitchesType,

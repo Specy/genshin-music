@@ -4,7 +4,6 @@ import GenshinNoteBorder from 'components/GenshinNoteBorder'
 import SvgNote from 'components/SvgNotes'
 import { observe } from 'mobx'
 import { ThemeStore } from 'stores/ThemeStore'
-import Color from 'color'
 import type { NoteData } from 'lib/Instrument'
 import type { InstrumentKeys, NoteStatus } from 'types/GeneralTypes'
 import type { ApproachingNote } from 'lib/Utils/SongClasses'
@@ -98,7 +97,6 @@ function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick
     </button>
 }
 
-const toMix = Color('#ffb347')
 
 function getApproachCircleColor(index: number) {
     const numOfNotes = APP_NAME === "Sky" ? 5 : 7
