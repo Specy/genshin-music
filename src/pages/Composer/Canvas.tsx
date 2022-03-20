@@ -79,7 +79,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             height: Math.floor(height),
             column: {
                 width: nearestEven(width / NumOfColumnsPerCanvas),
-                
+
                 height: height
             },
             timelineHeight: isMobile() ? 25 : 30,
@@ -88,7 +88,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 timeline: {
                     hex: ThemeStore.layer('primary', 0.1).toString(),
                     hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
-                    selected:  ThemeStore.get('composer_accent').negate().rgbNumber(),
+                    selected: ThemeStore.get('composer_accent').negate().rgbNumber(),
                     border: ThemeStore.get('composer_accent').rgbNumber()
                 }
             },
@@ -135,7 +135,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     timeline: {
                         hex: ThemeStore.layer('primary', 0.1).toString(),
                         hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
-                        selected:  ThemeStore.get('composer_accent').negate().rgbNumber(),
+                        selected: ThemeStore.get('composer_accent').negate().rgbNumber(),
                         border: ThemeStore.get('composer_accent').rgbNumber()
                     }
                 }
@@ -358,10 +358,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                 draw={(g) => {
                                     g.clear()
                                     g.beginFill(theme.timeline.hexNumber)
-                                    g.drawRect(0, 0,width, timelineHeight)
+                                    g.drawRect(0, 0, width, timelineHeight)
                                 }}
                             />
-                            {data.selectedColumns.length 
+                            {data.selectedColumns.length
                                 ? <Graphics
                                     draw={(g) => {
                                         const first = data.selectedColumns[0] || 0
@@ -371,17 +371,17 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                         const width = xEnd - x
                                         g.clear()
                                         g.beginFill(theme.timeline.selected, 0.6)
-                                        g.drawRect(x, 0,width, timelineHeight)
+                                        g.drawRect(x, 0, width, timelineHeight)
                                     }}
                                 />
                                 : null
                             }
-                            {data.breakpoints.map(breakpoint => 
+                            {data.breakpoints.map(breakpoint =>
                                 <Sprite
                                     texture={cache.breakpoints[0]}
                                     key={breakpoint}
                                     anchor={[0.5, 0]}
-                                    x={(width / (data.columns.length-1)) * breakpoint}
+                                    x={(width / (data.columns.length - 1)) * breakpoint}
                                 >
                                 </Sprite>
                             )}

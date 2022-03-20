@@ -686,50 +686,14 @@ class Composer extends Component<any, ComposerState>{
         this.setState({ copiedColumns: [], selectedColumns: [this.state.song.selected] })
     }
     copyColumns = (layer: LayerType | 'all') => {
-        const { selectedColumns } = this.state
-        let copiedColumns: Column[] = []
-        selectedColumns.forEach((index) => {
-            const column = this.state.song.columns[index]
-            if (column !== undefined) copiedColumns.push(column.clone())
-        })
-        if (layer !== 'all') {
-            copiedColumns = copiedColumns.map(column => {
-                column.notes = column.notes.filter(e => e.isLayerToggled(layer - 1 as LayerIndex))
-                column.notes = column.notes.map(e => {
-                    e.layer = EMPTY_LAYER
-                    e.setLayer(layer - 1 as LayerIndex, '1')
-                    return e
-                })
-                return column
-            })
-        }
+        const { selectedColumns, song } = this.state
+        const copiedColumns = song.copyColumns(selectedColumns, layer)
         this.changes++
         this.setState({ selectedColumns: [], copiedColumns })
     }
     pasteColumns = async (insert: boolean) => {
         const { song, copiedColumns } = this.state
-        const cloned: Column[] = copiedColumns.map(column => column.clone())
-        if (!insert) {
-            song.columns.splice(song.selected, 0, ...cloned)
-        } else {
-            cloned.forEach((clonedColumn, i) => {
-                const column = song.columns[song.selected + i]
-                if (column !== undefined) {
-                    clonedColumn.notes.forEach(clonedNote => {
-                        const index = column.notes.findIndex(note => clonedNote.index === note.index)
-                        if (index < 0) {
-                            column.notes.push(clonedNote)
-                        } else {
-                            for (let j = 0; j < 3; j++) {
-                                if (clonedNote.isLayerToggled(j as LayerIndex)) {
-                                    column.notes[index].setLayer(j as LayerIndex, '1')
-                                }
-                            }
-                        }
-                    })
-                }
-            })
-        }
+        song.pasteColumns(copiedColumns, insert)
         this.changes++
         this.setState({ song })
     }
@@ -746,10 +710,7 @@ class Composer extends Component<any, ComposerState>{
     }
     deleteColumns = async () => {
         const { song, selectedColumns } = this.state
-        song.columns = song.columns.filter((e, i) => !selectedColumns.includes(i))
-        if (song.selected > song.columns.length - 1) song.selected = song.columns.length - 1
-        if (song.selected <= 0) song.selected = 0
-        if (song.columns.length === 0) await this.addColumns(12, 0)
+        song.deleteColumns(selectedColumns)
         this.changes++
         this.setState({
             song,

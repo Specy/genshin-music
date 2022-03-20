@@ -197,7 +197,7 @@ export class ComposedSong {
             this.breakpoints.push(index)
         }
     }
-    eraseColumns(columns: number[], layer: LayerType | 'all'){
+    eraseColumns = (columns: number[], layer: LayerType | 'all') => {
         if (layer === 'all') {
             columns.forEach(index => {
                 const column = this.columns[index]
@@ -214,6 +214,58 @@ export class ComposedSong {
                 }
             })
         }
+        return this
+    }
+    pasteColumns = async (copiedColumns: Column[], insert: boolean) => {
+        const cloned: Column[] = copiedColumns.map(column => column.clone())
+        if (!insert) {
+            this.columns.splice(this.selected, 0, ...cloned)
+        } else {
+            cloned.forEach((clonedColumn, i) => {
+                const column = this.columns[this.selected + i]
+                if (column !== undefined) {
+                    clonedColumn.notes.forEach(clonedNote => {
+                        const index = column.getNoteIndex(clonedNote.index)
+                        if (index === null) {
+                            column.addColumnNote(clonedNote)
+                        } else {
+                            for (let j = 0; EMPTY_LAYER.length; j++) {
+                                if (clonedNote.isLayerToggled(j as LayerIndex)) {
+                                    column.notes[index].setLayer(j as LayerIndex, '1')
+                                }
+                            }
+                        }
+                    })
+                }
+            })
+        }
+        return this
+    }
+    copyColumns = (selectedColumns: number[], layer: LayerType | 'all') => {
+        let copiedColumns: Column[] = []
+        selectedColumns.forEach((index) => {
+            const column = this.columns[index]
+            if (column !== undefined) copiedColumns.push(column.clone())
+        })
+        if (layer !== 'all') {
+            copiedColumns = copiedColumns.map(column => {
+                column.notes = column.notes.filter(e => e.isLayerToggled(layer - 1 as LayerIndex))
+                column.notes = column.notes.map(e => {
+                    e.layer = EMPTY_LAYER
+                    e.setLayer(layer - 1 as LayerIndex, '1')
+                    return e
+                })
+                return column
+            })
+        }
+        return copiedColumns
+    }
+    deleteColumns = (selectedColumns: number[]) => {
+        this.columns = this.columns.filter((e, i) => !selectedColumns.includes(i))
+        if (this.selected > this.columns.length - 1) this.selected = this.columns.length - 1
+        if (this.selected <= 0) this.selected = 0
+        if (this.columns.length === 0) this.addColumns(12, 0)
+        return this
     }
     static deserializeLayer = (layer: string): CombinedLayer => {
         const split = EMPTY_LAYER.split('')

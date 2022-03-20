@@ -14,10 +14,13 @@ export class Column {
         clone.notes = this.notes.map(note => note.clone())
         return clone
     }
-	addNote = (index: number) => {
-		const note = new ColumnNote(index)
+	addNote = (index: number,layer?: CombinedLayer) => {
+		const note = new ColumnNote(index,layer)
 		this.notes.push(note)
 		return note
+	}
+	addColumnNote = (note: ColumnNote) => {
+		this.notes.push(note.clone())
 	}
 	removeAtIndex = (index: number) => {
 		this.notes.splice(index, 1)
@@ -30,9 +33,7 @@ export class Column {
 		return TEMPO_CHANGERS[this.tempoChanger]
 	}
 	getNoteIndex = (index: number): number | null => {
-		const result = this.notes.findIndex((n) => {
-            return index === n.index
-        })
+		const result = this.notes.findIndex((n) => index === n.index)
 		return result === -1 ? null : result
 	}
 }
