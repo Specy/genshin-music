@@ -6,7 +6,7 @@ import { ThemeStore } from 'stores/ThemeStore'
 import { observe } from 'mobx'
 import { NoteImages } from 'types/Keyboard'
 import { NoteData } from 'lib/Instrument'
-import { CombinedLayer, InstrumentKeys } from 'types/GeneralTypes'
+import { CombinedLayer, InstrumentName } from 'types/GeneralTypes'
 
 function getTextColor(){
     const noteBg = ThemeStore.get('note_background')
@@ -24,7 +24,7 @@ function getTextColor(){
 interface ComposerNoteProps{
     data: NoteData
     layer: CombinedLayer
-    instrument: InstrumentKeys
+    instrument: InstrumentName
     clickAction: (data: NoteData) => void
     noteText: string
     noteImage: NoteImages

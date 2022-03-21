@@ -1,6 +1,6 @@
 import { ChangeEvent } from "react"
 import { ThemeStoreClass } from "stores/ThemeStore"
-import { InstrumentKeys } from "types/GeneralTypes"
+import { InstrumentName } from "types/GeneralTypes"
 import { SettingsInstrument, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface InstrumentInputProps{
@@ -33,7 +33,7 @@ export function InstrumentInput({data,volume, onVolumeChange, onVolumeComplete, 
     function handleInstrument(e: ChangeEvent<HTMLSelectElement>){
         onInstrumentPick({
             key: objectKey,
-            data: { ...data, value: e.target.value as InstrumentKeys }
+            data: { ...data, value: e.target.value as InstrumentName }
         })
     }
 

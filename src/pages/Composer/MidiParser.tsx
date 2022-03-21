@@ -1,7 +1,7 @@
 import { ChangeEvent, Component, useEffect, useState } from 'react'
 import { FileElement, FilePicker } from 'components/FilePicker'
 import { Midi, Track } from '@tonejs/midi'
-import { numberToLayer, groupByIndex, mergeLayers } from 'lib/Utils/Tools'
+import { numberToLayer, groupNotesByIndex, mergeLayers } from 'lib/Utils/Tools'
 import { ColumnNote, Column } from 'lib/Utils/SongClasses'
 import { ComposedSong } from 'lib/Utils/ComposedSong'
 import { APP_NAME, LAYERS_INDEXES, PITCHES, PitchesType } from 'appConfig'
@@ -10,10 +10,11 @@ import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
 import { ThemeStore, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
-import { InstrumentKeys, LayerIndex } from 'types/GeneralTypes'
+import { LayerIndex } from 'types/GeneralTypes'
+import { SongInstruments } from 'types/SongTypes'
 interface MidiImportProps {
     data: {
-        instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys, InstrumentKeys]
+        instruments: SongInstruments
         selectedColumn: number
     }
     functions: {
@@ -134,7 +135,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         const bpmToMs = Math.floor(60000 / bpm)
         const groupedNotes: MidiNote[][] = []
         while (sorted.length > 0) {
-            let row = [sorted.shift() as MidiNote]
+            const row = [sorted.shift() as MidiNote]
             let amount = 0
             for (let i = 0; i < sorted.length; i++) {
                 if (row[0].time > sorted[i].time - bpmToMs / 9) amount++
@@ -144,20 +145,20 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         const columns: Column[] = []
         let previousTime = 0
         groupedNotes.forEach(notes => {
-            let note = notes[0]
+            const note = notes[0]
             if (!note) return
-            let elapsedTime = note.time - previousTime
-            previousTime = note.time
+            const elapsedTime = note.time - previousTime
             const emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
+            const noteColumn = new Column()
+            previousTime = note.time
             if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
-            let noteColumn = new Column()
             noteColumn.notes = notes.map(note => {
                 return new ColumnNote(note.data.note, numberToLayer(note.layer))
             })
             columns.push(noteColumn)
         })
         columns.forEach(column => { //merges notes of different layer
-            const groupedNotes = groupByIndex(column)
+            const groupedNotes = groupNotesByIndex(column)
             column.notes = groupedNotes.map(group => {
                 group[0].layer = mergeLayers(group)
                 return group[0]

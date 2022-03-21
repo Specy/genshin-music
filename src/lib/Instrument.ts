@@ -1,44 +1,48 @@
 import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT } from "appConfig"
-import { InstrumentKeys, NoteStatus } from "types/GeneralTypes"
+import { InstrumentName, NoteStatus } from "types/GeneralTypes"
 
+type Layouts = {
+    keyboard: string[]
+    mobile: string[]
+    keyCodes: string[]
+}
 export default class Instrument {
-    instrumentName: InstrumentKeys
-    layout: NoteData[]
-    buffers: AudioBuffer[]
-    loaded: boolean
-    deleted: boolean
+    name: InstrumentName
     volumeNode: GainNode
-    keyboardLayout: string[]
-    mobileLayout: string[]
-    keyboardCodes: string[]
+    layout: NoteData[] = []
+    layouts: Layouts = {
+        keyboard: [],
+        mobile: [],
+        keyCodes: []
+    }
+    buffers: AudioBuffer[] = []
+    isDeleted: boolean = false
+    isLoaded: boolean = false
 
-    constructor(instrumentName: InstrumentKeys = INSTRUMENTS[0]) {
-        this.instrumentName = instrumentName
-        //@ts-ignore
-        if (!INSTRUMENTS.includes(this.instrumentName)) this.instrumentName = INSTRUMENTS[0]
-        this.layout = []
-        this.buffers = []
-        this.loaded = false
-        this.deleted = false
+    constructor(name: InstrumentName = INSTRUMENTS[0]) {
+        this.name = name
+        if (!INSTRUMENTS.includes(this.name as any)) this.name = INSTRUMENTS[0]
         this.volumeNode = AUDIO_CONTEXT.createGain()
-        const instrumentData = INSTRUMENTS_DATA[this.instrumentName as keyof typeof INSTRUMENTS_DATA]
-        this.keyboardLayout = LAYOUT_DATA[instrumentData.notes].keyboardLayout
-        this.mobileLayout = LAYOUT_DATA[instrumentData.notes].mobileLayout
-        this.keyboardCodes = LAYOUT_DATA[instrumentData.notes].keyboardCodes
-
-        this.keyboardLayout.forEach((noteName, i) => {
+        const instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]
+        const layouts = LAYOUT_DATA[instrumentData.notes]
+        this.layouts = {
+            keyboard: layouts.keyboardLayout,
+            mobile: layouts.mobileLayout,
+            keyCodes: layouts.keyboardCodes
+        }
+        this.layouts.keyboard.forEach((noteName, i) => {
             const noteNames = {
                 keyboard: noteName,
-                mobile: this.mobileLayout[i]
+                mobile: this.layouts.mobile[i]
             }
-            let url = `./assets/audio/${this.instrumentName}/${i}.mp3`
+            const url = `./assets/audio/${this.name}/${i}.mp3`
             this.layout.push(new NoteData(i, noteNames, url))
         })
 
         this.volumeNode.gain.value = 0.8
     }
     getNoteFromCode = (code: number | string) => {
-        let index = this.keyboardLayout.findIndex(e => e === String(code))
+        const index = this.layouts.keyboard.findIndex(e => e === String(code))
         return index !== -1 ? index : null
     }
 
@@ -49,7 +53,7 @@ export default class Instrument {
     }
 
     play = (note: number, pitch: number) => {
-        if (this.deleted) return
+        if (this.isDeleted) return
         const player = AUDIO_CONTEXT.createBufferSource()
         player.buffer = this.buffers[note]
         player.connect(this.volumeNode)
@@ -63,7 +67,7 @@ export default class Instrument {
         player.addEventListener('ended',handleEnd,{once: true})
     }
     load = async () => {
-        let emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
+        const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
         const requests: Promise<AudioBuffer>[] = this.layout.map(note => {
             //dont change any of this, safari bug
             return new Promise(resolve => {
@@ -78,7 +82,7 @@ export default class Instrument {
             })
         })
         this.buffers = await Promise.all(requests)
-        this.loaded = true
+        this.isLoaded = true
         return true
     }
     disconnect = () => {
@@ -89,7 +93,7 @@ export default class Instrument {
     }
     delete = () => {
         this.disconnect()
-        this.deleted = true
+        this.isDeleted = true
         this.buffers = []
     }
 }

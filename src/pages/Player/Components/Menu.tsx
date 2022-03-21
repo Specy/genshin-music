@@ -64,7 +64,7 @@ function Menu({ functions, data }: MenuProps) {
         checkStorage()
     }, [])
     const handleKeyboard = useCallback((event: KeyboardEvent) => {
-        let key = event.code
+        const key = event.code
         if (document.activeElement?.tagName === "INPUT") return
         //@ts-ignore
         document.activeElement?.blur()

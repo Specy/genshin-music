@@ -5,8 +5,7 @@ interface MenuPanelProps{
 }
 
 export default function MenuPanel({title, current, children}: MenuPanelProps) {
-    let className = current === title ? "menu-panel menu-panel-visible" : "menu-panel"
-    return <div className={className}>
+    return <div className={current === title ? "menu-panel menu-panel-visible" : "menu-panel"}>
         <div className="menu-title">
             {title}
         </div>

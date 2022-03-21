@@ -1,6 +1,7 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, PitchesType, EMPTY_LAYER } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
-import { CombinedLayer, InstrumentKeys, LayerIndex, LayerType } from "types/GeneralTypes"
+import { CombinedLayer, InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
+import { SongInstruments } from "types/SongTypes"
 import { Song } from "./Song"
 import { Column, ColumnNote, RecordedNote, SongDataType } from "./SongClasses"
 
@@ -16,7 +17,7 @@ export interface SerializedComposedSong {
     data: SongDataType
     bpm: number
     pitch: PitchesType
-    instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys, InstrumentKeys]
+    instruments: SongInstruments
     breakpoints: number[]
     columns: SerializedColumn[]
 }
@@ -38,7 +39,7 @@ export class ComposedSong {
     bpm: number
     pitch: PitchesType
     notes: RecordedNote[] 
-    instruments: [InstrumentKeys, InstrumentKeys, InstrumentKeys, InstrumentKeys]
+    instruments: [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
     breakpoints: number[]
     columns: Column[]
     selected: number
@@ -70,7 +71,7 @@ export class ComposedSong {
         newSong.data = {...newSong.data, ...song.data} 
         newSong.bpm = isNaN(bpm) ? 220 : bpm
         newSong.pitch = song.pitch ?? "C"
-        const parsedInstruments = [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
+        const parsedInstruments = EMPTY_LAYER.split('').map(() => INSTRUMENTS[0])
         parsedInstruments.forEach((_, i) => {
             const toParse = song.instruments[i] as any
             if(toParse !== undefined){
@@ -85,7 +86,7 @@ export class ComposedSong {
             const columnObj = new Column()
             columnObj.tempoChanger = column[0]
             column[1].forEach(note => {
-                const deserializedNote = ComposedSong.deserializeLayer(note[1])
+                const deserializedNote = ColumnNote.deserializeLayer(note[1])
                 if(deserializedNote.match(/^0+$/g)) return
                 columnObj.notes.push(new ColumnNote(note[0], deserializedNote))
             })
@@ -122,9 +123,8 @@ export class ComposedSong {
         obj.data.appName = APP_NAME
         this.columns.forEach(column => {
             const notes = column.notes.map(note => {
-                return [note.index, note.layer]
+                return [note.index, note.layer] as SerializedNote
             })
-            //@ts-ignore
             obj.columns.push([column.tempoChanger, notes])
         })
         return obj
@@ -143,27 +143,12 @@ export class ComposedSong {
         let totalTime = 100
         song.columns.forEach(column => {
             column[1].forEach(note => {
-                let layer = 1
-                if (note[1] === '0010') layer = 2
-                if (note[1] === '0110') layer = 2
-                if (note[1] === '0100') layer = 2
-                if (note[1] === '1010') layer = 3
-                if (note[1] === '1000') layer = 1
-                if (note[1] === '1110') layer = 3
-                if (note[1] === '1100') layer = 3
-                
-                if (note[1] === '0011') layer = 2
-                if (note[1] === '0111') layer = 2
-                if (note[1] === '0101') layer = 2
-                if (note[1] === '1011') layer = 3
-                if (note[1] === '1001') layer = 1
-                if (note[1] === '1111') layer = 3
-                if (note[1] === '1101') layer = 3
+                const layer = LAYERS_MAP[note[1]]
+                if(layer === 0) return
                 const noteObj:OldFormatNoteType = {
                     key: (layer > 2 ? 2 : layer) + 'Key' + note[0],
                     time: totalTime,
                     ...layer > 2 ? { l : 3} : {}
-
                 }
                 convertedNotes.push(noteObj)
             })
@@ -184,7 +169,6 @@ export class ComposedSong {
         }
     }
     removeColumns(amount: number, position: number){
-        if (this.columns.length < 16) return
         this.columns.splice(position, amount)
         this.validateBreakpoints()
     }
@@ -229,7 +213,7 @@ export class ComposedSong {
                         if (index === null) {
                             column.addColumnNote(clonedNote)
                         } else {
-                            for (let j = 0; EMPTY_LAYER.length; j++) {
+                            for (let j = 0; j < EMPTY_LAYER.length; j++) {
                                 if (clonedNote.isLayerToggled(j as LayerIndex)) {
                                     column.notes[index].setLayer(j as LayerIndex, '1')
                                 }
@@ -267,13 +251,7 @@ export class ComposedSong {
         if (this.columns.length === 0) this.addColumns(12, 0)
         return this
     }
-    static deserializeLayer = (layer: string): CombinedLayer => {
-        const split = EMPTY_LAYER.split('')
-        for(let i = 0; i<layer.length;i++){
-            split[i] = layer[i]
-        }
-        return split.join('') as CombinedLayer
-    }
+
     validateBreakpoints(){
         this.breakpoints = this.breakpoints.filter(breakpoint => breakpoint < this.columns.length)
     }
@@ -303,4 +281,23 @@ export class ComposedSong {
         clone.columns = this.columns.map(column => column.clone())
         return clone
     }
+}
+
+const LAYERS_MAP = {
+    '0000': 0,
+    '0010': 2,
+    '0110': 2,
+    '0100': 2,
+    '1010': 3,
+    '1000': 1,
+    '1110': 3,
+    '1100': 3,
+    '0001': 2,
+    '0011': 2,
+    '0111': 2,
+    '0101': 2,
+    '1011': 3,
+    '1001': 1,
+    '1111': 3,
+    '1101': 3
 }

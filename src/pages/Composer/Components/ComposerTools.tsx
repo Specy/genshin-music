@@ -4,7 +4,7 @@ import { memo } from "react"
 import { LayerType } from "types/GeneralTypes"
 interface ComposerToolsProps{
     data: {
-        visible: boolean
+        isToolsVisible: boolean
         hasCopiedColumns: boolean
         layer: LayerType,
     }
@@ -21,11 +21,11 @@ interface ComposerToolsProps{
 function ComposerTools({ data, functions }: ComposerToolsProps) {
     const [theme] = useTheme()
     const { toggleTools, copyColumns, eraseColumns, pasteColumns, deleteColumns, resetSelection } = functions
-    const { visible, hasCopiedColumns, layer } = data
+    const { isToolsVisible, hasCopiedColumns, layer } = data
     const themeStyle = {
         backgroundColor: theme.layer('primary',0.2).toString()
     } 
-    return <div className={visible ? "floating-tools tools-visible" : "floating-tools"}>
+    return <div className={isToolsVisible ? "floating-tools tools-visible" : "floating-tools"}>
         <div className="tools-row">
             <div>
                 Scroll to select the columns
@@ -107,7 +107,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
 }
 
 export default memo(ComposerTools,(p,n) => {
-    return p.data.visible === n.data.visible && p.data.hasCopiedColumns === n.data.hasCopiedColumns && p.data.layer === n.data.layer
+    return p.data.isToolsVisible === n.data.isToolsVisible && p.data.hasCopiedColumns === n.data.hasCopiedColumns && p.data.layer === n.data.layer
 })
 
 interface ToolButtonprops{

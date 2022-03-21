@@ -11,7 +11,7 @@ import Instrument from "lib/Instrument"
 import Shortcut from "./Shortcut"
 import LoggerStore from "stores/LoggerStore"
 import type { MIDINote } from "lib/Utils/Tools"
-import { InstrumentKeys } from "types/GeneralTypes"
+import { InstrumentName } from "types/GeneralTypes"
 
 interface MidiSetupState{
     settings: typeof MIDISettings
@@ -130,7 +130,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         this.setState({ settings })
         localStorage.setItem(APP_NAME + '_MIDI_Settings', JSON.stringify(this.state.settings))
     }
-    loadInstrument = async (name: InstrumentKeys) => {
+    loadInstrument = async (name: InstrumentName) => {
         this.state.instrument?.delete?.()
         const newInstrument = new Instrument(name)
         await newInstrument.load()

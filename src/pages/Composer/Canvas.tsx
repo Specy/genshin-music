@@ -68,7 +68,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         NumOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
         let width = nearestEven(sizes.width * 0.84)
         let height = nearestEven(sizes.height * 0.45)
-
         if (window.screen.width < sizes.height) {
             width = nearestEven(sizes.height * 0.84)
             height = nearestEven(sizes.width * 0.45)
@@ -150,8 +149,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.state.cache?.destroy()
     }
     handleKeyboard = (event: KeyboardEvent) => {
-        let key = event.code
-        switch (key) {
+        switch (event.code) {
             case "ArrowRight": this.handleBreakpoints(1)
                 break;
             case "ArrowLeft": this.handleBreakpoints(-1)
@@ -216,7 +214,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         }
     }
     handleStageSlide = (e: any) => {
-        let x = e.data.global.x
+        const x = e.data.global.x
         if (this.stageSelected === true) {
             if (this.throttleScroll++ < 5) return
             this.throttleScroll = 0
@@ -231,7 +229,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     handleBreakpoints = (direction: 1 | -1) => {
         const { selected, columns, breakpoints } = this.props.data
-        let breakpoint = direction === 1 //1 = right, -1 = left
+        const breakpoint = direction === 1 //1 = right, -1 = left
             ? breakpoints.filter((v) => v > selected).sort((a, b) => a - b)
             : breakpoints.filter((v) => v < selected).sort((a, b) => b - a)
         if (breakpoint.length === 0) return
@@ -249,8 +247,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             this.throttleScroll = 0
             const totalWidth = column.width * data.columns.length
             const x = this.onSlider ? (globalX + this.sliderOffset) : globalX
-            let relativePos = Math.floor(x / width * totalWidth / column.width)
-            this.props.functions.selectColumn(relativePos, true)
+            const relativePosition = Math.floor(x / width * totalWidth / column.width)
+            this.props.functions.selectColumn(relativePosition, true)
         }
     }
 

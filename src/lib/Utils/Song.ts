@@ -1,7 +1,7 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, PitchesType } from "appConfig"
 import { Column, ColumnNote, RecordedNote,SongDataType } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
-import { numberToLayer, groupByIndex, mergeLayers, groupByNotes } from 'lib/Utils/Tools'
+import { numberToLayer, groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Utils/Tools'
 import clonedeep from 'lodash.clonedeep'
 import { LayerIndex } from "types/GeneralTypes"
 
@@ -92,10 +92,10 @@ export class Song {
         }
     }
     toComposed = (precision = 4) => {
-        let bpmToMs = Math.floor(60000 / this.bpm)
-        let composed = new ComposedSong(this.name)
-        composed.bpm = this.bpm
-        composed.pitch = this.pitch
+        const bpmToMs = Math.floor(60000 / this.bpm)
+        const song = new ComposedSong(this.name)
+        song.bpm = this.bpm
+        song.pitch = this.pitch
         const notes = this.notes
         //remove duplicates
         let converted = []
@@ -114,7 +114,7 @@ export class Song {
             }
             const columns:Column[] = [] 
             groupedNotes.forEach(notes => {
-                let note = notes[0]
+                const note = notes[0]
                 if (!note) return
                 const elapsedTime = note[1] - previousTime
                 previousTime = note[1]
@@ -127,7 +127,7 @@ export class Song {
                 columns.push(noteColumn)
             })
             columns.forEach(column => { //merges notes of different layer
-                let groupedNotes = groupByIndex(column)
+                const groupedNotes = groupNotesByIndex(column)
                 column.notes = groupedNotes.map(group => {
                     group[0].layer = mergeLayers(group)
                     return group[0]
@@ -135,12 +135,12 @@ export class Song {
             })
             converted = columns
         }else{
-            let grouped = groupByNotes(notes, bpmToMs / 9)
-            let combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
+            const grouped = groupByNotes(notes, bpmToMs / 9)
+            const combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
             for (let i = 0; i < grouped.length; i++) {
-                let column = new Column()
+                const column = new Column()
                 column.notes = grouped[i].map(note => {
-                    let columnNote = new ColumnNote(note[0])
+                    const columnNote = new ColumnNote(note[0])
                     if (note[2] === 0) columnNote.layer = "1000"
                     else if (note[2] === 1) columnNote.layer = "1000"
                     else if (note[2] === 2) columnNote.layer = "0100"
@@ -148,9 +148,9 @@ export class Song {
                     else columnNote.layer = "1000"
                     return columnNote
                 })
-                let next = grouped[i + 1] || [[0, 0, 0]]
+                const next = grouped[i + 1] || [[0, 0, 0]]
+                const paddingColumns = []
                 let difference = next[0][1] - grouped[i][0][1]
-                let paddingColumns = []
                 while (difference >= combinations[3]) {
                     if (difference / combinations[0] >= 1) {
                         difference -= combinations[0]
@@ -178,8 +178,8 @@ export class Song {
                 converted.push(column, ...finalPadding)
             }
         }
-        composed.columns = converted
-        return composed
+        song.columns = converted
+        return song
     }
     static fromOldFormat = (song: any) => {
         try {

@@ -14,8 +14,14 @@ export class Column {
         clone.notes = this.notes.map(note => note.clone())
         return clone
     }
-	addNote = (index: number,layer?: CombinedLayer) => {
-		const note = new ColumnNote(index,layer)
+	addNote(note: ColumnNote): ColumnNote
+	addNote(index: number,layer?: CombinedLayer ): ColumnNote
+	addNote(indexOrNote: number| ColumnNote,layer?: CombinedLayer){
+		if(indexOrNote instanceof ColumnNote){
+			this.notes.push(indexOrNote)
+			return indexOrNote
+		}
+		const note = new ColumnNote(indexOrNote,layer)
 		this.notes.push(note)
 		return note
 	}
@@ -37,6 +43,8 @@ export class Column {
 		return result === -1 ? null : result
 	}
 }
+
+const SPLIT_EMPTY_LAYER = EMPTY_LAYER.split("")
 export class ColumnNote {
 	index: number
 	layer: CombinedLayer
@@ -44,6 +52,12 @@ export class ColumnNote {
 		this.index = index
 		this.layer = layer
 	}
+	static deserializeLayer = (layer: string): CombinedLayer => {
+        for(let i = 0; i<layer.length;i++){
+            SPLIT_EMPTY_LAYER[i] = layer[i]
+        }
+        return SPLIT_EMPTY_LAYER.join('') as CombinedLayer
+    }
 	setLayer(layerIndex: LayerIndex, value: '0' | '1'){
 		if(layerIndex > this.layer.length) return
 		const split = this.layer.split('')

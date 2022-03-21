@@ -89,8 +89,7 @@ class App extends Component<any>{
 	askForStorage = async () => {
 		try {
 			if (navigator.storage && navigator.storage.persist) {
-				let result = await navigator.storage.persist()
-				if (result) {
+				if (await navigator.storage.persist()) {
 					LoggerStore.success("Storage permission allowed")
 				}
 			}
@@ -107,7 +106,7 @@ class App extends Component<any>{
 	checkUpdate = async () => {
 		await delay(1000)
 		if (this.updateChecked) return
-		let storedVersion = localStorage.getItem(APP_NAME + "_Version")
+		const storedVersion = localStorage.getItem(APP_NAME + "_Version")
 		if (!this.state.hasVisited) {
 			return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}

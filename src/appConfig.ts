@@ -315,8 +315,7 @@ const TEMPO_CHANGERS = [
 ] as const
 export type TempoChanger = typeof TEMPO_CHANGERS[number]
 function isTwa() {
-    let isTwa = JSON.parse(sessionStorage.getItem('isTwa') || 'null')
-    return isTwa
+    return JSON.parse(sessionStorage.getItem('isTwa') || 'null')
 }
 
 export {

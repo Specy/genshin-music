@@ -17,7 +17,7 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
         const el = e.target
         if (data.type === "number") {
-            let value = Number(el.value)
+            const value = Number(el.value)
             el.value = "" //have to do this to remove a react bug that adds a 0 at the start
             if (!data.threshold || value < data.threshold[0] || value > data.threshold[1]) return
             onChange(value)
@@ -28,7 +28,7 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
 
     function handleIncrement(sign: number){
         if(data.type === 'number'){
-            let nextValue = Number(value) + (data.increment || 0) * sign
+            const nextValue = Number(value) + (data.increment || 0) * sign
             if (!data.threshold || nextValue < data.threshold[0] || nextValue > data.threshold[1]) return
             onComplete({
                 key: objectKey,

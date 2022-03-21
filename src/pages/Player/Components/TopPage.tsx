@@ -9,6 +9,7 @@ import { BsTriangleFill } from "react-icons/bs";
 import './Track.css'
 import { AppButton } from "components/AppButton";
 import { ApproachingScore } from "types/GeneralTypes";
+import { clamp } from "lib/Utils/Tools";
 
 interface TopPageProps {
     restart: () => void
@@ -78,9 +79,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
         const sliderX = inputDimension.x
         const sliderWidth = inputDimension.width
         const x = event.clientX - sliderX
-        let value = Math.round(x / sliderWidth * sliderState.size)
-        if (value < 0) value = 0
-        if (value > sliderState.size) value = sliderState.size
+        const value = clamp(Math.round(x / sliderWidth * sliderState.size), 0, sliderState.size)
         if (currentThumb === 'left') {
             if (value - sliderState.end < -1) SliderStore.setPosition(value)
         } else {

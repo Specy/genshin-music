@@ -3,7 +3,7 @@ import { observe } from 'mobx'
 import { LAYOUT_IMAGES, APP_NAME, SPEED_CHANGERS, MIDI_STATUS, PitchesType } from "appConfig"
 import Note from './Components/Note'
 import { SongStore } from 'stores/SongStore'
-import { Array2d, getNoteText, delay } from "lib/Utils/Tools"
+import { Array2d, getNoteText, delay, clamp } from "lib/Utils/Tools"
 import "./Keyboard.css"
 import { getMIDISettings } from 'lib/BaseSettings'
 import TopPage from './Components/TopPage'
@@ -189,7 +189,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
         end = end ? end : song.notes.length
         const notes = []
         this.approachRate = this.props.data.approachRate || 1500
-        let startDelay = this.approachRate
+        const startDelay = this.approachRate
         const startOffset = song.notes[start] !== undefined ? song.notes[start][1] : 0
         for (let i = start; i < end && i < song.notes.length; i++) {
             const note = song.notes[i]
@@ -236,12 +236,12 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
                 break
             }
         }
-        stateNotes.forEach(note => {
-            for (let i = 0; i < note.length; i++) {
-                let apNote = note[i]
-                apNote.time -= this.tickTime
-                if (apNote.clicked) {
-                    if (apNote.time < this.approachRate / 3) {
+        stateNotes.forEach(approachingNotes => {
+            for (let i = 0; i < approachingNotes.length; i++) {
+                const note = approachingNotes[i]
+                note.time -= this.tickTime
+                if (note.clicked) {
+                    if (note.time < this.approachRate / 3) {
                         approachingScore.correct++
                         approachingScore.combo++
                         approachingScore.score += approachingScore.combo * speedChanger.value
@@ -249,14 +249,14 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
                         approachingScore.wrong++
                         approachingScore.combo = 0
                     }
-                    apNote.time = -1 //so that it can be removed after
+                    note.time = -1 //so that it can be removed after
                 }
-                if (apNote.time < 0) {
-                    if (!apNote.clicked) {
+                if (note.time < 0) {
+                    if (!note.clicked) {
                         approachingScore.wrong++
                         approachingScore.combo = 0
                     }
-                    note.splice(i, 1)
+                    approachingNotes.splice(i, 1)
                     i--
                     hasChanges = true
                     removed++
@@ -281,7 +281,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
         let pastError = 0
         let previousTime = new Date().getTime()
         for (let i = start; i < end && i < song.notes.length; i++) {
-            let delayTime = notes[i][1] - previous
+            const delayTime = notes[i][1] - previous
             previous = notes[i][1]
             previousTime = new Date().getTime()
             if (delayTime > 16) await delay(delayTime - pastError)
@@ -311,7 +311,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
             )
             const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
             for (let j = 0; j < notes.length && j < 20; j++) {
-                let difference = notes[j][1] - chunk.notes[0][1] - 50 //TODO add threshold here
+                const difference = notes[j][1] - chunk.notes[0][1] - 50 //TODO add threshold here
                 if (difference < 0) {
                     chunk.notes.push(notes.shift() as RecordedNote)
                     j--
@@ -408,7 +408,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
 
     handleApproachClick = (note: NoteData) => {
         const { approachingNotes } = this.state
-        let approachingNote = approachingNotes[note.index][0]
+        const approachingNote = approachingNotes[note.index][0]
         if (approachingNote) {
             approachingNote.clicked = true
             if (approachingNote.time < this.approachRate / 3) return "approach-correct"
@@ -418,13 +418,13 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
     handlePracticeClick = (note: NoteData) => {
         const { keyboard, songToPractice } = this.state
         if (songToPractice.length > 0) {
-            let indexClicked = songToPractice[0]?.notes.findIndex(e => e[0] === note.index)
+            const indexClicked = songToPractice[0]?.notes.findIndex(e => e[0] === note.index)
             if (indexClicked !== -1) {
                 songToPractice[0].notes.splice(indexClicked, 1)
                 if (songToPractice[0].notes.length === 0) songToPractice.shift()
                 if (songToPractice.length > 0) {
-                    let nextChunk = songToPractice[0]
-                    let nextNextChunk = songToPractice[1]
+                    const nextChunk = songToPractice[0]
+                    const nextNextChunk = songToPractice[1]
                     nextChunk.notes.forEach(note => {
                         keyboard[note[0]] = keyboard[note[0]].setState({
                             status: 'toClick',
@@ -460,7 +460,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
             if (approachStatus === 'approach-wrong') approachingScore.combo = 0
         }
         if (hasAnimation && SongStore.eventType !== 'approaching') {
-            let key = Math.floor(Math.random() * 10000) + new Date().getTime()
+            const key = Math.floor(Math.random() * 10000) + new Date().getTime()
             outgoingAnimation[note.index] = [...outgoingAnimation[note.index], { key }]
         }
         this.setState({
@@ -487,9 +487,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
         const { state, props } = this
         const { data } = props
         const { keyboard, approachingScore, speedChanger } = state
-        let size = data.keyboardSize / 100
-        if (size < 0.5) size = 0.5
-        if (size > 1.5) size = 1.5
+        const size = clamp(data.keyboardSize / 100, 0.5, 1)
         let keyboardClass = "keyboard"
         if (keyboard.length === 15) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
@@ -519,7 +517,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
                             note={note}
                             data={{
                                 approachRate: this.approachRate,
-                                instrument: this.props.data.keyboard.instrumentName,
+                                instrument: this.props.data.keyboard.name,
                                 isAnimated: SongStore.eventType === 'approaching' ? false : data.hasAnimation
                             }}
                             approachingNotes={state.approachingNotes[note.index]}

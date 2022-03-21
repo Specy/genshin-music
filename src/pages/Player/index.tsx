@@ -11,13 +11,13 @@ import { MainPageSettings, MainPageSettingsDataType, MainPageSettingsType } from
 import Instrument, { NoteData } from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { APP_NAME, AUDIO_CONTEXT, isTwa, PITCHES, PitchesType } from "appConfig"
+import { APP_NAME, AUDIO_CONTEXT, PitchesType } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
 import { AppBackground } from 'components/AppBackground';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { InstrumentKeys, NoteNameType } from 'types/GeneralTypes';
+import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
 
 
@@ -29,7 +29,7 @@ interface PlayerState{
 	isLoadingInstrument: boolean
 	isRecordingAudio: boolean
 	isRecording: boolean
-	thereIsSong: boolean
+	hasSong: boolean
 }
 class Player extends Component<any,PlayerState>{
 	state: PlayerState
@@ -52,7 +52,7 @@ class Player extends Component<any,PlayerState>{
 			songs: [],
 			settings: settings,
 			isDragging: false,
-			thereIsSong: false
+			hasSong: false
 		}
 		this.mounted = false
 		this.reverbNode = null
@@ -99,13 +99,13 @@ class Player extends Component<any,PlayerState>{
 	}
 
 	handleKeyboard = async (event: KeyboardEvent) => {
-		const { thereIsSong } = this.state
+		const { hasSong } = this.state
 		if (event.repeat) return
 		if (document.activeElement?.tagName === "INPUT") return
 		if (event.shiftKey) {
 			switch (event.code) {
 				case "KeyC": {
-					if (!thereIsSong) {
+					if (!hasSong) {
 						this.toggleRecord()
 						event.preventDefault()
 					}
@@ -131,7 +131,7 @@ class Player extends Component<any,PlayerState>{
 	}
 
 	setHasSong = (data: boolean) => {
-		this.setState({ thereIsSong: data })
+		this.setState({ hasSong: data })
 	}
 
 	handleDrop = async (e: DragEvent) => {
@@ -171,14 +171,12 @@ class Player extends Component<any,PlayerState>{
 	}
 
 	changeVolume = (obj: SettingVolumeUpdate) => {
-		let settings = this.state.settings
+		const {settings} = this.state
 		if (obj.key === "instrument") {
 			settings.instrument = { ...settings.instrument, volume: obj.value }
 			this.state.instrument.changeVolume(obj.value)
 		}
-		this.setState({
-			settings: settings
-		}, this.updateSettings)
+		this.setState({ settings }, this.updateSettings)
 	}
 
 	getSettings = () => {
@@ -198,18 +196,19 @@ class Player extends Component<any,PlayerState>{
         }
 	}
 
-	loadInstrument = async (name: InstrumentKeys) => {
+	loadInstrument = async (name: InstrumentName) => {
 		this.state.instrument?.delete?.()
-		let newInstrument = new Instrument(name)
-		newInstrument.changeVolume(this.state.settings.instrument.volume || 100)
+		const { settings } = this.state
+		const instrument = new Instrument(name)
+		instrument.changeVolume(settings.instrument.volume || 100)
 		this.setState({ isLoadingInstrument: true })
-		await newInstrument.load()
+		await instrument.load()
 		if (!this.mounted || !this.audioContext) return
-		newInstrument.connect(this.audioContext.destination)
+		instrument.connect(this.audioContext.destination)
 		this.setState({
-			instrument: newInstrument,
+			instrument,
 			isLoadingInstrument: false
-		}, () => this.toggleReverbNodes(this.state.settings.caveMode.value))
+		}, () => this.toggleReverbNodes(settings.caveMode.value))
 	}
 
 	loadReverb() : Promise<void>{
@@ -221,8 +220,8 @@ class Player extends Component<any,PlayerState>{
 					if (!this.mounted || !this.audioContext) return
 					this.audioContext.decodeAudioData(b, (impulse_response) => {
 						if (!this.mounted || !this.audioContext) return
-						let convolver = this.audioContext.createConvolver()
-						let gainNode = this.audioContext.createGain()
+						const convolver = this.audioContext.createConvolver()
+						const gainNode = this.audioContext.createGain()
 						gainNode.gain.value = 2.5
 						convolver.buffer = impulse_response
 						convolver.connect(gainNode)
@@ -260,7 +259,7 @@ class Player extends Component<any,PlayerState>{
 		//@ts-ignore
 		settings[setting.key] = { ...settings[setting.key], value: data.value }
 		if (setting.key === "instrument") {
-			this.loadInstrument(data.value as InstrumentKeys)
+			this.loadInstrument(data.value as InstrumentName)
 		}
 		if (setting.key === 'caveMode') {
 			this.toggleReverbNodes(data.value as boolean)
@@ -296,7 +295,7 @@ class Player extends Component<any,PlayerState>{
 	}
 
 	removeSong = async (name: string) => {
-		let result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
+		const result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
 		if (!this.mounted) return
 		if (result) {
 			await DB.removeSong({ name: name })
@@ -315,7 +314,7 @@ class Player extends Component<any,PlayerState>{
 		return new Promise(async resolve => {
 			let promptString = "Write song name, press cancel to ignore"
 			while (true) {
-				let songName = await asyncPrompt(promptString)
+				const songName = await asyncPrompt(promptString)
 				if (songName === null) return resolve(null)
 				if (songName !== "") {
 					if (await this.songExists(songName)) {
@@ -365,8 +364,8 @@ class Player extends Component<any,PlayerState>{
 			}
 			recorder.start()
 		} else {
-			let recording = await recorder.stop()
-			let fileName = await asyncPrompt("Write the song name, press cancel to ignore")
+			const recording = await recorder.stop()
+			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
 			if (!this.mounted) return
 			if (fileName) recorder.download(recording.data, fileName + '.wav')
 			this.toggleReverbNodes(hasReverb)
@@ -384,20 +383,21 @@ class Player extends Component<any,PlayerState>{
 	}
 	render() {
 		const { state } = this
+		const { settings, isLoadingInstrument, songs, instrument, hasSong,isRecordingAudio,isRecording,isDragging } = state
 		const keyboardFunctions = {
 			playSound: this.playSound,
 			setHasSong: this.setHasSong
 		}
 		const keyboardData = {
-			isLoading: state.isLoadingInstrument,
-			keyboard: state.instrument,
-			pitch: state.settings.pitch.value as PitchesType,
-			keyboardSize: state.settings.keyboardSize.value,
-			noteNameType: state.settings.noteNameType.value as NoteNameType,
-			hasSong: state.thereIsSong,
-			hasAnimation: state.settings.noteAnimation.value,
-			approachRate: state.settings.approachSpeed.value,
-			keyboardYPosition: state.settings.keyboardYPosition.value
+			isLoading: isLoadingInstrument,
+			keyboard: instrument,
+			pitch: settings.pitch.value as PitchesType,
+			keyboardSize: settings.keyboardSize.value,
+			noteNameType: settings.noteNameType.value as NoteNameType,
+			hasSong,
+			hasAnimation: settings.noteAnimation.value,
+			approachRate: settings.approachSpeed.value,
+			keyboardYPosition: settings.keyboardYPosition.value
 		}
 		const menuFunctions = {
 			addSong: this.addSong,
@@ -406,62 +406,49 @@ class Player extends Component<any,PlayerState>{
 			handleSettingChange: this.handleSettingChange,
 			changeVolume: this.changeVolume
 		}
-		const menuData = {
-			songs: state.songs,
-			settings: state.settings
-		}
+		const menuData = { songs, settings }
 
 		return <AppBackground page='Main'>
 			{SongStore.eventType !== 'approaching' &&
 				<div className='record-button'>
-					<AppButton
-						
-						toggled={state.isRecordingAudio}
+					<AppButton	
+						toggled={isRecordingAudio}
 						onClick={this.toggleRecordAudio}
 					>
-						{state.isRecordingAudio ? "Finish recording" : "Record audio"}
+						{isRecordingAudio ? "Finish recording" : "Record audio"}
 					</AppButton>
 				</div>
 			}
 
-			{state.isDragging && <div className='drag-n-drop'>
+			{isDragging && <div className='drag-n-drop'>
 				Drop file here
 			</div>}
 			<Menu functions={menuFunctions} data={menuData} />
 			<div className="right-panel">
 				<div className="upper-right">
-					{!this.state.thereIsSong
+					{!hasSong
 						&&
 						<AppButton
-							toggled={state.isRecording}
+							toggled={isRecording}
 							onClick={this.toggleRecord}
 							style={{ marginTop: "0.8rem" }}
 						>
-							{state.isRecording ? "Stop" : "Record"}
+							{isRecording ? "Stop" : "Record"}
 						</AppButton>
 
 					}
 				</div>
 				<div className="keyboard-wrapper" style={{ marginBottom: '2vh' }}>
 					<Keyboard
-						key={state.instrument.layout.length}
+						key={instrument.layout.length}
 						data={keyboardData}
 						functions={keyboardFunctions}
 					/>
 				</div>
 			</div>
 		</AppBackground>
-
-
 	}
 }
 
-
-function setIfInTWA() {
-	if (isTwa()) return console.log('inTWA')
-	let isInTwa = document.referrer.includes('android-app://')
-	sessionStorage.setItem('isTwa', JSON.stringify(isInTwa))
-}
-setIfInTWA()
 //@ts-ignore
 export default withRouter(Player);

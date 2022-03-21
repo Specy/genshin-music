@@ -61,7 +61,7 @@ export default function SheetVisualizer() {
                 const chunk = new Chunk([notes.shift() as RecordedNote])
                 const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
                 for (let j = 0; j < notes.length && j < 20; j++) {
-                    let difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
+                    const difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
                     if (difference < 0) {
                         chunk.notes.push(notes.shift() as RecordedNote)
                         j--

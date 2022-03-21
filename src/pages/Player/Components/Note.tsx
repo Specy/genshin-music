@@ -5,7 +5,7 @@ import SvgNote from 'components/SvgNotes'
 import { observe } from 'mobx'
 import { ThemeStore } from 'stores/ThemeStore'
 import type { NoteData } from 'lib/Instrument'
-import type { InstrumentKeys, NoteStatus } from 'types/GeneralTypes'
+import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
 import type { ApproachingNote } from 'lib/Utils/SongClasses'
 import type { NoteImages } from 'types/Keyboard'
 
@@ -26,7 +26,7 @@ interface NoteProps{
     note: NoteData,
     data: {
         approachRate: number
-        instrument: InstrumentKeys
+        instrument: InstrumentName
         isAnimated: boolean
     }
     approachingNotes: ApproachingNote[]

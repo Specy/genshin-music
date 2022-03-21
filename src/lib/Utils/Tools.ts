@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType, EMPTY_LAYER, TEMPO_CHANGERS } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType, EMPTY_LAYER, TEMPO_CHANGERS, isTwa } from "appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
@@ -7,7 +7,7 @@ import { ColumnNote } from "./SongClasses";
 import { CombinedLayer, LayerIndex, NoteNameType } from "types/GeneralTypes";
 
 class FileDownloader {
-	static download = (file:string, name:string, as: string = "text/json") => {
+	static download = (file: string, name: string, as: string = "text/json") => {
 		const data = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
 		const el = document.createElement("a")
 		el.style.display = 'none'
@@ -23,67 +23,73 @@ class FileDownloader {
 
 
 
-class MIDINote{
-	index:number
-	midi:number
+class MIDINote {
+	index: number
+	midi: number
 	status: 'wrong' | 'right' | 'clicked'
-	constructor(index: number = 0,midi:number = 0){
+	constructor(index: number = 0, midi: number = 0) {
 		this.index = index
 		this.midi = midi
 		this.status = midi < 0 ? 'wrong' : 'right'
 	}
 }
 
-class MIDIShortcut{
+class MIDIShortcut {
 	type: string
-	midi:number
+	midi: number
 	status: 'wrong' | 'right' | 'clicked'
-    constructor(type: string, midi:number){
-        this.type = type
-        this.midi = midi
+	constructor(type: string, midi: number) {
+		this.type = type
+		this.midi = midi
 		this.status = midi < 0 ? 'wrong' : 'right'
-    }
+	}
 }
 
 
 
-function capitalize(str:string){
+function capitalize(str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function getNoteText(
-		noteNameType:NoteNameType, 
-		index: number, 
-		pitch: PitchesType, 
-		layoutLength: keyof typeof LAYOUT_DATA
-	) {
-    try {
+	noteNameType: NoteNameType,
+	index: number,
+	pitch: PitchesType,
+	layoutLength: keyof typeof LAYOUT_DATA
+) {
+	try {
 		const layout = LAYOUT_DATA[layoutLength]
 		//@ts-ignore
-        if (noteNameType === "Note name") return NOTE_NAMES[APP_NAME][PITCHES.indexOf(pitch)][index]
-        if (noteNameType === "Keyboard layout") return layout.keyboardLayout[index]
-        if (noteNameType === "Do Re Mi") return layout.mobileLayout[index]
+		if (noteNameType === "Note name") return NOTE_NAMES[APP_NAME][PITCHES.indexOf(pitch)][index]
+		if (noteNameType === "Keyboard layout") return layout.keyboardLayout[index]
+		if (noteNameType === "Do Re Mi") return layout.mobileLayout[index]
 		if (noteNameType === "ABC") return layout.abcLayout[index]
-		if( noteNameType === "No Text") return ''
-    } catch (e) { }
-    return ''
+		if (noteNameType === "No Text") return ''
+	} catch (e) { }
+	return ''
 }
 
-class Array2d{
-	static from(height: number){
-		return new Array(height).fill(0).map(() => {return []})
+class Array2d {
+	static from(height: number) {
+		return new Array(height).fill(0).map(() => { return [] })
 	}
 }
 
 
 function formatMs(ms: number) {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Number(((ms % 60000) / 1000).toFixed(0))
-    return (
-        seconds === 60
-            ? (minutes + 1) + ":00"
-            : minutes + ":" + (seconds < 10 ? "0" : "") + seconds
-    )
+	const minutes = Math.floor(ms / 60000);
+	const seconds = Number(((ms % 60000) / 1000).toFixed(0))
+	return (
+		seconds === 60
+			? (minutes + 1) + ":00"
+			: minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+	)
+}
+
+function setIfInTWA() {
+	if (isTwa()) return console.log('inTWA')
+	const isInTwa = document.referrer.includes('android-app://')
+	sessionStorage.setItem('isTwa', JSON.stringify(isInTwa))
 }
 
 function parseSong(song: any): Song | ComposedSong {
@@ -94,7 +100,7 @@ function parseSong(song: any): Song | ComposedSong {
 	}
 	if (type === "oldSky") {
 		const parsed = Song.fromOldFormat(song)
-		if(parsed === null) {
+		if (parsed === null) {
 			throw new Error("Error Invalid song")
 		}
 		return parsed
@@ -102,17 +108,17 @@ function parseSong(song: any): Song | ComposedSong {
 	if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
 		throw new Error("Error Invalid song")
 	}
-	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {  
-		if(song.data?.isComposedVersion) return ComposedSong.deserialize(song).toGenshin()
+	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
+		if (song.data?.isComposedVersion) return ComposedSong.deserialize(song).toGenshin()
 		return Song.deserialize(song).toGenshin()
 	}
-	if(type === 'newComposed') return ComposedSong.deserialize(song)
-	if(type === 'newRecorded') return Song.deserialize(song)
+	if (type === 'newComposed') return ComposedSong.deserialize(song)
+	if (type === 'newRecorded') return Song.deserialize(song)
 	throw new Error("Error Invalid song")
 }
 
 //TODO improve this detection
-function getSongType(song:any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' {
+function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' {
 	try {
 		if (song.data === undefined) {
 			//oldSky format
@@ -135,7 +141,7 @@ function getSongType(song:any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded
 				}
 				if (Array.isArray(song.columns)) {
 					if (song.columns.length > 0) {
-						let column = song.columns[0]
+						const column = song.columns[0]
 						if (typeof column[0] !== "number") return "none"
 					}
 					return "newComposed"
@@ -176,40 +182,40 @@ function getPitchChanger(pitch: PitchesType) {
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
 function calculateSongLength(columns: Column[], bpm: number, end: number) {
-    const bpmPerMs = Math.floor(60000 / bpm)
-    let totalLength = 0
-    let currentLength = 0
-    let increment = 0 
-    for (let i = 0; i < columns.length; i++) {
-        increment = bpmPerMs * TEMPO_CHANGERS[columns[i].tempoChanger].changer
-        if (i < end) currentLength += increment
-        totalLength += increment
-    }
-    return {
-        total: totalLength,
-        current: currentLength
-    }
+	const bpmPerMs = Math.floor(60000 / bpm)
+	let totalLength = 0
+	let currentLength = 0
+	let increment = 0
+	for (let i = 0; i < columns.length; i++) {
+		increment = bpmPerMs * TEMPO_CHANGERS[columns[i].tempoChanger].changer
+		if (i < end) currentLength += increment
+		totalLength += increment
+	}
+	return {
+		total: totalLength,
+		current: currentLength
+	}
 }
-function numberToLayer(number: LayerIndex) : CombinedLayer {
-	let layer: CombinedLayer = "1000"
-	if (number === 0) layer = "1000"
-	if (number === 1) layer = "0100"
-	if (number === 2) layer = "0010"
-	if (number === 3) layer = "0001"
-	return layer
+const NUMBER_TO_LAYER_MAP = {
+	0: "1000",
+	1: "0100",
+	2: "0010",
+	3: "0001"
+}
+function numberToLayer(number: LayerIndex): CombinedLayer {
+	return NUMBER_TO_LAYER_MAP[number] as CombinedLayer
 }
 
 function mergeLayers(notes: ColumnNote[]): CombinedLayer {
-	let final = EMPTY_LAYER.split("")
+	const merged = EMPTY_LAYER.split("")
 	notes.forEach(note => {
 		note.layer.split("").forEach((e, i) => {
-			if (e === "1") final[i] = "1"
+			if (e === "1") merged[i] = "1"
 		})
 	})
-	return final.join("") as CombinedLayer
+	return merged.join("") as CombinedLayer
 }
-
-function groupByIndex(column: Column) {
+function groupNotesByIndex(column: Column) {
 	const notes: ColumnNote[][] = []
 	column.notes.forEach(note => {
 		if (notes[note.index]) {
@@ -222,17 +228,16 @@ function groupByIndex(column: Column) {
 }
 
 function delay(ms: number) {
-    return new Promise(resolve => {
-        workerTimers.setTimeout(resolve, ms)
-    })
+	return new Promise(resolve => {
+		workerTimers.setTimeout(resolve, ms)
+	})
 }
 
 function nearestEven(num: number) {
-    return 2 * Math.round(num / 2);
+	return 2 * Math.round(num / 2);
 }
 
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
-
 
 export {
 	FileDownloader,
@@ -242,7 +247,7 @@ export {
 	groupByNotes,
 	numberToLayer,
 	mergeLayers,
-	groupByIndex,
+	groupNotesByIndex,
 	delay,
 	Array2d,
 	MIDINote,
@@ -252,5 +257,6 @@ export {
 	clamp,
 	nearestEven,
 	formatMs,
-	calculateSongLength
+	calculateSongLength,
+	setIfInTWA
 }

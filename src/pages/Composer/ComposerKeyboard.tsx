@@ -25,35 +25,35 @@ interface ComposerKeyboardProps {
 }
 
 export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
-    let hiddenSideMenu = data.isPlaying ? " hidden" : ""
+    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, layer} = data
+    const { handleClick, changeLayer, handleTempoChanger } = functions
     let keyboardClass = "keyboard"
-    if (data.keyboard.layout.length === 15) keyboardClass += " keyboard-5"
-    if (data.keyboard.layout.length === 8) keyboardClass += " keyboard-4"
+    if (keyboard.layout.length === 15) keyboardClass += " keyboard-5"
+    if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
     return <>
         <div className={keyboardClass}>
-            {data.keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
-            {data.keyboard.layout.map((note, i) => {
-                let index = -1
-                let noteText = ""
-                let noteImage = ""
+            {keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
+            {keyboard.layout.map((note, i) => {
                 try {
-                    index = data.currentColumn.notes.findIndex((e) => e.index === i)
+                    const index = currentColumn.notes.findIndex((e) => e.index === i)
                     //@ts-ignore
-                    noteImage = LAYOUT_IMAGES[data.keyboard.layout.length][note.index]
-                    noteText = getNoteText(data.noteNameType, note.index, data.pitch, data.keyboard.layout.length as 8 | 15 | 21)
-                } catch (e) { }
-                return <ComposerNote
-                    key={note.index}
-                    layer={index >= 0 ? data.currentColumn.notes[index].layer : EMPTY_LAYER}
-                    data={note}
-                    noteText={noteText}
-                    instrument={data.keyboard.instrumentName}
-                    noteImage={noteImage as NoteImages}
-                    clickAction={functions.handleClick}
-                />
+                    const noteImage = LAYOUT_IMAGES[keyboard.layout.length][note.index]
+                    const noteText = getNoteText(noteNameType, note.index, pitch, keyboard.layout.length as 8 | 15 | 21)
+                    return <ComposerNote
+                        key={note.index}
+                        layer={index >= 0 ? currentColumn.notes[index].layer : EMPTY_LAYER}
+                        data={note}
+                        noteText={noteText}
+                        instrument={keyboard.name}
+                        noteImage={noteImage as NoteImages}
+                        clickAction={handleClick}
+                    />
+                } catch (e) {
+                    return 'Err'
+                }
             })}
         </div>
-        <div className={"bottom-right-wrapper" + hiddenSideMenu}>
+        <div className={"bottom-right-wrapper" + (isPlaying ? " hidden" : "")}>
             <div className={"layer-buttons-wrapper"}>
                 <div className="bottom-right-text">
                     Layer
@@ -61,8 +61,8 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                 <MultiSwitch<LayerType>
                     buttonsClass="layer-button"
                     options={LAYERS_INDEXES}
-                    onSelect={functions.changeLayer}
-                    selected={data.layer}
+                    onSelect={changeLayer}
+                    selected={layer}
                 />
             </div>
             <div className="tempo-changers-wrapper">
@@ -72,7 +72,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                 {TEMPO_CHANGERS.map((tempoChanger) => {
                     return <button
                         key={tempoChanger.id}
-                        onClick={() => functions.handleTempoChanger(tempoChanger)}
+                        onClick={() => handleTempoChanger(tempoChanger)}
                         style={{
                             ...(tempoChanger.changer === 1
                             ? {

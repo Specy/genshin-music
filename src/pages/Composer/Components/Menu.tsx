@@ -24,7 +24,7 @@ interface MenuProps {
         currentSong: ComposedSong
         settings: ComposerSettingsDataType,
         hasChanges: boolean,
-        menuOpen: boolean,
+        isMenuOpen: boolean,
         isRecordingAudio: boolean
     }
     functions: {
@@ -111,7 +111,7 @@ function Menu({ data, functions }: MenuProps) {
         downloadSong
     }
     const hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
-    const menuClass = data.menuOpen ? "menu menu-visible" : "menu"
+    const menuClass = data.isMenuOpen ? "menu menu-visible" : "menu"
     return <div className="menu-wrapper">
         <div className={menuClass}>
             <MenuItem<MenuTabs> action={() => toggleMenu(false)} className='close-menu'>
