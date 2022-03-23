@@ -118,7 +118,6 @@ export class Recording {
 	}
 }
 
-
 export type SongDataType = {
     isComposed: boolean
     isComposedVersion: boolean,
