@@ -140,11 +140,12 @@ export class Song {
             for (let i = 0; i < grouped.length; i++) {
                 const column = new Column()
                 column.notes = grouped[i].map(note => {
+                    //TODO redo this whole thing, layer here should be the same as the one in the note
                     const columnNote = new ColumnNote(note[0])
                     if (note[2] === 0) columnNote.layer = "1000"
                     else if (note[2] === 1) columnNote.layer = "1000"
                     else if (note[2] === 2) columnNote.layer = "0100"
-                    //if (note[2] === 3) columnNote.layer = "110" //TODO check if layer 3 exists
+                    //if (note[2] === 3) columnNote.layer = "110" 
                     else columnNote.layer = "1000"
                     return columnNote
                 })
