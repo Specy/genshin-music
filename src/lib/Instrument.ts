@@ -8,7 +8,7 @@ type Layouts = {
 }
 export default class Instrument {
     name: InstrumentName
-    volumeNode: GainNode
+    volumeNode: GainNode | null
     layout: NoteData[] = []
     layouts: Layouts = {
         keyboard: [],
@@ -49,11 +49,11 @@ export default class Instrument {
     changeVolume = (amount: number) => {
         let newVolume = Number((amount / 135).toFixed(2))
         if (amount < 5) newVolume = 0
-        this.volumeNode.gain.value = newVolume
+        if(this.volumeNode) this.volumeNode.gain.value = newVolume
     }
 
     play = (note: number, pitch: number) => {
-        if (this.isDeleted) return
+        if (this.isDeleted || !this.volumeNode) return
         const player = AUDIO_CONTEXT.createBufferSource()
         player.buffer = this.buffers[note]
         player.connect(this.volumeNode)
@@ -85,16 +85,19 @@ export default class Instrument {
         this.isLoaded = true
         return true
     }
-    disconnect = () => {
-        this.volumeNode.disconnect()
+    disconnect = (node?: AudioNode) => {
+        if(node) return this.volumeNode?.disconnect(node)
+        this.volumeNode?.disconnect()
     }
     connect = (node: AudioNode) => {
-        this.volumeNode.connect(node)
+        this.volumeNode?.connect(node)
     }
     delete = () => {
         this.disconnect()
         this.isDeleted = true
         this.buffers = []
+        //TODO why was this not garbage collected?
+        this.volumeNode = null
     }
 }
 

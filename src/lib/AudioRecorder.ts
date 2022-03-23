@@ -4,7 +4,7 @@ import toWav from 'audiobuffer-to-wav'
 import MediaRecorderPolyfill from 'audio-recorder-polyfill'
 
 export default class AudioRecorder {
-    node: MediaStreamAudioDestinationNode
+    node: MediaStreamAudioDestinationNode | null
     recorder: MediaRecorder
     constructor() {
         this.node = AUDIO_CONTEXT.createMediaStreamDestination()
@@ -17,6 +17,10 @@ export default class AudioRecorder {
     }
     start() {
         this.recorder.start()
+    }
+    delete(){
+        this.node?.disconnect()
+        this.node = null
     }
     stop(): Promise<{
         data: Blob,
@@ -35,6 +39,7 @@ export default class AudioRecorder {
         })
     }
     async download(urlBlob:Blob, fileName:string) {
+        //TODO add file downloader here
         const anchor = document.createElement("a")
         const wav = toWav(await blobToAudio(urlBlob))
         const blob = new Blob([new DataView(wav)], {

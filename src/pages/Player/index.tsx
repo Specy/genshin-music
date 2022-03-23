@@ -83,14 +83,16 @@ class Player extends Component<any,PlayerState>{
 		document.body.removeEventListener('dragover', this.handleDragOver)
 		document.body.removeEventListener('drop', this.handleDrop)
 		window.removeEventListener('keydown', this.handleKeyboard)
-
 		SongStore.reset()
+		this.state.instrument.delete()
+		this.reverbNode?.disconnect()
+		this.reverbVolumeNode?.disconnect()
+		this.recorder?.delete()
 		this.mounted = false
 		this.audioContext = null
 		this.recorder = null
 		this.reverbNode = null
 		this.reverbVolumeNode = null
-		this.state.instrument.delete()
 	}
 
 	componentDidCatch() {
@@ -204,7 +206,6 @@ class Player extends Component<any,PlayerState>{
 		this.setState({ isLoadingInstrument: true })
 		await instrument.load()
 		if (!this.mounted || !this.audioContext) return
-		instrument.connect(this.audioContext.destination)
 		this.setState({
 			instrument,
 			isLoadingInstrument: false
@@ -358,9 +359,10 @@ class Player extends Component<any,PlayerState>{
 		if(!this.reverbVolumeNode || !recorder || !this.audioContext) return
 		if (newState) {
 			if (hasReverb) {
-				this.reverbVolumeNode.connect(recorder.node)
+				if(recorder.node) this.reverbVolumeNode.connect(recorder.node)
+
 			} else {
-				instrument.connect(recorder.node)
+				if(recorder.node) instrument.connect(recorder.node)
 			}
 			recorder.start()
 		} else {

@@ -52,7 +52,7 @@ class Composer extends Component<any, ComposerState>{
     currentMidiSource: WebMidi.MIDIInput | null
     broadcastChannel: BroadcastChannel | null
     audioContext: AudioContext | null
-    recorder: AudioRecorder
+    recorder: AudioRecorder | null
     MIDISettings: typeof MIDISettings
     mounted: boolean
     changes: number
@@ -120,7 +120,9 @@ class Composer extends Component<any, ComposerState>{
         this.broadcastChannel?.close?.()
         layers.forEach(instrument => instrument.delete())
         this.reverbNode?.disconnect?.()
+		this.recorder?.delete()
         this.reverbVolumeNode?.disconnect?.()
+        this.recorder = null
         this.reverbNode = null
         this.reverbVolumeNode = null
         this.audioContext = null
@@ -333,11 +335,12 @@ class Composer extends Component<any, ComposerState>{
         const { layers } = this.state
         const hasReverb = this.state.settings.caveMode.value
         const { recorder } = this
+        if(!recorder) return
         if (hasReverb) {
-            if (this.reverbVolumeNode) this.reverbVolumeNode.connect(recorder.node)
+            if (this.reverbVolumeNode && recorder.node) this.reverbVolumeNode.connect(recorder.node)
         } else {
             layers.forEach(instrument => {
-                instrument.connect(recorder.node)
+                if(recorder.node) instrument.connect(recorder.node)
             })
         }
         recorder.start()
