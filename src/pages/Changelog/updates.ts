@@ -9,7 +9,7 @@ export const updates: Update[] = [
     {
         version: '2.5',
         title: 'Composer improvements',
-        date: '2022- 06/03',
+        date: '2022- 25/03',
         changes: [
             'Improved the rendering of the composer to be more sharp and easier to see on mobile',
             'Added 4th layer in the composer',
