@@ -163,8 +163,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             l: ThemeStore.get('primary'),
             d: ThemeStore.get('primary')
         }
-        colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.35) : colors.l.lighten(0.1)
-        colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.2) : colors.d.darken(0.03)
+        colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
+        colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
         if (!this.notesStageRef?.current && !this.breakpointsStageRef?.current) return null
         return new ComposerCache({
             width: width,

@@ -5,6 +5,7 @@ import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import LoggerStore from 'stores/LoggerStore'
 import { DB } from "Database";
+import { baseThemes } from "./defaultThemes";
 
 export type ThemeKeys = keyof typeof ThemeSettings.data
 export type ThemeProp = {
@@ -40,7 +41,8 @@ export class BaseTheme {
 }
 
 const defaultThemes: Theme[] = [
-    ThemeSettings as Theme
+    ThemeSettings as Theme,
+    ...baseThemes
 ]
 export class ThemeStoreClass {
     state: Theme
@@ -55,7 +57,9 @@ export class ThemeStoreClass {
             const themeId = localStorage.getItem(APP_NAME + '_Theme')
             if (themeId !== null) {
                 const theme = await DB.getTheme(themeId)
-                if (theme) this.loadFromTheme(theme)
+                const defaultTheme = defaultThemes.find(t => t.other.id === themeId)
+                if (theme) return this.loadFromTheme(theme)
+                if(defaultTheme) return this.loadFromTheme(defaultTheme)
             }
         } catch (e) {
             console.error(e)

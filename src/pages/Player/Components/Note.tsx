@@ -127,7 +127,9 @@ const ApproachCircle = memo(function ApproachCircle({ approachRate, index }: App
 function parseBorderFill(status: NoteStatus) {
     if (status === "clicked") return "transparent"
     else if (status === 'toClickNext' || status === 'toClickAndNext') return '#63aea7'
-    return ThemeStore.layer('note_background',0.13).desaturate(0.6).hex()
+
+    const color = ThemeStore.get('note_background').desaturate(0.6)
+    return color.isDark() ? color.lighten(0.45).hex() : color.darken(0.2).hex()
 }
 
 function parseClass(status: NoteStatus) {
