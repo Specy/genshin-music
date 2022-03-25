@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
 import { FileDownloader, parseSong } from "lib/Utils/Tools"
-import { ComposedSong } from 'lib/Utils/ComposedSong';
 import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -21,7 +20,6 @@ import { SerializedSongType } from 'types/SongTypes';
 interface MenuProps {
     data: {
         songs: SerializedSongType[]
-        currentSong: ComposedSong
         settings: ComposerSettingsDataType,
         hasChanges: boolean,
         isMenuOpen: boolean,
@@ -32,7 +30,7 @@ interface MenuProps {
         removeSong: (name: string) => void
         createNewSong: () => void
         changePage: (page: Pages | 'Home') => void
-        updateSong: (song: ComposedSong) => void
+        updateThisSong: () => void
         handleSettingChange: (data: SettingUpdate) => void
         toggleMenuVisible: () => void
         changeVolume: (data: SettingVolumeUpdate) => void
@@ -44,7 +42,7 @@ export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 function Menu({ data, functions }: MenuProps) {
     const [open, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
-    const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible } = functions
+    const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible,updateThisSong } = functions
 
     const handleKeyboard = useCallback((event: KeyboardEvent) => {
         const key = event.code
@@ -100,9 +98,6 @@ function Menu({ data, functions }: MenuProps) {
         }
     },[])
 
-    const updateSong = () => {
-        functions.updateSong(data.currentSong)
-    }
     const sideClass = open ? "side-menu menu-open" : "side-menu"
     const songFunctions = {
         loadSong,
@@ -117,7 +112,7 @@ function Menu({ data, functions }: MenuProps) {
             <MenuItem<MenuTabs> action={() => toggleMenu(false)} className='close-menu'>
                 <FaTimes className="icon" />
             </MenuItem>
-            <MenuItem<MenuTabs> action={updateSong} className={hasUnsaved}>
+            <MenuItem<MenuTabs> action={updateThisSong} className={hasUnsaved}>
                 <Memoized>
                     <FaSave className="icon" />
                 </Memoized>
@@ -237,6 +232,7 @@ function SongRow({ data, functions }: SongRowProps) {
     </div>
 }
 
-
-
-export default Menu
+export default memo(Menu, (p,n) => {
+    return p.data.songs === n.data.songs && p.data.settings === n.data.settings &&
+     p.data.hasChanges === n.data.hasChanges && p.data.isMenuOpen === n.data.isMenuOpen && p.data.isRecordingAudio === n.data.isRecordingAudio
+})

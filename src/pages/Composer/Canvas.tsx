@@ -12,8 +12,6 @@ import type { Column, ColumnNote } from 'lib/Utils/SongClasses';
 import type { Texture } from 'pixi.js';
 import type { ComposerSettingsDataType } from 'lib/BaseSettings';
 
-let NumOfColumnsPerCanvas = 35
-
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
     data: {
@@ -32,6 +30,7 @@ interface ComposerCanvasProps {
 interface ComposerCanvasState {
     width: number
     height: number
+    numberOfColumnsPerCanvas: number
     column: {
         width: number
         height: number
@@ -65,7 +64,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         super(props)
         const sizes = document.body.getBoundingClientRect()
         this.sizes = sizes
-        NumOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
+        const numberOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
         let width = nearestEven(sizes.width * 0.84)
         let height = nearestEven(sizes.height * 0.45)
         if (window.screen.width < sizes.height) {
@@ -76,8 +75,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.state = {
             width: Math.floor(width),
             height: Math.floor(height),
+            numberOfColumnsPerCanvas,
             column: {
-                width: nearestEven(width / NumOfColumnsPerCanvas),
+                width: nearestEven(width / numberOfColumnsPerCanvas),
 
                 height: height
             },
@@ -193,7 +193,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     handleClick = (e: any, type: ClickEventType) => {
         const x = e.data.global.x
-        const { width } = this.state
+        const { width, numberOfColumnsPerCanvas } = this.state
         const { data } = this.props
         if (type === "up") {
             this.sliderSelected = false
@@ -201,8 +201,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         if (type === "down") {
             this.sliderSelected = true
             const relativeColumnWidth = width / data.columns.length
-            const stageSize = relativeColumnWidth * (NumOfColumnsPerCanvas + 1)
-            const stagePosition = relativeColumnWidth * data.selected - (NumOfColumnsPerCanvas / 2) * relativeColumnWidth
+            const stageSize = relativeColumnWidth * (numberOfColumnsPerCanvas + 1)
+            const stagePosition = relativeColumnWidth * data.selected - (numberOfColumnsPerCanvas / 2) * relativeColumnWidth
             this.onSlider = x > stagePosition && x < stagePosition + stageSize
             this.sliderOffset = stagePosition + stageSize / 2 - x
             this.throttleScroll = Number.MAX_SAFE_INTEGER
@@ -253,16 +253,16 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
 
     render() {
-        const { width, timelineHeight, height, theme } = this.state
+        const { width, timelineHeight, height, theme, numberOfColumnsPerCanvas } = this.state
         const { data, functions } = this.props
         const cache = this.state.cache?.cache
         const sizes = this.state.column
-        const xPosition = (data.selected - NumOfColumnsPerCanvas / 2 + 1) * - sizes.width
+        const xPosition = (data.selected - numberOfColumnsPerCanvas / 2 + 1) * - sizes.width
         const beatMarks = Number(data.settings.beatMarks.value)
         const counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks
         const relativeColumnWidth = width / data.columns.length
-        const timelineWidth = Math.floor(relativeColumnWidth * NumOfColumnsPerCanvas)
-        const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (NumOfColumnsPerCanvas / 2)
+        const timelineWidth = Math.floor(relativeColumnWidth * (width / sizes.width + 1))
+        const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         return <div className="canvas-wrapper" style={{ width: width + 2 }}>
             <Stage
                 width={width}
@@ -284,7 +284,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     pointermove={(e) => this.handleStageSlide(e)}
                 >
                     {data.columns.map((column, i) => {
-                        if (!isVisible(i, data.selected)) return null
+                        if (!isVisible(i, data.selected,numberOfColumnsPerCanvas)) return null
                         const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
                         const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
                         const background = column.tempoChanger === 0
@@ -467,7 +467,7 @@ function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, is
 }
 
 
-function isVisible(pos: number, currentPos: number) {
-    const threshold = NumOfColumnsPerCanvas / 2 + 2
+function isVisible(pos: number, currentPos: number, numberOfColumnsPerCanvas: number) {
+    const threshold = numberOfColumnsPerCanvas / 2 + 2
     return (currentPos - threshold) < pos && pos < (currentPos + threshold)
 }

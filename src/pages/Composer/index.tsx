@@ -120,7 +120,7 @@ class Composer extends Component<any, ComposerState>{
         this.broadcastChannel?.close?.()
         layers.forEach(instrument => instrument.delete())
         this.reverbNode?.disconnect?.()
-		this.recorder?.delete()
+        this.recorder?.delete()
         this.reverbVolumeNode?.disconnect?.()
         this.recorder = null
         this.reverbNode = null
@@ -290,7 +290,7 @@ class Composer extends Component<any, ComposerState>{
         if (key === "layer3") this.loadInstrument(data.value as InstrumentName, 3)
         if (key === "layer4") this.loadInstrument(data.value as InstrumentName, 4)
         if (key === "caveMode") this.setupAudioDestination(data.value as boolean)
-        this.setState({ settings, song }, this.updateSettings)
+        this.setState({ settings: {...settings}, song }, this.updateSettings)
     }
     loadInstrument = async (name: InstrumentName, layer: LayerType) => {
         if (!this.mounted) return
@@ -310,7 +310,7 @@ class Composer extends Component<any, ComposerState>{
         //@ts-ignore
         settings[obj.key] = { ...settings[obj.key], volume: obj.value }
         this.state.layers[layer].changeVolume(obj.value)
-        this.setState({ settings }, this.updateSettings)
+        this.setState({ settings: {...settings} }, this.updateSettings)
     }
     setupAudioDestination = (hasReverb: boolean) => {
         if (!this.mounted) return
@@ -335,12 +335,12 @@ class Composer extends Component<any, ComposerState>{
         const { layers } = this.state
         const hasReverb = this.state.settings.caveMode.value
         const { recorder } = this
-        if(!recorder) return
+        if (!recorder) return
         if (hasReverb) {
             if (this.reverbVolumeNode && recorder.node) this.reverbVolumeNode.connect(recorder.node)
         } else {
             layers.forEach(instrument => {
-                if(recorder.node) instrument.connect(recorder.node)
+                if (recorder.node) instrument.connect(recorder.node)
             })
         }
         recorder.start()
@@ -419,7 +419,7 @@ class Composer extends Component<any, ComposerState>{
     changePitch = (value: PitchesType) => {
         const { settings } = this.state
         settings.pitch = { ...settings.pitch, value }
-        this.setState({ settings }, this.updateSettings)
+        this.setState({ settings:{...settings} }, this.updateSettings)
     }
     handleClick = (note: NoteData) => {
         const { layers, song, layer } = this.state
@@ -487,6 +487,9 @@ class Composer extends Component<any, ComposerState>{
             }
             resolve()
         })
+    }
+    updateThisSong = async () => {
+        this.updateSong(this.state.song)
     }
     askForSongName = (question?: string): Promise<string | null> => {
         return new Promise(async resolve => {
@@ -569,7 +572,7 @@ class Composer extends Component<any, ComposerState>{
         console.log("song loaded")
         this.setState({
             song: parsed,
-            settings,
+            settings: {...settings},
             selectedColumns: []
         })
     }
@@ -728,8 +731,8 @@ class Composer extends Component<any, ComposerState>{
     render() {
         const { state } = this
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, songs, isRecordingAudio, isToolsVisible, isMenuOpen, layer, selectedColumns, layers } = state
-        const { 
-            loadSong, removeSong, createNewSong, changePage, updateSong, handleSettingChange, toggleMenuVisible, changeVolume, startRecordingAudio, handleClick,
+        const {
+            loadSong, removeSong, createNewSong, changePage, updateThisSong, handleSettingChange, toggleMenuVisible, changeVolume, startRecordingAudio, handleClick,
             toggleBreakpoint, handleTempoChanger, changeLayer, copyColumns, pasteColumns, eraseColumns, resetSelection, deleteColumns, changeMidiVisibility,
             selectColumn, toggleTools, changePitch
         } = this
@@ -791,10 +794,14 @@ class Composer extends Component<any, ComposerState>{
                         />
                         <div className="buttons-composer-wrapper-right">
                             <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
-                                <AddColumn className="tool-icon" />
+                                <Memoized>
+                                    <AddColumn className="tool-icon" />
+                                </Memoized>
                             </div>
                             <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
-                                <RemoveColumn className='tool-icon' />
+                                <Memoized>
+                                    <RemoveColumn className='tool-icon' />
+                                </Memoized>
                             </div>
                             <div className="tool" onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}>
                                 <Memoized>
@@ -823,13 +830,11 @@ class Composer extends Component<any, ComposerState>{
             </div>
             <Menu
                 data={{
-                    songs, isMenuOpen, isRecordingAudio,settings,
-                    currentSong: state.song,
+                    songs, isMenuOpen, isRecordingAudio, settings,
                     hasChanges: this.changes > 0,
-    
                 }}
                 functions={{
-                    loadSong, removeSong, createNewSong, changePage, updateSong, handleSettingChange,
+                    loadSong, removeSong, createNewSong, changePage, updateThisSong, handleSettingChange,
                     toggleMenuVisible, changeVolume, changeMidiVisibility, startRecordingAudio
                 }}
             />

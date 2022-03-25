@@ -5,8 +5,8 @@ const baseThemes: Theme[] = [
         other: {
             backgroundImageMain: "",
             backgroundImageComposer: "",
-            name: "Purple",
-            id: "Purple"
+            name: "Pink",
+            id: "Pink"
         },
         data: {
             background: {
@@ -30,7 +30,7 @@ const baseThemes: Theme[] = [
             accent: {
                 name: "accent",
                 css: "accent",
-                value: "rgb(205, 30, 158)",
+                value: "#DC45B4",
                 text: "#edeae5"
             },
             composer_accent: {
@@ -42,7 +42,7 @@ const baseThemes: Theme[] = [
             icon_color: {
                 name: "icon_color",
                 css: "icon-color",
-                value: "rgb(255, 255, 254)",
+                value: "#FBDDFF",
                 text: "#151414"
             },
             menu_background: {

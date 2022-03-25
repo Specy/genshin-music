@@ -44,6 +44,7 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
     if (layer[2] === "1") className += " layer-3"
     if (layer[3] === "1") className += " layer-4"
 
+    const color = ThemeStore.get('note_background').desaturate(0.6)
     const layer3Class = "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"
     return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
         <div className={className} >
@@ -52,13 +53,12 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
                 color={ThemeStore.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
             />
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
-                fill={ThemeStore.layer('note_background',0.13).desaturate(0.6).toString()}
+                fill={color.isDark() ? color.lighten(0.45).hex() : color.darken(0.18).hex()}
                 className='genshin-border'
             />}
             <div className={layer3Class}>
             </div>
             <div className='layer-4-line'>
-
             </div>
             <div 
                 className={APP_NAME === "Sky" ? "note-name-sky" : "note-name"}

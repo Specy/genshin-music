@@ -11,14 +11,15 @@ import { AppButton } from "components/AppButton";
 export interface ThemeProprietyProps {
     name: ThemeKeys,
     value: string,
-    modified: boolean,
+    isSelected: boolean,
+    isModified: boolean,
+    canReset: boolean,
     setSelectedProp: (name: ThemeKeys | '') => void,
-    selected: boolean,
     onChange: (name: ThemeKeys, value: string) => void,
     handlePropReset: (name: ThemeKeys) => void
 }
 
-export function ThemePropriety({ name, value, onChange, modified, setSelectedProp, selected, handlePropReset }: ThemeProprietyProps) {
+export function ThemePropriety({ name, value, onChange, isModified, setSelectedProp, isSelected, handlePropReset, canReset }: ThemeProprietyProps) {
     const [color, setColor] = useState(Color(value))
     useEffect(() => {
         setColor(Color(value))
@@ -33,8 +34,8 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
     }
 
     return <div
-        className={`theme-row ${selected ? 'selected' : ''}`}
-        style={selected ? {
+        className={`theme-row ${isSelected ? 'selected' : ''}`}
+        style={isSelected ? {
             backgroundColor: color.toString(),
             color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
         } : {}}
@@ -43,7 +44,12 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
             {capitalize(name.split('_').join(' '))}
         </div>
         <div className="color-input-wrapper">
-            {selected
+            {(canReset && isModified)  &&
+                <AppButton onClick={() => handlePropReset(name)} toggled={isModified} className='theme-reset'>
+                    RESET
+                </AppButton>
+            }
+            {isSelected
                 ? <div className="color-picker">
                     <HexColorPicker onChange={handleChange} color={color.hex()} />
                     <div className="color-picker-row">
@@ -54,7 +60,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark,
                             }}
                         >
-                            <div style={{fontFamily:'Arial'}}>#</div>
+                            <div style={{ fontFamily: 'Arial' }}>#</div>
                             <HexColorInput
                                 onChange={handleChange}
                                 color={color.hex()}
@@ -102,9 +108,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                     Text
                 </div>
             }
-            <AppButton onClick={() => handlePropReset(name)} toggled={modified} className='theme-reset'>
-                RESET
-            </AppButton>
+
         </div>
     </div>
 }

@@ -123,11 +123,12 @@ function ThemePage() {
                 <ThemePropriety
                     {...e}
                     key={e.name}
-                    selected={selectedProp === e.name}
+                    isSelected={selectedProp === e.name}
+                    canReset={ThemeStore.isEditable()}
+                    isModified={!theme.isDefault(e.name)}
                     onChange={handleChange}
                     setSelectedProp={setSelectedProp}
                     handlePropReset={handlePropReset}
-                    modified={!theme.isDefault(e.name)}
                 />
             )}
             <ThemeInput

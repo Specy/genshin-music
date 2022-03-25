@@ -7,13 +7,17 @@ import { ColumnNote } from "./SongClasses";
 import { CombinedLayer, LayerIndex, NoteNameType } from "types/GeneralTypes";
 
 class FileDownloader {
-	static download = (file: string, name: string, as: string = "text/json") => {
-		const data = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
+	static download(file: string | Blob, name: string, as: string = "text/json"){
 		const el = document.createElement("a")
 		el.style.display = 'none'
 		document.body.appendChild(el)
-		el.setAttribute("href", data)
-		el.setAttribute("download", name)
+		if(typeof file === "string"){
+			el.href = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
+		}
+		if(file instanceof Blob){
+			el.href = URL.createObjectURL(file)
+		}
+		el.download = name
 		el.click();
 		el.remove();
 	}
