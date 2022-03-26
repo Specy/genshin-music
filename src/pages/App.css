@@ -94,8 +94,10 @@ body {
 	flex: 1;
 }
 #root {
-	width: 100%;
 	height: 100%;
+	width: 100%;
+	display: flex;
+	justify-content: center;
 }
 .app,
 .app-content {
@@ -150,13 +152,6 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: space-between;
-}
-
-.index {
-	height: 100%;
-	width: 100%;
-	display: flex;
-	justify-content: center;
 }
 .hidden {
 	display: none !important;

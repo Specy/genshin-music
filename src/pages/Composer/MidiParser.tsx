@@ -12,6 +12,7 @@ import { ThemeStore, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
 import { LayerIndex } from 'types/GeneralTypes'
 import { SongInstruments } from 'types/SongTypes'
+import Switch from 'components/Switch'
 interface MidiImportProps {
     data: {
         instruments: SongInstruments
@@ -244,79 +245,52 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     Close
                 </button>
             </div>
-            <table className='separator-border' style={{ width: "100%" }}>
-                <tbody>
-                    <tr>
-                        <td>
-                            <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
-                        </td>
-                        <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems: "center" }}>
-                            <NumberInput
-                                value={bpm}
-                                onChange={changeBpm}
-                                delay={600}
-                                style={midiInputsStyle}
-                                step={5}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div style={{ marginRight: '0.5rem' }}>Scale notes by: </div>
-                        </td>
-                        <td>
-                            <NumberInput
-                                value={offset}
-                                onChange={changeOffset}
-                                delay={600}
-                                style={midiInputsStyle}
-                                step={1}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div style={{ marginRight: '0.5rem' }}>Pitch:</div>
-                        </td>
-                        <td style={{ display: 'flex', justifyContent: 'flex-end', alignItems: "center" }}>
-                            <select
-                                className='midi-select'
-                                value={pitch}
-                                onChange={(event: ChangeEvent<HTMLSelectElement>) => changePitch(event.target.value as PitchesType)}
-                                style={{ 
-                                    backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#','%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`,
-                                    width: '5rem', 
-                                    ...midiInputsStyle 
-                                }}
-                            >
-                                <option value="C">C</option>
-                                <option value="Db">Db</option>
-                                <option value="D">D</option>
-                                <option value="Eb">Eb</option>
-                                <option value="E">E</option>
-                                <option value="F">F</option>
-                                <option value="Gb">Gb</option>
-                                <option value="G">G</option>
-                                <option value="Ab">Ab</option>
-                                <option value="A">A</option>
-                                <option value="Bb">Bb</option>
-                                <option value="B">B</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div style={{ marginRight: '0.5rem' }}>Include accidentals:</div>
-                        </td>
-                        <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <input type='checkbox'
-                                checked={includeAccidentals}
-                                onChange={this.toggleAccidentals}
-                            />
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div className='midi-table-row'>
+                <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
+                <NumberInput
+                    value={bpm}
+                    onChange={changeBpm}
+                    delay={600}
+                    style={midiInputsStyle}
+                    step={5}
+                />
+            </div>
+            <div className='midi-table-row'>
+                <div style={{ marginRight: '0.5rem' }}>Scale notes by: </div>
+                <NumberInput
+                    value={offset}
+                    onChange={changeOffset}
+                    delay={600}
+                    style={midiInputsStyle}
+                    step={1}
+                />
+            </div>
+            <div className='midi-table-row'>
+                <div style={{ marginRight: '0.5rem' }}>Pitch:</div>
+                <select
+                    className='midi-select'
+                    value={pitch}
+                    onChange={(event: ChangeEvent<HTMLSelectElement>) => changePitch(event.target.value as PitchesType)}
+                    style={{
+                        margin: 0,
+                        backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`,
+                        width: '5rem',
+                        ...midiInputsStyle
+                    }}
+                >
+                    {PITCHES.map(pitch =>
+                        <option key={pitch} value={pitch}>{pitch}</option>
+                    )}
+                </select>
+            </div>
+            <div className='midi-table-row'>
+                <div style={{ marginRight: '0.5rem' }}>Include accidentals:</div>
+                <Switch
+                    checked={includeAccidentals}
+                    onChange={this.toggleAccidentals}
+                    styleOuter={midiInputsStyle}
+                />
+            </div>
             {tracks.length && <div className='midi-column separator-border' style={{ width: '100%' }}>
                 <div className='midi-column' style={{ width: '100%' }}>
                     <div>Select midi tracks</div>
@@ -380,13 +354,13 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
                     value={data.layer}
                     className='midi-select'
                     style={{
-                        backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#','%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
+                        backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
                     }}
                 >
-                    {LAYERS_INDEXES.map(layer => 
+                    {LAYERS_INDEXES.map(layer =>
                         <option value={layer - 1} key={layer}>
                             Layer {layer}
-                        </option>    
+                        </option>
                     )}
                 </select>
 
@@ -401,8 +375,7 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
         <div
             className='midi-track-data'
             style={{
-                display: dataShown ? "flex" : "none",
-                backgroundColor: theme.layer('primary', 0.3).toString()
+                display: dataShown ? "flex" : "none"
             }}
         >
             <div className='midi-track-data-row'>

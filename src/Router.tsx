@@ -1,6 +1,6 @@
 import { HashRouter, Route, Switch } from "react-router-dom";
 import App from 'pages/App';
-import Main from 'pages/Player';
+import Player from 'pages/Player';
 import Composer from "pages/Composer"
 import ErrorPage from "pages/ErrorPage"
 import Changelogpage from 'pages/Changelog'
@@ -12,10 +12,10 @@ import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
 import { ThemeProvider } from 'components/ThemeProvider';
+import { AppBackground } from "components/AppBackground";
 
 export function Router() {
-	return <div className="index">
-		<HashRouter>
+	return <HashRouter>
 			<ThemeProvider>
 				<App />
 				<Switch>
@@ -23,13 +23,19 @@ export function Router() {
 						<ErrorPage />
 					</Route>
 					<Route exact path="/">
-						<Main />
+						<AppBackground page="Main">
+							<Player />
+						</AppBackground>
 					</Route>
 					<Route exact path="/Player">
-						<Main />
+						<AppBackground page="Main">
+							<Player />
+						</AppBackground>
 					</Route>
 					<Route exact path="/Composer">
-						<Composer />
+						<AppBackground page="Composer">
+							<Composer />
+						</AppBackground>
 					</Route>
 					<Route exact path="/Donate">
 						<Donate />
@@ -58,6 +64,4 @@ export function Router() {
 				</Switch>
 			</ThemeProvider>
 		</HashRouter>
-
-	</div>
 }

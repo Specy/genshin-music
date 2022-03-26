@@ -24,7 +24,6 @@ import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
-import { AppBackground } from 'components/AppBackground';
 import { SerializedSong, Song } from 'lib/Utils/Song';
 import { SerializedSongType, SongInstruments } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
@@ -56,6 +55,7 @@ class Composer extends Component<any, ComposerState>{
     MIDISettings: typeof MIDISettings
     mounted: boolean
     changes: number
+    unblock: () => void
     constructor(props: any) {
         super(props)
         const settings = this.getSettings()
@@ -90,6 +90,7 @@ class Composer extends Component<any, ComposerState>{
         this.currentMidiSource = null
         this.reverbNode = null
         this.reverbVolumeNode = null
+        this.unblock = () => {}
     }
 
     componentDidMount() {
@@ -104,6 +105,12 @@ class Composer extends Component<any, ComposerState>{
                 this.togglePlay(event.data === 'play')
             }
         }
+        this.unblock = this.props.history.block((data:any) => {
+            if(this.changes !== 0){
+                this.changePage(data.pathname)
+                return false
+            }
+        })
         if (window.location.hostname !== "localhost") {
             window.addEventListener("beforeunload", this.handleUnload)
         }
@@ -127,6 +134,7 @@ class Composer extends Component<any, ComposerState>{
         this.reverbVolumeNode = null
         this.audioContext = null
         state.isPlaying = false
+        this.unblock()
         if (window.location.hostname !== "localhost") {
             window.removeEventListener("beforeunload", this.handleUnload)
         }
@@ -386,6 +394,7 @@ class Composer extends Component<any, ComposerState>{
                 case "Digit3": this.handleTempoChanger(TEMPO_CHANGERS[2]); break;
                 case "Digit4": this.handleTempoChanger(TEMPO_CHANGERS[3]); break;
                 case "Space": {
+                    if(event.repeat) return
                     this.togglePlay()
                     if (!settings.syncTabs.value) break;
                     this.broadcastChannel?.postMessage?.("play")
@@ -552,7 +561,11 @@ class Composer extends Component<any, ComposerState>{
             if (!confirm && state.song.columns.length > 0) {
                 confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`)
             }
-            if (confirm) await this.updateSong(state.song)
+            if (confirm){
+                await this.updateSong(state.song)
+                 //TODO once i change to ID i need to remove this
+                if(state.song.name === parsed.name) return 
+            }
         }
         const settings = this.state.settings
         settings.bpm = { ...settings.bpm, value: song.bpm }
@@ -645,6 +658,7 @@ class Composer extends Component<any, ComposerState>{
     }
     changePage = async (page: Pages | 'Home') => {
         const { song, settings } = this.state
+        if (page === 'Home') return HomeStore.open()
         if (this.changes !== 0) {
             if (settings.autosave.value) {
                 await this.updateSong(song)
@@ -655,8 +669,7 @@ class Composer extends Component<any, ComposerState>{
                 }
             }
         }
-        if (page === 'Home') return HomeStore.open()
-        //@ts-ignore
+        this.unblock()
         this.props.history.push(page)
     }
     selectColumn = (index: number, ignoreAudio?: boolean) => {
@@ -738,7 +751,7 @@ class Composer extends Component<any, ComposerState>{
         } = this
 
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
-        return <AppBackground page='Composer'>
+        return <>
             {isMidiVisible &&
                 <MidiParser
                     functions={{ loadSong, changeMidiVisibility, changePitch }}
@@ -857,7 +870,7 @@ class Composer extends Component<any, ComposerState>{
                     {formatMs(songLength.total)}
                 </div>
             </div>
-        </AppBackground>
+        </>
     }
 }
 

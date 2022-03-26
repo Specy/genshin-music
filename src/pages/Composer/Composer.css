@@ -339,16 +339,38 @@ canvas{
     border: solid 2px var(--secondary);
     color: var(--primary-text);
     max-width: 60vw;
-    min-width: 40vw;
+    min-width: 45vw;
     z-index: 3;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     overflow:auto;
-
+    animation: fadeIn 0.2s;
 }
+@keyframes fadeIn{
+    from{
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to{
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+    
 .floating-midi *{
     font-size: 0.9rem;
+}
+.midi-table{
+    margin-bottom: 0.1rem;
+}
+.midi-table-row{
+    width: 100%;
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
 }
 .floating-midi::-webkit-scrollbar-thumb {
 	background: var(--icon-color);
@@ -395,7 +417,6 @@ canvas{
     display: flex;
     flex-direction: column;
     margin-top: 0.5rem;
-    background: var(--primary);
     padding: 0.4rem;
     border-radius: 0.2rem;
 }

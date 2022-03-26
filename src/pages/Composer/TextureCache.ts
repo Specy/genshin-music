@@ -68,6 +68,14 @@ export class ComposerCache {
         this.generate()
     }
     destroy = () => {
+        this.cache.columns.forEach(e => e.destroy(true))
+        this.cache.standard.forEach(e => e.destroy(true))
+        this.cache.columnsLarger.forEach(e => e.destroy(true))
+        this.cache.standardLarger.forEach(e => e.destroy(true))
+        this.cache.breakpoints.forEach(e => e.destroy(true))
+        Object.entries(this.cache.notes).forEach(([_, value]) => {
+            value.destroy(true)
+        })
     }
     generate = () => {
         TEMPO_CHANGERS.forEach(tempoChanger => {

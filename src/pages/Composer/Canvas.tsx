@@ -122,7 +122,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             )
         })
         this.dispose = observe(ThemeStore.state.data, () => {
-            this.state?.cache?.destroy?.()
             this.setState({
                 cache: this.getCache(
                     this.state.column.width,
@@ -166,7 +165,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
         if (!this.notesStageRef?.current && !this.breakpointsStageRef?.current) return null
-        return new ComposerCache({
+        const newCache = new ComposerCache({
             width: width,
             height: height,
             margin: margin,
@@ -186,7 +185,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 }
             ]
         })
-
+        this.state?.cache?.destroy?.()
+        return newCache
     }
     handleWheel = (e: WheelEvent) => {
         this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
@@ -305,7 +305,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     })}
                 </Container>
                 }
-
             </Stage>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
                 <div

@@ -15,7 +15,6 @@ import { APP_NAME, AUDIO_CONTEXT, PitchesType } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
-import { AppBackground } from 'components/AppBackground';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
@@ -410,7 +409,7 @@ class Player extends Component<any,PlayerState>{
 		}
 		const menuData = { songs, settings }
 
-		return <AppBackground page='Main'>
+		return <>
 			{SongStore.eventType !== 'approaching' &&
 				<div className='record-button'>
 					<AppButton	
@@ -448,7 +447,7 @@ class Player extends Component<any,PlayerState>{
 					/>
 				</div>
 			</div>
-		</AppBackground>
+		</>
 	}
 }
 
