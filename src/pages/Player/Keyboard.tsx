@@ -164,7 +164,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
         //@ts-ignore
         if (this.currentMIDISource) this.currentMIDISource.removeEventListener('midimessage', this.handleMidi)
         this.currentMIDISource = inputs.find(input => {
-            return input.name + " " + input.manufacturer === this.MIDISettings.currentSource
+            return (input.name + " " + input.manufacturer) === this.MIDISettings.currentSource
         }) || null
         if (this.currentMIDISource) this.currentMIDISource.onmidimessage = this.handleMidi
     }
