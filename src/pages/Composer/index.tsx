@@ -520,7 +520,7 @@ class Composer extends Component<any, ComposerState>{
 
     }
     askForSongUpdate = async () => {
-        return await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`)
+        return await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`,false)
     }
     songExists = async (name: string) => {
         return await DB.existsSong({ name: name })
@@ -559,7 +559,7 @@ class Composer extends Component<any, ComposerState>{
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
             if (!confirm && state.song.columns.length > 0) {
-                confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`)
+                confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`,false)
             }
             if (confirm){
                 await this.updateSong(state.song)

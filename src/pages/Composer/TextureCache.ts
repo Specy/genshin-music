@@ -33,8 +33,8 @@ export class ComposerCache {
     noteWidth: number
     noteHeight: number
     standardsColors: typeof standards
-    app: Application
-    breakpointsApp: Application
+    app: Application | null
+    breakpointsApp: Application | null
     composerAccent: Color
     constructor({
         width,
@@ -76,16 +76,21 @@ export class ComposerCache {
         Object.entries(this.cache.notes).forEach(([_, value]) => {
             value.destroy(true)
         })
+        this.app = null
+        this.breakpointsApp = null
     }
     generate = () => {
         TEMPO_CHANGERS.forEach(tempoChanger => {
-            this.cache.columns.push(this.drawColumn(tempoChanger, 1))
+            const texture = this.drawColumn(tempoChanger, 1)
+            if(texture) this.cache.columns.push(texture)
         })
         this.standardsColors.forEach(standardColumn => {
-            this.cache.standard.push(this.drawColumn(standardColumn, 1))
+            const texture = this.drawColumn(standardColumn, 1)
+            if(texture) this.cache.standard.push(texture)
         })
         this.standardsColors.forEach(standardColumn => {
-            this.cache.standardLarger.push(this.drawColumn(standardColumn, 3))
+            const texture = this.drawColumn(standardColumn, 3)
+            if(texture) this.cache.standardLarger.push(texture)
         })
         layersCombination.forEach(note => {
             const radius = this.noteWidth > 20 ? 3 : 2
@@ -127,15 +132,18 @@ export class ComposerCache {
                     .lineTo(this.noteWidth - this.margin + 0.5, this.noteHeight / 2)
                     .endFill()
             }
+            if(!this.app) return
             const texture = this.app.renderer.generateTexture(g, {
                 resolution: 2,
                 scaleMode: SCALE_MODES.LINEAR,
                 region: new Rectangle(0, 0, this.noteWidth, this.noteHeight)
             });
             this.cache.notes[note] = texture
+            g.destroy(true)
         })
         TEMPO_CHANGERS.forEach(tempoChanger => {
-            this.cache.columnsLarger.push(this.drawColumn(tempoChanger, 2))
+            const texture = this.drawColumn(tempoChanger, 2)
+            if(texture) this.cache.columnsLarger.push(texture)
         })
         breakpoints.forEach(breakpoint => {
             const g = new Graphics()
@@ -147,12 +155,14 @@ export class ComposerCache {
                     this.timelineHeight / 2,
                     size
                 ).endFill()
+                if(!this.breakpointsApp) return
                 const texture = this.breakpointsApp.renderer.generateTexture(g, {
                     scaleMode: SCALE_MODES.LINEAR,
                     resolution: 2,
                     region: new Rectangle(0, 0, size * 2, this.timelineHeight)
                 });
                 this.cache.breakpoints.push(texture)
+                g.destroy(true)
             } else {
                 g.beginFill(this.composerAccent.rgbNumber())
                     .moveTo(0, this.height)
@@ -174,17 +184,18 @@ export class ComposerCache {
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(this.width, this.noteHeight)
                     .endFill();
+                if(!this.app) return
                 const texture = this.app.renderer.generateTexture(g, {
                     scaleMode: SCALE_MODES.LINEAR,
                     resolution: 2
                 });
                 this.cache.breakpoints.push(texture)
+                g.destroy(true)
             }
         })
     }
     drawColumn = (data: { color: number }, borderWidth: number) => {
         const g = new Graphics()
-
         g.beginFill(data.color)
         g.drawRect(0, 0, this.width, this.height)
         g.lineStyle(borderWidth, borderWidth === 2 ? 0x333333 : 0x333333)
@@ -196,10 +207,13 @@ export class ComposerCache {
             g.moveTo(0, y)
             g.lineTo(this.width, y)
         }
-        return this.app.renderer.generateTexture(g, {
+        if(!this.app) return
+        const texture = this.app.renderer.generateTexture(g, {
             scaleMode: SCALE_MODES.LINEAR,
             resolution: window.devicePixelRatio || 1,
             region: new Rectangle(0, 0, this.width, this.height)
-        });
+        })
+        g.destroy(true)
+        return texture
     }
 }

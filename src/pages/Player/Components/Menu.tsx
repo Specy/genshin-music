@@ -27,6 +27,7 @@ import { SearchedSongType } from 'types/GeneralTypes';
 import { FileElement, FilePicker } from 'components/FilePicker';
 import { SerializedSongType } from 'types/SongTypes';
 import "./menu.css"
+import { ThemeStoreClass } from 'stores/ThemeStore';
 
 interface MenuProps {
     functions: {
@@ -220,6 +221,7 @@ function Menu({ functions, data }: MenuProps) {
                     baseType='recorded'
                     SongComponent={SongRow}
                     componentProps={{
+                        theme,
                         functions: {
                             removeSong,
                             toggleMenu,
@@ -308,6 +310,7 @@ function Menu({ functions, data }: MenuProps) {
                         searchedSongs.length > 0
                             ? searchedSongs.map(song =>
                                 <LibrarySearchedSong
+                                    theme={theme}
                                     key={song.file}
                                     data={song}
                                     importSong={addSong}
@@ -343,6 +346,7 @@ function Menu({ functions, data }: MenuProps) {
 
 interface SongRowProps {
     data: Song | ComposedSong
+    theme: ThemeStoreClass
     functions: {
         removeSong: (name: string) => void
         toggleMenu: (override?: boolean) => void
@@ -350,9 +354,9 @@ interface SongRowProps {
     }
 }
 
-function SongRow({ data, functions }: SongRowProps) {
+function SongRow({ data, functions, theme }: SongRowProps) {
     const { removeSong, toggleMenu, downloadSong } = functions
-
+    const buttonStyle = { backgroundColor: theme.layer('primary',0.15).hex() }
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             SongStore.play(data, 0)
@@ -362,26 +366,27 @@ function SongRow({ data, functions }: SongRowProps) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                SongStore.practice(data, 0, data.notes.length)
-                toggleMenu(false)
-            }}
+                    SongStore.practice(data, 0, data.notes.length)
+                    toggleMenu(false)
+                }}
+                style={buttonStyle}
             >
                 <FaCrosshairs />
             </button>
 
             <button className="song-button" onClick={() => {
-                SongStore.approaching(data, 0, data.notes.length)
-                toggleMenu(false)
-            }}
+                    SongStore.approaching(data, 0, data.notes.length)
+                    toggleMenu(false)
+                }}
+                style={buttonStyle}
             >
                 <BsCircle />
             </button>
-            <button className="song-button" onClick={() => downloadSong(data)}>
+            <button className="song-button" onClick={() => downloadSong(data)} style={buttonStyle}>
                 <FaDownload />
-
             </button>
-            <button className="song-button" onClick={() => removeSong(data.name)}>
-                <FaTrash color="#ed4557" />
+            <button className="song-button" onClick={() => removeSong(data.name)} style={buttonStyle}>
+                <FaTrash color="#ed4557" /> 
             </button>
         </div>
     </div>

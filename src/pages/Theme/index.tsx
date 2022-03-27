@@ -4,7 +4,7 @@ import { observe } from "mobx";
 import { SimpleMenu } from "components/SimpleMenu";
 import { AppButton } from "components/AppButton";
 import { FileElement, FilePicker } from "components/FilePicker"
-import Main from "pages/Player";
+import Player from "pages/Player";
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
 import { DB } from "Database";
@@ -17,6 +17,7 @@ import LoggerStore from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/hooks/useTheme";
 import './Theme.css'
+import { AppBackground } from "components/AppBackground";
 
 
 function ThemePage() {
@@ -195,7 +196,9 @@ function ThemePage() {
                 Preview
             </div>
             <div className="theme-app-preview">
-                <Main />
+                <AppBackground page="Main">
+                    <Player />
+                </AppBackground>
             </div>
         </div>
     </div>

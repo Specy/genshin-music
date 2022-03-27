@@ -487,7 +487,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
         const { state, props } = this
         const { data } = props
         const { keyboard, approachingScore, speedChanger } = state
-        const size = clamp(data.keyboardSize / 100, 0.5, 1)
+        const size = clamp(data.keyboardSize / 100, 0.5, 1.5)
         let keyboardClass = "keyboard"
         if (keyboard.length === 15) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"

@@ -5,14 +5,16 @@ import LoggerStore from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
 import { ComposedSong } from 'lib/Utils/ComposedSong';
 import type {  Song } from 'lib/Utils/Song';
+import { ThemeStoreClass } from 'stores/ThemeStore';
 
 interface SearchedSongProps{
     onClick: (song: ComposedSong | Song, start: number) => void,
     importSong: (song: ComposedSong | Song) => void, 
     data: SearchedSongType
+    theme: ThemeStoreClass
 }
 
-export default function SearchedSong({ onClick, data, importSong }:SearchedSongProps) {
+export default function SearchedSong({ onClick, data, importSong, theme }:SearchedSongProps) {
     const [fetching, setFetching] = useState(false)
     const [cache, setCache] = useState<Song | ComposedSong | null>(null)
     const download = async function () {
@@ -52,7 +54,7 @@ export default function SearchedSong({ onClick, data, importSong }:SearchedSongP
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={download}>
+            <button className="song-button" onClick={download} style={{backgroundColor: theme.layer('primary',0.2).hex()}}>
                 {fetching ? <FaSpinner /> : <FaDownload />}
             </button>
         </div>

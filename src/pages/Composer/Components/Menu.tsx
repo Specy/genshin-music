@@ -16,6 +16,8 @@ import { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
 import { SerializedSongType } from 'types/SongTypes';
+import { useTheme } from 'lib/hooks/useTheme';
+import { ThemeStoreClass } from 'stores/ThemeStore';
 
 interface MenuProps {
     data: {
@@ -43,7 +45,7 @@ function Menu({ data, functions }: MenuProps) {
     const [open, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible,updateThisSong } = functions
-
+    const [theme] = useTheme()
     const handleKeyboard = useCallback((event: KeyboardEvent) => {
         const key = event.code
         if (document.activeElement?.tagName === "INPUT") return
@@ -149,6 +151,7 @@ function Menu({ data, functions }: MenuProps) {
                     SongComponent={SongRow}
                     baseType='composed'
                     componentProps={{
+                        theme,
                         functions: songFunctions
                     }}
                 />
@@ -200,6 +203,7 @@ function Menu({ data, functions }: MenuProps) {
 
 interface SongRowProps {
     data: SerializedSongType
+    theme: ThemeStoreClass
     functions: {
         removeSong: (name: string) => void
         toggleMenu: (override: boolean) => void
@@ -208,8 +212,9 @@ interface SongRowProps {
     }
 }
 
-function SongRow({ data, functions }: SongRowProps) {
+function SongRow({ data, functions, theme }: SongRowProps) {
     const { removeSong, toggleMenu, loadSong, downloadSong } = functions
+    const buttonStyle = { backgroundColor: theme.layer('primary',0.15).hex() }
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             loadSong(data)
@@ -218,12 +223,12 @@ function SongRow({ data, functions }: SongRowProps) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => downloadSong(data)}>
+            <button className="song-button" onClick={() => downloadSong(data)} style={buttonStyle}>
                 <Memoized>
                     <FaDownload />
                 </Memoized>
             </button>
-            <button className="song-button" onClick={() => removeSong(data.name)}>
+            <button className="song-button" onClick={() => removeSong(data.name)} style={buttonStyle}>
                 <Memoized>
                     <FaTrash color="#ed4557" />
                 </Memoized>

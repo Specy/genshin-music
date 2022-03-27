@@ -103,6 +103,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.throttleScroll = 0
         this.onSlider = false
         this.dispose = () => { }
+        //TODO memory leak somewhere in this page
     }
     resetPointerDown = () => {
         this.stageSelected = false
@@ -146,6 +147,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
         this.dispose()
         this.state.cache?.destroy()
+        this.notesStageRef = null
+        this.breakpointsStageRef = null
     }
     handleKeyboard = (event: KeyboardEvent) => {
         switch (event.code) {
@@ -164,7 +167,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         }
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
-        if (!this.notesStageRef?.current && !this.breakpointsStageRef?.current) return null
+        if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return null
         const newCache = new ComposerCache({
             width: width,
             height: height,
@@ -185,7 +188,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 }
             ]
         })
-        this.state?.cache?.destroy?.()
+        this.state.cache?.destroy?.()
         return newCache
     }
     handleWheel = (e: WheelEvent) => {

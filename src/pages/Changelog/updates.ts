@@ -9,12 +9,14 @@ export const updates: Update[] = [
     {
         version: '2.5',
         title: 'Composer improvements',
-        date: '2022- 25/03',
+        date: '2022- 27/03',
         changes: [
-            'Improved the rendering of the composer to be more sharp and easier to see on mobile',
+            'Improved the rendering of the composer to be sherper and easier to see on mobile',
+            'Improved performance in the composer',
             'Added 4th layer in the composer',
             'Added theming of more parts of the composer',
             'App rewrite in TypeScript',
+            'Bug fixes'
         ]
     },
     {

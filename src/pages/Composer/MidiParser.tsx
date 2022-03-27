@@ -291,7 +291,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     styleOuter={midiInputsStyle}
                 />
             </div>
-            {tracks.length && <div className='midi-column separator-border' style={{ width: '100%' }}>
+            {tracks.length > 0 && <div className='midi-column separator-border' style={{ width: '100%' }}>
                 <div className='midi-column' style={{ width: '100%' }}>
                     <div>Select midi tracks</div>
                     {tracks.map((track, i) =>
@@ -306,7 +306,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 </div>
             </div>
             }
-            {tracks.length && <table>
+            {tracks.length > 0 && <table>
                 <tbody>
                     <tr>
                         <td>Total notes: </td>

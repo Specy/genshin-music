@@ -108,7 +108,7 @@ const baseThemes: Theme[] = [
             menu_background: {
                 name: "menu_background",
                 css: "menu-background",
-                value: "rgb(155, 184, 197)",
+                value: "#c4cfd4",
                 text: "#151414"
             },
             note_background: {
@@ -126,7 +126,7 @@ const baseThemes: Theme[] = [
             backgroundImageMain: "./assets/images/Rainy_Theme.png",
             backgroundImageComposer: "./assets/images/Rainy_Theme.png",
             name: "Rainy Lullaby",
-            id: "RainyLullaby"
+            id: "Rainy_Lullaby"
         },
         data: {
             background: {
@@ -246,7 +246,7 @@ const baseThemes: Theme[] = [
             backgroundImageMain: "",
             backgroundImageComposer: "",
             name: "Hacker",
-            id: "Hacker theme"
+            id: "Hacker_Theme"
         },
         data: {
             background: {
