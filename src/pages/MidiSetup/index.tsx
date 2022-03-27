@@ -80,7 +80,9 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         const selectedSource = inputs.find((input) => {
             return (input.name + " " + input.manufacturer) === settings.currentSource
         }) || inputs.length ? inputs[0] : null
+        if(selectedSource) settings.currentSource = selectedSource.name + " " + selectedSource.manufacturer
         if(selectedSource) this.selectSource(selectedSource)
+        this.saveLayout()
         this.setState({ sources: inputs, selectedSource})
     }
     midiStateChange = () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { defaultThemes, ThemeKeys, ThemeStore } from "stores/ThemeStore";
 import { observe } from "mobx";
 import { SimpleMenu } from "components/SimpleMenu";
@@ -65,14 +65,17 @@ function ThemePage() {
                     ThemeStore.loadFromJson(sanitized)
                     setUserThemes(await DB.getThemes())
                 } else {
-                    LoggerStore.error('There was an error importing this theme')
+                    logImportError()
                 }
             } catch (e) {
-                LoggerStore.error('There was an error importing this theme')
+                logImportError()
             }
         }
     }
-
+    const logImportError = useCallback((error?:any) => {
+        if(error) console.error(error)
+        LoggerStore.error('There was an error importing this theme, is it the correct file?',4000)
+    },[])
     async function cloneTheme(name: string) {
         const theme = new BaseTheme(name)
         theme.state = cloneDeep(ThemeStore.state)
@@ -109,7 +112,7 @@ function ThemePage() {
         <div className="default-content">
 
             <div style={{ display: 'flex', alignItems: 'center' }}>
-                <FilePicker onChange={handleImport} as='json'>
+                <FilePicker onChange={handleImport} as='json' onError={logImportError}>
                     <AppButton style={{ margin: '0.25rem' }}>
                         Import Theme
                     </AppButton>

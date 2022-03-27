@@ -142,10 +142,7 @@ function Menu({ functions, data }: MenuProps) {
                 if (file.file.name.includes?.(".mid")) {
                     return LoggerStore.error("Midi files should be imported in the composer")
                 }
-                LoggerStore.error(
-                    `Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
-                    8000
-                )
+                logImportError()
             }
         }
     }
@@ -157,7 +154,13 @@ function Menu({ functions, data }: MenuProps) {
         LoggerStore.success("Song downloaded")
         Analytics.userSongs('download', { name: songName, page: 'player' })
     }
-
+    const logImportError = useCallback((error?:any) => {
+        if(error) console.error(error)
+        LoggerStore.error(
+            `Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
+            8000
+        )
+    },[])
     function downloadAllSongs(){
         const toDownload = data.songs.map(song => {
             return APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()
@@ -207,6 +210,7 @@ function Menu({ functions, data }: MenuProps) {
                     </Link>
                     <FilePicker<SerializedSongType | SerializedSongType[]>
                         onChange={importSong} 
+                        onError={logImportError}
                         as='json'
                         multiple={true}
                     >
