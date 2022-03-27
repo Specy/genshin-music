@@ -23,18 +23,12 @@ class HomeStore {
         })
     }
     open = () => {
-        this.state.data = {
-            ...this.state.data, visible: true, isInPosition: false
-        }
+        this.setState({ visible: true, isInPosition: false})
     }
     close = () => {
-        this.state.data = {
-            ...this.state.data, isInPosition: true
-        }
+        this.setState({ isInPosition: true})
         setTimeout(() => {
-            this.state.data = {
-                ...this.state.data, visible: false
-            }
+            this.setState({visible: false})
         }, 150)
     }
     override = (override: boolean) => {

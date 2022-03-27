@@ -1,15 +1,12 @@
-import { appName } from "appConfig"
-import React from "react"
-
-
+import { APP_NAME } from "appConfig"
 interface WelcomePopupProps{
     hasPersistentStorage: boolean,
-    askForStorage: (e: any) => void
+    askForStorage: () => void
 }
 export default function WelcomePopup({ hasPersistentStorage, askForStorage }: WelcomePopupProps) {
     return <div className="welcome-message">
         <div className='welcome-overflow'>
-            <div className={"welcome-message-title"}>Welcome to {appName} music {appName === "Sky" ? "nightly" : ""}</div>
+            <div className={"welcome-message-title"}>Welcome to {APP_NAME} music {APP_NAME === "Sky" ? "nightly" : ""}</div>
             <div>
                 This is a webapp which is run in your browser, if you currently are on one, please add
                 the website to the homescreen to have a fullscreen view and a more "app" feel.

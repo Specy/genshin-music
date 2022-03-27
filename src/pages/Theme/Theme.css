@@ -43,7 +43,7 @@
     font-size: 0.8rem;
     margin: 0;
     width: 5rem;
-    margin-left: 1rem;
+    margin-right: 1rem;
 }
 .theme-save{
     animation: pulse infinite 2s;
@@ -185,7 +185,6 @@
 
 .theme-preview:hover{
     filter: brightness(1.1);
-    transform: scale(0.97);
 }
 
 .theme-input{

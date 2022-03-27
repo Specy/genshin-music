@@ -1,0 +1,306 @@
+.keyboard {
+	display: grid;
+	margin-top: auto;
+	grid-template-columns: repeat(7, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	justify-items: center;
+	align-items: center;
+	margin-bottom: 2vh;
+}
+.keyboard-5 {
+	grid-template-columns: repeat(5, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+}
+.keyboard-4 {
+	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+}
+
+.note,
+.note-composer,
+.note-sky,
+.note-composer-sky {
+	background-color: var(--note-background);
+	color: var(--note-background-text);
+	border-radius: 50%;
+	width: 6vw;
+	height: 6vw;
+	border: 0.5vw solid var(--note-border);
+	color: var(--accent);
+	font-size: 1.5rem;
+	font-weight: bold;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: all 0.1s;
+	cursor: pointer;
+	z-index: 10;
+	touch-action: none;
+    transform: translate3d(0, 0, 0);
+}
+.note-sky,
+.note-composer-sky {
+	border-radius: 1.3vw;
+	border: 0.4vw solid var(--note-background);
+    transform-origin: 50% 50%;
+	transition: all 0.1s;
+    user-select: none;
+}
+
+.note, .note-composer{
+	border: none;
+}
+.note-composer,
+.note-composer-sky {
+	transition: none;
+}
+.note img,
+.note-composer img,
+.note-sky img,
+.note-composer-sky img,
+.note svg,
+.note-composer svg,
+.note-sky svg,
+.note-composer-sky svg
+{
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	fill: var(--accent);
+}
+.note img, .note-composer img,
+.note svg, .note-composer svg
+{
+	position: absolute;
+	width: 80%;
+	height: 80%;
+	top: 5%;
+}
+.note-sky .svg-note, .note-composer-sky .svg-note{
+	width: 80%;
+	height: 80%;
+}
+.note-composer .note-name{
+	bottom: 14% !important;
+    font-size: 0.7rem;
+}
+.genshin-border{
+	top: unset !important;
+	width: 100% !important;
+	height: 100% !important;
+}
+.click-event {
+	transform: translate3d(0, 0, 0) scale(0.9);
+	background-color: var(--clicked-note);
+	border-color: var(--accent);
+}
+.click-event .svg-note{
+	fill: white !important;
+	stroke: white !important;
+}
+.note-red {
+	background-color: #f06565;
+	border-color: #d75c5c;
+	color: white;
+}
+.note-red .svg-note {
+	fill: white !important;
+	stroke: white !important;
+}
+.note-border-click {
+	border-color: var(--accent);
+}
+.note-name {
+	font-size: 0.8rem;
+	position: absolute;
+	bottom: 15%;
+	color: var(--note-background-text);
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+}
+.note-name-sky {
+	position: absolute;
+	font-size: 1rem;
+	color: var(--note-background-text);
+}
+.button-hitbox,
+.button-hitbox-bigger
+{
+	background-color: transparent;
+	border: none;
+	padding: 0.25rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+}
+.button-hitbox-bigger{
+	padding: 0.35rem;
+}
+.approach-circle, .approach-circle-sky {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	border: 3px solid var(--accent);
+	border-radius: 50%;
+	animation: approach 1s linear;
+	transform-origin: 50% 50%;
+	pointer-events: none;
+	opacity: 0;
+	transform: scale(2.7);
+
+}
+.approach-circle-sky{
+	transform: scale(1.8);
+	border-radius: 2vw;
+}
+@keyframes approach {
+	0% {
+		
+		opacity: 0;
+	}
+	50%{
+		opacity: 0.3;
+	}
+	99% {
+		transform: scale(0.8);
+		opacity: 0.8;
+	}
+	100% {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+}
+
+.note-animation,.note-animation-sky{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	border: 2px solid var(--accent);
+	border-radius: 50%;
+	animation: note-animation 0.75s cubic-bezier(.25,.46,.45,.94);
+	animation-delay: 0.1s;
+	transform-origin: 50% 50%;
+	pointer-events: none;
+	opacity: 1;
+	z-index: 1;
+	transform: scale(0.8);
+}
+
+.note-animation-sky{
+	border-radius: 1.7vw;
+	animation: note-animation-sky 0.75s cubic-bezier(.25,.46,.45,.94);
+	animation-delay: 0.15s;
+}
+
+@keyframes note-animation {
+    0% {
+        transform: scale(0.8);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(1.45);
+		opacity: 0.2;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+@keyframes note-animation-sky{
+    0% {
+        transform: scale(0.8);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(1.25);
+		opacity: 0.1;
+    }
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+.upper-right {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+.record-btn {
+	width: fit-content;
+}
+@media only screen and (max-width: 900px) {
+	.note {
+		width: 6.7vw;
+		height: 6.7vw;
+		font-size: 1rem;
+		border-width: 4px;
+	}
+	.note-animation-sky{
+		border-radius: 2.5vw;
+	}
+	.keyboard{
+		margin-bottom: 1vh;
+	}
+	.note-sky {
+		width: 8.5vw;
+		height: 8.5vw;
+		border-radius: 1.8vw;
+	}
+	.note-name-sky {
+		font-size: 0.8rem;
+	}
+	.note-composer .note-name {
+		bottom: 10% !important;
+	}
+	.note-name {
+		font-size: 0.6rem;
+		bottom: 10%;
+	}
+	@keyframes note-animation {
+		0% {
+			transform: scale(0.8);
+			opacity: 1;
+			border-width: 2px;
+		}
+		70% {
+			transform: scale(1.45);
+			opacity: 0.2;
+		}
+		100% {
+			transform: scale(1.5);
+			opacity: 0;
+			border-width: 2px;
+		}
+	}
+}
+
+.approach-wrong{
+	background-color:#d66969;
+	border-color:#b35555
+}
+
+.approach-correct{
+	background-color: #60ad7e;
+	border-color: #358a55;
+}
+.approach-correct .svg-note, .approach-wrong .svg-note{
+	fill: white !important ;
+	stroke: white !important;
+}
+@media only screen and (max-width: 800px) {
+	.note-name-sky {
+		font-size: 0.7rem;
+	}
+	.note-animation{
+		border: 2px solid var(--accent);
+	}
+}

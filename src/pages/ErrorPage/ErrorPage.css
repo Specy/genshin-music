@@ -1,10 +1,9 @@
 .error-page {
 	background-color: #863545;
 	color: white;
-	display: flex;
 	flex-direction: column;
-	justify-content: flex-start;
-	padding-top: 20vh;
+	align-items: center;
+	padding-top: 10vh;
 }
 .error-buttons-wrapper {
 	display: flex;

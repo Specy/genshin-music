@@ -1,5 +1,5 @@
 const {execSync} = require('child_process')
-const fs = require('fs/promises')
+const fs = require('fs')
 const publicPath = './public'
 const skyPath = './src/appData/sky'
 const genshinPath = './src/appData/genshin'

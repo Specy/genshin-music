@@ -49,6 +49,7 @@ select {
     text-overflow: ellipsis;
     overflow: hidden;
     max-width: 23vw;
+    text-shadow: rgb(51 51 51) 0px 1px 5px
 }
 .top-panel-composer{
     display: flex;
@@ -113,6 +114,7 @@ select{
 .timeline-scroll{
     display: flex;
     width: 100%;
+    border-radius: 0.1rem;
 }
 .timeline-thumb{
     height: 100%;
@@ -123,10 +125,8 @@ select{
 }
 .timeline-scroll canvas{
     width: 100% !important;
-    border-radius: 0.3rem;
+    border-radius: 0.1rem;
 }
-
-
 
 .buttons-composer-wrapper, .buttons-composer-wrapper-right{
         display: grid;
@@ -161,14 +161,6 @@ select{
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-}
-.tools-row button{
-    color: white;
-    border-radius: 0.2rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    cursor: pointer;
-    background-color: var(--accent);
 }
 .tools-buttons-wrapper button:hover{
     filter: brightness(1.1);
@@ -239,10 +231,19 @@ select{
     border-radius: 50%;
     visibility: hidden;
 }
+.layer-4-line{
+    height: 20%;
+    width: 100%;
+    position: absolute;
+    background-color: #d75c5c;
+    border-radius: 0.2vw;
+    visibility: hidden;
+}
 .bottom-right-text{
     text-align: center;
     width: 100%;
     color: var(--background-text);
+    text-shadow: rgb(51, 51, 51) 0px 1px 5px;
     font-size: 0.8rem;
 }
 .note-composer svg{
@@ -265,14 +266,17 @@ select{
 }
 .layer-2, .layer-2 .genshin-border{
     border-color: #d75c5c !important;
-    fill: #f06868 !important;
-    stroke: #f06868 !important;
+    fill: #d75c5c !important;
+    stroke: #d75c5c !important;
 }
 .note-composer.layer-3 .svg-note{
     fill: #f2ecec !important;
     stroke: #f2ecec !important;
 }
 .layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
+    visibility: visible;
+}
+.layer-4 .layer-4-line{
     visibility: visible;
 }
 .layer-3-ball-bigger{
@@ -293,7 +297,7 @@ canvas{
     border: none;
     font-size: 1rem;
     color: white;
-    padding: 0.2rem;
+    padding: 0.4rem 0;
     filter: brightness(1.1);
     cursor: pointer;
 }
@@ -308,7 +312,7 @@ canvas{
     width: 8vw;
     max-width: 4rem;
     font-size: 1rem;
-    padding: 0.6rem 0;
+    padding: 0.4rem 0;
     flex: 1;
     background-color: var(--primary);
     color: var(--primary-text);
@@ -335,16 +339,38 @@ canvas{
     border: solid 2px var(--secondary);
     color: var(--primary-text);
     max-width: 60vw;
-    min-width: 40vw;
+    min-width: 45vw;
     z-index: 3;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     overflow:auto;
-
+    animation: fadeIn 0.2s;
 }
+@keyframes fadeIn{
+    from{
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to{
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+    
 .floating-midi *{
     font-size: 0.9rem;
+}
+.midi-table{
+    margin-bottom: 0.1rem;
+}
+.midi-table-row{
+    width: 100%;
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
 }
 .floating-midi::-webkit-scrollbar-thumb {
 	background: var(--icon-color);
@@ -391,7 +417,6 @@ canvas{
     display: flex;
     flex-direction: column;
     margin-top: 0.5rem;
-    background-color: #515c6e;
     padding: 0.4rem;
     border-radius: 0.2rem;
 }
@@ -408,7 +433,7 @@ canvas{
     align-items: center;
 }
 .midi-track-column{
-    background: #576377;
+    background: var(--primary);
     padding: 0.3rem 0.5rem;
     border-radius: 0.2rem;
     display: flex;

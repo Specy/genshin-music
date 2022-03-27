@@ -1,22 +1,15 @@
-import { observe } from "mobx"
-import { useEffect, useState } from "react"
-import { ThemeStore } from "stores/ThemeStore"
+import { useThemeOther } from "lib/hooks/useThemeOther"
 
 interface AppBackgroundProps {
-    children: JSX.Element | JSX.Element[],
+    children: React.ReactNode,
     page: 'Composer' | 'Main'
 }
 export function AppBackground({ children, page }: AppBackgroundProps) {
-    //@ts-ignore
-    const [background, setBackground] = useState(ThemeStore.getOther('backgroundImage' + page))
-    useEffect(() => {
-        const dispose = observe(ThemeStore.state.other, () => {
-            //@ts-ignore
-            setBackground(ThemeStore.getOther('backgroundImage' + page))
-        })
-        return dispose
-    }, [page])
-    return <div className='app bg-image' style={{ backgroundImage: `url(${background}` }}>
+    const [theme] = useThemeOther()
+    return <div 
+        className='app bg-image' 
+        //@ts-ignore
+        style={{ backgroundImage: `url(${theme.getOther('backgroundImage' + page)}` }}>
         {children}
     </div>
 }

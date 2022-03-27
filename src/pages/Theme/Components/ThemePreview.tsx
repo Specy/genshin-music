@@ -1,6 +1,7 @@
-import { appName } from "appConfig";
-import { FileDownloader } from "lib/Utils";
+import { APP_NAME } from "appConfig";
+import { FileDownloader } from "lib/Utils/Tools";
 import { FaTrash, FaDownload } from "react-icons/fa";
+import LoggerStore from "stores/LoggerStore";
 import { Theme } from "stores/ThemeStore";
 
 
@@ -33,9 +34,10 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                         color={theme.data.background.text}
                         onClick={(e) => {
                             e.stopPropagation()
-                            new FileDownloader('json').download(
+                            LoggerStore.success(`The theme "${theme.other.name}" was downloaded`)
+                            FileDownloader.download(
                                 JSON.stringify(theme),
-                                `${theme.other.name || appName}.theme.json`
+                                `${theme.other.name || APP_NAME}.theme.json`
                             )
                         }}
                         size={18}

@@ -1,23 +1,25 @@
 
 import { useEffect, useState } from "react";
 import { ThemeKeys, ThemeStore } from "stores/ThemeStore";
-import { capitalize } from "lib/Utils";
+import { capitalize } from "lib/Utils/Tools";
 import Color from "color";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { BASE_THEME_CONFIG } from "appConfig";
 import { FaCheck, FaTimes } from 'react-icons/fa'
+import { AppButton } from "components/AppButton";
 
 export interface ThemeProprietyProps {
     name: ThemeKeys,
     value: string,
-    modified: boolean,
+    isSelected: boolean,
+    isModified: boolean,
+    canReset: boolean,
     setSelectedProp: (name: ThemeKeys | '') => void,
-    selected: boolean,
     onChange: (name: ThemeKeys, value: string) => void,
     handlePropReset: (name: ThemeKeys) => void
 }
 
-export function ThemePropriety({ name, value, onChange, modified, setSelectedProp, selected, handlePropReset }: ThemeProprietyProps) {
+export function ThemePropriety({ name, value, onChange, isModified, setSelectedProp, isSelected, handlePropReset, canReset }: ThemeProprietyProps) {
     const [color, setColor] = useState(Color(value))
     useEffect(() => {
         setColor(Color(value))
@@ -27,14 +29,14 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
         setColor(Color(e))
     }
     function sendEvent() {
-        onChange(name, color.hex())
+        onChange(name, color.toString())
         setSelectedProp('')
     }
 
     return <div
-        className={`theme-row ${selected ? 'selected' : ''}`}
-        style={selected ? {
-            backgroundColor: color.hex(),
+        className={`theme-row ${isSelected ? 'selected' : ''}`}
+        style={isSelected ? {
+            backgroundColor: color.toString(),
             color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
         } : {}}
     >
@@ -42,18 +44,23 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
             {capitalize(name.split('_').join(' '))}
         </div>
         <div className="color-input-wrapper">
-            {selected
+            {(canReset && isModified)  &&
+                <AppButton onClick={() => handlePropReset(name)} toggled={isModified} className='theme-reset'>
+                    RESET
+                </AppButton>
+            }
+            {isSelected
                 ? <div className="color-picker">
                     <HexColorPicker onChange={handleChange} color={color.hex()} />
                     <div className="color-picker-row">
                         <div
                             className="color-picker-input"
                             style={{
-                                backgroundColor: color.hex(),
+                                backgroundColor: color.toString(),
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark,
                             }}
                         >
-                            <div style={{fontFamily:'Arial'}}>#</div>
+                            <div style={{ fontFamily: 'Arial' }}>#</div>
                             <HexColorInput
                                 onChange={handleChange}
                                 color={color.hex()}
@@ -71,7 +78,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                                 setSelectedProp('')
                             }}
                             style={{
-                                backgroundColor: color.hex(),
+                                backgroundColor: color.toString(),
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
                             }}
                         >
@@ -81,7 +88,7 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                             className="color-picker-check"
                             onClick={sendEvent}
                             style={{
-                                backgroundColor: color.hex(),
+                                backgroundColor: color.toString(),
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
                             }}
                         >
@@ -94,19 +101,13 @@ export function ThemePropriety({ name, value, onChange, modified, setSelectedPro
                     onClick={() => setSelectedProp(name)}
                     className='color-preview'
                     style={{
-                        backgroundColor: ThemeStore.get(name).hex(),
-                        color: ThemeStore.getText(name).hex()
+                        backgroundColor: ThemeStore.get(name).toString(),
+                        color: ThemeStore.getText(name).toString()
                     }}
                 >
                     Text
                 </div>
             }
-            <button
-                onClick={() => handlePropReset(name)}
-                className={`genshin-button theme-reset ${modified ? 'active' : ''}`}
-            >
-                RESET
-            </button>
 
         </div>
     </div>

@@ -1,17 +1,18 @@
-import React from "react"
-
 interface AppButtonprops {
     style?: object,
     className?: string,
     onClick?: () => void,
-    children?: JSX.Element | JSX.Element[] | string,
-    toggled?: boolean
+    children?: React.ReactNode,
+    toggled?: boolean,
+    disabled?: boolean,
+    visible?: boolean
 }
-export function AppButton({ style, className = '', children, toggled = false, onClick }: AppButtonprops) {
+export function AppButton({ style = {}, className = '', children, toggled = false, onClick, disabled = false, visible = true}: AppButtonprops) {
     return <button
         className={`app-button ${className} ${toggled ? 'active' : ''}`}
-        style={style}
+        style={{...style, ...(!visible ? {display: 'none'} : {})}}
         onClick={onClick || (() => { })}
+        disabled={disabled}
     >
         {children}
     </button>

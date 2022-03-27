@@ -21,8 +21,8 @@ async function asyncPrompt(question: string):Promise<string | null> {
         ok.innerText = "Ok"
         cancel.innerText = "Cancel"
         text.innerText = question
-        cancel.style.backgroundColor = ThemeStore.layer('primary', 0.1).hex()
-        ok.style.backgroundColor = ThemeStore.layer('primary', 0.1).hex()
+        cancel.style.backgroundColor = ThemeStore.layer('primary', 0.1).toString()
+        ok.style.backgroundColor = ThemeStore.layer('primary', 0.1).toString()
 
         row.append(cancel, ok)
         container.append(text, input, row)
@@ -54,7 +54,7 @@ async function asyncPrompt(question: string):Promise<string | null> {
             dispose()
         }
 
-        function handleKeyboard(event: any) {
+        function handleKeyboard(event: KeyboardEvent) {
             const key = event.code
             if (key === 'Enter') okListener()
             if (key === 'Escape') cancelListener()
@@ -135,7 +135,7 @@ async function asyncConfirm(question: string, cancellable = true): Promise<boole
         ok.addEventListener("click", okListener)
         window.addEventListener('keydown', handleKeyboard)
         //@ts-ignore
-        document.activeElement.blur()
+        document.activeElement?.blur()
         function dispose() {
             disposed = true
             cancel.removeEventListener('click', cancelListener)

@@ -4,14 +4,11 @@ import { observe } from "mobx";
 import { SimpleMenu } from "components/SimpleMenu";
 import { AppButton } from "components/AppButton";
 import { FileElement, FilePicker } from "components/FilePicker"
-import Main from "pages/Main";
+import Player from "pages/Player";
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
-import './Theme.css'
 import { DB } from "Database";
-// @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
-
 import { Theme } from "stores/ThemeStore";
 import { ThemePreview } from "./Components/ThemePreview";
 import { FaPlus } from "react-icons/fa";
@@ -19,6 +16,10 @@ import { BaseTheme } from "stores/ThemeStore";
 import LoggerStore from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/hooks/useTheme";
+import './Theme.css'
+import { AppBackground } from "components/AppBackground";
+
+
 function ThemePage() {
     const [theme, setTheme] = useTheme()
     const [userThemes, setUserThemes] = useState<Theme[]>([])
@@ -38,7 +39,7 @@ function ThemePage() {
     }, [setTheme])
     async function handleChange(name: ThemeKeys, value: string) {
         if (!ThemeStore.isEditable()) {
-            if (value === ThemeStore.get(name).hex()) return
+            if (value === ThemeStore.get(name).toString()) return
             const themeName = await asyncPrompt('Creating a new theme from this default theme, write the name:')
             if (themeName === null) return
             await cloneTheme(themeName)
@@ -53,7 +54,7 @@ function ThemePage() {
         setUserThemes(await DB.getThemes())
     }
 
-    async function handleImport(file: FileElement[]) {
+    async function handleImport(file: FileElement<Theme>[]) {
         if (file.length) {
             const theme = file[0].data as Theme
             try {
@@ -123,11 +124,12 @@ function ThemePage() {
                 <ThemePropriety
                     {...e}
                     key={e.name}
-                    selected={selectedProp === e.name}
+                    isSelected={selectedProp === e.name}
+                    canReset={ThemeStore.isEditable()}
+                    isModified={!theme.isDefault(e.name)}
                     onChange={handleChange}
                     setSelectedProp={setSelectedProp}
                     handlePropReset={handlePropReset}
-                    modified={e.value !== theme.baseTheme.data[e.name].value}
                 />
             )}
             <ThemeInput
@@ -194,7 +196,9 @@ function ThemePage() {
                 Preview
             </div>
             <div className="theme-app-preview">
-                <Main />
+                <AppBackground page="Main">
+                    <Player />
+                </AppBackground>
             </div>
         </div>
     </div>

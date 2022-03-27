@@ -18,6 +18,7 @@
 	--hint-main: #949494;
 	--red: rgb(169, 82, 90);
 	--green: #358a55;
+	--orange: #e07f2a;
 }
 @font-face {
 	font-family: Bonobo;
@@ -64,10 +65,7 @@ body {
 .keys-table :nth-child(2) {
 	width: 100%;
 }
-.column {
-	display: flex;
-	flex-direction: column;
-}
+
 input {
 	accent-color: var(--accent);
 }
@@ -78,8 +76,8 @@ input {
 	-ms-user-select: none;
 	user-select: none;
 	box-sizing: border-box;
-	outline: none;
 	font-family: Bonobo;
+	outline: none;
 	-webkit-tap-highlight-color: transparent;
 }
 body {
@@ -96,8 +94,10 @@ body {
 	flex: 1;
 }
 #root {
-	width: 100%;
 	height: 100%;
+	width: 100%;
+	display: flex;
+	justify-content: center;
 }
 .app,
 .app-content {
@@ -112,7 +112,6 @@ body {
 .app-content {
 	z-index: 2;
 }
-.genshin-button,
 .app-button {
 	background-color: var(--primary);
 	color: var(--primary-text);
@@ -122,6 +121,7 @@ body {
 	height: fit-content;
 	cursor: pointer;
 	min-width: 5rem;
+	transition: background-color 0.2s, color 0.2s;
 }
 .link{
 	color: var(--background-text);
@@ -129,14 +129,16 @@ body {
 .app-button::placeholder{
 	color: var(--primary-text);
 }
-.genshin-button:hover,
 .app-button:hover {
 	filter: brightness(1.1);
 }
-.app-button.selected {
-	transition: all 0.3s;
-	background-color: var(--accent);
-	color: var(--accent-text);
+.app-button.active {
+	background-color: var(--accent) !important;
+	color: var(--accent-text) !important;
+}
+.app-button:disabled{
+	filter: brightness(0.8);
+	cursor: not-allowed;
 }
 .selected {
 	transition: all 0.3s;
@@ -150,13 +152,6 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: space-between;
-}
-
-.index {
-	height: 100%;
-	width: 100%;
-	display: flex;
-	justify-content: center;
 }
 .hidden {
 	display: none !important;
@@ -199,37 +194,9 @@ body {
 	width: 100%;
 	justify-content: center;
 }
-.floating-message {
-	position: fixed;
-	margin-left: auto;
-	margin-right: auto;
-	bottom: -10rem;
-	width: 50vw;
-	min-height: 8rem;
-	border-radius: 0.5rem;
-	border: solid 2px var(--secondary);
-	background-color: var(--primary);
-	color: var(--primary-text);
-	z-index: 999;
-	padding: 1rem;
-	transition: all 0.6s;
-	display: flex;
-	flex-direction: column;
-	opacity: 0;
-	transform: scale(0.8);
-}
+
 .red {
 	background-color: red;
-}
-.floating-message-title {
-	margin-top: -0.5rem;
-	display: flex;
-	justify-content: center;
-	padding-bottom: 0.2rem;
-}
-.floating-message-text {
-	flex: 1;
-	white-space: pre-line;
 }
 .floating-prompt {
 	position: absolute;
@@ -377,11 +344,7 @@ a {
 	margin-top: 0.5rem;
 	justify-content: space-between;
 }
-.floating-message-visible {
-	bottom: 1rem;
-	opacity: 1;
-	transform: scale(1);
-}
+
 .settings-row-wrap{
     display: flex;
     flex-wrap: wrap;
@@ -432,6 +395,7 @@ a {
 }
 .bg-image {
 	background-size: cover;
+	background-position: center;
 	background-repeat: no-repeat;
 }
 .sc-2 {

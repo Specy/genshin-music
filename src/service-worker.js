@@ -10,8 +10,8 @@ import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
-const appName = process.env.REACT_APP_NAME
-const CACHE = appName + "-11.8" //TODO automate this
+const APP_NAME = process.env.REACT_APP_NAME
+const CACHE = APP_NAME + "-14.6" //TODO automate this
 console.log("CACHE Version: ", CACHE)
 clientsClaim();
 
@@ -23,36 +23,36 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 
 registerRoute(
-  new RegExp('/*'),
-  new CacheFirst({
-    cacheName: CACHE
-  })
+	new RegExp('/*'),
+	new CacheFirst({
+		cacheName: CACHE
+	})
 );
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+	if (event.data && event.data.type === 'SKIP_WAITING') {
+		self.skipWaiting();
+	}
 });
 
 self.addEventListener('activate', (evt) => {
-  console.log('[ServiceWorker] Activate');
-  //Remove previous cached data from disk.
-  evt.waitUntil(
-    caches.keys().then(async (keyList) => {
-      let promises = await Promise.all(keyList.map((key) => {
-        if ((key.includes(appName) && key !== CACHE)) {
-          console.log('[ServiceWorker] Removing old cache', key);
-          return caches.delete(key)
-        }
-        return new Promise((r) => r())
-      }));
-      return promises
-    })
-  );
-  self.clients.claim();
+	console.log('[ServiceWorker] Activate');
+	//Remove previous cached data from disk.
+	evt.waitUntil(
+		caches.keys().then(async (keyList) => {
+			const promises = await Promise.all(keyList.map((key) => {
+				if ((key.includes(APP_NAME) && key !== CACHE)) {
+					console.log('[ServiceWorker] Removing old cache', key);
+					return caches.delete(key)
+				}
+				return new Promise(resolve => resolve())
+			}));
+			return promises
+		})
+	);
+	self.clients.claim();
 });
 
 

@@ -1,25 +1,31 @@
+import { ComposedSong } from "lib/Utils/ComposedSong";
+import { Song } from "lib/Utils/Song";
 import { observable } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
-
-interface SongStoreProps{
-    song: object,
+type SongTypes = Song | ComposedSong | null
+type SongTypesNonNull = Song | ComposedSong
+type SongStoreProps = {
+    song: SongTypes,
     eventType: eventType,
     start: number,
     end: number,
     restarted: boolean
 }
 
-interface SongStoreData{
-    data:SongStoreProps
+interface SongStoreState{
+    data:SongStoreProps | SongStoreProps & {
+        song: null
+        eventType: 'stop'
+    }
 }
 
 class SongStoreClass{
-    state:SongStoreData
+    state:SongStoreState
     constructor(){
         this.state = observable({
             data: {
-                song: {},
+                song: null,
                 eventType: 'stop',
                 restarted: false,
                 end: 0,
@@ -27,7 +33,7 @@ class SongStoreClass{
             }
         })
     }
-    get song():object{
+    get song():Song | ComposedSong | null{
         return this.state.data.song
     }
     get eventType(): eventType{
@@ -42,7 +48,7 @@ class SongStoreClass{
     setState = (state: Partial<SongStoreProps>) => {
         this.state.data = {...this.state.data, ...state}
     }
-    play = (song:object, start:number = 0, end?: number) => {
+    play = (song:SongTypesNonNull, start:number = 0, end?: number) => {
         this.setState({
             song,
             start,
@@ -50,7 +56,7 @@ class SongStoreClass{
             end 
         })
     }
-    practice = (song: object, start:number = 0, end: number) => {
+    practice = (song: SongTypesNonNull, start:number = 0, end: number) => {
         this.setState({
             song,
             start,
@@ -58,7 +64,7 @@ class SongStoreClass{
             end
         })
     }
-    approaching = (song: object, start: number = 0, end: number) => {
+    approaching = (song: SongTypesNonNull, start: number = 0, end: number) => {
         this.setState({
             song,
             start,
@@ -68,7 +74,7 @@ class SongStoreClass{
     }
     reset = () => {
         this.setState({
-            song: {},
+            song: null,
             eventType: 'stop',
             start: 0,
             end: 0

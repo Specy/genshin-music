@@ -1,13 +1,11 @@
 import { ChangeEvent } from "react"
-
+import { SettingsSlider, SettingUpdateKey } from "types/SettingsPropriety"
 interface SliderProps{
-    data: {
-        threshold: [number, number]
-    },
-    objectKey: string,
+    data: SettingsSlider,
+    objectKey: SettingUpdateKey,
     value: number, 
     onChange: (data: {
-        key: string, 
+        key: SettingUpdateKey, 
         data: any
     }) => void,
 }

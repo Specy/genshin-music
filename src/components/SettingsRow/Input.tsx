@@ -1,18 +1,14 @@
 import { ChangeEvent } from "react"
 import { FaPlus, FaMinus } from 'react-icons/fa'
+import { SettingsNumber, SettingsText, SettingUpdateKey } from "types/SettingsPropriety"
+
 interface InputProps {
-    data: {
-        type: string,
-        value: string | number,
-        placeholder: string,
-        threshold?: [number, number],
-        increment?: number
-    },
-    objectKey: string,
+    data: SettingsText | SettingsNumber,
+    objectKey: SettingUpdateKey,
     value: string | number,
     onChange: (value: string | number) => void,
     onComplete: (data: {
-        key: string,
+        key: SettingUpdateKey,
         data: any
     }) => void
 }
@@ -21,7 +17,7 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
         const el = e.target
         if (data.type === "number") {
-            let value = Number(el.value)
+            const value = Number(el.value)
             el.value = "" //have to do this to remove a react bug that adds a 0 at the start
             if (!data.threshold || value < data.threshold[0] || value > data.threshold[1]) return
             onChange(value)
@@ -31,12 +27,14 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
     }
 
     function handleIncrement(sign: number){
-        let nextValue = Number(value) + (data.increment || 0) * sign
-        if (!data.threshold || nextValue < data.threshold[0] || nextValue > data.threshold[1]) return
-        onComplete({
-            key: objectKey,
-            data: { ...data, value: nextValue }
-        })
+        if(data.type === 'number'){
+            const nextValue = Number(value) + (data.increment || 0) * sign
+            if (!data.threshold || nextValue < data.threshold[0] || nextValue > data.threshold[1]) return
+            onComplete({
+                key: objectKey,
+                data: { ...data, value: nextValue }
+            })
+        }
     }
 
     function handleBlur() {
