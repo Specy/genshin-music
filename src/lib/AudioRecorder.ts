@@ -39,6 +39,13 @@ export default class AudioRecorder {
             this.recorder.stop()
         })
     }
+    static async downloadBlob(urlBlob:Blob, fileName:string){
+        const wav = toWav(await blobToAudio(urlBlob))
+        const blob = new Blob([new DataView(wav)], {
+            type: 'audio/wav'
+        })
+        FileDownloader.download(blob, fileName)
+    }
     async download(urlBlob:Blob, fileName:string) {
         //TODO add file downloader here
         const wav = toWav(await blobToAudio(urlBlob))

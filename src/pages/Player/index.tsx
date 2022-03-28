@@ -18,6 +18,8 @@ import LoggerStore from 'stores/LoggerStore';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
+import { KeyboardListener } from 'lib/KeyboardListener';
+import { AudioProvider } from 'AudioProvider';
 
 
 interface PlayerState{
@@ -34,11 +36,8 @@ class Player extends Component<any,PlayerState>{
 	state: PlayerState
 	recording: Recording
 	mounted: boolean
-	reverbNode: ConvolverNode | null
-	audioContext: AudioContext | null
-	reverbVolumeNode: GainNode | null
-	recorder: AudioRecorder | null
-
+	keyboardListener: KeyboardListener
+	audioProvider: AudioProvider
 	constructor(props: any) {
 		super(props)
 		this.recording = new Recording()
@@ -53,25 +52,22 @@ class Player extends Component<any,PlayerState>{
 			isDragging: false,
 			hasSong: false
 		}
+		this.audioProvider = new AudioProvider(AUDIO_CONTEXT)
 		this.mounted = false
-		this.reverbNode = null
-		this.reverbVolumeNode = null
-		this.audioContext = AUDIO_CONTEXT
-		this.recorder = new AudioRecorder()
+		this.keyboardListener = new KeyboardListener()
 	}
 
 	init = async () => {
 		const { settings } = this.state
 		await this.loadInstrument(settings.instrument.value)
-		await this.loadReverb()
-		this.toggleReverbNodes(settings.caveMode.value)
+		await this.audioProvider.init()
+		this.audioProvider.setReverb(settings.caveMode.value)
 	}
 	componentDidMount() {
 		document.body.addEventListener('dragenter', this.handleDrag)
 		document.body.addEventListener('dragleave', this.resetDrag)
 		document.body.addEventListener('dragover', this.handleDragOver)
 		document.body.addEventListener('drop', this.handleDrop)
-		window.addEventListener('keydown', this.handleKeyboard)
 		this.mounted = true
 		this.syncSongs()
 		this.init()
@@ -81,40 +77,18 @@ class Player extends Component<any,PlayerState>{
 		document.body.removeEventListener('dragleave', this.resetDrag)
 		document.body.removeEventListener('dragover', this.handleDragOver)
 		document.body.removeEventListener('drop', this.handleDrop)
-		window.removeEventListener('keydown', this.handleKeyboard)
+		this.keyboardListener.destroy()
 		SongStore.reset()
 		this.state.instrument.delete()
-		this.reverbNode?.disconnect()
-		this.reverbVolumeNode?.disconnect()
-		this.recorder?.delete()
 		this.mounted = false
-		this.audioContext = null
-		this.recorder = null
-		this.reverbNode = null
-		this.reverbVolumeNode = null
 	}
-
+	registerKeyboardListeners = () => {
+		const { keyboardListener } = this
+		keyboardListener.registerLetter('C',() => this.toggleRecord(), {shift: true})
+	}
 	componentDidCatch() {
 		LoggerStore.warn("There was an error with the song! Restoring default...")
 		SongStore.reset()
-	}
-
-	handleKeyboard = async (event: KeyboardEvent) => {
-		const { hasSong } = this.state
-		if (event.repeat) return
-		if (document.activeElement?.tagName === "INPUT") return
-		if (event.shiftKey) {
-			switch (event.code) {
-				case "KeyC": {
-					if (!hasSong) {
-						this.toggleRecord()
-						event.preventDefault()
-					}
-					break;
-				}
-				default: break;
-			}
-		}
 	}
 
 	resetDrag = () => {
@@ -157,20 +131,6 @@ class Player extends Component<any,PlayerState>{
 
 	}
 
-	toggleReverbNodes = (override: boolean) => {
-		if (!this.mounted) return
-		const { instrument } = this.state
-		if(!this.audioContext) return
-		if (override) {
-			if (!this.reverbNode) return console.log("Couldn't connect to reverb")
-			instrument.disconnect()
-			instrument.connect(this.reverbNode)
-		} else {
-			instrument.disconnect()
-			instrument.connect(this.audioContext.destination)
-		}
-	}
-
 	changeVolume = (obj: SettingVolumeUpdate) => {
 		const {settings} = this.state
 		if (obj.key === "instrument") {
@@ -198,42 +158,20 @@ class Player extends Component<any,PlayerState>{
 	}
 
 	loadInstrument = async (name: InstrumentName) => {
-		this.state.instrument?.delete?.()
+		const oldInstrument = this.state.instrument
+		this.audioProvider.disconnect(oldInstrument.endNode)
+		this.state.instrument.delete()
 		const { settings } = this.state
 		const instrument = new Instrument(name)
 		instrument.changeVolume(settings.instrument.volume || 100)
+		this.audioProvider.connect(instrument.endNode)
 		this.setState({ isLoadingInstrument: true })
 		await instrument.load()
-		if (!this.mounted || !this.audioContext) return
+		if (!this.mounted) return
 		this.setState({
 			instrument,
 			isLoadingInstrument: false
-		}, () => this.toggleReverbNodes(settings.caveMode.value))
-	}
-
-	loadReverb() : Promise<void>{
-		//TODO export this to a function 
-		return new Promise(resolve => {
-			fetch("./assets/audio/reverb4.wav")
-				.then(r => r.arrayBuffer())
-				.then(b => {
-					if (!this.mounted || !this.audioContext) return
-					this.audioContext.decodeAudioData(b, (impulse_response) => {
-						if (!this.mounted || !this.audioContext) return
-						const convolver = this.audioContext.createConvolver()
-						const gainNode = this.audioContext.createGain()
-						gainNode.gain.value = 2.5
-						convolver.buffer = impulse_response
-						convolver.connect(gainNode)
-						gainNode.connect(this.audioContext.destination)
-						this.reverbVolumeNode = gainNode
-						this.reverbNode = convolver
-						resolve()
-					})
-				}).catch((e) => {
-					console.log("Error with reverb", e)
-				})
-		})
+		}, () => this.audioProvider.setReverb(settings.caveMode.value))
 	}
 
 	playSound = (note: NoteData) => {
@@ -241,7 +179,7 @@ class Player extends Component<any,PlayerState>{
 		const { settings } = state
 		if (note === undefined) return
 		if (state.isRecording) this.handleRecording(note)
-		this.state.instrument.play(note.index, getPitchChanger(settings.pitch.value as PitchesType))
+		this.state.instrument.play(note.index, settings.pitch.value as PitchesType)
 	}
 
 	updateSettings = (override?: MainPageSettingsDataType) => {
@@ -262,7 +200,7 @@ class Player extends Component<any,PlayerState>{
 			this.loadInstrument(data.value as InstrumentName)
 		}
 		if (setting.key === 'caveMode') {
-			this.toggleReverbNodes(data.value as boolean)
+			this.audioProvider.setReverb(data.value as boolean)
 		}
 		this.setState({
 			settings: settings,
@@ -351,32 +289,16 @@ class Player extends Component<any,PlayerState>{
 	toggleRecordAudio = async (override?: boolean | null) => {
 		if (!this.mounted) return
 		if (typeof override !== "boolean") override = null
-		const { instrument } = this.state
-		const { recorder } = this
-		const hasReverb = this.state.settings.caveMode.value
 		const newState = override !== null ? override : !this.state.isRecordingAudio
-		if(!this.reverbVolumeNode || !recorder || !this.audioContext) return
 		if (newState) {
-			if (hasReverb) {
-				if(recorder.node) this.reverbVolumeNode.connect(recorder.node)
-
-			} else {
-				if(recorder.node) instrument.connect(recorder.node)
-			}
-			recorder.start()
+			this.audioProvider.startRecording()
 		} else {
-			const recording = await recorder.stop()
+			const recording = await this.audioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
-			if (!this.mounted) return
-			if (fileName) recorder.download(recording.data, fileName + '.wav')
-			this.toggleReverbNodes(hasReverb)
-			this.reverbVolumeNode.disconnect()
-			this.reverbVolumeNode.connect(this.audioContext.destination)
-
+			if (!this.mounted || !recording) return
+			if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
 		}
-		this.setState({
-			isRecordingAudio: newState
-		})
+		this.setState({isRecordingAudio: newState})
 	}
 	changePage = (page: string) => {
 		//@ts-ignore

@@ -13,10 +13,11 @@ import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
 import { ThemeProvider } from 'components/ThemeProvider';
 import { AppBackground } from "components/AppBackground";
-
+import { MIDIListenerProvider } from "components/MIDIListenerProvider";
 export function Router() {
 	return <HashRouter>
-			<ThemeProvider>
+		<ThemeProvider>
+			<MIDIListenerProvider>
 				<App />
 				<Switch>
 					<Route exact path="/ErrorPage">
@@ -62,6 +63,7 @@ export function Router() {
 						<Error404 />
 					</Route>
 				</Switch>
-			</ThemeProvider>
-		</HashRouter>
+			</MIDIListenerProvider>
+		</ThemeProvider>
+	</HashRouter>
 }

@@ -11,11 +11,12 @@ import Analytics from 'lib/Analytics';
 import LoggerStore from 'stores/LoggerStore'
 import { SliderStore } from 'stores/SongSliderStore'
 import { ApproachingNote, RecordedNote } from 'lib/Utils/SongClasses'
-import type { MIDISettings } from 'lib/BaseSettings'
+import { MIDISettings } from 'lib/BaseSettings'
 import type { NoteData } from 'lib/Instrument'
 import type Instrument from 'lib/Instrument'
 import type { ApproachingScore, NoteNameType } from 'types/GeneralTypes'
 import type { Song } from 'lib/Utils/Song'
+import { MIDIEvent, MIDIListener } from 'lib/MIDIListener'
 
 interface KeyboardProps {
     data: {
@@ -47,7 +48,6 @@ interface KeyboardState{
 }
 export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
     state: KeyboardState
-    MIDISettings: typeof MIDISettings
     approachRate: number
     approachingNotesList: ApproachingNote[]
     songTimestamp: number
@@ -55,8 +55,6 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
     tickTime: number
     tickInterval: number
     mounted: boolean
-    MIDIAccess: WebMidi.MIDIAccess | null
-    currentMIDISource: WebMidi.MIDIInput | null
     dispose: () => void
 
     constructor(props: KeyboardProps) {
@@ -78,10 +76,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
                 combo: 0
             },
             speedChanger: SPEED_CHANGERS.find(e => e.name === 'x1') as typeof SPEED_CHANGERS[number],
-        }
-        this.MIDISettings = getMIDISettings()
-        this.MIDIAccess = null
-        this.currentMIDISource = null
+        }        
         this.approachRate = 1500
         this.approachingNotesList = []
         this.songTimestamp = 0
@@ -131,55 +126,22 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
                 })
 
             }
-
+            MIDIListener.addListener(this.handleMidi)
         })
-        if (this.MIDISettings.enabled) {
-            if (navigator.requestMIDIAccess) {
-                navigator.requestMIDIAccess().then(this.initMidi, () => {
-                    LoggerStore.error('MIDI permission not accepted')
-                })
-            } else {
-                LoggerStore.error('MIDI is not supported on this browser')
-            }
-        }
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
+        MIDIListener.removeListener(this.handleMidi)
         this.dispose()
         this.songTimestamp = 0
         this.mounted = false
-        if (this.MIDIAccess) this.MIDIAccess.removeEventListener('statechange', this.resetMidiAccess)
-        //@ts-ignore
-        if (this.currentMIDISource) this.currentMIDISource.removeEventListener('midimessage', this.handleMidi)
         clearInterval(this.tickInterval)
     }
-    initMidi = (e: WebMidi.MIDIAccess) => {
-        this.MIDIAccess = e
-        this.MIDIAccess.addEventListener('statechange', this.resetMidiAccess)
-        const midiInputs = this.MIDIAccess.inputs.values()
-        const inputs = []
-        for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
-            inputs.push(input.value)
-        }
-        //@ts-ignore
-        if (this.currentMIDISource) this.currentMIDISource.removeEventListener('midimessage', this.handleMidi)
-        this.currentMIDISource = inputs.find(input => {
-            return (input.name + " " + input.manufacturer) === this.MIDISettings.currentSource
-        }) || null
-        if (this.currentMIDISource) this.currentMIDISource.onmidimessage = this.handleMidi
-    }
-    resetMidiAccess = () => {
-        if (this.MIDIAccess) this.initMidi(this.MIDIAccess)
-    }
-    handleMidi = (e: WebMidi.MIDIMessageEvent) => {
+    handleMidi = ([eventType, note, velocity]: MIDIEvent) => {
         if (!this.mounted) return
         const instrument = this.props.data.keyboard
-        const { data } = e
-        const eventType = data[0]
-        const note = data[1]
-        const velocity = data[2]
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
-            const keyboardNotes = this.MIDISettings.notes.filter(e => e.midi === note)
+            const keyboardNotes = MIDIListener.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.layout[keyboardNote.index])
             })
@@ -351,9 +313,8 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
     }
     restartSong = async (override?: number) => {
         await this.stopSong()
-        if (!this.mounted) return
-        //@ts-ignore
-        SongStore.restart((Number.isInteger(override)) ? override : SliderStore.position, SliderStore.end)
+        if (!this.mounted) return 
+        SongStore.restart((typeof override === 'number') ? override : SliderStore.position, SliderStore.end)
     }
     stopSong = (): Promise<void> => {
         return new Promise(res => {
