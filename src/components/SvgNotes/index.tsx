@@ -11,7 +11,7 @@ import laNote from "./genshin/la";
 import tiNote from "./genshin/ti";
 
 import { memo } from "react";
-import { NoteImages } from "types/Keyboard";
+import { NoteImage } from "types/Keyboard";
 const notes = {
     cr: crNote,
     dm: dmNote,
@@ -25,7 +25,7 @@ const notes = {
     ti: tiNote
 }
 interface SvgNoteProps{
-    name: NoteImages,
+    name: NoteImage,
     color?: string
     fill?: string
 }

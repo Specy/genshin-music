@@ -5,13 +5,10 @@ import Note from './Components/Note'
 import { SongStore } from 'stores/SongStore'
 import { Array2d, getNoteText, delay, clamp } from "lib/Utils/Tools"
 import "./Keyboard.css"
-import { getMIDISettings } from 'lib/BaseSettings'
 import TopPage from './Components/TopPage'
 import Analytics from 'lib/Analytics';
-import LoggerStore from 'stores/LoggerStore'
 import { SliderStore } from 'stores/SongSliderStore'
 import { ApproachingNote, RecordedNote } from 'lib/Utils/SongClasses'
-import { MIDISettings } from 'lib/BaseSettings'
 import type { NoteData } from 'lib/Instrument'
 import type Instrument from 'lib/Instrument'
 import type { ApproachingScore, NoteNameType } from 'types/GeneralTypes'
@@ -90,6 +87,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
     componentDidMount() {
         window.addEventListener('keydown', this.handleKeyboard)
         this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
+        MIDIListener.addListener(this.handleMidi)
         this.dispose = observe(SongStore.state, async () => {
             const value = SongStore.state.data
             const song = SongStore.song
@@ -126,7 +124,6 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
                 })
 
             }
-            MIDIListener.addListener(this.handleMidi)
         })
     }
     componentWillUnmount() {

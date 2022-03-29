@@ -2,39 +2,43 @@ import { APP_NAME } from "appConfig"
 import { MIDISettings } from "./BaseSettings"
 
 
-export type MIDIEvent = [eventType:number, note: number, velocity:number]
-type MIDICallback = (event:MIDIEvent) => void
+export type MIDIEvent = [eventType: number, note: number, velocity: number]
+type MIDICallback = (event: MIDIEvent) => void
 type InputsCallback = (inputs: WebMidi.MIDIInput[]) => void
-export class MIDIListenerClass{
+export class MIDIListenerClass {
     private listeners: MIDICallback[] = []
     private inputsListeners: InputsCallback[] = []
     MIDIAccess: WebMidi.MIDIAccess | null = null
     currentMIDISource: WebMidi.MIDIInput | null = null
     settings: typeof MIDISettings
     inputs: WebMidi.MIDIInput[] = []
-    constructor(){
+    constructor() {
         this.settings = MIDIListenerClass.loadSettings()
-        if(this.settings.enabled) this.create()
+        if (this.settings.enabled) this.create()
     }
-    create():Promise<WebMidi.MIDIAccess | null>{
-        return new Promise((resolve) => {
-            if(this.MIDIAccess) return resolve(this.MIDIAccess)
-            if (navigator.requestMIDIAccess) {
-                navigator.requestMIDIAccess().then(this.init, () => {
-                    resolve(this.MIDIAccess)
-                }).catch(() => resolve(null))
-            } else {
-                console.log("Midi not available")
-                resolve(null)
+    create = async (): Promise<WebMidi.MIDIAccess | null> => {
+        if (this.MIDIAccess) return this.MIDIAccess
+        if (navigator.requestMIDIAccess) {
+            try{
+                const access = await navigator.requestMIDIAccess()
+                this.handleMIDIState(access)
+                return access
+            }catch(e){
+                console.error(e)
+                return null
             }
-        })
 
+        } else {
+            console.log("Midi not available")
+            return null
+        }
     }
-    enable(){
+    enable = () => {
         this.settings.enabled = true
-        this.create()
+        this.saveSettings()
+        return this.create()
     }
-    dispose(){
+    dispose = () => {
         this.listeners = []
         this.inputs = []
         this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess)
@@ -42,25 +46,28 @@ export class MIDIListenerClass{
         this.currentMIDISource?.removeEventListener('midimessage', this.handleEvent)
         this.MIDIAccess = null
     }
-    init(e: WebMidi.MIDIAccess){
+    private handleMIDIState = (e: WebMidi.MIDIAccess) => {
         this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess)
-        e.addEventListener('statechange', this.reloadMidiAccess)
         this.MIDIAccess = e
+        e.addEventListener('statechange', this.reloadMidiAccess)
         const midiInputs = this.MIDIAccess.inputs.values()
         const inputs = []
         for (let input = midiInputs.next(); input && !input.done; input = midiInputs.next()) {
             inputs.push(input.value)
         }
-        //@ts-ignore
-        this.currentMIDISource?.removeEventListener('midimessage', this.handleEvent)
-        this.currentMIDISource = inputs.find(input => {
+        this.inputs = inputs
+        const savedSource = inputs.find(input => {
             return input.name + " " + input.manufacturer === this.settings.currentSource
         }) || null
-        this.inputs = inputs
-        this.currentMIDISource?.addEventListener('midimessage', this.handleEvent)
+        this.dispatchInputs()
+        if (inputs.length) this.selectSource(savedSource || inputs[0])
     }
     reloadMidiAccess = () => {
-        if (this.MIDIAccess) this.init(this.MIDIAccess)
+        if (this.MIDIAccess) this.handleMIDIState(this.MIDIAccess)
+        this.dispatchInputs()
+    }
+    private dispatchInputs = () => {
+
         this.inputsListeners.forEach(l => l(this.inputs))
     }
     selectSource = (source: WebMidi.MIDIInput) => {
@@ -71,47 +78,44 @@ export class MIDIListenerClass{
         this.currentMIDISource = source
         this.currentMIDISource.addEventListener('midimessage', this.handleEvent)
     }
-    static loadSettings(){
-        let settings = localStorage.getItem(APP_NAME + '_MIDI_Settings') as any
+    static loadSettings() {
         try {
-            settings = JSON.parse(settings)
-        } catch (e) {
-            settings = null
-        }
-        if (settings !== null) {
-            if (settings.settingVersion !== MIDISettings.settingVersion) {
+            const settings = JSON.parse(localStorage.getItem(`${APP_NAME}_MIDI_Settings`) || 'null') as any
+            if (settings !== null && settings.settingVersion === MIDISettings.settingVersion) {
+                return settings
+            } else {
                 return MIDISettings
             }
-        } else {
+        } catch (e) {
+            console.error(e)
             return MIDISettings
         }
-        return MIDISettings
+
     }
-    saveSettings(){
-        localStorage.setItem(APP_NAME + '_MIDI_Settings', JSON.stringify(this.settings))
+    saveSettings = () => {
+        localStorage.setItem(`${APP_NAME}_MIDI_Settings`, JSON.stringify(this.settings))
     }
-    handleEvent(e: WebMidi.MIDIMessageEvent){
+    handleEvent = (e: WebMidi.MIDIMessageEvent) => {
         const { data } = e
         const event = [data[0], data[1], data[2]] as MIDIEvent
         this.listeners.forEach(l => l(event))
     }
-    addListener(listener: MIDICallback){
+    addListener = (listener: MIDICallback) => {
         this.listeners.push(listener)
     }
-    addInputsListener(listener: InputsCallback){
+    addInputsListener = (listener: InputsCallback) => {
         this.inputsListeners.push(listener)
     }
-    removeInputsListener(listener: InputsCallback){
+    removeInputsListener = (listener: InputsCallback) => {
         this.inputsListeners = this.inputsListeners.filter(l => l !== listener)
     }
-    removeListener(listener: MIDICallback){
+    removeListener = (listener: MIDICallback) => {
         this.listeners = this.listeners.filter(l => l !== listener)
     }
-    clear(){
+    clear = () => {
         this.listeners = []
         this.inputsListeners = []
     }
 }
 
 export const MIDIListener = new MIDIListenerClass()
- 

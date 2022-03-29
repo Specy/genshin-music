@@ -7,10 +7,10 @@ interface MIDIListenerProviderProps{
 export function MIDIListenerProvider({children}:MIDIListenerProviderProps){
     useEffect(() => {
         MIDIListener.create()
-        return MIDIListener.dispose
+        return () =>  MIDIListener.dispose()
     },[])
 
-    return <>
+    return < >   
         {children}
     </>
 }

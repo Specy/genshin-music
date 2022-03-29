@@ -7,7 +7,7 @@ import { ThemeStore } from 'stores/ThemeStore'
 import type { NoteData } from 'lib/Instrument'
 import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
 import type { ApproachingNote } from 'lib/Utils/SongClasses'
-import type { NoteImages } from 'types/Keyboard'
+import type { NoteImage } from 'types/Keyboard'
 
 function getTextColor(){
     const noteBg = ThemeStore.get('note_background')
@@ -34,7 +34,7 @@ interface NoteProps{
         key: number
     }[]
     fadeTime: number
-    noteImage: NoteImages
+    noteImage: NoteImage
     noteText: string
     handleClick: (note: NoteData) => void
 }

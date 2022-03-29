@@ -1,9 +1,8 @@
+import { AUDIO_CONTEXT } from "appConfig"
 import AudioRecorder from "lib/AudioRecorder"
-import Instrument from "lib/Instrument"
-import { InstrumentName } from "types/GeneralTypes"
 
 
-export class AudioProvider{
+export class AudioProviderClass {
     audioContext: AudioContext
     reverbNode: ConvolverNode | null = null
     reverbVolumeNode: GainNode | null = null
@@ -11,16 +10,16 @@ export class AudioProvider{
     hasReverb: boolean = false
     recorder: AudioRecorder | null
     isRecording: boolean = false
-    constructor(context: AudioContext){
+    constructor(context: AudioContext) {
         this.audioContext = context
         this.recorder = new AudioRecorder()
     }
-    async init(){
+    init = async () => {
         await this.loadReverb()
         this.setAudioDestinations()
         return this
     }
-    loadReverb(): Promise<void> {
+    loadReverb = (): Promise<void> => {
         return new Promise(resolve => {
             fetch("./assets/audio/reverb4.wav")
                 .then(r => r.arrayBuffer())
@@ -43,34 +42,39 @@ export class AudioProvider{
                 })
         })
     }
-    connect(node: AudioNode | null){
-        if(!node) return this
+    connect = (node: AudioNode | null) => {
+        if (!node) return this
         this.nodes.push(node)
         this.setAudioDestinations()
         return this
     }
-
-    destroy(){
+    destroy = () => {
         this.nodes.forEach(node => node.disconnect())
         this.nodes = []
         this.recorder = null
         this.reverbNode = null
         this.reverbVolumeNode = null
     }
-    disconnect(node:AudioNode | null){
-        if(!node) return this
+    clear = () => {
+        this.nodes.forEach(node => node.disconnect())
+        this.nodes = []
+        this.setReverb(false)
+        return this
+    }
+    disconnect = (node: AudioNode | null) => {
+        if (!node) return this
         this.nodes = this.nodes.filter(n => n !== node)
         node.disconnect()
         return this
     }
-    setReverb(reverb: boolean){
+    setReverb = (reverb: boolean) => {
         this.hasReverb = reverb
         this.setAudioDestinations()
         return this
     }
-    startRecording(){
+    startRecording = () => {
         const { hasReverb, recorder, nodes, reverbVolumeNode } = this
-        if(!recorder) return
+        if (!recorder) return
         if (hasReverb) {
             if (reverbVolumeNode && recorder.node) reverbVolumeNode.connect(recorder.node)
         } else {
@@ -81,9 +85,9 @@ export class AudioProvider{
         recorder.start()
         return this
     }
-    async stopRecording(){
+    stopRecording = async () => {
         const { recorder, reverbVolumeNode, audioContext } = this
-        if(!recorder) return
+        if (!recorder) return
         const recording = await recorder.stop()
         if (reverbVolumeNode && audioContext) {
             reverbVolumeNode.disconnect()
@@ -92,7 +96,7 @@ export class AudioProvider{
         this.setAudioDestinations()
         return recording
     }
-    setAudioDestinations(){
+    setAudioDestinations = () => {
         this.nodes.forEach(node => {
             if (this.hasReverb) {
                 if (!this.reverbNode) return console.log("Couldn't connect to reverb")
@@ -103,7 +107,8 @@ export class AudioProvider{
                 if (this.audioContext) node.connect(this.audioContext.destination)
             }
         })
-        console.log(this.nodes)
         return this
     }
 }
+
+export const AudioProvider = new AudioProviderClass(AUDIO_CONTEXT)

@@ -19,7 +19,7 @@ import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
 import { KeyboardListener } from 'lib/KeyboardListener';
-import { AudioProvider } from 'AudioProvider';
+import { AudioProvider } from 'lib/AudioProvider';
 
 
 interface PlayerState{
@@ -37,7 +37,6 @@ class Player extends Component<any,PlayerState>{
 	recording: Recording
 	mounted: boolean
 	keyboardListener: KeyboardListener
-	audioProvider: AudioProvider
 	constructor(props: any) {
 		super(props)
 		this.recording = new Recording()
@@ -52,7 +51,6 @@ class Player extends Component<any,PlayerState>{
 			isDragging: false,
 			hasSong: false
 		}
-		this.audioProvider = new AudioProvider(AUDIO_CONTEXT)
 		this.mounted = false
 		this.keyboardListener = new KeyboardListener()
 	}
@@ -60,8 +58,7 @@ class Player extends Component<any,PlayerState>{
 	init = async () => {
 		const { settings } = this.state
 		await this.loadInstrument(settings.instrument.value)
-		await this.audioProvider.init()
-		this.audioProvider.setReverb(settings.caveMode.value)
+		AudioProvider.setReverb(settings.caveMode.value)
 	}
 	componentDidMount() {
 		document.body.addEventListener('dragenter', this.handleDrag)
@@ -79,6 +76,7 @@ class Player extends Component<any,PlayerState>{
 		document.body.removeEventListener('drop', this.handleDrop)
 		this.keyboardListener.destroy()
 		SongStore.reset()
+		AudioProvider.clear()
 		this.state.instrument.delete()
 		this.mounted = false
 	}
@@ -159,19 +157,19 @@ class Player extends Component<any,PlayerState>{
 
 	loadInstrument = async (name: InstrumentName) => {
 		const oldInstrument = this.state.instrument
-		this.audioProvider.disconnect(oldInstrument.endNode)
+		AudioProvider.disconnect(oldInstrument.endNode)
 		this.state.instrument.delete()
 		const { settings } = this.state
 		const instrument = new Instrument(name)
 		instrument.changeVolume(settings.instrument.volume || 100)
-		this.audioProvider.connect(instrument.endNode)
+		AudioProvider.connect(instrument.endNode)
 		this.setState({ isLoadingInstrument: true })
 		await instrument.load()
 		if (!this.mounted) return
 		this.setState({
 			instrument,
 			isLoadingInstrument: false
-		}, () => this.audioProvider.setReverb(settings.caveMode.value))
+		}, () => AudioProvider.setReverb(settings.caveMode.value))
 	}
 
 	playSound = (note: NoteData) => {
@@ -200,7 +198,7 @@ class Player extends Component<any,PlayerState>{
 			this.loadInstrument(data.value as InstrumentName)
 		}
 		if (setting.key === 'caveMode') {
-			this.audioProvider.setReverb(data.value as boolean)
+			AudioProvider.setReverb(data.value as boolean)
 		}
 		this.setState({
 			settings: settings,
@@ -283,7 +281,6 @@ class Player extends Component<any,PlayerState>{
 			this.recording = new Recording()
 		}
 		this.setState({ isRecording: newState })
-
 	}
 
 	toggleRecordAudio = async (override?: boolean | null) => {
@@ -291,9 +288,9 @@ class Player extends Component<any,PlayerState>{
 		if (typeof override !== "boolean") override = null
 		const newState = override !== null ? override : !this.state.isRecordingAudio
 		if (newState) {
-			this.audioProvider.startRecording()
+			AudioProvider.startRecording()
 		} else {
-			const recording = await this.audioProvider.stopRecording()
+			const recording = await AudioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
 			if (!this.mounted || !recording) return
 			if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')

@@ -32,7 +32,7 @@ import "./Composer.css"
 import { MIDIEvent, MIDIListener } from 'lib/MIDIListener';
 import { KeyboardListener } from 'lib/KeyboardListener';
 import type { KeyboardNumber } from 'lib/KeyboardListener/KeyboardTypes';
-import { AudioProvider } from 'AudioProvider';
+import { AudioProvider } from 'lib/AudioProvider';
 interface ComposerState {
     layers: ComposerInstruments
     songs: SerializedSongType[]
@@ -54,7 +54,6 @@ class Composer extends Component<any, ComposerState>{
     changes: number
     unblock: () => void
     keyboardListener: KeyboardListener
-    audioProvider: AudioProvider
     constructor(props: any) {
         super(props)
         const settings = this.getSettings()
@@ -72,7 +71,6 @@ class Composer extends Component<any, ComposerState>{
             isRecordingAudio: false,
             isMenuOpen: false,
         }
-        this.audioProvider = new AudioProvider(AUDIO_CONTEXT)
         this.state.song.bpm = settings.bpm.value
         this.state.song.instruments = [
             settings.layer1.value,
@@ -113,11 +111,10 @@ class Composer extends Component<any, ComposerState>{
     }
 
     componentWillUnmount() {
-        const { state, keyboardListener } = this
+        const { state } = this
         const { layers } = state
         this.mounted = false
-        this.audioProvider.destroy()
-        keyboardListener.destroy()
+        AudioProvider.clear()
         layers.forEach(instrument => instrument.delete())
         this.broadcastChannel?.close?.()
         state.isPlaying = false
@@ -130,7 +127,6 @@ class Composer extends Component<any, ComposerState>{
 
     init = async () => {
         this.syncSongs()
-        const { audioProvider } = this
         const { settings } = this.state
         //TODO if new layer is added    
         const promises = [
@@ -140,8 +136,8 @@ class Composer extends Component<any, ComposerState>{
             this.loadInstrument(settings.layer4.value, 4)
         ]
         if (this.mounted) await Promise.all(promises)
-        if (this.mounted) await audioProvider.init()
-        audioProvider.setReverb(settings.caveMode.value)
+        if (this.mounted) await AudioProvider.init()
+        AudioProvider.setReverb(settings.caveMode.value)
         MIDIListener.addListener(this.handleMidi)
         this.registerKeyboardListeners()
     }
@@ -259,18 +255,18 @@ class Composer extends Component<any, ComposerState>{
         if (key === "layer2") this.loadInstrument(data.value as InstrumentName, 2)
         if (key === "layer3") this.loadInstrument(data.value as InstrumentName, 3)
         if (key === "layer4") this.loadInstrument(data.value as InstrumentName, 4)
-        if (key === "caveMode") this.audioProvider.setReverb(data.value as boolean)
+        if (key === "caveMode") AudioProvider.setReverb(data.value as boolean)
         this.setState({ settings: { ...settings }, song }, this.updateSettings)
     }
     loadInstrument = async (name: InstrumentName, layer: LayerType) => {
         if (!this.mounted) return
         const { settings, layers } = this.state
         const instrument = new Instrument(name)
-        this.audioProvider.disconnect(layers[layer - 1].endNode)
+        AudioProvider.disconnect(layers[layer - 1].endNode)
         layers[layer - 1].delete()
         layers[layer - 1] = instrument
         await instrument.load()
-        this.audioProvider.connect(instrument.endNode)
+        AudioProvider.connect(instrument.endNode)
         if (!this.mounted) return
         instrument.changeVolume(settings[`layer${layer}`]?.volume)
         this.setState({ layers })
@@ -283,17 +279,17 @@ class Composer extends Component<any, ComposerState>{
         this.state.layers[layer].changeVolume(obj.value)
         this.setState({ settings: { ...settings } }, this.updateSettings)
     }
-    startRecordingAudio = async (override?: boolean) => { //will record untill the song stops
+    startRecordingAudio = async (override?: boolean) => {
         if (!this.mounted) return
         if (!override) {
             this.setState({ isRecordingAudio: false })
             return this.togglePlay(false)
         }
-        this.audioProvider.startRecording()
+        AudioProvider.startRecording()
         this.setState({ isRecordingAudio: true })
         await this.togglePlay(true) //wait till song finishes
         if (!this.mounted) return
-        const recording = await this.audioProvider.stopRecording()
+        const recording = await AudioProvider.stopRecording()
         this.setState({ isRecordingAudio: false })
         if (!recording) return
         const fileName = await asyncPrompt("Write the song name, press cancel to ignore")

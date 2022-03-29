@@ -4,7 +4,7 @@ import GenshinNoteBorder from 'components/GenshinNoteBorder'
 import SvgNote from 'components/SvgNotes'
 import { ThemeStore } from 'stores/ThemeStore'
 import { observe } from 'mobx'
-import { NoteImages } from 'types/Keyboard'
+import { NoteImage } from 'types/Keyboard'
 import { NoteData } from 'lib/Instrument'
 import { CombinedLayer, InstrumentName } from 'types/GeneralTypes'
 
@@ -27,7 +27,7 @@ interface ComposerNoteProps{
     instrument: InstrumentName
     clickAction: (data: NoteData) => void
     noteText: string
-    noteImage: NoteImages
+    noteImage: NoteImage
 }
 export default memo(function ComposerNote({ data, layer, instrument, clickAction, noteText, noteImage }: ComposerNoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())

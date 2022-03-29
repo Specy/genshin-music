@@ -3,7 +3,7 @@ import GenshinNoteBorder from 'components/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
 import { ThemeStore } from "stores/ThemeStore"
-import { NoteImages } from "types/Keyboard"
+import { NoteImage } from "types/Keyboard"
 import SvgNotes from "./SvgNotes"
 
 
@@ -13,7 +13,7 @@ interface BaseNoteProps{
     }, //TODO do this
     noteText: string,
     handleClick: (data:any) => void,
-    noteImage: NoteImages
+    noteImage: NoteImage
 }
 export default function BaseNote({ data, noteText = 'A', handleClick, noteImage }:BaseNoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())

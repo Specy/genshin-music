@@ -6,7 +6,7 @@ import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS, EMPTY_LAYER
 import { ThemeStore } from "stores/ThemeStore"
 import Instrument, { NoteData } from "lib/Instrument"
 import { LayerType, NoteNameType } from "types/GeneralTypes"
-import { NoteImages } from "types/Keyboard"
+import { NoteImage } from "types/Keyboard"
 
 interface ComposerKeyboardProps {
     data: {
@@ -45,7 +45,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         data={note}
                         noteText={noteText}
                         instrument={keyboard.name}
-                        noteImage={noteImage as NoteImages}
+                        noteImage={noteImage as NoteImage}
                         clickAction={handleClick}
                     />
                 } catch (e) {
