@@ -3,14 +3,14 @@ import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
 import SvgNote from 'components/SvgNotes'
 import { observe } from 'mobx'
-import { ThemeStore } from 'stores/ThemeStore'
+import { ThemeProvider } from 'stores/ThemeStore'
 import type { NoteData } from 'lib/Instrument'
 import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
 import type { ApproachingNote } from 'lib/Utils/SongClasses'
 import type { NoteImage } from 'types/Keyboard'
 
 function getTextColor(){
-    const noteBg = ThemeStore.get('note_background')
+    const noteBg = ThemeProvider.get('note_background')
     if(APP_NAME === 'Genshin'){
         if(noteBg.luminosity() > 0.65){
             return BASE_THEME_CONFIG.text.note
@@ -41,7 +41,7 @@ interface NoteProps{
 function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick, noteImage, noteText, data }: NoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
-        const dispose = observe(ThemeStore.state.data, () => {
+        const dispose = observe(ThemeProvider.state.data, () => {
             setTextColor(getTextColor())
         })
         return dispose
@@ -76,14 +76,14 @@ function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick
             className={className}
             style={{
                 ...animation,
-                ...(clickColor && note.status === 'clicked' && ThemeStore.isDefault('accent')
+                ...(clickColor && note.status === 'clicked' && ThemeProvider.isDefault('accent')
                     ? { backgroundColor: clickColor } : {}
                 )
             }}
         >
             <SvgNote
                 name={noteImage}
-                color={ThemeStore.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
+                color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
             />
 
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
@@ -102,7 +102,7 @@ function getApproachCircleColor(index: number) {
     const numOfNotes = APP_NAME === "Sky" ? 5 : 7
     const row = Math.floor(index / numOfNotes)
     if(row === 0) return 'var(--accent)'
-    if(row === 1) return ThemeStore.get('accent').rotate(180).hex()
+    if(row === 1) return ThemeProvider.get('accent').rotate(180).hex()
     if(row === 2) return "var(--accent)"
     return "var(--accent)"
 }
@@ -127,7 +127,7 @@ const ApproachCircle = memo(function ApproachCircle({ approachRate, index }: App
 function parseBorderFill(status: NoteStatus) {
     if (status === "clicked") return "transparent"
     else if (status === 'toClickNext' || status === 'toClickAndNext') return '#63aea7'
-    const color = ThemeStore.get('note_background').desaturate(0.6)
+    const color = ThemeProvider.get('note_background').desaturate(0.6)
     return color.isDark() ? color.lighten(0.45).hex() : color.darken(0.18).hex()
 }
 

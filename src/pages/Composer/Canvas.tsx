@@ -5,7 +5,7 @@ import isMobile from "is-mobile"
 import { ComposerCache } from "./TextureCache"
 import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN, APP_NAME } from "appConfig"
 import Memoized from 'components/Memoized';
-import { ThemeStore } from 'stores/ThemeStore';
+import { ThemeProvider } from 'stores/ThemeStore';
 import { observe } from 'mobx';
 import { clamp, nearestEven } from 'lib/Utils/Tools';
 import type { Column, ColumnNote } from 'lib/Utils/SongClasses';
@@ -85,10 +85,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             currentBreakpoint: -1,
             theme: {
                 timeline: {
-                    hex: ThemeStore.layer('primary', 0.1).toString(),
-                    hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
-                    selected: ThemeStore.get('composer_accent').negate().rgbNumber(),
-                    border: ThemeStore.get('composer_accent').rgbNumber()
+                    hex: ThemeProvider.layer('primary', 0.1).toString(),
+                    hexNumber: ThemeProvider.layer('primary', 0.1).rgbNumber(),
+                    selected: ThemeProvider.get('composer_accent').negate().rgbNumber(),
+                    border: ThemeProvider.get('composer_accent').rgbNumber()
                 }
             },
             cache: null
@@ -122,7 +122,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 this.state.timelineHeight
             )
         })
-        this.dispose = observe(ThemeStore.state.data, () => {
+        this.dispose = observe(ThemeProvider.state.data, () => {
             this.setState({
                 cache: this.getCache(
                     this.state.column.width,
@@ -132,10 +132,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 ),
                 theme: {
                     timeline: {
-                        hex: ThemeStore.layer('primary', 0.1).toString(),
-                        hexNumber: ThemeStore.layer('primary', 0.1).rgbNumber(),
-                        selected: ThemeStore.get('composer_accent').negate().rgbNumber(),
-                        border: ThemeStore.get('composer_accent').rgbNumber()
+                        hex: ThemeProvider.layer('primary', 0.1).toString(),
+                        hexNumber: ThemeProvider.layer('primary', 0.1).rgbNumber(),
+                        selected: ThemeProvider.get('composer_accent').negate().rgbNumber(),
+                        border: ThemeProvider.get('composer_accent').rgbNumber()
                     }
                 }
             })
@@ -162,8 +162,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     getCache(width: number, height: number, margin: number, timelineHeight: number) {
         const colors = {
-            l: ThemeStore.get('primary'),
-            d: ThemeStore.get('primary')
+            l: ThemeProvider.get('primary'),
+            d: ThemeProvider.get('primary')
         }
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
@@ -175,16 +175,16 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             timelineHeight: timelineHeight,
             app: this.notesStageRef.current.app,
             breakpointsApp: this.breakpointsStageRef.current.app,
-            composerAccent: ThemeStore.get('composer_accent').rotate(20).darken(0.5),
+            composerAccent: ThemeProvider.get('composer_accent').rotate(20).darken(0.5),
             standardsColors: [
                 {
                     color: colors.l.rgbNumber() //lighter
                 }, {
                     color: colors.d.rgbNumber() //darker
                 }, {
-                    color: ThemeStore.get('composer_accent').rgbNumber() //current
+                    color: ThemeProvider.get('composer_accent').rgbNumber() //current
                 }, {
-                    color: ThemeStore.get('composer_accent').negate().rgbNumber()
+                    color: ThemeProvider.get('composer_accent').negate().rgbNumber()
                 }
             ]
         })

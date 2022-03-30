@@ -7,7 +7,7 @@ import { getNoteText, parseSong } from 'lib/Utils/Tools'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
-import { ThemeStore } from 'stores/ThemeStore'
+import { ThemeProvider } from 'stores/ThemeStore'
 import { SerializedSongType } from 'types/SongTypes'
 import { Song } from 'lib/Utils/Song'
 import { RecordedNote } from 'lib/Utils/SongClasses'
@@ -190,7 +190,7 @@ function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
                     return <div 
                             className={exists ? 'frame-note-s' : 'frame-note-ns'} 
                             key={i}
-                            style={!exists ? {backgroundColor: ThemeStore.layer('primary',0.2).toString()} : {}}
+                            style={!exists ? {backgroundColor: ThemeProvider.layer('primary',0.2).toString()} : {}}
                         >
                         {(exists && hasText) 
                             ? getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === 'Genshin' ? 21 : 15) 

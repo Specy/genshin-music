@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { defaultThemes, ThemeKeys, ThemeStore } from "stores/ThemeStore";
+import { defaultThemes, ThemeKeys, ThemeProvider } from "stores/ThemeStore";
 import { observe } from "mobx";
 import { SimpleMenu } from "components/SimpleMenu";
 import { AppButton } from "components/AppButton";
@@ -26,8 +26,8 @@ function ThemePage() {
     const [selectedProp, setSelectedProp] = useState('')
 
     useEffect(() => {
-        const dispose2 = observe(ThemeStore.state.other, () => {
-            setTheme({ ...ThemeStore })
+        const dispose2 = observe(ThemeProvider.state.other, () => {
+            setTheme({ ...ThemeProvider })
         })
         async function getThemes() {
             setUserThemes(await DB.getThemes())
@@ -38,19 +38,19 @@ function ThemePage() {
         }
     }, [setTheme])
     async function handleChange(name: ThemeKeys, value: string) {
-        if (!ThemeStore.isEditable()) {
-            if (value === ThemeStore.get(name).toString()) return
+        if (!ThemeProvider.isEditable()) {
+            if (value === ThemeProvider.get(name).toString()) return
             const themeName = await asyncPrompt('Creating a new theme from this default theme, write the name:')
             if (themeName === null) return
             await cloneTheme(themeName)
         }
-        ThemeStore.set(name, value)
-        await ThemeStore.save()
+        ThemeProvider.set(name, value)
+        await ThemeProvider.save()
         setUserThemes(await DB.getThemes())
     }
     async function handlePropReset(key: ThemeKeys) {
-        ThemeStore.reset(key)
-        await ThemeStore.save()
+        ThemeProvider.reset(key)
+        await ThemeProvider.save()
         setUserThemes(await DB.getThemes())
     }
 
@@ -59,10 +59,10 @@ function ThemePage() {
             const theme = file[0].data as Theme
             try {
                 if (theme.data && theme.other) {
-                    const sanitized = ThemeStore.sanitize(theme)
+                    const sanitized = ThemeProvider.sanitize(theme)
                     const id = await DB.addTheme(sanitized)
                     sanitized.other.id = id
-                    ThemeStore.loadFromJson(sanitized)
+                    ThemeProvider.loadFromJson(sanitized)
                     setUserThemes(await DB.getThemes())
                 } else {
                     logImportError()
@@ -78,7 +78,7 @@ function ThemePage() {
     },[])
     async function cloneTheme(name: string) {
         const theme = new BaseTheme(name)
-        theme.state = cloneDeep(ThemeStore.state)
+        theme.state = cloneDeep(ThemeProvider.state)
         theme.state.other.name = name
         theme.state.editable = true
         await addNewTheme(theme)
@@ -93,14 +93,14 @@ function ThemePage() {
     async function addNewTheme(newTheme: BaseTheme) {
         const id = await DB.addTheme(newTheme.toObject())
         newTheme.state.other.id = id
-        ThemeStore.loadFromJson(newTheme.toObject())
+        ThemeProvider.loadFromJson(newTheme.toObject())
         setUserThemes(await DB.getThemes())
         return id
     }
     async function handleThemeDelete(theme: Theme) {
         if (await asyncConfirm(`Are you sure you want to delete the theme ${theme.other.name}?`)) {
-            if (ThemeStore.getId() === theme.other.id) {
-                ThemeStore.wipe()
+            if (ThemeProvider.getId() === theme.other.id) {
+                ThemeProvider.wipe()
             }
             await DB.removeTheme({ id: theme.other.id })
             setUserThemes(await DB.getThemes())
@@ -118,7 +118,7 @@ function ThemePage() {
                     </AppButton>
                 </FilePicker>
                 <div style={{ marginLeft: '1rem' }}>
-                    {ThemeStore.getOther('name')}
+                    {ThemeProvider.getOther('name')}
                 </div>
             </div>
             <div style={{ marginTop: '2.2rem' }}>
@@ -128,7 +128,7 @@ function ThemePage() {
                     {...e}
                     key={e.name}
                     isSelected={selectedProp === e.name}
-                    canReset={ThemeStore.isEditable()}
+                    canReset={ThemeProvider.isEditable()}
                     isModified={!theme.isDefault(e.name)}
                     onChange={handleChange}
                     setSelectedProp={setSelectedProp}
@@ -138,22 +138,22 @@ function ThemePage() {
             <ThemeInput
                 name="Background image (URL)"
                 value={theme.getOther('backgroundImageMain')}
-                disabled={!ThemeStore.isEditable()}
-                onChange={(e) => ThemeStore.setBackground(e, 'Main')}
+                disabled={!ThemeProvider.isEditable()}
+                onChange={(e) => ThemeProvider.setBackground(e, 'Main')}
             />
             <ThemeInput
                 name="Composer Background image (URL)"
                 value={theme.getOther('backgroundImageComposer')}
-                disabled={!ThemeStore.isEditable()}
-                onChange={(e) => ThemeStore.setBackground(e, 'Composer')}
+                disabled={!ThemeProvider.isEditable()}
+                onChange={(e) => ThemeProvider.setBackground(e, 'Composer')}
             />
             <ThemeInput
                 name="Theme name"
                 value={theme.getOther('name')}
-                disabled={!ThemeStore.isEditable()}
-                onChange={(e) => ThemeStore.setOther('name', e)}
+                disabled={!ThemeProvider.isEditable()}
+                onChange={(e) => ThemeProvider.setOther('name', e)}
                 onLeave={async () => {
-                    await ThemeStore.save()
+                    await ThemeProvider.save()
                     setUserThemes(await DB.getThemes())
                 }}
             />
@@ -164,13 +164,13 @@ function ThemePage() {
                 {userThemes.map(theme =>
                     <ThemePreview
                         onDelete={handleThemeDelete}
-                        current={theme.other.id === ThemeStore.getId()}
+                        current={theme.other.id === ThemeProvider.getId()}
                         key={theme.other.id}
                         theme={theme}
                         downloadable={true}
                         onClick={(theme) => {
-                            ThemeStore.loadFromTheme(theme)
-                            ThemeStore.save()
+                            ThemeProvider.loadFromTheme(theme)
+                            ThemeProvider.save()
                         }}
                     />
                 )}
@@ -187,10 +187,10 @@ function ThemePage() {
                     <ThemePreview
                         key={theme.other.id}
                         theme={theme}
-                        current={theme.other.id === ThemeStore.getId()}
+                        current={theme.other.id === ThemeProvider.getId()}
                         onClick={(theme) => {
-                            ThemeStore.loadFromTheme(theme)
-                            ThemeStore.save()
+                            ThemeProvider.loadFromTheme(theme)
+                            ThemeProvider.save()
                         }}
                     />
                 )}

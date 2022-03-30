@@ -3,7 +3,7 @@ import { getNoteText } from 'lib/Utils/Tools'
 import { Column } from "lib/Utils/SongClasses"
 import MultiSwitch from "./Components/MultiSwitch"
 import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS, EMPTY_LAYER } from "appConfig"
-import { ThemeStore } from "stores/ThemeStore"
+import { ThemeProvider } from "stores/ThemeStore"
 import Instrument, { NoteData } from "lib/Instrument"
 import { LayerType, NoteNameType } from "types/GeneralTypes"
 import { NoteImage } from "types/Keyboard"
@@ -76,12 +76,12 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         style={{
                             ...(tempoChanger.changer === 1
                             ? {
-                                backgroundColor: ThemeStore.get('primary').toString(),
-                                color: ThemeStore.getText('primary').toString()
+                                backgroundColor: ThemeProvider.get('primary').toString(),
+                                color: ThemeProvider.getText('primary').toString()
                             }
                             : { backgroundColor: "#" + tempoChanger.color.toString(16) }),
                             outline: data.currentColumn.tempoChanger === tempoChanger.id 
-                                ? `3px ${ThemeStore.get('composer_accent').toString()} solid` 
+                                ? `3px ${ThemeProvider.get('composer_accent').toString()} solid` 
                                 : '',
                             outlineOffset: '-3px'
                         }}

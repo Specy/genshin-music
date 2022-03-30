@@ -13,7 +13,7 @@ import type { NoteData } from 'lib/Instrument'
 import type Instrument from 'lib/Instrument'
 import type { ApproachingScore, NoteNameType } from 'types/GeneralTypes'
 import type { Song } from 'lib/Utils/Song'
-import { MIDIEvent, MIDIListener } from 'lib/MIDIListener'
+import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider'
 
 interface KeyboardProps {
     data: {
@@ -87,7 +87,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
     componentDidMount() {
         window.addEventListener('keydown', this.handleKeyboard)
         this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
-        MIDIListener.addListener(this.handleMidi)
+        MIDIProvider.addListener(this.handleMidi)
         this.dispose = observe(SongStore.state, async () => {
             const value = SongStore.state.data
             const song = SongStore.song
@@ -128,7 +128,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
     }
     componentWillUnmount() {
         window.removeEventListener('keydown', this.handleKeyboard)
-        MIDIListener.removeListener(this.handleMidi)
+        MIDIProvider.removeListener(this.handleMidi)
         this.dispose()
         this.songTimestamp = 0
         this.mounted = false
@@ -138,7 +138,7 @@ export default class Keyboard extends Component<KeyboardProps,KeyboardState> {
         if (!this.mounted) return
         const instrument = this.props.data.keyboard
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
-            const keyboardNotes = MIDIListener.settings.notes.filter(e => e.midi === note)
+            const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.layout[keyboardNote.index])
             })

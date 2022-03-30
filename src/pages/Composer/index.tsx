@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import { APP_NAME, AUDIO_CONTEXT, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, PitchesType, TempoChanger, EMPTY_LAYER } from "appConfig"
+import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, PitchesType, TempoChanger, EMPTY_LAYER } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -15,7 +15,7 @@ import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
-import { getPitchChanger, delay, formatMs, calculateSongLength } from "lib/Utils/Tools"
+import { delay, formatMs, calculateSongLength } from "lib/Utils/Tools"
 import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
 import { Column } from 'lib/Utils/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
@@ -29,10 +29,10 @@ import { SerializedSongType, SongInstruments } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { ComposerInstruments, InstrumentName, LayerIndex, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
 import "./Composer.css"
-import { MIDIEvent, MIDIListener } from 'lib/MIDIListener';
-import { KeyboardListener } from 'lib/KeyboardListener';
-import type { KeyboardNumber } from 'lib/KeyboardListener/KeyboardTypes';
-import { AudioProvider } from 'lib/AudioProvider';
+import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider';
+import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
+import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardTypes';
+import { AudioProvider } from 'lib/Providers/AudioProvider';
 interface ComposerState {
     layers: ComposerInstruments
     songs: SerializedSongType[]
@@ -53,7 +53,6 @@ class Composer extends Component<any, ComposerState>{
     mounted: boolean
     changes: number
     unblock: () => void
-    keyboardListener: KeyboardListener
     constructor(props: any) {
         super(props)
         const settings = this.getSettings()
@@ -82,7 +81,6 @@ class Composer extends Component<any, ComposerState>{
         this.changes = 0
         this.broadcastChannel = null
         this.unblock = () => { }
-        this.keyboardListener = new KeyboardListener()
     }
 
     get currentInstrument() {
@@ -119,7 +117,8 @@ class Composer extends Component<any, ComposerState>{
         this.broadcastChannel?.close?.()
         state.isPlaying = false
         this.unblock()
-        MIDIListener.removeListener(this.handleMidi)
+        KeyboardProvider.clear()
+        MIDIProvider.removeListener(this.handleMidi)
         if (window.location.hostname !== "localhost") {
             window.removeEventListener("beforeunload", this.handleUnload)
         }
@@ -138,34 +137,34 @@ class Composer extends Component<any, ComposerState>{
         if (this.mounted) await Promise.all(promises)
         if (this.mounted) await AudioProvider.init()
         AudioProvider.setReverb(settings.caveMode.value)
-        MIDIListener.addListener(this.handleMidi)
+        MIDIProvider.addListener(this.handleMidi)
         this.registerKeyboardListeners()
     }
     registerKeyboardListeners = () => {
-        const { state, keyboardListener } = this //DONT SPREAD THE STATE, IT NEEDS TO REUSE THE REFERENCE EVERYTIME 
-        keyboardListener.registerLetter('D', () => { if (!state.isPlaying) this.selectColumn(state.song.selected + 1) })
-        keyboardListener.registerLetter('A', () => { if (!state.isPlaying) this.selectColumn(state.song.selected - 1) })
-        keyboardListener.registerLetter('Q', () => { if (!state.isPlaying) this.removeColumns(1, state.song.selected) })
-        keyboardListener.registerLetter('E', () => { if (!state.isPlaying) this.addColumns(1, state.song.selected) })
+        const { state } = this //DONT SPREAD THE STATE, IT NEEDS TO REUSE THE REFERENCE EVERYTIME 
+        KeyboardProvider.registerLetter('D', () => { if (!state.isPlaying) this.selectColumn(state.song.selected + 1) })
+        KeyboardProvider.registerLetter('A', () => { if (!state.isPlaying) this.selectColumn(state.song.selected - 1) })
+        KeyboardProvider.registerLetter('Q', () => { if (!state.isPlaying) this.removeColumns(1, state.song.selected) })
+        KeyboardProvider.registerLetter('E', () => { if (!state.isPlaying) this.addColumns(1, state.song.selected) })
         TEMPO_CHANGERS.forEach((tempoChanger, i) => {
-            keyboardListener.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger))
+            KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger))
         })
-        keyboardListener.register('ArrowUp', () => {
+        KeyboardProvider.register('ArrowUp', () => {
             const nextLayer = state.layer - 1
             if (nextLayer > 0) this.changeLayer(nextLayer as LayerType)
         })
-        keyboardListener.register('ArrowDown', () => {
+        KeyboardProvider.register('ArrowDown', () => {
             const nextLayer = state.layer + 1
             if (nextLayer < state.layers.length + 1) this.changeLayer(nextLayer as LayerType)
         })
-        keyboardListener.register('Space', ({ event }) => {
+        KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
             this.togglePlay()
             if (state.settings.syncTabs.value) {
                 this.broadcastChannel?.postMessage?.(this.state.isPlaying ? 'play' : 'stop')
             }
         })
-        keyboardListener.listen(({ event, letter }) => {
+        KeyboardProvider.listen(({ event, letter }) => {
             const { isPlaying } = state
             const shouldEditKeyboard = isPlaying || event.shiftKey
             if (shouldEditKeyboard) {
@@ -195,11 +194,11 @@ class Composer extends Component<any, ComposerState>{
         if (!this.mounted) return
         const { song, layer } = this.state
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
-            const keyboardNotes = MIDIListener.settings.notes.filter(e => e.midi === note)
+            const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(this.currentInstrument.layout[keyboardNote.index])
             })
-            const shortcut = MIDIListener.settings.shortcuts.find(e => e.midi === note)
+            const shortcut = MIDIProvider.settings.shortcuts.find(e => e.midi === note)
             if (!shortcut) return
             switch (shortcut.type) {
                 case 'toggle_play': this.togglePlay(); break;

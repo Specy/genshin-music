@@ -8,7 +8,7 @@ import { APP_NAME, LAYERS_INDEXES, PITCHES, PitchesType } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
-import { ThemeStore, ThemeStoreClass } from 'stores/ThemeStore'
+import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
 import { LayerIndex } from 'types/GeneralTypes'
 import { SongInstruments } from 'types/SongTypes'
@@ -59,13 +59,13 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             outOfRange: 0,
             totalNotes: 0,
             includeAccidentals: true,
-            theme: ThemeStore
+            theme: ThemeProvider
         }
         this.dispose = () => { }
     }
     componentDidMount() {
-        this.dispose = observe(ThemeStore.state.data, () => {
-            this.setState({ theme: { ...ThemeStore } })
+        this.dispose = observe(ThemeProvider.state.data, () => {
+            this.setState({ theme: { ...ThemeProvider } })
         })
     }
     componentWillUnmount() {

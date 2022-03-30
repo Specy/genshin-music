@@ -1,4 +1,4 @@
-import { AudioProvider } from "lib/AudioProvider"
+import { AudioProvider } from "lib/Providers/AudioProvider"
 import { useEffect } from "react"
 
 

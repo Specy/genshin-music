@@ -1,11 +1,12 @@
 import { APP_NAME } from "appConfig"
-import { MIDISettings } from "./BaseSettings"
+import { MIDISettings } from "../BaseSettings"
 
 
 export type MIDIEvent = [eventType: number, note: number, velocity: number]
 type MIDICallback = (event: MIDIEvent) => void
 type InputsCallback = (inputs: WebMidi.MIDIInput[]) => void
-export class MIDIListenerClass {
+
+export class MIDIListener {
     private listeners: MIDICallback[] = []
     private inputsListeners: InputsCallback[] = []
     MIDIAccess: WebMidi.MIDIAccess | null = null
@@ -13,7 +14,7 @@ export class MIDIListenerClass {
     settings: typeof MIDISettings
     inputs: WebMidi.MIDIInput[] = []
     constructor() {
-        this.settings = MIDIListenerClass.loadSettings()
+        this.settings = MIDIListener.loadSettings()
         if (this.settings.enabled) this.create()
     }
     create = async (): Promise<WebMidi.MIDIAccess | null> => {
@@ -118,4 +119,4 @@ export class MIDIListenerClass {
     }
 }
 
-export const MIDIListener = new MIDIListenerClass()
+export const MIDIProvider = new MIDIListener()

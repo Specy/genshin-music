@@ -1,4 +1,3 @@
-
 import './MidiSetup.css'
 import { APP_NAME } from "appConfig"
 import { MIDISettings } from "lib/BaseSettings"
@@ -11,8 +10,8 @@ import Shortcut from "./Shortcut"
 import LoggerStore from "stores/LoggerStore"
 import type { MIDINote } from "lib/Utils/Tools"
 import { InstrumentName, InstrumentNotesLayout } from "types/GeneralTypes"
-import { MIDIEvent, MIDIListener } from "lib/MIDIListener"
-import { AudioProvider } from "lib/AudioProvider"
+import { MIDIEvent, MIDIProvider } from "lib/Providers/MIDIProvider"
+import { AudioProvider } from "lib/Providers/AudioProvider"
 import { DefaultPage } from "components/DefaultPage"
 import { NoteImage } from "types/Keyboard"
 
@@ -32,7 +31,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         super(props)
         this.state = {
             instrument: new Instrument(),
-            settings: MIDIListener.settings,
+            settings: MIDIProvider.settings,
             selectedNote: null,
             selectedShortcut: null,
             sources: [],
@@ -45,17 +44,17 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
     }
     componentWillUnmount() {
         this.mounted = false
-        MIDIListener.clear()
+        MIDIProvider.clear()
         AudioProvider.clear()
     }
     init = async () => {
         await this.loadInstrument(INSTRUMENTS[0])
-		await MIDIListener.enable()
-        MIDIListener.addInputsListener(this.midiStateChange)
-        MIDIListener.addListener(this.handleMidi)
+		await MIDIProvider.enable()
+        MIDIProvider.addInputsListener(this.midiStateChange)
+        MIDIProvider.addListener(this.handleMidi)
         this.setState({ 
-            sources: MIDIListener.inputs,
-            selectedSource: MIDIListener.currentMIDISource
+            sources: MIDIProvider.inputs,
+            selectedSource: MIDIProvider.currentMIDISource
          })
     }
     midiStateChange = (inputs: WebMidi.MIDIInput[]) => {
@@ -69,9 +68,9 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
     }
     selectMidi = (selectedSource?: WebMidi.MIDIInput) => {
         if (!this.mounted || !selectedSource) return
-        MIDIListener.selectSource(selectedSource)
+        MIDIProvider.selectSource(selectedSource)
         this.setState({ selectedSource })
-        MIDIListener.saveSettings()
+        MIDIProvider.saveSettings()
     }
 
     deselectNotes = () => {
@@ -104,7 +103,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                 selectedNote.midi = note
                 this.deselectNotes()
                 this.setState({ selectedNote: null })
-                MIDIListener.saveSettings()
+                MIDIProvider.saveSettings()
             }
             if (selectedShortcut) {
                 const shortcut = settings.shortcuts.find(e => e.type === selectedShortcut)
@@ -113,7 +112,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                     shortcut.midi = note
                     shortcut.status = note < 0 ? 'wrong' : 'right'
                     this.setState({ settings: settings })
-                    MIDIListener.saveSettings()
+                    MIDIProvider.saveSettings()
                 }
             }
             const shortcut = settings.shortcuts.find(e => e.midi === note)
@@ -168,7 +167,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                     <select
                             className="midi-select"
                             value={selectedSource?.name || 'None'}
-                            onChange={(e) => this.selectMidi(sources.find(e => e.id === e.id))}
+                            onChange={(e) => this.selectMidi(sources.find(s => s.id === e.target.value))}
                         >
                             <option disabled value={'None'}> None</option>
                             {sources.map((e, i) => <option value={e.id} key={e.id}>
