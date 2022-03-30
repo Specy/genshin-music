@@ -1,10 +1,10 @@
-interface MenuPanelProps{
+interface MenuPanelProps {
     title: string,
     current: string,
     children: React.ReactNode
 }
 
-export default function MenuPanel({title, current, children}: MenuPanelProps) {
+export default function MenuPanel({ title, current, children }: MenuPanelProps) {
     return <div className={current === title ? "menu-panel menu-panel-visible" : "menu-panel"}>
         <div className="menu-title">
             {title}

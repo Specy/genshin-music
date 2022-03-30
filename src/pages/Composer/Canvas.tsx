@@ -3,14 +3,15 @@ import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
 import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
 import isMobile from "is-mobile"
 import { ComposerCache } from "./TextureCache"
-import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN, APP_NAME } from "appConfig"
+import { APP_NAME } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeProvider } from 'stores/ThemeStore';
 import { observe } from 'mobx';
-import { clamp, nearestEven } from 'lib/Utils/Tools';
-import type { Column, ColumnNote } from 'lib/Utils/SongClasses';
-import type { Texture } from 'pixi.js';
+import { clamp, nearestEven } from 'lib/Tools';
+import type { Column } from 'lib/SongClasses';
 import type { ComposerSettingsDataType } from 'lib/BaseSettings';
+import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
+import { isColumnVisible, RenderColumn } from './Components/RenderColumn';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
@@ -112,7 +113,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
-        window.addEventListener("keydown", this.handleKeyboard)
+        KeyboardProvider.listen(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
         this.setState({
             cache: this.getCache(
@@ -141,25 +142,22 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             })
         })
     }
+
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
-        window.removeEventListener("keydown", this.handleKeyboard)
+        KeyboardProvider.unlisten(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
         this.dispose()
         this.state.cache?.destroy()
         this.notesStageRef = null
         this.breakpointsStageRef = null
     }
-    handleKeyboard = (event: KeyboardEvent) => {
-        switch (event.code) {
-            case "ArrowRight": this.handleBreakpoints(1)
-                break;
-            case "ArrowLeft": this.handleBreakpoints(-1)
-                break;
-            default:
-                break;
-        }
+
+    handleKeyboard = ({code}: KeyboardEventData) => {
+        if(code === 'ArrowRight') this.handleBreakpoints(1)
+        else if (code === 'ArrowLeft') this.handleBreakpoints(-1)
     }
+
     getCache(width: number, height: number, margin: number, timelineHeight: number) {
         const colors = {
             l: ThemeProvider.get('primary'),
@@ -266,6 +264,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const relativeColumnWidth = width / data.columns.length
         const timelineWidth = Math.floor(relativeColumnWidth * (width / sizes.width + 1))
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
+        
         return <div className="canvas-wrapper" style={{ width: width + 2 }}>
             <Stage
                 width={width}
@@ -287,7 +286,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     pointermove={(e) => this.handleStageSlide(e)}
                 >
                     {data.columns.map((column, i) => {
-                        if (!isVisible(i, data.selected,numberOfColumnsPerCanvas)) return null
+                        if (!isColumnVisible(i, data.selected,numberOfColumnsPerCanvas)) return null
                         const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
                         const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
                         const background = column.tempoChanger === 0
@@ -415,61 +414,4 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             </div>
         </div>
     }
-}
-
-interface RenderColumnProps {
-    notes: ColumnNote[]
-    index: number
-    sizes: {
-        width: number
-        height: number
-    }
-    cache: any
-    backgroundCache: Texture
-    isBreakpoint: boolean
-    isSelected: boolean
-    isToolsSelected: boolean
-    onClick: (index: number) => void
-}
-
-function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }: RenderColumnProps) {
-    return <Container
-        pointertap={() => onClick(index)}
-        interactive={true}
-        x={sizes.width * index}
-    >
-        <Sprite
-            texture={backgroundCache}
-            interactiveChildren={false}
-        >
-            {(isSelected || isToolsSelected) &&
-                <Sprite
-                    texture={isToolsSelected && !isSelected ? cache.standard[3] : cache.standard[2]}
-                    alpha={isToolsSelected && !isSelected ? 0.4 : 0.8}
-                    zIndex={1}
-                />
-            }
-            {isBreakpoint &&
-                <Sprite
-                    texture={cache.breakpoints[1]}
-                />
-            }
-        </Sprite>
-
-        {notes.map((note: any) => {
-            return <Sprite
-                key={note.index}
-                texture={cache.notes[note.layer]}
-                y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
-            >
-            </Sprite>
-        })}
-
-    </Container>
-}
-
-
-function isVisible(pos: number, currentPos: number, numberOfColumnsPerCanvas: number) {
-    const threshold = numberOfColumnsPerCanvas / 2 + 2
-    return (currentPos - threshold) < pos && pos < (currentPos + threshold)
 }

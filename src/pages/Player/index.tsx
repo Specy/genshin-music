@@ -3,10 +3,10 @@ import Keyboard from "./Keyboard"
 import Menu from "./Components/Menu"
 import { DB } from 'Database';
 import { SongStore } from 'stores/SongStore'
-import { parseSong } from "lib/Utils/Tools"
-import { SerializedSong, Song } from 'lib/Utils/Song';
-import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
-import { Recording } from 'lib/Utils/SongClasses';
+import { parseSong } from "lib/Tools"
+import { SerializedSong, Song } from 'lib/Song';
+import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
+import { Recording } from 'lib/SongClasses';
 import { MainPageSettings, MainPageSettingsDataType, MainPageSettingsType } from "lib/BaseSettings"
 import Instrument, { NoteData } from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
@@ -28,7 +28,6 @@ interface PlayerState {
 	songs: (ComposedSong | Song)[]
 	settings: MainPageSettingsDataType
 	instrument: Instrument
-	isDragging: boolean
 	isLoadingInstrument: boolean
 	isRecordingAudio: boolean
 	isRecording: boolean
@@ -49,7 +48,6 @@ class Player extends Component<any, PlayerState>{
 			isRecordingAudio: false,
 			songs: [],
 			settings: settings,
-			isDragging: false,
 			hasSong: false
 		}
 		this.mounted = false
@@ -80,10 +78,6 @@ class Player extends Component<any, PlayerState>{
 		SongStore.reset()
 	}
 
-	handleDragOver = (isDragging: boolean) => {
-		this.setState({ isDragging })
-	}
-
 	setHasSong = (data: boolean) => {
 		this.setState({ hasSong: data })
 	}
@@ -96,7 +90,9 @@ class Player extends Component<any, PlayerState>{
 			}
 		}
 	}
-
+	dropError = () => {
+		LoggerStore.error("There was an error importing the file! Was it the correct format?")
+	}
 	changeVolume = (obj: SettingVolumeUpdate) => {
 		const { settings } = this.state
 		if (obj.key === "instrument") {
@@ -265,81 +261,60 @@ class Player extends Component<any, PlayerState>{
 		}
 		this.setState({ isRecordingAudio: newState })
 	}
-	changePage = (page: string) => {
-		//@ts-ignore
-		this.props.history.push(page)
-	}
 	render() {
-		const { state } = this
-		const { settings, isLoadingInstrument, songs, instrument, hasSong, isRecordingAudio, isRecording, isDragging } = state
-		const keyboardFunctions = {
-			playSound: this.playSound,
-			setHasSong: this.setHasSong
-		}
-		const keyboardData = {
-			isLoading: isLoadingInstrument,
-			keyboard: instrument,
-			pitch: settings.pitch.value as PitchesType,
-			keyboardSize: settings.keyboardSize.value,
-			noteNameType: settings.noteNameType.value as NoteNameType,
-			hasSong,
-			hasAnimation: settings.noteAnimation.value,
-			approachRate: settings.approachSpeed.value,
-			keyboardYPosition: settings.keyboardYPosition.value
-		}
-		const menuFunctions = {
-			addSong: this.addSong,
-			removeSong: this.removeSong,
-			changePage: this.changePage,
-			handleSettingChange: this.handleSettingChange,
-			changeVolume: this.changeVolume
-		}
-		const menuData = { songs, settings }
-
+		const { state, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this
+		const { settings, isLoadingInstrument, songs, instrument, hasSong, isRecordingAudio, isRecording } = state
 		return <>
+			<Menu 
+				functions={{ addSong, removeSong, handleSettingChange, changeVolume }} 
+				data={{ songs, settings }} 
+			/>
+			<div className="right-panel">
+				<div className="upper-right">
+					{!hasSong &&
+						<AppButton
+							toggled={isRecording}
+							onClick={this.toggleRecord}
+							style={{ marginTop: "0.8rem" }}
+						>
+							{isRecording ? "Stop" : "Record"}
+						</AppButton>
+					}
+				</div>
+				<div className="keyboard-wrapper" style={{ marginBottom: '2vh' }}>
+					<Keyboard
+						key={instrument.layout.length}
+						data={{
+							isLoading: isLoadingInstrument,
+							keyboard: instrument,
+							pitch: settings.pitch.value as PitchesType,
+							keyboardSize: settings.keyboardSize.value,
+							noteNameType: settings.noteNameType.value as NoteNameType,
+							hasSong,
+							hasAnimation: settings.noteAnimation.value,
+							approachRate: settings.approachSpeed.value,
+							keyboardYPosition: settings.keyboardYPosition.value
+						}}
+						functions={{ playSound, setHasSong }}
+					/>
+				</div>
+			</div>
 			<BodyDropper<SerializedSongType>
 				as='json'
-				onDrop={this.handleDrop}
-				onHoverChange={this.handleDragOver}
-			>
-				{SongStore.eventType !== 'approaching' &&
-					<div className='record-button'>
-						<AppButton
-							toggled={isRecordingAudio}
-							onClick={this.toggleRecordAudio}
-						>
-							{isRecordingAudio ? "Finish recording" : "Record audio"}
-						</AppButton>
-					</div>
-				}
-
-				{isDragging && <div className='drag-n-drop'>
-					Drop file here
-				</div>}
-				<Menu functions={menuFunctions} data={menuData} />
-				<div className="right-panel">
-					<div className="upper-right">
-						{!hasSong
-							&&
-							<AppButton
-								toggled={isRecording}
-								onClick={this.toggleRecord}
-								style={{ marginTop: "0.8rem" }}
-							>
-								{isRecording ? "Stop" : "Record"}
-							</AppButton>
-
-						}
-					</div>
-					<div className="keyboard-wrapper" style={{ marginBottom: '2vh' }}>
-						<Keyboard
-							key={instrument.layout.length}
-							data={keyboardData}
-							functions={keyboardFunctions}
-						/>
-					</div>
+				onDrop={handleDrop}
+				onError={dropError}
+				showDropArea={true}
+			/>
+			{SongStore.eventType !== 'approaching' &&
+				<div className='record-button'>
+					<AppButton
+						toggled={isRecordingAudio}
+						onClick={this.toggleRecordAudio}
+					>
+						{isRecordingAudio ? "Finish recording" : "Record audio"}
+					</AppButton>
 				</div>
-			</BodyDropper>
+			}
 		</>
 	}
 }

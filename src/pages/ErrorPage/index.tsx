@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FaTrash, FaDownload } from 'react-icons/fa';
 import { DB } from 'Database';
-import { FileDownloader, parseSong } from "lib/Utils/Tools"
+import { FileDownloader, parseSong } from "lib/Tools"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { APP_NAME } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'

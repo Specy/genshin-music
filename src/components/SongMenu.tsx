@@ -1,6 +1,6 @@
 import { useTheme } from "lib/hooks/useTheme";
-import { ComposedSong } from "lib/Utils/ComposedSong";
-import { Song } from "lib/Utils/Song";
+import { ComposedSong } from "lib/ComposedSong";
+import { Song } from "lib/Song";
 import { useEffect, useState } from "react"
 import { SerializedSongType } from "types/SongTypes";
 

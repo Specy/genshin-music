@@ -1,6 +1,6 @@
 import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, PitchesType } from "appConfig"
 import { InstrumentName, NoteStatus } from "types/GeneralTypes"
-import { getPitchChanger } from "./Utils/Tools"
+import { getPitchChanger } from "./Tools"
 
 type Layouts = {
     keyboard: string[]

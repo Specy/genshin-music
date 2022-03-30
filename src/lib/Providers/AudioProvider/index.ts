@@ -14,12 +14,8 @@ export class AudioProviderClass {
         this.audioContext = context
         this.recorder = new AudioRecorder()
     }
-    init = async () => {
-        await this.loadReverb()
-        this.setAudioDestinations()
-        return this
-    }
-    loadReverb = (): Promise<void> => {
+
+    private loadReverb = (): Promise<void> => {
         return new Promise(resolve => {
             fetch("./assets/audio/reverb4.wav")
                 .then(r => r.arrayBuffer())
@@ -42,12 +38,20 @@ export class AudioProviderClass {
                 })
         })
     }
+
+    init = async () => {
+        await this.loadReverb()
+        this.setAudioDestinations()
+        return this
+    }
+    
     connect = (node: AudioNode | null) => {
         if (!node) return this
         this.nodes.push(node)
         this.setAudioDestinations()
         return this
     }
+
     destroy = () => {
         this.nodes.forEach(node => node.disconnect())
         this.nodes = []
@@ -55,23 +59,27 @@ export class AudioProviderClass {
         this.reverbNode = null
         this.reverbVolumeNode = null
     }
+
     clear = () => {
         this.nodes.forEach(node => node.disconnect())
         this.nodes = []
         this.setReverb(false)
         return this
     }
+
     disconnect = (node: AudioNode | null) => {
         if (!node) return this
         this.nodes = this.nodes.filter(n => n !== node)
         node.disconnect()
         return this
     }
+
     setReverb = (reverb: boolean) => {
         this.hasReverb = reverb
         this.setAudioDestinations()
         return this
     }
+
     startRecording = () => {
         const { hasReverb, recorder, nodes, reverbVolumeNode } = this
         if (!recorder) return
@@ -85,6 +93,7 @@ export class AudioProviderClass {
         recorder.start()
         return this
     }
+
     stopRecording = async () => {
         const { recorder, reverbVolumeNode, audioContext } = this
         if (!recorder) return
@@ -96,6 +105,7 @@ export class AudioProviderClass {
         this.setAudioDestinations()
         return recording
     }
+
     setAudioDestinations = () => {
         this.nodes.forEach(node => {
             if (this.hasReverb) {

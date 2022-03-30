@@ -1,6 +1,6 @@
 import { isMobile } from "is-mobile"
 import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
-import { MIDINote, MIDIShortcut } from "./Utils/Tools"
+import { MIDINote, MIDIShortcut } from "./Tools"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
 
 export type ComposerSettingsDataType = {

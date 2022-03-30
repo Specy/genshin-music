@@ -9,7 +9,7 @@ import { BsTriangleFill } from "react-icons/bs";
 import './Track.css'
 import { AppButton } from "components/AppButton";
 import { ApproachingScore } from "types/GeneralTypes";
-import { clamp } from "lib/Utils/Tools";
+import { clamp } from "lib/Tools";
 
 interface TopPageProps {
     restart: () => void

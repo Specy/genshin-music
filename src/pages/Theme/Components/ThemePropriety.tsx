@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { ThemeKeys, ThemeProvider } from "stores/ThemeStore";
-import { capitalize } from "lib/Utils/Tools";
+import { capitalize } from "lib/Tools";
 import Color from "color";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { BASE_THEME_CONFIG } from "appConfig";

@@ -1,7 +1,7 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, PitchesType } from "appConfig"
 import { Column, ColumnNote, RecordedNote,SongDataType } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
-import { numberToLayer, groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Utils/Tools'
+import { numberToLayer, groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
 import { LayerIndex } from "types/GeneralTypes"
 

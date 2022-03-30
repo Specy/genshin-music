@@ -326,8 +326,9 @@ a {
 	cursor: pointer;
 }
 .drag-n-drop {
-	background-color: #4f6f6c;
-	color: white;
+	background-color: var(--accent);
+	filter: contrast(0.7) brightness(0.7);
+	color: var(--accent-text);
 	width: 100vw;
 	height: 100vh;
 	position: absolute;
@@ -336,8 +337,20 @@ a {
 	align-items: center;
 	display: flex;
 	font-size: 1.5rem;
+	animation: infinite drop-pulse 3s;
 }
+@keyframes drop-pulse {
+	0%{
+		filter: contrast(0.7) brightness(0.7);
+	}
+	25%{
+		filter: contrast(0.7) brightness(0.9);
 
+	}
+	50%{
+		filter: contrast(0.7) brightness(0.7);
+	}
+}
 .prompt-row {
 	display: flex;
 	width: 100%;

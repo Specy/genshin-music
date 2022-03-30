@@ -3,8 +3,8 @@ import { KeyboardCode, KeyboardLetter, KeyboardNumber, KeyboardNumberCode } from
 export type KeyboardListenerOptions = {
     shift?: boolean;
 }
-export type KeyboardListenerProps = { letter: string, shift: boolean, event: KeyboardEvent }
-export type KeyboardListenerCallback = (data: KeyboardListenerProps) => void
+export type KeyboardEventData = { letter: string, shift: boolean, event: KeyboardEvent, code: KeyboardCode }
+export type KeyboardListenerCallback = (data: KeyboardEventData) => void
 export type KeyboardHandler = {
     callback: KeyboardListenerCallback
     options: KeyboardListenerOptions
@@ -26,26 +26,30 @@ export class KeyboardProviderClass {
     create = () => {
         window.addEventListener('keydown', this.handleEvent)
     }
-    clear() {
+    clear = () => {
         this.handlers.clear()
+        this.listeners = []
     }
-    listen(callback: KeyboardListenerCallback) {
+    listen = (callback: KeyboardListenerCallback) => {
         const handler = KeyboardProviderClass.emptyHandler
         handler.callback = callback
         this.listeners.push(handler)
     }
-    unregister(code: KeyboardCode, callback: KeyboardListenerCallback) {
+    unlisten = (callback: KeyboardListenerCallback) => {
+        this.listeners = this.listeners.filter(handler => handler.callback !== callback)
+    }
+    unregister = (code: KeyboardCode, callback: KeyboardListenerCallback) => {
         const handlers = this.handlers.get(code)
         if (handlers) {
             this.handlers.set(code, handlers.filter(handler => handler.callback !== callback))
         }
-
     }
-    destroy() {
+    destroy = () => {
         this.clear()
         window.removeEventListener('keydown', this.handleEvent)
     }
-    register(code: KeyboardCode, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) {
+    
+    register = (code: KeyboardCode, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) =>{
         const handler = KeyboardProviderClass.emptyHandler
         handler.callback = callback
         Object.assign(handler.options, options)
@@ -55,25 +59,25 @@ export class KeyboardProviderClass {
             this.handlers.set(code, [handler])
         }
     }
-    registerLetter(letter: KeyboardLetter, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) {
+    registerLetter = (letter: KeyboardLetter, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) => {
         this.register(`Key${letter}`, callback, options)
     }
-    registerNumber(number: KeyboardNumber, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) {
+    registerNumber = (number: KeyboardNumber, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) => {
         const letter = number.toString()
         this.register(`Digit${letter}` as KeyboardNumberCode, callback, options)
     }
-    handleEvent = (e: KeyboardEvent) => {
+    private handleEvent = (e: KeyboardEvent) => {
         if (document.activeElement?.tagName === "INPUT") return
-        const key = e.code
-        const letter = key.replace('Key', '')
+        const code = e.code as KeyboardCode
+        const letter = code.replace('Key', '')
         const shiftPressed = e.shiftKey
-        this.listeners.forEach(handler => handler.callback({ letter, shift: shiftPressed, event: e }))
-        if (this.handlers.has(key)) {
-            this.handlers.get(key)?.forEach(handler => {
+        this.listeners.forEach(handler => handler.callback({ letter, shift: shiftPressed, event: e ,code}))
+        if (this.handlers.has(code)) {
+            this.handlers.get(code)?.forEach(handler => {
                 if (shiftPressed && handler.options.shift) {
-                    handler.callback({ letter, shift: shiftPressed, event: e })
+                    handler.callback({ letter, shift: shiftPressed, event: e, code })
                 } else if (!shiftPressed && !handler.options.shift) {
-                    handler.callback({ letter, shift: shiftPressed, event: e })
+                    handler.callback({ letter, shift: shiftPressed, event: e, code })
                 }
             })
         }

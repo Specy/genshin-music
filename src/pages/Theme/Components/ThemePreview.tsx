@@ -1,5 +1,5 @@
 import { APP_NAME } from "appConfig";
-import { FileDownloader } from "lib/Utils/Tools";
+import { FileDownloader } from "lib/Tools";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import LoggerStore from "stores/LoggerStore";
 import { Theme } from "stores/ThemeStore";

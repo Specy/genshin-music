@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
-import { FileDownloader, parseSong } from "lib/Utils/Tools"
+import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'

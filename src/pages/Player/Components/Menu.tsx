@@ -3,7 +3,7 @@ import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaS
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, parseSong } from "lib/Utils/Tools"
+import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { SongStore } from 'stores/SongStore'
 import { HelpTab } from 'components/HelpTab'
@@ -18,8 +18,8 @@ import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { Link } from 'react-router-dom'
-import type { Song } from 'lib/Utils/Song';
-import { ComposedSong } from 'lib/Utils/ComposedSong';
+import type { Song } from 'lib/Song';
+import { ComposedSong } from 'lib/ComposedSong';
 import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { MainPageSettingsDataType } from 'lib/BaseSettings';
 import { useTheme } from 'lib/hooks/useTheme';
@@ -28,12 +28,12 @@ import { FileElement, FilePicker } from 'components/FilePicker';
 import { SerializedSongType } from 'types/SongTypes';
 import "./menu.css"
 import { ThemeStoreClass } from 'stores/ThemeStore';
+import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 
 interface MenuProps {
     functions: {
         addSong: (song: Song | ComposedSong) => void
         removeSong: (name: string) => void
-        changePage: (page: string) => void
         handleSettingChange: (override: SettingUpdate) => void
         changeVolume: (override: SettingVolumeUpdate) => void
     }
@@ -53,7 +53,7 @@ function Menu({ functions, data }: MenuProps) {
     const [searchStatus, setSearchStatus] = useState('')
     const [isPersistentStorage, setPeristentStorage] = useState(false)
     const [theme] = useTheme()
-    const { handleSettingChange, changePage, addSong, removeSong } = functions
+    const { handleSettingChange, addSong, removeSong } = functions
     useEffect(() => {
         async function checkStorage() {
             if (navigator.storage && navigator.storage.persist) {
@@ -64,36 +64,19 @@ function Menu({ functions, data }: MenuProps) {
         }
         checkStorage()
     }, [])
-    const handleKeyboard = useCallback((event: KeyboardEvent) => {
-        const key = event.code
-        if (document.activeElement?.tagName === "INPUT") return
+    const handleKeyboard = useCallback(({letter, shift, code}: KeyboardEventData) => {
         //@ts-ignore
         document.activeElement?.blur()
-        if (event.shiftKey) {
-            switch (key) {
-                case "KeyM": {
-                    setOpen(!open)
-                    break
-                }
-                default: break;
-            }
-        } else {
-            switch (key) {
-                case "Escape": {
-                    setOpen(false)
-                    break
-                }
-                default: break;
-            }
-        }
+        if(letter === 'M' && shift) setOpen(!open)
+        if(code === 'Escape') setOpen(false)
     }, [open])
 
     useEffect(() => {
-        window.addEventListener("keydown", handleKeyboard)
-        return () => window.removeEventListener('keydown', handleKeyboard)
+        KeyboardProvider.listen(handleKeyboard)
+        return () => KeyboardProvider.unlisten(handleKeyboard)
     }, [handleKeyboard])
 
-    function clearSearch(){
+    function clearSearch() {
         setSearchInput('')
         setSearchStatus('')
         setSearchedSongs([])
@@ -154,14 +137,14 @@ function Menu({ functions, data }: MenuProps) {
         LoggerStore.success("Song downloaded")
         Analytics.userSongs('download', { name: songName, page: 'player' })
     }
-    const logImportError = useCallback((error?:any) => {
-        if(error) console.error(error)
+    const logImportError = useCallback((error?: any) => {
+        if (error) console.error(error)
         LoggerStore.error(
             `Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
             8000
         )
-    },[])
-    function downloadAllSongs(){
+    }, [])
+    function downloadAllSongs() {
         const toDownload = data.songs.map(song => {
             return APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()
         })
@@ -172,7 +155,6 @@ function Menu({ functions, data }: MenuProps) {
     }
 
     const sideClass = open ? "side-menu menu-open" : "side-menu"
-
     const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
     const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
     return <div className="menu-wrapper">
@@ -209,7 +191,7 @@ function Menu({ functions, data }: MenuProps) {
                         </AppButton>
                     </Link>
                     <FilePicker<SerializedSongType | SerializedSongType[]>
-                        onChange={importSong} 
+                        onChange={importSong}
                         onError={logImportError}
                         as='json'
                         multiple={true}
@@ -226,12 +208,7 @@ function Menu({ functions, data }: MenuProps) {
                     SongComponent={SongRow}
                     componentProps={{
                         theme,
-                        functions: {
-                            removeSong,
-                            toggleMenu,
-                            downloadSong
-                        }
-
+                        functions: { removeSong, toggleMenu, downloadSong }
                     }}
                 />
                 <div style={{ marginTop: "auto", paddingTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
@@ -257,26 +234,22 @@ function Menu({ functions, data }: MenuProps) {
                 })}
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <AppButton
-                            onClick={() => changePage('MidiSetup')}
-                            style={{ width: 'fit-content' }}>
-                            Connect MIDI keyboard
-
-                        </AppButton>
+                        <Link to={'MidiSetup'}>
+                            <AppButton style={{ width: 'fit-content' }}>
+                                Connect MIDI keyboard
+                            </AppButton>
+                        </Link>
                     }
-                    <AppButton
-                        onClick={() => changePage('Theme')}
-                        style={{ width: 'fit-content' }}
-                    >
-                        Change app theme
-                    </AppButton>
-
+                    <Link to={'Theme'}>
+                        <AppButton style={{ width: 'fit-content' }}>
+                            Change app theme
+                        </AppButton>
+                    </Link>
                 </div>
                 <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }}>
                     {isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                 </div>
                 <DonateButton />
-
             </MenuPanel>
 
             <MenuPanel title="Library" current={selectedMenu}>
@@ -360,7 +333,7 @@ interface SongRowProps {
 
 function SongRow({ data, functions, theme }: SongRowProps) {
     const { removeSong, toggleMenu, downloadSong } = functions
-    const buttonStyle = { backgroundColor: theme.layer('primary',0.15).hex() }
+    const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             SongStore.play(data, 0)
@@ -370,18 +343,18 @@ function SongRow({ data, functions, theme }: SongRowProps) {
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                    SongStore.practice(data, 0, data.notes.length)
-                    toggleMenu(false)
-                }}
+                SongStore.practice(data, 0, data.notes.length)
+                toggleMenu(false)
+            }}
                 style={buttonStyle}
             >
                 <FaCrosshairs />
             </button>
 
             <button className="song-button" onClick={() => {
-                    SongStore.approaching(data, 0, data.notes.length)
-                    toggleMenu(false)
-                }}
+                SongStore.approaching(data, 0, data.notes.length)
+                toggleMenu(false)
+            }}
                 style={buttonStyle}
             >
                 <BsCircle />
@@ -390,7 +363,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 <FaDownload />
             </button>
             <button className="song-button" onClick={() => removeSong(data.name)} style={buttonStyle}>
-                <FaTrash color="#ed4557" /> 
+                <FaTrash color="#ed4557" />
             </button>
         </div>
     </div>

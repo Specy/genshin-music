@@ -2,7 +2,7 @@ import { AUDIO_CONTEXT } from "appConfig";
 //@ts-ignore
 import toWav from 'audiobuffer-to-wav'
 import MediaRecorderPolyfill from 'audio-recorder-polyfill'
-import { FileDownloader } from "./Utils/Tools";
+import { FileDownloader } from "./Tools";
 
 export default class AudioRecorder {
     node: MediaStreamAudioDestinationNode | null

@@ -15,16 +15,16 @@ import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
-import { delay, formatMs, calculateSongLength } from "lib/Utils/Tools"
-import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
-import { Column } from 'lib/Utils/SongClasses';
+import { delay, formatMs, calculateSongLength, parseSong } from "lib/Tools"
+import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
+import { Column } from 'lib/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 import { DB } from 'Database';
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
-import { SerializedSong, Song } from 'lib/Utils/Song';
+import { SerializedSong, Song } from 'lib/Song';
 import { SerializedSongType, SongInstruments } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { ComposerInstruments, InstrumentName, LayerIndex, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
@@ -33,6 +33,7 @@ import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardTypes';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
+import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 interface ComposerState {
     layers: ComposerInstruments
     songs: SerializedSongType[]
@@ -86,6 +87,7 @@ class Composer extends Component<any, ComposerState>{
     get currentInstrument() {
         return this.state.layers[this.state.layer - 1]
     }
+
     componentDidMount() {
         this.mounted = true
         this.init()
@@ -216,6 +218,20 @@ class Composer extends Component<any, ComposerState>{
             }
         }
     }
+    handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
+		for (const file of files) {
+			const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
+			for (const song of parsed) {
+                const parsedSong = parseSong(song)
+                if(parsedSong instanceof ComposedSong) await this.addSong(parsedSong)
+                if(parsedSong instanceof Song) await this.addSong(parsedSong.toComposed())
+			}
+		}
+    }
+
+    handleDropError = () => {
+        LoggerStore.error("There was an error importing the file! Was it the correct format?")
+    }
     getSettings = (): ComposerSettingsDataType => {
         const json = localStorage.getItem(APP_NAME + "_Composer_Settings")
         try {
@@ -331,7 +347,7 @@ class Composer extends Component<any, ComposerState>{
     }
     addSong = async (song: ComposedSong) => {
         if (await this.songExists(song.name)) {
-            LoggerStore.warn("A song with this name already exists! \n" + song.name)
+            return LoggerStore.warn("A song with this name already exists! \n" + song.name)
         }
         await DB.addSong(song.serialize())
         this.syncSongs()
@@ -620,7 +636,7 @@ class Composer extends Component<any, ComposerState>{
         const {
             loadSong, removeSong, createNewSong, changePage, updateThisSong, handleSettingChange, toggleMenuVisible, changeVolume, startRecordingAudio, handleClick,
             toggleBreakpoint, handleTempoChanger, changeLayer, copyColumns, pasteColumns, eraseColumns, resetSelection, deleteColumns, changeMidiVisibility,
-            selectColumn, toggleTools, changePitch
+            selectColumn, toggleTools, changePitch, handleDrop, handleDropError
         } = this
 
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
@@ -634,6 +650,13 @@ class Composer extends Component<any, ComposerState>{
                     }}
                 />
             }
+            <BodyDropper
+                onDrop={handleDrop}
+                as='json'
+                dropAreaStyle={{paddingTop: '15vh'}}
+                showDropArea={true}
+                onError={handleDropError}
+            />
             <div className="hamburger" onClick={this.toggleMenuVisible}>
                 <Memoized>
                     <FaBars />
