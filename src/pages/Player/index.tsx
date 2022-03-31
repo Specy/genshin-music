@@ -64,14 +64,14 @@ class Player extends Component<any, PlayerState>{
 		this.init()
 	}
 	componentWillUnmount() {
-		KeyboardProvider.clear()
+		KeyboardProvider.unregisterById('player')
 		SongStore.reset()
 		AudioProvider.clear()
 		this.state.instrument.delete()
 		this.mounted = false
 	}
 	registerKeyboardListeners = () => {
-		KeyboardProvider.registerLetter('C', () => this.toggleRecord(), { shift: true })
+		KeyboardProvider.registerLetter('C', () => this.toggleRecord(), { shift: true, id: "player" })
 	}
 	componentDidCatch() {
 		LoggerStore.warn("There was an error with the song! Restoring default...")

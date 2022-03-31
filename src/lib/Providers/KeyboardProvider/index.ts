@@ -2,6 +2,10 @@ import { KeyboardCode, KeyboardLetter, KeyboardNumber, KeyboardNumberCode } from
 
 export type KeyboardListenerOptions = {
     shift?: boolean;
+    id?: string
+}
+export type KeyboardRawListenerOptions = {
+    id?: string
 }
 export type KeyboardEventData = { letter: string, shift: boolean, event: KeyboardEvent, code: KeyboardCode }
 export type KeyboardListenerCallback = (data: KeyboardEventData) => void
@@ -19,7 +23,8 @@ export class KeyboardProviderClass {
         return {
             callback: () => { },
             options: {
-                shift: false
+                shift: false,
+                id: ''
             }
         }
     }
@@ -30,10 +35,12 @@ export class KeyboardProviderClass {
         this.handlers.clear()
         this.listeners = []
     }
-    listen = (callback: KeyboardListenerCallback) => {
+    listen = (callback: KeyboardListenerCallback, options?: KeyboardRawListenerOptions) => {
         const handler = KeyboardProviderClass.emptyHandler
         handler.callback = callback
+        if(options) Object.assign(handler, { options })
         this.listeners.push(handler)
+
     }
     unlisten = (callback: KeyboardListenerCallback) => {
         this.listeners = this.listeners.filter(handler => handler.callback !== callback)
@@ -42,17 +49,25 @@ export class KeyboardProviderClass {
         const handlers = this.handlers.get(code)
         if (handlers) {
             this.handlers.set(code, handlers.filter(handler => handler.callback !== callback))
+            if(this.handlers.get(code)?.length === 0) this.handlers.delete(code)
         }
+    }
+    unregisterById = (id: string) => {
+        this.handlers.forEach((handler, key) => {
+            this.handlers.set(key, handler.filter(handler => handler.options.id !== id))
+            if(this.handlers.get(key)?.length === 0) this.handlers.delete(key)
+        })
+        this.listeners = this.listeners.filter(handler => handler.options.id !== id)
     }
     destroy = () => {
         this.clear()
         window.removeEventListener('keydown', this.handleEvent)
     }
-    
-    register = (code: KeyboardCode, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) =>{
+
+    register = (code: KeyboardCode, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) => {
         const handler = KeyboardProviderClass.emptyHandler
         handler.callback = callback
-        Object.assign(handler.options, options)
+        if(options) Object.assign(handler, { options })
         if (this.handlers.has(code)) {
             this.handlers.get(code)?.push(handler)
         } else {
@@ -71,18 +86,18 @@ export class KeyboardProviderClass {
         const code = e.code as KeyboardCode
         const letter = code.replace('Key', '')
         const shiftPressed = e.shiftKey
-        this.listeners.forEach(handler => handler.callback({ letter, shift: shiftPressed, event: e ,code}))
-        if (this.handlers.has(code)) {
-            this.handlers.get(code)?.forEach(handler => {
-                if (shiftPressed && handler.options.shift) {
-                    handler.callback({ letter, shift: shiftPressed, event: e, code })
-                } else if (!shiftPressed && !handler.options.shift) {
-                    handler.callback({ letter, shift: shiftPressed, event: e, code })
-                }
-            })
-        }
+        const data = { letter, shift: shiftPressed, event: e, code }
+        this.listeners.forEach(handler => handler.callback(data))
+        if (!this.handlers.has(code)) return
+        this.handlers.get(code)?.forEach(handler => {
+            if (shiftPressed && handler.options.shift) {
+                handler.callback(data)
+            } else if (!shiftPressed && !handler.options.shift) {
+                handler.callback(data)
+            }
+        })
+
     }
 }
-
 
 export const KeyboardProvider = new KeyboardProviderClass()

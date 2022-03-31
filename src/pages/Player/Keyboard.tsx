@@ -86,18 +86,19 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     }
 
     componentDidMount() {
+        const id = 'keyboard-player'
         this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
         KeyboardProvider.registerLetter('S',() => {
             if (this.props.data.hasSong) this.stopAndClear()
-        }, {shift: true})
+        }, {shift: true, id})
         KeyboardProvider.registerLetter('R',() => {
             if (!this.props.data.hasSong) return
             if (['practice', 'play', 'approaching'].includes(SongStore.eventType)) {
                 this.restartSong(0)
             }
-        }, {shift: true})
+        }, {shift: true, id})
+        KeyboardProvider.listen(this.handleKeyboard, { id })
         MIDIProvider.addListener(this.handleMidi)
-        KeyboardProvider.listen(this.handleKeyboard)
         this.dispose = observe(SongStore.state, async () => {
             const value = SongStore.state.data
             const song = SongStore.song
@@ -138,7 +139,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     componentWillUnmount() {
         MIDIProvider.removeListener(this.handleMidi)
         this.dispose()
-        KeyboardProvider.clear()
+        KeyboardProvider.unregisterById('keyboard-player')
         this.songTimestamp = 0
         this.mounted = false
         clearInterval(this.tickInterval)

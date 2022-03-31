@@ -9,7 +9,7 @@ import { APP_VERSION } from 'appConfig'
 export default function Changelogpage() {
     return <div className='default-page'>
         <div className='changelog-page-title'>
-            Changelog <span style={{fontSize: '1.2rem'}}>v{APP_VERSION}</span>
+            Changelog <span style={{ fontSize: '1.2rem' }}>v{APP_VERSION}</span>
         </div>
         <SimpleMenu>
             <MenuItem>
@@ -18,7 +18,7 @@ export default function Changelogpage() {
                 </a>
             </MenuItem>
         </SimpleMenu>
-        
+
         {updates.map(data => <ChangelogRow
             {...data}
             key={data.version}

@@ -34,6 +34,5 @@ export function ChangelogRow({version, title, changes, date }:ChangelogRowProps)
                 )}
             </ul>
         </div>
-
     </div>
 }

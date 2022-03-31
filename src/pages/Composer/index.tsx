@@ -119,7 +119,7 @@ class Composer extends Component<any, ComposerState>{
         this.broadcastChannel?.close?.()
         state.isPlaying = false
         this.unblock()
-        KeyboardProvider.clear()
+        KeyboardProvider.unregisterById('composer')
         MIDIProvider.removeListener(this.handleMidi)
         if (window.location.hostname !== "localhost") {
             window.removeEventListener("beforeunload", this.handleUnload)
@@ -144,28 +144,29 @@ class Composer extends Component<any, ComposerState>{
     }
     registerKeyboardListeners = () => {
         const { state } = this //DONT SPREAD THE STATE, IT NEEDS TO REUSE THE REFERENCE EVERYTIME 
-        KeyboardProvider.registerLetter('D', () => { if (!state.isPlaying) this.selectColumn(state.song.selected + 1) })
-        KeyboardProvider.registerLetter('A', () => { if (!state.isPlaying) this.selectColumn(state.song.selected - 1) })
-        KeyboardProvider.registerLetter('Q', () => { if (!state.isPlaying) this.removeColumns(1, state.song.selected) })
-        KeyboardProvider.registerLetter('E', () => { if (!state.isPlaying) this.addColumns(1, state.song.selected) })
+        const id = 'composer'
+        KeyboardProvider.registerLetter('D', () => { if (!state.isPlaying) this.selectColumn(state.song.selected + 1) },{ id })
+        KeyboardProvider.registerLetter('A', () => { if (!state.isPlaying) this.selectColumn(state.song.selected - 1) },{ id })
+        KeyboardProvider.registerLetter('Q', () => { if (!state.isPlaying) this.removeColumns(1, state.song.selected) },{ id })
+        KeyboardProvider.registerLetter('E', () => { if (!state.isPlaying) this.addColumns(1, state.song.selected) },{ id })
         TEMPO_CHANGERS.forEach((tempoChanger, i) => {
-            KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger))
+            KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger),{ id })
         })
         KeyboardProvider.register('ArrowUp', () => {
             const nextLayer = state.layer - 1
             if (nextLayer > 0) this.changeLayer(nextLayer as LayerType)
-        })
+        },{ id })
         KeyboardProvider.register('ArrowDown', () => {
             const nextLayer = state.layer + 1
             if (nextLayer < state.layers.length + 1) this.changeLayer(nextLayer as LayerType)
-        })
+        },{ id })
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
             this.togglePlay()
             if (state.settings.syncTabs.value) {
                 this.broadcastChannel?.postMessage?.(this.state.isPlaying ? 'play' : 'stop')
             }
-        })
+        },{ id })
         KeyboardProvider.listen(({ event, letter }) => {
             const { isPlaying } = state
             const shouldEditKeyboard = isPlaying || event.shiftKey
@@ -173,7 +174,7 @@ class Composer extends Component<any, ComposerState>{
                 const note = this.currentInstrument.getNoteFromCode(letter)
                 if (note !== null) this.handleClick(this.currentInstrument.layout[note])
             }
-        })
+        },{ id })
     }
     componentDidCatch() {
         LoggerStore.error("There was an error with the Composer, reloading the page...")

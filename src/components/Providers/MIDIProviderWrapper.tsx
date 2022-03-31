@@ -7,7 +7,7 @@ interface MIDIListenerProviderProps{
 export function MIDIProviderWrapper({children}:MIDIListenerProviderProps){
     useEffect(() => {
         MIDIProvider.create()
-        return () =>  MIDIProvider.dispose()
+        return () =>  MIDIProvider.destroy()
     },[])
 
     return < >   

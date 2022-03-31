@@ -8,18 +8,22 @@ import { CombinedLayer, LayerIndex, NoteNameType } from "types/GeneralTypes";
 
 class FileDownloader {
 	static download(file: string | Blob, name: string, as: string = "text/json"){
-		const el = document.createElement("a")
-		el.style.display = 'none'
-		document.body.appendChild(el)
+		const a = document.createElement("a")
+		a.style.display = 'none'
+		a.download = name
+		document.body.appendChild(a)
+
 		if(typeof file === "string"){
-			el.href = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
+			a.href = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
+			a.click();
 		}
 		if(file instanceof Blob){
-			el.href = URL.createObjectURL(file)
+			const url = URL.createObjectURL(file)
+			a.href = url
+			a.click();
+			URL.revokeObjectURL(url)
 		}
-		el.download = name
-		el.click();
-		el.remove();
+		a.remove();
 	}
 }
 

@@ -31,6 +31,7 @@ export type OldFormatSong = SongProps & {
     bitsPerPage: number,
     isEncrypted: boolean
 }
+
 export class Song {
 	name: string
 	version: number

@@ -39,7 +39,7 @@ export class MIDIListener {
         this.saveSettings()
         return this.create()
     }
-    dispose = () => {
+    destroy = () => {
         this.listeners = []
         this.inputs = []
         this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess)
