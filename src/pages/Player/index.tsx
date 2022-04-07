@@ -25,7 +25,7 @@ import { SerializedSongType } from 'types/SongTypes';
 
 
 interface PlayerState {
-	songs: (ComposedSong | Song)[]
+	songs: SerializedSongType[]
 	settings: MainPageSettingsDataType
 	instrument: Instrument
 	isLoadingInstrument: boolean
@@ -170,11 +170,14 @@ class Player extends Component<any, PlayerState>{
 	}
 
 	syncSongs = async () => {
-		const songs = (await DB.getSongs()).map((song) => {
-			if (song.data?.isComposedVersion) return ComposedSong.deserialize(song as SerializedComposedSong)
-			return Song.deserialize(song as SerializedSong)
-		})
-		this.setState({ songs })
+		try{
+			const songs = await DB.getSongs()
+			this.setState({ songs })
+		}catch(e){
+			console.error(e)
+			LoggerStore.warn('There was an error syncing the songs')
+		}
+
 	}
 	songExists = async (name: string) => {
 		return await DB.existsSong({ name: name })

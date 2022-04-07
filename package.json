@@ -43,11 +43,11 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "buildSky": "node ./scripts/buildApp.js Sky",
-    "buildGenshin": "node ./scripts/buildApp.js Genshin",
-    "buildAll": "node ./scripts/buildApp.js All",
-    "startSky": "node ./scripts/startApp.js Sky",
-    "startGenshin": "node ./scripts/startApp.js Genshin"
+    "build:sky": "node ./scripts/buildApp.js Sky",
+    "build:genshin": "node ./scripts/buildApp.js Genshin",
+    "build:all": "node ./scripts/buildApp.js All",
+    "start:sky": "node ./scripts/startApp.js Sky",
+    "start:genshin": "node ./scripts/startApp.js Genshin"
   },
   "eslintConfig": {
     "extends": [

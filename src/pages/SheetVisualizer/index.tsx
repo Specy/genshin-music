@@ -9,19 +9,24 @@ import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
 import { ThemeProvider } from 'stores/ThemeStore'
 import { SerializedSongType } from 'types/SongTypes'
+import { Song } from 'lib/Song'
+import { RecordedNote } from 'lib/SongClasses'
 import { AppButton } from 'components/AppButton'
 import LoggerStore from 'stores/LoggerStore'
-import { Chunk, VisualSong } from 'components/VisualSong'
 
-
+const THRESHOLDS = {
+    joined: 50,
+    pause: 400,
+}
 
 
 export default function SheetVisualizer() {
     const [songs, setSongs] = useState<SerializedSongType[]>([])
-    const [song, setSong] = useState<VisualSong | null>(null)
+    const [sheet, setSheet] = useState<Chunk[]>([])
     const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState<SerializedSongType | null>(null)
     const [hasText, setHasText] = useState(false)
+    const [songAsText, setSongAstext] = useState('')
 
     function setFrames(amount: number) {
         const newAmount = framesPerRow + amount
@@ -39,11 +44,44 @@ export default function SheetVisualizer() {
         load()
     }, [])
 
+    function getChunkNoteText(i: number) {  
+        const text = getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === "Genshin" ? 21 : 15)
+        return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
+    }
     function handleClick(song: SerializedSongType) {
         setCurrentSong(song)
         try{
-            const visualSong = VisualSong.from(parseSong(song))
-            setSong(visualSong)
+            const temp = parseSong(song)
+            const lostReference = temp instanceof Song ? temp : temp.toSong()
+            const notes = lostReference.notes
+            const chunks: Chunk[] = []
+            let previousChunkDelay = 0
+            let sheetText = ''
+            for (let i = 0; notes.length > 0; i++) {
+                const chunk = new Chunk([notes.shift() as RecordedNote])
+                const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
+                for (let j = 0; j < notes.length && j < 20; j++) {
+                    const difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
+                    if (difference < 0) {
+                        chunk.notes.push(notes.shift() as RecordedNote)
+                        j--
+                    }
+                }
+                chunk.delay = previousChunkDelay
+                previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
+                const emptyChunks = Math.floor(chunk.delay / THRESHOLDS.pause)
+                chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
+                chunks.push(chunk)
+                sheetText += emptyChunks > 2 ? ' \n\n' : "- ".repeat(emptyChunks)
+                if (chunk.notes.length > 1) {
+                    const text = chunk.notes.map(e => getChunkNoteText(e[0])).join('')
+                    sheetText += APP_NAME === "Genshin" ? `[${text}] ` : `${text} `
+                } else if (chunk.notes.length > 0) {
+                    sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
+                }
+            }
+            setSongAstext(sheetText)
+            setSheet(chunks)
         }catch(e){
             console.error(e)
             LoggerStore.error('Error visualizing song')
@@ -105,7 +143,7 @@ export default function SheetVisualizer() {
                 style={{ gridTemplateColumns: `repeat(${framesPerRow},1fr)` }}
             >
 
-                {song?.chunks.map((frame, i) =>
+                {sheet.map((frame, i) =>
                     <SheetFrame
                         key={i}
                         frame={frame}
@@ -114,17 +152,22 @@ export default function SheetVisualizer() {
                     />
                 )}
             </div>
-            {song && 
-                <pre className='text-notation-wrapper'>
-                    {song.text}
-                </pre>
-            }
+            {songAsText.trim().length > 0 && <pre className='text-notation-wrapper'>
+                {songAsText}
+            </pre>}
 
         </div>
     </div>
 }
 
-
+class Chunk {
+    notes: RecordedNote[] = []
+    delay = 0
+    constructor(notes:RecordedNote[]  = [], delay:number = 0) {
+        this.notes = notes
+        this.delay = delay
+    }
+}
 
 interface SheetFrameProps{
     frame: Chunk
@@ -135,7 +178,7 @@ function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const notes = new Array(columnsPerRow * rows).fill(0)
     frame.notes.forEach(note => {
-        notes[note.index] = 1
+        notes[note[0]] = 1
     })
     return frame.notes.length === 0
         ? <div className='frame-outer displayer-ball'>

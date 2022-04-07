@@ -210,11 +210,13 @@ export class Song {
         }
     }
     toGenshin = () => {
-        this.notes = this.notes.map(note => {
+        const clone = this.clone()
+        clone.data.appName = "Genshin"
+        clone.notes = clone.notes.map(note => {
 			note[0] = IMPORT_NOTE_POSITIONS[note[0]]
 			return note
 		})
-        return this
+        return clone
     }
     clone = () => {
         const clone = new Song(this.name)

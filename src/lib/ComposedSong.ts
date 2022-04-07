@@ -257,6 +257,7 @@ export class ComposedSong {
     }
     toGenshin = () => {
         const clone = this.clone()
+        clone.data.appName = 'Genshin'
         //@ts-ignore
         clone.instruments = this.instruments.map(_ => INSTRUMENTS[0])
         clone.columns = clone.columns.map(column => {

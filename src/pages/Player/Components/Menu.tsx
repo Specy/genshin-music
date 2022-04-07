@@ -18,8 +18,8 @@ import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { Link } from 'react-router-dom'
-import type { Song } from 'lib/Song';
-import { ComposedSong } from 'lib/ComposedSong';
+import { SerializedSong, Song } from 'lib/Song';
+import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
 import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { MainPageSettingsDataType } from 'lib/BaseSettings';
 import { useTheme } from 'lib/hooks/useTheme';
@@ -39,7 +39,7 @@ interface MenuProps {
     }
     data: {
         settings: MainPageSettingsDataType
-        songs: (ComposedSong | Song)[]
+        songs: SerializedSongType[]
     }
 }
 
@@ -117,6 +117,8 @@ function Menu({ functions, data }: MenuProps) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSongType[]
                 for (const song of songs) {
+                    //@ts-ignore
+                    console.log(song.notes,parseSong(song))
                     addSong(parseSong(song))
                     Analytics.userSongs('import', { name: song?.name, page: 'player' })
                 }
@@ -145,13 +147,23 @@ function Menu({ functions, data }: MenuProps) {
         )
     }, [])
     function downloadAllSongs() {
-        const toDownload = data.songs.map(song => {
-            return APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()
-        })
-        const json = JSON.stringify(toDownload)
-        const date = new Date().toISOString().split('T')[0]
-        FileDownloader.download(json, `${APP_NAME}_Backup_${date}.json`)
-        LoggerStore.success("Song backup downloaded")
+        try{
+            const toDownload = data.songs.map(song => {
+                if(APP_NAME === 'Sky'){
+                    return song.data.isComposedVersion 
+                        ? ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
+                        : Song.deserialize(song as SerializedSong).toOldFormat()
+                }
+                return song
+            })
+            const json = JSON.stringify(toDownload)
+            const date = new Date().toISOString().split('T')[0]
+            FileDownloader.download(json, `${APP_NAME}_Backup_${date}.json`)
+            LoggerStore.success("Song backup downloaded")
+        }catch(e){
+            console.error(e)
+            LoggerStore.error("Error downloading songs")
+        }
     }
 
     const sideClass = open ? "side-menu menu-open" : "side-menu"
@@ -322,7 +334,7 @@ function Menu({ functions, data }: MenuProps) {
 
 
 interface SongRowProps {
-    data: Song | ComposedSong
+    data: SerializedSongType
     theme: ThemeStoreClass
     functions: {
         removeSong: (name: string) => void
@@ -336,14 +348,15 @@ function SongRow({ data, functions, theme }: SongRowProps) {
     const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     return <div className="song-row">
         <div className="song-name" onClick={() => {
-            SongStore.play(data, 0)
+            SongStore.play(parseSong(data), 0)
             toggleMenu(false)
         }}>
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => {
-                SongStore.practice(data, 0, data.notes.length)
+                const parsed = parseSong(data)
+                SongStore.practice(parseSong(data), 0, parsed.notes.length)
                 toggleMenu(false)
             }}
                 style={buttonStyle}
@@ -352,14 +365,16 @@ function SongRow({ data, functions, theme }: SongRowProps) {
             </button>
 
             <button className="song-button" onClick={() => {
-                SongStore.approaching(data, 0, data.notes.length)
+                const parsed = parseSong(data)
+
+                SongStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
             }}
                 style={buttonStyle}
             >
                 <BsCircle />
             </button>
-            <button className="song-button" onClick={() => downloadSong(data)} style={buttonStyle}>
+            <button className="song-button" onClick={() => downloadSong(parseSong(data))} style={buttonStyle}>
                 <FaDownload />
             </button>
             <button className="song-button" onClick={() => removeSong(data.name)} style={buttonStyle}>

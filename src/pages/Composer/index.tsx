@@ -143,32 +143,35 @@ class Composer extends Component<any, ComposerState>{
         this.registerKeyboardListeners()
     }
     registerKeyboardListeners = () => {
-        const { state } = this //DONT SPREAD THE STATE, IT NEEDS TO REUSE THE REFERENCE EVERYTIME 
         const id = 'composer'
-        KeyboardProvider.registerLetter('D', () => { if (!state.isPlaying) this.selectColumn(state.song.selected + 1) },{ id })
-        KeyboardProvider.registerLetter('A', () => { if (!state.isPlaying) this.selectColumn(state.song.selected - 1) },{ id })
-        KeyboardProvider.registerLetter('Q', () => { if (!state.isPlaying) this.removeColumns(1, state.song.selected) },{ id })
-        KeyboardProvider.registerLetter('E', () => { if (!state.isPlaying) this.addColumns(1, state.song.selected) },{ id })
+        KeyboardProvider.registerLetter('D', () => { 
+            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected + 1) },{ id })
+        KeyboardProvider.registerLetter('A', () => { 
+            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected - 1) },{ id })
+        KeyboardProvider.registerLetter('Q', () => { 
+            if (!this.state.isPlaying) this.removeColumns(1, this.state.song.selected) },{ id })
+        KeyboardProvider.registerLetter('E', () => { 
+            if (!this.state.isPlaying) this.addColumns(1, this.state.song.selected) },{ id })
         TEMPO_CHANGERS.forEach((tempoChanger, i) => {
             KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger),{ id })
         })
         KeyboardProvider.register('ArrowUp', () => {
-            const nextLayer = state.layer - 1
+            const nextLayer = this.state.layer - 1
             if (nextLayer > 0) this.changeLayer(nextLayer as LayerType)
         },{ id })
         KeyboardProvider.register('ArrowDown', () => {
-            const nextLayer = state.layer + 1
-            if (nextLayer < state.layers.length + 1) this.changeLayer(nextLayer as LayerType)
+            const nextLayer = this.state.layer + 1
+            if (nextLayer < this.state.layers.length + 1) this.changeLayer(nextLayer as LayerType)
         },{ id })
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
             this.togglePlay()
-            if (state.settings.syncTabs.value) {
+            if (this.state.settings.syncTabs.value) {
                 this.broadcastChannel?.postMessage?.(this.state.isPlaying ? 'play' : 'stop')
             }
         },{ id })
         KeyboardProvider.listen(({ event, letter }) => {
-            const { isPlaying } = state
+            const { isPlaying } = this.state
             const shouldEditKeyboard = isPlaying || event.shiftKey
             if (shouldEditKeyboard) {
                 const note = this.currentInstrument.getNoteFromCode(letter)

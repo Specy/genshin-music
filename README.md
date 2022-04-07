@@ -10,11 +10,11 @@ Then clone the repo to a folder and install the dependencies with `yarn install`
 
 There are 4 more scripts which might be useful, run as a specific app and build as a specific app.
 
-You can run `yarn startSky` or `yarn startGenshin`, this will run the webapps for the specific game and swap the assets. 
+You can run `yarn start:sky` or `yarn start:genshin`, this will run the webapps for the specific game and swap the assets. 
 
 # How to build
 
-You can use the scripts `yarn buildGenshin` and `yarn buildSky` which will build the correct app, or `yarn buildAll` to build both
+You can use the scripts `yarn build:genshin` and `yarn build:sky` which will build the correct app, or `yarn build:all` to build both
 
 # Documentation
 You can find the documentation of the app [here](https://github.com/Specy/genshin-music/wiki)
