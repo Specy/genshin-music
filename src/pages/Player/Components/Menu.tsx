@@ -117,8 +117,6 @@ function Menu({ functions, data }: MenuProps) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSongType[]
                 for (const song of songs) {
-                    //@ts-ignore
-                    console.log(song.notes,parseSong(song))
                     addSong(parseSong(song))
                     Analytics.userSongs('import', { name: song?.name, page: 'player' })
                 }

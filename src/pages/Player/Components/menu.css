@@ -74,7 +74,7 @@
     min-height: 100%;
     display: flex;
     flex-direction: row;
-    z-index: 2;
+    z-index: 11;
 }
 
 .library-search-result-text{

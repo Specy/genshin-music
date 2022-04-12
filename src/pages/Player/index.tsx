@@ -84,9 +84,14 @@ class Player extends Component<any, PlayerState>{
 
 	handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
 		for (const file of files) {
-			const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
-			for (const song of parsed) {
-				await this.addSong(parseSong(song))
+			try{
+				const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
+				for (const song of parsed) {
+					await this.addSong(parseSong(song))
+				}
+			}catch(e){
+				console.error(e)
+				LoggerStore.error('Error while parsing song!')
 			}
 		}
 	}

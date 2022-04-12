@@ -68,7 +68,6 @@ export class MIDIListener {
         this.dispatchInputs()
     }
     private dispatchInputs = () => {
-
         this.inputsListeners.forEach(l => l(this.inputs))
     }
     selectSource = (source: WebMidi.MIDIInput) => {
@@ -91,7 +90,6 @@ export class MIDIListener {
             console.error(e)
             return MIDISettings
         }
-
     }
     saveSettings = () => {
         localStorage.setItem(`${APP_NAME}_MIDI_Settings`, JSON.stringify(this.settings))

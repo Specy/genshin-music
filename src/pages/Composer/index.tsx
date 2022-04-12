@@ -225,11 +225,15 @@ class Composer extends Component<any, ComposerState>{
     handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
 		for (const file of files) {
 			const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
-			for (const song of parsed) {
-                const parsedSong = parseSong(song)
-                if(parsedSong instanceof ComposedSong) await this.addSong(parsedSong)
-                if(parsedSong instanceof Song) await this.addSong(parsedSong.toComposed())
-			}
+            try{
+                for (const song of parsed) {
+                    const parsedSong = parseSong(song)
+                    await this.addSong(parsedSong)
+                }
+            }catch(e){
+                console.error(e)
+                LoggerStore.error("There was an error loading the song!")
+            }
 		}
     }
 
@@ -349,7 +353,7 @@ class Composer extends Component<any, ComposerState>{
         if (!this.mounted) return
         this.setState({ songs })
     }
-    addSong = async (song: ComposedSong) => {
+    addSong = async (song: ComposedSong | Song) => {
         if (await this.songExists(song.name)) {
             return LoggerStore.warn("A song with this name already exists! \n" + song.name)
         }

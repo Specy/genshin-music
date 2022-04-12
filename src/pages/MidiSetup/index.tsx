@@ -52,6 +52,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
 		await MIDIProvider.enable()
         MIDIProvider.addInputsListener(this.midiStateChange)
         MIDIProvider.addListener(this.handleMidi)
+
         this.setState({ 
             sources: MIDIProvider.inputs,
             selectedSource: MIDIProvider.currentMIDISource
@@ -166,12 +167,14 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                     Select MIDI device:
                     <select
                             className="midi-select"
-                            value={selectedSource?.name || 'None'}
-                            onChange={(e) => this.selectMidi(sources.find(s => s.id === e.target.value))}
+                            value={selectedSource ? selectedSource.id : 'None'}
+                            onChange={(e) => {
+                                this.selectMidi(sources.find(s => s.id === e.target.value))
+                            }}
                         >
                             <option disabled value={'None'}> None</option>
                             {sources.map((e, i) => <option value={e.id} key={e.id}>
-                                {e.name}
+                                {e.name} - {e.id}
                             </option>)
                             }
                         </select>

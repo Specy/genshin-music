@@ -24,10 +24,6 @@
 	font-family: Bonobo;
 	src: url("../assets/font/BonoboBold.ttf");
 }
-@font-face {
-	font-family: Cronos;
-	src: url("../assets/font/Cronos.otf");
-}
 .loading {
 	color: var(--background-text);
 	font-size: 2rem;
@@ -361,6 +357,7 @@ a {
 .settings-row-wrap{
     display: flex;
     flex-wrap: wrap;
+	gap: 0.2rem;
     justify-content: space-between;
     margin: 0.4rem 0;
     margin-bottom: 0.7rem;
