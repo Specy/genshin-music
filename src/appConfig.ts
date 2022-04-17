@@ -64,7 +64,6 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Bells",
         "DunDun",
         "HandPan",
-
     ] as const
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const BaseinstrumentsData = {

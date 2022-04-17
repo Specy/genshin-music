@@ -25,7 +25,7 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 35,
+        settingVersion: APP_NAME + 36,
     },
     data: {
         layer1: {
@@ -177,7 +177,7 @@ export type MainPageSettingsType = {
 }
 export const MainPageSettings: MainPageSettingsType = {
     other: {
-        settingVersion: APP_NAME + 32
+        settingVersion: APP_NAME + 36
     },
     data: {
         instrument: {
