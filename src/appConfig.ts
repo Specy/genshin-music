@@ -48,6 +48,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Piano",
         "Contrabass",
         "Guitar",
+        "LightGuitar",
         "Harp",
         "Horn",
         "Trumpet",
@@ -62,7 +63,8 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Drum",
         "Bells",
         "DunDun",
-        "HandPan"
+        "HandPan",
+
     ] as const
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const BaseinstrumentsData = {
@@ -85,6 +87,9 @@ const BaseinstrumentsData = {
     Panflute: {
         notes: 15
     },
+    LightGuitar: {
+        notes: 15
+    },  
     Bells: {
         notes: 8
     },

@@ -211,6 +211,10 @@ export class Song {
     }
     toGenshin = () => {
         const clone = this.clone()
+        if(clone.data.appName === 'Genshin') {
+            console.warn("Song already in Genshin format")
+            return clone
+        }
         clone.data.appName = "Genshin"
         clone.notes = clone.notes.map(note => {
 			note[0] = IMPORT_NOTE_POSITIONS[note[0]]

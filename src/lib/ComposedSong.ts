@@ -257,6 +257,10 @@ export class ComposedSong {
     }
     toGenshin = () => {
         const clone = this.clone()
+        if(clone.data.appName === 'Genshin') {
+            console.warn("Song already in Genshin format")
+            return clone
+        }
         clone.data.appName = 'Genshin'
         //@ts-ignore
         clone.instruments = this.instruments.map(_ => INSTRUMENTS[0])

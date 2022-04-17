@@ -8,9 +8,10 @@ type Update = {
 export const updates: Update[] = [
     {
         version: '2.6',
-        title: 'Bug fix',
+        title: 'Light guitar & Bug fix',
         date: '2022- 27/03',
         changes: [
+            "Added Light guitar (Sky, notes can't be held)",
             'Bug fixes for main page loading songs',
             'Added drag and drop in the composer'
         ]
