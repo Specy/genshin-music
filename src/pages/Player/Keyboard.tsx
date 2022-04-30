@@ -154,7 +154,8 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             })
         }
     }
-    handleKeyboard = async ({letter, shift}:KeyboardEventData) => {
+    handleKeyboard = async ({letter, shift, event}:KeyboardEventData) => {
+        if(event.repeat) return
         const { keyboard } = this.state
         if (!shift) {
             const index = this.props.data.keyboard.getNoteFromCode(letter)

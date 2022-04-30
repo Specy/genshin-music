@@ -3,15 +3,14 @@ const APP_VERSION = '2.6' as const
 
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ? ` - Improved the rendering of the composer to be sharper and easier to see on mobile
-        - Added 4th layer in the composer
-        - Improved performance in the composer
-        - Added more theming in the composer
+    ? ` 
+        - Bug fixes for main page loading songs
+        - Added drag and drop in the composer
     `.trim()
-    : ` - Improved the rendering of the composer to be sharper and easier to see on mobile
-        - Added 4th layer in the composer
-        - Improved performance in the composer
-        - Added more theming in the composer
+    : `    
+        - Added Light guitar (Sky, notes can't be held)
+        - Bug fixes for main page loading songs
+        - Added drag and drop in the composer
     `.trim()
 const LAYERS_INDEXES = [1,2,3,4] as const
 const EMPTY_LAYER = '0000'

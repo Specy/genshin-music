@@ -144,40 +144,45 @@ class Composer extends Component<any, ComposerState>{
     }
     registerKeyboardListeners = () => {
         const id = 'composer'
-        KeyboardProvider.registerLetter('D', () => { 
-            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected + 1) },{ id })
-        KeyboardProvider.registerLetter('A', () => { 
-            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected - 1) },{ id })
-        KeyboardProvider.registerLetter('Q', () => { 
-            if (!this.state.isPlaying) this.removeColumns(1, this.state.song.selected) },{ id })
-        KeyboardProvider.registerLetter('E', () => { 
-            if (!this.state.isPlaying) this.addColumns(1, this.state.song.selected) },{ id })
+        KeyboardProvider.registerLetter('D', () => {
+            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected + 1)
+        }, { id })
+        KeyboardProvider.registerLetter('A', () => {
+            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected - 1)
+        }, { id })
+        KeyboardProvider.registerLetter('Q', () => {
+            if (!this.state.isPlaying) this.removeColumns(1, this.state.song.selected)
+        }, { id })
+        KeyboardProvider.registerLetter('E', () => {
+            if (!this.state.isPlaying) this.addColumns(1, this.state.song.selected)
+        }, { id })
         TEMPO_CHANGERS.forEach((tempoChanger, i) => {
-            KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger),{ id })
+            KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger), { id })
         })
         KeyboardProvider.register('ArrowUp', () => {
             const nextLayer = this.state.layer - 1
             if (nextLayer > 0) this.changeLayer(nextLayer as LayerType)
-        },{ id })
+        }, { id })
         KeyboardProvider.register('ArrowDown', () => {
             const nextLayer = this.state.layer + 1
             if (nextLayer < this.state.layers.length + 1) this.changeLayer(nextLayer as LayerType)
-        },{ id })
+        }, { id })
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
             this.togglePlay()
             if (this.state.settings.syncTabs.value) {
                 this.broadcastChannel?.postMessage?.(this.state.isPlaying ? 'play' : 'stop')
             }
-        },{ id })
+        }, { id })
         KeyboardProvider.listen(({ event, letter }) => {
+            if (event.repeat) return
             const { isPlaying } = this.state
             const shouldEditKeyboard = isPlaying || event.shiftKey
             if (shouldEditKeyboard) {
                 const note = this.currentInstrument.getNoteFromCode(letter)
                 if (note !== null) this.handleClick(this.currentInstrument.layout[note])
             }
-        },{ id })
+        }, { id })
     }
     componentDidCatch() {
         LoggerStore.error("There was an error with the Composer, reloading the page...")
@@ -223,18 +228,18 @@ class Composer extends Component<any, ComposerState>{
         }
     }
     handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
-		for (const file of files) {
-			const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
-            try{
+        for (const file of files) {
+            const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
+            try {
                 for (const song of parsed) {
                     const parsedSong = parseSong(song)
                     await this.addSong(parsedSong)
                 }
-            }catch(e){
+            } catch (e) {
                 console.error(e)
                 LoggerStore.error("There was an error loading the song!")
             }
-		}
+        }
     }
 
     handleDropError = () => {
@@ -661,7 +666,7 @@ class Composer extends Component<any, ComposerState>{
             <BodyDropper
                 onDrop={handleDrop}
                 as='json'
-                dropAreaStyle={{paddingTop: '15vh'}}
+                dropAreaStyle={{ paddingTop: '15vh' }}
                 showDropArea={true}
                 onError={handleDropError}
             />
