@@ -1,3 +1,5 @@
+import { Tooltip,hasTooltip } from "./Tooltip"
+
 interface AppButtonprops {
     style?: object,
     className?: string,
@@ -5,15 +7,36 @@ interface AppButtonprops {
     children?: React.ReactNode,
     toggled?: boolean,
     disabled?: boolean,
-    visible?: boolean
+    visible?: boolean,
+    tooltip?: string
 }
-export function AppButton({ style = {}, className = '', children, toggled = false, onClick, disabled = false, visible = true}: AppButtonprops) {
+export function AppButton({ 
+        style = {}, 
+        className = '', 
+        children, 
+        toggled = false, 
+        onClick, 
+        disabled = false, 
+        visible = true, 
+        tooltip
+    }: AppButtonprops) {
     return <button
-        className={`app-button ${className} ${toggled ? 'active' : ''}`}
-        style={{...style, ...(!visible ? {display: 'none'} : {})}}
+        className={`app-button ${className} ${toggled ? 'active' : ''} ${hasTooltip(tooltip)}`}
+        style={{
+            ...style, 
+            ...(!visible 
+                ? {display: 'none'} 
+                : {})
+            
+            }}
         onClick={onClick || (() => { })}
         disabled={disabled}
     >
         {children}
+        {tooltip && 
+            <Tooltip>
+                {tooltip}
+            </Tooltip>
+        }
     </button>
 }

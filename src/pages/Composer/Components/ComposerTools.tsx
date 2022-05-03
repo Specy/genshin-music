@@ -1,4 +1,5 @@
 import { AppButton } from "components/AppButton"
+import { hasTooltip, Tooltip } from "components/Tooltip"
 import { useTheme } from "lib/hooks/useTheme"
 import { memo } from "react"
 import { LayerType } from "types/GeneralTypes"
@@ -50,6 +51,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     onClick={() => copyColumns('all')}
                     active={hasCopiedColumns}
                     style={themeStyle}
+                    tooltip='Copy all notes'
                 >
                     Copy
                 </ToolButton>
@@ -58,6 +60,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     onClick={() => copyColumns(layer)}
                     active={hasCopiedColumns}
                     style={themeStyle}
+                    tooltip={`Copy layer ${layer} notes`}
                 >
                    {`Copy layer ${layer}`}
                 </ToolButton>
@@ -67,6 +70,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     disabled={!hasCopiedColumns}
                     onClick={() => pasteColumns(false)}
                     style={themeStyle}
+                    tooltip='Paste copied notes'
                 >
                     Paste
                 </ToolButton>
@@ -74,6 +78,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     disabled={!hasCopiedColumns}
                     onClick={() => pasteColumns(true)}
                     style={themeStyle}
+                    tooltip='Insert copied notes'
                 >
                     Insert
                 </ToolButton>
@@ -83,6 +88,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     disabled={hasCopiedColumns}
                     onClick={() => eraseColumns('all')}
                     style={themeStyle}
+                    tooltip='Erase all selected notes'
                 >
                     Erase
                 </ToolButton>
@@ -90,6 +96,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     disabled={hasCopiedColumns}
                     onClick={() => eraseColumns(layer)}
                     style={themeStyle}
+                    tooltip={`Erase selected layer ${layer} notes`}
                 >
                     {`Erase layer ${layer}`}
                 </ToolButton>
@@ -99,6 +106,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 disabled={hasCopiedColumns}
                 onClick={deleteColumns}
                 style={themeStyle}
+                tooltip='Delete selected columns'
             >
                 Delete
             </ToolButton>
@@ -116,17 +124,24 @@ interface ToolButtonprops{
     active?: boolean
     style: any
     children: React.ReactNode
+    tooltip?: string
 }
-function ToolButton({ disabled, onClick, active, style, children }: ToolButtonprops) {
+function ToolButton({ disabled, onClick, active, style, children,tooltip }: ToolButtonprops) {
+    console.log(tooltip)
     return <button
         disabled={disabled}
         onClick={(e) => {
             e.currentTarget.blur()
             onClick()
         }}
-        className={active ? "tools-button-highlighted" : ""}
+        className={`${active ? "tools-button-highlighted" : ""} ${hasTooltip(tooltip)}`}
         style={style || {}}
     >
         {children}
+        {tooltip && 
+            <Tooltip position="top">
+                {tooltip}
+            </Tooltip>
+        }   
     </button>
 }
