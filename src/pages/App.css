@@ -485,13 +485,15 @@ a {
 	flex-direction: column;
 	flex: 1;
 }
-
-.has-tooltip:hover .tooltip {
-	display: block;
-	animation: fadeIn 0.2s;
-	animation-delay: 0.7s;
-	animation-fill-mode: forwards;
+@media (hover:hover) {
+	.has-tooltip:hover .tooltip {
+		display: block;
+		animation: fadeIn 0.2s;
+		animation-delay: 0.7s;
+		animation-fill-mode: forwards;
+	}
 }
+
 
 .tooltip {
 	display: none;
@@ -507,6 +509,8 @@ a {
 	box-shadow: 0px 1px 4px 2px #28283387;
 	font-size: 0.7rem;
 	pointer-events: none;
+	z-index: 2;
+
 }
 
 .tooltip-bottom {
@@ -566,9 +570,10 @@ a {
 	align-items: center;
 	background-color: var(--accent);
 	color: var(--accent-text);
-	padding:0.05rem;
-	width: 1.6rem;
-	height: 1.6rem;
+	padding: 0;
+	width: 26px;
+	height: 26px;
+	
 	border-radius: 50%;
 	border: 0;
 }
@@ -581,6 +586,10 @@ a {
 	border: solid 2px var(--secondary);
 	padding: 0.3rem 0.6rem;
 	border-radius: 0.4rem;
+	font-size: 0.8rem;
+	z-index: 2;
+	pointer-events: none;
+
 }
 .help-tooltip-button:focus + .help-tooltip-content{
 	display: flex;

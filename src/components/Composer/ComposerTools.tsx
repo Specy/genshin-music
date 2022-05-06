@@ -30,7 +30,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
     return <div className={isToolsVisible ? "floating-tools tools-visible" : "floating-tools"}>
         <div className="tools-row">
             <HelpTooltip>
-                Scroll left/right to select the columns, then choose your action
+                Scroll left/right to select the columns, then choose the action
 
             </HelpTooltip>
             <div className='row'>
@@ -129,7 +129,6 @@ interface ToolButtonprops{
     tooltip?: string
 }
 function ToolButton({ disabled, onClick, active, style, children,tooltip }: ToolButtonprops) {
-    console.log(tooltip)
     return <button
         disabled={disabled}
         onClick={(e) => {
