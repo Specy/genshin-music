@@ -6,11 +6,11 @@ import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, PitchesType, Tem
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
 
-import MidiParser from "./MidiParser"
-import ComposerTools from "./Components/ComposerTools"
-import ComposerKeyboard from "./ComposerKeyboard"
-import ComposerCanvas from "./Canvas"
-import Menu from "./Components/Menu"
+import MidiParser from "components/Composer/MidiParser"
+import ComposerTools from "components/Composer/ComposerTools"
+import ComposerKeyboard from "components/Composer/ComposerKeyboard"
+import ComposerCanvas from "components/Composer/Canvas"
+import Menu from "components/Composer/Menu"
 import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType } from "lib/BaseSettings"
@@ -34,6 +34,8 @@ import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardTypes';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
+import { CanvasTool } from 'components/Composer/CanvasTool';
+
 interface ComposerState {
     layers: ComposerInstruments
     songs: SerializedSongType[]
@@ -679,18 +681,18 @@ class Composer extends Component<any, ComposerState>{
                 <div className="column fill-x">
                     <div className="top-panel-composer">
                         <div className="buttons-composer-wrapper">
-                            <div className="tool" onPointerDown={() => this.selectColumn(song.selected + 1)}>
+                            <CanvasTool onClick={() => this.selectColumn(song.selected + 1)}>
                                 <Memoized>
                                     <FaChevronRight />
                                 </Memoized>
-                            </div>
-                            <div className="tool" onClick={() => this.selectColumn(song.selected - 1)}>
+                            </CanvasTool>
+                            <CanvasTool  onClick={() => this.selectColumn(song.selected - 1)}>
                                 <Memoized>
                                     <FaChevronLeft />
                                 </Memoized>
-                            </div>
+                            </CanvasTool>
 
-                            <div className="tool" onClick={() => {
+                            <CanvasTool onClick={() => {
                                 this.togglePlay()
                                 if (settings.syncTabs.value) {
                                     this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
@@ -702,7 +704,7 @@ class Composer extends Component<any, ComposerState>{
                                         : <FaPlay key='play' />
                                     }
                                 </Memoized>
-                            </div>
+                            </CanvasTool>
                         </div>
                         <ComposerCanvas
                             key={settings.columnsPerCanvas.value}
@@ -715,27 +717,29 @@ class Composer extends Component<any, ComposerState>{
                             }}
                         />
                         <div className="buttons-composer-wrapper-right">
-                            <div className="tool" onClick={() => this.addColumns(1, song.selected)}>
+                            <CanvasTool onClick={() => this.addColumns(1, song.selected)} tooltip='Add column'>
                                 <Memoized>
                                     <AddColumn className="tool-icon" />
                                 </Memoized>
-                            </div>
-                            <div className="tool" onClick={() => this.removeColumns(1, song.selected)}>
+                            </CanvasTool>
+                            <CanvasTool onClick={() => this.removeColumns(1, song.selected)} tooltip='Remove column'>
                                 <Memoized>
                                     <RemoveColumn className='tool-icon' />
                                 </Memoized>
-                            </div>
-                            <div className="tool" onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}>
+                            </CanvasTool>
+                            <CanvasTool 
+                                onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}
+                                tooltip='Add new page'
+                            >
                                 <Memoized>
                                     <FaPlus />
                                 </Memoized>
-                            </div>
-                            <div className="tool" onClick={this.toggleTools}>
+                            </CanvasTool>
+                            <CanvasTool onClick={this.toggleTools} tooltip='Open tools'>
                                 <Memoized>
                                     <FaTools />
                                 </Memoized>
-                            </div>
-
+                            </CanvasTool>
                         </div>
                     </div>
                 </div>

@@ -2,7 +2,7 @@ import { Component, createRef } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
 import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
 import isMobile from "is-mobile"
-import { ComposerCache } from "./TextureCache"
+import { ComposerCache } from "components/Composer/TextureCache"
 import { APP_NAME } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeProvider } from 'stores/ThemeStore';
@@ -11,7 +11,8 @@ import { clamp, nearestEven } from 'lib/Tools';
 import type { Column } from 'lib/SongClasses';
 import type { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import { isColumnVisible, RenderColumn } from './Components/RenderColumn';
+import { isColumnVisible, RenderColumn } from 'components/Composer/RenderColumn';
+import { TimelineButton } from './TimelineButton';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
@@ -153,8 +154,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.breakpointsStageRef = null
     }
 
-    handleKeyboard = ({code}: KeyboardEventData) => {
-        if(code === 'ArrowRight') this.handleBreakpoints(1)
+    handleKeyboard = ({ code }: KeyboardEventData) => {
+        if (code === 'ArrowRight') this.handleBreakpoints(1)
         else if (code === 'ArrowLeft') this.handleBreakpoints(-1)
     }
 
@@ -264,7 +265,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const relativeColumnWidth = width / data.columns.length
         const timelineWidth = Math.floor(relativeColumnWidth * (width / sizes.width + 1))
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
-        
+        const isBreakpointSelected = data.breakpoints.includes(data.selected)
         return <div className="canvas-wrapper" style={{ width: width + 2 }}>
             <Stage
                 width={width}
@@ -286,7 +287,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     pointermove={(e) => this.handleStageSlide(e)}
                 >
                     {data.columns.map((column, i) => {
-                        if (!isColumnVisible(i, data.selected,numberOfColumnsPerCanvas)) return null
+                        if (!isColumnVisible(i, data.selected, numberOfColumnsPerCanvas)) return null
                         const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
                         const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
                         const background = column.tempoChanger === 0
@@ -309,9 +310,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 }
             </Stage>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
-                <div
-                    className="timeline-button"
+                <TimelineButton
                     onClick={() => this.handleBreakpoints(-1)}
+                    tooltip='Previous Breakpoint'
                     style={{
                         backgroundColor: theme.timeline.hex
                     }}
@@ -319,10 +320,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     <Memoized>
                         <FaStepBackward />
                     </Memoized>
-                </div>
-                <div
-                    className="timeline-button"
+                </TimelineButton>
+                <TimelineButton
                     onClick={() => this.handleBreakpoints(1)}
+                    tooltip='Next breakpoint'
                     style={{
                         marginLeft: 0,
                         backgroundColor: theme.timeline.hex
@@ -331,7 +332,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     <Memoized>
                         <FaStepForward />
                     </Memoized>
-                </div>
+                </TimelineButton>
+
                 <div className='timeline-scroll' style={{ backgroundColor: theme.timeline.hex }}>
                     <Stage
                         width={width}
@@ -397,20 +399,21 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         />
                     </Stage>
                 </div>
-                <div
-                    className="timeline-button"
+                <TimelineButton
                     onClick={functions.toggleBreakpoint}
                     style={{
                         backgroundColor: theme.timeline.hex
                     }}
+                    tooltip={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
                 >
                     <Memoized>
-                        {data.breakpoints.includes(data.selected)
+                        {isBreakpointSelected
                             ? <FaMinusCircle key='minus' />
                             : <FaPlusCircle key='plus' />
                         }
                     </Memoized>
-                </div>
+                </TimelineButton>
+
             </div>
         </div>
     }

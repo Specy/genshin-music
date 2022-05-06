@@ -1,4 +1,5 @@
 import { AppButton } from "components/AppButton"
+import { HelpTooltip } from "components/HelpTooltip"
 import { hasTooltip, Tooltip } from "components/Tooltip"
 import { useTheme } from "lib/hooks/useTheme"
 import { memo } from "react"
@@ -28,9 +29,10 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
     } 
     return <div className={isToolsVisible ? "floating-tools tools-visible" : "floating-tools"}>
         <div className="tools-row">
-            <div>
-                Scroll to select the columns
-            </div>
+            <HelpTooltip>
+                Scroll left/right to select the columns, then choose your action
+
+            </HelpTooltip>
             <div className='row'>
                 <AppButton 
                     toggled={hasCopiedColumns} 
