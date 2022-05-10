@@ -489,7 +489,7 @@ a {
 	.has-tooltip:hover .tooltip {
 		display: block;
 		animation: fadeIn 0.2s;
-		animation-delay: 0.7s;
+		animation-delay: 0.5s;
 		animation-fill-mode: forwards;
 	}
 }
