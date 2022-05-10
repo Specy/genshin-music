@@ -1,7 +1,7 @@
 import { Tooltip,hasTooltip } from "./Tooltip"
 
 interface AppButtonprops {
-    style?: object,
+    style?: React.CSSProperties,
     className?: string,
     onClick?: () => void,
     children?: React.ReactNode,

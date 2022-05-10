@@ -10,7 +10,7 @@ import './Track.css'
 import { AppButton } from "components/AppButton";
 import { ApproachingScore } from "types/GeneralTypes";
 import { clamp } from "lib/Tools";
-
+import { Tooltip } from 'components/Tooltip'
 interface TopPageProps {
     restart: () => void
     handleSpeedChanger: (event: ChangeEvent<HTMLSelectElement>) => void
@@ -56,7 +56,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     }, [selectedThumb])
 
     const handleSliderClick = (event: React.PointerEvent<HTMLDivElement>) => {
-        if(slider.current && thumb1.current && thumb2.current){
+        if (slider.current && thumb1.current && thumb2.current) {
             const size = slider.current.getBoundingClientRect()
             const x = event.clientX
             const thumb1X = thumb1.current.getBoundingClientRect().x
@@ -73,7 +73,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     function handleSliderLeave() {
         setSelectedThumb(null)
     }
-    const handleSliderMove = (event: React.PointerEvent<HTMLDivElement>, override?:'left' | 'right') => {
+    const handleSliderMove = (event: React.PointerEvent<HTMLDivElement>, override?: 'left' | 'right') => {
         if (selectedThumb === null && !override) return
         const currentThumb = override || selectedThumb
         const sliderX = inputDimension.x
@@ -93,7 +93,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             <Score {...approachingScore} />
         }
         <div className="slider-wrapper">
-            <AppButton className="slider-button" onClick={SongStore.reset}>
+            <AppButton className="slider-button" onClick={SongStore.reset} tooltip='Stop'>
                 <Memoized>
                     <FaStop />
                 </Memoized>
@@ -124,24 +124,29 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                 </div>
             </div>
 
-            <AppButton className="slider-button" onClick={restart}>
+            <AppButton className="slider-button" onClick={restart} tooltip='Restart'>
                 <Memoized>
                     <FaSyncAlt />
                 </Memoized>
             </AppButton>
-            <select
-                className='slider-select'
-                onChange={handleSpeedChanger}
-                value={speedChanger.name}
-                style={{backgroundImage: 'none'}}
-            >
-                <option disabled>Speed</option>
-                {SPEED_CHANGERS.map(e => {
-                    return <option value={e.name} key={e.name}>
-                        {e.name}
-                    </option>
-                })}
-            </select>
+            <div className="has-tooltip">
+                <select
+                    className='slider-select'
+                    onChange={handleSpeedChanger}
+                    value={speedChanger.name}
+                    style={{ backgroundImage: 'none' }}
+                >
+                    <option disabled>Speed</option>
+                    {SPEED_CHANGERS.map(e => {
+                        return <option value={e.name} key={e.name}>
+                            {e.name}
+                        </option>
+                    })}
+                </select>
+                <Tooltip style={{ transform: 'translateY(2px) translateX(-1.1rem)'}}>
+                    Change speed
+                </Tooltip>
+            </div>
         </div>
     </div>
 }, (prev, next) => {

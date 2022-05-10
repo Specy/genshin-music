@@ -11,17 +11,26 @@ interface SongMenuProps {
     SongComponent: any,
     componentProps: any,
     className?: string,
-    style?: any,
+    style?: React.CSSProperties,
+    scrollerStyle?: React.CSSProperties
     baseType: songType
 }
-export function SongMenu({ songs, SongComponent, componentProps, className = '', style = {}, baseType = 'recorded' }: SongMenuProps) {
+export function SongMenu({
+    songs,
+    SongComponent,
+    componentProps,
+    className = '',
+    style = {},
+    baseType = 'recorded',
+    scrollerStyle = {}
+}: SongMenuProps) {
     const [songType, setSongType] = useState<songType>('recorded')
     const [theme] = useTheme()
     useEffect(() => {
         setSongType(baseType)
-    },[baseType])
-    const selectedColor = theme.layer('menu_background',0.32).desaturate(0.4)
-    const unselectedColor = theme.layer('menu_background',0.35).lighten(0.2)
+    }, [baseType])
+    const selectedColor = theme.layer('menu_background', 0.32).desaturate(0.4)
+    const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
     return <div className={`${className}`} style={style}>
         <div className="tab-selector-wrapper">
             <button
@@ -43,8 +52,8 @@ export function SongMenu({ songs, SongComponent, componentProps, className = '',
                 Composed
             </button>
         </div>
-        <div className="songs-wrapper" style={{backgroundColor: selectedColor.toString()}}>
-            {songs.filter((song) => 
+        <div className="songs-wrapper" style={{ backgroundColor: selectedColor.toString(), ...scrollerStyle }}>
+            {songs.filter((song) =>
                 songType === 'composed' ? song.data?.isComposedVersion : !song.data?.isComposedVersion
             ).map((song) =>
                 <SongComponent

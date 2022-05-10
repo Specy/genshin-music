@@ -2,9 +2,10 @@
 interface TooltipProps{
     children: React.ReactNode;
     position?: 'top' | 'bottom' | 'left' | 'right'
+    style?: React.CSSProperties
 }
-export function Tooltip({children, position = 'bottom'}: TooltipProps) {
-    return <span className={`tooltip tooltip-${position}`}>
+export function Tooltip({children, position = 'bottom', style}: TooltipProps) {
+    return <span className={`tooltip tooltip-${position}`} style={style}>
         {children}
     </span>
 }

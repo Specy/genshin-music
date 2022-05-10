@@ -44,7 +44,7 @@ export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 function Menu({ data, functions }: MenuProps) {
     const [open, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
-    const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible,updateThisSong } = functions
+    const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible, updateThisSong } = functions
     const [theme] = useTheme()
     const handleKeyboard = useCallback((event: KeyboardEvent) => {
         const key = event.code
@@ -71,7 +71,7 @@ function Menu({ data, functions }: MenuProps) {
         const newState = override !== undefined ? override : !open
         setOpen(newState)
         if (newState === false) toggleMenuVisible()
-    },[open,toggleMenuVisible])
+    }, [open, toggleMenuVisible])
 
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
         if (selection === selectedMenu && open) {
@@ -82,10 +82,10 @@ function Menu({ data, functions }: MenuProps) {
             setSelectedMenu(selection)
             Analytics.UIEvent('menu', { tab: selection })
         }
-    },[open,selectedMenu])
+    }, [open, selectedMenu])
 
     const downloadSong = useCallback((song: SerializedSongType) => {
-        try{
+        try {
             song.data.appName = APP_NAME
             const songName = song.name
             const parsed = parseSong(song)
@@ -94,11 +94,11 @@ function Menu({ data, functions }: MenuProps) {
             FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
             LoggerStore.success("Song downloaded")
             Analytics.userSongs('download', { name: parsed.name, page: 'composer' })
-        }catch(e){
+        } catch (e) {
             console.log(e)
             LoggerStore.error('Error downloading song')
         }
-    },[])
+    }, [])
 
     const sideClass = open ? "side-menu menu-open" : "side-menu"
     const songFunctions = {
@@ -157,6 +157,7 @@ function Menu({ data, functions }: MenuProps) {
                 />
                 <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
                     <AppButton
+                        style={{ marginTop: '0.5rem' }}
                         className={`record-btn`}
                         onClick={() => functions.startRecordingAudio(!data.isRecordingAudio)}
                         toggled={data.isRecordingAudio}
@@ -214,7 +215,7 @@ interface SongRowProps {
 
 function SongRow({ data, functions, theme }: SongRowProps) {
     const { removeSong, toggleMenu, loadSong, downloadSong } = functions
-    const buttonStyle = { backgroundColor: theme.layer('primary',0.15).hex() }
+    const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     return <div className="song-row">
         <div className="song-name" onClick={() => {
             loadSong(data)
@@ -237,7 +238,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
     </div>
 }
 
-export default memo(Menu, (p,n) => {
+export default memo(Menu, (p, n) => {
     return p.data.songs === n.data.songs && p.data.settings === n.data.settings &&
-     p.data.hasChanges === n.data.hasChanges && p.data.isMenuOpen === n.data.isMenuOpen && p.data.isRecordingAudio === n.data.isRecordingAudio
+        p.data.hasChanges === n.data.hasChanges && p.data.isMenuOpen === n.data.isMenuOpen && p.data.isRecordingAudio === n.data.isRecordingAudio
 })

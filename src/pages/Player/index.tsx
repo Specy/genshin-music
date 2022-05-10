@@ -1,11 +1,11 @@
 import { Component } from 'react';
-import Keyboard from "./Keyboard"
-import Menu from "./Components/Menu"
+import Keyboard from "components/Player/Keyboard"
+import Menu from "components/Player/Menu"
 import { DB } from 'Database';
 import { SongStore } from 'stores/SongStore'
 import { parseSong } from "lib/Tools"
-import { SerializedSong, Song } from 'lib/Song';
-import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
+import { Song } from 'lib/Song';
+import { ComposedSong } from 'lib/ComposedSong';
 import { Recording } from 'lib/SongClasses';
 import { MainPageSettings, MainPageSettingsDataType, MainPageSettingsType } from "lib/BaseSettings"
 import Instrument, { NoteData } from 'lib/Instrument';
@@ -33,6 +33,7 @@ interface PlayerState {
 	isRecording: boolean
 	hasSong: boolean
 }
+
 class Player extends Component<any, PlayerState>{
 	state: PlayerState
 	recording: Recording

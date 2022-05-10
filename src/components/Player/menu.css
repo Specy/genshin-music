@@ -168,7 +168,6 @@
     flex-direction: column;
     gap: 0.3rem;
     min-height: 4rem;
-    overflow-y: auto;
 }
 .library-search-songs-wrapper{
     border-radius: 0.3rem;

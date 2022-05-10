@@ -12,6 +12,7 @@ import MenuPanel from 'components/MenuPanel'
 import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import LibrarySearchedSong from 'components/LibrarySearchedSong'
+import { SongActionButton } from 'components/SongActionButton'
 import Analytics from 'lib/Analytics';
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
@@ -64,11 +65,11 @@ function Menu({ functions, data }: MenuProps) {
         }
         checkStorage()
     }, [])
-    const handleKeyboard = useCallback(({letter, shift, code}: KeyboardEventData) => {
+    const handleKeyboard = useCallback(({ letter, shift, code }: KeyboardEventData) => {
         //@ts-ignore
         document.activeElement?.blur()
-        if(letter === 'M' && shift) setOpen(!open)
-        if(code === 'Escape') setOpen(false)
+        if (letter === 'M' && shift) setOpen(!open)
+        if (code === 'Escape') setOpen(false)
     }, [open])
 
     useEffect(() => {
@@ -145,10 +146,10 @@ function Menu({ functions, data }: MenuProps) {
         )
     }, [])
     function downloadAllSongs() {
-        try{
+        try {
             const toDownload = data.songs.map(song => {
-                if(APP_NAME === 'Sky'){
-                    return song.data.isComposedVersion 
+                if (APP_NAME === 'Sky') {
+                    return song.data.isComposedVersion
                         ? ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
                         : Song.deserialize(song as SerializedSong).toOldFormat()
                 }
@@ -158,7 +159,7 @@ function Menu({ functions, data }: MenuProps) {
             const date = new Date().toISOString().split('T')[0]
             FileDownloader.download(json, `${APP_NAME}_Backup_${date}.json`)
             LoggerStore.success("Song backup downloaded")
-        }catch(e){
+        } catch (e) {
             console.error(e)
             LoggerStore.error("Error downloading songs")
         }
@@ -352,32 +353,43 @@ function SongRow({ data, functions, theme }: SongRowProps) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => {
-                const parsed = parseSong(data)
-                SongStore.practice(parseSong(data), 0, parsed.notes.length)
-                toggleMenu(false)
-            }}
+            <SongActionButton
+                onClick={() => {
+                    const parsed = parseSong(data)
+                    SongStore.practice(parsed, 0, parsed.notes.length)
+                    toggleMenu(false)
+                }}
+                tooltip='Practice'
                 style={buttonStyle}
             >
                 <FaCrosshairs />
-            </button>
+            </SongActionButton>
 
-            <button className="song-button" onClick={() => {
+            <SongActionButton onClick={() => {
                 const parsed = parseSong(data)
-
                 SongStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
+                
             }}
+                tooltip='Approach mode'
                 style={buttonStyle}
             >
                 <BsCircle />
-            </button>
-            <button className="song-button" onClick={() => downloadSong(parseSong(data))} style={buttonStyle}>
+            </SongActionButton>
+            <SongActionButton 
+                onClick={() => downloadSong(parseSong(data))} 
+                style={buttonStyle}
+                tooltip='Download'
+            >
                 <FaDownload />
-            </button>
-            <button className="song-button" onClick={() => removeSong(data.name)} style={buttonStyle}>
+            </SongActionButton>
+            <SongActionButton 
+                onClick={() => removeSong(data.name)} 
+                style={buttonStyle}
+                tooltip='Delete'
+            >
                 <FaTrash color="#ed4557" />
-            </button>
+            </SongActionButton>
         </div>
     </div>
 }

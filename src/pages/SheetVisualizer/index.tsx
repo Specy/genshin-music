@@ -98,6 +98,7 @@ export default function SheetVisualizer() {
                     songs={songs}
                     className='displayer-songs-wrapper noprint'
                     style={{ marginTop: '0' }}
+                    scrollerStyle={{overflowY: 'auto'}}
                     baseType='recorded'
                     SongComponent={SongRow}
                     componentProps={{

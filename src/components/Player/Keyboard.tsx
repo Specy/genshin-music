@@ -1,11 +1,11 @@
 import { ChangeEvent, Component } from 'react'
 import { observe } from 'mobx'
 import { LAYOUT_IMAGES, APP_NAME, SPEED_CHANGERS, MIDI_STATUS, PitchesType } from "appConfig"
-import Note from './Components/Note'
+import Note from 'components/Player/Note'
 import { SongStore } from 'stores/SongStore'
 import { Array2d, getNoteText, delay, clamp } from "lib/Tools"
 import "./Keyboard.css"
-import TopPage from './Components/TopPage'
+import TopPage from 'components/Player/TopPage'
 import Analytics from 'lib/Analytics';
 import { SliderStore } from 'stores/SongSliderStore'
 import { ApproachingNote, RecordedNote } from 'lib/SongClasses'
