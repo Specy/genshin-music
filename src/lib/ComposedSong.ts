@@ -5,11 +5,12 @@ import { SongInstruments } from "types/SongTypes"
 import { Song } from "./Song"
 import { Column, ColumnNote, RecordedNote, SongDataType } from "./SongClasses"
 
-interface OldFormatNoteType{
-    key: string, 
+interface OldFormatNoteType {
+    key: string,
     time: number
     l?: number
 }
+export type ComposedSongInstruments = [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
 export type SerializedNote = [index: number, layer: CombinedLayer]
 export type SerializedColumn = [tempoChanger: number, notes: SerializedNote[]]
 export interface SerializedComposedSong {
@@ -38,12 +39,12 @@ export class ComposedSong {
     version: number
     bpm: number
     pitch: PitchesType
-    notes: RecordedNote[] 
-    instruments: [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
+    notes: RecordedNote[]
+    instruments: ComposedSongInstruments
     breakpoints: number[]
     columns: Column[]
     selected: number
-    constructor(name: string, notes = []) {
+    constructor(name: string, notes: RecordedNote[] = []) {
         this.version = 1
         this.data = {
             appName: APP_NAME,
@@ -52,49 +53,40 @@ export class ComposedSong {
         }
         this.name = name
         this.bpm = 220
-        this.pitch =
-            this.pitch = "C"
+        this.pitch = "C"
         this.notes = notes
         this.instruments = [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
         this.breakpoints = [0]
-        this.columns = []
         this.selected = 0
-        new Array(100).fill(0).forEach(_ => {
-            const column = new Column()
-            column.tempoChanger = 0
-            this.columns.push(column)
-        })
+        this.columns = new Array(100).fill(0).map(_ => new Column())
     }
     static deserialize = (song: SerializedComposedSong): ComposedSong => {
         const bpm = Number(song.bpm)
-        const newSong = new ComposedSong(song.name)
-        newSong.data = {...newSong.data, ...song.data} 
-        newSong.bpm = isNaN(bpm) ? 220 : bpm
-        newSong.pitch = song.pitch ?? "C"
+        const parsed = new ComposedSong(song.name)
+        parsed.data = { ...parsed.data, ...song.data }
+        parsed.bpm = isNaN(bpm) ? 220 : bpm
+        parsed.pitch = song.pitch ?? "C"
+        song.instruments = song.instruments ?? []
         const parsedInstruments = EMPTY_LAYER.split('').map(() => INSTRUMENTS[0])
         parsedInstruments.forEach((_, i) => {
-            const toParse = song.instruments[i] as any
-            if(toParse !== undefined){
-                if(INSTRUMENTS.includes(toParse)) parsedInstruments[i] = toParse
-                else parsedInstruments[i] = INSTRUMENTS[0]
-            }
+            const toParse = song?.instruments[i] as any
+            parsedInstruments[i] = INSTRUMENTS.includes(toParse) ? toParse : INSTRUMENTS[0]
         })
-        //@ts-ignore
-        newSong.instruments = parsedInstruments
-        newSong.breakpoints = [...song.breakpoints ?? []] 
-        newSong.columns = song.columns.map(column => {
-            const columnObj = new Column()
-            columnObj.tempoChanger = column[0]
+        parsed.instruments = parsedInstruments as ComposedSongInstruments
+        parsed.breakpoints = [...(song.breakpoints ?? [])]
+        parsed.columns = song.columns.map(column => {
+            const parsedColumn = new Column()
+            parsedColumn.tempoChanger = column[0]
             column[1].forEach(note => {
                 const deserializedNote = ColumnNote.deserializeLayer(note[1])
-                if(deserializedNote.match(/^0+$/g)) return
-                columnObj.notes.push(new ColumnNote(note[0], deserializedNote))
+                if (deserializedNote.match(/^0+$/g)) return
+                parsedColumn.notes.push(new ColumnNote(note[0], deserializedNote))
             })
-            return columnObj
+            return parsedColumn
         })
-        return newSong
+        return parsed
     }
-    get isComposed(): true{
+    get isComposed(): true {
         return true
     }
     toSong = () => {
@@ -111,23 +103,25 @@ export class ComposedSong {
     }
     serialize = (): SerializedComposedSong => {
         const bpm = Number(this.bpm)
-        const obj: SerializedComposedSong = {
-            data: this.data,
+        const serialized: SerializedComposedSong = {
+            data: {
+                ...this.data,
+                appName: APP_NAME
+            },
             name: this.name,
             bpm: isNaN(bpm) ? 220 : bpm,
             pitch: this.pitch,
             breakpoints: [...this.breakpoints],
             instruments: [...this.instruments],
             columns: []
-        } 
-        obj.data.appName = APP_NAME
+        }
         this.columns.forEach(column => {
             const notes = column.notes.map(note => {
                 return [note.index, note.layer] as SerializedNote
             })
-            obj.columns.push([column.tempoChanger, notes])
+            serialized.columns.push([column.tempoChanger, notes])
         })
-        return obj
+        return serialized
     }
     toOldFormat = () => {
         const song: OldFormatComposed = {
@@ -144,11 +138,11 @@ export class ComposedSong {
         song.columns.forEach(column => {
             column[1].forEach(note => {
                 const layer = LAYERS_MAP[note[1]]
-                if(layer === 0) return
-                const noteObj:OldFormatNoteType = {
+                if (layer === 0) return
+                const noteObj: OldFormatNoteType = {
                     key: (layer > 2 ? 2 : layer) + 'Key' + note[0],
                     time: totalTime,
-                    ...layer > 2 ? { l : 3} : {}
+                    ...layer > 2 ? { l: 3 } : {}
                 }
                 convertedNotes.push(noteObj)
             })
@@ -157,10 +151,10 @@ export class ComposedSong {
         song.songNotes = convertedNotes
         return song
     }
-    get selectedColumn(){
+    get selectedColumn() {
         return this.columns[this.selected]
     }
-    addColumns(amount: number, position: number | 'end'){
+    addColumns = (amount: number, position: number | 'end') => {
         const columns = new Array(amount).fill(0).map(() => new Column())
         if (position === "end") {
             this.columns.push(...columns)
@@ -168,11 +162,11 @@ export class ComposedSong {
             this.columns.splice(position + 1, 0, ...columns)
         }
     }
-    removeColumns(amount: number, position: number){
+    removeColumns = (amount: number, position: number) => {
         this.columns.splice(position, amount)
         this.validateBreakpoints()
     }
-    toggleBreakpoint(override?: number){
+    toggleBreakpoint = (override?: number) => {
         const index = typeof override === "number" ? override : this.selected
         const breakpointIndex = this.breakpoints.indexOf(index)
         if (breakpointIndex >= 0 && this.columns.length > index) {
@@ -207,20 +201,19 @@ export class ComposedSong {
         } else {
             cloned.forEach((clonedColumn, i) => {
                 const column = this.columns[this.selected + i]
-                if (column !== undefined) {
-                    clonedColumn.notes.forEach(clonedNote => {
-                        const index = column.getNoteIndex(clonedNote.index)
-                        if (index === null) {
-                            column.addColumnNote(clonedNote)
-                        } else {
-                            for (let j = 0; j < EMPTY_LAYER.length; j++) {
-                                if (clonedNote.isLayerToggled(j as LayerIndex)) {
-                                    column.notes[index].setLayer(j as LayerIndex, '1')
-                                }
+                if (column === undefined) return
+                clonedColumn.notes.forEach(clonedNote => {
+                    const index = column.getNoteIndex(clonedNote.index)
+                    if (index === null) {
+                        column.addColumnNote(clonedNote)
+                    } else {
+                        for (let j = 0; j < EMPTY_LAYER.length; j++) {
+                            if (clonedNote.isLayerToggled(j as LayerIndex)) {
+                                column.notes[index].setLayer(j as LayerIndex, '1')
                             }
                         }
-                    })
-                }
+                    }
+                })
             })
         }
         return this
@@ -252,31 +245,30 @@ export class ComposedSong {
         return this
     }
 
-    validateBreakpoints(){
+    validateBreakpoints = () => {
         this.breakpoints = this.breakpoints.filter(breakpoint => breakpoint < this.columns.length)
     }
     toGenshin = () => {
         const clone = this.clone()
-        if(clone.data.appName === 'Genshin') {
+        if (clone.data.appName === 'Genshin') {
             console.warn("Song already in Genshin format")
             return clone
         }
         clone.data.appName = 'Genshin'
-        //@ts-ignore
-        clone.instruments = this.instruments.map(_ => INSTRUMENTS[0])
+        clone.instruments = this.instruments.map(_ => INSTRUMENTS[0]) as ComposedSongInstruments
         clone.columns = clone.columns.map(column => {
             column.notes = column.notes.map(note => {
                 note.index = IMPORT_NOTE_POSITIONS[note.index]
                 return note
             })
             return column
-		})
+        })
         return clone
     }
 
     clone = () => {
         const clone = new ComposedSong(this.name)
-        clone.data = {...this.data}
+        clone.data = { ...this.data }
         clone.version = this.version
         clone.bpm = this.bpm
         clone.pitch = this.pitch

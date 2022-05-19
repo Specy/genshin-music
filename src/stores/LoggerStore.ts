@@ -6,7 +6,7 @@ enum LOGGER_COLOR{
     success = 'var(--accent)'
 }
 
-interface LoggerDataProps{
+export interface LoggerDataProps{
     timestamp: number
     visible: boolean
     text: string
@@ -18,7 +18,7 @@ interface LoggerDataProps{
 type LoggerData = {
     data: LoggerDataProps
 }
-class LoggerStore {
+export class LoggerStoreClass {
     state: LoggerData
     timeout: any
     constructor() {
@@ -70,4 +70,4 @@ class LoggerStore {
     }
 }
 
-export default new LoggerStore()
+export default new LoggerStoreClass()

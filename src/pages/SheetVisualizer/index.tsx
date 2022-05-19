@@ -90,7 +90,7 @@ export default function SheetVisualizer() {
         Analytics.songEvent({type:'visualize'})
     }
 
-    return <div className='default-page'>
+    return <div className='default-page' style={{overflowY: 'scroll'}}>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SimpleMenu className='noprint' />
             <div>
