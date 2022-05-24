@@ -22,6 +22,7 @@ import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { SerializedSongType } from 'types/SongTypes';
+import { hasTooltip, Tooltip } from 'components/Tooltip';
 
 
 interface PlayerState {
@@ -85,12 +86,12 @@ class Player extends Component<any, PlayerState>{
 
 	handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
 		for (const file of files) {
-			try{
+			try {
 				const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
 				for (const song of parsed) {
 					await this.addSong(parseSong(song))
 				}
-			}catch(e){
+			} catch (e) {
 				console.error(e)
 				LoggerStore.error('Error while parsing song!')
 			}
@@ -176,10 +177,10 @@ class Player extends Component<any, PlayerState>{
 	}
 
 	syncSongs = async () => {
-		try{
+		try {
 			const songs = await DB.getSongs()
 			this.setState({ songs })
-		}catch(e){
+		} catch (e) {
 			console.error(e)
 			LoggerStore.warn('There was an error syncing the songs')
 		}
@@ -274,9 +275,9 @@ class Player extends Component<any, PlayerState>{
 		const { state, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this
 		const { settings, isLoadingInstrument, songs, instrument, hasSong, isRecordingAudio, isRecording } = state
 		return <>
-			<Menu 
-				functions={{ addSong, removeSong, handleSettingChange, changeVolume }} 
-				data={{ songs, settings }} 
+			<Menu
+				functions={{ addSong, removeSong, handleSettingChange, changeVolume }}
+				data={{ songs, settings }}
 			/>
 			<div className="right-panel">
 				<div className="upper-right">

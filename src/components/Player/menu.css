@@ -113,8 +113,8 @@
 }
 .songs-buttons-wrapper{
     display:flex;
-    justify-content: flex-end;
     width: 100%;
+    align-items: center;
     flex-wrap: wrap;
     gap: 0.2rem;
 }

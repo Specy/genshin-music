@@ -30,8 +30,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
     return <div className={isToolsVisible ? "floating-tools tools-visible" : "floating-tools"}>
         <div className="tools-row">
             <HelpTooltip>
-                Scroll left/right to select the columns, then choose the action
-
+                Scroll left/right to select the columns, then choose the action.
             </HelpTooltip>
             <div className='row'>
                 <AppButton 

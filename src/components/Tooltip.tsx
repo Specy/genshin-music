@@ -10,6 +10,6 @@ export function Tooltip({children, position = 'bottom', style}: TooltipProps) {
     </span>
 }
 
-export function hasTooltip(text?:string){
+export function hasTooltip(text?:string | boolean){
     return text ? 'has-tooltip' : '';
 }

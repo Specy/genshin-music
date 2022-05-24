@@ -564,20 +564,32 @@ a {
 	transform: translateY(50%) rotate(45deg);
 }
 
+
+.help-tooltip ul{
+	margin: 0.2rem;
+	padding-left: 0.6rem;
+}
+.help-tooltip li{
+	margin-bottom: 0.2rem;
+}
 .help-tooltip-button{
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background-color: var(--accent);
-	color: var(--accent-text);
+	background-color: var(--primary);
+	color: var(--primary-text);
 	padding: 0;
 	width: 26px;
 	height: 26px;
-	
+	cursor: pointer;
 	border-radius: 50%;
 	border: 0;
+	transition: all 0.2s;
 }
-
+.help-tooltip-button:hover{
+	transform: rotate(30deg);
+	filter: brightness(1.1);
+}
 .help-tooltip-content{
 	position: absolute;
 	transform: translateY(0.4rem);
@@ -599,8 +611,8 @@ a {
 	animation-fill-mode: forwards;
 }
 .help-tooltip-button:focus{
-	background-color: var(--secondary);
-	color: var(--secondary-text);
+	background-color: var(--accent);
+	color: var(--accent-text);
 }
 
 @media only screen and (max-width: 900px) {

@@ -30,7 +30,8 @@ import { SerializedSongType } from 'types/SongTypes';
 import "./menu.css"
 import { ThemeStoreClass } from 'stores/ThemeStore';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-
+import { hasTooltip, Tooltip } from "components/Tooltip"
+import { HelpTooltip } from 'components/HelpTooltip';
 interface MenuProps {
     functions: {
         addSong: (song: Song | ComposedSong) => void
@@ -196,7 +197,23 @@ function Menu({ functions, data }: MenuProps) {
             </MenuPanel>
             <MenuPanel title="Songs" current={selectedMenu}>
                 <div className="songs-buttons-wrapper">
-                    <Link to='Composer'>
+                    <HelpTooltip>
+                        <ul>
+                            <li>Click the song name to play it</li>
+                            <li>
+                                You can import songs made by other users (does not accept audio files).
+                                Or you can download yours to share
+                            </li>
+                            <li>To create your song, you can record the notes you play or create one in the composer</li>
+                            <li><FaCrosshairs style={{marginRight: '0.2rem'}}/>: Start the practice mode</li>
+                            <li><BsCircle style={{marginRight: '0.2rem'}}/>: Start the approaching notes mode</li>
+                            {IS_MIDI_AVAILABLE && 
+                                <li>You can connect a MIDI keyboard to play</li>
+                            }
+
+                        </ul>
+                    </HelpTooltip>
+                    <Link to='Composer' style={{marginLeft: 'auto'}}>
                         <AppButton>
                             Compose song
                         </AppButton>
@@ -346,12 +363,17 @@ function SongRow({ data, functions, theme }: SongRowProps) {
     const { removeSong, toggleMenu, downloadSong } = functions
     const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     return <div className="song-row">
-        <div className="song-name" onClick={() => {
+        <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             SongStore.play(parseSong(data), 0)
             toggleMenu(false)
         }}>
             {data.name}
+            <Tooltip>
+                Play song
+            </Tooltip>
         </div>
+
+
         <div className="song-buttons-wrapper">
             <SongActionButton
                 onClick={() => {
@@ -369,22 +391,22 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 const parsed = parseSong(data)
                 SongStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
-                
+
             }}
                 tooltip='Approach mode'
                 style={buttonStyle}
             >
                 <BsCircle />
             </SongActionButton>
-            <SongActionButton 
-                onClick={() => downloadSong(parseSong(data))} 
+            <SongActionButton
+                onClick={() => downloadSong(parseSong(data))}
                 style={buttonStyle}
                 tooltip='Download'
             >
                 <FaDownload />
             </SongActionButton>
-            <SongActionButton 
-                onClick={() => removeSong(data.name)} 
+            <SongActionButton
+                onClick={() => removeSong(data.name)}
                 style={buttonStyle}
                 tooltip='Delete'
             >

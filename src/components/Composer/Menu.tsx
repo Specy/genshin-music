@@ -18,6 +18,8 @@ import { Pages } from 'types/GeneralTypes';
 import { SerializedSongType } from 'types/SongTypes';
 import { useTheme } from 'lib/hooks/useTheme';
 import { ThemeStoreClass } from 'stores/ThemeStore';
+import { hasTooltip, Tooltip } from 'components/Tooltip';
+import { HelpTooltip } from 'components/HelpTooltip';
 
 interface MenuProps {
     data: {
@@ -139,7 +141,22 @@ function Menu({ data, functions }: MenuProps) {
 
             <MenuPanel title="Songs" current={selectedMenu}>
                 <div className="songs-buttons-wrapper">
-                    <AppButton onClick={() => { changeMidiVisibility(true); toggleMenu() }}>
+                    <HelpTooltip>
+                        <ul>
+                            <li>Click the song name to load it</li>
+                            <li>You can use different instruments for each layer</li>
+                            <li>Tempo changers help you make faster parts of a song without having very high bpm</li>
+                            <li>You can quickly create a song by importing a MIDI file and editing it</li>
+                            <li>
+                                You can add breakpoints to the timeline (the bar below the composer) to quickly jump
+                                between parts of a song
+                            </li>
+                        </ul>
+                    </HelpTooltip>
+                    <AppButton 
+                        onClick={() => { changeMidiVisibility(true); toggleMenu() }}
+                        style={{marginLeft: 'auto'}}
+                    >
                         Create from MIDI
                     </AppButton>
                     <AppButton onClick={createNewSong}>
@@ -217,11 +234,14 @@ function SongRow({ data, functions, theme }: SongRowProps) {
     const { removeSong, toggleMenu, loadSong, downloadSong } = functions
     const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     return <div className="song-row">
-        <div className="song-name" onClick={() => {
+        <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             loadSong(data)
             toggleMenu(false)
         }}>
             {data.name}
+            <Tooltip>
+                Open in composer
+            </Tooltip>
         </div>
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => downloadSong(data)} style={buttonStyle}>

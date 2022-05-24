@@ -162,7 +162,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     width: columnWidth,
                     height
                 },
-                cache : this.getCache(columnWidth, height, isMobile() ? 2 : 4, this.state.timelineHeight),
+                cache : this.getCache(columnWidth, height, isMobile() ? 2 : 4, isMobile() ? 25 : 30),
             })
         },50)
     } 

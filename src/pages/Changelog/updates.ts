@@ -12,9 +12,11 @@ export const updates: Update[] = [
         date: '2022- 27/03',
         changes: [
             "Added tooltips",
+            "Added help buttons",
             "Added Light guitar (Sky, notes can't be held)",
-            'Bug fixes for main page loading songs',
-            'Added drag and drop in the composer'
+            "Bug fixes for main page loading songs",
+            "Added drag and drop in the composer",
+            "Composer on pc now resizes with the page"
         ]
     },
     {
