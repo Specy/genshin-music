@@ -4,6 +4,7 @@ const publicPath = './public'
 const skyPath = './src/appData/sky'
 const genshinPath = './src/appData/genshin'
 const copyDir = require('recursive-copy')
+const clc = require("cli-color");
 const chosenApp = process.argv[2]
 
 if (!['Genshin', 'Sky'].includes(chosenApp)) {
@@ -28,10 +29,10 @@ async function execute() {
     await deleteAssets()
     await copyDir(chosenApp === "Sky" ? skyPath : genshinPath, publicPath)
     if (process.platform === 'win32') {
-        console.log("Starting on windows")
+        console.log(clc.yellow.bold("Starting on windows"))
         execSync(`set REACT_APP_NAME=${chosenApp}&& yarn start`)
     } else {
-        console.log("Starting on Linux")
+        console.log(clc.yellow.bold("Starting on linux"))
         execSync(`REACT_APP_NAME=${chosenApp} yarn start`)
     }
 }

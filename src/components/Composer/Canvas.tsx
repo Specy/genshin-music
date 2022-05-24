@@ -1,3 +1,6 @@
+//TODO i hate this component with all my heart, the code needs to be improved, but this is the only way to make
+//it half performant, maybe i should get rid of react pixi and do it manually, that might improve garbage collection
+//since sprites are always removed and added to the stage everytime it scrolls
 import { Component, createRef } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
 import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
@@ -13,6 +16,7 @@ import type { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { isColumnVisible, RenderColumn } from 'components/Composer/RenderColumn';
 import { TimelineButton } from './TimelineButton';
+import { Timer } from 'types/GeneralTypes';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
@@ -61,18 +65,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     sliderOffset: number
     throttleScroll: number
     onSlider: boolean
+    cacheRecalculateDebounce: Timer
     dispose: () => void
     constructor(props: ComposerCanvasProps) {
         super(props)
-        const sizes = document.body.getBoundingClientRect()
-        this.sizes = sizes
+        this.sizes = document.body.getBoundingClientRect()
         const numberOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
-        let width = nearestEven(sizes.width * 0.84)
-        let height = nearestEven(sizes.height * 0.45)
-        if (window.screen.width < sizes.height) {
-            width = nearestEven(sizes.height * 0.84)
-            height = nearestEven(sizes.width * 0.45)
-        }
+        let width = nearestEven(this.sizes.width * 0.84)
+        let height = nearestEven(this.sizes.height * 0.45)
         if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
         this.state = {
             width: Math.floor(width),
@@ -80,7 +80,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             numberOfColumnsPerCanvas,
             column: {
                 width: nearestEven(width / numberOfColumnsPerCanvas),
-
                 height: height
             },
             timelineHeight: isMobile() ? 25 : 30,
@@ -106,32 +105,18 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.onSlider = false
         this.dispose = () => { }
         //TODO memory leak somewhere in this page
+        this.cacheRecalculateDebounce = 0
     }
-    resetPointerDown = () => {
-        this.stageSelected = false
-        this.sliderSelected = false
-        this.stagePreviousPositon = 0
-    }
+
     componentDidMount() {
         window.addEventListener("pointerup", this.resetPointerDown)
+        window.addEventListener("resize", this.recalculateCacheAndSizes)
         KeyboardProvider.listen(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
-        this.setState({
-            cache: this.getCache(
-                this.state.column.width,
-                this.state.height,
-                isMobile() ? 2 : 4,
-                this.state.timelineHeight
-            )
-        })
+        this.recalculateCacheAndSizes()
         this.dispose = observe(ThemeProvider.state.data, () => {
+            this.recalculateCacheAndSizes()
             this.setState({
-                cache: this.getCache(
-                    this.state.column.width,
-                    this.state.height,
-                    isMobile() ? 2 : 4,
-                    this.state.timelineHeight
-                ),
                 theme: {
                     timeline: {
                         hex: ThemeProvider.layer('primary', 0.1).toString(),
@@ -146,6 +131,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
 
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
+        window.removeEventListener("resize", this.recalculateCacheAndSizes)
+        if(this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
         KeyboardProvider.unlisten(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
         this.dispose()
@@ -153,25 +140,50 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.notesStageRef = null
         this.breakpointsStageRef = null
     }
-
+    resetPointerDown = () => {
+        this.stageSelected = false
+        this.sliderSelected = false
+        this.stagePreviousPositon = 0
+    }
+    recalculateCacheAndSizes = () => {
+        if(this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
+        this.cacheRecalculateDebounce = setTimeout(() => {
+            if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return
+            const sizes = document.body.getBoundingClientRect()
+            const { numberOfColumnsPerCanvas } = this.state
+            let width = nearestEven(sizes.width * 0.84)
+            let height = nearestEven(sizes.height * 0.45)
+            if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
+            let columnWidth = nearestEven(width / numberOfColumnsPerCanvas)
+            this.setState({
+                width: Math.floor(width),
+                height: Math.floor(height),
+                column: {
+                    width: columnWidth,
+                    height
+                },
+                cache : this.getCache(columnWidth, height, isMobile() ? 2 : 4, this.state.timelineHeight),
+            })
+        },50)
+    } 
     handleKeyboard = ({ code }: KeyboardEventData) => {
         if (code === 'ArrowRight') this.handleBreakpoints(1)
         else if (code === 'ArrowLeft') this.handleBreakpoints(-1)
     }
 
-    getCache(width: number, height: number, margin: number, timelineHeight: number) {
+    getCache(columnWidth: number, height: number, margin: number, timelineHeight: number) {
         const colors = {
-            l: ThemeProvider.get('primary'),
-            d: ThemeProvider.get('primary')
+            l: ThemeProvider.get('primary'), //light
+            d: ThemeProvider.get('primary') //dark
         }
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
         if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return null
         const newCache = new ComposerCache({
-            width: width,
-            height: height,
-            margin: margin,
-            timelineHeight: timelineHeight,
+            width: columnWidth,
+            height,
+            margin,
+            timelineHeight,
             app: this.notesStageRef.current.app,
             breakpointsApp: this.breakpointsStageRef.current.app,
             composerAccent: ThemeProvider.get('composer_accent').rotate(20).darken(0.5),
@@ -277,7 +289,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     autoDensity: true,
                     resolution: window.devicePixelRatio || 1.4
                 }}
-                key={this.state.width}
                 ref={this.notesStageRef}
             >
                 {cache && <Container
@@ -413,7 +424,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         }
                     </Memoized>
                 </TimelineButton>
-
             </div>
         </div>
     }

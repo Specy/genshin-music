@@ -2,7 +2,6 @@ import type { INSTRUMENTS } from "appConfig";
 import type Instrument from "lib/Instrument";
 
 export type InstrumentName = typeof INSTRUMENTS[number]
-
 export type ApproachingScore = {
     correct: number
     wrong: number
@@ -27,3 +26,4 @@ export type SearchedSongType = {
     file: string
     error: string
 }
+export type Timer = ReturnType<typeof setTimeout> | 0

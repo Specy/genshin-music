@@ -18,6 +18,7 @@
     "@types/webmidi": "^2.0.6",
     "audio-recorder-polyfill": "^0.4.1",
     "audiobuffer-to-wav": "^1.0.0",
+    "cli-color": "^2.0.2",
     "color": "^4.2.0",
     "is-mobile": "^3.0.0",
     "lodash.clonedeep": "^4.5.0",
