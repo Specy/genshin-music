@@ -45,7 +45,7 @@ async function execute() {
         } else {
             console.log(clc.italic("Building on Linux"))
             result = execSync(
-                `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_SW_VERSION=${SW_VERSION} yarn build`)
+                `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_APP_SW_VERSION=${SW_VERSION} yarn build`)
         }
         console.log(clc.green(`${app} build complete \n`))
         console.log(result.toString())
