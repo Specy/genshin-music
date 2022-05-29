@@ -80,9 +80,10 @@ function App({history}:any) {
 	}
 	const checkUpdate = useCallback(async () => {
 		await delay(1000)
+		const visited  = localStorage.getItem(APP_NAME + "_Visited")
 		if (checkedUpdate) return
 		const storedVersion = localStorage.getItem(APP_NAME + "_Version")
-		if (!hasVisited) {
+		if (!visited) {
 			return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
 		if (APP_VERSION !== storedVersion) {
@@ -90,13 +91,13 @@ function App({history}:any) {
 			localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
 		setCheckedUpdate(true)
-		if (!hasVisited) return
+		if (!visited) return
 		if (navigator.storage && navigator.storage.persist) {
 			let isPersisted = await navigator.storage.persisted()
 			if (!isPersisted) isPersisted = await navigator.storage.persist()
 			console.log(isPersisted ? "Storage Persisted" : "Storage Not persisted")
 		}
-	},[checkedUpdate, hasVisited])
+	},[checkedUpdate])
 
 	useEffect(() => {
 		window.addEventListener('resize', handleResize)

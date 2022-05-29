@@ -48,7 +48,7 @@ function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick
     }, [])
     const { approachRate, instrument } = data
     const animation = {
-        transition: `background-color ${fadeTime}ms  ${fadeTime === (APP_NAME === 'Genshin' ? 100 : 100) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
+        transition: `background-color ${fadeTime}ms  ${fadeTime === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
     const className = parseClass(note.status)
     const clickColor = INSTRUMENTS_DATA[instrument]?.clickColor
