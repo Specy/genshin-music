@@ -8,7 +8,7 @@ interface TimelineButtonProps {
 }
 
 export function TimelineButton({onClick, children, tooltip, style}:TimelineButtonProps) {
-    return <div
+    return <button
         className={`timeline-button ${hasTooltip(tooltip)}`}
         onClick={onClick}
         style={style}
@@ -19,5 +19,5 @@ export function TimelineButton({onClick, children, tooltip, style}:TimelineButto
                 {tooltip}
             </Tooltip>
         }
-    </div>
+    </button>
 }

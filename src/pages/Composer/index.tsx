@@ -236,7 +236,9 @@ class Composer extends Component<any, ComposerState>{
                 for (const song of parsed) {
                     const parsedSong = parseSong(song)
                     await this.addSong(parsedSong)
+                    LoggerStore.success(`Song added to the ${parsedSong?.isComposed ? "Composed" : "Recorded"} tab!`, 4000)
                 }
+                
             } catch (e) {
                 console.error(e)
                 LoggerStore.error("There was an error loading the song!")
@@ -683,12 +685,12 @@ class Composer extends Component<any, ComposerState>{
                         <div className="buttons-composer-wrapper">
                             <CanvasTool onClick={() => this.selectColumn(song.selected + 1)}>
                                 <Memoized>
-                                    <FaChevronRight />
+                                    <FaChevronRight size={16}/>
                                 </Memoized>
                             </CanvasTool>
                             <CanvasTool  onClick={() => this.selectColumn(song.selected - 1)}>
                                 <Memoized>
-                                    <FaChevronLeft />
+                                    <FaChevronLeft size={16}/>
                                 </Memoized>
                             </CanvasTool>
 
@@ -700,8 +702,8 @@ class Composer extends Component<any, ComposerState>{
                             }}>
                                 <Memoized>
                                     {this.state.isPlaying
-                                        ? <FaPause key='pause' />
-                                        : <FaPlay key='play' />
+                                        ? <FaPause key='pause' size={16}/>
+                                        : <FaPlay key='play' size={16}/>
                                     }
                                 </Memoized>
                             </CanvasTool>
@@ -732,12 +734,12 @@ class Composer extends Component<any, ComposerState>{
                                 tooltip='Add new page'
                             >
                                 <Memoized>
-                                    <FaPlus />
+                                    <FaPlus size={16}/>
                                 </Memoized>
                             </CanvasTool>
                             <CanvasTool onClick={this.toggleTools} tooltip='Open tools'>
                                 <Memoized>
-                                    <FaTools />
+                                    <FaTools size={16}/>
                                 </Memoized>
                             </CanvasTool>
                         </div>

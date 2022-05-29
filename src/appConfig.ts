@@ -3,13 +3,16 @@ const APP_VERSION = '2.6' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? ` 
-        - Bug fixes for main page loading songs
-        - Added drag and drop in the composer
+        Added tooltips and help buttons
+        Bug fixes for main page loading songs
+        Added drag and drop in the composer
+        Composer on pc now resizes with the page
     `.trim()
     : `    
-        - Added Light guitar (Sky, notes can't be held)
-        - Bug fixes for main page loading songs
-        - Added drag and drop in the composer
+        Added Light guitar (notes can't be held)
+        Bug fixes for main page loading songs
+        Added drag and drop in the composer
+        Composer on pc now resizes with the page
     `.trim()
 const LAYERS_INDEXES = [1,2,3,4] as const
 const EMPTY_LAYER = '0000'

@@ -223,7 +223,7 @@ body {
 	position: absolute;
 	margin-right: auto;
 	margin-left: auto;
-	top: 2rem;
+	top: 1rem;
 	display: flex;
 	flex-direction: column;
 	left: 0;
@@ -238,24 +238,24 @@ body {
 	z-index: 1000;
 	word-break: break-word;
 	transition: 0.3s all;
-	animation: prompt-show 0.2s linear;
+	animation: prompt-show 0.2s;
 }
 
 @keyframes prompt-show {
 	from {
 		opacity: 0;
-		top: 1.5rem;
+		transform: translateY(-20%);
 	}
 
 	to {
 		opacity: 1;
-		top: 2rem;
+		transform: translateY(0%);
 	}
 }
 
 .floating-prompt-hidden {
 	opacity: 0;
-	top: 1.5rem;
+	transform: translateY(-20%);
 }
 
 .prompt-button {
@@ -486,7 +486,8 @@ a {
 	flex: 1;
 }
 @media (hover:hover) {
-	.has-tooltip:hover .tooltip {
+
+	.has-tooltip:hover:not(:focus) .tooltip {
 		display: block;
 		animation: fadeIn 0.2s;
 		animation-delay: 0.5s;

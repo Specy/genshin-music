@@ -9,12 +9,12 @@ interface CanvasToolProps {
 
 
 export function CanvasTool({ children, tooltip, onClick }: CanvasToolProps) {
-    return <div className={`tool ${hasTooltip(tooltip)}`} onClick={onClick}>
+    return <button className={`tool ${hasTooltip(tooltip)}`} onClick={onClick}>
         {children}
         {tooltip &&
             <Tooltip>
                 {tooltip}
             </Tooltip>
         }
-    </div>
+    </button>
 }

@@ -329,7 +329,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     }}
                 >
                     <Memoized>
-                        <FaStepBackward />
+                        <FaStepBackward size={16}/>
                     </Memoized>
                 </TimelineButton>
                 <TimelineButton
@@ -341,7 +341,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     }}
                 >
                     <Memoized>
-                        <FaStepForward />
+                        <FaStepForward size={16}/>
                     </Memoized>
                 </TimelineButton>
 
@@ -419,8 +419,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 >
                     <Memoized>
                         {isBreakpointSelected
-                            ? <FaMinusCircle key='minus' />
-                            : <FaPlusCircle key='plus' />
+                            ? <FaMinusCircle key='minus' size={16}/>
+                            : <FaPlusCircle key='plus' size={16} />
                         }
                     </Memoized>
                 </TimelineButton>

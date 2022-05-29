@@ -16,7 +16,23 @@ import { AppBackground } from "components/AppBackground";
 import { MIDIProviderWrapper } from "components/Providers/MIDIProviderWrapper";
 import { AudioProviderWrapper } from "components/Providers/AudioProviderWrapper";
 import { KeyboardProviderWrapper } from "components/Providers/KeyboardProviderWrapper";
+import { useEffect } from "react";
 export function Router() {
+	useEffect(() => {
+		try{
+			if ('virtualKeyboard' in navigator) {
+				//@ts-ignore
+				navigator.virtualKeyboard.overlaysContent = true;
+				console.log("virtual keyboard supported")
+			}else{
+				console.log("virtual keyboard not supported")
+			}
+		}catch(e){
+			console.error(e)
+		}
+	},[])
+
+
 	return <HashRouter>
 		<ThemeProviderWrapper>
 			<KeyboardProviderWrapper>
