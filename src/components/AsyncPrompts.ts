@@ -1,5 +1,5 @@
 import LoggerStore from "stores/LoggerStore"
-import { ThemeStore } from 'stores/ThemeStore'
+import { ThemeProvider } from 'stores/ThemeStore'
 import isMobile from 'is-mobile'
 async function asyncPrompt(question: string):Promise<string | null> {
     return new Promise(resolve => {
@@ -21,8 +21,8 @@ async function asyncPrompt(question: string):Promise<string | null> {
         ok.innerText = "Ok"
         cancel.innerText = "Cancel"
         text.innerText = question
-        cancel.style.backgroundColor = ThemeStore.layer('primary', 0.1).toString()
-        ok.style.backgroundColor = ThemeStore.layer('primary', 0.1).toString()
+        cancel.style.backgroundColor = ThemeProvider.layer('primary', 0.1).toString()
+        ok.style.backgroundColor = ThemeProvider.layer('primary', 0.1).toString()
 
         row.append(cancel, ok)
         container.append(text, input, row)

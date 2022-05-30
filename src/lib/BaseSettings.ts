@@ -1,6 +1,6 @@
 import { isMobile } from "is-mobile"
 import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
-import { MIDINote, MIDIShortcut } from "./Utils/Tools"
+import { MIDINote, MIDIShortcut } from "./Tools"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
 
 export type ComposerSettingsDataType = {
@@ -25,7 +25,7 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 35,
+        settingVersion: APP_NAME + 36,
     },
     data: {
         layer1: {
@@ -177,7 +177,7 @@ export type MainPageSettingsType = {
 }
 export const MainPageSettings: MainPageSettingsType = {
     other: {
-        settingVersion: APP_NAME + 32
+        settingVersion: APP_NAME + 36
     },
     data: {
         instrument: {

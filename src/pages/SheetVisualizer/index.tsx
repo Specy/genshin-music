@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
 import { DB } from 'Database'
 import { APP_NAME } from 'appConfig'
-import { getNoteText, parseSong } from 'lib/Utils/Tools'
+import { getNoteText, parseSong } from 'lib/Tools'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
-import { ThemeStore } from 'stores/ThemeStore'
+import { ThemeProvider } from 'stores/ThemeStore'
 import { SerializedSongType } from 'types/SongTypes'
-import { Song } from 'lib/Utils/Song'
-import { RecordedNote } from 'lib/Utils/SongClasses'
+import { Song } from 'lib/Song'
+import { RecordedNote } from 'lib/SongClasses'
 import { AppButton } from 'components/AppButton'
 import LoggerStore from 'stores/LoggerStore'
 
@@ -90,7 +90,7 @@ export default function SheetVisualizer() {
         Analytics.songEvent({type:'visualize'})
     }
 
-    return <div className='default-page'>
+    return <div className='default-page' style={{overflowY: 'scroll'}}>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SimpleMenu className='noprint' />
             <div>
@@ -98,6 +98,7 @@ export default function SheetVisualizer() {
                     songs={songs}
                     className='displayer-songs-wrapper noprint'
                     style={{ marginTop: '0' }}
+                    scrollerStyle={{overflowY: 'auto'}}
                     baseType='recorded'
                     SongComponent={SongRow}
                     componentProps={{
@@ -190,7 +191,7 @@ function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
                     return <div 
                             className={exists ? 'frame-note-s' : 'frame-note-ns'} 
                             key={i}
-                            style={!exists ? {backgroundColor: ThemeStore.layer('primary',0.2).toString()} : {}}
+                            style={!exists ? {backgroundColor: ThemeProvider.layer('primary',0.2).toString()} : {}}
                         >
                         {(exists && hasText) 
                             ? getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === 'Genshin' ? 21 : 15) 

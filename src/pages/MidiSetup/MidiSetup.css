@@ -8,6 +8,17 @@
     border-radius: 0.2rem;
     margin: 0.5rem;
 }
+.midi-inputs{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.midi-inputs button{
+    width: 100%;
+    background-color: var(--primary);
+    color: var(--primary-text);
+}
 .midi-setup-content{
     display: flex;
     flex-direction: column;

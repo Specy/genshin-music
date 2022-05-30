@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { ThemeKeys, ThemeStore } from "stores/ThemeStore";
-import { capitalize } from "lib/Utils/Tools";
+import { ThemeKeys, ThemeProvider } from "stores/ThemeStore";
+import { capitalize } from "lib/Tools";
 import Color from "color";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { BASE_THEME_CONFIG } from "appConfig";
@@ -101,8 +101,8 @@ export function ThemePropriety({ name, value, onChange, isModified, setSelectedP
                     onClick={() => setSelectedProp(name)}
                     className='color-preview'
                     style={{
-                        backgroundColor: ThemeStore.get(name).toString(),
-                        color: ThemeStore.getText(name).toString()
+                        backgroundColor: ThemeProvider.get(name).toString(),
+                        color: ThemeProvider.getText(name).toString()
                     }}
                 >
                     Text

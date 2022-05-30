@@ -2,7 +2,6 @@ import type { INSTRUMENTS } from "appConfig";
 import type Instrument from "lib/Instrument";
 
 export type InstrumentName = typeof INSTRUMENTS[number]
-
 export type ApproachingScore = {
     correct: number
     wrong: number
@@ -11,6 +10,7 @@ export type ApproachingScore = {
 }
 export type LayerType = 1 | 2 | 3 | 4
 export type LayerIndex = 0 | 1 | 2 | 3
+export type InstrumentNotesLayout = 8 | 15 | 21
 export type Pages = 'Composer' | 'Player' | 'Donate' | 'ErrorPage' | 'Help' | 'Main' | 'MidiSetup' | 'SheetVisualizer'
     | 'Theme' | '404' | 'Changelog'
 export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text'
@@ -26,3 +26,4 @@ export type SearchedSongType = {
     file: string
     error: string
 }
+export type Timer = ReturnType<typeof setTimeout> | 0

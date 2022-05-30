@@ -20,20 +20,19 @@
 	--green: #358a55;
 	--orange: #e07f2a;
 }
+
 @font-face {
 	font-family: Bonobo;
 	src: url("../assets/font/BonoboBold.ttf");
 }
-@font-face {
-	font-family: Cronos;
-	src: url("../assets/font/Cronos.otf");
-}
+
 .loading {
 	color: var(--background-text);
 	font-size: 2rem;
 	grid-row: 1;
 	grid-column: 2/-1;
 }
+
 html,
 body {
 	width: 100%;
@@ -44,6 +43,7 @@ body {
 	overscroll-behavior-y: contain;
 	touch-action: pan-x pan-y;
 }
+
 body {
 	position: absolute;
 	-webkit-text-size-adjust: none;
@@ -62,6 +62,7 @@ body {
 	width: 10rem;
 	display: inline-block;
 }
+
 .keys-table :nth-child(2) {
 	width: 100%;
 }
@@ -69,6 +70,7 @@ body {
 input {
 	accent-color: var(--accent);
 }
+
 *:not(input) {
 	-webkit-user-select: none;
 	-khtml-user-select: none;
@@ -80,9 +82,11 @@ input {
 	outline: none;
 	-webkit-tap-highlight-color: transparent;
 }
+
 body {
 	background-color: var(--background);
 }
+
 .disabled {
 	filter: brightness(0.7);
 }
@@ -93,12 +97,14 @@ body {
 	align-items: center;
 	flex: 1;
 }
+
 #root {
 	height: 100%;
 	width: 100%;
 	display: flex;
 	justify-content: center;
 }
+
 .app,
 .app-content {
 	display: flex;
@@ -109,9 +115,11 @@ body {
 	height: 100%;
 	overflow: hidden;
 }
+
 .app-content {
 	z-index: 2;
 }
+
 .app-button {
 	background-color: var(--primary);
 	color: var(--primary-text);
@@ -123,28 +131,35 @@ body {
 	min-width: 5rem;
 	transition: background-color 0.2s, color 0.2s;
 }
-.link{
+
+.link {
 	color: var(--background-text);
 }
-.app-button::placeholder{
+
+.app-button::placeholder {
 	color: var(--primary-text);
 }
+
 .app-button:hover {
 	filter: brightness(1.1);
 }
+
 .app-button.active {
 	background-color: var(--accent) !important;
 	color: var(--accent-text) !important;
 }
-.app-button:disabled{
+
+.app-button:disabled {
 	filter: brightness(0.8);
 	cursor: not-allowed;
 }
+
 .selected {
 	transition: all 0.3s;
 	background-color: var(--accent);
 	color: var(--accent-text);
 }
+
 .right-panel {
 	flex: 1;
 	height: 100%;
@@ -153,9 +168,11 @@ body {
 	align-items: center;
 	justify-content: space-between;
 }
+
 .hidden {
 	display: none !important;
 }
+
 .slider-select {
 	width: 3rem;
 	font-size: 0.8rem;
@@ -172,10 +189,12 @@ body {
 	color: var(--primary-text);
 	margin-left: 0.5rem;
 }
+
 .hidden-opacity {
 	opacity: 0;
 	pointer-events: none;
 }
+
 .slider-wrapper {
 	width: 100%;
 	display: flex;
@@ -189,6 +208,7 @@ body {
 .slider-wrapper button {
 	margin: 0;
 }
+
 .upper-right {
 	display: flex;
 	width: 100%;
@@ -198,11 +218,12 @@ body {
 .red {
 	background-color: red;
 }
+
 .floating-prompt {
 	position: absolute;
 	margin-right: auto;
 	margin-left: auto;
-	top: 2rem;
+	top: 1rem;
 	display: flex;
 	flex-direction: column;
 	left: 0;
@@ -217,22 +238,26 @@ body {
 	z-index: 1000;
 	word-break: break-word;
 	transition: 0.3s all;
-	animation: prompt-show 0.2s linear;
+	animation: prompt-show 0.2s;
 }
+
 @keyframes prompt-show {
 	from {
 		opacity: 0;
-		top: 1.5rem;
+		transform: translateY(-20%);
 	}
+
 	to {
 		opacity: 1;
-		top: 2rem;
+		transform: translateY(0%);
 	}
 }
+
 .floating-prompt-hidden {
 	opacity: 0;
-	top: 1.5rem;
+	transform: translateY(-20%);
 }
+
 .prompt-button {
 	background-color: var(--primary);
 	color: var(--primary-text);
@@ -241,12 +266,14 @@ body {
 	border-radius: 0.3rem;
 	cursor: pointer;
 }
+
 .prompt-input {
 	margin-top: 0.5rem;
 	border-radius: 0.3rem;
 	border: none;
 	padding: 0.3rem;
 }
+
 .prompt-overlay {
 	width: 100%;
 	height: 100%;
@@ -258,20 +285,25 @@ body {
 	transition: all 0.2s;
 	animation: overlay-show 0.2s linear;
 }
+
 @keyframes overlay-show {
 	0% {
 		opacity: 0.5;
 	}
+
 	to {
 		opacity: 1;
 	}
 }
+
 .prompt-overlay-hidden {
 	opacity: 0;
 }
+
 a {
 	text-decoration: none;
 }
+
 .welcome-message {
 	position: absolute;
 	width: 60vw;
@@ -287,19 +319,23 @@ a {
 	display: flex;
 	flex-direction: column;
 }
+
 .welcome-overflow {
 	overflow-y: auto;
 }
+
 .welcome-message-title {
 	font-size: 1.5rem;
 	text-align: center;
 	margin-bottom: 2rem;
 }
+
 .welcome-message-button-wrapper {
 	display: flex;
 	margin-top: auto;
 	justify-content: flex-end;
 }
+
 .welcome-message-button {
 	border: none;
 	padding: 0.4rem 1rem;
@@ -309,10 +345,12 @@ a {
 	margin-top: 0.5rem;
 	cursor: pointer;
 }
+
 .red-text {
 	color: rgb(255, 51, 74);
 	display: inline-block;
 }
+
 .donate-button {
 	margin-top: auto;
 	width: 100%;
@@ -325,9 +363,11 @@ a {
 	font-size: 1.2rem;
 	cursor: pointer;
 }
+
 .drag-n-drop {
-	background-color: #4f6f6c;
-	color: white;
+	background-color: var(--accent);
+	filter: contrast(0.7) brightness(0.7);
+	color: var(--accent-text);
 	width: 100vw;
 	height: 100vh;
 	position: absolute;
@@ -336,6 +376,22 @@ a {
 	align-items: center;
 	display: flex;
 	font-size: 1.5rem;
+	animation: infinite drop-pulse 3s;
+}
+
+@keyframes drop-pulse {
+	0% {
+		filter: contrast(0.7) brightness(0.7);
+	}
+
+	25% {
+		filter: contrast(0.7) brightness(0.9);
+
+	}
+
+	50% {
+		filter: contrast(0.7) brightness(0.7);
+	}
 }
 
 .prompt-row {
@@ -345,13 +401,15 @@ a {
 	justify-content: space-between;
 }
 
-.settings-row-wrap{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin: 0.4rem 0;
-    margin-bottom: 0.7rem;
+.settings-row-wrap {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.2rem;
+	justify-content: space-between;
+	margin: 0.4rem 0;
+	margin-bottom: 0.7rem;
 }
+
 /* width */
 ::-webkit-scrollbar {
 	width: 5px;
@@ -389,18 +447,22 @@ a {
 	font-weight: bold;
 	border-radius: 0.4rem;
 }
+
 .approaching-accuracy table {
 	font-size: 0.8rem;
 	border-collapse: collapse;
 }
+
 .bg-image {
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
 }
+
 .sc-2 {
 	padding-right: 0.5rem;
 }
+
 .sc-1 {
 	padding-left: 0.5rem;
 	min-width: 3.5rem;
@@ -416,20 +478,154 @@ a {
 	flex-direction: column;
 	color: var(--background-text);
 }
+
 .default-content {
 	width: 100%;
 	display: flex;
 	flex-direction: column;
 	flex: 1;
 }
+@media (hover:hover) {
+
+	.has-tooltip:hover:not(:focus) .tooltip {
+		display: block;
+		animation: fadeIn 0.2s;
+		animation-delay: 0.5s;
+		animation-fill-mode: forwards;
+	}
+}
+
+
+.tooltip {
+	display: none;
+	opacity: 0;
+	position: absolute;
+	background-color: var(--secondary);
+	color: var(--secondary-text);
+	padding: 0.3rem 0.6rem;
+	border-radius: 0.2rem;
+	max-width: 10rem;
+	width: fit-content;
+	z-index: 20;
+	box-shadow: 0px 1px 4px 2px #28283387;
+	font-size: 0.7rem;
+	pointer-events: none;
+	z-index: 2;
+
+}
+
+.tooltip-bottom {
+	transform: translateY(125%);
+}
+
+.tooltip-top {
+	transform: translateY(-125%);
+}
+
+.tooltip-left {
+	transform: translateX(-50%);
+}
+
+.tooltip-right {
+	transform: translateY(-50%);
+}
+
+.tooltip::before {
+	content: "";
+	transform: translateY(-50%) rotate(45deg);
+	position: absolute;
+	width: 0.5rem;
+	height: 0.5rem;
+	background-color: var(--secondary);
+}
+
+.tooltip-bottom::before {
+	right: calc(50% - 0.25rem);
+	top: 0;
+	border-top-right-radius: 2px;
+}
+
+.tooltip-top::before {
+	bottom: 0;
+	right: calc(50% - 0.25rem);
+	border-bottom-right-radius: 2px;
+	transform: translateY(50%) rotate(45deg);
+}
+
+.tooltip-left::before {
+	right: -0.25rem;
+	top: 50%;
+	border-bottom-left-radius: 2px;
+}
+
+.tooltip-right::before {
+	left: -0.25rem;
+	top: 50%;
+	border-bottom-right-radius: 2px;
+	transform: translateY(50%) rotate(45deg);
+}
+
+
+.help-tooltip ul{
+	margin: 0.2rem;
+	padding-left: 0.6rem;
+}
+.help-tooltip li{
+	margin-bottom: 0.2rem;
+}
+.help-tooltip-button{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: var(--primary);
+	color: var(--primary-text);
+	padding: 0;
+	width: 26px;
+	height: 26px;
+	cursor: pointer;
+	border-radius: 50%;
+	border: 0;
+	transition: all 0.2s;
+}
+.help-tooltip-button:hover{
+	transform: rotate(30deg);
+	filter: brightness(1.1);
+}
+.help-tooltip-content{
+	position: absolute;
+	transform: translateY(0.4rem);
+	display: none;
+	box-shadow: 0px 1px 4px 2px #28283387;
+	border: solid 2px var(--secondary);
+	padding: 0.3rem 0.6rem;
+	border-radius: 0.4rem;
+	font-size: 0.8rem;
+	z-index: 2;
+	pointer-events: none;
+
+}
+.help-tooltip-button:focus + .help-tooltip-content{
+	display: flex;
+	background-color: var(--primary);
+	color: var(--primary-text);
+	animation: fadeIn 0.3s;
+	animation-fill-mode: forwards;
+}
+.help-tooltip-button:focus{
+	background-color: var(--accent);
+	color: var(--accent-text);
+}
+
 @media only screen and (max-width: 900px) {
 	.floating-prompt {
 		width: 45vw;
 		padding: 0.5rem;
 	}
+
 	.slider-wrapper {
 		margin-left: 0;
 	}
+
 	.default-page {
 		padding: 1rem 1.4rem 1rem 5rem;
 	}

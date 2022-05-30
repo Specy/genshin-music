@@ -2,8 +2,8 @@ import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
 import GenshinNoteBorder from 'components/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
-import { ThemeStore } from "stores/ThemeStore"
-import { NoteImages } from "types/Keyboard"
+import { ThemeProvider } from "stores/ThemeStore"
+import { NoteImage } from "types/Keyboard"
 import SvgNotes from "./SvgNotes"
 
 
@@ -13,12 +13,12 @@ interface BaseNoteProps{
     }, //TODO do this
     noteText: string,
     handleClick: (data:any) => void,
-    noteImage: NoteImages
+    noteImage: NoteImage
 }
 export default function BaseNote({ data, noteText = 'A', handleClick, noteImage }:BaseNoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
-        const dispose = observe(ThemeStore.state.data, () => {
+        const dispose = observe(ThemeProvider.state.data, () => {
             setTextColor(getTextColor())
         })
         return dispose
@@ -66,7 +66,7 @@ function parseBorderColor(status:string) {
 }
 
 function getTextColor() {
-    const noteBg = ThemeStore.get('note_background')
+    const noteBg = ThemeProvider.get('note_background')
     if (APP_NAME === 'Genshin') {
         if (noteBg.luminosity() > 0.65) {
             return BASE_THEME_CONFIG.text.note

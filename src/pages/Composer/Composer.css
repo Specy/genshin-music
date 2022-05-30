@@ -61,7 +61,7 @@ select {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0.3rem;
+    border: none;
     border-radius: 0.3rem;
     color: var(--icon-color);
     background-color: var(--primary);
@@ -99,8 +99,8 @@ select{
     height: 100%;
     width: 2rem;
     margin: 0.2rem;
-    padding: 0 0.5rem;
     background-color: var(--primary);
+    border: none;
     color: var(--icon-color);
     display: flex;
     justify-content: center;
@@ -340,23 +340,14 @@ canvas{
     color: var(--primary-text);
     max-width: 60vw;
     min-width: 45vw;
-    z-index: 3;
+    z-index: 20;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     overflow:auto;
     animation: fadeIn 0.2s;
 }
-@keyframes fadeIn{
-    from{
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to{
-        opacity: 1;
-        transform: scale(1);
-    }
-}
+
     
 .floating-midi *{
     font-size: 0.9rem;

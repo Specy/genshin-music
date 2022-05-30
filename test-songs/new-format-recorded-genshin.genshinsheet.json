@@ -1,1 +1,43 @@
-[{"name":"new-format-genshin","version":1,"notes":[[0,100],[1,426],[2,766],[3,1080],[4,1410],[5,1740],[6,2070]],"bpm":220,"pitch":"C","data":{"isComposed":false,"isComposedVersion":false,"appName":"Genshin"}}]
+[
+    {
+        "name": "new-format-genshin",
+        "version": 1,
+        "notes": [
+            [
+                0,
+                100
+            ],
+            [
+                1,
+                426
+            ],
+            [
+                2,
+                766
+            ],
+            [
+                3,
+                1080
+            ],
+            [
+                4,
+                1410
+            ],
+            [
+                5,
+                1740
+            ],
+            [
+                6,
+                2070
+            ]
+        ],
+        "bpm": 220,
+        "pitch": "C",
+        "data": {
+            "isComposed": false,
+            "isComposedVersion": false,
+            "appName": "Genshin"
+        }
+    }
+]

@@ -20,7 +20,6 @@ export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuP
             <MenuItem action={HomeStore.open}>
                 <FaHome className="icon" />
             </MenuItem>
-
         </div>
     </div>
 }

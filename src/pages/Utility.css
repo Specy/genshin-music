@@ -13,3 +13,13 @@
 	display: flex;
 	flex-direction: column;
 }
+@keyframes fadeIn{
+    from{
+        opacity: 0;
+        transform: scale(0.9) inherit;
+    }
+    to{
+        opacity: 1;
+        transform: scale(1) inherit;
+    }
+}

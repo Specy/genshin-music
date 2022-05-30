@@ -1,5 +1,6 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT } from "appConfig"
+import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, PitchesType } from "appConfig"
 import { InstrumentName, NoteStatus } from "types/GeneralTypes"
+import { getPitchChanger } from "./Tools"
 
 type Layouts = {
     keyboard: string[]
@@ -19,6 +20,9 @@ export default class Instrument {
     isDeleted: boolean = false
     isLoaded: boolean = false
 
+    get endNode(){
+        return this.volumeNode
+    }
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
         this.name = name
         if (!INSTRUMENTS.includes(this.name as any)) this.name = INSTRUMENTS[0]
@@ -52,13 +56,14 @@ export default class Instrument {
         if(this.volumeNode) this.volumeNode.gain.value = newVolume
     }
 
-    play = (note: number, pitch: number) => {
+    play = (note: number, pitch: PitchesType) => {
         if (this.isDeleted || !this.volumeNode) return
+        const pitchChanger = getPitchChanger(pitch)
         const player = AUDIO_CONTEXT.createBufferSource()
         player.buffer = this.buffers[note]
         player.connect(this.volumeNode)
         //player.detune.value = pitch * 100, pitch should be 0 indexed from C
-        player.playbackRate.value = pitch
+        player.playbackRate.value = pitchChanger
         player.start(0)
         function handleEnd(){
             player.stop()

@@ -183,9 +183,8 @@ export class ThemeStoreClass {
     }
 }
 
-const ThemeStore = new ThemeStoreClass(defaultThemes[0])
+export const ThemeProvider = new ThemeStoreClass(defaultThemes[0])
 
 export {
-    ThemeStore,
     defaultThemes
 }

@@ -1,1 +1,101 @@
-[{"name":"new-format-recorded","version":1,"notes":[[0,100],[1,420],[2,676],[3,968],[4,1212],[5,1526],[6,1832],[7,2124],[8,2425],[9,2668]],"bpm":220,"pitch":"C","data":{"isComposed":false,"isComposedVersion":false,"appName":"Sky"},"isComposed":false,"pitchLevel":0,"songNotes":[{"time":100,"key":"1Key0"},{"time":420,"key":"1Key1"},{"time":676,"key":"1Key2"},{"time":968,"key":"1Key3"},{"time":1212,"key":"1Key4"},{"time":1526,"key":"1Key5"},{"time":1832,"key":"1Key6"},{"time":2124,"key":"1Key7"},{"time":2425,"key":"1Key8"},{"time":2668,"key":"1Key9"}],"bitsPerPage":16,"isEncrypted":false}]
+[
+    {
+        "name": "new-format-recorded",
+        "version": 1,
+        "notes": [
+            [
+                0,
+                100
+            ],
+            [
+                1,
+                420
+            ],
+            [
+                2,
+                676
+            ],
+            [
+                3,
+                968
+            ],
+            [
+                4,
+                1212
+            ],
+            [
+                5,
+                1526
+            ],
+            [
+                6,
+                1832
+            ],
+            [
+                7,
+                2124
+            ],
+            [
+                8,
+                2425
+            ],
+            [
+                9,
+                2668
+            ]
+        ],
+        "bpm": 220,
+        "pitch": "C",
+        "data": {
+            "isComposed": false,
+            "isComposedVersion": false,
+            "appName": "Sky"
+        },
+        "isComposed": false,
+        "pitchLevel": 0,
+        "songNotes": [
+            {
+                "time": 100,
+                "key": "1Key0"
+            },
+            {
+                "time": 420,
+                "key": "1Key1"
+            },
+            {
+                "time": 676,
+                "key": "1Key2"
+            },
+            {
+                "time": 968,
+                "key": "1Key3"
+            },
+            {
+                "time": 1212,
+                "key": "1Key4"
+            },
+            {
+                "time": 1526,
+                "key": "1Key5"
+            },
+            {
+                "time": 1832,
+                "key": "1Key6"
+            },
+            {
+                "time": 2124,
+                "key": "1Key7"
+            },
+            {
+                "time": 2425,
+                "key": "1Key8"
+            },
+            {
+                "time": 2668,
+                "key": "1Key9"
+            }
+        ],
+        "bitsPerPage": 16,
+        "isEncrypted": false
+    }
+]

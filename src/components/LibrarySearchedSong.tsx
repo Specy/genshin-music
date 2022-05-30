@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { parseSong } from "lib/Utils/Tools"
+import { parseSong } from "lib/Tools"
 import LoggerStore from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
-import { ComposedSong } from 'lib/Utils/ComposedSong';
-import type {  Song } from 'lib/Utils/Song';
+import { ComposedSong } from 'lib/ComposedSong';
+import type {  Song } from 'lib/Song';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 
 interface SearchedSongProps{

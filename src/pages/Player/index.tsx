@@ -1,44 +1,44 @@
 import { Component } from 'react';
-import Keyboard from "./Keyboard"
-import Menu from "./Components/Menu"
+import Keyboard from "components/Player/Keyboard"
+import Menu from "components/Player/Menu"
 import { DB } from 'Database';
 import { SongStore } from 'stores/SongStore'
-import { parseSong, getPitchChanger } from "lib/Utils/Tools"
-import { SerializedSong, Song } from 'lib/Utils/Song';
-import { ComposedSong, SerializedComposedSong } from 'lib/Utils/ComposedSong';
-import { Recording } from 'lib/Utils/SongClasses';
+import { parseSong } from "lib/Tools"
+import { Song } from 'lib/Song';
+import { ComposedSong } from 'lib/ComposedSong';
+import { Recording } from 'lib/SongClasses';
 import { MainPageSettings, MainPageSettingsDataType, MainPageSettingsType } from "lib/BaseSettings"
 import Instrument, { NoteData } from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { APP_NAME, AUDIO_CONTEXT, PitchesType } from "appConfig"
+import { APP_NAME, PitchesType } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
+import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
+import { AudioProvider } from 'lib/Providers/AudioProvider';
+import { BodyDropper, DroppedFile } from 'components/BodyDropper';
+import { SerializedSongType } from 'types/SongTypes';
+import { hasTooltip, Tooltip } from 'components/Tooltip';
 
 
-interface PlayerState{
-	songs: (ComposedSong | Song)[]
+interface PlayerState {
+	songs: SerializedSongType[]
 	settings: MainPageSettingsDataType
 	instrument: Instrument
-	isDragging: boolean
 	isLoadingInstrument: boolean
 	isRecordingAudio: boolean
 	isRecording: boolean
 	hasSong: boolean
 }
-class Player extends Component<any,PlayerState>{
+
+class Player extends Component<any, PlayerState>{
 	state: PlayerState
 	recording: Recording
 	mounted: boolean
-	reverbNode: ConvolverNode | null
-	audioContext: AudioContext | null
-	reverbVolumeNode: GainNode | null
-	recorder: AudioRecorder | null
-
 	constructor(props: any) {
 		super(props)
 		this.recording = new Recording()
@@ -50,129 +50,58 @@ class Player extends Component<any,PlayerState>{
 			isRecordingAudio: false,
 			songs: [],
 			settings: settings,
-			isDragging: false,
 			hasSong: false
 		}
 		this.mounted = false
-		this.reverbNode = null
-		this.reverbVolumeNode = null
-		this.audioContext = AUDIO_CONTEXT
-		this.recorder = new AudioRecorder()
 	}
 
 	init = async () => {
 		const { settings } = this.state
 		await this.loadInstrument(settings.instrument.value)
-		await this.loadReverb()
-		this.toggleReverbNodes(settings.caveMode.value)
+		AudioProvider.setReverb(settings.caveMode.value)
 	}
 	componentDidMount() {
-		document.body.addEventListener('dragenter', this.handleDrag)
-		document.body.addEventListener('dragleave', this.resetDrag)
-		document.body.addEventListener('dragover', this.handleDragOver)
-		document.body.addEventListener('drop', this.handleDrop)
-		window.addEventListener('keydown', this.handleKeyboard)
 		this.mounted = true
 		this.syncSongs()
 		this.init()
 	}
 	componentWillUnmount() {
-		document.body.removeEventListener('dragenter', this.handleDrag)
-		document.body.removeEventListener('dragleave', this.resetDrag)
-		document.body.removeEventListener('dragover', this.handleDragOver)
-		document.body.removeEventListener('drop', this.handleDrop)
-		window.removeEventListener('keydown', this.handleKeyboard)
+		KeyboardProvider.unregisterById('player')
 		SongStore.reset()
+		AudioProvider.clear()
 		this.state.instrument.delete()
-		this.reverbNode?.disconnect()
-		this.reverbVolumeNode?.disconnect()
-		this.recorder?.delete()
 		this.mounted = false
-		this.audioContext = null
-		this.recorder = null
-		this.reverbNode = null
-		this.reverbVolumeNode = null
 	}
-
+	registerKeyboardListeners = () => {
+		KeyboardProvider.registerLetter('C', () => this.toggleRecord(), { shift: true, id: "player" })
+	}
 	componentDidCatch() {
 		LoggerStore.warn("There was an error with the song! Restoring default...")
 		SongStore.reset()
-	}
-
-	handleKeyboard = async (event: KeyboardEvent) => {
-		const { hasSong } = this.state
-		if (event.repeat) return
-		if (document.activeElement?.tagName === "INPUT") return
-		if (event.shiftKey) {
-			switch (event.code) {
-				case "KeyC": {
-					if (!hasSong) {
-						this.toggleRecord()
-						event.preventDefault()
-					}
-					break;
-				}
-				default: break;
-			}
-		}
-	}
-
-	resetDrag = () => {
-		this.setState({ isDragging: false })
-	}
-
-	handleDragOver = (e: DragEvent) => {
-		e.preventDefault()
-		this.setState({ isDragging: true })
-	}
-
-	handleDrag = (e: DragEvent) => {
-		e.preventDefault()
-		this.setState({ isDragging: true })
 	}
 
 	setHasSong = (data: boolean) => {
 		this.setState({ hasSong: data })
 	}
 
-	handleDrop = async (e: DragEvent) => {
-		this.resetDrag()
-		e.preventDefault()
-		try {
-			const files = await Promise.all(Array.from(e.dataTransfer?.files || []).map(file => file.text()))
-			for (let i = 0; i < files.length; i++) {
-				const songs = JSON.parse(files[i])
-				const parsed = Array.isArray(songs) ? songs : [songs]
-				for (let j = 0; j < parsed.length; j++) {
-					await this.addSong(parseSong(parsed[j]))
+	handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
+		for (const file of files) {
+			try {
+				const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
+				for (const song of parsed) {
+					await this.addSong(parseSong(song))
 				}
+			} catch (e) {
+				console.error(e)
+				LoggerStore.error('Error while parsing song!')
 			}
-		} catch (e) {
-			console.error(e)
-			LoggerStore.error(
-				`Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
-				8000
-			)
-		}
-
-	}
-
-	toggleReverbNodes = (override: boolean) => {
-		if (!this.mounted) return
-		const { instrument } = this.state
-		if(!this.audioContext) return
-		if (override) {
-			if (!this.reverbNode) return console.log("Couldn't connect to reverb")
-			instrument.disconnect()
-			instrument.connect(this.reverbNode)
-		} else {
-			instrument.disconnect()
-			instrument.connect(this.audioContext.destination)
 		}
 	}
-
+	dropError = () => {
+		LoggerStore.error("There was an error importing the file! Was it the correct format?")
+	}
 	changeVolume = (obj: SettingVolumeUpdate) => {
-		const {settings} = this.state
+		const { settings } = this.state
 		if (obj.key === "instrument") {
 			settings.instrument = { ...settings.instrument, volume: obj.value }
 			this.state.instrument.changeVolume(obj.value)
@@ -181,59 +110,37 @@ class Player extends Component<any,PlayerState>{
 	}
 
 	getSettings = () => {
-        const json = localStorage.getItem(APP_NAME + "_Player_Settings")
-        try {
-            const storedSettings = JSON.parse(json || 'null') as MainPageSettingsType | null
-            if (storedSettings) {
-                if (storedSettings.other?.settingVersion !== MainPageSettings.other.settingVersion) {
-                    this.updateSettings(MainPageSettings.data)
-                    return MainPageSettings.data
-                }
-                return storedSettings.data
-            }
-            return MainPageSettings.data
-        } catch (e) {
-            return MainPageSettings.data
-        }
+		const json = localStorage.getItem(APP_NAME + "_Player_Settings")
+		try {
+			const storedSettings = JSON.parse(json || 'null') as MainPageSettingsType | null
+			if (storedSettings) {
+				if (storedSettings.other?.settingVersion !== MainPageSettings.other.settingVersion) {
+					this.updateSettings(MainPageSettings.data)
+					return MainPageSettings.data
+				}
+				return storedSettings.data
+			}
+			return MainPageSettings.data
+		} catch (e) {
+			return MainPageSettings.data
+		}
 	}
 
 	loadInstrument = async (name: InstrumentName) => {
-		this.state.instrument?.delete?.()
+		const oldInstrument = this.state.instrument
+		AudioProvider.disconnect(oldInstrument.endNode)
+		this.state.instrument.delete()
 		const { settings } = this.state
 		const instrument = new Instrument(name)
 		instrument.changeVolume(settings.instrument.volume || 100)
+		AudioProvider.connect(instrument.endNode)
 		this.setState({ isLoadingInstrument: true })
 		await instrument.load()
-		if (!this.mounted || !this.audioContext) return
+		if (!this.mounted) return
 		this.setState({
 			instrument,
 			isLoadingInstrument: false
-		}, () => this.toggleReverbNodes(settings.caveMode.value))
-	}
-
-	loadReverb() : Promise<void>{
-		//TODO export this to a function 
-		return new Promise(resolve => {
-			fetch("./assets/audio/reverb4.wav")
-				.then(r => r.arrayBuffer())
-				.then(b => {
-					if (!this.mounted || !this.audioContext) return
-					this.audioContext.decodeAudioData(b, (impulse_response) => {
-						if (!this.mounted || !this.audioContext) return
-						const convolver = this.audioContext.createConvolver()
-						const gainNode = this.audioContext.createGain()
-						gainNode.gain.value = 2.5
-						convolver.buffer = impulse_response
-						convolver.connect(gainNode)
-						gainNode.connect(this.audioContext.destination)
-						this.reverbVolumeNode = gainNode
-						this.reverbNode = convolver
-						resolve()
-					})
-				}).catch((e) => {
-					console.log("Error with reverb", e)
-				})
-		})
+		}, () => AudioProvider.setReverb(settings.caveMode.value))
 	}
 
 	playSound = (note: NoteData) => {
@@ -241,7 +148,7 @@ class Player extends Component<any,PlayerState>{
 		const { settings } = state
 		if (note === undefined) return
 		if (state.isRecording) this.handleRecording(note)
-		this.state.instrument.play(note.index, getPitchChanger(settings.pitch.value as PitchesType))
+		this.state.instrument.play(note.index, settings.pitch.value as PitchesType)
 	}
 
 	updateSettings = (override?: MainPageSettingsDataType) => {
@@ -262,7 +169,7 @@ class Player extends Component<any,PlayerState>{
 			this.loadInstrument(data.value as InstrumentName)
 		}
 		if (setting.key === 'caveMode') {
-			this.toggleReverbNodes(data.value as boolean)
+			AudioProvider.setReverb(data.value as boolean)
 		}
 		this.setState({
 			settings: settings,
@@ -270,11 +177,14 @@ class Player extends Component<any,PlayerState>{
 	}
 
 	syncSongs = async () => {
-		const songs = (await DB.getSongs()).map((song) => {
-			if(song.data?.isComposedVersion) return ComposedSong.deserialize(song as SerializedComposedSong)
-			return Song.deserialize(song as SerializedSong)
-		})
-		this.setState({ songs })
+		try {
+			const songs = await DB.getSongs()
+			this.setState({ songs })
+		} catch (e) {
+			console.error(e)
+			LoggerStore.warn('There was an error syncing the songs')
+		}
+
 	}
 	songExists = async (name: string) => {
 		return await DB.existsSong({ name: name })
@@ -301,7 +211,7 @@ class Player extends Component<any,PlayerState>{
 			await DB.removeSong({ name: name })
 			this.syncSongs()
 		}
-		Analytics.userSongs('delete',{ name: name, page: 'player' })
+		Analytics.userSongs('delete', { name: name, page: 'player' })
 	}
 
 	handleRecording = (note: NoteData) => {
@@ -339,96 +249,39 @@ class Player extends Component<any,PlayerState>{
 				const song = new Song(songName, this.recording.notes)
 				song.pitch = this.state.settings.pitch.value as PitchesType
 				this.addSong(song)
-				Analytics.userSongs('record',{ name: songName, page: 'player' })
+				Analytics.userSongs('record', { name: songName, page: 'player' })
 			}
 		} else {
 			this.recording = new Recording()
 		}
 		this.setState({ isRecording: newState })
-
 	}
 
 	toggleRecordAudio = async (override?: boolean | null) => {
 		if (!this.mounted) return
 		if (typeof override !== "boolean") override = null
-		const { instrument } = this.state
-		const { recorder } = this
-		const hasReverb = this.state.settings.caveMode.value
 		const newState = override !== null ? override : !this.state.isRecordingAudio
-		if(!this.reverbVolumeNode || !recorder || !this.audioContext) return
 		if (newState) {
-			if (hasReverb) {
-				if(recorder.node) this.reverbVolumeNode.connect(recorder.node)
-
-			} else {
-				if(recorder.node) instrument.connect(recorder.node)
-			}
-			recorder.start()
+			AudioProvider.startRecording()
 		} else {
-			const recording = await recorder.stop()
+			const recording = await AudioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
-			if (!this.mounted) return
-			if (fileName) recorder.download(recording.data, fileName + '.wav')
-			this.toggleReverbNodes(hasReverb)
-			this.reverbVolumeNode.disconnect()
-			this.reverbVolumeNode.connect(this.audioContext.destination)
-
+			if (!this.mounted || !recording) return
+			if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
 		}
-		this.setState({
-			isRecordingAudio: newState
-		})
-	}
-	changePage = (page: string) => {
-		//@ts-ignore
-		this.props.history.push(page)
+		this.setState({ isRecordingAudio: newState })
 	}
 	render() {
-		const { state } = this
-		const { settings, isLoadingInstrument, songs, instrument, hasSong,isRecordingAudio,isRecording,isDragging } = state
-		const keyboardFunctions = {
-			playSound: this.playSound,
-			setHasSong: this.setHasSong
-		}
-		const keyboardData = {
-			isLoading: isLoadingInstrument,
-			keyboard: instrument,
-			pitch: settings.pitch.value as PitchesType,
-			keyboardSize: settings.keyboardSize.value,
-			noteNameType: settings.noteNameType.value as NoteNameType,
-			hasSong,
-			hasAnimation: settings.noteAnimation.value,
-			approachRate: settings.approachSpeed.value,
-			keyboardYPosition: settings.keyboardYPosition.value
-		}
-		const menuFunctions = {
-			addSong: this.addSong,
-			removeSong: this.removeSong,
-			changePage: this.changePage,
-			handleSettingChange: this.handleSettingChange,
-			changeVolume: this.changeVolume
-		}
-		const menuData = { songs, settings }
-
+		const { state, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this
+		const { settings, isLoadingInstrument, songs, instrument, hasSong, isRecordingAudio, isRecording } = state
 		return <>
-			{SongStore.eventType !== 'approaching' &&
-				<div className='record-button'>
-					<AppButton	
-						toggled={isRecordingAudio}
-						onClick={this.toggleRecordAudio}
-					>
-						{isRecordingAudio ? "Finish recording" : "Record audio"}
-					</AppButton>
-				</div>
-			}
-
-			{isDragging && <div className='drag-n-drop'>
-				Drop file here
-			</div>}
-			<Menu functions={menuFunctions} data={menuData} />
+			<Menu
+				functions={{ addSong, removeSong, handleSettingChange, changeVolume }}
+				data={{ songs, settings }}
+			/>
 			<div className="right-panel">
 				<div className="upper-right">
-					{!hasSong
-						&&
+					{!hasSong &&
 						<AppButton
 							toggled={isRecording}
 							onClick={this.toggleRecord}
@@ -436,17 +289,42 @@ class Player extends Component<any,PlayerState>{
 						>
 							{isRecording ? "Stop" : "Record"}
 						</AppButton>
-
 					}
 				</div>
 				<div className="keyboard-wrapper" style={{ marginBottom: '2vh' }}>
 					<Keyboard
 						key={instrument.layout.length}
-						data={keyboardData}
-						functions={keyboardFunctions}
+						data={{
+							isLoading: isLoadingInstrument,
+							keyboard: instrument,
+							pitch: settings.pitch.value as PitchesType,
+							keyboardSize: settings.keyboardSize.value,
+							noteNameType: settings.noteNameType.value as NoteNameType,
+							hasSong,
+							hasAnimation: settings.noteAnimation.value,
+							approachRate: settings.approachSpeed.value,
+							keyboardYPosition: settings.keyboardYPosition.value
+						}}
+						functions={{ playSound, setHasSong }}
 					/>
 				</div>
 			</div>
+			<BodyDropper<SerializedSongType>
+				as='json'
+				onDrop={handleDrop}
+				onError={dropError}
+				showDropArea={true}
+			/>
+			{SongStore.eventType !== 'approaching' &&
+				<div className='record-button'>
+					<AppButton
+						toggled={isRecordingAudio}
+						onClick={this.toggleRecordAudio}
+					>
+						{isRecordingAudio ? "Finish recording" : "Record audio"}
+					</AppButton>
+				</div>
+			}
 		</>
 	}
 }

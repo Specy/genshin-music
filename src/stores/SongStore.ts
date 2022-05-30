@@ -1,5 +1,5 @@
-import { ComposedSong } from "lib/Utils/ComposedSong";
-import { Song } from "lib/Utils/Song";
+import { ComposedSong } from "lib/ComposedSong";
+import { Song } from "lib/Song";
 import { observable } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"

@@ -1,17 +1,18 @@
-const APP_NAME: 'Sky'| 'Genshin' = process.env.REACT_APP_NAME as 'Sky'| 'Genshin' || ["Sky", "Genshin"][0]
-const APP_VERSION = '2.5' as const
-
+const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
+const APP_VERSION = '2.6' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ? ` - Improved the rendering of the composer to be sharper and easier to see on mobile
-        - Added 4th layer in the composer
-        - Improved performance in the composer
-        - Added more theming in the composer
+    ? ` 
+        Added tooltips and help buttons
+        Bug fixes for main page loading songs
+        Added drag and drop in the composer
+        Composer on pc now resizes with the page
     `.trim()
-    : ` - Improved the rendering of the composer to be sharper and easier to see on mobile
-        - Added 4th layer in the composer
-        - Improved performance in the composer
-        - Added more theming in the composer
+    : `    
+        Added Light guitar (notes can't be held)
+        Bug fixes for main page loading songs
+        Added drag and drop in the composer
+        Composer on pc now resizes with the page
     `.trim()
 const LAYERS_INDEXES = [1,2,3,4] as const
 const EMPTY_LAYER = '0000'
@@ -48,6 +49,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Piano",
         "Contrabass",
         "Guitar",
+        "LightGuitar",
         "Harp",
         "Horn",
         "Trumpet",
@@ -62,7 +64,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Drum",
         "Bells",
         "DunDun",
-        "HandPan"
+        "HandPan",
     ] as const
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const BaseinstrumentsData = {
@@ -85,6 +87,9 @@ const BaseinstrumentsData = {
     Panflute: {
         notes: 15
     },
+    LightGuitar: {
+        notes: 15
+    },  
     Bells: {
         notes: 8
     },
@@ -319,6 +324,7 @@ export type TempoChanger = typeof TEMPO_CHANGERS[number]
 function isTwa() {
     return JSON.parse(sessionStorage.getItem('isTwa') || 'null')
 }
+export type AppName = 'Sky'| 'Genshin'
 
 export {
     INSTRUMENTS,

@@ -1,14 +1,20 @@
 const copyDir = require('recursive-copy')
 const fs = require('fs/promises')
+const clc = require("cli-color");
 const { execSync } = require('child_process')
-
 const skyPath = './src/appData/sky'
 const genshinPath = './src/appData/genshin'
 const publicPath = './public'
 const chosenApp = process.argv[2]
-
+const date = new Date()
+const SW_VERSION = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`
+console.log(SW_VERSION)
+const PATH_NAMES = {
+    Sky: "skyMusic",
+    Genshin: "genshinMusic"
+}
 if (!['Genshin', 'Sky', "All"].includes(chosenApp)) {
-    console.error('Please specify an app name [Sky/Genshin/All]')
+    console.error('Please specify an app name [Sky / Genshin / All]')
     process.exit(1)
 }
 
@@ -23,28 +29,28 @@ async function deleteAssets() {
     }))
 }
 
+
+
 async function execute() {
     const toBuild = chosenApp === "All" ? ['Sky', 'Genshin'] : [chosenApp]
     for (const app of toBuild) {
-        console.log("\x1b[33m", 'Building ' + app + '...')
+        console.log(clc.bold.yellow(`Building ${app}...`))
         await deleteAssets()
         await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
         let result = ''
         if (process.platform === 'win32') {
-            console.log(" Building on windows")
-            result = execSync(`set REACT_APP_NAME=${app}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`)
+            console.log(clc.italic("Building on windows"))
+            result = execSync(
+                `set REACT_APP_NAME=${app}&& set REACT_APP_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`)
         } else {
-            console.log(" Building on Linux")
-            result = execSync(`REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} yarn build`)
+            console.log(clc.italic("Building on Linux"))
+            result = execSync(
+                `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_APP_SW_VERSION=${SW_VERSION} yarn build`)
         }
-        console.log("\x1b[32m", 'Build complete')
-        console.log("\x1b[0m")
+        console.log(clc.green(`${app} build complete \n`))
         console.log(result.toString())
     }
+    console.log(clc.bold.green("Build complete \n"))
+}
 
-}
-const PATH_NAMES = {
-    Sky: "skyMusic",
-    Genshin: "genshinMusic"
-}
 execute()

@@ -3,6 +3,8 @@
     width: 2.4rem;
     height: 1.4rem;
     padding: 0.2rem;
+    cursor: pointer;
+    border: 0;
     background: var(--primary);
 	color: var(--primary-text);
 }
