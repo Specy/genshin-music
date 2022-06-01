@@ -1,9 +1,9 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, PitchesType, EMPTY_LAYER } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, Pitch, EMPTY_LAYER } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
 import { CombinedLayer, InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
 import { SongInstruments } from "types/SongTypes"
 import { Song } from "./Song"
-import { Column, ColumnNote, RecordedNote, SongDataType } from "./SongClasses"
+import { Column, ColumnNote, RecordedNote, SongData } from "./SongClasses"
 
 interface OldFormatNoteType {
     key: string,
@@ -14,10 +14,11 @@ export type ComposedSongInstruments = [InstrumentName, InstrumentName, Instrumen
 export type SerializedNote = [index: number, layer: CombinedLayer]
 export type SerializedColumn = [tempoChanger: number, notes: SerializedNote[]]
 export interface SerializedComposedSong {
+    id: string | null
     name: string
-    data: SongDataType
+    data: SongData
     bpm: number
-    pitch: PitchesType
+    pitch: Pitch
     instruments: SongInstruments
     breakpoints: number[]
     columns: SerializedColumn[]
@@ -34,11 +35,12 @@ type OldFormatComposed = SerializedComposedSong & {
     isEncrypted: boolean
 }
 export class ComposedSong {
+    id: string | null
     name: string
-    data: SongDataType
+    data: SongData
     version: number
     bpm: number
-    pitch: PitchesType
+    pitch: Pitch
     notes: RecordedNote[]
     instruments: ComposedSongInstruments
     breakpoints: number[]
@@ -51,6 +53,7 @@ export class ComposedSong {
             isComposed: true,
             isComposedVersion: true
         }
+        this.id = null
         this.name = name
         this.bpm = 220
         this.pitch = "C"
@@ -63,6 +66,7 @@ export class ComposedSong {
     static deserialize = (song: SerializedComposedSong): ComposedSong => {
         const bpm = Number(song.bpm)
         const parsed = new ComposedSong(song.name)
+        parsed.id = song.id
         parsed.data = { ...parsed.data, ...song.data }
         parsed.bpm = isNaN(bpm) ? 220 : bpm
         parsed.pitch = song.pitch ?? "C"
@@ -104,16 +108,17 @@ export class ComposedSong {
     serialize = (): SerializedComposedSong => {
         const bpm = Number(this.bpm)
         const serialized: SerializedComposedSong = {
+            name: this.name,
+            bpm: isNaN(bpm) ? 220 : bpm,
+            pitch: this.pitch,
             data: {
                 ...this.data,
                 appName: APP_NAME
             },
-            name: this.name,
-            bpm: isNaN(bpm) ? 220 : bpm,
-            pitch: this.pitch,
             breakpoints: [...this.breakpoints],
             instruments: [...this.instruments],
-            columns: []
+            columns: [],
+            id: this.id
         }
         this.columns.forEach(column => {
             const notes = column.notes.map(note => {

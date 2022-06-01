@@ -1,5 +1,5 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, PitchesType } from "appConfig"
-import { Column, ColumnNote, RecordedNote,SongDataType } from "./SongClasses"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, Pitch } from "appConfig"
+import { Column, ColumnNote, RecordedNote,SongData } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
 import { numberToLayer, groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
@@ -11,15 +11,17 @@ type OldNote = {
     l?: number
 }
 interface SongProps {
+    id:string | null
+
     //TODO add tempo changer type
     name: string
-    data: SongDataType
+    data: SongData
     bpm: number
-    pitch: PitchesType
+    pitch: Pitch
     version: number,
     notes: RecordedNote[]
 }
-export type SerializedSong = SongProps 
+export type SerializedSong = SongProps
 export type OldFormatSong = SongProps & {
     isComposed: boolean,
     pitchLevel: number,
@@ -33,18 +35,20 @@ export type OldFormatSong = SongProps & {
 }
 
 export class Song {
+    id: string | null
 	name: string
 	version: number
 	notes: RecordedNote[] 
 	bpm: number
-	pitch: PitchesType
-	data: SongDataType
+	pitch: Pitch
+	data: SongData
     timestamp: number
 	constructor(name: string, notes? : RecordedNote[]) {
 		this.name = name
 		this.version = 1
 		this.notes = notes || []
 		this.bpm = 220
+        this.id = null
 		this.pitch = "C"
 		this.data = {
 			isComposed: false,
@@ -86,10 +90,11 @@ export class Song {
         return {
             name: this.name,
             version: this.version,
-            data: {...this.data},
             pitch: this.pitch,
             bpm: this.bpm,
-            notes: clonedeep(this.notes)
+            data: {...this.data},
+            notes: clonedeep(this.notes),
+            id: this.id
         }
     }
     toComposed = (precision = 4) => {

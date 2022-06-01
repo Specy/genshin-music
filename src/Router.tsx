@@ -19,6 +19,7 @@ import { KeyboardProviderWrapper } from "components/Providers/KeyboardProviderWr
 import { useEffect } from "react";
 export function Router() {
 	useEffect(() => {
+
 		try{
 			if ('virtualKeyboard' in navigator) {
 				//@ts-ignore

@@ -7,7 +7,7 @@ import { FileElement, FilePicker } from "components/FilePicker"
 import Player from "pages/Player";
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
-import { DB } from "Database";
+
 import cloneDeep from 'lodash.clonedeep'
 import { Theme } from "stores/ThemeStore";
 import { ThemePreview } from "./Components/ThemePreview";
@@ -18,6 +18,7 @@ import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/hooks/useTheme";
 import './Theme.css'
 import { AppBackground } from "components/AppBackground";
+import { themeService } from "lib/services/ThemeService";
 
 
 function ThemePage() {
@@ -30,7 +31,7 @@ function ThemePage() {
             setTheme({ ...ThemeProvider })
         })
         async function getThemes() {
-            setUserThemes(await DB.getThemes())
+            setUserThemes(await themeService.getThemes())
         }
         getThemes()
         return () => {
@@ -46,12 +47,12 @@ function ThemePage() {
         }
         ThemeProvider.set(name, value)
         await ThemeProvider.save()
-        setUserThemes(await DB.getThemes())
+        setUserThemes(await themeService.getThemes())
     }
     async function handlePropReset(key: ThemeKeys) {
         ThemeProvider.reset(key)
         await ThemeProvider.save()
-        setUserThemes(await DB.getThemes())
+        setUserThemes(await themeService.getThemes())
     }
 
     async function handleImport(file: FileElement<Theme>[]) {
@@ -60,10 +61,10 @@ function ThemePage() {
             try {
                 if (theme.data && theme.other) {
                     const sanitized = ThemeProvider.sanitize(theme)
-                    const id = await DB.addTheme(sanitized)
+                    const id = await themeService.addTheme(sanitized)
                     sanitized.other.id = id
                     ThemeProvider.loadFromJson(sanitized)
-                    setUserThemes(await DB.getThemes())
+                    setUserThemes(await themeService.getThemes())
                 } else {
                     logImportError()
                 }
@@ -91,10 +92,10 @@ function ThemePage() {
         }
     }
     async function addNewTheme(newTheme: BaseTheme) {
-        const id = await DB.addTheme(newTheme.toObject())
+        const id = await themeService.addTheme(newTheme.toObject())
         newTheme.state.other.id = id
         ThemeProvider.loadFromJson(newTheme.toObject())
-        setUserThemes(await DB.getThemes())
+        setUserThemes(await themeService.getThemes())
         return id
     }
     async function handleThemeDelete(theme: Theme) {
@@ -102,8 +103,8 @@ function ThemePage() {
             if (ThemeProvider.getId() === theme.other.id) {
                 ThemeProvider.wipe()
             }
-            await DB.removeTheme({ id: theme.other.id })
-            setUserThemes(await DB.getThemes())
+            await themeService.removeTheme({ id: theme.other.id })
+            setUserThemes(await themeService.getThemes())
         }
     }
 
@@ -154,7 +155,7 @@ function ThemePage() {
                 onChange={(e) => ThemeProvider.setOther('name', e)}
                 onLeave={async () => {
                     await ThemeProvider.save()
-                    setUserThemes(await DB.getThemes())
+                    setUserThemes(await themeService.getThemes())
                 }}
             />
             <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>

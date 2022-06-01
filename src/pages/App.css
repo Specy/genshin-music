@@ -486,7 +486,6 @@ a {
 	flex: 1;
 }
 @media (hover:hover) {
-
 	.has-tooltip:hover:not(:focus) .tooltip {
 		display: block;
 		animation: fadeIn 0.2s;
@@ -615,6 +614,9 @@ a {
 	background-color: var(--accent);
 	color: var(--accent-text);
 }
+
+
+
 
 @media only screen and (max-width: 900px) {
 	.floating-prompt {

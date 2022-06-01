@@ -4,7 +4,7 @@ import { Midi, Track } from '@tonejs/midi'
 import { numberToLayer, groupNotesByIndex, mergeLayers } from 'lib/Tools'
 import { ColumnNote, Column } from 'lib/SongClasses'
 import { ComposedSong } from 'lib/ComposedSong'
-import { APP_NAME, LAYERS_INDEXES, PITCHES, PitchesType } from 'appConfig'
+import { APP_NAME, LAYERS_INDEXES, PITCHES, Pitch } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
@@ -20,7 +20,7 @@ interface MidiImportProps {
     }
     functions: {
         changeMidiVisibility: (override: boolean) => void
-        changePitch: (pitch: PitchesType) => void
+        changePitch: (pitch: Pitch) => void
         loadSong: (song: ComposedSong) => void
     }
 }
@@ -37,7 +37,7 @@ interface MidiImportState {
     tracks: CustomTrack[]
     bpm: number
     offset: number
-    pitch: PitchesType
+    pitch: Pitch
     accidentals: number
     outOfRange: number
     totalNotes: number
@@ -93,7 +93,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 fileName: file.file.name,
                 bpm: Math.floor(bpm * 4) || 220,
                 offset: 0,
-                pitch: (PITCHES.includes(key as never) ? key : 'C') as PitchesType,
+                pitch: (PITCHES.includes(key as never) ? key : 'C') as Pitch,
             }, () => { if (this.state.tracks.length) this.convertMidi() })
         } catch (e) {
             console.error(e)
@@ -197,7 +197,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             offset: value
         }, () => { if (this.state.tracks.length > 0) this.convertMidi() })
     }
-    changePitch = (value: PitchesType) => {
+    changePitch = (value: Pitch) => {
         this.props.functions.changePitch(value)
         this.setState({
             pitch: value
@@ -270,7 +270,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 <select
                     className='midi-select'
                     value={pitch}
-                    onChange={(event: ChangeEvent<HTMLSelectElement>) => changePitch(event.target.value as PitchesType)}
+                    onChange={(event: ChangeEvent<HTMLSelectElement>) => changePitch(event.target.value as Pitch)}
                     style={{
                         margin: 0,
                         backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`,

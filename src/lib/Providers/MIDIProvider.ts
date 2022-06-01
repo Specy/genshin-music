@@ -1,4 +1,5 @@
 import { APP_NAME } from "appConfig"
+import { settingsService } from "lib/services/SettingsService"
 import { MIDISettings } from "../BaseSettings"
 
 
@@ -14,7 +15,7 @@ export class MIDIListener {
     settings: typeof MIDISettings
     inputs: WebMidi.MIDIInput[] = []
     constructor() {
-        this.settings = MIDIListener.loadSettings()
+        this.settings = settingsService.getMIDISettings()
         if (this.settings.enabled) this.create()
     }
     create = async (): Promise<WebMidi.MIDIAccess | null> => {
@@ -78,21 +79,8 @@ export class MIDIListener {
         this.currentMIDISource = source
         this.currentMIDISource.addEventListener('midimessage', this.handleEvent)
     }
-    static loadSettings() {
-        try {
-            const settings = JSON.parse(localStorage.getItem(`${APP_NAME}_MIDI_Settings`) || 'null') as any
-            if (settings !== null && settings.settingVersion === MIDISettings.settingVersion) {
-                return settings
-            } else {
-                return MIDISettings
-            }
-        } catch (e) {
-            console.error(e)
-            return MIDISettings
-        }
-    }
     saveSettings = () => {
-        localStorage.setItem(`${APP_NAME}_MIDI_Settings`, JSON.stringify(this.settings))
+        settingsService.updateMIDISettings(this.settings)
     }
     handleEvent = (e: WebMidi.MIDIMessageEvent) => {
         const { data } = e

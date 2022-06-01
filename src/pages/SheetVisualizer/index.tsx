@@ -1,7 +1,6 @@
 import './SheetVisualizer.css'
 import { useEffect, useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
-import { DB } from 'Database'
 import { APP_NAME } from 'appConfig'
 import { getNoteText, parseSong } from 'lib/Tools'
 import Switch from 'components/Switch'
@@ -13,6 +12,7 @@ import { Song } from 'lib/Song'
 import { RecordedNote } from 'lib/SongClasses'
 import { AppButton } from 'components/AppButton'
 import LoggerStore from 'stores/LoggerStore'
+import { songService } from 'lib/services/SongService'
 
 const THRESHOLDS = {
     joined: 50,
@@ -39,7 +39,7 @@ export default function SheetVisualizer() {
 
     useEffect(() => {
         async function load() {
-            setSongs(await DB.getSongs())
+            setSongs(await songService.getSongs())
         }
         load()
     }, [])

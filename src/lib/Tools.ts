@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType, EMPTY_LAYER, TEMPO_CHANGERS, isTwa } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, EMPTY_LAYER, TEMPO_CHANGERS, isTwa } from "appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
@@ -62,7 +62,7 @@ function capitalize(str: string) {
 function getNoteText(
 	noteNameType: NoteNameType,
 	index: number,
-	pitch: PitchesType,
+	pitch: Pitch,
 	layoutLength: keyof typeof LAYOUT_DATA
 ) {
 	try {
@@ -184,7 +184,7 @@ function groupByNotes(notes: RecordedNote[], threshold: number) {
 	return result
 }
 
-function getPitchChanger(pitch: PitchesType) {
+function getPitchChanger(pitch: Pitch) {
 	let index = PITCHES.indexOf(pitch)
 	if (index < 0) index = 0
 	return Number(Math.pow(2, index / 12).toFixed(4))

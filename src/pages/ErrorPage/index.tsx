@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { FaTrash, FaDownload } from 'react-icons/fa';
-import { DB } from 'Database';
 import { FileDownloader, parseSong } from "lib/Tools"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { APP_NAME } from "appConfig"
@@ -12,26 +11,27 @@ import { SerializedSongType } from 'types/SongTypes';
 
 import './ErrorPage.css'
 import { AppButton } from 'components/AppButton';
+import { songService } from 'lib/services/SongService';
 
 export function ErrorPage() {
     const [songs, setSongs] = useState<SerializedSongType[]>([])
     const syncSongs = async () => {
-        setSongs(await DB.getSongs())
+        setSongs(await songService.getSongs())
     }
     useEffect(() => {
         syncSongs()
     }, [])
 
-    const deleteSong = async (name: string) => {
+    const deleteSong = async (name: string, id: string) => {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
-            await DB.removeSong({ name: name })
+            await songService.removeSong(id)
             syncSongs()
         }
 
     }
     const deleteAllSongs = async () => {
         if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
-            await DB.removeSong({})
+            await songService._clearAll()
             syncSongs()
         }
     }
@@ -87,7 +87,7 @@ export function ErrorPage() {
 
 interface SongRowProps{
     data: SerializedSongType
-    deleteSong: (name: string) => void
+    deleteSong: (name: string, id: string) => void
     download: (song: SerializedSongType) => void
 }
 function SongRow({data, deleteSong, download } : SongRowProps) {
@@ -100,7 +100,7 @@ function SongRow({data, deleteSong, download } : SongRowProps) {
                 <FaDownload />
 
             </button>
-            <button className="song-button" onClick={() => deleteSong(data.name)}>
+            <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)}>
                 <FaTrash color="#ed4557" />
             </button>
         </div>

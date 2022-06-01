@@ -1,4 +1,4 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, PitchesType } from "appConfig"
+import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch } from "appConfig"
 import { InstrumentName, NoteStatus } from "types/GeneralTypes"
 import { getPitchChanger } from "./Tools"
 
@@ -56,7 +56,7 @@ export default class Instrument {
         if(this.volumeNode) this.volumeNode.gain.value = newVolume
     }
 
-    play = (note: number, pitch: PitchesType) => {
+    play = (note: number, pitch: Pitch) => {
         if (this.isDeleted || !this.volumeNode) return
         const pitchChanger = getPitchChanger(pitch)
         const player = AUDIO_CONTEXT.createBufferSource()

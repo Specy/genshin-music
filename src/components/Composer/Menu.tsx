@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes } from 'react-icons/fa';
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen } from 'react-icons/fa';
 import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
@@ -20,6 +20,8 @@ import { useTheme } from 'lib/hooks/useTheme';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 import { hasTooltip, Tooltip } from 'components/Tooltip';
 import { HelpTooltip } from 'components/HelpTooltip';
+import { FloatingDropdown, FloatingDropdownRow } from 'components/FloatingDropdown';
+import { SongActionButton } from 'components/SongActionButton';
 
 interface MenuProps {
     data: {
@@ -31,7 +33,8 @@ interface MenuProps {
     }
     functions: {
         loadSong: (song: SerializedSongType) => void
-        removeSong: (name: string) => void
+        renameSong : (newName: string, id:string) => void
+        removeSong: (name: string, id: string) => void
         createNewSong: () => void
         changePage: (page: Pages | 'Home') => void
         updateThisSong: () => void
@@ -46,7 +49,7 @@ export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 function Menu({ data, functions }: MenuProps) {
     const [open, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
-    const { loadSong, removeSong, changePage, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible, updateThisSong } = functions
+    const { loadSong, removeSong, changePage, renameSong, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible, updateThisSong } = functions
     const [theme] = useTheme()
     const handleKeyboard = useCallback((event: KeyboardEvent) => {
         const key = event.code
@@ -107,7 +110,8 @@ function Menu({ data, functions }: MenuProps) {
         loadSong,
         removeSong,
         toggleMenu,
-        downloadSong
+        downloadSong,
+        renameSong
     }
     const hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
     const menuClass = data.isMenuOpen ? "menu menu-visible" : "menu"
@@ -223,7 +227,8 @@ interface SongRowProps {
     data: SerializedSongType
     theme: ThemeStoreClass
     functions: {
-        removeSong: (name: string) => void
+        removeSong: (name: string, id: string) => void
+        renameSong: (newName: string, id: string) => void
         toggleMenu: (override: boolean) => void
         loadSong: (song: SerializedSongType) => void
         downloadSong: (song: SerializedSongType) => void
@@ -231,29 +236,65 @@ interface SongRowProps {
 }
 
 function SongRow({ data, functions, theme }: SongRowProps) {
-    const { removeSong, toggleMenu, loadSong, downloadSong } = functions
+    const { removeSong, toggleMenu, renameSong, loadSong, downloadSong } = functions
     const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
+    const [isRenaming, setIsRenaming] = useState(false)
+    const [songName, setSongName] = useState(data.name)
+    useEffect(() => {
+        setSongName(data.name)
+    }, [data.name])
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
+            if(isRenaming) return
             loadSong(data)
             toggleMenu(false)
         }}>
-            {data.name}
+            <input 
+                className={`song-name-input ${isRenaming ? "song-rename" : ""}`}
+                disabled={!isRenaming} 
+                onChange={(e) => setSongName(e.target.value)}
+                style={{width: "100%", color: "var(--primary-text)"}}
+                value={songName}
+            />
             <Tooltip>
                 Open in composer
             </Tooltip>
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => downloadSong(data)} style={buttonStyle}>
-                <Memoized>
-                    <FaDownload />
-                </Memoized>
-            </button>
-            <button className="song-button" onClick={() => removeSong(data.name)} style={buttonStyle}>
-                <Memoized>
-                    <FaTrash color="#ed4557" />
-                </Memoized>
-            </button>
+            <FloatingDropdown
+                Icon={FaCog}
+                style={buttonStyle}
+                onClose={() => setIsRenaming(false)}
+            >
+                <AppButton 
+                    className='row row-centered' 
+                    style={{padding: "0.4rem"}}
+                    onClick={() => {
+                        if(isRenaming) {
+                            renameSong(songName, data.id as string)
+                            setIsRenaming(false)
+                        }
+                        setIsRenaming(!isRenaming)
+                    }}
+                >
+                    <FaPen style={{marginRight: "0.3rem"}}/>
+                    <div>
+                        {isRenaming ? "Save" : "Rename"}
+                    </div>
+                </AppButton>
+                <FloatingDropdownRow onClick={() => downloadSong(data)}>
+                    <FaDownload style={{marginRight: "0.3rem"}}/>
+                    <div>
+                        Download
+                    </div>
+                </FloatingDropdownRow>
+                <FloatingDropdownRow  onClick={() => removeSong(data.name, data.id as string)}>
+                    <FaTrash color="#ed4557" style={{marginRight: "0.3rem"}}/>
+                    <div>
+                        Delete
+                    </div>
+                </FloatingDropdownRow>
+            </FloatingDropdown>
         </div>
     </div>
 }

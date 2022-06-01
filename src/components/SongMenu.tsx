@@ -59,10 +59,9 @@ export function SongMenu({
                 <SongComponent
                     {...componentProps}
                     data={song}
-                    key={song?.name}
+                    key={song?.id}
                 />
             )}
-
         </div>
     </div>
 }

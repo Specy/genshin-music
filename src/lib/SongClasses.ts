@@ -117,7 +117,7 @@ export class Recording {
 	}
 }
 
-export type SongDataType = {
+export type SongData = {
     isComposed: boolean
     isComposedVersion: boolean,
     appName: string

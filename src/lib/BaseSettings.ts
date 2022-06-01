@@ -285,24 +285,6 @@ export const MIDISettings = {
     ]
 }
 
-export function getMIDISettings() {
-    //TODO make this a store
-    let settings = localStorage.getItem(APP_NAME + '_MIDI_Settings') as any
-    try {
-        settings = JSON.parse(settings)
-    } catch (e) {
-        settings = null
-    }
-    if (settings !== null) {
-        if (settings.settingVersion !== MIDISettings.settingVersion) {
-            return MIDISettings
-        }
-    } else {
-        return MIDISettings
-    }
-    return settings
-}
-
 
 export const ThemeSettings = {
     editable: false,

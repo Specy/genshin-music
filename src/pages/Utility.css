@@ -4,7 +4,9 @@
     display: flex;
     flex-direction: row;
 }
-
+.row-centered{
+    align-items: center;
+}
 .flex-centered{
     align-items: center;
     justify-content: center;

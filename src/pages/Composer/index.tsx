@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, PitchesType, TempoChanger, EMPTY_LAYER } from "appConfig"
+import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, Pitch, TempoChanger, EMPTY_LAYER } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -19,7 +19,7 @@ import { delay, formatMs, calculateSongLength, parseSong } from "lib/Tools"
 import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
 import { Column } from 'lib/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
-import { DB } from 'Database';
+
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
@@ -35,7 +35,8 @@ import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardType
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { CanvasTool } from 'components/Composer/CanvasTool';
-
+import { songService } from 'lib/services/SongService';
+import { settingsService } from 'lib/services/SettingsService';
 interface ComposerState {
     layers: ComposerInstruments
     songs: SerializedSongType[]
@@ -58,7 +59,7 @@ class Composer extends Component<any, ComposerState>{
     unblock: () => void
     constructor(props: any) {
         super(props)
-        const settings = this.getSettings()
+        const settings = settingsService.getComposerSettings()
         this.state = {
             layers: [new Instrument(), new Instrument(), new Instrument(), new Instrument()],
             songs: [],
@@ -249,29 +250,9 @@ class Composer extends Component<any, ComposerState>{
     handleDropError = () => {
         LoggerStore.error("There was an error importing the file! Was it the correct format?")
     }
-    getSettings = (): ComposerSettingsDataType => {
-        const json = localStorage.getItem(APP_NAME + "_Composer_Settings")
-        try {
-            const storedSettings = JSON.parse(json || 'null') as ComposerSettingsType | null
-            if (storedSettings) {
-                if (storedSettings.other?.settingVersion !== ComposerSettings.other.settingVersion) {
-                    this.updateSettings(ComposerSettings.data)
-                    return ComposerSettings.data
-                }
-                return storedSettings.data
-            }
-            return ComposerSettings.data
-        } catch (e) {
-            return ComposerSettings.data
-        }
-    }
 
     updateSettings = (override?: ComposerSettingsDataType) => {
-        const state = {
-            other: ComposerSettings.other,
-            data: override !== undefined ? override : this.state.settings
-        }
-        localStorage.setItem(APP_NAME + "_Composer_Settings", JSON.stringify(state))
+        settingsService.updateComposerSettings(override !== undefined ? override : this.state.settings)
     }
 
     handleSettingChange = ({ data, key }: SettingUpdate) => {
@@ -330,9 +311,9 @@ class Composer extends Component<any, ComposerState>{
     playSound = (instrument: Instrument, index: number) => {
         const note = instrument.layout[index]
         if (note === undefined) return
-        instrument.play(note.index, this.state.settings.pitch.value as PitchesType)
+        instrument.play(note.index, this.state.settings.pitch.value as Pitch)
     }
-    changePitch = (value: PitchesType) => {
+    changePitch = (value: Pitch) => {
         const { settings } = this.state
         settings.pitch = { ...settings.pitch, value }
         this.setState({ settings: { ...settings } }, this.updateSettings)
@@ -358,20 +339,28 @@ class Composer extends Component<any, ComposerState>{
         )
     }
     syncSongs = async () => {
-        const songs = await DB.getSongs()
+        const songs = await songService.getSongs()
         if (!this.mounted) return
         this.setState({ songs })
     }
     addSong = async (song: ComposedSong | Song) => {
-        if (await this.songExists(song.name)) {
-            return LoggerStore.warn("A song with this name already exists! \n" + song.name)
-        }
-        await DB.addSong(song.serialize())
+        const id = await songService.addSong(song.serialize())
+        song.id = id
         this.syncSongs()
     }
+    renameSong = async (newName: string, id: string ) => {
+        const {song} = this.state
+        await songService.renameSong(id, newName)
+        await this.syncSongs()
+        if(this.state.song.id === id){
+            song.name = newName
+            this.setState({ song })
+        }
+    }
     updateSong = async (song: ComposedSong): Promise<void> => {
+        //if it is the default song, ask for name and add it
         if (song.name === "Untitled") {
-            const name = await this.askForSongName()
+            const name = await asyncPrompt("Write song name, press cancel to ignore")
             if (name === null || !this.mounted) return
             song.name = name
             this.changes = 0
@@ -379,22 +368,23 @@ class Composer extends Component<any, ComposerState>{
         }
         return new Promise(async resolve => {
             const { settings } = this.state
-            if (await this.songExists(song.name)) {
+            //if it exists, update it
+            if (await songService.songExists(song.id as string)) {
                 song.instruments[0] = settings.layer1.value
                 song.instruments[1] = settings.layer2.value
                 song.instruments[2] = settings.layer3.value
                 song.instruments[3] = settings.layer4.value
-                await DB.updateSong({ name: song.name }, song.serialize())
+                await songService.updateSong(song.id as string, song.serialize())
                 console.log("song saved:", song.name)
                 this.changes = 0
                 this.syncSongs()
             } else {
+                //if it doesn't exist, add it
                 if (song.name.includes("- Composed")) {
-                    const name = await this.askForSongName("Write composed song name, press cancel to ignore")
+                    const name = await asyncPrompt("Write song name, press cancel to ignore")
                     if (name === null) return resolve()
                     song.name = name
-                    await DB.addSong(song.serialize())
-                    this.syncSongs()
+                    this.addSong(song)
                     return resolve()
                 }
                 console.log("song doesn't exist")
@@ -407,30 +397,8 @@ class Composer extends Component<any, ComposerState>{
     updateThisSong = async () => {
         this.updateSong(this.state.song)
     }
-    askForSongName = (question?: string): Promise<string | null> => {
-        return new Promise(async resolve => {
-            let promptString = question || "Write song name, press cancel to ignore"
-            while (true) {
-                const songName = await asyncPrompt(promptString)
-                if (songName === null) return resolve(null)
-                if (songName !== "") {
-                    if (await this.songExists(songName)) {
-                        promptString = "This song already exists: " + songName
-                    } else {
-                        return resolve(songName)
-                    }
-                } else {
-                    promptString = question || "Write song name, press cancel to ignore"
-                }
-            }
-        })
-
-    }
     askForSongUpdate = async () => {
         return await asyncConfirm(`You have unsaved changes to the song: "${this.state.song.name}" do you want to save now?`, false)
-    }
-    songExists = async (name: string) => {
-        return await DB.existsSong({ name: name })
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.changes > 0) {
@@ -438,7 +406,7 @@ class Composer extends Component<any, ComposerState>{
                 await this.updateSong(this.state.song)
             }
         }
-        const name = await this.askForSongName("Write new song name, press cancel to ignore")
+        const name = await asyncPrompt("Write song name, press cancel to ignore")
         if (name === null) return
         const song = new ComposedSong(name)
         this.changes = 0
@@ -446,9 +414,9 @@ class Composer extends Component<any, ComposerState>{
         this.setState({ song }, () => this.addSong(song))
         Analytics.songEvent({ type: 'create' })
     }
-    removeSong = async (name: string) => {
+    removeSong = async (name: string, id: string) => { 
         const confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
-        if (confirm) await DB.removeSong({ name: name })
+        if (confirm) await songService.removeSong(id)
         this.syncSongs()
         Analytics.userSongs('delete', { name: name, page: 'composer' })
     }
@@ -653,7 +621,7 @@ class Composer extends Component<any, ComposerState>{
         const {
             loadSong, removeSong, createNewSong, changePage, updateThisSong, handleSettingChange, toggleMenuVisible, changeVolume, startRecordingAudio, handleClick,
             toggleBreakpoint, handleTempoChanger, changeLayer, copyColumns, pasteColumns, eraseColumns, resetSelection, deleteColumns, changeMidiVisibility,
-            selectColumn, toggleTools, changePitch, handleDrop, handleDropError
+            selectColumn, toggleTools, changePitch, handleDrop, handleDropError, renameSong
         } = this
 
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
@@ -751,7 +719,7 @@ class Composer extends Component<any, ComposerState>{
                         isPlaying, layer,
                         keyboard: layers[0],
                         currentColumn: song.selectedColumn,
-                        pitch: settings.pitch.value as PitchesType,
+                        pitch: settings.pitch.value as Pitch,
                         noteNameType: settings.noteNameType.value as NoteNameType,
                     }}
                 />
@@ -763,7 +731,7 @@ class Composer extends Component<any, ComposerState>{
                 }}
                 functions={{
                     loadSong, removeSong, createNewSong, changePage, updateThisSong, handleSettingChange,
-                    toggleMenuVisible, changeVolume, changeMidiVisibility, startRecordingAudio
+                    toggleMenuVisible, changeVolume, changeMidiVisibility, startRecordingAudio, renameSong
                 }}
             />
             <ComposerTools

@@ -2,7 +2,7 @@ import ComposerNote from "components/Composer/ComposerNote"
 import { getNoteText } from 'lib/Tools'
 import { Column } from "lib/SongClasses"
 import MultiSwitch from "components/Composer/MultiSwitch"
-import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS, EMPTY_LAYER } from "appConfig"
+import { LAYOUT_IMAGES, LAYERS_INDEXES, Pitch, TEMPO_CHANGERS, EMPTY_LAYER } from "appConfig"
 import { ThemeProvider } from "stores/ThemeStore"
 import Instrument, { NoteData } from "lib/Instrument"
 import { LayerType, NoteNameType } from "types/GeneralTypes"
@@ -13,7 +13,7 @@ interface ComposerKeyboardProps {
         keyboard: Instrument,
         currentColumn: Column,
         layer: LayerType,
-        pitch: PitchesType,
+        pitch: Pitch,
         isPlaying: boolean,
         noteNameType: NoteNameType
     },

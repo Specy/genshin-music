@@ -2,7 +2,7 @@ import { hasTooltip, Tooltip } from "./Tooltip"
 
 
 interface SongActionButtonProps {
-    onClick: () => void
+    onClick?: () => void
     style: React.CSSProperties
     tooltip?: string
     children: React.ReactNode
@@ -10,7 +10,9 @@ interface SongActionButtonProps {
 
 export function SongActionButton({ onClick, children, style, tooltip }: SongActionButtonProps) {
     return <>
-        <button className={`song-button ${hasTooltip(tooltip)}`} onClick={onClick}
+        <button 
+            className={`song-button ${hasTooltip(tooltip)}`} 
+            onClick={onClick || (() => { })}
             style={style}
         >
             {children}
