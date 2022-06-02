@@ -77,13 +77,14 @@ export class Song {
         return song
     }
     static deserialize(obj:SerializedSong): Song{
-        const { version, data, pitch, bpm, notes, name} = obj
+        const { version, data, pitch, bpm, notes, name, id} = obj
         const song = new Song(name || 'Untitled')
         song.version = version || song.version
         song.data = {...song.data, ...data}
         song.pitch = pitch || song.pitch
         song.bpm = bpm || song.bpm
         song.notes = Array.isArray(notes) ? clonedeep(notes) : []
+        song.id = id
         return song
     }
     serialize = () => {

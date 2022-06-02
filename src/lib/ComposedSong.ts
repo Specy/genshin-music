@@ -106,6 +106,7 @@ export class ComposedSong {
         return recordedSong
     }
     serialize = (): SerializedComposedSong => {
+
         const bpm = Number(this.bpm)
         const serialized: SerializedComposedSong = {
             name: this.name,

@@ -54,7 +54,11 @@ export default function SearchedSong({ onClick, data, importSong, theme }:Search
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={download} style={{backgroundColor: theme.layer('primary',0.2).hex()}}>
+            <button 
+                className="song-button" 
+                onClick={download} 
+                style={{backgroundColor: theme.layer('primary',0.2).hex(), marginRight: 0}}
+            >
                 {fetching ? <FaSpinner /> : <FaDownload />}
             </button>
         </div>

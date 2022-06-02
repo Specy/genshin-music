@@ -375,13 +375,18 @@ function SongRow({ data, functions, theme }: SongRowProps) {
             SongStore.play(parseSong(data), 0)
             toggleMenu(false)
         }}>
-            <input 
-                className={`song-name-input ${isRenaming ? "song-rename" : ""}`}
-                disabled={!isRenaming} 
-                onChange={(e) => setSongName(e.target.value)}
-                style={{width: "100%", color: "var(--primary-text)"}}
-                value={songName}
-            />
+            {isRenaming 
+                ? <input 
+                    className={`song-name-input ${isRenaming ? "song-rename" : ""}`}
+                    disabled={!isRenaming} 
+                    onChange={(e) => setSongName(e.target.value)}
+                    style={{width: "100%", color: "var(--primary-text)"}}
+                    value={songName}
+                />
+                : <div style={{marginLeft: '0.3rem'}}>
+                    {songName}
+                </div>
+            }
             <Tooltip>
                 {isRenaming ? "Song name": "Play song"}
             </Tooltip>
@@ -415,6 +420,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
             <FloatingDropdown
                 Icon={FaEllipsisH}
                 style={buttonStyle}
+                tooltip="More options"
                 onClose={() => setIsRenaming(false)}
             >
                 <AppButton 
