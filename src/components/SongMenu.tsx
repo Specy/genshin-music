@@ -5,17 +5,22 @@ import { useEffect, useState } from "react"
 import { SerializedSongType } from "types/SongTypes";
 
 
+
 type songType = 'recorded' | 'composed'
-interface SongMenuProps {
-    songs: SerializedSongType[] | Song[] | ComposedSong[],
-    SongComponent: any,
-    componentProps: any,
+type SongKinds = SerializedSongType | Song | ComposedSong
+interface SongMenuProps<T> {
+    songs: SongKinds[],
+    SongComponent: Function,
+    componentProps: Omit<T, "data">
     className?: string,
     style?: React.CSSProperties,
     scrollerStyle?: React.CSSProperties
     baseType: songType
 }
-export function SongMenu({
+
+
+
+export function SongMenu<T>({
     songs,
     SongComponent,
     componentProps,
@@ -23,7 +28,7 @@ export function SongMenu({
     style = {},
     baseType = 'recorded',
     scrollerStyle = {}
-}: SongMenuProps) {
+}: SongMenuProps<T>) {
     const [songType, setSongType] = useState<songType>('recorded')
     const [theme] = useTheme()
     useEffect(() => {

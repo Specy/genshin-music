@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen } from 'react-icons/fa';
+import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle} from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
-import { BsCircle } from 'react-icons/bs'
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
@@ -208,7 +207,7 @@ function Menu({ functions, data }: MenuProps) {
                             </li>
                             <li>To create your song, you can record the notes you play or create one in the composer</li>
                             <li><FaCrosshairs style={{marginRight: '0.2rem'}}/>: Start the practice mode</li>
-                            <li><BsCircle style={{marginRight: '0.2rem'}}/>: Start the approaching notes mode</li>
+                            <li><FaRegCircle style={{marginRight: '0.2rem'}}/>: Start the approaching notes mode</li>
                             {IS_MIDI_AVAILABLE && 
                                 <li>You can connect a MIDI keyboard to play</li>
                             }
@@ -232,7 +231,7 @@ function Menu({ functions, data }: MenuProps) {
                     </FilePicker>
 
                 </div>
-                <SongMenu
+                <SongMenu<SongRowProps>
                     songs={data.songs}
                     baseType='recorded'
                     SongComponent={SongRow}
@@ -384,7 +383,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 value={songName}
             />
             <Tooltip>
-                Play song
+                {isRenaming ? "Song name": "Play song"}
             </Tooltip>
         </div>
 
@@ -411,10 +410,10 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 tooltip='Approach mode'
                 style={buttonStyle}
             >
-                <BsCircle />
+                <FaRegCircle />
             </SongActionButton>
             <FloatingDropdown
-                Icon={FaCog}
+                Icon={FaEllipsisH}
                 style={buttonStyle}
                 onClose={() => setIsRenaming(false)}
             >
@@ -429,19 +428,19 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                         setIsRenaming(!isRenaming)
                     }}
                 >
-                    <FaPen style={{marginRight: "0.3rem"}}/>
+                    <FaPen style={{marginRight: "0.4rem"}}/>
                     <div>
                         {isRenaming ? "Save" : "Rename"}
                     </div>
                 </AppButton>
                 <FloatingDropdownRow onClick={() => downloadSong(parseSong(data))}>
-                    <FaDownload style={{marginRight: "0.3rem"}}/>
+                    <FaDownload style={{marginRight: "0.4rem"}}/>
                     <div>
                         Download
                     </div>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow  onClick={() => removeSong(data.name, data.id as string)}>
-                    <FaTrash color="#ed4557" style={{marginRight: "0.3rem"}}/>
+                    <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}}/>
                     <div>
                         Delete
                     </div>

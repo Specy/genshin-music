@@ -94,7 +94,7 @@ export default function SheetVisualizer() {
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SimpleMenu className='noprint' />
             <div>
-                <SongMenu 
+                <SongMenu<SongRowProps>
                     songs={songs}
                     className='displayer-songs-wrapper noprint'
                     style={{ marginTop: '0' }}
@@ -102,7 +102,7 @@ export default function SheetVisualizer() {
                     baseType='recorded'
                     SongComponent={SongRow}
                     componentProps={{
-                        currentSong,
+                        current: currentSong,
                         onClick: handleClick
                     }}
                 />

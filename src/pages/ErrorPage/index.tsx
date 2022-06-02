@@ -71,7 +71,7 @@ export function ErrorPage() {
             </AppButton>
         </div>
         <div className="error-songs-wrapper">
-            <SongMenu
+            <SongMenu<SongRowProps>
                 SongComponent={SongRow}
                 songs={songs}
                 baseType='recorded'

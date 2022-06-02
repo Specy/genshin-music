@@ -7,20 +7,23 @@ import { SongActionButton } from "./SongActionButton"
 interface FloatingDropdownProps {
     position?: "top" | "bottom" | "left" | "right"
     children: React.ReactNode
+    tooltip?: string
     Icon: React.FC
     className?: string
     style?: React.CSSProperties
     onClose?: () => void
 }
 
-export function FloatingDropdown({ position = 'bottom', children, Icon, className = "", style = {}, onClose }: FloatingDropdownProps) {
+export function FloatingDropdown({ position = 'bottom', children, Icon, className = "", style = {}, onClose, tooltip }: FloatingDropdownProps) {
     const [isActive, setActive] = useState(false)
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
-        <SongActionButton style={{ ...style }}
+        <SongActionButton style={{ margin: 0, ...style }}
             onClick={() => {
                 setActive(!isActive)
                 if (isActive && onClose) onClose()
-            }}>
+            }}
+            tooltip={tooltip}
+        >
             {isActive
                 ? <FaTimes />
                 : <Icon />
@@ -36,7 +39,7 @@ export function FloatingDropdown({ position = 'bottom', children, Icon, classNam
 
 interface FloatingDropdownButtonProps {
     children: React.ReactNode
-    onClick: () => void
+    onClick?: () => void
 
 }
 export function FloatingDropdownRow({ children, onClick }: FloatingDropdownButtonProps) {

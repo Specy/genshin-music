@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen } from 'react-icons/fa';
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH } from 'react-icons/fa';
 import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
@@ -21,7 +21,6 @@ import { ThemeStoreClass } from 'stores/ThemeStore';
 import { hasTooltip, Tooltip } from 'components/Tooltip';
 import { HelpTooltip } from 'components/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow } from 'components/FloatingDropdown';
-import { SongActionButton } from 'components/SongActionButton';
 
 interface MenuProps {
     data: {
@@ -167,7 +166,7 @@ function Menu({ data, functions }: MenuProps) {
                         Create new song
                     </AppButton>
                 </div>
-                <SongMenu
+                <SongMenu<SongRowProps>
                     songs={data.songs}
                     SongComponent={SongRow}
                     baseType='composed'
@@ -257,12 +256,12 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 value={songName}
             />
             <Tooltip>
-                Open in composer
+                {isRenaming ? "Song name": "Open in composer"}
             </Tooltip>
         </div>
         <div className="song-buttons-wrapper">
             <FloatingDropdown
-                Icon={FaCog}
+                Icon={FaEllipsisH}
                 style={buttonStyle}
                 onClose={() => setIsRenaming(false)}
             >
@@ -277,19 +276,19 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                         setIsRenaming(!isRenaming)
                     }}
                 >
-                    <FaPen style={{marginRight: "0.3rem"}}/>
+                    <FaPen style={{marginRight: "0.4rem"}}/>
                     <div>
                         {isRenaming ? "Save" : "Rename"}
                     </div>
                 </AppButton>
                 <FloatingDropdownRow onClick={() => downloadSong(data)}>
-                    <FaDownload style={{marginRight: "0.3rem"}}/>
+                    <FaDownload style={{marginRight: "0.4rem"}}/>
                     <div>
                         Download
                     </div>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow  onClick={() => removeSong(data.name, data.id as string)}>
-                    <FaTrash color="#ed4557" style={{marginRight: "0.3rem"}}/>
+                    <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}}/>
                     <div>
                         Delete
                     </div>
