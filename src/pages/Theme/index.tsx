@@ -18,7 +18,7 @@ import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/hooks/useTheme";
 import './Theme.css'
 import { AppBackground } from "components/AppBackground";
-import { themeService } from "lib/services/ThemeService";
+import { themeService } from "lib/Services/ThemeService";
 
 
 function ThemePage() {

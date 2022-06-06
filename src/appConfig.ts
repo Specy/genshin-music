@@ -15,7 +15,6 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         Composer on pc now resizes with the page
     `.trim()
 const LAYERS_INDEXES = [1,2,3,4] as const
-const EMPTY_LAYER = '0000'
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
@@ -349,7 +348,6 @@ export {
     LAYERS_INDEXES,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,
-    EMPTY_LAYER
 }
 export type {
     Pitch

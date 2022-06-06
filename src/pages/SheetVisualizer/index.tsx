@@ -12,7 +12,7 @@ import { Song } from 'lib/Song'
 import { RecordedNote } from 'lib/SongClasses'
 import { AppButton } from 'components/AppButton'
 import LoggerStore from 'stores/LoggerStore'
-import { songService } from 'lib/services/SongService'
+import { songService } from 'lib/Services/SongService'
 
 const THRESHOLDS = {
     joined: 50,
@@ -59,25 +59,25 @@ export default function SheetVisualizer() {
             let sheetText = ''
             for (let i = 0; notes.length > 0; i++) {
                 const chunk = new Chunk([notes.shift() as RecordedNote])
-                const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
+                const startTime = chunk.notes.length > 0 ? chunk.notes[0].time : 0
                 for (let j = 0; j < notes.length && j < 20; j++) {
-                    const difference = notes[j][1] - chunk.notes[0][1] - THRESHOLDS.joined //TODO add threshold here
+                    const difference = notes[j].time - chunk.notes[0].time - THRESHOLDS.joined //TODO add threshold here
                     if (difference < 0) {
                         chunk.notes.push(notes.shift() as RecordedNote)
                         j--
                     }
                 }
                 chunk.delay = previousChunkDelay
-                previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
+                previousChunkDelay = notes.length > 0 ? notes[0].time - startTime : 0
                 const emptyChunks = Math.floor(chunk.delay / THRESHOLDS.pause)
                 chunks.push(...new Array(emptyChunks).fill(0).map(() => new Chunk()))
                 chunks.push(chunk)
                 sheetText += emptyChunks > 2 ? ' \n\n' : "- ".repeat(emptyChunks)
                 if (chunk.notes.length > 1) {
-                    const text = chunk.notes.map(e => getChunkNoteText(e[0])).join('')
+                    const text = chunk.notes.map(e => getChunkNoteText(e.index)).join('')
                     sheetText += APP_NAME === "Genshin" ? `[${text}] ` : `${text} `
                 } else if (chunk.notes.length > 0) {
-                    sheetText += `${getChunkNoteText(chunk.notes[0][0])} `
+                    sheetText += `${getChunkNoteText(chunk.notes[0].index)} `
                 }
             }
             setSongAstext(sheetText)
@@ -179,7 +179,7 @@ function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const notes = new Array(columnsPerRow * rows).fill(0)
     frame.notes.forEach(note => {
-        notes[note[0]] = 1
+        notes[note.index] = 1
     })
     return frame.notes.length === 0
         ? <div className='frame-outer displayer-ball'>

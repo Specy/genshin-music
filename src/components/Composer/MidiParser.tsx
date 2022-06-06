@@ -1,7 +1,7 @@
 import { ChangeEvent, Component, useEffect, useState } from 'react'
 import { FileElement, FilePicker } from 'components/FilePicker'
 import { Midi, Track } from '@tonejs/midi'
-import { numberToLayer, groupNotesByIndex, mergeLayers } from 'lib/Tools'
+import { groupNotesByIndex, mergeLayers } from 'lib/Tools'
 import { ColumnNote, Column } from 'lib/SongClasses'
 import { ComposedSong } from 'lib/ComposedSong'
 import { APP_NAME, LAYERS_INDEXES, PITCHES, Pitch } from 'appConfig'
@@ -13,6 +13,7 @@ import { observe } from 'mobx'
 import { LayerIndex } from 'types/GeneralTypes'
 import { SongInstruments } from 'types/SongTypes'
 import Switch from 'components/Switch'
+import { NoteLayer } from 'lib/Layer'
 interface MidiImportProps {
     data: {
         instruments: SongInstruments
@@ -154,7 +155,9 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             previousTime = note.time
             if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
             noteColumn.notes = notes.map(note => {
-                return new ColumnNote(note.data.note, numberToLayer(note.layer))
+                const layer = new NoteLayer()
+                layer.set(note.layer, true)
+                return new ColumnNote(note.data.note, layer)
             })
             columns.push(noteColumn)
         })

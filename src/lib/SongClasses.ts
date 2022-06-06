@@ -1,27 +1,28 @@
-import { EMPTY_LAYER, TempoChanger, TEMPO_CHANGERS } from "appConfig"
-import { CombinedLayer, LayerIndex } from "types/GeneralTypes"
+import { TempoChanger, TEMPO_CHANGERS } from "appConfig"
+import { LayerIndex } from "types/GeneralTypes"
+import { NoteLayer } from "./Layer"
 
 export class Column {
 	notes: ColumnNote[]
-	tempoChanger : number //TODO put the keys of the tempo changers here
+	tempoChanger: number //TODO put the keys of the tempo changers here
 	constructor() {
 		this.notes = []
 		this.tempoChanger = 0
 	}
-    clone = () => {
-        const clone = new Column()
-        clone.tempoChanger = this.tempoChanger
-        clone.notes = this.notes.map(note => note.clone())
-        return clone
-    }
+	clone = () => {
+		const clone = new Column()
+		clone.tempoChanger = this.tempoChanger
+		clone.notes = this.notes.map(note => note.clone())
+		return clone
+	}
 	addNote(note: ColumnNote): ColumnNote
-	addNote(index: number,layer?: CombinedLayer ): ColumnNote
-	addNote(indexOrNote: number| ColumnNote,layer?: CombinedLayer){
-		if(indexOrNote instanceof ColumnNote){
+	addNote(index: number, layer?: NoteLayer): ColumnNote
+	addNote(indexOrNote: number | ColumnNote, layer?: NoteLayer) {
+		if (indexOrNote instanceof ColumnNote) {
 			this.notes.push(indexOrNote)
 			return indexOrNote
 		}
-		const note = new ColumnNote(indexOrNote,layer)
+		const note = new ColumnNote(indexOrNote, layer)
 		this.notes.push(note)
 		return note
 	}
@@ -31,10 +32,10 @@ export class Column {
 	removeAtIndex = (index: number) => {
 		this.notes.splice(index, 1)
 	}
-	setTempoChanger(changer:TempoChanger){
+	setTempoChanger(changer: TempoChanger) {
 		this.tempoChanger = changer.id
 	}
-	getTempoChanger(){
+	getTempoChanger() {
 		return TEMPO_CHANGERS[this.tempoChanger]
 	}
 	getNoteIndex = (index: number): number | null => {
@@ -43,82 +44,105 @@ export class Column {
 	}
 }
 
-const SPLIT_EMPTY_LAYER = EMPTY_LAYER.split("")
+const SPLIT_EMPTY_LAYER = "0000".split("")
 export class ColumnNote {
 	index: number
-	layer: CombinedLayer
-	constructor(index: number, layer: CombinedLayer = EMPTY_LAYER) {
+	layer: NoteLayer
+	constructor(index: number, layer?: NoteLayer) {
 		this.index = index
-		this.layer = layer
+		this.layer = layer || new NoteLayer()
 	}
-	static deserializeLayer = (layer: string): CombinedLayer => {
-        for(let i = 0; i<layer.length;i++){
-            SPLIT_EMPTY_LAYER[i] = layer[i]
-        }
-        return SPLIT_EMPTY_LAYER.join('') as CombinedLayer
-    }
-	setLayer(layerIndex: LayerIndex, value: '0' | '1'){
-		if(layerIndex > this.layer.length) return
-		const split = this.layer.split('')
-		split[layerIndex] = value
-		this.layer = split.join('') as CombinedLayer
+	static deserializeLayer = (layer: string): String => {
+		for (let i = 0; i < layer.length; i++) {
+			SPLIT_EMPTY_LAYER[i] = layer[i]
+		}
+		return SPLIT_EMPTY_LAYER.join('')
+	}
+	clearLayer(){
+		this.layer.setData(0)
+	}
+
+	setLayer(layerIndex: LayerIndex, value: boolean) {
+
+		this.layer.set(layerIndex, value)
 		return this.layer
 	}
-	toggleLayer(layerIndex: LayerIndex){
-		const split = this.layer.split('')
-		const toToggle = split[layerIndex]
-		split[layerIndex] = toToggle === '0' ? '1' : '0'
-		this.layer = split.join('') as CombinedLayer
+	toggleLayer(layerIndex: LayerIndex) {
+		this.layer.toggle(layerIndex)
 		return this.layer
 	}
-	isLayerToggled(layerIndex: LayerIndex){
-		return this.layer[layerIndex] === '1'
+	isLayerToggled(layerIndex: LayerIndex) {
+		return this.layer.test(layerIndex)
 	}
-    clone = () => {
-        return new ColumnNote(this.index, this.layer)
-    }
+	clone = () => {
+		return new ColumnNote(this.index, this.layer)
+	}
 }
 
-interface ApproachingNoteProps{
+interface ApproachingNoteProps {
 	time: number
 	index: number
 	clicked?: boolean
 	id?: number
 }
-export class ApproachingNote{
+export class ApproachingNote {
 	time: number
 	index: number
 	clicked: boolean
 	id: number
-	constructor({time, index, clicked = false, id = 0}: ApproachingNoteProps){
+	constructor({ time, index, clicked = false, id = 0 }: ApproachingNoteProps) {
 		this.time = time
 		this.index = index
 		this.clicked = clicked
 		this.id = id
 	}
 }
-export type RecordedNote = [index:number, time:number,layer: LayerIndex]
+
+export type SerializedRecordedNote = [index: number, time: number, layer: string]
+
+export class RecordedNote {
+	index: number
+	time: number
+	layer: NoteLayer
+	constructor(index?: number, time?: number, layer?: NoteLayer) {
+		this.index = index = 0
+		this.time = time = 0
+		this.layer = layer || new NoteLayer()
+	}
+	setLayer(layer: number, value: boolean) {
+		this.layer.set(layer, value)
+	}
+	serialize(): SerializedRecordedNote {
+		return [this.index, this.time, this.layer.serializeHex()]
+	}
+	static deserialize(data: SerializedRecordedNote) {
+		return new RecordedNote(data[0], data[1], NoteLayer.deserializeHex(data[2]))
+	}
+	clone = () => {
+		return new RecordedNote(this.index, this.time, this.layer.clone())
+	}
+}
 export class Recording {
-	start: number
+	startTimestamp: number
 	notes: RecordedNote[]
 	constructor() {
-		this.start = new Date().getTime()
+		this.startTimestamp = new Date().getTime()
 		this.notes = []
 	}
-	init = () => {
-		this.start = new Date().getTime() - 100
+	start = () => {
+		this.startTimestamp = new Date().getTime() - 100
 		console.log("Started new recording")
 	}
-	addNote = (index:number) => {
-		if (this.notes.length === 0) this.init()
+	addNote = (index: number) => {
+		if (this.notes.length === 0) this.start()
 		const currentTime = new Date().getTime()
-		const note:RecordedNote = [index, currentTime - this.start,0]
+		const note: RecordedNote = new RecordedNote(index, currentTime - this.startTimestamp)
 		this.notes.push(note)
 	}
 }
 
 export type SongData = {
-    isComposed: boolean
-    isComposedVersion: boolean,
-    appName: string
+	isComposed: boolean
+	isComposedVersion: boolean,
+	appName: string
 }

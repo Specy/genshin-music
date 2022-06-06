@@ -1,7 +1,8 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, Pitch, EMPTY_LAYER } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, Pitch } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
-import { CombinedLayer, InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
+import { InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
 import { SongInstruments } from "types/SongTypes"
+import { NoteLayer } from "./Layer"
 import { Song } from "./Song"
 import { Column, ColumnNote, RecordedNote, SongData } from "./SongClasses"
 
@@ -11,10 +12,11 @@ interface OldFormatNoteType {
     l?: number
 }
 export type ComposedSongInstruments = [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
-export type SerializedNote = [index: number, layer: CombinedLayer]
+export type SerializedNote = [index: number, layer: string]
 export type SerializedColumn = [tempoChanger: number, notes: SerializedNote[]]
 export interface SerializedComposedSong {
     id: string | null
+    version: number
     name: string
     data: SongData
     bpm: number
@@ -71,20 +73,24 @@ export class ComposedSong {
         parsed.bpm = isNaN(bpm) ? 220 : bpm
         parsed.pitch = song.pitch ?? "C"
         song.instruments = song.instruments ?? []
-        const parsedInstruments = EMPTY_LAYER.split('').map(() => INSTRUMENTS[0])
-        parsedInstruments.forEach((_, i) => {
+       
+        parsed.instruments.map((_, i) => {
             const toParse = song?.instruments[i] as any
-            parsedInstruments[i] = INSTRUMENTS.includes(toParse) ? toParse : INSTRUMENTS[0]
+            return INSTRUMENTS.includes(toParse) ? toParse : INSTRUMENTS[0]
         })
-        parsed.instruments = parsedInstruments as ComposedSongInstruments
         parsed.breakpoints = [...(song.breakpoints ?? [])]
         parsed.columns = song.columns.map(column => {
             const parsedColumn = new Column()
             parsedColumn.tempoChanger = column[0]
             column[1].forEach(note => {
-                const deserializedNote = ColumnNote.deserializeLayer(note[1])
-                if (deserializedNote.match(/^0+$/g)) return
-                parsedColumn.notes.push(new ColumnNote(note[0], deserializedNote))
+                if(song.version === undefined || song.version !== 2){
+                    const layer = note[1].split("").reverse().join("")
+                    const deserializedNote = new ColumnNote(note[0], NoteLayer.deserializeBin(layer))
+                    parsedColumn.notes.push(deserializedNote)
+                }
+                const layer = NoteLayer.deserializeHex(note[1])
+                if (layer.isEmpty()) return
+                parsedColumn.notes.push(new ColumnNote(note[0], layer))
             })
             return parsedColumn
         })
@@ -99,7 +105,7 @@ export class ComposedSong {
         let totalTime = 100
         this.columns.forEach(column => {
             column.notes.forEach(note => {
-                recordedSong.notes.push([note.index, totalTime, 0]) //TODO can add layer data here
+                recordedSong.notes.push(new RecordedNote(note.index, totalTime, note.layer))
             })
             totalTime += Math.floor(bpmPerMs * TEMPO_CHANGERS[column.tempoChanger].changer)
         })
@@ -112,6 +118,7 @@ export class ComposedSong {
             name: this.name,
             bpm: isNaN(bpm) ? 220 : bpm,
             pitch: this.pitch,
+            version: this.version,
             data: {
                 ...this.data,
                 appName: APP_NAME
@@ -123,7 +130,7 @@ export class ComposedSong {
         }
         this.columns.forEach(column => {
             const notes = column.notes.map(note => {
-                return [note.index, note.layer] as SerializedNote
+                return [note.index, note.layer.serializeHex()] as SerializedNote
             })
             serialized.columns.push([column.tempoChanger, notes])
         })
@@ -143,6 +150,7 @@ export class ComposedSong {
         let totalTime = 100
         song.columns.forEach(column => {
             column[1].forEach(note => {
+                //@ts-ignore
                 const layer = LAYERS_MAP[note[1]]
                 if (layer === 0) return
                 const noteObj: OldFormatNoteType = {
@@ -192,9 +200,9 @@ export class ComposedSong {
                 const column = this.columns[index]
                 if (column !== undefined) {
                     column.notes.forEach(note => {
-                        note.setLayer(layer - 1 as LayerIndex, '0')
+                        note.setLayer(layer - 1 as LayerIndex, false)
                     })
-                    column.notes = column.notes.filter(note => !note.layer.match(/^0+$/g))
+                    column.notes = column.notes.filter(note => !note.layer.isEmpty())
                 }
             })
         }
@@ -213,9 +221,9 @@ export class ComposedSong {
                     if (index === null) {
                         column.addColumnNote(clonedNote)
                     } else {
-                        for (let j = 0; j < EMPTY_LAYER.length; j++) {
+                        for (let j = 0; j < this.instruments.length; j++) {
                             if (clonedNote.isLayerToggled(j as LayerIndex)) {
-                                column.notes[index].setLayer(j as LayerIndex, '1')
+                                column.notes[index].setLayer(j as LayerIndex, true)
                             }
                         }
                     }
@@ -234,8 +242,8 @@ export class ComposedSong {
             copiedColumns = copiedColumns.map(column => {
                 column.notes = column.notes.filter(e => e.isLayerToggled(layer - 1 as LayerIndex))
                 column.notes = column.notes.map(e => {
-                    e.layer = EMPTY_LAYER
-                    e.setLayer(layer - 1 as LayerIndex, '1')
+                    e.clearLayer()
+                    e.setLayer(layer - 1 as LayerIndex, true)
                     return e
                 })
                 return column

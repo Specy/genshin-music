@@ -5,7 +5,7 @@ import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import LoggerStore from 'stores/LoggerStore'
 import { baseThemes } from "./defaultThemes";
-import { themeService } from "lib/services/ThemeService";
+import { themeService } from "lib/Services/ThemeService";
 
 export type ThemeKeys = keyof typeof ThemeSettings.data
 export type ThemeProp = {

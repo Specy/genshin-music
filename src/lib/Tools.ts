@@ -1,10 +1,11 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, EMPTY_LAYER, TEMPO_CHANGERS, isTwa } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
 import { Song } from "./Song";
 import { ColumnNote } from "./SongClasses";
-import { CombinedLayer, LayerIndex, NoteNameType } from "types/GeneralTypes";
+import { LayerIndex, NoteNameType } from "types/GeneralTypes";
+import { NoteLayer } from "./Layer";
 
 class FileDownloader {
 	static download(file: string | Blob, name: string, as: string = "text/json"){
@@ -177,7 +178,7 @@ function groupByNotes(notes: RecordedNote[], threshold: number) {
 		const row = [notes.shift() as RecordedNote]
 		let amount = 0
 		for (let i = 0; i < notes.length; i++) {
-			if (row[0][1] > notes[i][1] - threshold) amount++
+			if (row[0].time > notes[i].time - threshold) amount++
 		}
 		result.push([...row, ...notes.splice(0, amount)])
 	}
@@ -210,18 +211,15 @@ const NUMBER_TO_LAYER_MAP = {
 	2: "0010",
 	3: "0001"
 }
-function numberToLayer(number: LayerIndex): CombinedLayer {
-	return NUMBER_TO_LAYER_MAP[number] as CombinedLayer
-}
 
-function mergeLayers(notes: ColumnNote[]): CombinedLayer {
-	const merged = EMPTY_LAYER.split("")
+function mergeLayers(notes: ColumnNote[]) {
+	const merged = new NoteLayer()
 	notes.forEach(note => {
-		note.layer.split("").forEach((e, i) => {
-			if (e === "1") merged[i] = "1"
+		note.layer.toArray().forEach((e, i) => {
+			if (e === 1) merged.set(i, true)
 		})
 	})
-	return merged.join("") as CombinedLayer
+	return merged
 }
 function groupNotesByIndex(column: Column) {
 	const notes: ColumnNote[][] = []
@@ -253,7 +251,6 @@ export {
 	getSongType,
 	parseSong,
 	groupByNotes,
-	numberToLayer,
 	mergeLayers,
 	groupNotesByIndex,
 	delay,

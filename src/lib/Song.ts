@@ -1,9 +1,9 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, Pitch } from "appConfig"
-import { Column, ColumnNote, RecordedNote,SongData } from "./SongClasses"
+import { Column, ColumnNote, RecordedNote,SerializedRecordedNote,SongData } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
-import { numberToLayer, groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
+import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
-import { LayerIndex } from "types/GeneralTypes"
+import { NoteLayer } from "./Layer"
 
 type OldNote = {
     key: string
@@ -19,10 +19,12 @@ interface SongProps {
     bpm: number
     pitch: Pitch
     version: number,
-    notes: RecordedNote[]
 }
-export type SerializedSong = SongProps
-export type OldFormatSong = SongProps & {
+export type SerializedSong = SongProps & {
+    notes: SerializedRecordedNote[]
+}
+
+export type OldFormatSong = SerializedSong & {
     isComposed: boolean,
     pitchLevel: number,
     songNotes: {
@@ -69,8 +71,8 @@ export class Song {
             isEncrypted: false,
             songNotes : this.notes.map(note => {
                 return {
-                    time: note[1],
-                    key: "1Key" + note[0]
+                    time: note.time,
+                    key: "1Key" + note.index
                 }
             })
         } 
@@ -88,15 +90,16 @@ export class Song {
         return song
     }
     serialize = () => {
-        return {
+        const data: SerializedSong = {
             name: this.name,
             version: this.version,
             pitch: this.pitch,
             bpm: this.bpm,
             data: {...this.data},
-            notes: clonedeep(this.notes),
+            notes: this.notes.map(note => note.serialize()),
             id: this.id
         }
+        return data
     }
     toComposed = (precision = 4) => {
         const bpmToMs = Math.floor(60000 / this.bpm)
@@ -108,13 +111,13 @@ export class Song {
         let converted = []
         if(precision === 1 ){
             const groupedNotes: RecordedNote[][] = []
-            let previousTime = notes[0][1]
+            let previousTime = notes[0].time
             while (notes.length > 0) {
                 const row: RecordedNote[] = notes.length > 0 ? [notes.shift() as RecordedNote] : []
                 let amount = 0
                 if(row[0] !== undefined){
                     for (let i = 0; i < notes.length; i++) {
-                        if (row[0][1] > notes[i][1] - bpmToMs / 9) amount++
+                        if (row[0].time > notes[i].time - bpmToMs / 9) amount++
                     }
                 }
                 groupedNotes.push([...row, ...notes.splice(0, amount)])
@@ -123,13 +126,13 @@ export class Song {
             groupedNotes.forEach(notes => {
                 const note = notes[0]
                 if (!note) return
-                const elapsedTime = note[1] - previousTime
-                previousTime = note[1]
+                const elapsedTime = note.time - previousTime
+                previousTime = note.time
                 const emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
                 if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
                 const noteColumn = new Column()
                 noteColumn.notes = notes.map(note => {
-                    return new ColumnNote(note[0], numberToLayer(note[2] || 0))
+                    return new ColumnNote(note.index, note.layer)
                 })
                 columns.push(noteColumn)
             })
@@ -147,18 +150,11 @@ export class Song {
             for (let i = 0; i < grouped.length; i++) {
                 const column = new Column()
                 column.notes = grouped[i].map(note => {
-                    //TODO redo this whole thing, layer here should be the same as the one in the note
-                    const columnNote = new ColumnNote(note[0])
-                    if (note[2] === 0) columnNote.layer = "1000"
-                    else if (note[2] === 1) columnNote.layer = "1000"
-                    else if (note[2] === 2) columnNote.layer = "0100"
-                    //if (note[2] === 3) columnNote.layer = "110" 
-                    else columnNote.layer = "1000"
-                    return columnNote
+                    return new ColumnNote(note.index, note.layer.clone())
                 })
                 const next = grouped[i + 1] || [[0, 0, 0]]
                 const paddingColumns = []
-                let difference = next[0][1] - grouped[i][0][1]
+                let difference = next[0].time - grouped[i][0].time
                 while (difference >= combinations[3]) {
                     if (difference / combinations[0] >= 1) {
                         difference -= combinations[0]
@@ -202,8 +198,9 @@ export class Song {
             )
             notes.forEach((note) => {
                 const data = note.key.split("Key")
-                const layer = (note.l ?? Number(data[0])) as LayerIndex
-                converted.notes.push([IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer])
+                const layer = new NoteLayer((note.l ?? Number(data[0])))
+                const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time,  layer)
+                converted.notes.push(recordedNote)
             })
     
             if ([true, "true"].includes(song.isComposed)) {
@@ -223,7 +220,7 @@ export class Song {
         }
         clone.data.appName = "Genshin"
         clone.notes = clone.notes.map(note => {
-			note[0] = IMPORT_NOTE_POSITIONS[note[0]]
+			note.index = IMPORT_NOTE_POSITIONS[note.index]
 			return note
 		})
         return clone

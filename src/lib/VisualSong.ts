@@ -3,6 +3,7 @@ import { ComposedSong } from "lib/ComposedSong"
 import { Song } from "lib/Song"
 import { Column, ColumnNote, RecordedNote } from "lib/SongClasses"
 import { getNoteText } from "lib/Tools"
+import { NoteLayer } from "./Layer"
 
 const THRESHOLDS = {
     joined: 50,
@@ -11,7 +12,7 @@ const THRESHOLDS = {
 type NoteDifference = {
     delay: number
     index: number
-    layer: number
+    layer: NoteLayer
     time: number
 }
 function getChunkNoteText(i: number) {
@@ -31,12 +32,12 @@ export class VisualSong {
     static noteDifferences(notes: RecordedNote[]) {
         const parsed: NoteDifference[] = []
         for (let i = 0; i < notes.length; i++) {
-            const delay = notes[i + 1] ? notes[i + 1][1] - notes[i][1] : 0
+            const delay = notes[i + 1] ? notes[i + 1].time - notes[i].time : 0
             parsed.push({
                 delay,
-                index: notes[i][0],
-                time: notes[i][1],
-                layer: notes[i][2]
+                index: notes[i].index,
+                time: notes[i].time,
+                layer: notes[i].layer
             })
         }
         return parsed
@@ -86,7 +87,7 @@ class ChunkNote{
         this.layer = layer || 0
     }
     static from(columnNote: ColumnNote){
-        const layer = 1 + columnNote.layer.split('').findIndex(l => l === '1')
+        const layer = 1 + columnNote.layer.toArray().findIndex(l => l === 1)
         const chunkNote = new ChunkNote(columnNote.index, layer)
         return chunkNote
     }

@@ -11,7 +11,7 @@ import { SerializedSongType } from 'types/SongTypes';
 
 import './ErrorPage.css'
 import { AppButton } from 'components/AppButton';
-import { songService } from 'lib/services/SongService';
+import { songService } from 'lib/Services/SongService';
 
 export function ErrorPage() {
     const [songs, setSongs] = useState<SerializedSongType[]>([])

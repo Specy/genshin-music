@@ -169,12 +169,12 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         const notes = []
         this.approachRate = this.props.data.approachRate || 1500
         const startDelay = this.approachRate
-        const startOffset = song.notes[start] !== undefined ? song.notes[start][1] : 0
+        const startOffset = song.notes[start] !== undefined ? song.notes[start].time : 0
         for (let i = start; i < end && i < song.notes.length; i++) {
             const note = song.notes[i]
             const obj = new ApproachingNote({
-                time: Math.floor((note[1] - startOffset) / this.state.speedChanger.value + startDelay),
-                index: note[0]
+                time: Math.floor((note.time - startOffset) / this.state.speedChanger.value + startDelay),
+                index: note.index
             })
             notes.push(obj)
         }
@@ -256,23 +256,23 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         const { keyboard } = this.state
         const notes = this.applySpeedChange(song.notes)
         if (notes.length === 0 || notes.length <= start) return
-        let previous = notes[start][1]
+        let previous = notes[start].time
         let pastError = 0
         let previousTime = new Date().getTime()
         for (let i = start; i < end && i < song.notes.length; i++) {
-            const delayTime = notes[i][1] - previous
-            previous = notes[i][1]
+            const delayTime = notes[i].time - previous
+            previous = notes[i].time
             previousTime = new Date().getTime()
             if (delayTime > 16) await delay(delayTime - pastError)
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
-            this.handleClick(keyboard[notes[i][0]])
+            this.handleClick(keyboard[notes[i].index])
             SliderStore.setCurrent(i + 1)
             pastError = new Date().getTime() - previousTime - delayTime
         }
     }
     applySpeedChange = (notes: RecordedNote[]) => {
         return notes.map(note => {
-            note[1] = note[1] / this.state.speedChanger.value
+            note.time = note.time / this.state.speedChanger.value
             return note
         })
     }
@@ -288,32 +288,32 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                 [notes.shift() as RecordedNote],
                 0
             )
-            const startTime = chunk.notes.length > 0 ? chunk.notes[0][1] : 0
+            const startTime = chunk.notes.length > 0 ? chunk.notes[0].time : 0
             for (let j = 0; j < notes.length && j < 20; j++) {
-                const difference = notes[j][1] - chunk.notes[0][1] - 50 //TODO add threshold here
+                const difference = notes[j].time - chunk.notes[0].time - 50 //TODO add threshold here
                 if (difference < 0) {
                     chunk.notes.push(notes.shift() as RecordedNote)
                     j--
                 }
             }
             chunk.delay = previousChunkDelay
-            previousChunkDelay = notes.length > 0 ? notes[0][1] - startTime : 0
+            previousChunkDelay = notes.length > 0 ? notes[0].time - startTime : 0
             chunks.push(chunk)
         }
         if (chunks.length === 0) return
         this.nextChunkDelay = 0
         const firstChunk = chunks[0]
         firstChunk.notes.forEach(note => {
-            keyboard[note[0]] = keyboard[note[0]].setState({
+            keyboard[note.index] = keyboard[note.index].setState({
                 status: 'toClick',
                 delay: APP_NAME === 'Genshin' ? 100 : 200
             })
         })
         const secondChunk = chunks[1]
         secondChunk?.notes.forEach(note => {
-            const keyboardNote = keyboard[note[0]]
-            if (keyboardNote.status === 'toClick') return keyboard[note[0]] = keyboardNote.setStatus('toClickAndNext')
-            keyboard[note[0]] = keyboardNote.setStatus('toClickNext')
+            const keyboardNote = keyboard[note.index]
+            if (keyboardNote.status === 'toClick') return keyboard[note.index] = keyboardNote.setStatus('toClickAndNext')
+            keyboard[note.index] = keyboardNote.setStatus('toClickNext')
         })
         this.props.functions.setHasSong(true)
         this.setState({
@@ -368,7 +368,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     handlePracticeClick = (note: NoteData) => {
         const { keyboard, songToPractice } = this.state
         if (songToPractice.length > 0) {
-            const indexClicked = songToPractice[0]?.notes.findIndex(e => e[0] === note.index)
+            const indexClicked = songToPractice[0]?.notes.findIndex(e => e.index === note.index)
             if (indexClicked !== -1) {
                 songToPractice[0].notes.splice(indexClicked, 1)
                 if (songToPractice[0].notes.length === 0) songToPractice.shift()
@@ -376,16 +376,16 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                     const nextChunk = songToPractice[0]
                     const nextNextChunk = songToPractice[1]
                     nextChunk.notes.forEach(note => {
-                        keyboard[note[0]] = keyboard[note[0]].setState({
+                        keyboard[note.index] = keyboard[note.index].setState({
                             status: 'toClick',
                             delay: nextChunk.delay
                         })
                     })
                     if (nextNextChunk) {
                         nextNextChunk?.notes.forEach(note => {
-                            const keyboardNote = keyboard[note[0]]
-                            if (keyboardNote.status === 'toClick') return keyboard[note[0]] = keyboardNote.setStatus('toClickAndNext')
-                            keyboard[note[0]] = keyboardNote.setStatus('toClickNext')
+                            const keyboardNote = keyboard[note.index]
+                            if (keyboardNote.status === 'toClick') return keyboard[note.index] = keyboardNote.setStatus('toClickAndNext')
+                            keyboard[note.index] = keyboardNote.setStatus('toClickNext')
                         })
                     }
                 }

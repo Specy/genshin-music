@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, Pitch, TempoChanger, EMPTY_LAYER } from "appConfig"
+import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, Pitch, TempoChanger } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -13,7 +13,7 @@ import ComposerCanvas from "components/Composer/Canvas"
 import Menu from "components/Composer/Menu"
 import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType } from "lib/BaseSettings"
+import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
 import { delay, formatMs, calculateSongLength, parseSong } from "lib/Tools"
 import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
@@ -35,8 +35,8 @@ import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardType
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { CanvasTool } from 'components/Composer/CanvasTool';
-import { songService } from 'lib/services/SongService';
-import { settingsService } from 'lib/services/SettingsService';
+import { songService } from 'lib/Services/SongService';
+import { settingsService } from 'lib/Services/SettingsService';
 interface ComposerState {
     layers: ComposerInstruments
     songs: SerializedSongType[]
@@ -325,11 +325,11 @@ class Composer extends Component<any, ComposerState>{
         const layerIndex = layer - 1 as LayerIndex
         if (index === null) { //if it doesn't exist, create a new one
             const columnNote = column.addNote(note.index)
-            columnNote.setLayer(layerIndex, '1')
+            columnNote.setLayer(layerIndex, true)
         } else { //if it exists, toggle the current layer and if it's 000 delete it
             const currentNote = column.notes[index]
             currentNote.toggleLayer(layerIndex)
-            if (currentNote.layer === EMPTY_LAYER) column.removeAtIndex(index)
+            if (currentNote.layer.isEmpty()) column.removeAtIndex(index)
         }
         this.setState({ song })
         this.handleAutoSave()
