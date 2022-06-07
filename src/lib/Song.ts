@@ -79,14 +79,23 @@ export class Song {
         return song
     }
     static deserialize(obj:SerializedSong): Song{
-        const { version, data, pitch, bpm, notes, name, id} = obj
+        const { data, pitch, bpm, notes, name, id} = obj
+        const version = obj.version || 1
         const song = new Song(name || 'Untitled')
-        song.version = version || song.version
         song.data = {...song.data, ...data}
         song.pitch = pitch || song.pitch
         song.bpm = bpm || song.bpm
-        song.notes = Array.isArray(notes) ? clonedeep(notes) : []
         song.id = id
+        if(version === 1){
+            const clonedNotes:[] =  Array.isArray(notes) ? clonedeep(notes) : []
+            song.notes = clonedNotes.map(note => {
+                return RecordedNote.deserialize([note[0], note[1], note[2] || 1] as SerializedRecordedNote)
+            })
+            return song
+        }
+
+
+        song.notes = notes.map(note => RecordedNote.deserialize(note))
         return song
     }
     serialize = () => {
@@ -106,7 +115,7 @@ export class Song {
         const song = new ComposedSong(this.name)
         song.bpm = this.bpm
         song.pitch = this.pitch
-        const notes = this.notes
+        const notes = this.notes.map(note => note.clone())
         //remove duplicates
         let converted = []
         if(precision === 1 ){
@@ -132,7 +141,7 @@ export class Song {
                 if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
                 const noteColumn = new Column()
                 noteColumn.notes = notes.map(note => {
-                    return new ColumnNote(note.index, note.layer)
+                    return new ColumnNote(note.index, note.layer.clone())
                 })
                 columns.push(noteColumn)
             })
@@ -231,7 +240,7 @@ export class Song {
         clone.bpm = this.bpm
         clone.pitch = this.pitch
         clone.data = {...this.data}
-        clone.notes = clonedeep(this.notes)
+        clone.notes = this.notes.map(note => note.clone())
         return clone
     }
 }

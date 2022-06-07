@@ -2,6 +2,7 @@ import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "appConfig"
 import type { ColumnNote } from 'lib/SongClasses';
 import type { Texture } from 'pixi.js';
 import { Container, Sprite } from '@inlet/react-pixi';
+import { ComposerCacheData } from "./TextureCache";
 
 interface RenderColumnProps {
     notes: ColumnNote[]
@@ -10,7 +11,7 @@ interface RenderColumnProps {
         width: number
         height: number
     }
-    cache: any
+    cache: ComposerCacheData
     backgroundCache: Texture
     isBreakpoint: boolean
     isSelected: boolean
@@ -42,10 +43,10 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCa
             }
         </Sprite>
 
-        {notes.map((note: any) => {
+        {notes.map((note) => {
             return <Sprite
                 key={note.index}
-                texture={cache.notes[note.layer]}
+                texture={cache.notes[note.layer.legacyString]}
                 y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
             >
             </Sprite>

@@ -75,7 +75,7 @@ export class ColumnNote {
 		return this.layer.test(layerIndex)
 	}
 	clone = () => {
-		return new ColumnNote(this.index, this.layer)
+		return new ColumnNote(this.index, this.layer.clone())
 	}
 }
 
@@ -105,8 +105,8 @@ export class RecordedNote {
 	time: number
 	layer: NoteLayer
 	constructor(index?: number, time?: number, layer?: NoteLayer) {
-		this.index = index = 0
-		this.time = time = 0
+		this.index = index || 0
+		this.time = time || 0
 		this.layer = layer || new NoteLayer()
 	}
 	setLayer(layer: number, value: boolean) {

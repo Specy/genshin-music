@@ -49,7 +49,7 @@ export class ComposedSong {
     columns: Column[]
     selected: number
     constructor(name: string, notes: RecordedNote[] = []) {
-        this.version = 1
+        this.version = 2
         this.data = {
             appName: APP_NAME,
             isComposed: true,
@@ -83,10 +83,11 @@ export class ComposedSong {
             const parsedColumn = new Column()
             parsedColumn.tempoChanger = column[0]
             column[1].forEach(note => {
-                if(song.version === undefined || song.version !== 2){
+                if(song.version === undefined) song.version = 1
+                if(song.version !== 2){
                     const layer = note[1].split("").reverse().join("")
                     const deserializedNote = new ColumnNote(note[0], NoteLayer.deserializeBin(layer))
-                    parsedColumn.notes.push(deserializedNote)
+                    return parsedColumn.notes.push(deserializedNote)
                 }
                 const layer = NoteLayer.deserializeHex(note[1])
                 if (layer.isEmpty()) return
@@ -105,7 +106,7 @@ export class ComposedSong {
         let totalTime = 100
         this.columns.forEach(column => {
             column.notes.forEach(note => {
-                recordedSong.notes.push(new RecordedNote(note.index, totalTime, note.layer))
+                recordedSong.notes.push(new RecordedNote(note.index, totalTime, note.layer.clone()))
             })
             totalTime += Math.floor(bpmPerMs * TEMPO_CHANGERS[column.tempoChanger].changer)
         })

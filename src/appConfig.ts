@@ -325,6 +325,7 @@ function isTwa() {
 }
 export type AppName = 'Sky'| 'Genshin'
 
+const EMPTY_LAYER = "0000"
 export {
     INSTRUMENTS,
     INSTRUMENTS_DATA,
@@ -348,6 +349,7 @@ export {
     LAYERS_INDEXES,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,
+    EMPTY_LAYER
 }
 export type {
     Pitch

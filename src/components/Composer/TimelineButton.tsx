@@ -4,7 +4,7 @@ interface TimelineButtonProps {
     onClick: () => void;
     tooltip?: string;
     children: React.ReactNode;
-    style?: any;
+    style?: React.CSSProperties;
 }
 
 export function TimelineButton({onClick, children, tooltip, style}:TimelineButtonProps) {

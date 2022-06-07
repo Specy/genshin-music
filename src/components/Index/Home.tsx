@@ -93,7 +93,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContntElement
                 icon={<FaCompactDisc />}
                 title='Composer'
-                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
+                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                 background={`./manifestData/composer.png`}
                 href='Composer'
                 current={currentPage === 'Composer'}
@@ -103,7 +103,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContntElement
                 icon={<BsMusicPlayerFill />}
                 title='Player'
-                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
+                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                 background={`./manifestData/main.png`}
                 href=''
                 current={currentPage === '' || currentPage === 'Player'}
@@ -165,7 +165,7 @@ interface MainContntElementProps {
     background: string,
     current: boolean,
     href: string,
-    style?: any
+    style?: React.CSSProperties
 
 }
 function MainContntElement({ title, icon, children, background, current, href, style = {} }: MainContntElementProps) {

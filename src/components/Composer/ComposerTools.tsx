@@ -123,7 +123,7 @@ interface ToolButtonprops{
     disabled: boolean
     onClick: () => void
     active?: boolean
-    style: any
+    style: React.CSSProperties
     children: React.ReactNode
     tooltip?: string
 }

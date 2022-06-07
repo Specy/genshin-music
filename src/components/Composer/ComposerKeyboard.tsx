@@ -42,7 +42,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     const noteText = getNoteText(noteNameType, note.index, pitch, keyboard.layout.length as 8 | 15 | 21)
                     return <ComposerNote
                         key={note.index}
-                        layer={index >= 0 ? currentColumn.notes[index].layer : NoteLayer.EMPTY_LAYER}
+                        layer={(index >= 0 ? currentColumn.notes[index].layer : NoteLayer.EMPTY_LAYER).legacyString}
                         data={note}
                         noteText={noteText}
                         instrument={keyboard.name}

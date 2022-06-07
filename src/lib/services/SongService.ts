@@ -57,7 +57,6 @@ class SongService{
 
     }
     async addSong(song:SerializedSongType){
-        console.log(song)
         const id = DbInstance.generateId()
         song.id = id
         await this.songCollection.insert(song)

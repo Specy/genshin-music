@@ -409,7 +409,7 @@ interface NumberInputProps {
     value: number
     delay: number
     step: number
-    style: any
+    style: React.CSSProperties
 }
 function NumberInput({ onChange, value, delay = 500, step = 1, style = {} }: NumberInputProps) {
     const [elementValue, setElementValue] = useState(value)

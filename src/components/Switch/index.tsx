@@ -4,7 +4,7 @@ import { useTheme } from 'lib/hooks/useTheme'
 interface SwitchProps{
     checked: boolean, 
     onChange: (change: boolean) => void,
-    styleOuter?: any
+    styleOuter?: React.CSSProperties
 }
 export default function Switch({checked, onChange, styleOuter}: SwitchProps){
     const [theme] = useTheme()
