@@ -14,7 +14,7 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         Added drag and drop in the composer
         Composer on pc now resizes with the page
     `.trim()
-const LAYERS_INDEXES = [1,2,3,4] as const
+const LAYERS_INDEXES = [1, 2, 3, 4] as const
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
@@ -44,7 +44,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Zither",
         "Old-Zither",
         "DunDun"
-    ] as const: [
+    ] as const : [
         "Piano",
         "Contrabass",
         "Guitar",
@@ -88,7 +88,7 @@ const BaseinstrumentsData = {
     },
     LightGuitar: {
         notes: 15
-    },  
+    },
     Bells: {
         notes: 8
     },
@@ -148,7 +148,7 @@ type InstrumentsDataProps = {
 }
 //@ts-ignore
 const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
-interface LayoutDataType{
+interface LayoutDataType {
     keyboardLayout: string[],
     mobileLayout: string[],
     keyboardCodes: string[],
@@ -190,7 +190,7 @@ const LAYOUT_DATA = {
             "65 83 68 70").split(" "),
         abcLayout: (
             "A1 A2 A3 A4" +
-            "B1 B2 B3 B4").split(" ")    
+            "B1 B2 B3 B4").split(" ")
     },
     15: {
         keyboardLayout: (
@@ -253,7 +253,7 @@ const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
         name: `x${e}`,
         value: e
     }
-}) 
+})
 
 const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] as const
 type Pitch = typeof PITCHES[number]
@@ -277,55 +277,125 @@ const CACHE_DATA = {
     standards: [
         {
             color: 0x515c6f //lighter
-        },{
+        }, {
             color: 0x485363 //darker
-        },{
+        }, {
             color: 0x1a968b //current
-        },{
+        }, {
             color: 0xd6722f //selected
         }
     ],
-    layersCombination: ["0000" , "0001" , "0010" , "0011" , "0100" , "0101" , "0110" , "0111" ,"1000" , "1001" , "1010" , "1011" , "1100" , "1101" , "1110" , "1111"],
+    layersCombination: ["0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111"],
     breakpoints: [
         {
             type: "short",
             color: "#282875"
-        },{
+        }, {
             type: "long",
             color: "#282875"
         }
     ]
 }
 const TEMPO_CHANGERS = [
-	{
-		id: 0,
-		text: "1",
-		changer: 1,
-		color: 0x515c6f
-	}, {
-		id: 1,
-		text: "1/2",
-		changer: 1 / 2,
-		color: 0x517553
-	}, {
-		id: 2,
-		text: "1/4",
-		changer: 1 / 4,
-		color: 0x434c7d
-	}, {
-		id: 3,
-		text: "1/8",
-		changer: 1 / 8,
-		color: 0x774D6D
-	}
+    {
+        id: 0,
+        text: "1",
+        changer: 1,
+        color: 0x515c6f
+    }, {
+        id: 1,
+        text: "1/2",
+        changer: 1 / 2,
+        color: 0x517553
+    }, {
+        id: 2,
+        text: "1/4",
+        changer: 1 / 4,
+        color: 0x434c7d
+    }, {
+        id: 3,
+        text: "1/8",
+        changer: 1 / 8,
+        color: 0x774D6D
+    }
 ] as const
 export type TempoChanger = typeof TEMPO_CHANGERS[number]
 function isTwa() {
     return JSON.parse(sessionStorage.getItem('isTwa') || 'null')
 }
-export type AppName = 'Sky'| 'Genshin'
+export type AppName = 'Sky' | 'Genshin'
 
 const EMPTY_LAYER = "0000"
+
+const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
+    ? {
+        60: [0, false],
+        61: [0, true],
+        62: [1, false],
+        63: [1, true],
+        64: [2, false],
+        65: [3, false],
+        66: [3, true],
+        67: [4, false],
+        68: [4, true],
+        69: [5, false],
+        70: [5, true],
+        71: [6, false],
+        72: [7, false],
+        73: [7, true],
+        74: [8, false],
+        75: [8, true],
+        76: [9, false],
+        77: [10, false],
+        78: [10, true],
+        79: [11, false],
+        80: [11, true],
+        81: [12, false],
+        82: [12, true],
+        83: [13, false],
+        84: [14, false],
+    }
+    : {
+        48: [14, false],
+        49: [14, true],
+        50: [15, false],
+        51: [15, true],
+        52: [16, false],
+        53: [17, false],
+        54: [17, true],
+        55: [18, false],
+        56: [18, true],
+        57: [19, false],
+        58: [19, true],
+        59: [20, false],
+        60: [7, false],
+        61: [7, true],
+        62: [8, false],
+        63: [8, true],
+        64: [9, false],
+        65: [10, false],
+        66: [10, true],
+        67: [11, false],
+        68: [11, true],
+        69: [12, false],
+        70: [12, true],
+        71: [13, false],
+        72: [0, false],
+        73: [0, true],
+        74: [1, false],
+        75: [1, true],
+        76: [2, false],
+        77: [3, false],
+        78: [3, true],
+        79: [4, false],
+        80: [4, true],
+        81: [5, false],
+        82: [5, true],
+        83: [6, false],
+    })))
+//get only non accidentals
+const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k,v]) => v[1] === false)
+const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
 export {
     INSTRUMENTS,
     INSTRUMENTS_DATA,
@@ -349,7 +419,9 @@ export {
     LAYERS_INDEXES,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,
-    EMPTY_LAYER
+    EMPTY_LAYER,
+    MIDI_MAP_TO_NOTE,
+    NOTE_MAP_TO_MIDI
 }
 export type {
     Pitch

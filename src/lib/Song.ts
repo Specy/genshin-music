@@ -4,6 +4,8 @@ import { ComposedSong } from "./ComposedSong"
 import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "./Layer"
+import { Header, Midi, Track } from "@tonejs/midi"
+import { MIDIEvent } from "./Providers/MIDIProvider"
 
 type OldNote = {
     key: string
@@ -91,11 +93,9 @@ export class Song {
             song.notes = clonedNotes.map(note => {
                 return RecordedNote.deserialize([note[0], note[1], note[2] || 1] as SerializedRecordedNote)
             })
-            return song
+        }else if(version === 2){
+            song.notes = notes.map(note => RecordedNote.deserialize(note))
         }
-
-
-        song.notes = notes.map(note => RecordedNote.deserialize(note))
         return song
     }
     serialize = () => {
@@ -193,6 +193,32 @@ export class Song {
         }
         song.columns = converted
         return song
+    }
+    toMidi(): Midi{
+        const midi = new Midi()
+        midi.header.setTempo(this.bpm)
+        midi.header.keySignatures.push({
+            ticks: 0,
+            key: this.pitch,
+            scale: "major"
+        })
+        midi.name = this.name
+        const highestLayer = Math.max(...this.notes.map(note => note.layer.asNumber()))
+        midi.tracks = new Array(highestLayer).fill(0).map((_,i) => {
+            const trackHeader = new Header()
+            const track = new Track([], trackHeader)
+            track.name = `Layer ${i + 1}`
+            const notes = this.notes.filter(note => note.layer.test(i))
+            notes.forEach(note => {
+                track.addNote({
+                    time: note.time,
+                    duration: 0.2,
+                    midi: note.toMidi() || 0,
+                })
+            })
+            return track
+        })
+        return midi
     }
     static fromOldFormat = (song: any) => {
         try {

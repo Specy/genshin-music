@@ -22,7 +22,9 @@ export class NoteLayer{
         this.data = data
         this.setLegacyString()
     }
-
+    asNumber(){
+        return this.data
+    }
     set(position: number, value: boolean){
         if(value){
             this.data |= (1 << position)

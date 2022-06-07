@@ -245,7 +245,7 @@
 	box-shadow: 0px 0px 4px 2px #2828336b;
 	display: none;
 	position: absolute;
-	transform: translateX(calc(-100% + 2.6rem));
+	transform: translateX(calc(-100% + 3rem));
 	z-index: 100;
 	padding: 0.2rem;
 	background-color: var(--primary);
@@ -253,6 +253,21 @@
 	border: solid 2px var(--secondary);
 	border-radius: 0.4rem;
 }
+.floating-dropdown{
+    position: relative;
+}
+.floating-dropdown-text{
+    display: flex;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+.floating-dropdown-active .floating-children-bottom{
+	display: flex;
+	animation: fadeIn 0.2s;
+	animation-fill-mode: forwards;
+
+}
+
 .song-name{
     flex: 1;
     cursor: pointer;

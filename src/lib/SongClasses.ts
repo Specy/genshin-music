@@ -1,6 +1,8 @@
-import { TempoChanger, TEMPO_CHANGERS } from "appConfig"
+import { NOTE_MAP_TO_MIDI, TempoChanger, TEMPO_CHANGERS } from "appConfig"
 import { LayerIndex } from "types/GeneralTypes"
 import { NoteLayer } from "./Layer"
+
+export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
 
 export class Column {
 	notes: ColumnNote[]
@@ -26,6 +28,16 @@ export class Column {
 		this.notes.push(note)
 		return note
 	}
+
+	serialize(): SerializedColumn{
+		return [this.tempoChanger, this.notes.map(note => note.serialize())]
+	}
+	static deserialize(data: SerializedColumn): Column {
+		const column = new Column()
+		column.tempoChanger = data[0]
+		column.notes = data[1].map(note => ColumnNote.deserialize(note)).filter(note => !note.layer.isEmpty())
+		return column
+	}
 	addColumnNote = (note: ColumnNote) => {
 		this.notes.push(note.clone())
 	}
@@ -44,7 +56,9 @@ export class Column {
 	}
 }
 
+export type SerializedColumnNote = [index: number, layer: string]
 const SPLIT_EMPTY_LAYER = "0000".split("")
+
 export class ColumnNote {
 	index: number
 	layer: NoteLayer
@@ -58,6 +72,14 @@ export class ColumnNote {
 		}
 		return SPLIT_EMPTY_LAYER.join('')
 	}
+	static deserialize(serialized: SerializedColumnNote): ColumnNote {
+		return  new ColumnNote(serialized[0], NoteLayer.deserializeHex(serialized[1]))
+	}
+
+	serialize(): SerializedColumnNote {
+		return [this.index, this.layer.serializeHex()]
+	}
+
 	clearLayer(){
 		this.layer.setData(0)
 	}
@@ -111,6 +133,9 @@ export class RecordedNote {
 	}
 	setLayer(layer: number, value: boolean) {
 		this.layer.set(layer, value)
+	}
+	toMidi(){
+		return NOTE_MAP_TO_MIDI.get(this.index)
 	}
 	serialize(): SerializedRecordedNote {
 		return [this.index, this.time, this.layer.serializeHex()]

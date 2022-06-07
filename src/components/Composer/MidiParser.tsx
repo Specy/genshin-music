@@ -4,7 +4,7 @@ import { Midi, Track } from '@tonejs/midi'
 import { groupNotesByIndex, mergeLayers } from 'lib/Tools'
 import { ColumnNote, Column } from 'lib/SongClasses'
 import { ComposedSong } from 'lib/ComposedSong'
-import { APP_NAME, LAYERS_INDEXES, PITCHES, Pitch } from 'appConfig'
+import { LAYERS_INDEXES, PITCHES, Pitch, MIDI_MAP_TO_NOTE } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
@@ -77,6 +77,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             if (files.length === 0) return
             const file = files[0]
             const midi = new Midi(file.data as ArrayBuffer)
+            console.log(midi)
             const bpm = midi.header.tempos[0]?.bpm
             const key = midi.header.keySignatures[0]?.key
             const tracks = midi.tracks.map((track, i) => {
@@ -178,6 +179,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         if (song.columns.length === 0) {
             return LoggerStore.warn("There are no notes")
         }
+        console.log(tracks)
         this.props.functions.loadSong(song)
         this.setState({
             accidentals: numberOfAccidentals,
@@ -460,82 +462,10 @@ class MidiNote {
     }
     static fromMidi = (layer: LayerIndex, time: number, midiNote: number) => {
         const toReturn = new MidiNote(time, layer)
-        let note = -1
-        let isAccidental = false
-        if (APP_NAME === 'Sky') {
-            switch (midiNote) {
-                case 60: note = 0; break;
-                case 61: note = 0; isAccidental = true; break;
-                case 62: note = 1; break;
-                case 63: note = 1; isAccidental = true; break;
-                case 64: note = 2; break;
-                case 65: note = 3; break;
-                case 66: note = 3; isAccidental = true; break;
-                case 67: note = 4; break;
-                case 68: note = 4; isAccidental = true; break;
-                case 69: note = 5; break;
-                case 70: note = 5; isAccidental = true; break;
-                case 71: note = 6; break;
-                case 72: note = 7; break;
-                case 73: note = 7; isAccidental = true; break;
-                case 74: note = 8; break;
-                case 75: note = 8; isAccidental = true; break;
-                case 76: note = 9; break;
-                case 77: note = 10; break;
-                case 78: note = 10; isAccidental = true; break;
-                case 79: note = 11; break;
-                case 80: note = 11; isAccidental = true; break;
-                case 81: note = 12; break;
-                case 82: note = 12; isAccidental = true; break;
-                case 83: note = 13; break;
-                case 84: note = 14; break;
-                default: note = -1;
-            }
-        }
-        if (APP_NAME === 'Genshin') {
-            switch (midiNote) {
-                case 48: note = 14; break;
-                case 49: note = 14; isAccidental = true; break;
-                case 50: note = 15; break;
-                case 51: note = 15; isAccidental = true; break;
-                case 52: note = 16; break;
-                case 53: note = 17; break;
-                case 54: note = 17; isAccidental = true; break;
-                case 55: note = 18; break;
-                case 56: note = 18; isAccidental = true; break;
-                case 57: note = 19; break;
-                case 58: note = 19; isAccidental = true; break;
-                case 59: note = 20; break;
-                case 60: note = 7; break;
-                case 61: note = 7; isAccidental = true; break;
-                case 62: note = 8; break;
-                case 63: note = 8; isAccidental = true; break;
-                case 64: note = 9; break;
-                case 65: note = 10; break;
-                case 66: note = 10; isAccidental = true; break;
-                case 67: note = 11; break;
-                case 68: note = 11; isAccidental = true; break;
-                case 69: note = 12; break;
-                case 70: note = 12; isAccidental = true; break;
-                case 71: note = 13; break;
-                case 72: note = 0; break;
-                case 73: note = 0; isAccidental = true; break;
-                case 74: note = 1; break;
-                case 75: note = 1; isAccidental = true; break;
-                case 76: note = 2; break;
-                case 77: note = 3; break;
-                case 78: note = 3; isAccidental = true; break;
-                case 79: note = 4; break;
-                case 80: note = 4; isAccidental = true; break;
-                case 81: note = 5; break;
-                case 82: note = 5; isAccidental = true; break;
-                case 83: note = 6; break;
-                default: note = -1;
-            }
-        }
+        const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean] 
         toReturn.data = {
-            note,
-            isAccidental
+            note:  note[0],
+            isAccidental: note[1]
         }
         return toReturn
     }

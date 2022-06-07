@@ -42,8 +42,21 @@ interface FloatingDropdownButtonProps {
     onClick?: () => void
 
 }
+interface FloatingDropdownTextProps {
+    text: string
+}
+
+export function FloatingDropdownText({text}: FloatingDropdownTextProps){
+    return <div className="floating-dropdown-text">
+        {text}
+    </div>
+}
 export function FloatingDropdownRow({ children, onClick }: FloatingDropdownButtonProps) {
-    return <AppButton className='row row-centered' style={{ padding: "0.4rem" }} onClick={onClick}>
+    return <AppButton 
+        className='row row-centered' 
+        style={{ padding: "0.4rem", minWidth: "unset" }} 
+        onClick={onClick}
+    >
         {children}
     </AppButton>
 }

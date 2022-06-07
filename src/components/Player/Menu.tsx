@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle} from 'react-icons/fa';
+import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, parseSong } from "lib/Tools"
@@ -31,7 +31,8 @@ import { ThemeStoreClass } from 'stores/ThemeStore';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { hasTooltip, Tooltip } from "components/Tooltip"
 import { HelpTooltip } from 'components/HelpTooltip';
-import { FloatingDropdown, FloatingDropdownRow } from 'components/FloatingDropdown';
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
+import { Midi } from '@tonejs/midi';
 interface MenuProps {
     functions: {
         addSong: (song: Song | ComposedSong) => void
@@ -132,7 +133,14 @@ function Menu({ functions, data }: MenuProps) {
             }
         }
     }
-    const downloadSong = (song: ComposedSong | Song) => {
+    const downloadSong = (song: ComposedSong | Song | Midi) => {
+        if (song instanceof Midi) {
+            FileDownloader.download(
+                new Blob([song.toArray()],{ type: "audio/midi"}), 
+                song.name + ".mid"
+            )
+            return
+        }
         const songName = song.name
         const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
         const json = JSON.stringify(converted)
@@ -206,15 +214,15 @@ function Menu({ functions, data }: MenuProps) {
                                 Or you can download yours to share
                             </li>
                             <li>To create your song, you can record the notes you play or create one in the composer</li>
-                            <li><FaCrosshairs style={{marginRight: '0.2rem'}}/>: Start the practice mode</li>
-                            <li><FaRegCircle style={{marginRight: '0.2rem'}}/>: Start the approaching notes mode</li>
-                            {IS_MIDI_AVAILABLE && 
+                            <li><FaCrosshairs style={{ marginRight: '0.2rem' }} />: Start the practice mode</li>
+                            <li><FaRegCircle style={{ marginRight: '0.2rem' }} />: Start the approaching notes mode</li>
+                            {IS_MIDI_AVAILABLE &&
                                 <li>You can connect a MIDI keyboard to play</li>
                             }
 
                         </ul>
                     </HelpTooltip>
-                    <Link to='Composer' style={{marginLeft: 'auto'}}>
+                    <Link to='Composer' style={{ marginLeft: 'auto' }}>
                         <AppButton>
                             Compose song
                         </AppButton>
@@ -355,14 +363,14 @@ interface SongRowProps {
     theme: ThemeStoreClass
     functions: {
         removeSong: (name: string, id: string) => void
-        renameSong: (newName: string, id: string, ) => void
+        renameSong: (newName: string, id: string,) => void
         toggleMenu: (override?: boolean) => void
-        downloadSong: (song: Song | ComposedSong) => void
+        downloadSong: (song: Song | ComposedSong | Midi) => void
     }
 }
 
 function SongRow({ data, functions, theme }: SongRowProps) {
-    const { removeSong, toggleMenu, downloadSong , renameSong} = functions
+    const { removeSong, toggleMenu, downloadSong, renameSong } = functions
     const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     const [isRenaming, setIsRenaming] = useState(false)
     const [songName, setSongName] = useState(data.name)
@@ -371,24 +379,24 @@ function SongRow({ data, functions, theme }: SongRowProps) {
     }, [data.name])
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
-            if(isRenaming) return
+            if (isRenaming) return
             SongStore.play(parseSong(data), 0)
             toggleMenu(false)
         }}>
-            {isRenaming 
-                ? <input 
+            {isRenaming
+                ? <input
                     className={`song-name-input ${isRenaming ? "song-rename" : ""}`}
-                    disabled={!isRenaming} 
+                    disabled={!isRenaming}
                     onChange={(e) => setSongName(e.target.value)}
-                    style={{width: "100%", color: "var(--primary-text)"}}
+                    style={{ width: "100%", color: "var(--primary-text)" }}
                     value={songName}
                 />
-                : <div style={{marginLeft: '0.3rem'}}>
+                : <div style={{ marginLeft: '0.3rem' }}>
                     {songName}
                 </div>
             }
             <Tooltip>
-                {isRenaming ? "Song name": "Play song"}
+                {isRenaming ? "Song name" : "Play song"}
             </Tooltip>
         </div>
 
@@ -423,33 +431,31 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 tooltip="More options"
                 onClose={() => setIsRenaming(false)}
             >
-                <AppButton 
-                    className='row row-centered' 
-                    style={{padding: "0.4rem"}}
+                <FloatingDropdownRow
                     onClick={() => {
-                        if(isRenaming) {
+                        if (isRenaming) {
                             renameSong(songName, data.id as string)
                             setIsRenaming(false)
                         }
                         setIsRenaming(!isRenaming)
                     }}
+
                 >
-                    <FaPen style={{marginRight: "0.4rem"}}/>
-                    <div>
-                        {isRenaming ? "Save" : "Rename"}
-                    </div>
-                </AppButton>
-                <FloatingDropdownRow onClick={() => downloadSong(parseSong(data))}>
-                    <FaDownload style={{marginRight: "0.4rem"}}/>
-                    <div>
-                        Download
-                    </div>
+                    <FaPen style={{ marginRight: "0.4rem" }} size={14}/>
+                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow  onClick={() => removeSong(data.name, data.id as string)}>
-                    <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}}/>
-                    <div>
-                        Delete
-                    </div>
+                <FloatingDropdownRow onClick={() => downloadSong(parseSong(data))}>
+                    <FaDownload style={{ marginRight: "0.4rem" }} size={14}/>
+                    <FloatingDropdownText text='Download' />
+
+                </FloatingDropdownRow>
+                <FloatingDropdownRow onClick={() => downloadSong(parseSong(data).toMidi())}>
+                    <FaDownload style={{ marginRight: "0.4rem" }} size={14}/>
+                    <FloatingDropdownText text='Download MIDI' />
+                </FloatingDropdownRow>
+                <FloatingDropdownRow onClick={() => removeSong(data.name, data.id as string)}>
+                    <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14}/>
+                    <FloatingDropdownText text='Delete' />
                 </FloatingDropdownRow>
             </FloatingDropdown>
         </div>

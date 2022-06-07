@@ -4,7 +4,7 @@ import { Column, RecordedNote } from "./SongClasses";
 import { ComposedSong } from "./ComposedSong";
 import { Song } from "./Song";
 import { ColumnNote } from "./SongClasses";
-import { LayerIndex, NoteNameType } from "types/GeneralTypes";
+import { NoteNameType } from "types/GeneralTypes";
 import { NoteLayer } from "./Layer";
 
 class FileDownloader {
