@@ -16,7 +16,7 @@ import { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
 import { SerializedSongType } from 'types/SongTypes';
-import { useTheme } from 'lib/hooks/useTheme';
+import { useTheme } from 'lib/Hooks/useTheme';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 import { hasTooltip, Tooltip } from 'components/Tooltip';
 import { HelpTooltip } from 'components/HelpTooltip';

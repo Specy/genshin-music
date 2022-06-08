@@ -1,7 +1,7 @@
 import { AppButton } from "components/AppButton"
 import { HelpTooltip } from "components/HelpTooltip"
 import { hasTooltip, Tooltip } from "components/Tooltip"
-import { useTheme } from "lib/hooks/useTheme"
+import { useTheme } from "lib/Hooks/useTheme"
 import { memo } from "react"
 import { LayerType } from "types/GeneralTypes"
 interface ComposerToolsProps{

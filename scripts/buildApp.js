@@ -63,7 +63,7 @@ async function execute() {
         const stdout = e.stdout
         if(stdout){
             console.log("STD OUT:")
-            process.stdout.write(stderr.toString())
+            process.stdout.write(stdout.toString())
         }
         process.exit(1)
     }

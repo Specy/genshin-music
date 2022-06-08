@@ -1,5 +1,5 @@
 import LoggerStore from "stores/LoggerStore"
-import { useLogger } from "lib/hooks/useLogger"
+import { useLogger } from "lib/Hooks/useLogger"
 export default function FloatingMessage() {
     const [data] = useLogger()
     const { title, text, visible, timeout, id, color } = data

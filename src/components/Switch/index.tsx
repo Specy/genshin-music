@@ -1,5 +1,5 @@
 import './switch.css'
-import { useTheme } from 'lib/hooks/useTheme'
+import { useTheme } from 'lib/Hooks/useTheme'
 
 interface SwitchProps{
     checked: boolean, 

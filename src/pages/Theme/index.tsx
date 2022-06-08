@@ -15,7 +15,7 @@ import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "stores/ThemeStore";
 import LoggerStore from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
-import { useTheme } from "lib/hooks/useTheme";
+import { useTheme } from "lib/Hooks/useTheme";
 import './Theme.css'
 import { AppBackground } from "components/AppBackground";
 import { themeService } from "lib/Services/ThemeService";

@@ -1,4 +1,4 @@
-import { useTheme } from "lib/hooks/useTheme";
+import { useTheme } from "lib/Hooks/useTheme";
 import { ComposedSong } from "lib/ComposedSong";
 import { Song } from "lib/Song";
 import { useEffect, useState } from "react"

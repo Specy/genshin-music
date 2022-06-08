@@ -22,7 +22,7 @@ import { SerializedSong, Song } from 'lib/Song';
 import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
 import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { MainPageSettingsDataType } from 'lib/BaseSettings';
-import { useTheme } from 'lib/hooks/useTheme';
+import { useTheme } from 'lib/Hooks/useTheme';
 import { SearchedSongType } from 'types/GeneralTypes';
 import { FileElement, FilePicker } from 'components/FilePicker';
 import { SerializedSongType } from 'types/SongTypes';

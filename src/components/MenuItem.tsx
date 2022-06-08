@@ -1,4 +1,4 @@
-import { useTheme } from "lib/hooks/useTheme"
+import { useTheme } from "lib/Hooks/useTheme"
 import { memo } from "react"
 
 interface MenuItemProps<T> {

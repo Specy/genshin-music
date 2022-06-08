@@ -5,7 +5,7 @@ import HomeStore from 'stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
-import { useTheme } from 'lib/hooks/useTheme'
+import { useTheme } from 'lib/Hooks/useTheme'
 import './Home.css'
 import MenuItem from 'components/MenuItem'
 
