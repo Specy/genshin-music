@@ -68,74 +68,118 @@ const INSTRUMENTS = APP_NAME === "Genshin"
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const BaseinstrumentsData = {
     Lyre: {
-        notes: 21
+        notes: 21,
+        family: "strings",
+        midiName: "pizzicato strings",
     },
     Zither: {
         notes: 21,
         fill: '#cdb68e',
-        clickColor: '#ddcba8'
+        family: "strings",
+        midiName: "pizzicato strings", //maybe koto?
+        clickColor: '#ddcba8',
     },
     "Old-Zither": {
         notes: 21,
         fill: '#cdb68e',
-        clickColor: '#ddcba8'
+        family: "strings",
+        midiName: "pizzicato strings",
+        clickColor: '#ddcba8',
     },
     DunDun: {
-        notes: 8
+        notes: 8,
+        family: "percussive",
+        midiName: "synth drum"
     },
     Panflute: {
-        notes: 15
+        notes: 15,
+        family: "pipe",
+        midiName: "pan flute"
     },
     LightGuitar: {
-        notes: 15
+        notes: 15,
+        family: "guitar",
+        midiName: "electric guitar (clean)"
     },
     Bells: {
-        notes: 8
+        notes: 8,
+        family: "chromatic percussion",
+        midiName: "tubular bells"
     },
     Trumpet: {
-        notes: 15
+        notes: 15,
+        family: "brass",
+        midiName: "trumpet"
     },
     Contrabass: {
-        notes: 15
+        notes: 15,
+        family: "guitar",
+        midiName: "contrabass"
     },
     Drum: {
-        notes: 8
+        notes: 8,
+        family: "percussive",
+        midiName: "synth drum"
     },
     Flute: {
-        notes: 15
+        notes: 15,
+        family: "pipe",
+        midiName: "flute"
     },
     Guitar: {
-        notes: 15
+        notes: 15,
+        family: "guitar",
+        midiName: "acoustic guitar (steel)"
     },
     HandPan: {
-        notes: 8
+        notes: 8,
+        family: "percussive",
+        midiName: "steel drums"
     },
     ToyUkulele: {
-        notes: 15
+        notes: 15,
+        family: "guitar",
+        midiName: "acoustic guitar (nylon)"
     },
     Harp: {
-        notes: 15
+        notes: 15,
+        family: "strings",
+        midiName: "orchestral harp"
     },
     Horn: {
-        notes: 15
+        notes: 15,
+        family: "brass",
+        midiName: "tuba"
     },
     Piano: {
-        notes: 15
+        notes: 15,
+        family: "piano",
+        midiName: "acoustic grand piano"
     },
     Pipa: {
-        notes: 15
+        notes: 15,
+        family: "reed",
+        midiName: "oboe"
     },
     Kalimba: {
-        notes: 15
+        notes: 15,
+        family: "piano",
+        midiName: "bright acoustic piano"
     },
     WinterPiano: {
-        notes: 15
+        notes: 15,
+        family: "piano",
+        midiName: "bright acoustic piano"
     },
     Xylophone: {
-        notes: 15
+        notes: 15,
+        family: "chromatic percussion",
+        midiName: "xylophone"
     },
     Ocarina: {
-        notes: 15
+        notes: 15,
+        family: "pipe",
+        midiName: "pan flute"
     }
 }
 type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
@@ -144,6 +188,8 @@ type InstrumentsDataProps = {
         notes: 8 | 15 | 21
         fill?: string
         clickColor?: string
+        family: string, 
+        midiName: string
     }
 }
 //@ts-ignore

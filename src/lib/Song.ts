@@ -6,6 +6,7 @@ import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "./Layer"
 import { Midi } from "@tonejs/midi"
 
+//TODO add instrument to song
 type OldNote = {
     key: string
     time: number

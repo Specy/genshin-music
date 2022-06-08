@@ -1,5 +1,6 @@
 import { Midi } from "@tonejs/midi"
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, Pitch } from "appConfig"
+import { Instrument } from "@tonejs/midi/dist/Instrument"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, Pitch, INSTRUMENTS_DATA } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
 import { SongInstruments } from "types/SongTypes"
@@ -275,6 +276,11 @@ export class ComposedSong {
     toMidi = (): Midi => {
         const song = this.toSong()
         const midi = song.toMidi()
+        this.instruments.forEach((ins,i)=> {
+            const instrument = INSTRUMENTS_DATA[ins]
+            if(!instrument || midi.tracks[i]) return
+            midi.tracks[i].instrument.name = instrument.midiName
+        })
         return midi
     }
     clone = () => {
