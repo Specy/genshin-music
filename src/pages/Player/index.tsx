@@ -21,8 +21,8 @@ import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { SerializedSongType } from 'types/SongTypes';
-import { songService } from 'lib/Services/SongService';
 import { settingsService } from 'lib/Services/SettingsService';
+import { songService } from 'lib/Services/SongService';
 
 interface PlayerState {
 	songs: SerializedSongType[]
