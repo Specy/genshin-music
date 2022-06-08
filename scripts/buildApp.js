@@ -53,9 +53,18 @@ async function execute() {
         }
         console.log(clc.bold.green("Build complete \n"))
     }catch(e){
+        console.log("ERROR:")
         process.stdout.write(e.toString())
         const stderr = e.stderr
-        if (stderr) process.stdout.write(e.stderr.toString())
+        if (stderr){
+            console.log("STD ERR:")
+            process.stdout.write(stderr.toString())
+        }
+        const stdout = e.stdout
+        if(stdout){
+            console.log("STD OUT:")
+            process.stdout.write(stderr.toString())
+        }
         process.exit(1)
     }
 }
