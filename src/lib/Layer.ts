@@ -42,7 +42,7 @@ export class NoteLayer{
     }
 
     toArray(){
-        return this.serializeBin().split('').map(x => parseInt(x))
+        return this.serializeBin().split('').map(x => parseInt(x)).reverse()
     }
     isEmpty(){
         return this.data === 0

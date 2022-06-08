@@ -1,11 +1,10 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, Pitch } from "appConfig"
-import { Column, ColumnNote, RecordedNote,SerializedRecordedNote,SongData } from "./SongClasses"
+import { Column, ColumnNote, RecordedNote, SerializedRecordedNote, SongData } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
 import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "./Layer"
-import { Header, Midi, Track } from "@tonejs/midi"
-import { MIDIEvent } from "./Providers/MIDIProvider"
+import { Midi } from "@tonejs/midi"
 
 type OldNote = {
     key: string
@@ -13,7 +12,7 @@ type OldNote = {
     l?: number
 }
 interface SongProps {
-    id:string | null
+    id: string | null
 
     //TODO add tempo changer type
     name: string
@@ -40,28 +39,28 @@ export type OldFormatSong = SerializedSong & {
 
 export class Song {
     id: string | null
-	name: string
-	version: number
-	notes: RecordedNote[] 
-	bpm: number
-	pitch: Pitch
-	data: SongData
+    name: string
+    version: number
+    notes: RecordedNote[]
+    bpm: number
+    pitch: Pitch
+    data: SongData
     timestamp: number
-	constructor(name: string, notes? : RecordedNote[]) {
-		this.name = name
-		this.version = 1
-		this.notes = notes || []
-		this.bpm = 220
+    constructor(name: string, notes?: RecordedNote[]) {
+        this.name = name
+        this.version = 1
+        this.notes = notes || []
+        this.bpm = 220
         this.id = null
-		this.pitch = "C"
-		this.data = {
-			isComposed: false,
-			isComposedVersion: false,
-			appName: APP_NAME
-		}
+        this.pitch = "C"
+        this.data = {
+            isComposed: false,
+            isComposedVersion: false,
+            appName: APP_NAME
+        }
         this.timestamp = 0
-	}
-    get isComposed(): false{
+    }
+    get isComposed(): false {
         return false
     }
     toOldFormat = () => {
@@ -71,29 +70,29 @@ export class Song {
             pitchLevel: PITCHES.indexOf(this.pitch),
             bitsPerPage: 16,
             isEncrypted: false,
-            songNotes : this.notes.map(note => {
+            songNotes: this.notes.map(note => {
                 return {
                     time: note.time,
                     key: "1Key" + note.index
                 }
             })
-        } 
+        }
         return song
     }
-    static deserialize(obj:SerializedSong): Song{
-        const { data, pitch, bpm, notes, name, id} = obj
+    static deserialize(obj: SerializedSong): Song {
+        const { data, pitch, bpm, notes, name, id } = obj
         const version = obj.version || 1
         const song = new Song(name || 'Untitled')
-        song.data = {...song.data, ...data}
+        song.data = { ...song.data, ...data }
         song.pitch = pitch || song.pitch
         song.bpm = bpm || song.bpm
         song.id = id
-        if(version === 1){
-            const clonedNotes:[] =  Array.isArray(notes) ? clonedeep(notes) : []
+        if (version === 1) {
+            const clonedNotes: [] = Array.isArray(notes) ? clonedeep(notes) : []
             song.notes = clonedNotes.map(note => {
                 return RecordedNote.deserialize([note[0], note[1], note[2] || 1] as SerializedRecordedNote)
             })
-        }else if(version === 2){
+        } else if (version === 2) {
             song.notes = notes.map(note => RecordedNote.deserialize(note))
         }
         return song
@@ -104,7 +103,7 @@ export class Song {
             version: this.version,
             pitch: this.pitch,
             bpm: this.bpm,
-            data: {...this.data},
+            data: { ...this.data },
             notes: this.notes.map(note => note.serialize()),
             id: this.id
         }
@@ -118,20 +117,20 @@ export class Song {
         const notes = this.notes.map(note => note.clone())
         //remove duplicates
         let converted = []
-        if(precision === 1 ){
+        if (precision === 1) {
             const groupedNotes: RecordedNote[][] = []
             let previousTime = notes[0].time
             while (notes.length > 0) {
                 const row: RecordedNote[] = notes.length > 0 ? [notes.shift() as RecordedNote] : []
                 let amount = 0
-                if(row[0] !== undefined){
+                if (row[0] !== undefined) {
                     for (let i = 0; i < notes.length; i++) {
                         if (row[0].time > notes[i].time - bpmToMs / 9) amount++
                     }
                 }
                 groupedNotes.push([...row, ...notes.splice(0, amount)])
             }
-            const columns:Column[] = [] 
+            const columns: Column[] = []
             groupedNotes.forEach(notes => {
                 const note = notes[0]
                 if (!note) return
@@ -153,7 +152,7 @@ export class Song {
                 })
             })
             converted = columns
-        }else{
+        } else {
             const grouped = groupByNotes(notes, bpmToMs / 9)
             const combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
             for (let i = 0; i < grouped.length; i++) {
@@ -168,17 +167,17 @@ export class Song {
                     if (difference / combinations[0] >= 1) {
                         difference -= combinations[0]
                         paddingColumns.push(0)
-                    } else if (difference / combinations[1] >= 1 ) {
+                    } else if (difference / combinations[1] >= 1) {
                         difference -= combinations[1]
-                        if(precision <= 1) continue
-                        paddingColumns.push(1)	
+                        if (precision <= 1) continue
+                        paddingColumns.push(1)
                     } else if (difference / combinations[2] >= 1) {
                         difference -= combinations[2]
-                        if(precision <= 2) continue
+                        if (precision <= 2) continue
                         paddingColumns.push(2)
                     } else if (difference / combinations[3] >= 1) {
                         difference -= combinations[3]
-                        if(precision <= 3) continue
+                        if (precision <= 3) continue
                         paddingColumns.push(3)
                     }
                 }
@@ -194,30 +193,28 @@ export class Song {
         song.columns = converted
         return song
     }
-    toMidi(): Midi{
+    toMidi(): Midi {
         const midi = new Midi()
-        midi.header.setTempo(this.bpm)
+        midi.header.setTempo(this.bpm / 4) //TODO decide if lowering or keeping this
         midi.header.keySignatures.push({
-            ticks: 0,
             key: this.pitch,
-            scale: "major"
+            scale: "major",
+            ticks: 0,
         })
         midi.name = this.name
         const highestLayer = Math.max(...this.notes.map(note => note.layer.asNumber()))
-        midi.tracks = new Array(highestLayer).fill(0).map((_,i) => {
-            const trackHeader = new Header()
-            const track = new Track([], trackHeader)
+        for (let i = 0; i < highestLayer; i++) {
+            const track = midi.addTrack()
             track.name = `Layer ${i + 1}`
             const notes = this.notes.filter(note => note.layer.test(i))
             notes.forEach(note => {
                 track.addNote({
-                    time: note.time,
-                    duration: 0.2,
+                    time: note.time / 1000,
+                    duration: 1,
                     midi: note.toMidi() || 0,
                 })
             })
-            return track
-        })
+        }
         return midi
     }
     static fromOldFormat = (song: any) => {
@@ -234,10 +231,10 @@ export class Song {
             notes.forEach((note) => {
                 const data = note.key.split("Key")
                 const layer = new NoteLayer((note.l ?? Number(data[0])))
-                const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time,  layer)
+                const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer)
                 converted.notes.push(recordedNote)
             })
-    
+
             if ([true, "true"].includes(song.isComposed)) {
                 return converted.toComposed()
             }
@@ -249,15 +246,15 @@ export class Song {
     }
     toGenshin = () => {
         const clone = this.clone()
-        if(clone.data.appName === 'Genshin') {
+        if (clone.data.appName === 'Genshin') {
             console.warn("Song already in Genshin format")
             return clone
         }
         clone.data.appName = "Genshin"
         clone.notes = clone.notes.map(note => {
-			note.index = IMPORT_NOTE_POSITIONS[note.index]
-			return note
-		})
+            note.index = IMPORT_NOTE_POSITIONS[note.index]
+            return note
+        })
         return clone
     }
     clone = () => {
@@ -265,7 +262,7 @@ export class Song {
         clone.version = this.version
         clone.bpm = this.bpm
         clone.pitch = this.pitch
-        clone.data = {...this.data}
+        clone.data = { ...this.data }
         clone.notes = this.notes.map(note => note.clone())
         return clone
     }

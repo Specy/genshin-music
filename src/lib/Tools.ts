@@ -205,12 +205,6 @@ function calculateSongLength(columns: Column[], bpm: number, end: number) {
 		current: currentLength
 	}
 }
-const NUMBER_TO_LAYER_MAP = {
-	0: "1000",
-	1: "0100",
-	2: "0010",
-	3: "0001"
-}
 
 function mergeLayers(notes: ColumnNote[]) {
 	const merged = new NoteLayer()
@@ -221,6 +215,8 @@ function mergeLayers(notes: ColumnNote[]) {
 	})
 	return merged
 }
+
+
 function groupNotesByIndex(column: Column) {
 	const notes: ColumnNote[][] = []
 	column.notes.forEach(note => {

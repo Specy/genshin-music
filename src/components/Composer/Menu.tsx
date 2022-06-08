@@ -20,7 +20,9 @@ import { useTheme } from 'lib/hooks/useTheme';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 import { hasTooltip, Tooltip } from 'components/Tooltip';
 import { HelpTooltip } from 'components/HelpTooltip';
-import { FloatingDropdown, FloatingDropdownRow } from 'components/FloatingDropdown';
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
+import { Midi } from '@tonejs/midi';
+import { asyncConfirm } from 'components/AsyncPrompts';
 
 interface MenuProps {
     data: {
@@ -88,8 +90,19 @@ function Menu({ data, functions }: MenuProps) {
         }
     }, [open, selectedMenu])
 
-    const downloadSong = useCallback((song: SerializedSongType) => {
+    const downloadSong = useCallback(async (song: SerializedSongType | Midi) => {
         try {
+            if (song instanceof Midi) {
+                const agrees = await asyncConfirm(
+                    `If you use MIDI, the song will loose some information, if you want to share the song with others,
+                    use the other format (button above). Do you still want to download?`
+                )
+                if(!agrees) return
+                return FileDownloader.download(
+                    new Blob([song.toArray()],{ type: "audio/midi"}), 
+                    song.name + ".mid"
+                )
+            }
             song.data.appName = APP_NAME
             const songName = song.name
             const parsed = parseSong(song)
@@ -230,7 +243,7 @@ interface SongRowProps {
         renameSong: (newName: string, id: string) => void
         toggleMenu: (override: boolean) => void
         loadSong: (song: SerializedSongType) => void
-        downloadSong: (song: SerializedSongType) => void
+        downloadSong: (song: SerializedSongType | Midi) => void
     }
 }
 
@@ -283,21 +296,19 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                     }}
                 >
                     <FaPen style={{marginRight: "0.4rem"}}/>
-                    <div>
-                        {isRenaming ? "Save" : "Rename"}
-                    </div>
+                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
                 </AppButton>
                 <FloatingDropdownRow onClick={() => downloadSong(data)}>
                     <FaDownload style={{marginRight: "0.4rem"}}/>
-                    <div>
-                        Download
-                    </div>
+                    <FloatingDropdownText text='Download'/>
+                </FloatingDropdownRow>
+                <FloatingDropdownRow onClick={() => downloadSong(parseSong(data).toMidi())}>
+                    <FaDownload style={{ marginRight: "0.4rem" }} size={14}/>
+                    <FloatingDropdownText text='Download MIDI' />
                 </FloatingDropdownRow>
                 <FloatingDropdownRow  onClick={() => removeSong(data.name, data.id as string)}>
                     <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}}/>
-                    <div>
-                        Delete
-                    </div>
+                    <FloatingDropdownText text='Delete' />
                 </FloatingDropdownRow>
             </FloatingDropdown>
         </div>

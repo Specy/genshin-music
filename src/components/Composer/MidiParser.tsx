@@ -179,7 +179,6 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         if (song.columns.length === 0) {
             return LoggerStore.warn("There are no notes")
         }
-        console.log(tracks)
         this.props.functions.loadSong(song)
         this.setState({
             accidentals: numberOfAccidentals,

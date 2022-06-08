@@ -33,6 +33,7 @@ import { hasTooltip, Tooltip } from "components/Tooltip"
 import { HelpTooltip } from 'components/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
+import { asyncConfirm } from 'components/AsyncPrompts';
 interface MenuProps {
     functions: {
         addSong: (song: Song | ComposedSong) => void
@@ -133,13 +134,17 @@ function Menu({ functions, data }: MenuProps) {
             }
         }
     }
-    const downloadSong = (song: ComposedSong | Song | Midi) => {
+    const downloadSong = async (song: ComposedSong | Song | Midi) => {
         if (song instanceof Midi) {
-            FileDownloader.download(
+            const agrees = await asyncConfirm(
+                `If you use MIDI, the song will loose some information, if you want to share the song with others,
+                use the other format (button above). Do you still want to download?`
+            )
+            if(!agrees) return
+            return FileDownloader.download(
                 new Blob([song.toArray()],{ type: "audio/midi"}), 
                 song.name + ".mid"
             )
-            return
         }
         const songName = song.name
         const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
@@ -447,7 +452,6 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 <FloatingDropdownRow onClick={() => downloadSong(parseSong(data))}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14}/>
                     <FloatingDropdownText text='Download' />
-
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={() => downloadSong(parseSong(data).toMidi())}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14}/>

@@ -603,6 +603,7 @@ a {
 	pointer-events: none;
 
 }
+
 .help-tooltip-button:focus + .help-tooltip-content{
 	display: flex;
 	background-color: var(--primary);

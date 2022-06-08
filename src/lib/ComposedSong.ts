@@ -100,6 +100,8 @@ export class ComposedSong {
     }
     toSong = () => {
         const recordedSong = new Song(this.name)
+        recordedSong.bpm = this.bpm
+        recordedSong.pitch = this.pitch
         const bpmPerMs = Math.floor(60000 / this.bpm)
         let totalTime = 100
         this.columns.forEach(column => {
@@ -272,7 +274,8 @@ export class ComposedSong {
     }
     toMidi = (): Midi => {
         const song = this.toSong()
-        return song.toMidi()
+        const midi = song.toMidi()
+        return midi
     }
     clone = () => {
         const clone = new ComposedSong(this.name)

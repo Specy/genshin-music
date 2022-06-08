@@ -116,14 +116,21 @@
 					src="./assets/icons/loadingApp.svg" 
 					class="loading-img" 
 					alt="loading..."
-					onload="document.querySelector('#mask').className = 'mask'"
+					id="img"
 				/>
 			</div>
 			<div class="loading-text">
 				Loading...
 			</div>
 		</div>
+
 	</div>
 </body>
-
+<script>
+	const img = document.querySelector('#img');
+	const mask = document.querySelector('#mask');
+	img.addEventListener("load", () => {
+		mask.className = 'mask';
+	});
+</script>
 </html>
