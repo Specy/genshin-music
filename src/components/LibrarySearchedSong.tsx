@@ -4,19 +4,19 @@ import { parseSong } from "lib/Tools"
 import LoggerStore from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
 import { ComposedSong } from 'lib/ComposedSong';
-import type {  Song } from 'lib/Song';
+import type {  RecordedSong } from 'lib/RecordedSong';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 
 interface SearchedSongProps{
-    onClick: (song: ComposedSong | Song, start: number) => void,
-    importSong: (song: ComposedSong | Song) => void, 
+    onClick: (song: ComposedSong | RecordedSong, start: number) => void,
+    importSong: (song: ComposedSong | RecordedSong) => void, 
     data: SearchedSongType
     theme: ThemeStoreClass
 }
 
 export default function SearchedSong({ onClick, data, importSong, theme }:SearchedSongProps) {
     const [fetching, setFetching] = useState(false)
-    const [cache, setCache] = useState<Song | ComposedSong | null>(null)
+    const [cache, setCache] = useState<RecordedSong | ComposedSong | null>(null)
     const download = async function () {
         if (fetching) return
         try {

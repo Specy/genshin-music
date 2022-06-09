@@ -5,14 +5,16 @@ class DB{
     instance: ZangoDb.Db
     collections: {
         songs:ZangoDb.Collection,
-        themes:ZangoDb.Collection
+        themes:ZangoDb.Collection,
+        folders: ZangoDb.Collection,
     }
     constructor(){
         //@ts-ignore
-        this.instance = new ZangoDb.Db(APP_NAME,2, { songs: [], themes: [] })
+        this.instance = new ZangoDb.Db(APP_NAME,3, { songs: [], themes: [], folders: [] })
         this.collections = {
             songs: this.instance.collection("songs"),
-            themes: this.instance.collection("themes")
+            themes: this.instance.collection("themes"),
+            folders: this.instance.collection("folders"),
         }
     }
     generateId = () => {

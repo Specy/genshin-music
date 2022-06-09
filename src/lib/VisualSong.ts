@@ -1,6 +1,6 @@
 import { APP_NAME } from "appConfig"
 import { ComposedSong } from "lib/ComposedSong"
-import { Song } from "lib/Song"
+import { RecordedSong } from "lib/RecordedSong"
 import { Column, ColumnNote, RecordedNote } from "lib/SongClasses"
 import { getNoteText } from "lib/Tools"
 import { NoteLayer } from "./Layer"
@@ -42,9 +42,9 @@ export class VisualSong {
         }
         return parsed
     }
-    static from(song: Song | ComposedSong) {
+    static from(song: RecordedSong | ComposedSong) {
         const vs = new VisualSong()
-        if(song instanceof Song){
+        if(song instanceof RecordedSong){
             vs.createChunk(0)
         }else if(song instanceof ComposedSong){
             const { columns } = song

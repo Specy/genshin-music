@@ -616,8 +616,42 @@ a {
 	color: var(--accent-text);
 }
 
+.folder{
+	display: flex;
+	flex-direction: column;
+	border-radius: 0.4rem;
+	margin: 0.4rem 0;
+}
+.folder-header{
+	padding: 0.3rem 0.3rem;
+	border-radius: 0.4rem 0.4rem 0 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.folder-header-button{
+	display: flex;
+	align-items: center;
+	flex: 1;
+	cursor: pointer;
+	padding: 0.25rem;
+}
+.folder-content{
+	display: none;
+	padding: 0.5rem;
+}
+.folder-expanded .folder-content{
+	display: flex;
+}
 
-
+.folder-name{
+	font-size: 1.2rem;
+	padding: 0;
+	max-width: 20rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 @media only screen and (max-width: 900px) {
 	.floating-prompt {

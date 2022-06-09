@@ -18,7 +18,7 @@ import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { Link } from 'react-router-dom'
-import { SerializedSong, Song } from 'lib/Song';
+import { SerializedRecordedSong, RecordedSong } from 'lib/RecordedSong';
 import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
 import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { MainPageSettingsDataType } from 'lib/BaseSettings';
@@ -37,7 +37,7 @@ import { asyncConfirm } from 'components/AsyncPrompts';
 import { SettingsPane } from 'components/Settings/SettingsPane';
 interface MenuProps {
     functions: {
-        addSong: (song: Song | ComposedSong) => void
+        addSong: (song: RecordedSong | ComposedSong) => void
         removeSong: (name: string, id: string) => void
         renameSong: (newName: string, id: string) => void
         handleSettingChange: (override: SettingUpdate) => void
@@ -135,7 +135,7 @@ function Menu({ functions, data }: MenuProps) {
             }
         }
     }
-    const downloadSong = async (song: ComposedSong | Song | Midi) => {
+    const downloadSong = async (song: ComposedSong | RecordedSong | Midi) => {
         if (song instanceof Midi) {
             const agrees = await asyncConfirm(
                 `If you use MIDI, the song will loose some information, if you want to share the song with others,
@@ -167,7 +167,7 @@ function Menu({ functions, data }: MenuProps) {
                 if (APP_NAME === 'Sky') {
                     return song.data.isComposedVersion
                         ? ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
-                        : Song.deserialize(song as SerializedSong).toOldFormat()
+                        : RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
                 }
                 return song
             })
@@ -367,7 +367,7 @@ interface SongRowProps {
         removeSong: (name: string, id: string) => void
         renameSong: (newName: string, id: string,) => void
         toggleMenu: (override?: boolean) => void
-        downloadSong: (song: Song | ComposedSong | Midi) => void
+        downloadSong: (song: RecordedSong | ComposedSong | Midi) => void
     }
 }
 
@@ -441,7 +441,6 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                         }
                         setIsRenaming(!isRenaming)
                     }}
-
                 >
                     <FaPen style={{ marginRight: "0.4rem" }} size={14}/>
                     <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>

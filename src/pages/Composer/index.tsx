@@ -24,7 +24,7 @@ import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
-import { SerializedSong, Song } from 'lib/Song';
+import { SerializedRecordedSong, RecordedSong } from 'lib/RecordedSong';
 import { SerializedSongType, SongInstruments } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { ComposerInstruments, InstrumentName, LayerIndex, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
@@ -343,7 +343,7 @@ class Composer extends Component<any, ComposerState>{
         if (!this.mounted) return
         this.setState({ songs })
     }
-    addSong = async (song: ComposedSong | Song) => {
+    addSong = async (song: ComposedSong | RecordedSong) => {
         const id = await songService.addSong(song.serialize())
         song.id = id
         this.syncSongs()
@@ -427,7 +427,7 @@ class Composer extends Component<any, ComposerState>{
             ? song.clone()
             : song.data.isComposedVersion
                 ? ComposedSong.deserialize(song as SerializedComposedSong)
-                : Song.deserialize(song as SerializedSong).toComposed(4)
+                : RecordedSong.deserialize(song as SerializedRecordedSong).toComposedSong(4)
         if (!parsed.data.isComposedVersion) {
             parsed.name += " - Composed"
         }

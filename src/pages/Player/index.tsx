@@ -3,7 +3,7 @@ import Keyboard from "components/Player/Keyboard"
 import Menu from "components/Player/Menu"
 import { SongStore } from 'stores/SongStore'
 import { parseSong } from "lib/Tools"
-import { Song } from 'lib/Song';
+import { RecordedSong } from 'lib/RecordedSong';
 import { ComposedSong } from 'lib/ComposedSong';
 import { Recording } from 'lib/SongClasses';
 import { MainPageSettingsDataType } from "lib/BaseSettings"
@@ -164,7 +164,7 @@ class Player extends Component<any, PlayerState>{
 
 	}
 
-	addSong = async (song: Song | ComposedSong) => {
+	addSong = async (song: RecordedSong | ComposedSong) => {
 		try {
 			const id = await songService.addSong(song.serialize())
 			song.id = id
@@ -203,7 +203,7 @@ class Player extends Component<any, PlayerState>{
 			const songName = await asyncPrompt("Write song name, press cancel to ignore")
 			if (!this.mounted) return
 			if (songName !== null) {
-				const song = new Song(songName, this.recording.notes)
+				const song = new RecordedSong(songName, this.recording.notes)
 				song.instrument = instrument.name
 				song.pitch = settings.pitch.value as Pitch
 				this.addSong(song)

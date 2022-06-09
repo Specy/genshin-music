@@ -8,7 +8,7 @@ import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
 import { ThemeProvider } from 'stores/ThemeStore'
 import { SerializedSongType } from 'types/SongTypes'
-import { Song } from 'lib/Song'
+import { RecordedSong } from 'lib/RecordedSong'
 import { RecordedNote } from 'lib/SongClasses'
 import { AppButton } from 'components/AppButton'
 import LoggerStore from 'stores/LoggerStore'
@@ -52,7 +52,7 @@ export default function SheetVisualizer() {
         setCurrentSong(song)
         try{
             const temp = parseSong(song)
-            const lostReference = temp instanceof Song ? temp : temp.toSong()
+            const lostReference = temp instanceof RecordedSong ? temp : temp.toRecordedSong()
             const notes = lostReference.notes
             const chunks: Chunk[] = []
             let previousChunkDelay = 0

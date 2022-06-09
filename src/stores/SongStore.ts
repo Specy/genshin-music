@@ -1,10 +1,10 @@
 import { ComposedSong } from "lib/ComposedSong";
-import { Song } from "lib/Song";
+import { RecordedSong } from "lib/RecordedSong";
 import { observable } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
-type SongTypes = Song | ComposedSong | null
-type SongTypesNonNull = Song | ComposedSong
+type SongTypes = RecordedSong | ComposedSong | null
+type SongTypesNonNull = RecordedSong | ComposedSong
 type SongStoreProps = {
     song: SongTypes,
     eventType: eventType,
@@ -33,7 +33,7 @@ class SongStoreClass{
             }
         })
     }
-    get song():Song | ComposedSong | null{
+    get song():RecordedSong | ComposedSong | null{
         return this.state.data.song
     }
     get eventType(): eventType{

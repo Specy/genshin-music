@@ -3,7 +3,7 @@ import { hasTooltip, Tooltip } from "./Tooltip"
 
 interface SongActionButtonProps {
     onClick?: () => void
-    style: React.CSSProperties
+    style?: React.CSSProperties
     tooltip?: string
     children: React.ReactNode
 }

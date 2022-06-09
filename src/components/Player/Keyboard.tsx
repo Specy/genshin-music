@@ -12,7 +12,7 @@ import { ApproachingNote, RecordedNote } from 'lib/SongClasses'
 import type { NoteData } from 'lib/Instrument'
 import type Instrument from 'lib/Instrument'
 import type { ApproachingScore, NoteNameType } from 'types/GeneralTypes'
-import type { Song } from 'lib/Song'
+import type { RecordedSong } from 'lib/RecordedSong'
 import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider'
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 
@@ -110,7 +110,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             } else {
                 if (!song) return
                 const lostReference = song.isComposed
-                    ? song.toSong().clone()
+                    ? song.toRecordedSong().clone()
                     : song.clone()
 
                 lostReference.timestamp = new Date().getTime()
@@ -164,7 +164,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             if (note) this.handleClick(note)
         }
     }
-    approachingSong = async (song: Song, start = 0, end?: number) => {
+    approachingSong = async (song: RecordedSong, start = 0, end?: number) => {
         end = end ? end : song.notes.length
         const notes = []
         this.approachRate = this.props.data.approachRate || 1500
@@ -250,7 +250,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         })
     }
 
-    playSong = async (song: Song, start = 0, end?: number) => {
+    playSong = async (song: RecordedSong, start = 0, end?: number) => {
         end = end ? end : song.notes.length
         this.songTimestamp = song.timestamp
         const { keyboard } = this.state
@@ -276,7 +276,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             return note
         })
     }
-    practiceSong = (song: Song, start = 0, end?: number) => {
+    practiceSong = (song: RecordedSong, start = 0, end?: number) => {
         //TODO move this to the song class
         end = end ? end : song.notes.length
         const { keyboard } = this.state

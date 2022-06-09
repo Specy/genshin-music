@@ -5,16 +5,26 @@ import { SongActionButton } from "./SongActionButton"
 
 
 interface FloatingDropdownProps {
-    position?: "top" | "bottom" | "left" | "right"
+    position?: "bottom"
     children: React.ReactNode
     tooltip?: string
     Icon: React.FC
     className?: string
+    offset?: number
     style?: React.CSSProperties
     onClose?: () => void
 }
 
-export function FloatingDropdown({ position = 'bottom', children, Icon, className = "", style = {}, onClose, tooltip }: FloatingDropdownProps) {
+export function FloatingDropdown({ 
+        position = 'bottom', 
+        children, 
+        Icon, 
+        className = "", 
+        style = {}, 
+        onClose, 
+        tooltip, 
+        offset = 3 
+    }: FloatingDropdownProps) {
     const [isActive, setActive] = useState(false)
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
         <SongActionButton style={{ margin: 0, ...style }}
@@ -30,7 +40,10 @@ export function FloatingDropdown({ position = 'bottom', children, Icon, classNam
             }
         </SongActionButton>
 
-        <div className={`floating-children-${position}`}>
+        <div
+            className={`floating-children-${position}`}
+            style={{ transform: `translateX(calc(-100% + ${offset}rem)` }}
+        >
             {children}
         </div>
     </div>
@@ -46,15 +59,15 @@ interface FloatingDropdownTextProps {
     text: string
 }
 
-export function FloatingDropdownText({text}: FloatingDropdownTextProps){
+export function FloatingDropdownText({ text }: FloatingDropdownTextProps) {
     return <div className="floating-dropdown-text">
         {text}
     </div>
 }
 export function FloatingDropdownRow({ children, onClick }: FloatingDropdownButtonProps) {
-    return <AppButton 
-        className='row row-centered' 
-        style={{ padding: "0.4rem", minWidth: "unset" }} 
+    return <AppButton
+        className='row row-centered'
+        style={{ padding: "0.4rem", minWidth: "unset" }}
         onClick={onClick}
     >
         {children}

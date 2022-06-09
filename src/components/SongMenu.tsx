@@ -1,13 +1,15 @@
 import { useTheme } from "lib/Hooks/useTheme";
 import { ComposedSong } from "lib/ComposedSong";
-import { Song } from "lib/Song";
+import { RecordedSong } from "lib/RecordedSong";
 import { useEffect, useState } from "react"
 import { SerializedSongType } from "types/SongTypes";
+import { SongFolder } from "./Folder";
+import { Folder } from "lib/Folder";
 
 
 
 type songType = 'recorded' | 'composed'
-type SongKinds = SerializedSongType | Song | ComposedSong
+type SongKinds = SerializedSongType | RecordedSong | ComposedSong
 interface SongMenuProps<T> {
     songs: SongKinds[],
     SongComponent: Function,
@@ -68,5 +70,19 @@ export function SongMenu<T>({
                 />
             )}
         </div>
+        <SongFolder 
+            backgroundColor={unselectedColor.toString()}
+            color={theme.getText('menu_background').toString()}
+            renameFolder={() => { }}
+            data={new Folder("Some folder")}
+        > 
+            Empty for now, just proof of concept
+            <br />
+            Bla bla some space
+            <br />
+            Bla bla some space
+            <br />
+            Bla bla some space
+        </SongFolder>
     </div>
 }
