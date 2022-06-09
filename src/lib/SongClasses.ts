@@ -129,7 +129,7 @@ export class RecordedNote {
 	constructor(index?: number, time?: number, layer?: NoteLayer) {
 		this.index = index || 0
 		this.time = time || 0
-		this.layer = layer || new NoteLayer()
+		this.layer = layer || new NoteLayer(1)
 	}
 	setLayer(layer: number, value: boolean) {
 		this.layer.set(layer, value)
