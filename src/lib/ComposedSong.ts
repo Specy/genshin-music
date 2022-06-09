@@ -66,21 +66,20 @@ export class ComposedSong {
         this.columns = new Array(100).fill(0).map(_ => new Column())
     }
     static deserialize = (song: SerializedComposedSong): ComposedSong => {
-        const bpm = Number(song.bpm)
+        const {id, bpm, data, pitch } = song
         const parsed = new ComposedSong(song.name)
-        parsed.id = song.id
-        parsed.data = { ...parsed.data, ...song.data }
-        parsed.bpm = isNaN(bpm) ? 220 : bpm
-        parsed.pitch = song.pitch ?? "C"
-        song.instruments = song.instruments ?? []
+        const version = song.version ?? 1
+        parsed.id = id || null
+        parsed.data = { ...parsed.data, ...data }
+        parsed.bpm = Number.isFinite(bpm) ? bpm : 220
+        parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
+        const instruments = Array.isArray(song.instruments) ? song.instruments : []
         parsed.instruments.map((_, i) => {
-            const toParse = song?.instruments[i] as any
+            const toParse = instruments[i] as any
             return INSTRUMENTS.includes(toParse) ? toParse : INSTRUMENTS[0]
         })
-        parsed.breakpoints = [...(song.breakpoints ?? [])]
-
-        if(song.version === undefined) song.version = 1
-        if(song.version === 1){
+        parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
+        if(version === 1){
             parsed.columns = song.columns.map(column => {
                 const parsedColumn = new Column()
                 parsedColumn.tempoChanger = column[0]
@@ -91,7 +90,7 @@ export class ComposedSong {
                 })
                 return parsedColumn
             })  
-        }else if(song.version === 2){
+        }else if(version === 2){
             parsed.columns = song.columns.map(column => Column.deserialize(column))
         }
         return parsed
@@ -278,13 +277,14 @@ export class ComposedSong {
         const midi = song.toMidi()
         this.instruments.forEach((ins,i)=> {
             const instrument = INSTRUMENTS_DATA[ins]
-            if(!instrument || midi.tracks[i]) return
+            if(!instrument || !midi.tracks[i]) return
             midi.tracks[i].instrument.name = instrument.midiName
         })
         return midi
     }
     clone = () => {
         const clone = new ComposedSong(this.name)
+        clone.id = this.id
         clone.data = { ...this.data }
         clone.version = this.version
         clone.bpm = this.bpm
@@ -296,7 +296,6 @@ export class ComposedSong {
         return clone
     }
 }
-
 const LAYERS_MAP = {
     '0000': 0,
     '0010': 2,

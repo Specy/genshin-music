@@ -44,7 +44,8 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Zither",
         "Old-Zither",
         "DunDun"
-    ] as const : [
+    ] as const 
+    : [
         "Piano",
         "Contrabass",
         "Guitar",
@@ -65,6 +66,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "DunDun",
         "HandPan",
     ] as const
+
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const BaseinstrumentsData = {
     Lyre: {

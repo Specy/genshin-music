@@ -1,10 +1,11 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, Pitch } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, Pitch, INSTRUMENTS, INSTRUMENTS_DATA } from "appConfig"
 import { Column, ColumnNote, RecordedNote, SerializedRecordedNote, SongData } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
 import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "./Layer"
 import { Midi } from "@tonejs/midi"
+import { InstrumentName } from "types/GeneralTypes"
 
 //TODO add instrument to song
 type OldNote = {
@@ -14,8 +15,7 @@ type OldNote = {
 }
 interface SongProps {
     id: string | null
-
-    //TODO add tempo changer type
+    instrument: InstrumentName
     name: string
     data: SongData
     bpm: number
@@ -40,6 +40,7 @@ export type OldFormatSong = SerializedSong & {
 
 export class Song {
     id: string | null
+    instrument: InstrumentName
     name: string
     version: number
     notes: RecordedNote[]
@@ -54,6 +55,7 @@ export class Song {
         this.bpm = 220
         this.id = null
         this.pitch = "C"
+        this.instrument = INSTRUMENTS[0]
         this.data = {
             isComposed: false,
             isComposedVersion: false,
@@ -84,9 +86,10 @@ export class Song {
         const { data, pitch, bpm, notes, name, id } = obj
         const version = obj.version || 1
         const song = new Song(name || 'Untitled')
+        song.instrument = INSTRUMENTS.includes(obj.instrument as any) ?  obj.instrument : INSTRUMENTS[0]
         song.data = { ...song.data, ...data }
-        song.pitch = pitch || song.pitch
-        song.bpm = bpm || song.bpm
+        song.pitch = PITCHES.includes(pitch) ? pitch : pitch
+        song.bpm = Number.isFinite(bpm) ? bpm : song.bpm
         song.id = id
         if (version === 1) {
             const clonedNotes: [] = Array.isArray(notes) ? clonedeep(notes) : []
@@ -101,6 +104,7 @@ export class Song {
     serialize = () => {
         const data: SerializedSong = {
             name: this.name,
+            instrument: this.instrument,
             version: this.version,
             pitch: this.pitch,
             bpm: this.bpm,
@@ -196,7 +200,7 @@ export class Song {
     }
     toMidi(): Midi {
         const midi = new Midi()
-        midi.header.setTempo(this.bpm / 4) //TODO decide if lowering or keeping this
+        midi.header.setTempo(this.bpm / 4) 
         midi.header.keySignatures.push({
             key: this.pitch,
             scale: "major",
@@ -204,10 +208,12 @@ export class Song {
         })
         midi.name = this.name
         const highestLayer = Math.max(...this.notes.map(note => note.layer.asNumber()))
-        for (let i = 0; i < highestLayer; i++) {
+        const numberOfTracks = highestLayer.toString(2).length
+        for (let i = 0; i < numberOfTracks; i++) {
+            const notes = this.notes.filter(note => note.layer.test(i))
+            if(!notes.length) continue
             const track = midi.addTrack()
             track.name = `Layer ${i + 1}`
-            const notes = this.notes.filter(note => note.layer.test(i))
             notes.forEach(note => {
                 track.addNote({
                     time: note.time / 1000,
@@ -216,13 +222,14 @@ export class Song {
                 })
             })
         }
+        if(midi.tracks.length === 1) midi.tracks[1].name = INSTRUMENTS_DATA[this.instrument].midiName
         return midi
     }
     static fromOldFormat = (song: any) => {
         try {
             const converted = new Song(song.name || "Untitled")
             const bpm = Number(song.bpm)
-            converted.bpm = isNaN(bpm) ? 220 : bpm
+            converted.bpm = Number.isFinite(bpm) ? bpm : 220
             converted.pitch = (PITCHES[song.pitchLevel || 0]) || "C"
             const notes: OldNote[] = song.songNotes.filter((note: OldNote, index: number, self: any) =>
                 index === self.findIndex((n: OldNote) => {
@@ -260,9 +267,11 @@ export class Song {
     }
     clone = () => {
         const clone = new Song(this.name)
+        clone.id = this.id
         clone.version = this.version
         clone.bpm = this.bpm
         clone.pitch = this.pitch
+        clone.instrument = this.instrument
         clone.data = { ...this.data }
         clone.notes = this.notes.map(note => note.clone())
         return clone

@@ -199,11 +199,13 @@ class Player extends Component<any, PlayerState>{
 		if (typeof override !== "boolean") override = null
 		const newState = override !== null ? override : !this.state.isRecording
 		if (!newState && this.recording.notes.length > 0) { //if there was a song recording
+			const { instrument, settings } = this.state
 			const songName = await asyncPrompt("Write song name, press cancel to ignore")
 			if (!this.mounted) return
 			if (songName !== null) {
 				const song = new Song(songName, this.recording.notes)
-				song.pitch = this.state.settings.pitch.value as Pitch
+				song.instrument = instrument.name
+				song.pitch = settings.pitch.value as Pitch
 				this.addSong(song)
 				Analytics.userSongs('record', { name: songName, page: 'player' })
 			}

@@ -439,7 +439,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                 <FloatingDropdownRow
                     onClick={() => {
                         if (isRenaming) {
-                            renameSong(songName, data.id as string)
+                            renameSong(songName, data.id!)
                             setIsRenaming(false)
                         }
                         setIsRenaming(!isRenaming)
@@ -457,7 +457,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14}/>
                     <FloatingDropdownText text='Download MIDI' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => removeSong(data.name, data.id as string)}>
+                <FloatingDropdownRow onClick={() => removeSong(data.name, data.id!)}>
                     <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14}/>
                     <FloatingDropdownText text='Delete' />
                 </FloatingDropdownRow>
