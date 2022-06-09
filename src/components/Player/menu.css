@@ -110,7 +110,13 @@
     display: none;
     flex: 1;
     flex-direction: column;
+    
 }
+.menu-panel-visible{
+    display: flex;
+    animation: appearLeft 0.3s;
+}
+
 .songs-buttons-wrapper{
     display:flex;
     width: 100%;
@@ -300,9 +306,7 @@
     justify-content: center;
     align-items: center;
 }
-.menu-panel-visible{
-    display: flex;
-}
+
 .menu-title{
     font-size: 2rem;
     width: 100%;

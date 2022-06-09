@@ -8,7 +8,7 @@ import { SongStore } from 'stores/SongStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
-import SettingsRow from 'components/SettingsRow'
+import SettingsRow from 'components/Settings/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import LibrarySearchedSong from 'components/LibrarySearchedSong'
 import { SongActionButton } from 'components/SongActionButton'
@@ -34,6 +34,7 @@ import { HelpTooltip } from 'components/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm } from 'components/AsyncPrompts';
+import { SettingsPane } from 'components/Settings/SettingsPane';
 interface MenuProps {
     functions: {
         addSong: (song: Song | ComposedSong) => void
@@ -207,9 +208,9 @@ function Menu({ functions, data }: MenuProps) {
             </MenuItem>
         </div>
         <div className={sideClass}>
-            <MenuPanel title="No selection" current={selectedMenu}>
+            <MenuPanel title="No selection" current={selectedMenu} id='No selection'>
             </MenuPanel>
-            <MenuPanel title="Songs" current={selectedMenu}>
+            <MenuPanel title="Songs" current={selectedMenu} id='Songs'>
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>
                         <ul>
@@ -264,16 +265,12 @@ function Menu({ functions, data }: MenuProps) {
                 </div>
             </MenuPanel>
 
-            <MenuPanel title="Settings" current={selectedMenu}>
-                {Object.entries(data.settings).map(([key, data]) => {
-                    return <SettingsRow
-                        key={key}
-                        objKey={key as SettingUpdateKey}
-                        data={data}
-                        changeVolume={functions.changeVolume}
-                        update={handleSettingChange}
-                    />
-                })}
+            <MenuPanel current={selectedMenu} id='Settings'>
+                <SettingsPane 
+                    settings={data.settings}
+                    changeVolume={functions.changeVolume}
+                    onUpdate={handleSettingChange}
+                />
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
                         <Link to={'MidiSetup'}>
@@ -294,7 +291,7 @@ function Menu({ functions, data }: MenuProps) {
                 <DonateButton />
             </MenuPanel>
 
-            <MenuPanel title="Library" current={selectedMenu}>
+            <MenuPanel title="Library" current={selectedMenu} id='Library'>
                 <div>
                     Here you can find songs to learn, they are provided by the sky-music library.
                 </div>
@@ -345,7 +342,7 @@ function Menu({ functions, data }: MenuProps) {
                     }
                 </div>
             </MenuPanel>
-            <MenuPanel title="Help" current={selectedMenu}>
+            <MenuPanel title="Help" current={selectedMenu} id='Help'>
                 <div className='help-icon-wrapper'>
                     <a href='https://discord.gg/Arsf65YYHq' >
                         <FaDiscord className='help-icon' />

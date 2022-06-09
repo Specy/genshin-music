@@ -25,7 +25,7 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 36,
+        settingVersion: APP_NAME + 37,
     },
     data: {
         layer1: {
@@ -34,7 +34,8 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS]
+            options: [...INSTRUMENTS],
+            category: "Song Settings",
         },
         layer2: {
             name: "Instrument (Layer 2)",
@@ -42,7 +43,8 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS]
+            options: [...INSTRUMENTS],
+            category: "Song Settings",
         },
         layer3: {
             name: "Instrument (Layer 3)",
@@ -50,7 +52,8 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS]
+            options: [...INSTRUMENTS],
+            category: "Song Settings",
         },
         layer4: {
             name: "Instrument (Layer 4)",
@@ -58,7 +61,8 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS]
+            options: [...INSTRUMENTS],
+            category: "Song Settings",
         },
         bpm: {
             name: "Bpm",
@@ -66,13 +70,15 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: true,
             increment: 5,
             threshold: [0, 1600],
-            value: 220
+            value: 220,
+            category: "Song Settings",
         },
         pitch: {
             name: "Pitch",
             type: "select",
             songSetting: true,
             value: "C",
+            category: "Song Settings",
             options: [
                 "C",
                 "Db",
@@ -93,6 +99,7 @@ export const ComposerSettings: ComposerSettingsType = {
             type: "select",
             songSetting: false,
             value: 3,
+            category: "General Settings",
             options: [
                 3,
                 4
@@ -102,6 +109,7 @@ export const ComposerSettings: ComposerSettingsType = {
             name: "Note name type",
             type: "select",
             songSetting: false,
+            category: "General Settings",
             value: APP_NAME === "Genshin"
                 ? isMobile()
                     ? "Do Re Mi"
@@ -126,6 +134,7 @@ export const ComposerSettings: ComposerSettingsType = {
             name: "Number of visible columns",
             type: "select",
             songSetting: false,
+            category: "General Settings",
             value: 35,
             options: [
                 20,
@@ -139,6 +148,7 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         caveMode: {
             name: "Reverb (cave mode)",
+            category: "General Settings",
             type: "checkbox",
             songSetting: false,
             value: false,
@@ -146,12 +156,14 @@ export const ComposerSettings: ComposerSettingsType = {
         autosave: {
             name: "Autosave changes",
             type: "checkbox",
+            category: "General Settings",
             songSetting: false,
             value: false,
         },
         syncTabs: {
             name: "Autoplay in all tabs (pc only)",
             type: "checkbox",
+            category: "General Settings",
             songSetting: false,
             value: false
         }
@@ -177,7 +189,7 @@ export type MainPageSettingsType = {
 }
 export const MainPageSettings: MainPageSettingsType = {
     other: {
-        settingVersion: APP_NAME + 36
+        settingVersion: APP_NAME + 37
     },
     data: {
         instrument: {
@@ -186,13 +198,15 @@ export const MainPageSettings: MainPageSettingsType = {
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS]
+            options: [...INSTRUMENTS],
+            category: "Song Settings",
         },
         pitch: {
             name: "Pitch",
             type: "select",
             songSetting: true,
             value: "C",
+            category: "Song Settings",
             options: [
                 "C",
                 "Db",
@@ -213,11 +227,13 @@ export const MainPageSettings: MainPageSettingsType = {
             type: "checkbox",
             songSetting: false,
             value: false,
+            category: "General Settings",
         },
         noteNameType: {
             name: "Note name type",
             type: "select",
             songSetting: false,
+            category: "General Settings",
             value: APP_NAME === "Genshin"
                 ? isMobile()
                     ? "Do Re Mi"
@@ -244,6 +260,7 @@ export const MainPageSettings: MainPageSettingsType = {
             type: "slider",
             songSetting: false,
             value: 100,
+            category: "General Settings",
             threshold: [80, 150]
         },
         keyboardYPosition: {
@@ -251,6 +268,7 @@ export const MainPageSettings: MainPageSettingsType = {
             type: "slider",
             songSetting: false,
             value: -20,
+            category: "General Settings",
             threshold: [-60, 80]
         },
         approachSpeed: {
@@ -259,11 +277,13 @@ export const MainPageSettings: MainPageSettingsType = {
             increment: 50,
             songSetting: false,
             value: 1500,
+            category: "General Settings",
             threshold: [0, 5000]
         },
         noteAnimation: {
             name: "Note animation",
             type: "checkbox",
+            category: "General Settings",
             songSetting: false,
             value: false
         }

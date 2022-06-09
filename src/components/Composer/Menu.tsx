@@ -4,7 +4,6 @@ import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
-import SettingsRow from 'components/SettingsRow'
 import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
 import { IS_MIDI_AVAILABLE } from 'appConfig';
@@ -13,7 +12,7 @@ import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { ComposerSettingsDataType } from 'lib/BaseSettings';
-import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
+import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
 import { SerializedSongType } from 'types/SongTypes';
 import { useTheme } from 'lib/Hooks/useTheme';
@@ -23,6 +22,7 @@ import { HelpTooltip } from 'components/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm } from 'components/AsyncPrompts';
+import { SettingsPane } from 'components/Settings/SettingsPane';
 
 interface MenuProps {
     data: {
@@ -155,7 +155,7 @@ function Menu({ data, functions }: MenuProps) {
         </div>
         <div className={sideClass}>
 
-            <MenuPanel title="Songs" current={selectedMenu}>
+            <MenuPanel title="Songs" current={selectedMenu} id="Songs">
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>
                         <ul>
@@ -201,16 +201,13 @@ function Menu({ data, functions }: MenuProps) {
                 </div>
 
             </MenuPanel>
-            <MenuPanel title="Settings" current={selectedMenu}>
-                {Object.entries(data.settings).map(([key, data]) =>
-                    <SettingsRow
-                        key={key}
-                        objKey={key as SettingUpdateKey}
-                        data={data}
-                        changeVolume={changeVolume}
-                        update={handleSettingChange}
-                    />
-                )}
+            <MenuPanel current={selectedMenu} id="Settings">
+                <SettingsPane 
+                    settings={data.settings}
+                    onUpdate={handleSettingChange}
+                    changeVolume={changeVolume}
+                
+                />
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
                         <AppButton

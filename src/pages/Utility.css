@@ -25,3 +25,23 @@
         transform: scale(1) inherit;
     }
 }
+@keyframes appearLeft{
+    from{
+        transform: translateX(-0.5rem);
+        opacity: 0.6;
+    }
+    to{
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+@keyframes disappearAbove{
+    from{
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to{
+        transform: translateY(-1rem);
+        opacity: 0;
+    }
+}
