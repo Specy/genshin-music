@@ -3,8 +3,8 @@ import { FaDownload, FaSpinner } from 'react-icons/fa';
 import { parseSong } from "lib/Tools"
 import LoggerStore from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
-import { ComposedSong } from 'lib/ComposedSong';
-import type {  RecordedSong } from 'lib/RecordedSong';
+import { ComposedSong } from 'lib/Songs/ComposedSong';
+import type {  RecordedSong } from 'lib/Songs/RecordedSong';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 
 interface SearchedSongProps{

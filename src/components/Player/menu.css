@@ -262,6 +262,13 @@
 .floating-dropdown{
     position: relative;
 }
+.dropdown-select{
+    background-color: var(--primary);
+    height: 100%;
+    width: 100%;
+    color: var(--primary-text);
+    border: none;
+}
 .floating-dropdown-text{
     display: flex;
     font-size: 0.8rem;

@@ -3,9 +3,9 @@ import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, Pitch, INSTRUMEN
 import { TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
 import { OldFormat, SongInstruments } from "types/SongTypes"
-import { NoteLayer } from "./Layer"
+import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
-import { Column, ColumnNote, RecordedNote, SerializedColumn, SongData } from "./SongClasses"
+import { Column, ColumnNote, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
 
 interface OldFormatNoteType {
@@ -14,11 +14,14 @@ interface OldFormatNoteType {
     l?: number
 }
 export type ComposedSongInstruments = [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
+
 export type SerializedComposedSong = SerializedSong & {
     instruments: SongInstruments
     breakpoints: number[]
     columns: SerializedColumn[]
 }
+
+
 type OldFormatComposed = SerializedComposedSong & OldFormat
 export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
     notes: RecordedNote[]
@@ -92,6 +95,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
         const bpm = Number(this.bpm)
         return {
             name: this.name,
+            folderId: this.folderId,
             bpm: isNaN(bpm) ? 220 : bpm,
             pitch: this.pitch,
             version: this.version,

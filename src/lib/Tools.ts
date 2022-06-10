@@ -1,9 +1,9 @@
 import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "appConfig"
 import * as workerTimers from 'worker-timers';
-import { Column, RecordedNote } from "./SongClasses";
-import { ComposedSong } from "./ComposedSong";
-import { RecordedSong } from "./RecordedSong";
-import { ColumnNote } from "./SongClasses";
+import { Column, RecordedNote } from "./Songs/SongClasses";
+import { ComposedSong } from "./Songs/ComposedSong";
+import { RecordedSong } from "./Songs/RecordedSong";
+import { ColumnNote } from "./Songs/SongClasses";
 import { NoteNameType } from "types/GeneralTypes";
 import { NoteLayer } from "./Layer";
 

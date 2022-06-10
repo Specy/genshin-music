@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH } from 'react-icons/fa';
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder } from 'react-icons/fa';
 import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME } from 'appConfig'
 import MenuItem from 'components/MenuItem'
@@ -14,7 +14,6 @@ import { SongMenu } from 'components/SongMenu';
 import { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
-import { SerializedSongType } from 'types/SongTypes';
 import { useTheme } from 'lib/Hooks/useTheme';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 import { hasTooltip, Tooltip } from 'components/Tooltip';
@@ -23,17 +22,22 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'com
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm } from 'components/AsyncPrompts';
 import { SettingsPane } from 'components/Settings/SettingsPane';
+import { SerializedSong } from 'lib/Songs/Song';
+import { useFolders } from 'lib/Hooks/useFolders';
+import { Folder } from 'lib/Folder';
+import { songService } from 'lib/Services/SongService';
+import { songsStore } from 'stores/SongsStore';
 
 interface MenuProps {
     data: {
-        songs: SerializedSongType[]
+        songs: SerializedSong[]
         settings: ComposerSettingsDataType,
         hasChanges: boolean,
         isMenuOpen: boolean,
         isRecordingAudio: boolean
     }
     functions: {
-        loadSong: (song: SerializedSongType) => void
+        loadSong: (song: SerializedSong) => void
         renameSong : (newName: string, id:string) => void
         removeSong: (name: string, id: string) => void
         createNewSong: () => void
@@ -49,6 +53,7 @@ interface MenuProps {
 export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 function Menu({ data, functions }: MenuProps) {
     const [open, setOpen] = useState(false)
+    const [folders] = useFolders()
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const { loadSong, removeSong, changePage, renameSong, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible, updateThisSong } = functions
     const [theme] = useTheme()
@@ -90,7 +95,7 @@ function Menu({ data, functions }: MenuProps) {
         }
     }, [open, selectedMenu])
 
-    const downloadSong = useCallback(async (song: SerializedSongType | Midi) => {
+    const downloadSong = useCallback(async (song: SerializedSong | Midi) => {
         try {
             if (song instanceof Midi) {
                 const agrees = await asyncConfirm(
@@ -185,6 +190,7 @@ function Menu({ data, functions }: MenuProps) {
                     baseType='composed'
                     componentProps={{
                         theme,
+                        folders,
                         functions: songFunctions
                     }}
                 />
@@ -233,18 +239,19 @@ function Menu({ data, functions }: MenuProps) {
 
 
 interface SongRowProps {
-    data: SerializedSongType
+    data: SerializedSong
     theme: ThemeStoreClass
+    folders: Folder[]
     functions: {
         removeSong: (name: string, id: string) => void
         renameSong: (newName: string, id: string) => void
         toggleMenu: (override: boolean) => void
-        loadSong: (song: SerializedSongType) => void
-        downloadSong: (song: SerializedSongType | Midi) => void
+        loadSong: (song: SerializedSong) => void
+        downloadSong: (song: SerializedSong | Midi) => void
     }
 }
 
-function SongRow({ data, functions, theme }: SongRowProps) {
+function SongRow({ data, functions, theme, folders }: SongRowProps) {
     const { removeSong, toggleMenu, renameSong, loadSong, downloadSong } = functions
     const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     const [isRenaming, setIsRenaming] = useState(false)
@@ -295,6 +302,23 @@ function SongRow({ data, functions, theme }: SongRowProps) {
                     <FaPen style={{marginRight: "0.4rem"}}/>
                     <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
                 </AppButton>
+                <FloatingDropdownRow>
+                    <FaFolder style={{marginRight: "0.4rem"}}/>
+                    <select className='dropdown-select' 
+                        value={data.folderId || "_None"}
+                        onChange={(e) => {
+                            const id = e.target.value
+                            songsStore.addSongToFolder(data, id !== "_None" ? id : null)
+                        }}
+                    >
+                        <option value={"_None"}>
+                            None
+                        </option>
+                        {folders.map(folder =>
+                             <option key={folder.id} value={folder.id!}>{folder.name}</option>
+                        )}
+                    </select>
+                </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={() => downloadSong(data)}>
                     <FaDownload style={{marginRight: "0.4rem"}}/>
                     <FloatingDropdownText text='Download'/>

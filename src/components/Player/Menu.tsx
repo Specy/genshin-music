@@ -4,7 +4,7 @@ import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
 import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
-import { SongStore } from 'stores/SongStore'
+import { PlayerStore } from 'stores/PlayerStore'
 import { HelpTab } from 'components/HelpTab'
 import MenuItem from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -18,14 +18,13 @@ import LoggerStore from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { Link } from 'react-router-dom'
-import { SerializedRecordedSong, RecordedSong } from 'lib/RecordedSong';
-import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
-import { SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety';
+import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
+import { ComposedSong, SerializedComposedSong } from 'lib/Songs/ComposedSong';
+import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { MainPageSettingsDataType } from 'lib/BaseSettings';
 import { useTheme } from 'lib/Hooks/useTheme';
 import { SearchedSongType } from 'types/GeneralTypes';
 import { FileElement, FilePicker } from 'components/FilePicker';
-import { SerializedSongType } from 'types/SongTypes';
 import "./menu.css"
 import { ThemeStoreClass } from 'stores/ThemeStore';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
@@ -35,6 +34,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'com
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm } from 'components/AsyncPrompts';
 import { SettingsPane } from 'components/Settings/SettingsPane';
+import { SerializedSong } from 'lib/Songs/Song';
 interface MenuProps {
     functions: {
         addSong: (song: RecordedSong | ComposedSong) => void
@@ -45,7 +45,7 @@ interface MenuProps {
     }
     data: {
         settings: MainPageSettingsDataType
-        songs: SerializedSongType[]
+        songs: SerializedSong[]
     }
 }
 
@@ -118,10 +118,10 @@ function Menu({ functions, data }: MenuProps) {
         setOpen(true)
         Analytics.UIEvent('menu', { tab: selection })
     }
-    const importSong = (files: FileElement<SerializedSongType[] | SerializedSongType>[]) => {
+    const importSong = (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
         for (const file of files) {
             try {
-                const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSongType[]
+                const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
                 for (const song of songs) {
                     addSong(parseSong(song))
                     Analytics.userSongs('import', { name: song?.name, page: 'player' })
@@ -233,7 +233,7 @@ function Menu({ functions, data }: MenuProps) {
                             Compose song
                         </AppButton>
                     </Link>
-                    <FilePicker<SerializedSongType | SerializedSongType[]>
+                    <FilePicker<SerializedSong | SerializedSong[]>
                         onChange={importSong}
                         onError={logImportError}
                         as='json'
@@ -330,7 +330,7 @@ function Menu({ functions, data }: MenuProps) {
                                     key={song.file}
                                     data={song}
                                     importSong={addSong}
-                                    onClick={SongStore.play}
+                                    onClick={PlayerStore.play}
                                 />
                             )
                             : <div className='library-search-result-text'>
@@ -361,7 +361,7 @@ function Menu({ functions, data }: MenuProps) {
 
 
 interface SongRowProps {
-    data: SerializedSongType
+    data: SerializedSong
     theme: ThemeStoreClass
     functions: {
         removeSong: (name: string, id: string) => void
@@ -382,7 +382,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             if (isRenaming) return
-            SongStore.play(parseSong(data), 0)
+            PlayerStore.play(parseSong(data), 0)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -407,7 +407,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
             <SongActionButton
                 onClick={() => {
                     const parsed = parseSong(data)
-                    SongStore.practice(parsed, 0, parsed.notes.length)
+                    PlayerStore.practice(parsed, 0, parsed.notes.length)
                     toggleMenu(false)
                 }}
                 tooltip='Practice'
@@ -418,7 +418,7 @@ function SongRow({ data, functions, theme }: SongRowProps) {
 
             <SongActionButton onClick={() => {
                 const parsed = parseSong(data)
-                SongStore.approaching(parsed, 0, parsed.notes.length)
+                PlayerStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
 
             }}

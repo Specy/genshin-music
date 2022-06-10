@@ -1,9 +1,9 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, Pitch, INSTRUMENTS, INSTRUMENTS_DATA } from "appConfig"
-import { Column, ColumnNote, RecordedNote, SerializedRecordedNote, SongData } from "./SongClasses"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS, INSTRUMENTS_DATA } from "appConfig"
+import { Column, ColumnNote, RecordedNote, SerializedRecordedNote } from "./SongClasses"
 import { ComposedSong } from "./ComposedSong"
 import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
-import { NoteLayer } from "./Layer"
+import { NoteLayer } from "../Layer"
 import { Midi } from "@tonejs/midi"
 import { InstrumentName } from "types/GeneralTypes"
 import { SerializedSong, Song } from "./Song"
@@ -69,9 +69,10 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         return song
     }
-    serialize = () => {
-        const data: SerializedRecordedSong = {
+    serialize = (): SerializedRecordedSong => {
+        return {
             name: this.name,
+            folderId: this.folderId,
             instrument: this.instrument,
             version: this.version,
             pitch: this.pitch,
@@ -80,7 +81,6 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             notes: this.notes.map(note => note.serialize()),
             id: this.id
         }
-        return data
     }
     toComposedSong = (precision = 4) => {
         const bpmToMs = Math.floor(60000 / this.bpm)

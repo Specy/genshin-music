@@ -485,7 +485,13 @@ a {
 	flex-direction: column;
 	flex: 1;
 }
+.has-tooltip{
+	position: relative;
+}
 @media (hover:hover) {
+	.has-tooltip:hover:not(:focus){
+		z-index: 2;
+	}
 	.has-tooltip:hover:not(:focus) .tooltip {
 		display: block;
 		animation: fadeIn 0.2s;
@@ -639,11 +645,22 @@ a {
 .folder-content{
 	display: none;
 	padding: 0.5rem;
+	padding-top: 0;
+	flex-direction: column;
+}
+.folder-songs-wrapper{
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.3rem;
 }
 .folder-expanded .folder-content{
 	display: flex;
 }
-
+.folder-title{
+	margin: 0.4rem 0;
+	margin-left: 0.4rem;
+	font-size: 1.2rem;
+}
 .folder-name{
 	font-size: 1.2rem;
 	padding: 0;

@@ -2,7 +2,7 @@ import { SPEED_CHANGERS } from "appConfig"
 import Memoized from "components/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
 import { memo, useEffect, useState, useRef, ChangeEvent } from "react";
-import { SongStore } from "stores/SongStore";
+import { PlayerStore } from "stores/PlayerStore";
 import { SliderStore } from "stores/SongSliderStore";
 import { observe } from "mobx";
 import { BsTriangleFill } from "react-icons/bs";
@@ -20,7 +20,7 @@ interface TopPageProps {
 }
 export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger, approachingScore, hasSong }: TopPageProps) {
     const [sliderState, setSliderState] = useState(SliderStore.state.data)
-    const [songData, setSongData] = useState(SongStore.state.data)
+    const [songData, setSongData] = useState(PlayerStore.state.data)
     const [selectedThumb, setSelectedThumb] = useState<'left' | 'right' | null>(null)
     const [inputDimension, setInputDimension] = useState({
         x: 0,
@@ -33,7 +33,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
         const dispose = observe(SliderStore.state, (newState) => {
             setSliderState(newState.object.data)
         })
-        const dispose2 = observe(SongStore.state, (newState2) => {
+        const dispose2 = observe(PlayerStore.state, (newState2) => {
             setSongData(newState2.object.data)
         })
         return () => {
@@ -93,7 +93,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             <Score {...approachingScore} />
         }
         <div className="slider-wrapper">
-            <AppButton className="slider-button" onClick={SongStore.reset} tooltip='Stop'>
+            <AppButton className="slider-button" onClick={PlayerStore.reset} tooltip='Stop'>
                 <Memoized>
                     <FaStop />
                 </Memoized>

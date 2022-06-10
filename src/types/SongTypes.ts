@@ -1,8 +1,4 @@
-import type { SerializedRecordedSong } from "lib/RecordedSong";
-import type { SerializedComposedSong } from "lib/ComposedSong";
 import { InstrumentName } from "./GeneralTypes";
-
-export type SerializedSongType = SerializedRecordedSong | SerializedComposedSong
 
 export type SongInstruments = [InstrumentName,InstrumentName,InstrumentName,InstrumentName]
 

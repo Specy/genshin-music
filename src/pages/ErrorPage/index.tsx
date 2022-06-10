@@ -6,33 +6,27 @@ import { APP_NAME } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
 import LoggerStore from 'stores/LoggerStore';
 import { SongMenu } from 'components/SongMenu';
-import { SerializedSongType } from 'types/SongTypes';
 
 
 import './ErrorPage.css'
 import { AppButton } from 'components/AppButton';
-import { songService } from 'lib/Services/SongService';
+import { SerializedSong } from 'lib/Songs/Song';
+import { useSongs } from 'lib/Hooks/useSongs';
+import { songsStore } from 'stores/SongsStore';
 
 export function ErrorPage() {
-    const [songs, setSongs] = useState<SerializedSongType[]>([])
-    const syncSongs = async () => {
-        setSongs(await songService.getSongs())
-    }
-    useEffect(() => {
-        syncSongs()
-    }, [])
+    const [songs] = useSongs()
+
 
     const deleteSong = async (name: string, id: string) => {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
-            await songService.removeSong(id)
-            syncSongs()
-        }
+            await songsStore.removeSong(id)
+        }   
 
     }
     const deleteAllSongs = async () => {
         if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
-            await songService._clearAll()
-            syncSongs()
+            await songsStore._DANGEROUS_CLEAR_ALL_SONGS()
         }
     }
     const resetSettings = () => {
@@ -40,7 +34,7 @@ export function ErrorPage() {
         localStorage.removeItem(APP_NAME + "_Main_Settings")
         LoggerStore.success("Settings have been reset")
     }
-    const downloadSong = (song: SerializedSongType) => {
+    const downloadSong = (song: SerializedSong) => {
         try{
             const songName = song.name
             const parsed = parseSong(song)
@@ -86,9 +80,9 @@ export function ErrorPage() {
 }
 
 interface SongRowProps{
-    data: SerializedSongType
+    data: SerializedSong
     deleteSong: (name: string, id: string) => void
-    download: (song: SerializedSongType) => void
+    download: (song: SerializedSong) => void
 }
 function SongRow({data, deleteSong, download } : SongRowProps) {
     return <div className="song-row">

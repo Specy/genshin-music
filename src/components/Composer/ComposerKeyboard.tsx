@@ -1,6 +1,6 @@
 import ComposerNote from "components/Composer/ComposerNote"
 import { getNoteText } from 'lib/Tools'
-import { Column } from "lib/SongClasses"
+import { Column } from "lib/Songs/SongClasses"
 import MultiSwitch from "components/Composer/MultiSwitch"
 import { LAYOUT_IMAGES, LAYERS_INDEXES, Pitch, TEMPO_CHANGERS } from "appConfig"
 import { ThemeProvider } from "stores/ThemeStore"

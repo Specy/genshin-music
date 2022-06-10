@@ -1,22 +1,25 @@
 import { useTheme } from "lib/Hooks/useTheme";
-import { ComposedSong } from "lib/ComposedSong";
-import { RecordedSong } from "lib/RecordedSong";
+import { ComposedSong } from "lib/Songs/ComposedSong";
+import { RecordedSong } from "lib/Songs/RecordedSong";
 import { useEffect, useState } from "react"
-import { SerializedSongType } from "types/SongTypes";
-import { SongFolder } from "./Folder";
+import { SongFolder, SongFolderContent } from "./Folder";
 import { Folder } from "lib/Folder";
+import { SerializedSong } from "lib/Songs/Song";
+import { useFolders } from "lib/Hooks/useFolders";
+import { asyncPrompt } from "./AsyncPrompts";
+import { folderStore } from "stores/FoldersStore";
+import { AppButton } from "./AppButton";
 
 
 
 type songType = 'recorded' | 'composed'
-type SongKinds = SerializedSongType | RecordedSong | ComposedSong
+type SongKinds = SerializedSong | RecordedSong | ComposedSong
 interface SongMenuProps<T> {
     songs: SongKinds[],
     SongComponent: Function,
     componentProps: Omit<T, "data">
     className?: string,
     style?: React.CSSProperties,
-    scrollerStyle?: React.CSSProperties
     baseType: songType
 }
 
@@ -29,16 +32,107 @@ export function SongMenu<T>({
     className = '',
     style = {},
     baseType = 'recorded',
-    scrollerStyle = {}
 }: SongMenuProps<T>) {
-    const [songType, setSongType] = useState<songType>('recorded')
-    const [theme] = useTheme()
+    const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
+    const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
     useEffect(() => {
-        setSongType(baseType)
-    }, [baseType])
-    const selectedColor = theme.layer('menu_background', 0.32).desaturate(0.4)
+        setNoFolderRecorded(new Folder("Recorded", null, songs.filter(song => !song.folderId && !song.data.isComposedVersion)))
+        setNoFolderComposed(new Folder("Composed", null, songs.filter(song => !song.folderId && song.data.isComposedVersion)))
+    }, [songs])
+    const [folders] = useFolders(songs)
+    const [theme] = useTheme()
+    //const selectedColor = theme.layer('menu_background', 0.32).desaturate(0.4)
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
+
+    async function createFolder() {
+        const name = await asyncPrompt("Write the folder name")
+        if (!name) return
+        folderStore.createFolder(name)
+    }
     return <div className={`${className}`} style={style}>
+        {noFolderComposed &&
+            <SongFolder
+                backgroundColor={unselectedColor.toString()}
+                color={theme.getText('menu_background').toString()}
+                data={noFolderComposed}
+                isDefault={true}
+                defaultOpen={baseType === 'composed'}
+            >
+                <SongFolderContent>
+                    {noFolderComposed.songs.map(song =>
+                        <SongComponent
+                            {...componentProps}
+                            data={song}
+                            key={song?.id}
+                        />
+                    )}
+                    {noFolderComposed.songs.length === 0 &&
+                        <div style={{padding: '0 0.4rem', fontSize: '0.9rem'}}>
+                            Go to the composer to create a new song!
+                        </div>
+                    }
+                </SongFolderContent>
+            </SongFolder>
+        }
+        {noFolderRecorded &&
+            <SongFolder
+                backgroundColor={unselectedColor.toString()}
+                color={theme.getText('menu_background').toString()}
+                data={noFolderRecorded}
+                isDefault={true}
+                defaultOpen={baseType === 'recorded'}
+            >
+                <SongFolderContent>
+                    {noFolderRecorded.songs.map(song =>
+                        <SongComponent
+                            {...componentProps}
+                            data={song}
+                            key={song?.id}
+                        />
+                    )}
+                    {noFolderRecorded.songs.length === 0 &&
+                        <div>
+                            Click "Record" to record a new song!
+                        </div>
+                    }
+                </SongFolderContent>
+            </SongFolder>
+        }
+        {folders.map(folder =>
+            <SongFolder
+                key={folder.id}
+                backgroundColor={unselectedColor.toString()}
+                color={theme.getText('menu_background').toString()}
+                data={folder}
+            >
+                <SongFolderContent title="Composed">
+                    {folder.songs.filter(song => song.data?.isComposedVersion).map(song =>
+                        <SongComponent
+                            {...componentProps}
+                            data={song}
+                            key={song?.id}
+                        />
+                    )}
+                </SongFolderContent>
+                <SongFolderContent title="Recorded">
+                    {folder.songs.filter(song => !song.data?.isComposedVersion).map(song =>
+                        <SongComponent
+                            {...componentProps}
+                            data={song}
+                            key={song?.id}
+                        />
+                    )}
+                </SongFolderContent>
+            </SongFolder>
+        )}
+        <AppButton onClick={createFolder} style={{ width: '100%', marginTop: "0.2rem" }}>
+            Create folder
+        </AppButton>
+    </div>
+}
+
+
+/*
         <div className="tab-selector-wrapper">
             <button
                 className={'tab-selector'}
@@ -70,19 +164,5 @@ export function SongMenu<T>({
                 />
             )}
         </div>
-        <SongFolder 
-            backgroundColor={unselectedColor.toString()}
-            color={theme.getText('menu_background').toString()}
-            renameFolder={() => { }}
-            data={new Folder("Some folder")}
-        > 
-            Empty for now, just proof of concept
-            <br />
-            Bla bla some space
-            <br />
-            Bla bla some space
-            <br />
-            Bla bla some space
-        </SongFolder>
-    </div>
-}
+
+*/

@@ -1,5 +1,5 @@
 import './SheetVisualizer.css'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { SimpleMenu } from 'components/SimpleMenu'
 import { APP_NAME } from 'appConfig'
 import { getNoteText, parseSong } from 'lib/Tools'
@@ -7,12 +7,12 @@ import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { SongMenu } from 'components/SongMenu'
 import { ThemeProvider } from 'stores/ThemeStore'
-import { SerializedSongType } from 'types/SongTypes'
-import { RecordedSong } from 'lib/RecordedSong'
-import { RecordedNote } from 'lib/SongClasses'
+import { RecordedSong } from 'lib/Songs/RecordedSong'
+import { RecordedNote } from 'lib/Songs/SongClasses'
 import { AppButton } from 'components/AppButton'
 import LoggerStore from 'stores/LoggerStore'
-import { songService } from 'lib/Services/SongService'
+import { SerializedSong } from 'lib/Songs/Song'
+import { useSongs } from 'lib/Hooks/useSongs'
 
 const THRESHOLDS = {
     joined: 50,
@@ -21,10 +21,10 @@ const THRESHOLDS = {
 
 
 export default function SheetVisualizer() {
-    const [songs, setSongs] = useState<SerializedSongType[]>([])
+    const [songs] = useSongs()
     const [sheet, setSheet] = useState<Chunk[]>([])
     const [framesPerRow, setFramesPerRow] = useState(7)
-    const [currentSong, setCurrentSong] = useState<SerializedSongType | null>(null)
+    const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
 
@@ -37,18 +37,11 @@ export default function SheetVisualizer() {
         setFramesPerRow(newAmount)
     }
 
-    useEffect(() => {
-        async function load() {
-            setSongs(await songService.getSongs())
-        }
-        load()
-    }, [])
-
     function getChunkNoteText(i: number) {  
         const text = getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === "Genshin" ? 21 : 15)
         return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
-    function handleClick(song: SerializedSongType) {
+    function handleClick(song: SerializedSong) {
         setCurrentSong(song)
         try{
             const temp = parseSong(song)
@@ -98,7 +91,6 @@ export default function SheetVisualizer() {
                     songs={songs}
                     className='displayer-songs-wrapper noprint'
                     style={{ marginTop: '0' }}
-                    scrollerStyle={{overflowY: 'auto'}}
                     baseType='recorded'
                     SongComponent={SongRow}
                     componentProps={{
@@ -204,9 +196,9 @@ function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
 }
 
 interface SongRowProps{
-    data: SerializedSongType
-    current: SerializedSongType | null
-    onClick: (song: SerializedSongType) => void
+    data: SerializedSong
+    current: SerializedSong | null
+    onClick: (song: SerializedSong) => void
 }
 function SongRow({ data, current, onClick }: SongRowProps ) {
     const selectedStyle = current === data ? { backgroundColor: 'rgb(124, 116, 106)' } : {}

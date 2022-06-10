@@ -1,17 +1,17 @@
-import { SerializedSongType } from "types/SongTypes"
+import { SerializedSong } from "lib/Songs/Song"
 import { DbInstance } from "./Database"
 
 
 class SongService{
     songCollection = DbInstance.collections.songs
 
-    async getSongs(): Promise<SerializedSongType[]>{
-        const songs = await (this.songCollection.find({}).toArray() as Promise<SerializedSongType[]>)
+    async getSongs(): Promise<SerializedSong[]>{
+        const songs = await (this.songCollection.find({}).toArray() as Promise<SerializedSong[]>)
         const migrationEnsured = await this.ensureMigration(songs)
         return migrationEnsured.map(this.stripDbId)
     }
 
-    private async ensureMigration(songs: SerializedSongType[]){
+    private async ensureMigration(songs: SerializedSong[]){
         const ensureId = songs.map(song => {
             return new Promise(async resolve => {
                 if(song.id === undefined || song.id === null){
@@ -26,10 +26,10 @@ class SongService{
         //if every song was already migrated
         if(!changes.some(change => change)) return songs
         //if some songs were not migrated
-        return this.songCollection.find({}).toArray() as Promise<SerializedSongType[]>
+        return this.songCollection.find({}).toArray() as Promise<SerializedSong[]>
     }
 
-    private stripDbId(song:SerializedSongType){
+    private stripDbId(song:SerializedSong){
         //@ts-ignore
         delete song._id
         return song
@@ -38,15 +38,15 @@ class SongService{
     async songExists(id: string): Promise<boolean>{
         return (await this.getSongById(id)) !== null
     }
-    async getSongById(id:string): Promise<SerializedSongType | null>{
-        const song = await (this.songCollection.findOne({id}) as Promise<SerializedSongType>)
+    async getSongById(id:string): Promise<SerializedSong | null>{
+        const song = await (this.songCollection.findOne({id}) as Promise<SerializedSong>)
         if(song) return this.stripDbId(song)
         return null
     }
     async existsSong(query:any){
         return (await this.songCollection.findOne(query)) !== undefined
     }
-    updateSong(id:string,data:SerializedSongType){
+    updateSong(id:string,data:SerializedSong){
         return this.songCollection.update({id}, data)
     }
     async renameSong(id: string, newName: string){
@@ -54,14 +54,14 @@ class SongService{
         if(song === null) return
         song.name = newName
         return this.updateSong(id, song)
-
     }
-    async addSong(song:SerializedSongType){
+    async addSong(song:SerializedSong){
         const id = DbInstance.generateId()
         song.id = id
         await this.songCollection.insert(song)
         return id
     }
+
     _clearAll(){
         return this.songCollection.remove({})
     }

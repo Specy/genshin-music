@@ -1,27 +1,31 @@
-import { SerializedSongType } from "types/SongTypes"
-import { folderService } from "./Services/FolderService"
+import { SerializedSong } from "./Songs/Song"
 
 
-
+export interface SerializedFolder {
+    id: string | null
+    name: string
+}
 
 export class Folder{
     id:string | null
     name:string
-    songs: SerializedSongType[]
-    constructor(name:string,id?: string | null ,songs?:SerializedSongType[]){
+    songs: SerializedSong[]
+    constructor(name:string,id?: string | null ,songs?:SerializedSong[]){
         this.id = id || null
         this.name = name
         this.songs = songs ?? []
     }
 
-    addSong(song:SerializedSongType){
+    addSong(song:SerializedSong){
         this.songs.push(song)
     }
-    static async create(name:string){
-        const folder = new Folder(name)
-        const id = await folderService.addFolder(folder)
-        folder.id = id
-        return folder
+    static deserialize(data: SerializedFolder){
+        return new Folder(data.name,data.id)
     }
-
+    serialize = (): SerializedFolder => {
+        return {
+            id: this.id,
+            name: this.name
+        }
+    }
 }

@@ -16,16 +16,16 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
 import { delay, formatMs, calculateSongLength, parseSong } from "lib/Tools"
-import { ComposedSong, SerializedComposedSong } from 'lib/ComposedSong';
-import { Column } from 'lib/SongClasses';
+import { ComposedSong, SerializedComposedSong } from 'lib/Songs/ComposedSong';
+import { Column } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
-import { SerializedRecordedSong, RecordedSong } from 'lib/RecordedSong';
-import { SerializedSongType, SongInstruments } from 'types/SongTypes';
+import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
+import { SongInstruments } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { ComposerInstruments, InstrumentName, LayerIndex, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
 import "./Composer.css"
@@ -35,11 +35,14 @@ import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardType
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { CanvasTool } from 'components/Composer/CanvasTool';
-import { songService } from 'lib/Services/SongService';
 import { settingsService } from 'lib/Services/SettingsService';
+import { SerializedSong } from 'lib/Songs/Song';
+import { subscribeSongs } from 'lib/Hooks/useSongs';
+import { songsStore } from 'stores/SongsStore';
+
 interface ComposerState {
     layers: ComposerInstruments
-    songs: SerializedSongType[]
+    songs: SerializedSong[]
     song: ComposedSong
     settings: ComposerSettingsDataType
     layer: LayerType
@@ -57,6 +60,7 @@ class Composer extends Component<any, ComposerState>{
     mounted: boolean
     changes: number
     unblock: () => void
+    disposeSongsObserver!: () => void
     constructor(props: any) {
         super(props)
         const settings = settingsService.getComposerSettings()
@@ -94,6 +98,9 @@ class Composer extends Component<any, ComposerState>{
     componentDidMount() {
         this.mounted = true
         this.init()
+        this.disposeSongsObserver = subscribeSongs((songs) => {
+            this.setState({ songs })
+        })
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : null
         if (this.broadcastChannel) {
             this.broadcastChannel.addEventListener('message', (event) => {
@@ -120,6 +127,7 @@ class Composer extends Component<any, ComposerState>{
         AudioProvider.clear()
         layers.forEach(instrument => instrument.delete())
         this.broadcastChannel?.close?.()
+        this.disposeSongsObserver?.()
         state.isPlaying = false
         this.unblock()
         KeyboardProvider.unregisterById('composer')
@@ -130,7 +138,6 @@ class Composer extends Component<any, ComposerState>{
     }
 
     init = async () => {
-        this.syncSongs()
         const { settings } = this.state
         //TODO if new layer is added    
         const promises = [
@@ -230,9 +237,9 @@ class Composer extends Component<any, ComposerState>{
             }
         }
     }
-    handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
+    handleDrop = async (files: DroppedFile<SerializedSong>[]) => {
         for (const file of files) {
-            const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
+            const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSong[]
             try {
                 for (const song of parsed) {
                     const parsedSong = parseSong(song)
@@ -338,20 +345,13 @@ class Composer extends Component<any, ComposerState>{
             note.index
         )
     }
-    syncSongs = async () => {
-        const songs = await songService.getSongs()
-        if (!this.mounted) return
-        this.setState({ songs })
-    }
     addSong = async (song: ComposedSong | RecordedSong) => {
-        const id = await songService.addSong(song.serialize())
+        const id = await songsStore.addSong(song)
         song.id = id
-        this.syncSongs()
     }
     renameSong = async (newName: string, id: string ) => {
         const {song} = this.state
-        await songService.renameSong(id, newName)
-        await this.syncSongs()
+        await songsStore.renameSong(id, newName)
         if(this.state.song.id === id){
             song.name = newName
             this.setState({ song })
@@ -369,15 +369,14 @@ class Composer extends Component<any, ComposerState>{
         return new Promise(async resolve => {
             const { settings } = this.state
             //if it exists, update it
-            if (await songService.songExists(song.id as string)) {
+            if (await songsStore.existsSong(song)) {
                 song.instruments[0] = settings.layer1.value
                 song.instruments[1] = settings.layer2.value
                 song.instruments[2] = settings.layer3.value
                 song.instruments[3] = settings.layer4.value
-                await songService.updateSong(song.id as string, song.serialize())
+                await songsStore.updateSong(song)
                 console.log("song saved:", song.name)
                 this.changes = 0
-                this.syncSongs()
             } else {
                 //if it doesn't exist, add it
                 if (song.name.includes("- Composed")) {
@@ -416,12 +415,13 @@ class Composer extends Component<any, ComposerState>{
     }
     removeSong = async (name: string, id: string) => { 
         const confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
-        if (confirm) await songService.removeSong(id)
-        this.syncSongs()
-        Analytics.userSongs('delete', { name: name, page: 'composer' })
+        if (confirm){
+            await songsStore.removeSong(id)
+            Analytics.userSongs('delete', { name: name, page: 'composer' })
+        }
     }
 
-    loadSong = async (song: SerializedSongType | ComposedSong) => {
+    loadSong = async (song: SerializedSong | ComposedSong) => {
         const state = this.state
         const parsed = song instanceof ComposedSong
             ? song.clone()

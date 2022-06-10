@@ -1,26 +1,24 @@
-import { Folder } from "lib/Folder"
+import { SerializedFolder } from "lib/Folder"
 import { DbInstance } from "./Database"
 
 
 class FolderService{
     foldersCollection = DbInstance.collections.folders
-    async getFolders():Promise<Folder[]>{
-        return this.foldersCollection.findOne({}) as Promise<Folder[]>
+    async getFolders():Promise<SerializedFolder[]>{
+        return this.foldersCollection.find({}).toArray() as Promise<SerializedFolder[]>
     }
-    async addFolder(data: Folder) : Promise<string>{
+    async addFolder(data: SerializedFolder) : Promise<string>{
         const id = DbInstance.generateId()
         data.id = id
-        await this.foldersCollection.insert({data})
+        await this.foldersCollection.insert(data)
         return id
     }
-    updateFolder(id:string,data:Folder){
-        this.foldersCollection.update({id},data)
+    updateFolder(id:string,data:SerializedFolder){
+        return this.foldersCollection.update({id},data)
     }
     removeFolder(id: string){
-        this.foldersCollection.remove({id})
-
+        return this.foldersCollection.remove({id})
     }
-
 }
 
 const folderService = new FolderService()

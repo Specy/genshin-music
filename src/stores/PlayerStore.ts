@@ -1,5 +1,5 @@
-import { ComposedSong } from "lib/ComposedSong";
-import { RecordedSong } from "lib/RecordedSong";
+import { ComposedSong } from "lib/Songs/ComposedSong";
+import { RecordedSong } from "lib/Songs/RecordedSong";
 import { observable } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
@@ -13,15 +13,15 @@ type SongStoreProps = {
     restarted: boolean
 }
 
-interface SongStoreState{
+interface PlayerStoreState{
     data:SongStoreProps | SongStoreProps & {
         song: null
         eventType: 'stop'
     }
 }
 
-class SongStoreClass{
-    state:SongStoreState
+class PlayerStoreClass{
+    state:PlayerStoreState
     constructor(){
         this.state = observable({
             data: {
@@ -85,4 +85,4 @@ class SongStoreClass{
     }
 }
 
-export const SongStore = new SongStoreClass()
+export const PlayerStore = new PlayerStoreClass()

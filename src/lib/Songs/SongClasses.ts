@@ -1,6 +1,6 @@
 import { NOTE_MAP_TO_MIDI, TempoChanger, TEMPO_CHANGERS } from "appConfig"
 import { LayerIndex } from "types/GeneralTypes"
-import { NoteLayer } from "./Layer"
+import { NoteLayer } from "../Layer"
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
 

@@ -6,7 +6,7 @@ import { observe } from 'mobx'
 import { ThemeProvider } from 'stores/ThemeStore'
 import type { NoteData } from 'lib/Instrument'
 import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
-import type { ApproachingNote } from 'lib/SongClasses'
+import type { ApproachingNote } from 'lib/Songs/SongClasses'
 import type { NoteImage } from 'types/Keyboard'
 
 function getTextColor(){

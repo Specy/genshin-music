@@ -1,9 +1,9 @@
 import { APP_NAME } from "appConfig"
-import { ComposedSong } from "lib/ComposedSong"
-import { RecordedSong } from "lib/RecordedSong"
-import { Column, ColumnNote, RecordedNote } from "lib/SongClasses"
+import { ComposedSong } from "lib/Songs/ComposedSong"
+import { RecordedSong } from "lib/Songs/RecordedSong"
+import { Column, ColumnNote, RecordedNote } from "lib/Songs/SongClasses"
 import { getNoteText } from "lib/Tools"
-import { NoteLayer } from "./Layer"
+import { NoteLayer } from "../Layer"
 
 const THRESHOLDS = {
     joined: 50,
