@@ -41,6 +41,7 @@ export abstract class Song<T = any, T2 extends SerializedSong = any>{
         const obj = {...song}
         obj.id = null
         obj.folderId = null
+        return obj
     }
     abstract toMidi(): Midi
     abstract serialize(): T2

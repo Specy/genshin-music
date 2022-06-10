@@ -193,7 +193,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 })
             })
         }
-        if(midi.tracks.length === 1) midi.tracks[1].name = INSTRUMENTS_DATA[this.instrument].midiName
+        if(midi.tracks.length === 1) midi.tracks[0].name = INSTRUMENTS_DATA[this.instrument].midiName
         return midi
     }
     static fromOldFormat = (song: any) => {

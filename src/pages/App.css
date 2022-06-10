@@ -675,12 +675,16 @@ a {
 .folder-expanded .folder-overflow{
 	animation: show-folder 0.2s;
 	animation-fill-mode: forwards;
+
 }
 /* Super hacky way to make overflow work */
 @keyframes show-folder  {
-	99%{ overflow: hidden; }
+	99%{ 
+		overflow: hidden;  
+	}
 	100%{
 		overflow: unset;
+		
 	}
 }
 
