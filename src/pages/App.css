@@ -229,6 +229,7 @@ body {
 	left: 0;
 	right: 0;
 	width: 30vw;
+	max-width: 24rem;
 	padding: 0.6rem;
 	background-color: var(--primary);
 	color: var(--primary-text);
@@ -668,6 +669,21 @@ a {
 	display: flex;
 	margin-top: 0;
 }
+.folder-overflow{
+	overflow: hidden; 
+}
+.folder-expanded .folder-overflow{
+	animation: show-folder 0.2s;
+	animation-fill-mode: forwards;
+}
+/* Super hacky way to make overflow work */
+@keyframes show-folder  {
+	99%{ overflow: hidden; }
+	100%{
+		overflow: unset;
+	}
+}
+
 .folder-title{
 	margin: 0 0 0.4rem 0rem;
 	font-size: 1.1rem;

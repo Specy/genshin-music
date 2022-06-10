@@ -34,32 +34,33 @@
 	position: fixed;
 	margin-left: auto;
 	margin-right: auto;
-	bottom: -20rem;
-	width: 50vw;
-	min-height: 8rem;
+	right: 0.8rem;
+	top: 0.8rem;
 	border-radius: 0.5rem;
 	border: solid 2px var(--secondary);
 	background-color: var(--primary);
 	color: var(--primary-text);
+	display: flex;
+	pointer-events: none;
 	z-index: 999;
-	transition: all 0.6s;
+	transition: all 0.3s;
 	display: flex;
 	flex-direction: column;
-	opacity: 0;
-	transform: scale(0.8);
+	opacity: 0.3;
+	transform: scale(0.8) translateY(calc(-120% - 0.8rem));
 }
-
+.logger-visible {
+	opacity: 1;
+	pointer-events: unset;
+	transform: scale(1) translateY(0);
+}
 .logger-content{
 	display: flex;
 	flex: 1;
-	padding: 1rem;
+	padding: 0.5rem;
+	font-size: 0.9rem;
 }
 
-.logger-visible {
-	bottom: 1rem;
-	opacity: 1;
-	transform: scale(1);
-}
 .logger-progress-bar{
 	height: 5px;
 	margin: 0.3rem;
@@ -77,7 +78,7 @@
 	}
 }
 .logger-title {
-	margin-top: -0.5rem;
+	margin-top: -0.2rem;
 	display: flex;
 	justify-content: center;
 	padding-bottom: 0.2rem;
@@ -85,6 +86,7 @@
 .logger-text {
 	flex: 1;
 	white-space: pre-line;
+	font-size: 0.9rem;
 }
 
 .home-visible {

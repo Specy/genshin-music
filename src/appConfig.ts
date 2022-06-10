@@ -1,18 +1,18 @@
 const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '2.6' as const
+const APP_VERSION = '2.7' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ? ` 
-        Added tooltips and help buttons
-        Bug fixes for main page loading songs
-        Added drag and drop in the composer
-        Composer on pc now resizes with the page
+    ?  `Added option to rename songs
+        Song names are not unique anymore
+        Added folders and new song menu UI
+        Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
+        Fixed some bugs
     `.trim()
-    : `    
-        Added Light guitar (notes can't be held)
-        Bug fixes for main page loading songs
-        Added drag and drop in the composer
-        Composer on pc now resizes with the page
+    :  `Added option to rename songs
+        Song names are not unique anymore
+        Added folders and new song menu UI
+        Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
+        Fixed some bugs
     `.trim()
 const LAYERS_INDEXES = [1, 2, 3, 4] as const
 const NOTES_CSS_CLASSES = {

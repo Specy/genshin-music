@@ -309,8 +309,8 @@ class Composer extends Component<any, ComposerState>{
         this.setState({ isRecordingAudio: true })
         await this.togglePlay(true) //wait till song finishes
         if (!this.mounted) return
-        const recording = await AudioProvider.stopRecording()
         this.setState({ isRecordingAudio: false })
+        const recording = await AudioProvider.stopRecording()
         if (!recording) return
         const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
         if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')

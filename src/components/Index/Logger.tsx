@@ -5,6 +5,7 @@ export default function FloatingMessage() {
     const { title, text, visible, timeout, id, color } = data
     return <div
         className={visible ? "logger logger-visible" : "logger"}
+        style={{ width: (text.length > 100 && visible) ? '23rem' : '18rem'}}
         onClick={LoggerStore.close}
     >
         <div className="column logger-content">

@@ -7,13 +7,14 @@ interface MenuItemProps<T> {
     children?: React.ReactNode,
     data?: T,
     current?: string,
+    style?: React.CSSProperties
 }
 
-function MenuItem<T>({ className, action, children, data }: MenuItemProps<T>) {
+function MenuItem<T>({ className, action, children, data, style }: MenuItemProps<T>) {
     const [theme] = useTheme()
     return <div
         className={className ? `menu-item ${className}` : "menu-item"}
-        style={{ backgroundColor: theme.layer('primary', 0.1).toString() }}
+        style={{ backgroundColor: theme.layer('primary', 0.1).toString(), ...style }}
         onClick={() => action?.(data)}
     >
         {children}

@@ -111,7 +111,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                     </FloatingDropdown>
             }
         </div>
-        <div className="column" style={{overflow: "hidden"}}>
+        <div className="column folder-overflow">
             {children}
         </div>
     </div>

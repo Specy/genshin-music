@@ -210,15 +210,16 @@ class Player extends Component<any, PlayerState>{
 		if (!this.mounted) return
 		if (typeof override !== "boolean") override = null
 		const newState = override !== null ? override : !this.state.isRecordingAudio
+		this.setState({ isRecordingAudio: newState })
 		if (newState) {
 			AudioProvider.startRecording()
 		} else {
 			const recording = await AudioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
+			console.log(recording)
 			if (!this.mounted || !recording) return
 			if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
 		}
-		this.setState({ isRecordingAudio: newState })
 	}
 	render() {
 		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this

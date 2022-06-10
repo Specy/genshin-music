@@ -11,6 +11,7 @@ import rotateImg from "assets/icons/rotate.svg"
 import { withRouter } from "react-router-dom";
 import './App.css';
 import './Utility.css'
+import { historyTracker } from 'stores/History';
 
 function App({history}:any) {
 	const [hasVisited, setHasVisited] = useState(false)
@@ -116,6 +117,7 @@ function App({history}:any) {
 			Analytics.pageView({
 				page_title: path.pathName as string
 			})
+			historyTracker.addPage(path.pathName)
 		})
 	}, [history])
 
