@@ -8,11 +8,12 @@ type Update = {
 export const updates: Update[] = [
     {
         version: '2.7',
-        title: 'Song rename and MIDI export',
+        title: 'Song rename, MIDI export, folders',
         date: '2022- 15/06',
         changes: [
             "Added option to rename songs",
             "Song names are not unique anymore",
+            "Added folders and new song menu UI",
             "Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)",
             "Fixed some bugs"
         ]

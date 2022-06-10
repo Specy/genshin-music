@@ -10,7 +10,7 @@ import { SongMenu } from 'components/SongMenu';
 
 import './ErrorPage.css'
 import { AppButton } from 'components/AppButton';
-import { SerializedSong } from 'lib/Songs/Song';
+import { SerializedSong, Song } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 
@@ -38,9 +38,8 @@ export function ErrorPage() {
         try{
             const songName = song.name
             const parsed = parseSong(song)
-            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
-            const json = JSON.stringify(converted)
-            FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
+            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()].map(s => Song.stripMetadata(s))
+            FileDownloader.download(JSON.stringify(converted), `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
             LoggerStore.success("Song downloaded")
         }catch(e){
             console.error(e)

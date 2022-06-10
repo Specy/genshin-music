@@ -264,6 +264,7 @@
 }
 .dropdown-select{
     background-color: var(--primary);
+    padding: 0.4rem 0;
     height: 100%;
     width: 100%;
     color: var(--primary-text);
@@ -288,6 +289,7 @@
     display: flex;
     height: 100%;
     align-items: center;
+    font-size: 1rem;
     padding-right: 0.45rem;
 }
 .song-name-input{

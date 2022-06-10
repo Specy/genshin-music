@@ -53,7 +53,7 @@ export function FloatingDropdown({
 interface FloatingDropdownButtonProps {
     children: React.ReactNode
     onClick?: () => void
-
+    style?: React.CSSProperties
 }
 interface FloatingDropdownTextProps {
     text: string
@@ -64,10 +64,10 @@ export function FloatingDropdownText({ text }: FloatingDropdownTextProps) {
         {text}
     </div>
 }
-export function FloatingDropdownRow({ children, onClick }: FloatingDropdownButtonProps) {
+export function FloatingDropdownRow({ children, onClick, style }: FloatingDropdownButtonProps) {
     return <AppButton
         className='row row-centered'
-        style={{ padding: "0.4rem", minWidth: "unset" }}
+        style={{ padding: "0.4rem", minWidth: "unset", ...style }}
         onClick={onClick}
     >
         {children}

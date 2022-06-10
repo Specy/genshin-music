@@ -1,4 +1,6 @@
 import { Folder } from "lib/Folder"
+import { Song } from "lib/Songs/Song"
+import { FileDownloader } from "lib/Tools"
 import { useEffect, useState } from "react"
 import { BsChevronRight } from "react-icons/bs"
 import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
@@ -34,7 +36,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
     const [expanded, setExpanded] = useState(false)
     const [isRenaming, setIsRenaming] = useState(false)
     const [folderName, setFolderName] = useState(data.name)
-
+    
     useEffect(() => {
         setFolderName(data.name)
     }, [data.name])
@@ -52,16 +54,29 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
     }
 
     return <div className={`folder ${expanded? "folder-expanded" : ""}`} style={style}>
-        <div className='folder-header' >
-            <div onClick={() => setExpanded(!expanded)} className='folder-header-button'>
+        <div className='folder-header'>
+            <div onClick={() => {
+                if(isRenaming) return
+                setExpanded(!expanded)
+            }} 
+                className='folder-header-button'
+            >
                     <BsChevronRight
                         strokeWidth={2}
-                        style={{ transform: `rotate(${expanded ? 90 : 0}deg)`, transition: 'all 0.2s', marginRight: '0.3rem' }}
+                        style={{ transform: `rotate(${expanded ? 90 : 0}deg)`, transition: 'all 0.2s',  }}
                         size={18}
                     />
-                <div className='folder-name' >
-                    {data.name}
-                </div>
+                {isRenaming 
+                    ? <input 
+                        value={folderName} 
+                        onChange={(e) => setFolderName(e.target.value)}
+                        className='folder-name'
+                    />
+                    : <div className='folder-name' >
+                        {data.name}
+                    </div>
+                }
+
             </div>
             {!isDefault &&
                         <FloatingDropdown
@@ -80,7 +95,12 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                             <FaPen style={{ marginRight: "0.4rem" }} size={14} />
                             <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
                         </FloatingDropdownRow>
-                        <FloatingDropdownRow>
+                        <FloatingDropdownRow 
+                            onClick={() => {
+                                const songs = data.songs.map(song => Song.stripMetadata(song))
+                                FileDownloader.download(JSON.stringify(songs), `${data.name}-folder.json`)
+                            }}
+                        >
                             <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                             <FloatingDropdownText text='Download' />
                         </FloatingDropdownRow>
@@ -91,6 +111,8 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                     </FloatingDropdown>
             }
         </div>
-        {children}
+        <div className="column" style={{overflow: "hidden"}}>
+            {children}
+        </div>
     </div>
 }

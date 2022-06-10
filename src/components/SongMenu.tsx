@@ -6,9 +6,6 @@ import { SongFolder, SongFolderContent } from "./Folder";
 import { Folder } from "lib/Folder";
 import { SerializedSong } from "lib/Songs/Song";
 import { useFolders } from "lib/Hooks/useFolders";
-import { asyncPrompt } from "./AsyncPrompts";
-import { folderStore } from "stores/FoldersStore";
-import { AppButton } from "./AppButton";
 
 
 
@@ -29,8 +26,8 @@ export function SongMenu<T>({
     songs,
     SongComponent,
     componentProps,
-    className = '',
-    style = {},
+    className,
+    style,
     baseType = 'recorded',
 }: SongMenuProps<T>) {
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
@@ -44,12 +41,8 @@ export function SongMenu<T>({
     //const selectedColor = theme.layer('menu_background', 0.32).desaturate(0.4)
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
 
-    async function createFolder() {
-        const name = await asyncPrompt("Write the folder name")
-        if (!name) return
-        folderStore.createFolder(name)
-    }
-    return <div className={`${className}`} style={style}>
+
+    return <div className={className} style={style}>
         {noFolderComposed &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
@@ -125,9 +118,7 @@ export function SongMenu<T>({
                 </SongFolderContent>
             </SongFolder>
         )}
-        <AppButton onClick={createFolder} style={{ width: '100%', marginTop: "0.2rem" }}>
-            Create folder
-        </AppButton>
+
     </div>
 }
 

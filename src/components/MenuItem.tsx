@@ -5,7 +5,8 @@ interface MenuItemProps<T> {
     className?: string,
     action?: (data?: T) => void
     children?: React.ReactNode,
-    data?: T
+    data?: T,
+    current?: string,
 }
 
 function MenuItem<T>({ className, action, children, data }: MenuItemProps<T>) {
@@ -22,5 +23,5 @@ export default memo(MenuItem, (prev, next) => {
     //@ts-ignore
     if (next.children.key !== null || prev.children.key !== null) return prev.children.key === next.children.key
     //@ts-ignore
-    return prev.children !== undefined && prev.className === next.className && prev.action === next.action
+    return prev.children !== undefined && prev.className === next.className && prev.action === next.action && prev.current === next.current
 }) as typeof MenuItem

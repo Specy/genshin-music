@@ -629,7 +629,7 @@ a {
 	margin: 0.4rem 0;
 }
 .folder-header{
-	padding: 0.3rem 0.3rem;
+	padding: 0.5rem 0.5rem;
 	border-radius: 0.4rem 0.4rem 0 0;
 	display: flex;
 	align-items: center;
@@ -642,11 +642,22 @@ a {
 	cursor: pointer;
 	padding: 0.25rem;
 }
+.folder-header-button input{
+	background-color: transparent;
+	color: var(--secondary-text);
+	border: none;
+	outline: solid 2px var(--secondary);
+	font-family: Bonobo;
+	border-radius: 0.2rem;
+}
+
 .folder-content{
-	display: none;
 	padding: 0.5rem;
 	padding-top: 0;
 	flex-direction: column;
+	margin-top: -101%;
+	opacity: 1;
+	transition: all 0.2s;
 }
 .folder-songs-wrapper{
 	display: grid;
@@ -655,16 +666,17 @@ a {
 }
 .folder-expanded .folder-content{
 	display: flex;
+	margin-top: 0;
 }
 .folder-title{
-	margin: 0.4rem 0;
-	margin-left: 0.4rem;
-	font-size: 1.2rem;
+	margin: 0 0 0.4rem 0rem;
+	font-size: 1.1rem;
 }
 .folder-name{
 	font-size: 1.2rem;
 	padding: 0;
 	max-width: 20rem;
+	padding-left: 0.3rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

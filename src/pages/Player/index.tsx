@@ -91,7 +91,7 @@ class Player extends Component<any, PlayerState>{
 	handleDrop = async (files: DroppedFile<SerializedSong>[]) => {
 		for (const file of files) {
 			try {
-				const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSong[]
+				const parsed = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
 				for (const song of parsed) {
 					await this.addSong(parseSong(song))
 				}

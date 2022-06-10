@@ -20,13 +20,14 @@ import { hasTooltip, Tooltip } from 'components/Tooltip';
 import { HelpTooltip } from 'components/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
-import { asyncConfirm } from 'components/AsyncPrompts';
+import { asyncConfirm, asyncPrompt } from 'components/AsyncPrompts';
 import { SettingsPane } from 'components/Settings/SettingsPane';
 import { SerializedSong } from 'lib/Songs/Song';
 import { useFolders } from 'lib/Hooks/useFolders';
 import { Folder } from 'lib/Folder';
 import { songService } from 'lib/Services/SongService';
 import { songsStore } from 'stores/SongsStore';
+import { folderStore } from 'stores/FoldersStore';
 
 interface MenuProps {
     data: {
@@ -83,6 +84,12 @@ function Menu({ data, functions }: MenuProps) {
         setOpen(newState)
         if (newState === false) toggleMenuVisible()
     }, [open, toggleMenuVisible])
+
+    const createFolder = useCallback(async () => {
+        const name = await asyncPrompt("Write the folder name")
+        if (!name) return
+        folderStore.createFolder(name)
+    },[])
 
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
         if (selection === selectedMenu && open) {
@@ -160,7 +167,7 @@ function Menu({ data, functions }: MenuProps) {
         </div>
         <div className={sideClass}>
 
-            <MenuPanel title="Songs" current={selectedMenu} id="Songs">
+            <MenuPanel current={selectedMenu} id="Songs">
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>
                         <ul>
@@ -188,12 +195,16 @@ function Menu({ data, functions }: MenuProps) {
                     songs={data.songs}
                     SongComponent={SongRow}
                     baseType='composed'
+                    style={{ marginTop: '0.6rem' }}
                     componentProps={{
                         theme,
                         folders,
                         functions: songFunctions
                     }}
                 />
+                <AppButton onClick={createFolder} style={{ width: '100%'}}>
+                    Create folder
+                </AppButton>
                 <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
                     <AppButton
                         style={{ marginTop: '0.5rem' }}
@@ -205,14 +216,12 @@ function Menu({ data, functions }: MenuProps) {
 
                     </AppButton>
                 </div>
-
             </MenuPanel>
             <MenuPanel current={selectedMenu} id="Settings">
                 <SettingsPane 
                     settings={data.settings}
                     onUpdate={handleSettingChange}
                     changeVolume={changeVolume}
-                
                 />
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
@@ -302,7 +311,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaPen style={{marginRight: "0.4rem"}}/>
                     <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
                 </AppButton>
-                <FloatingDropdownRow>
+                <FloatingDropdownRow style={{padding: '0 0.4rem'}}>
                     <FaFolder style={{marginRight: "0.4rem"}}/>
                     <select className='dropdown-select' 
                         value={data.folderId || "_None"}

@@ -239,7 +239,7 @@ class Composer extends Component<any, ComposerState>{
     }
     handleDrop = async (files: DroppedFile<SerializedSong>[]) => {
         for (const file of files) {
-            const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSong[]
+            const parsed = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
             try {
                 for (const song of parsed) {
                     const parsedSong = parseSong(song)

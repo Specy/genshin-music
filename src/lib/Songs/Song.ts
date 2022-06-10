@@ -37,6 +37,11 @@ export abstract class Song<T = any, T2 extends SerializedSong = any>{
         }
     }
 
+    static stripMetadata(song: SerializedSong){
+        const obj = {...song}
+        obj.id = null
+        obj.folderId = null
+    }
     abstract toMidi(): Midi
     abstract serialize(): T2
     abstract toRecordedSong(): RecordedSong
