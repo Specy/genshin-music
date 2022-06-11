@@ -656,7 +656,6 @@ a {
 	padding: 0.5rem;
 	padding-top: 0;
 	flex-direction: column;
-	margin-top: -101%;
 	opacity: 1;
 	transition: all 0.2s;
 }
@@ -665,18 +664,19 @@ a {
 	grid-template-columns: 1fr;
 	gap: 0.3rem;
 }
-.folder-expanded .folder-content{
-	display: flex;
-	margin-top: 0;
-}
+
 .folder-overflow{
-	overflow: hidden; 
+	overflow: hidden;
+	transition: all 0.2s;
+}
+.folder-overflow-expandible{
+	transition: all 0.2s;
 }
 .folder-expanded .folder-overflow{
 	animation: show-folder 0.2s;
 	animation-fill-mode: forwards;
-
 }
+
 /* Super hacky way to make overflow work */
 @keyframes show-folder  {
 	99%{ 

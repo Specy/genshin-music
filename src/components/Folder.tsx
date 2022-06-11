@@ -1,7 +1,7 @@
 import { Folder } from "lib/Folder"
 import { Song } from "lib/Songs/Song"
 import { FileDownloader } from "lib/Tools"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BsChevronRight } from "react-icons/bs"
 import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
 import { folderStore } from "stores/FoldersStore"
@@ -36,10 +36,18 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
     const [expanded, setExpanded] = useState(false)
     const [isRenaming, setIsRenaming] = useState(false)
     const [folderName, setFolderName] = useState(data.name)
-    
+    const ref = useRef<HTMLDivElement>(null)
+    const [height, setHeight] = useState(0)
     useEffect(() => {
         setFolderName(data.name)
     }, [data.name])
+    useEffect(() => {
+        if (ref.current) {
+            const bounds = ref.current.getBoundingClientRect()
+            setHeight(bounds?.height || 0)
+        }
+    },[data.songs, expanded])
+
     useEffect(() => {
         setExpanded(defaultOpen)
     },[defaultOpen])
@@ -81,6 +89,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
             {!isDefault &&
                         <FloatingDropdown
                         offset={2.3}
+                        ignoreClickOutside={isRenaming}
                         Icon={FaEllipsisH}
                     >
                         <FloatingDropdownRow
@@ -111,8 +120,11 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                     </FloatingDropdown>
             }
         </div>
-        <div className="column folder-overflow">
-            {children}
+
+        <div className="column folder-overflow" style={{height: expanded ? `${height}px` : 0}}>
+            <div className="column folder-overflow-expandible" ref={ref}>
+                {children}
+            </div>
         </div>
     </div>
 }

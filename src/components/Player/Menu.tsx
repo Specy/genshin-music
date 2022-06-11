@@ -256,7 +256,6 @@ function Menu({ functions, data }: MenuProps) {
                 </div>
                 <SongMenu<SongRowProps>
                     songs={data.songs}
-                    baseType='recorded'
                     style={{ marginTop: '0.6rem' }}
                     SongComponent={SongRow}
                     componentProps={{
@@ -445,6 +444,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
             <FloatingDropdown
                 Icon={FaEllipsisH}
                 style={buttonStyle}
+                ignoreClickOutside={isRenaming}
                 tooltip="More options"
                 onClose={() => setIsRenaming(false)}
             >

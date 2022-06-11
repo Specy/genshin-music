@@ -17,7 +17,7 @@ interface SongMenuProps<T> {
     componentProps: Omit<T, "data">
     className?: string,
     style?: React.CSSProperties,
-    baseType: songType
+    baseType?: songType
 }
 
 
@@ -28,7 +28,7 @@ export function SongMenu<T>({
     componentProps,
     className,
     style,
-    baseType = 'recorded',
+    baseType,
 }: SongMenuProps<T>) {
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()

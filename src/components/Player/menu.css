@@ -256,7 +256,7 @@
 	padding: 0.2rem;
 	background-color: var(--primary);
 	color: var(--primary-text);
-	border: solid 2px var(--secondary);
+	border: solid 1px var(--secondary);
 	border-radius: 0.4rem;
 }
 .floating-dropdown{

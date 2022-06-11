@@ -1,3 +1,4 @@
+import useClickOutside from "lib/Hooks/useClickOutside"
 import { useState } from "react"
 import { FaTimes } from "react-icons/fa"
 import { AppButton } from "./AppButton"
@@ -12,6 +13,7 @@ interface FloatingDropdownProps {
     className?: string
     offset?: number
     style?: React.CSSProperties
+    ignoreClickOutside? : boolean
     onClose?: () => void
 }
 
@@ -23,9 +25,16 @@ export function FloatingDropdown({
         style = {}, 
         onClose, 
         tooltip, 
-        offset = 3 
+        offset = 3,
+        ignoreClickOutside,
     }: FloatingDropdownProps) {
+
     const [isActive, setActive] = useState(false)
+    const ref = useClickOutside<HTMLDivElement>(() => {
+        if(ignoreClickOutside) return
+        setActive(false)
+        if (onClose) onClose()
+    }, isActive)
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
         <SongActionButton style={{ margin: 0, ...style }}
             onClick={() => {
@@ -41,6 +50,7 @@ export function FloatingDropdown({
         </SongActionButton>
 
         <div
+            ref={ref}
             className={`floating-children-${position}`}
             style={{ transform: `translateX(calc(-100% + ${offset}rem)` }}
         >

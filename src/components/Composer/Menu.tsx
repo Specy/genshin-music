@@ -293,6 +293,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         <div className="song-buttons-wrapper">
             <FloatingDropdown
                 Icon={FaEllipsisH}
+                ignoreClickOutside={isRenaming}
                 style={buttonStyle}
                 tooltip="More options"
                 onClose={() => setIsRenaming(false)}
