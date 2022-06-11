@@ -18,7 +18,7 @@
 	--hint-main: #949494;
 	--red: rgb(169, 82, 90);
 	--green: #358a55;
-	--orange: #e07f2a;
+	--orange: #dd8d46;
 }
 
 @font-face {
@@ -513,7 +513,7 @@ a {
 	max-width: 10rem;
 	width: fit-content;
 	z-index: 20;
-	box-shadow: 0px 1px 4px 2px #28283387;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.15);
 	font-size: 0.7rem;
 	pointer-events: none;
 	z-index: 2;
@@ -601,14 +601,13 @@ a {
 	position: absolute;
 	transform: translateY(0.4rem);
 	display: none;
-	box-shadow: 0px 1px 4px 2px #28283387;
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.15), 0 4px 6px -4px rgb(0 0 0 / 0.15);
 	border: solid 2px var(--secondary);
 	padding: 0.3rem 0.6rem;
 	border-radius: 0.4rem;
 	font-size: 0.8rem;
 	z-index: 2;
 	pointer-events: none;
-
 }
 
 .help-tooltip-button:focus + .help-tooltip-content{

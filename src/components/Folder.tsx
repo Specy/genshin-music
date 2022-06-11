@@ -46,7 +46,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
             const bounds = ref.current.getBoundingClientRect()
             setHeight(bounds?.height || 0)
         }
-    },[data.songs, expanded])
+    },[data.songs, expanded, children])
 
     useEffect(() => {
         setExpanded(defaultOpen)

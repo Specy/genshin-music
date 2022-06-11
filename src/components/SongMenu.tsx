@@ -60,8 +60,8 @@ export function SongMenu<T>({
                         />
                     )}
                     {noFolderComposed.songs.length === 0 &&
-                        <div style={{padding: '0 0.4rem', fontSize: '0.9rem'}}>
-                            Go to the composer to create a new song!
+                        <div style={{ padding: '0.2rem', fontSize: '0.9rem' }}>
+                            No songs here, compose one!
                         </div>
                     }
                 </SongFolderContent>
@@ -84,76 +84,51 @@ export function SongMenu<T>({
                         />
                     )}
                     {noFolderRecorded.songs.length === 0 &&
-                        <div>
-                            Click "Record" to record a new song!
+                        <div style={{ padding: '0.2rem', fontSize: '0.9rem' }}>
+                            No songs here, record one!
                         </div>
                     }
                 </SongFolderContent>
             </SongFolder>
         }
-        {folders.map(folder =>
-            <SongFolder
+        {folders.map(folder => {
+            const composed = folder.songs.filter(song => song.data.isComposedVersion)
+            const recorded = folder.songs.filter(song => !song.data.isComposedVersion)
+            return <SongFolder
                 key={folder.id}
                 backgroundColor={unselectedColor.toString()}
                 color={theme.getText('menu_background').toString()}
                 data={folder}
             >
-                <SongFolderContent title="Composed">
-                    {folder.songs.filter(song => song.data?.isComposedVersion).map(song =>
-                        <SongComponent
-                            {...componentProps}
-                            data={song}
-                            key={song?.id}
-                        />
-                    )}
-                </SongFolderContent>
-                <SongFolderContent title="Recorded">
-                    {folder.songs.filter(song => !song.data?.isComposedVersion).map(song =>
-                        <SongComponent
-                            {...componentProps}
-                            data={song}
-                            key={song?.id}
-                        />
-                    )}
-                </SongFolderContent>
+                {composed.length > 0 &&
+                    <SongFolderContent title="Composed">
+                        {composed.map(song =>
+                            <SongComponent
+                                {...componentProps}
+                                data={song}
+                                key={song?.id}
+                            />
+                        )}
+                    </SongFolderContent>
+                }
+                {recorded.length > 0 &&
+                    <SongFolderContent title="Recorded">
+                        {recorded.map(song =>
+                            <SongComponent
+                                {...componentProps}
+                                data={song}
+                                key={song?.id}
+                            />
+                        )}
+                    </SongFolderContent>
+                }
+                {composed.length === 0 && recorded.length === 0 &&
+                    <div style={{padding: '0.7rem', paddingTop: "0", fontSize: '0.9rem'}}>
+                        The folder is empty
+                    </div>
+                }
             </SongFolder>
-        )}
+        })}
 
     </div>
 }
-
-
-/*
-        <div className="tab-selector-wrapper">
-            <button
-                className={'tab-selector'}
-                style={{
-                    backgroundColor: songType === 'recorded' ? selectedColor.toString() : unselectedColor.toString()
-                }}
-                onClick={() => setSongType("recorded")}
-            >
-                Recorded
-            </button>
-            <button
-                className={'tab-selector'}
-                style={{
-                    backgroundColor: songType !== 'recorded' ? selectedColor.toString() : unselectedColor.toString()
-                }}
-                onClick={() => setSongType("composed")}
-            >
-                Composed
-            </button>
-        </div>
-        <div className="songs-wrapper" style={{ backgroundColor: selectedColor.toString(), ...scrollerStyle }}>
-            {songs.filter((song) =>
-                songType === 'composed' ? song.data?.isComposedVersion : !song.data?.isComposedVersion
-            ).map((song) =>
-                <SongComponent
-                    {...componentProps}
-                    data={song}
-                    key={song?.id}
-                />
-            )}
-        </div>
-
-*/

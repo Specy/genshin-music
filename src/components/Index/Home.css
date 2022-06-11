@@ -36,12 +36,14 @@
 	margin-right: auto;
 	right: 0.8rem;
 	top: 0.8rem;
-	border-radius: 0.5rem;
+	border-radius: 0.4rem;
 	border: solid 2px var(--secondary);
 	background-color: var(--primary);
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 	color: var(--primary-text);
 	display: flex;
 	pointer-events: none;
+	padding: 0.4rem;
 	z-index: 999;
 	transition: all 0.3s;
 	display: flex;
@@ -56,35 +58,40 @@
 }
 .logger-content{
 	display: flex;
+	flex-direction: row;
 	flex: 1;
-	padding: 0.5rem;
+	padding: 0.1rem;
 	font-size: 0.9rem;
 }
-
-.logger-progress-bar{
+.logger-progress-outer{
+	overflow: hidden;
 	height: 5px;
-	margin: 0.3rem;
+	margin-top: 0.4rem;
 	border-radius: 0.5rem;
-	width: 0%;
-	border-bottom-left-radius: 4px;
+}
+.logger-progress-bar{
+	height: 100%;
+	width: 100%;
 	background-color: var(--accent);
 	animation: logger-animation linear 1s;
 }
 @keyframes logger-animation {
 	from{
-		width: 100%;
+		transform: translateX(0);
 	}to{
-		width: 0%;
+		transform: translateX(-100%);
 	}
 }
-.logger-title {
-	margin-top: -0.2rem;
+.logger-status {
 	display: flex;
-	justify-content: center;
-	padding-bottom: 0.2rem;
+	align-items: center;
+	margin-right: 0.6rem;
+	max-height: 1.4rem;
 }
 .logger-text {
 	flex: 1;
+	display: flex;
+	align-items: center;
 	white-space: pre-line;
 	font-size: 0.9rem;
 }

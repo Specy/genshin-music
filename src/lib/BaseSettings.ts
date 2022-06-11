@@ -331,7 +331,7 @@ export const ThemeSettings = {
             name: 'secondary',
             css: 'secondary',
             value: '#8c7063',
-            text: BASE_THEME_CONFIG.text.dark
+            text: BASE_THEME_CONFIG.text.light
         },
         accent: {
             name: 'accent',

@@ -1,19 +1,18 @@
 import { observable } from "mobx"
 
-enum LOGGER_COLOR{
-    error = 'var(--red)',
-    warn = 'var(--orange)',
-    success = 'var(--accent)'
+export enum LoggerStatus{
+    ERROR = 'var(--red)',
+    WARN = 'var(--orange)',
+    SUCCESS = 'var(--accent)'
 }
 
 export interface LoggerDataProps{
     timestamp: number
     visible: boolean
     text: string
-    title: string
     timeout: number
     id: number
-    color: LOGGER_COLOR
+    type: LoggerStatus
 }
 type LoggerData = {
     data: LoggerDataProps
@@ -27,40 +26,37 @@ export class LoggerStoreClass {
                 timestamp: 0,
                 visible: false,
                 text: "Text",
-                title: "Title",
                 timeout: 3000,
                 id: 0,
-                color: LOGGER_COLOR.success
+                type: LoggerStatus.WARN
             }
         })
         this.timeout = undefined
     }
     log = (
-        status: string, 
         text: string, 
         timeout: number = 3500, 
-        color: LOGGER_COLOR = LOGGER_COLOR.success,
+        type: LoggerStatus = LoggerStatus.SUCCESS,
     ) => {
         this.state.data = {
-            title: status,
             text,
             timestamp: new Date().getTime(),
             visible: true,
             timeout,
             id: ++this.state.data.id,
-            color
+            type
         }
         if(this.timeout !== undefined) clearTimeout(this.timeout)
         this.timeout = setTimeout(this.close, timeout)
     }
     error = (text: string, timeout?: number) => {
-        this.log('Error', text, timeout, LOGGER_COLOR.error)
+        this.log(text, timeout, LoggerStatus.ERROR)
     }
     success = (text: string, timeout?: number) => {
-        this.log('Success', text, timeout, LOGGER_COLOR.success)
+        this.log(text, timeout, LoggerStatus.SUCCESS)
     }
     warn = (text: string, timeout?: number) => {
-        this.log('Warning', text, timeout, LOGGER_COLOR.warn)
+        this.log(text, timeout, LoggerStatus.WARN)
     }
     close = () => {
         this.setState({visible: false})

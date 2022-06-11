@@ -248,7 +248,7 @@
 }
 .floating-children-bottom{
 	flex-direction: column;
-	box-shadow: 0px 0px 4px 2px #2828336b;
+	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
 	display: none;
 	position: absolute;
 	transform: translateX(calc(-100% + 3rem));
