@@ -1,7 +1,7 @@
 interface MenuPanelProps {
     title?: string,
-    current: string,
-    id: string,
+    current?: string,
+    id?: string,
     children: React.ReactNode
 }
 

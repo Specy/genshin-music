@@ -45,9 +45,6 @@ select {
 
 }
 .song-info div{
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
     max-width: 23vw;
     text-shadow: rgb(51 51 51) 0px 1px 5px
 }

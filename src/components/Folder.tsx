@@ -79,7 +79,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                         onChange={(e) => setFolderName(e.target.value)}
                         className='folder-name'
                     />
-                    : <div className='folder-name' >
+                    : <div className='folder-name text-ellipsis' >
                         {data.name}
                     </div>
                 }

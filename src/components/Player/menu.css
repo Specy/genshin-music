@@ -212,7 +212,7 @@
     color: var(--primary-text);
     justify-content: space-between;
     align-items: flex-start;
-    padding: 0.45rem;
+    padding: 0.4rem;
     transition: all 0.2s;
 }
 
@@ -236,7 +236,7 @@
     width: 2rem;
     font-size: 1rem;
     border: none;
-    margin-right: 0.45rem;
+    margin-right: 0.4rem;
     cursor: pointer;
     padding: 0;
 }

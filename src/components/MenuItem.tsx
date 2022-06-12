@@ -16,7 +16,7 @@ export function MenuItem<T>({ className = "", onClick, children, data, style, is
         className={`menu-item ${className}`}
         style={{ 
             backgroundColor: isActive
-            ? theme.layer('primary', 0.15).toString()
+            ? theme.layer('primary', 0.2).toString()
             : theme.layer('primary', 0).toString(),
              ...style 
         }}

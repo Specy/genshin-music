@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
@@ -6,7 +6,7 @@ import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { PlayerStore } from 'stores/PlayerStore'
 import { HelpTab } from 'components/HelpTab'
-import {MenuItem} from 'components/MenuItem'
+import { MenuItem } from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import DonateButton from 'components/DonateButton'
 import LibrarySearchedSong from 'components/LibrarySearchedSong'
@@ -38,6 +38,8 @@ import { songsStore } from 'stores/SongsStore';
 import { Folder } from 'lib/Folder';
 import { useFolders } from 'lib/Hooks/useFolders';
 import { folderStore } from 'stores/FoldersStore';
+import { useSongs } from 'lib/Hooks/useSongs';
+import useClickOutside from 'lib/Hooks/useClickOutside';
 
 interface MenuProps {
     functions: {
@@ -49,13 +51,13 @@ interface MenuProps {
     }
     data: {
         settings: MainPageSettingsDataType
-        songs: SerializedSong[]
     }
 }
 
-export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home' 
+export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
 
 function Menu({ functions, data }: MenuProps) {
+    const [songs] = useSongs()
     const [isOpen, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Songs')
     const [searchInput, setSearchInput] = useState('')
@@ -65,6 +67,9 @@ function Menu({ functions, data }: MenuProps) {
     const [theme] = useTheme()
     const [folders] = useFolders()
     const { handleSettingChange, addSong, removeSong, renameSong } = functions
+    const menuRef = useClickOutside<HTMLDivElement>((e) => {
+        setOpen(false)
+    }, {active: isOpen, ignoreFocusable: true})
     useEffect(() => {
         async function checkStorage() {
             if (navigator.storage && navigator.storage.persist) {
@@ -153,7 +158,7 @@ function Menu({ functions, data }: MenuProps) {
             )
         }
         const songName = song.name
-        const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()].map(s=> Song.stripMetadata(s))
+        const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()].map(s => Song.stripMetadata(s))
         FileDownloader.download(JSON.stringify(converted), `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
         LoggerStore.success("Song downloaded")
         Analytics.userSongs('download', { name: songName, page: 'player' })
@@ -162,7 +167,7 @@ function Menu({ functions, data }: MenuProps) {
         const name = await asyncPrompt("Write the folder name")
         if (!name) return
         folderStore.createFolder(name)
-    },[])
+    }, [])
 
     const logImportError = useCallback((error?: any) => {
         if (error) console.error(error)
@@ -173,10 +178,10 @@ function Menu({ functions, data }: MenuProps) {
     }, [])
     function downloadAllSongs() {
         try {
-            const toDownload = data.songs.map(song => {
+            const toDownload = songs.map(song => {
                 if (APP_NAME === 'Sky') {
-                    if(song.type === 'composed') ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
-                    if(song.type === 'recorded') RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
+                    if (song.type === 'composed') ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
+                    if (song.type === 'recorded') RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
                 }
                 return song
             }).map(s => Song.stripMetadata(s))
@@ -192,7 +197,7 @@ function Menu({ functions, data }: MenuProps) {
     const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
     const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
     const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
-    return <div className="menu-wrapper">
+    return <div className="menu-wrapper" ref={menuRef}>
         <div className="menu menu-visible menu-main-page" >
             {isOpen &&
                 <MenuItem onClick={toggleMenu} className='close-menu'>
@@ -254,7 +259,7 @@ function Menu({ functions, data }: MenuProps) {
 
                 </div>
                 <SongMenu<SongRowProps>
-                    songs={data.songs}
+                    songs={songs}
                     style={{ marginTop: '0.6rem' }}
                     SongComponent={SongRow}
                     componentProps={{
@@ -263,9 +268,11 @@ function Menu({ functions, data }: MenuProps) {
                         functions: { removeSong, toggleMenu, downloadSong, renameSong }
                     }}
                 />
-                <AppButton onClick={createFolder} style={{ width: '100%' }}>
-                    Create folder
-                </AppButton>
+                <div className='row' style={{ justifyContent: "flex-end" }}>
+                    <AppButton onClick={createFolder}>
+                        Create folder
+                    </AppButton>
+                </div>
                 <div style={{ marginTop: "auto", paddingTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                     <AppButton
                         style={{ marginLeft: 'auto' }}

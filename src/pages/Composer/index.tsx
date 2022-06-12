@@ -728,7 +728,7 @@ class Composer extends Component<any, ComposerState>{
                 }}
             />
             <div className="song-info">
-                <div>
+                <div className='text-ellipsis'>
                     {song.name}
                 </div>
                 <div>

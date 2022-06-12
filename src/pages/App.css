@@ -629,7 +629,7 @@ a {
 	margin: 0.4rem 0;
 }
 .folder-header{
-	padding: 0.5rem 0.5rem;
+	padding: 0.5rem;
 	border-radius: 0.4rem 0.4rem 0 0;
 	display: flex;
 	align-items: center;
@@ -696,12 +696,16 @@ a {
 	padding: 0;
 	max-width: 20rem;
 	padding-left: 0.3rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+
 }
 
 @media only screen and (max-width: 900px) {
+	.folder-header{
+		padding: 0.4rem;
+	}
+	.folder-content{
+		padding: 0.4rem;
+	}
 	.floating-prompt {
 		width: 45vw;
 		padding: 0.5rem;

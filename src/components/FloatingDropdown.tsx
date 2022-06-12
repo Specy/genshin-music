@@ -34,7 +34,7 @@ export function FloatingDropdown({
         if(ignoreClickOutside) return
         setActive(false)
         if (onClose) onClose()
-    }, isActive)
+    }, { active: isActive, ignoreFocusable: true})
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
         <SongActionButton style={{ margin: 0, ...style }}
             onClick={() => {

@@ -20,9 +20,9 @@ function getChunkNoteText(i: number) {
     return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
 }
 export class VisualSong {
-    private baseChunks: Chunk[] = []
+    private baseChunks: _Chunk[] = []
     type: 'song' | 'composed' = 'song'
-    chunks: Chunk[] = []
+    chunks: _Chunk[] = []
     text: string = ''
 
     get currentChunk() {
@@ -69,11 +69,11 @@ export class VisualSong {
         this.text = this.baseChunks.map(chunk => chunk.toString()).join(' ')
     }
     createChunk(changer?: ChunkTempoChanger){
-        const chunk = new Chunk(changer || 1)
+        const chunk = new _Chunk(changer || 1)
         this.baseChunks.push(chunk)
         return chunk
     }
-    addChunk(chunk: Chunk) {
+    addChunk(chunk: _Chunk) {
         this.baseChunks.push(chunk)
     }
 
@@ -115,7 +115,7 @@ const tempoChangerMap = {
     2: '~',
     3: '^',
 }
-export class Chunk{
+export class _Chunk{
     columns: ChunkColumn[] = []
     tempoChanger: ChunkTempoChanger
     constructor(changer?:ChunkTempoChanger){
@@ -131,5 +131,14 @@ export class Chunk{
         const notes = this.columns.map(column => column.notes).flat()
         const text = notes.map(note => getChunkNoteText(note.index)).join('')
         return notes.length ? text : `[${this.tempoString}${text}]`
+    }
+}
+
+export class Chunk {
+    notes: RecordedNote[] = []
+    delay = 0
+    constructor(notes: RecordedNote[] = [], delay: number = 0) {
+        this.notes = notes
+        this.delay = delay
     }
 }

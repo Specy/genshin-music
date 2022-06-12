@@ -22,11 +22,9 @@ import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { settingsService } from 'lib/Services/SettingsService';
 import { SerializedSong } from 'lib/Songs/Song';
-import { subscribeSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 
 interface PlayerState {
-	songs: SerializedSong[]
 	settings: MainPageSettingsDataType
 	instrument: Instrument
 	isLoadingInstrument: boolean
@@ -49,7 +47,6 @@ class Player extends Component<any, PlayerState>{
 			isLoadingInstrument: true,
 			isRecording: false,
 			isRecordingAudio: false,
-			songs: [],
 			settings: settings,
 			hasSong: false
 		}
@@ -63,9 +60,7 @@ class Player extends Component<any, PlayerState>{
 	}
 	componentDidMount() {
 		this.mounted = true
-		this.disposeSongsObserver = subscribeSongs((songs) => {
-			this.setState({songs})
-		})
+
 		this.init()
 	}
 	componentWillUnmount() {
@@ -223,11 +218,11 @@ class Player extends Component<any, PlayerState>{
 	}
 	render() {
 		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this
-		const { settings, isLoadingInstrument, songs, instrument, hasSong, isRecordingAudio, isRecording } = state
+		const { settings, isLoadingInstrument, instrument, hasSong, isRecordingAudio, isRecording } = state
 		return <>
 			<Menu
 				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
-				data={{ songs, settings }}
+				data={{ settings }}
 			/>
 			<div className="right-panel">
 				<div className="upper-right">

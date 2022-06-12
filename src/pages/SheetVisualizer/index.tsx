@@ -1,18 +1,18 @@
 import './SheetVisualizer.css'
+
 import { useState } from 'react'
-import { SimpleMenu } from 'components/SimpleMenu'
 import { APP_NAME } from 'appConfig'
 import { getNoteText, parseSong } from 'lib/Tools'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
-import { SongMenu } from 'components/SongMenu'
-import { ThemeProvider } from 'stores/ThemeStore'
 import { RecordedSong } from 'lib/Songs/RecordedSong'
 import { RecordedNote } from 'lib/Songs/SongClasses'
 import { AppButton } from 'components/AppButton'
 import LoggerStore from 'stores/LoggerStore'
 import { SerializedSong } from 'lib/Songs/Song'
-import { useSongs } from 'lib/Hooks/useSongs'
+import { SheetVisualiserMenu } from 'components/SheetVisualizer/Menu'
+import { SheetFrame } from 'components/SheetVisualizer/SheetFrame'
+import { Chunk } from 'lib/Songs/VisualSong'
 
 const THRESHOLDS = {
     joined: 50,
@@ -21,7 +21,7 @@ const THRESHOLDS = {
 
 
 export default function SheetVisualizer() {
-    const [songs] = useSongs()
+
     const [sheet, setSheet] = useState<Chunk[]>([])
     const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
@@ -37,13 +37,13 @@ export default function SheetVisualizer() {
         setFramesPerRow(newAmount)
     }
 
-    function getChunkNoteText(i: number) {  
+    function getChunkNoteText(i: number) {
         const text = getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === "Genshin" ? 21 : 15)
         return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
-    function handleClick(song: SerializedSong) {
+    function loadSong(song: SerializedSong) {
         setCurrentSong(song)
-        try{
+        try {
             const temp = parseSong(song)
             const lostReference = temp instanceof RecordedSong ? temp : temp.toRecordedSong()
             const notes = lostReference.notes
@@ -75,29 +75,20 @@ export default function SheetVisualizer() {
             }
             setSongAstext(sheetText)
             setSheet(chunks)
-        }catch(e){
+        } catch (e) {
             console.error(e)
             LoggerStore.error('Error visualizing song')
         }
 
-        Analytics.songEvent({type:'visualize'})
+        Analytics.songEvent({ type: 'visualize' })
     }
-
-    return <div className='default-page' style={{overflowY: 'scroll'}}>
+    return <div className='default-page' style={{ overflowY: 'scroll' }}>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-            <SimpleMenu className='noprint' />
+            <SheetVisualiserMenu
+                onSongLoaded={(song) => loadSong(song)}
+                currentSong={currentSong}
+            />
             <div>
-                <SongMenu<SongRowProps>
-                    songs={songs}
-                    className='displayer-songs-wrapper noprint'
-                    style={{ marginTop: '0' }}
-                    baseType='recorded'
-                    SongComponent={SongRow}
-                    componentProps={{
-                        current: currentSong,
-                        onClick: handleClick
-                    }}
-                />
                 <div className='displayer-buttons-wrapper noprint'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{ marginRight: '0.5rem' }}>Note names</div>
@@ -121,14 +112,17 @@ export default function SheetVisualizer() {
             </h1>
             <div style={{ width: '100%' }} className='noprint'>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2>{currentSong ? currentSong.name : 'No song selected'}</h2>
-                    <AppButton onClick={() => window.print()}>
+                    <h2 className='text-ellipsis'>
+                        {currentSong ? currentSong.name : 'No song selected'}
+                    </h2>
+                    <AppButton onClick={() => window.print()} style={{minWidth: 'fit-content', marginLeft: "0.4rem"}}>
                         Print as PDF
                     </AppButton>
                 </div>
                 <div style={{ color: 'var(--background-text)' }}>
+                    Select a song from the menu on the left.
                     Remember that you can learn a song with the interactive
-                    practice tool in the main page
+                    practice tool in the Player
                 </div>
             </div>
             <div
@@ -153,61 +147,6 @@ export default function SheetVisualizer() {
     </div>
 }
 
-class Chunk {
-    notes: RecordedNote[] = []
-    delay = 0
-    constructor(notes:RecordedNote[]  = [], delay:number = 0) {
-        this.notes = notes
-        this.delay = delay
-    }
-}
 
-interface SheetFrameProps{
-    frame: Chunk
-    rows: number
-    hasText: boolean
-}
-function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
-    const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
-    const notes = new Array(columnsPerRow * rows).fill(0)
-    frame.notes.forEach(note => {
-        notes[note.index] = 1
-    })
-    return frame.notes.length === 0
-        ? <div className='frame-outer displayer-ball'>
-            <div></div>
-        </div>
-        : <div className='frame-outer'>
-            <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
-                {notes.map((exists, i) => {
-                    return <div 
-                            className={exists ? 'frame-note-s' : 'frame-note-ns'} 
-                            key={i}
-                            style={!exists ? {backgroundColor: ThemeProvider.layer('primary',0.2).toString()} : {}}
-                        >
-                        {(exists && hasText) 
-                            ? getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === 'Genshin' ? 21 : 15) 
-                            : null
-                        }
-                    </div>
-                })}
-            </div>
-        </div>
-}
 
-interface SongRowProps{
-    data: SerializedSong
-    current: SerializedSong | null
-    onClick: (song: SerializedSong) => void
-}
-function SongRow({ data, current, onClick }: SongRowProps ) {
-    const selectedStyle = current === data ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
-    return <div
-        className="song-row"
-        style={selectedStyle}
-        onClick={() => onClick(data)}>
-        <div className="song-name">
-            {data.name}
-        </div>
-    </div>
-}
+
