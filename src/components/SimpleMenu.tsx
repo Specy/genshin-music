@@ -1,6 +1,6 @@
 import { FaHome, FaDiscord, FaArrowLeft } from 'react-icons/fa';
 
-import MenuItem from 'components/MenuItem'
+import {MenuItem} from 'components/MenuItem'
 import HomeStore from 'stores/HomeStore';
 import { useHistory } from 'react-router-dom';
 import { historyTracker } from 'stores/History';
@@ -16,7 +16,7 @@ export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuP
             {historyTracker.hasNavigated &&
                 <MenuItem
                     style={{ marginBottom: 'auto' }}
-                    action={() => {
+                    onClick={() => {
                         history.goBack()
                     }}
                 >
@@ -30,7 +30,7 @@ export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuP
                 </a>
             </MenuItem>
 
-            <MenuItem action={HomeStore.open}>
+            <MenuItem onClick={HomeStore.open}>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

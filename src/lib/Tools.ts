@@ -118,8 +118,8 @@ function parseSong(song: any): RecordedSong | ComposedSong {
 		throw new Error("Error Invalid song")
 	}
 	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
-		if (song.data?.isComposedVersion) return ComposedSong.deserialize(song).toGenshin()
-		return RecordedSong.deserialize(song).toGenshin()
+		if (song.data?.isComposedVersion === true) return ComposedSong.deserialize(song).toGenshin()
+		if (song.data?.isComposedVersion === false) RecordedSong.deserialize(song).toGenshin()
 	}
 	if (type === 'newComposed') return ComposedSong.deserialize(song)
 	if (type === 'newRecorded') return RecordedSong.deserialize(song)
@@ -137,7 +137,7 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 			}
 		} else {
 			//current format
-			if (song.data.isComposedVersion) {
+			if ((song.data.isComposedVersion === true) || song.type === 'composed') {
 				if (typeof song.name !== "string") return "none"
 				if (typeof song.bpm !== "number") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"
@@ -157,7 +157,7 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 				} else {
 					return "none"
 				}
-			} else {
+			} else if((song.data.isComposedVersion === false) || song.type === 'recorded'){
 				if (typeof song.name !== "string") return "none"
 				if (typeof song.bpm !== "number") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"

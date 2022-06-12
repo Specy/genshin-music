@@ -1,5 +1,5 @@
 import { SimpleMenu } from 'components/SimpleMenu'
-import MenuItem from 'components/MenuItem'
+import {MenuItem} from 'components/MenuItem'
 import { FaGithub } from 'react-icons/fa'
 import { ChangelogRow } from './ChangelogRow'
 import './Changelog.css'

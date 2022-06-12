@@ -7,7 +7,8 @@ import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
 import { useTheme } from 'lib/Hooks/useTheme'
 import './Home.css'
-import MenuItem from 'components/MenuItem'
+import {MenuItem} from 'components/MenuItem'
+import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -24,12 +25,21 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     const history = useHistory()
     const [theme] = useTheme()
 
+
     useEffect(() => {
         const dispose = history.listen((path) => {
             setCurrentPage(path.pathname.replace('/', ''))
         })
+        KeyboardProvider.register("Escape", () => {
+            if (HomeStore.state.data.visible) {
+                HomeStore.close()
+            }
+        }, {id: "home"})
         setBreakpoint(window.innerWidth > 900)
-        return dispose
+        return () => {
+            dispose()
+            KeyboardProvider.unregisterById("home")
+        }
     }, [history])
 
     useEffect(() => {
@@ -47,7 +57,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     >
         <MenuItem
             className='close-home'
-            action={HomeStore.close}
+            onClick={HomeStore.close}
         >
             <FaTimes size={25} />
         </MenuItem>

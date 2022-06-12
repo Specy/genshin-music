@@ -33,8 +33,8 @@ export function SongMenu<T>({
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
     useEffect(() => {
-        setNoFolderRecorded(new Folder("Recorded", null, songs.filter(song => !song.folderId && !song.data.isComposedVersion)))
-        setNoFolderComposed(new Folder("Composed", null, songs.filter(song => !song.folderId && song.data.isComposedVersion)))
+        setNoFolderRecorded(new Folder("Recorded", null, songs.filter(song => !song.folderId && song.type === 'recorded')))
+        setNoFolderComposed(new Folder("Composed", null, songs.filter(song => !song.folderId && song.type === 'composed')))
     }, [songs])
     const [folders] = useFolders(songs)
     const [theme] = useTheme()
@@ -92,8 +92,8 @@ export function SongMenu<T>({
             </SongFolder>
         }
         {folders.map(folder => {
-            const composed = folder.songs.filter(song => song.data.isComposedVersion)
-            const recorded = folder.songs.filter(song => !song.data.isComposedVersion)
+            const composed = folder.songs.filter(song => song.type = 'composed')
+            const recorded = folder.songs.filter(song => song.type = 'recorded')
             return <SongFolder
                 key={folder.id}
                 backgroundColor={unselectedColor.toString()}

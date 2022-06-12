@@ -37,12 +37,10 @@ import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { CanvasTool } from 'components/Composer/CanvasTool';
 import { settingsService } from 'lib/Services/SettingsService';
 import { SerializedSong } from 'lib/Songs/Song';
-import { subscribeSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 
 interface ComposerState {
     layers: ComposerInstruments
-    songs: SerializedSong[]
     song: ComposedSong
     settings: ComposerSettingsDataType
     layer: LayerType
@@ -52,7 +50,6 @@ interface ComposerState {
     isMidiVisible: boolean
     isRecordingAudio: boolean
     isPlaying: boolean
-    isMenuOpen: boolean
 }
 class Composer extends Component<any, ComposerState>{
     state: ComposerState
@@ -60,13 +57,11 @@ class Composer extends Component<any, ComposerState>{
     mounted: boolean
     changes: number
     unblock: () => void
-    disposeSongsObserver!: () => void
     constructor(props: any) {
         super(props)
         const settings = settingsService.getComposerSettings()
         this.state = {
             layers: [new Instrument(), new Instrument(), new Instrument(), new Instrument()],
-            songs: [],
             isPlaying: false,
             song: new ComposedSong("Untitled"),
             settings: settings,
@@ -76,7 +71,6 @@ class Composer extends Component<any, ComposerState>{
             isToolsVisible: false,
             isMidiVisible: false,
             isRecordingAudio: false,
-            isMenuOpen: false,
         }
         this.state.song.bpm = settings.bpm.value
         this.state.song.instruments = [
@@ -98,9 +92,7 @@ class Composer extends Component<any, ComposerState>{
     componentDidMount() {
         this.mounted = true
         this.init()
-        this.disposeSongsObserver = subscribeSongs((songs) => {
-            this.setState({ songs })
-        })
+
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : null
         if (this.broadcastChannel) {
             this.broadcastChannel.addEventListener('message', (event) => {
@@ -127,7 +119,6 @@ class Composer extends Component<any, ComposerState>{
         AudioProvider.clear()
         layers.forEach(instrument => instrument.delete())
         this.broadcastChannel?.close?.()
-        this.disposeSongsObserver?.()
         state.isPlaying = false
         this.unblock()
         KeyboardProvider.unregisterById('composer')
@@ -345,10 +336,6 @@ class Composer extends Component<any, ComposerState>{
             note.index
         )
     }
-    addSong = async (song: ComposedSong | RecordedSong) => {
-        const id = await songsStore.addSong(song)
-        song.id = id
-    }
     renameSong = async (newName: string, id: string ) => {
         const {song} = this.state
         await songsStore.renameSong(id, newName)
@@ -356,6 +343,10 @@ class Composer extends Component<any, ComposerState>{
             song.name = newName
             this.setState({ song })
         }
+    }
+    addSong = async (song: ComposedSong | RecordedSong) => {
+        const id = await songsStore.addSong(song)
+        song.id = id
     }
     updateSong = async (song: ComposedSong): Promise<void> => {
         //if it is the default song, ask for name and add it
@@ -413,24 +404,23 @@ class Composer extends Component<any, ComposerState>{
         this.setState({ song }, () => this.addSong(song))
         Analytics.songEvent({ type: 'create' })
     }
-    removeSong = async (name: string, id: string) => { 
-        const confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
-        if (confirm){
-            await songsStore.removeSong(id)
-            Analytics.userSongs('delete', { name: name, page: 'composer' })
-        }
-    }
-
     loadSong = async (song: SerializedSong | ComposedSong) => {
         const state = this.state
-        const parsed = song instanceof ComposedSong
-            ? song.clone()
-            : song.data.isComposedVersion
-                ? ComposedSong.deserialize(song as SerializedComposedSong)
-                : RecordedSong.deserialize(song as SerializedRecordedSong).toComposedSong(4)
-        if (!parsed.data.isComposedVersion) {
-            parsed.name += " - Composed"
+        let parsed: ComposedSong | null = null
+        if(song instanceof ComposedSong){
+            parsed = song
+        }else{
+            if(song.type === 'recorded'){
+                parsed = RecordedSong.deserialize(song as SerializedRecordedSong).toComposedSong(4)
+                parsed.name += " - Composed"
+            }
+            if(song.type === 'composed'){
+                ComposedSong.deserialize(song as SerializedComposedSong)
+            }
         }
+
+        if(!parsed) return
+
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
             if (!confirm && state.song.columns.length > 0) {
@@ -516,9 +506,7 @@ class Composer extends Component<any, ComposerState>{
         }
         this.selectColumn(newIndex)
     }
-    toggleMenuVisible = () => {
-        this.setState({ isMenuOpen: !this.state.isMenuOpen })
-    }
+
     toggleBreakpoint = (override?: number) => {
         const { song } = this.state
         song.toggleBreakpoint(override)
@@ -617,9 +605,9 @@ class Composer extends Component<any, ComposerState>{
     }
     render() {
         const { state } = this
-        const { isMidiVisible, song, isPlaying, copiedColumns, settings, songs, isRecordingAudio, isToolsVisible, isMenuOpen, layer, selectedColumns, layers } = state
+        const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers } = state
         const {
-            loadSong, removeSong, createNewSong, changePage, updateThisSong, handleSettingChange, toggleMenuVisible, changeVolume, startRecordingAudio, handleClick,
+            loadSong, createNewSong, changePage, updateThisSong, handleSettingChange, changeVolume, startRecordingAudio, handleClick,
             toggleBreakpoint, handleTempoChanger, changeLayer, copyColumns, pasteColumns, eraseColumns, resetSelection, deleteColumns, changeMidiVisibility,
             selectColumn, toggleTools, changePitch, handleDrop, handleDropError, renameSong
         } = this
@@ -642,11 +630,7 @@ class Composer extends Component<any, ComposerState>{
                 showDropArea={true}
                 onError={handleDropError}
             />
-            <div className="hamburger" onClick={this.toggleMenuVisible}>
-                <Memoized>
-                    <FaBars />
-                </Memoized>
-            </div>
+
             <div className="right-panel-composer">
                 <div className="column fill-x">
                     <div className="top-panel-composer">
@@ -726,12 +710,12 @@ class Composer extends Component<any, ComposerState>{
             </div>
             <Menu
                 data={{
-                    songs, isMenuOpen, isRecordingAudio, settings,
+                    isRecordingAudio, settings,
                     hasChanges: this.changes > 0,
                 }}
                 functions={{
-                    loadSong, removeSong, createNewSong, changePage, updateThisSong, handleSettingChange,
-                    toggleMenuVisible, changeVolume, changeMidiVisibility, startRecordingAudio, renameSong
+                    loadSong, createNewSong, changePage, updateThisSong, handleSettingChange,
+                     changeVolume, changeMidiVisibility, startRecordingAudio, renameSong
                 }}
             />
             <ComposerTools

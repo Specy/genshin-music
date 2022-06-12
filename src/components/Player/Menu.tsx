@@ -6,7 +6,7 @@ import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { PlayerStore } from 'stores/PlayerStore'
 import { HelpTab } from 'components/HelpTab'
-import MenuItem from 'components/MenuItem'
+import {MenuItem} from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import DonateButton from 'components/DonateButton'
 import LibrarySearchedSong from 'components/LibrarySearchedSong'
@@ -53,10 +53,10 @@ interface MenuProps {
     }
 }
 
-export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
+export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home' 
 
 function Menu({ functions, data }: MenuProps) {
-    const [open, setOpen] = useState(false)
+    const [isOpen, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Songs')
     const [searchInput, setSearchInput] = useState('')
     const [searchedSongs, setSearchedSongs] = useState<SearchedSongType[]>([])
@@ -78,9 +78,9 @@ function Menu({ functions, data }: MenuProps) {
     const handleKeyboard = useCallback(({ letter, shift, code }: KeyboardEventData) => {
         //@ts-ignore
         document.activeElement?.blur()
-        if (letter === 'M' && shift) setOpen(!open)
+        if (letter === 'M' && shift) setOpen(!isOpen)
         if (code === 'Escape') setOpen(false)
-    }, [open])
+    }, [isOpen])
 
     useEffect(() => {
         KeyboardProvider.listen(handleKeyboard)
@@ -111,11 +111,11 @@ function Menu({ functions, data }: MenuProps) {
     }
     const toggleMenu = (override?: boolean | null) => {
         if (typeof override !== "boolean") override = null
-        const newState = override !== null ? override : !open
+        const newState = override !== null ? override : !isOpen
         setOpen(newState)
     }
     const selectSideMenu = (selection?: MenuTabs) => {
-        if (selection === selectedMenu && open) {
+        if (selection === selectedMenu && isOpen) {
             return setOpen(false)
         }
         clearSearch()
@@ -175,9 +175,8 @@ function Menu({ functions, data }: MenuProps) {
         try {
             const toDownload = data.songs.map(song => {
                 if (APP_NAME === 'Sky') {
-                    return song.data.isComposedVersion
-                        ? ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
-                        : RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
+                    if(song.type === 'composed') ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
+                    if(song.type === 'recorded') RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
                 }
                 return song
             }).map(s => Song.stripMetadata(s))
@@ -190,29 +189,29 @@ function Menu({ functions, data }: MenuProps) {
         }
     }
 
-    const sideClass = open ? "side-menu menu-open" : "side-menu"
+    const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
     const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
     const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
     return <div className="menu-wrapper">
         <div className="menu menu-visible menu-main-page" >
-            {open &&
-                <MenuItem action={toggleMenu} className='close-menu'>
+            {isOpen &&
+                <MenuItem onClick={toggleMenu} className='close-menu'>
                     <FaTimes className="icon" />
                 </MenuItem>
             }
-            <MenuItem<MenuTabs> data="Help" action={selectSideMenu} className="margin-top-auto">
+            <MenuItem onClick={() => selectSideMenu("Help")} className="margin-top-auto" isActive={selectedMenu === "Help" && isOpen}>
                 <FaInfo className="icon" />
             </MenuItem>
-            <MenuItem<MenuTabs> data="Library" action={selectSideMenu}>
+            <MenuItem onClick={() => selectSideMenu("Library")} isActive={selectedMenu === "Library" && isOpen}>
                 <RiPlayListFill className='icon' />
             </MenuItem>
-            <MenuItem<MenuTabs> data="Songs" action={selectSideMenu} >
+            <MenuItem onClick={() => selectSideMenu("Songs")} isActive={selectedMenu === "Songs" && isOpen}>
                 <FaMusic className="icon" />
             </MenuItem>
-            <MenuItem<MenuTabs> data="Settings" action={selectSideMenu}>
+            <MenuItem onClick={() => selectSideMenu("Settings")} isActive={selectedMenu === "Settings" && isOpen}>
                 <FaCog className="icon" />
             </MenuItem>
-            <MenuItem<MenuTabs> data="Home" action={HomeStore.open}>
+            <MenuItem onClick={HomeStore.open}>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

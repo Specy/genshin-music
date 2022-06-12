@@ -644,7 +644,7 @@ a {
 }
 .folder-header-button input{
 	background-color: transparent;
-	color: var(--secondary-text);
+	color: var(--menu-background-text);
 	border: none;
 	outline: solid 2px var(--secondary);
 	font-family: Bonobo;

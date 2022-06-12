@@ -11,6 +11,7 @@ import { OldFormat, OldNote } from "types/SongTypes"
 
 
 export type SerializedRecordedSong = SerializedSong & {
+    type: 'recorded'
     notes: SerializedRecordedNote[]
     instrument: InstrumentName
 }
@@ -22,7 +23,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     notes: RecordedNote[]
     timestamp: number
     constructor(name: string, notes?: RecordedNote[]) {
-        super(name, 2, {
+        super(name, 2, 'recorded', {
             isComposed: false,
             isComposedVersion: false,
             appName: APP_NAME
@@ -72,6 +73,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     serialize = (): SerializedRecordedSong => {
         return {
             name: this.name,
+            type: 'recorded',
             folderId: this.folderId,
             instrument: this.instrument,
             version: this.version,

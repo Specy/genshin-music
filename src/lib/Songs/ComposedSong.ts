@@ -16,6 +16,7 @@ interface OldFormatNoteType {
 export type ComposedSongInstruments = [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
 
 export type SerializedComposedSong = SerializedSong & {
+    type: "composed"
     instruments: SongInstruments
     breakpoints: number[]
     columns: SerializedColumn[]
@@ -30,7 +31,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
     columns: Column[]
     selected: number
     constructor(name: string, notes: RecordedNote[] = []) {
-        super(name, 2, {
+        super(name, 2, 'composed', {
             appName: APP_NAME,
             isComposed: true,
             isComposedVersion: true
@@ -95,6 +96,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
         const bpm = Number(this.bpm)
         return {
             name: this.name,
+            type: 'composed',
             folderId: this.folderId,
             bpm: isNaN(bpm) ? 220 : bpm,
             pitch: this.pitch,
@@ -113,7 +115,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
         const song: OldFormatComposed = {
             ...this.serialize(),
             pitchLevel: PITCHES.indexOf(this.pitch),
-            isComposed: this.data.isComposedVersion,
+            isComposed: true,
             bitsPerPage: 16,
             isEncrypted: false,
             songNotes: []

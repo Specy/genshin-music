@@ -1,8 +1,8 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder } from 'react-icons/fa';
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars } from 'react-icons/fa';
 import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME } from 'appConfig'
-import MenuItem from 'components/MenuItem'
+import {MenuItem} from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
 import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
@@ -25,27 +25,24 @@ import { SettingsPane } from 'components/Settings/SettingsPane';
 import { SerializedSong } from 'lib/Songs/Song';
 import { useFolders } from 'lib/Hooks/useFolders';
 import { Folder } from 'lib/Folder';
-import { songService } from 'lib/Services/SongService';
 import { songsStore } from 'stores/SongsStore';
 import { folderStore } from 'stores/FoldersStore';
+import { useSongs } from 'lib/Hooks/useSongs';
+import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 
 interface MenuProps {
     data: {
-        songs: SerializedSong[]
         settings: ComposerSettingsDataType,
         hasChanges: boolean,
-        isMenuOpen: boolean,
         isRecordingAudio: boolean
     }
     functions: {
         loadSong: (song: SerializedSong) => void
         renameSong : (newName: string, id:string) => void
-        removeSong: (name: string, id: string) => void
         createNewSong: () => void
         changePage: (page: Pages | 'Home') => void
         updateThisSong: () => void
         handleSettingChange: (data: SettingUpdate) => void
-        toggleMenuVisible: () => void
         changeVolume: (data: SettingVolumeUpdate) => void
         changeMidiVisibility: (visible: boolean) => void
         startRecordingAudio: (override?: boolean) => void
@@ -53,38 +50,35 @@ interface MenuProps {
 }
 export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 function Menu({ data, functions }: MenuProps) {
-    const [open, setOpen] = useState(false)
+    const [isOpen, setOpen] = useState(false)
+    const [isVisible, setVisible] = useState(false)
+    const [songs] = useSongs()
     const [folders] = useFolders()
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
-    const { loadSong, removeSong, changePage, renameSong, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, toggleMenuVisible, updateThisSong } = functions
+    const { loadSong, changePage, renameSong, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, updateThisSong } = functions
     const [theme] = useTheme()
-    const handleKeyboard = useCallback((event: KeyboardEvent) => {
-        const key = event.code
-        if (document.activeElement?.tagName === "INPUT") return
-        //@ts-ignore
-        document.activeElement?.blur()
-        switch (key) {
-            case "Escape": {
-                if (open) toggleMenuVisible()
-                setOpen(false)
-                break
-            }
-            default: break;
-        }
-    }, [open, toggleMenuVisible])
-
     useEffect(() => {
-        window.addEventListener("keydown", handleKeyboard)
-        return () => window.removeEventListener('keydown', handleKeyboard)
-    }, [handleKeyboard])
+        KeyboardProvider.register("Escape", () => {
+            setOpen(false)
+            setVisible(false)
+        }, {id: "composer_menu"})
+        return () => KeyboardProvider.unregisterById("composer_menu")
+    }, [])
 
     const toggleMenu = useCallback((override?: boolean) => {
         if (typeof override !== "boolean") override = undefined
-        const newState = override !== undefined ? override : !open
+        const newState = override !== undefined ? override : !isOpen
         setOpen(newState)
-        if (newState === false) toggleMenuVisible()
-    }, [open, toggleMenuVisible])
+        setVisible(newState)
+    }, [isOpen])
 
+    const removeSong = useCallback(async (name: string, id: string) => {
+        const confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
+        if (confirm){
+            await songsStore.removeSong(id)
+            Analytics.userSongs('delete', { name: name, page: 'composer' })
+        }
+    }, [])
     const createFolder = useCallback(async () => {
         const name = await asyncPrompt("Write the folder name")
         if (!name) return
@@ -92,7 +86,7 @@ function Menu({ data, functions }: MenuProps) {
     },[])
 
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
-        if (selection === selectedMenu && open) {
+        if (selection === selectedMenu && isOpen) {
             return setOpen(false)
         }
         setOpen(true)
@@ -100,7 +94,7 @@ function Menu({ data, functions }: MenuProps) {
             setSelectedMenu(selection)
             Analytics.UIEvent('menu', { tab: selection })
         }
-    }, [open, selectedMenu])
+    }, [isOpen, selectedMenu])
 
     const downloadSong = useCallback(async (song: SerializedSong | Midi) => {
         try {
@@ -128,8 +122,7 @@ function Menu({ data, functions }: MenuProps) {
             LoggerStore.error('Error downloading song')
         }
     }, [])
-
-    const sideClass = open ? "side-menu menu-open" : "side-menu"
+    const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
     const songFunctions = {
         loadSong,
         removeSong,
@@ -138,112 +131,120 @@ function Menu({ data, functions }: MenuProps) {
         renameSong
     }
     const hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
-    const menuClass = data.isMenuOpen ? "menu menu-visible" : "menu"
-    return <div className="menu-wrapper">
-        <div className={menuClass}>
-            <MenuItem<MenuTabs> action={() => toggleMenu(false)} className='close-menu'>
-                <FaTimes className="icon" />
-            </MenuItem>
-            <MenuItem<MenuTabs> action={updateThisSong} className={hasUnsaved}>
+    const menuClass = isVisible ? "menu menu-visible" : "menu"
+    return <>
+                <div className="hamburger" onClick={() => setVisible(!isVisible)}>
                 <Memoized>
-                    <FaSave className="icon" />
+                    <FaBars />
                 </Memoized>
-            </MenuItem>
-            <MenuItem<MenuTabs> data="Songs" action={selectSideMenu}>
-                <Memoized>
-                    <FaMusic className="icon" />
-                </Memoized>
-            </MenuItem>
-            <MenuItem<MenuTabs> data="Settings" action={selectSideMenu}>
-                <Memoized>
-                    <FaCog className="icon" />
-                </Memoized>
-            </MenuItem>
-            <MenuItem<MenuTabs> action={() => changePage('Home')}>
-                <Memoized>
-                    <FaHome className="icon" />
-                </Memoized>
-            </MenuItem>
-        </div>
-        <div className={sideClass}>
+            </div>
+            <div className="menu-wrapper">
 
-            <MenuPanel current={selectedMenu} id="Songs">
-                <div className="songs-buttons-wrapper">
-                    <HelpTooltip>
-                        <ul>
-                            <li>Click the song name to load it</li>
-                            <li>You can use different instruments for each layer</li>
-                            <li>Tempo changers help you make faster parts of a song without having very high bpm</li>
-                            <li>You can quickly create a song by importing a MIDI file and editing it</li>
-                            <li>
-                                You can add breakpoints to the timeline (the bar below the composer) to quickly jump
-                                between parts of a song
-                            </li>
-                        </ul>
-                    </HelpTooltip>
-                    <AppButton 
-                        onClick={() => { changeMidiVisibility(true); toggleMenu() }}
-                        style={{marginLeft: 'auto'}}
-                    >
-                        Create from MIDI
-                    </AppButton>
-                    <AppButton onClick={createNewSong}>
-                        Create new song
-                    </AppButton>
-                </div>
-                <SongMenu<SongRowProps>
-                    songs={data.songs}
-                    SongComponent={SongRow}
-                    baseType='composed'
-                    style={{ marginTop: '0.6rem' }}
-                    componentProps={{
-                        theme,
-                        folders,
-                        functions: songFunctions
-                    }}
-                />
-                <AppButton onClick={createFolder} style={{ width: '100%'}}>
-                    Create folder
+<div className={menuClass}>
+    <MenuItem onClick={() => toggleMenu(false)} className='close-menu'>
+        <FaTimes className="icon" />
+    </MenuItem>
+    <MenuItem onClick={updateThisSong}  className={hasUnsaved}>
+        <Memoized>
+            <FaSave className="icon" />
+        </Memoized>
+    </MenuItem>
+    <MenuItem onClick={() => selectSideMenu("Songs")} isActive={isOpen && selectedMenu === "Songs"}>
+        <Memoized>
+            <FaMusic className="icon" />
+        </Memoized>
+    </MenuItem>
+    <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"}>
+        <Memoized>
+            <FaCog className="icon" />
+        </Memoized>
+    </MenuItem>
+    <MenuItem onClick={() => changePage('Home')}>
+        <Memoized>
+            <FaHome className="icon" />
+        </Memoized>
+    </MenuItem>
+</div>
+<div className={sideClass}>
+
+    <MenuPanel current={selectedMenu} id="Songs">
+        <div className="songs-buttons-wrapper">
+            <HelpTooltip>
+                <ul>
+                    <li>Click the song name to load it</li>
+                    <li>You can use different instruments for each layer</li>
+                    <li>Tempo changers help you make faster parts of a song without having very high bpm</li>
+                    <li>You can quickly create a song by importing a MIDI file and editing it</li>
+                    <li>
+                        You can add breakpoints to the timeline (the bar below the composer) to quickly jump
+                        between parts of a song
+                    </li>
+                </ul>
+            </HelpTooltip>
+            <AppButton 
+                onClick={() => { changeMidiVisibility(true); toggleMenu() }}
+                style={{marginLeft: 'auto'}}
+            >
+                Create from MIDI
+            </AppButton>
+            <AppButton onClick={createNewSong}>
+                Create new song
+            </AppButton>
+        </div>
+        <SongMenu<SongRowProps>
+            songs={songs}
+            SongComponent={SongRow}
+            baseType='composed'
+            style={{ marginTop: '0.6rem' }}
+            componentProps={{
+                theme,
+                folders,
+                functions: songFunctions
+            }}
+        />
+        <AppButton onClick={createFolder} style={{ width: '100%'}}>
+            Create folder
+        </AppButton>
+        <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
+            <AppButton
+                style={{ marginTop: '0.5rem' }}
+                className={`record-btn`}
+                onClick={() => functions.startRecordingAudio(!data.isRecordingAudio)}
+                toggled={data.isRecordingAudio}
+            >
+                {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
+
+            </AppButton>
+        </div>
+    </MenuPanel>
+    <MenuPanel current={selectedMenu} id="Settings">
+        <SettingsPane 
+            settings={data.settings}
+            onUpdate={handleSettingChange}
+            changeVolume={changeVolume}
+        />
+        <div className='settings-row-wrap'>
+            {IS_MIDI_AVAILABLE &&
+                <AppButton
+                    onClick={() => changePage('MidiSetup')}
+                    style={{ width: 'fit-content' }}
+                >
+                    Connect MIDI keyboard
                 </AppButton>
-                <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
-                    <AppButton
-                        style={{ marginTop: '0.5rem' }}
-                        className={`record-btn`}
-                        onClick={() => functions.startRecordingAudio(!data.isRecordingAudio)}
-                        toggled={data.isRecordingAudio}
-                    >
-                        {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
-
-                    </AppButton>
-                </div>
-            </MenuPanel>
-            <MenuPanel current={selectedMenu} id="Settings">
-                <SettingsPane 
-                    settings={data.settings}
-                    onUpdate={handleSettingChange}
-                    changeVolume={changeVolume}
-                />
-                <div className='settings-row-wrap'>
-                    {IS_MIDI_AVAILABLE &&
-                        <AppButton
-                            onClick={() => changePage('MidiSetup')}
-                            style={{ width: 'fit-content' }}
-                        >
-                            Connect MIDI keyboard
-
-                        </AppButton>
-                    }
-                    <AppButton
-                        onClick={() => changePage('Theme')}
-                        style={{ width: 'fit-content' }}
-                    >
-                        Change app theme
-                    </AppButton>
-                </div>
-                <DonateButton />
-            </MenuPanel>
+            }
+            <AppButton
+                onClick={() => changePage('Theme')}
+                style={{ width: 'fit-content' }}
+            >
+                Change app theme
+            </AppButton>
         </div>
-    </div>
+        <DonateButton />
+    </MenuPanel>
+</div>
+</div>
+    
+    </>
 }
 
 
@@ -347,6 +348,6 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
 }
 
 export default memo(Menu, (p, n) => {
-    return p.data.songs === n.data.songs && p.data.settings === n.data.settings &&
-        p.data.hasChanges === n.data.hasChanges && p.data.isMenuOpen === n.data.isMenuOpen && p.data.isRecordingAudio === n.data.isRecordingAudio
+    return p.data.settings === n.data.settings &&
+        p.data.hasChanges === n.data.hasChanges && p.data.isRecordingAudio === n.data.isRecordingAudio
 })

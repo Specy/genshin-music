@@ -16,6 +16,10 @@ export class SongsStore{
     }
     sync = async () => {
         const songs = await songService.getSongs()
+        songs.forEach(song => {
+            if(!song.type) song.type = Song.getSongType(song)!
+            if(song.folderId === undefined) song.folderId = null
+        })
         this.songs.splice(0,this.songs.length,...songs)
     }
     _DANGEROUS_CLEAR_ALL_SONGS = async () => {

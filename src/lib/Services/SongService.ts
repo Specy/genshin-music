@@ -1,6 +1,5 @@
-import { SerializedSong } from "lib/Songs/Song"
+import { SerializedSong, Song } from "lib/Songs/Song"
 import { DbInstance } from "./Database"
-
 
 class SongService{
     songCollection = DbInstance.collections.songs
@@ -12,17 +11,20 @@ class SongService{
     }
 
     private async ensureMigration(songs: SerializedSong[]){
-        const ensureId = songs.map(song => {
+        const migratedId = songs.map(song => {
             return new Promise(async resolve => {
+                let hasChanges = false
                 if(song.id === undefined || song.id === null){
                     song.id = DbInstance.generateId()
+                    song.type = Song.getSongType(song)!
+                    song.folderId = null
                     await this.songCollection.update({name: song.name}, song)
-                    resolve(true)
-                }
-                resolve(false)
+                    hasChanges = true
+                } 
+                resolve(hasChanges)
             })
         })
-        const changes = await Promise.all(ensureId)
+        const changes = await Promise.all(migratedId)
         //if every song was already migrated
         if(!changes.some(change => change)) return songs
         //if some songs were not migrated

@@ -344,6 +344,7 @@
     cursor: pointer;
     transition: all 0.3s;
 }
+
 .menu-item a{
     color: var(--icon-color);
     display: flex;

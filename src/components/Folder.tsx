@@ -44,10 +44,9 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
     useEffect(() => {
         if (ref.current) {
             const bounds = ref.current.getBoundingClientRect()
-            setHeight(bounds?.height || 0)
+            setHeight((bounds?.height || 0) + 50)
         }
     },[data.songs, expanded, children])
-
     useEffect(() => {
         setExpanded(defaultOpen)
     },[defaultOpen])
@@ -90,6 +89,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                         <FloatingDropdown
                         offset={2.3}
                         ignoreClickOutside={isRenaming}
+                        onClose = {() => setIsRenaming(false)}
                         Icon={FaEllipsisH}
                     >
                         <FloatingDropdownRow
@@ -121,7 +121,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
             }
         </div>
 
-        <div className="column folder-overflow" style={{height: expanded ? `${height}px` : 0}}>
+        <div className="column folder-overflow" style={{maxHeight: expanded ? `${height}px` : 0}}>
             <div className="column folder-overflow-expandible" ref={ref}>
                 {children}
             </div>
