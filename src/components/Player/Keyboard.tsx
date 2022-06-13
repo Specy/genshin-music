@@ -400,7 +400,9 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         const prevStatus = keyboard[note.index].status
         keyboard[note.index].setState({
             status: 'clicked',
-            delay: APP_NAME === 'Genshin' ? 100 : 200
+            delay: PlayerStore.eventType !== 'play' 
+            ? APP_NAME === 'Genshin' ? 100 : 200 
+            : 0
         })
         this.handlePracticeClick(note)
         this.props.functions.playSound(note)

@@ -33,7 +33,7 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	transition: all 0.1s;
+	transition: transform 0.1s;
 	cursor: pointer;
 	z-index: 10;
 	touch-action: none;

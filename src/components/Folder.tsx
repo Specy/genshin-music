@@ -44,7 +44,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
     useEffect(() => {
         if (ref.current) {
             const bounds = ref.current.getBoundingClientRect()
-            setHeight((bounds?.height || 0) + 50)
+            setHeight((bounds?.height || 0) + 100)
         }
     },[data.songs, expanded, children])
     useEffect(() => {

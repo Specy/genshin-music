@@ -15,6 +15,7 @@ export const updates: Update[] = [
             "Song names are not unique anymore",
             "Added folders and new song menu UI",
             "Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)",
+            "Improved song playback in the player",
             "Fixed some bugs"
         ]
     },
