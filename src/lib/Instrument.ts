@@ -1,5 +1,6 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch } from "appConfig"
+import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME } from "appConfig"
 import { InstrumentName, NoteStatus } from "types/GeneralTypes"
+import { NoteImage } from "types/Keyboard"
 import { getPitchChanger } from "./Tools"
 
 type Layouts = {
@@ -20,7 +21,7 @@ export default class Instrument {
     isDeleted: boolean = false
     isLoaded: boolean = false
 
-    get endNode(){
+    get endNode() {
         return this.volumeNode
     }
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
@@ -40,7 +41,11 @@ export default class Instrument {
                 mobile: this.layouts.mobile[i]
             }
             const url = `./assets/audio/${this.name}/${i}.mp3`
-            this.layout.push(new NoteData(i, noteNames, url))
+            const note = new NoteData(i, noteNames, url)
+            note.instrument = this.name
+            //@ts-ignore
+            note.noteImage = LAYOUT_IMAGES[this.layouts.keyboard.length][i]
+            this.layout.push(note)
         })
 
         this.volumeNode.gain.value = 0.8
@@ -53,7 +58,7 @@ export default class Instrument {
     changeVolume = (amount: number) => {
         let newVolume = Number((amount / 135).toFixed(2))
         if (amount < 5) newVolume = 0
-        if(this.volumeNode) this.volumeNode.gain.value = newVolume
+        if (this.volumeNode) this.volumeNode.gain.value = newVolume
     }
 
     play = (note: number, pitch: Pitch) => {
@@ -65,11 +70,11 @@ export default class Instrument {
         //player.detune.value = pitch * 100, pitch should be 0 indexed from C
         player.playbackRate.value = pitchChanger
         player.start(0)
-        function handleEnd(){
+        function handleEnd() {
             player.stop()
             player.disconnect()
         }
-        player.addEventListener('ended',handleEnd,{once: true})
+        player.addEventListener('ended', handleEnd, { once: true })
     }
     load = async () => {
         const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
@@ -91,7 +96,7 @@ export default class Instrument {
         return true
     }
     disconnect = (node?: AudioNode) => {
-        if(node) return this.volumeNode?.disconnect(node)
+        if (node) return this.volumeNode?.disconnect(node)
         this.volumeNode?.disconnect()
     }
     connect = (node: AudioNode) => {
@@ -114,6 +119,9 @@ interface NoteName {
 
 export class NoteData {
     index: number
+    renderId: number
+    noteImage: NoteImage
+    instrument: InstrumentName
     noteNames: NoteName
     url: string
     buffer: ArrayBuffer
@@ -126,31 +134,34 @@ export class NoteData {
         this.index = index
         this.noteNames = noteNames
         this.url = url
+        this.noteImage = APP_NAME === "Genshin" ? "do" : "cr"
+        this.instrument = INSTRUMENTS[0]
+        this.renderId = Math.floor(Math.random() * 10000)
         this.buffer = new ArrayBuffer(8)
         this.data = {
             status: '',
             delay: 0
         }
     }
-    get status(): NoteStatus{
+    get status(): NoteStatus {
         return this.data.status
     }
 
-    setStatus(status: NoteStatus){
-        return this.setState({status})
-    }   
+    setStatus(status: NoteStatus) {
+        return this.setState({ status })
+    }
     setState(data: Partial<{
         status: NoteStatus
         delay: number
-    }>){
-        const clone = this.clone()
-        clone.data = {...this.data, ...data}
-        return clone
+    }>) {
+        Object.assign(this.data, data)
+        this.renderId++
     }
-    clone(){
+    clone() {
         const obj = new NoteData(this.index, this.noteNames, this.url)
         obj.buffer = this.buffer
-        obj.data = {...this.data}
+        obj.noteImage = this.noteImage
+        obj.data = { ...this.data }
         return obj
     }
 }

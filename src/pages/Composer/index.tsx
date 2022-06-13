@@ -415,12 +415,10 @@ class Composer extends Component<any, ComposerState>{
                 parsed.name += " - Composed"
             }
             if(song.type === 'composed'){
-                ComposedSong.deserialize(song as SerializedComposedSong)
+                parsed = ComposedSong.deserialize(song as SerializedComposedSong)
             }
         }
-
         if(!parsed) return
-
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
             if (!confirm && state.song.columns.length > 0) {

@@ -304,7 +304,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         this.nextChunkDelay = 0
         const firstChunk = chunks[0]
         firstChunk.notes.forEach(note => {
-            keyboard[note.index] = keyboard[note.index].setState({
+            keyboard[note.index].setState({
                 status: 'toClick',
                 delay: APP_NAME === 'Genshin' ? 100 : 200
             })
@@ -312,8 +312,8 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         const secondChunk = chunks[1]
         secondChunk?.notes.forEach(note => {
             const keyboardNote = keyboard[note.index]
-            if (keyboardNote.status === 'toClick') return keyboard[note.index] = keyboardNote.setStatus('toClickAndNext')
-            keyboard[note.index] = keyboardNote.setStatus('toClickNext')
+            if (keyboardNote.status === 'toClick') return keyboardNote.setStatus('toClickAndNext')
+            keyboardNote.setStatus('toClickNext')
         })
         this.props.functions.setHasSong(true)
         this.setState({
@@ -337,13 +337,13 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         return new Promise(res => {
             const { keyboard } = this.state
             this.songTimestamp = 0
-            const resetNotes = keyboard.map(note => note.setState({
+            keyboard.forEach(note => note.setState({
                 status: '',
                 delay: APP_NAME === 'Genshin' ? 100 : 200
             }))
             this.approachingNotesList = []
             this.setState({
-                keyboard: resetNotes,
+                keyboard,
                 songToPractice: [],
                 approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21)
             }, res)
@@ -376,7 +376,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                     const nextChunk = songToPractice[0]
                     const nextNextChunk = songToPractice[1]
                     nextChunk.notes.forEach(note => {
-                        keyboard[note.index] = keyboard[note.index].setState({
+                        keyboard[note.index].setState({
                             status: 'toClick',
                             delay: nextChunk.delay
                         })
@@ -384,8 +384,8 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                     if (nextNextChunk) {
                         nextNextChunk?.notes.forEach(note => {
                             const keyboardNote = keyboard[note.index]
-                            if (keyboardNote.status === 'toClick') return keyboard[note.index] = keyboardNote.setStatus('toClickAndNext')
-                            keyboard[note.index] = keyboardNote.setStatus('toClickNext')
+                            if (keyboardNote.status === 'toClick') return keyboardNote.setStatus('toClickAndNext')
+                            keyboardNote.setStatus('toClickNext')
                         })
                     }
                 }
@@ -398,7 +398,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         const { keyboard, outgoingAnimation, approachingScore } = this.state
         const hasAnimation = this.props.data.hasAnimation
         const prevStatus = keyboard[note.index].status
-        keyboard[note.index] = keyboard[note.index].setState({
+        keyboard[note.index].setState({
             status: 'clicked',
             delay: APP_NAME === 'Genshin' ? 100 : 200
         })
@@ -406,7 +406,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         this.props.functions.playSound(note)
         const approachStatus = this.handleApproachClick(note)
         if (PlayerStore.eventType === 'approaching') {
-            keyboard[note.index] = keyboard[note.index].setStatus(approachStatus)
+            keyboard[note.index].setStatus(approachStatus)
             if (approachStatus === 'approach-wrong') approachingScore.combo = 0
         }
         if (hasAnimation && PlayerStore.eventType !== 'approaching') {
@@ -428,8 +428,8 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         })
         setTimeout(() => {
             if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[note.index].status)) return
-            if (prevStatus === 'toClickNext') keyboard[note.index] = keyboard[note.index].setStatus(prevStatus)
-            else keyboard[note.index] = keyboard[note.index].setStatus('')
+            if (prevStatus === 'toClickNext') keyboard[note.index].setStatus(prevStatus)
+            else keyboard[note.index].setStatus('')
             this.setState({ keyboard })
         }, APP_NAME === 'Sky' ? 200 : 100)
     }
@@ -441,6 +441,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         let keyboardClass = "keyboard"
         if (keyboard.length === 15) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
+        const style = size !== 1 ? { transform: `scale(${size})` } : {}
         return <>
             {<TopPage
                 hasSong={data.hasSong}
@@ -452,7 +453,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             <div
                 className={keyboardClass}
                 style={{
-                    transform: `scale(${size})`,
+                    ...style,
                     marginBottom: `${size * 6 + (data.keyboardYPosition / 10)}vh`
                 }}
             >
@@ -461,9 +462,9 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
 
                     : keyboard.map(note => {
                         //@ts-ignore
-                        const noteImage = LAYOUT_IMAGES[keyboard.length][note.index]
                         return <Note
                             key={note.index}
+                            renderId={note.renderId}
                             note={note}
                             data={{
                                 approachRate: this.approachRate,
@@ -472,11 +473,9 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                             }}
                             approachingNotes={state.approachingNotes[note.index]}
                             outgoingAnimation={state.outgoingAnimation[note.index]}
-                            fadeTime={note.data.delay}
                             handleClick={this.handleClick}
                             //@ts-ignore
                             noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
-                            noteImage={noteImage}
                         />
 
                     })
