@@ -196,6 +196,7 @@ class Composer extends Component<any, ComposerState>{
     handleAutoSave = () => {
         this.changes++
         if (this.changes > 5 && this.state.settings.autosave.value) {
+            //TODO maybe add here that songs which arent saved dont get autosaved
             if (this.state.song.name !== "Untitled") {
                 this.updateSong(this.state.song)
             }
@@ -347,6 +348,7 @@ class Composer extends Component<any, ComposerState>{
     addSong = async (song: ComposedSong | RecordedSong) => {
         const id = await songsStore.addSong(song)
         song.id = id
+        return song
     }
     updateSong = async (song: ComposedSong): Promise<void> => {
         //if it is the default song, ask for name and add it
@@ -355,7 +357,9 @@ class Composer extends Component<any, ComposerState>{
             if (name === null || !this.mounted) return
             song.name = name
             this.changes = 0
-            return this.addSong(song)
+            this.setState({})
+            await this.addSong(song)
+            return 
         }
         return new Promise(async resolve => {
             const { settings } = this.state
@@ -368,6 +372,7 @@ class Composer extends Component<any, ComposerState>{
                 await songsStore.updateSong(song)
                 console.log("song saved:", song.name)
                 this.changes = 0
+                this.setState({})
             } else {
                 //if it doesn't exist, add it
                 if (song.name.includes("- Composed")) {
@@ -401,13 +406,16 @@ class Composer extends Component<any, ComposerState>{
         const song = new ComposedSong(name)
         this.changes = 0
         if (!this.mounted) return
-        this.setState({ song }, () => this.addSong(song))
+        const added = await this.addSong(song) as ComposedSong
+        if (!this.mounted) return
+        this.setState({ song: added})
         Analytics.songEvent({ type: 'create' })
     }
     loadSong = async (song: SerializedSong | ComposedSong) => {
         const state = this.state
         let parsed: ComposedSong | null = null
         if(song instanceof ComposedSong){
+            //TODO not sure if i should clone the song here
             parsed = song
         }else{
             if(song.type === 'recorded'){

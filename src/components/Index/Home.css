@@ -9,19 +9,22 @@
 	padding: 1rem 25vw;
 	background-color: var(--background);
 	color: var(--background-text);
-	backdrop-filter: blur(4px);
 	z-index: 100;
 	transition: all 0.2s ease-out;
 	animation: 0.15s home-appear ease-out;
 	opacity: 0;
-	transform: scale(0.9);
+	transform: scale(0.95);
+}
+.home-visible {
+	opacity: 1;
 	backdrop-filter: blur(4px);
+	transform: scale(1);
 }
 @keyframes home-appear {
 	0% {
 		opacity: 0.5;
 		backdrop-filter: none;
-		transform: scale(0.9);
+		transform: scale(0.95);
 	}
 	100% {
 		opacity: 1;
@@ -43,7 +46,7 @@
 	color: var(--primary-text);
 	display: flex;
 	pointer-events: none;
-	padding: 0.4rem;
+	padding: 0.5rem;
 	z-index: 999;
 	transition: all 0.3s;
 	display: flex;
@@ -66,7 +69,7 @@
 .logger-progress-outer{
 	overflow: hidden;
 	height: 5px;
-	margin-top: 0.4rem;
+	margin-top: 0.6rem;
 	border-radius: 0.5rem;
 }
 .logger-progress-bar{
@@ -96,11 +99,7 @@
 	font-size: 0.9rem;
 }
 
-.home-visible {
-	opacity: 1;
-	backdrop-filter: blur(4px);
-	transform: scale(1);
-}
+
 .home-spacing {
 	margin-bottom: 0.3rem;
 }

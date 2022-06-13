@@ -38,7 +38,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     onClick={resetSelection}
                     style={{...themeStyle, marginRight: '0.2rem'}}
                 >
-                    Reset
+                    Reset selection
                 </AppButton>
                 <AppButton onClick={toggleTools} style={themeStyle}>
                     Close

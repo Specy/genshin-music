@@ -45,7 +45,7 @@ class SongService{
         if(song) return this.stripDbId(song)
         return null
     }
-    async existsSong(query:any){
+    async existsSong(query:Partial<SerializedSong>){
         return (await this.songCollection.findOne(query)) !== undefined
     }
     updateSong(id:string,data:SerializedSong){

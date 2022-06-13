@@ -44,7 +44,7 @@ export class SongsStore{
         this.sync()
     }
     existsSong = async (song: Song) => {
-        return await songService.existsSong(song.id)
+        return await songService.songExists(song.id!)
     }
     addSongToFolder = async (song: SerializedSong, folderId: string | null) => {
         song.folderId = folderId

@@ -92,8 +92,8 @@ export function SongMenu<T>({
             </SongFolder>
         }
         {folders.map(folder => {
-            const composed = folder.songs.filter(song => song.type = 'composed')
-            const recorded = folder.songs.filter(song => song.type = 'recorded')
+            const composed = folder.songs.filter(song => song.type === 'composed')
+            const recorded = folder.songs.filter(song => song.type === 'recorded')
             return <SongFolder
                 key={folder.id}
                 backgroundColor={unselectedColor.toString()}
@@ -129,6 +129,5 @@ export function SongMenu<T>({
                 }
             </SongFolder>
         })}
-
     </div>
 }

@@ -49,7 +49,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         return dispose
     }, [])
     return <div
-        className={homeClass}
+        className={`${homeClass} ignore_click_outside`}
         style={{
             ...!data.visible ? { display: 'none' } : {},
             backgroundColor: theme.get('background').fade(0.1).toString()

@@ -88,23 +88,21 @@ export default function SheetVisualizer() {
                 onSongLoaded={(song) => loadSong(song)}
                 currentSong={currentSong}
             />
-            <div>
-                <div className='displayer-buttons-wrapper noprint'>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{ marginRight: '0.5rem' }}>Note names</div>
-                        <Switch checked={hasText} onChange={setHasText} />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        Per row: {framesPerRow}
-                        <button className='displayer-plus-minus'
-                            onClick={() => setFrames(-1)}>
-                            -
-                        </button>
-                        <button className='displayer-plus-minus'
-                            onClick={() => setFrames(1)}>
-                            +
-                        </button>
-                    </div>
+            <div className='displayer-buttons-wrapper noprint'>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ marginRight: '0.5rem' }}>Note names</div>
+                    <Switch checked={hasText} onChange={setHasText} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    Per row: {framesPerRow}
+                    <button className='displayer-plus-minus'
+                        onClick={() => setFrames(-1)}>
+                        -
+                    </button>
+                    <button className='displayer-plus-minus'
+                        onClick={() => setFrames(1)}>
+                        +
+                    </button>
                 </div>
             </div>
             <h1 className='onprint'>
@@ -115,7 +113,7 @@ export default function SheetVisualizer() {
                     <h2 className='text-ellipsis'>
                         {currentSong ? currentSong.name : 'No song selected'}
                     </h2>
-                    <AppButton onClick={() => window.print()} style={{minWidth: 'fit-content', marginLeft: "0.4rem"}}>
+                    <AppButton onClick={() => window.print()} style={{ minWidth: 'fit-content', marginLeft: "0.4rem" }}>
                         Print as PDF
                     </AppButton>
                 </div>

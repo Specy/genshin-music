@@ -7,7 +7,7 @@ export default function FloatingMessage() {
     const isBig = text.length > 150
     return <div
         className={visible ? "logger logger-visible" : "logger"}
-        style={{ width: (isBig && visible) ? '23rem' : '18rem' }}
+        style={{ maxWidth: (isBig && visible) ? '24rem' : '19rem' }}
         onClick={LoggerStore.close}
     >
         <div className="logger-content">

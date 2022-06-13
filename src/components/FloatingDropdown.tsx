@@ -77,7 +77,7 @@ export function FloatingDropdownText({ text }: FloatingDropdownTextProps) {
 export function FloatingDropdownRow({ children, onClick, style }: FloatingDropdownButtonProps) {
     return <AppButton
         className='row row-centered'
-        style={{ padding: "0.4rem", minWidth: "unset", ...style }}
+        style={{ padding: "0.5rem", minWidth: "unset", ...style }}
         onClick={onClick}
     >
         {children}

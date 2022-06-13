@@ -15,9 +15,11 @@ export default function useClickOutside<T extends HTMLElement>(callback: Callbac
     useEffect(() => {
         if(!options?.active) return
         function onClick(e: any): void {
-            if(options?.ignoreFocusable && hasFocusable(e)) return
             const clickedOutside = !(innerRef.current?.contains(e.target));
-            if (clickedOutside) callbackRef.current?.(e);
+            if (clickedOutside) {
+                if(options?.ignoreFocusable && hasFocusable(e)) return
+                callbackRef.current?.(e);
+            }
         }
         document.addEventListener("click", onClick);
         return () => {
@@ -29,7 +31,7 @@ export default function useClickOutside<T extends HTMLElement>(callback: Callbac
 }
 export function hasFocusable(e: MouseEvent){
     const path = e.composedPath()
+
     //@ts-ignore
-    const tags = path.map(e => e.tagName)
-    return tags.some(tag => tag === "INPUT" || tag === "BUTTON")
+    return path.some(e => e.tagName === "INPUT" || e.tagName === "BUTTON" || e.classList?.contains?.("ignore_click_outside"))
 }

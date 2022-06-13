@@ -264,9 +264,9 @@
 }
 .dropdown-select{
     background-color: var(--primary);
-    padding: 0.4rem 0;
+    padding: 0.5rem 0;
     height: 100%;
-    width: 100%;
+    flex: 1;
     color: var(--primary-text);
     border: none;
 }
@@ -332,6 +332,7 @@
   }
 .menu-item{
     background-color: var(--primary);
+    border: none;
     width: 2.8rem;
     height: 2.8rem;
     min-height: 2.8rem;

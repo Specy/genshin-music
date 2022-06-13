@@ -12,7 +12,7 @@ interface MenuItemProps<T> {
 
 export function MenuItem<T>({ className = "", onClick, children, data, style, isActive }: MenuItemProps<T>) {
     const [theme] = useTheme()
-    return <div
+    return <button
         className={`menu-item ${className}`}
         style={{ 
             backgroundColor: isActive
@@ -23,5 +23,5 @@ export function MenuItem<T>({ className = "", onClick, children, data, style, is
         onClick={() => onClick?.(data)}
     >
         {children}
-    </div>
+    </button>
 }
