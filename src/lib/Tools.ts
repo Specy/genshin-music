@@ -11,6 +11,7 @@ class FileDownloader {
 	static download(file: string | Blob, name: string, as: string = "text/json"){
 		const a = document.createElement("a")
 		a.style.display = 'none'
+		a.className = 'ignore_click_outside'
 		a.download = name
 		document.body.appendChild(a)
 

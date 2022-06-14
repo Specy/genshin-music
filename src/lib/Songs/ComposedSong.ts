@@ -51,10 +51,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
         parsed.bpm = Number.isFinite(bpm) ? bpm : 220
         parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
         const instruments = Array.isArray(song.instruments) ? song.instruments : []
-        parsed.instruments.map((_, i) => {
+        parsed.instruments = parsed.instruments.map((_, i) => {
             const toParse = instruments[i] as any
             return INSTRUMENTS.includes(toParse) ? toParse : INSTRUMENTS[0]
-        })
+        }) as ComposedSongInstruments
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
         if (version === 1) {
             parsed.columns = song.columns.map(column => {

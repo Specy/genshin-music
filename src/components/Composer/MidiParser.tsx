@@ -77,7 +77,6 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             if (files.length === 0) return
             const file = files[0]
             const midi = new Midi(file.data as ArrayBuffer)
-            console.log(midi)
             const bpm = midi.header.tempos[0]?.bpm
             const key = midi.header.keySignatures[0]?.key
             const tracks = midi.tracks.map((track, i) => {
