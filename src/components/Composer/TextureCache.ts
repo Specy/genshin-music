@@ -15,19 +15,22 @@ interface ComposerCacheProps {
     breakpointsApp: Application
     composerAccent: Color
 }
+
+export type ComposerCacheData =  {
+    columns: Texture[]
+    notes: {
+        [key in string]: Texture
+    }
+    standard: Texture[]
+    columnsLarger: Texture[]
+    standardLarger: Texture[]
+    breakpoints: Texture[]
+}
+
 export class ComposerCache {
     width: number
     height: number
-    cache: {
-        columns: Texture[]
-        notes: {
-            [key in string]: Texture
-        }
-        standard: Texture[]
-        columnsLarger: Texture[]
-        standardLarger: Texture[]
-        breakpoints: Texture[]
-    }
+    cache: ComposerCacheData
     timelineHeight: number
     margin: number
     noteWidth: number

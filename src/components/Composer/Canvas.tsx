@@ -11,7 +11,7 @@ import Memoized from 'components/Memoized';
 import { ThemeProvider } from 'stores/ThemeStore';
 import { observe } from 'mobx';
 import { clamp, nearestEven } from 'lib/Tools';
-import type { Column } from 'lib/SongClasses';
+import type { Column } from 'lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { isColumnVisible, RenderColumn } from 'components/Composer/RenderColumn';

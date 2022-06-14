@@ -18,7 +18,7 @@
 	--hint-main: #949494;
 	--red: rgb(169, 82, 90);
 	--green: #358a55;
-	--orange: #e07f2a;
+	--orange: #dd8d46;
 }
 
 @font-face {
@@ -229,6 +229,7 @@ body {
 	left: 0;
 	right: 0;
 	width: 30vw;
+	max-width: 24rem;
 	padding: 0.6rem;
 	background-color: var(--primary);
 	color: var(--primary-text);
@@ -485,8 +486,13 @@ a {
 	flex-direction: column;
 	flex: 1;
 }
+.has-tooltip{
+	position: relative;
+}
 @media (hover:hover) {
-
+	.has-tooltip:hover:not(:focus){
+		z-index: 2;
+	}
 	.has-tooltip:hover:not(:focus) .tooltip {
 		display: block;
 		animation: fadeIn 0.2s;
@@ -507,7 +513,7 @@ a {
 	max-width: 10rem;
 	width: fit-content;
 	z-index: 20;
-	box-shadow: 0px 1px 4px 2px #28283387;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.15);
 	font-size: 0.7rem;
 	pointer-events: none;
 	z-index: 2;
@@ -595,15 +601,15 @@ a {
 	position: absolute;
 	transform: translateY(0.4rem);
 	display: none;
-	box-shadow: 0px 1px 4px 2px #28283387;
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.15), 0 4px 6px -4px rgb(0 0 0 / 0.15);
 	border: solid 2px var(--secondary);
 	padding: 0.3rem 0.6rem;
 	border-radius: 0.4rem;
 	font-size: 0.8rem;
 	z-index: 2;
 	pointer-events: none;
-
 }
+
 .help-tooltip-button:focus + .help-tooltip-content{
 	display: flex;
 	background-color: var(--primary);
@@ -616,7 +622,90 @@ a {
 	color: var(--accent-text);
 }
 
+.folder{
+	display: flex;
+	flex-direction: column;
+	border-radius: 0.4rem;
+	margin: 0.4rem 0;
+}
+.folder-header{
+	padding: 0.5rem;
+	border-radius: 0.4rem 0.4rem 0 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.folder-header-button{
+	display: flex;
+	align-items: center;
+	flex: 1;
+	cursor: pointer;
+	padding: 0.25rem;
+}
+.folder-header-button input{
+	background-color: transparent;
+	color: var(--menu-background-text);
+	border: none;
+	outline: solid 2px var(--secondary);
+	font-family: Bonobo;
+	border-radius: 0.2rem;
+}
+
+.folder-content{
+	padding: 0.5rem;
+	padding-top: 0;
+	flex-direction: column;
+	opacity: 1;
+	transition: all 0.2s;
+}
+.folder-songs-wrapper{
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.3rem;
+}
+
+.folder-overflow{
+	overflow: hidden;
+	transition: all 0.2s;
+}
+.folder-overflow-expandible{
+	transition: all 0.2s;
+}
+.folder-expanded .folder-overflow{
+	animation: show-folder 0.2s;
+	animation-fill-mode: forwards;
+}
+
+/* Super hacky way to make overflow work */
+@keyframes show-folder  {
+	99%{ 
+		overflow: hidden;  
+	}
+	100%{
+		overflow: unset;
+		
+	}
+}
+
+.folder-title{
+	margin: 0 0 0.4rem 0rem;
+	font-size: 1.1rem;
+}
+.folder-name{
+	font-size: 1.2rem;
+	padding: 0;
+	max-width: 20rem;
+	padding-left: 0.3rem;
+
+}
+
 @media only screen and (max-width: 900px) {
+	.folder-header{
+		padding: 0.4rem;
+	}
+	.folder-content{
+		padding: 0.4rem;
+	}
 	.floating-prompt {
 		width: 45vw;
 		padding: 0.5rem;

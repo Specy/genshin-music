@@ -11,14 +11,15 @@ import MidiSetup from 'pages/MidiSetup';
 import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
-import { ThemeProviderWrapper } from 'components/Providers/ThemeProviderWrapper';
+import { ThemeProviderWrapper } from 'components/ProviderWrappers/ThemeProviderWrapper';
 import { AppBackground } from "components/AppBackground";
-import { MIDIProviderWrapper } from "components/Providers/MIDIProviderWrapper";
-import { AudioProviderWrapper } from "components/Providers/AudioProviderWrapper";
-import { KeyboardProviderWrapper } from "components/Providers/KeyboardProviderWrapper";
+import { MIDIProviderWrapper } from "components/ProviderWrappers/MIDIProviderWrapper";
+import { AudioProviderWrapper } from "components/ProviderWrappers/AudioProviderWrapper";
+import { KeyboardProviderWrapper } from "components/ProviderWrappers/KeyboardProviderWrapper";
 import { useEffect } from "react";
 export function Router() {
 	useEffect(() => {
+
 		try{
 			if ('virtualKeyboard' in navigator) {
 				//@ts-ignore

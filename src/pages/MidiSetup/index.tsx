@@ -112,7 +112,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                 if (shortcut) {
                     shortcut.midi = note
                     shortcut.status = note < 0 ? 'wrong' : 'right'
-                    this.setState({ settings: settings })
+                    this.setState({ settings })
                     MIDIProvider.saveSettings()
                 }
             }
@@ -121,9 +121,9 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                 shortcut.status = 'clicked'
                 setTimeout(() => {
                     shortcut.status = note < 0 ? 'wrong' : 'right'
-                    this.setState({ settings: settings })
+                    this.setState({ settings })
                 }, 150)
-                this.setState({ settings: settings })
+                this.setState({ settings })
 
             }
             const keyboardNotes = settings.notes.filter(e => e.midi === note)

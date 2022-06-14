@@ -4,8 +4,8 @@ import { APP_NAME, BASE_THEME_CONFIG } from 'appConfig'
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import LoggerStore from 'stores/LoggerStore'
-import { DB } from "Database";
 import { baseThemes } from "./defaultThemes";
+import { themeService } from "lib/Services/ThemeService";
 
 export type ThemeKeys = keyof typeof ThemeSettings.data
 export type ThemeProp = {
@@ -54,9 +54,9 @@ export class ThemeStoreClass {
     }
     load = async () => {
         try {
-            const themeId = localStorage.getItem(APP_NAME + '_Theme')
+            const themeId = themeService.getCurrentThemeId()
             if (themeId !== null) {
-                const theme = await DB.getTheme(themeId)
+                const theme = await themeService.getTheme(themeId)
                 const defaultTheme = defaultThemes.find(t => t.other.id === themeId)
                 if (theme) return this.loadFromTheme(theme)
                 if(defaultTheme) return this.loadFromTheme(defaultTheme)
@@ -178,8 +178,8 @@ export class ThemeStoreClass {
         }
     }
     save = () => {
-        localStorage.setItem(APP_NAME + '_Theme', this.getId())
-        return DB.updateTheme(this.state.other.id, cloneDeep(this.state))
+        themeService.setCurrentThemeId(this.getId())
+        return themeService.updateTheme(this.state.other.id, cloneDeep(this.state))
     }
 }
 

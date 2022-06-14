@@ -3,20 +3,20 @@ import { FaDownload, FaSpinner } from 'react-icons/fa';
 import { parseSong } from "lib/Tools"
 import LoggerStore from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
-import { ComposedSong } from 'lib/ComposedSong';
-import type {  Song } from 'lib/Song';
+import { ComposedSong } from 'lib/Songs/ComposedSong';
+import type {  RecordedSong } from 'lib/Songs/RecordedSong';
 import { ThemeStoreClass } from 'stores/ThemeStore';
 
 interface SearchedSongProps{
-    onClick: (song: ComposedSong | Song, start: number) => void,
-    importSong: (song: ComposedSong | Song) => void, 
+    onClick: (song: ComposedSong | RecordedSong, start: number) => void,
+    importSong: (song: ComposedSong | RecordedSong) => void, 
     data: SearchedSongType
     theme: ThemeStoreClass
 }
 
 export default function SearchedSong({ onClick, data, importSong, theme }:SearchedSongProps) {
     const [fetching, setFetching] = useState(false)
-    const [cache, setCache] = useState<Song | ComposedSong | null>(null)
+    const [cache, setCache] = useState<RecordedSong | ComposedSong | null>(null)
     const download = async function () {
         if (fetching) return
         try {
@@ -54,7 +54,11 @@ export default function SearchedSong({ onClick, data, importSong, theme }:Search
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={download} style={{backgroundColor: theme.layer('primary',0.2).hex()}}>
+            <button 
+                className="song-button" 
+                onClick={download} 
+                style={{backgroundColor: theme.layer('primary',0.2).hex(), marginRight: 0}}
+            >
                 {fetching ? <FaSpinner /> : <FaDownload />}
             </button>
         </div>

@@ -110,7 +110,13 @@
     display: none;
     flex: 1;
     flex-direction: column;
+    
 }
+.menu-panel-visible{
+    display: flex;
+    animation: appearLeft 0.3s;
+}
+
 .songs-buttons-wrapper{
     display:flex;
     width: 100%;
@@ -206,13 +212,10 @@
     color: var(--primary-text);
     justify-content: space-between;
     align-items: flex-start;
-    padding: 0.45rem;
-    padding-right: 0;
+    padding: 0.4rem;
     transition: all 0.2s;
 }
-.song-row:hover{
-    filter: brightness(1.1);
-}
+
 .panel-content-wrapper{
     display: flex;
     flex-direction: column;
@@ -233,10 +236,52 @@
     width: 2rem;
     font-size: 1rem;
     border: none;
-    margin-right: 0.45rem;
+    margin-right: 0.4rem;
     cursor: pointer;
     padding: 0;
 }
+
+.floating-dropdown-active .floating-children-bottom{
+	display: flex;
+	animation: fadeIn 0.3s;
+	animation-fill-mode: forwards;
+}
+.floating-children-bottom{
+	flex-direction: column;
+	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+	display: none;
+	position: absolute;
+	transform: translateX(calc(-100% + 3rem));
+	z-index: 100;
+	padding: 0.2rem;
+	background-color: var(--primary);
+	color: var(--primary-text);
+	border: solid 1px var(--secondary);
+	border-radius: 0.4rem;
+}
+.floating-dropdown{
+    position: relative;
+}
+.dropdown-select{
+    background-color: var(--primary);
+    padding: 0.5rem 0;
+    height: 100%;
+    flex: 1;
+    color: var(--primary-text);
+    border: none;
+}
+.floating-dropdown-text{
+    display: flex;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+.floating-dropdown-active .floating-children-bottom{
+	display: flex;
+	animation: fadeIn 0.2s;
+	animation-fill-mode: forwards;
+
+}
+
 .song-name{
     flex: 1;
     cursor: pointer;
@@ -244,17 +289,33 @@
     display: flex;
     height: 100%;
     align-items: center;
+    font-size: 1rem;
     padding-right: 0.45rem;
-    padding-left:  0.2rem;
 }
+.song-name-input{
+	background-color: transparent;
+    font-size: 1rem;
+    font-family: Bonobo;
+	padding: 0;
+	margin: 0;
+	height: 100%;
+	border: none;
+    padding-left:  0.3rem;
+    cursor: pointer;
+
+}
+.song-rename{
+	outline: solid 2px var(--secondary);
+	border-radius: 0.2rem;
+    cursor: text;
+}
+
 .song-buttons-wrapper{
     display: flex;
     justify-content: center;
     align-items: center;
 }
-.menu-panel-visible{
-    display: flex;
-}
+
 .menu-title{
     font-size: 2rem;
     width: 100%;
@@ -271,6 +332,7 @@
   }
 .menu-item{
     background-color: var(--primary);
+    border: none;
     width: 2.8rem;
     height: 2.8rem;
     min-height: 2.8rem;
@@ -283,6 +345,7 @@
     cursor: pointer;
     transition: all 0.3s;
 }
+
 .menu-item a{
     color: var(--icon-color);
     display: flex;

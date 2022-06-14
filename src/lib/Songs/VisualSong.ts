@@ -1,8 +1,9 @@
 import { APP_NAME } from "appConfig"
-import { ComposedSong } from "lib/ComposedSong"
-import { Song } from "lib/Song"
-import { Column, ColumnNote, RecordedNote } from "lib/SongClasses"
+import { ComposedSong } from "lib/Songs/ComposedSong"
+import { RecordedSong } from "lib/Songs/RecordedSong"
+import { Column, ColumnNote, RecordedNote } from "lib/Songs/SongClasses"
 import { getNoteText } from "lib/Tools"
+import { NoteLayer } from "../Layer"
 
 const THRESHOLDS = {
     joined: 50,
@@ -11,7 +12,7 @@ const THRESHOLDS = {
 type NoteDifference = {
     delay: number
     index: number
-    layer: number
+    layer: NoteLayer
     time: number
 }
 function getChunkNoteText(i: number) {
@@ -19,9 +20,9 @@ function getChunkNoteText(i: number) {
     return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
 }
 export class VisualSong {
-    private baseChunks: Chunk[] = []
+    private baseChunks: _Chunk[] = []
     type: 'song' | 'composed' = 'song'
-    chunks: Chunk[] = []
+    chunks: _Chunk[] = []
     text: string = ''
 
     get currentChunk() {
@@ -31,19 +32,19 @@ export class VisualSong {
     static noteDifferences(notes: RecordedNote[]) {
         const parsed: NoteDifference[] = []
         for (let i = 0; i < notes.length; i++) {
-            const delay = notes[i + 1] ? notes[i + 1][1] - notes[i][1] : 0
+            const delay = notes[i + 1] ? notes[i + 1].time - notes[i].time : 0
             parsed.push({
                 delay,
-                index: notes[i][0],
-                time: notes[i][1],
-                layer: notes[i][2]
+                index: notes[i].index,
+                time: notes[i].time,
+                layer: notes[i].layer
             })
         }
         return parsed
     }
-    static from(song: Song | ComposedSong) {
+    static from(song: RecordedSong | ComposedSong) {
         const vs = new VisualSong()
-        if(song instanceof Song){
+        if(song instanceof RecordedSong){
             vs.createChunk(0)
         }else if(song instanceof ComposedSong){
             const { columns } = song
@@ -68,11 +69,11 @@ export class VisualSong {
         this.text = this.baseChunks.map(chunk => chunk.toString()).join(' ')
     }
     createChunk(changer?: ChunkTempoChanger){
-        const chunk = new Chunk(changer || 1)
+        const chunk = new _Chunk(changer || 1)
         this.baseChunks.push(chunk)
         return chunk
     }
-    addChunk(chunk: Chunk) {
+    addChunk(chunk: _Chunk) {
         this.baseChunks.push(chunk)
     }
 
@@ -86,7 +87,7 @@ class ChunkNote{
         this.layer = layer || 0
     }
     static from(columnNote: ColumnNote){
-        const layer = 1 + columnNote.layer.split('').findIndex(l => l === '1')
+        const layer = 1 + columnNote.layer.toArray().findIndex(l => l === 1)
         const chunkNote = new ChunkNote(columnNote.index, layer)
         return chunkNote
     }
@@ -114,7 +115,7 @@ const tempoChangerMap = {
     2: '~',
     3: '^',
 }
-export class Chunk{
+export class _Chunk{
     columns: ChunkColumn[] = []
     tempoChanger: ChunkTempoChanger
     constructor(changer?:ChunkTempoChanger){
@@ -130,5 +131,14 @@ export class Chunk{
         const notes = this.columns.map(column => column.notes).flat()
         const text = notes.map(note => getChunkNoteText(note.index)).join('')
         return notes.length ? text : `[${this.tempoString}${text}]`
+    }
+}
+
+export class Chunk {
+    notes: RecordedNote[] = []
+    delay = 0
+    constructor(notes: RecordedNote[] = [], delay: number = 0) {
+        this.notes = notes
+        this.delay = delay
     }
 }

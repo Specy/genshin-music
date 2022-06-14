@@ -1,9 +1,12 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, PitchesType, EMPTY_LAYER } from "appConfig"
+import { Midi } from "@tonejs/midi"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, Pitch, INSTRUMENTS_DATA } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
-import { CombinedLayer, InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
-import { SongInstruments } from "types/SongTypes"
-import { Song } from "./Song"
-import { Column, ColumnNote, RecordedNote, SongDataType } from "./SongClasses"
+import { InstrumentName, LayerIndex, LayerType } from "types/GeneralTypes"
+import { OldFormat, SongInstruments } from "types/SongTypes"
+import { NoteLayer } from "../Layer"
+import { RecordedSong } from "./RecordedSong"
+import { Column, ColumnNote, RecordedNote, SerializedColumn } from "./SongClasses"
+import { SerializedSong, Song } from "./Song"
 
 interface OldFormatNoteType {
     key: string,
@@ -11,49 +14,28 @@ interface OldFormatNoteType {
     l?: number
 }
 export type ComposedSongInstruments = [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
-export type SerializedNote = [index: number, layer: CombinedLayer]
-export type SerializedColumn = [tempoChanger: number, notes: SerializedNote[]]
-export interface SerializedComposedSong {
-    name: string
-    data: SongDataType
-    bpm: number
-    pitch: PitchesType
+
+export type SerializedComposedSong = SerializedSong & {
+    type: "composed"
     instruments: SongInstruments
     breakpoints: number[]
     columns: SerializedColumn[]
 }
-type OldFormatComposed = SerializedComposedSong & {
-    isComposed: boolean,
-    pitchLevel: number,
-    songNotes: {
-        key: string
-        time: number
-        l?: number
-    }[],
-    bitsPerPage: number,
-    isEncrypted: boolean
-}
-export class ComposedSong {
-    name: string
-    data: SongDataType
-    version: number
-    bpm: number
-    pitch: PitchesType
+
+
+type OldFormatComposed = SerializedComposedSong & OldFormat
+export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
     notes: RecordedNote[]
     instruments: ComposedSongInstruments
     breakpoints: number[]
     columns: Column[]
     selected: number
     constructor(name: string, notes: RecordedNote[] = []) {
-        this.version = 1
-        this.data = {
+        super(name, 2, 'composed', {
             appName: APP_NAME,
             isComposed: true,
             isComposedVersion: true
-        }
-        this.name = name
-        this.bpm = 220
-        this.pitch = "C"
+        })
         this.notes = notes
         this.instruments = [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]
         this.breakpoints = [0]
@@ -61,73 +43,79 @@ export class ComposedSong {
         this.columns = new Array(100).fill(0).map(_ => new Column())
     }
     static deserialize = (song: SerializedComposedSong): ComposedSong => {
-        const bpm = Number(song.bpm)
+        const { id, bpm, data, pitch } = song
         const parsed = new ComposedSong(song.name)
-        parsed.data = { ...parsed.data, ...song.data }
-        parsed.bpm = isNaN(bpm) ? 220 : bpm
-        parsed.pitch = song.pitch ?? "C"
-        song.instruments = song.instruments ?? []
-        const parsedInstruments = EMPTY_LAYER.split('').map(() => INSTRUMENTS[0])
-        parsedInstruments.forEach((_, i) => {
-            const toParse = song?.instruments[i] as any
-            parsedInstruments[i] = INSTRUMENTS.includes(toParse) ? toParse : INSTRUMENTS[0]
-        })
-        parsed.instruments = parsedInstruments as ComposedSongInstruments
-        parsed.breakpoints = [...(song.breakpoints ?? [])]
-        parsed.columns = song.columns.map(column => {
-            const parsedColumn = new Column()
-            parsedColumn.tempoChanger = column[0]
-            column[1].forEach(note => {
-                const deserializedNote = ColumnNote.deserializeLayer(note[1])
-                if (deserializedNote.match(/^0+$/g)) return
-                parsedColumn.notes.push(new ColumnNote(note[0], deserializedNote))
+        const version = song.version ?? 1
+        parsed.id = id || null
+        parsed.data = { ...parsed.data, ...data }
+        parsed.bpm = Number.isFinite(bpm) ? bpm : 220
+        parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
+        const instruments = Array.isArray(song.instruments) ? song.instruments : []
+        parsed.instruments = parsed.instruments.map((_, i) => {
+            const toParse = instruments[i] as any
+            return INSTRUMENTS.includes(toParse) ? toParse : INSTRUMENTS[0]
+        }) as ComposedSongInstruments
+        parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
+        if (version === 1) {
+            parsed.columns = song.columns.map(column => {
+                const parsedColumn = new Column()
+                parsedColumn.tempoChanger = column[0]
+                column[1].forEach(note => {
+                    const layer = note[1].split("").reverse().join("")
+                    const deserializedNote = new ColumnNote(note[0], NoteLayer.deserializeBin(layer))
+                    return parsedColumn.notes.push(deserializedNote)
+                })
+                return parsedColumn
             })
-            return parsedColumn
-        })
+        } else if (version === 2) {
+            parsed.columns = song.columns.map(column => Column.deserialize(column))
+        }
         return parsed
     }
     get isComposed(): true {
         return true
     }
-    toSong = () => {
-        const recordedSong = new Song(this.name)
+    toRecordedSong = () => {
+        const recordedSong = new RecordedSong(this.name)
+        recordedSong.bpm = this.bpm
+        recordedSong.pitch = this.pitch
         const bpmPerMs = Math.floor(60000 / this.bpm)
         let totalTime = 100
         this.columns.forEach(column => {
             column.notes.forEach(note => {
-                recordedSong.notes.push([note.index, totalTime, 0]) //TODO can add layer data here
+                recordedSong.notes.push(new RecordedNote(note.index, totalTime, note.layer.clone()))
             })
             totalTime += Math.floor(bpmPerMs * TEMPO_CHANGERS[column.tempoChanger].changer)
         })
         return recordedSong
     }
+    toComposedSong = () => {
+        return this.clone()
+    }
     serialize = (): SerializedComposedSong => {
         const bpm = Number(this.bpm)
-        const serialized: SerializedComposedSong = {
+        return {
+            name: this.name,
+            type: 'composed',
+            folderId: this.folderId,
+            bpm: isNaN(bpm) ? 220 : bpm,
+            pitch: this.pitch,
+            version: this.version,
             data: {
                 ...this.data,
                 appName: APP_NAME
             },
-            name: this.name,
-            bpm: isNaN(bpm) ? 220 : bpm,
-            pitch: this.pitch,
             breakpoints: [...this.breakpoints],
             instruments: [...this.instruments],
-            columns: []
+            columns: this.columns.map(col => col.serialize()),
+            id: this.id
         }
-        this.columns.forEach(column => {
-            const notes = column.notes.map(note => {
-                return [note.index, note.layer] as SerializedNote
-            })
-            serialized.columns.push([column.tempoChanger, notes])
-        })
-        return serialized
     }
-    toOldFormat = () => {
+    toOldFormat = (): OldFormatComposed => {
         const song: OldFormatComposed = {
             ...this.serialize(),
             pitchLevel: PITCHES.indexOf(this.pitch),
-            isComposed: this.data.isComposedVersion,
+            isComposed: true,
             bitsPerPage: 16,
             isEncrypted: false,
             songNotes: []
@@ -137,6 +125,7 @@ export class ComposedSong {
         let totalTime = 100
         song.columns.forEach(column => {
             column[1].forEach(note => {
+                //@ts-ignore
                 const layer = LAYERS_MAP[note[1]]
                 if (layer === 0) return
                 const noteObj: OldFormatNoteType = {
@@ -186,9 +175,9 @@ export class ComposedSong {
                 const column = this.columns[index]
                 if (column !== undefined) {
                     column.notes.forEach(note => {
-                        note.setLayer(layer - 1 as LayerIndex, '0')
+                        note.setLayer(layer - 1 as LayerIndex, false)
                     })
-                    column.notes = column.notes.filter(note => !note.layer.match(/^0+$/g))
+                    column.notes = column.notes.filter(note => !note.layer.isEmpty())
                 }
             })
         }
@@ -207,9 +196,9 @@ export class ComposedSong {
                     if (index === null) {
                         column.addColumnNote(clonedNote)
                     } else {
-                        for (let j = 0; j < EMPTY_LAYER.length; j++) {
+                        for (let j = 0; j < this.instruments.length; j++) {
                             if (clonedNote.isLayerToggled(j as LayerIndex)) {
-                                column.notes[index].setLayer(j as LayerIndex, '1')
+                                column.notes[index].setLayer(j as LayerIndex, true)
                             }
                         }
                     }
@@ -228,8 +217,8 @@ export class ComposedSong {
             copiedColumns = copiedColumns.map(column => {
                 column.notes = column.notes.filter(e => e.isLayerToggled(layer - 1 as LayerIndex))
                 column.notes = column.notes.map(e => {
-                    e.layer = EMPTY_LAYER
-                    e.setLayer(layer - 1 as LayerIndex, '1')
+                    e.clearLayer()
+                    e.setLayer(layer - 1 as LayerIndex, true)
                     return e
                 })
                 return column
@@ -265,9 +254,19 @@ export class ComposedSong {
         })
         return clone
     }
-
+    toMidi = (): Midi => {
+        const song = this.toRecordedSong()
+        const midi = song.toMidi()
+        this.instruments.forEach((ins, i) => {
+            const instrument = INSTRUMENTS_DATA[ins]
+            if (!instrument || !midi.tracks[i]) return
+            midi.tracks[i].instrument.name = instrument.midiName
+        })
+        return midi
+    }
     clone = () => {
         const clone = new ComposedSong(this.name)
+        clone.id = this.id
         clone.data = { ...this.data }
         clone.version = this.version
         clone.bpm = this.bpm
@@ -279,7 +278,6 @@ export class ComposedSong {
         return clone
     }
 }
-
 const LAYERS_MAP = {
     '0000': 0,
     '0010': 2,

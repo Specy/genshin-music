@@ -1,15 +1,17 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, PitchesType, EMPTY_LAYER, TEMPO_CHANGERS, isTwa } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "appConfig"
 import * as workerTimers from 'worker-timers';
-import { Column, RecordedNote } from "./SongClasses";
-import { ComposedSong } from "./ComposedSong";
-import { Song } from "./Song";
-import { ColumnNote } from "./SongClasses";
-import { CombinedLayer, LayerIndex, NoteNameType } from "types/GeneralTypes";
+import { Column, RecordedNote } from "./Songs/SongClasses";
+import { ComposedSong } from "./Songs/ComposedSong";
+import { RecordedSong } from "./Songs/RecordedSong";
+import { ColumnNote } from "./Songs/SongClasses";
+import { NoteNameType } from "types/GeneralTypes";
+import { NoteLayer } from "./Layer";
 
 class FileDownloader {
 	static download(file: string | Blob, name: string, as: string = "text/json"){
 		const a = document.createElement("a")
 		a.style.display = 'none'
+		a.className = 'ignore_click_outside'
 		a.download = name
 		document.body.appendChild(a)
 
@@ -62,7 +64,7 @@ function capitalize(str: string) {
 function getNoteText(
 	noteNameType: NoteNameType,
 	index: number,
-	pitch: PitchesType,
+	pitch: Pitch,
 	layoutLength: keyof typeof LAYOUT_DATA
 ) {
 	try {
@@ -100,14 +102,14 @@ function setIfInTWA() {
 	sessionStorage.setItem('isTwa', JSON.stringify(isInTwa))
 }
 
-function parseSong(song: any): Song | ComposedSong {
+function parseSong(song: any): RecordedSong | ComposedSong {
 	song = Array.isArray(song) ? song[0] : song
 	const type = getSongType(song)
 	if (type === "none") {
 		throw new Error("Error Invalid song")
 	}
 	if (type === "oldSky") {
-		const parsed = Song.fromOldFormat(song)
+		const parsed = RecordedSong.fromOldFormat(song)
 		if (parsed === null) {
 			throw new Error("Error Invalid song")
 		}
@@ -117,11 +119,11 @@ function parseSong(song: any): Song | ComposedSong {
 		throw new Error("Error Invalid song")
 	}
 	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
-		if (song.data?.isComposedVersion) return ComposedSong.deserialize(song).toGenshin()
-		return Song.deserialize(song).toGenshin()
+		if (song.data?.isComposedVersion === true) return ComposedSong.deserialize(song).toGenshin()
+		if (song.data?.isComposedVersion === false) RecordedSong.deserialize(song).toGenshin()
 	}
 	if (type === 'newComposed') return ComposedSong.deserialize(song)
-	if (type === 'newRecorded') return Song.deserialize(song)
+	if (type === 'newRecorded') return RecordedSong.deserialize(song)
 	throw new Error("Error Invalid song")
 }
 
@@ -136,7 +138,7 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 			}
 		} else {
 			//current format
-			if (song.data.isComposedVersion) {
+			if ((song.data.isComposedVersion === true) || song.type === 'composed') {
 				if (typeof song.name !== "string") return "none"
 				if (typeof song.bpm !== "number") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"
@@ -156,7 +158,7 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 				} else {
 					return "none"
 				}
-			} else {
+			} else if((song.data.isComposedVersion === false) || song.type === 'recorded'){
 				if (typeof song.name !== "string") return "none"
 				if (typeof song.bpm !== "number") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"
@@ -177,14 +179,14 @@ function groupByNotes(notes: RecordedNote[], threshold: number) {
 		const row = [notes.shift() as RecordedNote]
 		let amount = 0
 		for (let i = 0; i < notes.length; i++) {
-			if (row[0][1] > notes[i][1] - threshold) amount++
+			if (row[0].time > notes[i].time - threshold) amount++
 		}
 		result.push([...row, ...notes.splice(0, amount)])
 	}
 	return result
 }
 
-function getPitchChanger(pitch: PitchesType) {
+function getPitchChanger(pitch: Pitch) {
 	let index = PITCHES.indexOf(pitch)
 	if (index < 0) index = 0
 	return Number(Math.pow(2, index / 12).toFixed(4))
@@ -204,25 +206,18 @@ function calculateSongLength(columns: Column[], bpm: number, end: number) {
 		current: currentLength
 	}
 }
-const NUMBER_TO_LAYER_MAP = {
-	0: "1000",
-	1: "0100",
-	2: "0010",
-	3: "0001"
-}
-function numberToLayer(number: LayerIndex): CombinedLayer {
-	return NUMBER_TO_LAYER_MAP[number] as CombinedLayer
-}
 
-function mergeLayers(notes: ColumnNote[]): CombinedLayer {
-	const merged = EMPTY_LAYER.split("")
+function mergeLayers(notes: ColumnNote[]) {
+	const merged = new NoteLayer()
 	notes.forEach(note => {
-		note.layer.split("").forEach((e, i) => {
-			if (e === "1") merged[i] = "1"
+		note.layer.toArray().forEach((e, i) => {
+			if (e === 1) merged.set(i, true)
 		})
 	})
-	return merged.join("") as CombinedLayer
+	return merged
 }
+
+
 function groupNotesByIndex(column: Column) {
 	const notes: ColumnNote[][] = []
 	column.notes.forEach(note => {
@@ -253,7 +248,6 @@ export {
 	getSongType,
 	parseSong,
 	groupByNotes,
-	numberToLayer,
 	mergeLayers,
 	groupNotesByIndex,
 	delay,

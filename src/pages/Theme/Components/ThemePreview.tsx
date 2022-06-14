@@ -25,7 +25,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
         }}
     >
         <div className="theme-preview-row">
-            <div className="theme-name">
+            <div className="text-ellipsis">
                 {theme.other.name}
             </div>
             <div>

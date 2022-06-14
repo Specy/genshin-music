@@ -143,12 +143,6 @@
     min-height: 8rem;
 }
 
-.theme-name{
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-}
 .react-colorful{
     border-radius: 0.5rem !important;
     box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);

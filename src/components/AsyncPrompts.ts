@@ -28,7 +28,7 @@ async function asyncPrompt(question: string):Promise<string | null> {
         container.append(text, input, row)
         overlay.append(container)
         document.body.appendChild(overlay)
-
+        overlay.classList.add("ignore_click_outside")
         let disposed = false
         function inputListener() {
             if (disposed) return
@@ -110,7 +110,7 @@ async function asyncConfirm(question: string, cancellable = true): Promise<boole
         container.append(text, row)
         overlay.append(container)
         document.body.appendChild(overlay)
-
+        overlay.classList.add("ignore_click_outside")
         let disposed = false
         function okListener() {
             if (disposed) return

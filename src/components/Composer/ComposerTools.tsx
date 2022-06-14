@@ -1,7 +1,7 @@
 import { AppButton } from "components/AppButton"
 import { HelpTooltip } from "components/HelpTooltip"
 import { hasTooltip, Tooltip } from "components/Tooltip"
-import { useTheme } from "lib/hooks/useTheme"
+import { useTheme } from "lib/Hooks/useTheme"
 import { memo } from "react"
 import { LayerType } from "types/GeneralTypes"
 interface ComposerToolsProps{
@@ -38,7 +38,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     onClick={resetSelection}
                     style={{...themeStyle, marginRight: '0.2rem'}}
                 >
-                    Reset
+                    Reset selection
                 </AppButton>
                 <AppButton onClick={toggleTools} style={themeStyle}>
                     Close
@@ -123,7 +123,7 @@ interface ToolButtonprops{
     disabled: boolean
     onClick: () => void
     active?: boolean
-    style: any
+    style: React.CSSProperties
     children: React.ReactNode
     tooltip?: string
 }

@@ -1,26 +1,27 @@
-import { useTheme } from "lib/hooks/useTheme"
-import { memo } from "react"
+import { useTheme } from "lib/Hooks/useTheme"
 
 interface MenuItemProps<T> {
     className?: string,
-    action?: (data?: T) => void
+    onClick?: (data?: T) => void
     children?: React.ReactNode,
-    data?: T
+    data?: T,
+    current?: string,
+    style?: React.CSSProperties
+    isActive?: boolean
 }
 
-function MenuItem<T>({ className, action, children, data }: MenuItemProps<T>) {
+export function MenuItem<T>({ className = "", onClick, children, data, style, isActive }: MenuItemProps<T>) {
     const [theme] = useTheme()
-    return <div
-        className={className ? `menu-item ${className}` : "menu-item"}
-        style={{ backgroundColor: theme.layer('primary', 0.1).toString() }}
-        onClick={() => action?.(data)}
+    return <button
+        className={`menu-item ${className}`}
+        style={{ 
+            backgroundColor: isActive
+            ? theme.layer('primary', 0.2).toString()
+            : theme.layer('primary', 0).toString(),
+             ...style 
+        }}
+        onClick={() => onClick?.(data)}
     >
         {children}
-    </div>
+    </button>
 }
-export default memo(MenuItem, (prev, next) => {
-    //@ts-ignore
-    if (next.children.key !== null || prev.children.key !== null) return prev.children.key === next.children.key
-    //@ts-ignore
-    return prev.children !== undefined && prev.className === next.className && prev.action === next.action
-}) as typeof MenuItem

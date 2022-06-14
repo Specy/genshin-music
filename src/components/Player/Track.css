@@ -40,6 +40,8 @@
 }
 .slider-current{
 	height: 100%;
+    width: 100%;
+    transform: translateX(-100%);
     transition: all 0.1s linear;
     background-color: var(--accent);
 	left: 0;

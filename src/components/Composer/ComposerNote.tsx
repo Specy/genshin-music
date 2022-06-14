@@ -7,6 +7,7 @@ import { observe } from 'mobx'
 import { NoteImage } from 'types/Keyboard'
 import { NoteData } from 'lib/Instrument'
 import { CombinedLayer, InstrumentName } from 'types/GeneralTypes'
+import { NoteLayer } from 'lib/Layer'
 
 function getTextColor(){
     const noteBg = ThemeProvider.get('note_background')

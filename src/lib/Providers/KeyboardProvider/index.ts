@@ -40,7 +40,7 @@ export class KeyboardProviderClass {
         handler.callback = callback
         if(options) Object.assign(handler, { options })
         this.listeners.push(handler)
-
+        return callback
     }
     unlisten = (callback: KeyboardListenerCallback) => {
         this.listeners = this.listeners.filter(handler => handler.callback !== callback)
@@ -73,13 +73,16 @@ export class KeyboardProviderClass {
         } else {
             this.handlers.set(code, [handler])
         }
+        return callback
     }
     registerLetter = (letter: KeyboardLetter, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) => {
         this.register(`Key${letter}`, callback, options)
+        return callback
     }
     registerNumber = (number: KeyboardNumber, callback: KeyboardListenerCallback, options?: KeyboardListenerOptions) => {
         const letter = number.toString()
         this.register(`Digit${letter}` as KeyboardNumberCode, callback, options)
+        return callback
     }
     private handleEvent = (e: KeyboardEvent) => {
         if (document.activeElement?.tagName === "INPUT") return

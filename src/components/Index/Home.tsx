@@ -5,9 +5,10 @@ import HomeStore from 'stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
-import { useTheme } from 'lib/hooks/useTheme'
+import { useTheme } from 'lib/Hooks/useTheme'
 import './Home.css'
-import MenuItem from 'components/MenuItem'
+import {MenuItem} from 'components/MenuItem'
+import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -24,12 +25,21 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     const history = useHistory()
     const [theme] = useTheme()
 
+
     useEffect(() => {
         const dispose = history.listen((path) => {
             setCurrentPage(path.pathname.replace('/', ''))
         })
+        KeyboardProvider.register("Escape", () => {
+            if (HomeStore.state.data.visible) {
+                HomeStore.close()
+            }
+        }, {id: "home"})
         setBreakpoint(window.innerWidth > 900)
-        return dispose
+        return () => {
+            dispose()
+            KeyboardProvider.unregisterById("home")
+        }
     }, [history])
 
     useEffect(() => {
@@ -39,7 +49,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         return dispose
     }, [])
     return <div
-        className={homeClass}
+        className={`${homeClass} ignore_click_outside`}
         style={{
             ...!data.visible ? { display: 'none' } : {},
             backgroundColor: theme.get('background').fade(0.1).toString()
@@ -47,7 +57,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     >
         <MenuItem
             className='close-home'
-            action={HomeStore.close}
+            onClick={HomeStore.close}
         >
             <FaTimes size={25} />
         </MenuItem>
@@ -93,7 +103,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContntElement
                 icon={<FaCompactDisc />}
                 title='Composer'
-                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
+                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                 background={`./manifestData/composer.png`}
                 href='Composer'
                 current={currentPage === 'Composer'}
@@ -103,7 +113,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <MainContntElement
                 icon={<BsMusicPlayerFill />}
                 title='Player'
-                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15) }}
+                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                 background={`./manifestData/main.png`}
                 href=''
                 current={currentPage === '' || currentPage === 'Player'}
@@ -165,7 +175,7 @@ interface MainContntElementProps {
     background: string,
     current: boolean,
     href: string,
-    style?: any
+    style?: React.CSSProperties
 
 }
 function MainContntElement({ title, icon, children, background, current, href, style = {} }: MainContntElementProps) {

@@ -33,11 +33,11 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	transition: all 0.1s;
+	transition: transform 0.1s;
 	cursor: pointer;
 	z-index: 10;
 	touch-action: none;
-    transform: translate3d(0, 0, 0);
+    will-change: background-color, border-color, transform;
 }
 .note-sky,
 .note-composer-sky {
@@ -91,7 +91,7 @@
 	height: 100% !important;
 }
 .click-event {
-	transform: translate3d(0, 0, 0) scale(0.9);
+	transform: scale(0.9);
 	background-color: var(--clicked-note);
 	border-color: var(--accent);
 }

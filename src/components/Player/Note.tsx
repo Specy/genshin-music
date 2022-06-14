@@ -6,8 +6,7 @@ import { observe } from 'mobx'
 import { ThemeProvider } from 'stores/ThemeStore'
 import type { NoteData } from 'lib/Instrument'
 import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
-import type { ApproachingNote } from 'lib/SongClasses'
-import type { NoteImage } from 'types/Keyboard'
+import type { ApproachingNote } from 'lib/Songs/SongClasses'
 
 function getTextColor(){
     const noteBg = ThemeProvider.get('note_background')
@@ -23,7 +22,8 @@ function getTextColor(){
 }
 
 interface NoteProps{
-    note: NoteData,
+    note: NoteData
+    renderId: number
     data: {
         approachRate: number
         instrument: InstrumentName
@@ -33,12 +33,10 @@ interface NoteProps{
     outgoingAnimation: {
         key: number
     }[]
-    fadeTime: number
-    noteImage: NoteImage
     noteText: string
     handleClick: (note: NoteData) => void
 }
-function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick, noteImage, noteText, data }: NoteProps) {
+function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText, data }: NoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
         const dispose = observe(ThemeProvider.state.data, () => {
@@ -48,7 +46,7 @@ function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick
     }, [])
     const { approachRate, instrument } = data
     const animation = {
-        transition: `background-color ${fadeTime}ms  ${fadeTime === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
+        transition: `background-color ${note.data.delay}ms  ${note.data.delay === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
     const className = parseClass(note.status)
     const clickColor = INSTRUMENTS_DATA[instrument]?.clickColor
@@ -82,7 +80,7 @@ function Note({ note, approachingNotes, outgoingAnimation, fadeTime, handleClick
             }}
         >
             <SvgNote
-                name={noteImage}
+                name={note.noteImage}
                 color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
             />
 
@@ -146,7 +144,6 @@ function parseClass(status: NoteStatus) {
 }
 
 export default memo(Note, (p, n) => {
-    return p.note.status === n.note.status && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
-        && p.noteText === n.noteText && p.fadeTime === n.fadeTime && p.handleClick === n.handleClick && p.noteImage === n.noteImage
-        && p.noteText === n.noteText && p.outgoingAnimation === n.outgoingAnimation && p.approachingNotes === n.approachingNotes
+    return p.renderId === n.renderId && p.note === n.note && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
+        && p.handleClick === n.handleClick && p.noteText === n.noteText && p.outgoingAnimation === n.outgoingAnimation && p.approachingNotes === n.approachingNotes
 }) as typeof Note

@@ -33,24 +33,40 @@ async function deleteAssets() {
 
 async function execute() {
     const toBuild = chosenApp === "All" ? ['Sky', 'Genshin'] : [chosenApp]
-    for (const app of toBuild) {
-        console.log(clc.bold.yellow(`Building ${app}...`))
-        await deleteAssets()
-        await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
-        let result = ''
-        if (process.platform === 'win32') {
-            console.log(clc.italic("Building on windows"))
-            result = execSync(
-                `set REACT_APP_NAME=${app}&& set REACT_APP_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`)
-        } else {
-            console.log(clc.italic("Building on Linux"))
-            result = execSync(
-                `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_APP_SW_VERSION=${SW_VERSION} yarn build`)
+    try{
+        for (const app of toBuild) {
+            console.log(clc.bold.yellow(`Building ${app}...`))
+            await deleteAssets()
+            await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
+            let result = ''
+            if (process.platform === 'win32') {
+                console.log(clc.italic("Building on windows"))
+                result = execSync(
+                    `set REACT_APP_NAME=${app}&& set REACT_APP_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`)
+            } else {
+                console.log(clc.italic("Building on Linux"))
+                result = execSync(
+                    `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_APP_SW_VERSION=${SW_VERSION} yarn build`)
+            }
+            console.log(clc.green(`${app} build complete \n`))
+            console.log(result.toString())
         }
-        console.log(clc.green(`${app} build complete \n`))
-        console.log(result.toString())
+        console.log(clc.bold.green("Build complete \n"))
+    }catch(e){
+        console.log("ERROR:")
+        process.stdout.write(e.toString())
+        const stderr = e.stderr
+        if (stderr){
+            console.log("STD ERR:")
+            process.stdout.write(stderr.toString())
+        }
+        const stdout = e.stdout
+        if(stdout){
+            console.log("STD OUT:")
+            process.stdout.write(stdout.toString())
+        }
+        process.exit(1)
     }
-    console.log(clc.bold.green("Build complete \n"))
 }
 
 execute()

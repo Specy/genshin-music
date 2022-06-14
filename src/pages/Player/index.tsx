@@ -1,17 +1,16 @@
 import { Component } from 'react';
 import Keyboard from "components/Player/Keyboard"
 import Menu from "components/Player/Menu"
-import { DB } from 'Database';
-import { SongStore } from 'stores/SongStore'
+import { PlayerStore } from 'stores/PlayerStore'
 import { parseSong } from "lib/Tools"
-import { Song } from 'lib/Song';
-import { ComposedSong } from 'lib/ComposedSong';
-import { Recording } from 'lib/SongClasses';
-import { MainPageSettings, MainPageSettingsDataType, MainPageSettingsType } from "lib/BaseSettings"
+import { RecordedSong } from 'lib/Songs/RecordedSong';
+import { ComposedSong } from 'lib/Songs/ComposedSong';
+import { Recording } from 'lib/Songs/SongClasses';
+import { MainPageSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
-import { APP_NAME, PitchesType } from "appConfig"
+import { Pitch } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import LoggerStore from 'stores/LoggerStore';
@@ -21,12 +20,11 @@ import { AppButton } from 'components/AppButton';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { BodyDropper, DroppedFile } from 'components/BodyDropper';
-import { SerializedSongType } from 'types/SongTypes';
-import { hasTooltip, Tooltip } from 'components/Tooltip';
-
+import { settingsService } from 'lib/Services/SettingsService';
+import { SerializedSong } from 'lib/Songs/Song';
+import { songsStore } from 'stores/SongsStore';
 
 interface PlayerState {
-	songs: SerializedSongType[]
 	settings: MainPageSettingsDataType
 	instrument: Instrument
 	isLoadingInstrument: boolean
@@ -39,16 +37,16 @@ class Player extends Component<any, PlayerState>{
 	state: PlayerState
 	recording: Recording
 	mounted: boolean
+	disposeSongsObserver!: () => void
 	constructor(props: any) {
 		super(props)
 		this.recording = new Recording()
-		const settings = this.getSettings()
+		const settings = settingsService.getPlayerSettings()
 		this.state = {
 			instrument: new Instrument(),
 			isLoadingInstrument: true,
 			isRecording: false,
 			isRecordingAudio: false,
-			songs: [],
 			settings: settings,
 			hasSong: false
 		}
@@ -62,14 +60,15 @@ class Player extends Component<any, PlayerState>{
 	}
 	componentDidMount() {
 		this.mounted = true
-		this.syncSongs()
+
 		this.init()
 	}
 	componentWillUnmount() {
 		KeyboardProvider.unregisterById('player')
-		SongStore.reset()
+		PlayerStore.reset()
 		AudioProvider.clear()
 		this.state.instrument.delete()
+		this.disposeSongsObserver?.()
 		this.mounted = false
 	}
 	registerKeyboardListeners = () => {
@@ -77,17 +76,17 @@ class Player extends Component<any, PlayerState>{
 	}
 	componentDidCatch() {
 		LoggerStore.warn("There was an error with the song! Restoring default...")
-		SongStore.reset()
+		PlayerStore.reset()
 	}
 
 	setHasSong = (data: boolean) => {
 		this.setState({ hasSong: data })
 	}
 
-	handleDrop = async (files: DroppedFile<SerializedSongType>[]) => {
+	handleDrop = async (files: DroppedFile<SerializedSong>[]) => {
 		for (const file of files) {
 			try {
-				const parsed = (Array.isArray(file) ? file.data : [file.data]) as SerializedSongType[]
+				const parsed = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
 				for (const song of parsed) {
 					await this.addSong(parseSong(song))
 				}
@@ -107,23 +106,6 @@ class Player extends Component<any, PlayerState>{
 			this.state.instrument.changeVolume(obj.value)
 		}
 		this.setState({ settings }, this.updateSettings)
-	}
-
-	getSettings = () => {
-		const json = localStorage.getItem(APP_NAME + "_Player_Settings")
-		try {
-			const storedSettings = JSON.parse(json || 'null') as MainPageSettingsType | null
-			if (storedSettings) {
-				if (storedSettings.other?.settingVersion !== MainPageSettings.other.settingVersion) {
-					this.updateSettings(MainPageSettings.data)
-					return MainPageSettings.data
-				}
-				return storedSettings.data
-			}
-			return MainPageSettings.data
-		} catch (e) {
-			return MainPageSettings.data
-		}
 	}
 
 	loadInstrument = async (name: InstrumentName) => {
@@ -148,16 +130,11 @@ class Player extends Component<any, PlayerState>{
 		const { settings } = state
 		if (note === undefined) return
 		if (state.isRecording) this.handleRecording(note)
-		this.state.instrument.play(note.index, settings.pitch.value as PitchesType)
+		this.state.instrument.play(note.index, settings.pitch.value as Pitch)
 	}
 
 	updateSettings = (override?: MainPageSettingsDataType) => {
-		//TODO make settings a global state and wrap it into a class to update it
-		const state = {
-			other: MainPageSettings.other,
-			data: override !== undefined ? override : this.state.settings
-		}
-		localStorage.setItem(APP_NAME + "_Player_Settings", JSON.stringify(state))
+		settingsService.updatePlayerSettings(override !== undefined ? override : this.state.settings)
 	}
 
 	handleSettingChange = (setting: SettingUpdate) => {
@@ -176,27 +153,10 @@ class Player extends Component<any, PlayerState>{
 		}, this.updateSettings)
 	}
 
-	syncSongs = async () => {
+	addSong = async (song: RecordedSong | ComposedSong) => {
 		try {
-			const songs = await DB.getSongs()
-			this.setState({ songs })
-		} catch (e) {
-			console.error(e)
-			LoggerStore.warn('There was an error syncing the songs')
-		}
-
-	}
-	songExists = async (name: string) => {
-		return await DB.existsSong({ name: name })
-	}
-
-	addSong = async (song: Song | ComposedSong) => {
-		try {
-			if (await this.songExists(song.name)) {
-				return LoggerStore.warn("A song with this name already exists! \n" + song.name)
-			}
-			await DB.addSong(song.serialize())
-			this.syncSongs()
+			const id = await songsStore.addSong(song)
+			song.id = id
 			LoggerStore.success(`Song added to the ${song.isComposed ? "Composed" : "Recorded"} tab!`, 4000)
 		} catch (e) {
 			console.error(e)
@@ -204,50 +164,34 @@ class Player extends Component<any, PlayerState>{
 		}
 	}
 
-	removeSong = async (name: string) => {
+	removeSong = async (name: string, id: string) => {
 		const result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
 		if (!this.mounted) return
 		if (result) {
-			await DB.removeSong({ name: name })
-			this.syncSongs()
+			await songsStore.removeSong(id)
+			Analytics.userSongs('delete', { page: 'player' })
 		}
-		Analytics.userSongs('delete', { name: name, page: 'player' })
 	}
-
+	renameSong = async (newName: string, id: string) => {
+        await songsStore.renameSong(id, newName)
+	}
 	handleRecording = (note: NoteData) => {
 		if (this.state.isRecording) {
 			this.recording.addNote(note.index)
 		}
 	}
 
-	askForSongName = (): Promise<string | null> => {
-		return new Promise(async resolve => {
-			let promptString = "Write song name, press cancel to ignore"
-			while (true) {
-				const songName = await asyncPrompt(promptString)
-				if (songName === null) return resolve(null)
-				if (songName !== "") {
-					if (await this.songExists(songName)) {
-						promptString = "This song already exists: " + songName
-					} else {
-						return resolve(songName)
-					}
-				} else {
-					promptString = "Write song name, press cancel to ignore"
-				}
-			}
-		})
-	}
-
 	toggleRecord = async (override?: boolean | null) => {
 		if (typeof override !== "boolean") override = null
 		const newState = override !== null ? override : !this.state.isRecording
 		if (!newState && this.recording.notes.length > 0) { //if there was a song recording
-			const songName = await this.askForSongName()
+			const { instrument, settings } = this.state
+			const songName = await asyncPrompt("Write song name, press cancel to ignore")
 			if (!this.mounted) return
 			if (songName !== null) {
-				const song = new Song(songName, this.recording.notes)
-				song.pitch = this.state.settings.pitch.value as PitchesType
+				const song = new RecordedSong(songName, this.recording.notes)
+				song.instrument = instrument.name
+				song.pitch = settings.pitch.value as Pitch
 				this.addSong(song)
 				Analytics.userSongs('record', { name: songName, page: 'player' })
 			}
@@ -261,23 +205,24 @@ class Player extends Component<any, PlayerState>{
 		if (!this.mounted) return
 		if (typeof override !== "boolean") override = null
 		const newState = override !== null ? override : !this.state.isRecordingAudio
+		this.setState({ isRecordingAudio: newState })
 		if (newState) {
 			AudioProvider.startRecording()
 		} else {
 			const recording = await AudioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
+			console.log(recording)
 			if (!this.mounted || !recording) return
 			if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
 		}
-		this.setState({ isRecordingAudio: newState })
 	}
 	render() {
-		const { state, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this
-		const { settings, isLoadingInstrument, songs, instrument, hasSong, isRecordingAudio, isRecording } = state
+		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this
+		const { settings, isLoadingInstrument, instrument, hasSong, isRecordingAudio, isRecording } = state
 		return <>
 			<Menu
-				functions={{ addSong, removeSong, handleSettingChange, changeVolume }}
-				data={{ songs, settings }}
+				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
+				data={{ settings }}
 			/>
 			<div className="right-panel">
 				<div className="upper-right">
@@ -297,7 +242,7 @@ class Player extends Component<any, PlayerState>{
 						data={{
 							isLoading: isLoadingInstrument,
 							keyboard: instrument,
-							pitch: settings.pitch.value as PitchesType,
+							pitch: settings.pitch.value as Pitch,
 							keyboardSize: settings.keyboardSize.value,
 							noteNameType: settings.noteNameType.value as NoteNameType,
 							hasSong,
@@ -309,13 +254,13 @@ class Player extends Component<any, PlayerState>{
 					/>
 				</div>
 			</div>
-			<BodyDropper<SerializedSongType>
+			<BodyDropper<SerializedSong>
 				as='json'
 				onDrop={handleDrop}
 				onError={dropError}
 				showDropArea={true}
 			/>
-			{SongStore.eventType !== 'approaching' &&
+			{PlayerStore.eventType !== 'approaching' &&
 				<div className='record-button'>
 					<AppButton
 						toggled={isRecordingAudio}

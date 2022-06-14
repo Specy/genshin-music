@@ -1,19 +1,20 @@
 import ComposerNote from "components/Composer/ComposerNote"
 import { getNoteText } from 'lib/Tools'
-import { Column } from "lib/SongClasses"
+import { Column } from "lib/Songs/SongClasses"
 import MultiSwitch from "components/Composer/MultiSwitch"
-import { LAYOUT_IMAGES, LAYERS_INDEXES, PitchesType, TEMPO_CHANGERS, EMPTY_LAYER } from "appConfig"
+import { LAYOUT_IMAGES, LAYERS_INDEXES, Pitch, TEMPO_CHANGERS } from "appConfig"
 import { ThemeProvider } from "stores/ThemeStore"
 import Instrument, { NoteData } from "lib/Instrument"
 import { LayerType, NoteNameType } from "types/GeneralTypes"
 import { NoteImage } from "types/Keyboard"
+import { NoteLayer } from "lib/Layer"
 
 interface ComposerKeyboardProps {
     data: {
         keyboard: Instrument,
         currentColumn: Column,
         layer: LayerType,
-        pitch: PitchesType,
+        pitch: Pitch,
         isPlaying: boolean,
         noteNameType: NoteNameType
     },
@@ -41,7 +42,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     const noteText = getNoteText(noteNameType, note.index, pitch, keyboard.layout.length as 8 | 15 | 21)
                     return <ComposerNote
                         key={note.index}
-                        layer={index >= 0 ? currentColumn.notes[index].layer : EMPTY_LAYER}
+                        layer={(index >= 0 ? currentColumn.notes[index].layer : NoteLayer.EMPTY_LAYER).legacyString}
                         data={note}
                         noteText={noteText}
                         instrument={keyboard.name}

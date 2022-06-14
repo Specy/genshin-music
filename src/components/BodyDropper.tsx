@@ -13,20 +13,29 @@ interface BodyDropperProps<T> {
     showDropArea?: boolean
     dropAreaStyle?: any
 }
+
+function hasFiles(event: DragEvent) {
+    return event?.dataTransfer?.types.includes('Files')
+}
+
+
 function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropArea = false ,dropAreaStyle = {}}: BodyDropperProps<T>) {
     const [isHovering, setIsHovering] = useState(false)
     const resetDrag = useCallback(() => {
+
         setIsHovering(false)
         onHoverChange?.(false)
     }, [onHoverChange])
 
     const handleDragOver = useCallback((e: DragEvent) => {
         e.preventDefault()
+        if(!hasFiles(e)) return
         setIsHovering(true)
         onHoverChange?.(true)
     }, [onHoverChange])
 
     const handleDrag = useCallback((e: DragEvent) => {
+        if(!hasFiles(e)) return
         e.preventDefault()
         setIsHovering(true)
         onHoverChange?.(true)
