@@ -304,18 +304,6 @@ canvas{
 .tempo-changers-wrapper button:focus{
     filter: brightness(1.3);
 }
-.layer-button{
-    border: none;
-    width: 8vw;
-    max-width: 4rem;
-    font-size: 1rem;
-    padding: 0.4rem 0;
-    flex: 1;
-    background-color: var(--primary);
-    color: var(--primary-text);
-    border-radius: 0.2rem;
-    cursor: pointer;
-}
 .layer-buttons-wrapper{
     display: flex;
     flex-direction: column;
@@ -323,6 +311,26 @@ canvas{
     margin-right: 2vw;
     justify-content: center;
 }
+.instruments-button-wrapper{
+    overflow-y: auto;
+    flex: 1;
+    background-color: var(--primary);
+    border-radius: 0.3rem;
+    padding: 0.4rem;
+    margin-bottom: 0.2rem;
+}
+.instrument-button{
+    height: 5rem;
+    border-radius: 0.3rem;
+    border-bottom: solid 1px var(--secondary);
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+
+}
+
+
+
+
 
 .floating-midi{
     position: absolute;

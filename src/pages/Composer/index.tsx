@@ -1,7 +1,7 @@
 import { Component } from 'react'
-import { FaPlay, FaPlus, FaPause, FaBars, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
+import { FaPlay, FaPlus, FaPause, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
 
-import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, Pitch, TempoChanger } from "appConfig"
+import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -16,7 +16,7 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
 import { delay, formatMs, calculateSongLength, parseSong } from "lib/Tools"
-import { ComposedSong, SerializedComposedSong } from 'lib/Songs/ComposedSong';
+import { ComposedSong, ComposedSongInstrument, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
 import { Column } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 
@@ -25,9 +25,8 @@ import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import LoggerStore from 'stores/LoggerStore';
 import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
-import { SongInstruments } from 'types/SongTypes';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { ComposerInstruments, InstrumentName, LayerIndex, LayerType, NoteNameType, Pages } from 'types/GeneralTypes';
+import { NoteNameType, Pages } from 'types/GeneralTypes';
 import "./Composer.css"
 import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
@@ -38,12 +37,14 @@ import { CanvasTool } from 'components/Composer/CanvasTool';
 import { settingsService } from 'lib/Services/SettingsService';
 import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
+import { InstrumentControls } from 'components/Composer/InstrumentControls';
+import { AppButton } from 'components/AppButton';
 
 interface ComposerState {
-    layers: ComposerInstruments
+    layers: Instrument[]
     song: ComposedSong
     settings: ComposerSettingsDataType
-    layer: LayerType
+    layer: number
     selectedColumns: number[]
     copiedColumns: Column[]
     isToolsVisible: boolean
@@ -61,11 +62,12 @@ class Composer extends Component<any, ComposerState>{
         super(props)
         const settings = settingsService.getComposerSettings()
         this.state = {
-            layers: [new Instrument(), new Instrument(), new Instrument(), new Instrument()],
+            layers: [new Instrument(INSTRUMENTS[1])], //TODO not sure if this is the best idea
+            //it doesnt change the instrument because it is the same as the one in the base song
             isPlaying: false,
-            song: new ComposedSong("Untitled"),
+            song: new ComposedSong("Untitled", [INSTRUMENTS[0]]),
             settings: settings,
-            layer: 1,
+            layer: 0,
             selectedColumns: [],
             copiedColumns: [],
             isToolsVisible: false,
@@ -73,12 +75,6 @@ class Composer extends Component<any, ComposerState>{
             isRecordingAudio: false,
         }
         this.state.song.bpm = settings.bpm.value
-        this.state.song.instruments = [
-            settings.layer1.value,
-            settings.layer2.value,
-            settings.layer3.value,
-            settings.layer4.value
-        ]
         this.mounted = false
         this.changes = 0
         this.broadcastChannel = null
@@ -86,13 +82,12 @@ class Composer extends Component<any, ComposerState>{
     }
 
     get currentInstrument() {
-        return this.state.layers[this.state.layer - 1]
+        return this.state.layers[this.state.layer]
     }
 
     componentDidMount() {
         this.mounted = true
         this.init()
-
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : null
         if (this.broadcastChannel) {
             this.broadcastChannel.addEventListener('message', (event) => {
@@ -130,14 +125,7 @@ class Composer extends Component<any, ComposerState>{
 
     init = async () => {
         const { settings } = this.state
-        //TODO if new layer is added    
-        const promises = [
-            this.loadInstrument(settings.layer1.value, 1),
-            this.loadInstrument(settings.layer2.value, 2),
-            this.loadInstrument(settings.layer3.value, 3),
-            this.loadInstrument(settings.layer4.value, 4)
-        ]
-        if (this.mounted) await Promise.all(promises)
+        await this.syncInstruments()
         if (this.mounted) await AudioProvider.init()
         AudioProvider.setReverb(settings.caveMode.value)
         MIDIProvider.addListener(this.handleMidi)
@@ -161,12 +149,12 @@ class Composer extends Component<any, ComposerState>{
             KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger), { id })
         })
         KeyboardProvider.register('ArrowUp', () => {
-            const nextLayer = this.state.layer - 1
-            if (nextLayer > 0) this.changeLayer(nextLayer as LayerType)
+            const previousLayer = this.state.layer - 1
+            if (previousLayer >= 0) this.changeLayer(previousLayer)
         }, { id })
         KeyboardProvider.register('ArrowDown', () => {
             const nextLayer = this.state.layer + 1
-            if (nextLayer < this.state.layers.length + 1) this.changeLayer(nextLayer as LayerType)
+            if (nextLayer < this.state.layers.length) this.changeLayer(nextLayer)
         }, { id })
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
@@ -193,6 +181,7 @@ class Composer extends Component<any, ComposerState>{
         event.preventDefault()
         event.returnValue = ''
     }
+
     handleAutoSave = () => {
         this.changes++
         if (this.changes > 5 && this.state.settings.autosave.value) {
@@ -222,7 +211,7 @@ class Composer extends Component<any, ComposerState>{
                 case 'change_layer': {
                     let nextLayer = layer + 1
                     if (nextLayer > LAYERS_INDEXES.length) nextLayer = 1
-                    this.changeLayer(nextLayer as LayerType)
+                    this.changeLayer(nextLayer)
                     break;
                 }
                 default: break;
@@ -262,26 +251,58 @@ class Composer extends Component<any, ComposerState>{
             //@ts-ignore
             song[key] = data.value
         }
-        //TODO if new layer is added
-        if (key === "layer1") this.loadInstrument(data.value as InstrumentName, 1)
-        if (key === "layer2") this.loadInstrument(data.value as InstrumentName, 2)
-        if (key === "layer3") this.loadInstrument(data.value as InstrumentName, 3)
-        if (key === "layer4") this.loadInstrument(data.value as InstrumentName, 4)
         if (key === "caveMode") AudioProvider.setReverb(data.value as boolean)
         this.setState({ settings: { ...settings }, song }, this.updateSettings)
     }
-    loadInstrument = async (name: InstrumentName, layer: LayerType) => {
-        if (!this.mounted) return
-        const { settings, layers } = this.state
-        const instrument = new Instrument(name)
-        AudioProvider.disconnect(layers[layer - 1].endNode)
-        layers[layer - 1].delete()
-        layers[layer - 1] = instrument
-        await instrument.load()
-        AudioProvider.connect(instrument.endNode)
-        if (!this.mounted) return
-        instrument.changeVolume(settings[`layer${layer}`]?.volume)
-        this.setState({ layers })
+
+    addInstrument = () => {
+        const { song } = this.state
+        song.addInstrument(INSTRUMENTS[0])
+        this.syncInstruments(song)
+    }
+
+    syncInstruments = async (song?:ComposedSong) => {
+        const { layers } = this.state
+        if (!song) song = this.state.song
+        //remove excess instruments
+        const extraInstruments = layers.splice(song.instruments.length)
+        extraInstruments.forEach(ins => {
+            AudioProvider.disconnect(ins.endNode)
+            ins.delete()
+        })
+        const promises = song.instruments.map(async (ins, i) => {
+            if(layers[i] === undefined){
+                //If it doesn't have a layer, create one
+                const instrument = new Instrument(ins.name)
+                layers[i] = instrument
+                await instrument.load()
+                if (!this.mounted) return instrument.delete()
+                AudioProvider.connect(instrument.endNode)
+                instrument.changeVolume(ins.volume)
+                return instrument
+            }
+            if(layers[i].name === ins.name){
+                //if it has a layer and it's the same, just set the volume
+                layers[i].changeVolume(ins.volume)
+                return layers[i]
+            } else {
+                //if it has a layer and it's different, delete the layer and create a new one
+                const old = layers[i]
+                AudioProvider.disconnect(old.endNode)
+                old.delete()
+                const instrument = new Instrument(ins.name)
+                layers[i] = instrument
+                await instrument.load()
+                if (!this.mounted) return instrument.delete()
+                AudioProvider.connect(instrument.endNode)
+                instrument.changeVolume(ins.volume)
+                return instrument
+            }
+        })
+        const instruments = await Promise.all(promises) as Instrument[]
+        if(!this.mounted) return
+        console.log(instruments)
+        this.setState({ layers: instruments })
     }
     changeVolume = (obj: SettingVolumeUpdate) => {
         const settings = this.state.settings
@@ -321,19 +342,18 @@ class Composer extends Component<any, ComposerState>{
         const { layers, song, layer } = this.state
         const column = song.selectedColumn
         const index = column.getNoteIndex(note.index)
-        const layerIndex = layer - 1 as LayerIndex
         if (index === null) { //if it doesn't exist, create a new one
             const columnNote = column.addNote(note.index)
-            columnNote.setLayer(layerIndex, true)
+            columnNote.setLayer(layer, true)
         } else { //if it exists, toggle the current layer and if it's 000 delete it
             const currentNote = column.notes[index]
-            currentNote.toggleLayer(layerIndex)
+            currentNote.toggleLayer(layer)
             if (currentNote.layer.isEmpty()) column.removeAtIndex(index)
         }
         this.setState({ song })
         this.handleAutoSave()
         this.playSound(
-            layers[layerIndex],
+            layers[layer],
             note.index
         )
     }
@@ -362,13 +382,8 @@ class Composer extends Component<any, ComposerState>{
             return 
         }
         return new Promise(async resolve => {
-            const { settings } = this.state
             //if it exists, update it
             if (await songsStore.existsSong(song)) {
-                song.instruments[0] = settings.layer1.value
-                song.instruments[1] = settings.layer2.value
-                song.instruments[2] = settings.layer3.value
-                song.instruments[3] = settings.layer4.value
                 await songsStore.updateSong(song)
                 console.log("song saved:", song.name)
                 this.changes = 0
@@ -403,7 +418,7 @@ class Composer extends Component<any, ComposerState>{
         }
         const name = await asyncPrompt("Write song name, press cancel to ignore")
         if (name === null) return
-        const song = new ComposedSong(name)
+        const song = new ComposedSong(name, [INSTRUMENTS[0]])
         this.changes = 0
         if (!this.mounted) return
         const added = await this.addSong(song) as ComposedSong
@@ -423,7 +438,7 @@ class Composer extends Component<any, ComposerState>{
                 parsed.name += " - Composed"
             }
             if(song.type === 'composed'){
-                parsed = ComposedSong.deserialize(song as SerializedComposedSong)
+                parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong)
             }
         }
         if(!parsed) return
@@ -442,23 +457,13 @@ class Composer extends Component<any, ComposerState>{
         settings.bpm = { ...settings.bpm, value: song.bpm }
         settings.pitch = { ...settings.pitch, value: song.pitch }
         if (!this.mounted) return
-        const layers = parsed.instruments
-        layers.forEach((layer, i) => {
-            //@ts-ignore
-            if (settings[`layer${i + 1}`].value !== layer) {
-                //@ts-ignore
-                this.loadInstrument(parsed.instruments[i], i + 1)
-                //@ts-ignore
-                settings[`layer${i + 1}`] = { ...settings[`layer${i + 1}`], value: layer }
-            }
-        })
         this.changes = 0
         console.log("song loaded")
         this.setState({
             song: parsed,
             settings: { ...settings },
             selectedColumns: []
-        })
+        }, () => this.syncInstruments())
     }
 
     addColumns = (amount = 1, position: number | 'end' = "end"): Promise<void> => {
@@ -503,8 +508,6 @@ class Composer extends Component<any, ComposerState>{
             })
         })
     }
-
-
     handleTick = () => {
         const newIndex = this.state.song.selected + 1
         if (this.state.isPlaying && newIndex > this.state.song.columns.length - 1) {
@@ -512,7 +515,6 @@ class Composer extends Component<any, ComposerState>{
         }
         this.selectColumn(newIndex)
     }
-
     toggleBreakpoint = (override?: number) => {
         const { song } = this.state
         song.toggleBreakpoint(override)
@@ -556,11 +558,11 @@ class Composer extends Component<any, ComposerState>{
         if (ignoreAudio) return
         song.selectedColumn.notes.forEach(note => {
             layers.forEach((layer, i) => {
-                if (note.isLayerToggled(i as LayerIndex)) this.playSound(layer, note.index)
+                if (note.isLayerToggled(i)) this.playSound(layer, note.index)
             })
         })
     }
-    changeLayer = (layer: LayerType) => {
+    changeLayer = (layer:number) => {
         this.setState({ layer })
     }
     toggleTools = () => {
@@ -573,7 +575,7 @@ class Composer extends Component<any, ComposerState>{
     resetSelection = () => {
         this.setState({ copiedColumns: [], selectedColumns: [this.state.song.selected] })
     }
-    copyColumns = (layer: LayerType | 'all') => {
+    copyColumns = (layer: number | 'all') => {
         const { selectedColumns, song } = this.state
         const copiedColumns = song.copyColumns(selectedColumns, layer)
         this.changes++
@@ -585,7 +587,7 @@ class Composer extends Component<any, ComposerState>{
         this.changes++
         this.setState({ song })
     }
-    eraseColumns = (layer: LayerType | 'all') => {
+    eraseColumns = (layer: number | 'all') => {
         const { song, selectedColumns } = this.state
         song.eraseColumns(selectedColumns, layer)
         this.changes++
@@ -614,8 +616,8 @@ class Composer extends Component<any, ComposerState>{
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers } = state
         const {
             loadSong, createNewSong, changePage, updateThisSong, handleSettingChange, changeVolume, startRecordingAudio, handleClick,
-            toggleBreakpoint, handleTempoChanger, changeLayer, copyColumns, pasteColumns, eraseColumns, resetSelection, deleteColumns, changeMidiVisibility,
-            selectColumn, toggleTools, changePitch, handleDrop, handleDropError, renameSong
+            toggleBreakpoint, handleTempoChanger, copyColumns, pasteColumns, eraseColumns, resetSelection, deleteColumns, changeMidiVisibility,
+            selectColumn, toggleTools, changePitch, handleDrop, handleDropError, renameSong, addInstrument, changeLayer
         } = this
 
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
@@ -624,7 +626,7 @@ class Composer extends Component<any, ComposerState>{
                 <MidiParser
                     functions={{ loadSong, changeMidiVisibility, changePitch }}
                     data={{
-                        instruments: layers.map(layer => layer.name) as SongInstruments,
+                        instruments: layers.map(layer => layer.name),
                         selectedColumn: song.selected,
                     }}
                 />
@@ -640,36 +642,37 @@ class Composer extends Component<any, ComposerState>{
             <div className="right-panel-composer">
                 <div className="column fill-x">
                     <div className="top-panel-composer">
-                        <div className="buttons-composer-wrapper">
-                            <CanvasTool onClick={() => this.selectColumn(song.selected + 1)}>
-                                <Memoized>
-                                    <FaChevronRight size={16}/>
-                                </Memoized>
-                            </CanvasTool>
-                            <CanvasTool  onClick={() => this.selectColumn(song.selected - 1)}>
-                                <Memoized>
-                                    <FaChevronLeft size={16}/>
-                                </Memoized>
-                            </CanvasTool>
-
-                            <CanvasTool onClick={() => {
-                                this.togglePlay()
-                                if (settings.syncTabs.value) {
-                                    this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
-                                }
-                            }}>
+                        <div className="column" style={{ margin: '0 0.2rem'}}>
+                            <InstrumentControls 
+                                instruments={song.instruments}
+                                selected={layer}
+                                onLayerSelect={changeLayer}
+                                onInstrumentAdd={addInstrument}
+                                onInstrumentChange={() => {}}
+                                onInstrumentDelete={() => {}}
+                            />
+                            <AppButton 
+                                style={{height: '4rem', borderRadius: '0.3rem'}}
+                                onClick={() => {
+                                    this.togglePlay()
+                                    if (settings.syncTabs.value) {
+                                        this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
+                                    }
+                                }}
+                            >
                                 <Memoized>
                                     {this.state.isPlaying
-                                        ? <FaPause key='pause' size={16}/>
-                                        : <FaPlay key='play' size={16}/>
+                                        ? <FaPause key='pause' size={16} color='var(--icon-color)'/>
+                                        : <FaPlay key='play' size={16} color='var(--icon-color)'/>
                                     }
                                 </Memoized>
-                            </CanvasTool>
+                            </AppButton>
                         </div>
                         <ComposerCanvas
                             key={settings.columnsPerCanvas.value}
                             functions={{ selectColumn, toggleBreakpoint }}
                             data={{
+                                currentLayer: layer,
                                 settings, selectedColumns,
                                 columns: song.columns,
                                 selected: song.selected,
@@ -704,9 +707,9 @@ class Composer extends Component<any, ComposerState>{
                     </div>
                 </div>
                 <ComposerKeyboard
-                    functions={{ handleClick, handleTempoChanger, changeLayer }}
+                    functions={{ handleClick, handleTempoChanger }}
                     data={{
-                        isPlaying, layer,
+                        isPlaying,
                         keyboard: layers[0],
                         currentColumn: song.selectedColumn,
                         pitch: settings.pitch.value as Pitch,

@@ -10,13 +10,12 @@ import useDebounce from 'lib/Hooks/useDebounce'
 import LoggerStore from 'stores/LoggerStore'
 import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
-import { LayerIndex } from 'types/GeneralTypes'
-import { SongInstruments } from 'types/SongTypes'
+import { InstrumentName } from 'types/GeneralTypes'
 import Switch from 'components/Switch'
 import { NoteLayer } from 'lib/Layer'
 interface MidiImportProps {
     data: {
-        instruments: SongInstruments
+        instruments: InstrumentName[]
         selectedColumn: number
     }
     functions: {
@@ -27,7 +26,7 @@ interface MidiImportProps {
 }
 type CustomTrack = Track & {
     selected: boolean
-    layer: LayerIndex
+    layer: number
     name: string
     numberOfAccidentals: number
     numberOfOutOfRange: number
@@ -171,7 +170,8 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         const song = new ComposedSong("Untitled")
         song.columns = columns
         song.bpm = bpm
-        song.instruments = this.props.data.instruments
+        song.instruments = []
+        this.props.data.instruments.forEach(ins => song.addInstrument(ins))
         song.pitch = pitch
         const lastColumn = this.props.data.selectedColumn
         song.selected = lastColumn < song.columns.length ? lastColumn : 0
@@ -353,7 +353,7 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
                     {data.instrument.family}
                 </div>
                 <select
-                    onChange={(event) => editTrack(index, { layer: Number(event.target.value) as LayerIndex })}
+                    onChange={(event) => editTrack(index, { layer: Number(event.target.value) })}
                     value={data.layer}
                     className='midi-select'
                     style={{
@@ -361,8 +361,8 @@ function TrackInfo({ data, index, editTrack, theme }: TrackProps) {
                     }}
                 >
                     {LAYERS_INDEXES.map(layer =>
-                        <option value={layer - 1} key={layer}>
-                            Layer {layer}
+                        <option value={layer} key={layer}>
+                            Layer {layer + 1}
                         </option>
                     )}
                 </select>
@@ -449,8 +449,8 @@ type ParsedMidiNote = {
 class MidiNote {
     time: number
     data: ParsedMidiNote
-    layer: LayerIndex
-    constructor(time: number, layer: LayerIndex, data?: ParsedMidiNote,) {
+    layer: number
+    constructor(time: number, layer: number, data?: ParsedMidiNote,) {
         this.time = time
         this.data = data || {
             note: -1,
@@ -458,7 +458,7 @@ class MidiNote {
         }
         this.layer = layer
     }
-    static fromMidi = (layer: LayerIndex, time: number, midiNote: number) => {
+    static fromMidi = (layer: number, time: number, midiNote: number) => {
         const toReturn = new MidiNote(time, layer)
         const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean] 
         toReturn.data = {

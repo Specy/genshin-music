@@ -1,11 +1,10 @@
 import ComposerNote from "components/Composer/ComposerNote"
 import { getNoteText } from 'lib/Tools'
 import { Column } from "lib/Songs/SongClasses"
-import MultiSwitch from "components/Composer/MultiSwitch"
-import { LAYOUT_IMAGES, LAYERS_INDEXES, Pitch, TEMPO_CHANGERS } from "appConfig"
+import { LAYOUT_IMAGES, Pitch, TEMPO_CHANGERS } from "appConfig"
 import { ThemeProvider } from "stores/ThemeStore"
 import Instrument, { NoteData } from "lib/Instrument"
-import { LayerType, NoteNameType } from "types/GeneralTypes"
+import { NoteNameType } from "types/GeneralTypes"
 import { NoteImage } from "types/Keyboard"
 import { NoteLayer } from "lib/Layer"
 
@@ -13,7 +12,6 @@ interface ComposerKeyboardProps {
     data: {
         keyboard: Instrument,
         currentColumn: Column,
-        layer: LayerType,
         pitch: Pitch,
         isPlaying: boolean,
         noteNameType: NoteNameType
@@ -21,13 +19,12 @@ interface ComposerKeyboardProps {
     functions: {
         handleClick: (note: NoteData) => void
         handleTempoChanger: (tempoChanger: typeof TEMPO_CHANGERS[number]) => void
-        changeLayer: (layer: LayerType) => void
     }
 }
 
 export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
-    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, layer} = data
-    const { handleClick, changeLayer, handleTempoChanger } = functions
+    const { keyboard, isPlaying, noteNameType, currentColumn, pitch} = data
+    const { handleClick, handleTempoChanger } = functions
     let keyboardClass = "keyboard"
     if (keyboard.layout.length === 15) keyboardClass += " keyboard-5"
     if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
@@ -55,17 +52,6 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
             })}
         </div>
         <div className={"bottom-right-wrapper" + (isPlaying ? " hidden" : "")}>
-            <div className={"layer-buttons-wrapper"}>
-                <div className="bottom-right-text">
-                    Layer
-                </div>
-                <MultiSwitch<LayerType>
-                    buttonsClass="layer-button"
-                    options={LAYERS_INDEXES}
-                    onSelect={changeLayer}
-                    selected={layer}
-                />
-            </div>
             <div className="tempo-changers-wrapper">
                 <div className="bottom-right-text">
                     Tempo

@@ -8,8 +8,6 @@ export type ApproachingScore = {
     score: number
     combo: number
 }
-export type LayerType = 1 | 2 | 3 | 4
-export type LayerIndex = 0 | 1 | 2 | 3
 export type InstrumentNotesLayout = 8 | 15 | 21
 export type Pages = 'Composer' | 'Player' | 'Donate' | 'ErrorPage' | 'Help' | 'Main' | 'MidiSetup' | 'SheetVisualizer'
     | 'Theme' | '404' | 'Changelog'

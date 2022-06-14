@@ -18,7 +18,7 @@ import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { Link } from 'react-router-dom'
 import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
-import { ComposedSong, SerializedComposedSong } from 'lib/Songs/ComposedSong';
+import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { MainPageSettingsDataType } from 'lib/BaseSettings';
 import { useTheme } from 'lib/Hooks/useTheme';
@@ -180,7 +180,7 @@ function Menu({ functions, data }: MenuProps) {
         try {
             const toDownload = songs.map(song => {
                 if (APP_NAME === 'Sky') {
-                    if (song.type === 'composed') ComposedSong.deserialize(song as SerializedComposedSong).toOldFormat()
+                    if (song.type === 'composed') ComposedSong.deserialize(song as UnknownSerializedComposedSong).toOldFormat()
                     if (song.type === 'recorded') RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
                 }
                 return song

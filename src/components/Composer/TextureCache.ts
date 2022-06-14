@@ -98,7 +98,7 @@ export class ComposerCache {
         layersCombination.forEach(note => {
             const radius = this.noteWidth > 20 ? 3 : 2
             const g = new Graphics()
-            if (note[0] === "1") { //layer 1
+            if (note === 1 || note === 3) { //layer 1
                 g.beginFill(new Color(noteData.background).rgbNumber())
                 .lineStyle(1, new Color(noteData.background).rgbNumber())
                     .drawRoundedRect(
@@ -109,7 +109,7 @@ export class ComposerCache {
                         radius
                     ).endFill()
             }
-            if (note[1] === "1") { //layer 2
+            if (note === 2 || note === 3) { //layer 2
                 g.lineStyle(this.margin === 4 ? 3 : 2,new Color(noteData.border).rgbNumber())
                     .drawRoundedRect(
                         this.margin / 2 - 0.25,
@@ -118,22 +118,6 @@ export class ComposerCache {
                         Math.ceil(this.noteHeight - this.margin),
                         radius
                     ).endFill()
-            }
-            if (note[2] === "1") { //layer 3
-                g.beginFill(new Color(noteData.center).rgbNumber())
-                    .lineStyle(1,new Color(noteData.center).rgbNumber())
-                    .drawCircle(
-                        this.noteWidth / 2 - 0.25,
-                        this.noteHeight / 2,
-                        this.noteHeight / 3 - 0.5
-                    ).endFill()
-            }
-            if (note[3] === "1") { //layer 4
-                const lineWidth = this.margin === 4 ? 3 : 2
-                g.lineStyle(lineWidth, new Color(noteData.border).rgbNumber())
-                    .moveTo(this.margin / 2 + 0.5, this.noteHeight / 2)
-                    .lineTo(this.noteWidth - this.margin + 0.5, this.noteHeight / 2)
-                    .endFill()
             }
             if(!this.app) return
             const texture = this.app.renderer.generateTexture(g, {

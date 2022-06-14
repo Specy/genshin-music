@@ -23,6 +23,7 @@ interface ComposerCanvasProps {
     data: {
         columns: Column[],
         selected: number,
+        currentLayer: number,
         settings: ComposerSettingsDataType,
         breakpoints: number[],
         selectedColumns: number[]
@@ -310,6 +311,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                             notes={column.notes}
                             index={i}
                             sizes={sizes}
+                            currentLayer={data.currentLayer}
                             backgroundCache={background}
                             isToolsSelected={data.selectedColumns.includes(i)}
                             onClick={functions.selectColumn}

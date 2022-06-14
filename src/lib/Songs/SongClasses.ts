@@ -1,5 +1,4 @@
 import { NOTE_MAP_TO_MIDI, TempoChanger, TEMPO_CHANGERS } from "appConfig"
-import { LayerIndex } from "types/GeneralTypes"
 import { NoteLayer } from "../Layer"
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
@@ -84,16 +83,16 @@ export class ColumnNote {
 		this.layer.setData(0)
 	}
 
-	setLayer(layerIndex: LayerIndex, value: boolean) {
+	setLayer(layerIndex: number, value: boolean) {
 
 		this.layer.set(layerIndex, value)
 		return this.layer
 	}
-	toggleLayer(layerIndex: LayerIndex) {
+	toggleLayer(layerIndex: number) {
 		this.layer.toggle(layerIndex)
 		return this.layer
 	}
-	isLayerToggled(layerIndex: LayerIndex) {
+	isLayerToggled(layerIndex: number) {
 		return this.layer.test(layerIndex)
 	}
 	clone = () => {

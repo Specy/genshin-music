@@ -40,7 +40,11 @@ export class NoteLayer{
     test(position: number){
         return (this.data & (1 << position)) !== 0
     }
-
+    toLayerStatus(position: number){
+        const isSelected = this.test(position)
+        if(this.data === 1 << position) return 1
+        return isSelected ? 3 : 2
+    }
     toArray(){
         return this.serializeBin().split('').map(x => parseInt(x)).reverse()
     }

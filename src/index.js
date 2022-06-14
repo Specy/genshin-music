@@ -1,5 +1,4 @@
-
-
+import 'pepjs';
 import { StrictMode } from 'react';
 import { render } from 'react-dom';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';

@@ -6,6 +6,7 @@ import { ComposerCacheData } from "./TextureCache";
 
 interface RenderColumnProps {
     notes: ColumnNote[]
+    currentLayer: number
     index: number
     sizes: {
         width: number
@@ -19,7 +20,7 @@ interface RenderColumnProps {
     onClick: (index: number) => void
 }
 
-export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }: RenderColumnProps) {
+export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
     return <Container
         pointertap={() => onClick(index)}
         interactive={true}
@@ -46,7 +47,9 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCa
         {notes.map((note) => {
             return <Sprite
                 key={note.index}
-                texture={cache.notes[note.layer.legacyString]}
+                texture={
+                    cache.notes[note.layer.toLayerStatus(currentLayer)]
+                }
                 y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
             >
             </Sprite>

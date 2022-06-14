@@ -3,17 +3,16 @@ import { HelpTooltip } from "components/HelpTooltip"
 import { hasTooltip, Tooltip } from "components/Tooltip"
 import { useTheme } from "lib/Hooks/useTheme"
 import { memo } from "react"
-import { LayerType } from "types/GeneralTypes"
 interface ComposerToolsProps{
     data: {
         isToolsVisible: boolean
         hasCopiedColumns: boolean
-        layer: LayerType,
+        layer: number,
     }
     functions: {
         toggleTools: () => void
-        copyColumns: (layer: LayerType | 'all') => void
-        eraseColumns: (layer: LayerType | 'all') => void
+        copyColumns: (layer: number | 'all') => void
+        eraseColumns: (layer: number | 'all') => void
         pasteColumns: (insert: boolean) => void
         deleteColumns: () => void
         resetSelection: () => void

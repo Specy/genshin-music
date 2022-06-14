@@ -86,7 +86,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
     toComposedSong = (precision = 4) => {
         const bpmToMs = Math.floor(60000 / this.bpm)
-        const song = new ComposedSong(this.name)
+        const song = new ComposedSong(this.name, [this.instrument])
         song.bpm = this.bpm
         song.pitch = this.pitch
         const notes = this.notes.map(note => note.clone())
