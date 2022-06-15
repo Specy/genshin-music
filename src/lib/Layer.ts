@@ -1,26 +1,17 @@
 import { EMPTY_LAYER } from "appConfig"
-import { CombinedLayer } from "types/GeneralTypes"
 
 
+//1 = has current layer, 2 = has other layers, 3 = has both
+export type LayerStatus = 1 | 2 | 3
 export class NoteLayer{
     private data: number
-    legacyString: CombinedLayer
     static EMPTY_LAYER = new NoteLayer(0)
     constructor(layer: number = 0){
         this.data = layer
-        this.legacyString = EMPTY_LAYER
-        this.setLegacyString()
     }
-    private setLegacyString(){
-        const finalLayer = EMPTY_LAYER.split("")
-        const string = finalLayer.map((_,i) => 
-                this.test(i) ? "1" : "0"
-            ).join("") as CombinedLayer
-        this.legacyString = string
-    }
+
     setData(data: number){
         this.data = data
-        this.setLegacyString()
     }
     asNumber(){
         return this.data
@@ -31,11 +22,9 @@ export class NoteLayer{
         }else{
             this.data &= ~(1 << position)
         }
-        this.setLegacyString()
     }
     toggle(position: number){
         this.data ^= (1 << position);
-        this.setLegacyString()
     }
     test(position: number){
         return (this.data & (1 << position)) !== 0

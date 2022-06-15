@@ -1,5 +1,6 @@
 .keyboard {
 	display: grid;
+	width: fit-content;
 	margin-top: auto;
 	grid-template-columns: repeat(7, 1fr);
 	grid-template-rows: repeat(3, 1fr);

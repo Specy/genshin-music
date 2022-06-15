@@ -7,6 +7,10 @@
 .row-centered{
     align-items: center;
 }
+.flex-grow{
+    display: flex;
+    flex: 1;
+}
 .flex-centered{
     display: flex;
     align-items: center;

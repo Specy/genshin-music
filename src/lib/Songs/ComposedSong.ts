@@ -7,6 +7,7 @@ import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
 import { Column, ColumnNote, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
+import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 
 interface OldFormatNoteType {
     key: string,
@@ -128,10 +129,24 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         return this.clone()
     }
     addInstrument = (instrument: InstrumentName) => {
-        this.instruments.push({
+        const newInstrument = {
             name: instrument,
             volume: 100
-        })
+        }
+        this.instruments = [...this.instruments, newInstrument]
+    }
+    removeInstrument = async (index: number) => {
+        if(index === 0){
+            this.switchLayer(this.columns.length, 0, 0, 1)
+        }else{
+            const toMove = this.instruments.slice(index)
+            toMove.forEach((_, i) => {
+                this.switchLayer(this.columns.length, 0, index + i, index + i - 1 )
+            })
+        }
+        this.instruments.splice(index,1)
+
+        this.instruments = [...this.instruments]
     }
     serialize = (): SerializedComposedSong => {
         const bpm = Number(this.bpm)
@@ -195,6 +210,14 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
     removeColumns = (amount: number, position: number) => {
         this.columns.splice(position, amount)
         this.validateBreakpoints()
+    }
+    switchLayer(amount: number, position:number, from: number, to:number) {
+        const columns = this.columns.slice(position, position + amount)
+        columns.forEach(column => {
+            column.notes.forEach(note => {
+                note.switchLayer(from, to)
+            })
+        })
     }
     toggleBreakpoint = (override?: number) => {
         const index = typeof override === "number" ? override : this.selected

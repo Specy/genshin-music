@@ -78,13 +78,16 @@ export class ColumnNote {
 	serialize(): SerializedColumnNote {
 		return [this.index, this.layer.serializeHex()]
 	}
-
+	switchLayer(from: number, to: number) {
+		const isToggled = this.layer.test(from)
+		if(isToggled) this.layer.set(to, true)
+		this.layer.set(from, false)
+	}
 	clearLayer(){
 		this.layer.setData(0)
 	}
 
 	setLayer(layerIndex: number, value: boolean) {
-
 		this.layer.set(layerIndex, value)
 		return this.layer
 	}

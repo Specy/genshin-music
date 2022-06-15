@@ -3,6 +3,11 @@
     flex-direction: column;
     width: 8rem;
 }
+.select{
+    background-color: var(--primary);
+    border: none;
+    color: var(--primary-text);
+}
 .instrument-picker input[type="range"]{
     margin-top: 0.2rem;
 }

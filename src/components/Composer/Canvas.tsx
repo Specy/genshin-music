@@ -72,7 +72,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         super(props)
         this.sizes = document.body.getBoundingClientRect()
         const numberOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
-        let width = nearestEven(this.sizes.width * 0.84)
+        let width = nearestEven(this.sizes.width * (isMobile() ? 0.80 : 0.84))
         let height = nearestEven(this.sizes.height * 0.45)
         if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
         this.state = {
@@ -152,7 +152,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return
             const sizes = document.body.getBoundingClientRect()
             const { numberOfColumnsPerCanvas } = this.state
-            let width = nearestEven(sizes.width * 0.84)
+            let width = nearestEven(sizes.width * (isMobile() ? 0.80 : 0.84))
             let height = nearestEven(sizes.height * 0.45)
             if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
             let columnWidth = nearestEven(width / numberOfColumnsPerCanvas)

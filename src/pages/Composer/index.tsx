@@ -65,7 +65,7 @@ class Composer extends Component<any, ComposerState>{
             layers: [new Instrument(INSTRUMENTS[1])], //TODO not sure if this is the best idea
             //it doesnt change the instrument because it is the same as the one in the base song
             isPlaying: false,
-            song: new ComposedSong("Untitled", [INSTRUMENTS[0]]),
+            song: new ComposedSong("Untitled", [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]]),
             settings: settings,
             layer: 0,
             selectedColumns: [],
@@ -227,7 +227,7 @@ class Composer extends Component<any, ComposerState>{
                     await this.addSong(parsedSong)
                     LoggerStore.success(`Song added to the ${parsedSong?.isComposed ? "Composed" : "Recorded"} tab!`, 4000)
                 }
-                
+
             } catch (e) {
                 console.error(e)
                 LoggerStore.error("There was an error loading the song!")
@@ -257,11 +257,29 @@ class Composer extends Component<any, ComposerState>{
 
     addInstrument = () => {
         const { song } = this.state
+        if(song.instruments.length >= 16) return LoggerStore.error("You can't add more than 16 instruments!")
         song.addInstrument(INSTRUMENTS[0])
+        this.setState({ song })
         this.syncInstruments(song)
     }
-
-    syncInstruments = async (song?:ComposedSong) => {
+    removeInstrument = async (index: number) => {
+        const { song, layers } = this.state
+        if (layers.length) return LoggerStore.warn("You can't remove all layers!")
+        const confirm = await asyncConfirm(`Are you sure you want to remove ${layers[index].name}? Notes will be merged to the previous instrument.`)
+        if (confirm) {
+            song.removeInstrument(index)
+            this.syncInstruments(song)
+            this.setState({ song, layer: index - 1 })
+        }
+    }
+    editInstrument = (instrument: ComposedSongInstrument, index: number) => {
+        const { song } = this.state
+        song.instruments[index] = instrument
+        song.instruments = [...song.instruments]
+        this.syncInstruments(song)
+        this.setState({ song })
+    }
+    syncInstruments = async (song?: ComposedSong) => {
         const { layers } = this.state
         if (!song) song = this.state.song
         //remove excess instruments
@@ -271,7 +289,7 @@ class Composer extends Component<any, ComposerState>{
             ins.delete()
         })
         const promises = song.instruments.map(async (ins, i) => {
-            if(layers[i] === undefined){
+            if (layers[i] === undefined) {
                 //If it doesn't have a layer, create one
                 const instrument = new Instrument(ins.name)
                 layers[i] = instrument
@@ -281,7 +299,7 @@ class Composer extends Component<any, ComposerState>{
                 instrument.changeVolume(ins.volume)
                 return instrument
             }
-            if(layers[i].name === ins.name){
+            if (layers[i].name === ins.name) {
                 //if it has a layer and it's the same, just set the volume
                 layers[i].changeVolume(ins.volume)
                 return layers[i]
@@ -300,8 +318,7 @@ class Composer extends Component<any, ComposerState>{
             }
         })
         const instruments = await Promise.all(promises) as Instrument[]
-        if(!this.mounted) return
-        console.log(instruments)
+        if (!this.mounted) return
         this.setState({ layers: instruments })
     }
     changeVolume = (obj: SettingVolumeUpdate) => {
@@ -357,10 +374,10 @@ class Composer extends Component<any, ComposerState>{
             note.index
         )
     }
-    renameSong = async (newName: string, id: string ) => {
-        const {song} = this.state
+    renameSong = async (newName: string, id: string) => {
+        const { song } = this.state
         await songsStore.renameSong(id, newName)
-        if(this.state.song.id === id){
+        if (this.state.song.id === id) {
             song.name = newName
             this.setState({ song })
         }
@@ -379,7 +396,7 @@ class Composer extends Component<any, ComposerState>{
             this.changes = 0
             this.setState({})
             await this.addSong(song)
-            return 
+            return
         }
         return new Promise(async resolve => {
             //if it exists, update it
@@ -418,30 +435,30 @@ class Composer extends Component<any, ComposerState>{
         }
         const name = await asyncPrompt("Write song name, press cancel to ignore")
         if (name === null) return
-        const song = new ComposedSong(name, [INSTRUMENTS[0]])
+        const song = new ComposedSong(name, [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]])
         this.changes = 0
         if (!this.mounted) return
         const added = await this.addSong(song) as ComposedSong
         if (!this.mounted) return
-        this.setState({ song: added})
+        this.setState({ song: added })
         Analytics.songEvent({ type: 'create' })
     }
     loadSong = async (song: SerializedSong | ComposedSong) => {
         const state = this.state
         let parsed: ComposedSong | null = null
-        if(song instanceof ComposedSong){
+        if (song instanceof ComposedSong) {
             //TODO not sure if i should clone the song here
             parsed = song
-        }else{
-            if(song.type === 'recorded'){
+        } else {
+            if (song.type === 'recorded') {
                 parsed = RecordedSong.deserialize(song as SerializedRecordedSong).toComposedSong(4)
                 parsed.name += " - Composed"
             }
-            if(song.type === 'composed'){
+            if (song.type === 'composed') {
                 parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong)
             }
         }
-        if(!parsed) return
+        if (!parsed) return
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
             if (!confirm && state.song.columns.length > 0) {
@@ -562,7 +579,7 @@ class Composer extends Component<any, ComposerState>{
             })
         })
     }
-    changeLayer = (layer:number) => {
+    changeLayer = (layer: number) => {
         this.setState({ layer })
     }
     toggleTools = () => {
@@ -614,17 +631,12 @@ class Composer extends Component<any, ComposerState>{
     render() {
         const { state } = this
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers } = state
-        const {
-            loadSong, createNewSong, changePage, updateThisSong, handleSettingChange, changeVolume, startRecordingAudio, handleClick,
-            toggleBreakpoint, handleTempoChanger, copyColumns, pasteColumns, eraseColumns, resetSelection, deleteColumns, changeMidiVisibility,
-            selectColumn, toggleTools, changePitch, handleDrop, handleDropError, renameSong, addInstrument, changeLayer
-        } = this
 
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
             {isMidiVisible &&
                 <MidiParser
-                    functions={{ loadSong, changeMidiVisibility, changePitch }}
+                    functions={this} //passes all functions to the midi parser
                     data={{
                         instruments: layers.map(layer => layer.name),
                         selectedColumn: song.selected,
@@ -632,45 +644,44 @@ class Composer extends Component<any, ComposerState>{
                 />
             }
             <BodyDropper
-                onDrop={handleDrop}
+                onDrop={this.handleDrop}
                 as='json'
                 dropAreaStyle={{ paddingTop: '15vh' }}
                 showDropArea={true}
-                onError={handleDropError}
+                onError={this.handleDropError}
             />
-
-            <div className="right-panel-composer">
-                <div className="column fill-x">
-                    <div className="top-panel-composer">
-                        <div className="column" style={{ margin: '0 0.2rem'}}>
-                            <InstrumentControls 
-                                instruments={song.instruments}
-                                selected={layer}
-                                onLayerSelect={changeLayer}
-                                onInstrumentAdd={addInstrument}
-                                onInstrumentChange={() => {}}
-                                onInstrumentDelete={() => {}}
-                            />
-                            <AppButton 
-                                style={{height: '4rem', borderRadius: '0.3rem'}}
-                                onClick={() => {
-                                    this.togglePlay()
-                                    if (settings.syncTabs.value) {
-                                        this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
-                                    }
-                                }}
-                            >
-                                <Memoized>
-                                    {this.state.isPlaying
-                                        ? <FaPause key='pause' size={16} color='var(--icon-color)'/>
-                                        : <FaPlay key='play' size={16} color='var(--icon-color)'/>
-                                    }
-                                </Memoized>
-                            </AppButton>
-                        </div>
+            <div className='composer-grid'>
+                <div className="column composer-right-control">
+                    <AppButton
+                        style={{ height: '3rem', borderRadius: '0.3rem' }}
+                        onClick={() => {
+                            this.togglePlay()
+                            if (settings.syncTabs.value) {
+                                this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
+                            }
+                        }}
+                    >
+                        <Memoized>
+                            {this.state.isPlaying
+                                ? <FaPause key='pause' size={16} color='var(--icon-color)' />
+                                : <FaPlay key='play' size={16} color='var(--icon-color)' />
+                            }
+                        </Memoized>
+                    </AppButton>
+                    <InstrumentControls
+                        instruments={song.instruments}
+                        selected={layer}
+                        onLayerSelect={this.changeLayer}
+                        onInstrumentAdd={this.addInstrument}
+                        onInstrumentChange={this.editInstrument}
+                        onInstrumentDelete={this.removeInstrument}
+                    />
+                </div>
+                <div className="top-panel-composer" style={{gridArea: "b"}}>
+                    <div className='row' style={{ height: 'fit-content', width: "100%" }}>
                         <ComposerCanvas
                             key={settings.columnsPerCanvas.value}
-                            functions={{ selectColumn, toggleBreakpoint }}
+                            functions={this}
                             data={{
                                 currentLayer: layer,
                                 settings, selectedColumns,
@@ -690,26 +701,27 @@ class Composer extends Component<any, ComposerState>{
                                     <RemoveColumn className='tool-icon' />
                                 </Memoized>
                             </CanvasTool>
-                            <CanvasTool 
+                            <CanvasTool
                                 onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}
                                 tooltip='Add new page'
                             >
                                 <Memoized>
-                                    <FaPlus size={16}/>
+                                    <FaPlus size={16} />
                                 </Memoized>
                             </CanvasTool>
                             <CanvasTool onClick={this.toggleTools} tooltip='Open tools'>
                                 <Memoized>
-                                    <FaTools size={16}/>
+                                    <FaTools size={16} />
                                 </Memoized>
                             </CanvasTool>
                         </div>
                     </div>
                 </div>
                 <ComposerKeyboard
-                    functions={{ handleClick, handleTempoChanger }}
+                    functions={this}
                     data={{
                         isPlaying,
+                        currentLayer: layer,
                         keyboard: layers[0],
                         currentColumn: song.selectedColumn,
                         pitch: settings.pitch.value as Pitch,
@@ -722,19 +734,14 @@ class Composer extends Component<any, ComposerState>{
                     isRecordingAudio, settings,
                     hasChanges: this.changes > 0,
                 }}
-                functions={{
-                    loadSong, createNewSong, changePage, updateThisSong, handleSettingChange,
-                     changeVolume, changeMidiVisibility, startRecordingAudio, renameSong
-                }}
+                functions={this}
             />
             <ComposerTools
                 data={{
                     isToolsVisible, layer,
                     hasCopiedColumns: copiedColumns.length > 0,
                 }}
-                functions={{
-                    toggleTools, eraseColumns, deleteColumns, copyColumns, pasteColumns, resetSelection
-                }}
+                functions={this}
             />
             <div className="song-info">
                 <div className='text-ellipsis'>
