@@ -21,7 +21,7 @@ import { HelpTooltip } from 'components/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm, asyncPrompt } from 'components/AsyncPrompts';
-import { SettingsPane } from 'components/Settings/SettingsPane';
+import { SettingsPane } from "components/Settings/SettingsPane";
 import { SerializedSong } from 'lib/Songs/Song';
 import { useFolders } from 'lib/Hooks/useFolders';
 import { Folder } from 'lib/Folder';
@@ -202,7 +202,6 @@ function Menu({ data, functions }: MenuProps) {
                     <SongMenu<SongRowProps>
                         songs={songs}
                         SongComponent={SongRow}
-                        baseType='composed'
                         style={{ marginTop: '0.6rem' }}
                         componentProps={{
                             theme,
