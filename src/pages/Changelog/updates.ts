@@ -7,6 +7,14 @@ type Update = {
 
 export const updates: Update[] = [
     {
+        version: '2.8',
+        title: 'Infinite Composer layers',
+        date: '2022- 15/06',
+        changes: [
+            "Added (almost) infinite layers in composer, max 16",
+        ]
+    },
+    {
         version: '2.7',
         title: 'Song rename, MIDI export, folders',
         date: '2022- 15/06',

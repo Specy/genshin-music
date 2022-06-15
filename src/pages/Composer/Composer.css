@@ -386,10 +386,12 @@ canvas {
 }
 .instrument-name-button{
     min-height: 3rem;
+    width: 6.2rem;
 }
 .instruments-button-wrapper {
     overflow-y: auto;
-    width: 6rem;
+    overflow-x: hidden;
+    width: 6.2rem;
     background-color: var(--primary);
     border-radius: 0.3rem;
     margin-top: 0.2rem;

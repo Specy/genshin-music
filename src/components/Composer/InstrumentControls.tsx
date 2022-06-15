@@ -69,7 +69,7 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onInstrument
         <AppButton
             onClick={onClick}
             style={{backgroundColor: "transparent"}}
-            className='flex-grow flex-centered instrument-name-button'
+            className='flex-grow flex-centered instrument-name-button text-ellipsis'
         >
             {instrument.name}
         </AppButton>
