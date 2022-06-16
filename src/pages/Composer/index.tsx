@@ -244,12 +244,12 @@ class Composer extends Component<any, ComposerState>{
     }
     removeInstrument = async (index: number) => {
         const { song, layers } = this.state
-        if (layers.length) return LoggerStore.warn("You can't remove all layers!")
+        if (layers.length <= 1) return LoggerStore.warn("You can't remove all layers!")
         const confirm = await asyncConfirm(`Are you sure you want to remove ${layers[index].name}? Notes will be merged to the previous instrument.`)
         if (confirm) {
             song.removeInstrument(index)
             this.syncInstruments(song)
-            this.setState({ song, layer: index - 1 })
+            this.setState({ song, layer: Math.max(0, index - 1) })
         }
     }
     editInstrument = (instrument: ComposedSongInstrument, index: number) => {

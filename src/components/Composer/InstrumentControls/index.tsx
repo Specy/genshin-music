@@ -21,7 +21,6 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
     const [theme] = useTheme()
     const [isEditing, setIsEditing] = useState(false)
     const setNotEditing = useCallback(() => {
-        console.log('a')
         setIsEditing(false)
     }, [])
     return <div className="column instruments-button-wrapper">
@@ -39,7 +38,10 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
             <InstrumentSettingsPopup
                 instrument={instruments[selected]}
                 onChange={ins => onInstrumentChange(ins, selected)}
-                onDelete={() => onInstrumentDelete(selected)}
+                onDelete={() => {
+                    onInstrumentDelete(selected)
+                    setNotEditing()
+                }}
                 onClose={setNotEditing}
             />
         }
