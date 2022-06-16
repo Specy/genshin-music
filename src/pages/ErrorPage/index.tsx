@@ -67,7 +67,6 @@ export function ErrorPage() {
             <SongMenu<SongRowProps>
                 SongComponent={SongRow}
                 songs={songs}
-                baseType='recorded'
                 componentProps={{
                     deleteSong,
                     download: downloadSong

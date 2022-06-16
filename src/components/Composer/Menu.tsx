@@ -202,7 +202,6 @@ function Menu({ data, functions }: MenuProps) {
                     <SongMenu<SongRowProps>
                         songs={songs}
                         SongComponent={SongRow}
-                        baseType='composed'
                         style={{ marginTop: '0.6rem' }}
                         componentProps={{
                             theme,
