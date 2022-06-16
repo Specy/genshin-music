@@ -5,6 +5,7 @@
 }
 .select{
     background-color: var(--primary);
+    border-radius: 0.2rem;
     border: none;
     color: var(--primary-text);
 }

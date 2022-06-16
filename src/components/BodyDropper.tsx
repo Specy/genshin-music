@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useState } from "react"
 
-export interface DroppedFile<T> {
-    data: Buffer | object | string | T,
+export interface DroppedFile<T = Buffer | object | string> {
+    data: T
     file: File
 }
 

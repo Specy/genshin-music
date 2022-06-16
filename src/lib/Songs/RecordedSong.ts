@@ -15,8 +15,9 @@ export type SerializedRecordedSong = SerializedSong & {
     notes: SerializedRecordedNote[]
     instrument: InstrumentName
 }
-
 export type OldFormatRecorded = SerializedRecordedSong & OldFormat
+
+export type UnknownSerializedRecordedSong = SerializedRecordedSong
 
 export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     instrument: InstrumentName

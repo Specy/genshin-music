@@ -43,7 +43,6 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
     if (layer === 2 || layer === 3) className += " layer-2"
 
     const color = ThemeProvider.get('note_background').desaturate(0.6)
-    const layer3Class = "Sky" ? "layer-3-ball-bigger" : "layer-3-ball"
     return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
         <div className={className} >
             <SvgNote
@@ -54,10 +53,7 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
                 fill={color.isDark() ? color.lighten(0.45).hex() : color.darken(0.18).hex()}
                 className='genshin-border'
             />}
-            <div className={layer3Class}>
-            </div>
-            <div className='layer-4-line'>
-            </div>
+  
             <div 
                 className={APP_NAME === "Sky" ? "note-name-sky" : "note-name"}
                 style={{color:textColor}}

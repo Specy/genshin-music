@@ -21,7 +21,7 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 38,
+        settingVersion: APP_NAME + 39,
     },
     data: {
         bpm: {
@@ -34,7 +34,7 @@ export const ComposerSettings: ComposerSettingsType = {
             category: "Song Settings",
         },
         pitch: {
-            name: "Pitch",
+            name: "Base pitch",
             type: "select",
             songSetting: true,
             value: "C",

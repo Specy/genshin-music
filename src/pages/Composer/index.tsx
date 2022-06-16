@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import { FaPlay, FaPlus, FaPause, FaChevronLeft, FaChevronRight, FaTools } from 'react-icons/fa';
+import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
 
 import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "appConfig"
 
@@ -15,7 +15,7 @@ import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
-import { delay, formatMs, calculateSongLength, parseSong } from "lib/Tools"
+import { delay, formatMs, calculateSongLength } from "lib/Tools"
 import { ComposedSong, ComposedSongInstrument, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
 import { Column } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
@@ -32,13 +32,13 @@ import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardTypes';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
-import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { CanvasTool } from 'components/Composer/CanvasTool';
 import { settingsService } from 'lib/Services/SettingsService';
 import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
 import { InstrumentControls } from 'components/Composer/InstrumentControls';
 import { AppButton } from 'components/AppButton';
+import { fileService, UnknownSongImport } from 'lib/Services/FileService';
 
 interface ComposerState {
     layers: Instrument[]
@@ -218,26 +218,6 @@ class Composer extends Component<any, ComposerState>{
             }
         }
     }
-    handleDrop = async (files: DroppedFile<SerializedSong>[]) => {
-        for (const file of files) {
-            const parsed = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
-            try {
-                for (const song of parsed) {
-                    const parsedSong = parseSong(song)
-                    await this.addSong(parsedSong)
-                    LoggerStore.success(`Song added to the ${parsedSong?.isComposed ? "Composed" : "Recorded"} tab!`, 4000)
-                }
-
-            } catch (e) {
-                console.error(e)
-                LoggerStore.error("There was an error loading the song!")
-            }
-        }
-    }
-
-    handleDropError = () => {
-        LoggerStore.error("There was an error importing the file! Was it the correct format?")
-    }
 
     updateSettings = (override?: ComposerSettingsDataType) => {
         settingsService.updateComposerSettings(override !== undefined ? override : this.state.settings)
@@ -345,10 +325,12 @@ class Composer extends Component<any, ComposerState>{
         const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
         if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
     }
-    playSound = (instrument: Instrument, index: number) => {
-        const note = instrument.layout[index]
+    playSound = (layer: number, index: number) => {
+        const instrument = this.state.layers[layer]
+        const note = instrument?.layout[index]
         if (note === undefined) return
-        instrument.play(note.index, this.state.settings.pitch.value as Pitch)
+        const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value as Pitch
+        instrument.play(note.index, pitch)
     }
     changePitch = (value: Pitch) => {
         const { settings } = this.state
@@ -356,7 +338,7 @@ class Composer extends Component<any, ComposerState>{
         this.setState({ settings: { ...settings } }, this.updateSettings)
     }
     handleClick = (note: NoteData) => {
-        const { layers, song, layer } = this.state
+        const { song, layer } = this.state
         const column = song.selectedColumn
         const index = column.getNoteIndex(note.index)
         if (index === null) { //if it doesn't exist, create a new one
@@ -370,7 +352,7 @@ class Composer extends Component<any, ComposerState>{
         this.setState({ song })
         this.handleAutoSave()
         this.playSound(
-            layers[layer],
+            layer,
             note.index
         )
     }
@@ -574,8 +556,8 @@ class Composer extends Component<any, ComposerState>{
         this.setState({ song, selectedColumns })
         if (ignoreAudio) return
         song.selectedColumn.notes.forEach(note => {
-            layers.forEach((layer, i) => {
-                if (note.isLayerToggled(i)) this.playSound(layer, note.index)
+            layers.forEach((_, i) => {
+                if (note.isLayerToggled(i)) this.playSound(i, note.index)
             })
         })
     }
@@ -629,9 +611,7 @@ class Composer extends Component<any, ComposerState>{
         if (visible) Analytics.songEvent({ type: 'create_MIDI' })
     }
     render() {
-        const { state } = this
-        const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers } = state
-
+        const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
             {isMidiVisible &&
@@ -643,15 +623,8 @@ class Composer extends Component<any, ComposerState>{
                     }}
                 />
             }
-            <BodyDropper
-                onDrop={this.handleDrop}
-                as='json'
-                dropAreaStyle={{ paddingTop: '15vh' }}
-                showDropArea={true}
-                onError={this.handleDropError}
-            />
             <div className='composer-grid'>
-                <div className="column composer-right-control">
+                <div className="column composer-left-control">
                     <AppButton
                         style={{ height: '3rem', borderRadius: '0.3rem' }}
                         onClick={() => {
@@ -662,7 +635,7 @@ class Composer extends Component<any, ComposerState>{
                         }}
                     >
                         <Memoized>
-                            {this.state.isPlaying
+                            {isPlaying
                                 ? <FaPause key='pause' size={16} color='var(--icon-color)' />
                                 : <FaPlay key='play' size={16} color='var(--icon-color)' />
                             }
@@ -724,7 +697,7 @@ class Composer extends Component<any, ComposerState>{
                         currentLayer: layer,
                         keyboard: layers[0],
                         currentColumn: song.selectedColumn,
-                        pitch: settings.pitch.value as Pitch,
+                        pitch:  song.instruments[layer].pitch || settings.pitch.value as Pitch,
                         noteNameType: settings.noteNameType.value as NoteNameType,
                     }}
                 />

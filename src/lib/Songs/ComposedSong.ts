@@ -1,5 +1,5 @@
 import { Midi } from "@tonejs/midi"
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, Pitch } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName } from "types/GeneralTypes"
 import { OldFormat, _LegacySongInstruments } from "types/SongTypes"
@@ -7,7 +7,6 @@ import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
 import { Column, ColumnNote, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
-import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 
 interface OldFormatNoteType {
     key: string,
@@ -18,6 +17,7 @@ interface OldFormatNoteType {
 export interface ComposedSongInstrument{
     name: InstrumentName
     volume: number
+    pitch: Pitch | ""
 }
 
 export type BaseSerializedComposedSong = SerializedSong & {
@@ -41,7 +41,8 @@ export type SerializedComposedSong = BaseSerializedComposedSong & {
 export type UnknownSerializedComposedSong = SerializedComposedSongV1 | SerializedComposedSongV2 | SerializedComposedSong
 
 
-type OldFormatComposed = BaseSerializedComposedSong & OldFormat
+export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
+
 export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong, 3>{
     notes: RecordedNote[] = []
     instruments: ComposedSongInstrument[]
@@ -77,7 +78,8 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             parsed.instruments = instruments.map(instrument =>  {
                 return {
                     name: instrument,
-                    volume: 100
+                    volume: 100,
+                    pitch: ""
                 }
             })
         } else if (song.version === 3){
@@ -98,9 +100,6 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         }
         if (song.version === 2) {
             parsed.columns = song.columns.map(column => Column.deserialize(column))
-        }
-        if (song.version === 3) {
-
         }
 
         return parsed
@@ -129,9 +128,10 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         return this.clone()
     }
     addInstrument = (instrument: InstrumentName) => {
-        const newInstrument = {
+        const newInstrument:ComposedSongInstrument = {
             name: instrument,
-            volume: 100
+            volume: 100,
+            pitch: ""
         }
         this.instruments = [...this.instruments, newInstrument]
     }

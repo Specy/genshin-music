@@ -11,6 +11,9 @@
     display: flex;
     flex: 1;
 }
+.space-between{
+    justify-content: space-between;
+}
 .flex-centered{
     display: flex;
     align-items: center;
@@ -24,6 +27,9 @@
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+}
+.box-shadow{
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 @keyframes fadeIn{
     from{

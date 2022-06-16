@@ -19,7 +19,6 @@ import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
-import { BodyDropper, DroppedFile } from 'components/BodyDropper';
 import { settingsService } from 'lib/Services/SettingsService';
 import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
@@ -81,23 +80,6 @@ class Player extends Component<any, PlayerState>{
 
 	setHasSong = (data: boolean) => {
 		this.setState({ hasSong: data })
-	}
-
-	handleDrop = async (files: DroppedFile<SerializedSong>[]) => {
-		for (const file of files) {
-			try {
-				const parsed = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
-				for (const song of parsed) {
-					await this.addSong(parseSong(song))
-				}
-			} catch (e) {
-				console.error(e)
-				LoggerStore.error('Error while parsing song!')
-			}
-		}
-	}
-	dropError = () => {
-		LoggerStore.error("There was an error importing the file! Was it the correct format?")
 	}
 	changeVolume = (obj: SettingVolumeUpdate) => {
 		const { settings } = this.state
@@ -217,7 +199,7 @@ class Player extends Component<any, PlayerState>{
 		}
 	}
 	render() {
-		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, dropError, handleDrop } = this
+		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong } = this
 		const { settings, isLoadingInstrument, instrument, hasSong, isRecordingAudio, isRecording } = state
 		return <>
 			<Menu
@@ -254,12 +236,7 @@ class Player extends Component<any, PlayerState>{
 					/>
 				</div>
 			</div>
-			<BodyDropper<SerializedSong>
-				as='json'
-				onDrop={handleDrop}
-				onError={dropError}
-				showDropArea={true}
-			/>
+
 			{PlayerStore.eventType !== 'approaching' &&
 				<div className='record-button'>
 					<AppButton

@@ -268,24 +268,6 @@ select {
 
 }
 
-.layer-3-ball,
-.layer-3-ball-bigger {
-    position: absolute;
-    background-color: #d75c5c;
-    width: 1.5vw;
-    height: 1.5vw;
-    border-radius: 50%;
-    visibility: hidden;
-}
-
-.layer-4-line {
-    height: 20%;
-    width: 100%;
-    position: absolute;
-    background-color: #d75c5c;
-    border-radius: 0.2vw;
-    visibility: hidden;
-}
 
 .bottom-right-text {
     text-align: center;
@@ -325,29 +307,6 @@ select {
     stroke: #d75c5c !important;
 }
 
-.note-composer.layer-3 .svg-note {
-    fill: #f2ecec !important;
-    stroke: #f2ecec !important;
-}
-
-.layer-3 .layer-3-ball,
-.layer-3 .layer-3-ball-bigger {
-    visibility: visible;
-}
-
-.layer-4 .layer-4-line {
-    visibility: visible;
-}
-
-.layer-3-ball-bigger {
-    width: 2.6vw;
-    height: 2.6vw;
-}
-
-.note-composer .layer-3-ball-bigger {
-    width: 3vw;
-    height: 3vw;
-}
 
 canvas {
     cursor: pointer !important;
@@ -380,9 +339,9 @@ canvas {
     margin-right: 2vw;
     justify-content: center;
 }
-.composer-right-control{
+.composer-left-control{
     grid-area: a;
-    height: calc(100vh - 4rem);
+    height: calc(100vh - 5rem);
 }
 .instrument-name-button{
     min-height: 3rem;
@@ -414,7 +373,21 @@ canvas {
     grid-template-columns: 1fr;
     gap: 0.3rem;
 }
-
+.floating-instrument-settings{
+    position: absolute;
+    width: 15rem;
+    background-color: var(--menu-background);
+    color: var(--menu-background-text);
+    display: flex;
+    flex-direction: column;
+    padding: 0.6rem;
+    border-radius: 0.4rem;
+    border: solid 2px var(--secondary);
+    top: 3.4rem;
+    margin-left: 6.6rem;
+    z-index: 10;
+    animation: fadeIn 0.2s;
+}
 .instrument-settings-button {
     flex: 1;
     margin: 0.2rem;
@@ -647,10 +620,7 @@ canvas {
 
     }
 
-    .layer-3-ball {
-        width: 1.5vw;
-        height: 1.5vw;
-    }
+
 
     .composer-grid {
         width: 100%;
