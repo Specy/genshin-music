@@ -140,7 +140,6 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 			//current format
 			if ((song.data.isComposedVersion === true) || song.type === 'composed') {
 				if (typeof song.name !== "string") return "none"
-				if (typeof song.bpm !== "number") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"
 				if (Array.isArray(song.breakpoints)) {
 					if (song.breakpoints.length > 0) {
@@ -160,7 +159,6 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 				}
 			} else if((song.data.isComposedVersion === false) || song.type === 'recorded'){
 				if (typeof song.name !== "string") return "none"
-				if (typeof song.bpm !== "number") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"
 				return "newRecorded"
 			}

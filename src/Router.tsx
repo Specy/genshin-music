@@ -18,6 +18,7 @@ import { AudioProviderWrapper } from "components/ProviderWrappers/AudioProviderW
 import { KeyboardProviderWrapper } from "components/ProviderWrappers/KeyboardProviderWrapper";
 import { useEffect } from "react";
 import { DropZoneProviderWrapper } from "components/ProviderWrappers/DropZoneProviderWrapper";
+import Privacy from "pages/Privacy";
 export function Router() {
 	useEffect(() => {
 		try {
@@ -81,6 +82,9 @@ export function Router() {
 								<Route path='/Theme'>
 									<Theme />
 								</Route>
+								<Route path='/Privacy'>
+									<Privacy />
+								</Route>
 								<Route path='*'>
 									<Error404 />
 								</Route>
@@ -90,6 +94,5 @@ export function Router() {
 				</KeyboardProviderWrapper>
 			</ThemeProviderWrapper>
 		</DropZoneProviderWrapper>
-
 	</HashRouter>
 }

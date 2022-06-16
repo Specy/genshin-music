@@ -62,7 +62,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     style={themeStyle}
                     tooltip={`Copy layer ${layer} notes`}
                 >
-                   {`Copy layer ${layer}`}
+                   {`Copy layer ${layer + 1}`}
                 </ToolButton>
             </div>
             <div className='tools-half'>
@@ -98,7 +98,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     style={themeStyle}
                     tooltip={`Erase selected layer ${layer} notes`}
                 >
-                    {`Erase layer ${layer}`}
+                    {`Erase layer ${layer + 1}`}
                 </ToolButton>
             </div>
 

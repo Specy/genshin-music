@@ -37,7 +37,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             value={instrument.volume}
             onChange={e => onChange({ ...instrument, volume: Number(e.target.value) })}
         />
-        <div className="row" style={{ marginTop: '0.3rem' }}>
+        <div className="row" style={{ marginTop: '0.1rem' }}>
             Pitch
         </div>
         <select

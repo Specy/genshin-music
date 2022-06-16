@@ -66,9 +66,10 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         const parsed = new ComposedSong(song.name)
         //@ts-ignore
         if(song.version === undefined) song.version = 1
+        const sanitizedBpm = Number(bpm)
         parsed.id = id || null
         parsed.data = { ...parsed.data, ...data }
-        parsed.bpm = Number.isFinite(bpm) ? bpm : 220
+        parsed.bpm = Number.isFinite(sanitizedBpm) ? sanitizedBpm : 220
         parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
 
@@ -154,7 +155,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             name: this.name,
             type: 'composed',
             folderId: this.folderId,
-            bpm: isNaN(bpm) ? 220 : bpm,
+            bpm: Number.isFinite(bpm) ? bpm : 220,
             pitch: this.pitch,
             version: this.version,
             data: {

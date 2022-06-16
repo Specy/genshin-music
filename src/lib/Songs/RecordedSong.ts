@@ -212,7 +212,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             )
             notes.forEach((note) => {
                 const data = note.key.split("Key")
-                const layer = new NoteLayer((note.l ?? Number(data[0])))
+                const layer = new NoteLayer((note.l ?? Number(data[0]))|| 1)
                 const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer)
                 converted.notes.push(recordedNote)
             })
