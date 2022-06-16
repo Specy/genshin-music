@@ -86,8 +86,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
     toComposedSong = (precision = 4) => {
         const bpmToMs = Math.floor(60000 / this.bpm)
+        const bpm = parseInt(this.bpm as any)
         const song = new ComposedSong(this.name)
-        song.bpm = this.bpm
+        song.bpm = Number.isFinite(bpm) ? bpm : 220
         song.pitch = this.pitch
         const notes = this.notes.map(note => note.clone())
         //remove duplicates
@@ -211,7 +212,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             )
             notes.forEach((note) => {
                 const data = note.key.split("Key")
-                const layer = new NoteLayer((note.l ?? Number(data[0])))
+                const layer = new NoteLayer((note.l ?? Number(data[0])) || 1)
                 const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer)
                 converted.notes.push(recordedNote)
             })

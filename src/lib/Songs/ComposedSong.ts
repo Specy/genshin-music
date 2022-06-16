@@ -46,9 +46,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
         const { id, bpm, data, pitch } = song
         const parsed = new ComposedSong(song.name)
         const version = song.version ?? 1
+        const sanitizedBpm = parseInt(bpm as any)
         parsed.id = id || null
         parsed.data = { ...parsed.data, ...data }
-        parsed.bpm = Number.isFinite(bpm) ? bpm : 220
+        parsed.bpm = Number.isFinite(sanitizedBpm) ? bpm : 220
         parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
         const instruments = Array.isArray(song.instruments) ? song.instruments : []
         parsed.instruments = parsed.instruments.map((_, i) => {
@@ -93,12 +94,12 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong>{
         return this.clone()
     }
     serialize = (): SerializedComposedSong => {
-        const bpm = Number(this.bpm)
+        let bpm = parseInt(this.bpm as any)
         return {
             name: this.name,
             type: 'composed',
             folderId: this.folderId,
-            bpm: isNaN(bpm) ? 220 : bpm,
+            bpm: Number.isFinite(bpm) ? bpm : 220,
             pitch: this.pitch,
             version: this.version,
             data: {
