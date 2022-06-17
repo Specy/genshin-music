@@ -33,10 +33,6 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
 
             <div 
                 className={keyboardClass} 
-                style={{
-                    margin: 'unset',
-                    marginLeft: '-6rem'
-                }}
             >
                 {keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
                 {keyboard.layout.map((note, i) => {
