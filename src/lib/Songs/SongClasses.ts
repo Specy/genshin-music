@@ -83,6 +83,11 @@ export class ColumnNote {
 		if(isToggled) this.layer.set(to, true)
 		this.layer.set(from, false)
 	}
+	swapLayer(layer1: number, layer2: number){
+		const tmp = this.layer.test(layer1)
+		this.layer.set(layer1, this.layer.test(layer2))
+		this.layer.set(layer2, tmp)
+	}
 	clearLayer(){
 		this.layer.setData(0)
 	}

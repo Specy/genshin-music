@@ -72,7 +72,6 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         parsed.bpm = Number.isFinite(sanitizedBpm) ? sanitizedBpm : 220
         parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
-
         //parsing instruments
         if(song.version === 1 || song.version === 2){
             const instruments = Array.isArray(song.instruments) ? song.instruments : []
@@ -99,10 +98,9 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
                 return parsedColumn
             })
         }
-        if (song.version === 2) {
+        if (song.version === 2 || song.version === 3) {
             parsed.columns = song.columns.map(column => Column.deserialize(column))
         }
-
         return parsed
     }
     get isComposed(): true {
@@ -220,6 +218,14 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             })
         })
     }
+    swapLayer(amount: number, position:number, layer1: number, layer2:number) {
+        const columns = this.columns.slice(position, position + amount)
+        columns.forEach(column => {
+            column.notes.forEach(note => {
+                note.swapLayer(layer1, layer2)
+            })
+        })
+    }
     toggleBreakpoint = (override?: number) => {
         const index = typeof override === "number" ? override : this.selected
         const breakpointIndex = this.breakpoints.indexOf(index)
@@ -309,6 +315,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             return clone
         }
         clone.data.appName = 'Genshin'
+        clone.instruments = []
         this.instruments.map(_ => clone.addInstrument(INSTRUMENTS[0]))
         clone.columns = clone.columns.map(column => {
             column.notes = column.notes.map(note => {

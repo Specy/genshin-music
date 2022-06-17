@@ -29,7 +29,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                 theme={theme}
                 instrument={ins}
                 isSelected={i === selected}
-                onEditClick={() => setIsEditing(true)}
+                onEditClick={() => setIsEditing(!isEditing)}
                 onClick={() => onLayerSelect(i)}
                 key={ins.name + i}
             />
