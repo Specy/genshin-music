@@ -15,7 +15,7 @@ import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
-import { delay, formatMs, calculateSongLength } from "lib/Tools"
+import { delay, formatMs, calculateSongLength, blurEvent } from "lib/Tools"
 import { ComposedSong, ComposedSongInstrument, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
 import { Column } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
@@ -629,8 +629,9 @@ class Composer extends Component<any, ComposerState>{
                 <div className="column composer-left-control">
                     <AppButton
                         style={{ height: '3rem', borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)"}}
-                        onClick={() => {
+                        onClick={(e) => {
                             this.togglePlay()
+                            blurEvent(e)
                             if (settings.syncTabs.value) {
                                 this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
                             }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
-import { FileDownloader, parseSong } from "lib/Tools"
+import { parseSong } from "lib/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { PlayerStore } from 'stores/PlayerStore'
 import { HelpTab } from 'components/HelpTab'
@@ -40,6 +40,7 @@ import { useFolders } from 'lib/Hooks/useFolders';
 import { folderStore } from 'stores/FoldersStore';
 import { useSongs } from 'lib/Hooks/useSongs';
 import useClickOutside from 'lib/Hooks/useClickOutside';
+import { fileService } from 'lib/Services/FileService';
 
 interface MenuProps {
     functions: {
@@ -152,14 +153,11 @@ function Menu({ functions, data }: MenuProps) {
                 use the other format (button above). Do you still want to download?`
             )
             if (!agrees) return
-            return FileDownloader.download(
-                new Blob([song.toArray()], { type: "audio/midi" }),
-                song.name + ".mid"
-            )
+            return fileService.downloadMidi(song)
         }
         const songName = song.name
         const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()].map(s => Song.stripMetadata(s))
-        FileDownloader.download(JSON.stringify(converted), `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
+        fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
         LoggerStore.success("Song downloaded")
         Analytics.userSongs('download', { name: songName, page: 'player' })
     }
@@ -186,7 +184,7 @@ function Menu({ functions, data }: MenuProps) {
                 return song
             }).map(s => Song.stripMetadata(s))
             const date = new Date().toISOString().split('T')[0]
-            FileDownloader.download(JSON.stringify(toDownload), `${APP_NAME}_Backup_${date}.json`)
+            fileService.downloadSong(toDownload, `${APP_NAME}_Backup_${date}`)
             LoggerStore.success("Song backup downloaded")
         } catch (e) {
             console.error(e)

@@ -1,6 +1,6 @@
 import { Folder } from "lib/Folder"
+import { fileService } from "lib/Services/FileService"
 import { Song } from "lib/Songs/Song"
-import { FileDownloader } from "lib/Tools"
 import { useEffect, useRef, useState } from "react"
 import { BsChevronRight } from "react-icons/bs"
 import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
@@ -107,7 +107,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                         <FloatingDropdownRow 
                             onClick={() => {
                                 const songs = data.songs.map(song => Song.stripMetadata(song))
-                                FileDownloader.download(JSON.stringify(songs), `${data.name}-folder.json`)
+                                fileService.downloadSong(songs, `${data.name}-folder`)
                             }}
                         >
                             <FaDownload style={{ marginRight: "0.4rem" }} size={14} />

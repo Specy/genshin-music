@@ -1,4 +1,5 @@
 import { useTheme } from "lib/Hooks/useTheme"
+import { blurEvent } from "lib/Tools"
 
 interface MenuItemProps<T> {
     className?: string,
@@ -20,7 +21,10 @@ export function MenuItem<T>({ className = "", onClick, children, data, style, is
             : theme.layer('primary', 0).toString(),
              ...style 
         }}
-        onClick={() => onClick?.(data)}
+        onClick={(e) => {
+            blurEvent(e)
+            onClick?.(data)
+        }}
     >
         {children}
     </button>

@@ -209,7 +209,7 @@ class Player extends Component<any, PlayerState>{
 					{!hasSong &&
 						<AppButton
 							toggled={isRecording}
-							onClick={this.toggleRecord}
+							onClick={() => this.toggleRecord}
 							style={{ marginTop: "0.8rem" }}
 						>
 							{isRecording ? "Stop" : "Record"}
@@ -239,7 +239,7 @@ class Player extends Component<any, PlayerState>{
 				<div className='record-button'>
 					<AppButton
 						toggled={isRecordingAudio}
-						onClick={this.toggleRecordAudio}
+						onClick={() => this.toggleRecordAudio}
 					>
 						{isRecordingAudio ? "Finish recording" : "Record audio"}
 					</AppButton>

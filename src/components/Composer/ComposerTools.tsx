@@ -2,6 +2,7 @@ import { AppButton } from "components/AppButton"
 import { HelpTooltip } from "components/HelpTooltip"
 import { hasTooltip, Tooltip } from "components/Tooltip"
 import { useTheme } from "lib/Hooks/useTheme"
+import { blurEvent } from "lib/Tools"
 import { memo } from "react"
 interface ComposerToolsProps{
     data: {
@@ -130,7 +131,7 @@ function ToolButton({ disabled, onClick, active, style, children,tooltip }: Tool
     return <button
         disabled={disabled}
         onClick={(e) => {
-            e.currentTarget.blur()
+            blurEvent(e)
             onClick()
         }}
         className={`${active ? "tools-button-highlighted" : ""} ${hasTooltip(tooltip)}`}

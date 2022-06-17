@@ -61,6 +61,12 @@ function capitalize(str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function blurEvent(e: any) {
+	//@ts-ignore
+	e?.target?.blur?.()
+}
+
+
 function getNoteText(
 	noteNameType: NoteNameType,
 	index: number,
@@ -258,5 +264,6 @@ export {
 	nearestEven,
 	formatMs,
 	calculateSongLength,
-	setIfInTWA
+	setIfInTWA,
+	blurEvent
 }

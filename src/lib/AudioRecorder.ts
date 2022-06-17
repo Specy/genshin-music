@@ -1,8 +1,6 @@
 import { AUDIO_CONTEXT } from "appConfig";
-//@ts-ignore
-import toWav from 'audiobuffer-to-wav'
 import MediaRecorderPolyfill from 'audio-recorder-polyfill'
-import { FileDownloader } from "./Tools";
+import { fileService } from "./Services/FileService";
 
 export default class AudioRecorder {
     node: MediaStreamAudioDestinationNode | null
@@ -40,32 +38,11 @@ export default class AudioRecorder {
         })
     }
     static async downloadBlob(urlBlob:Blob, fileName:string){
-        const wav = toWav(await blobToAudio(urlBlob))
-        const blob = new Blob([new DataView(wav)], {
-            type: 'audio/wav'
-        })
-        FileDownloader.download(blob, fileName)
+        fileService.downloadBlobAsWav(urlBlob, fileName)
+
     }
     async download(urlBlob:Blob, fileName:string) {
-        //TODO add file downloader here
-        const wav = toWav(await blobToAudio(urlBlob))
-        const blob = new Blob([new DataView(wav)], {
-            type: 'audio/wav'
-        })
-        FileDownloader.download(blob, fileName)
+        fileService.downloadBlobAsWav(urlBlob, fileName)
     }
 }
 
-function blobToAudio(blob:Blob): Promise<AudioBuffer> {
-    return new Promise(resolve => {
-        const audioContext = new AudioContext();
-        const fileReader = new FileReader();
-        function handleLoad(){
-            audioContext.decodeAudioData(fileReader.result as ArrayBuffer, (audioBuffer) => {
-                resolve(audioBuffer)
-            })
-        }
-        fileReader.addEventListener('loadend',handleLoad, {once: true})
-        fileReader.readAsArrayBuffer(blob);
-    })
-}

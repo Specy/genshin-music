@@ -3,7 +3,7 @@ import { Tooltip,hasTooltip } from "./Tooltip"
 interface AppButtonprops {
     style?: React.CSSProperties,
     className?: string,
-    onClick?: () => void,
+    onClick?: (e: React.MouseEvent) => void,
     children?: React.ReactNode,
     toggled?: boolean,
     disabled?: boolean,
@@ -29,7 +29,7 @@ export function AppButton({
                 : {})
             
             }}
-        onClick={onClick || (() => { })}
+        onClick={(e) => onClick?.(e)}
         disabled={disabled}
     >
         {children}

@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars } from 'react-icons/fa';
-import { FileDownloader, parseSong } from "lib/Tools"
 import { APP_NAME } from 'appConfig'
 import { MenuItem } from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -31,6 +30,8 @@ import { useSongs } from 'lib/Hooks/useSongs';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import useClickOutside from 'lib/Hooks/useClickOutside';
 import isMobile from 'is-mobile';
+import { fileService } from 'lib/Services/FileService';
+import { parseSong } from 'lib/Tools';
 
 const isOnMobile = isMobile()
 interface MenuProps {
@@ -112,17 +113,13 @@ function Menu({ data, functions }: MenuProps) {
                     use the other format (button above). Do you still want to download?`
                 )
                 if (!agrees) return
-                return FileDownloader.download(
-                    new Blob([song.toArray()], { type: "audio/midi" }),
-                    song.name + ".mid"
-                )
+                return fileService.downloadMidi(song)
             }
             song.data.appName = APP_NAME
             const songName = song.name
             const parsed = parseSong(song)
             const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
-            const json = JSON.stringify(converted)
-            FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
+            fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
             LoggerStore.success("Song downloaded")
             Analytics.userSongs('download', { name: parsed.name, page: 'composer' })
         } catch (e) {

@@ -1,5 +1,5 @@
 import { FaTrash, FaDownload } from 'react-icons/fa';
-import { FileDownloader, parseSong } from "lib/Tools"
+import { parseSong } from "lib/Tools"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { APP_NAME } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
@@ -12,6 +12,7 @@ import { AppButton } from 'components/AppButton';
 import { SerializedSong, Song } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
+import { fileService } from 'lib/Services/FileService';
 
 export function ErrorPage() {
     const [songs] = useSongs()
@@ -38,7 +39,7 @@ export function ErrorPage() {
             const songName = song.name
             const parsed = parseSong(song)
             const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()].map(s => Song.stripMetadata(s))
-            FileDownloader.download(JSON.stringify(converted), `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
+            fileService.downloadSong(converted,`${songName}.${APP_NAME.toLowerCase()}sheet`)
             LoggerStore.success("Song downloaded")
         }catch(e){
             console.error(e)
