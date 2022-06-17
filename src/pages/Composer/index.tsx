@@ -38,7 +38,7 @@ import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
 import { InstrumentControls } from 'components/Composer/InstrumentControls';
 import { AppButton } from 'components/AppButton';
-import { fileService, UnknownSongImport } from 'lib/Services/FileService';
+import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore';
 
 interface ComposerState {
     layers: Instrument[]
@@ -51,6 +51,7 @@ interface ComposerState {
     isMidiVisible: boolean
     isRecordingAudio: boolean
     isPlaying: boolean
+    theme: ThemeStoreClass
 }
 class Composer extends Component<any, ComposerState>{
     state: ComposerState
@@ -73,6 +74,7 @@ class Composer extends Component<any, ComposerState>{
             isToolsVisible: false,
             isMidiVisible: false,
             isRecordingAudio: false,
+            theme: ThemeProvider
         }
         this.state.song.bpm = settings.bpm.value
         this.mounted = false
@@ -626,7 +628,7 @@ class Composer extends Component<any, ComposerState>{
             <div className='composer-grid'>
                 <div className="column composer-left-control">
                     <AppButton
-                        style={{ height: '3rem', borderRadius: '0.3rem' }}
+                        style={{ height: '3rem', borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)"}}
                         onClick={() => {
                             this.togglePlay()
                             if (settings.syncTabs.value) {

@@ -2,7 +2,6 @@ import { OldFormatComposed, UnknownSerializedComposedSong } from "lib/Songs/Comp
 import { OldFormatRecorded, UnknownSerializedRecordedSong } from "lib/Songs/RecordedSong"
 import { parseSong } from "lib/Tools"
 import { songsStore } from "stores/SongsStore"
-import { songService } from "./SongService"
 
 type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong
 type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded

@@ -93,13 +93,12 @@ select {
     border: none;
     border-radius: 0.3rem;
     color: var(--icon-color);
-    background-color: var(--primary);
+    background-color: var(--primary-darken-10);
     cursor: pointer;
 }
 
 .tool {
     width: 4vw;
-    max-width: 3rem;
 }
 
 .tool-icon {
@@ -357,7 +356,7 @@ canvas {
 .instruments-button-wrapper {
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: var(--primary);
+    background-color: var(--primary-darken-10);
     border-radius: 0.3rem;
     margin-top: 0.2rem;
 }

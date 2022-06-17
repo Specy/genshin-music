@@ -1,5 +1,3 @@
-import { EMPTY_LAYER } from "appConfig"
-
 
 //1 = has current layer, 2 = has other layers, 3 = has both
 export type LayerStatus = 1 | 2 | 3

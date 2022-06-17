@@ -38,7 +38,6 @@ export function SongMenu<T>({
     }, [songs])
     const [folders] = useFolders(songs)
     const [theme] = useTheme()
-    //const selectedColor = theme.layer('menu_background', 0.32).desaturate(0.4)
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
 
 

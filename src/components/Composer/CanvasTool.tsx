@@ -10,7 +10,15 @@ interface CanvasToolProps {
 
 
 export function CanvasTool({ children, tooltip, onClick, style }: CanvasToolProps) {
-    return <button className={`tool ${hasTooltip(tooltip)}`} onClick={onClick} style={style}>
+    return <button 
+        className={`tool ${hasTooltip(tooltip)}`} 
+        onClick={(e) => {
+            onClick();
+            //@ts-ignore
+            e.target?.blur?.()
+        }} 
+        style={style}
+    >
         {children}
         {tooltip &&
             <Tooltip>

@@ -2,7 +2,6 @@ import { Component } from 'react';
 import Keyboard from "components/Player/Keyboard"
 import Menu from "components/Player/Menu"
 import { PlayerStore } from 'stores/PlayerStore'
-import { parseSong } from "lib/Tools"
 import { RecordedSong } from 'lib/Songs/RecordedSong';
 import { ComposedSong } from 'lib/Songs/ComposedSong';
 import { Recording } from 'lib/Songs/SongClasses';
@@ -20,7 +19,6 @@ import { AppButton } from 'components/AppButton';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { settingsService } from 'lib/Services/SettingsService';
-import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
 
 interface PlayerState {

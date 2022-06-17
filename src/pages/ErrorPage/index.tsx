@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { FaTrash, FaDownload } from 'react-icons/fa';
 import { FileDownloader, parseSong } from "lib/Tools"
 import { asyncConfirm } from "components/AsyncPrompts"

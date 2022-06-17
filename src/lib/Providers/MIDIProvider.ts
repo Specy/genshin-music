@@ -1,4 +1,3 @@
-import { APP_NAME } from "appConfig"
 import { settingsService } from "lib/Services/SettingsService"
 import { MIDISettings } from "../BaseSettings"
 

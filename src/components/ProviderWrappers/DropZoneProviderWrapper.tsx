@@ -1,6 +1,5 @@
 import { BodyDropper, DroppedFile } from "components/BodyDropper"
 import { fileService, UnknownSongImport } from "lib/Services/FileService"
-import { SerializedSong } from "lib/Songs/Song"
 import LoggerStore from "stores/LoggerStore"
 
 interface DropZoneProviderProps {

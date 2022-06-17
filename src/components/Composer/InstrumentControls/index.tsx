@@ -48,7 +48,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
         <div style={{ height: '1rem' }}>
 
         </div>
-        <AppButton style={{ marginTop: 'auto', padding: '0rem', paddingBottom: '0.1rem' }} onClick={onInstrumentAdd}>
+        <AppButton style={{ marginTop: 'auto', padding: '0rem', paddingBottom: '0.1rem', backgroundColor: "var(--primary-darken-10)" }} onClick={onInstrumentAdd}>
             <FaPlus size={16} color='var(--icon-color)' />
         </AppButton>
     </div>
