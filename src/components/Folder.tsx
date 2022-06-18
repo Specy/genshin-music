@@ -106,8 +106,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                         </FloatingDropdownRow>
                         <FloatingDropdownRow 
                             onClick={() => {
-                                const songs = data.songs.map(song => Song.stripMetadata(song))
-                                fileService.downloadSong(songs, `${data.name}-folder`)
+                                fileService.downloadSong(data.songs, `${data.name}-folder`)
                             }}
                         >
                             <FaDownload style={{ marginRight: "0.4rem" }} size={14} />

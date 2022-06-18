@@ -110,13 +110,12 @@ export class ComposerCache {
                     ).endFill()
             }
             if (note === 2 || note === 3) { //layer 2
-                g.lineStyle(this.margin === 4 ? 3 : 2,new Color(noteData.border).rgbNumber())
-                    .drawRoundedRect(
-                        this.margin / 2 - 0.25,
-                        this.margin / 2,
-                        Math.ceil(this.noteWidth - this.margin),
-                        Math.ceil(this.noteHeight - this.margin),
-                        radius
+                g.beginFill(new Color(noteData.center).rgbNumber())
+                    .lineStyle(1,new Color(noteData.center).rgbNumber())
+                    .drawCircle(
+                        this.noteWidth / 2 - 0.25,
+                        this.noteHeight / 2,
+                        this.noteHeight / 3 - 0.5
                     ).endFill()
             }
             if(!this.app) return

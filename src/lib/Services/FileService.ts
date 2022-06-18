@@ -5,9 +5,9 @@ import { FileDownloader, parseSong } from "lib/Tools"
 import { songsStore } from "stores/SongsStore"
 //@ts-ignore
 import toWav from 'audiobuffer-to-wav'
-import { SerializedSong } from "lib/Songs/Song"
+import { SerializedSong, Song } from "lib/Songs/Song"
 import { Midi } from "@tonejs/midi"
-import { Theme, ThemeStoreClass } from "stores/ThemeStore"
+import { Theme } from "stores/ThemeStore"
 type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedSong
 type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded
 type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
@@ -43,8 +43,10 @@ class FileService {
     downloadSong(songs: UnknownSong[] | UnknownSong, fileName: string) {
         fileName = fileName.replace(".json", "")
         if(Array.isArray(songs)) {
+            songs = songs.map(song => Song.stripMetadata(song))
             FileDownloader.download(JSON.stringify(songs), `${fileName}.json`)
         }else{
+            songs = Song.stripMetadata(songs)
             FileDownloader.download(JSON.stringify([songs]), `${fileName}.json`)
         }
     }

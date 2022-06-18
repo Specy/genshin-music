@@ -38,7 +38,7 @@ export function ErrorPage() {
         try{
             const songName = song.name
             const parsed = parseSong(song)
-            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()].map(s => Song.stripMetadata(s))
+            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
             fileService.downloadSong(converted,`${songName}.${APP_NAME.toLowerCase()}sheet`)
             LoggerStore.success("Song downloaded")
         }catch(e){

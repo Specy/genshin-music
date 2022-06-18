@@ -156,7 +156,7 @@ function Menu({ functions, data }: MenuProps) {
             return fileService.downloadMidi(song)
         }
         const songName = song.name
-        const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()].map(s => Song.stripMetadata(s))
+        const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
         fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
         LoggerStore.success("Song downloaded")
         Analytics.userSongs('download', { name: songName, page: 'player' })
@@ -182,7 +182,7 @@ function Menu({ functions, data }: MenuProps) {
                     if (song.type === 'recorded') RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
                 }
                 return song
-            }).map(s => Song.stripMetadata(s))
+            })
             const date = new Date().toISOString().split('T')[0]
             fileService.downloadSong(toDownload, `${APP_NAME}_Backup_${date}`)
             LoggerStore.success("Song backup downloaded")
