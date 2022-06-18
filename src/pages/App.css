@@ -24,6 +24,7 @@
 @font-face {
 	font-family: Bonobo;
 	src: url("../assets/font/BonoboBold.ttf");
+	font-display: swap;
 }
 
 .loading {
@@ -78,7 +79,7 @@ input {
 	-ms-user-select: none;
 	user-select: none;
 	box-sizing: border-box;
-	font-family: Bonobo;
+	font-family: Bonobo, Arial;
 	outline: none;
 	-webkit-tap-highlight-color: transparent;
 }

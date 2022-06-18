@@ -2,8 +2,8 @@
 # Welcome to Genshin music and Sky music nightly
 
 This repository holds the code relative to the two music apps for Genshin and sky cotl, you can see the published apps at https://specy.app
-![Composer](docs/assets/composer.png)
-![Player](docs/assets/player.png)
+![Composer](docs/assets/composer.webp)
+![Player](docs/assets/player.webp)
 
 # How to run
 You need node.js and yarn installed, if you don't have yarn, install it with `npm i yarn --global`.

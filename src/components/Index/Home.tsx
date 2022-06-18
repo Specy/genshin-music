@@ -104,7 +104,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 icon={<FaCompactDisc />}
                 title='Composer'
                 style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                background={`./manifestData/composer.png`}
+                background={`./manifestData/composer.webp`}
                 href='Composer'
                 current={currentPage === 'Composer'}
             >
@@ -114,7 +114,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 icon={<BsMusicPlayerFill />}
                 title='Player'
                 style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                background={`./manifestData/main.png`}
+                background={`./manifestData/main.webp`}
                 href=''
                 current={currentPage === '' || currentPage === 'Player'}
             >

@@ -8,7 +8,6 @@ const publicPath = './public'
 const chosenApp = process.argv[2]
 const date = new Date()
 const SW_VERSION = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`
-console.log(SW_VERSION)
 const PATH_NAMES = {
     Sky: "skyMusic",
     Genshin: "genshinMusic"

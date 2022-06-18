@@ -21,14 +21,14 @@
   ],
   "screenshots": [
     {
-      "src": "manifestData/main.png",
+      "src": "manifestData/main.webp",
       "type": "image/png",
-      "sizes": "1706x960"
+      "sizes": "1280x720"
     },
     {
-      "src": "manifestData/composer.png",
+      "src": "manifestData/composer.webp",
       "type": "image/png",
-      "sizes": "1706x960"
+      "sizes": "1280x720"
     }
   ],
   "start_url": ".",

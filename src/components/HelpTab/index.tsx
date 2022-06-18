@@ -1,5 +1,3 @@
-import mainPageImg from 'assets/images/mainpage.png'
-import composerImg from 'assets/images/composer.png'
 import songsImg from 'assets/images/songs.png'
 import { FaCrosshairs, FaDownload } from 'react-icons/fa'
 import { BsCircle } from 'react-icons/bs'
@@ -11,7 +9,7 @@ export function HelpTab() {
             Main page
         </div>
         <div>
-            <img src={mainPageImg} className='help-img' alt='tutorial for the main page' loading='lazy'/>
+            <img src={`./manifestData/main.webp`} className='help-img' alt='tutorial for the main page' loading='lazy'/>
             <ol>
                 <li>Record the keyboard as an audio file</li>
                 <li>Current note position, you can change it to reload</li>
@@ -84,7 +82,7 @@ export function HelpTab() {
             Composer
         </div>
         <div>
-            <img src={composerImg} className='help-img' alt="tutorial for composer" loading='lazy'/>
+            <img src={`./manifestData/composer.webp`} className='help-img' alt="tutorial for composer" loading='lazy'/>
             <ol>
                 <li>Go to the next / previous breakpoint</li>
                 <li>Timeline of the breakpoints</li>
