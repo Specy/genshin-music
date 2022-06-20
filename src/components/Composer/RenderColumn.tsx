@@ -3,10 +3,12 @@ import type { ColumnNote } from 'lib/Songs/SongClasses';
 import type { Texture } from 'pixi.js';
 import { Container, Sprite } from '@inlet/react-pixi';
 import { ComposerCacheData } from "./TextureCache";
+import { ComposedSongInstrument } from "lib/Songs/ComposedSong";
 
 interface RenderColumnProps {
     notes: ColumnNote[]
     currentLayer: number
+    instruments: ComposedSongInstrument[]
     index: number
     sizes: {
         width: number
@@ -20,7 +22,7 @@ interface RenderColumnProps {
     onClick: (index: number) => void
 }
 
-export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
+export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,  backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
     return <Container
         pointertap={() => onClick(index)}
         interactive={true}
@@ -48,7 +50,7 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCa
             return <Sprite
                 key={note.index}
                 texture={
-                    cache.notes[note.layer.toLayerStatus(currentLayer)]
+                    cache.notes[note.layer.toLayerStatus(currentLayer, instruments)]
                 }
                 y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
             >

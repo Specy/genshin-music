@@ -18,6 +18,7 @@ export interface ComposedSongInstrument{
     name: InstrumentName
     volume: number
     pitch: Pitch | ""
+    visible: boolean
 }
 
 export type BaseSerializedComposedSong = SerializedSong & {
@@ -42,6 +43,13 @@ export type UnknownSerializedComposedSong = SerializedComposedSongV1 | Serialize
 
 
 export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
+
+const baseInstrument: ComposedSongInstrument = {
+    name: INSTRUMENTS[0],
+    volume: 100,
+    pitch: "",
+    visible: true
+}
 
 export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong, 3>{
     notes: RecordedNote[] = []
@@ -75,15 +83,11 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         //parsing instruments
         if(song.version === 1 || song.version === 2){
             const instruments = Array.isArray(song.instruments) ? song.instruments : []
-            parsed.instruments = instruments.map(instrument =>  {
-                return {
-                    name: instrument,
-                    volume: 100,
-                    pitch: ""
-                }
+            parsed.instruments = instruments.map(name =>  {
+                return {...baseInstrument, name}
             })
         } else if (song.version === 3){
-            parsed.instruments = song.instruments.map(instrument => ({...instrument}))
+            parsed.instruments = song.instruments.map(instrument => ({...baseInstrument, ...instrument}))
         }
         //parsing columns
         if (song.version === 1) {
@@ -126,12 +130,8 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
     toComposedSong = () => {
         return this.clone()
     }
-    addInstrument = (instrument: InstrumentName) => {
-        const newInstrument:ComposedSongInstrument = {
-            name: instrument,
-            volume: 100,
-            pitch: ""
-        }
+    addInstrument = (name: InstrumentName) => {
+        const newInstrument:ComposedSongInstrument = {...baseInstrument, name}
         this.instruments = [...this.instruments, newInstrument]
     }
     removeInstrument = async (index: number) => {

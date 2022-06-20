@@ -366,6 +366,7 @@ canvas {
 	background: var(--secondary);
 }
 .instrument-button {
+    position: relative;
     flex-direction: column;
     border-radius: 0.3rem;
     border-bottom: solid 2px var(--secondary);
@@ -375,9 +376,14 @@ canvas {
 .instrument-settings {
     font-size: 0.8rem;
     display: grid;
-    padding: 0 0.2rem;
-    grid-template-columns: 1fr;
-    gap: 0.3rem;
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+}
+.instrument-settings .app-button{
+    padding: 0;
+    background-color: transparent;
+    min-width: unset;
+    width: 100%;
 }
 .floating-instrument-settings{
     position: absolute;

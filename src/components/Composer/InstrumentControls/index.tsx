@@ -3,7 +3,7 @@ import { useTheme } from "lib/Hooks/useTheme";
 import { ComposedSongInstrument } from "lib/Songs/ComposedSong";
 import { blurEvent } from "lib/Tools";
 import { memo, useCallback, useState } from "react";
-import { FaCog, FaPlus } from "react-icons/fa";
+import { FaCog, FaEye, FaEyeSlash, FaPlus } from "react-icons/fa";
 import { ThemeStoreClass } from "stores/ThemeStore";
 import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
 
@@ -32,6 +32,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                 isSelected={i === selected}
                 onEditClick={() => setIsEditing(!isEditing)}
                 onClick={() => onLayerSelect(i)}
+                onVisibleToggle={(visible) => onInstrumentChange({ ...ins, visible }, i)}
                 key={ins.name + i}
             />
         )}
@@ -65,8 +66,10 @@ interface InstrumentButtonProps {
     isSelected: boolean,
     onClick: () => void
     onEditClick: () => void
+    onVisibleToggle: (newState: boolean) => void
 }
-function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick }: InstrumentButtonProps) {
+function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick, onVisibleToggle }: InstrumentButtonProps) {
+    const passiveIcon = theme.getText('primary')
     return <div
         className="instrument-button flex-centered"
         style={isSelected
@@ -74,6 +77,17 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick 
                 backgroundColor: theme.get("primary").mix(theme.get("accent")).toString(),
             } : {}}
     >
+        {!isSelected && !instrument.visible &&
+            <FaEyeSlash 
+                style={{
+                    position: 'absolute', 
+                    top: '0.3rem', 
+                    left: '0.3rem', 
+                    color: (passiveIcon.isDark() ? passiveIcon.lighten(0.2) : passiveIcon.darken(0.2)).hex()
+                }}
+                size={14}
+            />
+        }
         <AppButton
             onClick={(e) => {
                 blurEvent(e)
@@ -89,10 +103,18 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick 
             <div className="instrument-settings">
                 <AppButton
                     onClick={() => onEditClick()}
-                    style={{ backgroundColor: "transparent", padding: '0' }}
                 >
-                    <FaCog size={16} />
+                    <FaCog size={15} />
                 </AppButton>
+                <AppButton
+                    onClick={() => onVisibleToggle(!instrument.visible)}
+                >
+                    {instrument.visible
+                        ? <FaEye size={16} />
+                        : <FaEyeSlash size={16} />
+                    }
+                </AppButton>
+
             </div>
         }
 

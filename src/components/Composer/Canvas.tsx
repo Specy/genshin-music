@@ -17,11 +17,13 @@ import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvi
 import { isColumnVisible, RenderColumn } from 'components/Composer/RenderColumn';
 import { TimelineButton } from './TimelineButton';
 import { Timer } from 'types/GeneralTypes';
+import { ComposedSong } from 'lib/Songs/ComposedSong';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
     data: {
         columns: Column[],
+        song: ComposedSong
         selected: number,
         currentLayer: number,
         settings: ComposerSettingsDataType,
@@ -311,6 +313,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                             notes={column.notes}
                             index={i}
                             sizes={sizes}
+                            instruments={data.song.instruments}
                             currentLayer={data.currentLayer}
                             backgroundCache={background}
                             isToolsSelected={data.selectedColumns.includes(i)}

@@ -660,6 +660,7 @@ class Composer extends Component<any, ComposerState>{
                             functions={this}
                             data={{
                                 currentLayer: layer,
+                                song,
                                 settings, selectedColumns,
                                 columns: song.columns,
                                 selected: song.selected,
