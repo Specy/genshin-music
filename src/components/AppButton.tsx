@@ -8,7 +8,8 @@ interface AppButtonprops {
     toggled?: boolean,
     disabled?: boolean,
     visible?: boolean,
-    tooltip?: string
+    tooltip?: string,
+    ariaLabel?: string
 }
 export function AppButton({ 
         style = {}, 
@@ -18,7 +19,8 @@ export function AppButton({
         onClick, 
         disabled = false, 
         visible = true, 
-        tooltip
+        tooltip,
+        ariaLabel = ''
     }: AppButtonprops) {
     return <button
         className={`app-button ${className} ${toggled ? 'active' : ''} ${hasTooltip(tooltip)}`}
@@ -29,6 +31,7 @@ export function AppButton({
                 : {})
             
             }}
+        aria-label={ariaLabel}
         onClick={(e) => onClick?.(e)}
         disabled={disabled}
     >

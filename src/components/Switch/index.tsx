@@ -8,7 +8,11 @@ interface SwitchProps{
 }
 export default function Switch({checked, onChange, styleOuter}: SwitchProps){
     const [theme] = useTheme()
-    return <button className="switch-wrapper" onClick={() => onChange(!checked)} style={styleOuter || {}}>
+    return <button 
+        className="switch-wrapper" 
+        onClick={() => onChange(!checked)} style={styleOuter || {}}
+        aria-label={checked ? 'Switch to off' : 'Switch to on'}
+    >
         <div 
             className={`switch-inner ${checked ? 'switch-inner-on' : ''}`}
             style={{backgroundColor: (checked ? theme.get('accent') : theme.layer('primary',0.4)).toString()}}

@@ -57,6 +57,7 @@ export default function SearchedSong({ onClick, data, importSong, theme }:Search
             <button 
                 className="song-button" 
                 onClick={download} 
+                aria-label={`Import song ${data.name}`}
                 style={{backgroundColor: theme.layer('primary',0.2).hex(), marginRight: 0}}
             >
                 {fetching ? <FaSpinner /> : <FaDownload />}

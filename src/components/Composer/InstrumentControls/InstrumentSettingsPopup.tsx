@@ -1,7 +1,8 @@
 import { Pitch, PITCHES } from "appConfig"
 import { AppButton } from "components/AppButton"
 import useClickOutside from "lib/Hooks/useClickOutside"
-import { ComposedSongInstrument } from "lib/Songs/ComposedSong"
+import { ComposedSongInstrument, InstrumentNoteIcon } from "lib/Songs/ComposedSong"
+import { capitalize } from "lodash"
 import { FaTrash } from "react-icons/fa"
 import { InstrumentSelector } from "./InstrumentSelector"
 
@@ -11,7 +12,7 @@ interface InstrumentSettingsPopupProps {
     onDelete: () => void
     onClose: () => void
 }
-
+const noteIcons: InstrumentNoteIcon[] = [ 'circle', 'border', 'line']
 export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClose }: InstrumentSettingsPopupProps) {
     const ref = useClickOutside<HTMLDivElement>(onClose, { active: true, ignoreFocusable: true })
     if (!instrument) return <div className="floating-instrument-settings  box-shadow">
@@ -52,6 +53,21 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             {PITCHES.map(pitch =>
                 <option key={pitch} value={pitch}>
                     {pitch}
+                </option>
+            )}
+        </select>
+        <div className="row" style={{ marginTop: '0.1rem' }}>
+            Unselected note icon
+        </div>
+        <select
+            className="select"
+            style={{ padding: '0.3rem' }}
+            value={instrument.icon}
+            onChange={e => onChange({ ...instrument, icon: e.target.value as InstrumentNoteIcon })}
+        >
+            {noteIcons.map(icon =>
+                <option key={icon} value={icon}>
+                    {capitalize(icon)}
                 </option>
             )}
         </select>

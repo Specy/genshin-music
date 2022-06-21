@@ -50,7 +50,11 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
         <div style={{ height: '1rem' }}>
 
         </div>
-        <AppButton style={{ marginTop: 'auto', padding: '0rem', paddingBottom: '0.1rem', backgroundColor: "var(--primary-darken-10)" }} onClick={onInstrumentAdd}>
+        <AppButton 
+            style={{ marginTop: 'auto', padding: '0rem', paddingBottom: '0.1rem', backgroundColor: "var(--primary-darken-10)" }} 
+            onClick={onInstrumentAdd}
+            ariaLabel='Add new instrument'
+        >
             <FaPlus size={16} color='var(--icon-color)' />
         </AppButton>
     </div>
@@ -93,7 +97,7 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
                 blurEvent(e)
                 onClick()
             }}
-            style={{ backgroundColor: "transparent" }}
+            style={{ backgroundColor: "transparent", width: '100%' }}
             className='flex-grow flex-centered instrument-name-button text-ellipsis'
         >
             {instrument.name}
@@ -103,11 +107,13 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
             <div className="instrument-settings">
                 <AppButton
                     onClick={() => onEditClick()}
+                    ariaLabel='Settings'
                 >
                     <FaCog size={15} />
                 </AppButton>
                 <AppButton
                     onClick={() => onVisibleToggle(!instrument.visible)}
+                    ariaLabel={instrument.visible ? 'Hide' : 'Show'}
                 >
                     {instrument.visible
                         ? <FaEye size={16} />

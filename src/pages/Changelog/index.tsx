@@ -12,7 +12,7 @@ export default function Changelogpage() {
             Changelog <span style={{ fontSize: '1.2rem' }}>v{APP_VERSION}</span>
         </div>
         <SimpleMenu>
-            <MenuItem>
+            <MenuItem ariaLabel='Go to github'>
                 <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
                     <FaGithub />
                 </a>

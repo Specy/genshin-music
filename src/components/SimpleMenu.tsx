@@ -19,18 +19,19 @@ export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuP
                     onClick={() => {
                         history.goBack()
                     }}
+                    ariaLabel='Go back'
                 >
                     <FaArrowLeft className='icon' />
                 </MenuItem>
             }
             {children}
-            <MenuItem>
+            <MenuItem ariaLabel='Go to discord'>
                 <a href='https://discord.gg/Arsf65YYHq' target='_blank' rel='noreferrer' >
                     <FaDiscord className="icon" />
                 </a>
             </MenuItem>
 
-            <MenuItem onClick={HomeStore.open}>
+            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

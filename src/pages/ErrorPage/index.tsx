@@ -88,11 +88,11 @@ function SongRow({data, deleteSong, download } : SongRowProps) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => download(data)}>
+            <button className="song-button" onClick={() => download(data)} aria-label={`Download song ${data.name}`}>
                 <FaDownload />
 
             </button>
-            <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)}>
+            <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)} aria-label={`Delete song ${data.name}`}>
                 <FaTrash color="#ed4557" />
             </button>
         </div>

@@ -146,25 +146,25 @@ function Menu({ data, functions }: MenuProps) {
         <div className="menu-wrapper" ref={menuRef}>
 
             <div className={menuClass}>
-                <MenuItem onClick={() => toggleMenu(false)} className='close-menu'>
+                <MenuItem onClick={() => toggleMenu(false)} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon" />
                 </MenuItem>
-                <MenuItem onClick={updateThisSong} className={hasUnsaved}>
+                <MenuItem onClick={updateThisSong} className={hasUnsaved} ariaLabel='Save'>
                     <Memoized>
                         <FaSave className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Songs")} isActive={isOpen && selectedMenu === "Songs"}>
+                <MenuItem onClick={() => selectSideMenu("Songs")} isActive={isOpen && selectedMenu === "Songs"} ariaLabel='Song menu'>
                     <Memoized>
                         <FaMusic className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"}>
+                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"} ariaLabel='Settings menu'>
                     <Memoized>
                         <FaCog className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => changePage('Home')}>
+                <MenuItem onClick={() => changePage('Home')} ariaLabel='Open home menu'>
                     <Memoized>
                         <FaHome className="icon" />
                     </Memoized>

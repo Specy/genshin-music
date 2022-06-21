@@ -332,6 +332,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     style={{
                         backgroundColor: theme.timeline.hex
                     }}
+                    ariaLabel='Previous Breakpoint'
                 >
                     <Memoized>
                         <FaStepBackward size={16}/>
@@ -344,6 +345,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         marginLeft: 0,
                         backgroundColor: theme.timeline.hex
                     }}
+                    ariaLabel='Next Breakpoint'
                 >
                     <Memoized>
                         <FaStepForward size={16}/>
@@ -421,6 +423,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         backgroundColor: theme.timeline.hex
                     }}
                     tooltip={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
+                    ariaLabel={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
                 >
                     <Memoized>
                         {isBreakpointSelected

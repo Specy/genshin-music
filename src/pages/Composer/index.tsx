@@ -636,6 +636,7 @@ class Composer extends Component<any, ComposerState>{
                                 this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
                             }
                         }}
+                        ariaLabel={isPlaying ? 'Pause' : 'Play'}
                     >
                         <Memoized>
                             {isPlaying
@@ -668,12 +669,12 @@ class Composer extends Component<any, ComposerState>{
                             }}
                         />
                         <div className="buttons-composer-wrapper-right">
-                            <CanvasTool onClick={() => this.addColumns(1, song.selected)} tooltip='Add column'>
+                            <CanvasTool onClick={() => this.addColumns(1, song.selected)} tooltip='Add column' ariaLabel='Add column'>
                                 <Memoized>
                                     <AddColumn className="tool-icon" />
                                 </Memoized>
                             </CanvasTool>
-                            <CanvasTool onClick={() => this.removeColumns(1, song.selected)} tooltip='Remove column'>
+                            <CanvasTool onClick={() => this.removeColumns(1, song.selected)} tooltip='Remove column' ariaLabel='Remove column'>
                                 <Memoized>
                                     <RemoveColumn className='tool-icon' />
                                 </Memoized>
@@ -681,12 +682,13 @@ class Composer extends Component<any, ComposerState>{
                             <CanvasTool
                                 onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}
                                 tooltip='Add new page'
+                                ariaLabel='Add new page'
                             >
                                 <Memoized>
                                     <FaPlus size={16} />
                                 </Memoized>
                             </CanvasTool>
-                            <CanvasTool onClick={this.toggleTools} tooltip='Open tools'>
+                            <CanvasTool onClick={this.toggleTools} tooltip='Open tools' ariaLabel='Open tools'>
                                 <Memoized>
                                     <FaTools size={16} />
                                 </Memoized>

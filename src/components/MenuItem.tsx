@@ -6,12 +6,13 @@ interface MenuItemProps<T> {
     onClick?: (data?: T) => void
     children?: React.ReactNode,
     data?: T,
+    ariaLabel: string,
     current?: string,
     style?: React.CSSProperties
     isActive?: boolean
 }
 
-export function MenuItem<T>({ className = "", onClick, children, data, style, isActive }: MenuItemProps<T>) {
+export function MenuItem<T>({ className = "", onClick, children, data, style, isActive, ariaLabel }: MenuItemProps<T>) {
     const [theme] = useTheme()
     return <button
         className={`menu-item ${className}`}
@@ -21,6 +22,7 @@ export function MenuItem<T>({ className = "", onClick, children, data, style, is
             : theme.layer('primary', 0).toString(),
              ...style 
         }}
+        aria-label={ariaLabel}
         onClick={(e) => {
             blurEvent(e)
             onClick?.(data)

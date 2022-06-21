@@ -93,7 +93,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             <Score {...approachingScore} />
         }
         <div className="slider-wrapper">
-            <AppButton className="slider-button" onClick={PlayerStore.reset} tooltip='Stop'>
+            <AppButton className="slider-button" onClick={PlayerStore.reset} tooltip='Stop' ariaLabel="Stop song">
                 <Memoized>
                     <FaStop />
                 </Memoized>
@@ -131,7 +131,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                 </div>
             </div>
 
-            <AppButton className="slider-button" onClick={restart} tooltip='Restart'>
+            <AppButton className="slider-button" onClick={restart} tooltip='Restart' ariaLabel="Restart song">
                 <Memoized>
                     <FaSyncAlt />
                 </Memoized>

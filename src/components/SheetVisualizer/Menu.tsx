@@ -27,6 +27,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
         <div className="menu menu-visible" style={{ justifyContent: 'flex-end' }}>
             {(historyTracker.hasNavigated && selectedPage === "") &&
                 <MenuItem
+                    ariaLabel='Go back'
                     style={{ marginBottom: 'auto' }}
                     onClick={() => {
                         history.goBack()
@@ -37,6 +38,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
             }
             {selectedPage !== "" &&
                 <MenuItem
+                    ariaLabel='Close menu'
                     style={{ marginBottom: 'auto' }}
                     onClick={() => setSelectedPage("")}
                 >
@@ -45,12 +47,12 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
             }
             <MenuItem onClick={() => {
                 setSelectedPage(selectedPage === "Songs" ? "" : "Songs")
-            }}>
+            }} ariaLabel='Open songs menu'>
                 <FaMusic className="icon" />
             </MenuItem>
 
 
-            <MenuItem onClick={HomeStore.open}>
+            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

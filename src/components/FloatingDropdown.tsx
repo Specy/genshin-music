@@ -41,6 +41,7 @@ export function FloatingDropdown({
                 setActive(!isActive)
                 if (isActive && onClose) onClose()
             }}
+            ariaLabel={isActive ? "Close" : "Open"}
             tooltip={tooltip}
         >
             {isActive
@@ -76,6 +77,7 @@ export function FloatingDropdownText({ text }: FloatingDropdownTextProps) {
 }
 export function FloatingDropdownRow({ children, onClick, style }: FloatingDropdownButtonProps) {
     return <AppButton
+        ariaLabel="Floating Dropdown Button"
         className='row row-centered'
         style={{ padding: "0.5rem", minWidth: "unset", ...style }}
         onClick={onClick}

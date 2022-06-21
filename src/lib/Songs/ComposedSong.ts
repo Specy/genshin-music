@@ -13,12 +13,13 @@ interface OldFormatNoteType {
     time: number
     l?: number
 }
-
+export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
 export interface ComposedSongInstrument{
     name: InstrumentName
     volume: number
     pitch: Pitch | ""
     visible: boolean
+    icon: InstrumentNoteIcon
 }
 
 export type BaseSerializedComposedSong = SerializedSong & {
@@ -48,8 +49,10 @@ const baseInstrument: ComposedSongInstrument = {
     name: INSTRUMENTS[0],
     volume: 100,
     pitch: "",
-    visible: true
+    visible: true,
+    icon: 'circle'
 }
+
 
 export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong, 3>{
     notes: RecordedNote[] = []

@@ -15,6 +15,7 @@ export function HelpTooltip({ children, maxWidth = 20, buttonStyle = {} }: HelpT
             ref={ref}  
             className='help-tooltip-button' 
             style={buttonStyle} 
+            aria-label={'Help'}
             //Safari focus workaround
             onClick={() => ref.current?.focus()}
         >
@@ -32,3 +33,4 @@ export function HelpTooltip({ children, maxWidth = 20, buttonStyle = {} }: HelpT
         </div>
     </div>
 }
+

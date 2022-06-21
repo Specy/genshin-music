@@ -51,22 +51,25 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
                 onClick={() => handleIncrement(-1)}
                 className="settings-input-button"
                 style={{marginRight: '0.15rem'}}
+                aria-label="Decrement"
             >
                 <FaMinus />
             </button>
         }
-            <input
+        <input
             type={data.type}
             value={value}
             placeholder={data.placeholder || ""}
             onBlur={handleBlur}
             onChange={handleChange}
+            aria-label={data.name}
         />
         {data.type === 'number' &&
             <button 
                 onClick={() => handleIncrement(1)}
                 className="settings-input-button"
                 style={{marginLeft: '0.15rem'}}
+                aria-label="Increment"
             >   
                 <FaPlus />
             </button>

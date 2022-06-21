@@ -58,6 +58,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         <MenuItem
             className='close-home'
             onClick={HomeStore.close}
+            ariaLabel='Close home menu'
         >
             <FaTimes size={25} />
         </MenuItem>

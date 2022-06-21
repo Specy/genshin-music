@@ -198,23 +198,23 @@ function Menu({ functions, data }: MenuProps) {
     return <div className="menu-wrapper" ref={menuRef}>
         <div className="menu menu-visible menu-main-page" >
             {isOpen &&
-                <MenuItem onClick={toggleMenu} className='close-menu'>
+                <MenuItem onClick={toggleMenu} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon" />
                 </MenuItem>
             }
-            <MenuItem onClick={() => selectSideMenu("Help")} className="margin-top-auto" isActive={selectedMenu === "Help" && isOpen}>
+            <MenuItem onClick={() => selectSideMenu("Help")} className="margin-top-auto" isActive={selectedMenu === "Help" && isOpen} ariaLabel='Open info menu'>
                 <FaInfo className="icon" />
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Library")} isActive={selectedMenu === "Library" && isOpen}>
+            <MenuItem onClick={() => selectSideMenu("Library")} isActive={selectedMenu === "Library" && isOpen} ariaLabel='Open library menu'>
                 <RiPlayListFill className='icon' />
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Songs")} isActive={selectedMenu === "Songs" && isOpen}>
+            <MenuItem onClick={() => selectSideMenu("Songs")} isActive={selectedMenu === "Songs" && isOpen} ariaLabel='Open songs menu'>
                 <FaMusic className="icon" />
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Settings")} isActive={selectedMenu === "Settings" && isOpen}>
+            <MenuItem onClick={() => selectSideMenu("Settings")} isActive={selectedMenu === "Settings" && isOpen} ariaLabel='Open settings'>
                 <FaCog className="icon" />
             </MenuItem>
-            <MenuItem onClick={HomeStore.open}>
+            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>
@@ -428,6 +428,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     PlayerStore.practice(parsed, 0, parsed.notes.length)
                     toggleMenu(false)
                 }}
+                ariaLabel={`Practice song ${data.name}`}
                 tooltip='Practice'
                 style={buttonStyle}
             >
@@ -441,6 +442,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
 
             }}
                 tooltip='Approach mode'
+                ariaLabel={`Play in Approach mode the song ${data.name}`}
                 style={buttonStyle}
             >
                 <FaRegCircle />
