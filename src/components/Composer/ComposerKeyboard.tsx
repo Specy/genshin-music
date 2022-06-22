@@ -30,7 +30,6 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
     if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
     return <>
         <div className="composer-keyboard-wrapper">
-
             <div 
                 className={keyboardClass} 
             >

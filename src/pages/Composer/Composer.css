@@ -73,6 +73,7 @@ select {
 }
 .composer-keyboard-wrapper .keyboard{
     margin: unset;
+    z-index: 1;
 }
 .song-info div {
     max-width: 23vw;
@@ -182,22 +183,23 @@ select {
 
 .tools-half {
     display: grid;
-    grid-template-rows: 1fr 1fr;
-    gap: 0.2rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
 }
 
 .tools-buttons-wrapper button {
     background-color: var(--primary);
     color: var(--primary-text);
-    border-radius: 0.2rem;
-    padding: 0.3rem 1rem;
+    border-radius: 0.3rem;
+    padding: 1rem;
     border: none;
-    display: flex;
-    font-size: 1.2rem;
-    justify-content: center;
-    align-items: center;
+    font-size: 0.9rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: space-between;
     cursor: pointer;
 }
+
 
 .tools-row {
     display: flex;
@@ -209,11 +211,12 @@ select {
 .tools-buttons-wrapper button:hover {
     filter: brightness(1.1);
 }
-
-.tools-buttons-wrapper button:disabled,
-.tools-buttons-wrapper button[disabled] {
-    filter: brightness(0.9);
+.tools-buttons-wrapper button:disabled{
+    cursor: not-allowed;
+    opacity: 0.8;
+    filter: unset;
 }
+
 
 .tools-button-highlighted {
     background-color: var(--accent) !important;
@@ -231,28 +234,30 @@ select {
 .floating-tools {
     position: fixed;
     bottom: -45vh;
+    max-height: 45vh;
     display: flex;
     margin-right: auto;
     margin-left: auto;
-    height: 45vh;
     overflow: auto;
-    width: 60vw;
     border-radius: 0.5rem;
-    background-color: var(--primary);
+    box-shadow: -2px -1px 27px 4px rgba(0, 0, 0, 0.25);
+    background-color: var(--menu-background);
     z-index: 10;
     opacity: 0;
     border: solid 2px var(--secondary);
     transition: all 0.4s;
     transform: scale(0.6);
-    padding: 0.5rem;
+    padding: 0.6rem;
     flex-direction: column;
     color: white;
 }
 
 .tools-visible {
-    bottom: 0.5rem;
+    bottom: 2rem;
     transform: scale(1);
     opacity: 1;
+    animation: delayBackdrop 0.4s;
+    animation-fill-mode: forwards;
 }
 
 .bottom-right-wrapper {
@@ -579,11 +584,22 @@ canvas {
     }
 
     .floating-tools {
-        height: 50vh;
+        max-height: 50vh;
+        padding: 0.4rem;
     }
-
+    .tools-visible{
+        bottom: 0.2rem;
+    }
+    .tools-icon{
+        font-size: 1.4rem;
+    }
+    .tools-buttons-wrapper{
+        gap: 0.3rem;
+    }
     .tools-buttons-wrapper button {
         font-size: 0.8rem;
+        padding: 0.6rem;
+        gap: 0.4rem;
     }
 
     .song-info div {

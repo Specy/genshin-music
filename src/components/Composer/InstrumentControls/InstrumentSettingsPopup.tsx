@@ -28,14 +28,21 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             selected={instrument}
             onChange={(name) => onChange(instrument.set({ name }))}
         />
-        <div className="row" style={{ marginTop: '0.5rem' }}>
-            Volume
-
+        <div className="row" style={{ marginTop: '0.5rem'  }}>
+            Volume 
+            <span style={
+                instrument.volume > 100 
+                    ? { color: `hsl(0, ${-40 + instrument.volume}%, 61%)`, marginLeft: "0.4rem"} 
+                    : {marginLeft: "0.4rem"}
+                }
+            >
+                {instrument.volume}%
+            </span>
         </div>
         <input
             type="range"
             min={1}
-            max={100}
+            max={125}
             value={instrument.volume}
             onChange={e => onChange(instrument.set({ volume: Number(e.target.value) }))}
         />

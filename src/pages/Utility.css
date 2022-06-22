@@ -61,3 +61,14 @@
         opacity: 0;
     }
 }
+@keyframes delayBackdrop{
+    0%{
+        backdrop-filter: unset;
+    }
+    99%{
+        backdrop-filter: unset;
+    }
+    100%{
+        backdrop-filter: blur(2px);
+    }
+}

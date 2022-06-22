@@ -104,6 +104,8 @@
     transform: scale(1);
     left: 4rem !important;
     opacity: 1;
+    animation: delayBackdrop 0.3s;
+    animation-fill-mode: forwards;
 }
 .menu-panel{
     width: 100%;
