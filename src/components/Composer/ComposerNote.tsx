@@ -21,9 +21,10 @@ function getTextColor(){
     }
 }
 
+export type ComposedNoteStatus = 0 | 1 | 2 | 3
 interface ComposerNoteProps{
     data: NoteData
-    layer: 0 | 1 | 2 | 3
+    layer: ComposedNoteStatus
     instrument: InstrumentName
     clickAction: (data: NoteData) => void
     noteText: string

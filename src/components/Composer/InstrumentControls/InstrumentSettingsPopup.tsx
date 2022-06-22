@@ -1,14 +1,15 @@
 import { Pitch, PITCHES } from "appConfig"
 import { AppButton } from "components/AppButton"
 import useClickOutside from "lib/Hooks/useClickOutside"
-import { ComposedSongInstrument, InstrumentNoteIcon } from "lib/Songs/ComposedSong"
+import { InstrumentNoteIcon } from "lib/Songs/ComposedSong"
+import { InstrumentData } from "lib/Songs/SongClasses"
 import { capitalize } from "lodash"
 import { FaTrash } from "react-icons/fa"
 import { InstrumentSelector } from "./InstrumentSelector"
 
 interface InstrumentSettingsPopupProps {
-    instrument: ComposedSongInstrument
-    onChange: (instrument: ComposedSongInstrument) => void
+    instrument: InstrumentData
+    onChange: (instrument: InstrumentData) => void
     onDelete: () => void
     onClose: () => void
 }
@@ -25,7 +26,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
         </div>
         <InstrumentSelector
             selected={instrument}
-            onChange={(name) => onChange({ ...instrument, name })}
+            onChange={(name) => onChange(instrument.set({ name }))}
         />
         <div className="row" style={{ marginTop: '0.5rem' }}>
             Volume
@@ -36,7 +37,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             min={1}
             max={100}
             value={instrument.volume}
-            onChange={e => onChange({ ...instrument, volume: Number(e.target.value) })}
+            onChange={e => onChange(instrument.set({ volume: Number(e.target.value) }))}
         />
         <div className="row" style={{ marginTop: '0.1rem' }}>
             Pitch
@@ -45,7 +46,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             className="select"
             style={{ padding: '0.3rem' }}
             value={instrument.pitch}
-            onChange={e => onChange({ ...instrument, pitch: e.target.value as Pitch })}
+            onChange={e => onChange(instrument.set({ pitch: e.target.value as Pitch }))}
         >
             <option value="">
                 Use song pitch
@@ -63,7 +64,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             className="select"
             style={{ padding: '0.3rem' }}
             value={instrument.icon}
-            onChange={e => onChange({ ...instrument, icon: e.target.value as InstrumentNoteIcon })}
+            onChange={e => onChange(instrument.set({ icon: e.target.value as InstrumentNoteIcon }))}
         >
             {noteIcons.map(icon =>
                 <option key={icon} value={icon}>

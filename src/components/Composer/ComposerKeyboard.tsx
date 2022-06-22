@@ -1,4 +1,4 @@
-import ComposerNote from "components/Composer/ComposerNote"
+import ComposerNote, { ComposedNoteStatus } from "components/Composer/ComposerNote"
 import { getNoteText } from 'lib/Tools'
 import { Column } from "lib/Songs/SongClasses"
 import { LAYOUT_IMAGES, Pitch, TEMPO_CHANGERS } from "appConfig"
@@ -44,7 +44,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         return <ComposerNote
                             key={note.index}
                             layer={(index >= 0
-                                ? currentColumn.notes[index].layer.toLayerStatus(currentLayer)
+                                ? currentColumn.notes[index].layer.toLayerStatus(currentLayer) as ComposedNoteStatus
                                 : 0
                             )}
                             data={note}

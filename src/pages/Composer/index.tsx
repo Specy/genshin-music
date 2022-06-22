@@ -16,8 +16,8 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
 import { delay, formatMs, calculateSongLength, blurEvent } from "lib/Tools"
-import { ComposedSong, ComposedSongInstrument, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
-import { Column } from 'lib/Songs/SongClasses';
+import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
+import { Column, InstrumentData } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 
 import Analytics from 'lib/Analytics';
@@ -254,9 +254,9 @@ class Composer extends Component<any, ComposerState>{
             this.setState({ song, layer: Math.max(0, index - 1) })
         }
     }
-    editInstrument = (instrument: ComposedSongInstrument, index: number) => {
+    editInstrument = (instrument: InstrumentData, index: number) => {
         const { song } = this.state
-        song.instruments[index] = instrument
+        song.instruments[index] = instrument.clone()
         song.instruments = [...song.instruments]
         this.syncInstruments(song)
         this.setState({ song })

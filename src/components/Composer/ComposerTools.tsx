@@ -61,7 +61,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     onClick={() => copyColumns(layer)}
                     active={hasCopiedColumns}
                     style={themeStyle}
-                    tooltip={`Copy layer ${layer} notes`}
+                    tooltip={`Copy layer ${layer + 1} notes`}
                 >
                    {`Copy layer ${layer + 1}`}
                 </ToolButton>
@@ -97,7 +97,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                     disabled={hasCopiedColumns}
                     onClick={() => eraseColumns(layer)}
                     style={themeStyle}
-                    tooltip={`Erase selected layer ${layer} notes`}
+                    tooltip={`Erase selected layer ${layer + 1} notes`}
                 >
                     {`Erase layer ${layer + 1}`}
                 </ToolButton>

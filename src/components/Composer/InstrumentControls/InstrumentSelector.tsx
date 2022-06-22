@@ -1,9 +1,9 @@
 import { INSTRUMENTS } from "appConfig"
-import { ComposedSongInstrument } from "lib/Songs/ComposedSong"
+import { InstrumentData } from "lib/Songs/SongClasses"
 import { InstrumentName } from "types/GeneralTypes"
 
 interface InstrumentSelectorProps {
-    selected: ComposedSongInstrument
+    selected: InstrumentData
     onChange: (instrument: InstrumentName) => void
 }
 export function InstrumentSelector({ selected, onChange }: InstrumentSelectorProps) {

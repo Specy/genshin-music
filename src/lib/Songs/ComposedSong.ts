@@ -5,7 +5,7 @@ import { InstrumentName } from "types/GeneralTypes"
 import { OldFormat, _LegacySongInstruments } from "types/SongTypes"
 import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
-import { Column, ColumnNote, RecordedNote, SerializedColumn } from "./SongClasses"
+import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
 
 interface OldFormatNoteType {
@@ -14,7 +14,7 @@ interface OldFormatNoteType {
     l?: number
 }
 export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
-export interface ComposedSongInstrument{
+export interface SerializedInstrumentData{
     name: InstrumentName
     volume: number
     pitch: Pitch | ""
@@ -37,7 +37,7 @@ export type SerializedComposedSongV2 = BaseSerializedComposedSong & {
 }
 export type SerializedComposedSong = BaseSerializedComposedSong & {
     version: 3
-    instruments: ComposedSongInstrument[]
+    instruments: SerializedInstrumentData[]
 }
 
 export type UnknownSerializedComposedSong = SerializedComposedSongV1 | SerializedComposedSongV2 | SerializedComposedSong
@@ -45,18 +45,10 @@ export type UnknownSerializedComposedSong = SerializedComposedSongV1 | Serialize
 
 export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
 
-const baseInstrument: ComposedSongInstrument = {
-    name: INSTRUMENTS[0],
-    volume: 100,
-    pitch: "",
-    visible: true,
-    icon: 'circle'
-}
-
 
 export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong, 3>{
     notes: RecordedNote[] = []
-    instruments: ComposedSongInstrument[]
+    instruments: InstrumentData[]
     breakpoints: number[]
     columns: Column[]
     selected: number
@@ -87,10 +79,10 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         if(song.version === 1 || song.version === 2){
             const instruments = Array.isArray(song.instruments) ? song.instruments : []
             parsed.instruments = instruments.map(name =>  {
-                return {...baseInstrument, name}
+                return new InstrumentData({name})
             })
         } else if (song.version === 3){
-            parsed.instruments = song.instruments.map(instrument => ({...baseInstrument, ...instrument}))
+            parsed.instruments = song.instruments.map(InstrumentData.deserialize)
         }
         //parsing columns
         if (song.version === 1) {
@@ -113,7 +105,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
     get isComposed(): true {
         return true
     }
-    get lastInstrument(): ComposedSongInstrument {
+    get lastInstrument(): InstrumentData {
         return this.instruments[this.instruments.length - 1]
     }
     toRecordedSong = () => {
@@ -134,7 +126,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         return this.clone()
     }
     addInstrument = (name: InstrumentName) => {
-        const newInstrument:ComposedSongInstrument = {...baseInstrument, name}
+        const newInstrument:InstrumentData = new InstrumentData({name})
         this.instruments = [...this.instruments, newInstrument]
     }
     removeInstrument = async (index: number) => {
@@ -164,7 +156,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
                 appName: APP_NAME
             },
             breakpoints: [...this.breakpoints],
-            instruments: [...this.instruments],
+            instruments: this.instruments.map(instrument => instrument.serialize()),
             columns: this.columns.map(col => col.serialize()),
             id: this.id
         }
@@ -346,7 +338,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         clone.version = this.version
         clone.bpm = this.bpm
         clone.pitch = this.pitch
-        clone.instruments = this.instruments.map(ins => ({ ...ins }))
+        clone.instruments = this.instruments.map(ins => ins.clone())
         clone.breakpoints = [...this.breakpoints]
         clone.selected = this.selected
         clone.columns = this.columns.map(column => column.clone())

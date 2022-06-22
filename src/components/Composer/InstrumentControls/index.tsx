@@ -1,6 +1,6 @@
 import { AppButton } from "components/AppButton";
 import { useTheme } from "lib/Hooks/useTheme";
-import { ComposedSongInstrument } from "lib/Songs/ComposedSong";
+import { InstrumentData } from "lib/Songs/SongClasses";
 import { blurEvent } from "lib/Tools";
 import { memo, useCallback, useState } from "react";
 import { FaCog, FaEye, FaEyeSlash, FaPlus } from "react-icons/fa";
@@ -10,10 +10,10 @@ import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
 
 
 interface InstrumentControlsProps {
-    instruments: ComposedSongInstrument[]
+    instruments: InstrumentData[]
     selected: number
     onLayerSelect: (index: number) => void
-    onInstrumentChange: (instrument: ComposedSongInstrument, index: number) => void
+    onInstrumentChange: (instrument: InstrumentData, index: number) => void
     onInstrumentDelete: (index: number) => void
     onInstrumentAdd: () => void
 }
@@ -32,7 +32,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                 isSelected={i === selected}
                 onEditClick={() => setIsEditing(!isEditing)}
                 onClick={() => onLayerSelect(i)}
-                onVisibleToggle={(visible) => onInstrumentChange({ ...ins, visible }, i)}
+                onVisibleToggle={(visible) => onInstrumentChange(ins.set({visible}), i)}
                 key={ins.name + i}
             />
         )}
@@ -65,7 +65,7 @@ export const InstrumentControls = memo(_InstrumentControls, (p, n) => {
 
 
 interface InstrumentButtonProps {
-    instrument: ComposedSongInstrument
+    instrument: InstrumentData
     theme: ThemeStoreClass
     isSelected: boolean,
     onClick: () => void

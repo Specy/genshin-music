@@ -1,5 +1,7 @@
-import { NOTE_MAP_TO_MIDI, TempoChanger, TEMPO_CHANGERS } from "appConfig"
+import { INSTRUMENTS, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "appConfig"
+import { InstrumentName } from "types/GeneralTypes"
 import { NoteLayer } from "../Layer"
+import { InstrumentNoteIcon, SerializedInstrumentData } from "./ComposedSong"
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
 
@@ -10,7 +12,7 @@ export class Column {
 		this.notes = []
 		this.tempoChanger = 0
 	}
-	clone = () => {
+	clone(){
 		const clone = new Column()
 		clone.tempoChanger = this.tempoChanger
 		clone.notes = this.notes.map(note => note.clone())
@@ -46,15 +48,47 @@ export class Column {
 	setTempoChanger(changer: TempoChanger) {
 		this.tempoChanger = changer.id
 	}
-	getTempoChanger() {
-		return TEMPO_CHANGERS[this.tempoChanger]
-	}
 	getNoteIndex = (index: number): number | null => {
 		const result = this.notes.findIndex((n) => index === n.index)
 		return result === -1 ? null : result
 	}
+	getTempoChanger() {
+		return TEMPO_CHANGERS[this.tempoChanger]
+	}
 }
-
+const instrumentNoteMap = new Map([['border', 1], ['circle', 2], ['line', 3]])
+export class InstrumentData{
+    name: InstrumentName = INSTRUMENTS[0]
+    volume: number = 100
+    pitch: Pitch | "" = ""
+    visible: boolean = true
+    icon: InstrumentNoteIcon = 'circle'
+	constructor(data: Partial<InstrumentData> = {}) {
+		Object.assign(this, data)
+	}
+	serialize(): SerializedInstrumentData{
+		return {
+			name: this.name,
+			volume: this.volume,
+			pitch: this.pitch,
+			visible: this.visible,
+			icon: this.icon
+		}
+	}
+	static deserialize(data: SerializedInstrumentData): InstrumentData{
+		return new InstrumentData(data)
+	}
+	set(data: Partial<InstrumentData>){
+		Object.assign(this, data)
+		return this
+	}
+	toNoteIcon(){
+		return instrumentNoteMap.get(this.icon) || 0
+	}
+	clone(){
+		return new InstrumentData(this)
+	}
+}
 export type SerializedColumnNote = [index: number, layer: string]
 const SPLIT_EMPTY_LAYER = "0000".split("")
 
@@ -103,7 +137,7 @@ export class ColumnNote {
 	isLayerToggled(layerIndex: number) {
 		return this.layer.test(layerIndex)
 	}
-	clone = () => {
+	clone(){
 		return new ColumnNote(this.index, this.layer.clone())
 	}
 }
@@ -150,7 +184,7 @@ export class RecordedNote {
 	static deserialize(data: SerializedRecordedNote) {
 		return new RecordedNote(data[0], data[1], NoteLayer.deserializeHex(data[2]))
 	}
-	clone = () => {
+	clone(){
 		return new RecordedNote(this.index, this.time, this.layer.clone())
 	}
 }

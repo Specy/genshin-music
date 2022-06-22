@@ -2,18 +2,20 @@ const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Gens
 const APP_VERSION = '2.7' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ?  `Added option to rename songs
+    ? `Added option to rename songs
         Song names are not unique anymore
         Added folders and new song menu UI
         Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
         Fixed some bugs
     `.trim()
-    :  `Added option to rename songs
+    : `Added option to rename songs
         Song names are not unique anymore
         Added folders and new song menu UI
         Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
         Fixed some bugs
     `.trim()
+
+
 const LAYERS_INDEXES = [1, 2, 3, 4] as const
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
@@ -44,7 +46,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Zither",
         "Old-Zither",
         "DunDun"
-    ] as const 
+    ] as const
     : [
         "Piano",
         "Contrabass",
@@ -190,7 +192,7 @@ type InstrumentsDataProps = {
         notes: 8 | 15 | 21
         fill?: string
         clickColor?: string
-        family: string, 
+        family: string,
         midiName: string
     }
 }
@@ -333,7 +335,7 @@ const CACHE_DATA = {
             color: 0xd6722f //selected
         }
     ],
-    layersCombination: [0, 1, 2, 3],
+    layersCombination: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
     breakpoints: [
         {
             type: "short",
@@ -442,7 +444,7 @@ const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
         83: [6, false],
     })))
 //get only non accidentals
-const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k,v]) => v[1] === false)
+const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
 const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
 export {
     INSTRUMENTS,

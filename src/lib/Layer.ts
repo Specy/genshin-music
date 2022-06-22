@@ -1,64 +1,70 @@
+import { InstrumentData } from "./Songs/SongClasses"
 
 //1 = has current layer, 2 = has other layers, 3 = has both
-export type LayerStatus = 0 | 1 | 2 | 3
-export class NoteLayer{
+export type LayerStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16
+
+export class NoteLayer {
     private data: number
     static EMPTY_LAYER = new NoteLayer(0)
-    constructor(layer: number = 0){
+    constructor(layer: number = 0) {
         this.data = layer
     }
 
-    setData(data: number){
+    setData(data: number) {
         this.data = data
     }
-    asNumber(){
+    asNumber() {
         return this.data
     }
-    set(position: number, value: boolean){
-        if(value){
+    set(position: number, value: boolean) {
+        if (value) {
             this.data |= (1 << position)
-        }else{
+        } else {
             this.data &= ~(1 << position)
         }
     }
-    toggle(position: number){
+    toggle(position: number) {
         this.data ^= (1 << position);
     }
-    test(position: number){
+    test(position: number) {
         return (this.data & (1 << position)) !== 0
     }
-    toLayerStatus(position: number, instruments?: {visible: boolean}[]): LayerStatus{
-        const layers = this.toArray().map((e, i) =>  +(instruments?.[i].visible ?? 1) && e)
-        const isSelected = layers[position]
-
-        if(this.data === 1 << position) return isSelected as LayerStatus; //if only this layer is selected
-        if(isSelected && layers.some((e,i) => i !== position && e)) return 3 //if this layer is selected and other layers are selected
-        if(layers.some(e => e)) return 2
-        return 0
+    toLayerStatus(position: number, instruments?: InstrumentData[]): LayerStatus {
+        if(instruments){ 
+            const layers = this.toArray().map((e, i) => +(i !== position && e && instruments[i].visible))
+            let note = this.test(position) ? 1 : 0
+            layers.forEach((layer, i) => {
+                note |= layer ? (1 << instruments[i].toNoteIcon()) : 0
+            })
+            return note as LayerStatus
+        }else{
+            const isSelected = this.test(position)
+            if(this.data === 1 << position) return 1
+            return isSelected ? 3 : 2
+        }
     }
-    toArray(){
+    toArray() {
         return this.serializeBin().split('').map(x => parseInt(x)).reverse()
     }
-    isEmpty(){
+    isEmpty() {
         return this.data === 0
     }
-    serializeHex(){
+    serializeHex() {
         return this.data.toString(16)
     }
-    serializeBin(){
+    serializeBin() {
         return this.data.toString(2)
     }
-
-    static deserializeHex(str: string){
+    static deserializeHex(str: string) {
         return new NoteLayer(parseInt(str, 16))
     }
-    static deserializeBin(str: string){
+    static deserializeBin(str: string) {
         return new NoteLayer(parseInt(str, 2))
     }
-    static deserializeDec(str: string){
+    static deserializeDec(str: string) {
         return new NoteLayer(parseInt(str, 10))
     }
-    clone = () => {
+    clone(){
         return new NoteLayer(this.data)
     }
 }
