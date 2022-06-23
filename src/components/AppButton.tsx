@@ -20,7 +20,7 @@ export function AppButton({
         disabled = false, 
         visible = true, 
         tooltip,
-        ariaLabel = ''
+        ariaLabel
     }: AppButtonprops) {
     return <button
         className={`app-button ${className} ${toggled ? 'active' : ''} ${hasTooltip(tooltip)}`}

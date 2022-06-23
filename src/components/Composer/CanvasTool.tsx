@@ -1,5 +1,4 @@
 import { hasTooltip, Tooltip } from "components/Tooltip";
-import { blurEvent } from "lib/Tools";
 
 
 interface CanvasToolProps {
@@ -14,10 +13,7 @@ interface CanvasToolProps {
 export function CanvasTool({ children, tooltip, onClick, style, ariaLabel }: CanvasToolProps) {
     return <button 
         className={`tool ${hasTooltip(tooltip)}`} 
-        onClick={(e) => {
-            blurEvent(e)
-            onClick();
-        }} 
+        onClick={onClick} 
         style={style}
         aria-label={ariaLabel}
     >

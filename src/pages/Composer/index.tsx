@@ -15,7 +15,7 @@ import Memoized from 'components/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
-import { delay, formatMs, calculateSongLength, blurEvent } from "lib/Tools"
+import { delay, formatMs, calculateSongLength } from "lib/Tools"
 import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
 import { Column, InstrumentData } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
@@ -46,6 +46,7 @@ interface ComposerState {
     settings: ComposerSettingsDataType
     layer: number
     selectedColumns: number[]
+    undoHistory: Column[][]
     copiedColumns: Column[]
     isToolsVisible: boolean
     isMidiVisible: boolean
@@ -70,6 +71,7 @@ class Composer extends Component<any, ComposerState>{
             settings: settings,
             layer: 0,
             selectedColumns: [],
+            undoHistory: [],
             copiedColumns: [],
             isToolsVisible: false,
             isMidiVisible: false,
@@ -160,6 +162,11 @@ class Composer extends Component<any, ComposerState>{
         }, { id })
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
+            //@ts-ignore
+            if(event.target?.tagName === "BUTTON"){
+                //@ts-ignore
+                event.target?.blur()
+            }
             this.togglePlay()
             if (this.state.settings.syncTabs.value) {
                 this.broadcastChannel?.postMessage?.(this.state.isPlaying ? 'play' : 'stop')
@@ -570,11 +577,29 @@ class Composer extends Component<any, ComposerState>{
         this.setState({
             isToolsVisible: !this.state.isToolsVisible,
             selectedColumns: this.state.isToolsVisible ? [] : [this.state.song.selected],
-            copiedColumns: []
+            copiedColumns: [],
+            undoHistory: []
         })
     }
     resetSelection = () => {
-        this.setState({ copiedColumns: [], selectedColumns: [this.state.song.selected] })
+        this.setState({ 
+            copiedColumns: [], 
+            selectedColumns: [this.state.song.selected] 
+        })
+    }
+    addToHistory = () => {
+        const { song, undoHistory, isToolsVisible } = this.state
+        if(!isToolsVisible) return
+        this.setState({ 
+            undoHistory: [...undoHistory, song.clone().columns] 
+        })
+    }
+    undo = () => {
+        const { undoHistory, song } = this.state
+        const history = undoHistory.pop()
+        if (!history) return
+        song.columns = history
+        this.setState({ undoHistory: [...undoHistory], song })
     }
     copyColumns = (layer: number | 'all') => {
         const { selectedColumns, song } = this.state
@@ -584,12 +609,15 @@ class Composer extends Component<any, ComposerState>{
     }
     pasteColumns = async (insert: boolean) => {
         const { song, copiedColumns } = this.state
+        this.addToHistory()
         song.pasteColumns(copiedColumns, insert)
         this.changes++
+
         this.setState({ song })
     }
     eraseColumns = (layer: number | 'all') => {
         const { song, selectedColumns } = this.state
+        this.addToHistory()
         song.eraseColumns(selectedColumns, layer)
         this.changes++
         this.setState({ song, selectedColumns: [song.selected] })
@@ -601,6 +629,7 @@ class Composer extends Component<any, ComposerState>{
     }
     deleteColumns = async () => {
         const { song, selectedColumns } = this.state
+        this.addToHistory()
         song.deleteColumns(selectedColumns)
         this.changes++
         this.setState({
@@ -613,7 +642,7 @@ class Composer extends Component<any, ComposerState>{
         if (visible) Analytics.songEvent({ type: 'create_MIDI' })
     }
     render() {
-        const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers } = this.state
+        const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers, undoHistory } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
             {isMidiVisible &&
@@ -631,7 +660,6 @@ class Composer extends Component<any, ComposerState>{
                         style={{ height: '3rem', borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)"}}
                         onClick={(e) => {
                             this.togglePlay()
-                            blurEvent(e)
                             if (settings.syncTabs.value) {
                                 this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
                             }
@@ -719,6 +747,8 @@ class Composer extends Component<any, ComposerState>{
                 data={{
                     isToolsVisible, layer,
                     hasCopiedColumns: copiedColumns.length > 0,
+                    selectedColumns,
+                    undoHistory
                 }}
                 functions={this}
             />

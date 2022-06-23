@@ -181,24 +181,18 @@ select {
     grid-template-rows: repeat(4, 1fr);
 }
 
-.tools-half {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
-}
+
 .tools-icon{
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
-.tools-buttons-wrapper button {
+.tools-button{
     background-color: var(--primary);
     color: var(--primary-text);
     border-radius: 0.3rem;
     padding: 1.1rem;
     border: none;
-    font-size: 0.9rem;
-    flex-direction: column;
+    font-size: 1rem;
     gap: 0.5rem;
-    justify-content: space-between;
     cursor: pointer;
 }
 
@@ -210,12 +204,12 @@ select {
     align-items: center;
 }
 
-.tools-buttons-wrapper button:hover {
+.tools-button:hover {
     filter: brightness(1.1);
 }
-.tools-buttons-wrapper button:disabled{
+.tools-button:disabled, .tools-right button:disabled {
     cursor: not-allowed;
-    opacity: 0.8;
+    opacity: 0.7;
     filter: unset;
 }
 
@@ -226,17 +220,20 @@ select {
 
 .tools-buttons-wrapper {
     display: grid;
-    grid-template-rows: repeat(2, 1fr);
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas: 
+                "a a b b"
+                "a a c c"
+                "d d e e"
+                "f f g g";
     flex: 1;
     gap: 0.6rem;
-    margin-top: 0.5rem;
 }
 
 .floating-tools {
     position: fixed;
     bottom: -45vh;
     max-height: 45vh;
+    min-width: 36vw;
     display: flex;
     margin-right: auto;
     margin-left: auto;
@@ -250,10 +247,20 @@ select {
     transition: all 0.4s;
     transform: scale(0.6);
     padding: 0.6rem;
-    flex-direction: column;
     color: white;
 }
+.tools-right{
+    margin-left: 1rem;
+    padding-left: 1rem;
+    border-left: solid 2px var(--secondary);
+}
 
+.tools-right .app-button{
+    min-width: unset;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.7rem;
+}
 .tools-visible {
     bottom: 1.4rem;
     transform: scale(1);
@@ -583,7 +590,10 @@ canvas {
     .buttons-composer-wrapper-right {
         flex: 1;
     }
-
+    .tools-right{
+        padding-left: 0.6rem;
+        margin-left: 0.6rem;
+    }
     .floating-tools {
         max-height: 50vh;
         padding: 0.4rem;
@@ -592,14 +602,14 @@ canvas {
         bottom: 0.2rem;
     }
     .tools-icon{
-        font-size: 1.4rem;
+        font-size: 1.1rem;
     }
     .tools-buttons-wrapper{
         gap: 0.3rem;
     }
-    .tools-buttons-wrapper button {
-        font-size: 0.8rem;
-        padding: 0.6rem;
+    .tools-button{
+        font-size: 0.9rem;
+        padding: 0.55rem 0.8rem;
         gap: 0.4rem;
     }
 

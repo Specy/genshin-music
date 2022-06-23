@@ -1,7 +1,6 @@
 import { AppButton } from "components/AppButton";
 import { useTheme } from "lib/Hooks/useTheme";
 import { InstrumentData } from "lib/Songs/SongClasses";
-import { blurEvent } from "lib/Tools";
 import { memo, useCallback, useState } from "react";
 import { FaCog, FaEye, FaEyeSlash, FaPlus } from "react-icons/fa";
 import { ThemeStoreClass } from "stores/ThemeStore";
@@ -93,10 +92,7 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
             />
         }
         <AppButton
-            onClick={(e) => {
-                blurEvent(e)
-                onClick()
-            }}
+            onClick={onClick}
             style={{ backgroundColor: "transparent", width: '100%' }}
             className='flex-grow flex-centered instrument-name-button text-ellipsis'
         >
