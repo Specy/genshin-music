@@ -183,7 +183,7 @@ select {
 
 
 .tools-icon{
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 .tools-button{
     background-color: var(--primary);
@@ -374,6 +374,12 @@ canvas {
     border-radius: 0.3rem;
     margin-top: 0.2rem;
     z-index: 2;
+}
+.new-instrument-button{
+    padding: 0.4rem;
+    background-color: var(--primary-darken-10);
+    margin-top: auto;
+    align-items: center;
 }
 .instruments-button-wrapper::-webkit-scrollbar-thumb {
 	background: var(--secondary);
@@ -666,6 +672,10 @@ canvas {
     }
     .instrument-name-button{
         min-height: 2.5rem;
+    }
+    .new-instrument-button{
+        padding: 0;
+        padding-bottom: 0.3rem;
     }
 }
 

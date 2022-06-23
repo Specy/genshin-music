@@ -50,9 +50,9 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
 
         </div>
         <AppButton 
-            style={{ marginTop: 'auto', padding: '0rem', paddingBottom: '0.1rem', backgroundColor: "var(--primary-darken-10)" }} 
             onClick={onInstrumentAdd}
             ariaLabel='Add new instrument'
+            className="new-instrument-button flex-centered"
         >
             <FaPlus size={16} color='var(--icon-color)' />
         </AppButton>

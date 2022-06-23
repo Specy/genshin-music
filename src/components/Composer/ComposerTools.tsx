@@ -5,6 +5,7 @@ import { Column } from "lib/Songs/SongClasses"
 import { memo, useState } from "react"
 import { FaCopy, FaEraser, FaPaste, FaTrash } from "react-icons/fa"
 import { MdPhotoSizeSelectSmall, MdSelectAll } from "react-icons/md"
+import { TbArrowBarToRight } from "react-icons/tb"
 interface ComposerToolsProps {
     data: {
         isToolsVisible: boolean
@@ -43,8 +44,9 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 active={hasCopiedColumns}
                 tooltip='Copy all notes'
                 style={{flexDirection: 'column'}}
+                tooltipPosition='bottom'
             >
-                <FaCopy className='tools-icon' />
+                <FaCopy className='tools-icon' size={24} />
                 Copy
             </ToolButton>
             <ToolButton
@@ -52,6 +54,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 onClick={() => pasteColumns(false)}
                 tooltip='Paste copied notes'
                 area="b"
+                tooltipPosition="bottom"
             >
                 <FaPaste className='tools-icon' />
                 Paste
@@ -62,7 +65,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 tooltip='Insert copied notes'
                 area="c"
             >
-                <FaPaste className='tools-icon' />
+                <TbArrowBarToRight className='tools-icon' style={{strokeWidth: '3px'}} />
                 Insert
             </ToolButton>
             <ToolButton
@@ -71,7 +74,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 tooltip='Erase all selected notes'
                 area="d"
             >
-                <FaEraser className='tools-icon' />
+                <FaEraser className='tools-icon'/>
                 Erase
             </ToolButton>
 
@@ -81,7 +84,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 tooltip='Delete selected columns'
                 area="f"
             >
-                <FaTrash className='tools-icon' />
+                <FaTrash className='tools-icon' color="var(--red)"/>
                 Delete
             </ToolButton>
         </div>
@@ -106,6 +109,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 style={{marginBottom: '0.2rem', justifyContent: 'center'}}
                 onClick={resetSelection}
                 disabled={selectedColumns.length <= 1 && !hasCopiedColumns}
+                toggled={hasCopiedColumns}
             >
                 Clear selection
             </AppButton>
@@ -138,9 +142,10 @@ interface ToolButtonprops {
     style?: React.CSSProperties
     children: React.ReactNode
     tooltip?: string
+    tooltipPosition?: "top" | "bottom"
     area?: string
 }
-function ToolButton({ disabled, onClick, active, style, children, tooltip, area }: ToolButtonprops) {
+function ToolButton({ disabled, onClick, active, style, children, tooltip, area, tooltipPosition }: ToolButtonprops) {
     return <button
         disabled={disabled}
         onClick={onClick}
@@ -150,7 +155,7 @@ function ToolButton({ disabled, onClick, active, style, children, tooltip, area 
     >
         {children}
         {tooltip &&
-            <Tooltip position="top">
+            <Tooltip position={tooltipPosition || "top"}>
                 {tooltip}
             </Tooltip>
         }

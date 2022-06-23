@@ -61,9 +61,6 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,
     </Container>
 }
 
-
-
-
 export function isColumnVisible(pos: number, currentPos: number, numberOfColumnsPerCanvas: number) {
     const threshold = numberOfColumnsPerCanvas / 2 + 2
     return (currentPos - threshold) < pos && pos < (currentPos + threshold)
