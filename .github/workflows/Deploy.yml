@@ -26,14 +26,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          projectName: genshin-music-nightly
-          directory: ./build/genshinMusic
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages publish ./build/genshinMusic --project-name=genshin-music-nightly
       - name: Publish Sky Music Nightly
         uses: cloudflare/wrangler-action@2.0.0
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          projectName: sky-music-nightly
-          directory: ./build/skyMusic
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages publish ./build/skyMusic --project-name=sky-music-nightly
