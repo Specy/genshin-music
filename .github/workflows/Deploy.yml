@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    name: Deploy
+    steps:
+      - name: Checkout
+      - uses: actions/checkout@v3
+      - name: Build
+        run: yarn && yarn build:all
+      - name: Publish Genshin Music Nightly
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CF_PAGES_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: genshin-music-nightly
+          directory: ./build/genshinMusic
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish Sky Music Nightly
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CF_PAGES_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: sky-music-nightly
+          directory: ./build/skyMusic
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
