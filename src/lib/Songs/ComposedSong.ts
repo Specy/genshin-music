@@ -62,22 +62,13 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         const { id, bpm, data, pitch } = song
         const parsed = new ComposedSong(song.name)
         //@ts-ignore
-        if(song.version === undefined) song.version = 1
+        if (song.version === undefined) song.version = 1
         const sanitizedBpm = Number(bpm)
         parsed.id = id || null
         parsed.data = { ...parsed.data, ...data }
         parsed.bpm = Number.isFinite(sanitizedBpm) ? sanitizedBpm : 220
         parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
-        //parsing instruments
-        if(song.version === 1 || song.version === 2){
-            const instruments = Array.isArray(song.instruments) ? song.instruments : []
-            parsed.instruments = instruments.map(name =>  {
-                return new InstrumentData({name})
-            })
-        } else if (song.version === 3){
-            parsed.instruments = song.instruments.map(InstrumentData.deserialize)
-        }
         //parsing columns
         if (song.version === 1) {
             parsed.columns = song.columns.map(column => {
@@ -93,6 +84,22 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         }
         if (song.version === 2 || song.version === 3) {
             parsed.columns = song.columns.map(column => Column.deserialize(column))
+        }
+        const highestLayer = Math.max(...parsed.columns.map(column => {
+            return Math.max(...column.notes.map(note => note.layer.asNumber()))
+        }))
+        //make sure there are enough instruments for the layers
+        song.instruments = highestLayer.toString(2).split("").map(_ => new InstrumentData())
+        //parsing instruments
+        if (song.version === 1 || song.version === 2) {
+            const instruments = Array.isArray(song.instruments) ? song.instruments : []
+            instruments.forEach((name, i) => {
+                parsed.instruments[i] = new InstrumentData({ name })
+            })
+        } else if (song.version === 3) {
+            song.instruments.forEach((ins, i) => {
+                parsed.instruments[i] = InstrumentData.deserialize(ins)
+            })
         }
         return parsed
     }
@@ -121,19 +128,19 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         return this.clone()
     }
     addInstrument = (name: InstrumentName) => {
-        const newInstrument:InstrumentData = new InstrumentData({name})
+        const newInstrument: InstrumentData = new InstrumentData({ name })
         this.instruments = [...this.instruments, newInstrument]
     }
     removeInstrument = async (index: number) => {
-        if(index === 0){
+        if (index === 0) {
             this.switchLayer(this.columns.length, 0, 0, 1)
-        }else{
+        } else {
             const toMove = this.instruments.slice(index)
             toMove.forEach((_, i) => {
-                this.switchLayer(this.columns.length, 0, index + i, index + i - 1 )
+                this.switchLayer(this.columns.length, 0, index + i, index + i - 1)
             })
         }
-        this.instruments.splice(index,1)
+        this.instruments.splice(index, 1)
 
         this.instruments = [...this.instruments]
     }
@@ -200,7 +207,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         this.columns.splice(position, amount)
         this.validateBreakpoints()
     }
-    switchLayer(amount: number, position:number, from: number, to:number) {
+    switchLayer(amount: number, position: number, from: number, to: number) {
         const columns = this.columns.slice(position, position + amount)
         columns.forEach(column => {
             column.notes.forEach(note => {
@@ -208,7 +215,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             })
         })
     }
-    swapLayer(amount: number, position:number, layer1: number, layer2:number) {
+    swapLayer(amount: number, position: number, layer1: number, layer2: number) {
         const columns = this.columns.slice(position, position + amount)
         columns.forEach(column => {
             column.notes.forEach(note => {

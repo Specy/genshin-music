@@ -1,4 +1,4 @@
-import { INSTRUMENTS, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "appConfig"
+import { APP_NAME, INSTRUMENTS, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName } from "types/GeneralTypes"
 import { NoteLayer } from "../Layer"
 import { InstrumentNoteIcon } from "./ComposedSong"
@@ -67,7 +67,7 @@ export interface SerializedInstrumentData{
 }
 export class InstrumentData{
     name: InstrumentName = INSTRUMENTS[0]
-    volume: number = 100
+    volume: number = APP_NAME === 'Genshin' ? 90 : 100
     pitch: Pitch | "" = ""
     visible: boolean = true
     icon: InstrumentNoteIcon = 'circle'
