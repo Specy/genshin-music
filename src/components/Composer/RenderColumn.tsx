@@ -3,6 +3,7 @@ import type { ColumnNote, InstrumentData } from 'lib/Songs/SongClasses';
 import type { Texture } from 'pixi.js';
 import { Container, Sprite } from '@inlet/react-pixi';
 import { ComposerCacheData } from "./TextureCache";
+import { useCallback } from "react";
 
 interface RenderColumnProps {
     notes: ColumnNote[]
@@ -22,8 +23,11 @@ interface RenderColumnProps {
 }
 
 export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,  backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
+    const clickCallback = useCallback(() => {
+        onClick(index)
+    }, [index, onClick])
     return <Container
-        pointertap={() => onClick(index)}
+        pointertap={clickCallback}
         interactive={true}
         x={sizes.width * index}
     >

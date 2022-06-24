@@ -30,8 +30,8 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
     if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
     return <>
         <div className="composer-keyboard-wrapper">
-            <div 
-                className={keyboardClass} 
+            <div
+                className={keyboardClass}
             >
                 {keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
                 {keyboard.layout.map((note, i) => {
@@ -59,32 +59,30 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
             </div>
 
         </div>
-        <div className={"bottom-right-wrapper" + (isPlaying ? " hidden" : "")}>
-            <div className="tempo-changers-wrapper">
-                <div className="bottom-right-text">
-                    Tempo
-                </div>
-                {TEMPO_CHANGERS.map((tempoChanger) => {
-                    return <button
-                        key={tempoChanger.id}
-                        onClick={() => handleTempoChanger(tempoChanger)}
-                        style={{
-                            ...(tempoChanger.changer === 1
-                                ? {
-                                    backgroundColor: ThemeProvider.get('primary').toString(),
-                                    color: ThemeProvider.getText('primary').toString()
-                                }
-                                : { backgroundColor: "#" + tempoChanger.color.toString(16) }),
-                            outline: data.currentColumn.tempoChanger === tempoChanger.id
-                                ? `3px ${ThemeProvider.get('composer_accent').toString()} solid`
-                                : '',
-                            outlineOffset: '-3px'
-                        }}
-                    >
-                        {tempoChanger.text}
-                    </button>
-                })}
+        <div className={`tempo-changers-wrapper ${isPlaying ? "tempo-changers-wrapper-hidden" : ""}`}>
+            <div className="bottom-right-text">
+                Tempo
             </div>
+            {TEMPO_CHANGERS.map((tempoChanger) => {
+                return <button
+                    key={tempoChanger.id}
+                    onClick={() => handleTempoChanger(tempoChanger)}
+                    style={{
+                        ...(tempoChanger.changer === 1
+                            ? {
+                                backgroundColor: ThemeProvider.get('primary').toString(),
+                                color: ThemeProvider.getText('primary').toString()
+                            }
+                            : { backgroundColor: "#" + tempoChanger.color.toString(16) }),
+                        outline: data.currentColumn.tempoChanger === tempoChanger.id
+                            ? `3px ${ThemeProvider.get('composer_accent').toString()} solid`
+                            : '',
+                        outlineOffset: '-3px'
+                    }}
+                >
+                    {tempoChanger.text}
+                </button>
+            })}
         </div>
     </>
 }

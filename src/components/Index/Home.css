@@ -155,7 +155,7 @@
 }
 .home-welcome {
 	font-size: 0.9rem;
-	background-color: rgb(47, 52, 63);
+	background-color: var(--primary-darken-10);
 	padding: 0.5rem;
 	border-radius: 0.5rem;
 	animation: welcome-flash infinite 8s;
@@ -324,7 +324,9 @@
 		margin-top: 1rem;
 	}
 	.close-home{
-
 		left: 0.4rem;
+	}
+	.home-top{
+		margin-bottom: 0;
 	}
 }

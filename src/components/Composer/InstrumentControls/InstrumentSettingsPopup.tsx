@@ -31,7 +31,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             onChange={e => onChange(instrument.set({ alias: e.target.value }))}
             placeholder={instrument.name}
         />
-        <div className="row">
+        <div className="row" style={{marginTop: '0.2rem'}}>
             Instrument
         </div>
         <InstrumentSelector
@@ -58,7 +58,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
         </div>
         <input
             type="range"
-            min={1}
+            min={0}
             max={125}
             value={instrument.volume}
             onChange={e => onChange(instrument.set({ volume: Number(e.target.value) }))}
@@ -81,7 +81,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
                 </option>
             )}
         </select>
-        <div className="row" style={{ marginTop: '0.1rem' }}>
+        <div className="row" style={{ marginTop: '0.2rem' }}>
             Unselected note icon
         </div>
         <select
