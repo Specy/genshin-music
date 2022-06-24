@@ -21,8 +21,17 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
     </div>
     return <div className="floating-instrument-settings box-shadow" ref={ref}>
         <div className="row">
+            Layer name
+        </div>
+        <input 
+            type="text" 
+            className="input"
+            value={instrument.alias} 
+            onChange={e => onChange(instrument.set({  alias: e.target.value }))} 
+            placeholder={instrument.name}
+        />
+        <div className="row">
             Instrument
-
         </div>
         <InstrumentSelector
             selected={instrument}

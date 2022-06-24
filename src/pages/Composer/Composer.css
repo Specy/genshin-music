@@ -591,7 +591,10 @@ canvas {
 }
 
 @media only screen and (max-width: 900px) {
-
+    .floating-instrument-settings{
+        top: 1rem;
+        padding: 0.5rem;
+    }
     .buttons-composer-wrapper,
     .buttons-composer-wrapper-right {
         flex: 1;
@@ -672,6 +675,8 @@ canvas {
     }
     .instrument-name-button{
         min-height: 2.5rem;
+        align-items: flex-end;
+        padding-bottom: 0.4rem;
     }
     .new-instrument-button{
         padding: 0;

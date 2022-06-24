@@ -169,8 +169,7 @@ class Player extends Component<any, PlayerState>{
 			const songName = await asyncPrompt("Write song name, press cancel to ignore")
 			if (!this.mounted) return
 			if (songName !== null) {
-				const song = new RecordedSong(songName, this.recording.notes)
-				song.instrument = instrument.name
+				const song = new RecordedSong(songName, this.recording.notes, [instrument.name])
 				song.pitch = settings.pitch.value as Pitch
 				this.addSong(song)
 				Analytics.userSongs('record', { name: songName, page: 'player' })

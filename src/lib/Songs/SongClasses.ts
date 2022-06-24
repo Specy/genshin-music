@@ -1,7 +1,7 @@
 import { INSTRUMENTS, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName } from "types/GeneralTypes"
 import { NoteLayer } from "../Layer"
-import { InstrumentNoteIcon, SerializedInstrumentData } from "./ComposedSong"
+import { InstrumentNoteIcon } from "./ComposedSong"
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
 
@@ -57,12 +57,21 @@ export class Column {
 	}
 }
 const instrumentNoteMap = new Map([['border', 1], ['circle', 2], ['line', 3]])
+export interface SerializedInstrumentData{
+    name: InstrumentName
+    volume: number
+    pitch: Pitch | ""
+    visible: boolean
+    icon: InstrumentNoteIcon
+	alias: string
+}
 export class InstrumentData{
     name: InstrumentName = INSTRUMENTS[0]
     volume: number = 100
     pitch: Pitch | "" = ""
     visible: boolean = true
     icon: InstrumentNoteIcon = 'circle'
+	alias = ''
 	constructor(data: Partial<InstrumentData> = {}) {
 		Object.assign(this, data)
 	}
@@ -72,7 +81,8 @@ export class InstrumentData{
 			volume: this.volume,
 			pitch: this.pitch,
 			visible: this.visible,
-			icon: this.icon
+			icon: this.icon,
+			alias: this.alias
 		}
 	}
 	static deserialize(data: SerializedInstrumentData): InstrumentData{

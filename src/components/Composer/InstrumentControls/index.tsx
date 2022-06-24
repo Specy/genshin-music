@@ -2,10 +2,11 @@ import { AppButton } from "components/AppButton";
 import { useTheme } from "lib/Hooks/useTheme";
 import { InstrumentData } from "lib/Songs/SongClasses";
 import { memo, useCallback, useState } from "react";
-import { FaCog, FaEye, FaEyeSlash, FaPlus } from "react-icons/fa";
+import { FaCircle, FaCog, FaEye, FaEyeSlash, FaLine, FaMinus, FaPlus } from "react-icons/fa";
+import { BiSquareRounded } from "react-icons/bi";
+
 import { ThemeStoreClass } from "stores/ThemeStore";
 import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
-
 
 
 interface InstrumentControlsProps {
@@ -31,7 +32,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                 isSelected={i === selected}
                 onEditClick={() => setIsEditing(!isEditing)}
                 onClick={() => onLayerSelect(i)}
-                onVisibleToggle={(visible) => onInstrumentChange(ins.set({visible}), i)}
+                onVisibleToggle={(visible) => onInstrumentChange(ins.set({ visible }), i)}
                 key={ins.name + i}
             />
         )}
@@ -49,7 +50,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
         <div style={{ height: '1rem' }}>
 
         </div>
-        <AppButton 
+        <AppButton
             onClick={onInstrumentAdd}
             ariaLabel='Add new instrument'
             className="new-instrument-button flex-centered"
@@ -72,7 +73,8 @@ interface InstrumentButtonProps {
     onVisibleToggle: (newState: boolean) => void
 }
 function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick, onVisibleToggle }: InstrumentButtonProps) {
-    const passiveIcon = theme.getText('primary')
+    let passiveIcon = theme.getText('primary')
+    passiveIcon = (passiveIcon.isDark() ? passiveIcon.lighten(0.2) : passiveIcon.darken(0.15))
     return <div
         className="instrument-button flex-centered"
         style={isSelected
@@ -81,22 +83,49 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
             } : {}}
     >
         {!isSelected && !instrument.visible &&
-            <FaEyeSlash 
+            <FaEyeSlash
                 style={{
-                    position: 'absolute', 
-                    top: '0.3rem', 
-                    left: '0.3rem', 
-                    color: (passiveIcon.isDark() ? passiveIcon.lighten(0.2) : passiveIcon.darken(0.2)).hex()
+                    position: 'absolute',
+                    top: '0.2rem',
+                    left: '0.3rem',
+                    color: passiveIcon.hex()
                 }}
                 size={14}
             />
         }
+        {!isSelected &&
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '0.4rem',
+                    right: '0.4rem',
+                    height: 'fit-content'
+                }}
+            >
+                {instrument.icon === 'circle' && 
+                    <FaCircle size={8} style={{display: 'block'}} color={passiveIcon.hex()}/>
+                }
+                {instrument.icon === 'border' && 
+                    <BiSquareRounded 
+                        size={12} 
+                        style={{display: 'block', marginRight: '-2px', marginTop: '-2px', strokeWidth: '2px'}}
+                        color={passiveIcon.hex()}
+                    />
+                }
+                {instrument.icon === 'line' && 
+                    <FaMinus size={8} style={{display: 'block'}} color={passiveIcon.hex()}/>
+                }
+            </div>
+        }
+
         <AppButton
             onClick={onClick}
             style={{ backgroundColor: "transparent", width: '100%' }}
-            className='flex-grow flex-centered instrument-name-button text-ellipsis'
+            className='flex-grow flex-centered instrument-name-button'
         >
-            {instrument.name}
+            <span className="text-ellipsis" style={{ width: '6rem' }}>
+                {instrument.alias || instrument.name}
+            </span>
         </AppButton>
 
         {isSelected &&
@@ -119,7 +148,6 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
 
             </div>
         }
-
     </div>
 }
 

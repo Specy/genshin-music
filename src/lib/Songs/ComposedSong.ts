@@ -5,7 +5,7 @@ import { InstrumentName } from "types/GeneralTypes"
 import { OldFormat, _LegacySongInstruments } from "types/SongTypes"
 import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
-import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
+import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn, SerializedInstrumentData } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
 
 interface OldFormatNoteType {
@@ -14,13 +14,7 @@ interface OldFormatNoteType {
     l?: number
 }
 export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
-export interface SerializedInstrumentData{
-    name: InstrumentName
-    volume: number
-    pitch: Pitch | ""
-    visible: boolean
-    icon: InstrumentNoteIcon
-}
+
 
 export type BaseSerializedComposedSong = SerializedSong & {
     type: "composed"
@@ -120,6 +114,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             })
             totalTime += Math.floor(bpmPerMs * TEMPO_CHANGERS[column.tempoChanger].changer)
         })
+        recordedSong.instruments = this.instruments.map(ins => ins.clone())
         return recordedSong
     }
     toComposedSong = () => {
