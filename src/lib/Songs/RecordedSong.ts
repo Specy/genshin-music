@@ -61,7 +61,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         song.pitch = PITCHES.includes(pitch) ? pitch : pitch
         song.bpm = Number.isFinite(bpm) ? bpm : song.bpm
         song.id = id
-        if(obj.instruments){
+        if (obj.instruments) {
             obj.instruments = song.instruments.map(InstrumentData.deserialize)
         }
         if (version === 1) {
@@ -89,7 +89,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
     }
     addInstrument = (name: InstrumentName) => {
-        const newInstrument:InstrumentData = new InstrumentData({name})
+        const newInstrument: InstrumentData = new InstrumentData({ name })
         this.instruments = [...this.instruments, newInstrument]
     }
     toComposedSong = (precision = 4) => {
@@ -182,7 +182,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
     toMidi(): Midi {
         const midi = new Midi()
-        midi.header.setTempo(this.bpm / 4) 
+        midi.header.setTempo(this.bpm / 4)
         midi.header.keySignatures.push({
             key: this.pitch,
             scale: "major",
@@ -193,7 +193,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const numberOfTracks = highestLayer.toString(2).length
         for (let i = 0; i < numberOfTracks; i++) {
             const notes = this.notes.filter(note => note.layer.test(i))
-            if(!notes.length) continue
+            if (!notes.length) continue
             const track = midi.addTrack()
             track.name = `Layer ${i + 1}`
             notes.forEach(note => {
@@ -204,7 +204,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 })
             })
         }
-        if(midi.tracks.length === 1) midi.tracks[0].name = INSTRUMENTS_DATA[this.instruments[0].name]?.midiName
+        if (midi.tracks.length === 1) midi.tracks[0].name = INSTRUMENTS_DATA[this.instruments[0].name]?.midiName
         return midi
     }
     static fromOldFormat = (song: any) => {
@@ -220,7 +220,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             )
             notes.forEach((note) => {
                 const data = note.key.split("Key")
-                const layer = new NoteLayer((note.l ?? Number(data[0]))|| 1)
+                const layer = new NoteLayer((note.l ?? Number(data[0])) || 1)
                 const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer)
                 converted.notes.push(recordedNote)
             })
