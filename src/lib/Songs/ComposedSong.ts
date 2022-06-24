@@ -145,7 +145,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         this.instruments = [...this.instruments]
     }
     serialize = (): SerializedComposedSong => {
-        const bpm = Number(this.bpm)
+        let bpm = parseInt(this.bpm as any)
         return {
             name: this.name,
             type: 'composed',
