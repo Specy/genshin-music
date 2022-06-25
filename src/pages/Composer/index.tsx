@@ -23,7 +23,7 @@ import AudioRecorder from 'lib/AudioRecorder'
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
-import LoggerStore from 'stores/LoggerStore';
+import { logger } from 'stores/LoggerStore';
 import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { NoteNameType, Pages } from 'types/GeneralTypes';
@@ -39,6 +39,7 @@ import { songsStore } from 'stores/SongsStore';
 import { InstrumentControls } from 'components/Composer/InstrumentControls';
 import { AppButton } from 'components/AppButton';
 import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore';
+import { Title } from 'components/Title';
 
 interface ComposerState {
     layers: Instrument[]
@@ -182,10 +183,6 @@ class Composer extends Component<any, ComposerState>{
             }
         }, { id })
     }
-    componentDidCatch() {
-        LoggerStore.error("There was an error with the Composer, reloading the page...")
-        setTimeout(window.location.reload, 3000)
-    }
     handleUnload = (event: BeforeUnloadEvent) => {
         event.preventDefault()
         event.returnValue = ''
@@ -246,14 +243,14 @@ class Composer extends Component<any, ComposerState>{
 
     addInstrument = () => {
         const { song } = this.state
-        if(song.instruments.length >= 16) return LoggerStore.error("You can't add more than 16 instruments!")
+        if(song.instruments.length >= 16) return logger.error("You can't add more than 16 instruments!")
         song.addInstrument(INSTRUMENTS[0])
         this.setState({ song })
         this.syncInstruments(song)
     }
     removeInstrument = async (index: number) => {
         const { song, layers } = this.state
-        if (layers.length <= 1) return LoggerStore.warn("You can't remove all layers!")
+        if (layers.length <= 1) return logger.warn("You can't remove all layers!")
         const confirm = await asyncConfirm(`Are you sure you want to remove ${layers[index].name}? Notes will be merged to the previous instrument.`)
         if (confirm) {
             song.removeInstrument(index)
@@ -645,6 +642,7 @@ class Composer extends Component<any, ComposerState>{
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers, undoHistory } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
+            <Title text={`Composer - ${song.name}`} />
             {isMidiVisible &&
                 <MidiParser
                     functions={this} //passes all functions to the midi parser

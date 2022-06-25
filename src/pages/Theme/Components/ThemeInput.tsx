@@ -1,4 +1,4 @@
-import LoggerStore from "stores/LoggerStore"
+import {logger} from "stores/LoggerStore";
 
 interface ThemeInputProps{
     name: string, 
@@ -21,7 +21,7 @@ export function ThemeInput({ name , onChange, disabled, value, onLeave}: ThemeIn
             disabled={disabled}
             value={value}
             onPointerDown={() => {
-                if(disabled) LoggerStore.warn('Create a new theme first')
+                if(disabled) logger.warn('Create a new theme first')
             }}
             onBlur={() => { if(onLeave) onLeave()}}
             onChange={(e) => onChange(e.target.value)}

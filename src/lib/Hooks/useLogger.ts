@@ -1,14 +1,14 @@
-import LoggerStore, { LoggerDataProps } from "stores/LoggerStore"
+import { logger,  LoggerDataProps } from "stores/LoggerStore"
 
 import { useState, useEffect } from "react";
 import { observe } from "mobx";
 
 type UseLogger = [LoggerDataProps, (data: LoggerDataProps) => void]
 export function useLogger(): UseLogger {
-    const [data, setData] = useState(LoggerStore.state.data)
+    const [data, setData] = useState(logger.state.data)
     useEffect(() => {
-        const dispose = observe(LoggerStore.state, () => {
-            setData({ ...LoggerStore.state.data })
+        const dispose = observe(logger.state, () => {
+            setData({ ...logger.state.data })
         })
         return dispose
     }, [])

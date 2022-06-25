@@ -8,11 +8,12 @@ import Analytics from 'lib/Analytics'
 import { RecordedSong } from 'lib/Songs/RecordedSong'
 import { RecordedNote } from 'lib/Songs/SongClasses'
 import { AppButton } from 'components/AppButton'
-import LoggerStore from 'stores/LoggerStore'
+import { logger } from 'stores/LoggerStore'
 import { SerializedSong } from 'lib/Songs/Song'
 import { SheetVisualiserMenu } from 'components/SheetVisualizer/Menu'
 import { SheetFrame } from 'components/SheetVisualizer/SheetFrame'
 import { Chunk } from 'lib/Songs/VisualSong'
+import { Title } from 'components/Title'
 
 const THRESHOLDS = {
     joined: 50,
@@ -77,12 +78,14 @@ export default function SheetVisualizer() {
             setSheet(chunks)
         } catch (e) {
             console.error(e)
-            LoggerStore.error('Error visualizing song')
+            logger.error('Error visualizing song')
         }
 
         Analytics.songEvent({ type: 'visualize' })
     }
     return <div className='default-page' style={{ overflowY: 'scroll' }}>
+        <Title text="Sheet Visualizer" />
+
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SheetVisualiserMenu
                 onSongLoaded={(song) => loadSong(song)}

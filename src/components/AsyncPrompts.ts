@@ -1,4 +1,4 @@
-import LoggerStore from "stores/LoggerStore"
+import {logger} from "stores/LoggerStore";
 import { ThemeProvider } from 'stores/ThemeStore'
 import isMobile from 'is-mobile'
 async function asyncPrompt(question: string):Promise<string | null> {
@@ -48,7 +48,7 @@ async function asyncPrompt(question: string):Promise<string | null> {
             if (input.value.trim() === '') return
             if (input.value.trim() === "Untitled") {
                 input.value = ""
-                LoggerStore.warn('"Untitled" is a reserved word, use another')
+                logger.warn('"Untitled" is a reserved word, use another')
             }
             resolve(input.value.trim())
             dispose()

@@ -7,7 +7,7 @@ import { ComposedSong } from 'lib/Songs/ComposedSong'
 import { LAYERS_INDEXES, PITCHES, Pitch, MIDI_MAP_TO_NOTE } from 'appConfig'
 import { FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/Hooks/useDebounce'
-import LoggerStore from 'stores/LoggerStore'
+import { logger } from 'stores/LoggerStore'
 import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
 import { InstrumentName } from 'types/GeneralTypes'
@@ -97,7 +97,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             }, () => { if (this.state.tracks.length) this.convertMidi() })
         } catch (e) {
             console.error(e)
-            LoggerStore.error('There was an error importing this file, is it a .mid file?')
+            logger.error('There was an error importing this file, is it a .mid file?')
         }
     }
 
@@ -176,7 +176,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         const lastColumn = this.props.data.selectedColumn
         song.selected = lastColumn < song.columns.length ? lastColumn : 0
         if (song.columns.length === 0) {
-            return LoggerStore.warn("There are no notes")
+            return logger.warn("There are no notes")
         }
         this.props.functions.loadSong(song)
         this.setState({

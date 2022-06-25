@@ -1,7 +1,10 @@
 import { SimpleMenu } from 'components/SimpleMenu'
+import { Title } from 'components/Title'
 
 export default function Privacy() {
     return <div className='default-page partners-page'>
+        <Title text="Privacy" />
+        
         <SimpleMenu />
         <div className='default-content partner-wrapper'>
             This website uses cookies to collect data about usage of the app through IP anonymized Google Analytics.

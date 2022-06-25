@@ -133,12 +133,14 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
                 <AppButton
                     onClick={() => onEditClick()}
                     ariaLabel='Settings'
+                    className="flex-centered"
                 >
                     <FaCog size={15} />
                 </AppButton>
                 <AppButton
                     onClick={() => onVisibleToggle(!instrument.visible)}
                     ariaLabel={instrument.visible ? 'Hide' : 'Show'}
+                    className="flex-centered"
                 >
                     {instrument.visible
                         ? <FaEye size={16} />

@@ -91,19 +91,27 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
         <div className="tools-right column">
             <AppButton 
                 style={{marginBottom: '0.2rem'}} 
+                className={hasTooltip(true)}
                 toggled={selectionType === 'all'}
                 onClick={() => setSelectionType('all')}
             >
                 <MdSelectAll style={{marginRight: '0.2rem'}} size={16}/>
                 All layers 
+                <Tooltip style={{left: 0}}>
+                    Select all the layers in the highlighted columns
+                </Tooltip>
             </AppButton>
             <AppButton  
                 style={{marginBottom: '0.2rem'}}
+                className={hasTooltip(true)}
                 toggled={selectionType === 'layer'}
                 onClick={() => setSelectionType('layer')}
             >
                 <MdPhotoSizeSelectSmall style={{marginRight: '0.2rem'}} size={16}/>
                 Only Layer {layer + 1}
+                <Tooltip style={{left: 0}}>
+                    Select all the notes in the highlighted columns of the current layer 
+                </Tooltip>
             </AppButton>
             <AppButton 
                 style={{marginBottom: '0.2rem', justifyContent: 'center'}}

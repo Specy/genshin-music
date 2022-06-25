@@ -489,6 +489,7 @@ a {
 .has-tooltip{
 	position: relative;
 }
+
 @media (hover:hover) {
 	.has-tooltip:hover:not(:focus){
 		z-index: 2;
@@ -500,7 +501,17 @@ a {
 		animation-fill-mode: forwards;
 	}
 }
-
+@media (hover:none) {
+	.has-tooltip:active{
+		z-index: 2;
+	}
+	.has-tooltip:active .tooltip{
+		display: block;
+		animation: fadeIn 0.2s;
+		animation-delay: 0.5s;
+		animation-fill-mode: forwards;
+	}
+}
 
 .tooltip {
 	display: none;
@@ -521,11 +532,13 @@ a {
 }
 
 .tooltip-bottom {
-	transform: translateY(125%);
+	transform: translateY(100%);
+	bottom: -0.4rem;
 }
 
 .tooltip-top {
-	transform: translateY(-125%);
+	transform: translateY(-100%);
+	top: -0.4rem;
 }
 
 .tooltip-left {

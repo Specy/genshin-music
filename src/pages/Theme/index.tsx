@@ -13,12 +13,13 @@ import { Theme } from "stores/ThemeStore";
 import { ThemePreview } from "./Components/ThemePreview";
 import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "stores/ThemeStore";
-import LoggerStore from "stores/LoggerStore";
+import { logger } from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/Hooks/useTheme";
 import './Theme.css'
 import { AppBackground } from "components/AppBackground";
 import { themeService } from "lib/Services/ThemeService";
+import { Title } from "components/Title";
 
 
 function ThemePage() {
@@ -73,10 +74,10 @@ function ThemePage() {
             }
         }
     }
-    const logImportError = useCallback((error?:any) => {
-        if(error) console.error(error)
-        LoggerStore.error('There was an error importing this theme, is it the correct file?',4000)
-    },[])
+    const logImportError = useCallback((error?: any) => {
+        if (error) console.error(error)
+        logger.error('There was an error importing this theme, is it the correct file?', 4000)
+    }, [])
     async function cloneTheme(name: string) {
         const theme = new BaseTheme(name)
         theme.state = cloneDeep(ThemeProvider.state)
@@ -109,6 +110,7 @@ function ThemePage() {
     }
 
     return <div className="default-page">
+        <Title text="Themes" />
         <SimpleMenu />
         <div className="default-content">
 

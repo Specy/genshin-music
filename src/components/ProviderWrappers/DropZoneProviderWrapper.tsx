@@ -1,6 +1,6 @@
 import { BodyDropper, DroppedFile } from "components/BodyDropper"
 import { fileService, UnknownSongImport } from "lib/Services/FileService"
-import LoggerStore from "stores/LoggerStore"
+import {logger} from "stores/LoggerStore";
 
 interface DropZoneProviderProps {
     children: React.ReactNode
@@ -15,20 +15,20 @@ export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
                 if(result.ok){
                     const success = result.successful.map(e => e.name)
                     if(success.length === 1){
-                        LoggerStore.success(`Song added to the ${result.successful[0].type} tab!`, 4000)
+                        logger.success(`Song added to the ${result.successful[0].type} tab!`, 4000)
                     }
                 } else {
                     const errors = result.errors.map(s => s.name || "UNKNOWN").join(", ")
-                    LoggerStore.error(`There was an error importing the song: ${errors}`)
+                    logger.error(`There was an error importing the song: ${errors}`)
                 }
             }
         }catch(e){
             console.error(e)
-            LoggerStore.error("Error importing file")
+            logger.error("Error importing file")
         }
     }
     function handleDropError() {
-        LoggerStore.error("There was an error importing the file! Was it the correct format?")
+        logger.error("There was an error importing the file! Was it the correct format?")
 
     }
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Analytics from 'lib/Analytics';
 import Home from 'components/Index/Home';
 import HomeStore from 'stores/HomeStore';
-import LoggerStore from 'stores/LoggerStore';
+import { logger } from 'stores/LoggerStore';
 import { delay } from "lib/Tools"
 import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "appConfig"
 import Logger from 'components/Index/Logger'
@@ -66,12 +66,12 @@ function App({history}:any) {
 		try {
 			if (navigator.storage && navigator.storage.persist) {
 				if (await navigator.storage.persist()) {
-					LoggerStore.success("Storage permission allowed")
+					logger.success("Storage permission allowed")
 				}
 			}
 		} catch (e) {
 			console.log(e)
-			LoggerStore.error("There was an error with setting up persistent storage")
+			logger.error("There was an error with setting up persistent storage")
 		}
 		closeWelcomeScreen()
 	}
@@ -88,7 +88,7 @@ function App({history}:any) {
 			return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
 		if (APP_VERSION !== storedVersion) {
-			LoggerStore.log("Update V" + APP_VERSION + "\n" + UPDATE_MESSAGE, 6000)
+			logger.log("Update V" + APP_VERSION + "\n" + UPDATE_MESSAGE, 6000)
 			localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
 		}
 		setCheckedUpdate(true)

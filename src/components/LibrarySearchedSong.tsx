@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
 import { parseSong } from "lib/Tools"
-import LoggerStore from 'stores/LoggerStore';
+import { logger } from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
 import { ComposedSong } from 'lib/Songs/ComposedSong';
 import type {  RecordedSong } from 'lib/Songs/RecordedSong';
@@ -30,7 +30,7 @@ export default function SearchedSong({ onClick, data, importSong, theme }:Search
         } catch (e) {
             setFetching(false)
             console.error(e)
-            LoggerStore.error("Error downloading song")
+            logger.error("Error downloading song")
         }
     }
     const play = async function () {
@@ -46,7 +46,7 @@ export default function SearchedSong({ onClick, data, importSong, theme }:Search
         } catch (e) {
             console.error(e)
             setFetching(false)
-            LoggerStore.error("Error downloading song")
+            logger.error("Error downloading song")
         }
     }
     return <div className="song-row">

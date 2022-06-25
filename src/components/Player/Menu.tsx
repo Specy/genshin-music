@@ -13,7 +13,7 @@ import LibrarySearchedSong from 'components/LibrarySearchedSong'
 import { SongActionButton } from 'components/SongActionButton'
 import Analytics from 'lib/Analytics';
 import HomeStore from 'stores/HomeStore';
-import LoggerStore from 'stores/LoggerStore';
+import { logger } from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { Link } from 'react-router-dom'
@@ -108,7 +108,7 @@ function Menu({ functions, data }: MenuProps) {
             .then(data => data.json()) as any
         if (fetchedSongs.error) {
             setSearchStatus('Please write a non empty name')
-            return LoggerStore.error(fetchedSongs.error)
+            return logger.error(fetchedSongs.error)
 
         }
         setSearchStatus('success')
@@ -140,7 +140,7 @@ function Menu({ functions, data }: MenuProps) {
             } catch (e) {
                 console.error(e)
                 if (file.file.name.includes?.(".mid")) {
-                    return LoggerStore.error("Midi files should be imported in the composer")
+                    return logger.error("Midi files should be imported in the composer")
                 }
                 logImportError()
             }
@@ -158,7 +158,7 @@ function Menu({ functions, data }: MenuProps) {
         const songName = song.name
         const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
         fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
-        LoggerStore.success("Song downloaded")
+        logger.success("Song downloaded")
         Analytics.userSongs('download', { name: songName, page: 'player' })
     }
     const createFolder = useCallback(async () => {
@@ -169,7 +169,7 @@ function Menu({ functions, data }: MenuProps) {
 
     const logImportError = useCallback((error?: any) => {
         if (error) console.error(error)
-        LoggerStore.error(
+        logger.error(
             `Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
             8000
         )
@@ -185,10 +185,10 @@ function Menu({ functions, data }: MenuProps) {
             })
             const date = new Date().toISOString().split('T')[0]
             fileService.downloadSong(toDownload, `${APP_NAME}_Backup_${date}`)
-            LoggerStore.success("Song backup downloaded")
+            logger.success("Song backup downloaded")
         } catch (e) {
             console.error(e)
-            LoggerStore.error("Error downloading songs")
+            logger.error("Error downloading songs")
         }
     }
 

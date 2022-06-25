@@ -1,8 +1,11 @@
 import { HelpTab } from "components/HelpTab"
 import { SimpleMenu } from "components/SimpleMenu"
+import { Title } from "components/Title"
 
 export default function Help(){
     return <div className="default-page">
+        <Title text="Help" />
+
         <SimpleMenu/>
         <div>
             <div style={{fontSize: '2rem', margin: '1rem 0'}}>

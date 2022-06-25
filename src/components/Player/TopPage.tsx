@@ -150,7 +150,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                         </option>
                     })}
                 </select>
-                <Tooltip style={{ transform: 'translateY(2px) translateX(-1.1rem)'}}>
+                <Tooltip >
                     Change speed
                 </Tooltip>
             </div>

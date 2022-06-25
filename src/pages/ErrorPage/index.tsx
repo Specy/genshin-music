@@ -3,7 +3,7 @@ import { parseSong } from "lib/Tools"
 import { asyncConfirm } from "components/AsyncPrompts"
 import { APP_NAME } from "appConfig"
 import { SimpleMenu } from 'components/SimpleMenu'
-import LoggerStore from 'stores/LoggerStore';
+import { logger } from 'stores/LoggerStore';
 import { SongMenu } from 'components/SongMenu';
 
 
@@ -13,6 +13,7 @@ import { SerializedSong, Song } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 import { fileService } from 'lib/Services/FileService';
+import { Title } from 'components/Title';
 
 export function ErrorPage() {
     const [songs] = useSongs()
@@ -32,7 +33,7 @@ export function ErrorPage() {
     const resetSettings = () => {
         localStorage.removeItem(APP_NAME + "_Composer_Settings")
         localStorage.removeItem(APP_NAME + "_Main_Settings")
-        LoggerStore.success("Settings have been reset")
+        logger.success("Settings have been reset")
     }
     const downloadSong = (song: SerializedSong) => {
         try{
@@ -40,14 +41,16 @@ export function ErrorPage() {
             const parsed = parseSong(song)
             const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
             fileService.downloadSong(converted,`${songName}.${APP_NAME.toLowerCase()}sheet`)
-            LoggerStore.success("Song downloaded")
+            logger.success("Song downloaded")
         }catch(e){
             console.error(e)
-            LoggerStore.error('Error downloading song')
+            logger.error('Error downloading song')
         }
 
     }
     return <div className="default-page error-page">
+        <Title text="Error" />
+        
         <SimpleMenu />
         <div className="error-text-wrapper">
             There seems to be an error. <br />

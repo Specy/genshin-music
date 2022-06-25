@@ -19,6 +19,8 @@ import { KeyboardProviderWrapper } from "components/ProviderWrappers/KeyboardPro
 import { useEffect } from "react";
 import { DropZoneProviderWrapper } from "components/ProviderWrappers/DropZoneProviderWrapper";
 import Privacy from "pages/Privacy";
+import ErrorBoundaryRedirect from "components/ErrorBoundaryRedirect";
+import {logger} from "stores/LoggerStore"
 export function Router() {
 	useEffect(() => {
 		try {
@@ -46,48 +48,53 @@ export function Router() {
 								<Route exact path="/ErrorPage">
 									<ErrorPage />
 								</Route>
-								<Route exact path="/">
-									<AppBackground page="Main">
-										<Player />
-									</AppBackground>
-								</Route>
-								<Route exact path="/Player">
-									<AppBackground page="Main">
-										<Player />
-									</AppBackground>
-								</Route>
-								<Route exact path="/Composer">
-									<AppBackground page="Composer">
-										<Composer />
-									</AppBackground>
-								</Route>
-								<Route exact path="/Donate">
-									<Donate />
-								</Route>
-								<Route exact path="/Changelog">
-									<Changelogpage />
-								</Route>
-								<Route exact path="/Partners">
-									<Partners />
-								</Route>
-								<Route exact path='/Help'>
-									<Help />
-								</Route>
-								<Route exact path='/SheetVisualizer'>
-									<SheetVisualizer />
-								</Route>
-								<Route exact path='/MidiSetup'>
-									<MidiSetup />
-								</Route>
-								<Route path='/Theme'>
-									<Theme />
-								</Route>
-								<Route path='/Privacy'>
-									<Privacy />
-								</Route>
+								<ErrorBoundaryRedirect 
+									onErrorGoTo="/ErrorPage"
+									onError={() => logger.error("There was an error with the app!")}
+								>
+									<Route exact path="/">
+										<AppBackground page="Main">
+											<Player />
+										</AppBackground>
+									</Route>
+									<Route exact path="/Player">
+										<AppBackground page="Main">
+											<Player />
+										</AppBackground>
+									</Route>
+									<Route exact path="/Composer">
+										<AppBackground page="Composer">
+											<Composer />
+										</AppBackground>
+									</Route>
+									<Route exact path="/Donate">
+										<Donate />
+									</Route>
+									<Route exact path="/Changelog">
+										<Changelogpage />
+									</Route>
+									<Route exact path="/Partners">
+										<Partners />
+									</Route>
+									<Route exact path='/Help'>
+										<Help />
+									</Route>
+									<Route exact path='/SheetVisualizer'>
+										<SheetVisualizer />
+									</Route>
+									<Route exact path='/MidiSetup'>
+										<MidiSetup />
+									</Route>
+									<Route path='/Theme'>
+										<Theme />
+									</Route>
+									<Route path='/Privacy'>
+										<Privacy />
+									</Route>
+								</ErrorBoundaryRedirect>
 								<Route path='*'>
-									<Error404 />
-								</Route>
+										<Error404 />
+									</Route>
 							</Switch>
 						</AudioProviderWrapper>
 					</MIDIProviderWrapper>

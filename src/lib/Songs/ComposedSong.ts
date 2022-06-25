@@ -85,11 +85,11 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         if (song.version === 2 || song.version === 3) {
             parsed.columns = song.columns.map(column => Column.deserialize(column))
         }
-        const highestLayer = Math.max(...parsed.columns.map(column => {
+        const highestLayer = Math.max(0, ...parsed.columns.map(column => {
             return Math.max(...column.notes.map(note => note.layer.asNumber()))
         }))
-        //make sure there are enough instruments for the layers
-        song.instruments = highestLayer.toString(2).split("").map(_ => new InstrumentData())
+        //make sure there are enough instruments for all layers
+        parsed.instruments = highestLayer.toString(2).split("").map(_ => new InstrumentData())
         //parsing instruments
         if (song.version === 1 || song.version === 2) {
             const instruments = Array.isArray(song.instruments) ? song.instruments : []
@@ -149,10 +149,10 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
         return {
             name: this.name,
             type: 'composed',
-            folderId: this.folderId,
             bpm: Number.isFinite(bpm) ? bpm : 220,
             pitch: this.pitch,
             version: this.version,
+            folderId: this.folderId,
             data: {
                 ...this.data,
                 appName: APP_NAME

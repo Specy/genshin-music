@@ -7,7 +7,7 @@ import DonateButton from 'components/DonateButton'
 import Memoized from 'components/Memoized';
 import { IS_MIDI_AVAILABLE } from 'appConfig';
 import Analytics from 'lib/Analytics';
-import LoggerStore from 'stores/LoggerStore';
+import { logger } from 'stores/LoggerStore';
 import { AppButton } from 'components/AppButton';
 import { SongMenu } from 'components/SongMenu';
 import { ComposerSettingsDataType } from 'lib/BaseSettings';
@@ -64,7 +64,7 @@ function Menu({ data, functions }: MenuProps) {
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
         if (isOnMobile) setVisible(false)
-    }, {active: isOpen, ignoreFocusable: true})
+    }, { active: isOpen, ignoreFocusable: true })
 
     useEffect(() => {
         KeyboardProvider.register("Escape", () => {
@@ -120,11 +120,11 @@ function Menu({ data, functions }: MenuProps) {
             const parsed = parseSong(song)
             const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
             fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
-            LoggerStore.success("Song downloaded")
+            logger.success("Song downloaded")
             Analytics.userSongs('download', { name: parsed.name, page: 'composer' })
         } catch (e) {
             console.log(e)
-            LoggerStore.error('Error downloading song')
+            logger.error('Error downloading song')
         }
     }, [])
     const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
@@ -206,7 +206,7 @@ function Menu({ data, functions }: MenuProps) {
                             functions: songFunctions
                         }}
                     />
-                    <div className='row' style={{justifyContent: "flex-end"}}>
+                    <div className='row' style={{ justifyContent: "flex-end" }}>
                         <AppButton onClick={createFolder}>
                             Create folder
                         </AppButton>

@@ -5,9 +5,11 @@ import { ChangelogRow } from './ChangelogRow'
 import './Changelog.css'
 import { updates } from './updates'
 import { APP_VERSION } from 'appConfig'
+import { Title } from 'components/Title'
 
 export default function Changelogpage() {
     return <div className='default-page'>
+        <Title text={`Changelog V${APP_VERSION}`} />
         <div className='changelog-page-title'>
             Changelog <span style={{ fontSize: '1.2rem' }}>v{APP_VERSION}</span>
         </div>

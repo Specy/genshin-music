@@ -3,7 +3,7 @@ import { ThemeSettings } from 'lib/BaseSettings'
 import { BASE_THEME_CONFIG } from 'appConfig'
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
-import LoggerStore from 'stores/LoggerStore'
+import { logger } from 'stores/LoggerStore'
 import { baseThemes } from "./defaultThemes";
 import { themeService } from "lib/Services/ThemeService";
 
@@ -133,7 +133,7 @@ export class ThemeStoreClass {
 
         } catch (e) {
             console.error(e)
-            LoggerStore.error("There was an error loading the theme", 4000)
+            logger.error("There was an error loading the theme", 4000)
         }
     }
     loadFromTheme = (theme: Theme) => {

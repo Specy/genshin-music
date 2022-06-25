@@ -12,7 +12,7 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { Pitch } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
-import LoggerStore from 'stores/LoggerStore';
+import {logger} from 'stores/LoggerStore';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
@@ -20,6 +20,7 @@ import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { settingsService } from 'lib/Services/SettingsService';
 import { songsStore } from 'stores/SongsStore';
+import { Title } from 'components/Title';
 
 interface PlayerState {
 	settings: MainPageSettingsDataType
@@ -54,6 +55,7 @@ class Player extends Component<any, PlayerState>{
 		const { settings } = this.state
 		await this.loadInstrument(settings.instrument.value)
 		AudioProvider.setReverb(settings.caveMode.value)
+
 	}
 	componentDidMount() {
 		this.mounted = true
@@ -71,11 +73,6 @@ class Player extends Component<any, PlayerState>{
 	registerKeyboardListeners = () => {
 		KeyboardProvider.registerLetter('C', () => this.toggleRecord(), { shift: true, id: "player" })
 	}
-	componentDidCatch() {
-		LoggerStore.warn("There was an error with the song! Restoring default...")
-		PlayerStore.reset()
-	}
-
 	setHasSong = (data: boolean) => {
 		this.setState({ hasSong: data })
 	}
@@ -137,10 +134,10 @@ class Player extends Component<any, PlayerState>{
 		try {
 			const id = await songsStore.addSong(song)
 			song.id = id
-			LoggerStore.success(`Song added to the ${song.isComposed ? "Composed" : "Recorded"} tab!`, 4000)
+			logger.success(`Song added to the ${song.isComposed ? "Composed" : "Recorded"} tab!`, 4000)
 		} catch (e) {
 			console.error(e)
-			return LoggerStore.error('There was an error importing the song')
+			return logger.error('There was an error importing the song')
 		}
 	}
 
@@ -199,6 +196,7 @@ class Player extends Component<any, PlayerState>{
 		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong } = this
 		const { settings, isLoadingInstrument, instrument, hasSong, isRecordingAudio, isRecording } = state
 		return <>
+        	<Title text="Player" />
 			<Menu
 				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
 				data={{ settings }}

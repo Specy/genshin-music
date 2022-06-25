@@ -1,8 +1,10 @@
 import './Partners.css'
 import { SimpleMenu } from 'components/SimpleMenu'
+import { Title } from 'components/Title'
 
 export default function Partners() {
     return <div className='default-page partners-page'>
+        <Title text="Partners" />
         <SimpleMenu/>
         <div className='default-content partner-wrapper'>
             <Partner

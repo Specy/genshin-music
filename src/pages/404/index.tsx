@@ -1,7 +1,9 @@
 import { SimpleMenu } from "components/SimpleMenu";
+import { Title } from "components/Title";
 import { Link } from 'react-router-dom'
 export default function Error404() {
     return <div className="default-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <Title text="404" />
         <SimpleMenu />
         <Link to='./' className='link' style={{textAlign: 'center'}}>
             <div style={{ fontSize: '6rem' }}>
