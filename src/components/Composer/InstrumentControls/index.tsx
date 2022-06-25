@@ -1,7 +1,7 @@
 import { AppButton } from "components/AppButton";
 import { useTheme } from "lib/Hooks/useTheme";
 import { InstrumentData } from "lib/Songs/SongClasses";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { FaCircle, FaCog, FaEye, FaEyeSlash, FaLine, FaMinus, FaPlus } from "react-icons/fa";
 import { BiSquareRounded } from "react-icons/bi";
 
@@ -47,7 +47,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                 onClose={setNotEditing}
             />
         }
-        <div style={{ height: '1rem' }}>
+        <div style={{ minHeight: '1rem' }}>
 
         </div>
         <AppButton
@@ -73,9 +73,15 @@ interface InstrumentButtonProps {
     onVisibleToggle: (newState: boolean) => void
 }
 function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick, onVisibleToggle }: InstrumentButtonProps) {
+    const ref = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        if (!isSelected || !ref.current) return
+        ref.current.scrollIntoView({behavior: "auto", block: "nearest"})
+    },[isSelected, ref])
     let passiveIcon = theme.getText('primary')
     passiveIcon = (passiveIcon.isDark() ? passiveIcon.lighten(0.2) : passiveIcon.darken(0.15))
     return <div
+        ref={ref}
         className="instrument-button flex-centered"
         style={isSelected
             ? {

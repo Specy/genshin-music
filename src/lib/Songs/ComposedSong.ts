@@ -1,5 +1,5 @@
 import { Midi } from "@tonejs/midi"
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, Pitch } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, Pitch, COMPOSER_NOTE_POSITIONS } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName } from "types/GeneralTypes"
 import { OldFormat, _LegacySongInstruments } from "types/SongTypes"
@@ -274,6 +274,47 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             })
         }
         return this
+    }
+    moveNotesBy(selectedColumns:number[], amount: number, layer: number | 'all'){
+        const layoutMax = APP_NAME === 'Genshin' ? 21 : 15 
+        const fromNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n,i) => [n, i]))
+        const toNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n,i) => [i, n]))
+        if (layer === 'all') {
+            selectedColumns.forEach(index => {
+                const column = this.columns[index]
+                if(!column) return
+                column.notes.forEach(note => {
+                    const fromPosition = fromNotePosition.get(note.index)
+                    const toPosition = toNotePosition.get(fromPosition! + amount)
+                    note.index = toPosition ?? -1
+                })
+                column.notes = column.notes.filter(note => note.index >= 0 && note.index < layoutMax) 
+            })
+        } else {
+            selectedColumns.forEach(index => {
+                const column = this.columns[index]
+                column.notes.sort((a, b) => amount < 0 ? a.index - b.index : b.index - a.index)
+                if(!column) return
+                column.notes.forEach(note => {
+                    note = column.notes.find(n => n.index === note.index)!
+                    if(!note.layer.test(layer)) return
+                    const fromPosition = fromNotePosition.get(note.index)
+                    const newPosition = toNotePosition.get(fromPosition! + amount)
+                    const noteAtPosition = column.notes.find(n => n.index === newPosition)
+                    if (noteAtPosition){
+                        noteAtPosition.setLayer(layer, true)
+                        note.setLayer(layer, false)
+                    }else{
+                        if(!note.layer.test(layer)) return
+                        note.setLayer(layer, false)
+                        const newNote = new ColumnNote(newPosition ?? -1, new NoteLayer())
+                        newNote.setLayer(layer, true)
+                        column.notes.push(newNote)
+                    }
+                })
+                column.notes = column.notes.filter(n => n.index >= 0 && n.index < layoutMax && !n.layer.isEmpty())
+            })
+        }
     }
     copyColumns = (selectedColumns: number[], layer: number | 'all') => {
         let copiedColumns: Column[] = []

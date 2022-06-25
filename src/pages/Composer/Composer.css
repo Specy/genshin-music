@@ -189,9 +189,9 @@ select {
     border: none;
     font-size: 1rem;
     gap: 0.5rem;
+    justify-content: flex-start;
     cursor: pointer;
 }
-
 
 .tools-row {
     display: flex;
@@ -214,7 +214,7 @@ select {
     background-color: var(--accent) !important;
 }
 
-.tools-buttons-wrapper {
+.tools-buttons-grid {
     display: grid;
     grid-template-areas: 
                 "a a b b"
@@ -630,7 +630,7 @@ canvas {
     .tools-icon{
         font-size: 1.1rem;
     }
-    .tools-buttons-wrapper{
+    .tools-buttons-grid{
         gap: 0.3rem;
     }
     .tools-button{

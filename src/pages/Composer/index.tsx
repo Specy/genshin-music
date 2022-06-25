@@ -619,11 +619,14 @@ class Composer extends Component<any, ComposerState>{
         this.changes++
         this.setState({ song, selectedColumns: [song.selected] })
     }
-    validateBreakpoints = () => {
-        const { song } = this.state
-        song.validateBreakpoints()
+    moveNotesBy = (amount: number, position: number | "all") => {
+        const { song, selectedColumns } = this.state
+        this.addToHistory()
+        song.moveNotesBy(selectedColumns, amount, position)
+        this.changes++
         this.setState({ song })
     }
+
     deleteColumns = async () => {
         const { song, selectedColumns } = this.state
         this.addToHistory()
@@ -633,6 +636,11 @@ class Composer extends Component<any, ComposerState>{
             song,
             selectedColumns: [song.selected]
         }, this.validateBreakpoints)
+    }
+    validateBreakpoints = () => {
+        const { song } = this.state
+        song.validateBreakpoints()
+        this.setState({ song })
     }
     changeMidiVisibility = (visible: boolean) => {
         this.setState({ isMidiVisible: visible })
