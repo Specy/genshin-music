@@ -39,7 +39,7 @@ export type UnknownSerializedComposedSong = SerializedComposedSongV1 | Serialize
 
 export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
 
-
+const defaultInstrumentMap: InstrumentNoteIcon[] = ['border', 'circle', 'line']
 export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong, 3>{
     notes: RecordedNote[] = []
     instruments: InstrumentData[]
@@ -89,12 +89,18 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
             return Math.max(...column.notes.map(note => note.layer.asNumber()))
         }))
         //make sure there are enough instruments for all layers
-        parsed.instruments = highestLayer.toString(2).split("").map(_ => new InstrumentData())
+        parsed.instruments = highestLayer.toString(2).split("").map((_,i) => {
+            const ins = new InstrumentData()
+            ins.icon = defaultInstrumentMap[i % 3]
+            return ins
+        })
         //parsing instruments
         if (song.version === 1 || song.version === 2) {
             const instruments = Array.isArray(song.instruments) ? song.instruments : []
             instruments.forEach((name, i) => {
-                parsed.instruments[i] = new InstrumentData({ name })
+                const ins = new InstrumentData({ name })
+                ins.icon = defaultInstrumentMap[i % 3]
+                parsed.instruments[i] = ins
             })
         } else if (song.version === 3) {
             song.instruments.forEach((ins, i) => {
@@ -129,6 +135,7 @@ export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong,
     }
     addInstrument = (name: InstrumentName) => {
         const newInstrument: InstrumentData = new InstrumentData({ name })
+        newInstrument.icon = defaultInstrumentMap[this.instruments.length % 3]
         this.instruments = [...this.instruments, newInstrument]
     }
     removeInstrument = async (index: number) => {

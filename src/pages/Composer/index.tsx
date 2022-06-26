@@ -428,7 +428,7 @@ class Composer extends Component<any, ComposerState>{
         if (!this.mounted) return
         const added = await this.addSong(song) as ComposedSong
         if (!this.mounted) return
-        this.setState({ song: added })
+        this.setState({ song: added, layer: 0 })
         Analytics.songEvent({ type: 'create' })
     }
     loadSong = async (song: SerializedSong | ComposedSong) => {
@@ -465,6 +465,7 @@ class Composer extends Component<any, ComposerState>{
         this.changes = 0
         console.log("song loaded")
         this.setState({
+            layer: 0,
             song: parsed,
             settings: { ...settings },
             selectedColumns: []
