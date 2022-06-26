@@ -428,9 +428,9 @@ canvas {
     height: 48vh;
     border-radius: 0.5rem;
     padding: 0.8rem;
-    background-color: var(--primary);
+    background-color: var(--menu-background);
     border: solid 2px var(--secondary);
-    color: var(--primary-text);
+    color: var(--menu-background-text);
     max-width: 60vw;
     min-width: 45vw;
     z-index: 10;
@@ -570,19 +570,25 @@ canvas {
 .midi-input,
 .midi-select {
     width: 4rem;
-    background-color: #576377;
     border: none;
+    background-color: var(--primary);
     height: 1.9rem;
     border-radius: 0.2rem;
-    color: white;
+    color: var(--primary-text);
     text-align: center;
+    outline: none;
 }
 
 .midi-select {
     width: 5.6rem;
-    background-color: #485263;
     text-align: left;
     padding: 0.5rem;
+    padding: 0.2rem;
+    padding-left: 0.5rem;
+}
+.midi-track-offset::placeholder{
+    font-size: 0.7rem;
+    color: var(--primary-text);
 }
 .canvas-buttons{
     height: 100%;

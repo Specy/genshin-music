@@ -1,13 +1,4 @@
-.midi-select{
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    width: 8rem;
-    padding: 0.2rem;
-    padding-left: 0.5rem;
-    border-radius: 0.2rem;
-    margin: 0.5rem;
-}
+
 .midi-inputs{
     display: flex;
     flex-direction: column;

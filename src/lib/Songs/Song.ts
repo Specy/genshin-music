@@ -4,7 +4,7 @@ import { ComposedSong } from "./ComposedSong"
 import { RecordedSong } from "./RecordedSong"
 import { SongData } from "./SongClasses"
 
-export type SongType = 'recorded' | 'composed'
+export type SongType = 'recorded' | 'composed' | 'midi'
 
 export interface SerializedSong {
     id: string | null,

@@ -442,7 +442,17 @@ const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
         81: [5, false],
         82: [5, true],
         83: [6, false],
+        84: [6, false],
     })))
+const MIDI_BOUNDS = APP_NAME === "Genshin" 
+    ? {
+        upper: 84,
+        lower: 48
+    }
+    : {
+        upper: 84,
+        lower: 60
+    }
 //get only non accidentals
 const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
 const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
@@ -471,7 +481,8 @@ export {
     TEMPO_CHANGERS,
     EMPTY_LAYER,
     MIDI_MAP_TO_NOTE,
-    NOTE_MAP_TO_MIDI
+    NOTE_MAP_TO_MIDI,
+    MIDI_BOUNDS
 }
 export type {
     Pitch

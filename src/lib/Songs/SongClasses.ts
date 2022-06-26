@@ -1,4 +1,4 @@
-import { APP_NAME, INSTRUMENTS, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "appConfig"
+import { APP_NAME, INSTRUMENTS, MIDI_BOUNDS, MIDI_MAP_TO_NOTE, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName } from "types/GeneralTypes"
 import { NoteLayer } from "../Layer"
 import { InstrumentNoteIcon } from "./ComposedSong"
@@ -221,4 +221,36 @@ export type SongData = {
 	isComposed: boolean
 	isComposedVersion: boolean,
 	appName: string
+}
+export type ParsedMidiNote = {
+    note: number
+    isAccidental: boolean
+    outOfRangeBound: 1 | -1 | 0
+}
+
+export class MidiNote {
+    time: number
+    data: ParsedMidiNote
+    layer: number
+    constructor(time: number, layer: number, data?: ParsedMidiNote,) {
+        this.time = time
+        this.data = data || {
+            note: -1,
+            isAccidental: false,
+            outOfRangeBound: 0
+        }
+        this.layer = layer
+    }
+    static fromMidi(layer: number, time: number, midiNote: number){
+        const toReturn = new MidiNote(time, layer)
+        const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean]
+        toReturn.data = {
+            note: note[0],
+            isAccidental: note[1],
+            outOfRangeBound: 0
+        }
+        if(midiNote > MIDI_BOUNDS.upper) toReturn.data.outOfRangeBound = 1
+        if(midiNote < MIDI_BOUNDS.lower) toReturn.data.outOfRangeBound = -1
+        return toReturn
+    }
 }

@@ -612,7 +612,7 @@ a {
 }
 .help-tooltip-content{
 	position: absolute;
-	transform: translateY(0.4rem);
+	transform: translateY(0.4rem) ;
 	display: none;
 	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.15), 0 4px 6px -4px rgb(0 0 0 / 0.15);
 	border: solid 2px var(--secondary);

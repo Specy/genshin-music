@@ -40,7 +40,7 @@ export type UnknownSerializedComposedSong = SerializedComposedSongV1 | Serialize
 export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
 
 const defaultInstrumentMap: InstrumentNoteIcon[] = ['border', 'circle', 'line']
-export class ComposedSong extends Song<ComposedSong, BaseSerializedComposedSong, 3>{
+export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     notes: RecordedNote[] = []
     instruments: InstrumentData[]
     breakpoints: number[]
