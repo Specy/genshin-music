@@ -258,6 +258,18 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         }
         return this
     }
+    pasteLayer(copiedColumns: Column[], insert: boolean, layer: number){
+        const layerColumns = copiedColumns.map(col => {
+            const clone = col.clone()
+            clone.notes = clone.notes.map(note => {
+                note.layer.setData(0)
+                note.layer.set(layer, true)
+                return note
+            }).filter(note => !note.layer.isEmpty())
+            return clone
+        })
+        this.pasteColumns(layerColumns, insert)
+    }
     pasteColumns = async (copiedColumns: Column[], insert: boolean) => {
         const cloned: Column[] = copiedColumns.map(column => column.clone())
         if (!insert) {

@@ -16,9 +16,10 @@ interface InstrumentControlsProps {
     onInstrumentChange: (instrument: InstrumentData, index: number) => void
     onInstrumentDelete: (index: number) => void
     onInstrumentAdd: () => void
+    onChangePosition: (direction: 1 | -1) => void
 }
 
-function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange, onInstrumentDelete, selected, onLayerSelect }: InstrumentControlsProps) {
+function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange, onInstrumentDelete, selected, onLayerSelect, onChangePosition }: InstrumentControlsProps) {
     const [theme] = useTheme()
     const [isEditing, setIsEditing] = useState(false)
     const setNotEditing = useCallback(() => {
@@ -39,11 +40,14 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
         {isEditing &&
             <InstrumentSettingsPopup
                 instrument={instruments[selected]}
+                currentLayer={selected}
+                instruments={instruments}
                 onChange={ins => onInstrumentChange(ins, selected)}
                 onDelete={() => {
                     onInstrumentDelete(selected)
                     setNotEditing()
                 }}
+                onChangePosition={onChangePosition}
                 onClose={setNotEditing}
             />
         }

@@ -315,9 +315,9 @@ select {
 
 .layer-2,
 .layer-2 .genshin-border {
-    border-color: #d75c5c !important;
-    fill: #d75c5c !important;
-    stroke: #d75c5c !important;
+    border-color: #de6b45 !important;
+    fill: #de6b45 !important;
+    stroke: #de6b45 !important;
 }
 
 
@@ -401,7 +401,7 @@ canvas {
 }
 .floating-instrument-settings{
     position: absolute;
-    width: 15rem;
+    width: 17rem;
     background-color: var(--menu-background);
     color: var(--menu-background-text);
     display: flex;

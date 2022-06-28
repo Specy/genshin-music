@@ -9,9 +9,14 @@ export const updates: Update[] = [
     {
         version: '2.8',
         title: 'Infinite Composer layers',
-        date: '2022- 15/06',
+        date: '2022- 1/07',
         changes: [
-            "Added (almost) infinite layers in composer, max 16",
+            "Increased instrument limit in the composer to 16",
+            "Redesigned the tools in the composer",
+            "Added UNDO to the composer tools",
+            "Added paste/insert to certain layer",
+            "Added possibility to move notes up/down",
+            "Bug fixes and improvements"
         ]
     },
     {

@@ -19,7 +19,7 @@ import { TbArrowBarToRight } from "react-icons/tb"
         copyColumns: (layer: number | 'all') => void
         eraseColumns: (layer: number | 'all') => void
         moveNotesBy: (amount: number, layer: number | 'all') => void
-        pasteColumns: (insert: boolean) => void
+        pasteColumns: (insert: boolean, layer: number | 'all') => void
         deleteColumns: () => void
         resetSelection: () => void
         undo: () => void
@@ -33,6 +33,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
     const [selectionType, setSelectionType] = useState<SelectionType>('all')
     const { toggleTools, copyColumns, eraseColumns, pasteColumns, deleteColumns, resetSelection, undo, moveNotesBy } = functions
     const { isToolsVisible, hasCopiedColumns, layer, selectedColumns, undoHistory } = data
+    const selectedTarget = selectionType === 'all' ? 'all' : layer
     return <div
         className={`floating-tools ${isToolsVisible ? "floating-tools tools-visible" : ""}`}
         style={{ backgroundColor: theme.get('menu_background').fade(0.1).toString() }}
@@ -41,7 +42,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
             <ToolButton
                 area="a"
                 disabled={hasCopiedColumns}
-                onClick={() => copyColumns(selectionType === 'all' ? 'all' : layer)}
+                onClick={() => copyColumns(selectedTarget)}
                 active={hasCopiedColumns}
                 tooltip='Copy all notes'
                 style={{ flexDirection: 'column', justifyContent: 'center' }}
@@ -52,26 +53,26 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
             </ToolButton>
             <ToolButton
                 disabled={!hasCopiedColumns}
-                onClick={() => pasteColumns(false)}
+                onClick={() => pasteColumns(false, selectedTarget)}
                 tooltip='Paste copied notes'
                 area="b"
                 tooltipPosition="bottom"
             >
                 <FaPaste className='tools-icon' />
-                Paste
+                Paste {selectionType === 'all' ? '' : `in layer ${layer + 1}`}
             </ToolButton>
             <ToolButton
                 disabled={!hasCopiedColumns}
-                onClick={() => pasteColumns(true)}
+                onClick={() => pasteColumns(true, selectedTarget)}
                 tooltip='Insert copied notes'
                 area="c"
             >
                 <TbArrowBarToRight className='tools-icon' style={{ strokeWidth: '3px' }} />
-                Insert
+                Insert {selectionType === 'all' ? '' : `in layer ${layer + 1}`}
             </ToolButton>
             <ToolButton
                 disabled={hasCopiedColumns}
-                onClick={() => eraseColumns(selectionType === 'all' ? 'all' : layer)}
+                onClick={() => eraseColumns(selectedTarget)}
                 tooltip='Erase all selected notes'
                 area="d"
             >
@@ -92,7 +93,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 disabled={false}
                 tooltip="Push notes up by 1 position"
                 area="e"
-                onClick={() => moveNotesBy(1, selectionType === 'all' ? 'all' : layer)}
+                onClick={() => moveNotesBy(1, selectedTarget)}
             >
                 <FaAngleUp className='tools-icon'/>
                 Move notes up
@@ -100,7 +101,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
             <ToolButton
                 disabled={false}
                 tooltip="Push notes down by 1 position"
-                onClick={() => moveNotesBy(-1, selectionType === 'all' ? 'all' : layer)}
+                onClick={() => moveNotesBy(-1, selectedTarget)}
                 area="g"
             >
                 <FaAngleDown className='tools-icon'/>

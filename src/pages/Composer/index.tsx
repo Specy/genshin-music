@@ -605,12 +605,12 @@ class Composer extends Component<any, ComposerState>{
         this.changes++
         this.setState({ selectedColumns: [], copiedColumns })
     }
-    pasteColumns = async (insert: boolean) => {
+    pasteColumns = async (insert: boolean, layer: number | 'all') => {
         const { song, copiedColumns } = this.state
         this.addToHistory()
-        song.pasteColumns(copiedColumns, insert)
+        if(layer === 'all') song.pasteColumns(copiedColumns, insert)
+        else if(Number.isFinite(layer)) song.pasteLayer(copiedColumns, insert, layer)
         this.changes++
-
         this.setState({ song })
     }
     eraseColumns = (layer: number | 'all') => {
@@ -627,7 +627,18 @@ class Composer extends Component<any, ComposerState>{
         this.changes++
         this.setState({ song })
     }
-
+    switchLayerPosition = (direction: 1 | -1) => {
+        const { song, layer } = this.state
+        const toSwap = layer + direction
+        if(toSwap < 0 || toSwap > song.instruments.length - 1) return
+        song.swapLayer(song.columns.length, 0, layer, toSwap)
+        const tmp = song.instruments[layer]
+        song.instruments[layer] = song.instruments[toSwap]
+        song.instruments[toSwap] = tmp
+        song.instruments = [...song.instruments]
+        this.changes++
+        this.setState({ song, layer: toSwap })
+    }
     deleteColumns = async () => {
         const { song, selectedColumns } = this.state
         this.addToHistory()
@@ -687,6 +698,7 @@ class Composer extends Component<any, ComposerState>{
                         onInstrumentAdd={this.addInstrument}
                         onInstrumentChange={this.editInstrument}
                         onInstrumentDelete={this.removeInstrument}
+                        onChangePosition={this.switchLayerPosition}
                     />
                 </div>
                 <div className="top-panel-composer" style={{gridArea: "b"}}>

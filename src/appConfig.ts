@@ -320,8 +320,8 @@ const LAYOUT_IMAGES = {
 const CACHE_DATA = {
     noteData: {
         background: "#d3bd8e",
-        border: "#de4545",
-        center: "#de4545"
+        border: "#de6b45",
+        center: "#de6b45"
     },
     horizontalLineBreak: NOTES_PER_COLUMN / 3,
     standards: [
