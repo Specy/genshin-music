@@ -464,6 +464,7 @@ class Composer extends Component<any, ComposerState>{
         if (!this.mounted) return
         this.changes = 0
         console.log("song loaded")
+        console.log(parsed)
         this.setState({
             layer: 0,
             song: parsed,
@@ -661,6 +662,7 @@ class Composer extends Component<any, ComposerState>{
     render() {
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers, undoHistory } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
+        console.log(song.instruments[layer] === undefined)
         return <>
             <Title text={`Composer - ${song.name}`} />
             {isMidiVisible &&
@@ -751,7 +753,7 @@ class Composer extends Component<any, ComposerState>{
                         currentLayer: layer,
                         keyboard: layers[0],
                         currentColumn: song.selectedColumn,
-                        pitch:  song.instruments[layer].pitch || settings.pitch.value as Pitch,
+                        pitch:  song.instruments[layer]?.pitch || settings.pitch.value as Pitch,
                         noteNameType: settings.noteNameType.value as NoteNameType,
                     }}
                 />

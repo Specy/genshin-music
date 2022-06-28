@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars } from 'react-icons/fa';
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone } from 'react-icons/fa';
 import { APP_NAME } from 'appConfig'
 import { MenuItem } from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -345,6 +345,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FloatingDropdownRow onClick={() => downloadSong(parseSong(data).toMidi())}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download MIDI' />
+                </FloatingDropdownRow>
+                <FloatingDropdownRow onClick={() => songsStore.addSong(parseSong(data))}
+                >
+                    <FaClone style={{ marginRight: "0.4rem" }} />
+                    <FloatingDropdownText text='Clone song' />
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={() => removeSong(data.name, data.id!)}>
                     <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} />

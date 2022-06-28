@@ -26,6 +26,11 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
     const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer } = data
     const { handleClick, handleTempoChanger } = functions
     let keyboardClass = "keyboard"
+    if(keyboard === undefined){
+        return <div className="composer-keyboard-wrapper" style={{marginBottom: '4rem'}}>
+            <h1>There was an error with this layer</h1>
+        </div>
+    }
     if (keyboard.layout.length === 15) keyboardClass += " keyboard-5"
     if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
     return <>

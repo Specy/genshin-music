@@ -1,6 +1,6 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS, INSTRUMENTS_DATA } from "appConfig"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote } from "./SongClasses"
-import { ComposedSong } from "./ComposedSong"
+import { ComposedSong, defaultInstrumentMap } from "./ComposedSong"
 import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
 import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "../Layer"
@@ -97,7 +97,6 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const song = new ComposedSong(this.name, this.instruments.map(ins => ins.name))
         song.bpm = this.bpm
         song.pitch = this.pitch
-        song.instruments = this.instruments.map(ins => ins.clone())
         const notes = this.notes.map(note => note.clone())
         //remove duplicates
         let converted = []
@@ -173,8 +172,19 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 })
                 converted.push(column, ...finalPadding)
             }
-        }
+    }
         song.columns = converted
+        const highestLayer = Math.max(0, ...song.columns.map(column => {
+            return Math.max(...column.notes.map(note => note.layer.asNumber()))
+        }))
+        song.instruments = highestLayer.toString(2).split("").map((_,i) => {
+            const ins = new InstrumentData()
+            ins.icon = defaultInstrumentMap[i % 3]
+            return ins
+        })
+        this.instruments.forEach((ins, i) => {
+            song.instruments[i] = ins
+        })
         return song
     }
     toRecordedSong = () => {
