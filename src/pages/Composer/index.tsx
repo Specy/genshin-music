@@ -123,6 +123,7 @@ class Composer extends Component<any, ComposerState>{
         this.unblock()
         KeyboardProvider.unregisterById('composer')
         MIDIProvider.removeListener(this.handleMidi)
+        Instrument.clearPool()
         if (window.location.hostname !== "localhost") {
             window.removeEventListener("beforeunload", this.handleUnload)
         }
@@ -637,6 +638,7 @@ class Composer extends Component<any, ComposerState>{
         song.instruments[toSwap] = tmp
         song.instruments = [...song.instruments]
         this.changes++
+        this.syncInstruments()
         this.setState({ song, layer: toSwap })
     }
     deleteColumns = async () => {
@@ -749,6 +751,7 @@ class Composer extends Component<any, ComposerState>{
                     data={{
                         isPlaying,
                         currentLayer: layer,
+                        instruments: song.instruments,
                         keyboard: layers[0],
                         currentColumn: song.selectedColumn,
                         pitch:  song.instruments[layer]?.pitch || settings.pitch.value as Pitch,

@@ -69,6 +69,7 @@ class Player extends Component<any, PlayerState>{
 		this.state.instrument.delete()
 		this.disposeSongsObserver?.()
 		this.mounted = false
+        Instrument.clearPool()
 	}
 	registerKeyboardListeners = () => {
 		KeyboardProvider.registerLetter('C', () => this.toggleRecord(), { shift: true, id: "player" })
@@ -187,7 +188,6 @@ class Player extends Component<any, PlayerState>{
 		} else {
 			const recording = await AudioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
-			console.log(recording)
 			if (!this.mounted || !recording) return
 			if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
 		}

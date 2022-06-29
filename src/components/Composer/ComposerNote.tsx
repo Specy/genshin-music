@@ -7,6 +7,7 @@ import { observe } from 'mobx'
 import { NoteImage } from 'types/Keyboard'
 import { NoteData } from 'lib/Instrument'
 import { InstrumentName } from 'types/GeneralTypes'
+import { LayerStatus } from 'lib/Layer'
 
 function getTextColor(){
     const noteBg = ThemeProvider.get('note_background')
@@ -24,7 +25,7 @@ function getTextColor(){
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
 interface ComposerNoteProps{
     data: NoteData
-    layer: ComposedNoteStatus
+    layer: LayerStatus
     instrument: InstrumentName
     clickAction: (data: NoteData) => void
     noteText: string
@@ -40,9 +41,10 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
     },[])
 
     let className = NOTES_CSS_CLASSES.noteComposer
-    if (layer === 1 || layer === 3) className += " layer-1"
-    if (layer === 2 || layer === 3) className += " layer-2"
-
+    if ((layer & 1) !== 0) className += " layer-1"
+    if ((layer & 2) !== 0) className += " layer-2"
+    if ((layer & 4) !== 0) className += " layer-3"
+    if ((layer & 8) !== 0) className += " layer-4"
     const color = ThemeProvider.get('note_background').desaturate(0.6)
     return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
         <div className={className} >
@@ -54,7 +56,10 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
                 fill={color.isDark() ? color.lighten(0.45).hex() : color.darken(0.18).hex()}
                 className='genshin-border'
             />}
-  
+            <div className="layer-3-ball-bigger">
+            </div>
+            <div className='layer-4-line'>
+            </div>
             <div 
                 className={APP_NAME === "Sky" ? "note-name-sky" : "note-name"}
                 style={{color:textColor}}

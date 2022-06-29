@@ -319,6 +319,40 @@ select {
     fill: #de6b45 !important;
     stroke: #de6b45 !important;
 }
+.layer-3-ball, .layer-3-ball-bigger{
+    position: absolute;
+    background-color: #d75c5c;
+    width: 1.5vw;
+    height: 1.5vw;
+    border-radius: 50%;
+    visibility: hidden;
+}
+.layer-4-line{
+    height: 20%;
+    width: 100%;
+    position: absolute;
+    background-color: #d75c5c;
+    border-radius: 0.2vw;
+    visibility: hidden;
+}
+.note-composer.layer-3 .svg-note{
+    fill: #f2ecec !important;
+    stroke: #f2ecec !important;
+}
+.layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
+    visibility: visible;
+}
+.layer-4 .layer-4-line{
+    visibility: visible;
+}
+.layer-3-ball-bigger{
+    width: 2.6vw;
+    height: 2.6vw;
+}
+.note-composer .layer-3-ball-bigger{
+    width: 3vw;
+    height: 3vw;
+}
 
 
 canvas {
@@ -704,6 +738,10 @@ canvas {
     .new-instrument-button{
         padding: 0;
         padding-bottom: 0.3rem;
+    }
+    .layer-3-ball{
+        width: 1.5vw;
+        height: 1.5vw;
     }
 }
 

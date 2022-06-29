@@ -1,6 +1,6 @@
 import ComposerNote, { ComposedNoteStatus } from "components/Composer/ComposerNote"
 import { getNoteText } from 'lib/Tools'
-import { Column } from "lib/Songs/SongClasses"
+import { Column, InstrumentData } from "lib/Songs/SongClasses"
 import { LAYOUT_IMAGES, Pitch, TEMPO_CHANGERS } from "appConfig"
 import { ThemeProvider } from "stores/ThemeStore"
 import Instrument, { NoteData } from "lib/Instrument"
@@ -10,6 +10,7 @@ import { NoteImage } from "types/Keyboard"
 interface ComposerKeyboardProps {
     data: {
         keyboard: Instrument,
+        instruments: InstrumentData[]
         currentLayer: number,
         currentColumn: Column,
         pitch: Pitch,
@@ -48,7 +49,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         return <ComposerNote
                             key={note.index}
                             layer={(index >= 0
-                                ? currentColumn.notes[index].layer.toLayerStatus(currentLayer) as ComposedNoteStatus
+                                ? currentColumn.notes[index].layer.toLayerStatus(currentLayer, data.instruments)
                                 : 0
                             )}
                             data={note}
