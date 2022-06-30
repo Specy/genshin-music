@@ -11,7 +11,7 @@ export const updates: Update[] = [
         title: 'Infinite Composer layers',
         date: '2022- 1/07',
         changes: [
-            "Increased instrument limit in the composer to 16",
+            "Increased instrument limit in the composer to 32",
             "Redesigned the tools in the composer",
             "Added UNDO to the composer tools",
             "Added paste/insert to certain layer",

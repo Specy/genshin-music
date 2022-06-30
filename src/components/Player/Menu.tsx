@@ -33,7 +33,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'com
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm, asyncPrompt } from 'components/AsyncPrompts';
 import { SettingsPane } from 'components/Settings/SettingsPane';
-import { SerializedSong, Song } from 'lib/Songs/Song';
+import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
 import { Folder } from 'lib/Folder';
 import { useFolders } from 'lib/Hooks/useFolders';

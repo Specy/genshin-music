@@ -1,4 +1,4 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS, INSTRUMENTS_DATA } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS_DATA } from "appConfig"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote } from "./SongClasses"
 import { ComposedSong, defaultInstrumentMap } from "./ComposedSong"
 import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'

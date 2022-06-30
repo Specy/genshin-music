@@ -9,7 +9,6 @@ import { ComposerCache } from "components/Composer/TextureCache"
 import { APP_NAME } from "appConfig"
 import Memoized from 'components/Memoized';
 import { ThemeProvider } from 'stores/ThemeStore';
-import { observe } from 'mobx';
 import { clamp, nearestEven } from 'lib/Tools';
 import type { Column } from 'lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from 'lib/BaseSettings';
@@ -18,7 +17,7 @@ import { isColumnVisible, RenderColumn } from 'components/Composer/RenderColumn'
 import { TimelineButton } from './TimelineButton';
 import { Timer } from 'types/GeneralTypes';
 import { ComposedSong } from 'lib/Songs/ComposedSong';
-import { subscribeTheme, useTheme } from 'lib/Hooks/useTheme';
+import { subscribeTheme } from 'lib/Hooks/useTheme';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {

@@ -1,4 +1,5 @@
-import ComposerNote, { ComposedNoteStatus } from "components/Composer/ComposerNote"
+
+import ComposerNote from "components/Composer/ComposerNote"
 import { getNoteText } from 'lib/Tools'
 import { Column, InstrumentData } from "lib/Songs/SongClasses"
 import { LAYOUT_IMAGES, Pitch, TEMPO_CHANGERS } from "appConfig"

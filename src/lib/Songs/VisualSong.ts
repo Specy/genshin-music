@@ -5,10 +5,7 @@ import { Column, ColumnNote, RecordedNote } from "lib/Songs/SongClasses"
 import { getNoteText } from "lib/Tools"
 import { NoteLayer } from "../Layer"
 
-const THRESHOLDS = {
-    joined: 50,
-    pause: 400,
-}
+
 type NoteDifference = {
     delay: number
     index: number

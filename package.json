@@ -39,6 +39,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
+    "tauri": "tauri",
+    "build-tauri:sky": "node ./scripts/buildTauri.js Sky",
+    "build-tauri:genshin": "node ./scripts/buildTauri.js Genshin",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
     "build:all": "node ./scripts/buildApp.js All",
@@ -64,6 +67,7 @@
     ]
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^1.0.1",
     "@types/color": "^3.0.3",
     "@types/jest": "^27.4.0",
     "@types/lodash.clonedeep": "^4.5.7",

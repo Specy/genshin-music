@@ -2,7 +2,7 @@ import { AppButton } from "components/AppButton";
 import { useTheme } from "lib/Hooks/useTheme";
 import { InstrumentData } from "lib/Songs/SongClasses";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { FaCircle, FaCog, FaEye, FaEyeSlash, FaLine, FaMinus, FaPlus } from "react-icons/fa";
+import { FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus } from "react-icons/fa";
 import { BiSquareRounded } from "react-icons/bi";
 
 import { ThemeStoreClass } from "stores/ThemeStore";

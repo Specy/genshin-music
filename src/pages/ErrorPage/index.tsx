@@ -9,7 +9,7 @@ import { SongMenu } from 'components/SongMenu';
 
 import './ErrorPage.css'
 import { AppButton } from 'components/AppButton';
-import { SerializedSong, Song } from 'lib/Songs/Song';
+import { SerializedSong } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 import { fileService } from 'lib/Services/FileService';

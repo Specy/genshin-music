@@ -1,4 +1,3 @@
-import { APP_NAME } from "appConfig"
 import { OldFormatComposed, UnknownSerializedComposedSong } from "lib/Songs/ComposedSong"
 import { OldFormatRecorded, UnknownSerializedRecordedSong } from "lib/Songs/RecordedSong"
 import { FileDownloader, parseSong } from "lib/Tools"
@@ -20,6 +19,7 @@ type ImportResult<T> = {
     successful: T[]
 }
 class FileService {
+    test?: UnknownFile
     async addSongs(file: UnknownSongImport) : Promise<ImportResult<UnknownSong>> {
         const data = Array.isArray(file) ? file : [file]
         const successful: UnknownSong[] = []

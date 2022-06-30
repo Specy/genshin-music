@@ -1,0 +1,19 @@
+{
+    "name":"v1.7.0",
+    "notes":"App Upadate",
+    "pub_date":"2020-06-22T19:25:57Z",
+    "platforms": {
+      "darwin": {
+        "signature":"",
+        "url":""
+      },
+       "linux": {
+        "signature":"",
+        "url":""
+      },
+      "win64": {
+        "signature":"",
+        "url":""
+      }
+    }
+  }

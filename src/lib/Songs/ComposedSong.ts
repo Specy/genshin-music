@@ -1,5 +1,5 @@
 import { Midi } from "@tonejs/midi"
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, Pitch, COMPOSER_NOTE_POSITIONS } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, COMPOSER_NOTE_POSITIONS } from "appConfig"
 import { TEMPO_CHANGERS } from "appConfig"
 import { InstrumentName } from "types/GeneralTypes"
 import { OldFormat, _LegacySongInstruments } from "types/SongTypes"
