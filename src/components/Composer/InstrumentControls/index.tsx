@@ -25,18 +25,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
     const setNotEditing = useCallback(() => {
         setIsEditing(false)
     }, [])
-    return <div className="column instruments-button-wrapper">
-        {instruments.map((ins, i) =>
-            <InstrumentButton
-                theme={theme}
-                instrument={ins}
-                isSelected={i === selected}
-                onEditClick={() => setIsEditing(!isEditing)}
-                onClick={() => onLayerSelect(i)}
-                onVisibleToggle={(visible) => onInstrumentChange(ins.set({ visible }), i)}
-                key={ins.name + i}
-            />
-        )}
+    return <>
         {isEditing &&
             <InstrumentSettingsPopup
                 instrument={instruments[selected]}
@@ -51,17 +40,37 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                 onClose={setNotEditing}
             />
         }
-        <div style={{ minHeight: '1rem' }}>
+        <div className="column instruments-button-wrapper">
+            {instruments.map((ins, i) =>
+                <InstrumentButton
+                    theme={theme}
+                    instrument={ins}
+                    isSelected={i === selected}
+                    onEditClick={() => setIsEditing(!isEditing)}
+                    onClick={() => onLayerSelect(i)}
+                    onVisibleToggle={(visible) => onInstrumentChange(ins.set({ visible }), i)}
+                    key={ins.name + i}
+                />
+            )}
+            <div style={{ minHeight: '1rem' }}>
 
+            </div>
+            <AppButton
+                onClick={(e) => {
+                    onInstrumentAdd()
+                    setTimeout(() => {
+                        // @ts-ignore
+                        e.target?.scrollIntoView()
+                    },50)
+                }}
+                ariaLabel='Add new instrument'
+                className="new-instrument-button flex-centered"
+            >
+                <FaPlus size={16} color='var(--icon-color)' />
+            </AppButton>
         </div>
-        <AppButton
-            onClick={onInstrumentAdd}
-            ariaLabel='Add new instrument'
-            className="new-instrument-button flex-centered"
-        >
-            <FaPlus size={16} color='var(--icon-color)' />
-        </AppButton>
-    </div>
+    </>
+
 }
 export const InstrumentControls = memo(_InstrumentControls, (p, n) => {
     return p.instruments === n.instruments && p.selected === n.selected
@@ -80,13 +89,13 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
     const ref = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (!isSelected || !ref.current) return
-        ref.current.scrollIntoView({behavior: "auto", block: "nearest"})
-    },[isSelected, ref])
+        ref.current.scrollIntoView({ behavior: "auto", block: "nearest" })
+    }, [isSelected, ref])
     let passiveIcon = theme.getText('primary')
     passiveIcon = (passiveIcon.isDark() ? passiveIcon.lighten(0.2) : passiveIcon.darken(0.15))
     return <div
         ref={ref}
-        className="instrument-button flex-centered"
+        className={`instrument-button flex-centered ${isSelected ? 'instrument-button-selected' : ''}`}
         style={isSelected
             ? {
                 backgroundColor: theme.get("primary").mix(theme.get("accent")).toString(),
@@ -112,18 +121,18 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
                     height: 'fit-content'
                 }}
             >
-                {instrument.icon === 'circle' && 
-                    <FaCircle size={8} style={{display: 'block'}} color={passiveIcon.hex()}/>
+                {instrument.icon === 'circle' &&
+                    <FaCircle size={8} style={{ display: 'block' }} color={passiveIcon.hex()} />
                 }
-                {instrument.icon === 'border' && 
-                    <BiSquareRounded 
-                        size={12} 
-                        style={{display: 'block', marginRight: '-2px', marginTop: '-2px', strokeWidth: '2px'}}
+                {instrument.icon === 'border' &&
+                    <BiSquareRounded
+                        size={12}
+                        style={{ display: 'block', marginRight: '-2px', marginTop: '-2px', strokeWidth: '2px' }}
                         color={passiveIcon.hex()}
                     />
                 }
-                {instrument.icon === 'line' && 
-                    <FaMinus size={8} style={{display: 'block'}} color={passiveIcon.hex()}/>
+                {instrument.icon === 'line' &&
+                    <FaMinus size={8} style={{ display: 'block' }} color={passiveIcon.hex()} />
                 }
             </div>
         }

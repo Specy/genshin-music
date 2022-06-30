@@ -55,7 +55,7 @@ select {
 }
 
 .song-info {
-    position: fixed;
+    position: absolute;
     bottom: 0.5vw;
     left: calc(4rem + 0.5vw);
     color: var(--background-text);
@@ -101,6 +101,7 @@ select {
     color: var(--icon-color);
     background-color: var(--primary-darken-10);
     cursor: pointer;
+    margin: 0;
 }
 
 .tool {
@@ -138,7 +139,8 @@ select {
 
 .timeline-button {
     height: 100%;
-    width: 2rem;
+    padding: 0;
+    width: 2.2rem;
     margin: 0.2rem;
     background-color: var(--primary);
     border: none;
@@ -227,7 +229,7 @@ select {
 
 .floating-tools {
     position: fixed;
-    bottom: -45vh;
+    bottom: -50vh;
     max-height: 45vh;
     min-width: 36vw;
     display: flex;
@@ -392,7 +394,6 @@ canvas {
     height: calc(100vh - 5rem);
 }
 .instrument-name-button{
-    min-height: 3rem;
     padding: 0;
     font-size: 0.8rem;
 }
@@ -414,13 +415,18 @@ canvas {
 	background: var(--secondary);
 }
 .instrument-button {
+    height: 3rem;
+    min-height: 3rem;
     position: relative;
     flex-direction: column;
     border-radius: 0.3rem;
     border-bottom: solid 2px var(--secondary);
     border-radius: 0;
 }
-
+.instrument-button-selected{
+    height: 4.2rem;
+    min-height: 4.2rem;
+}
 .instrument-settings {
     font-size: 0.8rem;
     display: grid;
@@ -730,8 +736,15 @@ canvas {
     .composer-left-control{
         width: 5.4rem;
     }
+    .instrument-button{
+        height: 2.6rem;
+        min-height: 2.6rem;
+    }
+    .instrument-button-selected{
+        height: 3.5rem;
+        min-height: 3.5rem;
+    }
     .instrument-name-button{
-        min-height: 2.5rem;
         align-items: flex-end;
         padding-bottom: 0.4rem;
     }

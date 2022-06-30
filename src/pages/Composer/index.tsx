@@ -244,10 +244,10 @@ class Composer extends Component<any, ComposerState>{
 
     addInstrument = () => {
         const { song } = this.state
-        if(song.instruments.length >= 16) return logger.error("You can't add more than 16 instruments!")
+        if(song.instruments.length >= 32) return logger.error("You can't add more than 32 instruments!")
         song.addInstrument(INSTRUMENTS[0])
         this.setState({ song })
-        this.syncInstruments(song)
+        this.syncInstruments(song)  
     }
     removeInstrument = async (index: number) => {
         const { song, layers } = this.state

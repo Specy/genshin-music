@@ -79,10 +79,12 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                                 backgroundColor: ThemeProvider.get('primary').toString(),
                                 color: ThemeProvider.getText('primary').toString()
                             }
-                            : { backgroundColor: "#" + tempoChanger.color.toString(16) }),
+                            : { backgroundColor: "#" + tempoChanger.color.toString(16) })
+                        ,
                         outline: data.currentColumn.tempoChanger === tempoChanger.id
                             ? `3px ${ThemeProvider.get('composer_accent').toString()} solid`
                             : '',
+                        margin: '',
                         outlineOffset: '-3px'
                     }}
                 >
