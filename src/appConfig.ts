@@ -93,7 +93,11 @@ const BaseinstrumentsData = {
     DunDun: {
         notes: 8,
         family: "percussive",
-        midiName: "synth drum"
+        midiName: "synth drum",
+        ...(APP_NAME === "Genshin" ? {
+            fill: '#F99C55',
+            clickColor: '#f5a262'
+        } : {})
     },
     Panflute: {
         notes: 15,

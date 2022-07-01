@@ -244,7 +244,9 @@ class Composer extends Component<any, ComposerState>{
 
     addInstrument = () => {
         const { song } = this.state
-        if(song.instruments.length >= 32) return logger.error("You can't add more than 32 instruments!")
+        const inUmaMode = localStorage.getItem(`${APP_NAME}-uma_mode`)
+        if(song.instruments.length >= 32 && !inUmaMode) return logger.error("You can't add more than 32 instruments!")
+        if(song.instruments.length >= 64) return logger.error("You can't add more than 64 instruments!")
         song.addInstrument(INSTRUMENTS[0])
         this.setState({ song })
         this.syncInstruments(song)  
@@ -424,6 +426,10 @@ class Composer extends Component<any, ComposerState>{
         }
         const name = await asyncPrompt("Write song name, press cancel to ignore")
         if (name === null) return
+        if(name === 'Such layer, much instrument, very uma') {
+            localStorage.setItem(`${APP_NAME}-uma_mode`, 'umauma')
+            logger.warn("✨UMA MODE ACTIVATED✨")
+        }
         const song = new ComposedSong(name, [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]])
         this.changes = 0
         if (!this.mounted) return

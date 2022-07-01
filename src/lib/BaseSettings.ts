@@ -140,6 +140,9 @@ export type MainPageSettingsDataType = {
     keyboardYPosition: SettingsSlider
     approachSpeed: SettingsNumber
     noteAnimation: SettingsCheckbox
+    metronomeBeats: SettingsNumber
+    bpm: SettingsNumber
+    metronomeVolume: SettingsSlider
 }
 export type MainPageSettingsType = {
     other: {
@@ -149,7 +152,7 @@ export type MainPageSettingsType = {
 }
 export const MainPageSettings: MainPageSettingsType = {
     other: {
-        settingVersion: APP_NAME + 37
+        settingVersion: APP_NAME + 39
     },
     data: {
         instrument: {
@@ -181,6 +184,32 @@ export const MainPageSettings: MainPageSettingsType = {
                 "Bb",
                 "B",
             ]
+        },
+        bpm: {
+            name: "Bpm",
+            type: "number",
+            songSetting: true,
+            increment: 5,
+            threshold: [0, 1600],
+            value: 220,
+            category: "Song Settings",
+        },
+        metronomeBeats: {
+            name: "Metronome beats",
+            type: "number",
+            songSetting: false,
+            increment: 1,
+            value: 4,
+            threshold: [1, 16],
+            category: "General Settings",
+        },
+        metronomeVolume: {
+            name: "Metronome volume",
+            type: "slider",
+            songSetting: false,
+            value: 50,
+            category: "General Settings",
+            threshold: [0, 120]
         },
         caveMode: {
             name: "Reverb (cave mode)",

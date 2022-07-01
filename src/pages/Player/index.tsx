@@ -21,6 +21,8 @@ import { AudioProvider } from 'lib/Providers/AudioProvider';
 import { settingsService } from 'lib/Services/SettingsService';
 import { songsStore } from 'stores/SongsStore';
 import { Title } from 'components/Title';
+import { metronome } from 'lib/Metronome';
+import { GiMetronome } from 'react-icons/gi';
 
 interface PlayerState {
 	settings: MainPageSettingsDataType
@@ -28,7 +30,8 @@ interface PlayerState {
 	isLoadingInstrument: boolean
 	isRecordingAudio: boolean
 	isRecording: boolean
-	hasSong: boolean
+	hasSong: boolean,
+	isMetronomePlaying: boolean
 }
 
 class Player extends Component<any, PlayerState>{
@@ -46,7 +49,8 @@ class Player extends Component<any, PlayerState>{
 			isRecording: false,
 			isRecordingAudio: false,
 			settings: settings,
-			hasSong: false
+			hasSong: false,
+			isMetronomePlaying: false
 		}
 		this.mounted = false
 	}
@@ -59,7 +63,6 @@ class Player extends Component<any, PlayerState>{
 	}
 	componentDidMount() {
 		this.mounted = true
-
 		this.init()
 	}
 	componentWillUnmount() {
@@ -70,6 +73,7 @@ class Player extends Component<any, PlayerState>{
 		this.disposeSongsObserver?.()
 		this.mounted = false
         Instrument.clearPool()
+		metronome.stop()
 	}
 	registerKeyboardListeners = () => {
 		KeyboardProvider.registerLetter('C', () => this.toggleRecord(), { shift: true, id: "player" })
@@ -126,6 +130,9 @@ class Player extends Component<any, PlayerState>{
 		if (setting.key === 'caveMode') {
 			AudioProvider.setReverb(data.value as boolean)
 		}
+		if(setting.key === 'bpm') metronome.bpm = data.value as number	
+		if(setting.key === 'metronomeBeats') metronome.beats = data.value as number
+		if(setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number)
 		this.setState({
 			settings: settings,
 		}, this.updateSettings)
@@ -158,7 +165,15 @@ class Player extends Component<any, PlayerState>{
 			this.recording.addNote(note.index)
 		}
 	}
-
+	toggleMetronome = () => {
+		const { isMetronomePlaying } = this.state
+		this.setState({ isMetronomePlaying: !isMetronomePlaying })
+		if (isMetronomePlaying) {
+			metronome.stop()
+		} else {
+			metronome.start()
+		}
+	}
 	toggleRecord = async (override?: boolean | null) => {
 		if (typeof override !== "boolean") override = null
 		const newState = override !== null ? override : !this.state.isRecording
@@ -168,6 +183,7 @@ class Player extends Component<any, PlayerState>{
 			if (!this.mounted) return
 			if (songName !== null) {
 				const song = new RecordedSong(songName, this.recording.notes, [instrument.name])
+				song.bpm = settings.bpm.value as number
 				song.pitch = settings.pitch.value as Pitch
 				this.addSong(song)
 				Analytics.userSongs('record', { name: songName, page: 'player' })
@@ -193,8 +209,8 @@ class Player extends Component<any, PlayerState>{
 		}
 	}
 	render() {
-		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong } = this
-		const { settings, isLoadingInstrument, instrument, hasSong, isRecordingAudio, isRecording } = state
+		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, toggleMetronome } = this
+		const { settings, isLoadingInstrument, instrument, hasSong, isRecordingAudio, isRecording, isMetronomePlaying } = state
 		return <>
         	<Title text="Player" />
 			<Menu
@@ -242,6 +258,9 @@ class Player extends Component<any, PlayerState>{
 					</AppButton>
 				</div>
 			}
+				<AppButton toggled={isMetronomePlaying} onClick={toggleMetronome} className='metronome-button'>
+					<GiMetronome size={22} />
+				</AppButton>
 		</>
 	}
 }

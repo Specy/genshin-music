@@ -127,7 +127,20 @@ export default class Instrument {
         this.volumeNode = null
     }
 }
-
+export function fetchAudioBuffer(url: string): Promise<AudioBuffer>{
+    return new Promise((res,rej) => {
+        fetch(url)
+        .then(result => result.arrayBuffer())
+        .then(buffer => {
+            AUDIO_CONTEXT.decodeAudioData(buffer, res, () => {
+                rej()
+            }).catch(e => {
+                console.error(e)
+                return rej()
+            })
+        })
+    })
+}
 
 interface NoteName {
     keyboard: string,

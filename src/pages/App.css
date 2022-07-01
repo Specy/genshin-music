@@ -189,7 +189,15 @@ body {
 	color: var(--primary-text);
 	margin-left: 0.5rem;
 }
-
+.metronome-button{
+	position: absolute;
+	min-width: unset;
+	padding: 0;
+	width: 2rem;
+	height: 2rem;
+	right: 0.8rem;
+	bottom: 0.8rem;
+}
 .hidden-opacity {
 	opacity: 0;
 	pointer-events: none;
