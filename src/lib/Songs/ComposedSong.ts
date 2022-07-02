@@ -139,14 +139,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.instruments = [...this.instruments, newInstrument]
     }
     removeInstrument = async (index: number) => {
-        if (index === 0) {
-            this.switchLayer(this.columns.length, 0, 0, 1)
-        } else {
-            const toMove = this.instruments.slice(index)
-            toMove.forEach((_, i) => {
-                this.switchLayer(this.columns.length, 0, index + i, index + i - 1)
-            })
-        }
+        this.columns.forEach(col => {
+            col.notes.forEach(note => note.layer.set(index, false))
+        })
         this.instruments.splice(index, 1)
 
         this.instruments = [...this.instruments]

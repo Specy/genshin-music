@@ -126,7 +126,7 @@ function parseSong(song: any): RecordedSong | ComposedSong {
 	}
 	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
 		if (song.data?.isComposedVersion === true || song.type === 'composed') return ComposedSong.deserialize(song).toGenshin()
-		if (song.data?.isComposedVersion === false|| song.type === 'recorded') RecordedSong.deserialize(song).toGenshin()
+		if (song.data?.isComposedVersion === false|| song.type === 'recorded') return RecordedSong.deserialize(song).toGenshin()
 	}
 	if (type === 'newComposed') return ComposedSong.deserialize(song)
 	if (type === 'newRecorded') return RecordedSong.deserialize(song)

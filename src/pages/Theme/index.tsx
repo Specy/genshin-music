@@ -5,6 +5,7 @@ import { SimpleMenu } from "components/SimpleMenu";
 import { AppButton } from "components/AppButton";
 import { FileElement, FilePicker } from "components/FilePicker"
 import Player from "pages/Player";
+import Composer from "pages/Composer";
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
 
@@ -26,7 +27,7 @@ function ThemePage() {
     const [theme, setTheme] = useTheme()
     const [userThemes, setUserThemes] = useState<Theme[]>([])
     const [selectedProp, setSelectedProp] = useState('')
-
+    const [selectedPagePreview, setSelectedPagePreview] = useState<"player" | "composer">("player")
     useEffect(() => {
         const dispose2 = observe(ThemeProvider.state.other, () => {
             setTheme({ ...ThemeProvider })
@@ -202,9 +203,24 @@ function ThemePage() {
                 Preview
             </div>
             <div className="theme-app-preview">
-                <AppBackground page="Main">
-                    <Player />
-                </AppBackground>
+                <AppButton 
+                    className="box-shadow" 
+                    toggled={true}
+                    style={{position: 'absolute', right: 0, top: 0, zIndex: 90}}
+                    onClick={() => setSelectedPagePreview(selectedPagePreview === 'composer' ? 'player' : 'composer')}
+                >
+                    {selectedPagePreview === 'composer' ? 'View player' : 'View composer'}
+                </AppButton>
+                {selectedPagePreview === "player" &&
+                    <AppBackground page="Main">
+                        <Player />
+                    </AppBackground>
+                }
+                {selectedPagePreview === "composer" &&
+                    <AppBackground page="Composer">
+                        <Composer inPreview={true}/>
+                    </AppBackground>
+                }
             </div>
         </div>
     </div>

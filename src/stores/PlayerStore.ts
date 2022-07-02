@@ -1,6 +1,6 @@
 import { ComposedSong } from "lib/Songs/ComposedSong";
 import { RecordedSong } from "lib/Songs/RecordedSong";
-import { observable } from "mobx";
+import { observable, observe } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
 type SongTypes = RecordedSong | ComposedSong | null
@@ -20,7 +20,7 @@ interface PlayerStoreState{
     }
 }
 
-class PlayerStoreClass{
+class PlayerStore{
     state:PlayerStoreState
     constructor(){
         this.state = observable({
@@ -84,5 +84,11 @@ class PlayerStoreClass{
         this.setState({start,end})
     }
 }
-
-export const PlayerStore = new PlayerStoreClass()
+export function subscribePlayer(callback: (data: SongStoreProps) => void){
+    const dispose = observe(playerStore.state,() => {
+        callback({...playerStore.state.data})
+    })
+    callback({...playerStore.state.data})
+    return dispose
+}
+export const playerStore = new PlayerStore()

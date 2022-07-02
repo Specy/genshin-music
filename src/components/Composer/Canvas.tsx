@@ -27,6 +27,7 @@ interface ComposerCanvasProps {
         song: ComposedSong
         selected: number,
         currentLayer: number,
+        inPreview?: boolean,
         settings: ComposerSettingsDataType,
         breakpoints: number[],
         selectedColumns: number[]
@@ -167,9 +168,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return
             const sizes = document.body.getBoundingClientRect()
             const { numberOfColumnsPerCanvas } = this.state
+            const { inPreview } = this.props.data
             let width = nearestEven(sizes.width * 0.85 - 45)
             let height = nearestEven(sizes.height * 0.45)
             if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
+            if(inPreview){
+                width =  nearestEven(width * (sizes.width < 900 ? 0.8 : 0.55))
+                height = nearestEven(height * (sizes.width < 900 ? 0.8 : 0.6))
+            }
             let columnWidth = nearestEven(width / numberOfColumnsPerCanvas)
             this.setState({
                 width: Math.floor(width),

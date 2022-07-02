@@ -143,6 +143,7 @@ export type MainPageSettingsDataType = {
     metronomeBeats: SettingsNumber
     bpm: SettingsNumber
     metronomeVolume: SettingsSlider
+    syncSongData: SettingsCheckbox
 }
 export type MainPageSettingsType = {
     other: {
@@ -152,7 +153,7 @@ export type MainPageSettingsType = {
 }
 export const MainPageSettings: MainPageSettingsType = {
     other: {
-        settingVersion: APP_NAME + 39
+        settingVersion: APP_NAME + 42
     },
     data: {
         instrument: {
@@ -193,6 +194,13 @@ export const MainPageSettings: MainPageSettingsType = {
             threshold: [0, 1600],
             value: 220,
             category: "Song Settings",
+        },
+        syncSongData: {
+            name: "Auto use the song's instruments and pitch",
+            type: "checkbox",
+            songSetting: false,
+            value: true,
+            category: "General Settings",
         },
         metronomeBeats: {
             name: "Metronome beats",

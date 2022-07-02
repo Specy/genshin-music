@@ -21,7 +21,7 @@ import { Column, InstrumentData } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
 
 import Analytics from 'lib/Analytics';
-import { withRouter } from 'react-router-dom'
+import { RouteComponentProps, withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';
 import { logger } from 'stores/LoggerStore';
 import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
@@ -55,7 +55,10 @@ interface ComposerState {
     isPlaying: boolean
     theme: ThemeStoreClass
 }
-class Composer extends Component<any, ComposerState>{
+type ComposerProps = RouteComponentProps & {
+    inPreview?: boolean
+}
+class Composer extends Component<ComposerProps, ComposerState>{
     state: ComposerState
     broadcastChannel: BroadcastChannel | null
     mounted: boolean
@@ -165,7 +168,7 @@ class Composer extends Component<any, ComposerState>{
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
             //@ts-ignore
-            if(event.target?.tagName === "BUTTON"){
+            if (event.target?.tagName === "BUTTON") {
                 //@ts-ignore
                 event.target?.blur()
             }
@@ -244,17 +247,17 @@ class Composer extends Component<any, ComposerState>{
 
     addInstrument = () => {
         const { song } = this.state
-        const inUmaMode = localStorage.getItem(`${APP_NAME}-uma_mode`)
-        if(song.instruments.length >= 32 && !inUmaMode) return logger.error("You can't add more than 32 instruments!")
-        if(song.instruments.length >= 64) return logger.error("You can't add more than 64 instruments!")
+
+        if (song.instruments.length >= 30) return logger.error("You can't add more than 30 instruments!")
+
         song.addInstrument(INSTRUMENTS[0])
         this.setState({ song })
-        this.syncInstruments(song)  
+        this.syncInstruments(song)
     }
     removeInstrument = async (index: number) => {
         const { song, layers } = this.state
         if (layers.length <= 1) return logger.warn("You can't remove all layers!")
-        const confirm = await asyncConfirm(`Are you sure you want to remove ${layers[index].name}? Notes will be merged to the previous instrument.`)
+        const confirm = await asyncConfirm(`Are you sure you want to remove ${layers[index].name}? ALL NOTES OF THIS LAYER WILL BE DELETED`)
         if (confirm) {
             song.removeInstrument(index)
             this.syncInstruments(song)
@@ -426,10 +429,6 @@ class Composer extends Component<any, ComposerState>{
         }
         const name = await asyncPrompt("Write song name, press cancel to ignore")
         if (name === null) return
-        if(name === 'Such layer, much instrument, very uma') {
-            localStorage.setItem(`${APP_NAME}-uma_mode`, 'umauma')
-            logger.warn("✨UMA MODE ACTIVATED✨")
-        }
         const song = new ComposedSong(name, [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]])
         this.changes = 0
         if (!this.mounted) return
@@ -439,6 +438,7 @@ class Composer extends Component<any, ComposerState>{
         Analytics.songEvent({ type: 'create' })
     }
     loadSong = async (song: SerializedSong | ComposedSong) => {
+        console.log(song)
         const state = this.state
         let parsed: ComposedSong | null = null
         if (song instanceof ComposedSong) {
@@ -587,16 +587,16 @@ class Composer extends Component<any, ComposerState>{
         })
     }
     resetSelection = () => {
-        this.setState({ 
-            copiedColumns: [], 
-            selectedColumns: [this.state.song.selected] 
+        this.setState({
+            copiedColumns: [],
+            selectedColumns: [this.state.song.selected]
         })
     }
     addToHistory = () => {
         const { song, undoHistory, isToolsVisible } = this.state
-        if(!isToolsVisible) return
-        this.setState({ 
-            undoHistory: [...undoHistory, song.clone().columns] 
+        if (!isToolsVisible) return
+        this.setState({
+            undoHistory: [...undoHistory, song.clone().columns]
         })
     }
     undo = () => {
@@ -615,8 +615,8 @@ class Composer extends Component<any, ComposerState>{
     pasteColumns = async (insert: boolean, layer: number | 'all') => {
         const { song, copiedColumns } = this.state
         this.addToHistory()
-        if(layer === 'all') song.pasteColumns(copiedColumns, insert)
-        else if(Number.isFinite(layer)) song.pasteLayer(copiedColumns, insert, layer)
+        if (layer === 'all') song.pasteColumns(copiedColumns, insert)
+        else if (Number.isFinite(layer)) song.pasteLayer(copiedColumns, insert, layer)
         this.changes++
         this.setState({ song })
     }
@@ -637,7 +637,7 @@ class Composer extends Component<any, ComposerState>{
     switchLayerPosition = (direction: 1 | -1) => {
         const { song, layer } = this.state
         const toSwap = layer + direction
-        if(toSwap < 0 || toSwap > song.instruments.length - 1) return
+        if (toSwap < 0 || toSwap > song.instruments.length - 1) return
         song.swapLayer(song.columns.length, 0, layer, toSwap)
         const tmp = song.instruments[layer]
         song.instruments[layer] = song.instruments[toSwap]
@@ -683,7 +683,7 @@ class Composer extends Component<any, ComposerState>{
             <div className='composer-grid'>
                 <div className="column composer-left-control">
                     <AppButton
-                        style={{ height: '3rem', borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)"}}
+                        style={{ height: '3rem', borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)" }}
                         onClick={(e) => {
                             this.togglePlay()
                             if (settings.syncTabs.value) {
@@ -709,12 +709,13 @@ class Composer extends Component<any, ComposerState>{
                         onChangePosition={this.switchLayerPosition}
                     />
                 </div>
-                <div className="top-panel-composer" style={{gridArea: "b"}}>
+                <div className="top-panel-composer" style={{ gridArea: "b" }}>
                     <div className='row' style={{ height: 'fit-content', width: "100%" }}>
                         <ComposerCanvas
                             key={settings.columnsPerCanvas.value}
                             functions={this}
                             data={{
+                                inPreview: this.props.inPreview,
                                 currentLayer: layer,
                                 isPlaying,
                                 song,
@@ -760,7 +761,7 @@ class Composer extends Component<any, ComposerState>{
                         instruments: song.instruments,
                         keyboard: layers[0],
                         currentColumn: song.selectedColumn,
-                        pitch:  song.instruments[layer]?.pitch || settings.pitch.value as Pitch,
+                        pitch: song.instruments[layer]?.pitch || settings.pitch.value as Pitch,
                         noteNameType: settings.noteNameType.value as NoteNameType,
                     }}
                 />
@@ -795,6 +796,5 @@ class Composer extends Component<any, ComposerState>{
     }
 }
 
-//@ts-ignore
 export default withRouter(Composer)
 

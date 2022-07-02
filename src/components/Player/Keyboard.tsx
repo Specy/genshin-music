@@ -2,7 +2,7 @@ import { ChangeEvent, Component } from 'react'
 import { observe } from 'mobx'
 import {  APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "appConfig"
 import Note from 'components/Player/Note'
-import { PlayerStore } from 'stores/PlayerStore'
+import { playerStore, subscribePlayer } from 'stores/PlayerStore'
 import { Array2d, getNoteText, delay, clamp } from "lib/Tools"
 import "./Keyboard.css"
 import TopPage from 'components/Player/TopPage'
@@ -15,6 +15,7 @@ import type { ApproachingScore, NoteNameType } from 'types/GeneralTypes'
 import type { RecordedSong } from 'lib/Songs/RecordedSong'
 import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider'
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider'
+import { NoteLayer } from 'lib/Layer'
 
 interface KeyboardProps {
     data: {
@@ -29,7 +30,7 @@ interface KeyboardProps {
         keyboardYPosition: number
     }
     functions: {
-        playSound: (note: NoteData) => void
+        playSound: (index:number, layer?:NoteLayer) => void
         setHasSong: (override: boolean) => void
     }
 }
@@ -93,16 +94,16 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         }, {shift: true, id})
         KeyboardProvider.registerLetter('R',() => {
             if (!this.props.data.hasSong) return
-            if (['practice', 'play', 'approaching'].includes(PlayerStore.eventType)) {
+            if (['practice', 'play', 'approaching'].includes(playerStore.eventType)) {
                 this.restartSong(0)
             }
         }, {shift: true, id})
         KeyboardProvider.listen(this.handleKeyboard, { id })
         MIDIProvider.addListener(this.handleMidi)
-        this.dispose = observe(PlayerStore.state, async () => {
-            const value = PlayerStore.state.data
-            const song = PlayerStore.song
-            const type = PlayerStore.eventType
+        this.dispose = subscribePlayer(async () => {
+            const value = playerStore.state.data
+            const song = playerStore.song
+            const type = playerStore.eventType
             await this.stopSong()
             if (!this.mounted) return
             if (type === 'stop') {
@@ -265,7 +266,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             previousTime = new Date().getTime()
             if (delayTime > 16) await delay(delayTime - pastError)
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
-            this.handleClick(keyboard[notes[i].index])
+            this.handleClick(keyboard[notes[i].index], notes[i].layer)
             SliderStore.setCurrent(i + 1)
             pastError = new Date().getTime() - previousTime - delayTime
         }
@@ -331,7 +332,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     restartSong = async (override?: number) => {
         await this.stopSong()
         if (!this.mounted) return
-        PlayerStore.restart((typeof override === 'number') ? override : SliderStore.position, SliderStore.end)
+        playerStore.restart((typeof override === 'number') ? override : SliderStore.position, SliderStore.end)
     }
     stopSong = (): Promise<void> => {
         return new Promise(res => {
@@ -353,7 +354,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
 
     stopAndClear = () => {
         this.stopSong()
-        PlayerStore.reset()
+        playerStore.reset()
     }
 
     handleApproachClick = (note: NoteData) => {
@@ -394,24 +395,24 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             }
         }
     }
-    handleClick = (note: NoteData) => {
+    handleClick = (note: NoteData, layers?: NoteLayer) => {
         const { keyboard, outgoingAnimation, approachingScore } = this.state
         const hasAnimation = this.props.data.hasAnimation
         const prevStatus = keyboard[note.index].status
         keyboard[note.index].setState({
             status: 'clicked',
-            delay: PlayerStore.eventType !== 'play' 
+            delay: playerStore.eventType !== 'play' 
             ? APP_NAME === 'Genshin' ? 100 : 200 
             : 0
         })
         this.handlePracticeClick(note)
-        this.props.functions.playSound(note)
+        this.props.functions.playSound(note.index, layers)
         const approachStatus = this.handleApproachClick(note)
-        if (PlayerStore.eventType === 'approaching') {
+        if (playerStore.eventType === 'approaching') {
             keyboard[note.index].setStatus(approachStatus)
             if (approachStatus === 'approach-wrong') approachingScore.combo = 0
         }
-        if (hasAnimation && PlayerStore.eventType !== 'approaching') {
+        if (hasAnimation && playerStore.eventType !== 'approaching') {
             const key = Math.floor(Math.random() * 10000) + new Date().getTime()
             outgoingAnimation[note.index] = [...outgoingAnimation[note.index], { key }]
         }
@@ -420,7 +421,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             approachingScore,
             outgoingAnimation
         }, () => {
-            if (!hasAnimation || PlayerStore.eventType === 'approaching') return
+            if (!hasAnimation || playerStore.eventType === 'approaching') return
             setTimeout(() => {
                 const { outgoingAnimation } = this.state
                 outgoingAnimation[note.index].shift()
@@ -471,7 +472,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                             data={{
                                 approachRate: this.approachRate,
                                 instrument: this.props.data.keyboard.name,
-                                isAnimated: PlayerStore.eventType === 'approaching' ? false : data.hasAnimation
+                                isAnimated: playerStore.eventType === 'approaching' ? false : data.hasAnimation
                             }}
                             approachingNotes={state.approachingNotes[note.index]}
                             outgoingAnimation={state.outgoingAnimation[note.index]}

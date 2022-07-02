@@ -4,7 +4,7 @@ import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
 import { parseSong } from "lib/Tools"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
-import { PlayerStore } from 'stores/PlayerStore'
+import { playerStore } from 'stores/PlayerStore'
 import { HelpTab } from 'components/HelpTab'
 import { MenuItem } from 'components/MenuItem'
 import MenuPanel from 'components/MenuPanel'
@@ -347,7 +347,7 @@ function Menu({ functions, data }: MenuProps) {
                                     key={song.file}
                                     data={song}
                                     importSong={addSong}
-                                    onClick={PlayerStore.play}
+                                    onClick={playerStore.play}
                                 />
                             )
                             : <div className='library-search-result-text'>
@@ -400,7 +400,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             if (isRenaming) return
-            PlayerStore.play(parseSong(data), 0)
+            playerStore.play(parseSong(data), 0)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -425,7 +425,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
             <SongActionButton
                 onClick={() => {
                     const parsed = parseSong(data)
-                    PlayerStore.practice(parsed, 0, parsed.notes.length)
+                    playerStore.practice(parsed, 0, parsed.notes.length)
                     toggleMenu(false)
                 }}
                 ariaLabel={`Practice song ${data.name}`}
@@ -437,7 +437,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
 
             <SongActionButton onClick={() => {
                 const parsed = parseSong(data)
-                PlayerStore.approaching(parsed, 0, parsed.notes.length)
+                playerStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
 
             }}

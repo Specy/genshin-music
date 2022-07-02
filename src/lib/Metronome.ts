@@ -36,11 +36,14 @@ class Metronome{
         this.indicatorBuffer = result[0]
         this.crochetBuffer = result[1]
     }
-    start(){
+    async start(){
         if(this.running) return
         this.running = true
         this.currentTick = 0
-        this.tick()
+        while(this.running){
+            this.tick()
+            await delay(60000 / this.bpm)
+        }
     }
     stop(){
         this.running = false
@@ -52,8 +55,7 @@ class Metronome{
             this.start()
         }
     }
-    async tick(){
-        if(!this.running) return
+    tick(){
         const source = AUDIO_CONTEXT.createBufferSource()
         if(this.currentTick % this.beats === 0){
             source.buffer = this.crochetBuffer
@@ -69,8 +71,6 @@ class Metronome{
             source.disconnect()
         }
         source.addEventListener('ended', handleEnd, { once: true })
-        await delay(60000 / this.bpm)
-        this.tick()
     }
 }
 
