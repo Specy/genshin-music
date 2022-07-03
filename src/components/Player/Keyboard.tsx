@@ -266,6 +266,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             previousTime = new Date().getTime()
             if (delayTime > 16) await delay(delayTime - pastError)
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
+
             this.handleClick(keyboard[notes[i].index], notes[i].layer)
             SliderStore.setCurrent(i + 1)
             pastError = new Date().getTime() - previousTime - delayTime
@@ -398,6 +399,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     handleClick = (note: NoteData, layers?: NoteLayer) => {
         const { keyboard, outgoingAnimation, approachingScore } = this.state
         const hasAnimation = this.props.data.hasAnimation
+        if(!note) return
         const prevStatus = keyboard[note.index].status
         keyboard[note.index].setState({
             status: 'clicked',
