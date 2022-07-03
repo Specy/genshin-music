@@ -25,7 +25,7 @@
     opacity: 0.9;
 }
 .hamburger{
-    position: fixed;
+    position: absolute;
     bottom: 0.5rem;
     left: 0.5rem;
     font-size: 1.5rem;

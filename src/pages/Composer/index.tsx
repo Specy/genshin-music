@@ -683,8 +683,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
             <div className='composer-grid'>
                 <div className="column composer-left-control">
                     <AppButton
+                        className='flex-centered'
                         style={{ height: '3rem', borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)" }}
-                        onClick={(e) => {
+                        onClick={_ => {
                             this.togglePlay()
                             if (settings.syncTabs.value) {
                                 this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
@@ -694,8 +695,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
                     >
                         <Memoized>
                             {isPlaying
-                                ? <FaPause key='pause' size={16} color='var(--icon-color)' />
-                                : <FaPlay key='play' size={16} color='var(--icon-color)' />
+                                ? <FaPause key='pause' size={18} color='var(--icon-color)' />
+                                : <FaPlay key='play' size={18} color='var(--icon-color)' />
                             }
                         </Memoized>
                     </AppButton>

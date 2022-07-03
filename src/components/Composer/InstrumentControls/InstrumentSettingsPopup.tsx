@@ -124,7 +124,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
         </div>
         <div className='row space-between' style={{ marginTop: '0.4rem' }}>
             <AppButton
-                className="row"
+                className="row-centered"
                 style={{ padding: '0.4rem', width: 'fit-content' }}
                 onClick={onDelete}
             >

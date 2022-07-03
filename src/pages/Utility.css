@@ -5,6 +5,7 @@
     flex-direction: row;
 }
 .row-centered{
+    display: flex;
     align-items: center;
 }
 .flex-grow{

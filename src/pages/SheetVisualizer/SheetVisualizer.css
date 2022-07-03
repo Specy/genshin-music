@@ -23,6 +23,7 @@
 	width: 2rem;
 	margin-left: 0.5rem;
 	height: 2rem;
+	padding: 0;
 	font-size: 1.4rem;
 	background-color: var(--primary);
 	color: var(--primary-text);

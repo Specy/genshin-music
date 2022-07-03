@@ -13,7 +13,8 @@
 	transition: all 0.2s ease-out;
 	animation: 0.15s home-appear ease-out;
 	opacity: 0;
-	transform: scale(0.95);
+	transform: scale(0.98);
+	will-change: opacity, transform, backdrop-filter;
 }
 .home-visible {
 	opacity: 1;
@@ -24,7 +25,7 @@
 	0% {
 		opacity: 0.5;
 		backdrop-filter: none;
-		transform: scale(0.95);
+		transform: scale(0.98);
 	}
 	100% {
 		opacity: 1;

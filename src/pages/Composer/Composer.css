@@ -11,6 +11,8 @@
 .canvas-relative{
     position: relative;
     display: flex;
+    z-index: 0;
+    width: 100%;
     border-top-left-radius: 0.4rem;
     border-top-right-radius: 0.4rem;
     overflow: hidden;
@@ -368,6 +370,7 @@ canvas {
     font-size: 1rem;
     color: white;
     padding: 0.4rem 0;
+    margin: 0;
     filter: brightness(1.1);
     cursor: pointer;
 }
@@ -645,6 +648,16 @@ canvas {
     font-size: 2rem;
     opacity: 0;
     transition: opacity 0.1s;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .canvas-buttons{
+        display: flex;
+    }
+    .canvas-buttons-visible{
+        display: flex;
+        opacity: 1;
+    }
 }
 @media only screen and (max-width: 900px) {
     .canvas-buttons{
