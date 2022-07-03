@@ -44,6 +44,7 @@
     "build-tauri:genshin": "node ./scripts/buildTauri.js Genshin",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
+    "start-tauri": "yarn tauri dev",
     "build:all": "node ./scripts/buildApp.js All",
     "start:sky": "node ./scripts/startApp.js Sky",
     "start:genshin": "node ./scripts/startApp.js Genshin"

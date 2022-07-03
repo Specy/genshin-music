@@ -5,20 +5,29 @@ This repository holds the code relative to the two music apps for Genshin and sk
 ![Composer](docs/assets/composer.webp)
 ![Player](docs/assets/player.webp)
 
-# How to run
+# How to run in dev mode
 You need node.js and yarn installed, if you don't have yarn, install it with `npm i yarn --global`.
-Then clone the repo to a folder and install the dependencies with `yarn install`, once installed, run the development server with `yarn start`
+Then clone the repo to a folder and install the dependencies with `yarn`, once installed, run the development server with `yarn start`
 
 There are 4 more scripts which might be useful, run as a specific app and build as a specific app.
 
 You can run `yarn start:sky` or `yarn start:genshin`, this will run the webapps for the specific game and swap the assets. 
 
+# How to run desktop app in dev mode
+You need to first start the development server, look [here](#how-to-run-in-dev-mode) for how to do that.
+Then you can run `yarn start-tauri`
 # How to build
 
 You can use the scripts `yarn build:genshin` and `yarn build:sky` which will build the correct app, or `yarn build:all` to build both
 
+# How to build desktop app
+
+The app uses tauri for the desktop bundle which is a sandboxed webview. You can build it by using `yarn build-tauri:genshin` or `yarn build-tauri:sky`
+
+
 # Documentation
 You can find the documentation of the app [here](https://github.com/Specy/genshin-music/wiki)
+It is not very detailed but might help to understand how the format works.
 
 # How to contribute
 Make a new issue saying what you want to work on and wait for me to assign the issue. This way we can also communicate whether or it would be a valid issue to fix/add

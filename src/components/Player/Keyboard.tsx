@@ -1,5 +1,4 @@
 import { ChangeEvent, Component } from 'react'
-import { observe } from 'mobx'
 import {  APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "appConfig"
 import Note from 'components/Player/Note'
 import { playerStore, subscribePlayer } from 'stores/PlayerStore'

@@ -29,7 +29,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "dev.specy.genshin",
+      "identifier": "dev.specy.genshin-music",
       "longDescription": "",
       "macOS": {
         "entitlements": null,

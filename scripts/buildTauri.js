@@ -37,7 +37,7 @@ async function execute() {
     tauriConfig.package.productName = `${chosenApp} Music Nightly`
     tauriConfig.package.version = chosenVersion
     tauriConfig.tauri.windows[0].title = `${chosenApp} Music Nightly`
-    tauriConfig.tauri.bundle.identifier = `dev.specy.${chosenApp.toLowerCase()}`
+    tauriConfig.tauri.bundle.identifier = `dev.specy.${chosenApp.toLowerCase()}-music`
     await fs.writeFile('./src-tauri/tauri.conf.json', JSON.stringify(tauriConfig, null, 2))
     try{
         execSync('yarn tauri build')
