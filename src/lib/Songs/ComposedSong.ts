@@ -138,10 +138,18 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         newInstrument.icon = defaultInstrumentMap[this.instruments.length % 3]
         this.instruments = [...this.instruments, newInstrument]
     }
+    static selection(start: number, end: number){
+        return new Array(end - start).fill(0).map((_, i) => i - start)
+    }
     removeInstrument = async (index: number) => {
-        this.columns.forEach(col => {
-            col.notes.forEach(note => note.layer.set(index, false))
-        })
+        this.eraseColumns(ComposedSong.selection(0, this.columns.length), index)
+        
+        if (index !== this.instruments.length - 1) {
+            const toMove = this.instruments.slice(index)
+            toMove.forEach((_, i) => {
+                this.switchLayer(this.columns.length, 0, index + i, index + i - 1)
+            })
+        }
         this.instruments.splice(index, 1)
 
         this.instruments = [...this.instruments]

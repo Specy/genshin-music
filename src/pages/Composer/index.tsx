@@ -40,6 +40,7 @@ import { InstrumentControls } from 'components/Composer/InstrumentControls';
 import { AppButton } from 'components/AppButton';
 import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore';
 import { Title } from 'components/Title';
+import { songService } from 'lib/Services/SongService';
 
 interface ComposerState {
     layers: Instrument[]
@@ -261,7 +262,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (confirm) {
             song.removeInstrument(index)
             this.syncInstruments(song)
-            this.setState({ song, layer: Math.max(0, index - 1) })
+            this.setState({ song, layer: Math.max(0, index) })
         }
     }
     editInstrument = (instrument: InstrumentData, index: number) => {
@@ -394,7 +395,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
         }
         return new Promise(async resolve => {
             //if it exists, update it
-            if (await songsStore.existsSong(song)) {
+            const existingSong = await songService.getSongById(song.id!)
+            if (existingSong) {
+                song.folderId = existingSong.folderId
                 await songsStore.updateSong(song)
                 console.log("song saved:", song.name)
                 this.changes = 0
@@ -438,7 +441,6 @@ class Composer extends Component<ComposerProps, ComposerState>{
         Analytics.songEvent({ type: 'create' })
     }
     loadSong = async (song: SerializedSong | ComposedSong) => {
-        console.log(song)
         const state = this.state
         let parsed: ComposedSong | null = null
         if (song instanceof ComposedSong) {

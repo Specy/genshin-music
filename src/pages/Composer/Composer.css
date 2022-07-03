@@ -380,6 +380,8 @@ canvas {
     filter: brightness(1.1);
 }
 
+
+
 .tempo-changers-wrapper button:focus {
     filter: brightness(1.3);
 }
