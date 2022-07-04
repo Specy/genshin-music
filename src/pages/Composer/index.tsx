@@ -342,6 +342,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const instrument = this.state.layers[layer]
         const note = instrument?.layout[index]
         if (note === undefined) return
+        if(this.state.song.instruments[layer].muted) return
         const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value as Pitch
         instrument.play(note.index, pitch)
     }

@@ -2,7 +2,7 @@ import { AppButton } from "components/AppButton";
 import { useTheme } from "lib/Hooks/useTheme";
 import { InstrumentData } from "lib/Songs/SongClasses";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus } from "react-icons/fa";
+import { FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus, FaVolumeMute } from "react-icons/fa";
 import { BiSquareRounded } from "react-icons/bi";
 
 import { ThemeStoreClass } from "stores/ThemeStore";
@@ -61,7 +61,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                     setTimeout(() => {
                         // @ts-ignore
                         e.target?.scrollIntoView()
-                    },50)
+                    }, 50)
                 }}
                 ariaLabel='Add new instrument'
                 className="new-instrument-button flex-centered"
@@ -101,17 +101,31 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
                 backgroundColor: theme.get("primary").mix(theme.get("accent")).toString(),
             } : {}}
     >
-        {!isSelected && !instrument.visible &&
-            <FaEyeSlash
+        {!isSelected &&
+            <div className="row"
                 style={{
                     position: 'absolute',
+                    gap: '0.2rem',
                     top: '0.2rem',
                     left: '0.3rem',
-                    color: passiveIcon.hex()
                 }}
-                size={14}
-            />
+            >
+                {!instrument.visible &&
+                    <FaEyeSlash
+                        color={passiveIcon.hex()}
+                        size={14}
+                    />
+                }
+                {instrument.muted &&
+                    <FaVolumeMute
+                        color={passiveIcon.hex()}
+                        size={14}
+                    />
+                }
+            </div>
+
         }
+
         {!isSelected &&
             <div
                 style={{

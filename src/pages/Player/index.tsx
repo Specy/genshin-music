@@ -6,7 +6,7 @@ import { RecordedSong } from 'lib/Songs/RecordedSong';
 import { ComposedSong } from 'lib/Songs/ComposedSong';
 import { Recording } from 'lib/Songs/SongClasses';
 import { MainPageSettingsDataType } from "lib/BaseSettings"
-import Instrument, { NoteData } from 'lib/Instrument';
+import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { Pitch } from "appConfig"

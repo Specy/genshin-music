@@ -5,7 +5,7 @@ import useClickOutside from "lib/Hooks/useClickOutside"
 import { InstrumentNoteIcon } from "lib/Songs/ComposedSong"
 import { InstrumentData } from "lib/Songs/SongClasses"
 import { capitalize } from "lodash"
-import { FaArrowDown, FaArrowUp, FaTrash } from "react-icons/fa"
+import { FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeOff, FaVolumeUp } from "react-icons/fa"
 import { InstrumentSelector } from "./InstrumentSelector"
 
 interface InstrumentSettingsPopupProps {
@@ -18,7 +18,7 @@ interface InstrumentSettingsPopupProps {
     onClose: () => void
 }
 const noteIcons: InstrumentNoteIcon[] = ['circle', 'border', 'line']
-export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClose, onChangePosition, currentLayer, instruments}: InstrumentSettingsPopupProps) {
+export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClose, onChangePosition, currentLayer, instruments }: InstrumentSettingsPopupProps) {
     const ref = useClickOutside<HTMLDivElement>(onClose, { active: true, ignoreFocusable: true })
     if (!instrument) return <div className="floating-instrument-settings  box-shadow">
         No instrument selected
@@ -44,7 +44,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
                 onChange={(name) => onChange(instrument.set({ name }))}
             />
         </div>
-        <div className="row space-between" style={{  marginTop: '0.4rem'  }}>
+        <div className="row space-between" style={{ marginTop: '0.4rem' }}>
             Pitch
             <select
                 className="select"
@@ -63,7 +63,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             </select>
         </div>
 
-        <div className="row space-between" style={{  marginTop: '0.4rem'  }}>
+        <div className="row space-between" style={{ marginTop: '0.4rem' }}>
             Note icon
             <select
                 className="select"
@@ -97,29 +97,43 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
                 If you hear distortion, reduce the volume
             </HelpTooltip>
         </div>
-        <input
-            type="range"
-            min={0}
-            max={125}
-            value={instrument.volume}
-            onChange={e => onChange(instrument.set({ volume: Number(e.target.value) }))}
-        />
-        <div className="row space-between" style={{marginTop: '1rem'}}>
-            <AppButton 
-                onClick={() => onChangePosition(-1)} 
+        <div className="row">
+            <input
+                type="range"
+                style={{flex: '1', opacity: instrument.muted ? "0.6": '1'}}
+                min={0}
+                max={125}
+                value={instrument.volume}
+                onChange={e => onChange(instrument.set({ volume: Number(e.target.value) }))}
+            />
+            <AppButton
+                className="flex-centered"
+                toggled={instrument.muted}
+                style={{ padding: 0, minWidth: 'unset', width: '1.6rem', height: '1.6rem', borderRadius: '2rem' }}
+                onClick={() => {
+                    if(instrument.volume === 0 && !instrument.muted) return
+                    onChange(instrument.set({ muted: !instrument.muted }))
+                }}
+            >
+                {(instrument.muted || instrument.volume === 0) ? <FaVolumeMute /> : <FaVolumeUp />}
+            </AppButton>
+        </div>
+        <div className="row space-between" style={{ marginTop: '1rem' }}>
+            <AppButton
+                onClick={() => onChangePosition(-1)}
                 disabled={currentLayer === 0}
                 className='flex-centered'
-                style={{padding: '0.5rem', flex: '1', marginRight: '0.4rem'}}
+                style={{ padding: '0.5rem', flex: '1', marginRight: '0.4rem' }}
             >
-                <FaArrowUp style={{marginRight: '0.2rem'}}/> Move up
+                <FaArrowUp style={{ marginRight: '0.2rem' }} /> Move up
             </AppButton>
-            <AppButton 
-                onClick={() => onChangePosition(1)} 
+            <AppButton
+                onClick={() => onChangePosition(1)}
                 disabled={currentLayer === instruments.length - 1}
                 className='flex-centered'
-                style={{padding: '0.5rem',  flex: '1'}}
+                style={{ padding: '0.5rem', flex: '1' }}
             >
-                <FaArrowDown style={{marginRight: '0.2rem'}}/> Move down
+                <FaArrowDown style={{ marginRight: '0.2rem' }} /> Move down
             </AppButton>
         </div>
         <div className='row space-between' style={{ marginTop: '0.4rem' }}>

@@ -415,20 +415,12 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         }
         if (hasAnimation && playerStore.eventType !== 'approaching') {
             const key = Math.floor(Math.random() * 10000) + new Date().getTime()
-            outgoingAnimation[note.index] = [...outgoingAnimation[note.index], { key }]
+            outgoingAnimation[note.index] = [{ key }]
         }
         this.setState({
             keyboard,
             approachingScore,
             outgoingAnimation
-        }, () => {
-            if (!hasAnimation || playerStore.eventType === 'approaching') return
-            setTimeout(() => {
-                const { outgoingAnimation } = this.state
-                outgoingAnimation[note.index].shift()
-                outgoingAnimation[note.index] = [...outgoingAnimation[note.index]]
-                this.setState({ outgoingAnimation })
-            }, 750)
         })
         setTimeout(() => {
             if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[note.index].status)) return

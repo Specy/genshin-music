@@ -70,6 +70,7 @@ body {
 
 input {
 	accent-color: var(--accent);
+	cursor: pointer;
 }
 
 *:not(input) {

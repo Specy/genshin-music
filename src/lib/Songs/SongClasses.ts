@@ -72,6 +72,7 @@ export class InstrumentData{
     visible: boolean = true
     icon: InstrumentNoteIcon = 'circle'
 	alias = ''
+	muted = false
 	constructor(data: Partial<InstrumentData> = {}) {
 		Object.assign(this, data)
 	}
