@@ -89,7 +89,6 @@ class Player extends Component<any, PlayerState>{
 		this.state.instruments.forEach(ins => ins.delete())
 		this.cleanup.forEach(c => c())
 		this.mounted = false
-		Instrument.clearPool()
 		metronome.stop()
 	}
 
@@ -329,7 +328,12 @@ class Player extends Component<any, PlayerState>{
 					</AppButton>
 				</div>
 			}
-			<AppButton toggled={isMetronomePlaying} onClick={toggleMetronome} className='metronome-button'>
+			<AppButton 
+				toggled={isMetronomePlaying} 
+				onClick={toggleMetronome} 
+				className='metronome-button'
+				ariaLabel='Toggle metronome'
+			>
 				<GiMetronome size={22} />
 			</AppButton>
 		</>

@@ -152,12 +152,11 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         </div>
         <div className='home-bottom'>
             <div>
-                © All rights reserved by {APP_NAME === 'Genshin' ? 'miHoYo' : 'TGC'}. Other properties belong to their respective owners.
+                © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </div>
         </div>
     </div>
 }
-
 interface PageRedirectProps {
     children: React.ReactNode,
     current: boolean,

@@ -288,7 +288,7 @@ const baseThemes: Theme[] = [
             menu_background: {
                 name: "menu_background",
                 css: "menu-background",
-                value: "#172017",
+                value: "#202820",
                 text: "#edeae5"
             },
             note_background: {

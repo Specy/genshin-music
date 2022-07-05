@@ -128,7 +128,6 @@ class Composer extends Component<ComposerProps, ComposerState>{
         KeyboardProvider.unregisterById('composer')
         MIDIProvider.removeListener(this.handleMidi)
         if(AudioProvider.isRecording) AudioProvider.stopRecording()
-        Instrument.clearPool()
         if (window.location.hostname !== "localhost") {
             window.removeEventListener("beforeunload", this.handleUnload)
         }
