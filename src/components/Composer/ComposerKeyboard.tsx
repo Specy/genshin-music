@@ -10,8 +10,9 @@ import { NoteImage } from "types/Keyboard"
 
 interface ComposerKeyboardProps {
     data: {
-        keyboard: Instrument,
+        keyboard: Instrument
         instruments: InstrumentData[]
+        isRecordingAudio: boolean
         currentLayer: number,
         currentColumn: Column,
         pitch: Pitch,
@@ -25,16 +26,24 @@ interface ComposerKeyboardProps {
 }
 
 export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
-    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer } = data
+    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio } = data
     const { handleClick, handleTempoChanger } = functions
     let keyboardClass = "keyboard"
-    if(keyboard === undefined){
-        return <div className="composer-keyboard-wrapper" style={{marginBottom: '4rem'}}>
+    if (keyboard === undefined) {
+        return <div className="composer-keyboard-wrapper" style={{ marginBottom: '4rem' }}>
             <h1>There was an error with this layer</h1>
+        </div>
+    }
+    if (isRecordingAudio) {
+        return <div className="composer-keyboard-wrapper" style={{ marginBottom: '4rem' }}>
+            <h1>
+                Recording Audio...
+            </h1>
         </div>
     }
     if (keyboard.layout.length === 15) keyboardClass += " keyboard-5"
     if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
+
     return <>
         <div className="composer-keyboard-wrapper">
             <div

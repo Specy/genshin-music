@@ -90,6 +90,7 @@ export class AudioProviderClass {
                 if (recorder.node) node.connect(recorder.node)
             })
         }
+        this.isRecording = true
         recorder.start()
         return this
     }
@@ -102,6 +103,7 @@ export class AudioProviderClass {
             reverbVolumeNode.disconnect()
             reverbVolumeNode.connect(this.audioContext.destination)
         }
+        this.isRecording = false
         this.setAudioDestinations()
         return recording
     }

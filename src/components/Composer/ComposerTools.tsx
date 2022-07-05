@@ -81,7 +81,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
             </ToolButton>
 
             <ToolButton
-                disabled={hasCopiedColumns}
+                disabled={hasCopiedColumns || selectedTarget !== 'all'}
                 onClick={deleteColumns}
                 tooltip='Delete selected columns'
                 area="f"
@@ -90,7 +90,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 Delete
             </ToolButton>
             <ToolButton
-                disabled={false}
+                disabled={hasCopiedColumns}
                 tooltip="Push notes up by 1 position"
                 area="e"
                 onClick={() => moveNotesBy(1, selectedTarget)}
@@ -99,7 +99,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
                 Move notes up
             </ToolButton>
             <ToolButton
-                disabled={false}
+                disabled={hasCopiedColumns}
                 tooltip="Push notes down by 1 position"
                 onClick={() => moveNotesBy(-1, selectedTarget)}
                 area="g"

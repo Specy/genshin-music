@@ -16,8 +16,8 @@ class Metronome{
     constructor(bpm?: number){
         this.bpm = bpm ?? 220
         this.loadBuffers()
-
         this.volumeNode.connect(AUDIO_CONTEXT.destination)
+        this.changeVolume(this.volume)
     }
     destroy(){
         this.volumeNode.disconnect()
@@ -29,8 +29,8 @@ class Metronome{
     }
     async loadBuffers(){
         const promises = [
-            fetchAudioBuffer("./assets/audio/Drum/1.mp3").catch(() => emptyBuffer),
-            fetchAudioBuffer("./assets/audio/Drum/0.mp3").catch(() => emptyBuffer)
+            fetchAudioBuffer("./assets/audio/Drum/0.mp3").catch(() => emptyBuffer),
+            fetchAudioBuffer("./assets/audio/Drum/1.mp3").catch(() => emptyBuffer)
         ]
         const result = await Promise.all(promises)
         this.indicatorBuffer = result[0]

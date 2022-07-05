@@ -12,7 +12,7 @@ import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
 import { Pitch } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
-import {logger} from 'stores/LoggerStore';
+import { logger } from 'stores/LoggerStore';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
 import { AppButton } from 'components/AppButton';
@@ -32,8 +32,9 @@ interface PlayerState {
 	isLoadingInstrument: boolean
 	isRecordingAudio: boolean
 	isRecording: boolean
-	hasSong: boolean,
 	isMetronomePlaying: boolean
+	isLoadingInstruments: boolean
+	hasSong: boolean
 }
 
 class Player extends Component<any, PlayerState>{
@@ -47,12 +48,14 @@ class Player extends Component<any, PlayerState>{
 		const settings = settingsService.getPlayerSettings()
 		this.state = {
 			instruments: [new Instrument()],
+			settings: settings,
 			isLoadingInstrument: true,
 			isRecording: false,
 			isRecordingAudio: false,
-			settings: settings,
+			isMetronomePlaying: false,
+			isLoadingInstruments: false,
 			hasSong: false,
-			isMetronomePlaying: false
+
 		}
 		this.mounted = false
 	}
@@ -66,14 +69,16 @@ class Player extends Component<any, PlayerState>{
 	componentDidMount() {
 		this.mounted = true
 		this.init()
-		this.cleanup.push(subscribePlayer(({eventType, song}) => {
+		this.cleanup.push(subscribePlayer(({ eventType, song }) => {
 			const { settings } = this.state
-			if(!settings.syncSongData.value || song === null) return 
-			if(['play','practice','approaching'].includes(eventType))
-			this.handleSettingChange({ data: {
-				...settings.pitch,
-				value: song.pitch
-			}, key: 'pitch'})
+			if (!settings.syncSongData.value || song === null) return
+			if (['play', 'practice', 'approaching'].includes(eventType))
+				this.handleSettingChange({
+					data: {
+						...settings.pitch,
+						value: song.pitch
+					}, key: 'pitch'
+				})
 			this.syncInstruments(song)
 		}))
 	}
@@ -84,7 +89,7 @@ class Player extends Component<any, PlayerState>{
 		this.state.instruments.forEach(ins => ins.delete())
 		this.cleanup.forEach(c => c())
 		this.mounted = false
-        Instrument.clearPool()
+		Instrument.clearPool()
 		metronome.stop()
 	}
 
@@ -122,54 +127,55 @@ class Player extends Component<any, PlayerState>{
 	}
 	syncInstruments = async (song: ComposedSong | RecordedSong) => {
 		const { instruments } = this.state
-        //remove excess instruments
-        const extraInstruments = instruments.splice(song.instruments.length)
-        extraInstruments.forEach(ins => {
-            AudioProvider.disconnect(ins.endNode)
-            ins.delete()
-        })
-        const promises = song.instruments.map(async (ins, i) => {
-            if (instruments[i] === undefined) {
-                //If it doesn't have a layer, create one
-                const instrument = new Instrument(ins.name)
-                instruments[i] = instrument
-                await instrument.load()
-                if (!this.mounted) return instrument.delete()
-                AudioProvider.connect(instrument.endNode)
-                instrument.changeVolume(ins.volume)
-                return instrument
-            }
-            if (instruments[i].name === ins.name) {
-                //if it has a layer and it's the same, just set the volume
-                instruments[i].changeVolume(ins.volume)
-                return instruments[i]
-            } else {
-                //if it has a layer and it's different, delete the layer and create a new one
-                const old = instruments[i]
-                AudioProvider.disconnect(old.endNode)
-                old.delete()
-                const instrument = new Instrument(ins.name)
-                instruments[i] = instrument
-                await instrument.load()
-                if (!this.mounted) return instrument.delete()
-                AudioProvider.connect(instrument.endNode)
-                instrument.changeVolume(ins.volume)
-                return instrument
-            }
-        })
-        const newInstruments = await Promise.all(promises) as Instrument[]
-        if (!this.mounted) return
-        this.setState({ instruments: newInstruments })
+		//remove excess instruments
+		const extraInstruments = instruments.splice(song.instruments.length)
+		extraInstruments.forEach(ins => {
+			AudioProvider.disconnect(ins.endNode)
+			ins.delete()
+		})
+		this.setState({ isLoadingInstruments: true })
+		const promises = song.instruments.map(async (ins, i) => {
+			if (instruments[i] === undefined) {
+				//If it doesn't have a layer, create one
+				const instrument = new Instrument(ins.name)
+				instruments[i] = instrument
+				await instrument.load()
+				if (!this.mounted) return instrument.delete()
+				AudioProvider.connect(instrument.endNode)
+				instrument.changeVolume(ins.volume)
+				return instrument
+			}
+			if (instruments[i].name === ins.name) {
+				//if it has a layer and it's the same, just set the volume
+				instruments[i].changeVolume(ins.volume)
+				return instruments[i]
+			} else {
+				//if it has a layer and it's different, delete the layer and create a new one
+				const old = instruments[i]
+				AudioProvider.disconnect(old.endNode)
+				old.delete()
+				const instrument = new Instrument(ins.name)
+				instruments[i] = instrument
+				await instrument.load()
+				if (!this.mounted) return instrument.delete()
+				AudioProvider.connect(instrument.endNode)
+				instrument.changeVolume(ins.volume)
+				return instrument
+			}
+		})
+		const newInstruments = await Promise.all(promises) as Instrument[]
+		if (!this.mounted) return
+		this.setState({ instruments: newInstruments, isLoadingInstruments:false })
 	}
-	playSound = (index:number, layers?: NoteLayer) => {
+	playSound = (index: number, layers?: NoteLayer) => {
 		const { state } = this
 		const { settings, instruments } = state
 		if (state.isRecording) this.handleRecording(index)
-		if(!layers){
-			instruments[0].play(index, settings.pitch.value  as Pitch)
-		}else{
-			instruments.forEach((ins,i) => {
-				if(layers.test(i)) ins.play(index, settings.pitch.value  as Pitch)
+		if (!layers) {
+			instruments[0].play(index, settings.pitch.value as Pitch)
+		} else {
+			instruments.forEach((ins, i) => {
+				if (layers.test(i)) ins.play(index, settings.pitch.value as Pitch)
 			})
 		}
 	}
@@ -189,9 +195,9 @@ class Player extends Component<any, PlayerState>{
 		if (setting.key === 'caveMode') {
 			AudioProvider.setReverb(data.value as boolean)
 		}
-		if(setting.key === 'bpm') metronome.bpm = data.value as number	
-		if(setting.key === 'metronomeBeats') metronome.beats = data.value as number
-		if(setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number)
+		if (setting.key === 'bpm') metronome.bpm = data.value as number
+		if (setting.key === 'metronomeBeats') metronome.beats = data.value as number
+		if (setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number)
 		this.setState({
 			settings: settings,
 		}, this.updateSettings)
@@ -201,7 +207,7 @@ class Player extends Component<any, PlayerState>{
 		try {
 			const id = await songsStore.addSong(song)
 			song.id = id
-			const type = song.type ?? song.data.isComposedVersion ? "composed" : "recorded"
+			const type = song.type ?? (song.data.isComposedVersion ? "composed" : "recorded")
 			logger.success(`Song added to the ${type} tab!`, 4000)
 		} catch (e) {
 			console.error(e)
@@ -218,7 +224,7 @@ class Player extends Component<any, PlayerState>{
 		}
 	}
 	renameSong = async (newName: string, id: string) => {
-        await songsStore.renameSong(id, newName)
+		await songsStore.renameSong(id, newName)
 	}
 	handleRecording = (index: number) => {
 		if (this.state.isRecording) {
@@ -270,9 +276,9 @@ class Player extends Component<any, PlayerState>{
 	}
 	render() {
 		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, toggleMetronome } = this
-		const { settings, isLoadingInstrument, instruments, hasSong, isRecordingAudio, isRecording, isMetronomePlaying } = state
+		const { settings, isLoadingInstruments, isLoadingInstrument, instruments, hasSong, isRecordingAudio, isRecording, isMetronomePlaying } = state
 		return <>
-        	<Title text="Player" />
+			<Title text="Player" />
 			<Menu
 				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
 				data={{ settings }}
@@ -307,6 +313,11 @@ class Player extends Component<any, PlayerState>{
 					/>
 				</div>
 			</div>
+			{isLoadingInstruments &&
+				<div style={{ position: 'absolute', bottom: '0.5rem', left:'50%', transform:"translateX(-50%)", fontSize: '0.9rem'}}>
+					Loading song instruments...
+				</div>
+			}
 
 			{playerStore.eventType !== 'approaching' &&
 				<div className='record-button'>
@@ -318,9 +329,9 @@ class Player extends Component<any, PlayerState>{
 					</AppButton>
 				</div>
 			}
-				<AppButton toggled={isMetronomePlaying} onClick={toggleMetronome} className='metronome-button'>
-					<GiMetronome size={22} />
-				</AppButton>
+			<AppButton toggled={isMetronomePlaying} onClick={toggleMetronome} className='metronome-button'>
+				<GiMetronome size={22} />
+			</AppButton>
 		</>
 	}
 }

@@ -1,6 +1,5 @@
 .changelog-page-title{
     font-size: 2.5rem;
-    margin-bottom: 2rem;
     color: var(--background-text);
 }
 
@@ -28,6 +27,7 @@
     color: var(--accent);
 }
 .changelog-list{
+
     margin:0;
     margin-left: 2.5rem;
     border-left: solid 2px var(--secondary);

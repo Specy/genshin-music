@@ -8,20 +8,20 @@ import type { NoteData } from 'lib/Instrument'
 import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
 import type { ApproachingNote } from 'lib/Songs/SongClasses'
 
-function getTextColor(){
+function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')
-    if(APP_NAME === 'Genshin'){
-        if(noteBg.luminosity() > 0.65){
+    if (APP_NAME === 'Genshin') {
+        if (noteBg.luminosity() > 0.65) {
             return BASE_THEME_CONFIG.text.note
-        }else{
+        } else {
             return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
         }
-    }else{
+    } else {
         return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
     }
 }
 
-interface NoteProps{
+interface NoteProps {
     note: NoteData
     renderId: number
     data: {
@@ -32,7 +32,7 @@ interface NoteProps{
     approachingNotes: ApproachingNote[]
     outgoingAnimation: {
         key: number
-    }[]
+    }
     noteText: string
     handleClick: (note: NoteData) => void
 }
@@ -64,12 +64,12 @@ function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText
                 approachRate={approachRate}
             />
         )}
-        {outgoingAnimation.map(e =>
-            <div
-                key={e.key}
-                className={NOTES_CSS_CLASSES.noteAnimation}
-            />
-        )}
+        {outgoingAnimation.key !== 0 &&
+              <div
+              key={outgoingAnimation.key}
+              className={NOTES_CSS_CLASSES.noteAnimation}
+          />
+        }
         <div
             className={className}
             style={{
@@ -99,13 +99,13 @@ function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText
 function getApproachCircleColor(index: number) {
     const numOfNotes = APP_NAME === "Sky" ? 5 : 7
     const row = Math.floor(index / numOfNotes)
-    if(row === 0) return 'var(--accent)'
-    if(row === 1) return ThemeProvider.get('accent').rotate(180).hex()
-    if(row === 2) return "var(--accent)"
+    if (row === 0) return 'var(--accent)'
+    if (row === 1) return ThemeProvider.get('accent').rotate(180).hex()
+    if (row === 2) return "var(--accent)"
     return "var(--accent)"
 }
 
-interface ApproachCircleProps{
+interface ApproachCircleProps {
     approachRate: number
     index: number
 }

@@ -70,7 +70,7 @@ function Menu({ functions, data }: MenuProps) {
     const { handleSettingChange, addSong, removeSong, renameSong } = functions
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
-    }, {active: isOpen, ignoreFocusable: true})
+    }, { active: isOpen, ignoreFocusable: true })
     useEffect(() => {
         async function checkStorage() {
             if (navigator.storage && navigator.storage.persist) {
@@ -338,26 +338,30 @@ function Menu({ functions, data }: MenuProps) {
                         <FaSearch />
                     </button>
                 </div>
-                <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.toString() }}>
-                    {searchStatus === "success" ?
-                        searchedSongs.length > 0
-                            ? searchedSongs.map(song =>
-                                <LibrarySearchedSong
-                                    theme={theme}
-                                    key={song.file}
-                                    data={song}
-                                    importSong={addSong}
-                                    onClick={playerStore.play}
-                                />
-                            )
+                {(searchStatus || searchedSongs.length > 0) &&
+                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.toString() }}>
+                        {searchStatus === "success" ?
+                            searchedSongs.length > 0
+                                ? searchedSongs.map(song =>
+                                    <LibrarySearchedSong
+                                        theme={theme}
+                                        key={song.file}
+                                        data={song}
+                                        importSong={addSong}
+                                        onClick={playerStore.play}
+                                    />
+                                )
+                                : <div className='library-search-result-text'>
+                                    No results
+                                </div>
                             : <div className='library-search-result-text'>
-                                No results
+                                {searchStatus}
                             </div>
-                        : <div className='library-search-result-text'>
-                            {searchStatus}
-                        </div>
-                    }
-                </div>
+                        }
+                    </div>
+
+                }
+
             </MenuPanel>
             <MenuPanel title="Help" current={selectedMenu} id='Help'>
                 <div className='help-icon-wrapper'>

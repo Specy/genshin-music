@@ -24,6 +24,7 @@ interface ComposerCanvasProps {
     data: {
         columns: Column[],
         isPlaying: boolean,
+        isRecordingAudio: boolean,
         song: ComposedSong
         selected: number,
         currentLayer: number,
@@ -338,7 +339,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     }}
                     ref={this.notesStageRef}
                 >
-                    {cache && <Container
+                    {(cache && !data.isRecordingAudio)  && <Container
                         x={xPosition}
                         interactive={true}
                         pointerdown={(e) => this.handleClick(e, "downStage")}

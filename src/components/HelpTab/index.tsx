@@ -1,21 +1,48 @@
-import songsImg from 'assets/images/songs.png'
-import { FaCrosshairs, FaDownload } from 'react-icons/fa'
-import { BsCircle } from 'react-icons/bs'
+import { APP_NAME } from 'appConfig'
+import composerImg from 'assets/images/help-composer.png'
+import playerImg from 'assets/images/help-player.png'
+import { HelpTooltip } from 'components/HelpTooltip'
 import isMobile from 'is-mobile'
 import './HelpComponent.css'
+
 export function HelpTab() {
     return <>
+        <span>
+            If you are on PC, hover over the buttons to see a tooltip, if you are on mobile, long press the buttons.
+            
+            When clicking the
+            <HelpTooltip 
+                parentStyle={{
+                    display: 'inline-flex'
+                }}
+                buttonStyle={{
+                    width: '1.2rem',
+                    height: '1.2rem',
+                    margin: '0 0.4rem'
+                }}
+            >
+                Example help
+            </HelpTooltip> 
+            it will show you more info.
+        </span>
+        {APP_NAME === "Sky" && <span>
+            The images are from the genshin version of the app, but the functionality is the same    
+        </span>}
         <div className='help-title'>
             Main page
         </div>
         <div>
-            <img src={`./manifestData/main.webp`} className='help-img' alt='tutorial for the main page' loading='lazy'/>
+            <img src={playerImg} className='help-img' alt='tutorial for the main page' loading='lazy'/>
             <ol>
                 <li>Record the keyboard as an audio file</li>
-                <li>Current note position, you can change it to reload</li>
+                <li>The selection where you want the song to start/end</li>
                 <li>Playback speed</li>
-                <li>Approaching circles score</li>
-                <li>Approaching circle, click when it's close to the note</li>
+                <li>Restart the song from the selected starting point</li>
+                <li>Practice tool note, you should press this note</li>
+                <li>Practice tool note, this will need to be clicked after all the red ones</li>
+                <li>Public Song library</li>
+                <li>Your songs</li>
+                <li>Open the Page selection menu</li>
             </ol>
         </div>
         {
@@ -52,37 +79,10 @@ export function HelpTab() {
         }
 
         <div className='help-title'>
-            Songs menu
-        </div>
-        <div>
-            <img src={songsImg} className='help-img' alt='tutorial for songs page' loading='lazy'/>
-            <ol>
-                <li>Open composer to create a song</li>
-                <li>Import song (as json)</li>
-                <li>Play song (click the name)</li>
-                <li>Practice the song</li>
-                <li>Play with the approaching circles mode</li>
-                <li>Download the song (as json)</li>
-            </ol>
-            <div className="column">
-                <div>
-                    <FaCrosshairs /> = practice the song
-                </div>
-                <div>
-                    <BsCircle /> = Approaching circles mode
-                </div>
-                <div>
-                    <FaDownload /> = download the song
-                </div>
-
-            </div>
-        </div>
-
-        <div className='help-title'>
             Composer
         </div>
         <div>
-            <img src={`./manifestData/composer.webp`} className='help-img' alt="tutorial for composer" loading='lazy'/>
+            <img src={composerImg} className='help-img' alt="tutorial for composer" loading='lazy'/>
             <ol>
                 <li>Go to the next / previous breakpoint</li>
                 <li>Timeline of the breakpoints</li>
@@ -90,7 +90,7 @@ export function HelpTab() {
                 <li>Add 16 columns to the end</li>
                 <li>Remove the current selected column</li>
                 <li>Add column after the current one</li>
-                <li>Change layer (instrument)</li>
+                <li>Layer (instrument) selection</li>
                 <li>Change column's duration</li>
             </ol>
         </div>

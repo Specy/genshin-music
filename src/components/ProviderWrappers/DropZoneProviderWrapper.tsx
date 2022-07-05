@@ -16,7 +16,8 @@ export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
                     const success = result.successful.map(e => e.name)
                     const firstSong = result.successful[0]
                     //@ts-ignore
-                    const type = firstSong.type ?? firstSong.data.isComposedVersion ? "composed" : "recorded"
+                    const type = firstSong.type ?? (firstSong.data?.isComposedVersion ? "composed" : "recorded")
+
                     if(success.length === 1){
                         logger.success(`Song added to the ${type} tab!`, 4000)
                     }

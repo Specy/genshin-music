@@ -127,6 +127,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.unblock()
         KeyboardProvider.unregisterById('composer')
         MIDIProvider.removeListener(this.handleMidi)
+        if(AudioProvider.isRecording) AudioProvider.stopRecording()
         Instrument.clearPool()
         if (window.location.hostname !== "localhost") {
             window.removeEventListener("beforeunload", this.handleUnload)
@@ -262,7 +263,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (confirm) {
             song.removeInstrument(index)
             this.syncInstruments(song)
-            this.setState({ song, layer: Math.max(0, index) })
+            this.setState({ song, layer: Math.max(0, index - 1) })
         }
     }
     editInstrument = (instrument: InstrumentData, index: number) => {
@@ -330,6 +331,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         }
         AudioProvider.startRecording()
         this.setState({ isRecordingAudio: true })
+        await delay(300)
         await this.togglePlay(true) //wait till song finishes
         if (!this.mounted) return
         this.setState({ isRecordingAudio: false })
@@ -607,6 +609,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const history = undoHistory.pop()
         if (!history) return
         song.columns = history
+        song.selected = song.columns.length > song.selected ? song.selected : song.columns.length - 1
         this.setState({ undoHistory: [...undoHistory], song })
     }
     copyColumns = (layer: number | 'all') => {
@@ -720,6 +723,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                             functions={this}
                             data={{
                                 inPreview: this.props.inPreview,
+                                isRecordingAudio,
                                 currentLayer: layer,
                                 isPlaying,
                                 song,
@@ -761,9 +765,10 @@ class Composer extends Component<ComposerProps, ComposerState>{
                     functions={this}
                     data={{
                         isPlaying,
+                        isRecordingAudio, 
                         currentLayer: layer,
                         instruments: song.instruments,
-                        keyboard: layers[0],
+                        keyboard: layers[layer],
                         currentColumn: song.selectedColumn,
                         pitch: song.instruments[layer]?.pitch || settings.pitch.value as Pitch,
                         noteNameType: settings.noteNameType.value as NoteNameType,

@@ -142,6 +142,7 @@
     height: 2.2rem;
     border: none;
     border-radius: 0.3rem;
+    cursor: text;
 }
 .library-search-input::placeholder{
     color: var(--menu-background-text);
@@ -175,7 +176,6 @@
     display: grid;
     flex-direction: column;
     gap: 0.3rem;
-    min-height: 4rem;
 }
 .library-search-songs-wrapper{
     border-radius: 0.3rem;
@@ -288,7 +288,7 @@
     height: 100%;
     align-items: center;
     font-size: 1rem;
-    padding-right: 0.45rem;
+    margin-right: 0.45rem;
 }
 .song-name-input{
 	background-color: transparent;

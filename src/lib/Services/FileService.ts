@@ -28,7 +28,7 @@ class FileService {
             try {
                 const parsed = parseSong(song)
                 await songsStore.addSong(parsed)
-                successful.push(song)
+                successful.push(parsed)
             } catch (e) {
                 errors.push(song)
                 console.error(e)

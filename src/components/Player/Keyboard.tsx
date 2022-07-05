@@ -39,7 +39,7 @@ interface KeyboardState {
     approachingNotes: ApproachingNote[][]
     outgoingAnimation: {
         key: number
-    }[][]
+    }[]
     keyboard: NoteData[]
     approachingScore: ApproachingScore
     speedChanger: typeof SPEED_CHANGERS[number]
@@ -61,7 +61,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             playTimestamp: new Date().getTime(),
             songToPractice: [],
             approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
-            outgoingAnimation: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
+            outgoingAnimation: new Array(APP_NAME === 'Sky' ? 15 : 21).fill({ key: 0 }),
             keyboard: this.props.data.keyboard.layout.map(note => {
                 const cloned = note.clone()
                 cloned.data.status = ''
@@ -277,6 +277,11 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             return note
         })
     }
+    resetOutgoingAnimation = () => {
+        this.setState({
+            outgoingAnimation: this.state.outgoingAnimation.map(_ => ({key: 0}))
+        })
+    }
     practiceSong = (song: RecordedSong, start = 0, end?: number) => {
         //TODO move this to the song class
         end = end ? end : song.notes.length
@@ -415,7 +420,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         }
         if (hasAnimation && playerStore.eventType !== 'approaching') {
             const key = Math.floor(Math.random() * 10000) + new Date().getTime()
-            outgoingAnimation[note.index] = [{ key }]
+            outgoingAnimation[note.index] = { key }
         }
         this.setState({
             keyboard,
