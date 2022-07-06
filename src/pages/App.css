@@ -72,7 +72,9 @@ input {
 	accent-color: var(--accent);
 	cursor: pointer;
 }
-
+input[type="text"],input[type="number"] {
+	cursor: text;
+}
 *:not(input) {
 	-webkit-user-select: none;
 	-khtml-user-select: none;
@@ -503,12 +505,13 @@ a {
 	.has-tooltip:hover:not(:focus){
 		z-index: 2;
 	}
-	.has-tooltip:hover:not(:focus) .tooltip {
+	.has-tooltip:hover:not(:focus) .tooltip{
 		display: block;
 		animation: fadeIn 0.2s;
 		animation-delay: 0.5s;
 		animation-fill-mode: forwards;
 	}
+
 }
 @media (hover:none) {
 	.has-tooltip:active{
@@ -534,7 +537,7 @@ a {
 	width: fit-content;
 	z-index: 20;
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.15);
-	font-size: 0.7rem;
+	font-size: 0.8rem;
 	pointer-events: none;
 	z-index: 2;
 

@@ -1,9 +1,10 @@
 import type{ INSTRUMENTS } from 'appConfig'
 import type { ComposerSettings, MainPageSettings } from 'lib/BaseSettings'
 interface BaseSettingsProp {
-    name: string,
-    songSetting: boolean,
-    category: string,
+    name: string
+    songSetting: boolean
+    category: string
+    tooltip?: string
 }
 
 export type SettingsPropriety = SettingsInstrument | SettingsSelect | SettingsSlider | SettingsNumber | SettingsCheckbox | SettingsText

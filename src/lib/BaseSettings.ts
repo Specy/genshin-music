@@ -21,11 +21,12 @@ export type ComposerSettingsType = {
 }
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 39,
+        settingVersion: APP_NAME + 43,
     },
     data: {
         bpm: {
             name: "Bpm",
+            tooltip:"Beats per minute, the speed of the song",
             type: "number",
             songSetting: true,
             increment: 5,
@@ -35,6 +36,7 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         pitch: {
             name: "Base pitch",
+            tooltip: "The main pitch of the song",
             type: "select",
             songSetting: true,
             value: "C",
@@ -67,6 +69,7 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         noteNameType: {
             name: "Note name type",
+            tooltip: "The type of text which will be written on the note",
             type: "select",
             songSetting: false,
             category: "General Settings",
@@ -108,6 +111,7 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         caveMode: {
             name: "Reverb (cave mode)",
+            tooltip: "Makes it sound like you are in a cave",
             category: "General Settings",
             type: "checkbox",
             songSetting: false,
@@ -115,6 +119,7 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         autosave: {
             name: "Autosave changes",
+            tooltip: "Autosaves the changes to a song every 5 edits, and when you change page/change song",
             type: "checkbox",
             category: "General Settings",
             songSetting: false,
@@ -122,6 +127,7 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         syncTabs: {
             name: "Autoplay in all tabs (pc only)",
+            tooltip: "Advanced feature, it syncs other browser tabs to all play at the same time",
             type: "checkbox",
             category: "General Settings",
             songSetting: false,
@@ -153,11 +159,12 @@ export type MainPageSettingsType = {
 }
 export const MainPageSettings: MainPageSettingsType = {
     other: {
-        settingVersion: APP_NAME + 42
+        settingVersion: APP_NAME + 43
     },
     data: {
         instrument: {
             name: "Instrument",
+            tooltip: "The main instrument of the player, will also be saved in the song you record",
             type: "instrument",
             songSetting: false,
             value: INSTRUMENTS[0],
@@ -167,6 +174,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         pitch: {
             name: "Pitch",
+            tooltip: "The pitch of the player, will also be saved in the song you record",
             type: "select",
             songSetting: true,
             value: "C",
@@ -188,6 +196,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         bpm: {
             name: "Bpm",
+            tooltip: "Beats per minute, used by the metronome and will be used when converting the song with the compsoer",
             type: "number",
             songSetting: true,
             increment: 5,
@@ -197,6 +206,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         syncSongData: {
             name: "Auto use the song's instruments and pitch",
+            tooltip: "Whenever you load a song, the instruments and pitch of that song will be loaded too",
             type: "checkbox",
             songSetting: false,
             value: true,
@@ -204,6 +214,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         metronomeBeats: {
             name: "Metronome beats",
+            tooltip: "After how many times a stronger beat is played",
             type: "number",
             songSetting: false,
             increment: 1,
@@ -213,6 +224,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         metronomeVolume: {
             name: "Metronome volume",
+            tooltip: "The volume of the metronome",
             type: "slider",
             songSetting: false,
             value: 50,
@@ -221,6 +233,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         caveMode: {
             name: "Reverb (cave mode)",
+            tooltip: "Makes it sound like you are in a cave",
             type: "checkbox",
             songSetting: false,
             value: false,
@@ -228,6 +241,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         noteNameType: {
             name: "Note name type",
+            tooltip: "The type of text which will be written on the note",
             type: "select",
             songSetting: false,
             category: "General Settings",
@@ -254,6 +268,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         keyboardSize: {
             name: "Keyboard size",
+            tooltip: "Scales the keyboard size",
             type: "slider",
             songSetting: false,
             value: 100,
@@ -262,6 +277,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         keyboardYPosition: {
             name: "Vertical position",
+            tooltip: "The vertical position of the keyboard",
             type: "slider",
             songSetting: false,
             value: -20,
@@ -270,6 +286,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         approachSpeed: {
             name: "Approach Rate (AR)",
+            tooltip: "The time between when the notes appear and when they reach the end (in ms)",
             type: "number",
             increment: 50,
             songSetting: false,
@@ -279,6 +296,7 @@ export const MainPageSettings: MainPageSettingsType = {
         },
         noteAnimation: {
             name: "Note animation",
+            tooltip: "Toggle the animation of the notes",
             type: "checkbox",
             category: "General Settings",
             songSetting: false,

@@ -9,7 +9,7 @@ export const updates: Update[] = [
     {
         version: '2.8',
         title: 'Infinite Composer layers',
-        date: '2022- 1/07',
+        date: '2022 - 7/07',
         changes: [
             "Increased instrument limit in the composer to 30",
             "Redesigned the tools in the composer",
@@ -18,13 +18,14 @@ export const updates: Update[] = [
             "Added tool to move notes up/down",
             "Added metronome in player",
             "Added multiple instruments in player",
+            "Added more tooltips, also for mobile",
             "Bug fixes and improvements"
         ]
     },
     {
         version: '2.7',
         title: 'Song rename, MIDI export, folders',
-        date: '2022- 15/06',
+        date: '2022 - 15/06',
         changes: [
             "Added option to rename songs",
             "Song names are not unique anymore",
@@ -37,7 +38,7 @@ export const updates: Update[] = [
     {
         version: '2.6',
         title: 'Light guitar & Tooltips',
-        date: '2022- 30/05',
+        date: '2022 - 30/05',
         changes: [
             "Added tooltips",
             "Added help buttons",
@@ -51,7 +52,7 @@ export const updates: Update[] = [
     {
         version: '2.5',
         title: 'Composer improvements',
-        date: '2022- 27/03',
+        date: '2022 - 27/03',
         changes: [
             'Improved the rendering of the composer to be sherper and easier to see on mobile',
             'Improved performance in the composer',
