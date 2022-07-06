@@ -8,7 +8,7 @@ type Update = {
 export const updates: Update[] = [
     {
         version: '2.8',
-        title: 'Infinite Composer layers',
+        title: 'More Composer layers and UI rework',
         date: '2022 - 7/07',
         changes: [
             "Increased instrument limit in the composer to 30",

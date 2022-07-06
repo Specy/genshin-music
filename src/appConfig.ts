@@ -1,18 +1,20 @@
 const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '2.7' as const
+const APP_VERSION = '2.8' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ? `Added option to rename songs
-        Song names are not unique anymore
-        Added folders and new song menu UI
-        Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
-        Fixed some bugs
-    `.trim()
-    : `Added option to rename songs
-        Song names are not unique anymore
-        Added folders and new song menu UI
-        Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
-        Fixed some bugs
+    ?  `Increased instrument limit in the composer to 30
+        Redesigned the tools in the composer
+        Added paste/insert to certain layer
+        Added metronome in player
+        Added multiple instruments in player
+        And more...
+    `.trim(): 
+       `Increased instrument limit in the composer to 30
+        Redesigned the tools in the composer
+        Added paste/insert to certain layer
+        Added metronome in player
+        Added multiple instruments in player
+        And more...
     `.trim()
 
 
