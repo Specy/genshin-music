@@ -7,7 +7,7 @@ import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
 import { useTheme } from 'lib/Hooks/useTheme'
 import './Home.css'
-import {MenuItem} from 'components/MenuItem'
+import { MenuItem } from 'components/MenuItem'
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 
 interface HomeProps {
@@ -34,7 +34,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             if (HomeStore.state.data.visible) {
                 HomeStore.close()
             }
-        }, {id: "home"})
+        }, { id: "home" })
         setBreakpoint(window.innerWidth > 900)
         return () => {
             dispose()
@@ -81,12 +81,25 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     <div className="red-text">WARNING</div>:
                     Clearing your browser cache / storage might delete your songs, make sure you make backups
                 </div>
+
                 {data.hasPersistentStorage ?
                     <div>
                         <div className="red-text">WARNING</div>: {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}
                     </div>
                     : null
                 }
+                <div>
+                    <span style={{ marginRight: '0.2rem' }}>
+                        We use cookies for analytics, by continuing to use this app, you agree to our use of cookies, learn more
+                    </span>
+                    <Link 
+                        to='Privacy' 
+                        style={{ color: 'var(--primary-text)', textDecoration: "underline" }}
+                        onClick={HomeStore.close}
+                    >
+                        here
+                    </Link>
+                </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button className="home-accept-storage"

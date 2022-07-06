@@ -159,24 +159,8 @@
 	background-color: var(--primary-darken-10);
 	padding: 0.5rem;
 	border-radius: 0.5rem;
-	animation: welcome-flash infinite 8s;
 	outline: 2px dashed var(--secondary);
 	outline-offset: 2px;
-}
-
-@keyframes welcome-flash {
-	0% {
-		background-color: rgb(47, 52, 63);
-	}
-	30% {
-		background-color: rgb(55, 61, 71);
-	}
-	70% {
-		background-color: rgb(55, 61, 71);
-	}
-	100% {
-		background-color: rgb(47, 52, 63);
-	}
 }
 .home-accept-storage {
 	border: none;
