@@ -1,5 +1,5 @@
 import { useTheme } from "lib/Hooks/useTheme"
-import { blurEvent } from "lib/Tools"
+import { blurEvent } from "lib/Utilities"
 
 interface MenuItemProps<T> {
     className?: string,

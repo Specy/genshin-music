@@ -26,6 +26,7 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,
     const clickCallback = useCallback(() => {
         onClick(index)
     }, [index, onClick])
+
     return <Container
         pointertap={clickCallback}
         interactive={true}

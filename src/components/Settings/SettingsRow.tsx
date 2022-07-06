@@ -7,7 +7,7 @@ import { Select } from './Select'
 import { useTheme } from 'lib/Hooks/useTheme'
 import './Settings.css'
 import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety'
-import { hasTooltip, Tooltip } from 'components/Tooltip'
+import { hasTooltip, Tooltip } from 'components/Utility/Tooltip'
 
 interface SettingsRowProps {
     data: SettingsPropriety,

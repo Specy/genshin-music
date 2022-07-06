@@ -1,5 +1,5 @@
 import { SPEED_CHANGERS } from "appConfig"
-import Memoized from "components/Memoized";
+import Memoized from "components/Utility/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
 import { memo, useEffect, useState, useRef, ChangeEvent } from "react";
 import { playerStore } from "stores/PlayerStore";
@@ -7,10 +7,10 @@ import { SliderStore } from "stores/SongSliderStore";
 import { observe } from "mobx";
 import { BsTriangleFill } from "react-icons/bs";
 import './Track.css'
-import { AppButton } from "components/AppButton";
+import { AppButton } from "components/Inputs/AppButton";
 import { ApproachingScore } from "types/GeneralTypes";
-import { clamp } from "lib/Tools";
-import { Tooltip } from 'components/Tooltip'
+import { clamp } from "lib/Utilities";
+import { Tooltip } from 'components/Utility/Tooltip'
 interface TopPageProps {
     restart: () => void
     handleSpeedChanger: (event: ChangeEvent<HTMLSelectElement>) => void

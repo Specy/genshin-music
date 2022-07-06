@@ -1,7 +1,7 @@
 import { APP_NAME } from 'appConfig'
 import composerImg from 'assets/images/help-composer.png'
 import playerImg from 'assets/images/help-player.png'
-import { HelpTooltip } from 'components/HelpTooltip'
+import { HelpTooltip } from 'components/Utility/HelpTooltip'
 import isMobile from 'is-mobile'
 import './HelpComponent.css'
 

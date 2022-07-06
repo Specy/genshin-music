@@ -12,14 +12,14 @@ import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
 import { ThemeProviderWrapper } from 'components/ProviderWrappers/ThemeProviderWrapper';
-import { AppBackground } from "components/AppBackground";
+import { AppBackground } from "components/Layout/AppBackground";
 import { MIDIProviderWrapper } from "components/ProviderWrappers/MIDIProviderWrapper";
 import { AudioProviderWrapper } from "components/ProviderWrappers/AudioProviderWrapper";
 import { KeyboardProviderWrapper } from "components/ProviderWrappers/KeyboardProviderWrapper";
 import { useEffect } from "react";
 import { DropZoneProviderWrapper } from "components/ProviderWrappers/DropZoneProviderWrapper";
 import Privacy from "pages/Privacy";
-import ErrorBoundaryRedirect from "components/ErrorBoundaryRedirect";
+import ErrorBoundaryRedirect from "components/Utility/ErrorBoundaryRedirect";
 import {logger} from "stores/LoggerStore"
 export function Router() {
 	useEffect(() => {

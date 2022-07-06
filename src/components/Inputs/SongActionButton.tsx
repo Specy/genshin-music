@@ -1,4 +1,4 @@
-import { hasTooltip, Tooltip } from "./Tooltip"
+import { hasTooltip, Tooltip } from "../Utility/Tooltip"
 
 
 interface SongActionButtonProps {

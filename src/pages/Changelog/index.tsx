@@ -1,11 +1,11 @@
-import { SimpleMenu } from 'components/SimpleMenu'
-import { MenuItem } from 'components/MenuItem'
+import { SimpleMenu } from 'components/Layout/SimpleMenu'
+import { MenuItem } from 'components/Miscellaneous/MenuItem'
 import { FaGithub } from 'react-icons/fa'
 import { ChangelogRow } from './ChangelogRow'
 import './Changelog.css'
 import { updates } from './updates'
 import { APP_VERSION } from 'appConfig'
-import { Title } from 'components/Title'
+import { Title } from 'components/Miscellaneous/Title'
 
 const cacheVersion = process.env.REACT_APP_SW_VERSION
 export default function Changelogpage() {

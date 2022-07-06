@@ -1,6 +1,6 @@
 import { OldFormatComposed, UnknownSerializedComposedSong } from "lib/Songs/ComposedSong"
 import { OldFormatRecorded, UnknownSerializedRecordedSong } from "lib/Songs/RecordedSong"
-import { FileDownloader, parseSong } from "lib/Tools"
+import { FileDownloader, parseSong } from "lib/Utilities"
 import { songsStore } from "stores/SongsStore"
 //@ts-ignore
 import toWav from 'audiobuffer-to-wav'

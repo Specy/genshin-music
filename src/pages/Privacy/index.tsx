@@ -1,5 +1,5 @@
-import { SimpleMenu } from 'components/SimpleMenu'
-import { Title } from 'components/Title'
+import { SimpleMenu } from 'components/Layout/SimpleMenu'
+import { Title } from 'components/Miscellaneous/Title'
 
 export default function Privacy() {
     return <div className='default-page'>

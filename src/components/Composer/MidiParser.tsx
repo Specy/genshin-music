@@ -1,22 +1,22 @@
 import { ChangeEvent, Component, useEffect, useState } from 'react'
-import { FileElement, FilePicker } from 'components/FilePicker'
+import { FileElement, FilePicker } from 'components/Inputs/FilePicker'
 import { Midi, Track } from '@tonejs/midi'
-import { groupNotesByIndex, mergeLayers } from 'lib/Tools'
-import { ColumnNote, Column, MidiNote } from 'lib/Songs/SongClasses'
+import { groupNotesByIndex, mergeLayers } from 'lib/Utilities'
+import { ColumnNote, Column, MidiNote, InstrumentData } from 'lib/Songs/SongClasses'
 import { ComposedSong } from 'lib/Songs/ComposedSong'
-import { LAYERS_INDEXES, PITCHES, Pitch } from 'appConfig'
-import { FaArrowDown, FaArrowUp, FaInfoCircle } from 'react-icons/fa'
+import { PITCHES, Pitch } from 'appConfig'
+import { FaArrowDown, FaArrowUp, FaEllipsisH, FaInfoCircle } from 'react-icons/fa'
 import useDebounce from 'lib/Hooks/useDebounce'
 import { logger } from 'stores/LoggerStore'
 import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore'
 import { observe } from 'mobx'
-import { InstrumentName } from 'types/GeneralTypes'
 import Switch from 'components/Switch'
 import { NoteLayer } from 'lib/Layer'
-import { HelpTooltip } from 'components/HelpTooltip'
+import { HelpTooltip } from 'components/Utility/HelpTooltip'
+import { Select } from 'components/Inputs/Select'
 interface MidiImportProps {
     data: {
-        instruments: InstrumentName[]
+        instruments: InstrumentData[]
         selectedColumn: number
     }
     functions: {
@@ -184,7 +184,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         song.columns = columns
         song.bpm = bpm
         song.instruments = []
-        this.props.data.instruments.forEach(ins => song.addInstrument(ins))
+        song.instruments = this.props.data.instruments.map(ins => ins.clone())
         song.pitch = pitch
         const lastColumn = this.props.data.selectedColumn
         song.selected = lastColumn < song.columns.length ? lastColumn : 0
@@ -230,7 +230,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
     render() {
         const { handleFile, editTrack, state, changeBpm, changeOffset, changePitch } = this
         const { tracks, fileName, bpm, offset, pitch, accidentals, outOfRange, totalNotes, includeAccidentals, theme, ignoreEmptytracks } = state
-        const { functions } = this.props
+        const { functions, data } = this.props
         const { changeMidiVisibility } = functions
         const midiInputsStyle = {
             backgroundColor: theme.layer('primary', 0.2).toString(),
@@ -243,10 +243,13 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             >
                 <FilePicker onChange={handleFile} as='buffer'>
                     <button className="midi-btn" style={midiInputsStyle}>
-                        Click to load midi file
+                        Open midi file
                     </button>
                 </FilePicker>
-                <div style={{ margin: '0 0.5rem', maxWidth: '8rem', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                <div 
+                    style={{ margin: '0 0.5rem', maxWidth: '20rem' }}
+                    className='text-ellipsis'
+                >
                     {fileName}
                 </div>
                 <button
@@ -328,6 +331,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                             ? null
                             : <TrackInfo
                                 data={track}
+                                instruments={data.instruments}
                                 key={i}
                                 index={i}
                                 onChange={editTrack}
@@ -364,11 +368,12 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
 interface TrackProps {
     data: CustomTrack
     index: number
+    instruments: InstrumentData[]
     onChange: (index: number, data: Partial<CustomTrack>) => void
     theme: ThemeStoreClass
 }
 
-function TrackInfo({ data, index, onChange, theme }: TrackProps) {
+function TrackInfo({ data, index, onChange, theme, instruments }: TrackProps) {
     const [dataShown, setDataShown] = useState(false)
     const background = {backgroundColor: theme.layer('menu_background', 0.15).toString()}
     const [offset, setOffset] = useState(`${data.localOffset ?? ""}`)
@@ -394,31 +399,22 @@ function TrackInfo({ data, index, onChange, theme }: TrackProps) {
 
             </div>
             <div className='midi-track-center'>
-                <input 
-                    type='text'
-                    value={offset}
-                    placeholder='Track offset'
-                    className='midi-input midi-track-offset'
-                    style={{width: '5rem', marginRight: "0.1rem"}}
-                    onChange={(e) => setOffset(e.target.value)}
-                />
-                <select
+                <Select
                     onChange={(event) => onChange(index, { layer: Number(event.target.value) })}
                     value={data.layer}
                     className='midi-select'
                     style={{
                         marginLeft: '0.2rem',
-                        backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
                     }}
                 >
-                    {LAYERS_INDEXES.map(layer =>
-                        <option value={layer} key={layer}>
-                            Layer {layer + 1}
+                    {instruments.map((ins, i) =>
+                        <option value={i} key={i}>
+                            {ins.name} - {`Layer ${ i + 1}`}
                         </option>
                     )}
-                </select>
+                </Select>
 
-                <FaInfoCircle
+                <FaEllipsisH
                     size={22}
                     color={dataShown ? "var(--accent)" : "var(--primary)"}
                     onClick={() => setDataShown(!dataShown)}
@@ -431,7 +427,19 @@ function TrackInfo({ data, index, onChange, theme }: TrackProps) {
             style={{
                 display: dataShown ? "flex" : "none"
             }}
-        >
+        >   
+            <div className='midi-track-data-row'>
+                <div>
+                    Track offset:
+                </div>
+                <input 
+                    type='text'
+                    value={offset}
+                    placeholder='No offset'
+                    className='midi-input'
+                    onChange={(e) => setOffset(e.target.value)}
+                />
+            </div>
             <div className='midi-track-data-row'>
                 <div>Instrument:</div>
                 <div>{data.instrument.name}</div>

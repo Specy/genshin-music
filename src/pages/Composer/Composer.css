@@ -247,7 +247,7 @@ select {
     opacity: 0;
     border: solid 2px var(--secondary);
     transition: all 0.4s;
-    transform: scale(0.6);
+    transform: scale(0.7);
     padding: 0.6rem;
     color: white;
 }
@@ -458,7 +458,7 @@ canvas {
     top: 3.4rem;
     margin-left: 6.6rem;
     z-index: 10;
-    animation: fadeIn 0.2s;
+    animation: fadeAndScaleIn 0.2s;
 }
 .instrument-settings-button {
     flex: 1;
@@ -484,7 +484,7 @@ canvas {
     flex-direction: column;
     align-items: flex-start;
     overflow: auto;
-    animation: fadeIn 0.2s;
+    animation: fadeAndScaleIn 0.2s;
 }
 
 
@@ -505,15 +505,6 @@ canvas {
     margin-bottom: 0.3rem;
 }
 
-.floating-midi::-webkit-scrollbar-thumb {
-    background: var(--icon-color);
-    border-radius: 2px;
-}
-
-/* Handle on hover */
-.floating-midi::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
 
 .midi-btn,
 .midi-btn-small,
@@ -626,7 +617,7 @@ canvas {
 }
 
 .midi-select {
-    width: 5.6rem;
+    width: 10rem;
     text-align: left;
     padding: 0.5rem;
     padding: 0.2rem;

@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react"
 import { BsChevronRight } from "react-icons/bs"
 import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
 import { folderStore } from "stores/FoldersStore"
-import { asyncConfirm } from "./AsyncPrompts"
-import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "./FloatingDropdown"
+import { asyncConfirm } from "../Utility/AsyncPrompts"
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "../Utility/FloatingDropdown"
 
 
 

@@ -1,20 +1,20 @@
 import './MidiSetup.css'
 import { APP_NAME } from "appConfig"
 import { MIDISettings } from "lib/BaseSettings"
-import BaseNote from "components/BaseNote"
+import BaseNote from "components/Miscellaneous/BaseNote"
 import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
 import { Component } from 'react'
 import { INSTRUMENTS } from "appConfig"
 import Instrument from "lib/Instrument"
 import Shortcut from "./Shortcut"
 import {logger} from "stores/LoggerStore";
-import type { MIDINote } from "lib/Tools"
+import type { MIDINote } from "lib/Utilities"
 import { InstrumentName, InstrumentNotesLayout } from "types/GeneralTypes"
 import { MIDIEvent, MIDIProvider } from "lib/Providers/MIDIProvider"
 import { AudioProvider } from "lib/Providers/AudioProvider"
-import { DefaultPage } from "components/DefaultPage"
+import { DefaultPage } from "components/Layout/DefaultPage"
 import { NoteImage } from "types/Keyboard"
-import { Title } from 'components/Title'
+import { Title } from 'components/Miscellaneous/Title'
 
 interface MidiSetupState {
     instrument: Instrument

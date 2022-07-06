@@ -1,19 +1,19 @@
 import { FaTrash, FaDownload } from 'react-icons/fa';
-import { parseSong } from "lib/Tools"
-import { asyncConfirm } from "components/AsyncPrompts"
+import { parseSong } from "lib/Utilities"
+import { asyncConfirm } from "components/Utility/AsyncPrompts"
 import { APP_NAME } from "appConfig"
-import { SimpleMenu } from 'components/SimpleMenu'
+import { SimpleMenu } from 'components/Layout/SimpleMenu'
 import { logger } from 'stores/LoggerStore';
-import { SongMenu } from 'components/SongMenu';
+import { SongMenu } from 'components/Layout/SongMenu';
 
 
 import './ErrorPage.css'
-import { AppButton } from 'components/AppButton';
+import { AppButton } from 'components/Inputs/AppButton';
 import { SerializedSong } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 import { fileService } from 'lib/Services/FileService';
-import { Title } from 'components/Title';
+import { Title } from 'components/Miscellaneous/Title';
 
 export function ErrorPage() {
     const [songs] = useSongs()

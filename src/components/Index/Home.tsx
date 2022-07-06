@@ -7,7 +7,7 @@ import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
 import { useTheme } from 'lib/Hooks/useTheme'
 import './Home.css'
-import { MenuItem } from 'components/MenuItem'
+import { MenuItem } from 'components/Miscellaneous/MenuItem'
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 
 interface HomeProps {

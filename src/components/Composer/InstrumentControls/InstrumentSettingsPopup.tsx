@@ -1,6 +1,6 @@
 import { Pitch, PITCHES } from "appConfig"
-import { AppButton } from "components/AppButton"
-import { HelpTooltip } from "components/HelpTooltip"
+import { AppButton } from "components/Inputs/AppButton"
+import { HelpTooltip } from "components/Utility/HelpTooltip"
 import useClickOutside from "lib/Hooks/useClickOutside"
 import { InstrumentNoteIcon } from "lib/Songs/ComposedSong"
 import { InstrumentData } from "lib/Songs/SongClasses"

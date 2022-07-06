@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { defaultThemes, ThemeKeys, ThemeProvider } from "stores/ThemeStore";
 import { observe } from "mobx";
-import { SimpleMenu } from "components/SimpleMenu";
-import { AppButton } from "components/AppButton";
-import { FileElement, FilePicker } from "components/FilePicker"
+import { SimpleMenu } from "components/Layout/SimpleMenu";
+import { AppButton } from "components/Inputs/AppButton";
+import { FileElement, FilePicker } from "components/Inputs/FilePicker"
 import Player from "pages/Player";
 import Composer from "pages/Composer";
-import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
+import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
 
 import cloneDeep from 'lodash.clonedeep'
@@ -18,9 +18,9 @@ import { logger } from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/Hooks/useTheme";
 import './Theme.css'
-import { AppBackground } from "components/AppBackground";
+import { AppBackground } from "components/Layout/AppBackground";
 import { themeService } from "lib/Services/ThemeService";
-import { Title } from "components/Title";
+import { Title } from "components/Miscellaneous/Title";
 
 
 function ThemePage() {

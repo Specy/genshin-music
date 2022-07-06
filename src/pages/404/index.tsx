@@ -1,5 +1,5 @@
-import { SimpleMenu } from "components/SimpleMenu";
-import { Title } from "components/Title";
+import { SimpleMenu } from "components/Layout/SimpleMenu";
+import { Title } from "components/Miscellaneous/Title";
 import { Link } from 'react-router-dom'
 export default function Error404() {
     return <div className="default-page" style={{ justifyContent: 'center', alignItems: 'center' }}>

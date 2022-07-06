@@ -1,5 +1,4 @@
 import type { INSTRUMENTS } from "appConfig";
-import type Instrument from "lib/Instrument";
 
 export type InstrumentName = typeof INSTRUMENTS[number]
 export type ApproachingScore = {
@@ -16,7 +15,6 @@ export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' 
 export type NoteStatus = 'clicked' | 'toClick' | 'toClickNext' | 'toClickAndNext' | 'approach-wrong' | 'approach-correct' | ''
 
 
-export type ComposerInstruments = [Instrument, Instrument, Instrument, Instrument]
 export type SearchedSongType = {
     name: string
     file: string

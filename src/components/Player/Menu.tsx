@@ -2,20 +2,20 @@ import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
-import { parseSong } from "lib/Tools"
+import { parseSong } from "lib/Utilities"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { playerStore } from 'stores/PlayerStore'
 import { HelpTab } from 'components/HelpTab'
-import { MenuItem } from 'components/MenuItem'
-import MenuPanel from 'components/MenuPanel'
-import DonateButton from 'components/DonateButton'
-import LibrarySearchedSong from 'components/LibrarySearchedSong'
-import { SongActionButton } from 'components/SongActionButton'
+import { MenuItem } from 'components/Miscellaneous/MenuItem'
+import MenuPanel from 'components/Layout/MenuPanel'
+import DonateButton from 'components/Miscellaneous/DonateButton'
+import LibrarySearchedSong from 'components/Miscellaneous/LibrarySearchedSong'
+import { SongActionButton } from 'components/Inputs/SongActionButton'
 import Analytics from 'lib/Analytics';
 import HomeStore from 'stores/HomeStore';
 import { logger } from 'stores/LoggerStore';
-import { AppButton } from 'components/AppButton';
-import { SongMenu } from 'components/SongMenu';
+import { AppButton } from 'components/Inputs/AppButton';
+import { SongMenu } from 'components/Layout/SongMenu';
 import { Link } from 'react-router-dom'
 import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
 import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
@@ -23,15 +23,15 @@ import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { MainPageSettingsDataType } from 'lib/BaseSettings';
 import { useTheme } from 'lib/Hooks/useTheme';
 import { SearchedSongType } from 'types/GeneralTypes';
-import { FileElement, FilePicker } from 'components/FilePicker';
+import { FileElement, FilePicker } from 'components/Inputs/FilePicker';
 import "./menu.css"
 import { ThemeStoreClass } from 'stores/ThemeStore';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import { hasTooltip, Tooltip } from "components/Tooltip"
-import { HelpTooltip } from 'components/HelpTooltip';
-import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
+import { hasTooltip, Tooltip } from "components/Utility/Tooltip"
+import { HelpTooltip } from 'components/Utility/HelpTooltip';
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/Utility/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
-import { asyncConfirm, asyncPrompt } from 'components/AsyncPrompts';
+import { asyncConfirm, asyncPrompt } from 'components/Utility/AsyncPrompts';
 import { SettingsPane } from 'components/Settings/SettingsPane';
 import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
@@ -149,8 +149,7 @@ function Menu({ functions, data }: MenuProps) {
     const downloadSong = async (song: ComposedSong | RecordedSong | Midi) => {
         if (song instanceof Midi) {
             const agrees = await asyncConfirm(
-                `If you use MIDI, the song will loose some information, if you want to share the song with others,
-                use the other format (button above). Do you still want to download?`
+                `If you use MIDI, the song will loose some information, if you want to share the song with others, use the other format (button above). Do you still want to download?`
             )
             if (!agrees) return
             return fileService.downloadMidi(song)
@@ -302,8 +301,21 @@ function Menu({ functions, data }: MenuProps) {
                         </AppButton>
                     </Link>
                 </div>
-                <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }}>
+                <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }} className={hasTooltip(true)}>
                     {isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
+                    {isPersistentStorage 
+                        ? <Tooltip position='top' style={{maxWidth: 'unset'}}>
+                            Your data is persisted in the browser, the browser should not automtically clear it. 
+                            Always make sure to download a backup sometimes, especially when you will not use the app 
+                            for a long time
+                        </Tooltip>
+                        : <Tooltip position='top'>
+                            The browser didn't allow to store data persistently, it might happen that you will loose data 
+                            when cache is automatically cleared. To get persistent storage, add the app to the home screen.
+                            If that still doesn't work, make sure you do a backup often
+                        </Tooltip>
+                    }
+                    
                 </div>
                 <DonateButton />
             </MenuPanel>

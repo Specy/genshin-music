@@ -7,9 +7,9 @@ import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle, FaChevronLe
 import isMobile from "is-mobile"
 import { ComposerCache } from "components/Composer/TextureCache"
 import { APP_NAME } from "appConfig"
-import Memoized from 'components/Memoized';
+import Memoized from 'components/Utility/Memoized';
 import { ThemeProvider } from 'stores/ThemeStore';
-import { clamp, nearestEven } from 'lib/Tools';
+import { clamp, nearestEven } from 'lib/Utilities';
 import type { Column } from 'lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';

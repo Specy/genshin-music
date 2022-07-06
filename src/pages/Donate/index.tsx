@@ -2,8 +2,8 @@ import './Donate.css'
 import paypalImg from 'assets/images/paypalme.png'
 import buyMeACoffeeImg from 'assets/images/buymeacoffee.svg'
 import kofiImg from 'assets/images/kofi.png'
-import { SimpleMenu } from 'components/SimpleMenu'
-import { Title } from 'components/Title'
+import { SimpleMenu } from 'components/Layout/SimpleMenu'
+import { Title } from 'components/Miscellaneous/Title'
 export default function Donate() {
     return <div className='default-page'>
         <Title text="Donate" />

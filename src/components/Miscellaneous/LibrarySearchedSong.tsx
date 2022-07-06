@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { parseSong } from "lib/Tools"
+import { parseSong } from "lib/Utilities"
 import { logger } from 'stores/LoggerStore';
 import type { SearchedSongType } from 'types/GeneralTypes';
 import { ComposedSong } from 'lib/Songs/ComposedSong';

@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
 
-import { APP_NAME, MIDI_STATUS, LAYERS_INDEXES, TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "appConfig"
+import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "appConfig"
 
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
@@ -11,11 +11,11 @@ import ComposerTools from "components/Composer/ComposerTools"
 import ComposerKeyboard from "components/Composer/ComposerKeyboard"
 import ComposerCanvas from "components/Composer/Canvas"
 import Menu from "components/Composer/Menu"
-import Memoized from 'components/Memoized';
-import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts"
+import Memoized from 'components/Utility/Memoized';
+import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"
 import Instrument, { NoteData } from "lib/Instrument"
-import { delay, formatMs, calculateSongLength } from "lib/Tools"
+import { delay, formatMs, calculateSongLength } from "lib/Utilities"
 import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
 import { Column, InstrumentData } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
@@ -37,9 +37,9 @@ import { settingsService } from 'lib/Services/SettingsService';
 import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
 import { InstrumentControls } from 'components/Composer/InstrumentControls';
-import { AppButton } from 'components/AppButton';
+import { AppButton } from 'components/Inputs/AppButton';
 import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore';
-import { Title } from 'components/Title';
+import { Title } from 'components/Miscellaneous/Title';
 import { songService } from 'lib/Services/SongService';
 
 interface ComposerState {
@@ -221,7 +221,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 case 'remove_column': this.removeColumns(1, song.selected); break;
                 case 'change_layer': {
                     let nextLayer = layer + 1
-                    if (nextLayer > LAYERS_INDEXES.length) nextLayer = 1
+                    if (nextLayer > this.state.layers.length) nextLayer = 1
                     this.changeLayer(nextLayer)
                     break;
                 }
@@ -678,9 +678,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
             <Title text={`Composer - ${song.name}`} />
             {isMidiVisible &&
                 <MidiParser
-                    functions={this} //passes all functions to the midi parser
+                    functions={this}
                     data={{
-                        instruments: layers.map(layer => layer.name),
+                        instruments: song.instruments,
                         selectedColumn: song.selected,
                     }}
                 />

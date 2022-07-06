@@ -1,25 +1,25 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone } from 'react-icons/fa';
 import { APP_NAME } from 'appConfig'
-import { MenuItem } from 'components/MenuItem'
-import MenuPanel from 'components/MenuPanel'
-import DonateButton from 'components/DonateButton'
-import Memoized from 'components/Memoized';
+import { MenuItem } from 'components/Miscellaneous/MenuItem'
+import MenuPanel from 'components/Layout/MenuPanel'
+import DonateButton from 'components/Miscellaneous/DonateButton'
+import Memoized from 'components/Utility/Memoized';
 import { IS_MIDI_AVAILABLE } from 'appConfig';
 import Analytics from 'lib/Analytics';
 import { logger } from 'stores/LoggerStore';
-import { AppButton } from 'components/AppButton';
-import { SongMenu } from 'components/SongMenu';
+import { AppButton } from 'components/Inputs/AppButton';
+import { SongMenu } from 'components/Layout/SongMenu';
 import { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
 import { useTheme } from 'lib/Hooks/useTheme';
 import { ThemeStoreClass } from 'stores/ThemeStore';
-import { hasTooltip, Tooltip } from 'components/Tooltip';
-import { HelpTooltip } from 'components/HelpTooltip';
-import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
+import { hasTooltip, Tooltip } from 'components/Utility/Tooltip';
+import { HelpTooltip } from 'components/Utility/HelpTooltip';
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/Utility/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
-import { asyncConfirm, asyncPrompt } from 'components/AsyncPrompts';
+import { asyncConfirm, asyncPrompt } from 'components/Utility/AsyncPrompts';
 import { SettingsPane } from "components/Settings/SettingsPane";
 import { SerializedSong } from 'lib/Songs/Song';
 import { useFolders } from 'lib/Hooks/useFolders';
@@ -31,7 +31,7 @@ import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import useClickOutside from 'lib/Hooks/useClickOutside';
 import isMobile from 'is-mobile';
 import { fileService } from 'lib/Services/FileService';
-import { parseSong } from 'lib/Tools';
+import { parseSong } from 'lib/Utilities';
 
 const isOnMobile = isMobile()
 interface MenuProps {
@@ -109,8 +109,7 @@ function Menu({ data, functions }: MenuProps) {
         try {
             if (song instanceof Midi) {
                 const agrees = await asyncConfirm(
-                    `If you use MIDI, the song will loose some information, if you want to share the song with others,
-                    use the other format (button above). Do you still want to download?`
+                    `If you use MIDI, the song will loose some information, if you want to share the song with others, use the other format (button above). Do you still want to download?`
                 )
                 if (!agrees) return
                 return fileService.downloadMidi(song)

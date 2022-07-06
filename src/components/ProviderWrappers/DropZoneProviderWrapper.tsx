@@ -1,4 +1,4 @@
-import { BodyDropper, DroppedFile } from "components/BodyDropper"
+import { BodyDropper, DroppedFile } from "components/Utility/BodyDropper"
 import { fileService, UnknownSongImport } from "lib/Services/FileService"
 import {logger} from "stores/LoggerStore";
 

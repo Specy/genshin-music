@@ -1,4 +1,4 @@
-import { Tooltip, hasTooltip } from "components/Tooltip";
+import { Tooltip, hasTooltip } from "components/Utility/Tooltip";
 
 interface TimelineButtonProps {
     onClick: () => void;

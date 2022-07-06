@@ -1,12 +1,12 @@
 
 import { useEffect, useState } from "react";
 import { ThemeKeys, ThemeProvider } from "stores/ThemeStore";
-import { capitalize } from "lib/Tools";
+import { capitalize } from "lib/Utilities";
 import Color from "color";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { BASE_THEME_CONFIG } from "appConfig";
 import { FaCheck, FaTimes } from 'react-icons/fa'
-import { AppButton } from "components/AppButton";
+import { AppButton } from "components/Inputs/AppButton";
 
 export interface ThemeProprietyProps {
     name: ThemeKeys,

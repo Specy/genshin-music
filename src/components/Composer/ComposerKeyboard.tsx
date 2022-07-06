@@ -1,6 +1,6 @@
 
 import ComposerNote from "components/Composer/ComposerNote"
-import { getNoteText } from 'lib/Tools'
+import { getNoteText } from 'lib/Utilities'
 import { Column, InstrumentData } from "lib/Songs/SongClasses"
 import { LAYOUT_IMAGES, Pitch, TEMPO_CHANGERS } from "appConfig"
 import { ThemeProvider } from "stores/ThemeStore"

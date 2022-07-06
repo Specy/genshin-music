@@ -18,7 +18,6 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     `.trim()
 
 
-const LAYERS_INDEXES = [1, 2, 3, 4] as const
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
@@ -377,7 +376,7 @@ const TEMPO_CHANGERS = [
 ] as const
 export type TempoChanger = typeof TEMPO_CHANGERS[number]
 function isTwa() {
-    return JSON.parse(sessionStorage.getItem('isTwa') || 'null')
+    return JSON.parse(sessionStorage?.getItem('isTwa') || 'null')
 }
 export type AppName = 'Sky' | 'Genshin'
 
@@ -482,7 +481,6 @@ export {
     UPDATE_MESSAGE,
     MIDI_STATUS,
     IS_MIDI_AVAILABLE,
-    LAYERS_INDEXES,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,
     EMPTY_LAYER,

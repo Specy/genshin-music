@@ -1,6 +1,6 @@
 import { AUDIO_CONTEXT } from "appConfig";
 import { fetchAudioBuffer } from "./Instrument";
-import { delay } from "./Tools";
+import { delay } from "./Utilities";
 
 
 const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)

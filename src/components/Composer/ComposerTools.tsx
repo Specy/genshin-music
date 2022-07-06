@@ -1,5 +1,5 @@
-import { AppButton } from "components/AppButton"
-import { hasTooltip, Tooltip } from "components/Tooltip"
+import { AppButton } from "components/Inputs/AppButton"
+import { hasTooltip, Tooltip } from "components/Utility/Tooltip"
 import { useTheme } from "lib/Hooks/useTheme"
 import { Column } from "lib/Songs/SongClasses"
 import { memo, useState } from "react"

@@ -1,10 +1,10 @@
 import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
-import GenshinNoteBorder from 'components/GenshinNoteBorder'
+import GenshinNoteBorder from 'components/Miscellaneous/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
 import { ThemeProvider } from "stores/ThemeStore"
 import { NoteImage } from "types/Keyboard"
-import SvgNotes from "./SvgNotes"
+import SvgNotes from "../SvgNotes"
 
 
 interface BaseNoteProps{

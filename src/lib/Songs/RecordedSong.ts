@@ -1,7 +1,7 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS_DATA } from "appConfig"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedInstrumentData, SerializedRecordedNote } from "./SongClasses"
 import { ComposedSong, defaultInstrumentMap } from "./ComposedSong"
-import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Tools'
+import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Utilities'
 import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "../Layer"
 import { Midi } from "@tonejs/midi"

@@ -1,8 +1,8 @@
 import useClickOutside from "lib/Hooks/useClickOutside"
 import { useState } from "react"
 import { FaTimes } from "react-icons/fa"
-import { AppButton } from "./AppButton"
-import { SongActionButton } from "./SongActionButton"
+import { AppButton } from "../Inputs/AppButton"
+import { SongActionButton } from "../Inputs/SongActionButton"
 
 
 interface FloatingDropdownProps {

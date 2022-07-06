@@ -1,6 +1,6 @@
 import { FaHome, FaDiscord, FaArrowLeft } from 'react-icons/fa';
 
-import {MenuItem} from 'components/MenuItem'
+import {MenuItem} from 'components/Miscellaneous/MenuItem'
 import HomeStore from 'stores/HomeStore';
 import { useHistory } from 'react-router-dom';
 import { historyTracker } from 'stores/History';

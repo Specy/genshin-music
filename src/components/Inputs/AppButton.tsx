@@ -1,4 +1,4 @@
-import { Tooltip,hasTooltip } from "./Tooltip"
+import { Tooltip,hasTooltip } from "../Utility/Tooltip"
 
 interface AppButtonprops {
     style?: React.CSSProperties,

@@ -3,7 +3,7 @@ import Analytics from 'lib/Analytics';
 import Home from 'components/Index/Home';
 import HomeStore from 'stores/HomeStore';
 import { logger } from 'stores/LoggerStore';
-import { delay } from "lib/Tools"
+import { delay } from "lib/Utilities"
 import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "appConfig"
 import Logger from 'components/Index/Logger'
 import rotateImg from "assets/icons/rotate.svg"

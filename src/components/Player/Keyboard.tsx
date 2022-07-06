@@ -2,7 +2,7 @@ import { ChangeEvent, Component } from 'react'
 import {  APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "appConfig"
 import Note from 'components/Player/Note'
 import { playerStore, subscribePlayer } from 'stores/PlayerStore'
-import { Array2d, getNoteText, delay, clamp } from "lib/Tools"
+import { Array2d, getNoteText, delay, clamp } from "lib/Utilities"
 import "./Keyboard.css"
 import TopPage from 'components/Player/TopPage'
 import Analytics from 'lib/Analytics';
