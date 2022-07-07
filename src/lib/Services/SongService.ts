@@ -3,7 +3,6 @@ import { DbInstance } from "./Database"
 
 class SongService{
     songCollection = DbInstance.collections.songs
-
     async getSongs(): Promise<SerializedSong[]>{
         const songs = await (this.songCollection.find({}).toArray() as Promise<SerializedSong[]>)
         const migrationEnsured = await this.ensureMigration(songs)

@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react'
 import { FaTrash, FaDownload } from 'react-icons/fa';
-import { FileDownloader, parseSong } from "lib/Tools"
-import { asyncConfirm } from "components/AsyncPrompts"
+import { parseSong } from "lib/Utilities"
+import { asyncConfirm } from "components/Utility/AsyncPrompts"
 import { APP_NAME } from "appConfig"
-import { SimpleMenu } from 'components/SimpleMenu'
-import LoggerStore from 'stores/LoggerStore';
-import { SongMenu } from 'components/SongMenu';
+import { SimpleMenu } from 'components/Layout/SimpleMenu'
+import { logger } from 'stores/LoggerStore';
+import { SongMenu } from 'components/Layout/SongMenu';
 
 
 import './ErrorPage.css'
-import { AppButton } from 'components/AppButton';
-import { SerializedSong, Song } from 'lib/Songs/Song';
+import { AppButton } from 'components/Inputs/AppButton';
+import { SerializedSong } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
+import { fileService } from 'lib/Services/FileService';
+import { Title } from 'components/Miscellaneous/Title';
 
 export function ErrorPage() {
     const [songs] = useSongs()
@@ -32,22 +33,24 @@ export function ErrorPage() {
     const resetSettings = () => {
         localStorage.removeItem(APP_NAME + "_Composer_Settings")
         localStorage.removeItem(APP_NAME + "_Main_Settings")
-        LoggerStore.success("Settings have been reset")
+        logger.success("Settings have been reset")
     }
     const downloadSong = (song: SerializedSong) => {
         try{
             const songName = song.name
             const parsed = parseSong(song)
-            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()].map(s => Song.stripMetadata(s))
-            FileDownloader.download(JSON.stringify(converted), `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
-            LoggerStore.success("Song downloaded")
+            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
+            fileService.downloadSong(converted,`${songName}.${APP_NAME.toLowerCase()}sheet`)
+            logger.success("Song downloaded")
         }catch(e){
             console.error(e)
-            LoggerStore.error('Error downloading song')
+            logger.error('Error downloading song')
         }
 
     }
     return <div className="default-page error-page">
+        <Title text="Error" />
+        
         <SimpleMenu />
         <div className="error-text-wrapper">
             There seems to be an error. <br />
@@ -88,11 +91,11 @@ function SongRow({data, deleteSong, download } : SongRowProps) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => download(data)}>
+            <button className="song-button" onClick={() => download(data)} aria-label={`Download song ${data.name}`}>
                 <FaDownload />
 
             </button>
-            <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)}>
+            <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)} aria-label={`Delete song ${data.name}`}>
                 <FaTrash color="#ed4557" />
             </button>
         </div>

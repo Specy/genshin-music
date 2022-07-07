@@ -1,19 +1,20 @@
 import './MidiSetup.css'
 import { APP_NAME } from "appConfig"
 import { MIDISettings } from "lib/BaseSettings"
-import BaseNote from "components/BaseNote"
+import BaseNote from "components/Miscellaneous/BaseNote"
 import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
 import { Component } from 'react'
 import { INSTRUMENTS } from "appConfig"
 import Instrument from "lib/Instrument"
 import Shortcut from "./Shortcut"
-import LoggerStore from "stores/LoggerStore"
-import type { MIDINote } from "lib/Tools"
+import {logger} from "stores/LoggerStore";
+import type { MIDINote } from "lib/Utilities"
 import { InstrumentName, InstrumentNotesLayout } from "types/GeneralTypes"
 import { MIDIEvent, MIDIProvider } from "lib/Providers/MIDIProvider"
 import { AudioProvider } from "lib/Providers/AudioProvider"
-import { DefaultPage } from "components/DefaultPage"
+import { DefaultPage } from "components/Layout/DefaultPage"
 import { NoteImage } from "types/Keyboard"
+import { Title } from 'components/Miscellaneous/Title'
 
 interface MidiSetupState {
     instrument: Instrument
@@ -62,9 +63,9 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         if (!this.mounted) return
         const { sources } = this.state
         if (sources.length > inputs.length)
-            LoggerStore.warn('Device disconnected')
+            logger.warn('Device disconnected')
         else if (inputs.length > 0)
-            LoggerStore.warn('Device connected')
+            logger.warn('Device connected')
         this.setState({ sources: inputs })
     }
     selectMidi = (selectedSource?: WebMidi.MIDIInput) => {
@@ -100,7 +101,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         const { selectedNote, settings, selectedShortcut } = this.state
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             if (selectedNote) {
-                if (this.checkIfUsed(note, 'shortcuts')) return LoggerStore.warn('Key already used')
+                if (this.checkIfUsed(note, 'shortcuts')) return logger.warn('Key already used')
                 selectedNote.midi = note
                 this.deselectNotes()
                 this.setState({ selectedNote: null })
@@ -108,7 +109,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
             }
             if (selectedShortcut) {
                 const shortcut = settings.shortcuts.find(e => e.type === selectedShortcut)
-                if (this.checkIfUsed(note, 'all')) return LoggerStore.warn('Key already used')
+                if (this.checkIfUsed(note, 'all')) return logger.warn('Key already used')
                 if (shortcut) {
                     shortcut.midi = note
                     shortcut.status = note < 0 ? 'wrong' : 'right'
@@ -162,6 +163,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
     render() {
         const { settings, sources, selectedShortcut, selectedSource } = this.state
         return <DefaultPage>
+            <Title text="MIDI Setup" />
             <div className="column midi-setup-column">
                 <div>
                     Select MIDI device:

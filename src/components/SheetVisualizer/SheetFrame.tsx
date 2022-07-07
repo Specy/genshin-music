@@ -1,6 +1,6 @@
 import { APP_NAME } from "appConfig"
 import { Chunk } from "lib/Songs/VisualSong"
-import { getNoteText } from "lib/Tools"
+import { getNoteText } from "lib/Utilities"
 import { ThemeProvider } from "stores/ThemeStore"
 
 

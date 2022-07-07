@@ -3,6 +3,12 @@
     flex-direction: column;
     width: 8rem;
 }
+.select{
+    background-color: var(--primary);
+    border-radius: 0.2rem;
+    border: none;
+    color: var(--primary-text);
+}
 .instrument-picker input[type="range"]{
     margin-top: 0.2rem;
 }
@@ -53,13 +59,13 @@
 .settings-input{
     display: flex;
     width: 8rem;
-    height: 1rem;
 }
 .settings-input input{
     width: unset;
     min-width: 0;
     display: flex;
     text-align: center;
+    height: 1rem;
     flex: 1;
 }
 .settings-input input::-webkit-outer-spin-button,
@@ -77,8 +83,8 @@
     height: 1.4rem;
     font-weight: bold;
     font-family: Arial;
-    padding: 0.2rem;
     display: flex;
+    padding: 0;
     justify-content: center;
     align-items: center;
     border: none;

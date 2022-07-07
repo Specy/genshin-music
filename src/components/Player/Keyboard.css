@@ -1,5 +1,6 @@
 .keyboard {
 	display: grid;
+	width: fit-content;
 	margin-top: auto;
 	grid-template-columns: repeat(7, 1fr);
 	grid-template-rows: repeat(3, 1fr);
@@ -185,7 +186,7 @@
 	bottom: 0;
 	border: 2px solid var(--accent);
 	border-radius: 50%;
-	animation: note-animation 0.75s cubic-bezier(.25,.46,.45,.94);
+	animation: note-animation 0.5s cubic-bezier(.25,.46,.45,.94);
 	animation-delay: 0.1s;
 	transform-origin: 50% 50%;
 	pointer-events: none;

@@ -1,9 +1,14 @@
+name: Deploy
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
+    inputs:
+      version:
+        description: Void
+        default: v0
+        required: false
 jobs:
   deploy:
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-import LoggerStore, { LoggerStatus } from "stores/LoggerStore"
+import { LoggerStatus, logger } from "stores/LoggerStore"
 import { useLogger } from "lib/Hooks/useLogger"
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle } from "react-icons/fa"
 export default function FloatingMessage() {
@@ -8,7 +8,7 @@ export default function FloatingMessage() {
     return <div
         className={visible ? "logger logger-visible" : "logger"}
         style={{ maxWidth: (isBig && visible) ? '24rem' : '19rem' }}
-        onClick={LoggerStore.close}
+        onClick={logger.close}
     >
         <div className="logger-content">
             {!isBig &&

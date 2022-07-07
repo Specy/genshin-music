@@ -7,7 +7,7 @@ import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
 import { useTheme } from 'lib/Hooks/useTheme'
 import './Home.css'
-import {MenuItem} from 'components/MenuItem'
+import { MenuItem } from 'components/Miscellaneous/MenuItem'
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 
 interface HomeProps {
@@ -34,7 +34,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             if (HomeStore.state.data.visible) {
                 HomeStore.close()
             }
-        }, {id: "home"})
+        }, { id: "home" })
         setBreakpoint(window.innerWidth > 900)
         return () => {
             dispose()
@@ -58,6 +58,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         <MenuItem
             className='close-home'
             onClick={HomeStore.close}
+            ariaLabel='Close home menu'
         >
             <FaTimes size={25} />
         </MenuItem>
@@ -80,12 +81,25 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     <div className="red-text">WARNING</div>:
                     Clearing your browser cache / storage might delete your songs, make sure you make backups
                 </div>
+
                 {data.hasPersistentStorage ?
                     <div>
                         <div className="red-text">WARNING</div>: {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}
                     </div>
                     : null
                 }
+                <div>
+                    <span style={{ marginRight: '0.2rem' }}>
+                        We use cookies for analytics, by continuing to use this app, you agree to our use of cookies, learn more
+                    </span>
+                    <Link 
+                        to='Privacy' 
+                        style={{ color: 'var(--primary-text)', textDecoration: "underline" }}
+                        onClick={HomeStore.close}
+                    >
+                        here
+                    </Link>
+                </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button className="home-accept-storage"
@@ -104,7 +118,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 icon={<FaCompactDisc />}
                 title='Composer'
                 style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                background={`./manifestData/composer.png`}
+                background={`./manifestData/composer.webp`}
                 href='Composer'
                 current={currentPage === 'Composer'}
             >
@@ -114,7 +128,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 icon={<BsMusicPlayerFill />}
                 title='Player'
                 style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                background={`./manifestData/main.png`}
+                background={`./manifestData/main.webp`}
                 href=''
                 current={currentPage === '' || currentPage === 'Player'}
             >
@@ -151,12 +165,11 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         </div>
         <div className='home-bottom'>
             <div>
-                © All rights reserved by {APP_NAME === 'Genshin' ? 'miHoYo' : 'TGC'}. Other properties belong to their respective owners.
+                © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </div>
         </div>
     </div>
 }
-
 interface PageRedirectProps {
     children: React.ReactNode,
     current: boolean,

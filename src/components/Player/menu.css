@@ -25,7 +25,7 @@
     opacity: 0.9;
 }
 .hamburger{
-    position: fixed;
+    position: absolute;
     bottom: 0.5rem;
     left: 0.5rem;
     font-size: 1.5rem;
@@ -104,6 +104,8 @@
     transform: scale(1);
     left: 4rem !important;
     opacity: 1;
+    animation: delayBackdrop 0.3s;
+    animation-fill-mode: forwards;
 }
 .menu-panel{
     width: 100%;
@@ -140,6 +142,7 @@
     height: 2.2rem;
     border: none;
     border-radius: 0.3rem;
+    cursor: text;
 }
 .library-search-input::placeholder{
     color: var(--menu-background-text);
@@ -173,7 +176,6 @@
     display: grid;
     flex-direction: column;
     gap: 0.3rem;
-    min-height: 4rem;
 }
 .library-search-songs-wrapper{
     border-radius: 0.3rem;
@@ -241,11 +243,7 @@
     padding: 0;
 }
 
-.floating-dropdown-active .floating-children-bottom{
-	display: flex;
-	animation: fadeIn 0.3s;
-	animation-fill-mode: forwards;
-}
+
 .floating-children-bottom{
 	flex-direction: column;
 	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
@@ -279,7 +277,6 @@
 	display: flex;
 	animation: fadeIn 0.2s;
 	animation-fill-mode: forwards;
-
 }
 
 .song-name{
@@ -290,7 +287,7 @@
     height: 100%;
     align-items: center;
     font-size: 1rem;
-    padding-right: 0.45rem;
+    margin-right: 0.45rem;
 }
 .song-name-input{
 	background-color: transparent;

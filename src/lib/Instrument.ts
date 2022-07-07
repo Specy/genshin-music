@@ -1,13 +1,17 @@
 import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME } from "appConfig"
 import { InstrumentName, NoteStatus } from "types/GeneralTypes"
 import { NoteImage } from "types/Keyboard"
-import { getPitchChanger } from "./Tools"
+import { getPitchChanger } from "./Utilities"
 
 type Layouts = {
     keyboard: string[]
     mobile: string[]
     keyCodes: string[]
 }
+const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
+
+
+
 export default class Instrument {
     name: InstrumentName
     volumeNode: GainNode | null
@@ -23,6 +27,9 @@ export default class Instrument {
 
     get endNode() {
         return this.volumeNode
+    }
+    static clearPool() {
+        INSTRUMENT_BUFFER_POOL.clear()
     }
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
         this.name = name
@@ -77,21 +84,31 @@ export default class Instrument {
         player.addEventListener('ended', handleEnd, { once: true })
     }
     load = async () => {
-        const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
-        const requests: Promise<AudioBuffer>[] = this.layout.map(note => {
-            //dont change any of this, safari bug
-            return new Promise(resolve => {
-                fetch(note.url)
-                    .then(result => result.arrayBuffer())
-                    .then(buffer => {
-                        AUDIO_CONTEXT.decodeAudioData(buffer, resolve, () => {
-                            resolve(emptyBuffer)
+        if (!INSTRUMENT_BUFFER_POOL.has(this.name)) {
+            const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
+            const requests: Promise<AudioBuffer>[] = this.layout.map(note => {
+                //dont change any of this, safari bug
+                return new Promise(resolve => {
+                    fetch(note.url)
+                        .then(result => result.arrayBuffer())
+                        .then(buffer => {
+                            AUDIO_CONTEXT.decodeAudioData(buffer, resolve, () => {
+                                resolve(emptyBuffer)
+                            }).catch(e => {
+                                console.error(e)
+                                return resolve(emptyBuffer)
+                            })
+                        }).catch(e => {
+                            console.error(e)
+                            return resolve(emptyBuffer)
                         })
-                            .catch(e => { resolve(emptyBuffer) })
-                    }).catch(e => { resolve(emptyBuffer) })
+                })
             })
-        })
-        this.buffers = await Promise.all(requests)
+            this.buffers = await Promise.all(requests)
+            if (!this.buffers.includes(emptyBuffer)) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers)
+        } else {
+            this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!
+        }
         this.isLoaded = true
         return true
     }
@@ -110,7 +127,20 @@ export default class Instrument {
         this.volumeNode = null
     }
 }
-
+export function fetchAudioBuffer(url: string): Promise<AudioBuffer>{
+    return new Promise((res,rej) => {
+        fetch(url)
+        .then(result => result.arrayBuffer())
+        .then(buffer => {
+            AUDIO_CONTEXT.decodeAudioData(buffer, res, () => {
+                rej()
+            }).catch(e => {
+                console.error(e)
+                return rej()
+            })
+        })
+    })
+}
 
 interface NoteName {
     keyboard: string,

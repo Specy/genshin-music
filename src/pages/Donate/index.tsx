@@ -2,9 +2,12 @@ import './Donate.css'
 import paypalImg from 'assets/images/paypalme.png'
 import buyMeACoffeeImg from 'assets/images/buymeacoffee.svg'
 import kofiImg from 'assets/images/kofi.png'
-import { SimpleMenu } from 'components/SimpleMenu'
+import { SimpleMenu } from 'components/Layout/SimpleMenu'
+import { Title } from 'components/Miscellaneous/Title'
 export default function Donate() {
     return <div className='default-page'>
+        <Title text="Donate" />
+
         <SimpleMenu/>
         <div className="donate-text">
             Each App I make takes months of learning and development. Added to that

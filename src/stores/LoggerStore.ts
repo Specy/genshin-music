@@ -17,7 +17,7 @@ export interface LoggerDataProps{
 type LoggerData = {
     data: LoggerDataProps
 }
-export class LoggerStoreClass {
+export class LoggerStore {
     state: LoggerData
     timeout: any
     constructor() {
@@ -66,4 +66,4 @@ export class LoggerStoreClass {
     }
 }
 
-export default new LoggerStoreClass()
+export const logger = new LoggerStore()

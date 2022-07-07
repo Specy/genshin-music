@@ -1,11 +1,14 @@
 import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "appConfig"
-import type { ColumnNote } from 'lib/Songs/SongClasses';
+import type { ColumnNote, InstrumentData } from 'lib/Songs/SongClasses';
 import type { Texture } from 'pixi.js';
 import { Container, Sprite } from '@inlet/react-pixi';
 import { ComposerCacheData } from "./TextureCache";
+import { useCallback } from "react";
 
 interface RenderColumnProps {
     notes: ColumnNote[]
+    currentLayer: number
+    instruments: InstrumentData[]
     index: number
     sizes: {
         width: number
@@ -19,9 +22,13 @@ interface RenderColumnProps {
     onClick: (index: number) => void
 }
 
-export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCache, isBreakpoint, isSelected, isToolsSelected }: RenderColumnProps) {
+export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,  backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
+    const clickCallback = useCallback(() => {
+        onClick(index)
+    }, [index, onClick])
+
     return <Container
-        pointertap={() => onClick(index)}
+        pointertap={clickCallback}
         interactive={true}
         x={sizes.width * index}
     >
@@ -44,9 +51,13 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCa
         </Sprite>
 
         {notes.map((note) => {
+            const layerStatus = note.layer.toLayerStatus(currentLayer, instruments)
+            if(layerStatus === 0) return null
             return <Sprite
                 key={note.index}
-                texture={cache.notes[note.layer.legacyString]}
+                texture={
+                    cache.notes[layerStatus]
+                }
                 y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
             >
             </Sprite>
@@ -54,9 +65,6 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, backgroundCa
 
     </Container>
 }
-
-
-
 
 export function isColumnVisible(pos: number, currentPos: number, numberOfColumnsPerCanvas: number) {
     const threshold = numberOfColumnsPerCanvas / 2 + 2

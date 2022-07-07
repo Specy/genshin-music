@@ -1,7 +1,8 @@
+name: Beta Deploy
 on:
   push:
     branches:
-      - dev
+      - Dev
   workflow_dispatch:
     inputs:
       version:

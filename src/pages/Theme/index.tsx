@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { defaultThemes, ThemeKeys, ThemeProvider } from "stores/ThemeStore";
 import { observe } from "mobx";
-import { SimpleMenu } from "components/SimpleMenu";
-import { AppButton } from "components/AppButton";
-import { FileElement, FilePicker } from "components/FilePicker"
+import { SimpleMenu } from "components/Layout/SimpleMenu";
+import { AppButton } from "components/Inputs/AppButton";
+import { FileElement, FilePicker } from "components/Inputs/FilePicker"
 import Player from "pages/Player";
-import { asyncConfirm, asyncPrompt } from "components/AsyncPrompts";
+import Composer from "pages/Composer";
+import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts";
 import { ThemePropriety } from "./Components/ThemePropriety";
 
 import cloneDeep from 'lodash.clonedeep'
@@ -13,19 +14,20 @@ import { Theme } from "stores/ThemeStore";
 import { ThemePreview } from "./Components/ThemePreview";
 import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "stores/ThemeStore";
-import LoggerStore from "stores/LoggerStore";
+import { logger } from "stores/LoggerStore";
 import { ThemeInput } from "./Components/ThemeInput";
 import { useTheme } from "lib/Hooks/useTheme";
 import './Theme.css'
-import { AppBackground } from "components/AppBackground";
+import { AppBackground } from "components/Layout/AppBackground";
 import { themeService } from "lib/Services/ThemeService";
+import { Title } from "components/Miscellaneous/Title";
 
 
 function ThemePage() {
     const [theme, setTheme] = useTheme()
     const [userThemes, setUserThemes] = useState<Theme[]>([])
     const [selectedProp, setSelectedProp] = useState('')
-
+    const [selectedPagePreview, setSelectedPagePreview] = useState<"player" | "composer">("player")
     useEffect(() => {
         const dispose2 = observe(ThemeProvider.state.other, () => {
             setTheme({ ...ThemeProvider })
@@ -73,10 +75,10 @@ function ThemePage() {
             }
         }
     }
-    const logImportError = useCallback((error?:any) => {
-        if(error) console.error(error)
-        LoggerStore.error('There was an error importing this theme, is it the correct file?',4000)
-    },[])
+    const logImportError = useCallback((error?: any) => {
+        if (error) console.error(error)
+        logger.error('There was an error importing this theme, is it the correct file?', 4000)
+    }, [])
     async function cloneTheme(name: string) {
         const theme = new BaseTheme(name)
         theme.state = cloneDeep(ThemeProvider.state)
@@ -109,6 +111,7 @@ function ThemePage() {
     }
 
     return <div className="default-page">
+        <Title text="Themes" />
         <SimpleMenu />
         <div className="default-content">
 
@@ -200,9 +203,24 @@ function ThemePage() {
                 Preview
             </div>
             <div className="theme-app-preview">
-                <AppBackground page="Main">
-                    <Player />
-                </AppBackground>
+                <AppButton 
+                    className="box-shadow" 
+                    toggled={true}
+                    style={{position: 'absolute', right: 0, top: 0, zIndex: 90}}
+                    onClick={() => setSelectedPagePreview(selectedPagePreview === 'composer' ? 'player' : 'composer')}
+                >
+                    {selectedPagePreview === 'composer' ? 'View player' : 'View composer'}
+                </AppButton>
+                {selectedPagePreview === "player" &&
+                    <AppBackground page="Main">
+                        <Player />
+                    </AppBackground>
+                }
+                {selectedPagePreview === "composer" &&
+                    <AppBackground page="Composer">
+                        <Composer inPreview={true}/>
+                    </AppBackground>
+                }
             </div>
         </div>
     </div>

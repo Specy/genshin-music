@@ -4,6 +4,7 @@ import { ComposedSong } from "./ComposedSong"
 import { RecordedSong } from "./RecordedSong"
 import { SongData } from "./SongClasses"
 
+export type SongType = 'recorded' | 'composed' | 'midi'
 
 export interface SerializedSong {
     id: string | null,
@@ -15,9 +16,8 @@ export interface SerializedSong {
     pitch: Pitch,
     version: number
 }
-export type SongType = 'recorded' | 'composed'
 
-export abstract class Song<T = any, T2 extends SerializedSong = any>{
+export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number>{
     id: string | null
     type: SongType
     folderId: string | null
@@ -25,8 +25,8 @@ export abstract class Song<T = any, T2 extends SerializedSong = any>{
     data: SongData
     bpm: number
     pitch: Pitch
-    version: number
-    constructor(name: string, version: number, type: SongType,  data?: SongData){
+    version: T3
+    constructor(name: string, version: T3, type: SongType,  data?: SongData){
         this.name = name
         this.version = version
         this.bpm = 220
@@ -42,7 +42,7 @@ export abstract class Song<T = any, T2 extends SerializedSong = any>{
         }
     }
 
-    static stripMetadata(song: SerializedSong){
+    static stripMetadata(song: SerializedSong): SerializedSong{
         const obj = {...song}
         obj.id = null
         obj.folderId = null

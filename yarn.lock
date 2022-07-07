@@ -1765,6 +1765,66 @@
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
 
+"@tauri-apps/cli-darwin-arm64@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-darwin-arm64/-/cli-darwin-arm64-1.0.1.tgz#e7edecb70a052e46786274e37d544eebc8149221"
+  integrity sha512-VxRL1HFkVKvAZ1jHvRN0V8hbk1klRfCGbEz3u0QU5nzt4PnScgvOTc6S4wB54Lb9wweHdmXFqA4p9nfziyRgaQ==
+
+"@tauri-apps/cli-darwin-x64@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-darwin-x64/-/cli-darwin-x64-1.0.1.tgz#3dc1161d7b834dec7587680c0d0ff1d12a2abc21"
+  integrity sha512-Jml4FYeWJFEwcfDCOWcxMMXI7X8ahl7KLncarQ/u7Ql6JBFpSfV6Cb8eDNUEevlZxWDNksgVki9m1lL44fKblw==
+
+"@tauri-apps/cli-linux-arm-gnueabihf@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-linux-arm-gnueabihf/-/cli-linux-arm-gnueabihf-1.0.1.tgz#be091e4a2c31d2716c1072345df20233c41adf18"
+  integrity sha512-RvHQeSmzUsM7G4MoMK9+DYYrypSA15Ev+7KbQCU5E7o3qmJ7jf2oYWVkeEWeYOthmikW1tNKel2roJQDkajEDg==
+
+"@tauri-apps/cli-linux-arm64-gnu@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-linux-arm64-gnu/-/cli-linux-arm64-gnu-1.0.1.tgz#c7b6bff7920559b4e3437d6a27bd98e15395cd9d"
+  integrity sha512-Jv05qEkNfWQ4b0oM0wIWZBYj4c5likjFBkWdJ8ixeCcTVbQWR735buWEb9GcWpD5ju2pETH6r+AfmyHlbz+wvA==
+
+"@tauri-apps/cli-linux-arm64-musl@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-linux-arm64-musl/-/cli-linux-arm64-musl-1.0.1.tgz#40ed7cbf32c47168baf0b7bc59ef881facc60166"
+  integrity sha512-EkQyRRPgZ7PcwqpxiZ7p8gYv9j/8m3s67b6ddiybGthPWNPC1ZeZocZ7HJfcwQr9nABDWnLAxTfnUm5N/waCwQ==
+
+"@tauri-apps/cli-linux-x64-gnu@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-linux-x64-gnu/-/cli-linux-x64-gnu-1.0.1.tgz#6e806956fab6cec1ef53adca1818fb860ec8b023"
+  integrity sha512-VlwXXG2XoSv1MvIruCHQCh5gYcFVtCtkTQVRlMiGSUrv2UCAaHYpUxmgv1XEausqe0tpLrmWMUU4BqKrPXbsxg==
+
+"@tauri-apps/cli-linux-x64-musl@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-linux-x64-musl/-/cli-linux-x64-musl-1.0.1.tgz#c429c6d8bab2f7c31ff414c033940af13d653129"
+  integrity sha512-WlWIqLf44o9JmVg34uFIpHbklg4B9jdLMlscx7W9ueoOh059yX3TjdEwrD+L91qpgyvh8MLHDbDmCZ1BUm/v5w==
+
+"@tauri-apps/cli-win32-ia32-msvc@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-win32-ia32-msvc/-/cli-win32-ia32-msvc-1.0.1.tgz#6101b1053afd3773f9ae8f31502799cb7b2d784b"
+  integrity sha512-jf8wIMNclPNIyqwTZBslTr9hpVmDb8tsEFqWLiV9lcCepovZZO7Jzkj3VVSNXV0QZkizIdh6YMvcFxZTazuGKA==
+
+"@tauri-apps/cli-win32-x64-msvc@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli-win32-x64-msvc/-/cli-win32-x64-msvc-1.0.1.tgz#534cd0873db4f4005bb9401fbccacb47a64f637f"
+  integrity sha512-6taaAkhxY9V9boCC2BUI/PtnAqz/jX5xnZFVWxY+CiE5HOt/tY6ZqSOWef3/wH8Q6fjg14xP4d7Xg3dA+rIiSw==
+
+"@tauri-apps/cli@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/cli/-/cli-1.0.1.tgz#ec516be3d07c73d405532c127a4866a56f9004f1"
+  integrity sha512-PBRZ+PF7CZWAh6sWcZi6YNzecw6x9xykjhNVJ/IrGmePKlKJpMMuMUnjt1CZGD4YKdOKCy6hFnckoajMYKoAEQ==
+  optionalDependencies:
+    "@tauri-apps/cli-darwin-arm64" "1.0.1"
+    "@tauri-apps/cli-darwin-x64" "1.0.1"
+    "@tauri-apps/cli-linux-arm-gnueabihf" "1.0.1"
+    "@tauri-apps/cli-linux-arm64-gnu" "1.0.1"
+    "@tauri-apps/cli-linux-arm64-musl" "1.0.1"
+    "@tauri-apps/cli-linux-x64-gnu" "1.0.1"
+    "@tauri-apps/cli-linux-x64-musl" "1.0.1"
+    "@tauri-apps/cli-win32-ia32-msvc" "1.0.1"
+    "@tauri-apps/cli-win32-x64-msvc" "1.0.1"
+
 "@tonejs/midi@^2.0.27":
   version "2.0.28"
   resolved "https://registry.npmjs.org/@tonejs/midi/-/midi-2.0.28.tgz"
@@ -6730,6 +6790,11 @@ path-type@^4.0.0:
   resolved "https://registry.npmjs.org/path-type/-/path-type-4.0.0.tgz"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
 
+pepjs@^0.5.3:
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/pepjs/-/pepjs-0.5.3.tgz#dc755f03d965c20e4b1bb65e42a03a97c382cfc7"
+  integrity sha512-5yHVB9OHqKd9fr/OIsn8ss0NgThQ9buaqrEuwr9Or5YjPp6h+WTDKWZI+xZLaBGZCtODTnFtlSHNmhFsq67THg==
+
 performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/performance-now/-/performance-now-2.1.0.tgz"
@@ -7564,9 +7629,9 @@ react-error-overlay@^6.0.10:
   integrity sha512-mKR90fX7Pm5seCOfz8q9F+66VCc1PGsWSBxKbITjfKVQHMNF2zudxHnMdJiB1fRCb+XsbQV9sO9DCkgsMQgBIA==
 
 react-icons@^4.3.1:
-  version "4.3.1"
-  resolved "https://registry.npmjs.org/react-icons/-/react-icons-4.3.1.tgz"
-  integrity sha512-cB10MXLTs3gVuXimblAdI71jrJx8njrJZmNMEMC+sQu5B/BIOmlsAjskdqpn81y8UBVEGuHODd7/ci5DvoSzTQ==
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/react-icons/-/react-icons-4.4.0.tgz#a13a8a20c254854e1ec9aecef28a95cdf24ef703"
+  integrity sha512-fSbvHeVYo/B5/L4VhB7sBA1i2tS8MkT0Hb9t2H1AVPkwGfVHLJCqyr2Py9dKMxsyM63Eng1GkdZfbWj+Fmv8Rg==
 
 react-is@^16.13.1, react-is@^16.6.0, react-is@^16.7.0:
   version "16.13.1"

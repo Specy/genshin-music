@@ -12,81 +12,94 @@ import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
 import { ThemeProviderWrapper } from 'components/ProviderWrappers/ThemeProviderWrapper';
-import { AppBackground } from "components/AppBackground";
+import { AppBackground } from "components/Layout/AppBackground";
 import { MIDIProviderWrapper } from "components/ProviderWrappers/MIDIProviderWrapper";
 import { AudioProviderWrapper } from "components/ProviderWrappers/AudioProviderWrapper";
 import { KeyboardProviderWrapper } from "components/ProviderWrappers/KeyboardProviderWrapper";
 import { useEffect } from "react";
+import { DropZoneProviderWrapper } from "components/ProviderWrappers/DropZoneProviderWrapper";
+import Privacy from "pages/Privacy";
+import ErrorBoundaryRedirect from "components/Utility/ErrorBoundaryRedirect";
+import {logger} from "stores/LoggerStore"
 export function Router() {
 	useEffect(() => {
-
-		try{
+		try {
 			if ('virtualKeyboard' in navigator) {
 				//@ts-ignore
 				navigator.virtualKeyboard.overlaysContent = true;
 				console.log("virtual keyboard supported")
-			}else{
+			} else {
 				console.log("virtual keyboard not supported")
 			}
-		}catch(e){
+		} catch (e) {
 			console.error(e)
 		}
-	},[])
+	}, [])
 
 
 	return <HashRouter>
-		<ThemeProviderWrapper>
-			<KeyboardProviderWrapper>
-				<MIDIProviderWrapper>
-					<AudioProviderWrapper>
-						<App />
-						<Switch>
-							<Route exact path="/ErrorPage">
-								<ErrorPage />
-							</Route>
-							<Route exact path="/">
-								<AppBackground page="Main">
-									<Player />
-								</AppBackground>
-							</Route>
-							<Route exact path="/Player">
-								<AppBackground page="Main">
-									<Player />
-								</AppBackground>
-							</Route>
-							<Route exact path="/Composer">
-								<AppBackground page="Composer">
-									<Composer />
-								</AppBackground>
-							</Route>
-							<Route exact path="/Donate">
-								<Donate />
-							</Route>
-							<Route exact path="/Changelog">
-								<Changelogpage />
-							</Route>
-							<Route exact path="/Partners">
-								<Partners />
-							</Route>
-							<Route exact path='/Help'>
-								<Help />
-							</Route>
-							<Route exact path='/SheetVisualizer'>
-								<SheetVisualizer />
-							</Route>
-							<Route exact path='/MidiSetup'>
-								<MidiSetup />
-							</Route>
-							<Route path='/Theme'>
-								<Theme />
-							</Route>
-							<Route path='*'>
-								<Error404 />
-							</Route>
-						</Switch>
-					</AudioProviderWrapper>
-				</MIDIProviderWrapper>
-			</KeyboardProviderWrapper>
-		</ThemeProviderWrapper>
+		<DropZoneProviderWrapper>
+			<ThemeProviderWrapper>
+				<KeyboardProviderWrapper>
+					<MIDIProviderWrapper>
+						<AudioProviderWrapper>
+							<App />
+							<Switch>
+								<Route exact path="/ErrorPage">
+									<ErrorPage />
+								</Route>
+								<ErrorBoundaryRedirect 
+									onErrorGoTo="/ErrorPage"
+									onError={() => logger.error("There was an error with the app!")}
+								>
+									<Route exact path="/">
+										<AppBackground page="Main">
+											<Player />
+										</AppBackground>
+									</Route>
+									<Route exact path="/Player">
+										<AppBackground page="Main">
+											<Player />
+										</AppBackground>
+									</Route>
+									<Route exact path="/Composer">
+										<AppBackground page="Composer">
+											<Composer />
+										</AppBackground>
+									</Route>
+									<Route exact path="/Donate">
+										<Donate />
+									</Route>
+									<Route exact path="/Changelog">
+										<Changelogpage />
+									</Route>
+									<Route exact path="/Partners">
+										<Partners />
+									</Route>
+									<Route exact path='/Help'>
+										<Help />
+									</Route>
+									<Route exact path='/SheetVisualizer'>
+										<SheetVisualizer />
+									</Route>
+									<Route exact path='/MidiSetup'>
+										<MidiSetup />
+									</Route>
+									<Route path='/Theme'>
+										<Theme />
+									</Route>
+									<Route path='/Privacy'>
+										<Privacy />
+									</Route>
+								</ErrorBoundaryRedirect>
+								<Route path='*'>
+										<Error404 />
+									</Route>
+							</Switch>
+						</AudioProviderWrapper>
+					</MIDIProviderWrapper>
+				</KeyboardProviderWrapper>
+			</ThemeProviderWrapper>
+		</DropZoneProviderWrapper>
 	</HashRouter>
 }

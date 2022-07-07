@@ -1,9 +1,10 @@
 import './Partners.css'
-import { SimpleMenu } from 'components/SimpleMenu'
-import WindsongDBImg from 'assets/images/partners/windsong-db.jpg'
+import { SimpleMenu } from 'components/Layout/SimpleMenu'
+import { Title } from 'components/Miscellaneous/Title'
 
 export default function Partners() {
     return <div className='default-page partners-page'>
+        <Title text="Partners" />
         <SimpleMenu/>
         <div className='default-content partner-wrapper'>
             <Partner
@@ -38,7 +39,7 @@ export default function Partners() {
                 description='A Genshin Impact Database for Instrument Gadget Keymaps'
             >
                 <PartnerImg 
-                    img={WindsongDBImg}
+                    img={'./assets/images/partners/windsong-db.jpg'}
                     to='https://genshin-lyre.notion.site/genshin-lyre/Windsong-DB-8012b5f6939b486d857552c7b60e917f'
                     alt='Windsong DB'
                 />

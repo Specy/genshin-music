@@ -3,26 +3,32 @@
 //since sprites are always removed and added to the stage everytime it scrolls
 import { Component, createRef } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
-import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
+import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import isMobile from "is-mobile"
 import { ComposerCache } from "components/Composer/TextureCache"
 import { APP_NAME } from "appConfig"
-import Memoized from 'components/Memoized';
+import Memoized from 'components/Utility/Memoized';
 import { ThemeProvider } from 'stores/ThemeStore';
-import { observe } from 'mobx';
-import { clamp, nearestEven } from 'lib/Tools';
+import { clamp, nearestEven } from 'lib/Utilities';
 import type { Column } from 'lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { isColumnVisible, RenderColumn } from 'components/Composer/RenderColumn';
 import { TimelineButton } from './TimelineButton';
 import { Timer } from 'types/GeneralTypes';
+import { ComposedSong } from 'lib/Songs/ComposedSong';
+import { subscribeTheme } from 'lib/Hooks/useTheme';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
     data: {
         columns: Column[],
+        isPlaying: boolean,
+        isRecordingAudio: boolean,
+        song: ComposedSong
         selected: number,
+        currentLayer: number,
+        inPreview?: boolean,
         settings: ComposerSettingsDataType,
         breakpoints: number[],
         selectedColumns: number[]
@@ -50,6 +56,10 @@ interface ComposerCanvasState {
             selected: number
             border: number
         }
+        sideButtons: {
+            hex: string
+            rgb: string
+        }
     }
     cache: ComposerCache | null
 }
@@ -71,7 +81,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         super(props)
         this.sizes = document.body.getBoundingClientRect()
         const numberOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
-        let width = nearestEven(this.sizes.width * 0.84)
+        let width = nearestEven(this.sizes.width * 0.85 - 45)
         let height = nearestEven(this.sizes.height * 0.45)
         if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
         this.state = {
@@ -90,6 +100,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     hexNumber: ThemeProvider.layer('primary', 0.1).rgbNumber(),
                     selected: ThemeProvider.get('composer_accent').negate().rgbNumber(),
                     border: ThemeProvider.get('composer_accent').rgbNumber()
+                },
+                sideButtons: {
+                    hex: ThemeProvider.get('primary').darken(0.08).toString(),
+                    rgb: ThemeProvider.get('primary').darken(0.08).rgb().array().map(x => Math.floor(x)).join(",")
                 }
             },
             cache: null
@@ -114,7 +128,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         KeyboardProvider.listen(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
         this.recalculateCacheAndSizes()
-        this.dispose = observe(ThemeProvider.state.data, () => {
+        this.dispose = subscribeTheme(() => {
             this.recalculateCacheAndSizes()
             this.setState({
                 theme: {
@@ -123,6 +137,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         hexNumber: ThemeProvider.layer('primary', 0.1).rgbNumber(),
                         selected: ThemeProvider.get('composer_accent').negate().rgbNumber(),
                         border: ThemeProvider.get('composer_accent').rgbNumber()
+                    },
+                    sideButtons: {
+                        hex: ThemeProvider.get('primary').darken(0.08).toString(),
+                        rgb: ThemeProvider.get('primary').darken(0.08).rgb().array().map(x => Math.floor(x)).join(",")
                     }
                 }
             })
@@ -132,7 +150,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
         window.removeEventListener("resize", this.recalculateCacheAndSizes)
-        if(this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
+        if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
         KeyboardProvider.unlisten(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
         this.dispose()
@@ -146,14 +164,19 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.stagePreviousPositon = 0
     }
     recalculateCacheAndSizes = () => {
-        if(this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
+        if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
         this.cacheRecalculateDebounce = setTimeout(() => {
             if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return
             const sizes = document.body.getBoundingClientRect()
             const { numberOfColumnsPerCanvas } = this.state
-            let width = nearestEven(sizes.width * 0.84)
+            const { inPreview } = this.props.data
+            let width = nearestEven(sizes.width * 0.85 - 45)
             let height = nearestEven(sizes.height * 0.45)
             if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
+            if(inPreview){
+                width =  nearestEven(width * (sizes.width < 900 ? 0.8 : 0.55))
+                height = nearestEven(height * (sizes.width < 900 ? 0.8 : 0.6))
+            }
             let columnWidth = nearestEven(width / numberOfColumnsPerCanvas)
             this.setState({
                 width: Math.floor(width),
@@ -162,10 +185,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     width: columnWidth,
                     height
                 },
-                cache : this.getCache(columnWidth, height, isMobile() ? 2 : 4, isMobile() ? 25 : 30),
+                cache: this.getCache(columnWidth, height, isMobile() ? 2 : 4, isMobile() ? 25 : 30),
             })
-        },50)
-    } 
+        }, 50)
+    }
     handleKeyboard = ({ code }: KeyboardEventData) => {
         if (code === 'ArrowRight') this.handleBreakpoints(1)
         else if (code === 'ArrowLeft') this.handleBreakpoints(-1)
@@ -278,48 +301,76 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const timelineWidth = Math.floor(relativeColumnWidth * (width / sizes.width + 1))
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         const isBreakpointSelected = data.breakpoints.includes(data.selected)
-        return <div className="canvas-wrapper" style={{ width: width + 2 }}>
-            <Stage
-                width={width}
-                height={height}
-                raf={false}
-                renderOnComponentChange={true}
-                options={{
-                    backgroundAlpha: 0,
-                    autoDensity: true,
-                    resolution: window.devicePixelRatio || 1.4
-                }}
-                ref={this.notesStageRef}
-            >
-                {cache && <Container
-                    x={xPosition}
-                    interactive={true}
-                    pointerdown={(e) => this.handleClick(e, "downStage")}
-                    pointermove={(e) => this.handleStageSlide(e)}
+        const sideColor = theme.sideButtons.rgb
+        return <div className="canvas-wrapper" style={{ width}}>
+            <div className='canvas-relative'>
+                <button 
+                    onPointerDown={() => functions.selectColumn(data.selected - 1)}
+                    className={`canvas-buttons ${!data.isPlaying ? 'canvas-buttons-visible' : ''}`}
+                    style={{ 
+                        left: '0' ,
+                        paddingRight: '0.5rem',
+                        background: `linear-gradient(90deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
+                    }}
                 >
-                    {data.columns.map((column, i) => {
-                        if (!isColumnVisible(i, data.selected, numberOfColumnsPerCanvas)) return null
-                        const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
-                        const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
-                        const background = column.tempoChanger === 0
-                            ? standardCache[Number(i % (counterLimit * 2) >= counterLimit)]
-                            : tempoChangersCache[column.tempoChanger]
-                        return <RenderColumn
-                            cache={cache}
-                            key={i}
-                            notes={column.notes}
-                            index={i}
-                            sizes={sizes}
-                            backgroundCache={background}
-                            isToolsSelected={data.selectedColumns.includes(i)}
-                            onClick={functions.selectColumn}
-                            isSelected={i === data.selected}
-                            isBreakpoint={data.breakpoints.includes(i)}
-                        />
-                    })}
-                </Container>
-                }
-            </Stage>
+                    <FaChevronLeft/>
+                </button>
+                <button 
+                    onPointerDown={() => functions.selectColumn(data.selected + 1)}
+                    className={`canvas-buttons ${!data.isPlaying ? 'canvas-buttons-visible' : ''}`}
+                    style={{ 
+                        right: '0',
+                        paddingLeft: '0.5rem',
+                        background: `linear-gradient(270deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
+                    }}
+                >
+                    <FaChevronRight />
+                </button>
+
+                <Stage
+                    width={width}
+                    height={height}
+                    raf={false}
+                    renderOnComponentChange={true}
+                    options={{
+                        backgroundAlpha: 0,
+                        autoDensity: true,
+                        resolution: window.devicePixelRatio || 1.4
+                    }}
+                    ref={this.notesStageRef}
+                >
+                    {(cache && !data.isRecordingAudio)  && <Container
+                        x={xPosition}
+                        interactive={true}
+                        pointerdown={(e) => this.handleClick(e, "downStage")}
+                        pointermove={(e) => this.handleStageSlide(e)}
+                    >
+                        {data.columns.map((column, i) => {
+                            if (!isColumnVisible(i, data.selected, numberOfColumnsPerCanvas)) return null
+                            const tempoChangersCache = (i + 1) % 4 === 0 ? cache.columnsLarger : cache.columns
+                            const standardCache = (i + 1) % 4 === 0 ? cache.standardLarger : cache.standard
+                            const background = column.tempoChanger === 0
+                                ? standardCache[Number(i % (counterLimit * 2) >= counterLimit)]
+                                : tempoChangersCache[column.tempoChanger]
+                            return <RenderColumn
+                                cache={cache}
+                                key={i}
+                                notes={column.notes}
+                                index={i}
+                                sizes={sizes}
+                                instruments={data.song.instruments}
+                                currentLayer={data.currentLayer}
+                                backgroundCache={background}
+                                isToolsSelected={data.selectedColumns.includes(i)}
+                                onClick={functions.selectColumn}
+                                isSelected={i === data.selected}
+                                isBreakpoint={data.breakpoints.includes(i)}
+                            />
+                        })}
+                    </Container>
+                    }
+                </Stage>
+            </div>
             <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
                 <TimelineButton
                     onClick={() => this.handleBreakpoints(-1)}
@@ -327,9 +378,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     style={{
                         backgroundColor: theme.timeline.hex
                     }}
+                    ariaLabel='Previous Breakpoint'
                 >
                     <Memoized>
-                        <FaStepBackward size={16}/>
+                        <FaStepBackward size={16} />
                     </Memoized>
                 </TimelineButton>
                 <TimelineButton
@@ -339,9 +391,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         marginLeft: 0,
                         backgroundColor: theme.timeline.hex
                     }}
+                    ariaLabel='Next Breakpoint'
                 >
                     <Memoized>
-                        <FaStepForward size={16}/>
+                        <FaStepForward size={16} />
                     </Memoized>
                 </TimelineButton>
 
@@ -416,10 +469,11 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         backgroundColor: theme.timeline.hex
                     }}
                     tooltip={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
+                    ariaLabel={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
                 >
                     <Memoized>
                         {isBreakpointSelected
-                            ? <FaMinusCircle key='minus' size={16}/>
+                            ? <FaMinusCircle key='minus' size={16} />
                             : <FaPlusCircle key='plus' size={16} />
                         }
                     </Memoized>

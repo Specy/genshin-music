@@ -2,6 +2,7 @@ import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "appConfig"
 import Color from "color"
 import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
 import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
+import { NoteLayer } from "lib/Layer";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
@@ -97,8 +98,9 @@ export class ComposerCache {
         })
         layersCombination.forEach(note => {
             const radius = this.noteWidth > 20 ? 3 : 2
+            const layer = new NoteLayer(note)
             const g = new Graphics()
-            if (note[0] === "1") { //layer 1
+            if (layer.test(0)) { //layer 1
                 g.beginFill(new Color(noteData.background).rgbNumber())
                 .lineStyle(1, new Color(noteData.background).rgbNumber())
                     .drawRoundedRect(
@@ -109,7 +111,7 @@ export class ComposerCache {
                         radius
                     ).endFill()
             }
-            if (note[1] === "1") { //layer 2
+            if (layer.test(1)) { //layer 2
                 g.lineStyle(this.margin === 4 ? 3 : 2,new Color(noteData.border).rgbNumber())
                     .drawRoundedRect(
                         this.margin / 2 - 0.25,
@@ -119,7 +121,7 @@ export class ComposerCache {
                         radius
                     ).endFill()
             }
-            if (note[2] === "1") { //layer 3
+            if (layer.test(2)) { //layer 3
                 g.beginFill(new Color(noteData.center).rgbNumber())
                     .lineStyle(1,new Color(noteData.center).rgbNumber())
                     .drawCircle(
@@ -128,7 +130,7 @@ export class ComposerCache {
                         this.noteHeight / 3 - 0.5
                     ).endFill()
             }
-            if (note[3] === "1") { //layer 4
+            if (layer.test(3)) { //layer 4
                 const lineWidth = this.margin === 4 ? 3 : 2
                 g.lineStyle(lineWidth, new Color(noteData.border).rgbNumber())
                     .moveTo(this.margin / 2 + 0.5, this.noteHeight / 2)

@@ -1,26 +1,25 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars } from 'react-icons/fa';
-import { FileDownloader, parseSong } from "lib/Tools"
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone } from 'react-icons/fa';
 import { APP_NAME } from 'appConfig'
-import { MenuItem } from 'components/MenuItem'
-import MenuPanel from 'components/MenuPanel'
-import DonateButton from 'components/DonateButton'
-import Memoized from 'components/Memoized';
+import { MenuItem } from 'components/Miscellaneous/MenuItem'
+import MenuPanel from 'components/Layout/MenuPanel'
+import DonateButton from 'components/Miscellaneous/DonateButton'
+import Memoized from 'components/Utility/Memoized';
 import { IS_MIDI_AVAILABLE } from 'appConfig';
 import Analytics from 'lib/Analytics';
-import LoggerStore from 'stores/LoggerStore';
-import { AppButton } from 'components/AppButton';
-import { SongMenu } from 'components/SongMenu';
+import { logger } from 'stores/LoggerStore';
+import { AppButton } from 'components/Inputs/AppButton';
+import { SongMenu } from 'components/Layout/SongMenu';
 import { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
 import { useTheme } from 'lib/Hooks/useTheme';
 import { ThemeStoreClass } from 'stores/ThemeStore';
-import { hasTooltip, Tooltip } from 'components/Tooltip';
-import { HelpTooltip } from 'components/HelpTooltip';
-import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/FloatingDropdown';
+import { hasTooltip, Tooltip } from 'components/Utility/Tooltip';
+import { HelpTooltip } from 'components/Utility/HelpTooltip';
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/Utility/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
-import { asyncConfirm, asyncPrompt } from 'components/AsyncPrompts';
+import { asyncConfirm, asyncPrompt } from 'components/Utility/AsyncPrompts';
 import { SettingsPane } from "components/Settings/SettingsPane";
 import { SerializedSong } from 'lib/Songs/Song';
 import { useFolders } from 'lib/Hooks/useFolders';
@@ -31,6 +30,8 @@ import { useSongs } from 'lib/Hooks/useSongs';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import useClickOutside from 'lib/Hooks/useClickOutside';
 import isMobile from 'is-mobile';
+import { fileService } from 'lib/Services/FileService';
+import { parseSong } from 'lib/Utilities';
 
 const isOnMobile = isMobile()
 interface MenuProps {
@@ -63,7 +64,7 @@ function Menu({ data, functions }: MenuProps) {
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
         if (isOnMobile) setVisible(false)
-    }, {active: isOpen, ignoreFocusable: true})
+    }, { active: isOpen, ignoreFocusable: true })
 
     useEffect(() => {
         KeyboardProvider.register("Escape", () => {
@@ -108,26 +109,21 @@ function Menu({ data, functions }: MenuProps) {
         try {
             if (song instanceof Midi) {
                 const agrees = await asyncConfirm(
-                    `If you use MIDI, the song will loose some information, if you want to share the song with others,
-                    use the other format (button above). Do you still want to download?`
+                    `If you use MIDI, the song will loose some information, if you want to share the song with others, use the other format (button above). Do you still want to download?`
                 )
                 if (!agrees) return
-                return FileDownloader.download(
-                    new Blob([song.toArray()], { type: "audio/midi" }),
-                    song.name + ".mid"
-                )
+                return fileService.downloadMidi(song)
             }
             song.data.appName = APP_NAME
             const songName = song.name
             const parsed = parseSong(song)
             const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
-            const json = JSON.stringify(converted)
-            FileDownloader.download(json, `${songName}.${APP_NAME.toLowerCase()}sheet.json`)
-            LoggerStore.success("Song downloaded")
+            fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
+            logger.success("Song downloaded")
             Analytics.userSongs('download', { name: parsed.name, page: 'composer' })
         } catch (e) {
             console.log(e)
-            LoggerStore.error('Error downloading song')
+            logger.error('Error downloading song')
         }
     }, [])
     const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
@@ -149,25 +145,25 @@ function Menu({ data, functions }: MenuProps) {
         <div className="menu-wrapper" ref={menuRef}>
 
             <div className={menuClass}>
-                <MenuItem onClick={() => toggleMenu(false)} className='close-menu'>
+                <MenuItem onClick={() => toggleMenu(false)} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon" />
                 </MenuItem>
-                <MenuItem onClick={updateThisSong} className={hasUnsaved}>
+                <MenuItem onClick={updateThisSong} className={hasUnsaved} ariaLabel='Save'>
                     <Memoized>
                         <FaSave className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Songs")} isActive={isOpen && selectedMenu === "Songs"}>
+                <MenuItem onClick={() => selectSideMenu("Songs")} isActive={isOpen && selectedMenu === "Songs"} ariaLabel='Song menu'>
                     <Memoized>
                         <FaMusic className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"}>
+                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"} ariaLabel='Settings menu'>
                     <Memoized>
                         <FaCog className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => changePage('Home')}>
+                <MenuItem onClick={() => changePage('Home')} ariaLabel='Open home menu'>
                     <Memoized>
                         <FaHome className="icon" />
                     </Memoized>
@@ -209,7 +205,7 @@ function Menu({ data, functions }: MenuProps) {
                             functions: songFunctions
                         }}
                     />
-                    <div className='row' style={{justifyContent: "flex-end"}}>
+                    <div className='row' style={{ justifyContent: "flex-end" }}>
                         <AppButton onClick={createFolder}>
                             Create folder
                         </AppButton>
@@ -348,6 +344,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FloatingDropdownRow onClick={() => downloadSong(parseSong(data).toMidi())}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download MIDI' />
+                </FloatingDropdownRow>
+                <FloatingDropdownRow onClick={() => songsStore.addSong(parseSong(data))}
+                >
+                    <FaClone style={{ marginRight: "0.4rem" }} />
+                    <FloatingDropdownText text='Clone song' />
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={() => removeSong(data.name, data.id!)}>
                     <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} />

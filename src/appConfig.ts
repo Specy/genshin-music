@@ -1,20 +1,23 @@
 const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '2.7' as const
+const APP_VERSION = '2.8' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ?  `Added option to rename songs
-        Song names are not unique anymore
-        Added folders and new song menu UI
-        Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
-        Fixed some bugs
+    ?  `Increased instrument limit in the composer to 30
+        Redesigned the tools in the composer
+        Added paste/insert to certain layer
+        Added metronome in player
+        Added multiple instruments in player
+        And more...
+    `.trim(): 
+       `Increased instrument limit in the composer to 30
+        Redesigned the tools in the composer
+        Added paste/insert to certain layer
+        Added metronome in player
+        Added multiple instruments in player
+        And more...
     `.trim()
-    :  `Added option to rename songs
-        Song names are not unique anymore
-        Added folders and new song menu UI
-        Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)
-        Fixed some bugs
-    `.trim()
-const LAYERS_INDEXES = [1, 2, 3, 4] as const
+
+
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
@@ -44,7 +47,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Zither",
         "Old-Zither",
         "DunDun"
-    ] as const 
+    ] as const
     : [
         "Piano",
         "Contrabass",
@@ -91,7 +94,11 @@ const BaseinstrumentsData = {
     DunDun: {
         notes: 8,
         family: "percussive",
-        midiName: "synth drum"
+        midiName: "synth drum",
+        ...(APP_NAME === "Genshin" ? {
+            fill: '#F99C55',
+            clickColor: '#f5a262'
+        } : {})
     },
     Panflute: {
         notes: 15,
@@ -190,7 +197,7 @@ type InstrumentsDataProps = {
         notes: 8 | 15 | 21
         fill?: string
         clickColor?: string
-        family: string, 
+        family: string,
         midiName: string
     }
 }
@@ -318,8 +325,8 @@ const LAYOUT_IMAGES = {
 const CACHE_DATA = {
     noteData: {
         background: "#d3bd8e",
-        border: "#de4545",
-        center: "#de4545"
+        border: "#de6b45",
+        center: "#de6b45"
     },
     horizontalLineBreak: NOTES_PER_COLUMN / 3,
     standards: [
@@ -333,7 +340,7 @@ const CACHE_DATA = {
             color: 0xd6722f //selected
         }
     ],
-    layersCombination: ["0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111"],
+    layersCombination: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
     breakpoints: [
         {
             type: "short",
@@ -369,7 +376,7 @@ const TEMPO_CHANGERS = [
 ] as const
 export type TempoChanger = typeof TEMPO_CHANGERS[number]
 function isTwa() {
-    return JSON.parse(sessionStorage.getItem('isTwa') || 'null')
+    return JSON.parse(sessionStorage?.getItem('isTwa') || 'null')
 }
 export type AppName = 'Sky' | 'Genshin'
 
@@ -440,9 +447,19 @@ const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
         81: [5, false],
         82: [5, true],
         83: [6, false],
+        84: [6, false],
     })))
+const MIDI_BOUNDS = APP_NAME === "Genshin" 
+    ? {
+        upper: 84,
+        lower: 48
+    }
+    : {
+        upper: 84,
+        lower: 60
+    }
 //get only non accidentals
-const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k,v]) => v[1] === false)
+const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
 const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
 export {
     INSTRUMENTS,
@@ -464,12 +481,12 @@ export {
     UPDATE_MESSAGE,
     MIDI_STATUS,
     IS_MIDI_AVAILABLE,
-    LAYERS_INDEXES,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,
     EMPTY_LAYER,
     MIDI_MAP_TO_NOTE,
-    NOTE_MAP_TO_MIDI
+    NOTE_MAP_TO_MIDI,
+    MIDI_BOUNDS
 }
 export type {
     Pitch

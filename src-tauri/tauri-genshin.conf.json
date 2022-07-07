@@ -1,0 +1,36 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeBuildCommand": "yarn build:genshin",
+    "beforeDevCommand": "",
+    "devPath": "http://localhost:3000",
+    "distDir": "../build/genshinMusic/"
+  },
+  "package": {
+    "productName": "Genshin Music Nightly",
+    "version": "1.1.0"
+  },
+  "tauri": {
+    "bundle": {
+      "icon": [
+        "assets/Genshin/icons/32x32.png",
+        "assets/Genshin/icons/128x128.png",
+        "assets/Genshin/icons/128x128@2x.png",
+        "assets/Genshin/icons/icon.icns",
+        "assets/Genshin/icons/icon.ico"
+      ],
+      "identifier": "dev.specy.genshin-music",
+      "longDescription": "An app based off Genshin where you can compose, play and practice songs.",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "windows": [
+      {
+        "title": "Genshin Music Nightly"
+      }
+    ]
+  }
+}

@@ -58,6 +58,7 @@
     border: dashed 4px var(--accent);
     border-radius: 0.4rem;
     overflow: hidden;
+    height: 70vh;
 }
 .theme-app-preview .side-menu{
     position: absolute;
@@ -242,5 +243,8 @@
 @media  (max-width:900px) {
     .theme-row{
         margin-top: 0.5rem;
+    }
+    .theme-app-preview{
+        height: calc(100vh - 3rem);
     }
 }
