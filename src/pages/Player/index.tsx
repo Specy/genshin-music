@@ -64,8 +64,8 @@ class Player extends Component<any, PlayerState>{
 		const { settings } = this.state
 		await this.loadInstrument(settings.instrument.value)
 		AudioProvider.setReverb(settings.caveMode.value)
-
-	}
+		this.registerKeyboardListeners()
+	}	
 	componentDidMount() {
 		this.mounted = true
 		this.init()

@@ -60,7 +60,7 @@ export function HelpTab() {
                                 <td><Key>Shift + R</Key></td><td>reload song </td>
                             </tr>
                             <tr>
-                                <td><Key>Shift + R</Key></td><td>Start/Stop recording when there are no songs playing</td>
+                                <td><Key>Shift + C</Key></td><td>Start/Stop recording when there are no songs playing</td>
                             </tr>
                             <tr>
                                 <td><Key>Shift + M</Key></td><td>Open/Close the menu</td>

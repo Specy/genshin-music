@@ -28,6 +28,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             Layer name
             <input
                 type="text"
+                maxLength={50}
                 className="input"
                 style={{ width: '7.4rem' }}
                 value={instrument.alias}

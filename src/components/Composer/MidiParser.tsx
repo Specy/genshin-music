@@ -5,7 +5,7 @@ import { groupNotesByIndex, mergeLayers } from 'lib/Utilities'
 import { ColumnNote, Column, MidiNote, InstrumentData } from 'lib/Songs/SongClasses'
 import { ComposedSong } from 'lib/Songs/ComposedSong'
 import { PITCHES, Pitch } from 'appConfig'
-import { FaArrowDown, FaArrowUp, FaEllipsisH, FaInfoCircle } from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaEllipsisH } from 'react-icons/fa'
 import useDebounce from 'lib/Hooks/useDebounce'
 import { logger } from 'stores/LoggerStore'
 import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore'
@@ -409,14 +409,14 @@ function TrackInfo({ data, index, onChange, theme, instruments }: TrackProps) {
                 >
                     {instruments.map((ins, i) =>
                         <option value={i} key={i}>
-                            {ins.name} - {`Layer ${ i + 1}`}
+                            {ins.alias || ins.name} - {`Layer ${ i + 1}`}
                         </option>
                     )}
                 </Select>
 
                 <FaEllipsisH
                     size={22}
-                    color={dataShown ? "var(--accent)" : "var(--primary)"}
+                    color={"var(--primary)"}
                     onClick={() => setDataShown(!dataShown)}
                     cursor='pointer'
                 />
@@ -437,6 +437,7 @@ function TrackInfo({ data, index, onChange, theme, instruments }: TrackProps) {
                     value={offset}
                     placeholder='No offset'
                     className='midi-input'
+                    style={{width: '6rem'}}
                     onChange={(e) => setOffset(e.target.value)}
                 />
             </div>

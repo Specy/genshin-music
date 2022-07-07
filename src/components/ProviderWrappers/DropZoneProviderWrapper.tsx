@@ -20,6 +20,8 @@ export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
 
                     if(success.length === 1){
                         logger.success(`Song added to the ${type} tab!`, 4000)
+                    }else if (success.length > 1){
+                        logger.success(`${success.length} songs added!`, 4000)
                     }
                 } else {
                     const errors = result.errors.map(s => s.name || "UNKNOWN").join(", ")

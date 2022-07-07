@@ -558,6 +558,7 @@ canvas {
     display: flex;
     flex-direction: row;
     margin-top: 0.2rem;
+    align-items: center;
     justify-content: space-between;
 }
 
