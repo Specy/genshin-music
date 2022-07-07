@@ -1,5 +1,5 @@
 const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '2.8' as const
+const APP_VERSION = '2.7.5' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ?  `Increased instrument limit in the composer to 30
