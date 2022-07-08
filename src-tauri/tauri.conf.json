@@ -4,7 +4,8 @@
     "beforeBuildCommand": "yarn build:genshin",
     "beforeDevCommand": "",
     "devPath": "http://localhost:3000",
-    "distDir": "../build/genshinMusic/"
+    "distDir": "../build/genshinMusic/",
+    "withGlobalTauri": true
   },
   "package": {
     "productName": "Genshin Music Nightly",
@@ -56,6 +57,7 @@
     "windows": [
       {
         "fullscreen": false,
+        "theme": "Dark",
         "height": 720,
         "minWidth": 600,
         "center": true,

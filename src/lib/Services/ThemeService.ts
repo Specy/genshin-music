@@ -1,12 +1,12 @@
 import { APP_NAME } from "appConfig"
 import { Theme } from "stores/ThemeStore"
-import { DbInstance } from "./Database"
+import { DbInstance } from "./Database/Database"
 
 
 class ThemeService{
     themeCollection = DbInstance.collections.themes
     async getTheme(id:string):Promise<Theme|null>{
-        const theme = await this.themeCollection.findOne({id}) as Theme
+        const theme = await this.themeCollection.findOne({id})
         if(theme){
             //@ts-ignore
             delete theme.id
@@ -16,7 +16,7 @@ class ThemeService{
         return theme
     }
     async getThemes(): Promise<Theme[]>{
-        const themes = (await this.themeCollection.find({}).toArray()) as Theme[]
+        const themes = await this.themeCollection.find({})
         themes.forEach(theme => {
             //@ts-ignore
             delete theme.id
@@ -32,7 +32,7 @@ class ThemeService{
         return id
     }
     updateTheme(id:string,data:Theme){
-        return this.themeCollection.update({id},data)
+        return this.themeCollection.update({id},{id, ...data})
     }
     removeTheme(query:any){
         return this.themeCollection.remove(query)

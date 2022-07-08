@@ -1,10 +1,10 @@
 import { SerializedSong, Song } from "lib/Songs/Song"
-import { DbInstance } from "./Database"
+import { DbInstance } from "./Database/Database"
 
 class SongService{
     songCollection = DbInstance.collections.songs
     async getSongs(): Promise<SerializedSong[]>{
-        const songs = await (this.songCollection.find({}).toArray() as Promise<SerializedSong[]>)
+        const songs = await this.songCollection.find({})
         const migrationEnsured = await this.ensureMigration(songs)
         return migrationEnsured.map(this.stripDbId)
     }
@@ -27,7 +27,7 @@ class SongService{
         //if every song was already migrated
         if(!changes.some(change => change)) return songs
         //if some songs were not migrated
-        return this.songCollection.find({}).toArray() as Promise<SerializedSong[]>
+        return this.songCollection.find({})
     }
 
     private stripDbId(song:SerializedSong){
@@ -40,7 +40,7 @@ class SongService{
         return (await this.getSongById(id)) !== null
     }
     async getSongById(id:string): Promise<SerializedSong | null>{
-        const song = await (this.songCollection.findOne({id}) as Promise<SerializedSong>)
+        const song = await this.songCollection.findOne({id})
         if(song) return this.stripDbId(song)
         return null
     }

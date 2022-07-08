@@ -25,6 +25,11 @@ export interface Theme {
     editable: boolean
 }
 
+export type SerializedTheme = Theme & {
+    id: string
+}
+
+
 export class BaseTheme {
     state: Theme
     constructor(name: string) {
