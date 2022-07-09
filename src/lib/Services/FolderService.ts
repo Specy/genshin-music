@@ -14,10 +14,10 @@ class FolderService{
         return id
     }
     updateFolder(id:string,data:SerializedFolder){
-        return this.foldersCollection.update({id},data)
+        return this.foldersCollection.updateById(id,data)
     }
     removeFolder(id: string){
-        return this.foldersCollection.remove({id})
+        return this.foldersCollection.removeById(id)
     }
 }
 

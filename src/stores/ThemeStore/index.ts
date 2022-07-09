@@ -184,6 +184,8 @@ export class ThemeStoreClass {
     }
     save = () => {
         themeService.setCurrentThemeId(this.getId())
+        if(!this.state.editable) return
+        console.log(this.state)
         return themeService.updateTheme(this.state.other.id, cloneDeep(this.state))
     }
 }

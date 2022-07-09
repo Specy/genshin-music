@@ -40,15 +40,12 @@ class SongService{
         return (await this.getSongById(id)) !== null
     }
     async getSongById(id:string): Promise<SerializedSong | null>{
-        const song = await this.songCollection.findOne({id})
+        const song = await this.songCollection.findOneById(id)
         if(song) return this.stripDbId(song)
         return null
     }
-    async existsSong(query:Partial<SerializedSong>){
-        return (await this.songCollection.findOne(query)) !== undefined
-    }
     updateSong(id:string,data:SerializedSong){
-        return this.songCollection.update({id}, data)
+        return this.songCollection.updateById(id, data)
     }
     async renameSong(id: string, newName: string){
         const song = await this.getSongById(id)
@@ -67,7 +64,7 @@ class SongService{
         return this.songCollection.remove({})
     }
     removeSong(id: string){
-        return this.songCollection.remove({id})
+        return this.songCollection.removeById(id)
     }
 }
 

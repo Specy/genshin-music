@@ -9,6 +9,7 @@
   "dependencies": {
     "@inlet/react-pixi": "^6.6.5",
     "@pixi/graphics-smooth": "^0.0.22",
+    "@tauri-apps/api": "^1.0.2",
     "@tonejs/midi": "^2.0.27",
     "audio-recorder-polyfill": "^0.4.1",
     "audiobuffer-to-wav": "^1.0.0",

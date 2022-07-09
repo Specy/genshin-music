@@ -1,12 +1,12 @@
 import ZangoDb from "zangodb"
-import { APP_NAME } from "appConfig"
-import { Collection, ZangoCollection } from "./Collection"
+import { APP_NAME, IS_TAURI } from "appConfig"
+import { Collection, TauriCollection, ZangoCollection } from "./Collection"
 import { SerializedSong } from "lib/Songs/Song"
 import { SerializedTheme } from "stores/ThemeStore"
 import { SerializedFolder } from "lib/Folder"
 
 class DB{
-    instance: ZangoDb.Db
+    private instance: ZangoDb.Db
     collections: {
         songs: Collection<SerializedSong>,
         themes: Collection<SerializedTheme>,
@@ -15,10 +15,18 @@ class DB{
     constructor(){
         //@ts-ignore
         this.instance = new ZangoDb.Db(APP_NAME,3, { songs: [], themes: [], folders: [] })
-        this.collections = {
-            songs: new ZangoCollection<SerializedSong>(this.instance.collection("songs"))  ,
-            themes: new ZangoCollection<SerializedTheme>(this.instance.collection("themes")),
-            folders: new ZangoCollection<SerializedFolder>(this.instance.collection("folders")),
+        if(IS_TAURI){
+            this.collections = {
+                songs: new TauriCollection<SerializedSong>('songs'),
+                themes: new TauriCollection<SerializedTheme>('themes'),
+                folders: new TauriCollection<SerializedFolder>('folders'),
+            }
+        }else{
+            this.collections = {
+                songs: new ZangoCollection<SerializedSong>(this.instance.collection("songs"))  ,
+                themes: new ZangoCollection<SerializedTheme>(this.instance.collection("themes")),
+                folders: new ZangoCollection<SerializedFolder>(this.instance.collection("folders")),
+            }
         }
     }
     generateId(){

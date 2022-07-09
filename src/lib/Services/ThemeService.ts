@@ -6,7 +6,7 @@ import { DbInstance } from "./Database/Database"
 class ThemeService{
     themeCollection = DbInstance.collections.themes
     async getTheme(id:string):Promise<Theme|null>{
-        const theme = await this.themeCollection.findOne({id})
+        const theme = await this.themeCollection.findOneById(id)
         if(theme){
             //@ts-ignore
             delete theme.id
@@ -32,10 +32,13 @@ class ThemeService{
         return id
     }
     updateTheme(id:string,data:Theme){
-        return this.themeCollection.update({id},{id, ...data})
+        return this.themeCollection.updateById(id,{...data, id})
     }
-    removeTheme(query:any){
+    removeTheme(query:Partial<Theme>){
         return this.themeCollection.remove(query)
+    }
+    removeThemeById(id:string){
+        return this.themeCollection.removeById(id)
     }
     getCurrentThemeId(){
         return localStorage.getItem(APP_NAME + '_Theme')
