@@ -1,5 +1,6 @@
 import { APP_NAME } from "appConfig"
 import { Theme } from "stores/ThemeStore"
+import { Query } from "./Database/Collection"
 import { DbInstance } from "./Database/Database"
 
 
@@ -34,7 +35,7 @@ class ThemeService{
     updateTheme(id:string,data:Theme){
         return this.themeCollection.updateById(id,{...data, id})
     }
-    removeTheme(query:Partial<Theme>){
+    removeTheme(query: Query<Theme>){
         return this.themeCollection.remove(query)
     }
     removeThemeById(id:string){
