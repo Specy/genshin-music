@@ -4,7 +4,8 @@
     "beforeBuildCommand": "yarn build:genshin",
     "beforeDevCommand": "",
     "devPath": "http://localhost:3000",
-    "distDir": "../build/genshinMusic/"
+    "distDir": "../build/genshinMusic/",
+    "withGlobalTauri": true
   },
   "package": {
     "productName": "Genshin Music Nightly",
@@ -12,7 +13,17 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "fs": {
+        "scope": [
+          "$APP/*"
+        ],
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeFile": true
+      }
     },
     "bundle": {
       "active": true,
@@ -51,11 +62,17 @@
       "csp": null
     },
     "updater": {
-      "active": false
+      "active": true,
+      "pubkey": "",
+      "endpoints": [
+        "https://github.com/Specy/genshin-music/blob/main/src-tauri/tauri.update.json"
+      ],
+      "dialog": true
     },
     "windows": [
       {
         "fullscreen": false,
+        "theme": "Dark",
         "height": 720,
         "minWidth": 600,
         "center": true,

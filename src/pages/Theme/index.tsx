@@ -105,7 +105,7 @@ function ThemePage() {
             if (ThemeProvider.getId() === theme.other.id) {
                 ThemeProvider.wipe()
             }
-            await themeService.removeTheme({ id: theme.other.id })
+            await themeService.removeThemeById(theme.other.id)
             setUserThemes(await themeService.getThemes())
         }
     }

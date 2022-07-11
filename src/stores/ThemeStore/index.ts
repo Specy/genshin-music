@@ -25,6 +25,11 @@ export interface Theme {
     editable: boolean
 }
 
+export type SerializedTheme = Theme & {
+    id: string
+}
+
+
 export class BaseTheme {
     state: Theme
     constructor(name: string) {
@@ -179,6 +184,8 @@ export class ThemeStoreClass {
     }
     save = () => {
         themeService.setCurrentThemeId(this.getId())
+        if(!this.state.editable) return
+        console.log(this.state)
         return themeService.updateTheme(this.state.other.id, cloneDeep(this.state))
     }
 }

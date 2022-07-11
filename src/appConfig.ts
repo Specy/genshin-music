@@ -16,8 +16,10 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         Added multiple instruments in player
         And more...
     `.trim()
-
-
+//@ts-ignore
+const TAURI = window?.__TAURI__
+//@ts-ignore
+const IS_TAURI = !!TAURI
 const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
@@ -486,7 +488,9 @@ export {
     EMPTY_LAYER,
     MIDI_MAP_TO_NOTE,
     NOTE_MAP_TO_MIDI,
-    MIDI_BOUNDS
+    MIDI_BOUNDS,
+    IS_TAURI,
+    TAURI
 }
 export type {
     Pitch
