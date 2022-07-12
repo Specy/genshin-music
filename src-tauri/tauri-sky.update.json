@@ -1,0 +1,14 @@
+{
+    "version": "v2.7.0",
+    "notes": "Test version",
+    "platforms": {
+      "linux-x86_64": {
+        "signature": "",
+        "url": ""
+      },
+      "windows-x86_64": {
+        "signature": "",
+        "url": ""
+      }
+    }
+  }

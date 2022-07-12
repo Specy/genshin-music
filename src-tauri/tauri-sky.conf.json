@@ -27,6 +27,11 @@
         "timestampUrl": ""
       }
     },
+    "updater": {
+      "endpoints": [
+        "https://github.com/Specy/genshin-music/blob/main/src-tauri/tauri-sky.update.json"
+      ]
+    },
     "windows": [
       {
         "title": "Sky Music Nightly"
