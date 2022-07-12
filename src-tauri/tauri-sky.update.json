@@ -1,14 +1,14 @@
 {
-    "version": "v2.7.0",
-    "notes": "Test version",
-    "platforms": {
-      "linux-x86_64": {
-        "signature": "",
-        "url": ""
-      },
-      "windows-x86_64": {
-        "signature": "",
-        "url": ""
-      }
+  "version": "v2.8.0",
+  "notes": "First desktop release",
+  "platforms": {
+    "linux-x86_64": {
+      "signature": "",
+      "url": ""
+    },
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTWHd5N0xUa2xwcFYvVzgwZlpBQStVRFJlVXZGT3BpSFJpczVsTW9nY1lSdjlKc3ZySFF3ZUpJeGxneTNqS055UU5JcEM5SEswUjdKY2p0STY5RlY5WitnTUdtMm1leWdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU3NjU5MjY3CWZpbGU6U2t5IE11c2ljIE5pZ2h0bHlfMi44LjBfeDY0X2VuLVVTLm1zaS56aXAKaSt6S3l0c3I0Yk1uSExTVyt6cUs5VUxxb2ZWK3UybC85QUN6RlhEUDFRbkt2MWpIcm5ra3VJaCsxWml3U1hIb1o1T2llSUZWaDZHcXZjRGVWazZLQ2c9PQo=",
+      "url": "https://github.com/Specy/genshin-music/releases/download/v2.8.0/Sky_Music_Nightly_2.8.0_x64_en-US.msi.zip"
     }
   }
+}
