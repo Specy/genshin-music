@@ -22,7 +22,7 @@ You can use the scripts `yarn build:genshin` and `yarn build:sky` which will bui
 
 # How to build desktop app
 
-The app uses tauri for the desktop bundle which is a sandboxed webview. You can build it by using `yarn build-tauri:genshin` or `yarn build-tauri:sky`
+The app uses tauri for the desktop bundle which is a sandboxed webview. You can build it by using `yarn build-tauri:genshin`, `yarn build-tauri:sky`, `yarn build-tauri:all`. The config is premade to allow for updates, if you dont have a signing key, the build will fail. If you want to build without updates, go to `src-tauri/tauri.conf.json` and set `updater` to false
 
 
 # Documentation
