@@ -42,7 +42,7 @@
     "eject": "react-scripts eject",
     "tauri": "tauri",
     "build-tauri:sky": "yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
-    "build-tauri:genhin": "yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
+    "build-tauri:genshin": "yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
     "start-tauri": "yarn tauri dev",
