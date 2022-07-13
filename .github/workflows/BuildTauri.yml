@@ -44,7 +44,7 @@ jobs:
           CHANGELOG: ${{ inputs.update_description }}
         run: yarn build-tauri-deployment:no-env all
       - name: Upload artifact
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.platform }}
           path: src-tauri/target/release/bundle/
