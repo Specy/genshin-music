@@ -2,13 +2,9 @@
   "version": "v2.8.0",
   "notes": "First desktop release",
   "platforms": {
-    "linux-x86_64": {
-      "signature": "",
-      "url": ""
-    },
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTWHd5N0xUa2xwcFo2NlNBbDhYQ2xHazU1bnd2eUhFeUNhUS8vZ3IwQ1g1bVdhQVdYaHVPanpNVmNoQXNzeC84NngwRU1lMVRvMUFIMEJCQkF5dS9EZ1FEaENGRDNkaWdFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU3NjYxMjE1CWZpbGU6R2Vuc2hpbiBNdXNpYyBOaWdodGx5XzIuOC4wX3g2NF9lbi1VUy5tc2kuemlwCk1xVXI5KzdsRGdac1BmVklheU41SG9KSkN4N2V4dy9xWEltaWl6bjcxelZNSWRqakxMSHF1QkdUYkUvTUl2MjBvTGJ1aFNycGZHR3V5YXU5aERDZUFnPT0K",
-      "url": "https://github.com/Specy/genshin-music/releases/download/v2.8.0/Genshin_Music_Nightly_2.8.0_x64_en-US.msi.zip"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTWHd5N0xUa2xwcFl2QlNDQTNPSDl6aElER0E2YW15TjR1S29sR29raFR6NEVJQ0daWkxaZGZueCt0cFBTUlNXZ1ZVakFqS2hIRWE3ditmUENwQ1RYd0I3UnZqQzF4UWdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU3NjY1MTY2CWZpbGU6R2Vuc2hpbiBNdXNpYyBOaWdodGx5XzIuNy4wX3g2NF9lbi1VUy5tc2kuemlwCldNWm9tZmtVNEVET3dyekNhd2hzVW9uWGF4Rm13Y1pNTDlqTlk5eXo5bUZ2N3hmb012TUdiVTd6ZEdjNy8yRSt6akM0V1IrU2REMkNIRVM1UFdoSkJRPT0K",
+      "url": "https://github.com/Specy/genshin-music/releases/download/v2.7.0/Genshin_Music_Nightly_2.7.0_x64_en-US.msi.zip"
     }
   }
 }
