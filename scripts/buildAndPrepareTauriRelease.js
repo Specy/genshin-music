@@ -29,37 +29,55 @@ if(changelog === undefined){
 const apps = app === "all" ? ["sky", "genshin"] : [app]
 async function run(){
     await fs.rm(releaseFolder.bundle, { recursive: true }).catch(() => console.warn("[Warning]: Could not delete bundle folder"))
-    for(const app of apps){
-        const appUpdate = await fs.readFile(`./src-tauri/tauri-${app}.update.json`, 'utf8').then(JSON.parse)
-        const appConfig = await fs.readFile(`./src-tauri/tauri-${app}.conf.json`, 'utf8').then(JSON.parse)
-        appConfig.package.version = version
-        await fs.writeFile(`./src-tauri/tauri-${app}.conf.json`, JSON.stringify(appConfig, null, 2))
-        console.log(`[Log]: Building react and tauri of ${app}...`)
-        execSync(`yarn build-tauri:${app}${useEnv === 'false' ? "-no-env" : ""}`)
-        console.log(clc.green(`[Status]: Build of ${app} complete \n`))
-        const buildFiles = await fs.readdir(releaseFolder.windows)
-        for(const file of buildFiles){
-            const newName = file.replaceAll(" ","_")
-            await fs.rename(`${releaseFolder.windows}${file}`, `${releaseFolder.windows}${newName}`)
+    try{
+        for(const app of apps){
+            const appUpdate = await fs.readFile(`./src-tauri/tauri-${app}.update.json`, 'utf8').then(JSON.parse)
+            const appConfig = await fs.readFile(`./src-tauri/tauri-${app}.conf.json`, 'utf8').then(JSON.parse)
+            appConfig.package.version = version
+            await fs.writeFile(`./src-tauri/tauri-${app}.conf.json`, JSON.stringify(appConfig, null, 2))
+            console.log(`[Log]: Building react and tauri of ${app}...`)
+            execSync(`yarn build-tauri:${app}${useEnv === 'false' ? "-no-env" : ""}`)
+            console.log(clc.green(`[Status]: Build of ${app} complete \n`))
+            const buildFiles = await fs.readdir(releaseFolder.windows)
+            for(const file of buildFiles){
+                const newName = file.replaceAll(" ","_")
+                await fs.rename(`${releaseFolder.windows}${file}`, `${releaseFolder.windows}${newName}`)
+            }
+            const renamedFiles = (await fs.readdir(releaseFolder.windows)).filter(f => f.toLowerCase().includes(app))
+            const buildZip = renamedFiles.find(e => e.endsWith('msi.zip'))
+            if(!buildZip){
+                console.error(clc.red(`[Error]: No MSI zip found for ${app}`))
+                process.exit(1)
+            }
+            const buildSignatureFile = renamedFiles.find(e => e.endsWith('msi.zip.sig'))
+            const buildSignature = await fs.readFile(`${releaseFolder.windows}${buildSignatureFile}`, 'utf8')
+            appUpdate.version = `v${version}`
+            appUpdate.notes = changelog
+            appUpdate.platforms["windows-x86_64"].url = githubEndpoint
+                .replace("{version}", 'v'+version)
+                .replace("{zip-name}", buildZip)
+            appUpdate.platforms["windows-x86_64"].signature = buildSignature
+    
+            await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
         }
-        const renamedFiles = (await fs.readdir(releaseFolder.windows)).filter(f => f.toLowerCase().includes(app))
-        const buildZip = renamedFiles.find(e => e.endsWith('msi.zip'))
-        if(!buildZip){
-            console.error(clc.red(`[Error]: No MSI zip found for ${app}`))
-            process.exit(1)
+        console.log(clc.green("[Log]: Build complete!"))
+    }catch(e){
+        console.log("ERROR:")
+        process.stdout.write(e.toString())
+        const stderr = e.stderr
+        if (stderr){
+            console.log("STD ERR:")
+            process.stdout.write(stderr.toString())
         }
-        const buildSignatureFile = renamedFiles.find(e => e.endsWith('msi.zip.sig'))
-        const buildSignature = await fs.readFile(`${releaseFolder.windows}${buildSignatureFile}`, 'utf8')
-        appUpdate.version = `v${version}`
-        appUpdate.notes = changelog
-        appUpdate.platforms["windows-x86_64"].url = githubEndpoint
-            .replace("{version}", 'v'+version)
-            .replace("{zip-name}", buildZip)
-        appUpdate.platforms["windows-x86_64"].signature = buildSignature
-
-        await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
+        const stdout = e.stdout
+        if(stdout){
+            console.log("STD OUT:")
+            process.stdout.write(stdout.toString())
+        }
+        process.exit(1)
     }
-    console.log(clc.green("[Log]: Build complete!"))
+    
+
 }
 
 run()
