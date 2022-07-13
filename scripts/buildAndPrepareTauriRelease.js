@@ -1,5 +1,8 @@
+require('dotenv').config()
 const fs = require('fs/promises')
-const [_1, _2, useEnv ,app, version, changelog] = process.argv
+const [_1, _2, useEnv ,app] = process.argv
+const version = process.env.VERSION
+const changelog = process.env.CHANGELOG
 const clc = require("cli-color");
 const { execSync } = require('child_process');
 const githubEndpoint = 'https://github.com/Specy/genshin-music/releases/download/{version}/{zip-name}'

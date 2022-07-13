@@ -15,6 +15,7 @@
     "audiobuffer-to-wav": "^1.0.0",
     "cli-color": "^2.0.2",
     "color": "^4.2.0",
+    "dotenv": "^16.0.1",
     "is-mobile": "^3.0.0",
     "lodash.clonedeep": "^4.5.0",
     "mobx": "^6.3.7",
@@ -45,7 +46,6 @@
     "build-tauri-deployment:no-env": "node ./scripts/buildAndPrepareTauriRelease.js false",
     "build-tauri:sky": "env-cmd yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
     "build-tauri:sky-no-env": "yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
-
     "build-tauri:genshin": "env-cmd yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
     "build-tauri:genshin-no-env": "yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
     "build-tauri:all": "yarn build-tauri:sky && yarn build-tauri:genshin",
