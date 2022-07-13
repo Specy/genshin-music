@@ -1,5 +1,5 @@
 const fs = require('fs/promises')
-const [_1, _2, app, version, changelog] = process.argv
+const [_1, _2, useEnv ,app, version, changelog] = process.argv
 const clc = require("cli-color");
 const { execSync } = require('child_process');
 const githubEndpoint = 'https://github.com/Specy/genshin-music/releases/download/{version}/{zip-name}'
@@ -32,7 +32,7 @@ async function run(){
         appConfig.package.version = version
         await fs.writeFile(`./src-tauri/tauri-${app}.conf.json`, JSON.stringify(appConfig, null, 2))
         console.log(`[Log]: Building react and tauri of ${app}...`)
-        execSync(`yarn build-tauri:${app}`)
+        execSync(`yarn build-tauri:${app}${useEnv === 'false' ? "-no-env" : ""}`)
         console.log(clc.green(`[Status]: Build of ${app} complete \n`))
         const buildFiles = await fs.readdir(releaseFolder.windows)
         for(const file of buildFiles){
