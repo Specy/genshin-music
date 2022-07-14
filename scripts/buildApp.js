@@ -37,20 +37,23 @@ async function execute() {
             console.log(clc.bold.yellow(`Building ${app}...`))
             await deleteAssets()
             await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
-            let result = ''
             if (process.platform === 'win32') {
                 console.log(clc.italic("Building on windows"))
-                result = execSync(
-                    `set REACT_APP_NAME=${app}&& set REACT_APP_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`)
+                execSync(
+                    `set REACT_APP_NAME=${app}&& set REACT_APP_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`,
+                    { stdio: 'inherit' }
+                )
             } else {
                 console.log(clc.italic("Building on Linux"))
-                result = execSync(
-                    `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_APP_SW_VERSION=${SW_VERSION} yarn build`)
+                execSync(
+                    `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_APP_SW_VERSION=${SW_VERSION} yarn build`,
+                    { stdio: 'inherit' }
+                )
             }
             console.log(clc.green(`${app} build complete \n`))
-            console.log(result.toString())
         }
         console.log(clc.bold.green("Build complete \n"))
+        process.exit(0)
     }catch(e){
         console.log("ERROR:")
         process.stdout.write(e.toString())

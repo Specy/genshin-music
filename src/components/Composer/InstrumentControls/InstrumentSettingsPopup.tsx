@@ -5,7 +5,7 @@ import useClickOutside from "lib/Hooks/useClickOutside"
 import { InstrumentNoteIcon } from "lib/Songs/ComposedSong"
 import { InstrumentData } from "lib/Songs/SongClasses"
 import { capitalize } from "lodash"
-import { FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeOff, FaVolumeUp } from "react-icons/fa"
+import { FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp } from "react-icons/fa"
 import { InstrumentSelector } from "./InstrumentSelector"
 
 interface InstrumentSettingsPopupProps {
