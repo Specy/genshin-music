@@ -73,6 +73,7 @@ async function run() {
             appConfig.package.version = version
             await fs.writeFile(`./src-tauri/tauri-${app}.conf.json`, JSON.stringify(appConfig, null, 2))
             console.log(`[Log]: Building react and tauri of ${app}...`)
+            await fs.rm(folders.bundle, { recursive: true }).catch(() => console.warn("[Warning]: Could not delete bundle folder"))   
             await buildApp(app)
             console.log(clc.green(`[Status]: Build of ${app} complete \n`))
             //on windows
@@ -216,23 +217,10 @@ async function run() {
         }
         console.log(clc.green("[Log]: Build complete!"))
     } catch (e) {
+        console.log(clc.error("[Error]: There was an error building"))
         console.error(e)
-        console.log("ERROR:")
-        process.stdout.write(e.toString())
-        const stderr = e.stderr
-        if (stderr) {
-            console.log("STD ERR:")
-            process.stdout.write(stderr.toString())
-        }
-        const stdout = e.stdout
-        if (stdout) {
-            console.log("STD OUT:")
-            process.stdout.write(stdout.toString())
-        }
         process.exit(1)
     }
-
-
 }
 
 run()

@@ -55,18 +55,8 @@ async function execute() {
         console.log(clc.bold.green("Build complete \n"))
         process.exit(0)
     }catch(e){
-        console.log("ERROR:")
-        process.stdout.write(e.toString())
-        const stderr = e.stderr
-        if (stderr){
-            console.log("STD ERR:")
-            process.stdout.write(stderr.toString())
-        }
-        const stdout = e.stdout
-        if(stdout){
-            console.log("STD OUT:")
-            process.stdout.write(stdout.toString())
-        }
+        console.log(clc.error("[Error]: There was an error building"))
+        console.error(e)
         process.exit(1)
     }
 }
