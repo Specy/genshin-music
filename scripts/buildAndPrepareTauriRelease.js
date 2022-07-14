@@ -36,7 +36,7 @@ if (changelog === undefined) {
 }
 const platformKey = {
     "win32": "windows-x86_64",
-    "darwin": "macos-x86_64",
+    "darwin": "darwin-x86_64",
     "linux": "linux-x86_64"
 }
 const apps = app === "all" ? ["sky", "genshin"] : [app]

@@ -6,7 +6,7 @@
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTWHd5N0xUa2xwcFgvMTFBKzBTRXZ4OTh4UmEyNmhRUmNIMXNoekprNGY0c3htQlVEMGNzSGt3NjZwdFdGamxyWkZGUmNobUlEaXdsL24wUUFGU0RaTmhZdHlGTVZNWXcwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU3NjY1MDA4CWZpbGU6U2t5IE11c2ljIE5pZ2h0bHlfMi43LjBfeDY0X2VuLVVTLm1zaS56aXAKK01yelA4NmliVWdOeHlGYkFOWlRMVFgweGpxMmx6NWhOdWlVOHlMMlZJbjBtZnlJTVlBaVZFaVg5QXVUY3c2SFQzaUYwZUlDdmhWQkJwcnFwYVRTQ1E9PQo=",
       "url": "https://github.com/Specy/genshin-music/releases/download/v2.8.0/Sky_Music_Nightly_2.8.0_x64_en-US.msi.zip"
     },
-    "macos-x86_64": {
+    "darwin-x86_64": {
       "url": "https://github.com/Specy/genshin-music/releases/download/v2.8.0/macos-Sky_Music_Nightly.app.tar.gz",
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTWHd5N0xUa2xwcFJiYUZpa0t5a09aU2ZIN1Ixb2lUZDhuSkpwaXdkSm9UOVM1VnZKR20wTklMbEY4cGxmMUxiOENhNFExaHlFLzVpWGVENGFqKzNWUk8xZ3dyWGhUVVFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU3ODExNzMwCWZpbGU6U2t5IE11c2ljIE5pZ2h0bHkuYXBwLnRhci5negpVNnlOSEtUK3ZpS0pad2lsS2x5OXpWOGUrK2c3d1l0RERqTWNyQjJ0T0ZBVUkySUhNVGgybktSYUhuWlRxekQrLzVDRkRwZHAyRlE1VlRndTBDV2lDUT09Cg=="
     }
