@@ -6,11 +6,17 @@ const changelog = process.env.CHANGELOG
 const clc = require("cli-color");
 const { execSync } = require('child_process');
 const githubEndpoint = 'https://github.com/Specy/genshin-music/releases/download/{version}/{zip-name}'
-const releaseFolder = {
+const PLATFORM = process.platform 
+const folders = {
     bundle: './src-tauri/target/release/bundle/',
     windows: './src-tauri/target/release/bundle/msi/',
+    windowsRelease: './src-tauri/bundle/windows/',
     macos: './src-tauri/target/release/bundle/macos/',
+    macosDmg: './src-tauri/target/release/bundle/dmg/',
+    macosRelease: './src-tauri/bundle/macos/',
     linux: './src-tauri/target/release/bundle/appimage/',
+    linuxDeb: './src-tauri/target/release/bundle/deb/',
+    linuxRelease: './src-tauri/bundle/linux/'
 }
 if (!['genshin', 'sky', "all"].includes(app?.toLowerCase())) {
     console.error('Please specify an app name [Sky / Genshin / All]')
@@ -35,10 +41,7 @@ const platformKey = {
 }
 const apps = app === "all" ? ["sky", "genshin"] : [app]
 async function run() {
-    await fs.rm(releaseFolder.bundle, { recursive: true }).catch(() => console.warn("[Warning]: Could not delete bundle folder"))
-    let currentReleaseFolder = releaseFolder.windows
-    if (process.platform === "darwin") currentReleaseFolder = releaseFolder.macos
-    if (process.platform === "linux") currentReleaseFolder = releaseFolder.linux
+    await fs.rm(folders.bundle, { recursive: true }).catch(() => console.warn("[Warning]: Could not delete bundle folder"))
     try {
         for (const app of apps) {
             const appUpdate = await fs.readFile(`./src-tauri/tauri-${app}.update.json`, 'utf8').then(JSON.parse)
@@ -48,32 +51,147 @@ async function run() {
             console.log(`[Log]: Building react and tauri of ${app}...`)
             execSync(`yarn build-tauri:${app}${useEnv === 'false' ? "-no-env" : ""}`)
             console.log(clc.green(`[Status]: Build of ${app} complete \n`))
-            const buildFiles = await fs.readdir(currentReleaseFolder)
-            for (const file of buildFiles) {
-                const newName = file.replaceAll(" ", "_")
-                await fs.rename(`${currentReleaseFolder}${file}`, `${currentReleaseFolder}${newName}`)
+
+            //on windows
+            if(PLATFORM === 'win32'){
+                const buildFiles = await fs.readdir(folders.windows)
+                //removes all spaces from the paths
+                for (const file of buildFiles) {
+                    const newName = file.replaceAll(" ", "_")
+                    await fs.rename(`${folders.windows}${file}`, `${folders.windows}${newName}`)
+                }
+                //finds the zip file for the update
+                const renamedFiles = (await fs.readdir(folders.windows)).filter(f => f.toLowerCase().includes(app))
+                const buildZip = renamedFiles.find(e => e.endsWith('.msi.zip'))
+                if (!buildZip) {
+                    console.error(clc.red(`[Error]: No Zip/Tar found for ${app}`))
+                    process.exit(1)
+                }
+                //finds the build signature for the update
+                const buildSignatureFile = renamedFiles.find(e => e.endsWith('.sig'))
+                const buildSignature = await fs.readFile(`${folders.windows}${buildSignatureFile}`, 'utf8')
+                //writes the update info to the update json
+                appUpdate.version = `v${version}`
+                appUpdate.notes = changelog
+                appUpdate.platforms[platformKey[PLATFORM]] = {
+                    url: githubEndpoint
+                        .replace("{version}", 'v' + version)
+                        .replace("{zip-name}", buildZip),
+                    signature: buildSignature
+                }
+                //saves the results to both the folder of the build data and updates the repository one
+                await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
+                await fs.writeFile(`${folders.windows}tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
+                //copies all the built files to the final release folder
+                await fs.mkdir(folders.windowsRelease, {recursive: true})
+                for(const file of renamedFiles.filter(f => [".msi.zip", '.msi','.json'].some(e => f.endsWith(e)))){
+                    await fs.copyFile(`${folders.windows}${file}`, `${folders.windowsRelease}${file}`, )
+                    await fs.rm(`${folders.windows}${file}`)
+                }
             }
-            const renamedFiles = (await fs.readdir(currentReleaseFolder)).filter(f => f.toLowerCase().includes(app))
-            const buildZip = renamedFiles.find(e => e.endsWith('msi.zip') || e.endsWith('.tar.gz'))
-            if (!buildZip) {
-                console.error(clc.red(`[Error]: No Zip/Tar found for ${app}`))
-                process.exit(1)
+            //on mac
+            if(PLATFORM === 'darwin'){
+                const buildFiles = await fs.readdir(folders.macos)
+                const dmgFiles = await fs.readdir(folders.macosDmg)
+                //removes all spaces from the paths
+                for (const file of buildFiles) {
+                    const newName = file.replaceAll(" ", "_")
+                    await fs.rename(`${folders.macos}${file}`, `${folders.macos}${newName}`)
+                }
+                for(const file of dmgFiles){
+                    const newName = file.replaceAll(" ", "_")
+                    await fs.rename(`${folders.macosDmg}${file}`, `${folders.macosDmg}${newName}`) 
+                }
+                //finds the zip file for the update
+                const renamedFiles = (await fs.readdir(folders.macos)).filter(f => f.toLowerCase().includes(app))
+                const buildZip = renamedFiles.find(e => e.endsWith('.tar.gz'))
+                if (!buildZip) {
+                    console.error(clc.red(`[Error]: No tar.gz found for ${app}`))
+                    process.exit(1)
+                }
+                //finds the build signature for the update
+                const buildSignatureFile = renamedFiles.find(e => e.endsWith('.sig'))
+                const buildSignature = await fs.readFile(`${folders.macos}${buildSignatureFile}`, 'utf8')
+                //writes the update info to the update json
+                appUpdate.version = `v${version}`
+                appUpdate.notes = changelog
+                appUpdate.platforms[platformKey[PLATFORM]] = {
+                    url: githubEndpoint
+                        .replace("{version}", 'v' + version)
+                        .replace("{zip-name}", buildZip),
+                    signature: buildSignature
+                }
+                //saves the results to both the folder of the build data and updates the repository one
+                await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
+                await fs.writeFile(`${folders.macos}tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
+                //copies all the update files 
+                await fs.mkdir(folders.macosRelease, {recursive: true})
+                for(const file of renamedFiles.filter(f => [".tar.gz",'.json'].some(e => f.endsWith(e)))){
+                    await fs.copyFile(`${folders.macos}${file}`, `${folders.macosRelease}${file}`, )
+                    await fs.rm(`${folders.macos}${file}`)
+                }
+                //copies all the install files
+                for(const file of (await fs.readdir(folders.macosDmg)).filter(f => f.endsWith('.dmg'))){
+                    await fs.copyFile(`${folders.macosDmg}${file}`, `${folders.macosRelease}${file}`)
+                    await fs.rm(`${folders.macosDmg}${file}`)
+                }
             }
-            const buildSignatureFile = renamedFiles.find(e => e.endsWith('.sig'))
-            const buildSignature = await fs.readFile(`${currentReleaseFolder}${buildSignatureFile}`, 'utf8')
-            appUpdate.version = `v${version}`
-            appUpdate.notes = changelog
-            appUpdate.platforms[platformKey[process.platform]] = {
-                url: githubEndpoint
-                    .replace("{version}", 'v' + version)
-                    .replace("{zip-name}", buildZip),
-                signature: buildSignature
+
+            //on linux
+            if(PLATFORM === 'linux'){
+                const buildFiles = await fs.readdir(folders.linux)
+                const dmgFiles = await fs.readdir(folders.linuxDeb)
+                //removes all spaces from the paths
+                for (const file of buildFiles) {
+                    const newName = file.replaceAll(" ", "_")
+                    await fs.rename(`${folders.linux}${file}`, `${folders.linux}${newName}`)
+                }
+                for(const file of dmgFiles){
+                    const newName = file.replaceAll(" ", "_")
+                    await fs.rename(`${folders.linuxDeb}${file}`, `${folders.linuxDeb}${newName}`) 
+                }
+                //finds the zip file for the update
+                const renamedFiles = (await fs.readdir(folders.linux)).filter(f => f.toLowerCase().includes(app))
+                const files = await fs.readdir(folders.linux)
+                files.forEach(f => {
+                    console.log(f.toLowerCase().includes(app), f.toLowerCase(), app)
+                })
+                const buildZip = renamedFiles.find(e => e.endsWith('.tar.gz'))
+                if (!buildZip) {
+                    console.error(clc.red(`[Error]: No tar.gz found for ${app}`))
+                    process.exit(1)
+                }
+                //finds the build signature for the update
+                const buildSignatureFile = renamedFiles.find(e => e.endsWith('.sig'))
+                const buildSignature = await fs.readFile(`${folders.linux}${buildSignatureFile}`, 'utf8')
+                //writes the update info to the update json
+                appUpdate.version = `v${version}`
+                appUpdate.notes = changelog
+                appUpdate.platforms[platformKey[PLATFORM]] = {
+                    url: githubEndpoint
+                        .replace("{version}", 'v' + version)
+                        .replace("{zip-name}", buildZip),
+                    signature: buildSignature
+                }
+                //saves the results to both the folder of the build data and updates the repository one
+                await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
+                await fs.writeFile(`${folders.linux}tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
+                //copies all the update files 
+                await fs.mkdir(folders.linuxRelease, {recursive: true})
+                for(const file of renamedFiles.filter(f => [".tar.gz",'.json'].some(e => f.endsWith(e)))){
+                    await fs.copyFile(`${folders.linux}${file}`, `${folders.linuxRelease}${file}`, )
+                    await fs.rm(`${folders.linux}${file}`)
+                }
+                //copies all the install files
+                for(const file of (await fs.readdir(folders.linuxDeb)).filter(f => f.endsWith('.deb'))){
+                    await fs.copyFile(`${folders.linuxDeb}${file}`, `${folders.linuxRelease}${file}`)
+                    await fs.rm(`${folders.linuxDeb}${file}`)
+                }
             }
-            await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
-            await fs.writeFile(`${currentReleaseFolder}tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
         }
         console.log(clc.green("[Log]: Build complete!"))
     } catch (e) {
+        console.error(e)
         console.log("ERROR:")
         process.stdout.write(e.toString())
         const stderr = e.stderr
