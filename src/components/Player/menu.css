@@ -55,13 +55,17 @@
     padding: 2rem;
     flex-direction: column;
     background-color: var(--primary);
-    color: var(--icon-color);
     font-size: 1.5rem;
 }
-.rotate-screen img{
+.rotate-screen p{
+    text-align: center;
+}
+.rotate-screen img, .rotate-screen svg{
     width: 60vw;
-    margin-bottom: 3rem;
+    height: 60vw;
+    margin-bottom: 1rem;
     background-color: var(--primary);
+    color: var(--icon-color);
     filter: brightness(1.1);
     padding: 1.5rem;
     border-radius: 1rem;

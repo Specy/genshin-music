@@ -217,7 +217,7 @@ async function run() {
         }
         console.log(clc.green("[Log]: Build complete!"))
     } catch (e) {
-        console.log(clc.error("[Error]: There was an error building"))
+        console.log(clc.red("[Error]: There was an error building"))
         console.error(e)
         process.exit(1)
     }

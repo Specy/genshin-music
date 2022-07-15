@@ -55,7 +55,7 @@ async function execute() {
         console.log(clc.bold.green("Build complete \n"))
         process.exit(0)
     }catch(e){
-        console.log(clc.error("[Error]: There was an error building"))
+        console.log(clc.red("[Error]: There was an error building"))
         console.error(e)
         process.exit(1)
     }

@@ -12,12 +12,14 @@ import { withRouter } from "react-router-dom";
 import './App.css';
 import './Utility.css'
 import { historyTracker } from 'stores/History';
+import isMobile from 'is-mobile';
+import { FaExpandAlt } from 'react-icons/fa';
 
-function App({history}:any) {
+function App({ history }: any) {
 	const [hasVisited, setHasVisited] = useState(false)
 	const [checkedUpdate, setCheckedUpdate] = useState(false)
 	const [pageHeight, setPageHeight] = useState(0)
-
+	const [isOnMobile, setIsOnMobile] = useState(false)
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
 		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
@@ -28,18 +30,19 @@ function App({history}:any) {
 			isInPosition: false,
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 		})
+		setIsOnMobile(isMobile())
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
 	}, [])
 
 	const setHeight = useCallback((h: number) => {
 		document.body.style.minHeight = h + 'px'
-	},[])
+	}, [])
 
 	const resetHeight = useCallback(() => {
 		//@ts-ignore
 		document.body.style = ''
-	},[])
+	}, [])
 
 	const handleResize = useCallback(() => {
 		if (document.activeElement?.tagName === 'INPUT') {
@@ -48,19 +51,20 @@ function App({history}:any) {
 		}
 		setHeight(window.innerHeight)
 		resetHeight()
-	},[pageHeight,resetHeight, setHeight])
+		setIsOnMobile(isMobile())
+	}, [pageHeight, resetHeight, setHeight])
 
 	const handleBlur = useCallback(() => {
 		const active = document.activeElement
 		//@ts-ignore
 		if (active && active.tagName === 'INPUT') active?.blur()
 		resetHeight()
-	},[resetHeight])
+	}, [resetHeight])
 
 	const setDontShowHome = useCallback((override = false) => {
 		localStorage.setItem(APP_NAME + "_ShowHome", JSON.stringify(override))
 		HomeStore.setState({ canShow: override })
-	},[])
+	}, [])
 
 	const askForStorage = async () => {
 		try {
@@ -81,7 +85,7 @@ function App({history}:any) {
 	}
 	const checkUpdate = useCallback(async () => {
 		await delay(1000)
-		const visited  = localStorage.getItem(APP_NAME + "_Visited")
+		const visited = localStorage.getItem(APP_NAME + "_Visited")
 		if (checkedUpdate) return
 		const storedVersion = localStorage.getItem(APP_NAME + "_Version")
 		if (!visited) {
@@ -98,7 +102,7 @@ function App({history}:any) {
 			if (!isPersisted) isPersisted = await navigator.storage.persist()
 			console.log(isPersisted ? "Storage Persisted" : "Storage Not persisted")
 		}
-	},[checkedUpdate])
+	}, [checkedUpdate])
 
 	useEffect(() => {
 		window.addEventListener('resize', handleResize)
@@ -108,7 +112,7 @@ function App({history}:any) {
 			window.removeEventListener('resize', handleResize)
 			window.removeEventListener('blur', handleBlur)
 		}
-	},[checkUpdate,handleResize, handleBlur])
+	}, [checkUpdate, handleResize, handleBlur])
 
 	useEffect(() => {
 		Analytics.UIEvent('version', { version: APP_VERSION })
@@ -130,9 +134,18 @@ function App({history}:any) {
 			askForStorage={askForStorage}
 		/>
 		<div className="rotate-screen">
-			<img src={rotateImg} alt="icon for the rotating screen">
-			</img>
-			For a better experience, add the website to the home screen, and rotate your device
+			{isOnMobile && <>
+				<img src={rotateImg} alt="icon for the rotating screen"/>
+				<p>
+					For a better experience, add the website to the home screen, and rotate your device
+				</p>
+			</>}
+			{!isOnMobile && <>
+				<FaExpandAlt />
+				<p>
+					Please increase your window size
+				</p>
+			</>}
 		</div>
 	</>
 }
