@@ -1,0 +1,14 @@
+{
+  "version": "v2.8.0",
+  "notes": "Test",
+  "platforms": {
+    "windows-x86_64": {
+      "url": "https://github.com/Specy/genshin-music/releases/download/v2.8.0/windows-Sky_Music_Nightly_2.8.0_x64_en-US.msi.zip",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTWHd5N0xUa2xwcFgvUHZqTGNOTGhWWHlpeERVSktFNzNpemVqYjloZHZvcXZRaG51bFR0VDBPZkVoemxpWnA2bHFNYnpYVlpQL3hTVUd4SEw3OGo4dUdyL3VpQi8rQmdZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU3OTE4NDU0CWZpbGU6U2t5IE11c2ljIE5pZ2h0bHlfMi44LjBfeDY0X2VuLVVTLm1zaS56aXAKc2x3RHVjMGtBclE0cjVhRXRkWDFjSU51Y2xvdHUwSXRuVWM2MGFDN3k0Wlpqc3I5QjNjQm9YQUJtMEZxUUIyQ0c2RjNudmw4NmcrYUFOY2hGMXZDQ1E9PQo="
+    },
+    "darwin-x86_64": {
+      "url": "https://github.com/Specy/genshin-music/releases/download/v2.8.0/macos-Sky_Music_Nightly.app.tar.gz",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTWHd5N0xUa2xwcFJiYUZpa0t5a09aU2ZIN1Ixb2lUZDhuSkpwaXdkSm9UOVM1VnZKR20wTklMbEY4cGxmMUxiOENhNFExaHlFLzVpWGVENGFqKzNWUk8xZ3dyWGhUVVFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU3ODExNzMwCWZpbGU6U2t5IE11c2ljIE5pZ2h0bHkuYXBwLnRhci5negpVNnlOSEtUK3ZpS0pad2lsS2x5OXpWOGUrK2c3d1l0RERqTWNyQjJ0T0ZBVUkySUhNVGgybktSYUhuWlRxekQrLzVDRkRwZHAyRlE1VlRndTBDV2lDUT09Cg=="
+    }
+  }
+}

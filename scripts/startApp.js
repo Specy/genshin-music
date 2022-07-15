@@ -25,15 +25,16 @@ function deleteAssets() {
             }))
         })
 }
+
 async function execute() {
     await deleteAssets()
     await copyDir(chosenApp === "Sky" ? skyPath : genshinPath, publicPath)
     if (process.platform === 'win32') {
         console.log(clc.yellow.bold("Starting on windows"))
-        execSync(`set REACT_APP_NAME=${chosenApp}&& yarn start`)
+        execSync(`set REACT_APP_NAME=${chosenApp}&& yarn start`, { stdio: 'inherit' })
     } else {
         console.log(clc.yellow.bold("Starting on linux"))
-        execSync(`REACT_APP_NAME=${chosenApp} yarn start`)
+        execSync(`REACT_APP_NAME=${chosenApp} yarn start`, { stdio: 'inherit' })
     }
 }
 

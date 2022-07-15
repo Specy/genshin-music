@@ -116,7 +116,8 @@ class Player extends Component<any, PlayerState>{
 		instrument.changeVolume(settings.instrument.volume || 100)
 		AudioProvider.connect(instrument.endNode)
 		this.setState({ isLoadingInstrument: true })
-		await instrument.load()
+		const loaded = await instrument.load()
+		if (!loaded) logger.error("There was an error loading the instrument")
 		if (!this.mounted) return
 		instruments.splice(0, 1, instrument)
 		this.setState({
@@ -138,7 +139,8 @@ class Player extends Component<any, PlayerState>{
 				//If it doesn't have a layer, create one
 				const instrument = new Instrument(ins.name)
 				instruments[i] = instrument
-				await instrument.load()
+				const loaded = await instrument.load()
+                if (!loaded) logger.error("There was an error loading the instrument")
 				if (!this.mounted) return instrument.delete()
 				AudioProvider.connect(instrument.endNode)
 				instrument.changeVolume(ins.volume)
@@ -155,7 +157,8 @@ class Player extends Component<any, PlayerState>{
 				old.delete()
 				const instrument = new Instrument(ins.name)
 				instruments[i] = instrument
-				await instrument.load()
+				const loaded = await instrument.load()
+                if (!loaded) logger.error("There was an error loading the instrument")
 				if (!this.mounted) return instrument.delete()
 				AudioProvider.connect(instrument.endNode)
 				instrument.changeVolume(ins.volume)

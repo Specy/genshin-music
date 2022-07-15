@@ -84,6 +84,7 @@ export default class Instrument {
         player.addEventListener('ended', handleEnd, { once: true })
     }
     load = async () => {
+        let loadedCorrectly = true
         if (!INSTRUMENT_BUFFER_POOL.has(this.name)) {
             const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
             const requests: Promise<AudioBuffer>[] = this.layout.map(note => {
@@ -93,24 +94,28 @@ export default class Instrument {
                         .then(result => result.arrayBuffer())
                         .then(buffer => {
                             AUDIO_CONTEXT.decodeAudioData(buffer, resolve, () => {
+                                loadedCorrectly = false
                                 resolve(emptyBuffer)
                             }).catch(e => {
                                 console.error(e)
+                                loadedCorrectly = false
                                 return resolve(emptyBuffer)
                             })
                         }).catch(e => {
                             console.error(e)
+                            loadedCorrectly = false
                             return resolve(emptyBuffer)
                         })
                 })
             })
             this.buffers = await Promise.all(requests)
-            if (!this.buffers.includes(emptyBuffer)) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers)
+            if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers)
         } else {
             this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!
         }
         this.isLoaded = true
-        return true
+        console.log('loaded', loadedCorrectly)
+        return loadedCorrectly
     }
     disconnect = (node?: AudioNode) => {
         if (node) return this.volumeNode?.disconnect(node)

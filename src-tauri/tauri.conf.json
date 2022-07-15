@@ -63,10 +63,7 @@
     },
     "updater": {
       "active": true,
-      "pubkey": "",
-      "endpoints": [
-        "https://github.com/Specy/genshin-music/blob/main/src-tauri/tauri.update.json"
-      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE1Njk0OTRFQ0IyRUMzOTcKUldTWHd5N0xUa2xwcGRVbk1DT3JRdFhMWlh6a0NlNG1uY1cvOXY5empaSXV0RFBtaTJnNzhsU3gK",
       "dialog": true
     },
     "windows": [

@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Sky Music Nightly",
-    "version": "1.1.0"
+    "version": "2.8.0"
   },
   "tauri": {
     "bundle": {
@@ -26,6 +26,11 @@
         "digestAlgorithm": "sha256",
         "timestampUrl": ""
       }
+    },
+    "updater": {
+      "endpoints": [
+        "https://raw.githubusercontent.com/Specy/genshin-music/main/src-tauri/tauri-sky.update.json"
+      ]
     },
     "windows": [
       {

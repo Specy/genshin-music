@@ -15,6 +15,7 @@
     "audiobuffer-to-wav": "^1.0.0",
     "cli-color": "^2.0.2",
     "color": "^4.2.0",
+    "dotenv": "^16.0.1",
     "is-mobile": "^3.0.0",
     "lodash.clonedeep": "^4.5.0",
     "mobx": "^6.3.7",
@@ -41,12 +42,17 @@
     "build": "react-scripts build",
     "eject": "react-scripts eject",
     "tauri": "tauri",
-    "build-tauri:sky": "yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
-    "build-tauri:genhin": "yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
+    "build-tauri-deployment": "cross-env REACT_APP_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js true",
+    "build-tauri-deployment:no-env": "cross-env REACT_APP_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js false",
+    "build-tauri:sky": "cross-env REACT_APP_IS_TAURI=true env-cmd yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
+    "build-tauri:sky-no-env": "cross-env REACT_APP_IS_TAURI=true yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
+    "build-tauri:genshin": "cross-env REACT_APP_IS_TAURI=true env-cmd yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
+    "build-tauri:genshin-no-env": "cross-env REACT_APP_IS_TAURI=true yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
+    "build-tauri:all": "cross-env REACT_APP_IS_TAURI=true yarn build-tauri:sky && yarn build-tauri:genshin",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
-    "start-tauri": "yarn tauri dev",
     "build:all": "node ./scripts/buildApp.js All",
+    "start-tauri": "yarn tauri dev",
     "start:sky": "node ./scripts/startApp.js Sky",
     "start:genshin": "node ./scripts/startApp.js Genshin"
   },
@@ -77,6 +83,8 @@
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.11",
     "@types/react-router-dom": "^5.3.3",
-    "@types/webmidi": "^2.0.6"
+    "@types/webmidi": "^2.0.6",
+    "cross-env": "^7.0.3",
+    "env-cmd": "^10.1.0"
   }
 }

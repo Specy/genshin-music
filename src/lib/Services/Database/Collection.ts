@@ -1,7 +1,6 @@
 import { TAURI } from "appConfig"
 import ZangoDb from "zangodb"
 import type TauriFs from '@tauri-apps/api/fs';
-import { SerializedRecordedSong } from "lib/Songs/RecordedSong";
 
 export type BaseObject = Object & {
     id: string | null

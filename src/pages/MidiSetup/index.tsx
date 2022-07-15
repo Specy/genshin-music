@@ -86,7 +86,8 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         AudioProvider.disconnect(this.state.instrument.endNode)
         this.state.instrument.delete()
         const instrument = new Instrument(name)
-        await instrument.load()
+        const loaded = await instrument.load()
+        if (!loaded) logger.error("There was an error loading the instrument")
         if (!this.mounted) return
         AudioProvider.connect(instrument.endNode)
         this.setState({ instrument })
