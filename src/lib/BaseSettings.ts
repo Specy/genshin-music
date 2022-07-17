@@ -159,7 +159,7 @@ export type MainPageSettingsType = {
 }
 export const MainPageSettings: MainPageSettingsType = {
     other: {
-        settingVersion: APP_NAME + 43
+        settingVersion: APP_NAME + 44
     },
     data: {
         instrument: {
@@ -219,7 +219,7 @@ export const MainPageSettings: MainPageSettingsType = {
             songSetting: false,
             increment: 1,
             value: 4,
-            threshold: [1, 16],
+            threshold: [0, 16],
             category: "General Settings",
         },
         metronomeVolume: {

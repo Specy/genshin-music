@@ -234,11 +234,14 @@ class Player extends Component<any, PlayerState>{
 		}
 	}
 	toggleMetronome = () => {
-		const { isMetronomePlaying } = this.state
+		const { isMetronomePlaying, settings } = this.state
 		this.setState({ isMetronomePlaying: !isMetronomePlaying })
 		if (isMetronomePlaying) {
 			metronome.stop()
 		} else {
+			metronome.bpm = settings.bpm.value
+			metronome.beats = settings.metronomeBeats.value	
+			metronome.changeVolume(settings.metronomeVolume.value)
 			metronome.start()
 		}
 	}
