@@ -114,7 +114,6 @@ export default class Instrument {
             this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!
         }
         this.isLoaded = true
-        console.log('loaded', loadedCorrectly)
         return loadedCorrectly
     }
     disconnect = (node?: AudioNode) => {

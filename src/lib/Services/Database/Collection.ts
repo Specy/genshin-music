@@ -1,6 +1,5 @@
 import { TAURI } from "appConfig"
 import ZangoDb from "zangodb"
-import type TauriFs from '@tauri-apps/api/fs';
 
 export type BaseObject = Object & {
     id: string | null
@@ -50,7 +49,7 @@ export class ZangoCollection<T extends BaseObject> implements Collection<T>{
 }
 
 export class TauriCollection<T extends BaseObject> implements Collection<T>{
-    private fs: typeof TauriFs = TAURI?.fs
+    private fs = TAURI?.fs
     readonly table: string
     private baseSettings: any
     private initializing: Promise<any> | false

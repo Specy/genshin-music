@@ -52,7 +52,8 @@
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
     "build:all": "node ./scripts/buildApp.js All",
-    "start-tauri": "yarn tauri dev",
+    "start-tauri:sky": "yarn tauri dev --config ./src-tauri/tauri-sky.conf.json",
+    "start-tauri:genshin": "yarn tauri dev --config ./src-tauri/tauri-genshin.conf.json",
     "start:sky": "node ./scripts/startApp.js Sky",
     "start:genshin": "node ./scripts/startApp.js Genshin"
   },

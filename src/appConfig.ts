@@ -1,3 +1,5 @@
+import { Tauri } from "types/TauriTypes"
+
 const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '2.8' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
@@ -16,8 +18,9 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         Added multiple instruments in player
         And more...
     `.trim()
+
 //@ts-ignore
-const TAURI = window?.__TAURI__
+const TAURI:Tauri = window?.__TAURI__
 //@ts-ignore
 const IS_TAURI = !!TAURI
 const NOTES_CSS_CLASSES = {

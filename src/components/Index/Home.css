@@ -18,7 +18,8 @@
 }
 .home-visible {
 	opacity: 1;
-	backdrop-filter: blur(4px);
+	--backdrop-amount: 4px;
+	animation: forwards delayBackdrop 0.2s, 0.15s home-appear ease-out;
 	transform: scale(1);
 }
 @keyframes home-appear {

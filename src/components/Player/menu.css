@@ -108,6 +108,7 @@
     transform: scale(1);
     left: 4rem !important;
     opacity: 1;
+    --backdrop-amount: 2px;
     animation: delayBackdrop 0.3s;
     animation-fill-mode: forwards;
 }

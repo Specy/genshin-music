@@ -94,6 +94,6 @@
         backdrop-filter: unset;
     }
     100%{
-        backdrop-filter: blur(2px);
+        backdrop-filter: blur(var(--backdrop-amount,2px));
     }
 }

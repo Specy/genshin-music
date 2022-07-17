@@ -267,6 +267,7 @@ select {
     bottom: 1.4rem;
     transform: scale(1);
     opacity: 1;
+    --backdrop-amount: 2px
     animation: delayBackdrop 0.4s;
     animation-fill-mode: forwards;
 }

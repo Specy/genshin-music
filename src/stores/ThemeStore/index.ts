@@ -61,10 +61,10 @@ export class ThemeStoreClass {
         try {
             const themeId = themeService.getCurrentThemeId()
             if (themeId !== null) {
-                const theme = await themeService.getTheme(themeId)
                 const defaultTheme = defaultThemes.find(t => t.other.id === themeId)
-                if (theme) return this.loadFromTheme(theme)
                 if(defaultTheme) return this.loadFromTheme(defaultTheme)
+                const theme = await themeService.getTheme(themeId)
+                if (theme) return this.loadFromTheme(theme)
             }
         } catch (e) {
             console.error(e)
@@ -185,7 +185,6 @@ export class ThemeStoreClass {
     save = () => {
         themeService.setCurrentThemeId(this.getId())
         if(!this.state.editable) return
-        console.log(this.state)
         return themeService.updateTheme(this.state.other.id, cloneDeep(this.state))
     }
 }

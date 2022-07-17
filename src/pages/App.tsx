@@ -4,7 +4,7 @@ import Home from 'components/Index/Home';
 import HomeStore from 'stores/HomeStore';
 import { logger } from 'stores/LoggerStore';
 import { delay } from "lib/Utilities"
-import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "appConfig"
+import { APP_NAME, APP_VERSION, IS_TAURI, TAURI, UPDATE_MESSAGE } from "appConfig"
 import Logger from 'components/Index/Logger'
 import rotateImg from "assets/icons/rotate.svg"
 
@@ -30,6 +30,14 @@ function App({ history }: any) {
 			isInPosition: false,
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 		})
+		async function checkUpdate(){
+			const update = await fetch(`https://raw.githubusercontent.com/Specy/genshin-music/main/src-tauri/tauri-${APP_NAME.toLowerCase()}.update.json`)
+								.then(res => res.json())
+			console.log(update)
+			const currentVersion = await TAURI.app.getVersion()
+			console.log(currentVersion)
+		}
+		if(IS_TAURI) checkUpdate()
 		setIsOnMobile(isMobile())
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
