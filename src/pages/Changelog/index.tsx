@@ -6,10 +6,11 @@ import './Changelog.css'
 import { updates } from './updates'
 import { APP_VERSION } from 'appConfig'
 import { Title } from 'components/Miscellaneous/Title'
+import { DefaultPage } from 'components/Layout/DefaultPage'
 
 const cacheVersion = process.env.REACT_APP_SW_VERSION
 export default function Changelogpage() {
-    return <div className='default-page' >
+    return <DefaultPage excludeMenu={true}>
         <SimpleMenu>
             <MenuItem ariaLabel='Go to github'>
                 <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
@@ -35,5 +36,5 @@ export default function Changelogpage() {
             key={data.version}
         />)}
         <div className='changelog-ending' />
-    </div>
+    </DefaultPage>
 }

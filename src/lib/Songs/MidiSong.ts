@@ -47,7 +47,8 @@ export class MidiSong extends Song{
             bpm: this.bpm,
             pitch: this.pitch,
             version: 1,
-            song: this.song.toJSON()
+            song: this.song.toJSON(),
+            instruments: this.instruments
         }
     }
 }

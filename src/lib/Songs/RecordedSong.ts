@@ -1,5 +1,5 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS_DATA } from "appConfig"
-import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedInstrumentData, SerializedRecordedNote } from "./SongClasses"
+import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote } from "./SongClasses"
 import { ComposedSong, defaultInstrumentMap } from "./ComposedSong"
 import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Utilities'
 import clonedeep from 'lodash.clonedeep'
@@ -13,7 +13,6 @@ import { OldFormat, OldNote } from "types/SongTypes"
 export type SerializedRecordedSong = SerializedSong & {
     type: 'recorded'
     notes: SerializedRecordedNote[]
-    instruments: SerializedInstrumentData[]
 }
 export type OldFormatRecorded = SerializedRecordedSong & OldFormat
 
@@ -54,16 +53,10 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         return song
     }
     static deserialize(obj: SerializedRecordedSong): RecordedSong {
-        const { data, pitch, bpm, notes, name, id } = obj
+        const { notes, name } = obj
         const version = obj.version || 1
         const song = new RecordedSong(name || 'Untitled')
-        song.data = { ...song.data, ...data }
-        song.pitch = PITCHES.includes(pitch) ? pitch : pitch
-        song.bpm = Number.isFinite(bpm) ? bpm : song.bpm
-        song.id = id
-        if (obj.instruments) {
-            song.instruments = obj.instruments.map(InstrumentData.deserialize)
-        }
+        Song.deserializeTo(song, obj)
         if(song.instruments.length === 0) song.instruments = [new InstrumentData()]
         if (version === 1) {
             const clonedNotes: [] = Array.isArray(notes) ? clonedeep(notes) : []

@@ -14,6 +14,7 @@ import { SheetVisualiserMenu } from 'components/SheetVisualizer/Menu'
 import { SheetFrame } from 'components/SheetVisualizer/SheetFrame'
 import { Chunk } from 'lib/Songs/VisualSong'
 import { Title } from 'components/Miscellaneous/Title'
+import { DefaultPage } from 'components/Layout/DefaultPage'
 
 const THRESHOLDS = {
     joined: 50,
@@ -83,7 +84,7 @@ export default function SheetVisualizer() {
 
         Analytics.songEvent({ type: 'visualize' })
     }
-    return <div className='default-page' style={{ overflowY: 'scroll' }}>
+    return <DefaultPage style={{ overflowY: 'scroll' }} excludeMenu={true}>
         <Title text="Sheet Visualizer" />
 
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
@@ -145,7 +146,7 @@ export default function SheetVisualizer() {
             </pre>}
 
         </div>
-    </div>
+    </DefaultPage>
 }
 
 

@@ -5,7 +5,7 @@ import { InstrumentName } from "types/GeneralTypes"
 import { OldFormat, _LegacySongInstruments } from "types/SongTypes"
 import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
-import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn, SerializedInstrumentData } from "./SongClasses"
+import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
 
 interface OldFormatNoteType {
@@ -31,7 +31,6 @@ export type SerializedComposedSongV2 = BaseSerializedComposedSong & {
 }
 export type SerializedComposedSong = BaseSerializedComposedSong & {
     version: 3
-    instruments: SerializedInstrumentData[]
 }
 
 export type UnknownSerializedComposedSong = SerializedComposedSongV1 | SerializedComposedSongV2 | SerializedComposedSong
@@ -42,7 +41,6 @@ export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
 export const defaultInstrumentMap: InstrumentNoteIcon[] = ['border', 'circle', 'line']
 export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     notes: RecordedNote[] = []
-    instruments: InstrumentData[]
     breakpoints: number[]
     columns: Column[]
     selected: number
@@ -59,15 +57,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         instruments.forEach(this.addInstrument)
     }
     static deserialize = (song: UnknownSerializedComposedSong): ComposedSong => {
-        const { id, bpm, data, pitch } = song
         const parsed = new ComposedSong(song.name)
         //@ts-ignore
         if (song.version === undefined) song.version = 1
-        const sanitizedBpm = Number(bpm)
-        parsed.id = id || null
-        parsed.data = { ...parsed.data, ...data }
-        parsed.bpm = Number.isFinite(sanitizedBpm) ? sanitizedBpm : 220
-        parsed.pitch = PITCHES.includes(pitch) ? pitch : song.pitch
+        Song.deserializeTo(parsed, song)
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
         //parsing columns
         if (song.version === 1) {
@@ -96,7 +89,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         })
         //parsing instruments
         if (song.version === 1 || song.version === 2) {
-            const instruments = Array.isArray(song.instruments) ? song.instruments : []
+            const instruments = (Array.isArray(song.instruments) ? song.instruments : []) as _LegacySongInstruments
             instruments.forEach((name, i) => {
                 const ins = new InstrumentData({ name })
                 ins.icon = defaultInstrumentMap[i % 3]
@@ -130,6 +123,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         recordedSong.instruments = this.instruments.map(ins => ins.clone())
         return recordedSong
     }
+
     toComposedSong = () => {
         return this.clone()
     }
@@ -137,6 +131,17 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         const newInstrument: InstrumentData = new InstrumentData({ name })
         newInstrument.icon = defaultInstrumentMap[this.instruments.length % 3]
         this.instruments = [...this.instruments, newInstrument]
+    }
+    ensureInstruments(){
+        const {columns, instruments} = this
+        const highestLayer = Math.max(0, ...columns.map(column => {
+            return Math.max(...column.notes.map(note => note.layer.asNumber()))
+        }))
+        if(highestLayer > instruments.length){
+            const newInstruments = new Array(highestLayer - instruments.length).fill(0).map(_ => new InstrumentData())
+            this.instruments = [...instruments, ...newInstruments]
+        }
+
     }
     static selection(start: number, end: number){
         return new Array(end - start).fill(0).map((_, i) => i - start)
@@ -271,6 +276,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             }).filter(note => !note.layer.isEmpty())
             return clone
         })
+        this.ensureInstruments()
         this.pasteColumns(layerColumns, insert)
     }
     pasteColumns = async (copiedColumns: Column[], insert: boolean) => {
@@ -295,6 +301,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
                 })
             })
         }
+        this.ensureInstruments()
         return this
     }
     moveNotesBy(selectedColumns:number[], amount: number, layer: number | 'all'){

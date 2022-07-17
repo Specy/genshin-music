@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { defaultThemes, ThemeKeys, ThemeProvider } from "stores/ThemeStore";
 import { observe } from "mobx";
-import { SimpleMenu } from "components/Layout/SimpleMenu";
 import { AppButton } from "components/Inputs/AppButton";
 import { FileElement, FilePicker } from "components/Inputs/FilePicker"
 import Player from "pages/Player";
@@ -21,6 +20,7 @@ import './Theme.css'
 import { AppBackground } from "components/Layout/AppBackground";
 import { themeService } from "lib/Services/ThemeService";
 import { Title } from "components/Miscellaneous/Title";
+import { DefaultPage } from "components/Layout/DefaultPage";
 
 
 function ThemePage() {
@@ -110,11 +110,8 @@ function ThemePage() {
         }
     }
 
-    return <div className="default-page">
+    return <DefaultPage>
         <Title text="Themes" />
-        <SimpleMenu />
-        <div className="default-content">
-
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <FilePicker onChange={handleImport} as='json' onError={logImportError}>
                     <AppButton style={{ margin: '0.25rem' }}>
@@ -222,8 +219,7 @@ function ThemePage() {
                     </AppBackground>
                 }
             </div>
-        </div>
-    </div>
+    </DefaultPage>
 }
 
 

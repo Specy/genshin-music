@@ -1,10 +1,9 @@
-import { SimpleMenu } from "components/Layout/SimpleMenu";
+import { DefaultPage } from "components/Layout/DefaultPage";
 import { Title } from "components/Miscellaneous/Title";
 import { Link } from 'react-router-dom'
 export default function Error404() {
-    return <div className="default-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
+    return <DefaultPage>
         <Title text="404" />
-        <SimpleMenu />
         <Link to='./' className='link' style={{textAlign: 'center'}}>
             <div style={{ fontSize: '6rem' }}>
                 404
@@ -13,5 +12,5 @@ export default function Error404() {
                 No page found, open the menu to change page
             </div>
         </Link>
-    </div>
+    </DefaultPage>
 }

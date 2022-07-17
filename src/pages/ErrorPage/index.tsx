@@ -2,7 +2,6 @@ import { FaTrash, FaDownload } from 'react-icons/fa';
 import { parseSong } from "lib/Utilities"
 import { asyncConfirm } from "components/Utility/AsyncPrompts"
 import { APP_NAME } from "appConfig"
-import { SimpleMenu } from 'components/Layout/SimpleMenu'
 import { logger } from 'stores/LoggerStore';
 import { SongMenu } from 'components/Layout/SongMenu';
 
@@ -14,6 +13,7 @@ import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 import { fileService } from 'lib/Services/FileService';
 import { Title } from 'components/Miscellaneous/Title';
+import { DefaultPage } from 'components/Layout/DefaultPage';
 
 export function ErrorPage() {
     const [songs] = useSongs()
@@ -48,10 +48,9 @@ export function ErrorPage() {
         }
 
     }
-    return <div className="default-page error-page">
+    return <DefaultPage className='error-page'>
         <Title text="Error" />
         
-        <SimpleMenu />
         <div className="error-text-wrapper">
             There seems to be an error. <br />
             Here you can download or delete your songs,
@@ -77,7 +76,7 @@ export function ErrorPage() {
 
             />
         </div>
-    </div>
+    </DefaultPage>
 }
 
 interface SongRowProps{

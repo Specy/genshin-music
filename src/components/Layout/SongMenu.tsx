@@ -4,12 +4,11 @@ import { RecordedSong } from "lib/Songs/RecordedSong";
 import { useEffect, useState } from "react"
 import { SongFolder, SongFolderContent } from "./Folder";
 import { Folder } from "lib/Folder";
-import { SerializedSong } from "lib/Songs/Song";
+import { SerializedSong, SongType } from "lib/Songs/Song";
 import { useFolders } from "lib/Hooks/useFolders";
 
 
 
-type songType = 'recorded' | 'composed'
 type SongKinds = SerializedSong | RecordedSong | ComposedSong
 interface SongMenuProps<T> {
     songs: SongKinds[],
@@ -17,7 +16,8 @@ interface SongMenuProps<T> {
     componentProps: Omit<T, "data">
     className?: string,
     style?: React.CSSProperties,
-    baseType?: songType
+    baseType?: SongType
+    exclude?: SongType[]
 }
 
 
@@ -29,20 +29,24 @@ export function SongMenu<T>({
     className,
     style,
     baseType,
+    exclude
 }: SongMenuProps<T>) {
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
+    const [filteredSongs, setFilteredSongs] = useState<SongKinds[]>([])
     useEffect(() => {
-        setNoFolderRecorded(new Folder("Recorded", null, songs.filter(song => !song.folderId && song.type === 'recorded')))
-        setNoFolderComposed(new Folder("Composed", null, songs.filter(song => !song.folderId && song.type === 'composed')))
-    }, [songs])
-    const [folders] = useFolders(songs)
+        setFilteredSongs(songs.filter(s => !exclude?.includes(s.type) ?? true))
+    }, [songs, exclude])
+    useEffect(() => {
+        setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !song.folderId && song.type === 'recorded')))
+        setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !song.folderId && song.type === 'composed')))
+    }, [filteredSongs])
+    const [folders] = useFolders(filteredSongs)
     const [theme] = useTheme()
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
 
-
     return <div className={className} style={style}>
-        {noFolderComposed &&
+        {((!exclude?.includes('recorded') ?? true) && noFolderComposed) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
                 color={theme.getText('menu_background').toString()}
@@ -66,7 +70,7 @@ export function SongMenu<T>({
                 </SongFolderContent>
             </SongFolder>
         }
-        {noFolderRecorded &&
+        {((!exclude?.includes('recorded') ?? true) && noFolderRecorded) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
                 color={theme.getText('menu_background').toString()}

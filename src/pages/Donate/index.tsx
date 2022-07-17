@@ -2,13 +2,11 @@ import './Donate.css'
 import paypalImg from 'assets/images/paypalme.png'
 import buyMeACoffeeImg from 'assets/images/buymeacoffee.svg'
 import kofiImg from 'assets/images/kofi.png'
-import { SimpleMenu } from 'components/Layout/SimpleMenu'
 import { Title } from 'components/Miscellaneous/Title'
+import { DefaultPage } from 'components/Layout/DefaultPage'
 export default function Donate() {
-    return <div className='default-page'>
+    return <DefaultPage>
         <Title text="Donate" />
-
-        <SimpleMenu/>
         <div className="donate-text">
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not
@@ -23,14 +21,14 @@ export default function Donate() {
         </div>
         <div className="donation-wrapper">
             <a href="https://paypal.me/specyDev" target="_blank" className="paypal" rel="noreferrer">
-                <img src={paypalImg} alt="paypalme" style={{ height: "3rem" }} loading='lazy'/>
+                <img src={paypalImg} alt="paypalme" style={{ height: "3rem" }} loading='lazy' />
             </a>
             <a href="https://ko-fi.com/specy" target="_blank" className="kofi" rel="noreferrer">
-                <img src={kofiImg} alt="kofi" style={{ height: "2rem" }} loading='lazy'/>
+                <img src={kofiImg} alt="kofi" style={{ height: "2rem" }} loading='lazy' />
             </a>
             <a href="https://www.buymeacoffee.com/specy" target="_blank" rel="noreferrer">
-                <img src={buyMeACoffeeImg} alt="buymeacoffee" style={{ height: "3rem" }} loading='lazy'/>
+                <img src={buyMeACoffeeImg} alt="buymeacoffee" style={{ height: "3rem" }} loading='lazy' />
             </a>
         </div>
-    </div>
+    </DefaultPage>
 }

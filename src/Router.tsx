@@ -11,6 +11,8 @@ import MidiSetup from 'pages/MidiSetup';
 import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
+import ManiaPlayer from "pages/VsrgPlayer";
+import VsrgComposer from "pages/VsrgComposer";
 import { ThemeProviderWrapper } from 'components/ProviderWrappers/ThemeProviderWrapper';
 import { AppBackground } from "components/Layout/AppBackground";
 import { MIDIProviderWrapper } from "components/ProviderWrappers/MIDIProviderWrapper";
@@ -45,11 +47,11 @@ export function Router() {
 						<AudioProviderWrapper>
 							<App />
 							<Switch>
-								<Route exact path="/ErrorPage">
+								<Route exact path="/Error">
 									<ErrorPage />
 								</Route>
 								<ErrorBoundaryRedirect 
-									onErrorGoTo="/ErrorPage"
+									onErrorGoTo="/Error"
 									onError={() => logger.error("There was an error with the app!")}
 								>
 									<Route exact path="/">
@@ -60,6 +62,16 @@ export function Router() {
 									<Route exact path="/Player">
 										<AppBackground page="Main">
 											<Player />
+										</AppBackground>
+									</Route>
+									<Route exact path="/VsrgComposer">
+										<AppBackground page="Composer">
+											<VsrgComposer />
+										</AppBackground>
+									</Route>
+									<Route exact path="/VsrgPlayer">
+										<AppBackground page="Main">
+											<ManiaPlayer />
 										</AppBackground>
 									</Route>
 									<Route exact path="/Composer">
@@ -85,16 +97,16 @@ export function Router() {
 									<Route exact path='/MidiSetup'>
 										<MidiSetup />
 									</Route>
-									<Route path='/Theme'>
+									<Route exact path='/Theme'>
 										<Theme />
 									</Route>
-									<Route path='/Privacy'>
+									<Route exact path='/Privacy'>
 										<Privacy />
 									</Route>
 								</ErrorBoundaryRedirect>
 								<Route path='*'>
 										<Error404 />
-									</Route>
+								</Route>
 							</Switch>
 						</AudioProviderWrapper>
 					</MIDIProviderWrapper>

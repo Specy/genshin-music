@@ -624,6 +624,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.addToHistory()
         if (layer === 'all') song.pasteColumns(copiedColumns, insert)
         else if (Number.isFinite(layer)) song.pasteLayer(copiedColumns, insert, layer)
+        this.syncInstruments()
         this.changes++
         this.setState({ song })
     }

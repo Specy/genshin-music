@@ -1,10 +1,7 @@
-import { Midi } from "@tonejs/midi"
-import { APP_NAME, Pitch } from "appConfig"
-import { ComposedSong } from "./ComposedSong"
-import { RecordedSong } from "./RecordedSong"
-import { SongData } from "./SongClasses"
+import { APP_NAME, Pitch, PITCHES } from "appConfig"
+import { InstrumentData, SerializedInstrumentData, SongData } from "./SongClasses"
 
-export type SongType = 'recorded' | 'composed' | 'midi'
+export type SongType = 'recorded' | 'composed' | 'midi' | 'vsrg'
 
 export interface SerializedSong {
     id: string | null,
@@ -14,26 +11,25 @@ export interface SerializedSong {
     data: SongData,
     bpm: number,
     pitch: Pitch,
-    version: number
+    version: number,
+    instruments: SerializedInstrumentData[]
+
 }
 
 export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number>{
-    id: string | null
+    id: string | null = null
     type: SongType
-    folderId: string | null
+    folderId: string | null = null
     name: string
     data: SongData
-    bpm: number
-    pitch: Pitch
+    bpm: number = 220
+    pitch: Pitch = "C"
     version: T3
+    instruments: InstrumentData[] = []
     constructor(name: string, version: T3, type: SongType,  data?: SongData){
         this.name = name
         this.version = version
-        this.bpm = 220
         this.type = type
-        this.id = null
-        this.folderId = null
-        this.pitch = "C"
         this.data = {
             isComposed: false,
             isComposedVersion: false,
@@ -54,11 +50,20 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
         if(song.data.isComposedVersion === false) return 'recorded'
         return null
     }
-    abstract toMidi(): Midi
+    static deserializeTo<T extends Song>(to: T, song: Partial<SerializedSong>): T{
+        const sanitizedBpm = Number(song.bpm)
+        const instruments = Array.isArray(song.instruments) ? song.instruments.map(InstrumentData.deserialize) : []
+        to.id = song.id ?? null
+        to.folderId = song.folderId ?? null
+        to.name = song.name ?? "Untitled"
+        to.data = { ...to.data, ...song.data }
+        to.bpm = Number.isFinite(sanitizedBpm) ? sanitizedBpm : 220
+        to.pitch = PITCHES.includes(song.pitch!) ? song.pitch! : "C"
+        to.version = song.version ?? -1
+        to.instruments = instruments
+        return to
+    }
     abstract serialize(): T2
-    abstract toRecordedSong(): RecordedSong
-    abstract toComposedSong(): ComposedSong
-    abstract toGenshin(): T
     abstract clone(): T
 }
 
