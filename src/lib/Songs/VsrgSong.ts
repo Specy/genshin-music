@@ -13,16 +13,35 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         super(name, 1, "vsrg")
     }
     static deserialize(obj: SerializedVsrgSong): VsrgSong {
-        const song = new VsrgSong(obj.name)
-        Song.deserializeTo(song, obj)
+        const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
         song.tracks = obj.tracks.map(track => VsrgTrack.deserialize(track))
         return song
     }
     serialize(): SerializedVsrgSong {
-        throw new Error("Method not implemented.");
+        return {
+            id: this.id,
+            type: "vsrg",
+            folderId: this.folderId,
+            name: this.name,
+            data: this.data,
+            bpm: this.bpm,
+            pitch: this.pitch,
+            version: 1,
+            tracks: this.tracks.map(track => track.serialize()),
+            instruments: this.instruments.map(instrument => instrument.serialize())
+        }
     }
     clone(): VsrgSong {
-        throw new Error("Method not implemented.");
+        const clone = new VsrgSong(this.name)
+        clone.id = this.id
+        clone.folderId = this.folderId
+        clone.bpm = this.bpm
+        clone.data = { ...this.data }
+        clone.version = this.version
+        clone.pitch = this.pitch
+        clone.instruments = this.instruments.map(ins => ins.clone())
+        clone.tracks = this.tracks.map(track => track.clone())
+        return clone
     }
 }
 

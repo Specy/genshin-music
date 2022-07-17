@@ -25,6 +25,8 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
     bpm: number = 220
     pitch: Pitch = "C"
     version: T3
+
+    //TODO Might not be ideal to have instrument data here
     instruments: InstrumentData[] = []
     constructor(name: string, version: T3, type: SongType,  data?: SongData){
         this.name = name
@@ -50,16 +52,15 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
         if(song.data.isComposedVersion === false) return 'recorded'
         return null
     }
-    static deserializeTo<T extends Song>(to: T, song: Partial<SerializedSong>): T{
-        const sanitizedBpm = Number(song.bpm)
-        const instruments = Array.isArray(song.instruments) ? song.instruments.map(InstrumentData.deserialize) : []
-        to.id = song.id ?? null
-        to.folderId = song.folderId ?? null
-        to.name = song.name ?? "Untitled"
-        to.data = { ...to.data, ...song.data }
+    static deserializeTo<T extends Song>(to: T, fromSong: Partial<SerializedSong>): T{
+        const sanitizedBpm = Number(fromSong.bpm)
+        const instruments = Array.isArray(fromSong.instruments) ? fromSong.instruments.map(InstrumentData.deserialize) : []
+        to.id = fromSong.id ?? null
+        to.folderId = fromSong.folderId ?? null
+        to.name = fromSong.name ?? "Untitled"
+        to.data = { ...to.data, ...fromSong.data }
         to.bpm = Number.isFinite(sanitizedBpm) ? sanitizedBpm : 220
-        to.pitch = PITCHES.includes(song.pitch!) ? song.pitch! : "C"
-        to.version = song.version ?? -1
+        to.pitch = PITCHES.includes(fromSong.pitch!) ? fromSong.pitch! : "C"
         to.instruments = instruments
         return to
     }

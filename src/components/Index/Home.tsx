@@ -138,13 +138,6 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         </div>
         <Separator />
         <div className='page-redirect-wrapper'>
-            <PageRedirect href='VsrgComposer' current={currentPage === 'Theme'}>
-                Vsrg Composer
-            </PageRedirect>
-            <PageRedirect href='VsrgPlayer' current={currentPage === 'Theme'}>
-                Vsrg Player
-            </PageRedirect>
-
             <PageRedirect href='Changelog' current={currentPage === 'Changelog'}>
                 Changelog
             </PageRedirect>

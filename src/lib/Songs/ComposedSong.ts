@@ -56,11 +56,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.columns = new Array(100).fill(0).map(_ => new Column())
         instruments.forEach(this.addInstrument)
     }
-    static deserialize = (song: UnknownSerializedComposedSong): ComposedSong => {
-        const parsed = new ComposedSong(song.name)
+    static deserialize(song: UnknownSerializedComposedSong): ComposedSong{
         //@ts-ignore
         if (song.version === undefined) song.version = 1
-        Song.deserializeTo(parsed, song)
+        const parsed = Song.deserializeTo(new ComposedSong(song.name), song)
+
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
         //parsing columns
         if (song.version === 1) {
@@ -406,9 +406,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     clone = () => {
         const clone = new ComposedSong(this.name)
         clone.id = this.id
+        clone.folderId = this.folderId
+        clone.bpm = this.bpm
         clone.data = { ...this.data }
         clone.version = this.version
-        clone.bpm = this.bpm
         clone.pitch = this.pitch
         clone.instruments = this.instruments.map(ins => ins.clone())
         clone.breakpoints = [...this.breakpoints]

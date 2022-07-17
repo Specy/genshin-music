@@ -55,8 +55,8 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     static deserialize(obj: SerializedRecordedSong): RecordedSong {
         const { notes, name } = obj
         const version = obj.version || 1
-        const song = new RecordedSong(name || 'Untitled')
-        Song.deserializeTo(song, obj)
+        const song = Song.deserializeTo(new RecordedSong(name || 'Untitled') , obj)
+        
         if(song.instruments.length === 0) song.instruments = [new InstrumentData()]
         if (version === 1) {
             const clonedNotes: [] = Array.isArray(notes) ? clonedeep(notes) : []
@@ -254,10 +254,11 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     clone = () => {
         const clone = new RecordedSong(this.name)
         clone.id = this.id
+        clone.folderId = this.folderId
         clone.version = this.version
         clone.bpm = this.bpm
         clone.pitch = this.pitch
-        clone.instruments = this.instruments
+        clone.instruments = this.instruments.map(ins => ins.clone())
         clone.data = { ...this.data }
         clone.notes = this.notes.map(note => note.clone())
         return clone

@@ -11,7 +11,7 @@ import MidiSetup from 'pages/MidiSetup';
 import Donate from 'pages/Donate'
 import Error404 from 'pages/404';
 import Theme from 'pages/Theme'
-import ManiaPlayer from "pages/VsrgPlayer";
+import VsrgPlayer from "pages/VsrgPlayer";
 import VsrgComposer from "pages/VsrgComposer";
 import { ThemeProviderWrapper } from 'components/ProviderWrappers/ThemeProviderWrapper';
 import { AppBackground } from "components/Layout/AppBackground";
@@ -71,7 +71,7 @@ export function Router() {
 									</Route>
 									<Route exact path="/VsrgPlayer">
 										<AppBackground page="Main">
-											<ManiaPlayer />
+											<VsrgPlayer />
 										</AppBackground>
 									</Route>
 									<Route exact path="/Composer">
