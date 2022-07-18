@@ -232,10 +232,10 @@
 	display: flex;
 	flex-wrap: wrap;
 	width: 100%;
-	gap: 0.4rem;
 }
 .page-redirect-wrapper a {
 	background-color: var(--primary);
+	margin: 0.2rem;
 	color: var(--primary-text);
 	border-radius: 0.5rem;
 	border: none;

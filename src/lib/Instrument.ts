@@ -93,7 +93,8 @@ export default class Instrument {
                     fetch(note.url)
                         .then(result => result.arrayBuffer())
                         .then(buffer => {
-                            AUDIO_CONTEXT.decodeAudioData(buffer, resolve, () => {
+                            AUDIO_CONTEXT.decodeAudioData(buffer, resolve, (e) => {
+                                console.error(e)
                                 loadedCorrectly = false
                                 resolve(emptyBuffer)
                             }).catch(e => {
@@ -136,7 +137,8 @@ export function fetchAudioBuffer(url: string): Promise<AudioBuffer>{
         fetch(url)
         .then(result => result.arrayBuffer())
         .then(buffer => {
-            AUDIO_CONTEXT.decodeAudioData(buffer, res, () => {
+            AUDIO_CONTEXT.decodeAudioData(buffer, res, (e) => {
+                console.error(e)
                 rej()
             }).catch(e => {
                 console.error(e)
