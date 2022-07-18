@@ -1,8 +1,6 @@
 import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
-import { ComposedSong } from "./Songs/ComposedSong";
-import { RecordedSong } from "./Songs/RecordedSong";
 import { ColumnNote } from "./Songs/SongClasses";
 import { NoteNameType } from "types/GeneralTypes";
 import { NoteLayer } from "./Layer";
@@ -108,30 +106,6 @@ function setIfInTWA() {
 	sessionStorage.setItem('isTwa', JSON.stringify(isInTwa))
 }
 
-function parseSong(song: any): RecordedSong | ComposedSong {
-	song = Array.isArray(song) ? song[0] : song
-	const type = getSongType(song)
-	if (type === "none") {
-		throw new Error("Error Invalid song")
-	}
-	if (type === "oldSky") {
-		const parsed = RecordedSong.fromOldFormat(song)
-		if (parsed === null) {
-			throw new Error("Error Invalid song")
-		}
-		return parsed
-	}
-	if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
-		throw new Error("Error Invalid song")
-	}
-	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
-		if (song.data?.isComposedVersion === true || song.type === 'composed') return ComposedSong.deserialize(song).toGenshin()
-		if (song.data?.isComposedVersion === false|| song.type === 'recorded') return RecordedSong.deserialize(song).toGenshin()
-	}
-	if (type === 'newComposed') return ComposedSong.deserialize(song)
-	if (type === 'newRecorded') return RecordedSong.deserialize(song)
-	throw new Error("Error Invalid song")
-}
 
 //TODO improve this detection
 function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' {
@@ -250,7 +224,6 @@ export {
 	FileDownloader,
 	getPitchChanger,
 	getSongType,
-	parseSong,
 	groupByNotes,
 	mergeLayers,
 	groupNotesByIndex,

@@ -2,7 +2,7 @@ import './SheetVisualizer.css'
 
 import { useState } from 'react'
 import { APP_NAME } from 'appConfig'
-import { getNoteText, parseSong } from 'lib/Utilities'
+import { getNoteText } from 'lib/Utilities'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { RecordedSong } from 'lib/Songs/RecordedSong'
@@ -15,6 +15,7 @@ import { SheetFrame } from 'components/SheetVisualizer/SheetFrame'
 import { Chunk } from 'lib/Songs/VisualSong'
 import { Title } from 'components/Miscellaneous/Title'
 import { DefaultPage } from 'components/Layout/DefaultPage'
+import { songService } from 'lib/Services/SongService'
 
 const THRESHOLDS = {
     joined: 50,
@@ -46,7 +47,7 @@ export default function SheetVisualizer() {
     function loadSong(song: SerializedSong) {
         setCurrentSong(song)
         try {
-            const temp = parseSong(song)
+            const temp = songService.parseSong(song)
             const lostReference = temp instanceof RecordedSong ? temp : temp.toRecordedSong()
             const notes = lostReference.notes
             const chunks: Chunk[] = []

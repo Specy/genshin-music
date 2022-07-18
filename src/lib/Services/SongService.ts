@@ -1,4 +1,8 @@
+import { APP_NAME } from "appConfig"
+import { ComposedSong } from "lib/Songs/ComposedSong"
+import { RecordedSong } from "lib/Songs/RecordedSong"
 import { SerializedSong, Song } from "lib/Songs/Song"
+import { getSongType } from "lib/Utilities"
 import { DbInstance } from "./Database/Database"
 
 class SongService{
@@ -62,6 +66,32 @@ class SongService{
 
     _clearAll(){
         return this.songCollection.remove({})
+    }
+    parseSong(song: any): ComposedSong | RecordedSong {
+        song = Array.isArray(song) ? song[0] : song
+        const type = getSongType(song)
+        if (type === "none") {
+            console.log(song)
+            throw new Error("Error Invalid song")
+        }
+        if (type === "oldSky") {
+            const parsed = RecordedSong.fromOldFormat(song)
+            if (parsed === null) {
+                throw new Error("Error Invalid song")
+            }
+            return parsed
+        }
+        if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
+            console.log(song)
+            throw new Error("Error Invalid song")
+        }
+        if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
+            if (song.data?.isComposedVersion === true || song.type === 'composed') return ComposedSong.deserialize(song).toGenshin()
+            if (song.data?.isComposedVersion === false|| song.type === 'recorded') return RecordedSong.deserialize(song).toGenshin()
+        }
+        if (type === 'newComposed') return ComposedSong.deserialize(song)
+        if (type === 'newRecorded') return RecordedSong.deserialize(song)
+        throw new Error("Error Invalid song")
     }
     removeSong(id: string){
         return this.songCollection.removeById(id)

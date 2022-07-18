@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
-import { parseSong } from "lib/Utilities"
 import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
 import { playerStore } from 'stores/PlayerStore'
 import { HelpTab } from 'components/HelpTab'
@@ -41,6 +40,7 @@ import { folderStore } from 'stores/FoldersStore';
 import { useSongs } from 'lib/Hooks/useSongs';
 import useClickOutside from 'lib/Hooks/useClickOutside';
 import { fileService } from 'lib/Services/FileService';
+import { songService } from 'lib/Services/SongService';
 
 interface MenuProps {
     functions: {
@@ -134,7 +134,7 @@ function Menu({ functions, data }: MenuProps) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
                 for (const song of songs) {
-                    addSong(parseSong(song))
+                    addSong(songService.parseSong(song))
                     Analytics.userSongs('import', { name: song?.name, page: 'player' })
                 }
             } catch (e) {
@@ -416,7 +416,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             if (isRenaming) return
-            playerStore.play(parseSong(data), 0)
+            playerStore.play(songService.parseSong(data), 0)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -440,7 +440,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         <div className="song-buttons-wrapper">
             <SongActionButton
                 onClick={() => {
-                    const parsed = parseSong(data)
+                    const parsed = songService.parseSong(data)
                     playerStore.practice(parsed, 0, parsed.notes.length)
                     toggleMenu(false)
                 }}
@@ -452,7 +452,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
             </SongActionButton>
 
             <SongActionButton onClick={() => {
-                const parsed = parseSong(data)
+                const parsed = songService.parseSong(data)
                 playerStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
 
@@ -499,11 +499,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(parseSong(data))}>
+                <FloatingDropdownRow onClick={() => downloadSong(songService.parseSong(data))}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(parseSong(data).toMidi())}>
+                <FloatingDropdownRow onClick={() => downloadSong(songService.parseSong(data).toMidi())}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download MIDI' />
                 </FloatingDropdownRow>

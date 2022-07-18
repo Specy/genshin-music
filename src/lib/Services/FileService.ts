@@ -1,12 +1,13 @@
 import { OldFormatComposed, UnknownSerializedComposedSong } from "lib/Songs/ComposedSong"
 import { OldFormatRecorded, UnknownSerializedRecordedSong } from "lib/Songs/RecordedSong"
-import { FileDownloader, parseSong } from "lib/Utilities"
+import { FileDownloader } from "lib/Utilities"
 import { songsStore } from "stores/SongsStore"
 //@ts-ignore
 import toWav from 'audiobuffer-to-wav'
 import { SerializedSong, Song } from "lib/Songs/Song"
 import { Midi } from "@tonejs/midi"
 import { Theme } from "stores/ThemeStore"
+import { songService } from "./SongService"
 type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedSong
 type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded
 type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
@@ -26,7 +27,7 @@ class FileService {
         const errors: UnknownSong[] = []
         for (const song of data) {
             try {
-                const parsed = parseSong(song)
+                const parsed = songService.parseSong(song)
                 await songsStore.addSong(parsed)
                 successful.push(parsed)
             } catch (e) {

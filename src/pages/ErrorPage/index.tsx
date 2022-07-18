@@ -1,5 +1,4 @@
 import { FaTrash, FaDownload } from 'react-icons/fa';
-import { parseSong } from "lib/Utilities"
 import { asyncConfirm } from "components/Utility/AsyncPrompts"
 import { APP_NAME } from "appConfig"
 import { logger } from 'stores/LoggerStore';
@@ -14,6 +13,7 @@ import { songsStore } from 'stores/SongsStore';
 import { fileService } from 'lib/Services/FileService';
 import { Title } from 'components/Miscellaneous/Title';
 import { DefaultPage } from 'components/Layout/DefaultPage';
+import { songService } from 'lib/Services/SongService';
 
 export function ErrorPage() {
     const [songs] = useSongs()
@@ -38,7 +38,7 @@ export function ErrorPage() {
     const downloadSong = (song: SerializedSong) => {
         try{
             const songName = song.name
-            const parsed = parseSong(song)
+            const parsed = songService.parseSong(song)
             const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
             fileService.downloadSong(converted,`${songName}.${APP_NAME.toLowerCase()}sheet`)
             logger.success("Song downloaded")

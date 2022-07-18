@@ -31,7 +31,7 @@ import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import useClickOutside from 'lib/Hooks/useClickOutside';
 import isMobile from 'is-mobile';
 import { fileService } from 'lib/Services/FileService';
-import { parseSong } from 'lib/Utilities';
+import { songService } from 'lib/Services/SongService';
 
 const isOnMobile = isMobile()
 interface MenuProps {
@@ -116,7 +116,7 @@ function Menu({ data, functions }: MenuProps) {
             }
             song.data.appName = APP_NAME
             const songName = song.name
-            const parsed = parseSong(song)
+            const parsed = songService.parseSong(song)
             const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
             fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
             logger.success("Song downloaded")
@@ -341,11 +341,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaDownload style={{ marginRight: "0.4rem" }} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(parseSong(data).toMidi())}>
+                <FloatingDropdownRow onClick={() => downloadSong(songService.parseSong(data).toMidi())}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download MIDI' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => songsStore.addSong(parseSong(data))}
+                <FloatingDropdownRow onClick={() => songsStore.addSong(songService.parseSong(data))}
                 >
                     <FaClone style={{ marginRight: "0.4rem" }} />
                     <FloatingDropdownText text='Clone song' />

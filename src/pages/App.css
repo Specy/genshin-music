@@ -132,7 +132,7 @@ body {
 	height: fit-content;
 	cursor: pointer;
 	min-width: 5rem;
-	transition: background-color 0.2s, color 0.2s;
+	transition: background-color 0.2s, color 0.2s, filter 0.2s;
 }
 
 .link {
