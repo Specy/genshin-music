@@ -11,6 +11,7 @@ class ErrorBoundaryRedirect extends Component<ErrorBoundaryRedirectProps>{
 
     componentDidCatch(error:any, info:any) {
         console.error(error, info);
+        if(window.location.hostname === "localhost") return console.error("Prevent localhost redirect")
         this.props.history.push(this.props.onErrorGoTo);
     }
 

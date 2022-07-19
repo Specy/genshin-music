@@ -1,14 +1,27 @@
 import { Component } from "react";
 import { SimpleMenu } from "components/Layout/SimpleMenu";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 
-export default class VsrgPlayer extends Component{
+type VsrgPlayerProps = RouteComponentProps & {
+    
+}
+interface VsrgPlayerState {
 
+}
+
+class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
+    constructor(props: VsrgPlayerProps) {
+        super(props)
+        this.state = {
+            
+        }
+    }
     render() {
         return <>
             <SimpleMenu />
-            <div>
-                <h1>Under construction...</h1>
-            </div>
+
         </>
     }
 }
+
+export default withRouter<VsrgPlayerProps, any>(VsrgPlayer)

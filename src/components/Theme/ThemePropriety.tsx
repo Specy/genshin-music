@@ -95,7 +95,6 @@ export function ThemePropriety({ name, value, onChange, isModified, setSelectedP
                             <FaCheck size={16} />
                         </button>
                     </div>
-
                 </div>
                 : <div
                     onClick={() => setSelectedProp(name)}

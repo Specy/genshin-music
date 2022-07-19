@@ -1,0 +1,143 @@
+.vsrg-page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+}
+
+.vsrg-top {
+    display: flex;
+    flex: 1;
+    margin-bottom: 0.6rem;
+}
+
+.vsrg-top-canvas-wrapper {
+    display: flex;
+    flex: 1;
+    border-radius: 0.6rem;
+}
+
+.vsrg-top-right {
+    display: flex;
+    flex-direction: column;
+    width: 13.6rem;
+    margin-left: 0.6rem;
+}
+
+.vsrg-track {
+    min-height: 3rem;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    border-bottom: solid 2px var(--secondary);
+}
+
+.vsrg-track-color {
+    --size: 2.4rem;
+    position: absolute;
+    top: calc(var(--size) / -2);
+    right: calc(var(--size) / -2);
+    width: var(--size);
+    height: var(--size);
+    transform: rotate(45deg);
+}
+
+.vsrg-floating-settings {
+    position: absolute;
+    right: calc(13.6rem + 0.8rem);
+    width: 18rem;
+    background-color: var(--menu-background);
+    color: var(--menu-background-text);
+    border-radius: 0.6rem;
+    border: solid 2px var(--secondary);
+    top: 0.5rem;
+    padding: 0.4rem;
+    animation: fadeAndScaleIn 0.15s ease-in-out forwards;
+}
+
+.vsrg-track-settings {
+    position: absolute;
+    bottom: 0.1rem;
+    left: 0.1rem;
+    padding: 0;
+    width: 1.2rem;
+    height: 1.2rem;
+    background-color: transparent;
+    min-width: unset;
+}
+
+.vsrg-track-wrapper {
+    min-height: 5rem;
+    background-color: var(--primary);
+    margin-bottom: 0.6rem;
+    border-radius: 0.6rem;
+    overflow-y: auto;
+}
+
+.vsrg-keyboard {
+    margin-top: auto;
+    display: grid;
+    gap: 0.15rem;
+}
+
+.vsrg-keyboard button {
+    width: 100%;
+    transition: all 0.2s;
+    cursor: pointer;
+    border-radius: 0.2rem;
+    aspect-ratio: 1;
+    min-height: 1.4rem;
+    background-color: var(--icon-color);
+    border: none;
+}
+
+.vsrg-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 3.5rem;
+    height: 2.5rem;
+}
+
+.multiple-option-slider {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    height: 100%;
+    padding: 0.2rem;
+    width: fit-content;
+    border-radius: 3rem;
+    position: relative;
+    background-color: var(--primary);
+}
+
+.multiple-option-slider button {
+    height: 100%;
+    padding: 0 1.4rem;
+    color: var(--primary-text);
+    transition: color 0.2s;
+    z-index: 2;
+    background-color: transparent;
+    border: none;
+}
+
+.multiple-options-selected {
+    color: var(--accent-text) !important;
+}
+
+.multiple-option-slider-overlay {
+    transition: all 0.15s ease-out;
+    position: absolute;
+    height: calc(100% - 0.4rem);
+    top: 0.2rem;
+    border-radius: 3rem;
+    background-color: var(--accent);
+}
+
+.vsrg-play-button {
+    color: var(--icon-color);
+    border-radius: 0.4rem;
+    height: 100%;
+    margin-left: 0.6rem;
+}

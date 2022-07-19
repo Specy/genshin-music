@@ -8,6 +8,7 @@
     border-radius: 0.2rem;
     border: none;
     color: var(--primary-text);
+    padding: 0.5rem;
 }
 .instrument-picker input[type="range"]{
     margin-top: 0.2rem;

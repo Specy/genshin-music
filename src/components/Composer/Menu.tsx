@@ -249,7 +249,6 @@ function Menu({ data, functions }: MenuProps) {
                 </MenuPanel>
             </div>
         </div>
-
     </>
 }
 

@@ -1,3 +1,4 @@
+import { Pitch } from "appConfig";
 import { InstrumentName } from "types/GeneralTypes";
 import { SerializedSong, Song } from "./Song";
 
@@ -17,6 +18,18 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         song.tracks = obj.tracks.map(track => VsrgTrack.deserialize(track))
         return song
     }
+
+    addTrack(instrument?: InstrumentName){
+        const track = new VsrgTrack(instrument ?? "Drum")
+        this.tracks.push(track)
+        this.tracks = [...this.tracks]
+        return track
+    }
+    deleteTrack(index:number){
+        this.tracks.splice(index, 1)
+        this.tracks = [...this.tracks]
+    }
+
     serialize(): SerializedVsrgSong {
         return {
             id: this.id,
@@ -31,6 +44,10 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             instruments: this.instruments.map(instrument => instrument.serialize())
         }
     }
+    set(data: Partial<VsrgSong>){
+		Object.assign(this, data)
+		return this
+	}
     clone(): VsrgSong {
         const clone = new VsrgSong(this.name)
         clone.id = this.id
@@ -49,25 +66,32 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
 
 interface SerializedVsrgTrack{
     instrument: InstrumentName
+    alias: string
+    pitch: Pitch
     hitObjects: SerializedVsrgHitObject[]
     volume: number
     color: string
 }
-class VsrgTrack{
+export class VsrgTrack{
     instrument: InstrumentName
+    pitch: Pitch = "C"
     hitObjects: VsrgHitObject[]
     volume: number = 100
     color: string = "white"
-    constructor(instrument: InstrumentName, hitObjects?: VsrgHitObject[]){
+    alias: string = ""
+    constructor(instrument: InstrumentName, alias?:string,  hitObjects?: VsrgHitObject[]){
         this.instrument = instrument ?? "Drum"
         this.hitObjects = hitObjects ?? []
+        this.alias = alias ?? ""
     }
     serialize(): SerializedVsrgTrack{
         return {
             instrument: this.instrument,
             hitObjects: this.hitObjects.map(x => x.serialize()),
             volume: this.volume,
-            color: this.color
+            color: this.color,
+            alias: this.alias,
+            pitch: this.pitch
         }
     }
     static deserialize(data: SerializedVsrgTrack){
@@ -82,11 +106,16 @@ class VsrgTrack{
         this.hitObjects.push(hitObject)
         return hitObject
     }
-    
+    set(data: Partial<VsrgTrack>){
+		Object.assign(this, data)
+		return this
+	}
     clone(){
-        const track = new VsrgTrack(this.instrument, this.hitObjects.map(x => x.clone()))
+        const track = new VsrgTrack(this.instrument,this.alias, this.hitObjects.map(x => x.clone()))
         track.volume = this.volume
         track.color = this.color
+        track.pitch = this.pitch
+        track.alias = this.alias
         return track
     }
 }
@@ -98,7 +127,7 @@ type SerializedVsrgHitObject = [
     holdDuration: number,
     notes: number[]
 ]
-class VsrgHitObject{
+export class VsrgHitObject{
     index: number
     timestamp: number
     notes: number[] = []

@@ -6,15 +6,15 @@ import { FileElement, FilePicker } from "components/Inputs/FilePicker"
 import Player from "pages/Player";
 import Composer from "pages/Composer";
 import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts";
-import { ThemePropriety } from "./Components/ThemePropriety";
+import { ThemePropriety } from "../../components/Theme/ThemePropriety";
 
 import cloneDeep from 'lodash.clonedeep'
 import { Theme } from "stores/ThemeStore";
-import { ThemePreview } from "./Components/ThemePreview";
+import { ThemePreview } from "../../components/Theme/ThemePreview";
 import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "stores/ThemeStore";
 import { logger } from "stores/LoggerStore";
-import { ThemeInput } from "./Components/ThemeInput";
+import { ThemeInput } from "../../components/Theme/ThemeInput";
 import { useTheme } from "lib/Hooks/useTheme";
 import './Theme.css'
 import { AppBackground } from "components/Layout/AppBackground";
