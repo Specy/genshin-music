@@ -2,18 +2,29 @@ import { AppButton } from "components/Inputs/AppButton"
 import { Select } from "components/Inputs/Select"
 import { useState } from "react"
 import { FaPlay } from "react-icons/fa"
-import { MultipleOptionSlider } from "./MultipleOptionSlider"
+import { MultipleOptionSlider, Option } from "./MultipleOptionSlider"
 
 interface VsrgBottomProps {
 
-    onHitObjectTypeChange: (hitObjectType: HitObjectType) => void
+    onHitObjectTypeChange: (hitObjectType: VsrgHitObjectType) => void
 }
 
-type HitObjectType = 'hold' | 'tap' | 'delete'
-const options: HitObjectType[] = ['tap', 'hold', 'delete']
+export type VsrgHitObjectType = 'hold' | 'tap' | 'delete'
+const options: Option<VsrgHitObjectType>[] = [
+    {
+        value: 'tap',
+        color: 'var(--accent)',
+    },{
+        value: 'hold',
+        color: '#8569a9',
+    },{
+        value: 'delete',
+        color: 'var(--red)',
+    }
+]
 const snapPoints = [1,2,4,8,16]
-export function VsrgBottom() {
-    const [hitObjectType, setHitObjectType] = useState<HitObjectType>('tap')
+export function VsrgBottom({}:VsrgBottomProps) {
+    const [hitObjectType, setHitObjectType] = useState<VsrgHitObjectType>('tap')
     const [selectedSnapPoint, setSelectedSnapPoint] = useState<number>(1)
 
     return <>
@@ -21,7 +32,7 @@ export function VsrgBottom() {
             <MultipleOptionSlider
                 options={options}
                 selected={hitObjectType}
-                onChange={(value: HitObjectType) => setHitObjectType(value)}
+                onChange={(value: VsrgHitObjectType) => setHitObjectType(value)}
             />
             <div>
                 Song name 0:40 / 2:10

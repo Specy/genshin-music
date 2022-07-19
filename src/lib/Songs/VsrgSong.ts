@@ -20,7 +20,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     }
 
     addTrack(instrument?: InstrumentName){
-        const track = new VsrgTrack(instrument ?? "Drum")
+        const track = new VsrgTrack(instrument ?? "DunDun")
         this.tracks.push(track)
         this.tracks = [...this.tracks]
         return track

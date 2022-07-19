@@ -33,6 +33,7 @@ export function SongMenu<T>({
 }: SongMenuProps<T>) {
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
+    const [noFolderVsrg, setNoFolderVsrg] = useState<Folder>()
     const [filteredSongs, setFilteredSongs] = useState<SongKinds[]>([])
     useEffect(() => {
         setFilteredSongs(songs.filter(s => !exclude?.includes(s.type) ?? true))
@@ -40,13 +41,14 @@ export function SongMenu<T>({
     useEffect(() => {
         setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !song.folderId && song.type === 'recorded')))
         setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !song.folderId && song.type === 'composed')))
+        setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !song.folderId && song.type === 'vsrg')))
     }, [filteredSongs])
     const [folders] = useFolders(filteredSongs)
     const [theme] = useTheme()
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
 
     return <div className={className} style={style}>
-        {((!exclude?.includes('recorded') ?? true) && noFolderComposed) &&
+        {((!exclude?.includes('composed') ?? true) && noFolderComposed) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
                 color={theme.getText('menu_background').toString()}
@@ -94,16 +96,41 @@ export function SongMenu<T>({
                 </SongFolderContent>
             </SongFolder>
         }
+        {((!exclude?.includes('vsrg') ?? true) && noFolderVsrg) &&
+            <SongFolder
+                backgroundColor={unselectedColor.toString()}
+                color={theme.getText('menu_background').toString()}
+                data={noFolderVsrg}
+                isDefault={true}
+                defaultOpen={baseType === 'recorded'}
+            >
+                <SongFolderContent>
+                    {noFolderVsrg.songs.map(song =>
+                        <SongComponent
+                            {...componentProps}
+                            data={song}
+                            key={song?.id}
+                        />
+                    )}
+                    {noFolderVsrg.songs.length === 0 &&
+                        <div style={{ padding: '0.2rem', fontSize: '0.9rem' }}>
+                            No songs here, record one!
+                        </div>
+                    }
+                </SongFolderContent>
+            </SongFolder>
+        }
         {folders.map(folder => {
             const composed = folder.songs.filter(song => song.type === 'composed')
             const recorded = folder.songs.filter(song => song.type === 'recorded')
+            const vsrg = folder.songs.filter(song => song.type === 'vsrg')
             return <SongFolder
                 key={folder.id}
                 backgroundColor={unselectedColor.toString()}
                 color={theme.getText('menu_background').toString()}
                 data={folder}
             >
-                {composed.length > 0 &&
+                {((!exclude?.includes('composed') ?? true) && composed.length > 0) &&
                     <SongFolderContent title="Composed">
                         {composed.map(song =>
                             <SongComponent
@@ -114,7 +141,7 @@ export function SongMenu<T>({
                         )}
                     </SongFolderContent>
                 }
-                {recorded.length > 0 &&
+                {((!exclude?.includes('recorded') ?? true) && recorded.length > 0) &&
                     <SongFolderContent title="Recorded">
                         {recorded.map(song =>
                             <SongComponent
@@ -125,8 +152,19 @@ export function SongMenu<T>({
                         )}
                     </SongFolderContent>
                 }
+                {((!exclude?.includes('vsrg') ?? true) && vsrg.length > 0) &&
+                    <SongFolderContent title="Vsrg">
+                        {vsrg.map(song =>
+                            <SongComponent
+                                {...componentProps}
+                                data={song}
+                                key={song?.id}
+                            />
+                        )}
+                    </SongFolderContent>
+                }
                 {composed.length === 0 && recorded.length === 0 &&
-                    <div style={{padding: '0.7rem', paddingTop: "0", fontSize: '0.9rem'}}>
+                    <div style={{ padding: '0.7rem', paddingTop: "0", fontSize: '0.9rem' }}>
                         The folder is empty
                     </div>
                 }

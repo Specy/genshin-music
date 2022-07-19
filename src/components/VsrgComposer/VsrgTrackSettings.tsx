@@ -17,6 +17,7 @@ interface TrackSelectorProps {
 
 export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSelectorProps) {
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
+    if(!track) return null
     return <>
         <div className="vsrg-floating-settings box-shadow">
             <div className="row-centered space-between">
@@ -76,37 +77,20 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                 />
             </div>
             <div className="column">
-                <div className="row-centered space-between"> 
-                    Color 
-                    {!isColorPickerOpen && 
-                        <AppButton
-                            onClick={() => setIsColorPickerOpen(true)}
-                            
-                            ariaLabel='Change color'
-                            style={{ 
-                                backgroundColor: track.color,
-                                color: Color(track.color).isDark() ? '#fff' : '#000',
-                            }}
-                        >
-                            Change
-                        </AppButton>
-                    }
-                </div>
-                {isColorPickerOpen &&
-                    <ColorPicker
-                        absolute={false}
-                        style={{
-                            boxShadow: "unset",
-                            backgroundColor: "unset"
-                        }}
-                        value={track.color}
-                        onChange={color => {
-                            onChange(track.set({ color }))
-                            setIsColorPickerOpen(false)
-                        }}
-                    />
-                }
+                <div className="row-centered space-between">
+                    Color
+                    <AppButton
+                        onClick={() => setIsColorPickerOpen(true)}
 
+                        ariaLabel='Change color'
+                        style={{
+                            backgroundColor: track.color,
+                            color: Color(track.color).isDark() ? '#fff' : '#000',
+                        }}
+                    >
+                        Change
+                    </AppButton>
+                </div>
             </div>
             <div className='row space-between' style={{ marginTop: '0.4rem' }}>
                 <AppButton
@@ -125,5 +109,18 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                 </AppButton>
             </div>
         </div>
+        {isColorPickerOpen &&
+            <ColorPicker
+                style={{
+                    right: '0.8rem',
+                    top: '0.5rem',
+                }}
+                value={track.color}
+                onChange={color => {
+                    onChange(track.set({ color }))
+                    setIsColorPickerOpen(false)
+                }}
+            />
+        }
     </>
 }

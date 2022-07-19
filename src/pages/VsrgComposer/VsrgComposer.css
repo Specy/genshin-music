@@ -3,6 +3,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
     padding: 0.5rem;
 }
 
@@ -118,6 +119,7 @@
     color: var(--primary-text);
     transition: color 0.2s;
     z-index: 2;
+    cursor: pointer;
     background-color: transparent;
     border: none;
 }
