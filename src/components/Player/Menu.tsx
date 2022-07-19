@@ -129,14 +129,19 @@ function Menu({ functions, data }: MenuProps) {
         setOpen(true)
         Analytics.UIEvent('menu', { tab: selection })
     }
-    const importSong = (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
+    const importSong = async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
         for (const file of files) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
-                for (const song of songs) {
-                    addSong(songService.parseSong(song))
-                    Analytics.userSongs('import', { name: song?.name, page: 'player' })
+                const result = await fileService.addSongs(songs)
+                if(result.ok){
+                    if(result.successful.length === 1) {
+                        return logger.success(`${result.successful[0].type} song imported successfully`)
+                    }
+                    return logger.success(`${result.successful.length} songs imported successfully`)
                 }
+                console.error(result.errors)
+                logger.error(`There were ${result.errors.length} errors while importing the file`)
             } catch (e) {
                 console.error(e)
                 if (file.file.name.includes?.(".mid")) {
@@ -175,6 +180,7 @@ function Menu({ functions, data }: MenuProps) {
     }, [])
     function downloadAllSongs() {
         try {
+            console.log(songs)
             const toDownload = songs.map(song => {
                 if (APP_NAME === 'Sky') {
                     if (song.type === 'composed') ComposedSong.deserialize(song as UnknownSerializedComposedSong).toOldFormat()

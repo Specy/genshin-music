@@ -67,6 +67,7 @@ class SongService{
     _clearAll(){
         return this.songCollection.remove({})
     }
+    //TODO not sure this is the best place for this
     parseSong(song: any): ComposedSong | RecordedSong {
         song = Array.isArray(song) ? song[0] : song
         const type = getSongType(song)

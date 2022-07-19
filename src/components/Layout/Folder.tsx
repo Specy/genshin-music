@@ -1,5 +1,6 @@
 import { Folder } from "lib/Folder"
 import { fileService } from "lib/Services/FileService"
+import cloneDeep from "lodash.clonedeep"
 import { useEffect, useRef, useState } from "react"
 import { BsChevronRight } from "react-icons/bs"
 import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
@@ -105,7 +106,8 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                         </FloatingDropdownRow>
                         <FloatingDropdownRow 
                             onClick={() => {
-                                fileService.downloadSong(data.songs, `${data.name}-folder`)
+                                const clone = cloneDeep(data.songs)
+                                fileService.downloadSong(clone, `${data.name}-folder`)
                             }}
                         >
                             <FaDownload style={{ marginRight: "0.4rem" }} size={14} />

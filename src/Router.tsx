@@ -22,7 +22,7 @@ import { useEffect } from "react";
 import { DropZoneProviderWrapper } from "components/ProviderWrappers/DropZoneProviderWrapper";
 import Privacy from "pages/Privacy";
 import ErrorBoundaryRedirect from "components/Utility/ErrorBoundaryRedirect";
-import {logger} from "stores/LoggerStore"
+import { logger } from "stores/LoggerStore"
 export function Router() {
 	useEffect(() => {
 		try {
@@ -50,7 +50,7 @@ export function Router() {
 								<Route exact path="/Error">
 									<ErrorPage />
 								</Route>
-								<ErrorBoundaryRedirect 
+								<ErrorBoundaryRedirect
 									onErrorGoTo="/Error"
 									onError={() => logger.error("There was an error with the app!")}
 								>
@@ -105,7 +105,7 @@ export function Router() {
 									</Route>
 								</ErrorBoundaryRedirect>
 								<Route path='*'>
-										<Error404 />
+									<Error404 />
 								</Route>
 							</Switch>
 						</AudioProviderWrapper>
