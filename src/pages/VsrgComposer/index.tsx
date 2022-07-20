@@ -11,6 +11,7 @@ import { VsrgCanvas } from "components/VsrgComposer/VsrgCanvas";
 import { VsrgComposerSettingsDataType } from "lib/BaseSettings";
 import { settingsService } from "lib/Services/SettingsService";
 import { SettingUpdate } from "types/SettingsPropriety";
+import { VsrgComposerEvents, vsrgComposerStore } from "stores/VsrgComposerStore";
 type VsrgComposerProps = RouteComponentProps & {
 
 }
@@ -66,22 +67,30 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         }
         this.setState({
             settings: { ...settings }
-        }, this.updateSettings)
+        }, () => {
+            this.updateSettings()
+            if(setting.key === 'keys') vsrgComposerStore.emitEvent('updateKeys')
+
+        })
     }
     onSnapPointChange = (snapPoint: number) => {
         this.setState({ snapPoint }, this.calculateSnapPoints)
     }
-    addHitObject = (timestamp: number) => {
-        console.log("addHitObject", timestamp)
+    onSnapPointSelect = (timestamp: number, key:number, type?: 0 | 2) => {
+        const {vsrg, selectedType} = this.state
+        if(selectedType === 'tap' && type !== 2) vsrg.createHitObjectInTrack(this.state.selectedTrack, timestamp, key)
+        if(selectedType === 'tap' && type === 2) vsrg.removeHitObjectAt(this.state.selectedTrack, timestamp, key)
+        if(selectedType === 'delete') vsrg.removeHitObjectAt(this.state.selectedTrack, timestamp, key)
+        this.setState({ vsrg })
     }
     selectTrack = (selectedTrack: number) => {
         this.setState({ selectedTrack })
     }
     calculateSnapPoints = () => {
         const { vsrg, snapPoint } = this.state
-        const amount = Math.floor(vsrg.duration / (60000 / vsrg.bpm) * snapPoint)
+        const amount = vsrg.duration / (60000 / vsrg.bpm) * snapPoint
         const perSnap = vsrg.duration / amount
-        const snapPoints = new Array(amount).fill(0).map((_, i) => i * perSnap)
+        const snapPoints = new Array(Math.floor(amount)).fill(0).map((_, i) => i * perSnap)
         this.setState({ snapPoints })
     }
     changeTrack = (track: VsrgTrack, index: number) => {
@@ -114,6 +123,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             <VsrgMenu
                 onSongOpen={this.onSongOpen}
                 onSave={this.saveSong}
+                
                 settings={this.state.settings}
                 handleSettingChange={this.handleSettingChange}
             />
@@ -131,7 +141,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                         snapPoint={this.state.snapPoint}
                         snapPoints={this.state.snapPoints}
                         isPlaying={this.state.isPlaying}
-                        onHitObjectAdded={this.addHitObject}
+                        onSnapPointSelect={this.onSnapPointSelect}
                     />
 
                 </VsrgTop>

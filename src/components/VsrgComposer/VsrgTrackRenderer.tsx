@@ -1,24 +1,27 @@
 import { Sprite } from "@inlet/react-pixi";
 import { VsrgTrack } from "lib/Songs/VsrgSong";
-import { VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasCache } from "./VsrgComposerCache";
 
 interface VsrgTrackRendererProps{
     track: VsrgTrack
     keys: number
     sizes: VsrgCanvasSizes
+    cache: VsrgCanvasCache
+    colors: VsrgCanvasColors
 }
 
 
-export function VsrgTrackRenderer({track, sizes, keys}: VsrgTrackRendererProps){
-
+export function VsrgTrackRenderer({track, sizes, keys, cache, colors}: VsrgTrackRendererProps){
+    const positionSize = sizes.height / keys
     return <>
-        {track.hitObjects.map((hitObject) => {
+        {track.hitObjects.map(hitObject => {
             return <Sprite
-            image="https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/coin.png"
-            scale={{ x: 0.5, y: 0.5 }}
+            key={hitObject.timestamp + hitObject.index}
+            texture={cache.getHitObjectCache(track.color)}
             anchor={0.5}
             x={hitObject.timestamp}
-            y={sizes.height / keys * hitObject.index}
+            y={positionSize * hitObject.index + positionSize / 2}
           />
         })}
     </>

@@ -30,8 +30,12 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         return track
     }
     createHitObjectInTrack(trackIndex: number, timestamp: number, index: number){
-        this.tracks[trackIndex].createHitObjectAt(timestamp, index)
+        const hitObject = this.tracks[trackIndex].createHitObjectAt(timestamp, index)
         this.duration = Math.max(this.duration, timestamp)
+        return hitObject
+    }
+    removeHitObjectAt(trackIndex: number, timestamp: number, index: number){
+        this.tracks[trackIndex].removeHitObjectAt(timestamp, index)
     }
     deleteTrack(index:number){
         this.tracks.splice(index, 1)
@@ -114,9 +118,17 @@ export class VsrgTrack{
         return track
     }
     createHitObjectAt(time: number, index: number){
+        const exists = this.hitObjects.find(x => x.timestamp === time && x.index === index)
+        if(exists) return null
         const hitObject = new VsrgHitObject(index, time)
         this.hitObjects.push(hitObject)
         return hitObject
+    }
+    removeHitObjectAt(time: number, index:number){
+        const indexOf = this.hitObjects.findIndex(x => x.timestamp === time && x.index === index)
+        if(indexOf === -1) return
+        this.hitObjects.splice(indexOf, 1)
+
     }
     set(data: Partial<VsrgTrack>){
 		Object.assign(this, data)

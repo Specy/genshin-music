@@ -7,6 +7,7 @@ import { HelpTooltip } from "components/Utility/HelpTooltip"
 import { ColorPicker } from "components/Inputs/ColorPicker"
 import { useState } from "react"
 import Color from "color"
+import { vsrgComposerStore } from "stores/VsrgComposerStore"
 
 interface TrackSelectorProps {
     track: VsrgTrack
@@ -119,6 +120,7 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                 onChange={color => {
                     onChange(track.set({ color }))
                     setIsColorPickerOpen(false)
+                    vsrgComposerStore.emitEvent("colorChange")
                 }}
             />
         }

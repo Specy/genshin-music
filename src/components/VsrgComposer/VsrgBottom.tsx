@@ -23,7 +23,7 @@ const options: Option<VsrgHitObjectType>[] = [
     }
 ]
 const snapPoints = [1,2,4,8,16]
-export function VsrgBottom({ onSnapPointChange }:VsrgBottomProps) {
+export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange }:VsrgBottomProps) {
     const [hitObjectType, setHitObjectType] = useState<VsrgHitObjectType>('tap')
     const [selectedSnapPoint, setSelectedSnapPoint] = useState<number>(1)
 
@@ -32,7 +32,10 @@ export function VsrgBottom({ onSnapPointChange }:VsrgBottomProps) {
             <MultipleOptionSlider
                 options={options}
                 selected={hitObjectType}
-                onChange={(value: VsrgHitObjectType) => setHitObjectType(value)}
+                onChange={(value: VsrgHitObjectType) => {
+                    setHitObjectType(value)
+                    onHitObjectTypeChange(value)
+                }}
             />
             <div>
                 Song name 0:40 / 2:10
