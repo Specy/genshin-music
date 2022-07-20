@@ -13,7 +13,7 @@ interface SettingsRowProps {
     data: SettingsPropriety,
     update: (data: SettingUpdate) => void,
     objKey: SettingUpdateKey,
-    changeVolume: (data: SettingVolumeUpdate) => void
+    changeVolume?: (data: SettingVolumeUpdate) => void
 }
 
 function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
@@ -52,6 +52,7 @@ function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
         {type === "select" &&
             <Select
                 theme={theme}
+                type={data.options[0]}
                 onChange={update}
                 value={data.value}
                 objectKey={objKey}
@@ -85,7 +86,7 @@ function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
                 onChange={update}
             />
         }
-        {type === "instrument" &&
+        {(type === "instrument" && changeVolume) &&
             <InstrumentInput
                 theme={theme}
                 volume={volume}

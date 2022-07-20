@@ -1,5 +1,5 @@
 import { APP_NAME } from "appConfig"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, MainPageSettings, MainPageSettingsDataType, MainPageSettingsType, MIDISettings } from "lib/BaseSettings"
+import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, MainPageSettings, MainPageSettingsDataType, MainPageSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType } from "lib/BaseSettings"
 
 
 
@@ -22,7 +22,30 @@ class SettingsService{
             return ComposerSettings.data
         }
     }
+    getVsrgComposerSettings(){
+        const json = localStorage.getItem(APP_NAME + "_VsrgComposer_Settings")
+		try {
+			const storedSettings = JSON.parse(json || 'null') as VsrgComposerSettingsType | null
+			if (storedSettings) {
+				if (storedSettings.other?.settingVersion !== VsrgComposerSettings.other.settingVersion) {
+					this.updateVsrgSettings(VsrgComposerSettings.data)
+					return VsrgComposerSettings.data
+				}
+				return storedSettings.data
+			}
+			return VsrgComposerSettings.data
+		} catch (e) {
+			return VsrgComposerSettings.data
+		}
+    }
+    updateVsrgSettings(settings: VsrgComposerSettingsDataType){
+        const state = {
+            other: VsrgComposerSettings.other,
+            data: settings
+        }
+        localStorage.setItem(APP_NAME + "_VsrgComposer_Settings", JSON.stringify(state))
 
+    }
     updateComposerSettings(settings: ComposerSettingsDataType){
         const state = {
             other: ComposerSettings.other,

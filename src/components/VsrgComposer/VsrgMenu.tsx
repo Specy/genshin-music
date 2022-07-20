@@ -2,12 +2,14 @@ import { SongActionButton } from "components/Inputs/SongActionButton";
 import MenuPanel from "components/Layout/MenuPanel";
 import { SongMenu } from "components/Layout/SongMenu";
 import { MenuItem } from "components/Miscellaneous/MenuItem";
+import { SettingsPane } from "components/Settings/SettingsPane";
 import { asyncConfirm } from "components/Utility/AsyncPrompts";
 import { FloatingDropdownRow, FloatingDropdownText, FloatingDropdown } from "components/Utility/FloatingDropdown";
 import Memoized from "components/Utility/Memoized";
 import { hasTooltip, Tooltip } from "components/Utility/Tooltip";
 import isMobile from "is-mobile";
 import Analytics from "lib/Analytics";
+import { VsrgComposerSettingsDataType } from "lib/BaseSettings";
 import { Folder } from "lib/Folder";
 import useClickOutside from "lib/Hooks/useClickOutside";
 import { useFolders } from "lib/Hooks/useFolders";
@@ -15,27 +17,28 @@ import { useSongs } from "lib/Hooks/useSongs";
 import { useTheme } from "lib/Hooks/useTheme";
 import { fileService } from "lib/Services/FileService";
 import { songService } from "lib/Services/SongService";
-import { ComposedSong } from "lib/Songs/ComposedSong";
-import { RecordedSong } from "lib/Songs/RecordedSong";
 import { SerializedSong } from "lib/Songs/Song";
 import { VsrgSong } from "lib/Songs/VsrgSong";
 import { memo, useCallback, useEffect, useState } from "react";
-import { FaBars, FaCrosshairs, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaRegCircle, FaSave, FaTimes, FaTrash } from "react-icons/fa";
+import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaRegCircle, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import HomeStore from "stores/HomeStore";
 import { songsStore } from "stores/SongsStore";
 import { ThemeStoreClass } from "stores/ThemeStore";
+import { SettingUpdate } from "types/SettingsPropriety";
 
 type MenuTabs = 'Songs' | 'Settings'
 const isOnMobile = isMobile()
 
-interface VsrgMenu{
+interface VsrgMenuProps{
+    settings: VsrgComposerSettingsDataType
+    handleSettingChange: (override: SettingUpdate) => void
     onSave: () => void
     onSongOpen: (song: VsrgSong) => void
 }
 
 
 
-function VsrgMenu({ onSave, onSongOpen}: VsrgMenu){
+function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange}: VsrgMenuProps){
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
@@ -95,7 +98,7 @@ function VsrgMenu({ onSave, onSongOpen}: VsrgMenu){
                 </MenuItem>
                 <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"} ariaLabel='Settings menu'>
                     <Memoized>
-                        <FaHome className="icon" />
+                        <FaCog className="icon" />
                     </Memoized>
                 </MenuItem>
                 <MenuItem onClick={() => HomeStore.open()} ariaLabel='Open home menu'>
@@ -124,12 +127,20 @@ function VsrgMenu({ onSave, onSongOpen}: VsrgMenu){
                 />
                 </MenuPanel>
                 <MenuPanel current={selectedMenu} id="Settings">
-                    settings
+                    <SettingsPane
+                        settings={settings}
+                        onUpdate={handleSettingChange}
+                    />
                 </MenuPanel>
             </div>
         </div>
     </>
 }
+export default memo(VsrgMenu, (p, n) => {
+    return p.settings === n.settings
+})
+
+
 
 interface SongRowProps {
     data: SerializedSong
@@ -230,6 +241,3 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     </div>
 }
 
-export default memo(VsrgMenu, (p, n) => {
-    return true
-})

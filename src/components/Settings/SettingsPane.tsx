@@ -6,7 +6,7 @@ interface SettingsPaneProps {
     settings: {
         [key: string]: SettingsPropriety
     },
-    changeVolume: (data: SettingVolumeUpdate) => void,
+    changeVolume?: (data: SettingVolumeUpdate) => void,
     onUpdate: (data: SettingUpdate) => void
 }
 interface Group {

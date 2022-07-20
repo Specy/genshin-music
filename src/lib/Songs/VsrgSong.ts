@@ -2,16 +2,20 @@ import { Pitch } from "appConfig";
 import { InstrumentName } from "types/GeneralTypes";
 import { SerializedSong, Song } from "./Song";
 
-
+export type VsrgSongKeys = 4 | 6 | 8
 type SerializedVsrgSong = SerializedSong & {
     type: "vsrg"
     tracks: SerializedVsrgTrack[]
+    keys: VsrgSongKeys
 }
 
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
+    keys: VsrgSongKeys = 4
+    duration: number = 2000
     constructor(name: string){
         super(name, 1, "vsrg")
+        this.bpm = 100
     }
     static deserialize(obj: SerializedVsrgSong): VsrgSong {
         const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
@@ -25,11 +29,17 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         this.tracks = [...this.tracks]
         return track
     }
+    createHitObjectInTrack(trackIndex: number, timestamp: number, index: number){
+        this.tracks[trackIndex].createHitObjectAt(timestamp, index)
+        this.duration = Math.max(this.duration, timestamp)
+    }
     deleteTrack(index:number){
         this.tracks.splice(index, 1)
         this.tracks = [...this.tracks]
     }
-
+    changeKeys(keys: VsrgSongKeys){
+        this.keys = keys
+    }
     serialize(): SerializedVsrgSong {
         return {
             id: this.id,
@@ -41,7 +51,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             pitch: this.pitch,
             version: 1,
             tracks: this.tracks.map(track => track.serialize()),
-            instruments: this.instruments.map(instrument => instrument.serialize())
+            instruments: this.instruments.map(instrument => instrument.serialize()),
+            keys: this.keys
         }
     }
     set(data: Partial<VsrgSong>){
@@ -58,6 +69,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         clone.pitch = this.pitch
         clone.instruments = this.instruments.map(ins => ins.clone())
         clone.tracks = this.tracks.map(track => track.clone())
+        clone.keys = this.keys
         return clone
     }
 }

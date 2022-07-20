@@ -16,18 +16,19 @@ interface VsrgTopProps {
     onTrackDelete: (index: number) => void
     onTrackSelect: (index: number) => void
     onTrackChange: (track: VsrgTrack, index: number) => void
+    children: React.ReactNode
 }
 
 export function VsrgTop({
     vsrg,
     selectedTrack,
+    children,
     onTrackAdd,
     onTrackChange,
     onTrackSelect,
     onTrackDelete
 }: VsrgTopProps) {
     const [theme] = useTheme()
-    const [canvasColor, setCanvasColor] = useState('var(--primary)')
     const [keyboardElements, setKeyboardElements] = useState<VsrgKeyboardElement[]>([])
     const [isTrackSettingsOpen, setIsTrackSettingsOpen] = useState(false)
     const currentTrack = vsrg.tracks[selectedTrack]
@@ -39,19 +40,9 @@ export function VsrgTop({
             }))
         )
     }, [])
-    useEffect(() => {
-        setCanvasColor(theme.get('primary').darken(0.15).toString())
-    }, [theme])
     return <>
         <div className="vsrg-top">
-            <div
-                className="vsrg-top-canvas-wrapper"
-                style={{
-                    backgroundColor: canvasColor,
-                }}
-            >
-                This is the canvas
-            </div>
+            {children}
             <div className="vsrg-top-right">
                 {isTrackSettingsOpen &&
                     <VsrgTrackSettings
@@ -64,6 +55,7 @@ export function VsrgTop({
                 <div className="vsrg-track-wrapper column">
                     {vsrg.tracks.map((track, index) =>
                         <TrackSelector
+                            key={index}
                             track={track}
                             selected={index === selectedTrack}
                             theme={theme}

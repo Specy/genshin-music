@@ -1,5 +1,5 @@
 import type{ INSTRUMENTS } from 'appConfig'
-import type { ComposerSettings, MainPageSettings } from 'lib/BaseSettings'
+import type { ComposerSettings, MainPageSettings, VsrgComposerSettings } from 'lib/BaseSettings'
 interface BaseSettingsProp {
     name: string
     songSetting: boolean
@@ -43,7 +43,10 @@ export type SettingsSelect = BaseSettingsProp & {
     options: string[] | number[]
 }
 
-export type SettingUpdateKey = keyof typeof ComposerSettings.data | keyof typeof MainPageSettings.data
+export type SettingUpdateKey = 
+    keyof typeof ComposerSettings.data 
+  | keyof typeof MainPageSettings.data 
+  | keyof typeof VsrgComposerSettings.data
 export type SettingUpdate = {
     key: SettingUpdateKey, 
     data: SettingsPropriety

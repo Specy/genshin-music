@@ -380,3 +380,45 @@ export const ThemeSettings = {
         }
     }
 }
+
+
+export type VsrgComposerSettingsDataType = {
+    keys: SettingsSelect
+    bpm: SettingsNumber
+}
+export type VsrgComposerSettingsType = {
+    other: {
+        settingVersion: string,
+    },
+    data: VsrgComposerSettingsDataType
+}
+export const VsrgComposerSettings: VsrgComposerSettingsType = {
+    other: {
+        settingVersion: APP_NAME + 2
+    },
+    data: {
+        keys:{
+            name: "Keys",
+            tooltip: "How many keys the song has",
+            type: "select",
+            songSetting: true,
+            value: 6,
+            category: "Song Settings",
+            options: [
+                4,
+                6,
+                8
+            ]
+        },
+        bpm: {
+            name: "Bpm",
+            tooltip:"Beats per minute, the speed of the song",
+            type: "number",
+            songSetting: true,
+            increment: 5,
+            threshold: [0, 1600],
+            value: 220,
+            category: "Song Settings",
+        },
+    }
+}

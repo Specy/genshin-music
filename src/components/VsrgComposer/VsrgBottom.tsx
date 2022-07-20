@@ -5,7 +5,7 @@ import { FaPlay } from "react-icons/fa"
 import { MultipleOptionSlider, Option } from "./MultipleOptionSlider"
 
 interface VsrgBottomProps {
-
+    onSnapPointChange: (snapPoint: number) => void
     onHitObjectTypeChange: (hitObjectType: VsrgHitObjectType) => void
 }
 
@@ -23,7 +23,7 @@ const options: Option<VsrgHitObjectType>[] = [
     }
 ]
 const snapPoints = [1,2,4,8,16]
-export function VsrgBottom({}:VsrgBottomProps) {
+export function VsrgBottom({ onSnapPointChange }:VsrgBottomProps) {
     const [hitObjectType, setHitObjectType] = useState<VsrgHitObjectType>('tap')
     const [selectedSnapPoint, setSelectedSnapPoint] = useState<number>(1)
 
@@ -40,7 +40,11 @@ export function VsrgBottom({}:VsrgBottomProps) {
             <div className='flex-centered' style={{height: '100%'}}>
                 <Select
                     value={selectedSnapPoint}
-                    onChange={(value) => setSelectedSnapPoint(parseInt(value.target.value))}
+                    onChange={(value) => {
+                        const parsed = parseInt(value.target.value)
+                        setSelectedSnapPoint(parsed)
+                        onSnapPointChange(parsed)
+                    }}
                     style={{width: '8rem', height: '100%', borderRadius: '0.4rem'}}
                 >
                     {snapPoints.map(snapPoint =>

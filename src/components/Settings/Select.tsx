@@ -4,6 +4,7 @@ import { SettingsSelect, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface SelectProps {
     value: string | number
+    type: string | number
     data: SettingsSelect
     objectKey: SettingUpdateKey
     children: ReactNode
@@ -13,11 +14,14 @@ interface SelectProps {
         data: any
     }) => void
 }
-export function Select({ value, onChange, data, objectKey , children, theme}: SelectProps) {
+export function Select({ value, onChange, data, objectKey , children, theme, type}: SelectProps) {
     function handleChange(e: ChangeEvent<HTMLSelectElement>) {
         onChange({
             key: objectKey,
-            data: { ...data, value: e.target.value }
+            data: { 
+                ...data, 
+                value: typeof type === 'number' ? parseInt(e.target.value) : e.target.value 
+            }
         })
     }
     return <select value={value}
