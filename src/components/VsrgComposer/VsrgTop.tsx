@@ -2,7 +2,7 @@ import { APP_NAME } from "appConfig"
 import Color from "color"
 import { AppButton } from "components/Inputs/AppButton"
 import { useTheme } from "lib/Hooks/useTheme"
-import { VsrgSong, VsrgTrack } from "lib/Songs/VsrgSong"
+import { VsrgHitObject, VsrgSong, VsrgTrack } from "lib/Songs/VsrgSong"
 import { useEffect, useState } from "react"
 import { FaCog, FaPlus } from "react-icons/fa"
 import { ThemeStoreClass } from "stores/ThemeStore"
@@ -17,6 +17,7 @@ interface VsrgTopProps {
     onTrackSelect: (index: number) => void
     onTrackChange: (track: VsrgTrack, index: number) => void
     children: React.ReactNode
+    lastCreatedHitObject: VsrgHitObject | null
 }
 
 export function VsrgTop({
@@ -26,7 +27,8 @@ export function VsrgTop({
     onTrackAdd,
     onTrackChange,
     onTrackSelect,
-    onTrackDelete
+    onTrackDelete,
+    lastCreatedHitObject
 }: VsrgTopProps) {
     const [theme] = useTheme()
     const [keyboardElements, setKeyboardElements] = useState<VsrgKeyboardElement[]>([])
@@ -43,7 +45,7 @@ export function VsrgTop({
     return <>
         <div className="vsrg-top">
             {children}
-            <div className="vsrg-top-right">
+            <div className={`vsrg-top-right ${lastCreatedHitObject !== null ? 'vsrg-top-right-disabled' : ''}`} >
                 {isTrackSettingsOpen &&
                     <VsrgTrackSettings
                         track={currentTrack}

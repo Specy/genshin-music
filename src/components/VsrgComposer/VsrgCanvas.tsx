@@ -119,16 +119,13 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         })
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
         this.setState({ 
             isPressing: true,
             previousPosition: e.clientX
         })
     }
     setIsNotDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
+        if(!this.state.isPressing) return
         this.setState({ isPressing: false,  totalMovement: 0 }, () => {
             //dumbass idk how to make otherwise
             setTimeout(() => this.setState({ preventClick: false }), 200)

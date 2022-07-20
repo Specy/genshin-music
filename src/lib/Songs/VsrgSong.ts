@@ -8,7 +8,6 @@ type SerializedVsrgSong = SerializedSong & {
     tracks: SerializedVsrgTrack[]
     keys: VsrgSongKeys
 }
-
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
     keys: VsrgSongKeys = 4
@@ -33,6 +32,14 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         const hitObject = this.tracks[trackIndex].createHitObjectAt(timestamp, index)
         this.duration = Math.max(this.duration, timestamp)
         return hitObject
+    }
+    createHeldHitObject(trackIndex: number, timestamp: number, index: number){
+        const hitObject = this.createHitObjectInTrack(trackIndex, timestamp, index)
+        hitObject.isHeld = true
+        return hitObject
+    }
+    setHeldHitObjectTail(trackIndex: number, hitObject: VsrgHitObject, duration: number){
+        this.tracks[trackIndex].setHeldHitObjectTail(hitObject, duration)
     }
     removeHitObjectAt(trackIndex: number, timestamp: number, index: number){
         this.tracks[trackIndex].removeHitObjectAt(timestamp, index)
@@ -118,11 +125,27 @@ export class VsrgTrack{
         return track
     }
     createHitObjectAt(time: number, index: number){
-        const exists = this.hitObjects.find(x => x.timestamp === time && x.index === index)
-        if(exists) return null
+        const exists = this.hitObjects.findIndex(x => x.timestamp === time && x.index === index)
+        if(exists !== -1) this.hitObjects.splice(exists, 1)
         const hitObject = new VsrgHitObject(index, time)
         this.hitObjects.push(hitObject)
         return hitObject
+    }
+    setHeldHitObjectTail(hitObject: VsrgHitObject,  duration: number){
+        const removeBound = hitObject.timestamp + duration
+        const toRemove = this.hitObjects.filter(x => 
+                x.index === hitObject.index && 
+                x.timestamp >= hitObject.timestamp &&
+                x.timestamp < removeBound &&
+                x !== hitObject
+            )
+        this.hitObjects = this.hitObjects.filter(x => !toRemove.includes(x))
+        if(duration < 0){
+            hitObject.holdDuration = Math.abs(duration)
+            hitObject.timestamp = removeBound
+        }else{
+            hitObject.holdDuration = duration
+        }
     }
     removeHitObjectAt(time: number, index:number){
         const indexOf = this.hitObjects.findIndex(x => x.timestamp === time && x.index === index)
@@ -153,6 +176,7 @@ type SerializedVsrgHitObject = [
 ]
 export class VsrgHitObject{
     index: number
+    isHeld: boolean = false
     timestamp: number
     notes: number[] = []
     holdDuration: number = 0

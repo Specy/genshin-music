@@ -30,7 +30,10 @@
     width: 13.6rem;
     margin-left: 0.6rem;
 }
-
+.vsrg-top-right-disabled{
+    pointer-events: none;
+    opacity: 0.5;
+}
 .vsrg-track {
     min-height: 3rem;
     position: relative;

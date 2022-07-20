@@ -4,7 +4,7 @@ import VsrgMenu from "components/VsrgComposer/VsrgMenu";
 import { VsrgBottom, VsrgHitObjectType } from "components/VsrgComposer/VsrgBottom";
 import './VsrgComposer.css';
 import { VsrgTop } from "components/VsrgComposer/VsrgTop";
-import { VsrgSong, VsrgSongKeys, VsrgTrack } from "lib/Songs/VsrgSong";
+import { VsrgHitObject, VsrgSong, VsrgSongKeys, VsrgTrack } from "lib/Songs/VsrgSong";
 import { asyncConfirm } from "components/Utility/AsyncPrompts";
 import { logger } from "stores/LoggerStore";
 import { VsrgCanvas } from "components/VsrgComposer/VsrgCanvas";
@@ -23,6 +23,7 @@ interface VsrgComposerState {
     settings: VsrgComposerSettingsDataType
     snapPoint: number
     snapPoints: number[]
+    lastCreatedHitObject: VsrgHitObject | null
 }
 
 class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
@@ -35,6 +36,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             snapPoints: [0],
             selectedType: 'tap',
             isPlaying: false,
+            lastCreatedHitObject: null, 
             settings: settingsService.getVsrgComposerSettings()
         }
         this.state.vsrg.addTrack("DunDun")
@@ -77,10 +79,19 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.setState({ snapPoint }, this.calculateSnapPoints)
     }
     onSnapPointSelect = (timestamp: number, key:number, type?: 0 | 2) => {
-        const {vsrg, selectedType} = this.state
-        if(selectedType === 'tap' && type !== 2) vsrg.createHitObjectInTrack(this.state.selectedTrack, timestamp, key)
-        if(selectedType === 'tap' && type === 2) vsrg.removeHitObjectAt(this.state.selectedTrack, timestamp, key)
-        if(selectedType === 'delete') vsrg.removeHitObjectAt(this.state.selectedTrack, timestamp, key)
+        const {vsrg, selectedType, lastCreatedHitObject, selectedTrack} = this.state
+        if(selectedType === 'tap' && type !== 2) vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
+        if(["tap", "hold"].includes(selectedType) && type === 2) vsrg.removeHitObjectAt(selectedTrack, timestamp, key)
+        if(selectedType === 'delete') vsrg.removeHitObjectAt(selectedTrack, timestamp, key)
+        if(selectedType === 'hold' && type !== 2) {
+            if(lastCreatedHitObject !== null){
+                vsrg.setHeldHitObjectTail(selectedTrack, lastCreatedHitObject, timestamp - lastCreatedHitObject.timestamp)
+                this.setState({ lastCreatedHitObject : null})
+            }else{
+                const lastCreatedHitObject = vsrg.createHeldHitObject(selectedTrack, timestamp, key)
+                this.setState({ lastCreatedHitObject })
+            }
+        }
         this.setState({ vsrg })
     }
     selectTrack = (selectedTrack: number) => {
@@ -131,6 +142,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 <VsrgTop
                     vsrg={this.state.vsrg}
                     selectedTrack={this.state.selectedTrack}
+                    lastCreatedHitObject={this.state.lastCreatedHitObject}
                     onTrackAdd={this.addTrack}
                     onTrackChange={this.changeTrack}
                     onTrackDelete={this.deleteTrack}
