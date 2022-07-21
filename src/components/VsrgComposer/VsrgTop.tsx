@@ -6,7 +6,7 @@ import { VsrgHitObject, VsrgSong, VsrgTrack } from "lib/Songs/VsrgSong"
 import { useEffect, useState } from "react"
 import { FaCog, FaPlus } from "react-icons/fa"
 import { ThemeStoreClass } from "stores/ThemeStore"
-import { VsrgKeyboard, VsrgKeyboardElement } from "./VsrgKeyboard"
+import { VsrgKeyboard } from "./VsrgKeyboard"
 import { VsrgTrackSettings } from "./VsrgTrackSettings"
 
 interface VsrgTopProps {
@@ -17,8 +17,10 @@ interface VsrgTopProps {
     onTrackDelete: (index: number) => void
     onTrackSelect: (index: number) => void
     onTrackChange: (track: VsrgTrack, index: number) => void
+    onNoteSelect: (note: number) => void
     children: React.ReactNode
     lastCreatedHitObject: VsrgHitObject | null
+    selectedHitObject: VsrgHitObject | null
 }
 
 export function VsrgTop({
@@ -29,19 +31,17 @@ export function VsrgTop({
     onTrackChange,
     onTrackSelect,
     onTrackDelete,
+    onNoteSelect,
     lastCreatedHitObject,
-    isHorizontal
+    selectedHitObject
 }: VsrgTopProps) {
     const [theme] = useTheme()
-    const [keyboardElements, setKeyboardElements] = useState<VsrgKeyboardElement[]>([])
+    const [keyboardElements, setKeyboardElements] = useState<number[]>([])
     const [isTrackSettingsOpen, setIsTrackSettingsOpen] = useState(false)
     const currentTrack = vsrg.tracks[selectedTrack]
     useEffect(() => {
         setKeyboardElements(
-            new Array(APP_NAME === "Sky" ? 15 : 21).fill(0).map((_, index) => ({
-                index,
-                selected: false
-            }))
+            new Array(APP_NAME === "Sky" ? 15 : 21).fill(0).map((_, index) => index)
         )
     }, [])
     return <>
@@ -88,11 +88,9 @@ export function VsrgTop({
                 </div>
                 <VsrgKeyboard
                     elements={keyboardElements}
+                    selected={selectedHitObject?.notes}
                     perRow={APP_NAME === "Sky" ? 5 : 7}
-                    onClick={(index: number) => {
-                        keyboardElements[index].selected = !keyboardElements[index].selected
-                        setKeyboardElements([...keyboardElements])
-                    }}
+                    onClick={onNoteSelect}
                 />
             </div>
         </div>

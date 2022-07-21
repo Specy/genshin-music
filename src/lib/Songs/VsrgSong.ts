@@ -28,6 +28,9 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         this.tracks = [...this.tracks]
         return track
     }
+    getHitObjectInTrack(trackIndex: number, timestamp: number, index: number){
+        return this.tracks[trackIndex].getHitObjectAt(timestamp, index)
+    }
     createHitObjectInTrack(trackIndex: number, timestamp: number, index: number){
         const hitObject = this.tracks[trackIndex].createHitObjectAt(timestamp, index)
         this.duration = Math.max(this.duration, timestamp)
@@ -117,6 +120,9 @@ export class VsrgTrack{
             pitch: this.pitch
         }
     }
+    sortTrack(){
+        this.hitObjects.sort((a, b) => a.timestamp - b.timestamp)
+    }
     static deserialize(data: SerializedVsrgTrack){
         const track = new VsrgTrack(data.instrument)
         track.hitObjects = data.hitObjects.map(x => VsrgHitObject.deserialize(x))
@@ -124,18 +130,22 @@ export class VsrgTrack{
         track.color = data.color
         return track
     }
+    getHitObjectAt(time: number, index: number){
+        return this.hitObjects.find(x => x.timestamp === time && x.index === index) || null
+    }
     createHitObjectAt(time: number, index: number){
         const exists = this.hitObjects.findIndex(x => x.timestamp === time && x.index === index)
-        if(exists !== -1) this.hitObjects.splice(exists, 1)
+        if(exists !== -1) return this.hitObjects[exists]
         const hitObject = new VsrgHitObject(index, time)
         this.hitObjects.push(hitObject)
+        this.sortTrack()
         return hitObject
     }
     selectObjectsBetween(start: number, end: number, key?: number){
         return this.hitObjects.filter(x => 
             x.timestamp >= start 
          && x.timestamp <= end 
-         && (!key || x.index === key))
+         && (key === undefined || x.index === key))
     }
     removeObjectsBetween(start: number, end: number, key?: number){
         const objects = this.selectObjectsBetween(start, end, key)
@@ -156,7 +166,6 @@ export class VsrgTrack{
         const indexOf = this.hitObjects.findIndex(x => x.timestamp === time && x.index === index)
         if(indexOf === -1) return
         this.hitObjects.splice(indexOf, 1)
-
     }
     set(data: Partial<VsrgTrack>){
 		Object.assign(this, data)
@@ -202,6 +211,21 @@ export class VsrgHitObject{
             this.holdDuration,
             [...this.notes]
         ]
+    }
+    toggleNote(note: number){
+        const exists = this.notes.find(x => x === note)
+        if(exists !== undefined) return this.removeNote(note)
+        this.setNote(note)
+    }
+    setNote(note: number){
+        if(this.notes.includes(note)) return
+        this.notes = [...this.notes, note]
+    }
+    removeNote(note: number){
+        const index = this.notes.indexOf(note)
+        if(index === -1) return
+        this.notes.splice(index, 1)
+        this.notes = [...this.notes]
     }
     clone(): VsrgHitObject {
         const hitObject = new VsrgHitObject(this.index, this.timestamp)

@@ -1,6 +1,6 @@
 import { Stage } from "@inlet/react-pixi"
 import { subscribeTheme } from "lib/Hooks/useTheme"
-import { VsrgSong } from "lib/Songs/VsrgSong"
+import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong"
 import { Application } from "pixi.js"
 import React, { Component, createRef } from "react"
 import { ThemeProvider, ThemeStoreClass } from "stores/ThemeStore"
@@ -31,6 +31,7 @@ interface VsrgCanvasProps {
     isPlaying: boolean
     snapPoint: number
     snapPoints: number[]
+    selectedHitObject: VsrgHitObject | null
     onSnapPointSelect: (timestamp: number,key: number, type?: 0 | 2) => void
 }
 interface VsrgCanvasState {
@@ -104,6 +105,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if(event === 'updateKeys') this.calculateSizes()
         if(event === 'updateOrientation') this.calculateSizes()
         if(event === 'snapPointChange') this.calculateSizes()
+        if(event === 'tracksChange') this.generateCache()
     }
     calculateSizes = () => {
         const { wrapperRef } = this
@@ -220,6 +222,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                             bpm={vsrg.bpm}
                             tracks={vsrg.tracks}
                             cache={cache}
+                            selectedHitObject={this.props.selectedHitObject}
                             snapPoint={this.props.snapPoint}
                             snapPoints={this.props.snapPoints}
                             timestamp={this.state.timestamp}

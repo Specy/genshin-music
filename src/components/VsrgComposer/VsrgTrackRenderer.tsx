@@ -1,5 +1,5 @@
 import { Sprite } from "@inlet/react-pixi";
-import { VsrgTrack } from "lib/Songs/VsrgSong";
+import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
@@ -11,10 +11,11 @@ interface VsrgTrackRendererProps {
     cache: VsrgCanvasCache
     colors: VsrgCanvasColors
     isHorizontal: boolean
+    selectedHitObject: VsrgHitObject | null
 }
 
 
-export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal }: VsrgTrackRendererProps) {
+export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject }: VsrgTrackRendererProps) {
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys
     return <>
@@ -58,14 +59,31 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal }: V
                         x={isHorizontal ? hitObject.timestamp + hitObject.holdDuration : x}
                         y={isHorizontal ? y : y - hitObject.holdDuration}
                     />
+                    {hitObject === selectedHitObject &&
+                        <Sprite
+                            texture={cache.getSelectionRingsCache(track.color)}
+                            anchor={0.5}
+                            x={x}
+                            y={y}
+                        />
+                    }
                 </Fragment>
-                : <Sprite
-                    key={hitObject.timestamp + hitObject.index}
-                    texture={cache.getHitObjectCache(track.color)}
-                    anchor={0.5}
-                    x={x}
-                    y={y}
-                />
+                : <Fragment key={hitObject.timestamp + hitObject.index}>
+                    <Sprite
+                        texture={cache.getHitObjectCache(track.color)}
+                        anchor={0.5}
+                        x={x}
+                        y={y}
+                    />
+                    {hitObject === selectedHitObject &&
+                        <Sprite
+                            texture={cache.getSelectionRingsCache(track.color)}
+                            anchor={0.5}
+                            x={x}
+                            y={y}
+                        />
+                    }
+                </Fragment>
 
         })}
     </>

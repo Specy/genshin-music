@@ -24,6 +24,9 @@ export type VsrgComposerCanvasCache = {
         hitObject: number
         trail: number
     }
+    selectionRings: {
+        [key: string]: Texture
+    }
     hitObjects: {
         [key: string]: Texture
     }
@@ -53,6 +56,7 @@ export class VsrgCanvasCache {
         this.textures = {
             hitObjects: {},
             heldHitObjects: {},
+            selectionRings: {},
             trails: {},
             snapPoints: {
                 size: 0,
@@ -83,6 +87,7 @@ export class VsrgCanvasCache {
         this.generateSnapPoints(app!)
         this.generateTrackCache(app!)
         this.generateTrails(app!)
+        this.generateSelectionRings(app!)
     }
 
     getHitObjectCache(color: string) {
@@ -93,6 +98,9 @@ export class VsrgCanvasCache {
     }
     getHeldHitObjectCache(color: string) {
         return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#FF0000']
+    }
+    getSelectionRingsCache(color: string) {
+        return this.textures.selectionRings[color] || this.textures.selectionRings['#FF0000']
     }
     generateTrails(app: Application) {
         const { sizes, trackColors } = this
@@ -116,6 +124,24 @@ export class VsrgCanvasCache {
             });
             this.textures.trails[color] = trailTexture
             trail.destroy(true)
+        })
+        this.textures.sizes.trail = hitObjectHeight
+    }
+    generateSelectionRings(app: Application) {
+        const { sizes, trackColors } = this
+        const withError = [...trackColors, '#FF0000']
+        const hitObjectHeight = sizes.keyHeight / 1.5
+        withError.forEach(color => {
+            const ring = new Graphics()
+            ring.lineStyle(3, Color(color).rgbNumber())
+                .drawCircle(hitObjectHeight / 2, hitObjectHeight / 2, hitObjectHeight / 2 - 3)
+            const ringTexture = app.renderer.generateTexture(ring, {
+                resolution: 1,
+                scaleMode: SCALE_MODES.LINEAR,
+                region: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight)
+            });
+            this.textures.selectionRings[color] = ringTexture
+            ring.destroy(true)
         })
         this.textures.sizes.trail = hitObjectHeight
     }

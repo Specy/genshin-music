@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@inlet/react-pixi";
-import { VsrgTrack } from "lib/Songs/VsrgSong";
+import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
 import { InteractionEvent } from "pixi.js";
 
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
@@ -19,9 +19,10 @@ interface VsrgScrollableTrackRendererProps {
     timestamp: number
     preventClick: boolean
     isHorizontal: boolean
+    selectedHitObject: VsrgHitObject | null
     onSnapPointSelect: (timestamp: number, key: number, type?: 0 | 2) => void
 }
-export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal }: VsrgScrollableTrackRendererProps) {
+export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject}: VsrgScrollableTrackRendererProps) {
     function handleSnapPointClick(event: InteractionEvent){
         if (preventClick) return
         if (isHorizontal) {
@@ -64,6 +65,7 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoin
                 keys={keys}
                 colors={colors}
                 sizes={sizes}
+                selectedHitObject={selectedHitObject}
                 isHorizontal={isHorizontal}
             />
         )}

@@ -6,18 +6,18 @@ import { NoteNameType } from "types/GeneralTypes";
 import { NoteLayer } from "./Layer";
 
 class FileDownloader {
-	static download(file: string | Blob, name: string, as: string = "text/json"){
+	static download(file: string | Blob, name: string, as: string = "text/json") {
 		const a = document.createElement("a")
 		a.style.display = 'none'
 		a.className = 'ignore_click_outside'
 		a.download = name
 		document.body.appendChild(a)
 
-		if(typeof file === "string"){
+		if (typeof file === "string") {
 			a.href = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
 			a.click();
 		}
-		if(file instanceof Blob){
+		if (file instanceof Blob) {
 			const url = URL.createObjectURL(file)
 			a.href = url
 			a.click();
@@ -88,7 +88,19 @@ class Array2d {
 		return new Array(height).fill(0).map(() => { return [] })
 	}
 }
-
+function insertionSort<T>(array: T[], compare: (a: T, b: T) => number) {
+	let n = array.length;
+	for (let i = 1; i < n; i++) {
+		let current = array[i];
+		let j = i - 1;
+		while ((j > -1) && (compare(current, array[j]) < 0)) {
+			array[j + 1] = array[j];
+			j--;
+		}
+		array[j + 1] = current;
+	}
+	return array;
+}
 
 function formatMs(ms: number) {
 	const minutes = Math.floor(ms / 60000);
@@ -137,7 +149,7 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 				} else {
 					return "none"
 				}
-			} else if((song.data.isComposedVersion === false) || song.type === 'recorded'){
+			} else if ((song.data.isComposedVersion === false) || song.type === 'recorded') {
 				if (typeof song.name !== "string") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"
 				return "newRecorded"
@@ -238,5 +250,6 @@ export {
 	formatMs,
 	calculateSongLength,
 	setIfInTWA,
-	blurEvent
+	blurEvent,
+	insertionSort
 }
