@@ -131,15 +131,20 @@ export class VsrgTrack{
         this.hitObjects.push(hitObject)
         return hitObject
     }
+    selectObjectsBetween(start: number, end: number, key?: number){
+        return this.hitObjects.filter(x => 
+            x.timestamp >= start 
+         && x.timestamp <= end 
+         && (!key || x.index === key))
+    }
+    removeObjectsBetween(start: number, end: number, key?: number){
+        const objects = this.selectObjectsBetween(start, end, key)
+        objects.forEach(x => this.removeHitObjectAt(x.timestamp, x.index))
+    }
     setHeldHitObjectTail(hitObject: VsrgHitObject,  duration: number){
         const removeBound = hitObject.timestamp + duration
-        const toRemove = this.hitObjects.filter(x => 
-                x.index === hitObject.index && 
-                x.timestamp >= hitObject.timestamp &&
-                x.timestamp < removeBound &&
-                x !== hitObject
-            )
-        this.hitObjects = this.hitObjects.filter(x => !toRemove.includes(x))
+        const toRemove = this.selectObjectsBetween(hitObject.timestamp, removeBound, hitObject.index)
+        toRemove.forEach(x => x !== hitObject && this.removeHitObjectAt(x.timestamp, x.index))
         if(duration < 0){
             hitObject.holdDuration = Math.abs(duration)
             hitObject.timestamp = removeBound

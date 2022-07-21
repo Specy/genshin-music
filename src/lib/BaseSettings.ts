@@ -385,6 +385,7 @@ export const ThemeSettings = {
 export type VsrgComposerSettingsDataType = {
     keys: SettingsSelect
     bpm: SettingsNumber
+    isVertical: SettingsCheckbox
 }
 export type VsrgComposerSettingsType = {
     other: {
@@ -420,5 +421,13 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             value: 220,
             category: "Song Settings",
         },
+        isVertical: {
+            name: "Vertical editor",
+            tooltip: "If the editor is set horizontally or vertically",
+            type: "checkbox",
+            songSetting: false,
+            value: false,
+            category: "Editor Settings",
+        }
     }
 }

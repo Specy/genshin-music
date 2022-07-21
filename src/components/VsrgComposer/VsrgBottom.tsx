@@ -5,7 +5,8 @@ import { FaPlay } from "react-icons/fa"
 import { MultipleOptionSlider, Option } from "./MultipleOptionSlider"
 
 interface VsrgBottomProps {
-    onSnapPointChange: (snapPoint: number) => void
+    selectedSnapPoint: SnapPoint
+    onSnapPointChange: (snapPoint: SnapPoint) => void
     onHitObjectTypeChange: (hitObjectType: VsrgHitObjectType) => void
 }
 
@@ -22,10 +23,10 @@ const options: Option<VsrgHitObjectType>[] = [
         color: 'var(--red)',
     }
 ]
-const snapPoints = [1,2,4,8,16]
-export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange }:VsrgBottomProps) {
+const snapPoints:SnapPoint[] = [1,2,4,8,16]
+export type SnapPoint = 1 | 2 | 4 | 8 | 16
+export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange, selectedSnapPoint }:VsrgBottomProps) {
     const [hitObjectType, setHitObjectType] = useState<VsrgHitObjectType>('tap')
-    const [selectedSnapPoint, setSelectedSnapPoint] = useState<number>(1)
 
     return <>
         <div className="vsrg-bottom">
@@ -43,9 +44,8 @@ export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange }:VsrgBott
             <div className='flex-centered' style={{height: '100%'}}>
                 <Select
                     value={selectedSnapPoint}
-                    onChange={(value) => {
-                        const parsed = parseInt(value.target.value)
-                        setSelectedSnapPoint(parsed)
+                    onChange={(e) => {
+                        const parsed = parseInt(e.target.value) as SnapPoint
                         onSnapPointChange(parsed)
                     }}
                     style={{width: '8rem', height: '100%', borderRadius: '0.4rem'}}

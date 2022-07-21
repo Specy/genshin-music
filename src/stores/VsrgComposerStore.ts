@@ -1,6 +1,6 @@
 
 
-export type VsrgComposerEvents = 'ALL' | 'colorChange' | 'updateKeys'
+export type VsrgComposerEvents = 'ALL' | 'colorChange' | 'updateKeys' | 'updateOrientation' | 'snapPointChange'
 export type VsrcComposerEventCallback = {
     callback: (event: VsrgComposerEvents) => void, 
     id: string

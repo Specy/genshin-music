@@ -7,6 +7,7 @@ interface VsrgKeysRendererProps {
     keys: string[]
     sizes: VsrgCanvasSizes
     colors: VsrgCanvasColors
+    isHorizontal: boolean
 }
 
 const defaultTextStyle = new TextStyle({
@@ -18,7 +19,7 @@ const defaultTextStyle = new TextStyle({
 
 
 
-export function VsrgKeysRenderer({ keys, sizes, colors }: VsrgKeysRendererProps) {
+export function VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeysRendererProps) {
     const [textStyle, setTextStyle] = useState(defaultTextStyle)
     useEffect(() => {
         setTextStyle(new TextStyle({
@@ -27,34 +28,47 @@ export function VsrgKeysRenderer({ keys, sizes, colors }: VsrgKeysRendererProps)
             fill: colors.lineColor[1],
         }))
     }, [colors, sizes, keys])
-    const elHeight = sizes.height / keys.length
+    const keyHeight = sizes.height / keys.length
+    const keyWidth = sizes.width / keys.length
     return <Container
         x={0}
         y={0}
         height={sizes.height}
-        width={60}
+        width={sizes.width}
     >
         <Graphics
             draw={(g) => {
                 g.clear()
-                g.beginFill(colors.background_plain[1])
-                g.drawRect(0, 0, 60, sizes.height)
-                g.lineStyle(2, colors.lineColor_10[1])
-                for (let i = 0; i < keys.length - 1; i++) {
-                    g.moveTo(0, elHeight * (i + 1))
-                    g.lineTo(sizes.width, elHeight * (i + 1))
+                g.beginFill(colors.background_plain[1]) 
+                if(isHorizontal) {
+                    g.drawRect(0, 0, 60, sizes.height)
+                    g.lineStyle(2, colors.lineColor_10[1])
+                    for (let i = 0; i < keys.length - 1; i++) {
+                        g.moveTo(0, keyHeight * (i + 1))
+                        g.lineTo(sizes.width, keyHeight * (i + 1))
+                    }
+                    g.lineStyle(2, colors.secondary[1])
+                    g.moveTo(59, 0)
+                    g.lineTo(59, sizes.height)
+                }else{
+                    g.drawRect(0, sizes.height - 60, sizes.width, 60)
+                    g.lineStyle(2, colors.lineColor_10[1] )
+                    for (let i = 0; i < keys.length - 1; i++) {
+                        g.moveTo(keyWidth * (i + 1), 0)
+                        g.lineTo(keyWidth * (i + 1), sizes.height)
+                    }
+                    g.lineStyle(2, colors.secondary[1])
+                    g.moveTo(0, sizes.height - 60)
+                    g.lineTo(sizes.width, sizes.height - 60)
                 }
-                g.lineStyle(2, colors.secondary[1])
-                g.moveTo(59, 0)
-                g.lineTo(59, sizes.height)
             }}
         />
         {keys.map((key, index) =>
             <Text
                 key={index}
                 text={key}
-                x={30}
-                y={elHeight * index + elHeight / 2}
+                x={isHorizontal ? 30 : keyWidth * index + keyWidth / 2}
+                y={isHorizontal ? keyHeight * index + keyHeight / 2 : sizes.height - 30}
                 anchor={0.5}
                 style={textStyle}
             />

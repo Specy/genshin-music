@@ -12,6 +12,7 @@ import { VsrgTrackSettings } from "./VsrgTrackSettings"
 interface VsrgTopProps {
     vsrg: VsrgSong
     selectedTrack: number
+    isHorizontal: boolean
     onTrackAdd: () => void
     onTrackDelete: (index: number) => void
     onTrackSelect: (index: number) => void
@@ -28,7 +29,8 @@ export function VsrgTop({
     onTrackChange,
     onTrackSelect,
     onTrackDelete,
-    lastCreatedHitObject
+    lastCreatedHitObject,
+    isHorizontal
 }: VsrgTopProps) {
     const [theme] = useTheme()
     const [keyboardElements, setKeyboardElements] = useState<VsrgKeyboardElement[]>([])
@@ -43,7 +45,7 @@ export function VsrgTop({
         )
     }, [])
     return <>
-        <div className="vsrg-top">
+        <div className={`vsrg-top`}>
             {children}
             <div className={`vsrg-top-right ${lastCreatedHitObject !== null ? 'vsrg-top-right-disabled' : ''}`} >
                 {isTrackSettingsOpen &&

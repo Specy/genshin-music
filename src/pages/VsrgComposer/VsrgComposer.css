@@ -16,11 +16,10 @@
 .vsrg-top-canvas-wrapper {
     display: flex;
     flex: 1;
+    justify-content: center;
     position: relative;
 }
 .vsrg-top-canvas-wrapper canvas {
-    width: 100% !important;
-    height: 100% !important;
     position: absolute;
     border-radius: 0.6rem;
 }

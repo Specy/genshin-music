@@ -15,6 +15,7 @@ export type VsrgCanvasSizes = {
     height: number
     snapPointWidth: number
     keyHeight: number
+    keyWidth: number
 }
 export type VsrgCanvasColors = {
     background_plain: [string, number]
@@ -25,6 +26,7 @@ export type VsrgCanvasColors = {
     lineColor_10: [string, number]
 }
 interface VsrgCanvasProps {
+    isHorizontal: boolean
     vsrg: VsrgSong
     isPlaying: boolean
     snapPoint: number
@@ -70,6 +72,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 height: 0,
                 snapPointWidth: 0,
                 keyHeight: 0,
+                keyWidth: 0,
             },
             isPressing: false,
             totalMovement: 0,
@@ -99,29 +102,37 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     handleEvent = (event: VsrgComposerEvents) => {
         if(event === 'colorChange') this.generateCache()
         if(event === 'updateKeys') this.calculateSizes()
+        if(event === 'updateOrientation') this.calculateSizes()
+        if(event === 'snapPointChange') this.calculateSizes()
     }
     calculateSizes = () => {
         const { wrapperRef } = this
         if (!wrapperRef.current) return console.log("no wrapper")
         const wrapperSizes = wrapperRef.current.getBoundingClientRect()
-        
+
         const sizes = {
             width: wrapperSizes.width,
             height: wrapperSizes.height,
             keyHeight: wrapperSizes.height / VsrgKeysMap[this.props.vsrg.keys].length,
-            snapPointWidth: (60000 / this.props.vsrg.bpm) * this.props.snapPoint,
+            keyWidth: wrapperSizes.width / VsrgKeysMap[this.props.vsrg.keys].length,
+            snapPointWidth: (60000 / this.props.vsrg.bpm) / this.props.snapPoint,
+        }
+        const canvas = wrapperRef.current.querySelector('canvas')
+        if(canvas){
+            canvas.style.width = `${sizes.width}px`
+            canvas.style.height = `${sizes.height}px`
         }
         this.setState({ sizes }, this.generateCache)
     }
     handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
         this.setState({
-            timestamp: Math.min(0, this.state.timestamp - e.deltaY / 1.5 )
+            timestamp: Math.max(0, this.state.timestamp + e.deltaY / 1.5 )
         })
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
         this.setState({ 
             isPressing: true,
-            previousPosition: e.clientX
+            previousPosition: this.props.isHorizontal ? e.clientX : -e.clientY
         })
     }
     setIsNotDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -134,13 +145,15 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     handleDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if(!this.state.isPressing) return
         const { previousPosition } = this.state
-        const delta = e.clientX - previousPosition
+        const { isHorizontal } = this.props
+        const deltaOrientation = isHorizontal ? e.clientX : -e.clientY
+        const delta = previousPosition - deltaOrientation
         const newTotalMovement = this.state.totalMovement + Math.abs(delta)
         this.setState({ 
-            previousPosition: e.clientX,
+            previousPosition: deltaOrientation,
             preventClick: newTotalMovement > 50,
             totalMovement: newTotalMovement,
-            timestamp:  Math.min(0, this.state.timestamp + delta )
+            timestamp: Math.max(0, this.state.timestamp + delta)
         })
     }
     generateCache = () => {
@@ -151,7 +164,8 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             app: this.stageRef.current.app as Application,
             sizes,
             colors: canvasColors,
-            trackColors
+            trackColors,
+            isHorizontal: this.props.isHorizontal
         })
         this.setState({ cache: newCache }, () => {
             cache?.destroy()  
@@ -178,13 +192,14 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
 
     render() {
         const { canvasColors, sizes, cache } = this.state
-        const { vsrg } = this.props
+        const { vsrg, isHorizontal } = this.props
         return <div
             className="vsrg-top-canvas-wrapper"
             ref={this.wrapperRef}
         >
             {this.wrapperRef.current &&
                 <Stage
+                    onMount={this.calculateSizes}
                     ref={this.stageRef}
                     width={sizes.width}
                     height={sizes.height}
@@ -212,11 +227,13 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                             sizes={sizes}
                             colors={canvasColors}
                             keys={vsrg.keys}
+                            isHorizontal={isHorizontal}
                             onSnapPointSelect={this.props.onSnapPointSelect}
                         />
                     }
 
                     <VsrgKeysRenderer
+                        isHorizontal={isHorizontal}
                         keys={VsrgKeysMap[vsrg.keys]}
                         sizes={sizes}
                         colors={canvasColors}
