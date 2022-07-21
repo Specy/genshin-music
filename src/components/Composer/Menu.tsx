@@ -21,7 +21,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'com
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm, asyncPrompt } from 'components/Utility/AsyncPrompts';
 import { SettingsPane } from "components/Settings/SettingsPane";
-import { SerializedSong } from 'lib/Songs/Song';
+import { SerializedSong, SongType } from 'lib/Songs/Song';
 import { useFolders } from 'lib/Hooks/useFolders';
 import { Folder } from 'lib/Folder';
 import { songsStore } from 'stores/SongsStore';
@@ -53,6 +53,7 @@ interface MenuProps {
     }
 }
 export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
+const excludedSongs: SongType[] = ['vsrg']
 function Menu({ data, functions }: MenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
@@ -197,6 +198,7 @@ function Menu({ data, functions }: MenuProps) {
                     </div>
                     <SongMenu<SongRowProps>
                         songs={songs}
+                        exclude={excludedSongs}
                         SongComponent={SongRow}
                         style={{ marginTop: '0.6rem' }}
                         componentProps={{

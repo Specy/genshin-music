@@ -32,7 +32,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'com
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm, asyncPrompt } from 'components/Utility/AsyncPrompts';
 import { SettingsPane } from 'components/Settings/SettingsPane';
-import { SerializedSong } from 'lib/Songs/Song';
+import { SerializedSong, SongType } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
 import { Folder } from 'lib/Folder';
 import { useFolders } from 'lib/Hooks/useFolders';
@@ -56,6 +56,7 @@ interface MenuProps {
 }
 
 export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
+const excludedSongs: SongType[] = ['vsrg']
 
 function Menu({ functions, data }: MenuProps) {
     const [songs] = useSongs()
@@ -180,7 +181,6 @@ function Menu({ functions, data }: MenuProps) {
     }, [])
     function downloadAllSongs() {
         try {
-            console.log(songs)
             const toDownload = songs.map(song => {
                 if (APP_NAME === 'Sky') {
                     if (song.type === 'composed') ComposedSong.deserialize(song as UnknownSerializedComposedSong).toOldFormat()
@@ -263,6 +263,7 @@ function Menu({ functions, data }: MenuProps) {
                 </div>
                 <SongMenu<SongRowProps>
                     songs={songs}
+                    exclude={excludedSongs}
                     style={{ marginTop: '0.6rem' }}
                     SongComponent={SongRow}
                     componentProps={{

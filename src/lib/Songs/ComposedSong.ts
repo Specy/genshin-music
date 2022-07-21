@@ -136,7 +136,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         const {columns, instruments} = this
         const highestLayer = Math.max(0, ...columns.map(column => {
             return Math.max(...column.notes.map(note => note.layer.asNumber()))
-        }))
+        })).toString(2).split("").length
         if(highestLayer > instruments.length){
             const newInstruments = new Array(highestLayer - instruments.length).fill(0).map(_ => new InstrumentData())
             this.instruments = [...instruments, ...newInstruments]

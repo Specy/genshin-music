@@ -74,17 +74,17 @@ export class VsrgCanvasCache {
     }
 
     getHitObjectCache(color: string) {
-        return this.textures.hitObjects[color] || this.textures.hitObjects['#000000']
+        return this.textures.hitObjects[color] || this.textures.hitObjects['#FF0000']
     }
     getHeldTrailCache(color: string) {
-        return this.textures.trails[color] || this.textures.trails['#000000']
+        return this.textures.trails[color] || this.textures.trails['#FF0000']
     }
     getHeldHitObjectCache(color: string) {
-        return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#000000']
+        return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#FF0000']
     }
     generateTrails(app: Application) {
         const { sizes, trackColors } = this
-        const withError = [...trackColors, '#000000']
+        const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = clamp(sizes.keyHeight / 2, 0, 100)
         const margin = hitObjectHeight / 2
         withError.forEach(color => {
@@ -104,7 +104,7 @@ export class VsrgCanvasCache {
     generateTrackCache(app: Application) {
         const { colors, sizes, trackColors } = this
         const hitObjectHeight = clamp(sizes.keyHeight / 2, 0, 100)
-        const withError = [...trackColors, '#000000']
+        const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {
             const hitObject = new Graphics()
             const circleSize = hitObjectHeight / 2

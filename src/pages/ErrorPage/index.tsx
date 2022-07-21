@@ -7,7 +7,7 @@ import { SongMenu } from 'components/Layout/SongMenu';
 
 import './ErrorPage.css'
 import { AppButton } from 'components/Inputs/AppButton';
-import { SerializedSong } from 'lib/Songs/Song';
+import { SerializedSong, SongType } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 import { fileService } from 'lib/Services/FileService';
@@ -15,6 +15,7 @@ import { Title } from 'components/Miscellaneous/Title';
 import { DefaultPage } from 'components/Layout/DefaultPage';
 import { songService } from 'lib/Services/SongService';
 
+const excludedSongs: SongType[] = ['vsrg']
 export function ErrorPage() {
     const [songs] = useSongs()
 
@@ -68,6 +69,7 @@ export function ErrorPage() {
         <div className="error-songs-wrapper">
             <SongMenu<SongRowProps>
                 SongComponent={SongRow}
+                exclude={excludedSongs}
                 songs={songs}
                 componentProps={{
                     deleteSong,

@@ -100,12 +100,12 @@ export default class Instrument {
                             }).catch(e => {
                                 console.error(e)
                                 loadedCorrectly = false
-                                return resolve(emptyBuffer)
+                                resolve(emptyBuffer)
                             })
                         }).catch(e => {
                             console.error(e)
                             loadedCorrectly = false
-                            return resolve(emptyBuffer)
+                            resolve(emptyBuffer)
                         })
                 })
             })

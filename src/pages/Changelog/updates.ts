@@ -7,6 +7,17 @@ type Update = {
 
 export const updates: Update[] = [
     {
+        version: '2.8.1',
+        title: 'Bug fixes',
+        date: '2022 - 22/07',
+        changes: [
+            "Fixed but that would remove a song from the folder when saved",
+            "Fixed issues when opening/saving songs in the composer",
+            "Fixed bug in pasting notes in the compsoer",
+            "Other bug fixes...",
+        ]
+    },{
+
         version: '2.8',
         title: 'More Composer layers and UI rework',
         date: '2022 - 7/07',
