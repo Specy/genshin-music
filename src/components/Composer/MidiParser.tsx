@@ -14,6 +14,7 @@ import Switch from 'components/Switch'
 import { NoteLayer } from 'lib/Layer'
 import { HelpTooltip } from 'components/Utility/HelpTooltip'
 import { Select } from 'components/Inputs/Select'
+import { PitchSelect } from 'components/Inputs/PitchSelect'
 interface MidiImportProps {
     data: {
         instruments: InstrumentData[]
@@ -289,21 +290,11 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             </div>
             <div className='midi-table-row'>
                 <div style={{ marginRight: '0.5rem' }}>Pitch:</div>
-                <select
-                    className='midi-select'
-                    value={pitch}
-                    onChange={(event: ChangeEvent<HTMLSelectElement>) => changePitch(event.target.value as Pitch)}
-                    style={{
-                        margin: 0,
-                        backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`,
-                        width: '5rem',
-                        ...midiInputsStyle
-                    }}
-                >
-                    {PITCHES.map(pitch =>
-                        <option key={pitch} value={pitch}>{pitch}</option>
-                    )}
-                </select>
+                <PitchSelect 
+                    style={{ width: '5rem', ...midiInputsStyle }}
+                    selected={pitch}
+                    onChange={changePitch}
+                />
             </div>
             <div className='midi-table-row'>
                 <div className='row'>

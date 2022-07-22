@@ -1,11 +1,13 @@
 import { AppButton } from "components/Inputs/AppButton"
 import { Select } from "components/Inputs/Select"
 import { useState } from "react"
-import { FaPlay } from "react-icons/fa"
+import { FaPause, FaPlay } from "react-icons/fa"
 import { MultipleOptionSlider, Option } from "./MultipleOptionSlider"
 
 interface VsrgBottomProps {
     selectedSnapPoint: SnapPoint
+    isPlaying: boolean
+    togglePlay: () => void
     onSnapPointChange: (snapPoint: SnapPoint) => void
     onHitObjectTypeChange: (hitObjectType: VsrgHitObjectType) => void
 }
@@ -25,7 +27,7 @@ const options: Option<VsrgHitObjectType>[] = [
 ]
 const snapPoints:SnapPoint[] = [1,2,4,8,16]
 export type SnapPoint = 1 | 2 | 4 | 8 | 16
-export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange, selectedSnapPoint }:VsrgBottomProps) {
+export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange, selectedSnapPoint, isPlaying, togglePlay}:VsrgBottomProps) {
     const [hitObjectType, setHitObjectType] = useState<VsrgHitObjectType>('tap')
 
     return <>
@@ -56,8 +58,8 @@ export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange, selectedS
                         </option>
                     )}
                 </Select>
-                <AppButton className="vsrg-play-button flex-centered">
-                    <FaPlay size={20}/>
+                <AppButton className="vsrg-play-button flex-centered" onClick={togglePlay}>
+                    {isPlaying ? <FaPause size={20}/> : <FaPlay size={20}/>}
                 </AppButton>
             </div>
         </div>

@@ -58,9 +58,12 @@ export class AudioPlayer{
         })
         return Promise.all(promises)
     }
-    playNoteOfInstrument(instrumentIndex: number, note: number){
+    playNoteOfInstrument(instrumentIndex: number, note: number, pitch?: Pitch){
         const instrumentData = this.instruments[instrumentIndex]
-        this.audioInstruments[instrumentIndex].play(note, instrumentData.pitch || this.basePitch)
+        this.audioInstruments[instrumentIndex].play(note, pitch ?? (instrumentData.pitch || this.basePitch))
+    }
+    playNotesOfInstrument(instrumentIndex: number, notes: number[], pitch?: Pitch){
+        notes.forEach(note => this.playNoteOfInstrument(instrumentIndex, note, pitch) )
     }
 
 }

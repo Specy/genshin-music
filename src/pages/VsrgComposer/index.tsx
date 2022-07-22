@@ -12,12 +12,15 @@ import { VsrgComposerSettingsDataType } from "lib/BaseSettings";
 import { settingsService } from "lib/Services/SettingsService";
 import { SettingUpdate } from "types/SettingsPropriety";
 import { vsrgComposerStore } from "stores/VsrgComposerStore";
+import { AudioPlayer } from "lib/AudioPlayer";
+import { KeyboardProvider } from "lib/Providers/KeyboardProvider";
 type VsrgComposerProps = RouteComponentProps & {
 
 }
 interface VsrgComposerState {
     vsrg: VsrgSong
     selectedTrack: number
+    audioPlayer: AudioPlayer
     selectedType: VsrgHitObjectType
     isPlaying: boolean
     settings: VsrgComposerSettingsDataType
@@ -28,10 +31,13 @@ interface VsrgComposerState {
     lastCreatedHitObject: VsrgHitObject | null
 }
 class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
+    lastTimestamp: number = 0
     constructor(props: VsrgComposerProps) {
         super(props)
+        const settings = settingsService.getVsrgComposerSettings()
         this.state = {
             vsrg: new VsrgSong("Untitled"),
+            audioPlayer: new AudioPlayer(settings.pitch.value),
             selectedTrack: 0,
             snapPoint: 4,
             snapPoints: [0],
@@ -40,8 +46,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             selectedType: 'tap',
             isPlaying: false,
             lastCreatedHitObject: null,
-            settings: settingsService.getVsrgComposerSettings()
+            settings
         }
+        this.lastTimestamp = 0
         this.state.vsrg.addTrack("DunDun")
     }
     addTrack = () => {
@@ -53,11 +60,27 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     componentDidMount() {
         this.calculateSnapPoints()
+        this.syncInstruments()
+        KeyboardProvider.register('Space', ({event}) => {
+            if (event.repeat) return
+            //@ts-ignore
+            if (event.target?.tagName === "BUTTON") {
+                //@ts-ignore
+                event.target?.blur()
+            }
+            this.togglePlay()
+        }, { id: 'vsrg-composer'})
+    }
+    componentWillUnmount() {
+        KeyboardProvider.unregisterById('vsrg-composer')
     }
     updateSettings = (override?: VsrgComposerSettingsDataType) => {
         settingsService.updateVsrgSettings(override !== undefined ? override : this.state.settings)
     }
-
+    syncInstruments = () => {
+        const { vsrg, audioPlayer } = this.state
+        audioPlayer.syncInstruments(vsrg.tracks.map(t => t.instrument))
+    }
     handleSettingChange = (setting: SettingUpdate) => {
         const { settings, vsrg } = this.state
         const { data } = setting
@@ -88,7 +111,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const { vsrg, selectedType, lastCreatedHitObject, selectedTrack, settings, snapPointDuration} = this.state
         timestamp = settings.isVertical.value ? timestamp - snapPointDuration : timestamp
         if (selectedType === 'tap' && type !== 2) {
-           const hitObject =  vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
+           const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
+           this.playHitObject(hitObject, selectedTrack)
            this.setState({ selectedHitObject: hitObject})
         }
         if (["tap", "hold"].includes(selectedType) && type === 2) {
@@ -121,15 +145,33 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const snapPoints = new Array(Math.floor(amount)).fill(0).map((_, i) => i * snapPointDuration)
         this.setState({ snapPoints, snapPointDuration })
     }
-    changeTrack = (track: VsrgTrack, index: number) => {
+    onTrackChange = (track: VsrgTrack, index: number) => {
         const { vsrg } = this.state
         vsrg.tracks[index] = track
-        this.setState({ vsrg })
+        this.setState({ vsrg }, this.syncInstruments)
     }
     onNoteSelect = (note: number) => {
-        const { selectedHitObject} = this.state
+        const { selectedHitObject, audioPlayer, selectedTrack} = this.state
         selectedHitObject?.toggleNote(note)
+        audioPlayer.playNoteOfInstrument(selectedTrack, note)
         this.setState({ selectedHitObject })
+    }
+    togglePlay = () => {
+        const { isPlaying, vsrg } = this.state
+        vsrg.startPlayback(this.lastTimestamp)
+        this.setState({ isPlaying: !isPlaying })
+    }
+    playHitObject = (hitObject: VsrgHitObject, trackIndex: number) => {
+        const { audioPlayer } = this.state
+        audioPlayer.playNotesOfInstrument(trackIndex, hitObject.notes)
+    }
+    onTimestampChange = (timestamp: number) => {
+        const { vsrg, isPlaying } = this.state
+        this.lastTimestamp = timestamp
+        if(isPlaying){
+            const tracks = vsrg.tickPlayback(timestamp)
+            tracks.forEach((track, index) => track.forEach(hitObject => this.playHitObject(hitObject, index)))
+        }
     }
     deleteTrack = async (index: number) => {
         if (this.state.vsrg.tracks.length === 1) return logger.error('Cannot delete last track')
@@ -168,13 +210,14 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                     selectedTrack={selectedTrack}
                     lastCreatedHitObject={lastCreatedHitObject}
                     onTrackAdd={this.addTrack}
-                    onTrackChange={this.changeTrack}
+                    onTrackChange={this.onTrackChange}
                     onTrackDelete={this.deleteTrack}
                     onTrackSelect={this.selectTrack}
                     onNoteSelect={this.onNoteSelect}
                 >
                     <VsrgCanvas
                         vsrg={vsrg}
+                        onTimestampChange={this.onTimestampChange}
                         selectedHitObject={selectedHitObject}
                         isHorizontal={!settings.isVertical.value}
                         snapPoint={snapPoint}
@@ -185,6 +228,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
 
                 </VsrgTop>
                 <VsrgBottom
+                    isPlaying={isPlaying}
+                    togglePlay={this.togglePlay}
                     selectedSnapPoint={snapPoint}
                     onSnapPointChange={this.onSnapPointChange}
                     onHitObjectTypeChange={this.selectType}

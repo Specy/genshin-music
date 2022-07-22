@@ -16,6 +16,8 @@ export function VsrgKeyboard({ elements, perRow, onClick, selected }: VsrgKeyboa
                 gridTemplateColumns: `repeat(${perRow}, 1fr)`,
                 gridTemplateRows: `repeat(${Math.ceil(elements.length / perRow)}, 1fr)`,
                 opacity: selected ? 1 : 0.5,
+                pointerEvents: selected ? 'all' : 'none',
+                cursor: selected ? 'pointer' : "not-allowed",
             }}
         >
             {elements.map(el =>

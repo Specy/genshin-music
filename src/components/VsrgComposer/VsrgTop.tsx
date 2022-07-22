@@ -127,7 +127,7 @@ function TrackSelector({ track, selected, theme, onSettingsClick, onTrackClick }
             }}
             onClick={onTrackClick}
         >
-            {track.alias || track.instrument}
+            {track.instrument.alias || track.instrument.name}
             <div className="vsrg-track-color" style={{ backgroundColor: track.color }} />
             {selected &&
                 <AppButton

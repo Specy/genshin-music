@@ -174,10 +174,10 @@ class Player extends Component<any, PlayerState>{
 		const { settings, instruments } = state
 		if (state.isRecording) this.handleRecording(index)
 		if (!layers) {
-			instruments[0].play(index, settings.pitch.value as Pitch)
+			instruments[0].play(index, settings.pitch.value)
 		} else {
 			instruments.forEach((ins, i) => {
-				if (layers.test(i)) ins.play(index, settings.pitch.value as Pitch)
+				if (layers.test(i)) ins.play(index, settings.pitch.value)
 			})
 		}
 	}
@@ -254,8 +254,8 @@ class Player extends Component<any, PlayerState>{
 			if (!this.mounted) return
 			if (songName !== null) {
 				const song = new RecordedSong(songName, this.recording.notes, [instruments[0].name])
-				song.bpm = settings.bpm.value as number
-				song.pitch = settings.pitch.value as Pitch
+				song.bpm = settings.bpm.value
+				song.pitch = settings.pitch.value
 				this.addSong(song)
 				Analytics.userSongs('record', { name: songName, page: 'player' })
 			}
@@ -306,9 +306,9 @@ class Player extends Component<any, PlayerState>{
 						data={{
 							isLoading: isLoadingInstrument,
 							keyboard: instruments[0],
-							pitch: settings.pitch.value as Pitch,
+							pitch: settings.pitch.value,
 							keyboardSize: settings.keyboardSize.value,
-							noteNameType: settings.noteNameType.value as NoteNameType,
+							noteNameType: settings.noteNameType.value,
 							hasSong,
 							hasAnimation: settings.noteAnimation.value,
 							approachRate: settings.approachSpeed.value,

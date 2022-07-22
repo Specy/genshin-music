@@ -1,13 +1,14 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
+import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch } from "appConfig"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
+import { NoteNameType } from "types/GeneralTypes"
 
 export type ComposerSettingsDataType = {
     bpm: SettingsNumber
     beatMarks: SettingsSelect
-    noteNameType: SettingsSelect
-    pitch: SettingsSelect
+    noteNameType: SettingsSelect<NoteNameType>
+    pitch: SettingsSelect<Pitch>
     columnsPerCanvas: SettingsSelect
     caveMode: SettingsCheckbox
     autosave: SettingsCheckbox
@@ -41,20 +42,7 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: true,
             value: "C",
             category: "Song Settings",
-            options: [
-                "C",
-                "Db",
-                "D",
-                "Eb",
-                "E",
-                "F",
-                "Gb",
-                "G",
-                "Ab",
-                "A",
-                "Bb",
-                "B",
-            ]
+            options: [...PITCHES]
         },
         beatMarks: {
             name: "Beat marks",
@@ -139,9 +127,9 @@ export const ComposerSettings: ComposerSettingsType = {
 
 export type MainPageSettingsDataType = {
     instrument: SettingsInstrument
-    pitch: SettingsSelect
+    pitch: SettingsSelect<Pitch>
     caveMode: SettingsCheckbox
-    noteNameType: SettingsSelect
+    noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
     approachSpeed: SettingsNumber
@@ -179,20 +167,7 @@ export const MainPageSettings: MainPageSettingsType = {
             songSetting: true,
             value: "C",
             category: "Song Settings",
-            options: [
-                "C",
-                "Db",
-                "D",
-                "Eb",
-                "E",
-                "F",
-                "Gb",
-                "G",
-                "Ab",
-                "A",
-                "Bb",
-                "B",
-            ]
+            options: [...PITCHES]
         },
         bpm: {
             name: "Bpm",
@@ -385,6 +360,7 @@ export const ThemeSettings = {
 export type VsrgComposerSettingsDataType = {
     keys: SettingsSelect
     bpm: SettingsNumber
+    pitch: SettingsSelect<Pitch>
     isVertical: SettingsCheckbox
 }
 export type VsrgComposerSettingsType = {
@@ -395,7 +371,7 @@ export type VsrgComposerSettingsType = {
 }
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 2
+        settingVersion: APP_NAME + 3
     },
     data: {
         keys:{
@@ -428,6 +404,15 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             songSetting: false,
             value: false,
             category: "Editor Settings",
-        }
+        },
+        pitch: {
+            name: "Base pitch",
+            tooltip: "The main pitch of the song",
+            type: "select",
+            songSetting: true,
+            value: "C",
+            category: "Song Settings",
+            options: [...PITCHES]
+        },
     }
 }

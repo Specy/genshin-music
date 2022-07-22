@@ -113,21 +113,19 @@
 	border-radius: 0.5rem;
 	cursor: pointer;
 }
-.home-dont-show-again {
-	position: fixed;
-	display: flex;
-	color: var(--background-text);
-	align-items: center;
-	bottom: 0.5rem;
-	right: 0.5rem;
-}
+
 .home-bottom {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	padding: 0.4rem;
 	color: var(--background-text);
 	padding-top: 0.5rem;
 	display: flex;
 	flex: 1;
-	flex-direction: column;
-	justify-content: flex-end;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
 	font-size: 0.8rem;
 }
 
@@ -227,11 +225,8 @@
 	margin-top: auto;
 	padding-top: 0.3rem;
 }
-.home-app-scaling {
-	position: absolute;
-	left: 0.5rem;
-	bottom: 0.5rem;
-	font-size: 0.8rem;
+.home-app-scaling *, .home-dont-show-again *{
+	white-space:nowrap;
 }
 .home-app-scaling  button{
 	margin-left: 0.2rem;
@@ -319,15 +314,9 @@
 		padding: 0.6rem 15vw;
 	}
 	.home-dont-show-again, .home-app-scaling  {
-		bottom: 0.3rem;
 		font-size: 0.8rem;
 	}
-    .home-dont-show-again{
-		right: 0.4rem;
-	}
-	.home-app-scaling{
-		left: 0.4rem;
-	}
+
 	.home-content {
 		margin-top: 1rem;
 	}
@@ -338,6 +327,6 @@
 		margin-bottom: 0;
 	}
 	.home-bottom{
-		font-size: 0.7rem;
+		font-size: 0.6rem;
 	}
 }

@@ -29,14 +29,14 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
 
     useEffect(() => {
         const storedFontScale = JSON.parse(localStorage.getItem(APP_NAME + '-font-size') || '100')
-        if(storedFontScale < 80 || storedFontScale > 120) return setAppScale(100)
+        if (storedFontScale < 75 || storedFontScale > 125) return setAppScale(100)
         setAppScale(storedFontScale)
-    },[])
+    }, [])
     useEffect(() => {
         const html = document.querySelector('html')
         if (html) {
             localStorage.setItem(APP_NAME + '-font-size', `${appScale}`)
-            if(appScale === 100){
+            if (appScale === 100) {
                 html.style.removeProperty("font-size")
                 return
             }
@@ -177,38 +177,44 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 App Theme
             </PageRedirect>
         </div>
-        <div className='home-dont-show-again' onClick={() => setDontShowHome(!data.canShow)}>
-            <input type='checkbox' checked={!data.canShow} readOnly />
-            Hide on open
-        </div>
-        <div className='home-app-scaling row-centered'>
-            App scale
-            <AppButton
-                className='flex-centered'
-                onClick={() => {
-                    const newScale = appScale - 2
-                    if (newScale < 80) return 
-                    setAppScale(newScale)
-                }}
-            >
-                <FaMinus />
-            </AppButton>
-            <AppButton
-                className='flex-centered'
-                style={{ marginRight: '0.5rem' }}
-                onClick={() => {
-                    const newScale = appScale + 2
-                    if (newScale > 120) return 
-                    setAppScale(newScale)
-                }}
-            >
-                <FaPlus />
-            </AppButton>
-            {appScale}%
-        </div>
+
+
         <div className='home-bottom'>
-            <div>
+            <div className='home-app-scaling row-centered'>
+                <span>
+                    App scale
+                </span>
+                <AppButton
+                    className='flex-centered'
+                    onClick={() => {
+                        const newScale = appScale - 2
+                        if (newScale < 75) return
+                        setAppScale(newScale)
+                    }}
+                >
+                    <FaMinus />
+                </AppButton>
+                <AppButton
+                    className='flex-centered'
+                    style={{ marginRight: '0.5rem' }}
+                    onClick={() => {
+                        const newScale = appScale + 2
+                        if (newScale > 125) return
+                        setAppScale(newScale)
+                    }}
+                >
+                    <FaPlus />
+                </AppButton>
+                {appScale}%
+            </div>
+            <span style={{padding: '0 1rem', textAlign:'center'}}>
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
+            </span>
+            <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>
+                <input type='checkbox' checked={!data.canShow} readOnly />
+                <span>
+                    Hide on open
+                </span>
             </div>
         </div>
     </div>

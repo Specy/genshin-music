@@ -37,10 +37,10 @@ export type SettingsSlider = BaseSettingsProp & {
     value: number
     threshold: [number, number]
 }
-export type SettingsSelect = BaseSettingsProp & {
+export type SettingsSelect<T = string | number> = BaseSettingsProp & {
     type: 'select'
-    value: string | number
-    options: string[] | number[]
+    value: T
+    options: T[]
 }
 
 export type SettingUpdateKey = 

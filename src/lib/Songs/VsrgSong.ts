@@ -1,6 +1,7 @@
 import { Pitch } from "appConfig";
 import { InstrumentName } from "types/GeneralTypes";
 import { SerializedSong, Song } from "./Song";
+import { InstrumentData, SerializedInstrumentData } from "./SongClasses";
 
 export type VsrgSongKeys = 4 | 6 | 8
 type SerializedVsrgSong = SerializedSong & {
@@ -11,7 +12,7 @@ type SerializedVsrgSong = SerializedSong & {
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
     keys: VsrgSongKeys = 4
-    duration: number = 2000
+    duration: number = 10000
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -22,6 +23,12 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         return song
     }
 
+    startPlayback(timestamp: number){
+        this.tracks.forEach(track => track.startPlayback(timestamp))
+    }
+    tickPlayback(timestamp: number){
+        return this.tracks.map(track => track.tickPlayback(timestamp))
+    }
     addTrack(instrument?: InstrumentName){
         const track = new VsrgTrack(instrument ?? "DunDun")
         this.tracks.push(track)
@@ -91,44 +98,56 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
 
 
 interface SerializedVsrgTrack{
-    instrument: InstrumentName
-    alias: string
-    pitch: Pitch
+    instrument: SerializedInstrumentData
     hitObjects: SerializedVsrgHitObject[]
-    volume: number
     color: string
 }
 export class VsrgTrack{
-    instrument: InstrumentName
-    pitch: Pitch = "C"
+    instrument: InstrumentData
     hitObjects: VsrgHitObject[]
-    volume: number = 100
     color: string = "white"
-    alias: string = ""
-    constructor(instrument: InstrumentName, alias?:string,  hitObjects?: VsrgHitObject[]){
-        this.instrument = instrument ?? "Drum"
+    private lastPlayedHitObjectIndex: number = 0
+    private currentTimestamp:number = 0
+    constructor(instrument?: InstrumentName, alias?:string,  hitObjects?: VsrgHitObject[]){
+        this.instrument = new InstrumentData({ name: instrument ?? "DunDun", alias })
         this.hitObjects = hitObjects ?? []
-        this.alias = alias ?? ""
+    }
+    static deserialize(data: SerializedVsrgTrack){
+        const track = new VsrgTrack()
+        track.instrument = InstrumentData.deserialize(data.instrument)
+        track.hitObjects = data.hitObjects.map(x => VsrgHitObject.deserialize(x))
+        track.color = data.color
+        return track
+    }
+    startPlayback(timestamp:number){
+        this.currentTimestamp = timestamp
+        this.lastPlayedHitObjectIndex = -1
+        for(let i = 0; i < this.hitObjects.length; i++){
+            if(this.hitObjects[i].timestamp > timestamp) break
+            this.lastPlayedHitObjectIndex = i
+        }
+    }
+    tickPlayback(timestamp: number){
+        const surpassed = []
+        for(let i = this.lastPlayedHitObjectIndex + 1; i < this.hitObjects.length; i++){
+            if(this.hitObjects[i].timestamp < timestamp) {
+                surpassed.push(this.hitObjects[i])
+                this.lastPlayedHitObjectIndex = i
+                continue
+            }
+            break
+        }
+        return surpassed
     }
     serialize(): SerializedVsrgTrack{
         return {
-            instrument: this.instrument,
+            instrument: this.instrument.serialize(),
             hitObjects: this.hitObjects.map(x => x.serialize()),
-            volume: this.volume,
             color: this.color,
-            alias: this.alias,
-            pitch: this.pitch
         }
     }
     sortTrack(){
         this.hitObjects.sort((a, b) => a.timestamp - b.timestamp)
-    }
-    static deserialize(data: SerializedVsrgTrack){
-        const track = new VsrgTrack(data.instrument)
-        track.hitObjects = data.hitObjects.map(x => VsrgHitObject.deserialize(x))
-        track.volume = data.volume
-        track.color = data.color
-        return track
     }
     getHitObjectAt(time: number, index: number){
         return this.hitObjects.find(x => x.timestamp === time && x.index === index) || null
@@ -172,11 +191,10 @@ export class VsrgTrack{
 		return this
 	}
     clone(){
-        const track = new VsrgTrack(this.instrument,this.alias, this.hitObjects.map(x => x.clone()))
-        track.volume = this.volume
+        const track = new VsrgTrack()
+        track.instrument = this.instrument.clone()
+        track.hitObjects = this.hitObjects.map(x => x.clone())
         track.color = this.color
-        track.pitch = this.pitch
-        track.alias = this.alias
         return track
     }
 }
@@ -194,6 +212,7 @@ export class VsrgHitObject{
     timestamp: number
     notes: number[] = []
     holdDuration: number = 0
+
     constructor(index:number, timestamp: number) {
         this.index = index
         this.timestamp = timestamp

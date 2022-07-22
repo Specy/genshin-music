@@ -1,6 +1,7 @@
 import { Stage } from "@inlet/react-pixi"
 import { subscribeTheme } from "lib/Hooks/useTheme"
 import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong"
+import { ThrottledEventLoop } from "lib/ThrottledEventLoop"
 import { Application } from "pixi.js"
 import React, { Component, createRef } from "react"
 import { ThemeProvider, ThemeStoreClass } from "stores/ThemeStore"
@@ -32,6 +33,7 @@ interface VsrgCanvasProps {
     snapPoint: number
     snapPoints: number[]
     selectedHitObject: VsrgHitObject | null
+    onTimestampChange: (timestamp: number) => void
     onSnapPointSelect: (timestamp: number,key: number, type?: 0 | 2) => void
 }
 interface VsrgCanvasState {
@@ -52,10 +54,12 @@ const VsrgKeysMap = {
 }
 
 
+
 export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     wrapperRef = createRef<HTMLDivElement>()
     stageRef = createRef<any>()
     toDispose: (() => void)[] = []
+    throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => {}, 48)
     constructor(props: VsrgCanvasProps) {
         super(props)
         this.state = {
@@ -94,11 +98,14 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         })
         this.toDispose.push(() => vsrgComposerStore.removeEventListener("ALL",{id: "vsrg-canvas-color-change"}))
         this.calculateSizes()
+        this.throttledEventLoop.setCallback(this.handleTick)
+        this.throttledEventLoop.start()
         this.handleThemeChange(ThemeProvider)
     }
     componentWillUnmount() {
         this.toDispose.forEach(d => d())
         this.state.cache?.destroy()
+        this.throttledEventLoop.stop()
     }
     handleEvent = (event: VsrgComposerEvents) => {
         if(event === 'colorChange') this.generateCache()
@@ -106,6 +113,13 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if(event === 'updateOrientation') this.calculateSizes()
         if(event === 'snapPointChange') this.calculateSizes()
         if(event === 'tracksChange') this.generateCache()
+    }
+    handleTick = (elapsed: number, sinceLast: number) => {
+        if(this.props.isPlaying){
+            const timestamp = this.state.timestamp + sinceLast
+            this.props.onTimestampChange(timestamp)
+            this.setState({ timestamp })
+        }
     }
     calculateSizes = () => {
         const { wrapperRef } = this
@@ -129,7 +143,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
         this.setState({
             timestamp: Math.max(0, this.state.timestamp + e.deltaY / 1.5 )
-        })
+        }, () => this.props.onTimestampChange(this.state.timestamp))
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
         this.setState({ 
@@ -156,7 +170,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             preventClick: newTotalMovement > 50,
             totalMovement: newTotalMovement,
             timestamp: Math.max(0, this.state.timestamp + delta)
-        })
+        }, () => this.props.onTimestampChange(this.state.timestamp))
     }
     generateCache = () => {
         const { sizes, canvasColors, cache } = this.state
@@ -203,6 +217,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 <Stage
                     onMount={this.calculateSizes}
                     ref={this.stageRef}
+                    raf={false}
                     width={sizes.width}
                     height={sizes.height}
                     onWheel={this.handleWheel}

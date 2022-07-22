@@ -8,6 +8,7 @@ import { ColorPicker } from "components/Inputs/ColorPicker"
 import { useState } from "react"
 import Color from "color"
 import { vsrgComposerStore } from "stores/VsrgComposerStore"
+import { Pitch } from "appConfig"
 
 interface TrackSelectorProps {
     track: VsrgTrack
@@ -18,7 +19,7 @@ interface TrackSelectorProps {
 
 export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSelectorProps) {
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-    if(!track) return null
+    if (!track) return null
     return <>
         <div className="vsrg-floating-settings box-shadow">
             <div className="row-centered space-between">
@@ -28,37 +29,50 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                     maxLength={50}
                     className="input"
                     style={{ width: '7.4rem' }}
-                    value={track.alias}
-                    onChange={e => onChange(track.set({ alias: e.target.value }))}
-                    placeholder={track.instrument}
+                    value={track.instrument.alias}
+                    onChange={e => {
+                        track.instrument.set({ alias: e.target.value })
+                        onChange(track)
+                    }}
+                    placeholder={track.instrument.name}
                 />
             </div>
             <div className="row-centered space-between" style={{ marginTop: '0.4rem' }}>
                 Instrument
                 <InstrumentSelect
                     style={{ width: '8rem' }}
-                    selected={track.instrument}
-                    onChange={(instrument) => onChange(track.set({ instrument }))}
+                    selected={track.instrument.name}
+                    onChange={(name) => {
+                        track.instrument.set({ name })
+                        onChange(track)
+                    }}
                 />
             </div>
             <div className="row-centered space-between" style={{ marginTop: '0.4rem' }}>
                 Pitch
                 <PitchSelect
                     style={{ width: '8rem' }}
-                    selected={track.pitch}
-                    onChange={(pitch) => onChange(track.set({ pitch }))}
-                />
+                    selected={track.instrument.pitch as Pitch}
+                    onChange={(pitch) => {
+                        track.instrument.set({ pitch })
+                        onChange(track)
+                    }}
+                >
+                    <option value="">
+                        Use song pitch
+                    </option>
+                </PitchSelect>
             </div>
             <div className="row-centered" style={{ marginTop: '1rem', alignItems: "center" }}>
                 Volume
                 <span style={{
                     marginLeft: "0.4rem",
                     width: '3rem',
-                    ...(track.volume > 100
-                        && { color: `hsl(0, ${-40 + track.volume}%, 61%)`, marginLeft: "0.4rem" })
+                    ...(track.instrument.volume > 100
+                        && { color: `hsl(0, ${-40 + track.instrument.volume}%, 61%)`, marginLeft: "0.4rem" })
                 }}
                 >
-                    {track.volume}%
+                    {track.instrument.volume}%
                 </span>
                 <HelpTooltip
                     buttonStyle={{ width: '1.2rem', height: '1.2rem' }}
@@ -73,8 +87,11 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                     style={{ flex: '1' }}
                     min={0}
                     max={125}
-                    value={track.volume}
-                    onChange={e => onChange(track.set({ volume: Number(e.target.value) }))}
+                    value={track.instrument.volume}
+                    onChange={e =>{
+                        track.instrument.set({ volume: parseInt(e.target.value) })
+                        onChange(track)
+                    }}
                 />
             </div>
             <div className="column">

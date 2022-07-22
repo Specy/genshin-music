@@ -346,7 +346,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const note = instrument?.layout[index]
         if (note === undefined) return
         if(this.state.song.instruments[layer].muted) return
-        const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value as Pitch
+        const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value 
         instrument.play(note.index, pitch)
     }
     changePitch = (value: Pitch) => {
@@ -772,8 +772,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
                         instruments: song.instruments,
                         keyboard: layers[layer],
                         currentColumn: song.selectedColumn,
-                        pitch: song.instruments[layer]?.pitch || settings.pitch.value as Pitch,
-                        noteNameType: settings.noteNameType.value as NoteNameType,
+                        pitch: song.instruments[layer]?.pitch || settings.pitch.value,
+                        noteNameType: settings.noteNameType.value,
                     }}
                 />
             </div>
