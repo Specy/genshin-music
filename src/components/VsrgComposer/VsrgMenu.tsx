@@ -196,7 +196,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FloatingDropdownRow
                     onClick={() => {
                         if (isRenaming) {
-                            songService.renameSong(data.id!, songName)
+                            songsStore.renameSong(data.id!, songName)
                             setIsRenaming(false)
                         }
                         setIsRenaming(!isRenaming)
@@ -231,7 +231,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FloatingDropdownRow onClick={async() => {
                     const confirm = await asyncConfirm("Are you sure you want to delete this song?")
                     if(!confirm) return
-                    await songService.removeSong(data.id!)
+                    songsStore.removeSong(data.id!)
                 }}>
                     <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Delete' />

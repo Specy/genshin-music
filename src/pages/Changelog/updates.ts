@@ -13,7 +13,8 @@ export const updates: Update[] = [
         changes: [
             "Fixed but that would remove a song from the folder when saved",
             "Fixed issues when opening/saving songs in the composer",
-            "Fixed bug in pasting notes in the compsoer",
+            "Fixed bug in pasting notes in the composer",
+            "Exporting a song would not work in sky music and sky studio",
             "Other bug fixes...",
         ]
     },{

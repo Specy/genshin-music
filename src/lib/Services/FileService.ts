@@ -20,7 +20,6 @@ type ImportResult<T> = {
     successful: T[]
 }
 class FileService {
-    test?: UnknownFile
     async addSongs(file: UnknownSongImport) : Promise<ImportResult<UnknownSong>> {
         const data = Array.isArray(file) ? file : [file]
         const successful: UnknownSong[] = []
