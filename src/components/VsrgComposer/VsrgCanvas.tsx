@@ -35,6 +35,9 @@ interface VsrgCanvasProps {
     selectedHitObject: VsrgHitObject | null
     onTimestampChange: (timestamp: number) => void
     onSnapPointSelect: (timestamp: number,key: number, type?: 0 | 2) => void
+    dragHitObject: (timestamp: number) => void
+    releaseHitObject: () => void
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex:number) => void
 }
 interface VsrgCanvasState {
     canvasColors: VsrgCanvasColors
@@ -45,6 +48,7 @@ interface VsrgCanvasState {
     previousPosition: number
     preventClick: boolean
     totalMovement: number
+    draggedHitObject: VsrgHitObject | null
 }
 
 const VsrgKeysMap = {
@@ -79,6 +83,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 keyHeight: 0,
                 keyWidth: 0,
             },
+            draggedHitObject: null,
             isPressing: false,
             totalMovement: 0,
             previousPosition: 0,
@@ -153,18 +158,26 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     }
     setIsNotDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if(!this.state.isPressing) return
-        this.setState({ isPressing: false,  totalMovement: 0 }, () => {
+        const draggedHitObject = this.state.draggedHitObject
+        this.setState({ isPressing: false,  totalMovement: 0, draggedHitObject: null}, () => {
             //dumbass idk how to make otherwise
+            if(draggedHitObject) this.props.releaseHitObject()
             setTimeout(() => this.setState({ preventClick: false }), 200)
         })
     }
     handleDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if(!this.state.isPressing) return
-        const { previousPosition } = this.state
+        const { previousPosition, draggedHitObject } = this.state
         const { isHorizontal } = this.props
         const deltaOrientation = isHorizontal ? e.clientX : -e.clientY
         const delta = previousPosition - deltaOrientation
         const newTotalMovement = this.state.totalMovement + Math.abs(delta)
+        if(draggedHitObject !== null){
+            const position = draggedHitObject.timestamp - delta
+            return this.setState({ previousPosition: deltaOrientation }, 
+                () => this.props.dragHitObject(Math.max(0, position))
+            )
+        }
         this.setState({ 
             previousPosition: deltaOrientation,
             preventClick: newTotalMovement > 50,
@@ -186,6 +199,10 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         this.setState({ cache: newCache }, () => {
             cache?.destroy()  
         })
+    }
+    selectHitObject = (hitObject: VsrgHitObject, trackIndex: number) => {
+        this.setState({ draggedHitObject: hitObject })
+        this.props.selectHitObject(hitObject, trackIndex)
     }
     handleThemeChange = (theme: ThemeStoreClass) => {
         const bg_plain = theme.get('primary')
@@ -246,6 +263,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                             colors={canvasColors}
                             keys={vsrg.keys}
                             isHorizontal={isHorizontal}
+                            selectHitObject={this.selectHitObject}
                             onSnapPointSelect={this.props.onSnapPointSelect}
                         />
                     }

@@ -35,8 +35,20 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         this.tracks = [...this.tracks]
         return track
     }
+    getHitObjectsAt(timestamp: number, key: number){
+        return this.tracks.map(track => track.getHitObjectAt(timestamp, key))
+    }
+    getHitObjectsBetween(start: number, end: number, key?:number) {
+        return this.tracks.map(track => track.getObjectsBetween(start, end, key))
+    }
+    removeHitObjectsBetween(start: number, end: number, key?: number){
+        this.tracks.forEach(track => track.removeObjectsBetween(start, end, key))
+    }
     getHitObjectInTrack(trackIndex: number, timestamp: number, index: number){
         return this.tracks[trackIndex].getHitObjectAt(timestamp, index)
+    }
+    addHitObjectInTrack(trackIndex: number, hitObject: VsrgHitObject){
+        this.tracks[trackIndex].addHitObject(hitObject)
     }
     createHitObjectInTrack(trackIndex: number, timestamp: number, index: number){
         const hitObject = this.tracks[trackIndex].createHitObjectAt(timestamp, index)
@@ -49,9 +61,13 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         return hitObject
     }
     setHeldHitObjectTail(trackIndex: number, hitObject: VsrgHitObject, duration: number){
+        this.tracks.forEach((t,i) => i !== trackIndex && t.removeObjectsBetween(hitObject.timestamp, hitObject.timestamp + duration, hitObject.index))
         this.tracks[trackIndex].setHeldHitObjectTail(hitObject, duration)
     }
-    removeHitObjectAt(trackIndex: number, timestamp: number, index: number){
+    removeHitObjectInTrack(trackIndex:number, hitObject: VsrgHitObject){
+        this.tracks[trackIndex].removeHitObject(hitObject)
+    }
+    removeHitObjectInTrackAtIndex(trackIndex: number, timestamp: number, index: number){
         this.tracks[trackIndex].removeHitObjectAt(timestamp, index)
     }
     deleteTrack(index:number){
@@ -107,7 +123,6 @@ export class VsrgTrack{
     hitObjects: VsrgHitObject[]
     color: string = "white"
     private lastPlayedHitObjectIndex: number = 0
-    private currentTimestamp:number = 0
     constructor(instrument?: InstrumentName, alias?:string,  hitObjects?: VsrgHitObject[]){
         this.instrument = new InstrumentData({ name: instrument ?? "DunDun", alias })
         this.hitObjects = hitObjects ?? []
@@ -120,7 +135,6 @@ export class VsrgTrack{
         return track
     }
     startPlayback(timestamp:number){
-        this.currentTimestamp = timestamp
         this.lastPlayedHitObjectIndex = -1
         for(let i = 0; i < this.hitObjects.length; i++){
             if(this.hitObjects[i].timestamp > timestamp) break
@@ -152,27 +166,35 @@ export class VsrgTrack{
     getHitObjectAt(time: number, index: number){
         return this.hitObjects.find(x => x.timestamp === time && x.index === index) || null
     }
+    addHitObject(hitObject: VsrgHitObject){
+        this.hitObjects.push(hitObject)
+        this.sortTrack()
+    }
     createHitObjectAt(time: number, index: number){
         const exists = this.hitObjects.findIndex(x => x.timestamp === time && x.index === index)
         if(exists !== -1) return this.hitObjects[exists]
         const hitObject = new VsrgHitObject(index, time)
-        this.hitObjects.push(hitObject)
-        this.sortTrack()
+        this.addHitObject(hitObject)
         return hitObject
     }
-    selectObjectsBetween(start: number, end: number, key?: number){
+    getObjectsBetween(start: number, end: number, key?: number){
+        if(start > end) {
+            const t = start
+            start = end
+            end = t
+        }
         return this.hitObjects.filter(x => 
             x.timestamp >= start 
          && x.timestamp <= end 
          && (key === undefined || x.index === key))
     }
     removeObjectsBetween(start: number, end: number, key?: number){
-        const objects = this.selectObjectsBetween(start, end, key)
+        const objects = this.getObjectsBetween(start, end, key)
         objects.forEach(x => this.removeHitObjectAt(x.timestamp, x.index))
     }
     setHeldHitObjectTail(hitObject: VsrgHitObject,  duration: number){
         const removeBound = hitObject.timestamp + duration
-        const toRemove = this.selectObjectsBetween(hitObject.timestamp, removeBound, hitObject.index)
+        const toRemove = this.getObjectsBetween(hitObject.timestamp, removeBound, hitObject.index)
         toRemove.forEach(x => x !== hitObject && this.removeHitObjectAt(x.timestamp, x.index))
         if(duration < 0){
             hitObject.holdDuration = Math.abs(duration)
@@ -180,6 +202,11 @@ export class VsrgTrack{
         }else{
             hitObject.holdDuration = duration
         }
+    }
+    removeHitObject(hitObject: VsrgHitObject){
+        const index = this.hitObjects.indexOf(hitObject)
+        if(index === -1) return
+        this.hitObjects.splice(index, 1)
     }
     removeHitObjectAt(time: number, index:number){
         const indexOf = this.hitObjects.findIndex(x => x.timestamp === time && x.index === index)

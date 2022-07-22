@@ -21,8 +21,9 @@ interface VsrgScrollableTrackRendererProps {
     isHorizontal: boolean
     selectedHitObject: VsrgHitObject | null
     onSnapPointSelect: (timestamp: number, key: number, type?: 0 | 2) => void
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex:number) => void
 }
-export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject}: VsrgScrollableTrackRendererProps) {
+export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject}: VsrgScrollableTrackRendererProps) {
     function handleSnapPointClick(event: InteractionEvent){
         if (preventClick) return
         if (isHorizontal) {
@@ -65,6 +66,8 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoin
                 keys={keys}
                 colors={colors}
                 sizes={sizes}
+                trackIndex={index}
+                selectHitObject={selectHitObject}
                 selectedHitObject={selectedHitObject}
                 isHorizontal={isHorizontal}
             />

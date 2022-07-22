@@ -1,4 +1,4 @@
-import { Sprite } from "@inlet/react-pixi";
+import { Container, Sprite } from "@inlet/react-pixi";
 import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
@@ -6,18 +6,21 @@ import { VsrgCanvasCache } from "./VsrgComposerCache";
 
 interface VsrgTrackRendererProps {
     track: VsrgTrack
+    trackIndex: number
     keys: number
     sizes: VsrgCanvasSizes
     cache: VsrgCanvasCache
     colors: VsrgCanvasColors
     isHorizontal: boolean
     selectedHitObject: VsrgHitObject | null
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number) => void
 }
 
 
-export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject }: VsrgTrackRendererProps) {
+export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex }: VsrgTrackRendererProps) {
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys
+
     return <>
         {track.hitObjects.map(hitObject => {
             const x = isHorizontal
@@ -27,7 +30,11 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                 ? positionSizeHorizontal * hitObject.index + positionSizeHorizontal / 2
                 : -(hitObject.timestamp - sizes.height)
             return hitObject.isHeld
-                ? <Fragment key={hitObject.timestamp + hitObject.index}>
+                ? <Container
+                    interactive={true}
+                    pointerdown={() => selectHitObject(hitObject, trackIndex)}
+                    key={hitObject.timestamp + hitObject.index}
+                >
                     {isHorizontal
                         ? <Sprite
                             texture={cache.getHeldTrailCache(track.color)}
@@ -67,14 +74,8 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                             y={y}
                         />
                     }
-                </Fragment>
+                </Container>
                 : <Fragment key={hitObject.timestamp + hitObject.index}>
-                    <Sprite
-                        texture={cache.getHitObjectCache(track.color)}
-                        anchor={0.5}
-                        x={x}
-                        y={y}
-                    />
                     {hitObject === selectedHitObject &&
                         <Sprite
                             texture={cache.getSelectionRingsCache(track.color)}
@@ -83,6 +84,15 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                             y={y}
                         />
                     }
+                    <Sprite
+                        texture={cache.getHitObjectCache(track.color)}
+                        interactive={true}
+                        pointerdown={() => selectHitObject(hitObject, trackIndex)}
+                        anchor={0.5}
+                        x={x}
+                        y={y}
+                    />
+
                 </Fragment>
 
         })}

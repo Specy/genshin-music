@@ -125,7 +125,7 @@ export class VsrgCanvasCache {
             this.textures.trails[color] = trailTexture
             trail.destroy(true)
         })
-        this.textures.sizes.trail = hitObjectHeight
+        this.textures.sizes.trail = hitObjectHeight 
     }
     generateSelectionRings(app: Application) {
         const { sizes, trackColors } = this
@@ -143,7 +143,6 @@ export class VsrgCanvasCache {
             this.textures.selectionRings[color] = ringTexture
             ring.destroy(true)
         })
-        this.textures.sizes.trail = hitObjectHeight
     }
     generateTrackCache(app: Application) {
         const { colors, sizes, trackColors } = this

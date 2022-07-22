@@ -29,7 +29,7 @@
     width: 13.6rem;
     margin-left: 0.6rem;
 }
-.vsrg-top-right-disabled{
+.vsrg-top-right-disabled .vsrg-track-wrapper{
     pointer-events: none;
     opacity: 0.5;
 }
