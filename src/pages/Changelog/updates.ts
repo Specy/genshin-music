@@ -11,6 +11,7 @@ export const updates: Update[] = [
         title: 'Bug fixes',
         date: '2022 - 22/07',
         changes: [
+            "Added app scaling",
             "Fixed but that would remove a song from the folder when saved",
             "Fixed issues when opening/saving songs in the composer",
             "Fixed bug in pasting notes in the composer",

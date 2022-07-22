@@ -1,4 +1,4 @@
-import { FaCompactDisc, FaTimes } from 'react-icons/fa'
+import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
 import { APP_NAME, isTwa } from "appConfig"
 import HomeStore from 'stores/HomeStore'
@@ -9,6 +9,7 @@ import { useTheme } from 'lib/Hooks/useTheme'
 import './Home.css'
 import { MenuItem } from 'components/Miscellaneous/MenuItem'
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
+import { AppButton } from 'components/Inputs/AppButton'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -19,12 +20,29 @@ interface HomeProps {
 
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }: HomeProps) {
     const [data, setData] = useState(HomeStore.state.data)
+    const [appScale, setAppScale] = useState(100)
     const [currentPage, setCurrentPage] = useState('')
     const [breakpoint, setBreakpoint] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
     const history = useHistory()
     const [theme] = useTheme()
 
+    useEffect(() => {
+        const storedFontScale = JSON.parse(localStorage.getItem(APP_NAME + '-font-size') || '100')
+        if(storedFontScale < 80 || storedFontScale > 120) return setAppScale(100)
+        setAppScale(storedFontScale)
+    },[])
+    useEffect(() => {
+        const html = document.querySelector('html')
+        if (html) {
+            localStorage.setItem(APP_NAME + '-font-size', `${appScale}`)
+            if(appScale === 100){
+                html.style.removeProperty("font-size")
+                return
+            }
+            html.style.fontSize = `${appScale}%`
+        }
+    }, [appScale])
 
     useEffect(() => {
         const dispose = history.listen((path) => {
@@ -162,6 +180,31 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         <div className='home-dont-show-again' onClick={() => setDontShowHome(!data.canShow)}>
             <input type='checkbox' checked={!data.canShow} readOnly />
             Hide on open
+        </div>
+        <div className='home-app-scaling row-centered'>
+            App scale
+            <AppButton
+                className='flex-centered'
+                onClick={() => {
+                    const newScale = appScale - 2
+                    if (newScale < 80) return 
+                    setAppScale(newScale)
+                }}
+            >
+                <FaMinus />
+            </AppButton>
+            <AppButton
+                className='flex-centered'
+                style={{ marginRight: '0.5rem' }}
+                onClick={() => {
+                    const newScale = appScale + 2
+                    if (newScale > 120) return 
+                    setAppScale(newScale)
+                }}
+            >
+                <FaPlus />
+            </AppButton>
+            {appScale}%
         </div>
         <div className='home-bottom'>
             <div>

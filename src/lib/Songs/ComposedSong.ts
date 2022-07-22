@@ -192,8 +192,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         let totalTime = 100
         song.columns.forEach(column => {
             column[1].forEach(note => {
-                const stringifiedLayer = Number(note[1]).toString(2)
-                const layer = LAYERS_MAP[stringifiedLayer.padStart(4, "0").substring(0, 4)] ?? 1
+                const parsedLayer = NoteLayer.deserializeHex(note[1])
+                const stringifiedLayer = parsedLayer.toArray().join("").padEnd(4, "0").substring(0, 4)
+                const layer = LAYERS_MAP[stringifiedLayer] ?? 1
                 if (layer === 0) return
                 const noteObj: OldFormatNoteType = {
                     key: (layer > 2 ? 2 : layer) + 'Key' + note[0],
@@ -419,7 +420,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     }
 }
 const LAYERS_MAP:{ [key in string] : number} = {
-    '0000': 0,
+    '0000': 1, //out of range
     '0010': 2,
     '0110': 2,
     '0100': 2,
