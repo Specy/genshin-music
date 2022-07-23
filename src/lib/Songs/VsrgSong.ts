@@ -1,4 +1,3 @@
-import { Pitch } from "appConfig";
 import { InstrumentName } from "types/GeneralTypes";
 import { SerializedSong, Song } from "./Song";
 import { InstrumentData, SerializedInstrumentData } from "./SongClasses";

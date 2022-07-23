@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from "@inlet/react-pixi";
 import { TextStyle } from "pixi.js";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 
 interface VsrgKeysRendererProps {
@@ -19,7 +19,7 @@ const defaultTextStyle = new TextStyle({
 
 
 
-export function VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeysRendererProps) {
+function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeysRendererProps) {
     const [textStyle, setTextStyle] = useState(defaultTextStyle)
     useEffect(() => {
         setTextStyle(new TextStyle({
@@ -39,8 +39,8 @@ export function VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeys
         <Graphics
             draw={(g) => {
                 g.clear()
-                g.beginFill(colors.background_plain[1]) 
-                if(isHorizontal) {
+                g.beginFill(colors.background_plain[1])
+                if (isHorizontal) {
                     g.drawRect(0, 0, 60, sizes.height)
                     g.lineStyle(2, colors.lineColor_10[1])
                     for (let i = 0; i < keys.length - 1; i++) {
@@ -50,9 +50,9 @@ export function VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeys
                     g.lineStyle(2, colors.secondary[1])
                     g.moveTo(59, 0)
                     g.lineTo(59, sizes.height)
-                }else{
+                } else {
                     g.drawRect(0, sizes.height - 60, sizes.width, 60)
-                    g.lineStyle(2, colors.lineColor_10[1] )
+                    g.lineStyle(2, colors.lineColor_10[1])
                     for (let i = 0; i < keys.length - 1; i++) {
                         g.moveTo(keyWidth * (i + 1), 0)
                         g.lineTo(keyWidth * (i + 1), sizes.height)
@@ -76,3 +76,9 @@ export function VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeys
 
     </Container>
 }
+
+export const VsrgKeysRenderer = memo<VsrgKeysRendererProps>(_VsrgKeysRenderer,
+    (p, n) => {
+        return p.keys === n.keys && p.sizes === n.sizes && p.colors === n.colors && p.isHorizontal === n.isHorizontal
+    }
+)

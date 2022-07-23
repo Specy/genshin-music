@@ -107,9 +107,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrgComposerStore.emitEvent("snapPointChange")
         })
     }
-    selectHitObject = (hitObject: VsrgHitObject, trackIndex:number) => {
+    selectHitObject = (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => {
         const selectedType = hitObject.isHeld ? 'hold' : 'tap'
-        if(this.state.selectedType === 'delete'){
+        if(this.state.selectedType === 'delete' || clickType === 2){
             this.state.vsrg.removeHitObjectInTrack(trackIndex, hitObject)
             this.setState( { selectedHitObject: null , vsrg: this.state.vsrg} )
             return 
@@ -174,8 +174,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         let firstBound = 0
         let secondBound = 0
         for(let i = 0; i < snapPoints.length; i++){
-            if(selectedHitObject.timestamp > snapPoints[i]) firstBound = snapPoints[i]
-            if(selectedHitObject.timestamp < snapPoints[i]){
+            if(selectedHitObject.timestamp >= snapPoints[i]) firstBound = snapPoints[i]
+            if(selectedHitObject.timestamp <= snapPoints[i]){
                 secondBound = snapPoints[i]
                 break
             }

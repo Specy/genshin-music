@@ -37,7 +37,7 @@ interface VsrgCanvasProps {
     onSnapPointSelect: (timestamp: number,key: number, type?: 0 | 2) => void
     dragHitObject: (timestamp: number) => void
     releaseHitObject: () => void
-    selectHitObject: (hitObject: VsrgHitObject, trackIndex:number) => void
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => void
 }
 interface VsrgCanvasState {
     canvasColors: VsrgCanvasColors
@@ -147,8 +147,13 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     }
     handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
         this.setState({
-            timestamp: Math.max(0, this.state.timestamp + e.deltaY / 1.5 )
-        }, () => this.props.onTimestampChange(this.state.timestamp))
+            timestamp: Math.max(0, this.state.timestamp + e.deltaY / 1.2 )
+        }, () => {
+            const { draggedHitObject, timestamp} = this.state
+            this.props.onTimestampChange(this.state.timestamp)
+            if(!draggedHitObject || timestamp <= 0) return 
+            this.props.dragHitObject(draggedHitObject.timestamp + e.deltaY / 1.2 )
+        })
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
         this.setState({ 
@@ -200,9 +205,9 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             cache?.destroy()  
         })
     }
-    selectHitObject = (hitObject: VsrgHitObject, trackIndex: number) => {
-        this.setState({ draggedHitObject: hitObject })
-        this.props.selectHitObject(hitObject, trackIndex)
+    selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => {
+        if(clickType !== 2) this.setState({ draggedHitObject: hitObject })
+        this.props.selectHitObject(hitObject, trackIndex, clickType)
     }
     handleThemeChange = (theme: ThemeStoreClass) => {
         const bg_plain = theme.get('primary')

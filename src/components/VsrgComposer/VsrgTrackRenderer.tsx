@@ -13,16 +13,19 @@ interface VsrgTrackRendererProps {
     colors: VsrgCanvasColors
     isHorizontal: boolean
     selectedHitObject: VsrgHitObject | null
-    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number) => void
+    timestamp: number
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => void
 }
 
 
-export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex }: VsrgTrackRendererProps) {
+export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex, timestamp }: VsrgTrackRendererProps) {
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys
-
+    const lowerBound = timestamp - cache.textures.snapPoints.size
+    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) + cache.textures.snapPoints.size
     return <>
         {track.hitObjects.map(hitObject => {
+            if(lowerBound > hitObject.timestamp + hitObject.holdDuration || hitObject.timestamp > upperBound) return null
             const x = isHorizontal
                 ? hitObject.timestamp
                 : positionSizeVertical * hitObject.index + positionSizeVertical / 2
@@ -32,7 +35,9 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
             return hitObject.isHeld
                 ? <Container
                     interactive={true}
-                    pointerdown={() => selectHitObject(hitObject, trackIndex)}
+                    pointerdown={(e) => {
+                        selectHitObject(hitObject, trackIndex, e.data.buttons)
+                    }}
                     key={hitObject.timestamp + hitObject.index}
                 >
                     {isHorizontal
@@ -87,7 +92,9 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                     <Sprite
                         texture={cache.getHitObjectCache(track.color)}
                         interactive={true}
-                        pointerdown={() => selectHitObject(hitObject, trackIndex)}
+                        pointerdown={(e) => {
+                            selectHitObject(hitObject, trackIndex,  e.data.buttons)
+                        }}
                         anchor={0.5}
                         x={x}
                         y={y}

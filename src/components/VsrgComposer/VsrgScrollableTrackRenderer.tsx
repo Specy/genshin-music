@@ -21,9 +21,11 @@ interface VsrgScrollableTrackRendererProps {
     isHorizontal: boolean
     selectedHitObject: VsrgHitObject | null
     onSnapPointSelect: (timestamp: number, key: number, type?: 0 | 2) => void
-    selectHitObject: (hitObject: VsrgHitObject, trackIndex:number) => void
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => void
 }
 export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject}: VsrgScrollableTrackRendererProps) {
+    const lowerBound = timestamp - cache.textures.snapPoints.size
+    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) + cache.textures.snapPoints.size
     function handleSnapPointClick(event: InteractionEvent){
         if (preventClick) return
         if (isHorizontal) {
@@ -44,6 +46,7 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoin
     >
 
         {snapPoints.map((sp, i) => {
+            if(lowerBound > sp || sp > upperBound) return null
             return <Sprite
                 interactive={true}
                 pointertap={handleSnapPointClick}
@@ -66,6 +69,7 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoin
                 keys={keys}
                 colors={colors}
                 sizes={sizes}
+                timestamp={timestamp}
                 trackIndex={index}
                 selectHitObject={selectHitObject}
                 selectedHitObject={selectedHitObject}
@@ -74,5 +78,4 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoin
         )}
 
     </Container>
-
 }
