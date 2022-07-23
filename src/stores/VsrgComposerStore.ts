@@ -7,6 +7,7 @@ export type VsrgComposerEvents =
 | 'updateOrientation' 
 | 'snapPointChange'
 | 'tracksChange'
+| 'songLoad'
 export type VsrcComposerEventCallback = {
     callback: (event: VsrgComposerEvents) => void, 
     id: string

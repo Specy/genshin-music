@@ -1,5 +1,6 @@
 import { AppButton } from "components/Inputs/AppButton"
 import { Select } from "components/Inputs/Select"
+import { VsrgSong } from "lib/Songs/VsrgSong"
 
 import { FaPause, FaPlay } from "react-icons/fa"
 import { MultipleOptionSlider, Option } from "./MultipleOptionSlider"
@@ -7,6 +8,7 @@ import { MultipleOptionSlider, Option } from "./MultipleOptionSlider"
 interface VsrgBottomProps {
     selectedSnapPoint: SnapPoint
     isPlaying: boolean
+    vsrg: VsrgSong
     togglePlay: () => void
     onSnapPointChange: (snapPoint: SnapPoint) => void
     selectedHitObjectType: VsrgHitObjectType
@@ -28,7 +30,7 @@ const options: Option<VsrgHitObjectType>[] = [
 ]
 const snapPoints:SnapPoint[] = [1,2,4,8,16]
 export type SnapPoint = 1 | 2 | 4 | 8 | 16
-export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange, selectedSnapPoint, isPlaying, togglePlay, selectedHitObjectType}:VsrgBottomProps) {
+export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange, selectedSnapPoint, isPlaying, togglePlay, selectedHitObjectType, vsrg}:VsrgBottomProps) {
 
     return <>
         <div className="vsrg-bottom">
@@ -39,8 +41,8 @@ export function VsrgBottom({ onSnapPointChange, onHitObjectTypeChange, selectedS
                     onHitObjectTypeChange(value)
                 }}
             />
-            <div>
-                Song name 0:40 / 2:10
+            <div className="text-ellipsis">
+                {vsrg.name}
             </div>
             <div className='flex-centered' style={{height: '100%'}}>
                 <Select

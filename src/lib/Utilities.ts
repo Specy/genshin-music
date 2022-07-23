@@ -4,6 +4,9 @@ import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
 import { NoteNameType } from "types/GeneralTypes";
 import { NoteLayer } from "./Layer";
+import { Song } from "./Songs/Song";
+import { ComposedSong } from "./Songs/ComposedSong";
+import { RecordedSong } from "./Songs/RecordedSong";
 
 class FileDownloader {
 	static download(file: string | Blob, name: string, as: string = "text/json") {
@@ -102,6 +105,9 @@ function insertionSort<T>(array: T[], compare: (a: T, b: T) => number) {
 	return array;
 }
 
+function isComposedOrRecorded(song: Song){
+	return song instanceof ComposedSong || song instanceof RecordedSong
+}
 function formatMs(ms: number) {
 	const minutes = Math.floor(ms / 60000);
 	const seconds = Number(((ms % 60000) / 1000).toFixed(0))
@@ -120,7 +126,7 @@ function setIfInTWA() {
 
 
 //TODO improve this detection
-function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' {
+function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' | 'vsrg' {
 	try {
 		if (song.data === undefined) {
 			//oldSky format
@@ -130,6 +136,7 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 			}
 		} else {
 			//current format
+			if(song.type === 'vsrg') return 'vsrg'
 			if ((song.data.isComposedVersion === true) || song.type === 'composed') {
 				if (typeof song.name !== "string") return "none"
 				if (!PITCHES.includes(song.pitch)) return "none"
@@ -251,5 +258,6 @@ export {
 	calculateSongLength,
 	setIfInTWA,
 	blurEvent,
-	insertionSort
+	insertionSort,
+	isComposedOrRecorded
 }

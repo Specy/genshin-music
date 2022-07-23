@@ -32,6 +32,9 @@ import useClickOutside from 'lib/Hooks/useClickOutside';
 import isMobile from 'is-mobile';
 import { fileService } from 'lib/Services/FileService';
 import { songService } from 'lib/Services/SongService';
+import { ComposedSong } from 'lib/Songs/ComposedSong';
+import { RecordedSong } from 'lib/Songs/RecordedSong';
+import { RecordedOrComposed } from 'types/SongTypes';
 
 const isOnMobile = isMobile()
 interface MenuProps {
@@ -118,7 +121,10 @@ function Menu({ data, functions }: MenuProps) {
             song.data.appName = APP_NAME
             const songName = song.name
             const parsed = songService.parseSong(song)
-            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
+            const converted = [APP_NAME === 'Sky' && (parsed instanceof ComposedSong || parsed instanceof RecordedSong)
+                ? parsed.toOldFormat()
+                : parsed.serialize()
+            ]
             fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
             logger.success("Song downloaded")
             Analytics.userSongs('download', { name: parsed.name, page: 'composer' })
@@ -276,6 +282,9 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     useEffect(() => {
         setSongName(data.name)
     }, [data.name])
+    if(data.type === 'vsrg') return <div className='row'>
+        Invalid song
+    </div>
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             if (isRenaming) return
@@ -342,10 +351,16 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaDownload style={{ marginRight: "0.4rem" }} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(songService.parseSong(data).toMidi())}>
-                    <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text='Download MIDI' />
-                </FloatingDropdownRow>
+                {(data.type === 'recorded' || data.type === "composed") &&
+                    <FloatingDropdownRow onClick={() => {
+                        const song = songService.parseSong(data) as RecordedOrComposed
+                        downloadSong(song.toMidi())
+                }}>
+                        <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
+                        <FloatingDropdownText text='Download MIDI' />
+                    </FloatingDropdownRow>
+                }
+
                 <FloatingDropdownRow onClick={() => songsStore.addSong(songService.parseSong(data))}
                 >
                     <FaClone style={{ marginRight: "0.4rem" }} />

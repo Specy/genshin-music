@@ -3,6 +3,7 @@ import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch } from "appCon
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
 import { NoteNameType } from "types/GeneralTypes"
+import { VsrgSongKeys } from "./Songs/VsrgSong"
 
 export type ComposerSettingsDataType = {
     bpm: SettingsNumber
@@ -358,10 +359,11 @@ export const ThemeSettings = {
 
 
 export type VsrgComposerSettingsDataType = {
-    keys: SettingsSelect
+    keys: SettingsSelect<VsrgSongKeys>
     bpm: SettingsNumber
     pitch: SettingsSelect<Pitch>
     isVertical: SettingsCheckbox
+    autosave: SettingsCheckbox
 }
 export type VsrgComposerSettingsType = {
     other: {
@@ -371,7 +373,7 @@ export type VsrgComposerSettingsType = {
 }
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 3
+        settingVersion: APP_NAME + 4
     },
     data: {
         keys:{
@@ -397,14 +399,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             value: 220,
             category: "Song Settings",
         },
-        isVertical: {
-            name: "Vertical editor",
-            tooltip: "If the editor is set horizontally or vertically",
-            type: "checkbox",
-            songSetting: false,
-            value: false,
-            category: "Editor Settings",
-        },
+
         pitch: {
             name: "Base pitch",
             tooltip: "The main pitch of the song",
@@ -413,6 +408,22 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             value: "C",
             category: "Song Settings",
             options: [...PITCHES]
+        },
+        isVertical: {
+            name: "Vertical editor",
+            tooltip: "If the editor is set horizontally or vertically",
+            type: "checkbox",
+            songSetting: false,
+            value: false,
+            category: "Editor Settings",
+        },
+        autosave: {
+            name: "Autosave changes",
+            tooltip: "Autosaves the changes to a song every 5 edits, and when you change page/change song",
+            type: "checkbox",
+            category: "Editor Settings",
+            songSetting: false,
+            value: false,
         },
     }
 }

@@ -12,6 +12,7 @@ import { VsrgScrollableTrackRenderer } from "./VsrgScrollableTrackRenderer"
 
 
 export type VsrgCanvasSizes = {
+    el: DOMRect
     width: number
     height: number
     snapPointWidth: number
@@ -35,7 +36,7 @@ interface VsrgCanvasProps {
     selectedHitObject: VsrgHitObject | null
     onTimestampChange: (timestamp: number) => void
     onSnapPointSelect: (timestamp: number,key: number, type?: 0 | 2) => void
-    dragHitObject: (timestamp: number) => void
+    dragHitObject: (timestamp: number, key?: number) => void
     releaseHitObject: () => void
     selectHitObject: (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => void
 }
@@ -77,6 +78,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             },
             timestamp: 0,
             sizes: {
+                el: new DOMRect(),
                 width: 0,
                 height: 0,
                 snapPointWidth: 0,
@@ -118,6 +120,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if(event === 'updateOrientation') this.calculateSizes()
         if(event === 'snapPointChange') this.calculateSizes()
         if(event === 'tracksChange') this.generateCache()
+        if(event === 'songLoad') this.calculateSizes()
     }
     handleTick = (elapsed: number, sinceLast: number) => {
         if(this.props.isPlaying){
@@ -132,6 +135,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         const wrapperSizes = wrapperRef.current.getBoundingClientRect()
 
         const sizes = {
+            el: wrapperSizes,
             width: wrapperSizes.width,
             height: wrapperSizes.height,
             keyHeight: wrapperSizes.height / VsrgKeysMap[this.props.vsrg.keys].length,
@@ -152,7 +156,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             const { draggedHitObject, timestamp} = this.state
             this.props.onTimestampChange(this.state.timestamp)
             if(!draggedHitObject || timestamp <= 0) return 
-            this.props.dragHitObject(draggedHitObject.timestamp + e.deltaY / 1.2 )
+            this.props.dragHitObject(draggedHitObject.timestamp + e.deltaY / 1.2)
         })
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -172,15 +176,17 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     }
     handleDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if(!this.state.isPressing) return
-        const { previousPosition, draggedHitObject } = this.state
+        const { previousPosition, draggedHitObject, sizes } = this.state
         const { isHorizontal } = this.props
         const deltaOrientation = isHorizontal ? e.clientX : -e.clientY
+        const keyPosition = isHorizontal ? e.clientY - sizes.el.top : e.clientX - sizes.el.left
+        const hoveredPosition = Math.floor(keyPosition / (isHorizontal ? sizes.keyHeight : sizes.keyWidth))
         const delta = previousPosition - deltaOrientation
         const newTotalMovement = this.state.totalMovement + Math.abs(delta)
         if(draggedHitObject !== null){
             const position = draggedHitObject.timestamp - delta
             return this.setState({ previousPosition: deltaOrientation }, 
-                () => this.props.dragHitObject(Math.max(0, position))
+                () => this.props.dragHitObject(Math.max(0, position), hoveredPosition)
             )
         }
         this.setState({ 
@@ -256,7 +262,6 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 >
                     {cache &&
                         <VsrgScrollableTrackRenderer
-                            bpm={vsrg.bpm}
                             tracks={vsrg.tracks}
                             cache={cache}
                             selectedHitObject={this.props.selectedHitObject}

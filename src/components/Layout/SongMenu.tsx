@@ -6,10 +6,11 @@ import { SongFolder, SongFolderContent } from "./Folder";
 import { Folder } from "lib/Folder";
 import { SerializedSong, SongType } from "lib/Songs/Song";
 import { useFolders } from "lib/Hooks/useFolders";
+import { VsrgSong } from "lib/Songs/VsrgSong";
 
 
 
-type SongKinds = SerializedSong | RecordedSong | ComposedSong
+type SongKinds = SerializedSong | RecordedSong | ComposedSong | VsrgSong
 interface SongMenuProps<T> {
     songs: SongKinds[],
     SongComponent: Function,
@@ -29,7 +30,8 @@ export function SongMenu<T>({
     className,
     style,
     baseType,
-    exclude
+    exclude,
+
 }: SongMenuProps<T>) {
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()

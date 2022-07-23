@@ -14,6 +14,8 @@ import { fileService } from 'lib/Services/FileService';
 import { Title } from 'components/Miscellaneous/Title';
 import { DefaultPage } from 'components/Layout/DefaultPage';
 import { songService } from 'lib/Services/SongService';
+import { ComposedSong } from 'lib/Songs/ComposedSong';
+import { RecordedSong } from 'lib/Songs/RecordedSong';
 
 const excludedSongs: SongType[] = ['vsrg']
 export function ErrorPage() {
@@ -40,7 +42,10 @@ export function ErrorPage() {
         try{
             const songName = song.name
             const parsed = songService.parseSong(song)
-            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
+            const converted = [APP_NAME === 'Sky' && (parsed instanceof ComposedSong || parsed instanceof RecordedSong)
+                ? parsed.toOldFormat() 
+                : parsed.serialize()
+            ]
             fileService.downloadSong(converted,`${songName}.${APP_NAME.toLowerCase()}sheet`)
             logger.success("Song downloaded")
         }catch(e){

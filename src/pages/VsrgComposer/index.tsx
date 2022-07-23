@@ -5,7 +5,7 @@ import { SnapPoint, VsrgBottom, VsrgHitObjectType } from "components/VsrgCompose
 import './VsrgComposer.css';
 import { VsrgTop } from "components/VsrgComposer/VsrgTop";
 import { VsrgHitObject, VsrgSong, VsrgSongKeys, VsrgTrack } from "lib/Songs/VsrgSong";
-import { asyncConfirm } from "components/Utility/AsyncPrompts";
+import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts";
 import { logger } from "stores/LoggerStore";
 import { VsrgCanvas } from "components/VsrgComposer/VsrgCanvas";
 import { VsrgComposerSettingsDataType } from "lib/BaseSettings";
@@ -14,6 +14,7 @@ import { SettingUpdate } from "types/SettingsPropriety";
 import { vsrgComposerStore } from "stores/VsrgComposerStore";
 import { AudioPlayer } from "lib/AudioPlayer";
 import { KeyboardProvider } from "lib/Providers/KeyboardProvider";
+import { songsStore } from "stores/SongsStore";
 type VsrgComposerProps = RouteComponentProps & {
 
 }
@@ -32,6 +33,7 @@ interface VsrgComposerState {
 }
 class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     lastTimestamp: number = 0
+    changes: number = 0
     constructor(props: VsrgComposerProps) {
         super(props)
         const settings = settingsService.getVsrgComposerSettings()
@@ -48,6 +50,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             lastCreatedHitObject: null,
             settings
         }
+        this.changes = 0
         this.lastTimestamp = 0
         this.state.vsrg.addTrack("DunDun")
     }
@@ -107,16 +110,16 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrgComposerStore.emitEvent("snapPointChange")
         })
     }
-    selectHitObject = (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => {
+    selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => {
         const selectedType = hitObject.isHeld ? 'hold' : 'tap'
-        if(this.state.selectedType === 'delete' || clickType === 2){
+        if (this.state.selectedType === 'delete' || clickType === 2) {
             this.state.vsrg.removeHitObjectInTrack(trackIndex, hitObject)
-            this.setState( { selectedHitObject: null , vsrg: this.state.vsrg} )
-            return 
+            this.setState({ selectedHitObject: null, vsrg: this.state.vsrg })
+            return
         }
-        this.setState({ 
-            selectedHitObject: hitObject, 
-            selectedTrack: trackIndex, 
+        this.setState({
+            selectedHitObject: hitObject,
+            selectedTrack: trackIndex,
             selectedType
         })
     }
@@ -125,7 +128,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         timestamp = settings.isVertical.value ? timestamp - snapPointDuration : timestamp
         const existing = vsrg.getHitObjectsAt(timestamp, key)
         if (selectedType === 'tap' && type !== 2) {
-            if(existing.some(h => h !== null)) return
+            if (existing.some(h => h !== null)) return
             const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
             this.playHitObject(hitObject, selectedTrack)
             this.setState({ selectedHitObject: hitObject })
@@ -143,7 +146,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 vsrg.setHeldHitObjectTail(selectedTrack, lastCreatedHitObject, timestamp - lastCreatedHitObject.timestamp)
                 this.setState({ lastCreatedHitObject: null, selectedHitObject: lastCreatedHitObject })
             } else {
-                if(existing.some(h => h !== null)) return
+                if (existing.some(h => h !== null)) return
                 const lastCreatedHitObject = vsrg.createHeldHitObject(selectedTrack, timestamp, key)
                 this.setState({ lastCreatedHitObject, selectedHitObject: lastCreatedHitObject })
             }
@@ -153,7 +156,33 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     selectTrack = (selectedTrack: number) => {
         this.setState({ selectedTrack })
     }
-
+    askForSongUpdate = async () => {
+        return await asyncConfirm(`You have unsaved changes to the song: "${this.state.vsrg.name}" do you want to save now?`, false)
+    }
+    createNewSong = async () => {
+        if (this.state.vsrg.name !== "Untitled" && this.changes > 0) {
+            if (await this.askForSongUpdate()) {
+                await this.saveSong()
+            }
+        }
+        const name = await asyncPrompt('Enter song name')
+        if (name) {
+            const vsrg = new VsrgSong(name)
+            vsrg.set({
+                bpm: this.state.settings.bpm.value,
+                keys: this.state.settings.keys.value,
+                pitch: this.state.settings.pitch.value
+            })
+            vsrg.addTrack()
+            const id = await songsStore.addSong(vsrg)
+            vsrg.set({ id })
+            this.setState({ vsrg }, () => {
+                vsrgComposerStore.emitEvent('songLoad')
+                this.calculateSnapPoints()
+                this.syncInstruments()
+            })
+        }
+    }
     calculateSnapPoints = () => {
         const { vsrg, snapPoint } = this.state
         const amount = vsrg.duration / (60000 / vsrg.bpm) * snapPoint
@@ -161,29 +190,30 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const snapPoints = new Array(Math.floor(amount)).fill(0).map((_, i) => i * snapPointDuration)
         this.setState({ snapPoints, snapPointDuration })
     }
-    dragHitObject = (newTimestamp: number) => {
-        const { selectedHitObject } = this.state
-        if(selectedHitObject === null) return
+    dragHitObject = (newTimestamp: number, key?: number) => {
+        const { selectedHitObject, vsrg, settings } = this.state
+        if (selectedHitObject === null) return
         selectedHitObject.timestamp = newTimestamp
-        this.setState({ vsrg: this.state.vsrg })
+        if (key !== undefined && key < settings.keys.value) selectedHitObject.index = key
+        this.setState({ vsrg, selectedHitObject })
     }
     releaseHitObject = () => {
         const { selectedHitObject, snapPoints, vsrg } = this.state
         //find closest snap point
-        if(selectedHitObject === null) return
+        if (selectedHitObject === null) return
         let firstBound = 0
         let secondBound = 0
-        for(let i = 0; i < snapPoints.length; i++){
-            if(selectedHitObject.timestamp >= snapPoints[i]) firstBound = snapPoints[i]
-            if(selectedHitObject.timestamp <= snapPoints[i]){
+        for (let i = 0; i < snapPoints.length; i++) {
+            if (selectedHitObject.timestamp >= snapPoints[i]) firstBound = snapPoints[i]
+            if (selectedHitObject.timestamp <= snapPoints[i]) {
                 secondBound = snapPoints[i]
                 break
             }
         }
         //check if timestamp is closer to first or second bound
-        if(Math.abs(selectedHitObject.timestamp - firstBound) < Math.abs(selectedHitObject.timestamp - secondBound)){
+        if (Math.abs(selectedHitObject.timestamp - firstBound) < Math.abs(selectedHitObject.timestamp - secondBound)) {
             selectedHitObject.timestamp = firstBound
-        }else{
+        } else {
             selectedHitObject.timestamp = secondBound
         }
         const tracks = vsrg.getHitObjectsBetween(selectedHitObject.timestamp, selectedHitObject.timestamp + selectedHitObject.holdDuration, selectedHitObject.index)
@@ -229,22 +259,56 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             selectedTrack: Math.max(0, index - 1)
         }, () => vsrgComposerStore.emitEvent("tracksChange"))
     }
-    onSongOpen = (vsrg: VsrgSong) => {
-        this.setState({ vsrg })
+    onSongOpen = async (song: VsrgSong) => {
+        const { settings, vsrg } = this.state
+        if (this.changes !== 0) {
+            let confirm = settings.autosave.value && vsrg.name !== "Untitled"
+            if (!confirm) {
+                confirm = await asyncConfirm(`You have unsaved changes to the song: "${vsrg.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+            }
+            if (confirm) {
+                await this.saveSong()
+            }
+        }
+        settings.bpm.value = song.bpm
+        settings.keys.value = song.keys
+        settings.pitch.value = song.pitch
+        this.updateSettings()
+        this.setState({
+            vsrg: song,
+            selectedTrack: 0,
+            selectedHitObject: null,
+            lastCreatedHitObject: null,
+        }, () => {
+            vsrgComposerStore.emitEvent('songLoad')
+            this.calculateSnapPoints()
+            this.syncInstruments()
+        })
     }
     saveSong = async () => {
-
+        const { vsrg } = this.state
+        const name = vsrg.name !== 'Untitled' ? vsrg.name : await asyncPrompt('Enter song name')
+        if (name === null) return
+        vsrg.set({ name })
+        if (vsrg.id === null) {
+            const id = await songsStore.addSong(vsrg)
+            vsrg.set({ id })
+        } else {
+            songsStore.updateSong(vsrg)
+        }
     }
     selectType = (selectedType: VsrgHitObjectType) => {
-        this.setState({ selectedType })
+        this.setState({ selectedType, lastCreatedHitObject: null })
     }
     render() {
         const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType } = this.state
         return <>
             <VsrgMenu
+                hasChanges={this.changes > 0}
                 onSongOpen={this.onSongOpen}
                 onSave={this.saveSong}
                 settings={settings}
+                onCreateSong={this.createNewSong}
                 handleSettingChange={this.handleSettingChange}
             />
             <div className="vsrg-page">
@@ -276,6 +340,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
 
                 </VsrgTop>
                 <VsrgBottom
+                    vsrg={vsrg}
                     isPlaying={isPlaying}
                     togglePlay={this.togglePlay}
                     selectedSnapPoint={snapPoint}

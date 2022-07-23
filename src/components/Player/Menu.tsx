@@ -41,6 +41,7 @@ import { useSongs } from 'lib/Hooks/useSongs';
 import useClickOutside from 'lib/Hooks/useClickOutside';
 import { fileService } from 'lib/Services/FileService';
 import { songService } from 'lib/Services/SongService';
+import { RecordedOrComposed } from 'types/SongTypes';
 
 interface MenuProps {
     functions: {
@@ -420,10 +421,13 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     useEffect(() => {
         setSongName(data.name)
     }, [data.name])
+    if(data.type === 'vsrg') return <div className='row'>
+        Invalid song
+    </div>
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             if (isRenaming) return
-            playerStore.play(songService.parseSong(data), 0)
+            playerStore.play(songService.parseSong(data) as RecordedOrComposed, 0)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -447,7 +451,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         <div className="song-buttons-wrapper">
             <SongActionButton
                 onClick={() => {
-                    const parsed = songService.parseSong(data)
+                    const parsed = songService.parseSong(data) as RecordedOrComposed
                     playerStore.practice(parsed, 0, parsed.notes.length)
                     toggleMenu(false)
                 }}
@@ -459,7 +463,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
             </SongActionButton>
 
             <SongActionButton onClick={() => {
-                const parsed = songService.parseSong(data)
+                const parsed = songService.parseSong(data) as RecordedOrComposed
                 playerStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
 
@@ -506,11 +510,17 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(songService.parseSong(data))}>
+                <FloatingDropdownRow onClick={() => {
+                    const song = songService.parseSong(data) as RecordedOrComposed
+                    downloadSong(song)
+                }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(songService.parseSong(data).toMidi())}>
+                <FloatingDropdownRow onClick={() => {
+                    const song = songService.parseSong(data) as RecordedOrComposed
+                    downloadSong(song.toMidi())
+                }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download MIDI' />
                 </FloatingDropdownRow>

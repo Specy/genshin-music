@@ -2,6 +2,7 @@ import { APP_NAME } from "appConfig"
 import { ComposedSong } from "lib/Songs/ComposedSong"
 import { RecordedSong } from "lib/Songs/RecordedSong"
 import { SerializedSong, Song } from "lib/Songs/Song"
+import { VsrgSong } from "lib/Songs/VsrgSong"
 import { getSongType } from "lib/Utilities"
 import { DbInstance } from "./Database/Database"
 
@@ -68,7 +69,7 @@ class SongService{
         return this.songCollection.remove({})
     }
     //TODO not sure this is the best place for this
-    parseSong(song: any): ComposedSong | RecordedSong {
+    parseSong(song: any): ComposedSong | RecordedSong | VsrgSong{
         song = Array.isArray(song) ? song[0] : song
         const type = getSongType(song)
         if (type === "none") {
@@ -89,9 +90,11 @@ class SongService{
         if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
             if (song.data?.isComposedVersion === true || song.type === 'composed') return ComposedSong.deserialize(song).toGenshin()
             if (song.data?.isComposedVersion === false|| song.type === 'recorded') return RecordedSong.deserialize(song).toGenshin()
+            if (song.type === 'vsrg') return VsrgSong.deserialize(song).toGenshin()
         }
         if (type === 'newComposed') return ComposedSong.deserialize(song)
         if (type === 'newRecorded') return RecordedSong.deserialize(song)
+        if(type === 'vsrg') return VsrgSong.deserialize(song)
         throw new Error("Error Invalid song")
     }
     removeSong(id: string){

@@ -38,7 +38,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                     pointerdown={(e) => {
                         selectHitObject(hitObject, trackIndex, e.data.buttons)
                     }}
-                    key={hitObject.timestamp + hitObject.index}
+                    key={hitObject.renderId}
                 >
                     {isHorizontal
                         ? <Sprite
@@ -80,7 +80,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                         />
                     }
                 </Container>
-                : <Fragment key={hitObject.timestamp + hitObject.index}>
+                : <Fragment key={hitObject.renderId}>
                     {hitObject === selectedHitObject &&
                         <Sprite
                             texture={cache.getSelectionRingsCache(track.color)}

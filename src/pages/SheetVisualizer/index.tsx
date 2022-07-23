@@ -2,7 +2,7 @@ import './SheetVisualizer.css'
 
 import { useState } from 'react'
 import { APP_NAME } from 'appConfig'
-import { getNoteText } from 'lib/Utilities'
+import { getNoteText, isComposedOrRecorded } from 'lib/Utilities'
 import Switch from 'components/Switch'
 import Analytics from 'lib/Analytics'
 import { RecordedSong } from 'lib/Songs/RecordedSong'
@@ -16,6 +16,7 @@ import { Chunk } from 'lib/Songs/VisualSong'
 import { Title } from 'components/Miscellaneous/Title'
 import { DefaultPage } from 'components/Layout/DefaultPage'
 import { songService } from 'lib/Services/SongService'
+import { ComposedSong } from 'lib/Songs/ComposedSong'
 
 const THRESHOLDS = {
     joined: 50,
@@ -48,7 +49,9 @@ export default function SheetVisualizer() {
         setCurrentSong(song)
         try {
             const temp = songService.parseSong(song)
-            const lostReference = temp instanceof RecordedSong ? temp : temp.toRecordedSong()
+            const isValid = isComposedOrRecorded(temp)
+            if(!isValid) return
+            const lostReference = temp instanceof RecordedSong ? temp : (temp as ComposedSong).toRecordedSong()
             const notes = lostReference.notes
             const chunks: Chunk[] = []
             let previousChunkDelay = 0

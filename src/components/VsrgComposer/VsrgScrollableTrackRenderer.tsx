@@ -12,7 +12,6 @@ interface VsrgScrollableTrackRendererProps {
     cache: VsrgCanvasCache
     sizes: VsrgCanvasSizes
     keys: number
-    bpm: number
     colors: VsrgCanvasColors
     snapPoint: number
     snapPoints: number[]
@@ -23,7 +22,7 @@ interface VsrgScrollableTrackRendererProps {
     onSnapPointSelect: (timestamp: number, key: number, type?: 0 | 2) => void
     selectHitObject: (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => void
 }
-export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, bpm, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject}: VsrgScrollableTrackRendererProps) {
+export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject}: VsrgScrollableTrackRendererProps) {
     const lowerBound = timestamp - cache.textures.snapPoints.size
     const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) + cache.textures.snapPoints.size
     function handleSnapPointClick(event: InteractionEvent){

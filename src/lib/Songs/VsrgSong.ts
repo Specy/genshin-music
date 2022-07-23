@@ -3,7 +3,7 @@ import { SerializedSong, Song } from "./Song";
 import { InstrumentData, SerializedInstrumentData } from "./SongClasses";
 
 export type VsrgSongKeys = 4 | 6 | 8
-type SerializedVsrgSong = SerializedSong & {
+export type SerializedVsrgSong = SerializedSong & {
     type: "vsrg"
     tracks: SerializedVsrgTrack[]
     keys: VsrgSongKeys
@@ -19,9 +19,14 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     static deserialize(obj: SerializedVsrgSong): VsrgSong {
         const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
         song.tracks = obj.tracks.map(track => VsrgTrack.deserialize(track))
+        song.keys = obj.keys
         return song
     }
 
+    toGenshin() {
+        return this
+        //TODO implement
+    }
     startPlayback(timestamp: number){
         this.tracks.forEach(track => track.startPlayback(timestamp))
     }
@@ -232,16 +237,19 @@ type SerializedVsrgHitObject = [
     holdDuration: number,
     notes: number[]
 ]
+
 export class VsrgHitObject{
     index: number
     isHeld: boolean = false
     timestamp: number
     notes: number[] = []
     holdDuration: number = 0
-
+    renderId: number = 0
+    static globalRenderId: number = 0
     constructor(index:number, timestamp: number) {
         this.index = index
         this.timestamp = timestamp
+        this.renderId = VsrgHitObject.globalRenderId++
     }
     static deserialize(data: SerializedVsrgHitObject): VsrgHitObject {
         const hitObject = new VsrgHitObject(data[0], data[1])
