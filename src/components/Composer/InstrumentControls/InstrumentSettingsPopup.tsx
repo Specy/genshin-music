@@ -1,4 +1,4 @@
-import { Pitch, PITCHES } from "appConfig"
+import { Pitch } from "appConfig"
 import { AppButton } from "components/Inputs/AppButton"
 import { PitchSelect } from "components/Inputs/PitchSelect"
 import { HelpTooltip } from "components/Utility/HelpTooltip"

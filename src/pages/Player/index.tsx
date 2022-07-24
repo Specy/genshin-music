@@ -9,12 +9,11 @@ import { MainPageSettingsDataType } from "lib/BaseSettings"
 import Instrument from 'lib/Instrument';
 import AudioRecorder from 'lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts"
-import { Pitch } from "appConfig"
 import Analytics from 'lib/Analytics';
 import { withRouter } from 'react-router-dom'
 import { logger } from 'stores/LoggerStore';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { InstrumentName, NoteNameType } from 'types/GeneralTypes';
+import { InstrumentName } from 'types/GeneralTypes';
 import { AppButton } from 'components/Inputs/AppButton';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { AudioProvider } from 'lib/Providers/AudioProvider';

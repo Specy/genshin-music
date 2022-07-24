@@ -26,6 +26,7 @@ export type VsrgCanvasColors = {
     secondary: [string, number]
     lineColor: [string, number]
     lineColor_10: [string, number]
+    accent: [string, number]
 }
 interface VsrgCanvasProps {
     isHorizontal: boolean
@@ -64,7 +65,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     wrapperRef = createRef<HTMLDivElement>()
     stageRef = createRef<any>()
     toDispose: (() => void)[] = []
-    throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => {}, 48)
+    throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => {}, 144)
     constructor(props: VsrgCanvasProps) {
         super(props)
         this.state = {
@@ -75,6 +76,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 secondary: ['#ffffff', 0xffffff],
                 lineColor: ['#ffffff', 0xffffff],
                 lineColor_10: ['#ffffff', 0xffffff],
+                accent: ['#ffffff', 0xffffff],
             },
             timestamp: 0,
             sizes: {
@@ -222,6 +224,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         const bg = bg_plain.darken(0.15)
         const bg_10 = bg.darken(0.1)
         const secondary = theme.get('secondary')
+        const accent = theme.get('accent')
         this.setState({
             canvasColors: {
                 background_plain: [bg_plain.hex(), bg_plain.rgbNumber()],
@@ -230,6 +233,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 secondary: [secondary.hex(), secondary.rgbNumber()],
                 lineColor: [bg_line.hex(), bg_line.rgbNumber()],
                 lineColor_10: [bg_line_10.hex(), bg_line_10.rgbNumber()],
+                accent: [accent.hex(), accent.rgbNumber()],
             }
         }, this.generateCache)
     }

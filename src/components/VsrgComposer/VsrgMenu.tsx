@@ -1,5 +1,4 @@
 import { AppButton } from "components/Inputs/AppButton";
-import { SongActionButton } from "components/Inputs/SongActionButton";
 import MenuPanel from "components/Layout/MenuPanel";
 import { SongMenu } from "components/Layout/SongMenu";
 import { MenuItem } from "components/Miscellaneous/MenuItem";
@@ -21,7 +20,7 @@ import { songService } from "lib/Services/SongService";
 import { SerializedSong } from "lib/Songs/Song";
 import { VsrgSong } from "lib/Songs/VsrgSong";
 import { memo, useCallback, useEffect, useState } from "react";
-import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaRegCircle, FaSave, FaTimes, FaTrash } from "react-icons/fa";
+import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import HomeStore from "stores/HomeStore";
 import { songsStore } from "stores/SongsStore";
 import { ThemeStoreClass } from "stores/ThemeStore";

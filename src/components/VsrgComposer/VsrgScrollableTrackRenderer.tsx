@@ -1,4 +1,5 @@
 import { Container, Sprite } from "@inlet/react-pixi";
+import { PLAY_BAR_OFFSET } from "appConfig";
 import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
 import { InteractionEvent } from "pixi.js";
 
@@ -38,8 +39,8 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, snapPoint, ti
         }
     }
     return <Container
-        x={isHorizontal ? -timestamp + 120 : 0}
-        y={isHorizontal ? 0 : timestamp - 120}
+        x={isHorizontal ? -timestamp + PLAY_BAR_OFFSET : 0}
+        y={isHorizontal ? 0 : timestamp - PLAY_BAR_OFFSET}
         interactive={true}
         interactiveChildren={true}
     >
@@ -53,7 +54,7 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, snapPoint, ti
                 x={isHorizontal ? sp : 0}
                 y={isHorizontal ? 0 : -(sp - sizes.height)}
                 width={isHorizontal ? cache.textures.snapPoints.size : sizes.width}
-                height={isHorizontal ? sizes.height : cache.textures.snapPoints.size}
+                height={isHorizontal ? sizes.height: cache.textures.snapPoints.size}
                 texture={i % snapPoint
                     ? cache.textures.snapPoints.small!
                     : cache.textures.snapPoints.large!

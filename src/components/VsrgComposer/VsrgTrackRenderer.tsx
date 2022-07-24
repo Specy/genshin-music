@@ -1,4 +1,5 @@
 import { Container, Sprite } from "@inlet/react-pixi";
+import { PLAY_BAR_OFFSET } from "appConfig";
 import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
@@ -21,8 +22,8 @@ interface VsrgTrackRendererProps {
 export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex, timestamp }: VsrgTrackRendererProps) {
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys
-    const lowerBound = timestamp - cache.textures.snapPoints.size
-    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) + cache.textures.snapPoints.size
+    const lowerBound = timestamp - PLAY_BAR_OFFSET -  cache.textures.sizes.hitObject
+    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) - PLAY_BAR_OFFSET + cache.textures.sizes.hitObject
     return <>
         {track.hitObjects.map(hitObject => {
             if(lowerBound > hitObject.timestamp + hitObject.holdDuration || hitObject.timestamp > upperBound) return null

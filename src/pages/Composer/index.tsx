@@ -26,7 +26,7 @@ import HomeStore from 'stores/HomeStore';
 import { logger } from 'stores/LoggerStore';
 import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { NoteNameType, Pages } from 'types/GeneralTypes';
+import { Pages } from 'types/GeneralTypes';
 import "./Composer.css"
 import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';

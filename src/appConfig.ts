@@ -77,7 +77,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "DunDun",
         "HandPan",
     ] as const
-
+const PLAY_BAR_OFFSET = 200
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const BaseinstrumentsData = {
     Lyre: {
@@ -496,7 +496,8 @@ export {
     NOTE_MAP_TO_MIDI,
     MIDI_BOUNDS,
     IS_TAURI,
-    TAURI
+    TAURI,
+    PLAY_BAR_OFFSET
 }
 export type {
     Pitch
