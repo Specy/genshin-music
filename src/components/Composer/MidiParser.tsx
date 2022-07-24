@@ -8,7 +8,7 @@ import { PITCHES, Pitch } from 'appConfig'
 import { FaArrowDown, FaArrowUp, FaEllipsisH } from 'react-icons/fa'
 import useDebounce from 'lib/Hooks/useDebounce'
 import { logger } from 'stores/LoggerStore'
-import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore'
+import { ThemeProvider, ThemeStore } from 'stores/ThemeStore'
 import { observe } from 'mobx'
 import Switch from 'components/Switch'
 import { NoteLayer } from 'lib/Layer'
@@ -49,7 +49,7 @@ interface MidiImportState {
     totalNotes: number
     includeAccidentals: boolean
     ignoreEmptytracks: boolean
-    theme: ThemeStoreClass
+    theme: ThemeStore
 }
 
 class MidiImport extends Component<MidiImportProps, MidiImportState> {
@@ -361,7 +361,7 @@ interface TrackProps {
     index: number
     instruments: InstrumentData[]
     onChange: (index: number, data: Partial<CustomTrack>) => void
-    theme: ThemeStoreClass
+    theme: ThemeStore
 }
 
 function TrackInfo({ data, index, onChange, theme, instruments }: TrackProps) {

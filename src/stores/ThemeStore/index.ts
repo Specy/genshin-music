@@ -49,7 +49,7 @@ const defaultThemes: Theme[] = [
     ThemeSettings as Theme,
     ...baseThemes
 ]
-export class ThemeStoreClass {
+export class ThemeStore {
     state: Theme
     baseTheme: Theme
     constructor(baseTheme: Theme) {
@@ -189,7 +189,7 @@ export class ThemeStoreClass {
     }
 }
 
-export const ThemeProvider = new ThemeStoreClass(defaultThemes[0])
+export const ThemeProvider = new ThemeStore(defaultThemes[0])
 
 export {
     defaultThemes

@@ -43,7 +43,8 @@ export class SongsStore{
         await songService.updateSong(song.id!, song.serialize())
         this.sync()
     }
-    getSongById = async(id: string) => {
+    getSongById = async(id: string | null) => {
+        if(id === null) return null
         return await songService.getSongById(id)
     }
     addSongToFolder = async (song: SerializedSong, folderId: string | null) => {

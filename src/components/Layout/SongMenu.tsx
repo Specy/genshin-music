@@ -48,7 +48,6 @@ export function SongMenu<T>({
     const [folders] = useFolders(filteredSongs)
     const [theme] = useTheme()
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
-
     return <div className={className} style={style}>
         {((!exclude?.includes('composed') ?? true) && noFolderComposed) &&
             <SongFolder
@@ -165,7 +164,7 @@ export function SongMenu<T>({
                         )}
                     </SongFolderContent>
                 }
-                {composed.length === 0 && recorded.length === 0 &&
+                {(composed.length === 0 && recorded.length === 0 && vsrg.length === 0) &&
                     <div style={{ padding: '0.7rem', paddingTop: "0", fontSize: '0.9rem' }}>
                         The folder is empty
                     </div>

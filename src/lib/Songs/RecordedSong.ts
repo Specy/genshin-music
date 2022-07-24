@@ -22,6 +22,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     instruments: InstrumentData[]
     notes: RecordedNote[]
     timestamp: number
+    private lastPlayedNote = -1
     constructor(name: string, notes?: RecordedNote[], instruments: InstrumentName[] = []) {
         super(name, 2, 'recorded', {
             isComposed: false,
@@ -81,6 +82,25 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             notes: this.notes.map(note => note.serialize()),
             id: this.id
         }
+    }
+    startPlayback(timestamp:number){
+        this.lastPlayedNote = -1
+        for(let i = 0; i < this.notes.length; i++){
+            if(this.notes[i].time >= timestamp) break
+            this.lastPlayedNote = i
+        }
+    }
+    tickPlayback(timestamp: number){
+        const surpassed = []
+        for(let i = this.lastPlayedNote + 1; i < this.notes.length; i++){
+            if(this.notes[i].time <= timestamp) {
+                surpassed.push(this.notes[i])
+                this.lastPlayedNote = i
+                continue
+            }
+            break
+        }
+        return surpassed
     }
     addInstrument = (name: InstrumentName) => {
         const newInstrument: InstrumentData = new InstrumentData({ name })

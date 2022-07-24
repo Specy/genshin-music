@@ -1,11 +1,11 @@
 import { ChangeEvent } from "react"
-import { ThemeStoreClass } from "stores/ThemeStore"
+import { ThemeStore } from "stores/ThemeStore"
 import { InstrumentName } from "types/GeneralTypes"
 import { SettingsInstrument, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface InstrumentInputProps{
     data: SettingsInstrument,
-    theme: ThemeStoreClass,
+    theme: ThemeStore,
     volume: number, 
     instrument: string,
     objectKey: SettingUpdateKey,

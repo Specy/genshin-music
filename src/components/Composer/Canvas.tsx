@@ -335,7 +335,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     options={{
                         backgroundAlpha: 0,
                         autoDensity: true,
-                        resolution: window.devicePixelRatio || 1.4
+                        resolution: window?.devicePixelRatio || 1.4
                     }}
                     ref={this.notesStageRef}
                 >
@@ -405,7 +405,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         options={{
                             backgroundAlpha: 0,
                             autoDensity: true,
-                            resolution: window.devicePixelRatio || 1
+                            resolution: window?.devicePixelRatio || 1
                         }}
                         raf={false}
                         ref={this.breakpointsStageRef}

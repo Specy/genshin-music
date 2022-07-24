@@ -5,7 +5,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus, FaVolumeMute } from "react-icons/fa";
 import { BiSquareRounded } from "react-icons/bi";
 
-import { ThemeStoreClass } from "stores/ThemeStore";
+import { ThemeStore } from "stores/ThemeStore";
 import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
 
 
@@ -79,7 +79,7 @@ export const InstrumentControls = memo(_InstrumentControls, (p, n) => {
 
 interface InstrumentButtonProps {
     instrument: InstrumentData
-    theme: ThemeStoreClass
+    theme: ThemeStore
     isSelected: boolean,
     onClick: () => void
     onEditClick: () => void

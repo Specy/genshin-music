@@ -14,7 +14,7 @@ import { ComposerSettingsDataType } from 'lib/BaseSettings';
 import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
 import { Pages } from 'types/GeneralTypes';
 import { useTheme } from 'lib/Hooks/useTheme';
-import { ThemeStoreClass } from 'stores/ThemeStore';
+import { ThemeStore } from 'stores/ThemeStore';
 import { hasTooltip, Tooltip } from 'components/Utility/Tooltip';
 import { HelpTooltip } from 'components/Utility/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/Utility/FloatingDropdown';
@@ -263,7 +263,7 @@ function Menu({ data, functions }: MenuProps) {
 
 interface SongRowProps {
     data: SerializedSong
-    theme: ThemeStoreClass
+    theme: ThemeStore
     folders: Folder[]
     functions: {
         removeSong: (name: string, id: string) => void

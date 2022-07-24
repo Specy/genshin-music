@@ -1,14 +1,16 @@
 import { Stage } from "@inlet/react-pixi"
 import { subscribeTheme } from "lib/Hooks/useTheme"
+import { RecordedSong } from "lib/Songs/RecordedSong"
 import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong"
 import { ThrottledEventLoop } from "lib/ThrottledEventLoop"
 import { Application } from "pixi.js"
 import React, { Component, createRef } from "react"
-import { ThemeProvider, ThemeStoreClass } from "stores/ThemeStore"
+import { ThemeProvider, ThemeStore } from "stores/ThemeStore"
 import { VsrgComposerEvents, vsrgComposerStore } from "stores/VsrgComposerStore"
 import { VsrgCanvasCache } from "./VsrgComposerCache"
 import { VsrgKeysRenderer } from "./VsrgKeysRenderer"
 import { VsrgScrollableTrackRenderer } from "./VsrgScrollableTrackRenderer"
+import { VsrgTimelineRenderer } from "./VsrgTimelineRenderer"
 
 
 export type VsrgCanvasSizes = {
@@ -18,6 +20,7 @@ export type VsrgCanvasSizes = {
     snapPointWidth: number
     keyHeight: number
     keyWidth: number
+    timelineSize: number
 }
 export type VsrgCanvasColors = {
     background_plain: [string, number]
@@ -35,11 +38,12 @@ interface VsrgCanvasProps {
     snapPoint: number
     snapPoints: number[]
     selectedHitObject: VsrgHitObject | null
+    audioSong: RecordedSong | null
     onTimestampChange: (timestamp: number) => void
-    onSnapPointSelect: (timestamp: number,key: number, type?: 0 | 2) => void
+    onSnapPointSelect: (timestamp: number, key: number, type?: 0 | 2) => void
     dragHitObject: (timestamp: number, key?: number) => void
     releaseHitObject: () => void
-    selectHitObject: (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => void
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => void
 }
 interface VsrgCanvasState {
     canvasColors: VsrgCanvasColors
@@ -65,7 +69,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     wrapperRef = createRef<HTMLDivElement>()
     stageRef = createRef<any>()
     toDispose: (() => void)[] = []
-    throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => {}, 144)
+    throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => { }, 48)
     constructor(props: VsrgCanvasProps) {
         super(props)
         this.state = {
@@ -86,6 +90,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 snapPointWidth: 0,
                 keyHeight: 0,
                 keyWidth: 0,
+                timelineSize: 0,
             },
             draggedHitObject: null,
             isPressing: false,
@@ -105,7 +110,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             callback: this.handleEvent,
             id: "vsrg-canvas-color-change"
         })
-        this.toDispose.push(() => vsrgComposerStore.removeEventListener("ALL",{id: "vsrg-canvas-color-change"}))
+        this.toDispose.push(() => vsrgComposerStore.removeEventListener("ALL", { id: "vsrg-canvas-color-change" }))
         this.calculateSizes()
         this.throttledEventLoop.setCallback(this.handleTick)
         this.throttledEventLoop.start()
@@ -117,15 +122,15 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         this.throttledEventLoop.stop()
     }
     handleEvent = (event: VsrgComposerEvents) => {
-        if(event === 'colorChange') this.generateCache()
-        if(event === 'updateKeys') this.calculateSizes()
-        if(event === 'updateOrientation') this.calculateSizes()
-        if(event === 'snapPointChange') this.calculateSizes()
-        if(event === 'tracksChange') this.generateCache()
-        if(event === 'songLoad') this.calculateSizes()
+        if (event === 'colorChange') this.generateCache()
+        if (event === 'updateKeys') this.calculateSizes()
+        if (event === 'updateOrientation') this.calculateSizes()
+        if (event === 'snapPointChange') this.calculateSizes()
+        if (event === 'tracksChange') this.generateCache()
+        if (event === 'songLoad') this.calculateSizes()
     }
     handleTick = (elapsed: number, sinceLast: number) => {
-        if(this.props.isPlaying){
+        if (this.props.isPlaying) {
             const timestamp = this.state.timestamp + sinceLast
             this.props.onTimestampChange(timestamp)
             this.setState({ timestamp })
@@ -136,66 +141,71 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if (!wrapperRef.current) return console.log("no wrapper")
         const wrapperSizes = wrapperRef.current.getBoundingClientRect()
 
-        const sizes = {
+        const sizes: VsrgCanvasSizes = {
             el: wrapperSizes,
             width: wrapperSizes.width,
             height: wrapperSizes.height,
             keyHeight: wrapperSizes.height / VsrgKeysMap[this.props.vsrg.keys].length,
             keyWidth: wrapperSizes.width / VsrgKeysMap[this.props.vsrg.keys].length,
             snapPointWidth: (60000 / this.props.vsrg.bpm) / this.props.snapPoint,
+            timelineSize: 40
         }
         const canvas = wrapperRef.current.querySelector('canvas')
-        if(canvas){
+        if (canvas) {
             canvas.style.width = `${sizes.width}px`
             canvas.style.height = `${sizes.height}px`
         }
         this.setState({ sizes }, this.generateCache)
     }
     handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+        const max = Math.max(0, this.state.timestamp + e.deltaY / 1.2)
+        const min = Math.min(max, this.props.vsrg.duration)
         this.setState({
-            timestamp: Math.max(0, this.state.timestamp + e.deltaY / 1.2 )
+            timestamp: min
         }, () => {
-            const { draggedHitObject, timestamp} = this.state
+            const { draggedHitObject, timestamp } = this.state
             this.props.onTimestampChange(this.state.timestamp)
-            if(!draggedHitObject || timestamp <= 0) return 
+            if (!draggedHitObject || timestamp <= 0) return
             this.props.dragHitObject(draggedHitObject.timestamp + e.deltaY / 1.2)
         })
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        this.setState({ 
+        this.setState({
             isPressing: true,
             previousPosition: this.props.isHorizontal ? e.clientX : -e.clientY
         })
     }
     setIsNotDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        if(!this.state.isPressing) return
+        if (!this.state.isPressing) return
         const draggedHitObject = this.state.draggedHitObject
-        this.setState({ isPressing: false,  totalMovement: 0, draggedHitObject: null}, () => {
+        this.setState({ isPressing: false, totalMovement: 0, draggedHitObject: null }, () => {
             //dumbass idk how to make otherwise
-            if(draggedHitObject) this.props.releaseHitObject()
+            if (draggedHitObject) this.props.releaseHitObject()
             setTimeout(() => this.setState({ preventClick: false }), 200)
         })
     }
     handleDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        if(!this.state.isPressing) return
-        const { previousPosition, draggedHitObject, sizes } = this.state
-        const { isHorizontal } = this.props
+        if (!this.state.isPressing) return
+        const { previousPosition, draggedHitObject, sizes, timestamp } = this.state
+        const { isHorizontal, vsrg } = this.props
         const deltaOrientation = isHorizontal ? e.clientX : -e.clientY
         const keyPosition = isHorizontal ? e.clientY - sizes.el.top : e.clientX - sizes.el.left
         const hoveredPosition = Math.floor(keyPosition / (isHorizontal ? sizes.keyHeight : sizes.keyWidth))
         const delta = previousPosition - deltaOrientation
         const newTotalMovement = this.state.totalMovement + Math.abs(delta)
-        if(draggedHitObject !== null){
+        if (draggedHitObject !== null) {
             const position = draggedHitObject.timestamp - delta
-            return this.setState({ previousPosition: deltaOrientation }, 
+            return this.setState({ previousPosition: deltaOrientation },
                 () => this.props.dragHitObject(Math.max(0, position), hoveredPosition)
             )
         }
-        this.setState({ 
+        const max = Math.max(0, timestamp + delta)
+        const min = Math.min(max, vsrg.duration)
+        this.setState({
             previousPosition: deltaOrientation,
             preventClick: newTotalMovement > 50,
             totalMovement: newTotalMovement,
-            timestamp: Math.max(0, this.state.timestamp + delta)
+            timestamp: min
         }, () => this.props.onTimestampChange(this.state.timestamp))
     }
     generateCache = () => {
@@ -210,14 +220,14 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             isHorizontal: this.props.isHorizontal
         })
         this.setState({ cache: newCache }, () => {
-            cache?.destroy()  
+            cache?.destroy()
         })
     }
     selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => {
-        if(clickType !== 2) this.setState({ draggedHitObject: hitObject })
+        if (clickType !== 2) this.setState({ draggedHitObject: hitObject })
         this.props.selectHitObject(hitObject, trackIndex, clickType)
     }
-    handleThemeChange = (theme: ThemeStoreClass) => {
+    handleThemeChange = (theme: ThemeStore) => {
         const bg_plain = theme.get('primary')
         const bg_line = theme.getText('primary')
         const bg_line_10 = bg_line.darken(0.5).desaturate(1)
@@ -239,8 +249,8 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     }
 
     render() {
-        const { canvasColors, sizes, cache } = this.state
-        const { vsrg, isHorizontal } = this.props
+        const { canvasColors, sizes, cache, timestamp, preventClick } = this.state
+        const { vsrg, isHorizontal, audioSong, snapPoint, snapPoints, selectedHitObject } = this.props
         return <div
             className="vsrg-top-canvas-wrapper"
             ref={this.wrapperRef}
@@ -261,18 +271,18 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                     options={{
                         backgroundColor: canvasColors.background[1],
                         autoDensity: false,
-                        resolution: window.devicePixelRatio || 1,
+                        resolution: window?.devicePixelRatio || 1,
                     }}
                 >
                     {cache &&
                         <VsrgScrollableTrackRenderer
                             tracks={vsrg.tracks}
                             cache={cache}
-                            selectedHitObject={this.props.selectedHitObject}
-                            snapPoint={this.props.snapPoint}
-                            snapPoints={this.props.snapPoints}
-                            timestamp={this.state.timestamp}
-                            preventClick={this.state.preventClick}
+                            selectedHitObject={selectedHitObject}
+                            snapPoint={snapPoint}
+                            snapPoints={snapPoints}
+                            timestamp={timestamp}
+                            preventClick={preventClick}
                             sizes={sizes}
                             colors={canvasColors}
                             keys={vsrg.keys}
@@ -288,6 +298,19 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                         sizes={sizes}
                         colors={canvasColors}
                     />
+                    {cache &&
+                        <VsrgTimelineRenderer
+                            cache={cache}
+                            timestamp={timestamp}
+                            isHorizontal={isHorizontal}
+                            song={vsrg}
+                            audioSong={audioSong}
+                            sizes={sizes}
+                            colors={canvasColors}
+                        />
+
+                    }
+
                 </Stage>
             }
         </div>

@@ -20,6 +20,9 @@ export type VsrgComposerCanvasCache = {
         small: Texture | null
         large: Texture | null
     }
+    timeline: {
+        square: Texture | null
+    }
     sizes: {
         hitObject: number
         trail: number
@@ -63,6 +66,9 @@ export class VsrgCanvasCache {
                 small: null,
                 large: null
             },
+            timeline: {
+                square: null
+            },
             sizes: {
                 hitObject: 0,
                 trail: 0
@@ -84,10 +90,12 @@ export class VsrgCanvasCache {
     }
     generate() {
         const { app } = this
-        this.generateSnapPoints(app!)
-        this.generateTrackCache(app!)
-        this.generateTrails(app!)
-        this.generateSelectionRings(app!)
+        if (!app) return
+        this.generateSnapPoints(app)
+        this.generateTrackCache(app)
+        this.generateTrails(app)
+        this.generateSelectionRings(app)
+        this.generateOthers(app)
     }
 
     getHitObjectCache(color: string) {
@@ -102,6 +110,20 @@ export class VsrgCanvasCache {
     getSelectionRingsCache(color: string) {
         return this.textures.selectionRings[color] || this.textures.selectionRings['#FF0000']
     }
+
+    generateOthers(app: Application) {
+        const square = new Graphics()
+        square.beginFill(this.colors.background_10[1])
+        square.drawRect(0,0, this.sizes.width, this.sizes.timelineSize)
+        const squareTexture = app.renderer.generateTexture(square, {
+            resolution: 1,
+            scaleMode: SCALE_MODES.LINEAR,
+            region: new Rectangle(0, 0, this.sizes.width, this.sizes.timelineSize)
+        })
+        this.textures.timeline.square = squareTexture
+    }
+
+
     generateTrails(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']

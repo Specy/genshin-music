@@ -7,11 +7,13 @@ export type SerializedVsrgSong = SerializedSong & {
     type: "vsrg"
     tracks: SerializedVsrgTrack[]
     keys: VsrgSongKeys
+    audioSongId: string | null
 }
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
     keys: VsrgSongKeys = 4
     duration: number = 10000
+    audioSongId: string | null = null
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -19,10 +21,14 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     static deserialize(obj: SerializedVsrgSong): VsrgSong {
         const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
         song.tracks = obj.tracks.map(track => VsrgTrack.deserialize(track))
+        song.audioSongId = obj.audioSongId
         song.keys = obj.keys
         return song
     }
 
+    setAudioSong(song: Song){
+        this.audioSongId = song.id
+    }
     toGenshin() {
         return this
         //TODO implement
@@ -83,17 +89,18 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     }
     serialize(): SerializedVsrgSong {
         return {
-            id: this.id,
-            type: "vsrg",
-            folderId: this.folderId,
             name: this.name,
-            data: this.data,
+            type: "vsrg",
             bpm: this.bpm,
             pitch: this.pitch,
             version: 1,
+            keys: this.keys,
+            data: this.data,
+            id: this.id,
+            audioSongId: this.audioSongId,
+            folderId: this.folderId,
             tracks: this.tracks.map(track => track.serialize()),
             instruments: this.instruments.map(instrument => instrument.serialize()),
-            keys: this.keys
         }
     }
     set(data: Partial<VsrgSong>){
@@ -141,14 +148,14 @@ export class VsrgTrack{
     startPlayback(timestamp:number){
         this.lastPlayedHitObjectIndex = -1
         for(let i = 0; i < this.hitObjects.length; i++){
-            if(this.hitObjects[i].timestamp > timestamp) break
+            if(this.hitObjects[i].timestamp >= timestamp) break
             this.lastPlayedHitObjectIndex = i
         }
     }
     tickPlayback(timestamp: number){
         const surpassed = []
         for(let i = this.lastPlayedHitObjectIndex + 1; i < this.hitObjects.length; i++){
-            if(this.hitObjects[i].timestamp < timestamp) {
+            if(this.hitObjects[i].timestamp <= timestamp) {
                 surpassed.push(this.hitObjects[i])
                 this.lastPlayedHitObjectIndex = i
                 continue

@@ -33,6 +33,12 @@
     pointer-events: none;
     opacity: 0.5;
 }
+.vsrg-select-song-wrapper{
+    border: dashed 4px var(--accent);
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    padding-bottom: 0;
+}
 .vsrg-track {
     min-height: 3rem;
     position: relative;

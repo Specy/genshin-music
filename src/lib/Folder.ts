@@ -28,4 +28,9 @@ export class Folder{
             name: this.name
         }
     }
+    clone = () => {
+        const folder = new Folder(this.name,this.id)
+        folder.songs = [...this.songs]
+        return folder
+    }
 }

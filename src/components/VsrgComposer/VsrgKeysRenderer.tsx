@@ -25,6 +25,7 @@ const fontFace= [{
 function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeysRendererProps) {
     const [textStyle, setTextStyle] = useState(defaultTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
+
     useEffect(() => {
         setTextStyle(new TextStyle({
             fontFamily: isFontLoaded ?  '"Bonobo"' : '"Source Sans Pro", Helvetica, sans-serif',

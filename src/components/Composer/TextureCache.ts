@@ -215,7 +215,7 @@ export class ComposerCache {
         if(!this.app) return
         const texture = this.app.renderer.generateTexture(g, {
             scaleMode: SCALE_MODES.LINEAR,
-            resolution: window.devicePixelRatio || 1,
+            resolution: window?.devicePixelRatio || 1,
             region: new Rectangle(0, 0, this.width, this.height)
         })
         g.destroy(true)

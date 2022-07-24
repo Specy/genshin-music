@@ -24,7 +24,7 @@ import { useTheme } from 'lib/Hooks/useTheme';
 import { SearchedSongType } from 'types/GeneralTypes';
 import { FileElement, FilePicker } from 'components/Inputs/FilePicker';
 import "./menu.css"
-import { ThemeStoreClass } from 'stores/ThemeStore';
+import { ThemeStore } from 'stores/ThemeStore';
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import { hasTooltip, Tooltip } from "components/Utility/Tooltip"
 import { HelpTooltip } from 'components/Utility/HelpTooltip';
@@ -403,7 +403,7 @@ function Menu({ functions, data }: MenuProps) {
 
 interface SongRowProps {
     data: SerializedSong
-    theme: ThemeStoreClass
+    theme: ThemeStore
     folders: Folder[]
     functions: {
         removeSong: (name: string, id: string) => void
@@ -446,8 +446,6 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 {isRenaming ? "Song name" : "Play song"}
             </Tooltip>
         </div>
-
-
         <div className="song-buttons-wrapper">
             <SongActionButton
                 onClick={() => {

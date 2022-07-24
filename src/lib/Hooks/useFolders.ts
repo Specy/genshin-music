@@ -17,8 +17,9 @@ export function useFolders(songs?: SerializedSong[]): UseFolders {
     useEffect(() => {
         if (!songs) return setParsedFolders(folders)
         setParsedFolders(folders.map(folder => {
-            folder.songs = songs.filter(song => song.folderId === folder.id)
-            return folder
+            const clone = folder.clone()
+            clone.songs = songs.filter(song => song.folderId === folder.id)
+            return clone
         }))
     }, [songs, folders])
 

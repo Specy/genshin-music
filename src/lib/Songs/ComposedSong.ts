@@ -108,12 +108,12 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     get lastInstrument(): InstrumentData {
         return this.instruments[this.instruments.length - 1]
     }
-    toRecordedSong = () => {
+    toRecordedSong = (offset: number = 100) => {
         const recordedSong = new RecordedSong(this.name)
         recordedSong.bpm = this.bpm
         recordedSong.pitch = this.pitch
         const bpmPerMs = Math.floor(60000 / this.bpm)
-        let totalTime = 100
+        let totalTime = offset
         this.columns.forEach(column => {
             column.notes.forEach(note => {
                 recordedSong.notes.push(new RecordedNote(note.index, totalTime, note.layer.clone()))

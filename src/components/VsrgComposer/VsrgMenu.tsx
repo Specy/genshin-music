@@ -1,10 +1,12 @@
 import { AppButton } from "components/Inputs/AppButton";
+import { SongActionButton } from "components/Inputs/SongActionButton";
 import MenuPanel from "components/Layout/MenuPanel";
 import { SongMenu } from "components/Layout/SongMenu";
 import { MenuItem } from "components/Miscellaneous/MenuItem";
 import { SettingsPane } from "components/Settings/SettingsPane";
 import { asyncConfirm } from "components/Utility/AsyncPrompts";
 import { FloatingDropdownRow, FloatingDropdownText, FloatingDropdown } from "components/Utility/FloatingDropdown";
+import { HelpTooltip } from "components/Utility/HelpTooltip";
 import Memoized from "components/Utility/Memoized";
 import { hasTooltip, Tooltip } from "components/Utility/Tooltip";
 import isMobile from "is-mobile";
@@ -17,21 +19,23 @@ import { useSongs } from "lib/Hooks/useSongs";
 import { useTheme } from "lib/Hooks/useTheme";
 import { fileService } from "lib/Services/FileService";
 import { songService } from "lib/Services/SongService";
-import { SerializedSong } from "lib/Songs/Song";
+import { SerializedSong, Song } from "lib/Songs/Song";
 import { VsrgSong } from "lib/Songs/VsrgSong";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import HomeStore from "stores/HomeStore";
 import { songsStore } from "stores/SongsStore";
-import { ThemeStoreClass } from "stores/ThemeStore";
+import { ThemeStore } from "stores/ThemeStore";
 import { SettingUpdate } from "types/SettingsPropriety";
 
 type MenuTabs = 'Songs' | 'Settings'
 const isOnMobile = isMobile()
 
-interface VsrgMenuProps{
+interface VsrgMenuProps {
     settings: VsrgComposerSettingsDataType
     hasChanges: boolean
+    audioSong: Song | null
+    setAudioSong: (song: SerializedSong | null) => void
     handleSettingChange: (override: SettingUpdate) => void
     onSave: () => void
     onSongOpen: (song: VsrgSong) => void
@@ -40,7 +44,7 @@ interface VsrgMenuProps{
 
 
 
-function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChanges, onCreateSong}: VsrgMenuProps){
+function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChanges, onCreateSong, setAudioSong, audioSong }: VsrgMenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
@@ -78,7 +82,6 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
             </Memoized>
         </div>
         <div className="menu-wrapper" ref={menuRef}>
-
             <div className={menuClass}>
                 <MenuItem onClick={() => toggleMenu(false)} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon" />
@@ -88,9 +91,9 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                         <FaSave className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem   
-                    onClick={() => selectSideMenu("Songs")} 
-                    isActive={isOpen && selectedMenu === "Songs"} 
+                <MenuItem
+                    onClick={() => selectSideMenu("Songs")}
+                    isActive={isOpen && selectedMenu === "Songs"}
                     ariaLabel='Song menu'
                 >
                     <Memoized>
@@ -117,39 +120,101 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                         </AppButton>
                     </div>
                     <SongMenu<SongRowProps>
-                    songs={songs}
-                    exclude={['composed', 'recorded']}
-                    style={{ marginTop: '0.6rem' }}
-                    SongComponent={SongRow}
-                    componentProps={{
-                        theme,
-                        folders,
-                        functions: { 
-                            onClick: onSongOpen,
-                            toggleMenu 
-                        }
-                    }}
-                />
+                        songs={songs}
+                        exclude={['composed', 'recorded']}
+                        style={{ marginTop: '0.6rem' }}
+                        SongComponent={SongRow}
+                        componentProps={{
+                            theme,
+                            folders,
+                            functions: {
+                                onClick: onSongOpen,
+                                toggleMenu
+                            }
+                        }}
+                    />
                 </MenuPanel>
                 <MenuPanel current={selectedMenu} id="Settings">
                     <SettingsPane
                         settings={settings}
                         onUpdate={handleSettingChange}
                     />
+                    <div className="column vsrg-select-song-wrapper">
+                        <h1 className="settings-group-title row-centered">
+                            Background Song
+                            <HelpTooltip buttonStyle={{ width: '1.2rem', height: '1.2rem', marginLeft: '0.5rem' }}>
+                                You can add a song that will be played on the background from one of your songs.
+                            </HelpTooltip>
+                        </h1>
+                            {audioSong === null
+                                ? <span>
+                                    No background song selected
+                                </span>
+                                : <div className="song-row">
+                                    <div className="song-name" style={{ cursor: 'default' }}>
+                                        {audioSong.name}
+                                    </div>
+                                    <SongActionButton
+                                        onClick={() => setAudioSong(null)}
+                                        ariaLabel="Remove background song"
+                                        tooltip="Remove background song"
+                                        style={{ backgroundColor: 'var(--red)', margin: 0 }}
+                                    >
+                                        <FaTimes />
+                                    </SongActionButton>
+                                </div>
+                            }
+                        <SongMenu<SeelctSongRowProps>
+                            songs={songs}
+                            exclude={['vsrg']}
+                            style={{ marginTop: '0.6rem' }}
+                            SongComponent={SelectSongRow}
+                            componentProps={{
+                                onClick: setAudioSong
+                            }}
+                        />
+                    </div>
+
                 </MenuPanel>
             </div>
         </div>
     </>
 }
 export default memo(VsrgMenu, (p, n) => {
-    return p.settings === n.settings && p.hasChanges === n.hasChanges
+    return p.settings === n.settings && p.hasChanges === n.hasChanges && p.audioSong === n.audioSong
 })
+
+
+
+
+interface SeelctSongRowProps {
+    data: SerializedSong
+    onClick: (song: SerializedSong) => void
+}
+function SelectSongRow({ data, onClick }: SeelctSongRowProps) {
+    return <>
+        <div
+            className={`song-row ${hasTooltip(true)}`}
+            onClick={() => {
+                onClick(data)
+            }}
+            style={{ cursor: 'pointer' }}
+        >
+            <div className={`song-name`} >
+                {data.name}
+            </div>
+            <Tooltip>
+                Click to select as background song
+            </Tooltip>
+        </div>
+    </>
+}
 
 
 
 interface SongRowProps {
     data: SerializedSong
-    theme: ThemeStoreClass
+    theme: ThemeStore
     folders: Folder[]
     functions: {
         onClick: (song: VsrgSong) => void
@@ -165,7 +230,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     useEffect(() => {
         setSongName(data.name)
     }, [data.name])
-    if(data.type !== 'vsrg') return <div className="row">
+    if (data.type !== 'vsrg') return <div className="row">
         Invalid song
     </div>
     return <div className="song-row">
@@ -235,9 +300,9 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={async() => {
+                <FloatingDropdownRow onClick={async () => {
                     const confirm = await asyncConfirm("Are you sure you want to delete this song?")
-                    if(!confirm) return
+                    if (!confirm) return
                     songsStore.removeSong(data.id!)
                 }}>
                     <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14} />

@@ -1,9 +1,9 @@
-import { ThemeProvider, ThemeStoreClass } from "stores/ThemeStore";
+import { ThemeProvider, ThemeStore } from "stores/ThemeStore";
 import { useState, useEffect } from "react";
 import { observe } from "mobx";
 
 
-type UseThemeOther = [ThemeStoreClass, (theme: ThemeStoreClass) => void]
+type UseThemeOther = [ThemeStore, (theme: ThemeStore) => void]
 export function useThemeOther(): UseThemeOther{
     const [themeOther,setThemeOther] = useState(ThemeProvider)
     useEffect(() => {

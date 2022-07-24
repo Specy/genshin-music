@@ -5,7 +5,7 @@ import { useTheme } from "lib/Hooks/useTheme"
 import { VsrgHitObject, VsrgSong, VsrgTrack } from "lib/Songs/VsrgSong"
 import { useEffect, useState } from "react"
 import { FaCog, FaPlus } from "react-icons/fa"
-import { ThemeStoreClass } from "stores/ThemeStore"
+import { ThemeStore } from "stores/ThemeStore"
 import { VsrgKeyboard } from "./VsrgKeyboard"
 import { VsrgTrackSettings } from "./VsrgTrackSettings"
 
@@ -99,7 +99,7 @@ export function VsrgTop({
 interface TrackSelectorProps {
     track: VsrgTrack
     selected: boolean
-    theme: ThemeStoreClass
+    theme: ThemeStore
     onSettingsClick: () => void
     onTrackClick: () => void
 }

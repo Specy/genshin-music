@@ -1,5 +1,5 @@
 import { ChangeEvent, ReactNode } from "react"
-import { ThemeStoreClass } from "stores/ThemeStore"
+import { ThemeStore } from "stores/ThemeStore"
 import { SettingsSelect, SettingUpdateKey } from "types/SettingsPropriety"
 
 interface SelectProps {
@@ -8,7 +8,7 @@ interface SelectProps {
     data: SettingsSelect
     objectKey: SettingUpdateKey
     children: ReactNode
-    theme: ThemeStoreClass
+    theme: ThemeStore
     onChange: (data: {
         key: SettingUpdateKey
         data: any

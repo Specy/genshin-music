@@ -85,6 +85,13 @@ function getNoteText(
 	} catch (e) { }
 	return ''
 }
+function isFocusable(el: HTMLElement | EventTarget | null | undefined){
+	const focusableElements = ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'];
+	if(!el) return false
+	//@ts-ignore
+	return focusableElements.includes(el.tagName)
+}
+
 
 class Array2d {
 	static from(height: number) {
@@ -259,5 +266,6 @@ export {
 	setIfInTWA,
 	blurEvent,
 	insertionSort,
-	isComposedOrRecorded
+	isComposedOrRecorded,
+	isFocusable
 }

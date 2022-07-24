@@ -38,7 +38,7 @@ import { SerializedSong } from 'lib/Songs/Song';
 import { songsStore } from 'stores/SongsStore';
 import { InstrumentControls } from 'components/Composer/InstrumentControls';
 import { AppButton } from 'components/Inputs/AppButton';
-import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore';
+import { ThemeProvider, ThemeStore } from 'stores/ThemeStore';
 import { Title } from 'components/Miscellaneous/Title';
 import { songService } from 'lib/Services/SongService';
 
@@ -54,7 +54,7 @@ interface ComposerState {
     isMidiVisible: boolean
     isRecordingAudio: boolean
     isPlaying: boolean
-    theme: ThemeStoreClass
+    theme: ThemeStore
 }
 type ComposerProps = RouteComponentProps & {
     inPreview?: boolean
