@@ -8,6 +8,7 @@ export type VsrgComposerEvents =
     | 'snapPointChange'
     | 'tracksChange'
     | 'songLoad'
+    | 'scaleChange'
 export type VsrcComposerEventCallback = {
     callback: (event: VsrgComposerEvents) => void,
     id: string

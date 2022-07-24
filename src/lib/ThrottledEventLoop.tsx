@@ -12,6 +12,7 @@ export class ThrottledEventLoop{
     private deltaTime = 0
     private raf: number = 0
     private duration = 0
+    private previousTickTime = 0
     constructor(callback: ThrottledEventLoopCallback, maxFps: number){
         this.callback = callback
         this.startTime = 0
@@ -33,6 +34,7 @@ export class ThrottledEventLoop{
         this.stop()
         this.startTime = Date.now()
         this.nextTick = Date.now()
+        this.previousTickTime = 0
         this.duration = duration ?? Number.MAX_SAFE_INTEGER
         this.tick()
     }
@@ -44,7 +46,8 @@ export class ThrottledEventLoop{
         this.deltaTime = currentTime - this.nextTick
         if(this.deltaTime >= this.maxFpsInterval){
             this.nextTick = currentTime - (this.deltaTime % this.maxFpsInterval)
-            this.callback(this.elapsed, this.deltaTime)
+            this.callback(this.elapsed, currentTime -  this.previousTickTime )
+            this.previousTickTime = currentTime
         }
         this.elapsed = currentTime - this.startTime
         if(this.elapsed < this.duration) this.raf = requestAnimationFrame(this.tick)

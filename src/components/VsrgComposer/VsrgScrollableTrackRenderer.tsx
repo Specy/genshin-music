@@ -1,4 +1,4 @@
-import { Container, Sprite } from "@inlet/react-pixi";
+import { Container, Sprite,  } from "@inlet/react-pixi";
 import { PLAY_BAR_OFFSET } from "appConfig";
 import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
 import { InteractionEvent } from "pixi.js";
@@ -24,35 +24,35 @@ interface VsrgScrollableTrackRendererProps {
     selectHitObject: (hitObject: VsrgHitObject, trackIndex:number, clickType: number) => void
 }
 export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject}: VsrgScrollableTrackRendererProps) {
-    const lowerBound = timestamp - cache.textures.snapPoints.size
-    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) + cache.textures.snapPoints.size
+    const scale = sizes.scaling 
+    const lowerBound = timestamp - cache.textures.snapPoints.size - PLAY_BAR_OFFSET / scale
+    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) / scale 
     function handleSnapPointClick(event: InteractionEvent){
         if (preventClick) return
         if (isHorizontal) {
             const y = event.data.global.y
-            const x = event.target.x
+            const x = event.target.x / scale
             onSnapPointSelect(x, Math.floor(y / sizes.keyHeight), event.data.button as 0 | 2)
         } else {
-            const y = Math.abs(Math.floor(event.target.y - sizes.height))
+            const y = Math.abs(Math.floor(event.target.y - sizes.height) / scale)
             const x = event.data.global.x
             onSnapPointSelect(y, Math.floor(x / sizes.keyWidth), event.data.button as 0 | 2)
         }
     }
     return <Container
-        x={isHorizontal ? -timestamp + PLAY_BAR_OFFSET : 0}
-        y={isHorizontal ? 0 : timestamp - PLAY_BAR_OFFSET}
+        x={isHorizontal ? (-timestamp * scale + PLAY_BAR_OFFSET) : 0}
+        y={isHorizontal ? 0 : (timestamp * scale - PLAY_BAR_OFFSET)}
         interactive={true}
         interactiveChildren={true}
     >
-
         {snapPoints.map((sp, i) => {
             if(lowerBound > sp || sp > upperBound) return null
             return <Sprite
+                key={sp}
                 interactive={true}
                 pointertap={handleSnapPointClick}
-                key={sp}
-                x={isHorizontal ? sp : 0}
-                y={isHorizontal ? 0 : -(sp - sizes.height)}
+                x={isHorizontal ? sp * scale : 0}
+                y={isHorizontal ? 0 : -(sp * scale - sizes.height)}
                 width={isHorizontal ? cache.textures.snapPoints.size : sizes.width}
                 height={isHorizontal ? sizes.height: cache.textures.snapPoints.size}
                 texture={i % snapPoint
@@ -61,6 +61,13 @@ export function VsrgScrollableTrackRenderer({ tracks, keys, sizes, snapPoint, ti
                 }
             />
         })}
+        {(lowerBound < 0) && 
+            <Sprite 
+                x={isHorizontal ? -PLAY_BAR_OFFSET : 0}
+                y={isHorizontal ? 0 : sizes.height}
+                texture={cache.textures.snapPoints.empty!}
+            />
+        }
         {tracks.map((track, index) =>
             <VsrgTrackRenderer
                 key={index}

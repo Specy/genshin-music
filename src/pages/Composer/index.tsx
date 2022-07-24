@@ -496,8 +496,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
 
     removeColumns = (amount: number, position: number) => {
-        const { song } = this.state
-        if (song.columns.length < 16) return
+        const { song, settings } = this.state
+        if (song.columns.length < (settings.beatMarks.value * 4)) return
         song.removeColumns(amount, position)
         if (song.columns.length <= song.selected) this.selectColumn(song.selected - 1)
         this.handleAutoSave()

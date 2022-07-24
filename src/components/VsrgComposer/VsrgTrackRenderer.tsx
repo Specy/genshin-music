@@ -20,19 +20,20 @@ interface VsrgTrackRendererProps {
 
 
 export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex, timestamp }: VsrgTrackRendererProps) {
+    const scale = sizes.scaling
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys
-    const lowerBound = timestamp - PLAY_BAR_OFFSET -  cache.textures.sizes.hitObject
-    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) - PLAY_BAR_OFFSET + cache.textures.sizes.hitObject
+    const lowerBound = timestamp - PLAY_BAR_OFFSET / scale - cache.textures.sizes.hitObject
+    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) / scale - PLAY_BAR_OFFSET + cache.textures.sizes.hitObject
     return <>
         {track.hitObjects.map(hitObject => {
             if(lowerBound > hitObject.timestamp + hitObject.holdDuration || hitObject.timestamp > upperBound) return null
             const x = isHorizontal
-                ? hitObject.timestamp
+                ? hitObject.timestamp * scale
                 : positionSizeVertical * hitObject.index + positionSizeVertical / 2
             const y = isHorizontal
                 ? positionSizeHorizontal * hitObject.index + positionSizeHorizontal / 2
-                : -(hitObject.timestamp - sizes.height)
+                : -(hitObject.timestamp * scale - sizes.height)
             return hitObject.isHeld
                 ? <Container
                     interactive={true}
@@ -46,7 +47,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                             texture={cache.getHeldTrailCache(track.color)}
                             anchor={[0, 0.5]}
                             height={cache.textures.sizes.trail}
-                            width={hitObject.holdDuration}
+                            width={hitObject.holdDuration * scale}
                             x={x}
                             y={y}
                         />
@@ -54,7 +55,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                             texture={cache.getHeldTrailCache(track.color)}
                             anchor={[0.5, 1]}
                             width={cache.textures.sizes.trail}
-                            height={hitObject.holdDuration}
+                            height={hitObject.holdDuration * scale}
                             x={x}
                             y={y}
                         />
@@ -69,8 +70,8 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                     <Sprite
                         texture={cache.getHeldHitObjectCache(track.color)}
                         anchor={0.5}
-                        x={isHorizontal ? hitObject.timestamp + hitObject.holdDuration : x}
-                        y={isHorizontal ? y : y - hitObject.holdDuration}
+                        x={isHorizontal ? (hitObject.timestamp + hitObject.holdDuration) * scale : x}
+                        y={isHorizontal ? y : (y - hitObject.holdDuration * scale)}
                     />
                     {hitObject === selectedHitObject &&
                         <Sprite

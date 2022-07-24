@@ -7,7 +7,7 @@ import { VsrgSongKeys } from "./Songs/VsrgSong"
 
 export type ComposerSettingsDataType = {
     bpm: SettingsNumber
-    beatMarks: SettingsSelect
+    beatMarks: SettingsSelect<number>
     noteNameType: SettingsSelect<NoteNameType>
     pitch: SettingsSelect<Pitch>
     columnsPerCanvas: SettingsSelect
@@ -373,7 +373,7 @@ export type VsrgComposerSettingsType = {
 }
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 4
+        settingVersion: APP_NAME + 5
     },
     data: {
         keys:{

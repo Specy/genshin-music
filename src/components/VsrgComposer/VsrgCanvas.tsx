@@ -20,6 +20,7 @@ export type VsrgCanvasSizes = {
     snapPointWidth: number
     keyHeight: number
     keyWidth: number
+    scaling: number
     timelineSize: number
 }
 export type VsrgCanvasColors = {
@@ -39,6 +40,7 @@ interface VsrgCanvasProps {
     snapPoints: number[]
     selectedHitObject: VsrgHitObject | null
     audioSong: RecordedSong | null
+    scaling: number
     onTimestampChange: (timestamp: number) => void
     onSnapPointSelect: (timestamp: number, key: number, type?: 0 | 2) => void
     dragHitObject: (timestamp: number, key?: number) => void
@@ -91,6 +93,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 keyHeight: 0,
                 keyWidth: 0,
                 timelineSize: 0,
+                scaling: 0,
             },
             draggedHitObject: null,
             isPressing: false,
@@ -128,6 +131,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if (event === 'snapPointChange') this.calculateSizes()
         if (event === 'tracksChange') this.generateCache()
         if (event === 'songLoad') this.calculateSizes()
+        if (event === 'scaleChange') this.calculateSizes()
     }
     handleTick = (elapsed: number, sinceLast: number) => {
         if (this.props.isPlaying) {
@@ -138,16 +142,17 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     }
     calculateSizes = () => {
         const { wrapperRef } = this
-        if (!wrapperRef.current) return console.log("no wrapper")
+        if (!wrapperRef.current) return console.warn("no wrapper")
         const wrapperSizes = wrapperRef.current.getBoundingClientRect()
-
+        const { scaling } = this.props
         const sizes: VsrgCanvasSizes = {
             el: wrapperSizes,
             width: wrapperSizes.width,
             height: wrapperSizes.height,
             keyHeight: wrapperSizes.height / VsrgKeysMap[this.props.vsrg.keys].length,
             keyWidth: wrapperSizes.width / VsrgKeysMap[this.props.vsrg.keys].length,
-            snapPointWidth: (60000 / this.props.vsrg.bpm) / this.props.snapPoint,
+            snapPointWidth: (60000 / this.props.vsrg.bpm) / this.props.snapPoint * scaling / 100,
+            scaling: scaling / 100,
             timelineSize: 40
         }
         const canvas = wrapperRef.current.querySelector('canvas')
@@ -191,7 +196,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         const deltaOrientation = isHorizontal ? e.clientX : -e.clientY
         const keyPosition = isHorizontal ? e.clientY - sizes.el.top : e.clientX - sizes.el.left
         const hoveredPosition = Math.floor(keyPosition / (isHorizontal ? sizes.keyHeight : sizes.keyWidth))
-        const delta = previousPosition - deltaOrientation
+        const delta = (previousPosition - deltaOrientation) / sizes.scaling
         const newTotalMovement = this.state.totalMovement + Math.abs(delta)
         if (draggedHitObject !== null) {
             const position = draggedHitObject.timestamp - delta
@@ -300,6 +305,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                     />
                     {cache &&
                         <VsrgTimelineRenderer
+                            hidden={true}
                             cache={cache}
                             timestamp={timestamp}
                             isHorizontal={isHorizontal}

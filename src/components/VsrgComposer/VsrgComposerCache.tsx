@@ -3,6 +3,7 @@ import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/gra
 import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { clamp } from "lib/Utilities";
+import { PLAY_BAR_OFFSET } from "appConfig";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 
@@ -19,6 +20,7 @@ export type VsrgComposerCanvasCache = {
         size: number
         small: Texture | null
         large: Texture | null
+        empty: Texture | null
     }
     timeline: {
         square: Texture | null
@@ -64,7 +66,8 @@ export class VsrgCanvasCache {
             snapPoints: {
                 size: 0,
                 small: null,
-                large: null
+                large: null,
+                empty: null
             },
             timeline: {
                 square: null
@@ -84,8 +87,11 @@ export class VsrgCanvasCache {
     destroy = () => {
         this.textures.snapPoints.small?.destroy()
         this.textures.snapPoints.large?.destroy()
+        this.textures.snapPoints.empty?.destroy()
         Object.values(this.textures.hitObjects).forEach(texture => texture.destroy())
+        Object.values(this.textures.heldHitObjects).forEach(texture => texture.destroy())
         Object.values(this.textures.trails).forEach(texture => texture.destroy())
+        Object.values(this.textures.selectionRings).forEach(texture => texture.destroy())
         this.app = null
     }
     generate() {
@@ -114,7 +120,7 @@ export class VsrgCanvasCache {
     generateOthers(app: Application) {
         const square = new Graphics()
         square.beginFill(this.colors.background_10[1])
-        square.drawRect(0,0, this.sizes.width, this.sizes.timelineSize)
+        square.drawRect(0, 0, this.sizes.width, this.sizes.timelineSize)
         const squareTexture = app.renderer.generateTexture(square, {
             resolution: 1,
             scaleMode: SCALE_MODES.LINEAR,
@@ -147,7 +153,7 @@ export class VsrgCanvasCache {
             this.textures.trails[color] = trailTexture
             trail.destroy(true)
         })
-        this.textures.sizes.trail = hitObjectHeight 
+        this.textures.sizes.trail = hitObjectHeight
     }
     generateSelectionRings(app: Application) {
         const { sizes, trackColors } = this
@@ -201,12 +207,13 @@ export class VsrgCanvasCache {
             heldHitObject.destroy(true)
         })
         this.textures.sizes.hitObject = hitObjectHeight
-        
+
     }
     generateSnapPoints(app: Application) {
         const { colors, sizes, isHorizontal } = this
         const small = new Graphics()
         const large = new Graphics()
+        const empty = new Graphics()
         if (isHorizontal) {
             small.lineStyle(2, colors.lineColor[1])
                 .moveTo(0, 0)
@@ -216,7 +223,6 @@ export class VsrgCanvasCache {
                 scaleMode: SCALE_MODES.LINEAR,
                 region: new Rectangle(0, 0, sizes.snapPointWidth, sizes.height)
             });
-            this.textures.snapPoints.small = smallTexture
             large.lineStyle(4, colors.secondary[1])
                 .moveTo(0, 0)
                 .lineTo(0, sizes.height)
@@ -225,8 +231,25 @@ export class VsrgCanvasCache {
                 scaleMode: SCALE_MODES.LINEAR,
                 region: new Rectangle(0, 0, sizes.snapPointWidth, sizes.height)
             });
+            const lines = 10
+            const lineSize = sizes.height / lines
+            // empty.rotation = rotation
+            empty.lineStyle(2, colors.secondary[1])
+            for (let i = 0; i < lines + 2; i++) {
+                const size = lineSize * i - lineSize
+                const y1 = size
+                empty.moveTo(PLAY_BAR_OFFSET, y1)
+                empty.lineTo(0, y1 + lineSize)
+            }
+            const emptyTexture = app.renderer.generateTexture(empty, {
+                resolution: 1,
+                scaleMode: SCALE_MODES.LINEAR,
+                region: new Rectangle(0, 0, PLAY_BAR_OFFSET, sizes.height)
+            });
             this.textures.snapPoints.size = sizes.snapPointWidth
+            this.textures.snapPoints.small = smallTexture
             this.textures.snapPoints.large = largeTexture
+            this.textures.snapPoints.empty = emptyTexture
         } else {
             small.lineStyle(2, colors.lineColor[1])
                 .moveTo(0, 0)
@@ -236,7 +259,6 @@ export class VsrgCanvasCache {
                 scaleMode: SCALE_MODES.LINEAR,
                 region: new Rectangle(0, 0, sizes.width, sizes.snapPointWidth)
             });
-            this.textures.snapPoints.small = smallTexture
 
             large.lineStyle(4, colors.secondary[1])
                 .moveTo(0, 0)
@@ -246,11 +268,30 @@ export class VsrgCanvasCache {
                 scaleMode: SCALE_MODES.LINEAR,
                 region: new Rectangle(0, 0, sizes.width, sizes.snapPointWidth)
             });
+            const lines = 10
+            const lineSize = sizes.width / lines
+            // empty.rotation = rotation
+            empty.lineStyle(2, colors.secondary[1])
+            for (let i = 0; i < lines + 2; i++) {
+                const size = lineSize * i - lineSize
+                const y1 = size
+                empty.moveTo(y1, PLAY_BAR_OFFSET)
+                empty.lineTo(y1 + lineSize, 0)
+            }
+            const emptyTexture = app.renderer.generateTexture(empty, {
+                resolution: 1,
+                scaleMode: SCALE_MODES.LINEAR,
+                region: new Rectangle(0, 0, sizes.width, PLAY_BAR_OFFSET)
+            });
             this.textures.snapPoints.size = sizes.snapPointWidth
             this.textures.snapPoints.large = largeTexture
+            this.textures.snapPoints.empty = emptyTexture
+            this.textures.snapPoints.small = smallTexture
+
         }
         small.destroy(true)
         large.destroy(true)
+        empty.destroy(true)
     }
 }
 

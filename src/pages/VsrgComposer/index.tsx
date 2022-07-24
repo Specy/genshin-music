@@ -19,8 +19,7 @@ import { RecordedSong } from "lib/Songs/RecordedSong";
 import { SerializedSong } from "lib/Songs/Song";
 import { songService } from "lib/Services/SongService";
 import { ComposedSong } from "lib/Songs/ComposedSong";
-import { delay, isFocusable } from "lib/Utilities";
-import { PLAY_BAR_OFFSET } from "appConfig";
+import { isFocusable } from "lib/Utilities";
 type VsrgComposerProps = RouteComponentProps & {
 
 }
@@ -34,6 +33,7 @@ interface VsrgComposerState {
     settings: VsrgComposerSettingsDataType
     snapPoint: SnapPoint
     snapPoints: number[]
+    scaling: number
     snapPointDuration: number
     selectedHitObject: VsrgHitObject | null
     lastCreatedHitObject: VsrgHitObject | null
@@ -56,6 +56,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             snapPoints: [0],
             snapPointDuration: 0,
             selectedHitObject: null,
+            scaling: 100,
             selectedType: 'tap',
             isPlaying: false,
             lastCreatedHitObject: null,
@@ -335,6 +336,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             this.setAudioSong(audioSong)
         })
     }
+    onScalingChange = (scaling: number) => {
+        this.setState({ scaling }, () => vsrgComposerStore.emitEvent('scaleChange'))
+    }
     saveSong = async () => {
         const { vsrg } = this.state
         const name = vsrg.name !== 'Untitled' ? vsrg.name : await asyncPrompt('Enter song name')
@@ -351,7 +355,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.setState({ selectedType, lastCreatedHitObject: null })
     }
     render() {
-        const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong } = this.state
+        const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling } = this.state
         return <>
             <VsrgMenu
                 hasChanges={this.changes > 0}
@@ -381,6 +385,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                         onTimestampChange={this.onTimestampChange}
                         selectedHitObject={selectedHitObject}
                         isHorizontal={!settings.isVertical.value}
+                        scaling={scaling}
                         audioSong={audioSong}
                         snapPoint={snapPoint}
                         snapPoints={snapPoints}
@@ -394,6 +399,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 </VsrgTop>
                 <VsrgBottom
                     vsrg={vsrg}
+                    scaling={scaling}
+                    onScalingChange={this.onScalingChange}
                     isPlaying={isPlaying}
                     togglePlay={this.togglePlay}
                     selectedSnapPoint={snapPoint}

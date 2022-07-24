@@ -15,9 +15,11 @@ interface VsrgTimelineRendererProps {
     song: VsrgSong
     sizes: VsrgCanvasSizes
     colors: VsrgCanvasColors
+    hidden: boolean
 }
 
-export function VsrgTimelineRenderer({ sizes, colors, isHorizontal, timestamp, song, cache }: VsrgTimelineRendererProps) {
+export function VsrgTimelineRenderer({ sizes, colors, timestamp, song, cache , hidden}: VsrgTimelineRendererProps) {
+    if(hidden) return null
     const thumbSize = clamp(sizes.width / song.duration * 100, 0, sizes.width)
     const relativeTimestampPosition = timestamp / song.duration
     return <>
