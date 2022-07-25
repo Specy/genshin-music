@@ -394,6 +394,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     addTime = () => {
         const { vsrg } = this.state
         vsrg.duration += 1000
+        this.calculateSnapPoints()
         this.setState({ vsrg })
     }
     onScalingChange = (scaling: number) => {
@@ -451,6 +452,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                         snapPoint={snapPoint}
                         snapPoints={snapPoints}
                         isPlaying={isPlaying}
+                        onTimeAdd={this.addTime}
                         onKeyDown={this.startHitObjectTap}
                         onKeyUp={this.endHitObjectTap}
                         dragHitObject={this.dragHitObject}

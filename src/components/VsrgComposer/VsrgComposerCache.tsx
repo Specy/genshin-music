@@ -23,6 +23,9 @@ export type VsrgComposerCanvasCache = {
         large: Texture | null
         empty: Texture | null
     }
+    buttons: {
+        time: Texture | null
+    }
     timeline: {
         square: Texture | null
     }
@@ -64,6 +67,9 @@ export class VsrgCanvasCache {
             heldHitObjects: {},
             selectionRings: {},
             trails: {},
+            buttons: {
+                time: null
+            },
             snapPoints: {
                 size: 0,
                 small: null,
@@ -119,6 +125,8 @@ export class VsrgCanvasCache {
     }
 
     generateOthers(app: Application) {
+        const { sizes, colors, isHorizontal } = this
+        //timeline
         const square = new Graphics()
         square.beginFill(this.colors.background_10[1])
         square.drawRect(0, 0, this.sizes.width, this.sizes.timelineSize)
@@ -128,6 +136,28 @@ export class VsrgCanvasCache {
             region: new Rectangle(0, 0, this.sizes.width, this.sizes.timelineSize)
         })
         this.textures.timeline.square = squareTexture
+
+        //buttons
+        const time = new Graphics()
+        time.beginFill(colors.background_10[1])
+        time.lineStyle(3, colors.secondary[1])
+        if(isHorizontal){
+            time.drawRoundedRect(0, 0, sizes.width / 3, sizes.keyHeight, 16)
+            const timeTexture = app.renderer.generateTexture(time, {
+                resolution: 1,
+                scaleMode: SCALE_MODES.LINEAR,
+                region: new Rectangle(0, 0, sizes.width / 3, sizes.keyHeight)
+            })
+            this.textures.buttons.time = timeTexture
+        }else{
+            time.drawRoundedRect(0, 0, sizes.width / 3, 200, 8)
+            const timeTexture = app.renderer.generateTexture(time, {
+                resolution: 1,
+                scaleMode: SCALE_MODES.LINEAR,
+                region: new Rectangle(0, 0, sizes.width / 3, 200)
+            })
+            this.textures.buttons.time = timeTexture
+        }
     }
 
 

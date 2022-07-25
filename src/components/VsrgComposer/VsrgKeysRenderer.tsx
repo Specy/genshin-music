@@ -14,7 +14,7 @@ interface VsrgKeysRendererProps {
     onKeyUp: (key: number) => void
 }
 
-const defaultTextStyle = new TextStyle({
+export const defaultTextStyle = new TextStyle({
     fontFamily: '"Source Sans Pro", Helvetica, sans-serif',
     fontSize: 30,
     fill: "#ffffff",

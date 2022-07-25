@@ -46,6 +46,7 @@ interface VsrgCanvasProps {
     maxFps: number
     onKeyDown: (key: number) => void
     onKeyUp: (key: number) => void
+    onTimeAdd: () => void
     onTimestampChange: (timestamp: number) => void
     onSnapPointSelect: (timestamp: number, key: number, clickType?: ClickType) => void
     dragHitObject: (timestamp: number, key?: number) => void
@@ -293,6 +294,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                             sizes={sizes}
                             colors={canvasColors}
                             isHorizontal={isHorizontal}
+                            addTime={this.props.onTimeAdd}
                             selectHitObject={this.selectHitObject}
                             onSnapPointSelect={this.props.onSnapPointSelect}
                         />

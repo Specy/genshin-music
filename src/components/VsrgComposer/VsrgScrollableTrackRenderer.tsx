@@ -3,12 +3,15 @@ import { PLAY_BAR_OFFSET } from "appConfig";
 import { VsrgHitObject, VsrgSong, VsrgTrack } from "lib/Songs/VsrgSong";
 import { parseMouseClick } from "lib/Utilities";
 import { ClickType } from "types/GeneralTypes"
-import { InteractionEvent } from "pixi.js";
+import { InteractionEvent, TextStyle } from "pixi.js";
 
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
 import { vsrgComposerStore } from "stores/VsrgComposerStore";
+import useFontFaceObserver from "use-font-face-observer";
+import { useEffect, useState } from "react";
+import { defaultTextStyle } from "./VsrgKeysRenderer";
 
 
 interface VsrgScrollableTrackRendererProps {
@@ -24,12 +27,26 @@ interface VsrgScrollableTrackRendererProps {
     selectedHitObject: VsrgHitObject | null
     onSnapPointSelect: (timestamp: number, key: number, clickType?: ClickType) => void
     selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => void
+    addTime: () => void
 }
-export function VsrgScrollableTrackRenderer({vsrg,  sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject }: VsrgScrollableTrackRendererProps) {
+
+const fontFace = [{
+    family: 'Bonobo'
+}]
+export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject, addTime }: VsrgScrollableTrackRendererProps) {
     const scale = sizes.scaling
     const lowerBound = timestamp - cache.textures.snapPoints.size - PLAY_BAR_OFFSET / scale
     const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) / scale
     const snapPointSize = cache.textures.snapPoints.size
+    const [textStyle, setTextStyle] = useState(defaultTextStyle)
+    const isFontLoaded = useFontFaceObserver(fontFace)
+    useEffect(() => {
+        setTextStyle(new TextStyle({
+            fontFamily: isFontLoaded ? '"Bonobo"' : '"Source Sans Pro", Helvetica, sans-serif',
+            fontSize: isFontLoaded ? 25 : 30,
+            fill: colors.lineColor[1],
+        }))
+    }, [isFontLoaded, colors.lineColor])
     function handleSnapPointClick(event: InteractionEvent) {
         if (preventClick) return
         if (isHorizontal) {
@@ -86,7 +103,24 @@ export function VsrgScrollableTrackRenderer({vsrg,  sizes, snapPoint, timestamp,
                 isHorizontal={isHorizontal}
             />
         )}
-
+        <Container
+            click={addTime}
+            interactive={true}
+            x={isHorizontal ? vsrg.duration * scale : sizes.width / 2}
+            anchor={0.5}
+            y={isHorizontal ? sizes.keyHeight * (vsrg.keys / 2 - 1) : -(vsrg.duration * scale - sizes.height + snapPointSize)}
+        >
+            <Sprite
+                texture={cache.textures.buttons.time!}
+            />
+            <Text
+                x={isHorizontal ? sizes.width / 6 : 0}
+                anchor={0.5}
+                y={isHorizontal ? sizes.keyHeight * 0.5 : 0}
+                text="Add time"
+                style={textStyle}
+            />
+        </Container>
 
 
     </Container>
