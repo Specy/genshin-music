@@ -20,4 +20,13 @@ export type SearchedSongType = {
     file: string
     error: string
 }
+
+export enum ClickType{
+    Left = 1,
+    Right = 2,
+    Unknown = -1
+}
+
+
+
 export type Timer = ReturnType<typeof setTimeout> | 0

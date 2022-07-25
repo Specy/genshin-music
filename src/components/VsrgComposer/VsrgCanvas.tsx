@@ -1,4 +1,5 @@
 import { Stage } from "@inlet/react-pixi"
+import { DEFAULT_VSRG_KEYS_MAP } from "appConfig"
 import { subscribeTheme } from "lib/Hooks/useTheme"
 import { RecordedSong } from "lib/Songs/RecordedSong"
 import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong"
@@ -7,6 +8,7 @@ import { Application } from "pixi.js"
 import React, { Component, createRef } from "react"
 import { ThemeProvider, ThemeStore } from "stores/ThemeStore"
 import { VsrgComposerEvents, vsrgComposerStore } from "stores/VsrgComposerStore"
+import { ClickType } from "types/GeneralTypes"
 import { VsrgCanvasCache } from "./VsrgComposerCache"
 import { VsrgKeysRenderer } from "./VsrgKeysRenderer"
 import { VsrgScrollableTrackRenderer } from "./VsrgScrollableTrackRenderer"
@@ -41,11 +43,14 @@ interface VsrgCanvasProps {
     selectedHitObject: VsrgHitObject | null
     audioSong: RecordedSong | null
     scaling: number
+    maxFps: number
+    onKeyDown: (key: number) => void
+    onKeyUp: (key: number) => void
     onTimestampChange: (timestamp: number) => void
-    onSnapPointSelect: (timestamp: number, key: number, type?: 0 | 2) => void
+    onSnapPointSelect: (timestamp: number, key: number, clickType?: ClickType) => void
     dragHitObject: (timestamp: number, key?: number) => void
     releaseHitObject: () => void
-    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => void
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => void
 }
 interface VsrgCanvasState {
     canvasColors: VsrgCanvasColors
@@ -59,11 +64,6 @@ interface VsrgCanvasState {
     draggedHitObject: VsrgHitObject | null
 }
 
-const VsrgKeysMap = {
-    4: ["A", "S", "G", "H"],
-    6: ["A", "S", "D", "G", "H", "J"],
-    8: ["A", "S", "D", "F", "G", "H", "J", "K"],
-}
 
 
 
@@ -116,6 +116,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         this.toDispose.push(() => vsrgComposerStore.removeEventListener("ALL", { id: "vsrg-canvas-color-change" }))
         this.calculateSizes()
         this.throttledEventLoop.setCallback(this.handleTick)
+        this.throttledEventLoop.changeMaxFps(this.props.maxFps)
         this.throttledEventLoop.start()
         this.handleThemeChange(ThemeProvider)
     }
@@ -132,6 +133,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if (event === 'tracksChange') this.generateCache()
         if (event === 'songLoad') this.calculateSizes()
         if (event === 'scaleChange') this.calculateSizes()
+        if (event === 'maxFpsChange') this.throttledEventLoop.changeMaxFps(this.props.maxFps)
     }
     handleTick = (elapsed: number, sinceLast: number) => {
         if (this.props.isPlaying) {
@@ -149,8 +151,8 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             el: wrapperSizes,
             width: wrapperSizes.width,
             height: wrapperSizes.height,
-            keyHeight: wrapperSizes.height / VsrgKeysMap[this.props.vsrg.keys].length,
-            keyWidth: wrapperSizes.width / VsrgKeysMap[this.props.vsrg.keys].length,
+            keyHeight: wrapperSizes.height / DEFAULT_VSRG_KEYS_MAP[this.props.vsrg.keys].length,
+            keyWidth: wrapperSizes.width / DEFAULT_VSRG_KEYS_MAP[this.props.vsrg.keys].length,
             snapPointWidth: (60000 / this.props.vsrg.bpm) / this.props.snapPoint * scaling / 100,
             scaling: scaling / 100,
             timelineSize: 40
@@ -281,7 +283,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                 >
                     {cache &&
                         <VsrgScrollableTrackRenderer
-                            tracks={vsrg.tracks}
+                            vsrg={vsrg}
                             cache={cache}
                             selectedHitObject={selectedHitObject}
                             snapPoint={snapPoint}
@@ -290,7 +292,6 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                             preventClick={preventClick}
                             sizes={sizes}
                             colors={canvasColors}
-                            keys={vsrg.keys}
                             isHorizontal={isHorizontal}
                             selectHitObject={this.selectHitObject}
                             onSnapPointSelect={this.props.onSnapPointSelect}
@@ -299,9 +300,11 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
 
                     <VsrgKeysRenderer
                         isHorizontal={isHorizontal}
-                        keys={VsrgKeysMap[vsrg.keys]}
+                        keys={DEFAULT_VSRG_KEYS_MAP[vsrg.keys]}
                         sizes={sizes}
                         colors={canvasColors}
+                        onKeyDown={this.props.onKeyDown}
+                        onKeyUp={this.props.onKeyUp}
                     />
                     {cache &&
                         <VsrgTimelineRenderer

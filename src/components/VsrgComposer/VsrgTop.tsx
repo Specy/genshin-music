@@ -4,7 +4,7 @@ import { AppButton } from "components/Inputs/AppButton"
 import { useTheme } from "lib/Hooks/useTheme"
 import { VsrgHitObject, VsrgSong, VsrgTrack } from "lib/Songs/VsrgSong"
 import { useEffect, useState } from "react"
-import { FaCog, FaPlus } from "react-icons/fa"
+import { FaCog, FaMinus, FaPlus } from "react-icons/fa"
 import { ThemeStore } from "stores/ThemeStore"
 import { VsrgKeyboard } from "./VsrgKeyboard"
 import { VsrgTrackSettings } from "./VsrgTrackSettings"
@@ -33,7 +33,7 @@ export function VsrgTop({
     onTrackDelete,
     onNoteSelect,
     lastCreatedHitObject,
-    selectedHitObject
+    selectedHitObject,
 }: VsrgTopProps) {
     const [theme] = useTheme()
     const [keyboardElements, setKeyboardElements] = useState<number[]>([])

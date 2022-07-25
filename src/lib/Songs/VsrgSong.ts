@@ -77,7 +77,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     removeHitObjectInTrack(trackIndex:number, hitObject: VsrgHitObject){
         this.tracks[trackIndex].removeHitObject(hitObject)
     }
-    removeHitObjectInTrackAtIndex(trackIndex: number, timestamp: number, index: number){
+    removeHitObjectInTrackAtTimestamp(trackIndex: number, timestamp: number, index: number){
         this.tracks[trackIndex].removeHitObjectAt(timestamp, index)
     }
     deleteTrack(index:number){

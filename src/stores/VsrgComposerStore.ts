@@ -9,8 +9,9 @@ export type VsrgComposerEvents =
     | 'tracksChange'
     | 'songLoad'
     | 'scaleChange'
+    | 'maxFpsChange'
 export type VsrcComposerEventCallback = {
-    callback: (event: VsrgComposerEvents) => void,
+callback: (event: VsrgComposerEvents) => void,
     id: string
 }
 

@@ -1,6 +1,9 @@
 import { Container, Sprite } from "@inlet/react-pixi";
 import { PLAY_BAR_OFFSET } from "appConfig";
 import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
+import { parseMouseClick } from "lib/Utilities";
+import { ClickType } from "types/GeneralTypes"
+
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
@@ -15,7 +18,7 @@ interface VsrgTrackRendererProps {
     isHorizontal: boolean
     selectedHitObject: VsrgHitObject | null
     timestamp: number
-    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => void
+    selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => void
 }
 
 
@@ -38,7 +41,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                 ? <Container
                     interactive={true}
                     pointerdown={(e) => {
-                        selectHitObject(hitObject, trackIndex, e.data.buttons)
+                        selectHitObject(hitObject, trackIndex, parseMouseClick(e.data.button))
                     }}
                     key={hitObject.renderId}
                 >
@@ -95,7 +98,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                         texture={cache.getHitObjectCache(track.color)}
                         interactive={true}
                         pointerdown={(e) => {
-                            selectHitObject(hitObject, trackIndex,  e.data.buttons)
+                            selectHitObject(hitObject, trackIndex, parseMouseClick(e.data.button))
                         }}
                         anchor={0.5}
                         x={x}

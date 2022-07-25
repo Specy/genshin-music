@@ -4,6 +4,7 @@ import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { clamp } from "lib/Utilities";
 import { PLAY_BAR_OFFSET } from "appConfig";
+import isMobile from "is-mobile";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 
@@ -133,7 +134,7 @@ export class VsrgCanvasCache {
     generateTrails(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
-        const hitObjectHeight = clamp(sizes.keyHeight / 2, 0, 100)
+        const hitObjectHeight = clamp(sizes.keyHeight / 2 * sizes.scaling, sizes.keyHeight / (isMobile() ? 3 : 4), 100)
         const margin = hitObjectHeight / 2
         withError.forEach(color => {
             const trail = new Graphics()
@@ -158,7 +159,7 @@ export class VsrgCanvasCache {
     generateSelectionRings(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
-        const hitObjectHeight = sizes.keyHeight / 1.5
+        const hitObjectHeight = clamp(sizes.keyHeight / 1.5 * sizes.scaling, sizes.keyHeight / (isMobile() ? 2 : 3), 150)
         withError.forEach(color => {
             const ring = new Graphics()
             ring.lineStyle(3, Color(color).rgbNumber())
@@ -174,7 +175,7 @@ export class VsrgCanvasCache {
     }
     generateTrackCache(app: Application) {
         const { colors, sizes, trackColors } = this
-        const hitObjectHeight = clamp(sizes.keyHeight / 2, 0, 100)
+        const hitObjectHeight = clamp(sizes.keyHeight / 2 * sizes.scaling, sizes.keyHeight / (isMobile() ? 3 : 4), 100)
         const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {
             const hitObject = new Graphics()
@@ -252,8 +253,8 @@ export class VsrgCanvasCache {
             this.textures.snapPoints.empty = emptyTexture
         } else {
             small.lineStyle(2, colors.lineColor[1])
-                .moveTo(0, 0)
-                .lineTo(sizes.width, 0)
+                .moveTo(0, sizes.snapPointWidth)
+                .lineTo(sizes.width, sizes.snapPointWidth)
             const smallTexture = app.renderer.generateTexture(small, {
                 resolution: 1,
                 scaleMode: SCALE_MODES.LINEAR,
@@ -261,8 +262,8 @@ export class VsrgCanvasCache {
             });
 
             large.lineStyle(4, colors.secondary[1])
-                .moveTo(0, 0)
-                .lineTo(sizes.width, 0)
+                .moveTo(0, sizes.snapPointWidth)
+                .lineTo(sizes.width, sizes.snapPointWidth)
             const largeTexture = app.renderer.generateTexture(large, {
                 resolution: 1,
                 scaleMode: SCALE_MODES.LINEAR,

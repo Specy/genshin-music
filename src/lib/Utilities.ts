@@ -7,6 +7,8 @@ import { NoteLayer } from "./Layer";
 import { Song } from "./Songs/Song";
 import { ComposedSong } from "./Songs/ComposedSong";
 import { RecordedSong } from "./Songs/RecordedSong";
+import { ClickType } from "types/GeneralTypes"
+
 
 class FileDownloader {
 	static download(file: string | Blob, name: string, as: string = "text/json") {
@@ -92,7 +94,11 @@ function isFocusable(el: HTMLElement | EventTarget | null | undefined){
 	return focusableElements.includes(el.tagName)
 }
 
-
+function parseMouseClick(event: number){
+	if(event === 0) return ClickType.Left
+	if(event === 2) return ClickType.Right
+	return ClickType.Unknown
+}
 class Array2d {
 	static from(height: number) {
 		return new Array(height).fill(0).map(() => { return [] })
@@ -267,5 +273,6 @@ export {
 	blurEvent,
 	insertionSort,
 	isComposedOrRecorded,
-	isFocusable
+	isFocusable,
+	parseMouseClick
 }

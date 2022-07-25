@@ -364,6 +364,7 @@ export type VsrgComposerSettingsDataType = {
     pitch: SettingsSelect<Pitch>
     isVertical: SettingsCheckbox
     autosave: SettingsCheckbox
+    maxFps: SettingsSelect<number>
 }
 export type VsrgComposerSettingsType = {
     other: {
@@ -416,6 +417,22 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             songSetting: false,
             value: false,
             category: "Editor Settings",
+        },
+        maxFps:{
+            name: "Max FPS (high values could lag)",
+            tooltip: "The FPS limiter of the editor, higher values could more lag",
+            type: "select",
+            songSetting: true,
+            value: 48,
+            category: "Song Settings",
+            options: [
+                24,
+                30,
+                48,
+                60,
+                90,
+                120
+            ]
         },
         autosave: {
             name: "Autosave changes",

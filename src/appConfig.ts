@@ -4,7 +4,7 @@ const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Gens
 const APP_VERSION = '2.8.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
-    ?  `
+    ? `
         (2.8.1 is a bug fix, changelog below is for 2.8.0)
         Increased instrument limit in the composer to 30
         Redesigned the tools in the composer
@@ -12,8 +12,8 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         Added metronome in player
         Added multiple instruments in player
         And more...
-    `.trim(): 
-       `(2.8.1 is a bug fix, changelog below is for 2.8.0)
+    `.trim() :
+    `(2.8.1 is a bug fix, changelog below is for 2.8.0)
         Increased instrument limit in the composer to 30
         Redesigned the tools in the composer
         Added paste/insert to certain layer
@@ -23,7 +23,7 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     `.trim()
 
 //@ts-ignore
-const TAURI:Tauri = window?.__TAURI__
+const TAURI: Tauri = window?.__TAURI__
 //@ts-ignore
 const IS_TAURI = !!TAURI
 const NOTES_CSS_CLASSES = {
@@ -457,7 +457,13 @@ const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
         83: [6, false],
         84: [6, false],
     })))
-const MIDI_BOUNDS = APP_NAME === "Genshin" 
+const DEFAULT_VSRG_KEYS_MAP = {
+    4: ["A", "S", "G", "H"],
+    6: ["A", "S", "D", "G", "H", "J"],
+    8: ["A", "S", "D", "F", "G", "H", "J", "K"],
+}
+
+const MIDI_BOUNDS = APP_NAME === "Genshin"
     ? {
         upper: 84,
         lower: 48
@@ -497,7 +503,8 @@ export {
     MIDI_BOUNDS,
     IS_TAURI,
     TAURI,
-    PLAY_BAR_OFFSET
+    PLAY_BAR_OFFSET,
+    DEFAULT_VSRG_KEYS_MAP
 }
 export type {
     Pitch

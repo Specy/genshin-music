@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from "@inlet/react-pixi";
 import { PLAY_BAR_OFFSET } from "appConfig";
-import { TextStyle } from "pixi.js";
+import { Rectangle, TextStyle } from "pixi.js";
 import { memo, useEffect, useState } from "react";
 import useFontFaceObserver from "use-font-face-observer";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
@@ -10,6 +10,8 @@ interface VsrgKeysRendererProps {
     sizes: VsrgCanvasSizes
     colors: VsrgCanvasColors
     isHorizontal: boolean
+    onKeyDown: (key: number) => void
+    onKeyUp: (key: number) => void
 }
 
 const defaultTextStyle = new TextStyle({
@@ -18,17 +20,15 @@ const defaultTextStyle = new TextStyle({
     fill: "#ffffff",
 })
 
-
-const fontFace= [{
+const fontFace = [{
     family: 'Bonobo'
 }]
-function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeysRendererProps) {
+function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKeyUp }: VsrgKeysRendererProps) {
     const [textStyle, setTextStyle] = useState(defaultTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
-
     useEffect(() => {
         setTextStyle(new TextStyle({
-            fontFamily: isFontLoaded ?  '"Bonobo"' : '"Source Sans Pro", Helvetica, sans-serif',
+            fontFamily: isFontLoaded ? '"Bonobo"' : '"Source Sans Pro", Helvetica, sans-serif',
             fontSize: isFontLoaded ? 25 : 30,
             fill: colors.lineColor[1],
         }))
@@ -69,35 +69,50 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal }: VsrgKeysRender
                 }
             }}
         />
-        <Graphics 
+        <Graphics
             draw={(g) => {
                 g.clear()
-                g.lineStyle(6,colors.accent[1])
-                if(isHorizontal){
-                    g.moveTo(PLAY_BAR_OFFSET, 0)
-                    g.lineTo(PLAY_BAR_OFFSET, sizes.height)
-                    for(let i = 0; i < keys.length; i++){
-                        g.drawCircle(PLAY_BAR_OFFSET, keyHeight * (i + 0.5) + 2, 4)
+                g.lineStyle(6, colors.accent[1])
+                if (isHorizontal) {
+                    g.moveTo(PLAY_BAR_OFFSET + 2, 0)
+                    g.lineTo(PLAY_BAR_OFFSET + 2, sizes.height)
+                    for (let i = 0; i < keys.length; i++) {
+                        g.drawCircle(PLAY_BAR_OFFSET + 2, keyHeight * (i + 0.5) + 2, 4)
                     }
-                }else{
-                    g.moveTo(0, sizes.height - PLAY_BAR_OFFSET)
-                    g.lineTo(sizes.width, sizes.height - PLAY_BAR_OFFSET)
-                    for(let i = 0; i < keys.length; i++){
-                        g.drawCircle(keyWidth * (i + 0.5) + 2, sizes.height - PLAY_BAR_OFFSET, 4)
+                } else {
+                    g.moveTo(0, sizes.height - PLAY_BAR_OFFSET + 2)
+                    g.lineTo(sizes.width, sizes.height - PLAY_BAR_OFFSET + 2)
+                    for (let i = 0; i < keys.length; i++) {
+                        g.drawCircle(keyWidth * (i + 0.5) + 2, sizes.height - PLAY_BAR_OFFSET + 2, 4)
                     }
                 }
             }}
         />
-        {keys.map((key, index) =>
-            <Text
-                key={index}
-                text={key}
-                x={isHorizontal ? 30 : keyWidth * index + keyWidth / 2}
-                y={isHorizontal ? keyHeight * index + keyHeight / 2 : sizes.height - 30}
-                anchor={0.5}
-                style={textStyle}
-            />
-        )}
+        {keys.map((key, index) => {
+            const hitArea = new Rectangle(
+                isHorizontal ? 0 : keyWidth * index,
+                isHorizontal ? keyHeight * index : sizes.height - 60,
+                isHorizontal ? keyWidth : sizes.width,
+                isHorizontal ? keyHeight : 60
+            )
+            return <Container
+                key={key}
+                hitArea={hitArea}
+                interactive={true}
+                pointerdown={() => onKeyDown(index)}
+                pointerup={() => onKeyUp(index)}
+                pointerupoutside={() => onKeyUp(index)}
+            >
+                <Text
+                    x={isHorizontal ? 30 : keyWidth * index + keyWidth / 2}
+                    y={isHorizontal ? keyHeight * index + keyHeight / 2 : sizes.height - 30}
+                    anchor={0.5}
+                    text={key}
+                    style={textStyle}
+                />
+            </Container>
+
+        })}
 
     </Container>
 }
