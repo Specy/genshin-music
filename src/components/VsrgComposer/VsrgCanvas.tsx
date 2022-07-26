@@ -1,5 +1,6 @@
 import { Stage } from "@inlet/react-pixi"
 import { DEFAULT_VSRG_KEYS_MAP } from "appConfig"
+import isMobile from "is-mobile"
 import { subscribeTheme } from "lib/Hooks/useTheme"
 import { RecordedSong } from "lib/Songs/RecordedSong"
 import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong"
@@ -17,6 +18,8 @@ import { VsrgTimelineRenderer } from "./VsrgTimelineRenderer"
 
 export type VsrgCanvasSizes = {
     el: DOMRect
+    rawWidth: number
+    rawHeight: number
     width: number
     height: number
     snapPointWidth: number
@@ -46,7 +49,8 @@ interface VsrgCanvasProps {
     maxFps: number
     onKeyDown: (key: number) => void
     onKeyUp: (key: number) => void
-    onTimeAdd: () => void
+    onAddTime: () => void
+    onRemoveTime: () => void
     onTimestampChange: (timestamp: number) => void
     onSnapPointSelect: (timestamp: number, key: number, clickType?: ClickType) => void
     dragHitObject: (timestamp: number, key?: number) => void
@@ -88,6 +92,8 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             timestamp: 0,
             sizes: {
                 el: new DOMRect(),
+                rawWidth: 0,
+                rawHeight: 0,
                 width: 0,
                 height: 0,
                 snapPointWidth: 0,
@@ -119,6 +125,9 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         this.throttledEventLoop.setCallback(this.handleTick)
         this.throttledEventLoop.changeMaxFps(this.props.maxFps)
         this.throttledEventLoop.start()
+        window.addEventListener('blur', this.handleBlur)
+        this.state.cache?.destroy()
+        this.toDispose.push(() => window.removeEventListener('blur', this.handleBlur))
         this.handleThemeChange(ThemeProvider)
     }
     componentWillUnmount() {
@@ -143,25 +152,32 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
             this.setState({ timestamp })
         }
     }
+    handleBlur = () => {
+        this.setState({ isPressing: false })
+    }
     calculateSizes = () => {
         const { wrapperRef } = this
         if (!wrapperRef.current) return console.warn("no wrapper")
         const wrapperSizes = wrapperRef.current.getBoundingClientRect()
         const { scaling } = this.props
+        const timelineSize = isMobile() ? 20 : 40
+        const height = wrapperSizes.height - timelineSize
         const sizes: VsrgCanvasSizes = {
             el: wrapperSizes,
+            rawWidth: wrapperSizes.width,
+            rawHeight: wrapperSizes.height,
             width: wrapperSizes.width,
-            height: wrapperSizes.height,
-            keyHeight: wrapperSizes.height / DEFAULT_VSRG_KEYS_MAP[this.props.vsrg.keys].length,
+            height: height,
+            keyHeight: height / DEFAULT_VSRG_KEYS_MAP[this.props.vsrg.keys].length,
             keyWidth: wrapperSizes.width / DEFAULT_VSRG_KEYS_MAP[this.props.vsrg.keys].length,
             snapPointWidth: (60000 / this.props.vsrg.bpm) / this.props.snapPoint * scaling / 100,
             scaling: scaling / 100,
-            timelineSize: 40
+            timelineSize
         }
         const canvas = wrapperRef.current.querySelector('canvas')
         if (canvas) {
             canvas.style.width = `${sizes.width}px`
-            canvas.style.height = `${sizes.height}px`
+            canvas.style.height = `${sizes.height + timelineSize}px`
         }
         this.setState({ sizes }, this.generateCache)
     }
@@ -178,10 +194,13 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         })
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        this.setState({
-            isPressing: true,
-            previousPosition: this.props.isHorizontal ? e.clientX : -e.clientY
-        })
+        const { sizes } = this.state
+        if((e.clientY - sizes.el.top) > sizes.timelineSize){
+            this.setState({
+                isPressing: true,
+                previousPosition: this.props.isHorizontal ? e.clientX : -e.clientY
+            })
+        }
     }
     setIsNotDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!this.state.isPressing) return
@@ -197,7 +216,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         const { previousPosition, draggedHitObject, sizes, timestamp } = this.state
         const { isHorizontal, vsrg } = this.props
         const deltaOrientation = isHorizontal ? e.clientX : -e.clientY
-        const keyPosition = isHorizontal ? e.clientY - sizes.el.top : e.clientX - sizes.el.left
+        const keyPosition = isHorizontal ? e.clientY - sizes.el.top - sizes.timelineSize : e.clientX - sizes.el.left
         const hoveredPosition = Math.floor(keyPosition / (isHorizontal ? sizes.keyHeight : sizes.keyWidth))
         const delta = (previousPosition - deltaOrientation) / sizes.scaling
         const newTotalMovement = this.state.totalMovement + Math.abs(delta)
@@ -235,6 +254,10 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if (clickType !== 2) this.setState({ draggedHitObject: hitObject })
         this.props.selectHitObject(hitObject, trackIndex, clickType)
     }
+    handleTimelineClick = (timestamp: number) => {
+        this.setState({ timestamp })
+        this.props.onTimestampChange(timestamp)
+    }
     handleThemeChange = (theme: ThemeStore) => {
         const bg_plain = theme.get('primary')
         const bg_line = theme.getText('primary')
@@ -268,13 +291,13 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                     onMount={this.calculateSizes}
                     ref={this.stageRef}
                     raf={false}
-                    width={sizes.width}
-                    height={sizes.height}
+                    width={sizes.rawWidth}
+                    height={sizes.rawHeight}
                     onWheel={this.handleWheel}
                     onPointerDown={this.setIsDragging}
                     onPointerUp={this.setIsNotDragging}
                     onPointerLeave={this.setIsNotDragging}
-                    onPointerMoveCapture={this.handleDrag}
+                    onPointerMove={this.handleDrag}
                     onContextMenu={(e) => e.preventDefault()}
                     options={{
                         backgroundColor: canvasColors.background[1],
@@ -294,7 +317,8 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                             sizes={sizes}
                             colors={canvasColors}
                             isHorizontal={isHorizontal}
-                            addTime={this.props.onTimeAdd}
+                            onAddTime={this.props.onAddTime}
+                            onRemoveTime={this.props.onRemoveTime}
                             selectHitObject={this.selectHitObject}
                             onSnapPointSelect={this.props.onSnapPointSelect}
                         />
@@ -310,16 +334,16 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                     />
                     {cache &&
                         <VsrgTimelineRenderer
-                            hidden={true}
+                            hidden={false}
                             cache={cache}
                             timestamp={timestamp}
+                            onTimelineClick={this.handleTimelineClick}
                             isHorizontal={isHorizontal}
                             song={vsrg}
                             audioSong={audioSong}
                             sizes={sizes}
                             colors={canvasColors}
                         />
-
                     }
 
                 </Stage>

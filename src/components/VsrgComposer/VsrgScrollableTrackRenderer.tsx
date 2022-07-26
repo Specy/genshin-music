@@ -8,7 +8,6 @@ import { InteractionEvent, TextStyle } from "pixi.js";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
-import { vsrgComposerStore } from "stores/VsrgComposerStore";
 import useFontFaceObserver from "use-font-face-observer";
 import { useEffect, useState } from "react";
 import { defaultTextStyle } from "./VsrgKeysRenderer";
@@ -27,13 +26,14 @@ interface VsrgScrollableTrackRendererProps {
     selectedHitObject: VsrgHitObject | null
     onSnapPointSelect: (timestamp: number, key: number, clickType?: ClickType) => void
     selectHitObject: (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => void
-    addTime: () => void
+    onAddTime: () => void
+    onRemoveTime: () => void
 }
 
 const fontFace = [{
     family: 'Bonobo'
 }]
-export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject, addTime }: VsrgScrollableTrackRendererProps) {
+export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject, onAddTime, onRemoveTime }: VsrgScrollableTrackRendererProps) {
     const scale = sizes.scaling
     const lowerBound = timestamp - cache.textures.snapPoints.size - PLAY_BAR_OFFSET / scale
     const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) / scale
@@ -50,7 +50,7 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
     function handleSnapPointClick(event: InteractionEvent) {
         if (preventClick) return
         if (isHorizontal) {
-            const y = event.data.global.y
+            const y = event.data.global.y - sizes.timelineSize
             const x = event.target.x / scale
             onSnapPointSelect(x, Math.floor(y / sizes.keyHeight), parseMouseClick(event.data.button))
         } else {
@@ -61,7 +61,7 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
     }
     return <Container
         x={isHorizontal ? (-timestamp * scale + PLAY_BAR_OFFSET) : 0}
-        y={isHorizontal ? 0 : (timestamp * scale - PLAY_BAR_OFFSET)}
+        y={isHorizontal ? sizes.timelineSize : (timestamp * scale - PLAY_BAR_OFFSET)}
         interactive={true}
         interactiveChildren={true}
     >
@@ -73,8 +73,6 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
                 pointertap={handleSnapPointClick}
                 x={isHorizontal ? sp * scale : 0}
                 y={isHorizontal ? 0 : -(sp * scale - sizes.height + snapPointSize)}
-                width={isHorizontal ? snapPointSize : sizes.width}
-                height={isHorizontal ? sizes.height : snapPointSize}
                 texture={i % snapPoint
                     ? cache.textures.snapPoints.small!
                     : cache.textures.snapPoints.large!
@@ -103,26 +101,46 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
                 isHorizontal={isHorizontal}
             />
         )}
-        <Container
-            click={addTime}
-            interactive={true}
-            x={isHorizontal ? vsrg.duration * scale : sizes.width / 2}
-            anchor={0.5}
-            y={isHorizontal ? sizes.keyHeight * (vsrg.keys / 2 - 1) : -(vsrg.duration * scale - sizes.height + snapPointSize)}
-        >
-            <Sprite
-                texture={cache.textures.buttons.time!}
-            />
-            <Text
-                x={isHorizontal ? sizes.width / 6 : 0}
-                anchor={0.5}
-                y={isHorizontal ? sizes.keyHeight * 0.5 : 0}
-                text="Add time"
-                style={textStyle}
-            />
-        </Container>
-
-
+        {timestamp >= vsrg.duration - (isHorizontal ? sizes.width : sizes.height) / scale &&
+            <>
+                <Container
+                    pointertap={onAddTime}
+                    interactive={true}
+                    x={isHorizontal ? vsrg.duration * scale : 0}
+                    anchor={0.5}
+                    y={isHorizontal ? 0 : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height)}
+                >
+                    <Sprite
+                        texture={cache.textures.buttons.time!}
+                    />
+                    <Text
+                        x={cache.textures.buttons.width / 2}
+                        anchor={0.5}
+                        y={cache.textures.buttons.height / 2}
+                        text="Click to add time"
+                        style={textStyle}
+                    />
+                </Container>
+                <Container
+                    pointertap={onRemoveTime}
+                    interactive={true}
+                    x={isHorizontal ? vsrg.duration * scale : sizes.width / 2}
+                    anchor={0.5}
+                    y={isHorizontal ? sizes.height / 2 : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height)}
+                >
+                    <Sprite
+                        texture={cache.textures.buttons.time!}
+                    />
+                    <Text
+                        x={cache.textures.buttons.width / 2}
+                        anchor={0.5}
+                        y={cache.textures.buttons.height / 2}
+                        text="Click to remove time"
+                        style={textStyle}
+                    />
+                </Container>
+            </>
+        }
     </Container>
 }
 

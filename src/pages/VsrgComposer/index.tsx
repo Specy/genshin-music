@@ -200,10 +200,11 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const { vsrg, selectedType, lastCreatedHitObject, selectedTrack } = this.state
         if (timestamp < 0) return console.warn("Timestamp is less than 0")
         const existing = vsrg.getHitObjectsAt(timestamp, key)
+        const firstNote = existing.find(h => h !== null)
         if (type === ClickType.Unknown) console.warn('unknown click type')
         //if wants to add a tap note
         if (selectedType === 'tap' && type === ClickType.Left) {
-            if (existing.some(h => h !== null)) return
+            if (firstNote) return this.setState({ selectedHitObject: firstNote })
             const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
             this.playHitObject(hitObject, selectedTrack)
             this.setState({ selectedHitObject: hitObject })
@@ -214,7 +215,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 vsrg.setHeldHitObjectTail(selectedTrack, lastCreatedHitObject, timestamp - lastCreatedHitObject.timestamp)
                 this.setState({ lastCreatedHitObject: null, selectedHitObject: lastCreatedHitObject })
             } else {
-                if (existing.some(h => h !== null)) return
+                if (firstNote) return this.setState({ selectedHitObject: firstNote })
                 const lastCreatedHitObject = vsrg.createHeldHitObject(selectedTrack, timestamp, key)
                 this.setState({ lastCreatedHitObject, selectedHitObject: lastCreatedHitObject })
             }
@@ -224,7 +225,6 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrg.removeHitObjectInTrackAtTimestamp(selectedTrack, timestamp, key)
             this.setState({ selectedHitObject: null })
         }
-
         this.setState({ vsrg })
     }
     selectTrack = (selectedTrack: number) => {
@@ -397,6 +397,12 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.calculateSnapPoints()
         this.setState({ vsrg })
     }
+    removeTime = () => {
+        const { vsrg } = this.state
+        vsrg.duration -= 1000
+        this.calculateSnapPoints()
+        this.setState({ vsrg })
+    }
     onScalingChange = (scaling: number) => {
         this.setState({ scaling }, () => vsrgComposerStore.emitEvent('scaleChange'))
     }
@@ -452,7 +458,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                         snapPoint={snapPoint}
                         snapPoints={snapPoints}
                         isPlaying={isPlaying}
-                        onTimeAdd={this.addTime}
+                        onRemoveTime={this.removeTime}
+                        onAddTime={this.addTime}
                         onKeyDown={this.startHitObjectTap}
                         onKeyUp={this.endHitObjectTap}
                         dragHitObject={this.dragHitObject}

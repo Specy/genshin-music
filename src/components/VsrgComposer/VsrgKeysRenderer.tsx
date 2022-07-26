@@ -37,10 +37,7 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
     const keyWidth = sizes.width / keys.length
     return <Container
         x={0}
-        y={0}
-        anchor={[0, 0]}
-        height={sizes.height}
-        width={sizes.width}
+        y={sizes.timelineSize}
     >
         <Graphics
             draw={(g) => {
@@ -80,10 +77,11 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
                         g.drawCircle(PLAY_BAR_OFFSET + 2, keyHeight * (i + 0.5) + 2, 4)
                     }
                 } else {
-                    g.moveTo(0, sizes.height - PLAY_BAR_OFFSET + 2)
-                    g.lineTo(sizes.width, sizes.height - PLAY_BAR_OFFSET + 2)
+                    const offset = sizes.height - PLAY_BAR_OFFSET - 2 - sizes.timelineSize
+                    g.moveTo(0, offset)
+                    g.lineTo(sizes.width, offset)
                     for (let i = 0; i < keys.length; i++) {
-                        g.drawCircle(keyWidth * (i + 0.5) + 2, sizes.height - PLAY_BAR_OFFSET + 2, 4)
+                        g.drawCircle(keyWidth * (i + 0.5) + 2, offset, 4)
                     }
                 }
             }}
@@ -92,7 +90,7 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
             const hitArea = new Rectangle(
                 isHorizontal ? 0 : keyWidth * index,
                 isHorizontal ? keyHeight * index : sizes.height - 60,
-                isHorizontal ? keyWidth : sizes.width,
+                isHorizontal ? 60 : sizes.width,
                 isHorizontal ? keyHeight : 60
             )
             return <Container

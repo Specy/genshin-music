@@ -24,10 +24,13 @@ export type VsrgComposerCanvasCache = {
         empty: Texture | null
     }
     buttons: {
+        width: number
+        height: number
         time: Texture | null
     }
     timeline: {
         square: Texture | null
+        thumb: Texture | null
     }
     sizes: {
         hitObject: number
@@ -68,6 +71,8 @@ export class VsrgCanvasCache {
             selectionRings: {},
             trails: {},
             buttons: {
+                width: 0,
+                height: 0,
                 time: null
             },
             snapPoints: {
@@ -77,7 +82,8 @@ export class VsrgCanvasCache {
                 empty: null
             },
             timeline: {
-                square: null
+                square: null,
+                thumb: null
             },
             sizes: {
                 hitObject: 0,
@@ -99,6 +105,7 @@ export class VsrgCanvasCache {
         Object.values(this.textures.heldHitObjects).forEach(texture => texture.destroy())
         Object.values(this.textures.trails).forEach(texture => texture.destroy())
         Object.values(this.textures.selectionRings).forEach(texture => texture.destroy())
+        this.textures.buttons.time?.destroy()
         this.app = null
     }
     generate() {
@@ -129,33 +136,76 @@ export class VsrgCanvasCache {
         //timeline
         const square = new Graphics()
         square.beginFill(this.colors.background_10[1])
-        square.drawRect(0, 0, this.sizes.width, this.sizes.timelineSize)
+            .drawRect(0, 0, this.sizes.width, this.sizes.timelineSize)
+            .lineStyle(3, this.colors.secondary[1], 1)
+            .moveTo(0, sizes.timelineSize)
+            .lineTo(this.sizes.width, sizes.timelineSize)
         const squareTexture = app.renderer.generateTexture(square, {
             resolution: 1,
             scaleMode: SCALE_MODES.LINEAR,
             region: new Rectangle(0, 0, this.sizes.width, this.sizes.timelineSize)
         })
         this.textures.timeline.square = squareTexture
+        const margin = isHorizontal ? sizes.height / 16 : sizes.width / 16
 
+        const thumbSize = clamp(sizes.timelineSize / 4, 8, 100)
+        const thumb = new Graphics()
+        //draw a line with two triangles on top and bottom
+        thumb.beginFill(colors.accent[1])
+            .moveTo(0, 0)
+            .lineTo(thumbSize, 0)
+            .lineTo(thumbSize / 2, thumbSize)
+            .lineTo(0, 0)
+            .moveTo(0, 0)
+            .lineTo(thumbSize, 0)
+            .lineTo(thumbSize / 2, -thumbSize)
+            .lineTo(0, 0)
+            .endFill()
+            .lineStyle(3, colors.accent[1], 1)
+            .moveTo(thumbSize / 2, 0)
+            .lineTo(thumbSize / 2, sizes.timelineSize)
+            .lineStyle(0)
+            .beginFill(colors.accent[1])
+            .moveTo(0, sizes.timelineSize)
+            .lineTo(thumbSize, sizes.timelineSize)
+            .lineTo(thumbSize / 2, sizes.timelineSize)
+            .lineTo(0, sizes.timelineSize)
+            .moveTo(0, sizes.timelineSize)
+            .lineTo(thumbSize, sizes.timelineSize)
+            .lineTo(thumbSize / 2, sizes.timelineSize - thumbSize)
+            .lineTo(0, sizes.timelineSize)
+
+
+
+        
+        const thumbTexture = app.renderer.generateTexture(thumb, {
+            resolution: 2,
+            scaleMode: SCALE_MODES.LINEAR,
+            region: new Rectangle(0, 0, thumbSize, sizes.timelineSize)
+        })
+        this.textures.timeline.thumb = thumbTexture
         //buttons
         const time = new Graphics()
         time.beginFill(colors.background_10[1])
-        time.lineStyle(3, colors.secondary[1])
-        if(isHorizontal){
-            time.drawRoundedRect(0, 0, sizes.width / 3, sizes.keyHeight, 16)
+        if (isHorizontal) {
+            time.drawRoundedRect(margin / 2, margin / 2, sizes.width / 2 - margin, sizes.height / 2 - margin, 16)
             const timeTexture = app.renderer.generateTexture(time, {
                 resolution: 1,
                 scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, sizes.width / 3, sizes.keyHeight)
+                region: new Rectangle(0, 0, sizes.width / 2, sizes.height / 2)
             })
+            this.textures.buttons.width = sizes.width / 2
+            this.textures.buttons.height = sizes.height / 2
             this.textures.buttons.time = timeTexture
-        }else{
-            time.drawRoundedRect(0, 0, sizes.width / 3, 200, 8)
+        } else {
+            time.drawRoundedRect(margin / 2, margin / 2, sizes.width / 2 - margin, sizes.height / 3 - margin, 8)
             const timeTexture = app.renderer.generateTexture(time, {
                 resolution: 1,
                 scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, sizes.width / 3, 200)
+                region: new Rectangle(0, 0, sizes.width / 2, sizes.height / 3)
             })
+            this.textures.buttons.width = sizes.width / 2
+            this.textures.buttons.height = sizes.height / 3
             this.textures.buttons.time = timeTexture
         }
     }
@@ -299,7 +349,7 @@ export class VsrgCanvasCache {
                 scaleMode: SCALE_MODES.LINEAR,
                 region: new Rectangle(0, 0, sizes.width, sizes.snapPointWidth)
             });
-            const lines = 10
+            const lines = 20
             const lineSize = sizes.width / lines
             // empty.rotation = rotation
             empty.lineStyle(2, colors.secondary[1])

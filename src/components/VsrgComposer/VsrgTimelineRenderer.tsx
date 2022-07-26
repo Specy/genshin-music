@@ -2,6 +2,8 @@ import { Container, Graphics, Sprite } from "@inlet/react-pixi";
 import { RecordedSong } from "lib/Songs/RecordedSong";
 import { VsrgSong } from "lib/Songs/VsrgSong";
 import { clamp } from "lib/Utilities";
+import { InteractionEvent, Rectangle } from "pixi.js";
+import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 
@@ -16,32 +18,58 @@ interface VsrgTimelineRendererProps {
     sizes: VsrgCanvasSizes
     colors: VsrgCanvasColors
     hidden: boolean
+    onTimelineClick: (timestamp: number) => void
 }
 
-export function VsrgTimelineRenderer({ sizes, colors, timestamp, song, cache , hidden}: VsrgTimelineRendererProps) {
-    if(hidden) return null
-    const thumbSize = clamp(sizes.width / song.duration * 100, 0, sizes.width)
+const defaultHitbox = new Rectangle(0, 0, 0, 0)
+export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, onTimelineClick }: VsrgTimelineRendererProps) {
+    const [hitbox, setHitbox] = useState(defaultHitbox)
+    const [isClicking, setIsClicking] = useState(false)
+
+    const setNotClicking = useCallback(() => setIsClicking(false), [])
+    useEffect(() => {
+        setHitbox(new Rectangle(0, 0, sizes.width, sizes.timelineSize))
+    }, [sizes])
+    useEffect(() => {
+        function handleBlur() {
+            setIsClicking(false)
+        }
+        window.addEventListener('blur', handleBlur)
+        return () => window.removeEventListener('blur', handleBlur)
+    }, [])
+
+    const handleEvent = useCallback((event: InteractionEvent,override?: boolean) => {
+        if (!isClicking && override !== true) return
+        const x = event.data.global.x
+        const time = x / sizes.width * song.duration
+        onTimelineClick(clamp(time, 0, song.duration))
+    }, [sizes, song.duration, onTimelineClick, isClicking])
+    const setClicking = useCallback((e: InteractionEvent) => {
+        setIsClicking(true)
+        handleEvent(e, true)
+    }, [handleEvent])
+    if (hidden) return null
     const relativeTimestampPosition = timestamp / song.duration
     return <>
         <Container
             x={0}
             y={0}
+            interactive={true}
+            pointermove={handleEvent}
+            pointerdown={setClicking}
+            pointerup={setNotClicking}
+            pointerupoutside={setNotClicking}
+            hitArea={hitbox}
         >
             <Sprite
                 x={0}
                 y={0}
                 texture={cache.textures.timeline.square!}
             />
-            <Graphics
+            <Sprite
+                y={0}
                 x={relativeTimestampPosition * sizes.width}
-                width={thumbSize}
-                height={sizes.timelineSize}
-                anchor={0.5}
-                draw={g => {
-                    g.clear()
-                    g.lineStyle(2, colors.accent[1])
-                    g.drawRoundedRect(0, 0, thumbSize, sizes.timelineSize, 4)
-                }}
+                texture={cache.textures.timeline.thumb!}
             />
 
         </Container>
