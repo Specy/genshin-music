@@ -1,10 +1,12 @@
 import { InstrumentName } from "types/GeneralTypes";
+import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";
-import { InstrumentData, SerializedInstrumentData } from "./SongClasses";
+import { InstrumentData, RecordedNote, SerializedInstrumentData } from "./SongClasses";
 
 export type VsrgSongKeys = 4 | 6 | 8
 export type SerializedVsrgSong = SerializedSong & {
     type: "vsrg"
+    trackModifiers: SerializedTrackModifier[]
     tracks: SerializedVsrgTrack[]
     keys: VsrgSongKeys
     audioSongId: string | null
@@ -14,6 +16,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     keys: VsrgSongKeys = 4
     duration: number = 60000
     audioSongId: string | null = null
+    trackModifiers: VsrgTrackModifier[] = []
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -28,6 +31,18 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
 
     setAudioSong(song: Song){
         this.audioSongId = song.id
+        const tracks = song.instruments.length
+        const trackDifference = tracks - this.trackModifiers.length
+        if(trackDifference > 0){
+            const newTracks = new Array(trackDifference).fill(0).map(() => new VsrgTrackModifier())
+            this.trackModifiers.push(...newTracks)
+        }else{
+            this.trackModifiers.splice(tracks, trackDifference)
+        }
+        song.instruments.forEach((instrument, i) => this.trackModifiers[i].set({
+            alias: instrument.alias || instrument.name,
+        }))
+        this.trackModifiers = [...this.trackModifiers]
     }
     toGenshin() {
         return this
@@ -44,6 +59,18 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         this.tracks.push(track)
         this.tracks = [...this.tracks]
         return track
+    }
+    getRenderableNotes(song: RecordedSong){
+        const notes:RecordedNote[] = []
+        const trackModifiers = this.trackModifiers.map(modifier => !modifier.hidden)
+        song.notes.forEach(note => {
+            const renderable = trackModifiers.some((value, i) => {
+                if(value) return note.layer.test(i)
+                return false
+            })
+            if(renderable) notes.push(note)
+        })
+        return notes
     }
     getHitObjectsAt(timestamp: number, key: number){
         return this.tracks.map(track => track.getHitObjectAt(timestamp, key))
@@ -101,6 +128,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             folderId: this.folderId,
             tracks: this.tracks.map(track => track.serialize()),
             instruments: this.instruments.map(instrument => instrument.serialize()),
+            trackModifiers: this.trackModifiers.map(modifier => modifier.serialize())
         }
     }
     set(data: Partial<VsrgSong>){
@@ -109,20 +137,61 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
 	}
     clone(): VsrgSong {
         const clone = new VsrgSong(this.name)
-        clone.id = this.id
-        clone.folderId = this.folderId
-        clone.bpm = this.bpm
-        clone.data = { ...this.data }
-        clone.version = this.version
-        clone.pitch = this.pitch
-        clone.instruments = this.instruments.map(ins => ins.clone())
-        clone.tracks = this.tracks.map(track => track.clone())
-        clone.keys = this.keys
+        clone.set({
+            id: this.id,
+            folderId: this.folderId,
+            bpm: this.bpm,
+            data: {...this.data},
+            version: this.version,
+            pitch: this.pitch,
+            keys: this.keys,
+            duration: this.duration,
+            audioSongId: this.audioSongId,
+            trackModifiers: this.trackModifiers.map(modifier => modifier.clone()),
+            tracks: this.tracks.map(track => track.clone()),
+            instruments: this.instruments.map(instrument => instrument.clone())
+
+        })
         return clone
     }
 }
 
 
+interface SerializedTrackModifier{
+    hidden: boolean
+    muted: boolean
+    alias: string
+}
+export class VsrgTrackModifier{
+    hidden: boolean = true
+    muted: boolean = false
+    alias: string = ""
+
+    static deserialize(obj: SerializedTrackModifier){
+        return new VsrgTrackModifier().set({
+            hidden: obj.hidden,
+            muted: obj.muted,
+            alias: obj.alias
+        })
+    }
+    serialize(): SerializedTrackModifier{
+        return {
+            hidden: this.hidden,
+            muted: this.muted,
+            alias: this.alias
+        }
+    }
+    clone(){
+        return new VsrgTrackModifier().set({
+            hidden: this.hidden,
+            muted: this.muted
+        })
+    }
+    set(data: Partial<VsrgTrackModifier>){
+        Object.assign(this, data)
+        return this
+    }
+}
 
 interface SerializedVsrgTrack{
     instrument: SerializedInstrumentData

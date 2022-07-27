@@ -1,4 +1,4 @@
-import { Container, Sprite, Text } from "@inlet/react-pixi";
+import { Container, Sprite } from "@inlet/react-pixi";
 import { PIXI_VERTICAL_ALIGN, PLAY_BAR_OFFSET } from "appConfig";
 import { RecordedSong } from "lib/Songs/RecordedSong";
 import { RecordedNote } from "lib/Songs/SongClasses";

@@ -20,13 +20,14 @@ import { useTheme } from "lib/Hooks/useTheme";
 import { fileService } from "lib/Services/FileService";
 import { songService } from "lib/Services/SongService";
 import { SerializedSong, Song } from "lib/Songs/Song";
-import { VsrgSong } from "lib/Songs/VsrgSong";
+import { VsrgSong, VsrgTrackModifier } from "lib/Songs/VsrgSong";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import HomeStore from "stores/HomeStore";
 import { songsStore } from "stores/SongsStore";
 import { ThemeStore } from "stores/ThemeStore";
 import { SettingUpdate } from "types/SettingsPropriety";
+import { TrackModifier } from "./TrackModifier";
 
 type MenuTabs = 'Songs' | 'Settings'
 const isOnMobile = isMobile()
@@ -35,16 +36,18 @@ interface VsrgMenuProps {
     settings: VsrgComposerSettingsDataType
     hasChanges: boolean
     audioSong: Song | null
+    trackModifiers: VsrgTrackModifier[]
     setAudioSong: (song: SerializedSong | null) => void
     handleSettingChange: (override: SettingUpdate) => void
     onSave: () => void
     onSongOpen: (song: VsrgSong) => void
     onCreateSong: () => void
+    onTrackModifierChange: (trackModifier: VsrgTrackModifier, index: number, recalculate: boolean) => void
 }
 
 
 
-function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChanges, onCreateSong, setAudioSong, audioSong }: VsrgMenuProps) {
+function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChanges, onCreateSong, setAudioSong, audioSong, trackModifiers, onTrackModifierChange }: VsrgMenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
@@ -146,24 +149,42 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                                 You can add a song that will be played on the background from one of your songs.
                             </HelpTooltip>
                         </h1>
-                            {audioSong === null
-                                ? <span>
-                                    No background song selected
-                                </span>
-                                : <div className="song-row">
-                                    <div className="song-name" style={{ cursor: 'default' }}>
-                                        {audioSong.name}
-                                    </div>
-                                    <SongActionButton
-                                        onClick={() => setAudioSong(null)}
-                                        ariaLabel="Remove background song"
-                                        tooltip="Remove background song"
-                                        style={{ backgroundColor: 'var(--red)', margin: 0 }}
-                                    >
-                                        <FaTimes />
-                                    </SongActionButton>
+                        {audioSong &&
+                            <>
+                                <div>
+                                    Instrument modifiers
                                 </div>
-                            }
+                                {trackModifiers.map((trackModifier, i) =>
+                                    <TrackModifier
+                                        key={i}
+                                        theme={theme}
+                                        data={trackModifier}
+                                        onChange={(t) => onTrackModifierChange(t, i, false)}
+                                        onVisibilityChange={(visible) => {
+                                            onTrackModifierChange(trackModifier.set({ hidden: visible }), i, true)
+                                        }}
+                                    />
+                                )}
+                            </>
+                        }
+                        {audioSong === null
+                            ? <span>
+                                No background song selected
+                            </span>
+                            : <div className="song-row" style={{marginTop: '0.5rem'}}>
+                                <div className="song-name" style={{ cursor: 'default' }}>
+                                    {audioSong.name}
+                                </div>
+                                <SongActionButton
+                                    onClick={() => setAudioSong(null)}
+                                    ariaLabel="Remove background song"
+                                    tooltip="Remove background song"
+                                    style={{ backgroundColor: 'var(--red)', margin: 0 }}
+                                >
+                                    <FaTimes />
+                                </SongActionButton>
+                            </div>
+                        }
                         <SongMenu<SeelctSongRowProps>
                             songs={songs}
                             exclude={['vsrg']}
@@ -181,7 +202,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
     </>
 }
 export default memo(VsrgMenu, (p, n) => {
-    return p.settings === n.settings && p.hasChanges === n.hasChanges && p.audioSong === n.audioSong
+    return p.settings === n.settings && p.hasChanges === n.hasChanges && p.audioSong === n.audioSong && p.trackModifiers === n.trackModifiers
 })
 
 

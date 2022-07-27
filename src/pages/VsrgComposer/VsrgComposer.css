@@ -165,6 +165,11 @@
     margin-left: 0.6rem;
 }
 
+.track-modifier{
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    margin-top: 0.2rem;
+}
 @media only screen and (max-width: 1000px){
     .vsrg-name{
         display: none;

@@ -3,8 +3,6 @@ import { asyncConfirm } from "components/Utility/AsyncPrompts"
 import { APP_NAME } from "appConfig"
 import { logger } from 'stores/LoggerStore';
 import { SongMenu } from 'components/Layout/SongMenu';
-
-
 import './ErrorPage.css'
 import { AppButton } from 'components/Inputs/AppButton';
 import { SerializedSong, SongType } from 'lib/Songs/Song';
