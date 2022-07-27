@@ -35,8 +35,8 @@ const fontFace = [{
 }]
 export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject, onAddTime, onRemoveTime }: VsrgScrollableTrackRendererProps) {
     const scale = sizes.scaling
-    const lowerBound = timestamp - cache.textures.snapPoints.size - PLAY_BAR_OFFSET / scale
-    const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) / scale
+    const lowerBound = timestamp - (PLAY_BAR_OFFSET + cache.textures.snapPoints.size) / scale
+    const upperBound = timestamp + ((isHorizontal ? sizes.width : sizes.height) - PLAY_BAR_OFFSET) / scale 
     const snapPointSize = cache.textures.snapPoints.size
     const [textStyle, setTextStyle] = useState(defaultTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)

@@ -71,17 +71,17 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
                 g.clear()
                 g.lineStyle(6, colors.accent[1])
                 if (isHorizontal) {
-                    g.moveTo(PLAY_BAR_OFFSET + 2, 0)
-                    g.lineTo(PLAY_BAR_OFFSET + 2, sizes.height)
+                    g.moveTo(PLAY_BAR_OFFSET + 1, 0)
+                    g.lineTo(PLAY_BAR_OFFSET + 1, sizes.height)
                     for (let i = 0; i < keys.length; i++) {
-                        g.drawCircle(PLAY_BAR_OFFSET + 2, keyHeight * (i + 0.5) + 2, 4)
+                        g.drawCircle(PLAY_BAR_OFFSET + 1, keyHeight * (i + 0.5), 4)
                     }
                 } else {
-                    const offset = sizes.height - PLAY_BAR_OFFSET - 2 - sizes.timelineSize
+                    const offset = sizes.height - PLAY_BAR_OFFSET - 1 - sizes.timelineSize
                     g.moveTo(0, offset)
                     g.lineTo(sizes.width, offset)
                     for (let i = 0; i < keys.length; i++) {
-                        g.drawCircle(keyWidth * (i + 0.5) + 2, offset, 4)
+                        g.drawCircle(keyWidth * (i + 0.5) + 1, offset, 4)
                     }
                 }
             }}

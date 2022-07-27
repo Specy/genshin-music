@@ -472,6 +472,9 @@ const MIDI_BOUNDS = APP_NAME === "Genshin"
         upper: 84,
         lower: 60
     }
+const PIXI_VERTICAL_ALIGN = [0.5, 0] as [number, number]
+const PIXI_HORIZONTAL_ALIGN = [0, 0.5] as [number, number]
+const PIXI_CENTER_ALIGN = 0.5
 //get only non accidentals
 const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
 const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
@@ -504,7 +507,10 @@ export {
     IS_TAURI,
     TAURI,
     PLAY_BAR_OFFSET,
-    DEFAULT_VSRG_KEYS_MAP
+    DEFAULT_VSRG_KEYS_MAP,
+    PIXI_VERTICAL_ALIGN,
+    PIXI_HORIZONTAL_ALIGN,
+    PIXI_CENTER_ALIGN,
 }
 export type {
     Pitch

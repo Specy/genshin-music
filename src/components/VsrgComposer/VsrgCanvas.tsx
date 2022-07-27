@@ -3,6 +3,7 @@ import { DEFAULT_VSRG_KEYS_MAP } from "appConfig"
 import isMobile from "is-mobile"
 import { subscribeTheme } from "lib/Hooks/useTheme"
 import { RecordedSong } from "lib/Songs/RecordedSong"
+import { RecordedNote } from "lib/Songs/SongClasses"
 import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong"
 import { ThrottledEventLoop } from "lib/ThrottledEventLoop"
 import { Application } from "pixi.js"
@@ -47,6 +48,7 @@ interface VsrgCanvasProps {
     audioSong: RecordedSong | null
     scaling: number
     maxFps: number
+    renderableNotes: RecordedNote[]
     onKeyDown: (key: number) => void
     onKeyUp: (key: number) => void
     onAddTime: () => void
@@ -335,6 +337,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                     {cache &&
                         <VsrgTimelineRenderer
                             hidden={false}
+                            notes={this.props.renderableNotes}
                             cache={cache}
                             timestamp={timestamp}
                             onTimelineClick={this.handleTimelineClick}

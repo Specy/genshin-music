@@ -12,7 +12,7 @@ export type SerializedVsrgSong = SerializedSong & {
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
     keys: VsrgSongKeys = 4
-    duration: number = 10000
+    duration: number = 60000
     audioSongId: string | null = null
     constructor(name: string){
         super(name, 1, "vsrg")

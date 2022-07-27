@@ -4,7 +4,7 @@ import VsrgMenu from "components/VsrgComposer/VsrgMenu";
 import { SnapPoint, VsrgBottom, VsrgHitObjectType } from "components/VsrgComposer/VsrgBottom";
 import './VsrgComposer.css';
 import { VsrgTop } from "components/VsrgComposer/VsrgTop";
-import { VsrgHitObject, VsrgSong, VsrgSongKeys, VsrgTrack } from "lib/Songs/VsrgSong";
+import { SerializedVsrgSong, VsrgHitObject, VsrgSong, VsrgSongKeys, VsrgTrack } from "lib/Songs/VsrgSong";
 import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts";
 import { logger } from "stores/LoggerStore";
 import { VsrgCanvas } from "components/VsrgComposer/VsrgCanvas";
@@ -22,6 +22,7 @@ import { ComposedSong } from "lib/Songs/ComposedSong";
 import { isFocusable } from "lib/Utilities";
 import { DEFAULT_VSRG_KEYS_MAP } from "appConfig";
 import { ClickType } from "types/GeneralTypes"
+import { RecordedNote } from "lib/Songs/SongClasses";
 
 type VsrgComposerProps = RouteComponentProps & {
 
@@ -44,6 +45,7 @@ interface VsrgComposerState {
     selectedHitObject: VsrgHitObject | null
     lastCreatedHitObject: VsrgHitObject | null
     audioSong: RecordedSong | null
+    renderableNotes: RecordedNote[]
 }
 class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     lastTimestamp: number = 0
@@ -69,7 +71,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             isPlaying: false,
             lastCreatedHitObject: null,
             settings,
-            audioSong: null
+            audioSong: null,
+            renderableNotes: []
         }
         this.state.vsrg.addTrack("DunDun")
         this.mounted = false
@@ -87,7 +90,10 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.syncInstruments()
         KeyboardProvider.listen(this.handleKeyboardDown, { id: 'vsrg-composer', type: 'keydown' })
         KeyboardProvider.listen(this.handleKeyboardUp, { id: 'vsrg-composer', type: 'keyup' })
-
+        setTimeout(() => {
+            const song = songsStore.songs.find(s => s.type === 'vsrg')
+            this.onSongOpen(songService.parseSong(song) as VsrgSong)
+        },500)
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
             if (isFocusable(document.activeElement)) {
@@ -125,7 +131,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             this.startHitObjectTap(key)
         }
     }
-    handleKeyboardUp = ({ event, letter }: KeyboardEventData) => {
+    handleKeyboardUp = ({ letter }: KeyboardEventData) => {
         const { vsrg } = this.state
         const key = DEFAULT_VSRG_KEYS_MAP[vsrg.keys]?.indexOf(letter)
         if (key >= 0) {
@@ -236,11 +242,12 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const parsed = songService.parseSong(song)
         if (parsed instanceof RecordedSong) {
             vsrg.setAudioSong(parsed)
-            this.setState({ audioSong: parsed }, this.syncAudioSongInstruments)
+            this.setState({ audioSong: parsed, renderableNotes: parsed.notes }, this.syncAudioSongInstruments)
         }
         if (parsed instanceof ComposedSong) {
+            const recorded = parsed.toRecordedSong(0)
             vsrg.setAudioSong(parsed)
-            this.setState({ audioSong: parsed.toRecordedSong(0) }, this.syncAudioSongInstruments)
+            this.setState({ audioSong: recorded, renderableNotes: recorded.notes }, this.syncAudioSongInstruments)
         }
     }
     askForSongUpdate = async () => {
@@ -422,7 +429,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.setState({ selectedType, lastCreatedHitObject: null })
     }
     render() {
-        const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling } = this.state
+        const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes } = this.state
         return <>
             <VsrgMenu
                 hasChanges={this.changes > 0}
@@ -449,6 +456,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 >
                     <VsrgCanvas
                         vsrg={vsrg}
+                        renderableNotes={renderableNotes}
                         onTimestampChange={this.onTimestampChange}
                         selectedHitObject={selectedHitObject}
                         isHorizontal={!settings.isVertical.value}

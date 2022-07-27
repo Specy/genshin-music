@@ -29,6 +29,8 @@ export type VsrgComposerCanvasCache = {
         time: Texture | null
     }
     timeline: {
+        currentTime: Texture | null
+        note: Texture | null
         square: Texture | null
         thumb: Texture | null
     }
@@ -82,6 +84,8 @@ export class VsrgCanvasCache {
                 empty: null
             },
             timeline: {
+                currentTime: null,
+                note: null,
                 square: null,
                 thumb: null
             },
@@ -101,11 +105,13 @@ export class VsrgCanvasCache {
         this.textures.snapPoints.small?.destroy()
         this.textures.snapPoints.large?.destroy()
         this.textures.snapPoints.empty?.destroy()
-        Object.values(this.textures.hitObjects).forEach(texture => texture.destroy())
-        Object.values(this.textures.heldHitObjects).forEach(texture => texture.destroy())
-        Object.values(this.textures.trails).forEach(texture => texture.destroy())
-        Object.values(this.textures.selectionRings).forEach(texture => texture.destroy())
+        Object.values(this.textures.hitObjects).forEach(texture => texture?.destroy())
+        Object.values(this.textures.heldHitObjects).forEach(texture => texture?.destroy())
+        Object.values(this.textures.trails).forEach(texture => texture?.destroy())
+        Object.values(this.textures.selectionRings).forEach(texture => texture?.destroy())
+        Object.values(this.textures.timeline).forEach(texture => texture?.destroy())
         this.textures.buttons.time?.destroy()
+
         this.app = null
     }
     generate() {
@@ -135,7 +141,7 @@ export class VsrgCanvasCache {
         const { sizes, colors, isHorizontal } = this
         //timeline
         const square = new Graphics()
-        square.beginFill(this.colors.background_10[1])
+        square.beginFill(this.colors.background_plain[1])
             .drawRect(0, 0, this.sizes.width, this.sizes.timelineSize)
             .lineStyle(3, this.colors.secondary[1], 1)
             .moveTo(0, sizes.timelineSize)
@@ -175,9 +181,26 @@ export class VsrgCanvasCache {
             .lineTo(thumbSize / 2, sizes.timelineSize - thumbSize)
             .lineTo(0, sizes.timelineSize)
 
-
-
-        
+        const noteSize = sizes.timelineSize / 2
+        const note = new Graphics()
+        note.lineStyle(isMobile() ? 2 : 3 , colors.secondary[1], 1)
+            .drawCircle(sizes.timelineSize / 2 + 1, sizes.timelineSize / 2, noteSize / 2)
+        const noteTexture = app.renderer.generateTexture(note, {
+            resolution: 1,
+            scaleMode: SCALE_MODES.LINEAR,
+            region: new Rectangle(0, 0, sizes.timelineSize, sizes.timelineSize)
+        })
+        this.textures.timeline.note = noteTexture
+        const currentTime = new Graphics()
+        currentTime.lineStyle(12, colors.accent[1], 1)
+            .moveTo(0, 0)
+            .lineTo(0, sizes.timelineSize)
+        const currentTimeTexture = app.renderer.generateTexture(currentTime, {
+            resolution: 1,
+            scaleMode: SCALE_MODES.LINEAR,
+            region: new Rectangle(0, 0, 12, sizes.timelineSize)
+        })
+        this.textures.timeline.currentTime = currentTimeTexture
         const thumbTexture = app.renderer.generateTexture(thumb, {
             resolution: 2,
             scaleMode: SCALE_MODES.LINEAR,
@@ -255,7 +278,7 @@ export class VsrgCanvasCache {
     }
     generateTrackCache(app: Application) {
         const { colors, sizes, trackColors } = this
-        const hitObjectHeight = clamp(sizes.keyHeight / 2 * sizes.scaling, sizes.keyHeight / (isMobile() ? 3 : 4), 100)
+        const hitObjectHeight = clamp(sizes.keyHeight / 1.8 * sizes.scaling, sizes.keyHeight / (isMobile() ? 2 : 3.5), 100)
         const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {
             const hitObject = new Graphics()

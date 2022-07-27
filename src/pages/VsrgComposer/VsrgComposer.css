@@ -169,4 +169,7 @@
     .vsrg-name{
         display: none;
     }
+    .vsrg-top-right{
+        width: 12.6rem;
+    }
 }
