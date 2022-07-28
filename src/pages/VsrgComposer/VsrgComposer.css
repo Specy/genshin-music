@@ -36,7 +36,7 @@
 
 .vsrg-select-song-wrapper{
     margin-top: 0.5rem;
-    border: dashed 4px var(--accent);
+    border: dotted 4px var(--accent);
     padding: 0 0.4rem;
     border-radius: 0.4rem;
 }
@@ -167,8 +167,24 @@
 
 .track-modifier{
     padding: 0.4rem;
+    background-color: var(--menu-background);
+    color: var(--menu-background-text);
+    border-radius: 0.3rem;
+}
+.vsrg-track-modifier-button{
+    min-width: unset;
+    padding: 0.2rem;
+    height: 1.6rem;
+    width: 2rem;
+    font-size: 1rem;
+}
+.vsrg-composer-selected-song{
+    gap: 0.4rem;
+    padding: 0.6rem;
     border-radius: 0.4rem;
-    margin-top: 0.2rem;
+    margin-top: 0.4rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
 }
 @media only screen and (max-width: 1000px){
     .vsrg-name{

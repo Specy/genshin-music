@@ -49,6 +49,7 @@ interface VsrgCanvasProps {
     scaling: number
     maxFps: number
     renderableNotes: RecordedNote[]
+    tempoChanger: number
     onKeyDown: (key: number) => void
     onKeyUp: (key: number) => void
     onAddTime: () => void
@@ -149,7 +150,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     }
     handleTick = (elapsed: number, sinceLast: number) => {
         if (this.props.isPlaying) {
-            const timestamp = this.state.timestamp + sinceLast
+            const timestamp = this.state.timestamp + sinceLast * this.props.tempoChanger
             this.props.onTimestampChange(timestamp)
             this.setState({ timestamp })
         }

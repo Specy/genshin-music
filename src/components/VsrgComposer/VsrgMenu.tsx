@@ -19,7 +19,8 @@ import { useSongs } from "lib/Hooks/useSongs";
 import { useTheme } from "lib/Hooks/useTheme";
 import { fileService } from "lib/Services/FileService";
 import { songService } from "lib/Services/SongService";
-import { SerializedSong, Song } from "lib/Songs/Song";
+import { RecordedSong } from "lib/Songs/RecordedSong";
+import { SerializedSong } from "lib/Songs/Song";
 import { VsrgSong, VsrgTrackModifier } from "lib/Songs/VsrgSong";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
@@ -35,7 +36,7 @@ const isOnMobile = isMobile()
 interface VsrgMenuProps {
     settings: VsrgComposerSettingsDataType
     hasChanges: boolean
-    audioSong: Song | null
+    audioSong: RecordedSong | null
     trackModifiers: VsrgTrackModifier[]
     setAudioSong: (song: SerializedSong | null) => void
     handleSettingChange: (override: SettingUpdate) => void
@@ -143,17 +144,55 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                         onUpdate={handleSettingChange}
                     />
                     <div className="column vsrg-select-song-wrapper">
-                        <h1 className="settings-group-title row-centered">
+                        <h1 className={`settings-group-title row-centered`}>
                             Background Song
                             <HelpTooltip buttonStyle={{ width: '1.2rem', height: '1.2rem', marginLeft: '0.5rem' }}>
-                                You can add a song that will be played on the background from one of your songs.
+                                You can select one of your songs to be played on the background
                             </HelpTooltip>
                         </h1>
-                        {audioSong &&
-                            <>
-                                <div>
-                                    Instrument modifiers
+                        {audioSong === null
+                            ? <span>
+                                No background song selected
+                            </span>
+                            : <div className="column vsrg-composer-selected-song">
+                                <div className="row"
+                                    style={{
+                                        borderBottom: '2px solid var(--secondary)',
+                                        paddingBottom: '0.4rem',
+                                        marginBottom: '0.4rem'
+                                    }}
+                                >
+                                    <span className="song-name" style={{ cursor: 'default' }}>
+                                        {audioSong.name}
+                                    </span>
+                                    <SongActionButton
+                                        onClick={() => setAudioSong(null)}
+                                        ariaLabel="Remove background song"
+                                        tooltip="Remove background song"
+                                        style={{ backgroundColor: 'var(--red-bg)', margin: 0 }}
+                                    >
+                                        <FaTimes />
+                                    </SongActionButton>
                                 </div>
+                                <div className="row-centered space-between">
+                                    <span>
+                                        Pitch
+                                    </span>
+                                    <span>
+                                        {audioSong.pitch}
+                                    </span>
+                                </div>
+                                <div className="row-centered space-between">
+                                    <span>
+                                        BPM
+                                    </span>
+                                    <span>
+                                        {audioSong.bpm}
+                                    </span>
+                                </div>
+                                <span style={{marginTop: '0.4rem'}}>
+                                    Instrument modifiers
+                                </span>
                                 {trackModifiers.map((trackModifier, i) =>
                                     <TrackModifier
                                         key={i}
@@ -165,24 +204,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                                         }}
                                     />
                                 )}
-                            </>
-                        }
-                        {audioSong === null
-                            ? <span>
-                                No background song selected
-                            </span>
-                            : <div className="song-row" style={{marginTop: '0.5rem'}}>
-                                <div className="song-name" style={{ cursor: 'default' }}>
-                                    {audioSong.name}
-                                </div>
-                                <SongActionButton
-                                    onClick={() => setAudioSong(null)}
-                                    ariaLabel="Remove background song"
-                                    tooltip="Remove background song"
-                                    style={{ backgroundColor: 'var(--red)', margin: 0 }}
-                                >
-                                    <FaTimes />
-                                </SongActionButton>
+
                             </div>
                         }
                         <SongMenu<SeelctSongRowProps>

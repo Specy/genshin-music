@@ -202,12 +202,12 @@ function getPitchChanger(pitch: Pitch) {
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
 function calculateSongLength(columns: Column[], bpm: number, end: number) {
-	const bpmPerMs = Math.floor(60000 / bpm)
+	const msPerBeat = Math.floor(60000 / bpm)
 	let totalLength = 0
 	let currentLength = 0
 	let increment = 0
 	for (let i = 0; i < columns.length; i++) {
-		increment = bpmPerMs * TEMPO_CHANGERS[columns[i].tempoChanger].changer
+		increment = msPerBeat * TEMPO_CHANGERS[columns[i].tempoChanger].changer
 		if (i < end) currentLength += increment
 		totalLength += increment
 	}

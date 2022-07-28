@@ -17,6 +17,7 @@
 	--whitish: #ede5d8;
 	--hint-main: #949494;
 	--red: rgb(242 75 91);
+	--red-bg: rgb(193 81 92);
 	--green: #358a55;
 	--orange: #dd8d46;
 }
@@ -595,8 +596,6 @@ a {
 	border-bottom-right-radius: 2px;
 	transform: translateY(50%) rotate(45deg);
 }
-
-
 .help-tooltip ul{
 	margin: 0.2rem;
 	padding-left: 0.6rem;

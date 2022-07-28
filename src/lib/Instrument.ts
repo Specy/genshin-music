@@ -128,7 +128,6 @@ export default class Instrument {
         this.disconnect()
         this.isDeleted = true
         this.buffers = []
-        //TODO why was this not garbage collected?
         this.volumeNode = null
     }
 }

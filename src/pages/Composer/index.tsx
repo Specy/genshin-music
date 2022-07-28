@@ -516,12 +516,12 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 while (this.state.isPlaying) {
                     const { song, settings } = this.state
                     const tempoChanger = song.selectedColumn.getTempoChanger().changer
-                    const msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger) + pastError
+                    const msPerBeat = Math.floor(60000 / settings.bpm.value * tempoChanger) + pastError
                     previousTime = new Date().getTime()
-                    await delay(msPerBPM)
+                    await delay(msPerBeat)
                     if (!this.state.isPlaying || !this.mounted) break
                     this.handleTick()
-                    pastError = previousTime + msPerBPM - new Date().getTime()
+                    pastError = previousTime + msPerBeat - new Date().getTime()
                 }
                 resolve()
             })

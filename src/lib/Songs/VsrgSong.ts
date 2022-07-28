@@ -1,3 +1,4 @@
+import { TrackModifier } from "components/VsrgComposer/TrackModifier";
 import { InstrumentName } from "types/GeneralTypes";
 import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";
@@ -9,6 +10,7 @@ export type SerializedVsrgSong = SerializedSong & {
     trackModifiers: SerializedTrackModifier[]
     tracks: SerializedVsrgTrack[]
     keys: VsrgSongKeys
+    duration: number
     audioSongId: string | null
 }
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
@@ -25,24 +27,26 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
         song.tracks = obj.tracks.map(track => VsrgTrack.deserialize(track))
         song.audioSongId = obj.audioSongId
+        song.trackModifiers = obj.trackModifiers.map(modifier => VsrgTrackModifier.deserialize(modifier))
+        song.duration = obj.duration
         song.keys = obj.keys
         return song
     }
 
     setAudioSong(song: Song){
+        if(this.audioSongId === song.id) return
         this.audioSongId = song.id
-        const tracks = song.instruments.length
-        const trackDifference = tracks - this.trackModifiers.length
-        if(trackDifference > 0){
-            const newTracks = new Array(trackDifference).fill(0).map(() => new VsrgTrackModifier())
-            this.trackModifiers.push(...newTracks)
-        }else{
-            this.trackModifiers.splice(tracks, trackDifference)
-        }
-        song.instruments.forEach((instrument, i) => this.trackModifiers[i].set({
-            alias: instrument.alias || instrument.name,
-        }))
-        this.trackModifiers = [...this.trackModifiers]
+        console.log(song.instruments)
+        this.trackModifiers = song.instruments.map(ins => {
+            const modifier = new VsrgTrackModifier()
+            modifier.alias = ins.alias || ins.name
+            return modifier
+        })
+    }
+    setDurationFromNotes(notes: RecordedNote[]){
+        const duration = notes.reduce((max, note) => Math.max(max, note.time), 0)
+        this.duration = this.duration < duration ? duration : this.duration
+        return duration
     }
     toGenshin() {
         return this
@@ -126,6 +130,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             id: this.id,
             audioSongId: this.audioSongId,
             folderId: this.folderId,
+            duration: this.duration,
             tracks: this.tracks.map(track => track.serialize()),
             instruments: this.instruments.map(instrument => instrument.serialize()),
             trackModifiers: this.trackModifiers.map(modifier => modifier.serialize())

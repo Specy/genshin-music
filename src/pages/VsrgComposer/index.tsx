@@ -46,6 +46,7 @@ interface VsrgComposerState {
     lastCreatedHitObject: VsrgHitObject | null
     audioSong: RecordedSong | null
     renderableNotes: RecordedNote[]
+    tempoChanger: number
 }
 class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     lastTimestamp: number = 0
@@ -62,7 +63,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             audioPlayer: new AudioPlayer(settings.pitch.value),
             audioPlaybackPlayer: new AudioPlayer(settings.pitch.value),
             selectedTrack: 0,
-            snapPoint: 2,
+            snapPoint: 1,
             snapPoints: [0],
             snapPointDuration: 0,
             selectedHitObject: null,
@@ -72,7 +73,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             lastCreatedHitObject: null,
             settings,
             audioSong: null,
-            renderableNotes: []
+            renderableNotes: [],
+            tempoChanger: 1,
         }
         this.state.vsrg.addTrack("DunDun")
         this.mounted = false
@@ -242,12 +244,15 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (parsed instanceof RecordedSong) {
             vsrg.setAudioSong(parsed)
             const renderableNotes = vsrg.getRenderableNotes(parsed)
+            vsrg.setDurationFromNotes(parsed.notes)
+            console.log(vsrg.duration)
             this.setState({ audioSong: parsed, renderableNotes }, this.syncAudioSongInstruments)
         }
         if (parsed instanceof ComposedSong) {
             const recorded = parsed.toRecordedSong(0)
             const renderableNotes = vsrg.getRenderableNotes(recorded)
-            vsrg.setAudioSong(parsed)
+            vsrg.setDurationFromNotes(recorded.notes)
+            vsrg.setAudioSong(parsed) //set as composed song because it's the original song
             this.setState({ audioSong: recorded, renderableNotes }, this.syncAudioSongInstruments)
         }
 
@@ -281,7 +286,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     calculateSnapPoints = () => {
         const { vsrg, snapPoint } = this.state
-        const amount = vsrg.duration / (60000 / vsrg.bpm) * snapPoint
+        const amount = vsrg.duration / Math.floor(60000 / vsrg.bpm) * snapPoint
         const snapPointDuration = vsrg.duration / amount
         const snapPoints = new Array(Math.floor(amount)).fill(0).map((_, i) => i * snapPointDuration)
         this.setState({ snapPoints, snapPointDuration })
@@ -353,7 +358,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 notes.forEach(n => {
                     const layers = n.layer.toArray()
                     layers.forEach((l, i) => {
-                        if (l === 1) audioPlaybackPlayer.playNoteOfInstrument(i, n.index, audioSong.pitch)
+                        if (l === 0 || vsrg.trackModifiers[i].muted) return
+                        audioPlaybackPlayer.playNoteOfInstrument(i, n.index)
                     })
                 })
             }
@@ -445,11 +451,14 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         }
         this.setState({ vsrg })
     }
+    onTempoChangerChange = (tempoChanger: number) => {
+        this.setState({ tempoChanger })
+    }
     selectType = (selectedType: VsrgHitObjectType) => {
         this.setState({ selectedType, lastCreatedHitObject: null })
     }
     render() {
-        const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes } = this.state
+        const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes, tempoChanger } = this.state
         return <>
             <VsrgMenu
                 trackModifiers={vsrg.trackModifiers}
@@ -482,6 +491,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                         onTimestampChange={this.onTimestampChange}
                         selectedHitObject={selectedHitObject}
                         isHorizontal={!settings.isVertical.value}
+                        tempoChanger={tempoChanger}
                         maxFps={settings.maxFps.value}
                         scaling={scaling}
                         audioSong={audioSong}
@@ -502,6 +512,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 <VsrgBottom
                     vsrg={vsrg}
                     scaling={scaling}
+                    tempoChanger={tempoChanger}
+                    onTempoChangerChange={this.onTempoChangerChange}
                     onScalingChange={this.onScalingChange}
                     isPlaying={isPlaying}
                     togglePlay={this.togglePlay}

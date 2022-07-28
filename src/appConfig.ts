@@ -389,7 +389,7 @@ function isTwa() {
 export type AppName = 'Sky' | 'Genshin'
 
 const EMPTY_LAYER = "0000"
-
+const VSRG_TEMPO_CHANGER = [2, 1.75, 1.5, 1.25, 1, 0.75, 0.50, 0.25]
 const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
     ? {
         60: [0, false],
@@ -511,6 +511,7 @@ export {
     PIXI_VERTICAL_ALIGN,
     PIXI_HORIZONTAL_ALIGN,
     PIXI_CENTER_ALIGN,
+    VSRG_TEMPO_CHANGER
 }
 export type {
     Pitch

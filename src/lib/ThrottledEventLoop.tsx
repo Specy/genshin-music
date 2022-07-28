@@ -1,3 +1,4 @@
+import { Timer } from "types/GeneralTypes"
 
 type ThrottledEventLoopCallback = (elapsed: number, sinceLast: number) => void
 
@@ -10,7 +11,7 @@ export class ThrottledEventLoop{
     private maxFps: number
     private maxFpsInterval = 0
     private deltaTime = 0
-    private raf: number = 0
+    private raf: Timer = 0
     private duration = 0
     private previousTickTime = 0
     constructor(callback: ThrottledEventLoopCallback, maxFps: number){
@@ -39,7 +40,7 @@ export class ThrottledEventLoop{
         this.tick()
     }
     stop(){
-        cancelAnimationFrame(this.raf)
+        clearTimeout(this.raf)
     }
     tick = () => {
         const currentTime = Date.now()
@@ -50,7 +51,7 @@ export class ThrottledEventLoop{
             this.previousTickTime = currentTime
         }
         this.elapsed = currentTime - this.startTime
-        if(this.elapsed < this.duration) this.raf = requestAnimationFrame(this.tick)
+        if(this.elapsed < this.duration) this.raf = setTimeout(this.tick, 8)
     }
 }
 

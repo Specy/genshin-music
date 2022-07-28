@@ -30,20 +30,23 @@ export function SettingsPane({ settings, changeVolume, onUpdate }: SettingsPaneP
         map.get(setting.category)!.settings[key] = setting
     })
     return <>
+    
         {Array.from(map.values()).map(group =>
             <Fragment key={group.category}>
-                <h1 className="settings-group-title">
-                    {group.category}
-                </h1>
-                {Object.entries(group.settings).map(([key, setting]) =>
-                    <SettingsRow
-                        key={key}
-                        objKey={key as SettingUpdateKey}
-                        data={setting}
-                        changeVolume={changeVolume}
-                        update={onUpdate}
-                    />
-                )}
+                <div className="column">
+                    <h1 className="settings-group-title">
+                        {group.category}
+                    </h1>
+                    {Object.entries(group.settings).map(([key, setting]) =>
+                        <SettingsRow
+                            key={key}
+                            objKey={key as SettingUpdateKey}
+                            data={setting}
+                            changeVolume={changeVolume}
+                            update={onUpdate}
+                        />
+                    )}
+                </div>
             </Fragment>
         )}
     </>
