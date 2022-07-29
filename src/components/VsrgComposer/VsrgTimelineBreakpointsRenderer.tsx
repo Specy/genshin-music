@@ -11,11 +11,13 @@ interface VsrgTimelineBreakpointsRendererProps {
 }
 
 
+//TODO add cache as bitmap
 function _VsrgTimelineBreakpointsRenderer({ cache, breakpoints, sizes, duration }: VsrgTimelineBreakpointsRendererProps) {
+
     return <>
         <Container>
-            {breakpoints.map(breakpoint => 
-                <Sprite 
+            {breakpoints.map(breakpoint =>
+                <Sprite
                     key={breakpoint}
                     texture={cache.textures.timeline.breakpoint!}
                     x={breakpoint / duration * sizes.width}

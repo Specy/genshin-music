@@ -23,6 +23,8 @@ export const defaultTextStyle = new TextStyle({
 const fontFace = [{
     family: 'Bonobo'
 }]
+
+//TODO add cache as bitmap
 function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKeyUp }: VsrgKeysRendererProps) {
     const [textStyle, setTextStyle] = useState(defaultTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
@@ -32,6 +34,7 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
             fontSize: isFontLoaded ? 25 : 30,
             fill: colors.lineColor[1],
         }))
+
     }, [colors, sizes, keys, isFontLoaded])
     const keyHeight = sizes.height / keys.length
     const keyWidth = sizes.width / keys.length

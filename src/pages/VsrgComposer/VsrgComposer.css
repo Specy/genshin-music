@@ -27,7 +27,7 @@
     display: flex;
     flex-direction: column;
     width: 13.6rem;
-    margin-left: 0.6rem;
+    margin-left: 0.4rem;
 }
 .vsrg-top-right-disabled .vsrg-track-wrapper{
     pointer-events: none;

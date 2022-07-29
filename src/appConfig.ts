@@ -511,7 +511,7 @@ export {
     PIXI_VERTICAL_ALIGN,
     PIXI_HORIZONTAL_ALIGN,
     PIXI_CENTER_ALIGN,
-    VSRG_TEMPO_CHANGER
+    VSRG_TEMPO_CHANGER,
 }
 export type {
     Pitch

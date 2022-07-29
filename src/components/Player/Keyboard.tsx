@@ -58,7 +58,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     constructor(props: KeyboardProps) {
         super(props)
         this.state = {
-            playTimestamp: new Date().getTime(),
+            playTimestamp: Date.now(),
             songToPractice: [],
             approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
             outgoingAnimation: new Array(APP_NAME === 'Sky' ? 15 : 21).fill({ key: 0 }),
@@ -113,7 +113,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                     ? song.toRecordedSong().clone()
                     : song.clone()
 
-                lostReference.timestamp = new Date().getTime()
+                lostReference.timestamp = Date.now()
                 const end = value.end || lostReference?.notes?.length || 0
                 if (type === 'play') {
                     this.playSong(lostReference, value.start, end)
@@ -258,17 +258,17 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         if (notes.length === 0 || notes.length <= start) return
         let previous = notes[start].time
         let pastError = 0
-        let previousTime = new Date().getTime()
+        let previousTime = Date.now()
         for (let i = start; i < end && i < song.notes.length; i++) {
             const delayTime = notes[i].time - previous
             previous = notes[i].time
-            previousTime = new Date().getTime()
+            previousTime = Date.now()
             if (delayTime > 16) await delay(delayTime - pastError)
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
 
             this.handleClick(keyboard[notes[i].index], notes[i].layer)
             SliderStore.setCurrent(i + 1)
-            pastError = new Date().getTime() - previousTime - delayTime
+            pastError = Date.now() - previousTime - delayTime
         }
     }
     applySpeedChange = (notes: RecordedNote[]) => {
@@ -419,7 +419,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             if (approachStatus === 'approach-wrong') approachingScore.combo = 0
         }
         if (hasAnimation && playerStore.eventType !== 'approaching') {
-            const key = Math.floor(Math.random() * 10000) + new Date().getTime()
+            const key = Math.floor(Math.random() * 10000) + Date.now()
             outgoingAnimation[note.index] = { key }
         }
         this.setState({

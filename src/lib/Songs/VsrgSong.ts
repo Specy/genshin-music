@@ -26,18 +26,18 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     }
     static deserialize(obj: SerializedVsrgSong): VsrgSong {
         const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
-        song.tracks = obj.tracks.map(track => VsrgTrack.deserialize(track))
-        song.audioSongId = obj.audioSongId
-        song.trackModifiers = obj.trackModifiers.map(modifier => VsrgTrackModifier.deserialize(modifier))
-        song.duration = obj.duration
-        song.keys = obj.keys
+        song.tracks = (obj.tracks ?? []).map(track => VsrgTrack.deserialize(track))
+        song.audioSongId = obj.audioSongId ?? null
+        song.trackModifiers = (obj.trackModifiers ?? []).map(modifier => VsrgTrackModifier.deserialize(modifier))
+        song.duration = obj.duration ?? 60000
+        song.keys = obj.keys ?? 4
+        song.breakpoints = obj.breakpoints ?? []
         return song
     }
 
     setAudioSong(song: Song){
         if(this.audioSongId === song.id) return
         this.audioSongId = song.id
-        console.log(song.instruments)
         this.trackModifiers = song.instruments.map(ins => {
             const modifier = new VsrgTrackModifier()
             modifier.alias = ins.alias || ins.name
@@ -77,11 +77,14 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         this.validateBreakpoints()
     }
     getClosestBreakpoint(timestamp: number, direction: -1 | 1){
-        const breakpoints = this.breakpoints.filter(breakpoint => breakpoint * direction > timestamp * direction)
-        if(breakpoints.length === 0){
+        const { breakpoints } = this
+        const breakpoint = direction === 1 //1 = right, -1 = left
+            ? breakpoints.filter((v) => v > timestamp)
+            : breakpoints.filter((v) => v < timestamp)
+        if (breakpoint.length === 0) {
             return direction === 1 ? this.duration : 0
         }
-        return breakpoints[0]
+        return breakpoint[direction === 1 ? 0 : breakpoint.length - 1]
     }
     getRenderableNotes(song: RecordedSong){
         const notes:RecordedNote[] = []
@@ -226,7 +229,7 @@ interface SerializedVsrgTrack{
 export class VsrgTrack{
     instrument: InstrumentData
     hitObjects: VsrgHitObject[]
-    color: string = "white"
+    color: string = '#FFFFFF'
     private lastPlayedHitObjectIndex: number = 0
     constructor(instrument?: InstrumentName, alias?:string,  hitObjects?: VsrgHitObject[]){
         this.instrument = new InstrumentData({ name: instrument ?? "DunDun", alias })
@@ -234,9 +237,9 @@ export class VsrgTrack{
     }
     static deserialize(data: SerializedVsrgTrack){
         const track = new VsrgTrack()
-        track.instrument = InstrumentData.deserialize(data.instrument)
-        track.hitObjects = data.hitObjects.map(x => VsrgHitObject.deserialize(x))
-        track.color = data.color
+        track.instrument = InstrumentData.deserialize(data.instrument ?? {})
+        track.hitObjects = (data.hitObjects ?? []).map(x => VsrgHitObject.deserialize(x))
+        track.color = data.color ?? '#FFFFFF'
         return track
     }
     startPlayback(timestamp:number){

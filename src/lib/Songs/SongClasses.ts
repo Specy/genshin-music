@@ -87,7 +87,14 @@ export class InstrumentData{
 		}
 	}
 	static deserialize(data: SerializedInstrumentData): InstrumentData{
-		return new InstrumentData(data)
+		return new InstrumentData().set({
+			name: data.name ?? INSTRUMENTS[0],
+			volume: data.volume ?? 100,
+			pitch: data.pitch ?? "C",
+			visible: data.visible ?? true,
+			icon: data.icon ?? 'circle',
+			alias: data.alias ?? ""
+		})
 	}
 	set(data: Partial<InstrumentData>){
 		Object.assign(this, data)
@@ -203,16 +210,16 @@ export class Recording {
 	startTimestamp: number
 	notes: RecordedNote[]
 	constructor() {
-		this.startTimestamp = new Date().getTime()
+		this.startTimestamp = Date.now()
 		this.notes = []
 	}
 	start = () => {
-		this.startTimestamp = new Date().getTime() - 100
+		this.startTimestamp = Date.now() - 100
 		console.log("Started new recording")
 	}
 	addNote = (index: number) => {
 		if (this.notes.length === 0) this.start()
-		const currentTime = new Date().getTime()
+		const currentTime = Date.now()
 		const note: RecordedNote = new RecordedNote(index, currentTime - this.startTimestamp)
 		this.notes.push(note)
 	}

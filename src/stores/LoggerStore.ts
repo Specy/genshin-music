@@ -40,7 +40,7 @@ export class LoggerStore {
     ) => {
         this.state.data = {
             text,
-            timestamp: new Date().getTime(),
+            timestamp: Date.now(),
             visible: true,
             timeout,
             id: ++this.state.data.id,
