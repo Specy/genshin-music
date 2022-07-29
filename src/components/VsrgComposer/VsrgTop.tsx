@@ -50,7 +50,6 @@ export function VsrgTop({
         )
     }, [])
     return <>
-        <div className={`vsrg-top`}>
             {children}
             <div className={`vsrg-top-right ${lastCreatedHitObject !== null ? 'vsrg-top-right-disabled' : ''}`} >
                 {isTrackSettingsOpen &&
@@ -122,7 +121,6 @@ export function VsrgTop({
                     onClick={onNoteSelect}
                 />
             </div>
-        </div>
     </>
 }
 interface TrackSelectorProps {
@@ -136,37 +134,54 @@ interface TrackSelectorProps {
 function TrackSelector({ track, selected, theme, onSettingsClick, onTrackClick }: TrackSelectorProps) {
     const [selectedColor, setSelectedColor] = useState({
         background: 'var(--primary)',
-        text: 'var(--text-color)'
+        text: 'var(--primary-text)'
     })
-
+    const [color, setColor] = useState({
+        background: 'var(--primary)',
+        text: 'var(--primary-text)'
+    })
     useEffect(() => {
         const themeColor = theme.get('primary')
         const mixed = themeColor.mix(new Color(track.color), 0.3)
         setSelectedColor({
             background: mixed.toString(),
-            text: 'var(--primary-text)'
+            text: mixed.isDark() ? 'var(--text-light)' : 'var(--text-dark)'
+        })
+        const color = new Color(track.color)
+        setColor({
+            background: color.toString(),
+            text: color.isDark() ? 'rgb(220 219 216)' : 'rgb(55 55 55)'
         })
     }, [theme, track.color])
     return <>
         <div
-            className="vsrg-track column flex-centered"
+            className="vsrg-track row-centered"
             style={{
                 backgroundColor: selected ? selectedColor.background : 'var(--primary)',
-                color: selected ? selectedColor.text : 'var(--text-color)',
+                color: selected ? selectedColor.text : 'var(--primary-text)',
             }}
             onClick={onTrackClick}
         >
-            {track.instrument.alias || track.instrument.name}
-            <div className="vsrg-track-color" style={{ backgroundColor: track.color }} />
-            {selected &&
-                <AppButton
-                    onClick={onSettingsClick}
-                    className="vsrg-track-settings flex-centered"
-                >
-                    <FaCog />
-                </AppButton>
-
-            }
+            <span 
+                className="text-ellipsis" 
+                style={{
+                    color: selected ? selectedColor.text : 'var(--text-color)',
+                    paddingLeft: '0.6rem',
+                    paddingRight: '0.2rem',
+                    flex: 1
+                }}
+            >
+                {track.instrument.alias || track.instrument.name}
+            </span>
+            <AppButton 
+                onClick={() => selected && onSettingsClick()} 
+                style={{ backgroundColor: color.background }} 
+                className='vsrg-track-left flex-centered'
+            >
+                {selected &&
+                    <FaCog color={color.text}/>
+                }
+            </AppButton>
         </div>
     </>
 }

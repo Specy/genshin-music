@@ -1,5 +1,4 @@
-
-.menu{
+.menu {
     width: 4rem;
     background-color: var(--primary);
     height: 100%;
@@ -15,16 +14,20 @@
     margin-left: -4rem;
     transition: all 0.4s;
 }
-.menu-visible{
+
+.menu-visible {
     margin-left: 0;
 }
-.margin-top-auto{
+
+.margin-top-auto {
     margin-top: auto;
 }
-.menu-main-page{
+
+.menu-main-page {
     opacity: 0.9;
 }
-.hamburger{
+
+.hamburger {
     position: absolute;
     bottom: 0.5rem;
     left: 0.5rem;
@@ -41,10 +44,12 @@
     align-items: center;
     cursor: pointer;
 }
-.icon{
+
+.icon {
     font-size: 1.5rem;
 }
-.rotate-screen{
+
+.rotate-screen {
     width: 100%;
     height: 100%;
     z-index: 1000;
@@ -57,10 +62,13 @@
     background-color: var(--primary);
     font-size: 1.5rem;
 }
-.rotate-screen p{
+
+.rotate-screen p {
     text-align: center;
 }
-.rotate-screen img, .rotate-screen svg{
+
+.rotate-screen img,
+.rotate-screen svg {
     width: 60vw;
     height: 60vw;
     margin-bottom: 1rem;
@@ -70,7 +78,8 @@
     padding: 1.5rem;
     border-radius: 1rem;
 }
-.menu-wrapper{
+
+.menu-wrapper {
     position: absolute;
     left: 0;
     top: 0;
@@ -81,14 +90,15 @@
     z-index: 11;
 }
 
-.library-search-result-text{
+.library-search-result-text {
     width: 100%;
     height: 100%;
     justify-content: center;
     align-items: center;
     display: flex;
 }
-.side-menu{
+
+.side-menu {
     width: 40vw;
     border-radius: 0.3rem;
     border-top-left-radius: unset;
@@ -104,7 +114,8 @@
     left: -40vw;
     position: fixed;
 }
-.menu-open{
+
+.menu-open {
     transform: scale(1);
     left: 4rem !important;
     opacity: 1;
@@ -112,50 +123,56 @@
     animation: delayBackdrop 0.3s;
     animation-fill-mode: forwards;
 }
-.menu-panel{
+
+.menu-panel {
     width: 100%;
     display: none;
     flex: 1;
     flex-direction: column;
-    
+
 }
-.menu-panel-visible{
+
+.menu-panel-visible {
     display: flex;
     animation: appearLeft 0.3s;
 }
 
-.songs-buttons-wrapper{
-    display:flex;
+.songs-buttons-wrapper {
+    display: flex;
     width: 100%;
     align-items: center;
     flex-wrap: wrap;
     gap: 0.2rem;
 }
-.library-search-row{
+
+.library-search-row {
     display: flex;
     width: 100%;
     margin: 1rem 0 0.2rem 0;
 }
-.library-search-input{
+
+.library-search-input {
     box-sizing: border-box;
     padding: 0 1rem;
     outline: none;
     color: var(--menu-background-text);
     background-color: #d3bd8e;
     display: flex;
-    flex:1;
+    flex: 1;
     height: 2.2rem;
     border: none;
     border-radius: 0.3rem;
     cursor: text;
 }
-.library-search-input::placeholder{
+
+.library-search-input::placeholder {
     color: var(--menu-background-text);
 }
-.library-search-btn{
+
+.library-search-btn {
     background-color: #d3bd8e;
     color: var(--menu-background-text);
-    height:2.2rem;
+    height: 2.2rem;
     width: 2.2rem;
     border: none;
     cursor: pointer;
@@ -168,10 +185,13 @@
     align-items: center;
     justify-content: center;
 }
-.library-search-btn:hover{
+
+.library-search-btn:hover {
     filter: brightness(1.1);
 }
-.songs-wrapper,.library-search-songs-wrapper{
+
+.songs-wrapper,
+.library-search-songs-wrapper {
     border-bottom-left-radius: 0.3rem;
     border-bottom-right-radius: 0.3rem;
     padding: 0.5rem;
@@ -182,16 +202,19 @@
     flex-direction: column;
     gap: 0.3rem;
 }
-.library-search-songs-wrapper{
+
+.library-search-songs-wrapper {
     border-radius: 0.3rem;
     padding-top: 0.5rem;
 }
-.tab-selector-wrapper{
+
+.tab-selector-wrapper {
     display: flex;
     margin-top: 1rem;
     gap: 0.2rem;
 }
-.tab-selector{
+
+.tab-selector {
     flex: 1;
     white-space: nowrap;
     border: none;
@@ -205,15 +228,18 @@
     margin: 0;
     transition: all 0.2s;
 }
-.tab-selected{
+
+.tab-selected {
     background-color: #ad9c85;
 }
-.inverted{
+
+.inverted {
     filter: invert(1);
 }
-.song-row{
+
+.song-row {
     display: flex;
-    flex:1;
+    flex: 1;
     background-color: var(--primary);
     border-radius: 0.3rem;
     color: var(--primary-text);
@@ -223,7 +249,7 @@
     transition: all 0.2s;
 }
 
-.panel-content-wrapper{
+.panel-content-wrapper {
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -232,7 +258,8 @@
     margin-right: -0.5rem;
     padding-right: 0.5rem;
 }
-.song-button{
+
+.song-button {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -249,23 +276,25 @@
 }
 
 
-.floating-children-bottom{
-	flex-direction: column;
-	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
-	display: none;
-	position: absolute;
-	transform: translateX(calc(-100% + 3rem));
-	z-index: 100;
-	padding: 0.2rem;
-	background-color: var(--primary);
-	color: var(--primary-text);
-	border: solid 1px var(--secondary);
-	border-radius: 0.4rem;
+.floating-children-bottom {
+    flex-direction: column;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+    display: none;
+    position: absolute;
+    transform: translateX(calc(-100% + 3rem));
+    z-index: 100;
+    padding: 0.2rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: solid 1px var(--secondary);
+    border-radius: 0.4rem;
 }
-.floating-dropdown{
+
+.floating-dropdown {
     position: relative;
 }
-.dropdown-select{
+
+.dropdown-select {
     background-color: var(--primary);
     padding: 0.5rem 0;
     height: 100%;
@@ -273,18 +302,20 @@
     color: var(--primary-text);
     border: none;
 }
-.floating-dropdown-text{
+
+.floating-dropdown-text {
     display: flex;
     font-size: 0.8rem;
     white-space: nowrap;
 }
-.floating-dropdown-active .floating-children-bottom{
-	display: flex;
-	animation: fadeIn 0.2s;
-	animation-fill-mode: forwards;
+
+.floating-dropdown-active .floating-children-bottom {
+    display: flex;
+    animation: fadeIn 0.2s;
+    animation-fill-mode: forwards;
 }
 
-.song-name{
+.song-name {
     flex: 1;
     cursor: pointer;
     word-break: break-word;
@@ -294,45 +325,50 @@
     font-size: 1rem;
     margin-right: 0.45rem;
 }
-.song-name-input{
-	background-color: transparent;
+
+.song-name-input {
+    background-color: transparent;
     font-size: 1rem;
     font-family: Bonobo;
-	padding: 0;
-	margin: 0;
-	height: 100%;
-	border: none;
-    padding-left:  0.3rem;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    border: none;
+    padding-left: 0.3rem;
     cursor: pointer;
 
 }
-.song-rename{
-	outline: solid 2px var(--secondary);
-	border-radius: 0.2rem;
+
+.song-rename {
+    outline: solid 2px var(--secondary);
+    border-radius: 0.2rem;
     cursor: text;
 }
 
-.song-buttons-wrapper{
+.song-buttons-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.menu-title{
+.menu-title {
     font-size: 2rem;
     width: 100%;
     display: flex;
     justify-content: center;
     margin-bottom: 1rem;
 }
+
 .menu::-webkit-scrollbar-thumb {
-	background: var(--icon-color);
-	border-radius: 2px;
-  }
+    background: var(--icon-color);
+    border-radius: 2px;
+}
+
 .menu::-webkit-scrollbar {
-	width: 3px;
-  }
-.menu-item{
+    width: 3px;
+}
+
+.menu-item {
     background-color: var(--primary);
     border: none;
     width: 2.8rem;
@@ -348,7 +384,7 @@
     transition: all 0.3s;
 }
 
-.menu-item a{
+.menu-item a {
     color: var(--icon-color);
     display: flex;
     width: 100%;
@@ -356,44 +392,53 @@
     justify-content: center;
     align-items: center;
 }
-.menu-item:hover{
+
+.menu-item:hover {
     filter: brightness(1.2);
 }
+
 @media only screen and (max-width: 900px) {
-    .side-menu{
+    .side-menu {
         padding: 0.5rem;
         width: 60vw;
         left: -60vw;
         opacity: 1;
     }
-    .menu-title{
+
+    .menu-title {
         display: none;
         font-size: 1rem;
         margin-bottom: 0.5rem;
         justify-content: flex-start;
     }
-    .menu{
+
+    .menu {
         width: 3.6rem;
         padding-top: 0.3rem;
     }
-    .menu-item{
+
+    .menu-item {
         width: 2.8rem;
         height: 2.8rem;
         margin-bottom: 0.4rem;
     }
-    .menu-open{
+
+    .menu-open {
         left: 3.6rem !important;
     }
-    .tab-selector-wrapper{
+
+    .tab-selector-wrapper {
         margin-top: 0.5rem;
     }
-    .panel-content-wrapper{
+
+    .panel-content-wrapper {
         margin-right: -0.3rem;
         padding-right: 0.2rem;
     }
 }
+
 @media screen and (orientation:portrait) {
-    .rotate-screen{
+    .rotate-screen {
         display: flex;
     }
 }

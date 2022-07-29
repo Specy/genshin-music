@@ -1,19 +1,27 @@
 .vsrg-page {
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
+    display: grid;
+    grid-template-areas: 
+        'a b'
+        'c c';
+    flex: 1;
+    grid-template-rows: calc(100% - 2.9rem) min-content;
+    grid-template-columns: 1fr min-content;
+    gap: 0.4rem;
     padding: 0.5rem;
 }
 
 .vsrg-top {
     display: flex;
     flex: 1;
+    height: 100%;
+    max-height: 100%;
     margin-bottom: 0.6rem;
 }
 
 .vsrg-top-canvas-wrapper {
+    grid-area: a;
     display: flex;
     flex: 1;
     justify-content: center;
@@ -25,9 +33,9 @@
 }
 .vsrg-top-right {
     display: flex;
+    grid-area: b;
     flex-direction: column;
     width: 13.6rem;
-    margin-left: 0.4rem;
 }
 .vsrg-top-right-disabled .vsrg-track-wrapper{
     pointer-events: none;
@@ -41,21 +49,20 @@
     border-radius: 0.4rem;
 }
 .vsrg-track {
+    height: 3rem;
     min-height: 3rem;
-    position: relative;
+    transition: background-color 0.15s;
     cursor: pointer;
     overflow: hidden;
     border-bottom: solid 2px var(--secondary);
 }
-
-.vsrg-track-color {
-    --size: 2.4rem;
-    position: absolute;
-    top: calc(var(--size) / -2);
-    right: calc(var(--size) / -2);
-    width: var(--size);
-    height: var(--size);
-    transform: rotate(45deg);
+.vsrg-track-left{
+    width: 2rem;
+    font-size: 1rem;
+    height: 100%;
+    min-width: 2rem;
+    padding: 0;
+    border-radius: 0;
 }
 
 .vsrg-floating-settings {
@@ -85,11 +92,13 @@
 .vsrg-track-wrapper {
     min-height: 5rem;
     background-color: var(--primary);
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
     border-radius: 0.6rem;
     overflow-y: auto;
 }
-
+.vsrg-track-wrapper::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+}
 .vsrg-keyboard {
     margin-top: auto;
     display: grid;
@@ -108,6 +117,7 @@
 }
 
 .vsrg-bottom {
+    grid-area: c;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -197,12 +207,16 @@
     padding: 0.2rem;
     margin-left: 0.2rem;
 }
+
 @media only screen and (max-width: 1000px){
     .vsrg-name{
         display: none;
     }
     .vsrg-top-right{
         width: 12.6rem;
+    }
+    .vsrg-page{
+        grid-template-rows: calc(100% - 2.5rem) min-content;
     }
     .vsrg-bottom{
         height: 2.2rem;
@@ -216,4 +230,9 @@
         width: 2.2rem;
         height: 2.2rem;
     }
+    .vsrg-track{
+        height: 2.4rem;
+        min-height: 2.4rem;
+    }
+
 }

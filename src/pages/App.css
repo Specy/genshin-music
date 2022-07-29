@@ -20,6 +20,8 @@
 	--red-bg: rgb(193 81 92);
 	--green: #358a55;
 	--orange: #dd8d46;
+	--text-dark: #151414;
+	--text-light: #edeae5;
 }
 
 @font-face {
