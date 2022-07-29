@@ -10,8 +10,9 @@ export type VsrgComposerEvents =
     | 'songLoad'
     | 'scaleChange'
     | 'maxFpsChange'
+    | 'timestampChange'
 export type VsrcComposerEventCallback = {
-callback: (event: VsrgComposerEvents) => void,
+callback: (event: VsrgComposerEvents, data?: any) => void,
     id: string
 }
 
@@ -30,9 +31,9 @@ class VsrgComposerStore {
         if (index === -1) return
         callbacks.splice(index, 1)
     }
-    emitEvent(event: VsrgComposerEvents) {
+    emitEvent(event: VsrgComposerEvents, data?: any) {
         const callbacks = [...(this.listeners.get(event) ?? []), ...(this.listeners.get('ALL') ?? [])]
-        callbacks.forEach(c => c.callback(event))
+        callbacks.forEach(c => c.callback(event, data))
     }
 }
 

@@ -8,6 +8,7 @@ import { InteractionEvent, Rectangle } from "pixi.js";
 import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
+import { VsrgTimelineBreakpointsRenderer } from "./VsrgTimelineBreakpointsRenderer";
 
 
 
@@ -84,6 +85,12 @@ export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, no
                     />
                 })}
             </Container>
+            <VsrgTimelineBreakpointsRenderer 
+                breakpoints={song.breakpoints}
+                cache={cache}
+                sizes={sizes}
+                duration={song.duration}
+            />
             <Sprite 
                 x={PLAY_BAR_OFFSET - 2}
                 y={0}

@@ -80,7 +80,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
     const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
     const hasUnsaved = hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
     return <>
-        <div className="hamburger" onClick={() => setVisible(!isVisible)}>
+        <div className="hamburger vsrg-hamburger" onClick={() => setVisible(!isVisible)}>
             <Memoized>
                 <FaBars />
             </Memoized>

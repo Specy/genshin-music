@@ -88,10 +88,23 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     componentDidMount() {
         this.mounted = true
+        const id = 'vsrg-composer'
         this.calculateSnapPoints()
         this.syncInstruments()
-        KeyboardProvider.listen(this.handleKeyboardDown, { id: 'vsrg-composer', type: 'keydown' })
-        KeyboardProvider.listen(this.handleKeyboardUp, { id: 'vsrg-composer', type: 'keyup' })
+        KeyboardProvider.listen(this.handleKeyboardDown, { id, type: 'keydown' })
+        KeyboardProvider.register("ArrowLeft", () => {
+            this.onBreakpointSelect(-1)
+        }, { id })
+        KeyboardProvider.register("ArrowRight", () => {
+            this.onBreakpointSelect(1)
+        }, { id })
+        KeyboardProvider.register("ArrowUp", () => {
+            this.selectTrack(Math.max(0, this.state.selectedTrack - 1))
+        }, { id })
+        KeyboardProvider.register("ArrowDown", () => {
+            this.selectTrack(Math.min(this.state.vsrg.tracks.length - 1, this.state.selectedTrack + 1))
+        }, { id })
+        KeyboardProvider.listen(this.handleKeyboardUp, { id, type: 'keyup' })
         KeyboardProvider.register('Space', ({ event }) => {
             if (event.repeat) return
             if (isFocusable(document.activeElement)) {
@@ -438,7 +451,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             songsStore.updateSong(vsrg)
         }
         this.changes = 0
-        this.setState({ vsrg }) 
+        this.setState({ vsrg })
     }
     onTrackModifierChange = (trackModifier: VsrgTrackModifier, index: number, recalculate: boolean) => {
         const { vsrg, audioSong } = this.state
@@ -456,6 +469,17 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     selectType = (selectedType: VsrgHitObjectType) => {
         this.setState({ selectedType, lastCreatedHitObject: null })
+    }
+    onBreakpointChange = (remove: boolean) => {
+        const { vsrg } = this.state
+        const timestamp = this.findClosestSnapPoint(this.lastTimestamp)
+        vsrg.setBreakpoint(timestamp, !remove)
+        this.setState({ vsrg })
+    }
+    onBreakpointSelect = (direction: -1 | 1) => {
+        const { vsrg } = this.state
+        const breakpoint = vsrg.getClosestBreakpoint(this.lastTimestamp, direction)
+        vsrgComposerStore.emitEvent('timestampChange', breakpoint)
     }
     render() {
         const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes, tempoChanger } = this.state
@@ -475,6 +499,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             <div className="vsrg-page">
                 <VsrgTop
                     vsrg={vsrg}
+                    onBreakpointSelect={this.onBreakpointSelect}
+                    onBreakpointChange={this.onBreakpointChange}
                     selectedHitObject={selectedHitObject}
                     isHorizontal={!settings.isVertical.value}
                     selectedTrack={selectedTrack}

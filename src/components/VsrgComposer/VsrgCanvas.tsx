@@ -138,7 +138,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         this.state.cache?.destroy()
         this.throttledEventLoop.stop()
     }
-    handleEvent = (event: VsrgComposerEvents) => {
+    handleEvent = (event: VsrgComposerEvents, data?: any) => {
         if (event === 'colorChange') this.generateCache()
         if (event === 'updateKeys') this.calculateSizes()
         if (event === 'updateOrientation') this.calculateSizes()
@@ -147,6 +147,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if (event === 'songLoad') this.calculateSizes()
         if (event === 'scaleChange') this.calculateSizes()
         if (event === 'maxFpsChange') this.throttledEventLoop.changeMaxFps(this.props.maxFps)
+        if (event === 'timestampChange') this.setTimestamp(data as number)
     }
     handleTick = (elapsed: number, sinceLast: number) => {
         if (this.props.isPlaying) {
@@ -257,7 +258,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
         if (clickType !== 2) this.setState({ draggedHitObject: hitObject })
         this.props.selectHitObject(hitObject, trackIndex, clickType)
     }
-    handleTimelineClick = (timestamp: number) => {
+    setTimestamp = (timestamp: number) => {
         this.setState({ timestamp })
         this.props.onTimestampChange(timestamp)
     }
@@ -341,7 +342,7 @@ export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
                             notes={this.props.renderableNotes}
                             cache={cache}
                             timestamp={timestamp}
-                            onTimelineClick={this.handleTimelineClick}
+                            onTimelineClick={this.setTimestamp}
                             isHorizontal={isHorizontal}
                             song={vsrg}
                             audioSong={audioSong}

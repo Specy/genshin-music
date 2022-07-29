@@ -30,6 +30,7 @@ export type VsrgComposerCanvasCache = {
     }
     timeline: {
         currentTime: Texture | null
+        breakpoint: Texture | null
         note: Texture | null
         square: Texture | null
         thumb: Texture | null
@@ -84,6 +85,7 @@ export class VsrgCanvasCache {
                 empty: null
             },
             timeline: {
+                breakpoint: null,
                 currentTime: null,
                 note: null,
                 square: null,
@@ -207,6 +209,23 @@ export class VsrgCanvasCache {
             region: new Rectangle(0, 0, thumbSize, sizes.timelineSize)
         })
         this.textures.timeline.thumb = thumbTexture
+
+        const breakpoint = new Graphics()
+        breakpoint.beginFill(colors.accent[1])
+            .moveTo(0, 0)
+            .lineTo(thumbSize, 0)
+            .lineTo(thumbSize / 2, thumbSize)
+            .lineTo(0, 0)
+            .moveTo(0, 0)
+            .lineTo(thumbSize, 0)
+            .lineTo(thumbSize / 2, -thumbSize)
+            .lineTo(0, 0)
+        const breakpointTexture = app.renderer.generateTexture(breakpoint, {
+            resolution: 1,
+            scaleMode: SCALE_MODES.LINEAR,
+            region: new Rectangle(0, 0, thumbSize, thumbSize)
+        })
+        this.textures.timeline.breakpoint = breakpointTexture
         //buttons
         const time = new Graphics()
         time.beginFill(colors.background_10[1])

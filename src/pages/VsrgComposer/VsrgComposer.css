@@ -111,7 +111,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-left: 3.5rem;
+    margin-left: 3.2rem;
     height: 2.5rem;
 }
 .vsrg-bottom input[type='range']{
@@ -186,11 +186,34 @@
     background-color: var(--primary);
     color: var(--primary-text);
 }
+.vsrg-breakpoints-buttons button{
+    display: flex;
+    min-width: unset;
+    height: 2rem;
+    justify-content: center;
+    border-radius: 0.4rem;
+    align-items: center;
+    flex: 1;
+    padding: 0.2rem;
+    margin-left: 0.2rem;
+}
 @media only screen and (max-width: 1000px){
     .vsrg-name{
         display: none;
     }
     .vsrg-top-right{
         width: 12.6rem;
+    }
+    .vsrg-bottom{
+        height: 2.2rem;
+        margin-left: 2.9rem;
+    }
+    .vsrg-keyboard button {
+        aspect-ratio: unset;
+        min-height: 1.5rem;
+    }
+    .vsrg-hamburger{
+        width: 2.2rem;
+        height: 2.2rem;
     }
 }

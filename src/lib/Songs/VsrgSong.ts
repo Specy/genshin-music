@@ -1,4 +1,3 @@
-import { TrackModifier } from "components/VsrgComposer/TrackModifier";
 import { InstrumentName } from "types/GeneralTypes";
 import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";
@@ -12,6 +11,7 @@ export type SerializedVsrgSong = SerializedSong & {
     keys: VsrgSongKeys
     duration: number
     audioSongId: string | null
+    breakpoints: number[]
 }
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
@@ -19,6 +19,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     duration: number = 60000
     audioSongId: string | null = null
     trackModifiers: VsrgTrackModifier[] = []
+    breakpoints: number[] = []
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -63,6 +64,24 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         this.tracks.push(track)
         this.tracks = [...this.tracks]
         return track
+    }
+    validateBreakpoints(){
+        const breakpoints = this.breakpoints.filter(breakpoint => breakpoint < this.duration)
+        breakpoints.sort((a,b) => a - b)
+        this.breakpoints = breakpoints
+    }
+    setBreakpoint(timestamp: number, set: boolean){
+        const index = this.breakpoints.findIndex(breakpoint => breakpoint === timestamp)
+        if(index === -1 && set) this.breakpoints.push(timestamp)
+        else if(index !== -1 && !set) this.breakpoints.splice(index, 1)
+        this.validateBreakpoints()
+    }
+    getClosestBreakpoint(timestamp: number, direction: -1 | 1){
+        const breakpoints = this.breakpoints.filter(breakpoint => breakpoint * direction > timestamp * direction)
+        if(breakpoints.length === 0){
+            return direction === 1 ? this.duration : 0
+        }
+        return breakpoints[0]
     }
     getRenderableNotes(song: RecordedSong){
         const notes:RecordedNote[] = []
@@ -133,7 +152,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             duration: this.duration,
             tracks: this.tracks.map(track => track.serialize()),
             instruments: this.instruments.map(instrument => instrument.serialize()),
-            trackModifiers: this.trackModifiers.map(modifier => modifier.serialize())
+            trackModifiers: this.trackModifiers.map(modifier => modifier.serialize()),
+            breakpoints: [...this.breakpoints]
         }
     }
     set(data: Partial<VsrgSong>){
@@ -154,8 +174,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             audioSongId: this.audioSongId,
             trackModifiers: this.trackModifiers.map(modifier => modifier.clone()),
             tracks: this.tracks.map(track => track.clone()),
-            instruments: this.instruments.map(instrument => instrument.clone())
-
+            instruments: this.instruments.map(instrument => instrument.clone()),
+            breakpoints: [...this.breakpoints]
         })
         return clone
     }
@@ -168,7 +188,7 @@ interface SerializedTrackModifier{
     alias: string
 }
 export class VsrgTrackModifier{
-    hidden: boolean = true
+    hidden: boolean = false
     muted: boolean = false
     alias: string = ""
 
