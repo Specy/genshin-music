@@ -1,13 +1,13 @@
 
 
-interface VsrgKeyboardProps{
+interface VsrgComposerKeyboardProps{
     elements: number[]
     selected?: number[]
     perRow: number
     onClick: (index: number) => void
 }
 
-export function VsrgKeyboard({ elements, perRow, onClick, selected }: VsrgKeyboardProps) {
+export function VsrgComposerKeyboard({ elements, perRow, onClick, selected }: VsrgComposerKeyboardProps) {
 
     return <>
         <div 

@@ -7,7 +7,7 @@ import { VsrgHitObject, VsrgSong, VsrgTrack } from "lib/Songs/VsrgSong"
 import { useEffect, useState } from "react"
 import { FaCog, FaMinus, FaPlus, FaStepBackward, FaStepForward } from "react-icons/fa"
 import { ThemeStore } from "stores/ThemeStore"
-import { VsrgKeyboard } from "./VsrgKeyboard"
+import { VsrgComposerKeyboard } from "./VsrgComposerKeyboard"
 import { VsrgTrackSettings } from "./VsrgTrackSettings"
 
 interface VsrgTopProps {
@@ -114,7 +114,7 @@ export function VsrgTop({
                         <FaPlus size={16} color='var(--icon-color)' />
                     </AppButton>
                 </div>
-                <VsrgKeyboard
+                <VsrgComposerKeyboard
                     elements={keyboardElements}
                     selected={selectedHitObject?.notes}
                     perRow={APP_NAME === "Sky" ? 5 : 7}

@@ -444,3 +444,21 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
         },
     }
 }
+
+
+export type VsrgPlayerSettingsDataType = {
+}
+export type VsrgPlayerSettingsType = {
+    other: {
+        settingVersion: string,
+    },
+    data: VsrgPlayerSettingsDataType
+}
+export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
+    other:{
+        settingVersion: APP_NAME + 5
+    },
+    data: {
+
+    }
+}

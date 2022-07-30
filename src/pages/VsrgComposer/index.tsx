@@ -123,7 +123,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         audioPlayer.destroy()
     }
     updateSettings = (override?: VsrgComposerSettingsDataType) => {
-        settingsService.updateVsrgSettings(override !== undefined ? override : this.state.settings)
+        settingsService.updateVsrgComposerSettings(override !== undefined ? override : this.state.settings)
     }
     syncInstruments = () => {
         const { vsrg, audioPlayer } = this.state
@@ -258,7 +258,6 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrg.setAudioSong(parsed)
             const renderableNotes = vsrg.getRenderableNotes(parsed)
             vsrg.setDurationFromNotes(parsed.notes)
-            console.log(vsrg.duration)
             this.setState({ audioSong: parsed, renderableNotes }, this.syncAudioSongInstruments)
         }
         if (parsed instanceof ComposedSong) {
@@ -268,7 +267,6 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrg.setAudioSong(parsed) //set as composed song because it's the original song
             this.setState({ audioSong: recorded, renderableNotes }, this.syncAudioSongInstruments)
         }
-
     }
     askForSongUpdate = async () => {
         return await asyncConfirm(`You have unsaved changes to the song: "${this.state.vsrg.name}" do you want to save now?`, false)
@@ -416,10 +414,10 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             lastCreatedHitObject: null,
         }, async () => {
             vsrgComposerStore.emitEvent('songLoad')
-            this.calculateSnapPoints()
             this.syncInstruments()
             const audioSong = await songsStore.getSongById(song.audioSongId)
             this.setAudioSong(audioSong)
+            this.calculateSnapPoints()
         })
     }
     addTime = () => {

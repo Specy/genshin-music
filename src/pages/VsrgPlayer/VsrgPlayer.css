@@ -1,0 +1,63 @@
+.vsrg-player-page{
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+}
+.vsrg-player-grid{
+    height: 100%;
+    display: grid;
+    grid-template-areas: 
+            'a'
+            'b';
+    grid-template-rows: 1fr min-content;
+}
+
+.vsrg-player-canvas{
+    width: 50vw;
+    grid-area: a;
+    display: flex;
+    flex: 1;
+}
+.vsrg-player-keyboard{
+    grid-area: b;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-around;
+}
+
+.vsrg-player-key-hitbox{
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+    width: 5vw;
+    height: 5vw;
+}
+.vsrg-player-key{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4rem;
+    color: var(--background-text);
+    width: 100%;
+    height: 100%;
+    border-radius: 50rem;
+    border: solid 3px var(--secondary);
+}
+.vsrg-key-pressed{
+    background-color: var(--accent);
+    color: var(--accent-text);
+}
+.vsrg-player-loading-instruments{
+    position: absolute;
+    bottom: calc(5vw + 2rem);
+    width: 100%;
+    left: 0;
+    text-align: center;
+    font-size: 1.6rem;
+    color: var(--background-text);
+    text-shadow: 0 0 0.5rem #252525;
+}
