@@ -63,12 +63,14 @@ function VsrgMenu({ onSongSelect }: VsrgMenuProps) {
     return <>
         <div className="menu-wrapper" ref={menuRef}>
             <div className='menu menu-visible '>
-                <MenuItem 
-                    onClick={() => setOpen(false)}
-                    ariaLabel="Close Menu"
-                >
-                    <FaTimes className='icon' />
-                </MenuItem>
+                {isOpen &&
+                    <MenuItem
+                        onClick={() => setOpen(false)}
+                        ariaLabel="Close Menu"
+                    >
+                        <FaTimes className='icon' />
+                    </MenuItem>
+                }
                 <MenuItem
                     style={{ marginTop: 'auto' }}
                     onClick={() => selectSideMenu("Songs")}

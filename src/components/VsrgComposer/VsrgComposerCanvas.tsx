@@ -75,7 +75,7 @@ interface VsrgCanvasState {
 
 
 
-export class VsrgCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
+export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     wrapperRef = createRef<HTMLDivElement>()
     stageRef = createRef<any>()
     toDispose: (() => void)[] = []

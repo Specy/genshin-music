@@ -7,7 +7,7 @@ import { VsrgTop } from "components/VsrgComposer/VsrgTop";
 import { VsrgHitObject, VsrgSong, VsrgSongKeys, VsrgTrack, VsrgTrackModifier } from "lib/Songs/VsrgSong";
 import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts";
 import { logger } from "stores/LoggerStore";
-import { VsrgCanvas } from "components/VsrgComposer/VsrgCanvas";
+import { VsrgComposerCanvas } from "components/VsrgComposer/VsrgComposerCanvas";
 import { VsrgComposerSettingsDataType } from "lib/BaseSettings";
 import { settingsService } from "lib/Services/SettingsService";
 import { SettingUpdate } from "types/SettingsPropriety";
@@ -509,7 +509,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                     onTrackSelect={this.selectTrack}
                     onNoteSelect={this.onNoteSelect}
                 >
-                    <VsrgCanvas
+                    <VsrgComposerCanvas
                         vsrg={vsrg}
                         renderableNotes={renderableNotes}
                         onTimestampChange={this.onTimestampChange}

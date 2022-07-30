@@ -5,7 +5,7 @@ import { parseMouseClick } from "lib/Utilities";
 import { ClickType } from "types/GeneralTypes"
 import { InteractionEvent, TextStyle } from "pixi.js";
 
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
 import useFontFaceObserver from "use-font-face-observer";

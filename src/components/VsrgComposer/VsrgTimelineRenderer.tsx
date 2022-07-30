@@ -6,7 +6,7 @@ import { VsrgSong } from "lib/Songs/VsrgSong";
 import { clamp } from "lib/Utilities";
 import { InteractionEvent, Rectangle } from "pixi.js";
 import { useCallback, useEffect, useState } from "react";
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTimelineBreakpointsRenderer } from "./VsrgTimelineBreakpointsRenderer";
 

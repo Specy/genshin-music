@@ -15,12 +15,13 @@ import { RecordedSong } from "lib/Songs/RecordedSong";
 import { songService } from "lib/Services/SongService";
 import { songsStore } from "stores/SongsStore";
 import { ComposedSong } from "lib/Songs/ComposedSong";
+import { VsrgPlayerRight } from "components/VsrgPlayer/VsrgPlayerRight";
 
 type VsrgPlayerProps = RouteComponentProps & {
 
 }
 interface VsrgPlayerState {
-    song: VsrgSong
+    song: VsrgSong | null
     audioSong: RecordedSong | null
     settings: VsrgPlayerSettingsDataType
     songAudioPlayer: AudioPlayer
@@ -36,7 +37,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     constructor(props: VsrgPlayerProps) {
         super(props)
         this.state = {
-            song: new VsrgSong(''),
+            song: null,
             audioSong: null,
             settings: settingsService.getVsrgPlayerSettings(),
             songAudioPlayer: new AudioPlayer("C"),
@@ -69,14 +70,21 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         await keyboardAudioPlayer.syncInstruments(song.tracks.map(track => track.instrument))
         this.setState({
             song,
-            isLoadingInstruments: false
+            isLoadingInstruments: false,
+            isPlaying: true
         }, () => {
             if (type === 'play') vsrgPlayerStore.playSong(song)
+        })
+    }
+    onStopSong = () => {
+        this.setState({ isPlaying: false, song: null }, () => {
+            vsrgPlayerStore.stopSong()
         })
     }
     handleTick = (timestamp: number) => {
         const { audioSong, songAudioPlayer, song } = this.state
         this.lastTimestamp = timestamp
+        if(!song) return
         if (this.lastTimestamp >= song.duration) return 
         if (audioSong) {
             const notes = audioSong.tickPlayback(timestamp)
@@ -103,6 +111,10 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     />
                     <VsrgPlayerKeyboard />
                 </div>
+                <VsrgPlayerRight 
+                    song={this.state.song}
+                    onStopSong={this.onStopSong}
+                />
                 {isLoadingInstruments &&
                     <div className="vsrg-player-loading-instruments">
                         Loading instruments...

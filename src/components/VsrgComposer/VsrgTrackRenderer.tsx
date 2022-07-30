@@ -5,7 +5,7 @@ import { parseMouseClick } from "lib/Utilities";
 import { ClickType } from "types/GeneralTypes"
 
 import { Fragment } from "react";
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 
 interface VsrgTrackRendererProps {

@@ -3,7 +3,7 @@ import { PLAY_BAR_OFFSET } from "appConfig";
 import { Rectangle, TextStyle } from "pixi.js";
 import { memo, useEffect, useState } from "react";
 import useFontFaceObserver from "use-font-face-observer";
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 
 interface VsrgKeysRendererProps {
     keys: string[]

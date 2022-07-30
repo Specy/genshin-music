@@ -12,6 +12,7 @@ export type SerializedVsrgSong = SerializedSong & {
     duration: number
     audioSongId: string | null
     breakpoints: number[]
+    approachRate: number
 }
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
@@ -20,6 +21,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     audioSongId: string | null = null
     trackModifiers: VsrgTrackModifier[] = []
     breakpoints: number[] = []
+    approachRate: number = 3000
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -32,6 +34,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         song.duration = obj.duration ?? 60000
         song.keys = obj.keys ?? 4
         song.breakpoints = obj.breakpoints ?? []
+        song.approachRate = obj.approachRate ?? 3000
         return song
     }
 
@@ -153,6 +156,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             audioSongId: this.audioSongId,
             folderId: this.folderId,
             duration: this.duration,
+            approachRate: this.approachRate,
             tracks: this.tracks.map(track => track.serialize()),
             instruments: this.instruments.map(instrument => instrument.serialize()),
             trackModifiers: this.trackModifiers.map(modifier => modifier.serialize()),
@@ -178,7 +182,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             trackModifiers: this.trackModifiers.map(modifier => modifier.clone()),
             tracks: this.tracks.map(track => track.clone()),
             instruments: this.instruments.map(instrument => instrument.clone()),
-            breakpoints: [...this.breakpoints]
+            breakpoints: [...this.breakpoints],
+            approachRate: this.approachRate
         })
         return clone
     }

@@ -16,10 +16,23 @@
 }
 
 .vsrg-player-canvas{
+    position: relative;
     width: 50vw;
     grid-area: a;
     display: flex;
     flex: 1;
+}
+.vsrg-player-canvas canvas{
+    position: absolute;
+    border-radius: 0.6rem;
+}
+.vsrg-player-right{
+    position: absolute;
+    padding: 1rem;
+    right: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
 }
 .vsrg-player-keyboard{
     grid-area: b;

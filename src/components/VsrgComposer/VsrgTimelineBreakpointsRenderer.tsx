@@ -1,6 +1,6 @@
 import { Container, Sprite } from "@inlet/react-pixi";
 import { memo } from "react";
-import { VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 
 interface VsrgTimelineBreakpointsRendererProps {

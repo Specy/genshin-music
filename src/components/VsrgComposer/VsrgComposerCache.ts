@@ -1,7 +1,7 @@
 import Color from "color"
 import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
 import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgCanvas";
+import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { clamp } from "lib/Utilities";
 import { PLAY_BAR_OFFSET } from "appConfig";
 import isMobile from "is-mobile";
