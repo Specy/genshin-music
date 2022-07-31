@@ -4,12 +4,12 @@ import { KeyboardKey, vsrgPlayerStore } from "stores/VsrgPlayerStore";
 
 
 
-export function useVsrgKey(index: number){
+export function useVsrgKey(index: number, layout: KeyboardKey[]){
     const [keyboardKey, setKeyboardKey] = useState<KeyboardKey>(vsrgPlayerStore.keyboard[index])
     useEffect(() => {
         const dispose = subscribeVsrgKey(index, setKeyboardKey)
         return dispose
-    },[index])
+    },[index, layout])
     return keyboardKey
 }
 

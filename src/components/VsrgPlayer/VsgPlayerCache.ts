@@ -76,6 +76,7 @@ export class VsrgPlayerCache {
         return this.textures.trails[color] || this.textures.trails['#FF0000']
     }
     getHeldHitObjectCache(color: string) {
+        
         return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#FF0000']
     }
 
@@ -83,7 +84,7 @@ export class VsrgPlayerCache {
     generateTrails(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
-        const hitObjectHeight = sizes.hitObjectSize * sizes.scaling
+        const hitObjectHeight = sizes.hitObjectSize
         const margin = hitObjectHeight / 3
         withError.forEach(color => {
             const trail = new Graphics()

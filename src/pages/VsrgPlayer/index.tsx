@@ -25,6 +25,7 @@ interface VsrgPlayerState {
     audioSong: RecordedSong | null
     settings: VsrgPlayerSettingsDataType
     songAudioPlayer: AudioPlayer
+    hitObjectSize: number
     keyboardAudioPlayer: AudioPlayer
     currentLayout: KeyboardLetter[]
     isLoadingInstruments: boolean
@@ -40,6 +41,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             song: null,
             audioSong: null,
             settings: settingsService.getVsrgPlayerSettings(),
+            hitObjectSize: 0,
             songAudioPlayer: new AudioPlayer("C"),
             keyboardAudioPlayer: new AudioPlayer("C"),
             currentLayout: DEFAULT_VSRG_KEYS_MAP[4] as KeyboardLetter[],
@@ -49,6 +51,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         this.lastTimestamp = 0
     }
     componentDidMount() {
+        this.calculateHitObjectSize()
         vsrgPlayerStore.setLayout(this.state.currentLayout)
     }
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
@@ -73,7 +76,16 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             isLoadingInstruments: false,
             isPlaying: true
         }, () => {
-            if (type === 'play') vsrgPlayerStore.playSong(song)
+            if (type === 'play') {
+                vsrgPlayerStore.setLayout(DEFAULT_VSRG_KEYS_MAP[song.keys] as KeyboardLetter[])
+                vsrgPlayerStore.playSong(song)
+            }
+        })
+    }
+    calculateHitObjectSize = async (): Promise<number> => {
+        return new Promise(res => {
+            const size = window.innerWidth * 0.05
+            return this.setState({ hitObjectSize: size }, () => res(size))
         })
     }
     onStopSong = () => {
@@ -84,8 +96,8 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     handleTick = (timestamp: number) => {
         const { audioSong, songAudioPlayer, song } = this.state
         this.lastTimestamp = timestamp
-        if(!song) return
-        if (this.lastTimestamp >= song.duration) return 
+        if (!song) return
+        if (this.lastTimestamp >= song.duration || timestamp < 0) return
         if (audioSong) {
             const notes = audioSong.tickPlayback(timestamp)
             notes.forEach(n => {
@@ -98,7 +110,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         }
     }
     render() {
-        const { isLoadingInstruments } = this.state
+        const { isLoadingInstruments, hitObjectSize } = this.state
         return <>
             <div className="vsrg-player-page">
                 <VsrgPlayerMenu
@@ -106,12 +118,15 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                 />
                 <div className="vsrg-player-grid">
                     <VsrgPlayerCanvas
+                        hitObjectSize={hitObjectSize}
                         onTick={this.handleTick}
                         isPlaying={this.state.isPlaying}
                     />
-                    <VsrgPlayerKeyboard />
+                    <VsrgPlayerKeyboard 
+                        hitObjectSize={hitObjectSize}
+                    />
                 </div>
-                <VsrgPlayerRight 
+                <VsrgPlayerRight
                     song={this.state.song}
                     onStopSong={this.onStopSong}
                 />

@@ -235,7 +235,7 @@ export class VsrgTrack{
     instrument: InstrumentData
     hitObjects: VsrgHitObject[]
     color: string = '#FFFFFF'
-    private lastPlayedHitObjectIndex: number = 0
+    private lastPlayedHitObjectIndex: number = -1
     constructor(instrument?: InstrumentName, alias?:string,  hitObjects?: VsrgHitObject[]){
         this.instrument = new InstrumentData({ name: instrument ?? "DunDun", alias })
         this.hitObjects = hitObjects ?? []
@@ -364,6 +364,7 @@ export class VsrgHitObject{
         const hitObject = new VsrgHitObject(data[0], data[1])
         hitObject.holdDuration = data[2]
         hitObject.notes = [...data[3]]
+        hitObject.isHeld = hitObject.holdDuration > 0
         return hitObject
     }
     serialize(): SerializedVsrgHitObject {
@@ -393,6 +394,8 @@ export class VsrgHitObject{
         const hitObject = new VsrgHitObject(this.index, this.timestamp)
         hitObject.notes = [...this.notes]
         hitObject.holdDuration = this.holdDuration
+        hitObject.isHeld = this.isHeld
+
         return hitObject
     }
 }

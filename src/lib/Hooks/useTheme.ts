@@ -17,5 +17,6 @@ export function subscribeTheme(callback: (theme: ThemeStore) => void) {
     const dispose = observe(ThemeProvider.state.data, () => {
         callback({...ThemeProvider})
     })
+    callback({...ThemeProvider})
     return dispose
 }
