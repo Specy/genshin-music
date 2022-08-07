@@ -1,12 +1,9 @@
 .home {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
 	height: 100%;
+	justify-content: space-between;
 	overflow-y: auto;
 	position: fixed;
 	width: 100%;
-	padding: 1rem 25vw;
 	background-color: var(--background);
 	color: var(--background-text);
 	z-index: 100;
@@ -21,6 +18,9 @@
 	--backdrop-amount: 4px;
 	animation: forwards delayBackdrop 0.2s, 0.15s home-appear ease-out;
 	transform: scale(1);
+}
+.home-padded{
+	padding: 1rem 25vw;
 }
 @keyframes home-appear {
 	0% {
@@ -115,14 +115,11 @@
 }
 
 .home-bottom {
-	position: absolute;
-	bottom: 0;
 	width: 100%;
 	padding: 0.4rem;
 	color: var(--background-text);
 	padding-top: 0.5rem;
 	display: flex;
-	flex: 1;
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
@@ -310,7 +307,7 @@
 	margin-bottom: 0.5rem;
 }
 @media only screen and (max-width: 900px) {
-	.home {
+	.home-padded {
 		padding: 0.6rem 15vw;
 	}
 	.home-dont-show-again, .home-app-scaling  {

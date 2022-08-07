@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import Keyboard from "components/Player/Keyboard"
+import KeyboardPlayer from "components/Player/KeyboardPlayer"
 import Menu from "components/Player/Menu"
 import { playerStore, subscribePlayer } from 'stores/PlayerStore'
 import { RecordedSong } from 'lib/Songs/RecordedSong';
@@ -24,6 +24,7 @@ import { metronome } from 'lib/Metronome';
 import { GiMetronome } from 'react-icons/gi';
 import { Lambda } from 'mobx';
 import { NoteLayer } from 'lib/Layer';
+import './Player.css'
 
 interface PlayerState {
 	settings: MainPageSettingsDataType
@@ -299,8 +300,8 @@ class Player extends Component<any, PlayerState>{
 						</AppButton>
 					}
 				</div>
-				<div className="keyboard-wrapper" style={{ marginBottom: '2vh' }}>
-					<Keyboard
+				<div className="keyboard-wrapper">
+					<KeyboardPlayer
 						key={instruments[0].layout.length}
 						data={{
 							isLoading: isLoadingInstrument,

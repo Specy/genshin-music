@@ -1,0 +1,16 @@
+.player-chunks-page{
+    position: absolute;
+    width: calc(80% - 3rem);
+    top: 5rem;
+    margin-left: 3.5rem;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.2rem
+}
+
+@media only screen and (max-width: 900px) {
+    .player-chunks-page{
+        top: 4rem;
+        margin-left: 0;
+    }
+}

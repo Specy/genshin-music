@@ -67,7 +67,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         return dispose
     }, [])
     return <div
-        className={`${homeClass} ignore_click_outside`}
+        className={`${homeClass} ignore_click_outside column`}
         style={{
             ...!data.visible ? { display: 'none' } : {},
             backgroundColor: theme.get('background').fade(0.1).toString()
@@ -80,104 +80,107 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         >
             <FaTimes size={25} />
         </MenuItem>
-        {(breakpoint || !hasVisited) && <div className='home-top'>
-            <div className='home-title'>
-                {APP_NAME} Music Nightly
-            </div>
-            <div className='home-top-text'>
-                An app where you can create, practice and play songs for {APP_NAME}
-            </div>
-        </div>
-        }
+        <div className='home-padded column'>
 
-        {!hasVisited && <div className='home-welcome'>
-            <div>
-                {!isTwa() && <div className='home-spacing'>
-                    To have the webapp fullscreen and better view, please add the website to the home screen
-                </div>}
-                <div className='home-spacing'>
-                    <div className="red-text">WARNING</div>:
-                    Clearing your browser cache / storage might delete your songs, make sure you make backups
+            {(breakpoint || !hasVisited) && <div className='home-top'>
+                <div className='home-title'>
+                    {APP_NAME} Music Nightly
                 </div>
-
-                {data.hasPersistentStorage ?
-                    <div>
-                        <div className="red-text">WARNING</div>: {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}
-                    </div>
-                    : null
-                }
-                <div>
-                    <span style={{ marginRight: '0.2rem' }}>
-                        We use cookies for analytics, by continuing to use this app, you agree to our use of cookies, learn more
-                    </span>
-                    <Link
-                        to='Privacy'
-                        style={{ color: 'var(--primary-text)', textDecoration: "underline" }}
-                        onClick={HomeStore.close}
-                    >
-                        here
-                    </Link>
+                <div className='home-top-text'>
+                    An app where you can create, practice and play songs for {APP_NAME}
                 </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button className="home-accept-storage"
-                    onClick={() => {
-                        closeWelcomeScreen()
-                        askForStorage()
-                    }}
-                >
-                    Confirm
-                </button>
-            </div>
-
-        </div>}
-        <div className='home-content'>
-            <MainContntElement
-                icon={<FaCompactDisc />}
-                title='Composer'
-                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                background={`./manifestData/composer.webp`}
-                href='Composer'
-                current={currentPage === 'Composer'}
-            >
-                Create or edit songs with a fully fledged music composer. Also with MIDI.
-            </MainContntElement>
-            <MainContntElement
-                icon={<BsMusicPlayerFill />}
-                title='Player'
-                style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                background={`./manifestData/main.webp`}
-                href=''
-                current={currentPage === '' || currentPage === 'Player'}
-            >
-                Play, download, record and import songs. Learn a song with approaching circle
-                mode and practice mode.
-            </MainContntElement>
-        </div>
-        <Separator />
-        <div className='page-redirect-wrapper'>
-            <PageRedirect href='Changelog' current={currentPage === 'Changelog'}>
-                Changelog
-            </PageRedirect>
-            {!isTwa() &&
-                <PageRedirect href='Donate' current={currentPage === 'Donate'}>
-                    Donate
-                </PageRedirect>
             }
-            <PageRedirect href='Partners' current={currentPage === 'Partners'}>
-                Partners
-            </PageRedirect>
-            <PageRedirect href='Help' current={currentPage === 'Help'}>
-                Help
-            </PageRedirect>
-            <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'}>
-                Sheet visualizer
-            </PageRedirect>
-            <PageRedirect href='Theme' current={currentPage === 'Theme'}>
-                App Theme
-            </PageRedirect>
-        </div>
 
+            {!hasVisited && <div className='home-welcome'>
+                <div>
+                    {!isTwa() && <div className='home-spacing'>
+                        To have the webapp fullscreen and better view, please add the website to the home screen
+                    </div>}
+                    <div className='home-spacing'>
+                        <div className="red-text">WARNING</div>:
+                        Clearing your browser cache / storage might delete your songs, make sure you make backups
+                    </div>
+
+                    {data.hasPersistentStorage ?
+                        <div>
+                            <div className="red-text">WARNING</div>: {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}
+                        </div>
+                        : null
+                    }
+                    <div>
+                        <span style={{ marginRight: '0.2rem' }}>
+                            We use cookies for analytics, by continuing to use this app, you agree to our use of cookies, learn more
+                        </span>
+                        <Link
+                            to='Privacy'
+                            style={{ color: 'var(--primary-text)', textDecoration: "underline" }}
+                            onClick={HomeStore.close}
+                        >
+                            here
+                        </Link>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button className="home-accept-storage"
+                        onClick={() => {
+                            closeWelcomeScreen()
+                            askForStorage()
+                        }}
+                    >
+                        Confirm
+                    </button>
+                </div>
+
+            </div>}
+            <div className='home-content'>
+                <MainContntElement
+                    icon={<FaCompactDisc />}
+                    title='Composer'
+                    style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
+                    background={`./manifestData/composer.webp`}
+                    href='Composer'
+                    current={currentPage === 'Composer'}
+                >
+                    Create or edit songs with a fully fledged music composer. Also with MIDI.
+                </MainContntElement>
+                <MainContntElement
+                    icon={<BsMusicPlayerFill />}
+                    title='Player'
+                    style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
+                    background={`./manifestData/main.webp`}
+                    href=''
+                    current={currentPage === '' || currentPage === 'Player'}
+                >
+                    Play, download, record and import songs. Learn a song with approaching circle
+                    mode and practice mode.
+                </MainContntElement>
+            </div>
+            <Separator />
+            <div className='page-redirect-wrapper'>
+                <PageRedirect href='Changelog' current={currentPage === 'Changelog'}>
+                    Changelog
+                </PageRedirect>
+                {!isTwa() &&
+                    <PageRedirect href='Donate' current={currentPage === 'Donate'}>
+                        Donate
+                    </PageRedirect>
+                }
+                <PageRedirect href='Partners' current={currentPage === 'Partners'}>
+                    Partners
+                </PageRedirect>
+                <PageRedirect href='Help' current={currentPage === 'Help'}>
+                    Help
+                </PageRedirect>
+                <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'}>
+                    Sheet visualizer
+                </PageRedirect>
+                <PageRedirect href='Theme' current={currentPage === 'Theme'}>
+                    App Theme
+                </PageRedirect>
+            </div>
+
+        </div>
 
         <div className='home-bottom'>
             <div className='home-app-scaling row-centered'>
@@ -207,7 +210,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 </AppButton>
                 {appScale}%
             </div>
-            <span style={{padding: '0 1rem', textAlign:'center'}}>
+            <span style={{ padding: '0 1rem', textAlign: 'center' }}>
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </span>
             <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>

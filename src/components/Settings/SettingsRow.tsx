@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react'
-import Switch from 'components/Switch'
+import Switch from 'components/Inputs/Switch'
 import { InstrumentInput } from './InstrumentInput'
 import { Input } from './Input'
 import { Slider } from './Slider'

@@ -479,6 +479,7 @@ const PIXI_CENTER_ALIGN = 0.5
 //get only non accidentals
 const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
 const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
+const DEFAULT_DOM_RECT = new DOMRect()
 export {
     INSTRUMENTS,
     INSTRUMENTS_DATA,
@@ -513,6 +514,7 @@ export {
     PIXI_HORIZONTAL_ALIGN,
     PIXI_CENTER_ALIGN,
     VSRG_TEMPO_CHANGER,
+    DEFAULT_DOM_RECT
 }
 export type {
     Pitch

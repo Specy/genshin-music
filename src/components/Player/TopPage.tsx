@@ -1,16 +1,16 @@
-import { SPEED_CHANGERS } from "appConfig"
+import { APP_NAME, DEFAULT_DOM_RECT, SPEED_CHANGERS } from "appConfig"
 import Memoized from "components/Utility/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
 import { memo, useEffect, useState, useRef, ChangeEvent } from "react";
-import { playerStore } from "stores/PlayerStore";
-import { SliderStore } from "stores/SongSliderStore";
-import { observe } from "mobx";
+import { playerStore, subscribePlayer } from "stores/PlayerStore";
+import { playerTopStore, subscribePlayerTopStore } from "stores/PlayerTopStore";
 import { BsTriangleFill } from "react-icons/bs";
 import './Track.css'
 import { AppButton } from "components/Inputs/AppButton";
 import { ApproachingScore } from "types/GeneralTypes";
 import { clamp } from "lib/Utilities";
 import { Tooltip } from 'components/Utility/Tooltip'
+import { SheetFrame } from "components/SheetVisualizer/SheetFrame";
 interface TopPageProps {
     restart: () => void
     handleSpeedChanger: (event: ChangeEvent<HTMLSelectElement>) => void
@@ -18,26 +18,20 @@ interface TopPageProps {
     approachingScore: ApproachingScore
     hasSong: boolean
 }
+
 export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger, approachingScore, hasSong }: TopPageProps) {
-    const [sliderState, setSliderState] = useState(SliderStore.state.data)
+    const [sliderState, setSliderState] = useState(playerTopStore.state.data)
     const [songData, setSongData] = useState(playerStore.state.data)
     const [selectedThumb, setSelectedThumb] = useState<'left' | 'right' | null>(null)
-    const [inputDimension, setInputDimension] = useState({
-        x: 0,
-        width: 0
-    })
+    const [inputDimension, setInputDimension] = useState(DEFAULT_DOM_RECT)
     const thumb1 = useRef<HTMLDivElement>(null)
     const thumb2 = useRef<HTMLDivElement>(null)
     const slider = useRef<HTMLDivElement>(null)
     useEffect(() => {
-        const dispose = observe(SliderStore.state, (newState) => {
-            setSliderState(newState.object.data)
-        })
-        const dispose2 = observe(playerStore.state, (newState2) => {
-            setSongData(newState2.object.data)
-        })
+        const dispose = subscribePlayerTopStore(setSliderState)
+        const dispose2 = subscribePlayer(setSongData)
         return () => {
-            dispose();
+            dispose()
             dispose2()
         }
     }, [])
@@ -81,81 +75,96 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
         const x = event.clientX - sliderX
         const value = clamp(Math.round(x / sliderWidth * sliderState.size), 0, sliderState.size)
         if (currentThumb === 'left') {
-            if (value - sliderState.end < -1) SliderStore.setPosition(value)
+            if (value - sliderState.end < -1) playerTopStore.setPosition(value)
         } else {
-            if (value - sliderState.position > 1) SliderStore.setState({ end: value })
+            if (value - sliderState.position > 1) playerTopStore.setState({ end: value })
         }
     }
     const left = sliderState.size !== 0 ? sliderState.position / sliderState.size * 100 : 0
     const right = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
-    return <div className="upper-right" style={!hasSong ? { display: 'none' } : {}} >
+    return <>
         {songData.eventType === 'approaching' &&
             <Score {...approachingScore} />
         }
-        <div className="slider-wrapper">
-            <AppButton className="slider-button" onClick={playerStore.reset} tooltip='Stop' ariaLabel="Stop song">
-                <Memoized>
-                    <FaStop />
-                </Memoized>
-            </AppButton>
-            <div
-                className="slider-outer"
-                ref={slider}
-                onPointerUp={handleSliderLeave}
-                onPointerMove={handleSliderMove}
-                onPointerDown={handleSliderClick}
-            >
-                <div className="slider-full">
-                    <div 
-                        className="slider-current" 
-                        style={{ transform: `translateX(-${(100 - sliderState.current / sliderState.size * 100).toFixed(1)}%)` }} 
-                    />
-                </div>
-                <div className="two-way-slider">
-                    <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${left}% - 8px)` }} ref={thumb1}>
-                        <Memoized>
-                            <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
-                        </Memoized>
-                        <div style={{ fontSize: '0.8rem' }}>
-                            {sliderState.position}
-                        </div>
-                    </div>
-                    <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${right}% - 8px)` }} ref={thumb2}>
-                        <Memoized>
-                            <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
-                        </Memoized>
-                        <div style={{ fontSize: '0.8rem' }}>
-                            {sliderState.end}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <AppButton className="slider-button" onClick={restart} tooltip='Restart' ariaLabel="Restart song">
-                <Memoized>
-                    <FaSyncAlt />
-                </Memoized>
-            </AppButton>
-            <div className="has-tooltip">
-                <select
-                    className='slider-select'
-                    onChange={handleSpeedChanger}
-                    value={speedChanger.name}
-                    style={{ backgroundImage: 'none' }}
+        <div className="upper-right" style={!hasSong ? { display: 'none' } : {}} >
+            <div className="slider-wrapper">
+                <AppButton className="slider-button" onClick={playerStore.reset} tooltip='Stop' ariaLabel="Stop song">
+                    <Memoized>
+                        <FaStop />
+                    </Memoized>
+                </AppButton>
+                <div
+                    className="slider-outer"
+                    ref={slider}
+                    onPointerUp={handleSliderLeave}
+                    onPointerMove={handleSliderMove}
+                    onPointerDown={handleSliderClick}
                 >
-                    <option disabled>Speed</option>
-                    {SPEED_CHANGERS.map(e => {
-                        return <option value={e.name} key={e.name}>
-                            {e.name}
-                        </option>
-                    })}
-                </select>
-                <Tooltip >
-                    Change speed
-                </Tooltip>
+                    <div className="slider-full">
+                        <div
+                            className="slider-current"
+                            style={{ transform: `translateX(-${(100 - sliderState.current / sliderState.size * 100).toFixed(1)}%)` }}
+                        />
+                    </div>
+                    <div className="two-way-slider">
+                        <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${left}% - 8px)` }} ref={thumb1}>
+                            <Memoized>
+                                <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
+                            </Memoized>
+                            <div style={{ fontSize: '0.8rem' }}>
+                                {sliderState.position}
+                            </div>
+                        </div>
+                        <div className="two-way-slider-thumb" style={{ marginLeft: `calc(${right}% - 8px)` }} ref={thumb2}>
+                            <Memoized>
+                                <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
+                            </Memoized>
+                            <div style={{ fontSize: '0.8rem' }}>
+                                {sliderState.end}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <AppButton className="slider-button" onClick={restart} tooltip='Restart' ariaLabel="Restart song">
+                    <Memoized>
+                        <FaSyncAlt />
+                    </Memoized>
+                </AppButton>
+                <div className="has-tooltip">
+                    <select
+                        className='slider-select'
+                        onChange={handleSpeedChanger}
+                        value={speedChanger.name}
+                        style={{ backgroundImage: 'none' }}
+                    >
+                        <option disabled>Speed</option>
+                        {SPEED_CHANGERS.map(e => {
+                            return <option value={e.name} key={e.name}>
+                                {e.name}
+                            </option>
+                        })}
+                    </select>
+                    <Tooltip >
+                        Change speed
+                    </Tooltip>
+                </div>
             </div>
+            {sliderState.pages.length > 0 &&
+                <div className="player-chunks-page">
+                    {sliderState.currentPage?.map((e, i) =>
+                        <SheetFrame
+                            key={i}
+                            selected={i === sliderState.currentChunkIndex}
+                            chunk={e}
+                            rows={3}
+                            hasText={false}
+                        />
+                    )}
+                </div>
+            }
         </div>
-    </div>
+    </>
 }, (prev, next) => {
     return prev.speedChanger === next.speedChanger
         && prev.approachingScore === next.approachingScore && prev.hasSong === next.hasSong

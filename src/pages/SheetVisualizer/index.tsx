@@ -3,7 +3,7 @@ import './SheetVisualizer.css'
 import { useState } from 'react'
 import { APP_NAME } from 'appConfig'
 import { getNoteText, isComposedOrRecorded } from 'lib/Utilities'
-import Switch from 'components/Switch'
+import Switch from 'components/Inputs/Switch'
 import Analytics from 'lib/Analytics'
 import { RecordedSong } from 'lib/Songs/RecordedSong'
 import { RecordedNote } from 'lib/Songs/SongClasses'
@@ -139,7 +139,7 @@ export default function SheetVisualizer() {
                 {sheet.map((frame, i) =>
                     <SheetFrame
                         key={i}
-                        frame={frame}
+                        chunk={frame}
                         rows={3}
                         hasText={hasText}
                     />

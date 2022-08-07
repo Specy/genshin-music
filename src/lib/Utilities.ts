@@ -58,6 +58,13 @@ class MIDIShortcut {
 	}
 }
 
+function groupArrayEvery<T>(array: T[], n: number) {
+	let groups: T[][] = []
+	for (let i = 0; i < array.length; i += n) {
+		groups.push(array.slice(i, i + n))
+	}
+	return groups
+}
 
 
 function capitalize(str: string) {
@@ -274,5 +281,6 @@ export {
 	insertionSort,
 	isComposedOrRecorded,
 	isFocusable,
-	parseMouseClick
+	parseMouseClick,
+	groupArrayEvery
 }

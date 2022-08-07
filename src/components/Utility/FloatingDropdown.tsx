@@ -1,12 +1,12 @@
 import useClickOutside from "lib/Hooks/useClickOutside"
-import { useState } from "react"
+import _ from "lodash"
+import { useEffect, useState } from "react"
 import { FaTimes } from "react-icons/fa"
 import { AppButton } from "../Inputs/AppButton"
 import { SongActionButton } from "../Inputs/SongActionButton"
 
 
 interface FloatingDropdownProps {
-    position?: "bottom"
     children: React.ReactNode
     tooltip?: string
     Icon: React.FC
@@ -16,9 +16,8 @@ interface FloatingDropdownProps {
     ignoreClickOutside? : boolean
     onClose?: () => void
 }
-
+const defaultBounds = new DOMRect(0, 0, 0, 0)
 export function FloatingDropdown({ 
-        position = 'bottom', 
         children, 
         Icon, 
         className = "", 
@@ -30,17 +29,36 @@ export function FloatingDropdown({
     }: FloatingDropdownProps) {
 
     const [isActive, setActive] = useState(false)
+    const [bounds, setBounds] = useState<DOMRect>(defaultBounds)
     const ref = useClickOutside<HTMLDivElement>(() => {
         if(ignoreClickOutside) return
         setActive(false)
         if (onClose) onClose()
     }, { active: isActive, ignoreFocusable: true})
+    useEffect(() => {
+        const el = ref.current
+        if(!el) return
+        const bounds = el.getBoundingClientRect()
+        setBounds(bounds)
+    },[isActive, ref])
+    const overflows = bounds.top + bounds.height > window.innerHeight
+
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
-        <SongActionButton style={{ margin: 0, ...style }}
+        <SongActionButton 
+            style={{ 
+                margin: 0, 
+                ...style,
+                ...isActive ? {
+                    backgroundColor: "var(--accent)",
+                    color: "var(--accent-text)",
+                } : {}
+            }}
+
             onClick={() => {
                 setActive(!isActive)
                 if (isActive && onClose) onClose()
             }}
+
             ariaLabel={isActive ? "Close" : "Open"}
             tooltip={tooltip}
         >
@@ -49,11 +67,15 @@ export function FloatingDropdown({
                 : <Icon />
             }
         </SongActionButton>
-
         <div
             ref={ref}
-            className={`floating-children-${position}`}
-            style={{ transform: `translateX(calc(-100% + ${offset}rem)` }}
+            className={`floating-dropdown-children`}
+            style={{ 
+                transform: 
+                `translateX(calc(-100% + ${offset}rem)) ${
+                    overflows ? `translateY(calc(-${bounds.height}px - 2rem))` : ""
+                }` 
+            }}
         >
             {children}
         </div>

@@ -2,21 +2,21 @@ import { ChangeEvent, Component } from 'react'
 import {  APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "appConfig"
 import Note from 'components/Player/Note'
 import { playerStore, subscribePlayer } from 'stores/PlayerStore'
-import { Array2d, getNoteText, delay, clamp } from "lib/Utilities"
+import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "lib/Utilities"
 import "./Keyboard.css"
 import TopPage from 'components/Player/TopPage'
 import Analytics from 'lib/Analytics';
-import { SliderStore } from 'stores/SongSliderStore'
+import { playerTopStore } from 'stores/PlayerTopStore'
 import { ApproachingNote, RecordedNote } from 'lib/Songs/SongClasses'
 import type { NoteData } from 'lib/Instrument'
 import type Instrument from 'lib/Instrument'
 import type { ApproachingScore, NoteNameType } from 'types/GeneralTypes'
-import type { RecordedSong } from 'lib/Songs/RecordedSong'
+import { Chunk, RecordedSong } from 'lib/Songs/RecordedSong'
 import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider'
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 import { NoteLayer } from 'lib/Layer'
 
-interface KeyboardProps {
+interface KeyboardPlayerProps {
     data: {
         isLoading: boolean
         keyboard: Instrument
@@ -33,7 +33,7 @@ interface KeyboardProps {
         setHasSong: (override: boolean) => void
     }
 }
-interface KeyboardState {
+interface KeyboardPlayerState {
     playTimestamp: number
     songToPractice: Chunk[]
     approachingNotes: ApproachingNote[][]
@@ -44,8 +44,8 @@ interface KeyboardState {
     approachingScore: ApproachingScore
     speedChanger: typeof SPEED_CHANGERS[number]
 }
-export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
-    state: KeyboardState
+export default class KeyboardPlayer extends Component<KeyboardPlayerProps, KeyboardPlayerState> {
+    state: KeyboardPlayerState
     approachRate: number
     approachingNotesList: ApproachingNote[]
     songTimestamp: number
@@ -55,7 +55,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     mounted: boolean
     dispose: () => void
 
-    constructor(props: KeyboardProps) {
+    constructor(props: KeyboardPlayerProps) {
         super(props)
         this.state = {
             playTimestamp: Date.now(),
@@ -126,7 +126,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                 }
                 this.props.functions.setHasSong(true)
                 Analytics.songEvent({ type })
-                SliderStore.setState({
+                playerTopStore.setState({
                     size: lostReference?.notes?.length || 1,
                     position: value.start,
                     end,
@@ -178,6 +178,8 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             })
             notes.push(obj)
         }
+        playerTopStore.setSong(song)
+        playerTopStore.clearPages()
         this.setState({
             approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
             approachingScore: {
@@ -243,7 +245,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             }
         })
         if (!hasChanges) return
-        SliderStore.setCurrent(SliderStore.current + removed)
+        playerTopStore.setCurrent(playerTopStore.current + removed)
         this.setState({
             approachingNotes: stateNotes.map(arr => arr.slice()), //removes ref
             approachingScore: approachingScore
@@ -254,20 +256,26 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         end = end ? end : song.notes.length
         this.songTimestamp = song.timestamp
         const { keyboard } = this.state
-        const notes = this.applySpeedChange(song.notes)
-        if (notes.length === 0 || notes.length <= start) return
+        const notes = this.applySpeedChange(song.notes).slice(start, end)
+        const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map(n => n.clone()))
+        playerTopStore.setPages(groupArrayEvery(mergedNotes, 10))
         let previous = notes[start].time
         let pastError = 0
         let previousTime = Date.now()
-        for (let i = start; i < end && i < song.notes.length; i++) {
+        let chunkPlayedNotes = 0
+        for (let i = 0; i < song.notes.length; i++) {
             const delayTime = notes[i].time - previous
             previous = notes[i].time
             previousTime = Date.now()
             if (delayTime > 16) await delay(delayTime - pastError)
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
-
             this.handleClick(keyboard[notes[i].index], notes[i].layer)
-            SliderStore.setCurrent(i + 1)
+            if(chunkPlayedNotes >= (playerTopStore.currentChunk?.notes.length ?? 0)){
+                chunkPlayedNotes = 0
+                playerTopStore.incrementChunkPosition()
+            }
+            chunkPlayedNotes++
+            playerTopStore.setCurrent(start + i + 1)
             pastError = Date.now() - previousTime - delayTime
         }
     }
@@ -287,25 +295,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
         end = end ? end : song.notes.length
         const { keyboard } = this.state
         const notes = this.applySpeedChange(song.notes).slice(start, end)
-        const chunks = []
-        let previousChunkDelay = 0
-        for (let i = 0; notes.length > 0; i++) {
-            const chunk = new Chunk(
-                [notes.shift() as RecordedNote],
-                0
-            )
-            const startTime = chunk.notes.length > 0 ? chunk.notes[0].time : 0
-            for (let j = 0; j < notes.length && j < 20; j++) {
-                const difference = notes[j].time - chunk.notes[0].time - 50 //TODO add threshold here
-                if (difference < 0) {
-                    chunk.notes.push(notes.shift() as RecordedNote)
-                    j--
-                }
-            }
-            chunk.delay = previousChunkDelay
-            previousChunkDelay = notes.length > 0 ? notes[0].time - startTime : 0
-            chunks.push(chunk)
-        }
+        const chunks = RecordedSong.mergeNotesIntoChunks(notes.map(n => n.clone()))
         if (chunks.length === 0) return
         this.nextChunkDelay = 0
         const firstChunk = chunks[0]
@@ -322,6 +312,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
             keyboardNote.setStatus('toClickNext')
         })
         this.props.functions.setHasSong(true)
+        playerTopStore.setPages(groupArrayEvery(chunks, 10))
         this.setState({
             songToPractice: chunks,
             keyboard
@@ -337,7 +328,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     restartSong = async (override?: number) => {
         await this.stopSong()
         if (!this.mounted) return
-        playerStore.restart((typeof override === 'number') ? override : SliderStore.position, SliderStore.end)
+        playerStore.restart((typeof override === 'number') ? override : playerTopStore.position, playerTopStore.end)
     }
     stopSong = (): Promise<void> => {
         return new Promise(res => {
@@ -374,10 +365,13 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     handlePracticeClick = (note: NoteData) => {
         const { keyboard, songToPractice } = this.state
         if (songToPractice.length > 0) {
-            const indexClicked = songToPractice[0]?.notes.findIndex(e => e.index === note.index)
-            if (indexClicked !== -1) {
-                songToPractice[0].notes.splice(indexClicked, 1)
-                if (songToPractice[0].notes.length === 0) songToPractice.shift()
+            const clickedNoteIndex = songToPractice[0]?.notes.findIndex(e => e.index === note.index)
+            if (clickedNoteIndex !== -1) {
+                songToPractice[0].notes.splice(clickedNoteIndex, 1)
+                if (songToPractice[0].notes.length === 0) {
+                    songToPractice.shift()
+                    playerTopStore.incrementChunkPosition()
+                }
                 if (songToPractice.length > 0) {
                     const nextChunk = songToPractice[0]
                     const nextNextChunk = songToPractice[1]
@@ -395,7 +389,7 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                         })
                     }
                 }
-                SliderStore.incrementCurrent()
+                playerTopStore.incrementCurrent()
                 this.setState({ songToPractice })
             }
         }
@@ -470,7 +464,6 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
                             data={{
                                 approachRate: this.approachRate,
                                 instrument: this.props.data.keyboard.name,
-                                isAnimated: playerStore.eventType === 'approaching' ? false : data.hasAnimation
                             }}
                             approachingNotes={state.approachingNotes[note.index]}
                             outgoingAnimation={state.outgoingAnimation[note.index]}
@@ -486,11 +479,3 @@ export default class Keyboard extends Component<KeyboardProps, KeyboardState> {
     }
 }
 
-class Chunk {
-    notes: RecordedNote[]
-    delay: number
-    constructor(notes: RecordedNote[], delay: number) {
-        this.notes = notes
-        this.delay = delay
-    }
-}

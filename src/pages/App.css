@@ -223,12 +223,6 @@ body {
 	margin: 0;
 }
 
-.upper-right {
-	display: flex;
-	width: 100%;
-	justify-content: center;
-}
-
 .red {
 	background-color: red;
 }
@@ -739,6 +733,7 @@ a {
 
 	.slider-wrapper {
 		margin-left: 0;
+		margin-top: 0.8rem;
 	}
 
 	.default-page {

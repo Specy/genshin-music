@@ -1,30 +1,39 @@
 import { APP_NAME } from "appConfig"
 import { Chunk } from "lib/Songs/VisualSong"
 import { getNoteText } from "lib/Utilities"
+import { memo } from "react"
 import { ThemeProvider } from "stores/ThemeStore"
 
 
 
 interface SheetFrameProps {
-    frame: Chunk
+    chunk: Chunk
     rows: number
     hasText: boolean
+    selected?: boolean
 }
 
 
 
-export function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
+export function _SheetFrame({ chunk, rows, hasText, selected }: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const notes = new Array(columnsPerRow * rows).fill(0)
-    frame.notes.forEach(note => {
+    chunk.notes.forEach(note => {
         notes[note.index] = 1
     })
-    return frame.notes.length === 0
-        ? <div className='frame-outer displayer-ball'>
-            <div></div>
-        </div>
-        : <div className='frame-outer'>
-            <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
+    return <div
+        className={`frame-outer ${chunk.notes.length === 0 ? 'displayer-ball' : ''}`}
+        style={selected
+            ? {
+                borderColor: 'var(--accent)',
+            }
+            : { }
+        }
+    >
+        {chunk.notes.length === 0
+
+            ? <div></div>
+            : <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
                 {notes.map((exists, i) => {
                     return <div
                         className={exists ? 'frame-note-s' : 'frame-note-ns'}
@@ -38,5 +47,10 @@ export function SheetFrame({ frame, rows, hasText }: SheetFrameProps) {
                     </div>
                 })}
             </div>
-        </div>
+        }
+    </div>
 }
+
+export const SheetFrame = memo(_SheetFrame, (p, n) => {
+    return p.chunk === n.chunk && p.rows === n.rows && p.hasText === n.hasText && p.selected === n.selected
+})

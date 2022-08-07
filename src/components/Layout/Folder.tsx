@@ -18,11 +18,11 @@ interface FolderProps {
     isDefault?: boolean,
     defaultOpen?: boolean
 }
-interface SongFolderContentProps{
+interface SongFolderContentProps {
     children: React.ReactNode
     title?: string,
 }
-export function SongFolderContent({ children, title}: SongFolderContentProps) {
+export function SongFolderContent({ children, title }: SongFolderContentProps) {
     return <div className="folder-content">
         {title && <h2 className="folder-title">{title}</h2>}
         <div className="folder-songs-wrapper">
@@ -42,14 +42,22 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
         setFolderName(data.name)
     }, [data.name])
     useEffect(() => {
-        if (ref.current) {
-            const bounds = ref.current.getBoundingClientRect()
-            setHeight((bounds?.height || 0) + 100)
-        }
-    },[data.songs, expanded, children])
+        const current = ref.current
+        if (!current) return
+        const bounds = ref.current.getBoundingClientRect()
+        setHeight(bounds.height + 100)
+        //TODO this looks pretty hacky, might have to consider improving it
+        const timeout = setTimeout(() => {
+            const current = ref.current
+            if (!current) return
+            const reflowBounds = current.getBoundingClientRect()
+            setHeight(reflowBounds.height + 100)
+        }, 200)
+        return () => clearTimeout(timeout)
+    }, [data.songs, expanded, children])
     useEffect(() => {
         setExpanded(defaultOpen)
-    },[defaultOpen])
+    }, [defaultOpen])
     const style = { backgroundColor, color }
     async function deleteFolder() {
         const confirm = await asyncConfirm(
@@ -60,22 +68,22 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
         folderStore.removeFolder(data)
     }
 
-    return <div className={`folder ${expanded? "folder-expanded" : ""}`} style={style}>
+    return <div className={`folder ${expanded ? "folder-expanded" : ""}`} style={style}>
         <div className='folder-header'>
             <div onClick={() => {
-                if(isRenaming) return
+                if (isRenaming) return
                 setExpanded(!expanded)
-            }} 
+            }}
                 className='folder-header-button'
             >
-                    <BsChevronRight
-                        strokeWidth={2}
-                        style={{ transform: `rotate(${expanded ? 90 : 0}deg)`, transition: 'all 0.2s',  }}
-                        size={18}
-                    />
-                {isRenaming 
-                    ? <input 
-                        value={folderName} 
+                <BsChevronRight
+                    strokeWidth={2}
+                    style={{ transform: `rotate(${expanded ? 90 : 0}deg)`, transition: 'all 0.2s', }}
+                    size={18}
+                />
+                {isRenaming
+                    ? <input
+                        value={folderName}
                         onChange={(e) => setFolderName(e.target.value)}
                         className='folder-name'
                     />
@@ -86,42 +94,42 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
 
             </div>
             {!isDefault &&
-                        <FloatingDropdown
-                        offset={2.3}
-                        ignoreClickOutside={isRenaming}
-                        onClose = {() => setIsRenaming(false)}
-                        Icon={FaEllipsisH}
+                <FloatingDropdown
+                    offset={2.3}
+                    ignoreClickOutside={isRenaming}
+                    onClose={() => setIsRenaming(false)}
+                    Icon={FaEllipsisH}
+                >
+                    <FloatingDropdownRow
+                        onClick={() => {
+                            if (isRenaming) {
+                                folderStore.renameFolder(data, folderName)
+                                setIsRenaming(false)
+                            }
+                            setIsRenaming(!isRenaming)
+                        }}
                     >
-                        <FloatingDropdownRow
-                            onClick={() => {
-                                if (isRenaming) {
-                                    folderStore.renameFolder(data, folderName)
-                                    setIsRenaming(false)
-                                }
-                                setIsRenaming(!isRenaming)
-                            }}
-                        >
-                            <FaPen style={{ marginRight: "0.4rem" }} size={14} />
-                            <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
-                        </FloatingDropdownRow>
-                        <FloatingDropdownRow 
-                            onClick={() => {
-                                const clone = cloneDeep(data.songs)
-                                fileService.downloadSong(clone, `${data.name}-folder`)
-                            }}
-                        >
-                            <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
-                            <FloatingDropdownText text='Download' />
-                        </FloatingDropdownRow>
-                        <FloatingDropdownRow onClick={deleteFolder}>
-                            <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14} />
-                            <FloatingDropdownText text='Delete' />
-                        </FloatingDropdownRow>
-                    </FloatingDropdown>
+                        <FaPen style={{ marginRight: "0.4rem" }} size={14} />
+                        <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
+                    </FloatingDropdownRow>
+                    <FloatingDropdownRow
+                        onClick={() => {
+                            const clone = cloneDeep(data.songs)
+                            fileService.downloadSong(clone, `${data.name}-folder`)
+                        }}
+                    >
+                        <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
+                        <FloatingDropdownText text='Download' />
+                    </FloatingDropdownRow>
+                    <FloatingDropdownRow onClick={deleteFolder}>
+                        <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14} />
+                        <FloatingDropdownText text='Delete' />
+                    </FloatingDropdownRow>
+                </FloatingDropdown>
             }
         </div>
 
-        <div className="column folder-overflow" style={{maxHeight: expanded ? `${height}px` : 0}}>
+        <div className="column folder-overflow" style={{ maxHeight: expanded ? `${height}px` : 0 }}>
             <div className="column folder-overflow-expandible" ref={ref}>
                 {children}
             </div>

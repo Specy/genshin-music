@@ -27,7 +27,6 @@ interface NoteProps {
     data: {
         approachRate: number
         instrument: InstrumentName
-        isAnimated: boolean
     }
     approachingNotes: ApproachingNote[]
     outgoingAnimation: {

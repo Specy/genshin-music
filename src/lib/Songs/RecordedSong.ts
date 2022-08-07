@@ -201,6 +201,28 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         })
         return song
     }
+    static mergeNotesIntoChunks(notes: RecordedNote[]){
+        const chunks = []
+        let previousChunkDelay = 0
+        for (let i = 0; notes.length > 0; i++) {
+            const chunk = new Chunk(
+                [notes.shift() as RecordedNote],
+                0
+            )
+            const startTime = chunk.notes.length > 0 ? chunk.notes[0].time : 0
+            for (let j = 0; j < notes.length && j < 20; j++) {
+                const difference = notes[j].time - chunk.notes[0].time - 50 //TODO add threshold here
+                if (difference < 0) {
+                    chunk.notes.push(notes.shift() as RecordedNote)
+                    j--
+                }
+            }
+            chunk.delay = previousChunkDelay
+            previousChunkDelay = notes.length > 0 ? notes[0].time - startTime : 0
+            chunks.push(chunk)
+        }
+        return chunks
+    }
     toRecordedSong = () => {
         return this.clone()
     }
@@ -282,5 +304,18 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         clone.data = { ...this.data }
         clone.notes = this.notes.map(note => note.clone())
         return clone
+    }
+}
+
+
+export class Chunk {
+    notes: RecordedNote[]
+    delay: number
+    constructor(notes: RecordedNote[], delay: number) {
+        this.notes = notes
+        this.delay = delay
+    }
+    clone(){
+        return new Chunk(this.notes.map(note => note.clone()), this.delay)
     }
 }

@@ -61,6 +61,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
                 <SongMenu<SongRowProps>
                     songs={songs}
                     className='noprint'
+                    exclude={['vsrg']}
                     SongComponent={SongRow}
                     componentProps={{
                         current: currentSong,

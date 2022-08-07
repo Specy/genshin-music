@@ -9,10 +9,10 @@ interface SongActionButtonProps {
     children: React.ReactNode
 }
 
-export function SongActionButton({ onClick, children, style, tooltip, ariaLabel }: SongActionButtonProps) {
+export function SongActionButton({ onClick, children, style, tooltip, ariaLabel,  }: SongActionButtonProps) {
     return <>
-        <button 
-            className={`song-button ${hasTooltip(tooltip)}`} 
+        <button
+            className={`song-button ${hasTooltip(tooltip)}`}
             onClick={onClick || (() => { })}
             style={style}
             aria-label={ariaLabel}
