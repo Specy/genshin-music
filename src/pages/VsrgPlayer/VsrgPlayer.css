@@ -1,5 +1,4 @@
 .vsrg-player-page{
-    padding: 0.4rem;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -12,6 +11,9 @@
     grid-template-areas: 
             'a'
             'b';
+    background-color: var(--background-darken-10);
+    border-left: solid 2px var(--secondary);
+    border-right: solid 2px var(--secondary);
     grid-template-rows: 1fr min-content;
 }
 
@@ -20,9 +22,8 @@
     width: 50vw;
     grid-area: a;
     display: flex;
-    flex: 1;
-    border-left: solid 2px var(--secondary);
-    border-right: solid 2px var(--secondary);
+    flex: 1;    
+
 }
 .vsrg-player-countdown{
     position: absolute;
@@ -95,4 +96,23 @@
     text-shadow: 0 0 0.5rem #252525;
     font-size: 1.4rem;
     color: var(--background-text);
+}
+
+.vsrg-floating-score{
+    position: absolute;
+    top: 70%;
+    width: 12rem;
+    left: calc(50% - 6rem);
+    pointer-events: none;
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: bold;
+    text-shadow: 0 0 0.5rem #252525;
+}
+
+@media only screen and (max-width: 900px) {
+    .vsrg-floating-score{
+        font-size: 1.8rem;
+        top: 65%;
+    }
 }

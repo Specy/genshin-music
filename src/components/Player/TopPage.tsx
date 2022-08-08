@@ -11,6 +11,7 @@ import { ApproachingScore } from "types/GeneralTypes";
 import { clamp } from "lib/Utilities";
 import { Tooltip } from 'components/Utility/Tooltip'
 import { SheetFrame } from "components/SheetVisualizer/SheetFrame";
+import { IconButton } from "components/Inputs/IconButton";
 interface TopPageProps {
     restart: () => void
     handleSpeedChanger: (event: ChangeEvent<HTMLSelectElement>) => void
@@ -88,11 +89,11 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
         }
         <div className="upper-right" style={!hasSong ? { display: 'none' } : {}} >
             <div className="slider-wrapper">
-                <AppButton className="slider-button" onClick={playerStore.reset} tooltip='Stop' ariaLabel="Stop song">
+                <IconButton onClick={playerStore.reset} tooltip='Stop' ariaLabel="Stop song">
                     <Memoized>
                         <FaStop />
                     </Memoized>
-                </AppButton>
+                </IconButton>
                 <div
                     className="slider-outer"
                     ref={slider}
@@ -126,11 +127,11 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                     </div>
                 </div>
 
-                <AppButton className="slider-button" onClick={restart} tooltip='Restart' ariaLabel="Restart song">
+                <IconButton onClick={restart} tooltip='Restart' ariaLabel="Restart song">
                     <Memoized>
                         <FaSyncAlt />
                     </Memoized>
-                </AppButton>
+                </IconButton>
                 <div className="has-tooltip">
                     <select
                         className='slider-select'

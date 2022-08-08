@@ -29,6 +29,9 @@ interface SvgNoteProps{
     color?: string
     fill?: string
 }
+export interface SvgNoteImageProps{
+    style: React.CSSProperties
+}
 function SvgNote({name,color = 'currentColor'}: SvgNoteProps){
     const NoteComponent = notes[name]
     return <NoteComponent style={{fill: color,stroke: color}}/>

@@ -1,4 +1,6 @@
-export default function dmNote({style}) {
+import { SvgNoteImageProps } from "..";
+
+export default function dmNote({style}: SvgNoteImageProps) {
     return <svg
 		style={style}
         version="0.0"

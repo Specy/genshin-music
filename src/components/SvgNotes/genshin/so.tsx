@@ -1,4 +1,6 @@
-export default function soNote({style}) {
+import { SvgNoteImageProps } from "..";
+
+export default function soNote({style}: SvgNoteImageProps) {
     return <svg
 		style={style}
 		className={'svg-note'}

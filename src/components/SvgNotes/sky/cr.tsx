@@ -1,4 +1,6 @@
-export default function crNote({ style }) {
+import { SvgNoteImageProps } from "..";
+
+export default function crNote({ style }: SvgNoteImageProps) {
    return <svg
       viewBox="0 0 63.87 63.87"
       style={style}

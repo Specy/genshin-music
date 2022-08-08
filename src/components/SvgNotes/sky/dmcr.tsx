@@ -1,4 +1,6 @@
-export default function dmcrNote({style}) {
+import { SvgNoteImageProps } from "..";
+
+export default function dmcrNote({style}: SvgNoteImageProps) {
     return <svg
 		style={style}
 		className={'svg-note'}

@@ -14,7 +14,7 @@ interface VsrgKeysRendererProps {
     onKeyUp: (key: number) => void
 }
 
-export const defaultTextStyle = new TextStyle({
+export const defaultVsrgTextStyle = new TextStyle({
     fontFamily: '"Source Sans Pro", Helvetica, sans-serif',
     fontSize: 30,
     fill: "#ffffff",
@@ -26,7 +26,7 @@ const fontFace = [{
 
 //TODO add cache as bitmap
 function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKeyUp }: VsrgKeysRendererProps) {
-    const [textStyle, setTextStyle] = useState(defaultTextStyle)
+    const [textStyle, setTextStyle] = useState(defaultVsrgTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
     useEffect(() => {
         setTextStyle(new TextStyle({
@@ -34,7 +34,6 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
             fontSize: isFontLoaded ? 25 : 30,
             fill: colors.lineColor[1],
         }))
-
     }, [colors, sizes, keys, isFontLoaded])
     const keyHeight = sizes.height / keys.length
     const keyWidth = sizes.width / keys.length

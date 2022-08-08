@@ -1,4 +1,6 @@
-export default function tiNote({style}) {
+import { SvgNoteImageProps } from "..";
+
+export default function tiNote({style}: SvgNoteImageProps) {
     return <svg
 		style={style}
 		className={'svg-note'}

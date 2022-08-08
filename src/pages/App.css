@@ -137,7 +137,11 @@ body {
 	min-width: 5rem;
 	transition: background-color 0.2s, color 0.2s, filter 0.2s;
 }
-
+.icon-app-button{
+	width: unset;
+	min-width: unset;
+	padding: 0;
+}
 .link {
 	color: var(--background-text);
 }
@@ -197,10 +201,6 @@ body {
 }
 .metronome-button{
 	position: absolute;
-	min-width: unset;
-	padding: 0;
-	width: 2rem;
-	height: 2rem;
 	right: 0.8rem;
 	bottom: 0.8rem;
 }

@@ -1,6 +1,6 @@
 import { Tooltip,hasTooltip } from "../Utility/Tooltip"
 
-interface AppButtonprops {
+export interface AppButtonProps {
     style?: React.CSSProperties,
     className?: string,
     onClick?: (e: React.MouseEvent) => void,
@@ -21,7 +21,7 @@ export function AppButton({
         visible = true, 
         tooltip,
         ariaLabel
-    }: AppButtonprops) {
+    }: AppButtonProps) {
     return <button
         className={`app-button ${className} ${toggled ? 'active' : ''} ${hasTooltip(tooltip)}`}
         style={{

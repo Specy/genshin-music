@@ -1,4 +1,6 @@
-export default function faNote({style}) {
+import { SvgNoteImageProps } from "..";
+
+export default function faNote({style}: SvgNoteImageProps) {
     return <svg
 		style={style}
 		className={'svg-note'}

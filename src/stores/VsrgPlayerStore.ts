@@ -18,6 +18,13 @@ export type VsrcPlayerKeyboardCallback = {
     callback: (key: KeyboardKey, type: VsrgKeyboardPressType) => void,
     id: string
 }
+export type VsrgPlayerHitType = 'perfect' | 'good' | 'bad' | 'miss'
+
+export type VsrgLatestScore = {
+    timestamp: number
+    type: VsrgPlayerHitType | ''
+}
+
 export type VsrgPlayerScore = {
     combo: number
     score: number
@@ -25,8 +32,8 @@ export type VsrgPlayerScore = {
     good: number
     bad: number
     miss: number
+    lastScore: VsrgLatestScore
 }
-export type VsrgPlayerHitType = 'perfect' | 'good' | 'bad' | 'miss'
 class VsrgPlayerStore {
     @observable keyboard: KeyboardKey[] = []
     @observable.shallow currentSong: VsrgPlayerSong = {
@@ -40,6 +47,10 @@ class VsrgPlayerStore {
         good: 0,
         bad: 0,
         miss: 0,
+        lastScore: {
+            timestamp: 0,
+            type: ''
+        }
     }
     private keyboardListeners: VsrcPlayerKeyboardCallback[] = []
     constructor() {
@@ -62,15 +73,22 @@ class VsrgPlayerStore {
             good: 0,
             bad: 0,
             miss: 0,
-            combo: 0
-            
+            combo: 0,
+            lastScore: {
+                timestamp: 0,
+                type: ''
+            }
         })
     }
     incrementScore = (type: VsrgPlayerHitType) => {
         Object.assign(this.score, {
             [type]: this.score[type] + 1,
             combo: this.score.combo + 1,
-            score: this.score.score + this.getScore(type)
+            score: this.score.score + this.getScore(type),
+            lastScore: {
+                timestamp: Date.now(),
+                type
+            }
         })
         if (type === 'miss') this.score.combo = 0
     }
@@ -132,7 +150,14 @@ export function subscribeCurrentSong(callback: (data: VsrgPlayerSong) => void) {
 
 export function subscribeVsrgScore(callback: (data: VsrgPlayerScore) => void) {
     const dispose = observe(vsrgPlayerStore.score, () => {
-        callback({...vsrgPlayerStore.score})
+        callback({ ...vsrgPlayerStore.score })
+    })
+    return dispose
+}
+
+export function subscribeVsrgLatestScore(callback: (data: VsrgLatestScore) => void) {
+    const dispose = observe(vsrgPlayerStore.score, () => {
+        callback({ ...vsrgPlayerStore.score.lastScore })
     })
     return dispose
 }

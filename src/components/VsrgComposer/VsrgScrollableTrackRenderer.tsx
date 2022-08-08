@@ -10,7 +10,7 @@ import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
 import useFontFaceObserver from "use-font-face-observer";
 import { useEffect, useState } from "react";
-import { defaultTextStyle } from "./VsrgKeysRenderer";
+import { defaultVsrgTextStyle } from "./VsrgKeysRenderer";
 
 
 interface VsrgScrollableTrackRendererProps {
@@ -38,7 +38,7 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
     const lowerBound = timestamp - (PLAY_BAR_OFFSET + cache.textures.snapPoints.size) / scale
     const upperBound = timestamp + ((isHorizontal ? sizes.width : sizes.height) - PLAY_BAR_OFFSET) / scale 
     const snapPointSize = cache.textures.snapPoints.size
-    const [textStyle, setTextStyle] = useState(defaultTextStyle)
+    const [textStyle, setTextStyle] = useState(defaultVsrgTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
     useEffect(() => {
         setTextStyle(new TextStyle({

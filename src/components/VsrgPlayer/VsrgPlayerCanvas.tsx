@@ -10,6 +10,7 @@ import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerSon
 import { VsrgPlayerCacheKinds, VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
 import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
+import { VsrgPlayerLatestScore } from "./VsrgLatestScore";
 
 
 
@@ -122,7 +123,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
     onSongPick = ({ type, song }: VsrgPlayerSong) => {
         vsrgPlayerStore.resetScore()
         if (type === 'play' && song) {
-            const countDown = 1000
+            const countDown = 3000
             this.setState({ song: song, timestamp: - countDown - song.approachRate, renderableHitObjects: [] }, () => {
                 song?.startPlayback(0)
                 this.calculateSizes()
@@ -294,7 +295,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                     }}
                     onMount={this.calculateSizes}
                 >
-                    {cache &&
+                    {cache && <>
                         <VsrgHitObjectsRenderer
                             sizes={sizes}
                             offset={verticalOffset}
@@ -302,6 +303,13 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                             renderableHitObjects={renderableHitObjects}
                             timestamp={timestamp}
                         />
+                        <Container
+                            x={sizes.width / 2}
+                            y={sizes.height * 0.7}
+                            anchor={0.5}
+                        >
+                        </Container>
+                    </>
                     }
                 </Stage>
             </div>

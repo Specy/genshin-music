@@ -16,6 +16,8 @@ import { songService } from "lib/Services/SongService";
 import { songsStore } from "stores/SongsStore";
 import { ComposedSong } from "lib/Songs/ComposedSong";
 import { VsrgPlayerRight } from "components/VsrgPlayer/VsrgPlayerRight";
+import { VsrgPlayerLatestScore } from "components/VsrgPlayer/VsrgLatestScore";
+import { ThemeProvider } from "stores/ThemeStore";
 
 type VsrgPlayerProps = RouteComponentProps & {
 
@@ -93,6 +95,11 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             vsrgPlayerStore.stopSong()
         })
     }
+    onRetrySong = () => {
+        const { song } = this.state
+        if (!song) return
+        this.onSongSelect(song, 'play')
+    }
     handleTick = (timestamp: number) => {
         const { audioSong, songAudioPlayer, song } = this.state
         this.lastTimestamp = timestamp
@@ -124,21 +131,28 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                 <VsrgPlayerMenu
                     onSongSelect={this.onSongSelect}
                 />
-                <div className="vsrg-player-grid">
+                <div
+                    className="vsrg-player-grid box-shadow"
+                    style={{
+                        backgroundColor: ThemeProvider.layer('background', 0.18, 0.06).hex()
+                    }}
+                >
                     <VsrgPlayerCanvas
                         hitObjectSize={hitObjectSize}
                         onTick={this.handleTick}
                         playHitObject={this.playHitObject}
                         isPlaying={this.state.isPlaying}
                     />
-                    <VsrgPlayerKeyboard 
+                    <VsrgPlayerKeyboard
                         hitObjectSize={hitObjectSize}
                     />
                 </div>
                 <VsrgPlayerRight
                     song={this.state.song}
                     onStopSong={this.onStopSong}
+                    onRetrySong={this.onRetrySong}
                 />
+                <VsrgPlayerLatestScore />
                 {isLoadingInstruments &&
                     <div className="vsrg-player-loading-instruments">
                         Loading instruments...

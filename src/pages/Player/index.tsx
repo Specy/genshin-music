@@ -25,6 +25,7 @@ import { GiMetronome } from 'react-icons/gi';
 import { Lambda } from 'mobx';
 import { NoteLayer } from 'lib/Layer';
 import './Player.css'
+import { IconButton } from 'components/Inputs/IconButton';
 
 interface PlayerState {
 	settings: MainPageSettingsDataType
@@ -334,14 +335,14 @@ class Player extends Component<any, PlayerState>{
 					</AppButton>
 				</div>
 			}
-			<AppButton 
+			<IconButton 
 				toggled={isMetronomePlaying} 
 				onClick={toggleMetronome} 
 				className='metronome-button'
 				ariaLabel='Toggle metronome'
 			>
 				<GiMetronome size={22} />
-			</AppButton>
+			</IconButton>
 		</>
 	}
 }

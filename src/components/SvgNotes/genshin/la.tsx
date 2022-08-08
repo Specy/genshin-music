@@ -1,4 +1,6 @@
-export default function laNote({style}) {
+import { SvgNoteImageProps } from "..";
+
+export default function laNote({style}: SvgNoteImageProps) {
     return <svg
 		style={style}
 		className={'svg-note'}

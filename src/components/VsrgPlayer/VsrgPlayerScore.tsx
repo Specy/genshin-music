@@ -24,5 +24,5 @@ function _VsrgPlayerScore(){
 
 
 export const VsrgPlayerScore = memo(_VsrgPlayerScore, (p,n) => {
-    return true
+    return false
 })
