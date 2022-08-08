@@ -65,7 +65,12 @@ function groupArrayEvery<T>(array: T[], n: number) {
 	}
 	return groups
 }
-
+function isNumberBetween(num: number, min: number, max: number) {
+	return num >= min && num <= max
+}
+function isNumberCloseTo(num: number, target: number, range: number) {
+	return num >= target - range && num <= target + range
+}
 
 function capitalize(str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);
@@ -203,9 +208,9 @@ function groupByNotes(notes: RecordedNote[], threshold: number) {
 	return result
 }
 
+const pitchMap = new Map(PITCHES.map((pitch, i) => [pitch, i]))
 function getPitchChanger(pitch: Pitch) {
-	let index = PITCHES.indexOf(pitch)
-	if (index < 0) index = 0
+	const index = pitchMap.get(pitch) ?? 0
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
 function calculateSongLength(columns: Column[], bpm: number, end: number) {
@@ -282,5 +287,7 @@ export {
 	isComposedOrRecorded,
 	isFocusable,
 	parseMouseClick,
-	groupArrayEvery
+	groupArrayEvery,
+	isNumberBetween,
+	isNumberCloseTo
 }

@@ -99,7 +99,6 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                     Color
                     <AppButton
                         onClick={() => setIsColorPickerOpen(true)}
-
                         ariaLabel='Change color'
                         style={{
                             backgroundColor: track.color,

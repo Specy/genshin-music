@@ -2,7 +2,7 @@ import { Component } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import './VsrgPlayer.css'
 import VsrgPlayerMenu from "components/VsrgPlayer/VsrgPlayerMenu";
-import { VsrgSong } from "lib/Songs/VsrgSong";
+import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong";
 import { settingsService } from "lib/Services/SettingsService";
 import { VsrgPlayerSettingsDataType } from "lib/BaseSettings";
 import { AudioPlayer } from "lib/AudioPlayer";
@@ -109,6 +109,14 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             })
         }
     }
+    playHitObject = (hitObject: VsrgHitObject, instrumentIndex: number) => {
+        const { keyboardAudioPlayer } = this.state
+        if (keyboardAudioPlayer) {
+            hitObject.notes.forEach(n => {
+                keyboardAudioPlayer.playNoteOfInstrument(instrumentIndex, n)
+            })
+        }
+    }
     render() {
         const { isLoadingInstruments, hitObjectSize } = this.state
         return <>
@@ -120,6 +128,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     <VsrgPlayerCanvas
                         hitObjectSize={hitObjectSize}
                         onTick={this.handleTick}
+                        playHitObject={this.playHitObject}
                         isPlaying={this.state.isPlaying}
                     />
                     <VsrgPlayerKeyboard 

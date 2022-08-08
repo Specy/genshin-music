@@ -102,6 +102,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         return surpassed
     }
+    
     addInstrument = (name: InstrumentName) => {
         const newInstrument: InstrumentData = new InstrumentData({ name })
         this.instruments = [...this.instruments, newInstrument]

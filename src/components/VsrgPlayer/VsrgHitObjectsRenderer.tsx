@@ -19,7 +19,7 @@ export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache,
     return <>
         <Container
             x={0}
-            y={timestamp * scale + offset}
+            y={timestamp * scale - offset}
         >
             {renderableHitObjects.map(renderableHitObject => {
                 const hitObject = renderableHitObject.hitObject
