@@ -1,4 +1,4 @@
-import { Container, Sprite, Stage } from "@inlet/react-pixi";
+import { Container, Stage } from "@inlet/react-pixi";
 import { subscribeTheme } from "lib/Hooks/useTheme";
 import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong";
 import { ThrottledEventLoop } from "lib/ThrottledEventLoop";

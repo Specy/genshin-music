@@ -21,7 +21,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     audioSongId: string | null = null
     trackModifiers: VsrgTrackModifier[] = []
     breakpoints: number[] = []
-    approachRate: number = 3000
+    approachRate: number = 2000
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -34,7 +34,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         song.duration = obj.duration ?? 60000
         song.keys = obj.keys ?? 4
         song.breakpoints = obj.breakpoints ?? []
-        song.approachRate = obj.approachRate ?? 3000
+        song.approachRate = obj.approachRate ?? 2000
+        
         return song
     }
 

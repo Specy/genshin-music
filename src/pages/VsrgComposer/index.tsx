@@ -186,6 +186,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrg.set({ bpm: data.value as number })
             this.calculateSnapPoints()
         }
+        if(setting.key === 'approachRate'){
+            vsrg.set({ approachRate: data.value as number })
+        }
         this.setState({
             settings: { ...settings }
         }, () => {
@@ -404,6 +407,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         settings.bpm.value = song.bpm
         settings.keys.value = song.keys
         settings.pitch.value = song.pitch
+        settings.approachRate.value = song.approachRate
         this.updateSettings()
         this.changes++
 

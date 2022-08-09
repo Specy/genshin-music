@@ -1,7 +1,5 @@
-import { Container, Text, useApp,  } from "@inlet/react-pixi"
-import { TextStyle } from "pixi.js"
 import { memo, useEffect, useRef, useState } from "react"
-import { subscribeVsrgLatestScore, VsrgLatestScore, vsrgPlayerStore } from "stores/VsrgPlayerStore"
+import { subscribeVsrgLatestScore, vsrgPlayerStore } from "stores/VsrgPlayerStore"
 
 interface VsrgScoreRendererProps {
 }

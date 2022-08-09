@@ -23,7 +23,6 @@ function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
     const { type } = data
     useEffect(() => {
         setValue(data.value)
-
     }, [data.value])
 
     function handleCheckbox(value: boolean) {

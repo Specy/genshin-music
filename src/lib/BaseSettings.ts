@@ -365,6 +365,7 @@ export type VsrgComposerSettingsDataType = {
     isVertical: SettingsCheckbox
     autosave: SettingsCheckbox
     maxFps: SettingsSelect<number>
+    approachRate: SettingsNumber
 }
 export type VsrgComposerSettingsType = {
     other: {
@@ -374,7 +375,7 @@ export type VsrgComposerSettingsType = {
 }
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 5
+        settingVersion: APP_NAME + 6
     },
     data: {
         keys:{
@@ -400,7 +401,6 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             value: 220,
             category: "Song Settings",
         },
-
         pitch: {
             name: "Base pitch",
             tooltip: "The main pitch of the song",
@@ -409,6 +409,16 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             value: "C",
             category: "Song Settings",
             options: [...PITCHES]
+        },
+        approachRate: {
+            name: "Approach rate (ms)",
+            tooltip:"The time between when the notes appear and when they reach the end (in ms)",
+            type: "number",
+            songSetting: true,
+            increment: 100,
+            threshold: [500, 5000],
+            value: 2000,
+            category: "Song Settings",
         },
         isVertical: {
             name: "Vertical editor",
@@ -442,6 +452,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             songSetting: false,
             value: false,
         },
+
     }
 }
 

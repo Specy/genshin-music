@@ -12,6 +12,8 @@ interface InputProps {
         data: any
     }) => void
 }
+
+//TODO add better debouncing
 export function Input({ data, value, onChange, onComplete, objectKey }: InputProps) {
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {

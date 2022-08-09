@@ -1,5 +1,4 @@
 /* eslint-disable no-restricted-globals */
-
 // This service worker can be customized!
 // See https://developers.google.com/web/tools/workbox/modules
 // for the list of available Workbox modules, or add any other
@@ -28,8 +27,6 @@ if (IS_TAURI) {
 	// This variable must be present somewhere in your service worker file,
 	// even if you decide not to use precaching. See https://cra.link/PWA
 	precacheAndRoute(PRECACHE_MANIFEST);
-
-
 	registerRoute(
 		new RegExp('/*'),
 		new CacheFirst({
@@ -37,7 +34,6 @@ if (IS_TAURI) {
 		})
 	);
 }
-
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})

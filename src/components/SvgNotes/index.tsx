@@ -1,7 +1,6 @@
 import crNote from "./sky/cr";
 import dmNote from "./sky/dm";
 import dmcrNote from "./sky/dmcr";
-
 import doNote from "./genshin/do";
 import reNote from "./genshin/re";
 import miNote from "./genshin/mi";
