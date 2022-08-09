@@ -64,7 +64,7 @@ function VsrgPlayerKeyboardKey({index, layout, size}: VsrgPlayerKeyboardKeyProps
         vsrgPlayerStore.releaseKey(index)
     }, [index])
     return <button 
-        className="vsrg-player-key-hitbox"
+        className="vsrg-player-key-hitbox flex-centered"
         onPointerDown={pressKey}
         onPointerUp={releaseKey}
     >

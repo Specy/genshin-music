@@ -84,7 +84,7 @@ class VsrgPlayerStore {
         Object.assign(this.score, {
             [type]: this.score[type] + 1,
             combo: this.score.combo + 1,
-            score: this.score.score + this.getScore(type),
+            score: this.score.score + this.getScore(type) * this.score.combo,
             lastScore: {
                 timestamp: Date.now(),
                 type

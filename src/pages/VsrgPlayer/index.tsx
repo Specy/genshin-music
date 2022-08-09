@@ -10,7 +10,7 @@ import { KeyboardLetter } from "lib/Providers/KeyboardProvider/KeyboardTypes";
 import { VsrgPlayerKeyboard } from "components/VsrgPlayer/VsrgPlayerKeyboard";
 import { DEFAULT_VSRG_KEYS_MAP } from "appConfig";
 import { vsrgPlayerStore } from "stores/VsrgPlayerStore";
-import { VsrgPlayerCanvas } from "components/VsrgPlayer/VsrgPlayerCanvas";
+import { defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes } from "components/VsrgPlayer/VsrgPlayerCanvas";
 import { RecordedSong } from "lib/Songs/RecordedSong";
 import { songService } from "lib/Services/SongService";
 import { songsStore } from "stores/SongsStore";
@@ -26,8 +26,8 @@ interface VsrgPlayerState {
     song: VsrgSong | null
     audioSong: RecordedSong | null
     settings: VsrgPlayerSettingsDataType
+    canvasSizes: VsrgPlayerCanvasSizes
     songAudioPlayer: AudioPlayer
-    hitObjectSize: number
     keyboardAudioPlayer: AudioPlayer
     currentLayout: KeyboardLetter[]
     isLoadingInstruments: boolean
@@ -43,7 +43,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             song: null,
             audioSong: null,
             settings: settingsService.getVsrgPlayerSettings(),
-            hitObjectSize: 0,
+            canvasSizes: defaultVsrgPlayerSizes,
             songAudioPlayer: new AudioPlayer("C"),
             keyboardAudioPlayer: new AudioPlayer("C"),
             currentLayout: DEFAULT_VSRG_KEYS_MAP[4] as KeyboardLetter[],
@@ -53,7 +53,6 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         this.lastTimestamp = 0
     }
     componentDidMount() {
-        this.calculateHitObjectSize()
         vsrgPlayerStore.setLayout(this.state.currentLayout)
     }
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
@@ -84,12 +83,10 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             }
         })
     }
-    calculateHitObjectSize = async (): Promise<number> => {
-        return new Promise(res => {
-            const size = window.innerWidth * 0.05
-            return this.setState({ hitObjectSize: size }, () => res(size))
-        })
+    onSizeChange = (sizes: VsrgPlayerCanvasSizes) => {
+        this.setState({ canvasSizes: sizes })
     }
+
     onStopSong = () => {
         this.setState({ isPlaying: false, song: null }, () => {
             vsrgPlayerStore.stopSong()
@@ -125,7 +122,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         }
     }
     render() {
-        const { isLoadingInstruments, hitObjectSize } = this.state
+        const { isLoadingInstruments, canvasSizes } = this.state
         return <>
             <div className="vsrg-player-page">
                 <VsrgPlayerMenu
@@ -138,13 +135,13 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     }}
                 >
                     <VsrgPlayerCanvas
-                        hitObjectSize={hitObjectSize}
                         onTick={this.handleTick}
+                        onSizeChange={this.onSizeChange}
                         playHitObject={this.playHitObject}
                         isPlaying={this.state.isPlaying}
                     />
                     <VsrgPlayerKeyboard
-                        hitObjectSize={hitObjectSize}
+                        hitObjectSize={canvasSizes.hitObjectSize}
                     />
                 </div>
                 <VsrgPlayerRight

@@ -7,10 +7,9 @@ import { Application } from "pixi.js";
 import { Component, createRef } from "react";
 import { ThemeStore } from "stores/ThemeStore";
 import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerSong, vsrgPlayerStore } from "stores/VsrgPlayerStore";
-import { VsrgPlayerCacheKinds, VsrgPlayerCache } from "./VsgPlayerCache";
+import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
 import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
-import { VsrgPlayerLatestScore } from "./VsrgLatestScore";
 
 
 
@@ -37,7 +36,7 @@ export type VsrgPlayerCanvasSizes = {
 
 interface VsrgPlayerCanvasProps {
     isPlaying: boolean
-    hitObjectSize: number
+    onSizeChange: (sizes: VsrgPlayerCanvasSizes) => void
     onTick: (timestamp: number) => void
     playHitObject: (hitObject: VsrgHitObject, instrumentIndex: number) => void
 }
@@ -68,6 +67,17 @@ interface VsrgPlayerCanvasState {
     cache: VsrgPlayerCache | null
     renderableHitObjects: RenderableHitObject[]
 }
+export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
+    el: new DOMRect(),
+    rawWidth: 0,
+    rawHeight: 0,
+    width: 0,
+    height: 0,
+    keyWidth: 0,
+    hitObjectSize: 0,
+    scaling: 0
+}
+
 export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlayerCanvasState>{
     throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => { }, 48)
     wrapperRef: React.RefObject<HTMLDivElement>
@@ -80,16 +90,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             timestamp: 0,
             verticalOffset: 0,
             accuracy: 150,
-            sizes: {
-                el: new DOMRect(),
-                rawWidth: 0,
-                rawHeight: 0,
-                width: 0,
-                height: 0,
-                keyWidth: 0,
-                hitObjectSize: 0,
-                scaling: 0
-            },
+            sizes: defaultVsrgPlayerSizes,
             colors: {
                 background_plain: ['#000000', 1],
                 background: ['#000000', 1],
@@ -179,7 +180,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             rawHeight: el.clientHeight,
             el: el.getBoundingClientRect(),
             keyWidth,
-            hitObjectSize: this.props.hitObjectSize,
+            hitObjectSize: keyWidth * 0.6,
             scaling: (el.clientHeight) / song.approachRate
         }
         const canvas = el.querySelector('canvas')
@@ -187,6 +188,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             canvas.style.width = `${sizes.width}px`
             canvas.style.height = `${sizes.height}px`
         }
+        this.props.onSizeChange(sizes)
         this.setState({ sizes, verticalOffset: sizes.hitObjectSize / 2 }, this.generateCache)
     }
     generateCache = () => {

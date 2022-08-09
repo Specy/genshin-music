@@ -6,6 +6,8 @@
     align-items: center;
 }
 .vsrg-player-grid{
+    opacity: 0.96;
+    max-width: 35rem;
     height: 100%;
     display: grid;
     grid-template-areas: 
@@ -20,10 +22,11 @@
 .vsrg-player-canvas{
     position: relative;
     width: 50vw;
+    max-width: 35rem;
+    margin-left: -2px;
     grid-area: a;
     display: flex;
     flex: 1;    
-
 }
 .vsrg-player-countdown{
     position: absolute;
@@ -52,7 +55,6 @@
     margin-bottom: 1rem;
     display: flex;
     z-index: 2;
-    justify-content: space-around;
 }
 
 .vsrg-player-key-hitbox{
@@ -61,8 +63,7 @@
     background: none;
     padding: 0;
     margin: 0;
-    width: 5vw;
-    height: 5vw;
+    flex: 1;
 }
 .vsrg-player-key{
     display: flex;

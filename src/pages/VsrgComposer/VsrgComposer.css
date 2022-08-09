@@ -29,6 +29,7 @@
 }
 .vsrg-top-canvas-wrapper canvas {
     position: absolute;
+    opacity: 0.96;
     border-radius: 0.6rem;
 }
 .vsrg-top-right {
