@@ -1,11 +1,8 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-
 import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "appConfig"
-
 import AddColumn from 'components/icons/AddColumn';
 import RemoveColumn from "components/icons/RemoveColumn"
-
 import MidiParser from "components/Composer/MidiParser"
 import ComposerTools from "components/Composer/ComposerTools"
 import ComposerKeyboard from "components/Composer/ComposerKeyboard"
@@ -19,7 +16,6 @@ import { delay, formatMs, calculateSongLength } from "lib/Utilities"
 import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
 import { Column, InstrumentData } from 'lib/Songs/SongClasses';
 import AudioRecorder from 'lib/AudioRecorder'
-
 import Analytics from 'lib/Analytics';
 import { RouteComponentProps, withRouter } from 'react-router-dom'
 import HomeStore from 'stores/HomeStore';

@@ -18,6 +18,7 @@ import { ComposedSong } from "lib/Songs/ComposedSong";
 import { VsrgPlayerRight } from "components/VsrgPlayer/VsrgPlayerRight";
 import { VsrgPlayerLatestScore } from "components/VsrgPlayer/VsrgLatestScore";
 import { ThemeProvider } from "stores/ThemeStore";
+import { SettingUpdate } from "types/SettingsPropriety";
 
 type VsrgPlayerProps = RouteComponentProps & {
 
@@ -55,6 +56,12 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     componentDidMount() {
         vsrgPlayerStore.setLayout(this.state.currentLayout)
     }
+    componentWillUnmount() {
+        const { songAudioPlayer, keyboardAudioPlayer } = this.state
+        songAudioPlayer.destroy()
+        keyboardAudioPlayer.destroy()
+        vsrgPlayerStore.resetScore()
+    }
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
         const { songAudioPlayer, keyboardAudioPlayer } = this.state
         const serializedAudioSong = await songsStore.getSongById(song.audioSongId)
@@ -82,6 +89,21 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                 vsrgPlayerStore.playSong(song)
             }
         })
+    }
+    handleSettingChange = (setting: SettingUpdate) => {
+        const { settings } = this.state
+        const { data } = setting
+        //@ts-ignore
+        settings[setting.key] = { ...settings[setting.key], value: data.value }
+
+        this.setState({
+            settings: { ...settings }
+        }, () => {
+            this.updateSettings()
+        })
+    }
+    updateSettings = (override?: VsrgPlayerSettingsDataType) => {
+        settingsService.updateVsrgPlayerSettings(override !== undefined ? override : this.state.settings)
     }
     onSizeChange = (sizes: VsrgPlayerCanvasSizes) => {
         this.setState({ canvasSizes: sizes })
@@ -122,10 +144,12 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         }
     }
     render() {
-        const { isLoadingInstruments, canvasSizes } = this.state
+        const { isLoadingInstruments, canvasSizes, settings } = this.state
         return <>
             <div className="vsrg-player-page">
                 <VsrgPlayerMenu
+                    settings={settings}
+                    onSettingsUpdate={this.handleSettingChange}
                     onSongSelect={this.onSongSelect}
                 />
                 <div
@@ -136,11 +160,13 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                 >
                     <VsrgPlayerCanvas
                         onTick={this.handleTick}
+                        scrollSpeed={settings.scrollSpeed.value}
                         onSizeChange={this.onSizeChange}
                         playHitObject={this.playHitObject}
                         isPlaying={this.state.isPlaying}
                     />
                     <VsrgPlayerKeyboard
+                        offset={canvasSizes.verticalOffset}
                         hitObjectSize={canvasSizes.hitObjectSize}
                     />
                 </div>

@@ -11,7 +11,7 @@ import Memoized from "components/Utility/Memoized";
 import { hasTooltip, Tooltip } from "components/Utility/Tooltip";
 import isMobile from "is-mobile";
 import Analytics from "lib/Analytics";
-import { VsrgComposerSettingsDataType } from "lib/BaseSettings";
+import { VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType } from "lib/BaseSettings";
 import { Folder } from "lib/Folder";
 import useClickOutside from "lib/Hooks/useClickOutside";
 import { useFolders } from "lib/Hooks/useFolders";
@@ -34,12 +34,14 @@ import { SettingUpdate } from "types/SettingsPropriety";
 type MenuTabs = 'Songs' | 'Settings'
 
 interface VsrgMenuProps {
+    settings: VsrgPlayerSettingsDataType
     onSongSelect: (song: VsrgSong, type: VsrgSongSelectType) => void
+    onSettingsUpdate: (update: SettingUpdate) => void
 }
 
 
 
-function VsrgMenu({ onSongSelect }: VsrgMenuProps) {
+function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const [folders] = useFolders()
@@ -119,14 +121,17 @@ function VsrgMenu({ onSongSelect }: VsrgMenuProps) {
                     />
                 </MenuPanel>
                 <MenuPanel current={selectedMenu} id="Settings">
-
+                        <SettingsPane 
+                            settings={settings}
+                            onUpdate={onSettingsUpdate}
+                        />
                 </MenuPanel>
             </div>
         </div>
     </>
 }
 export default memo(VsrgMenu, (p, n) => {
-    return true
+    return p.settings === n.settings
 })
 
 

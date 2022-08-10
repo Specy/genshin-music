@@ -76,7 +76,6 @@ export class VsrgPlayerCache {
         return this.textures.trails[color] || this.textures.trails['#FF0000']
     }
     getHeldHitObjectCache(color: string) {
-        
         return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#FF0000']
     }
 
@@ -121,8 +120,6 @@ export class VsrgPlayerCache {
             const heldHitObject = new Graphics()
             const diamondSize = hitObjectHeight * 0.7
             const margin = (hitObjectHeight - diamondSize) / 2
-            heldHitObject.width = diamondSize
-            heldHitObject.height = diamondSize
             heldHitObject.lineStyle(5, Color(color).rgbNumber())
                 .beginFill(colors.background_10[1])
                 .drawRoundedRect(margin, margin, diamondSize, diamondSize, 6)

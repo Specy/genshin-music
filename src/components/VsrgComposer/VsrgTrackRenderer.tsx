@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@inlet/react-pixi";
-import { PLAY_BAR_OFFSET } from "appConfig";
+import { PIXI_CENTER_X_END_Y, PLAY_BAR_OFFSET } from "appConfig";
 import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
 import { parseMouseClick } from "lib/Utilities";
 import { ClickType } from "types/GeneralTypes"
@@ -56,7 +56,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                         />
                         : <Sprite
                             texture={cache.getHeldTrailCache(track.color)}
-                            anchor={[0.5, 1]}
+                            anchor={PIXI_CENTER_X_END_Y}
                             width={cache.textures.sizes.trail}
                             height={hitObject.holdDuration * scale}
                             x={x}

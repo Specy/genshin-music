@@ -365,7 +365,6 @@ export type VsrgComposerSettingsDataType = {
     isVertical: SettingsCheckbox
     autosave: SettingsCheckbox
     maxFps: SettingsSelect<number>
-    approachRate: SettingsNumber
 }
 export type VsrgComposerSettingsType = {
     other: {
@@ -410,16 +409,6 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             category: "Song Settings",
             options: [...PITCHES]
         },
-        approachRate: {
-            name: "Approach rate (ms)",
-            tooltip:"The time between when the notes appear and when they reach the end (in ms)",
-            type: "number",
-            songSetting: true,
-            increment: 100,
-            threshold: [500, 5000],
-            value: 2000,
-            category: "Song Settings",
-        },
         isVertical: {
             name: "Vertical editor",
             tooltip: "If the editor is set horizontally or vertically",
@@ -458,6 +447,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
 
 
 export type VsrgPlayerSettingsDataType = {
+    scrollSpeed: SettingsNumber
 }
 export type VsrgPlayerSettingsType = {
     other: {
@@ -470,6 +460,15 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
         settingVersion: APP_NAME + 5
     },
     data: {
-
+        scrollSpeed: {
+            name: "Scroll speed",
+            tooltip:"The time between when the notes appear and when they reach the end (in ms)",
+            type: "number",
+            songSetting: true,
+            increment: 100,
+            threshold: [500, 5000],
+            value: 2000,
+            category: "Player Settings",
+        },
     }
 }

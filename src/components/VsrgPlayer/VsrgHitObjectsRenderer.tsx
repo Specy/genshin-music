@@ -1,4 +1,6 @@
 import { Container, Sprite } from "@inlet/react-pixi";
+import { PIXI_CENTER_X_END_Y } from "appConfig";
+import { VsrgHitObject } from "lib/Songs/VsrgSong";
 import { Fragment } from "react";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { RenderableHitObject, VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas";
@@ -14,39 +16,40 @@ interface VsrgHitObjectsRendererProps {
 
 
 
-export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache, sizes, offset}: VsrgHitObjectsRendererProps) {
+export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache, sizes, offset }: VsrgHitObjectsRendererProps) {
     const scale = sizes.scaling
+    const halfWidth = sizes.hitObjectSize / 2
     return <>
         <Container
             x={0}
-            y={timestamp * scale - offset}
+            y={timestamp * scale + sizes.height - offset}
         >
             {renderableHitObjects.map(renderableHitObject => {
                 const hitObject = renderableHitObject.hitObject
                 const x = hitObject.index * sizes.keyWidth + sizes.keyWidth / 2
-                const y = -(hitObject.timestamp * scale - sizes.height)
+                const y = -(hitObject.timestamp * scale)
                 if (hitObject.isHeld) {
                     return <Fragment key={hitObject.renderId}>
                         <Sprite
                             texture={cache.getHeldTrailCache(renderableHitObject.color)}
-                            anchor={[0.5, 1]}
+                            anchor={PIXI_CENTER_X_END_Y}
                             width={cache.textures.sizes.trail}
                             height={hitObject.holdDuration * scale}
                             x={x}
-                            y={y}
+                            y={y - halfWidth}
                         />
                         <Sprite
                             texture={cache.getHeldHitObjectCache(renderableHitObject.color)}
                             anchor={0.5}
-                            x={x}
                             angle={45}
-                            y={y}
+                            x={x}
+                            y={y - halfWidth}
                         />
                         <Sprite
                             texture={cache.getHeldHitObjectCache(renderableHitObject.color)}
-                            anchor={0.5}
+                            anchor={PIXI_CENTER_X_END_Y}
                             x={x}
-                            y={y - hitObject.holdDuration * scale}
+                            y={y - hitObject.holdDuration * scale} 
                         />
 
                     </Fragment>
@@ -55,7 +58,7 @@ export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache,
                         texture={cache.getHitObjectCache(renderableHitObject.color)}
                         key={renderableHitObject.hitObject.renderId}
                         y={y}
-                        anchor={0.5}
+                        anchor={PIXI_CENTER_X_END_Y}
                         x={x}
                     />
                 }

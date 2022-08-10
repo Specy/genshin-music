@@ -475,6 +475,7 @@ const MIDI_BOUNDS = APP_NAME === "Genshin"
     }
 const PIXI_VERTICAL_ALIGN = [0.5, 0] as [number, number]
 const PIXI_HORIZONTAL_ALIGN = [0, 0.5] as [number, number]
+const PIXI_CENTER_X_END_Y = [0.5, 1] as [number, number]
 const PIXI_CENTER_ALIGN = 0.5
 //get only non accidentals
 const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
@@ -514,7 +515,8 @@ export {
     PIXI_HORIZONTAL_ALIGN,
     PIXI_CENTER_ALIGN,
     VSRG_TEMPO_CHANGER,
-    DEFAULT_DOM_RECT
+    DEFAULT_DOM_RECT,
+    PIXI_CENTER_X_END_Y
 }
 export type {
     Pitch

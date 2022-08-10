@@ -14,8 +14,8 @@ function _VsrgPlayerCountDown({ time }: VsrgPlayerProps) {
         const element = ref.current
         if (element) {
             element.animate([
-                { transform: 'scale(1)' },
                 { transform: 'scale(1.5)' },
+                { transform: 'scale(1)' },
             ], {
                 duration: 1000,
                 iterations: 1
@@ -23,7 +23,7 @@ function _VsrgPlayerCountDown({ time }: VsrgPlayerProps) {
         }
     }, [time])
     return <>
-        <div className="vsrg-player-countdown" ref={ref}>
+        <div className="vsrg-player-countdown flex-centered" ref={ref}>
             {time}
         </div>
     </>

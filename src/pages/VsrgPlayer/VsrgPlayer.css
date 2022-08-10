@@ -7,6 +7,8 @@
 }
 .vsrg-player-grid{
     opacity: 0.96;
+    position: relative;
+    width: 50vw;
     max-width: 35rem;
     height: 100%;
     display: grid;
@@ -21,19 +23,16 @@
 
 .vsrg-player-canvas{
     position: relative;
-    width: 50vw;
-    max-width: 35rem;
-    margin-left: -2px;
-    grid-area: a;
+    width: 100%;
     display: flex;
     flex: 1;    
 }
 .vsrg-player-countdown{
     position: absolute;
     top: 50%;
-    left: 50%;
-    display: flex;
+    left: calc(50% - 2.5rem);
     font-size: 5rem;
+    width: 5rem;
     font-weight: bold;
     text-shadow: 0 0 0.5rem #252525;
     transition: all 0.1s;
@@ -51,8 +50,9 @@
     flex-direction: column;
 }
 .vsrg-player-keyboard{
-    grid-area: b;
-    margin-bottom: 1rem;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
     display: flex;
     z-index: 2;
 }

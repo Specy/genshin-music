@@ -31,11 +31,13 @@ export type VsrgPlayerCanvasSizes = {
     keyWidth: number
     hitObjectSize: number
     scaling: number
+    verticalOffset: number
 }
 
 
 interface VsrgPlayerCanvasProps {
     isPlaying: boolean
+    scrollSpeed: number
     onSizeChange: (sizes: VsrgPlayerCanvasSizes) => void
     onTick: (timestamp: number) => void
     playHitObject: (hitObject: VsrgHitObject, instrumentIndex: number) => void
@@ -59,7 +61,6 @@ export class RenderableHitObject {
 }
 interface VsrgPlayerCanvasState {
     song: VsrgSong
-    verticalOffset: number
     timestamp: number
     accuracy: number
     sizes: VsrgPlayerCanvasSizes
@@ -75,7 +76,8 @@ export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
     height: 0,
     keyWidth: 0,
     hitObjectSize: 0,
-    scaling: 0
+    scaling: 0,
+    verticalOffset: 0
 }
 
 export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlayerCanvasState>{
@@ -88,7 +90,6 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         this.state = {
             song: new VsrgSong(''),
             timestamp: 0,
-            verticalOffset: 0,
             accuracy: 150,
             sizes: defaultVsrgPlayerSizes,
             colors: {
@@ -123,9 +124,10 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
     }
     onSongPick = ({ type, song }: VsrgPlayerSong) => {
         vsrgPlayerStore.resetScore()
+        const { scrollSpeed } = this.props
         if (type === 'play' && song) {
             const countDown = 3000
-            this.setState({ song: song, timestamp: - countDown - song.approachRate, renderableHitObjects: [] }, () => {
+            this.setState({ song: song, timestamp: - countDown - scrollSpeed, renderableHitObjects: [] }, () => {
                 song?.startPlayback(0)
                 this.calculateSizes()
             })
@@ -173,6 +175,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         if (!el) return
         const width = el.clientWidth
         const keyWidth = width / this.state.song.keys
+        const hitObjectSize = keyWidth * 0.6
         const sizes: VsrgPlayerCanvasSizes = {
             width,
             height: el.clientHeight,
@@ -180,8 +183,9 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             rawHeight: el.clientHeight,
             el: el.getBoundingClientRect(),
             keyWidth,
-            hitObjectSize: keyWidth * 0.6,
-            scaling: (el.clientHeight) / song.approachRate
+            hitObjectSize,
+            scaling: (el.clientHeight) / this.props.scrollSpeed,
+            verticalOffset: 15
         }
         const canvas = el.querySelector('canvas')
         if (canvas) {
@@ -189,7 +193,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             canvas.style.height = `${sizes.height}px`
         }
         this.props.onSizeChange(sizes)
-        this.setState({ sizes, verticalOffset: sizes.hitObjectSize / 2 }, this.generateCache)
+        this.setState({ sizes }, this.generateCache)
     }
     generateCache = () => {
         const { colors, sizes, cache } = this.state
@@ -225,11 +229,11 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         }, this.generateCache)
     }
     handleTick = (elapsed: number, sinceLast: number) => {
-        const { isPlaying } = this.props
+        const { isPlaying, scrollSpeed } = this.props
         const { song, renderableHitObjects, sizes } = this.state
         if (!isPlaying) return
         const timestamp = this.state.timestamp + sinceLast
-        const tracks = song.tickPlayback(timestamp + song.approachRate + sizes.height)
+        const tracks = song.tickPlayback(timestamp + scrollSpeed + sizes.height)
         const toAdd = tracks.map((track, i) => {
             const hitObjects = track.map(hitObject => {
                 const renderable = new RenderableHitObject(hitObject)
@@ -277,12 +281,13 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
 
 
     render() {
-        const { sizes, cache, renderableHitObjects, timestamp, song, verticalOffset } = this.state
+        const { sizes, cache, renderableHitObjects, timestamp, song } = this.state
+        const { scrollSpeed } = this.props
         return <>
             <div className="vsrg-player-canvas" ref={this.wrapperRef}>
-                {(timestamp + song.approachRate) < 0 &&
+                {(timestamp + scrollSpeed) < 0 &&
                     <VsrgPlayerCountDown
-                        time={Math.abs(Math.ceil((timestamp + song.approachRate) / 1000)) + 1}
+                        time={Math.abs(Math.ceil((timestamp + scrollSpeed) / 1000)) + 1}
                     />
                 }
                 <Stage
@@ -300,7 +305,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                     {cache && <>
                         <VsrgHitObjectsRenderer
                             sizes={sizes}
-                            offset={verticalOffset}
+                            offset={sizes.verticalOffset}
                             cache={cache}
                             renderableHitObjects={renderableHitObjects}
                             timestamp={timestamp}

@@ -7,9 +7,10 @@ import { KeyboardKey, vsrgPlayerStore } from "stores/VsrgPlayerStore"
 
 interface VsrgPlayerKeyboardProps{
     hitObjectSize: number
+    offset: number
 }
 
-export function VsrgPlayerKeyboard({hitObjectSize}: VsrgPlayerKeyboardProps){
+export function VsrgPlayerKeyboard({hitObjectSize, offset}: VsrgPlayerKeyboardProps){
     const layout = useVsrgKeyboardLayout()
     useEffect(() => {
         //TODO not sure if this is the best place
@@ -31,7 +32,7 @@ export function VsrgPlayerKeyboard({hitObjectSize}: VsrgPlayerKeyboardProps){
         <div 
             className="vsrg-player-keyboard" 
             style={{
-                marginTop: -hitObjectSize
+                bottom: offset
             }}
             key={layout.length}
         >
