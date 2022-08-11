@@ -186,6 +186,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrg.set({ bpm: data.value as number })
             this.calculateSnapPoints()
         }
+        if (setting.key === "difficulty") {
+            vsrg.set({ difficulty: data.value as number })
+        }
         this.setState({
             settings: { ...settings }
         }, () => {

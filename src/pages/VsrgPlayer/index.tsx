@@ -153,10 +153,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     onSongSelect={this.onSongSelect}
                 />
                 <div
-                    className="vsrg-player-grid box-shadow"
-                    style={{
-                        backgroundColor: ThemeProvider.layer('background', 0.18, 0.06).hex()
-                    }}
+                    className="vsrg-player-grid"
                 >
                     <VsrgPlayerCanvas
                         onTick={this.handleTick}
@@ -166,6 +163,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                         isPlaying={this.state.isPlaying}
                     />
                     <VsrgPlayerKeyboard
+                        keyboardLayout="circles"
                         offset={canvasSizes.verticalOffset}
                         hitObjectSize={canvasSizes.hitObjectSize}
                     />

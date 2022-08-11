@@ -6,7 +6,7 @@ import { isNumberCloseTo } from "lib/Utilities";
 import { Application } from "pixi.js";
 import { Component, createRef } from "react";
 import { ThemeStore } from "stores/ThemeStore";
-import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerSong, vsrgPlayerStore } from "stores/VsrgPlayerStore";
+import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "stores/VsrgPlayerStore";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
 import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
@@ -15,6 +15,7 @@ import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
 
 export type VsrgPlayerCanvasColors = {
     background_plain: [string, number]
+    background_layer_10: [string, number]
     background: [string, number]
     background_10: [string, number]
     secondary: [string, number]
@@ -59,6 +60,14 @@ export class RenderableHitObject {
         this.hitObject = hitObject
     }
 }
+
+type VsrgAccuracyBounds = [
+    awesome: number,
+    perfect: number,
+    great: number,
+    good: number,
+    bad: number,
+]
 interface VsrgPlayerCanvasState {
     song: VsrgSong
     timestamp: number
@@ -66,7 +75,8 @@ interface VsrgPlayerCanvasState {
     sizes: VsrgPlayerCanvasSizes
     colors: VsrgPlayerCanvasColors
     cache: VsrgPlayerCache | null
-    renderableHitObjects: RenderableHitObject[]
+    renderableHitObjects: RenderableHitObject[],
+    accuracyBounds: VsrgAccuracyBounds
 }
 export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
     el: new DOMRect(),
@@ -94,6 +104,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             sizes: defaultVsrgPlayerSizes,
             colors: {
                 background_plain: ['#000000', 1],
+                background_layer_10: ['#000000', 1],
                 background: ['#000000', 1],
                 background_10: ['#000000', 1],
                 secondary: ['#000000', 1],
@@ -101,6 +112,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                 lineColor_10: ['#000000', 1],
                 accent: ['#000000', 1]
             },
+            accuracyBounds: [0, 0, 0, 0, 0],
             cache: null,
             renderableHitObjects: []
         }
@@ -130,6 +142,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             this.setState({ song: song, timestamp: - countDown - scrollSpeed, renderableHitObjects: [] }, () => {
                 song?.startPlayback(0)
                 this.calculateSizes()
+                this.generateAccuracyBounds()
             })
         }
         if (type === 'stop') this.setState({ song: new VsrgSong(''), timestamp: 0, renderableHitObjects: [] })
@@ -153,8 +166,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                     rho.status = HitObjectStatus.Pressed
                 }
                 this.props.playHitObject(rho.hitObject, rho.instrumentIndex)
-                //TODO add score detection
-                vsrgPlayerStore.incrementScore('perfect')
+                vsrgPlayerStore.incrementScore(this.getHitRating(rho.hitObject, timestamp))
             }
         }
         if (type === 'up') {
@@ -170,7 +182,6 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
 
     }
     calculateSizes = () => {
-        const { song } = this.state
         const el = this.wrapperRef.current
         if (!el) return
         const width = el.clientWidth
@@ -208,10 +219,33 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             cache?.destroy()
         })
     }
+    generateAccuracyBounds = () => {
+        const { song } = this.state
+        const { difficulty } = song
+        const accuracyBounds: VsrgAccuracyBounds = [
+            16,
+            64 - (difficulty * 2),
+            97 - (difficulty * 2),
+            127 - (difficulty * 2),
+            188 - (difficulty * 2)
+        ]
+        this.setState({ accuracyBounds })
+    }
+    getHitRating = (hitObject: VsrgHitObject, timestamp: number): VsrgPlayerHitType => {
+        const { accuracyBounds } = this.state
+        const diff = Math.abs(timestamp - hitObject.timestamp)
+        if (diff < accuracyBounds[0]) return 'amazing'
+        if (diff < accuracyBounds[1]) return 'perfect'
+        if (diff < accuracyBounds[2]) return 'great'
+        if (diff < accuracyBounds[3]) return 'good'
+        if (diff < accuracyBounds[4]) return 'bad'
+        return 'miss'
+    }
     handleThemeChange = (theme: ThemeStore) => {
         const bg_plain = theme.get('primary')
         const bg_line = theme.getText('primary')
         const bg_line_10 = bg_line.darken(0.5).desaturate(1)
+        const bg_layer_10 = theme.layer('background', 0.18, 0.06)
         const bg = bg_plain.darken(0.15)
         const bg_10 = bg.darken(0.1)
         const secondary = theme.get('secondary')
@@ -219,6 +253,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         this.setState({
             colors: {
                 background_plain: [bg_plain.hex(), bg_plain.rgbNumber()],
+                background_layer_10: [bg_layer_10.hex(), bg_layer_10.rgbNumber()],
                 background: [bg.hex(), bg.rgbNumber()],
                 background_10: [bg_10.hex(), bg_10.rgbNumber()],
                 secondary: [secondary.hex(), secondary.rgbNumber()],
@@ -251,24 +286,24 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         const { accuracy } = this.state
         const keyboard = vsrgPlayerStore.keyboard
         for (let i = 0; i < renderableHitObjects.length; i++) {
-            const hitObject = renderableHitObjects[i]
-            const key = keyboard[hitObject.hitObject.index]
+            const ro = renderableHitObjects[i]
+            const key = keyboard[ro.hitObject.index]
             if (!key) continue
-            const isIdle = hitObject.status === HitObjectStatus.Idle
-            if (!key.isPressed && isIdle && hitObject.hitObject.timestamp < timestamp - accuracy) {
-                hitObject.status = HitObjectStatus.Missed
+            const isIdle = ro.status === HitObjectStatus.Idle
+            if (!key.isPressed && isIdle && ro.hitObject.timestamp < timestamp - accuracy) {
+                ro.status = HitObjectStatus.Missed
                 vsrgPlayerStore.incrementScore('miss')
                 continue
             }
-            if (key.isPressed && hitObject.status === HitObjectStatus.Pressed) {
-                const pressedTooLong = hitObject.hitObject.timestamp + hitObject.hitObject.holdDuration < timestamp - accuracy
-                hitObject.heldScoreTimeout -= timestamp - previousTimestamp
+            if (key.isPressed && ro.status === HitObjectStatus.Pressed) {
+                const pressedTooLong = ro.hitObject.timestamp + ro.hitObject.holdDuration < timestamp - accuracy
+                ro.heldScoreTimeout -= timestamp - previousTimestamp
                 if (pressedTooLong) {
-                    hitObject.status = HitObjectStatus.Missed
+                    ro.status = HitObjectStatus.Missed
                     vsrgPlayerStore.incrementScore('miss')
                 } else {
-                    if (hitObject.heldScoreTimeout <= 0) {
-                        hitObject.heldScoreTimeout = 300
+                    if (ro.heldScoreTimeout <= 0) {
+                        ro.heldScoreTimeout = 300
                         vsrgPlayerStore.incrementScore('perfect')
                     }
                 }
@@ -281,10 +316,16 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
 
 
     render() {
-        const { sizes, cache, renderableHitObjects, timestamp, song } = this.state
+        const { sizes, cache, renderableHitObjects, timestamp, colors } = this.state
         const { scrollSpeed } = this.props
         return <>
-            <div className="vsrg-player-canvas" ref={this.wrapperRef}>
+            <div 
+                className="vsrg-player-canvas box-shadow"
+                style={{
+                    backgroundColor: colors.background_layer_10[0]
+                }} 
+                ref={this.wrapperRef}
+            >
                 {(timestamp + scrollSpeed) < 0 &&
                     <VsrgPlayerCountDown
                         time={Math.abs(Math.ceil((timestamp + scrollSpeed) / 1000)) + 1}

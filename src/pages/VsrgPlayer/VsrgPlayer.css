@@ -7,23 +7,24 @@
 }
 .vsrg-player-grid{
     opacity: 0.96;
-    position: relative;
-    width: 50vw;
-    max-width: 35rem;
+    width: 100%;
     height: 100%;
     display: grid;
+    justify-items: center;
     grid-template-areas: 
             'a'
             'b';
-    background-color: var(--background-darken-10);
-    border-left: solid 2px var(--secondary);
-    border-right: solid 2px var(--secondary);
     grid-template-rows: 1fr min-content;
 }
 
 .vsrg-player-canvas{
     position: relative;
-    width: 100%;
+    width: 50vw;
+    max-width: 35rem;
+    background-color: var(--background-darken-10);
+
+    border-left: solid 2px var(--secondary);
+    border-right: solid 2px var(--secondary);
     display: flex;
     flex: 1;    
 }
@@ -52,11 +53,13 @@
 .vsrg-player-keyboard{
     position: absolute;
     bottom: 0;
-    width: 100%;
     display: flex;
     z-index: 2;
 }
-
+.vsrg-player-keyboard-circles{
+    width: 50vw;
+    max-width: 35rem;
+}
 .vsrg-player-key-hitbox{
     cursor: pointer;
     border: none;

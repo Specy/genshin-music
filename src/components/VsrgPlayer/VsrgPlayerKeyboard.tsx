@@ -5,41 +5,43 @@ import { useCallback, useEffect } from "react"
 import { KeyboardKey, vsrgPlayerStore } from "stores/VsrgPlayerStore"
 
 
-interface VsrgPlayerKeyboardProps{
+interface VsrgPlayerKeyboardProps {
     hitObjectSize: number
+    keyboardLayout: VsrgKeyboardLayout
     offset: number
 }
+export type VsrgKeyboardLayout = 'line' | 'circles'
 
-export function VsrgPlayerKeyboard({hitObjectSize, offset}: VsrgPlayerKeyboardProps){
+export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout }: VsrgPlayerKeyboardProps) {
     const layout = useVsrgKeyboardLayout()
     useEffect(() => {
         //TODO not sure if this is the best place
-        layout.forEach((letter,i) => {
-            KeyboardProvider.registerLetter(letter.key, ({event}) => {
-                if(event.repeat) return
+        layout.forEach((letter, i) => {
+            KeyboardProvider.registerLetter(letter.key, ({ event }) => {
+                if (event.repeat) return
                 vsrgPlayerStore.pressKey(i)
-            }, { type: 'keydown', id: 'vsrg-player-keyboard'})
-            KeyboardProvider.registerLetter(letter.key, ({event}) => {
-                if(event.repeat) return
+            }, { type: 'keydown', id: 'vsrg-player-keyboard' })
+            KeyboardProvider.registerLetter(letter.key, ({ event }) => {
+                if (event.repeat) return
                 vsrgPlayerStore.releaseKey(i)
-            }, { type: 'keyup', id: 'vsrg-player-keyboard'})
+            }, { type: 'keyup', id: 'vsrg-player-keyboard' })
         })
         return () => {
             KeyboardProvider.unregisterById('vsrg-player-keyboard')
         }
-    },[layout])
+    }, [layout])
     return <>
-        <div 
-            className="vsrg-player-keyboard" 
+        <div
+            className={`vsrg-player-keyboard vsrg-player-keyboard-${keyboardLayout}`}
             style={{
                 bottom: offset
             }}
             key={layout.length}
         >
-            {layout.map((letter, index) => 
-                <VsrgPlayerKeyboardKey 
-                    key={letter.key} 
-                    index={index} 
+            {layout.map((letter, index) =>
+                <VsrgPlayerKeyboardKey
+                    key={letter.key}
+                    index={index}
                     layout={layout}
                     size={hitObjectSize}
                 />
@@ -50,12 +52,12 @@ export function VsrgPlayerKeyboard({hitObjectSize, offset}: VsrgPlayerKeyboardPr
 
 
 
-interface VsrgPlayerKeyboardKeyProps{
+interface VsrgPlayerKeyboardKeyProps {
     index: number
     layout: KeyboardKey[]
     size: number
 }
-function VsrgPlayerKeyboardKey({index, layout, size}: VsrgPlayerKeyboardKeyProps){
+function VsrgPlayerKeyboardKey({ index, layout, size }: VsrgPlayerKeyboardKeyProps) {
     const data = useVsrgKey(index, layout)
 
     const pressKey = useCallback(() => {
@@ -64,18 +66,18 @@ function VsrgPlayerKeyboardKey({index, layout, size}: VsrgPlayerKeyboardKeyProps
     const releaseKey = useCallback(() => {
         vsrgPlayerStore.releaseKey(index)
     }, [index])
-    return <button 
+    return <button
         className="vsrg-player-key-hitbox flex-centered"
         onPointerDown={pressKey}
         onPointerUp={releaseKey}
     >
-        <div 
+        <div
             className={`vsrg-player-key ${data.isPressed ? 'vsrg-key-pressed' : ''}`}
             style={{
                 width: size,
                 height: size,
             }}
-        > 
+        >
             {data.key}
         </div>
     </button>

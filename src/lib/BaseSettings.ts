@@ -4,6 +4,7 @@ import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
 import { NoteNameType } from "types/GeneralTypes"
 import { VsrgSongKeys } from "./Songs/VsrgSong"
+import { VsrgKeyboardLayout } from "components/VsrgPlayer/VsrgPlayerKeyboard"
 
 export type ComposerSettingsDataType = {
     bpm: SettingsNumber
@@ -28,7 +29,7 @@ export const ComposerSettings: ComposerSettingsType = {
     data: {
         bpm: {
             name: "Bpm",
-            tooltip:"Beats per minute, the speed of the song",
+            tooltip: "Beats per minute, the speed of the song",
             type: "number",
             songSetting: true,
             increment: 5,
@@ -365,6 +366,7 @@ export type VsrgComposerSettingsDataType = {
     isVertical: SettingsCheckbox
     autosave: SettingsCheckbox
     maxFps: SettingsSelect<number>
+    difficulty: SettingsSelect<number>
 }
 export type VsrgComposerSettingsType = {
     other: {
@@ -374,10 +376,10 @@ export type VsrgComposerSettingsType = {
 }
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 6
+        settingVersion: APP_NAME + 7
     },
     data: {
-        keys:{
+        keys: {
             name: "Keys",
             tooltip: "How many keys the song has",
             type: "select",
@@ -392,7 +394,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
         },
         bpm: {
             name: "Bpm",
-            tooltip:"Beats per minute, the speed of the song",
+            tooltip: "Beats per minute, the speed of the song",
             type: "number",
             songSetting: true,
             increment: 5,
@@ -417,7 +419,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             value: false,
             category: "Editor Settings",
         },
-        maxFps:{
+        maxFps: {
             name: "Max FPS (high values could lag)",
             tooltip: "The FPS limiter of the editor, higher values could more lag",
             type: "select",
@@ -441,13 +443,22 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             songSetting: false,
             value: false,
         },
-
+        difficulty: {
+            name: "Difficulty",
+            tooltip: "Higher values means the notes need to be pressed more accurately",
+            type: "select",
+            songSetting: true,
+            value: 5,
+            category: "Song Settings",
+            options: new Array(10).fill(0).map((_, i) => i + 1)
+        },
     }
 }
 
 
 export type VsrgPlayerSettingsDataType = {
     scrollSpeed: SettingsNumber
+    keyboardLayout: SettingsSelect<VsrgKeyboardLayout>
 }
 export type VsrgPlayerSettingsType = {
     other: {
@@ -456,19 +467,31 @@ export type VsrgPlayerSettingsType = {
     data: VsrgPlayerSettingsDataType
 }
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
-    other:{
-        settingVersion: APP_NAME + 5
+    other: {
+        settingVersion: APP_NAME + 7
     },
     data: {
         scrollSpeed: {
             name: "Scroll speed",
-            tooltip:"The time between when the notes appear and when they reach the end (in ms)",
+            tooltip: "The time between when the notes appear and when they reach the end (in ms)",
             type: "number",
             songSetting: true,
             increment: 100,
-            threshold: [500, 5000],
+            threshold: [200, 5000],
             value: 2000,
             category: "Player Settings",
+        },
+        keyboardLayout: {
+            name: "Keyboard layout",
+            tooltip: "The keyboard layout of the player",
+            type: "select",
+            songSetting: true,
+            value: 'circles',
+            category: "Player Settings",
+            options: [
+                'circles',
+                'line'
+            ]
         },
     }
 }

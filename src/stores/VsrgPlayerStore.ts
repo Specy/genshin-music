@@ -17,7 +17,7 @@ export type VsrcPlayerKeyboardCallback = {
     callback: (key: KeyboardKey, type: VsrgKeyboardPressType) => void,
     id: string
 }
-export type VsrgPlayerHitType = 'perfect' | 'good' | 'bad' | 'miss'
+export type VsrgPlayerHitType = 'amazing' | 'perfect' | 'great' | 'good' | 'bad' | 'miss'
 
 export type VsrgLatestScore = {
     timestamp: number
@@ -27,12 +27,24 @@ export type VsrgLatestScore = {
 export type VsrgPlayerScore = {
     combo: number
     score: number
+    amazing: number
     perfect: number
+    great: number
     good: number
     bad: number
     miss: number
     lastScore: VsrgLatestScore
 }
+const baseScoreMap = {
+    amazing: 300,
+    perfect: 200,
+    great: 100,
+    good: 50,
+    bad: 25,
+    miss: 0
+}
+
+
 class VsrgPlayerStore {
     @observable keyboard: KeyboardKey[] = []
     @observable.shallow currentSong: VsrgPlayerSong = {
@@ -40,9 +52,11 @@ class VsrgPlayerStore {
         type: 'stop'
     }
     @observable score: VsrgPlayerScore = {
+        amazing: 0,
         combo: 0,
         score: 0,
         perfect: 0,
+        great: 0,
         good: 0,
         bad: 0,
         miss: 0,
@@ -68,7 +82,9 @@ class VsrgPlayerStore {
     resetScore = () => {
         Object.assign(this.score, {
             score: 0,
+            amazing: 0,
             perfect: 0,
+            great: 0,
             good: 0,
             bad: 0,
             miss: 0,
@@ -92,18 +108,7 @@ class VsrgPlayerStore {
         if (type === 'miss') this.score.combo = 0
     }
     private getScore = (type: VsrgPlayerHitType) => {
-        switch (type) {
-            case 'perfect':
-                return 100
-            case 'good':
-                return 50
-            case 'bad':
-                return 25
-            case 'miss':
-                return 0
-            default:
-                return 0
-        }
+       return baseScoreMap[type] ?? 0
     }
     playSong = (song: VsrgSong) => {
         this.currentSong.type = 'play'

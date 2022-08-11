@@ -17,6 +17,9 @@
     border-top-right-radius: 0.4rem;
     overflow: hidden;
 }
+.canvas-relative canvas{
+    cursor: pointer !important;
+}
 select {
     -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='gray'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
@@ -360,10 +363,6 @@ select {
     height: 3vw;
 }
 
-
-canvas {
-    cursor: pointer !important;
-}
 
 .tempo-changers-wrapper button {
     flex: 1;

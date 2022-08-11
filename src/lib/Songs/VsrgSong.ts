@@ -12,6 +12,7 @@ export type SerializedVsrgSong = SerializedSong & {
     duration: number
     audioSongId: string | null
     breakpoints: number[]
+    difficulty: number
 }
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
@@ -20,6 +21,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     audioSongId: string | null = null
     trackModifiers: VsrgTrackModifier[] = []
     breakpoints: number[] = []
+    difficulty: number = 5
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -156,7 +158,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             tracks: this.tracks.map(track => track.serialize()),
             instruments: this.instruments.map(instrument => instrument.serialize()),
             trackModifiers: this.trackModifiers.map(modifier => modifier.serialize()),
-            breakpoints: [...this.breakpoints]
+            breakpoints: [...this.breakpoints],
+            difficulty: this.difficulty,
         }
     }
     set(data: Partial<VsrgSong>){
@@ -179,6 +182,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             tracks: this.tracks.map(track => track.clone()),
             instruments: this.instruments.map(instrument => instrument.clone()),
             breakpoints: [...this.breakpoints],
+            difficulty: this.difficulty,
         })
         return clone
     }
