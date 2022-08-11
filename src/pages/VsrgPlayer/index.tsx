@@ -156,6 +156,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     className="vsrg-player-grid"
                 >
                     <VsrgPlayerCanvas
+                        keyboardLayout={settings.keyboardLayout.value}
                         onTick={this.handleTick}
                         scrollSpeed={settings.scrollSpeed.value}
                         onSizeChange={this.onSizeChange}
@@ -163,7 +164,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                         isPlaying={this.state.isPlaying}
                     />
                     <VsrgPlayerKeyboard
-                        keyboardLayout="circles"
+                        keyboardLayout={settings.keyboardLayout.value}
                         offset={canvasSizes.verticalOffset}
                         hitObjectSize={canvasSizes.hitObjectSize}
                     />

@@ -1,34 +1,41 @@
-.vsrg-player-page{
+.vsrg-player-page {
     display: flex;
     flex-direction: column;
     width: 100%;
     height: 100%;
     align-items: center;
 }
-.vsrg-player-grid{
+
+.vsrg-player-grid {
     opacity: 0.96;
     width: 100%;
     height: 100%;
     display: grid;
     justify-items: center;
-    grid-template-areas: 
-            'a'
-            'b';
+    align-items: flex-end;
+    grid-template-areas:
+        'a'
+        'b';
+    perspective: 100vh;
     grid-template-rows: 1fr min-content;
 }
 
-.vsrg-player-canvas{
-    position: relative;
+.vsrg-player-canvas {
+    position: absolute;
+    bottom: 0;
     width: 50vw;
+    /* height: 190vh; magic number */
+    height: 100vh;
     max-width: 35rem;
     background-color: var(--background-darken-10);
-
     border-left: solid 2px var(--secondary);
     border-right: solid 2px var(--secondary);
+    /* transform-origin: bottom;
+    transform: rotateX(35deg); */
     display: flex;
-    flex: 1;    
 }
-.vsrg-player-countdown{
+
+.vsrg-player-countdown {
     position: absolute;
     top: 50%;
     left: calc(50% - 2.5rem);
@@ -38,11 +45,13 @@
     text-shadow: 0 0 0.5rem #252525;
     transition: all 0.1s;
 }
-.vsrg-player-canvas canvas{
+
+.vsrg-player-canvas canvas {
     position: absolute;
     border-radius: 0.6rem;
 }
-.vsrg-player-right{
+
+.vsrg-player-right {
     position: absolute;
     padding: 1rem;
     right: 0;
@@ -50,17 +59,22 @@
     display: flex;
     flex-direction: column;
 }
-.vsrg-player-keyboard{
+
+.vsrg-player-keyboard-circles,
+.vsrg-player-keyboard-line {
     position: absolute;
     bottom: 0;
     display: flex;
     z-index: 2;
-}
-.vsrg-player-keyboard-circles{
     width: 50vw;
     max-width: 35rem;
 }
-.vsrg-player-key-hitbox{
+
+.vsrg-player-keyboard-circles{
+    /* transform: rotateX(35deg) translateZ(-4.5vh); magic number */
+}
+.vsrg-player-key-hitbox-circle,
+.vsrg-player-key-hitbox-line {
     cursor: pointer;
     border: none;
     background: none;
@@ -68,7 +82,16 @@
     margin: 0;
     flex: 1;
 }
-.vsrg-player-key{
+
+.vsrg-player-key-hitbox-line {
+    height: 50vh;
+    display: flex;
+    align-items: flex-end;
+}
+.vsrg-player-key-hitbox-line:nth-child(odd){
+    filter: brightness(0.8);
+}
+.vsrg-player-key-circle {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,11 +102,19 @@
     border-radius: 50rem;
     outline: solid 3px var(--secondary);
 }
-.vsrg-key-pressed{
+
+.vsrg-player-key-line {
+    width: 100%;
+    height: 100%;
+    background-color: var(--secondary);
+}
+
+.vsrg-key-pressed {
     background-color: var(--accent);
     color: var(--accent-text);
 }
-.vsrg-player-loading-instruments{
+
+.vsrg-player-loading-instruments {
     position: absolute;
     bottom: calc(5vw + 2rem);
     width: 100%;
@@ -94,7 +125,7 @@
     text-shadow: 0 0 0.5rem #252525;
 }
 
-.vsrg-player-score{
+.vsrg-player-score {
     min-width: 5rem;
     margin-bottom: 2rem;
     text-shadow: 0 0 0.5rem #252525;
@@ -102,7 +133,7 @@
     color: var(--background-text);
 }
 
-.vsrg-floating-score{
+.vsrg-floating-score {
     position: absolute;
     top: 70%;
     width: 12rem;
@@ -115,7 +146,7 @@
 }
 
 @media only screen and (max-width: 900px) {
-    .vsrg-floating-score{
+    .vsrg-floating-score {
         font-size: 1.8rem;
         top: 65%;
     }

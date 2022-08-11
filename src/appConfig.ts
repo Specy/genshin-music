@@ -1,4 +1,4 @@
-import { KeyboardLetter } from "lib/Providers/KeyboardProvider/KeyboardTypes"
+import isMobile from "is-mobile"
 import { Tauri } from "types/TauriTypes"
 
 const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
@@ -390,6 +390,7 @@ function isTwa() {
 export type AppName = 'Sky' | 'Genshin'
 
 const EMPTY_LAYER = "0000"
+const IS_MOBILE = isMobile()
 const VSRG_TEMPO_CHANGER = [2, 1.75, 1.5, 1.25, 1, 0.75, 0.50, 0.25]
 const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
     ? {
@@ -516,7 +517,8 @@ export {
     PIXI_CENTER_ALIGN,
     VSRG_TEMPO_CHANGER,
     DEFAULT_DOM_RECT,
-    PIXI_CENTER_X_END_Y
+    PIXI_CENTER_X_END_Y,
+    IS_MOBILE
 }
 export type {
     Pitch

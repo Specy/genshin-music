@@ -1,3 +1,4 @@
+import { IS_MOBILE } from "appConfig"
 import { useVsrgKey } from "lib/Hooks/useVsrgKey"
 import { useVsrgKeyboardLayout } from "lib/Hooks/useVsrgKeyboardLayout"
 import { KeyboardProvider } from "lib/Providers/KeyboardProvider"
@@ -32,17 +33,17 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout }: Vs
     }, [layout])
     return <>
         <div
-            className={`vsrg-player-keyboard vsrg-player-keyboard-${keyboardLayout}`}
-            style={{
-                bottom: offset
-            }}
+            className={`vsrg-player-keyboard-${keyboardLayout}`}
             key={layout.length}
+
         >
             {layout.map((letter, index) =>
                 <VsrgPlayerKeyboardKey
                     key={letter.key}
                     index={index}
                     layout={layout}
+                    offset={offset}
+                    layoutType={keyboardLayout}
                     size={hitObjectSize}
                 />
             )}
@@ -55,9 +56,11 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout }: Vs
 interface VsrgPlayerKeyboardKeyProps {
     index: number
     layout: KeyboardKey[]
+    offset: number
+    layoutType: VsrgKeyboardLayout
     size: number
 }
-function VsrgPlayerKeyboardKey({ index, layout, size }: VsrgPlayerKeyboardKeyProps) {
+function VsrgPlayerKeyboardKey({ index, layout, size, layoutType, offset }: VsrgPlayerKeyboardKeyProps) {
     const data = useVsrgKey(index, layout)
 
     const pressKey = useCallback(() => {
@@ -66,19 +69,43 @@ function VsrgPlayerKeyboardKey({ index, layout, size }: VsrgPlayerKeyboardKeyPro
     const releaseKey = useCallback(() => {
         vsrgPlayerStore.releaseKey(index)
     }, [index])
-    return <button
-        className="vsrg-player-key-hitbox flex-centered"
-        onPointerDown={pressKey}
-        onPointerUp={releaseKey}
-    >
-        <div
-            className={`vsrg-player-key ${data.isPressed ? 'vsrg-key-pressed' : ''}`}
+
+
+    if (layoutType === 'circles') {
+        return <button
+            className="vsrg-player-key-hitbox-circle flex-centered"
             style={{
-                width: size,
-                height: size,
+                paddingBottom: `${offset}px`,
             }}
+            onPointerDown={pressKey}
+            onPointerUp={releaseKey}
         >
-            {data.key}
-        </div>
-    </button>
+            <div
+                className={`vsrg-player-key-circle ${data.isPressed ? 'vsrg-key-pressed' : ''}`}
+                style={{
+                    width: size,
+                    height: size,
+                }}
+            >
+                {data.key}
+            </div>
+        </button>
+    }
+    if (layoutType === 'line') {
+        return <button
+            className="vsrg-player-key-hitbox-line"
+            onPointerDown={pressKey}
+            onPointerUp={releaseKey}
+        >
+            <div
+                className={`vsrg-player-key-line ${data.isPressed ? 'vsrg-key-pressed' : ''}`}
+                style={{
+                    height: `${offset}px`,
+                }}
+            >
+            </div>
+        </button>
+    }
+
+    return null
 }

@@ -19,6 +19,10 @@ interface VsrgHitObjectsRendererProps {
 export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache, sizes, offset }: VsrgHitObjectsRendererProps) {
     const scale = sizes.scaling
     const halfWidth = sizes.hitObjectSize / 2
+    /*
+    const debugHitObject = new VsrgHitObject(0, 0)
+    const debugRenderable = new RenderableHitObject(debugHitObject)
+    */
     return <>
         <Container
             x={0}
@@ -49,7 +53,7 @@ export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache,
                             texture={cache.getHeldHitObjectCache(renderableHitObject.color)}
                             anchor={PIXI_CENTER_X_END_Y}
                             x={x}
-                            y={y - hitObject.holdDuration * scale} 
+                            y={y - hitObject.holdDuration * scale}
                         />
 
                     </Fragment>

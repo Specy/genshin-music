@@ -10,6 +10,7 @@ import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerHit
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
 import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
+import { VsrgKeyboardLayout } from "./VsrgPlayerKeyboard";
 
 
 
@@ -39,6 +40,7 @@ export type VsrgPlayerCanvasSizes = {
 interface VsrgPlayerCanvasProps {
     isPlaying: boolean
     scrollSpeed: number
+    keyboardLayout: VsrgKeyboardLayout
     onSizeChange: (sizes: VsrgPlayerCanvasSizes) => void
     onTick: (timestamp: number) => void
     playHitObject: (hitObject: VsrgHitObject, instrumentIndex: number) => void
