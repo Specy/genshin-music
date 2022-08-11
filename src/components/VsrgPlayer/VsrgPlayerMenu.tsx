@@ -125,6 +125,17 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                             settings={settings}
                             onUpdate={onSettingsUpdate}
                         />
+                        <div className="row" style={{
+                            marginTop: '0.6rem',
+                            justifyContent: 'flex-end'
+                        }}>
+                        <Link to={'/Keybinds'}>
+                            <AppButton>
+                                Change keybinds
+                            </AppButton>
+                        </Link>
+                        </div>
+
                 </MenuPanel>
             </div>
         </div>

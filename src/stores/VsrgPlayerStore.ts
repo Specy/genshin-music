@@ -3,7 +3,7 @@ import { VsrgSong } from "lib/Songs/VsrgSong"
 import { makeObservable, observable, observe } from "mobx"
 
 export type KeyboardKey = {
-    key: KeyboardLetter
+    key: string
     index: number
     isPressed: boolean
 }
@@ -69,7 +69,7 @@ class VsrgPlayerStore {
     constructor() {
         makeObservable(this)
     }
-    setLayout = (layout: KeyboardLetter[]) => {
+    setLayout = (layout: string[]) => {
         this.keyboard.splice(0, this.keyboard.length,
             ...layout.map((key, index) => {
                 return {

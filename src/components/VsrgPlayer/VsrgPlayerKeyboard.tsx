@@ -2,6 +2,7 @@ import { IS_MOBILE } from "appConfig"
 import { useVsrgKey } from "lib/Hooks/useVsrgKey"
 import { useVsrgKeyboardLayout } from "lib/Hooks/useVsrgKeyboardLayout"
 import { KeyboardProvider } from "lib/Providers/KeyboardProvider"
+import { KeyboardCode } from "lib/Providers/KeyboardProvider/KeyboardTypes"
 import { useCallback, useEffect } from "react"
 import { KeyboardKey, vsrgPlayerStore } from "stores/VsrgPlayerStore"
 
@@ -18,13 +19,15 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout }: Vs
     useEffect(() => {
         //TODO not sure if this is the best place
         layout.forEach((letter, i) => {
-            KeyboardProvider.registerLetter(letter.key, ({ event }) => {
+            KeyboardProvider.listen(({ letter, event }) => {
                 if (event.repeat) return
-                vsrgPlayerStore.pressKey(i)
+                const index = layout.findIndex((l) => l.key === letter)
+                if(index >= 0) vsrgPlayerStore.pressKey(index)
             }, { type: 'keydown', id: 'vsrg-player-keyboard' })
-            KeyboardProvider.registerLetter(letter.key, ({ event }) => {
+            KeyboardProvider.listen(({ letter, event }) => {
                 if (event.repeat) return
-                vsrgPlayerStore.releaseKey(i)
+                const index = layout.findIndex((l) => l.key === letter)
+                if(index >= 0) vsrgPlayerStore.releaseKey(index)
             }, { type: 'keyup', id: 'vsrg-player-keyboard' })
         })
         return () => {

@@ -23,6 +23,7 @@ import { DropZoneProviderWrapper } from "components/ProviderWrappers/DropZonePro
 import Privacy from "pages/Privacy";
 import ErrorBoundaryRedirect from "components/Utility/ErrorBoundaryRedirect";
 import { logger } from "stores/LoggerStore"
+import { Keybinds } from "pages/Keybinds";
 export function Router() {
 	useEffect(() => {
 		try {
@@ -103,6 +104,10 @@ export function Router() {
 									<Route exact path='/Privacy'>
 										<Privacy />
 									</Route>
+									<Route exact path='/Keybinds'>
+										<Keybinds />
+									</Route>
+
 								</ErrorBoundaryRedirect>
 								<Route path='*'>
 									<Error404 />

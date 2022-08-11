@@ -1,6 +1,6 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { APP_NAME, isTwa } from "appConfig"
+import { APP_NAME, isTwa, IS_MOBILE } from "appConfig"
 import HomeStore from 'stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
@@ -178,6 +178,11 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 <PageRedirect href='Theme' current={currentPage === 'Theme'}>
                     App Theme
                 </PageRedirect>
+                {!IS_MOBILE &&
+                    <PageRedirect href='Keybinds' current={currentPage === 'Keybinds'}>
+                        Keybinds
+                    </PageRedirect>
+                }
             </div>
 
         </div>

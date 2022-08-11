@@ -256,6 +256,7 @@
 }
 .current-page {
 	/* Could be added */
+	outline: var(--accent) solid 2px;
 	filter: none;
 }	
 .home-content-open button {

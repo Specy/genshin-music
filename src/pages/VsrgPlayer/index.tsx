@@ -17,8 +17,8 @@ import { songsStore } from "stores/SongsStore";
 import { ComposedSong } from "lib/Songs/ComposedSong";
 import { VsrgPlayerRight } from "components/VsrgPlayer/VsrgPlayerRight";
 import { VsrgPlayerLatestScore } from "components/VsrgPlayer/VsrgLatestScore";
-import { ThemeProvider } from "stores/ThemeStore";
 import { SettingUpdate } from "types/SettingsPropriety";
+import { keyBinds } from "stores/Keybinds";
 
 type VsrgPlayerProps = RouteComponentProps & {
 
@@ -30,7 +30,7 @@ interface VsrgPlayerState {
     canvasSizes: VsrgPlayerCanvasSizes
     songAudioPlayer: AudioPlayer
     keyboardAudioPlayer: AudioPlayer
-    currentLayout: KeyboardLetter[]
+    currentLayout: string[]
     isLoadingInstruments: boolean
     isPlaying: boolean
 }
@@ -47,7 +47,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             canvasSizes: defaultVsrgPlayerSizes,
             songAudioPlayer: new AudioPlayer("C"),
             keyboardAudioPlayer: new AudioPlayer("C"),
-            currentLayout: DEFAULT_VSRG_KEYS_MAP[4] as KeyboardLetter[],
+            currentLayout: keyBinds.getVsrgKeybinds(4),
             isLoadingInstruments: false,
             isPlaying: false
         }
@@ -85,7 +85,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             isPlaying: true
         }, () => {
             if (type === 'play') {
-                vsrgPlayerStore.setLayout(DEFAULT_VSRG_KEYS_MAP[song.keys] as KeyboardLetter[])
+                vsrgPlayerStore.setLayout(keyBinds.getVsrgKeybinds(song.keys))
                 vsrgPlayerStore.playSong(song)
             }
         })

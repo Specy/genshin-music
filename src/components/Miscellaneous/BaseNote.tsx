@@ -13,7 +13,7 @@ interface BaseNoteProps{
     }, //TODO do this
     noteText: string,
     handleClick: (data:any) => void,
-    noteImage: NoteImage
+    noteImage?: NoteImage
 }
 export default function BaseNote({ data, noteText = 'A', handleClick, noteImage }:BaseNoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
@@ -35,7 +35,7 @@ export default function BaseNote({ data, noteText = 'A', handleClick, noteImage 
             className={className}
             style={{ borderColor: parseBorderColor(data.status) }}
         >
-            <SvgNotes name={noteImage} />
+            {noteImage && <SvgNotes name={noteImage} />}
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderColor(data.status)}

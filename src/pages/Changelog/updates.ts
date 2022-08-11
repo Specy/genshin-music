@@ -12,7 +12,7 @@ export const updates: Update[] = [
         date: '2022 - 22/07',
         changes: [
             "Added app scaling",
-            "Fixed but that would remove a song from the folder when saved",
+            "Fixed bug that would remove a song from the folder when saved",
             "Fixed issues when opening/saving songs in the composer",
             "Fixed bug in pasting notes in the composer",
             "Exporting a song would not work in sky music and sky studio",

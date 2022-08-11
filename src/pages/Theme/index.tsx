@@ -28,6 +28,7 @@ function ThemePage() {
     const [userThemes, setUserThemes] = useState<Theme[]>([])
     const [selectedProp, setSelectedProp] = useState('')
     const [selectedPagePreview, setSelectedPagePreview] = useState<"player" | "composer">("player")
+
     useEffect(() => {
         const dispose2 = observe(ThemeProvider.state.other, () => {
             setTheme({ ...ThemeProvider })
