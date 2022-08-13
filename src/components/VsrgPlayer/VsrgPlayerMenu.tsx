@@ -43,13 +43,15 @@ interface VsrgMenuProps {
 
 function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
     const [isOpen, setOpen] = useState(false)
+    const [isVisible, setIsVisible] = useState(true)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const [folders] = useFolders()
     const [songs] = useSongs()
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
-    }, { active: isOpen, ignoreFocusable: true })
+    }, { active: isOpen && isVisible, ignoreFocusable: true })
+
 
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
         if (selection === selectedMenu && isOpen) {
@@ -61,18 +63,27 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
             Analytics.UIEvent('menu', { tab: selection })
         }
     }, [isOpen, selectedMenu])
-    const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
+
+    const sideClass = (isOpen && isVisible) ? "side-menu menu-open" : "side-menu"
     return <>
         <div className="menu-wrapper" ref={menuRef}>
-            <div className='menu menu-visible '>
-                {isOpen &&
-                    <MenuItem
-                        onClick={() => setOpen(false)}
-                        ariaLabel="Close Menu"
-                    >
-                        <FaTimes className='icon' />
-                    </MenuItem>
-                }
+            <div
+                className="hamburger-top"
+                onClick={() => setIsVisible(!isVisible)}
+            >
+                <Memoized>
+                    <FaBars />
+                </Memoized>
+            </div>
+            <div className={`menu ${isVisible ? "menu-visible" : ""}`}>
+                <MenuItem
+                    onClick={() => {
+                        setIsVisible(false)
+                    }}
+                    ariaLabel="Close Menu"
+                >
+                    <FaTimes className='icon' />
+                </MenuItem>
                 <MenuItem
                     style={{ marginTop: 'auto' }}
                     onClick={() => selectSideMenu("Songs")}
@@ -114,27 +125,27 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                             theme,
                             folders,
                             functions: {
-                                setMenuOpen: setOpen,
+                                setMenuVisible: setIsVisible,
                                 onSongSelect
                             }
                         }}
                     />
                 </MenuPanel>
                 <MenuPanel current={selectedMenu} id="Settings">
-                        <SettingsPane 
-                            settings={settings}
-                            onUpdate={onSettingsUpdate}
-                        />
-                        <div className="row" style={{
-                            marginTop: '0.6rem',
-                            justifyContent: 'flex-end'
-                        }}>
+                    <SettingsPane
+                        settings={settings}
+                        onUpdate={onSettingsUpdate}
+                    />
+                    <div className="row" style={{
+                        marginTop: '0.6rem',
+                        justifyContent: 'flex-end'
+                    }}>
                         <Link to={'/Keybinds'}>
                             <AppButton>
                                 Change keybinds
                             </AppButton>
                         </Link>
-                        </div>
+                    </div>
 
                 </MenuPanel>
             </div>
@@ -153,12 +164,12 @@ interface SongRowProps {
     folders: Folder[]
     functions: {
         onSongSelect: (song: VsrgSong, type: VsrgSongSelectType) => void
-        setMenuOpen: (override: boolean) => void
+        setMenuVisible: (override: boolean) => void
     }
 }
 
 function SongRow({ data, functions, theme, folders }: SongRowProps) {
-    const { setMenuOpen, onSongSelect } = functions
+    const { setMenuVisible, onSongSelect } = functions
     const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
     const [isRenaming, setIsRenaming] = useState(false)
     const [songName, setSongName] = useState(data.name)
@@ -172,7 +183,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
             if (isRenaming) return
             onSongSelect(songService.parseSong(data) as VsrgSong, 'play')
-            setMenuOpen(false)
+            setMenuVisible(false)
         }}>
             {isRenaming
                 ? <input

@@ -88,13 +88,14 @@ class SongService{
             throw new Error("Error Invalid song")
         }
         if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
+            if (song.type === 'vsrg') return VsrgSong.deserialize(song).toGenshin()
+            //always put those below because of the legacy format
             if (song.data?.isComposedVersion === true || song.type === 'composed') return ComposedSong.deserialize(song).toGenshin()
             if (song.data?.isComposedVersion === false|| song.type === 'recorded') return RecordedSong.deserialize(song).toGenshin()
-            if (song.type === 'vsrg') return VsrgSong.deserialize(song).toGenshin()
         }
+        if(type === 'vsrg') return VsrgSong.deserialize(song)
         if (type === 'newComposed') return ComposedSong.deserialize(song)
         if (type === 'newRecorded') return RecordedSong.deserialize(song)
-        if(type === 'vsrg') return VsrgSong.deserialize(song)
         throw new Error("Error Invalid song")
     }
     removeSong(id: string){

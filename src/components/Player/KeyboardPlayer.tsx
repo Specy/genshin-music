@@ -270,13 +270,15 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             if (delayTime > 16) await delay(delayTime - pastError)
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
             this.handleClick(keyboard[notes[i].index], notes[i].layer)
+            pastError = Date.now() - previousTime - delayTime
             if(chunkPlayedNotes >= (playerTopStore.currentChunk?.notes.length ?? 0)){
-                chunkPlayedNotes = 0
-                playerTopStore.incrementChunkPosition()
+                //to prevent a rerender on every tick...
+                chunkPlayedNotes = 1
+                playerTopStore.incrementChunkPositionAndSetCurrent(start + i + 1)
+                continue
             }
             chunkPlayedNotes++
             playerTopStore.setCurrent(start + i + 1)
-            pastError = Date.now() - previousTime - delayTime
         }
     }
     applySpeedChange = (notes: RecordedNote[]) => {
@@ -370,7 +372,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                 songToPractice[0].notes.splice(clickedNoteIndex, 1)
                 if (songToPractice[0].notes.length === 0) {
                     songToPractice.shift()
-                    playerTopStore.incrementChunkPosition()
+                    playerTopStore.incrementChunkPositionAndSetCurrent()
                 }
                 if (songToPractice.length > 0) {
                     const nextChunk = songToPractice[0]
@@ -433,7 +435,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         const { data } = props
         const { keyboard, approachingScore, speedChanger } = state
         const size = clamp(data.keyboardSize / 100, 0.5, 1.5)
-        let keyboardClass = "keyboard"
+        let keyboardClass = "keyboard" + (playerStore.eventType === 'play' ? " keyboard-playback" : "")
         if (keyboard.length === 15) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
         const style = size !== 1 ? { transform: `scale(${size})` } : {}

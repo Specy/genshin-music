@@ -9,7 +9,7 @@ export function AudioProviderWrapper({children}:AudioProviderProps){
     useEffect(() => {
         AudioProvider.init()
         return () =>  AudioProvider.destroy()
-    })
+    },[])
     return <>
         {children}
     </>

@@ -462,7 +462,6 @@ const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
 const DEFAULT_VSRG_KEYS_MAP = {
     4: ["A", "S", "G", "H"] ,
     6: ["A", "S", "D", "G", "H", "J"],
-    8: ["A", "S", "D", "F", "G", "H", "J", "K"],
 }
 
 const MIDI_BOUNDS = APP_NAME === "Genshin"

@@ -12,6 +12,7 @@ import { clamp } from "lib/Utilities";
 import { Tooltip } from 'components/Utility/Tooltip'
 import { SheetFrame } from "components/SheetVisualizer/SheetFrame";
 import { IconButton } from "components/Inputs/IconButton";
+import { useTheme } from "lib/Hooks/useTheme";
 interface TopPageProps {
     restart: () => void
     handleSpeedChanger: (event: ChangeEvent<HTMLSelectElement>) => void
@@ -24,6 +25,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     const [sliderState, setSliderState] = useState(playerTopStore.state.data)
     const [songData, setSongData] = useState(playerStore.state.data)
     const [selectedThumb, setSelectedThumb] = useState<'left' | 'right' | null>(null)
+    const [theme] = useTheme()
     const [inputDimension, setInputDimension] = useState(DEFAULT_DOM_RECT)
     const thumb1 = useRef<HTMLDivElement>(null)
     const thumb2 = useRef<HTMLDivElement>(null)
@@ -36,7 +38,6 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             dispose2()
         }
     }, [])
-
     useEffect(() => {
         if (selectedThumb === null) return
         function resetSelection() {
@@ -63,7 +64,6 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
             setSelectedThumb(left >= right ? 'right' : 'left')
             handleSliderMove(event, currentThumb)
         }
-
     }
     function handleSliderLeave() {
         setSelectedThumb(null)
@@ -85,7 +85,9 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
     const right = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
     return <>
         {songData.eventType === 'approaching' &&
-            <Score {...approachingScore} />
+            <Score
+                {...approachingScore}
+            />
         }
         <div className="upper-right" style={!hasSong ? { display: 'none' } : {}} >
             <div className="slider-wrapper">
@@ -126,7 +128,6 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                         </div>
                     </div>
                 </div>
-
                 <IconButton onClick={restart} tooltip='Restart' ariaLabel="Restart song">
                     <Memoized>
                         <FaSyncAlt />
@@ -156,6 +157,7 @@ export default memo(function TopPage({ restart, handleSpeedChanger, speedChanger
                     {sliderState.currentPage?.map((e, i) =>
                         <SheetFrame
                             key={i}
+                            theme={theme}
                             selected={i === sliderState.currentChunkIndex}
                             chunk={e}
                             rows={3}

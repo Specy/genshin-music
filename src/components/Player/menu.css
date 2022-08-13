@@ -1,5 +1,8 @@
+:root{
+    --menu-size: 4rem;
+}
 .menu {
-    width: 4rem;
+    width: var(--menu-size);
     background-color: var(--primary);
     height: 100%;
     border-right: solid 2px var(--secondary);
@@ -27,7 +30,7 @@
     opacity: 0.9;
 }
 
-.hamburger {
+.hamburger, .hamburger-top {
     position: absolute;
     bottom: 0.5rem;
     left: 0.5rem;
@@ -43,6 +46,10 @@
     justify-content: center;
     align-items: center;
     cursor: pointer;
+}
+.hamburger-top{
+    top: 0.5rem;
+    bottom: unset;
 }
 
 .icon {
@@ -398,6 +405,9 @@
 }
 
 @media only screen and (max-width: 900px) {
+    :root{
+        --menu-size: 3.6rem;
+    }
     .side-menu {
         padding: 0.5rem;
         width: 60vw;
@@ -413,7 +423,7 @@
     }
 
     .menu {
-        width: 3.6rem;
+        width: var(--menu-size);
         padding-top: 0.3rem;
     }
 

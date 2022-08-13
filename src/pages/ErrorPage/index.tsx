@@ -5,7 +5,7 @@ import { logger } from 'stores/LoggerStore';
 import { SongMenu } from 'components/Layout/SongMenu';
 import './ErrorPage.css'
 import { AppButton } from 'components/Inputs/AppButton';
-import { SerializedSong, SongType } from 'lib/Songs/Song';
+import { SerializedSong } from 'lib/Songs/Song';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { songsStore } from 'stores/SongsStore';
 import { fileService } from 'lib/Services/FileService';
@@ -15,11 +15,8 @@ import { songService } from 'lib/Services/SongService';
 import { ComposedSong } from 'lib/Songs/ComposedSong';
 import { RecordedSong } from 'lib/Songs/RecordedSong';
 
-const excludedSongs: SongType[] = ['vsrg']
 export function ErrorPage() {
     const [songs] = useSongs()
-
-
     const deleteSong = async (name: string, id: string) => {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
             await songsStore.removeSong(id)
@@ -72,7 +69,6 @@ export function ErrorPage() {
         <div className="error-songs-wrapper">
             <SongMenu<SongRowProps>
                 SongComponent={SongRow}
-                exclude={excludedSongs}
                 songs={songs}
                 componentProps={{
                     deleteSong,

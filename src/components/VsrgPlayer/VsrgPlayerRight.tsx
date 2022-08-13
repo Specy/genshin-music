@@ -16,7 +16,6 @@ export function VsrgPlayerRight({ song, onStopSong, onRetrySong }: VsrgPlayerRig
     if (!song) return null
     return <>
         <div className="vsrg-player-right">
-            <VsrgPlayerScore />
             <div className="row space-between" style={{gap: '0.2rem'}}>
                 <IconButton onClick={onStopSong}>
                     <Memoized>
@@ -29,7 +28,7 @@ export function VsrgPlayerRight({ song, onStopSong, onRetrySong }: VsrgPlayerRig
                     </Memoized>
                 </IconButton>
             </div>
-
+            <VsrgPlayerScore />
         </div>
     </>
 }

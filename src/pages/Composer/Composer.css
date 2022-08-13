@@ -163,6 +163,7 @@ select {
     display: flex;
     width: 100%;
     overflow: hidden;
+    cursor: pointer;
     border-radius: 0.3rem;
 }
 

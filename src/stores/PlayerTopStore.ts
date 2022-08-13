@@ -14,9 +14,7 @@ interface PlayerTopStoreProps {
 interface PlayerTopStoreData {
     data: PlayerTopStoreProps
 }
-interface Song {
-    notes: Array<any>,
-}
+
 class PlayerTopStore {
     state: PlayerTopStoreData
     constructor() {
@@ -88,19 +86,22 @@ class PlayerTopStore {
     incrementCurrent = () => {
         this.setState({ current: this.current + 1 })
     }
-    incrementChunkPosition = (override?: number) => {
+    incrementChunkPositionAndSetCurrent = (current?: number) => {
         const { pages, currentPageIndex } = this.state.data
-        const nextChunkPosition = override ?? this.currentChunkIndex + 1
+        current = current ?? this.current
+        const nextChunkPosition = this.currentChunkIndex + 1
         if (nextChunkPosition >= (pages[currentPageIndex]?.length ?? 0)) {
             if (currentPageIndex === pages.length - 1) return
             this.setState({
                 currentPageIndex: currentPageIndex + 1,
                 currentChunkIndex: 0,
-                currentPage: pages[currentPageIndex + 1]
+                currentPage: pages[currentPageIndex + 1],
+                current
             })
         } else {
             this.setState({
-                currentChunkIndex: nextChunkPosition
+                currentChunkIndex: nextChunkPosition,
+                current
             })
         }
     }

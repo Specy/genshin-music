@@ -6,7 +6,7 @@ import useClickOutside from "lib/Hooks/useClickOutside";
 import { useObservableArray } from "lib/Hooks/useObserve";
 import { KeyboardProvider } from "lib/Providers/KeyboardProvider";
 import { VsrgSongKeys } from "lib/Songs/VsrgSong";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { keyBinds } from "stores/Keybinds";
 import { InstrumentNotesLayout } from "types/GeneralTypes";
 import { NoteImage } from "types/Keyboard";
@@ -20,15 +20,12 @@ export function Keybinds() {
         type: '',
         index: -1
     })
-    const resetSelection = useCallback(() => {
-        setSelected({
-            type: '',
-            index: -1
-        })
-    }, [])
     useEffect(() => {
         KeyboardProvider.listen(({ letter }) => {
-            if (letter === 'Escape') return resetSelection()
+            if (letter === 'Escape') return setSelected({
+                type: '',
+                index: -1
+            })
             const { type, index } = selected
             if (type === 'keyboard' && index !== -1) {
                 keyBinds.setKeyboardKeybind(index, letter)
@@ -41,10 +38,9 @@ export function Keybinds() {
             }
         }, { id: 'keybinds' })
         return () => KeyboardProvider.unregisterById('keybinds')
-    }, [selected, resetSelection])
+    }, [selected])
     const k4 = useObservableArray(keyBinds.getVsrgKeybinds(4))
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
-    const k8 = useObservableArray(keyBinds.getVsrgKeybinds(8))
     return <DefaultPage>
         <Title text="Keybinds" />
         {false && <>
@@ -82,7 +78,7 @@ export function Keybinds() {
             Vsrg keybinds
         </h1>
         <div className="column" style={{ marginLeft: '1rem' }}>
-            {[k4, k6, k8].map((keys, j) =>
+            {[k4, k6].map((keys, j) =>
                 <Fragment key={j}>
                     <h2>
                         {keys.length} keys
@@ -125,6 +121,7 @@ function VsrgKey({ letter, isActive, handleClick }: VsrgKeyProps) {
             width: '3.5rem',
             height: '3.5rem',
             margin: '0.4rem',
+            border: 'none',
             backgroundColor: isActive ? 'var(--accent)' : 'var(--primary)',
             color: isActive ? 'var(--accent-text)' : 'var(--primary-text)',
             cursor: 'pointer'

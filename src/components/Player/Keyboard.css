@@ -91,6 +91,7 @@
 	width: 100% !important;
 	height: 100% !important;
 }
+
 .click-event {
 	transform: scale(0.9);
 	background-color: var(--clicked-note);
@@ -241,6 +242,9 @@
 	width: fit-content;
 }
 @media only screen and (max-width: 900px) {
+	.keyboard-playback .click-event{
+		transform: unset; /*performance reasons for mobile*/
+	}
 	.note {
 		width: 6.7vw;
 		height: 6.7vw;

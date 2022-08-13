@@ -53,7 +53,7 @@
 
 .vsrg-player-right {
     position: absolute;
-    padding: 1rem;
+    padding: 0.5rem;
     right: 0;
     top: 0;
     display: flex;
@@ -70,9 +70,48 @@
     max-width: 35rem;
 }
 
-.vsrg-player-keyboard-circles{
+.vsrg-player-keyboard-control-left,
+.vsrg-player-keyboard-control-right {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+
+}
+
+.vsrg-player-keyboard-control-left {
+    left: 1rem;
+    transform-origin: top left;
+    transform: rotate(-35deg);
+}
+
+.vsrg-player-keyboard-control-left .vsrg-player-key-circle,
+.vsrg-player-keyboard-control-right .vsrg-player-key-circle {
+    width: 8vw !important;
+    max-width: 5rem;
+    height: 8vw !important;
+    max-height: 5rem;
+}
+
+.vsrg-player-keyboard-control-left .vsrg-player-key-circle {
+    transform: rotate(35deg);
+}
+
+.vsrg-player-keyboard-control-right .vsrg-player-key-circle {
+    transform: rotate(-35deg);
+
+}
+
+.vsrg-player-keyboard-control-right {
+    flex-direction: column-reverse;
+    right: 1rem;
+    transform-origin: top right;
+    transform: rotate(35deg);
+}
+
+.vsrg-player-keyboard-circles {
     /* transform: rotateX(35deg) translateZ(-4.5vh); magic number */
 }
+
 .vsrg-player-key-hitbox-circle,
 .vsrg-player-key-hitbox-line {
     cursor: pointer;
@@ -88,9 +127,11 @@
     display: flex;
     align-items: flex-end;
 }
-.vsrg-player-key-hitbox-line:nth-child(odd){
+
+.vsrg-player-key-hitbox-line:nth-child(odd) {
     filter: brightness(0.8);
 }
+
 .vsrg-player-key-circle {
     display: flex;
     justify-content: center;
@@ -127,7 +168,7 @@
 
 .vsrg-player-score {
     min-width: 5rem;
-    margin-bottom: 2rem;
+    margin-top: 1rem;
     text-shadow: 0 0 0.5rem #252525;
     font-size: 1.4rem;
     color: var(--background-text);
@@ -149,5 +190,16 @@
     .vsrg-floating-score {
         font-size: 1.8rem;
         top: 65%;
+    }
+
+    .vsrg-player-keyboard-control-left {
+        left: 0;
+        bottom: var(--vertical-offset);
+    }
+
+    .vsrg-player-keyboard-control-right {
+        right: 0;
+        bottom: var(--vertical-offset);
+
     }
 }

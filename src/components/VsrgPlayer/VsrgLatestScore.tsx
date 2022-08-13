@@ -50,7 +50,7 @@ function _VsrgPlayerLatestScore() {
             transform: `rotate(${angle}deg)`,
             color: colorMap[data.type]
         })
-    }, [data])
+    }, [data]) //don't need since we need to animate only when data changes
 
     return <>
         <div

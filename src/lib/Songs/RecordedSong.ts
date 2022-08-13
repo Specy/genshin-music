@@ -271,7 +271,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer)
                 converted.notes.push(recordedNote)
             })
-
+            const highestLayer = Math.max(...converted.notes.map(note => note.layer.asNumber()))
+            const numberOfInstruments = highestLayer.toString(2).length
+            converted.instruments = new Array(numberOfInstruments).fill(0).map(_ => new InstrumentData())
             if ([true, "true"].includes(song.isComposed)) {
                 return converted.toComposedSong()
             }

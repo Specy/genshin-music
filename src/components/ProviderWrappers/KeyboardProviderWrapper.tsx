@@ -8,7 +8,7 @@ export function KeyboardProviderWrapper({ children }: KeyboardProviderWrapperPro
     useEffect(() => {
         KeyboardProvider.create()
         return () => KeyboardProvider.destroy() //TODO decide if calling destroy or dispose for all providers
-    })
+    },[])
     return <>
         {children}
     </>

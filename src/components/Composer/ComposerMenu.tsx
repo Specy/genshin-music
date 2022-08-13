@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone } from 'react-icons/fa';
-import { APP_NAME } from 'appConfig'
+import { APP_NAME, IS_MOBILE } from 'appConfig'
 import { MenuItem } from 'components/Miscellaneous/MenuItem'
 import MenuPanel from 'components/Layout/MenuPanel'
 import DonateButton from 'components/Miscellaneous/DonateButton'
@@ -36,7 +36,6 @@ import { ComposedSong } from 'lib/Songs/ComposedSong';
 import { RecordedSong } from 'lib/Songs/RecordedSong';
 import { RecordedOrComposed } from 'types/SongTypes';
 
-const isOnMobile = isMobile()
 interface MenuProps {
     data: {
         settings: ComposerSettingsDataType,
@@ -66,13 +65,15 @@ function Menu({ data, functions }: MenuProps) {
     const { loadSong, changePage, renameSong, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, updateThisSong } = functions
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
-        setOpen(false)
-        if (isOnMobile) setVisible(false)
-    }, { active: isOpen, ignoreFocusable: true })
+        if(IS_MOBILE){
+            setVisible(false)
+        }else{
+            setOpen(false)
+        }
+    }, { active: (isOpen && isVisible), ignoreFocusable: true })
 
     useEffect(() => {
         KeyboardProvider.register("Escape", () => {
-            setOpen(false)
             setVisible(false)
         }, { id: "composer_menu" })
         return () => KeyboardProvider.unregisterById("composer_menu")
@@ -81,7 +82,6 @@ function Menu({ data, functions }: MenuProps) {
     const toggleMenu = useCallback((override?: boolean) => {
         if (typeof override !== "boolean") override = undefined
         const newState = override !== undefined ? override : !isOpen
-        setOpen(newState)
         setVisible(newState)
     }, [isOpen])
 
@@ -133,7 +133,7 @@ function Menu({ data, functions }: MenuProps) {
             logger.error('Error downloading song')
         }
     }, [])
-    const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
+    const sideClass = (isOpen && isVisible) ? "side-menu menu-open" : "side-menu"
     const songFunctions = {
         loadSong,
         removeSong,

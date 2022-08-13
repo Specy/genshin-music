@@ -1,5 +1,5 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch } from "appConfig"
+import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE } from "appConfig"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "types/SettingsPropriety"
 import { NoteNameType } from "types/GeneralTypes"
@@ -389,7 +389,6 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             options: [
                 4,
                 6,
-                8
             ]
         },
         bpm: {
@@ -486,7 +485,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             tooltip: "The keyboard layout of the player",
             type: "select",
             songSetting: true,
-            value: 'circles',
+            value: IS_MOBILE ? 'line' : 'circles',
             category: "Player Settings",
             options: [
                 'circles',

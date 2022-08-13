@@ -3,7 +3,7 @@ import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";
 import { InstrumentData, RecordedNote, SerializedInstrumentData } from "./SongClasses";
 
-export type VsrgSongKeys = 4 | 6 | 8
+export type VsrgSongKeys = 4 | 6
 export type SerializedVsrgSong = SerializedSong & {
     type: "vsrg"
     trackModifiers: SerializedTrackModifier[]

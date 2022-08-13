@@ -17,6 +17,7 @@ import { Title } from 'components/Miscellaneous/Title'
 import { DefaultPage } from 'components/Layout/DefaultPage'
 import { songService } from 'lib/Services/SongService'
 import { ComposedSong } from 'lib/Songs/ComposedSong'
+import { useTheme } from 'lib/Hooks/useTheme'
 
 const THRESHOLDS = {
     joined: 50,
@@ -25,7 +26,7 @@ const THRESHOLDS = {
 
 
 export default function SheetVisualizer() {
-
+    const [theme] = useTheme()
     const [sheet, setSheet] = useState<Chunk[]>([])
     const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
@@ -141,6 +142,7 @@ export default function SheetVisualizer() {
                         key={i}
                         chunk={frame}
                         rows={3}
+                        theme={theme}
                         hasText={hasText}
                     />
                 )}

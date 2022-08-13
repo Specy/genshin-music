@@ -7,7 +7,7 @@ import MidiParser from "components/Composer/MidiParser"
 import ComposerTools from "components/Composer/ComposerTools"
 import ComposerKeyboard from "components/Composer/ComposerKeyboard"
 import ComposerCanvas from "components/Composer/Canvas"
-import Menu from "components/Composer/Menu"
+import Menu from "components/Composer/ComposerMenu"
 import Memoized from 'components/Utility/Memoized';
 import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts"
 import { ComposerSettingsDataType } from "lib/BaseSettings"

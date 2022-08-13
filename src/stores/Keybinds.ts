@@ -21,9 +21,8 @@ class KeyBinds {
     version: number = 1
     @observable
     private vsrg = {
-        4: ['A', 'S', 'G', 'H'],
-        6: ['A', 'S', 'D', 'G', 'H', 'J'],
-        8: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K']
+        4: ['A', 'S', 'J', 'K'],
+        6: ['A', 'S', 'D', 'H', 'J', 'K'],
     }
     @observable
     private keyboard = {
@@ -48,18 +47,22 @@ class KeyBinds {
     }
     setVsrgKeybind(keyCount: VsrgSongKeys, index: number, keybind: string) {
         this.vsrg[keyCount][index] = keybind
+        this.save()
     }
     setVsrgKeybinds(keyCount: VsrgSongKeys, keybinds: string[]) {
         this.vsrg[keyCount].splice(0, keybinds.length, ...keybinds)
+        this.save()
     }
     getKeyboardKeybinds() {
         return this.keyboard[APP_NAME.toLowerCase() as 'sky' | 'genshin']
     }
     setKeyboardKeybinds(keybinds: string[]) {
         this.keyboard[APP_NAME.toLowerCase() as 'sky' | 'genshin'].splice(0, keybinds.length, ...keybinds)
+        this.save()
     }
     setKeyboardKeybind(index: number, keybind: string) {
         this.keyboard[APP_NAME.toLowerCase() as 'sky' | 'genshin'][index] = keybind
+        this.save()
     }
     load() {
         const data = localStorage.getItem(`${APP_NAME}_keybinds`)

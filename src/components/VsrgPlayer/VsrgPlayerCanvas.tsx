@@ -5,6 +5,7 @@ import { ThrottledEventLoop } from "lib/ThrottledEventLoop";
 import { isNumberCloseTo } from "lib/Utilities";
 import { Application } from "pixi.js";
 import { Component, createRef } from "react";
+import { keyBinds } from "stores/Keybinds";
 import { ThemeStore } from "stores/ThemeStore";
 import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "stores/VsrgPlayerStore";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
@@ -151,6 +152,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
     }
     componentWillUnmount() {
         this.throttledEventLoop.stop()
+        vsrgPlayerStore.setLayout(keyBinds.getVsrgKeybinds(4))
         this.toDispose.forEach(d => d())
     }
     handleKeyboard = (key: KeyboardKey, type: VsrgKeyboardPressType) => {
