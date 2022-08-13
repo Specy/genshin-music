@@ -254,6 +254,27 @@
 .page-redirect-wrapper a:hover{
 	filter: brightness(1.1);
 }
+.middle-size-pages-wrapper{
+	margin-top: 1rem;
+	gap: 1rem;
+}
+.middle-size-page{
+	border-radius: 0.5rem;
+	display: grid;
+	align-items: center;
+	flex: 1;
+	max-width: 20rem;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.2rem;
+	padding: 0.6rem 1.2rem;
+	color: var(--primary-text);
+	text-decoration: unset;
+	background-color: var(--primary);
+}
+.middle-size-page-icon{
+	color: var(--primary-text);
+	font-size: 2rem;
+}
 .current-page {
 	/* Could be added */
 	outline: var(--accent) solid 2px;

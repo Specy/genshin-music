@@ -50,7 +50,8 @@ function _VsrgPlayerLatestScore() {
             transform: `rotate(${angle}deg)`,
             color: colorMap[data.type]
         })
-    }, [data]) //don't need since we need to animate only when data changes
+        //don't need 'style' to dep array since we need to animate only when data changes
+    }, [data]) 
 
     return <>
         <div
@@ -59,6 +60,11 @@ function _VsrgPlayerLatestScore() {
             className="vsrg-floating-score"
         >
             {data.type}
+        </div>
+        <div
+            className='vsrg-floating-combo'
+        >
+            {data.combo > 0 && `${data.combo}x`}
         </div>
     </>
 }

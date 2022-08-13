@@ -10,6 +10,8 @@ import './Home.css'
 import { MenuItem } from 'components/Miscellaneous/MenuItem'
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 import { AppButton } from 'components/Inputs/AppButton'
+import { VsrgIcon } from 'components/icons/VsrgIcon'
+import { VsrgComposerIcon } from 'components/icons/VsrgComposerIcon'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -134,7 +136,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
 
             </div>}
             <div className='home-content'>
-                <MainContntElement
+                <MainContentElement
                     icon={<FaCompactDisc />}
                     title='Composer'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
@@ -143,8 +145,8 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     current={currentPage === 'Composer'}
                 >
                     Create or edit songs with a fully fledged music composer. Also with MIDI.
-                </MainContntElement>
-                <MainContntElement
+                </MainContentElement>
+                <MainContentElement
                     icon={<BsMusicPlayerFill />}
                     title='Player'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
@@ -154,7 +156,22 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 >
                     Play, download, record and import songs. Learn a song with approaching circle
                     mode and practice mode.
-                </MainContntElement>
+                </MainContentElement>
+            </div>
+            <div className='row space-around middle-size-pages-wrapper'>
+                <MiddleSizePage
+                    Icon={VsrgComposerIcon}
+                    current={currentPage === 'VsrgComposer'}
+                    href='VsrgComposer'
+                    title='Vsrg Composer'
+                />
+
+                <MiddleSizePage
+                    Icon={VsrgIcon}
+                    current={currentPage === 'VsrgPlayer'}
+                    href='VsrgPlayer'
+                    title='Vsrg Player'
+                />
             </div>
             <Separator />
             <div className='page-redirect-wrapper'>
@@ -227,6 +244,27 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         </div>
     </div>
 }
+
+interface MiddleSizePageProps {
+    title: string
+    href: string
+    current: boolean
+    Icon: React.FC<{ className?: string }>
+}
+function MiddleSizePage({ href, title, Icon, current }: MiddleSizePageProps) {
+    return <Link
+        to={href}
+        onClick={HomeStore.close}
+        className={`middle-size-page row ${current ? 'current-page' : ''}`}
+    >
+        <Icon className='middle-size-page-icon' />
+        <span style={{ fontSize: '1.2rem' }}>
+            {title}
+        </span>
+    </Link>
+}
+
+
 interface PageRedirectProps {
     children: React.ReactNode,
     current: boolean,
@@ -238,7 +276,7 @@ function PageRedirect({ children, current, href }: PageRedirectProps) {
     </Link>
 }
 
-interface MainContntElementProps {
+interface MainContentElementProps {
     title: string,
     icon: React.ReactNode,
     children: React.ReactNode,
@@ -248,7 +286,7 @@ interface MainContntElementProps {
     style?: React.CSSProperties
 
 }
-function MainContntElement({ title, icon, children, background, current, href, style = {} }: MainContntElementProps) {
+function MainContentElement({ title, icon, children, background, current, href, style = {} }: MainContentElementProps) {
     return <Link
         className={`home-content-element ${current ? 'current-page' : ''}`}
         to={href}

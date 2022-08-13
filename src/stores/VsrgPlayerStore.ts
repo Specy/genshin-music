@@ -22,6 +22,7 @@ export type VsrgPlayerHitType = 'amazing' | 'perfect' | 'great' | 'good' | 'bad'
 export type VsrgLatestScore = {
     timestamp: number
     type: VsrgPlayerHitType | ''
+    combo: number
 }
 
 export type VsrgPlayerScore = {
@@ -62,7 +63,8 @@ class VsrgPlayerStore {
         miss: 0,
         lastScore: {
             timestamp: 0,
-            type: ''
+            type: '',
+            combo: 0
         }
     }
     private keyboardListeners: VsrcPlayerKeyboardCallback[] = []
@@ -91,21 +93,23 @@ class VsrgPlayerStore {
             combo: 0,
             lastScore: {
                 timestamp: 0,
-                type: ''
+                type: '',
+                combo: 0
             }
         })
     }
     incrementScore = (type: VsrgPlayerHitType) => {
+        const combo = type === 'miss' ? 0 : this.score.combo + 1
         Object.assign(this.score, {
             [type]: this.score[type] + 1,
-            combo: this.score.combo + 1,
-            score: this.score.score + this.getScore(type) * this.score.combo,
+            combo,
+            score: this.score.score + this.getScore(type) * combo,
             lastScore: {
                 timestamp: Date.now(),
-                type
+                type,
+                combo,
             }
         })
-        if (type === 'miss') this.score.combo = 0
     }
     private getScore = (type: VsrgPlayerHitType) => {
        return baseScoreMap[type] ?? 0

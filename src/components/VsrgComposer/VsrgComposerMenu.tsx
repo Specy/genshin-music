@@ -58,12 +58,10 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
         if (isOnMobile) setVisible(false)
-    }, { active: isOpen, ignoreFocusable: true })
-
+    }, { active: (isOpen && isVisible), ignoreFocusable: true })
     const toggleMenu = useCallback((override?: boolean) => {
         if (typeof override !== "boolean") override = undefined
         const newState = override !== undefined ? override : !isOpen
-        setOpen(newState)
         setVisible(newState)
     }, [isOpen])
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
@@ -77,7 +75,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
         }
     }, [isOpen, selectedMenu])
     const menuClass = isVisible ? "menu menu-visible" : "menu"
-    const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
+    const sideClass = (isOpen && isVisible) ? "side-menu menu-open" : "side-menu"
     const hasUnsaved = hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
     return <>
         <div className="hamburger vsrg-hamburger" onClick={() => setVisible(!isVisible)}>
@@ -190,7 +188,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                                         {audioSong.bpm}
                                     </span>
                                 </div>
-                                <span style={{marginTop: '0.4rem'}}>
+                                <span style={{ marginTop: '0.4rem' }}>
                                     Instrument modifiers
                                 </span>
                                 {trackModifiers.map((trackModifier, i) =>

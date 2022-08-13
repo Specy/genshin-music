@@ -174,7 +174,7 @@
     color: var(--background-text);
 }
 
-.vsrg-floating-score {
+.vsrg-floating-score, .vsrg-floating-combo {
     position: absolute;
     top: 70%;
     width: 12rem;
@@ -185,13 +185,21 @@
     font-weight: bold;
     text-shadow: 0 0 0.5rem #252525;
 }
-
+.vsrg-floating-combo{
+    top: 30%;
+    font-size: 3rem;
+    opacity: 0.8;
+}
 @media only screen and (max-width: 900px) {
     .vsrg-floating-score {
         font-size: 1.8rem;
         top: 65%;
     }
-
+    .vsrg-floating-combo{
+        top: 20%;
+        font-size: 2.4rem;
+        opacity: 0.8;
+    }
     .vsrg-player-keyboard-control-left {
         left: 0;
         bottom: var(--vertical-offset);

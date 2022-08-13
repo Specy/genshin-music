@@ -1,6 +1,6 @@
 import { Component } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
-import VsrgMenu from "components/VsrgComposer/VsrgMenu";
+import VsrgMenu from "components/VsrgComposer/VsrgComposerMenu";
 import { SnapPoint, VsrgBottom, VsrgHitObjectType } from "components/VsrgComposer/VsrgBottom";
 import './VsrgComposer.css';
 import { VsrgTop } from "components/VsrgComposer/VsrgTop";
