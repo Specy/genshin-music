@@ -35,5 +35,10 @@ export default function useClickOutside<T extends HTMLElement>(callback: Callbac
 export function hasFocusable(e: MouseEvent) {
     const path = e.composedPath()
     //@ts-ignore
-    return path.some(e => e.tagName === "INPUT" || e.tagName === "BUTTON" || e.classList?.contains?.("ignore_click_outside"))
+    return path.some(e => {
+        //@ts-ignore
+        if(e.tagName === "INPUT" || e.tagName === "BUTTON") return !e.classList?.contains?.("include_click_outside")
+        //@ts-ignore
+        return e.classList?.contains?.("ignore_click_outside")
+    })
 }

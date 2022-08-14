@@ -463,7 +463,15 @@ const DEFAULT_VSRG_KEYS_MAP = {
     4: ["A", "S", "G", "H"] ,
     6: ["A", "S", "D", "G", "H", "J"],
 }
-
+const VSRG_SCORE_COLOR_MAP = {
+    amazing: '#cff3e3',
+    perfect: '#d9af0a',
+    great: '#358a55 ',
+    good: '#380cc4',
+    bad: '#dd8d46',
+    miss: '#f24b5b',
+    '': '#ffffff',
+}
 const MIDI_BOUNDS = APP_NAME === "Genshin"
     ? {
         upper: 84,
@@ -517,7 +525,8 @@ export {
     VSRG_TEMPO_CHANGER,
     DEFAULT_DOM_RECT,
     PIXI_CENTER_X_END_Y,
-    IS_MOBILE
+    IS_MOBILE,
+    VSRG_SCORE_COLOR_MAP
 }
 export type {
     Pitch

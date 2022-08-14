@@ -167,12 +167,43 @@
 }
 
 .vsrg-player-score {
+    position: absolute;
+    top: 2.4rem;
+    right: 0.5rem;
     min-width: 5rem;
     margin-top: 1rem;
     text-shadow: 0 0 0.5rem #252525;
     font-size: 1.4rem;
     color: var(--background-text);
 }
+.vsrg-final-score{
+    position: absolute;
+    top: 20%;
+    display: grid;
+    grid-template-areas: 
+        'a b'
+        'c d'
+        'e e';
+    ;
+    gap: 2rem;
+    background-color: var(--primary);
+    border-radius: 0.5rem;
+    border: solid 2px var(--secondary);
+    padding: 1rem;
+    left: 50%;
+    transform-origin: left; /* fix for animation doing the transform from the left*/
+    transform: translateX(-50%);
+    --existing-transform: translateX(-50%);
+    animation: fadeIn 0.4s;
+}
+.floating-score-element{
+    display: grid;
+    align-items: center;
+    gap: 1rem;
+    grid-template-columns: 1fr min-content;
+    font-size: 1.4rem;
+}
+
 
 .vsrg-floating-score, .vsrg-floating-combo {
     position: absolute;

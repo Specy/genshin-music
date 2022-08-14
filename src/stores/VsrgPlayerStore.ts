@@ -26,6 +26,7 @@ export type VsrgLatestScore = {
 }
 
 export type VsrgPlayerScore = {
+    scoreVisible: boolean
     combo: number
     score: number
     amazing: number
@@ -53,9 +54,11 @@ class VsrgPlayerStore {
         type: 'stop'
     }
     @observable score: VsrgPlayerScore = {
-        amazing: 0,
+        scoreVisible: false,
         combo: 0,
         score: 0,
+
+        amazing: 0,
         perfect: 0,
         great: 0,
         good: 0,
@@ -82,7 +85,8 @@ class VsrgPlayerStore {
             }))
     }
     resetScore = () => {
-        Object.assign(this.score, {
+        const resetScore:VsrgPlayerScore = {
+            scoreVisible: false,
             score: 0,
             amazing: 0,
             perfect: 0,
@@ -96,7 +100,8 @@ class VsrgPlayerStore {
                 type: '',
                 combo: 0
             }
-        })
+        }
+        Object.assign(this.score, resetScore)
     }
     incrementScore = (type: VsrgPlayerHitType) => {
         const combo = type === 'miss' ? 0 : this.score.combo + 1
@@ -117,6 +122,9 @@ class VsrgPlayerStore {
     playSong = (song: VsrgSong) => {
         this.currentSong.type = 'play'
         this.currentSong.song = song.clone()
+    }
+    showScore = () => {
+        this.score.scoreVisible = true
     }
     stopSong = () => {
         this.currentSong.type = 'stop'

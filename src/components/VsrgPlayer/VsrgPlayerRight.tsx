@@ -28,7 +28,7 @@ export function VsrgPlayerRight({ song, onStopSong, onRetrySong }: VsrgPlayerRig
                     </Memoized>
                 </IconButton>
             </div>
-            <VsrgPlayerScore />
         </div>
+        <VsrgPlayerScore />
     </>
 }

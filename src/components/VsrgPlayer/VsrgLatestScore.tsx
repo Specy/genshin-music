@@ -1,17 +1,9 @@
+import { VSRG_SCORE_COLOR_MAP } from "appConfig"
 import { memo, useEffect, useRef, useState } from "react"
 import { subscribeVsrgLatestScore, vsrgPlayerStore } from "stores/VsrgPlayerStore"
 import { Timer } from "types/GeneralTypes"
 
 
-const colorMap = {
-    'amazing': '#cff3e3',
-    'perfect': '#d9af0a',
-    'great': '#358a55 ',
-    'good': '#0057d9',
-    'bad': '#dd8d46',
-    'miss': '#f24b5b',
-    '': '#ffffff',
-}
 const defaultStyle = {
     transform: 'rotate(0) scale(1)',
     color: 'var(--primary-text)'
@@ -40,15 +32,15 @@ function _VsrgPlayerLatestScore() {
         const angle = Math.floor(Math.random() * 25 - 12.5)
         current.animate([
             style,
-            { transform: `rotate(${angle}deg) scale(1.3)`, color: colorMap[data.type] },
-            { transform: `rotate(0) scale(1)`, color: colorMap[data.type] },
+            { transform: `rotate(${angle}deg) scale(1.3)`, color: VSRG_SCORE_COLOR_MAP[data.type] },
+            { transform: `rotate(0) scale(1)`, color: VSRG_SCORE_COLOR_MAP[data.type] },
         ], {
             duration: 150,
             easing: 'ease-out'
         })
         setStyle({
             transform: `rotate(${angle}deg)`,
-            color: colorMap[data.type]
+            color: VSRG_SCORE_COLOR_MAP[data.type]
         })
         //don't need 'style' to dep array since we need to animate only when data changes
     }, [data]) 

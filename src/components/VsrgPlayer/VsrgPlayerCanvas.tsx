@@ -142,8 +142,8 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         const { scrollSpeed } = this.props
         if (type === 'play' && song) {
             const countDown = 3000
-            this.setState({ song: song, timestamp: - countDown - scrollSpeed, renderableHitObjects: [] }, () => {
-                song?.startPlayback(0)
+            this.setState({ song, timestamp: - countDown - scrollSpeed, renderableHitObjects: [] }, () => {
+                song.startPlayback(0)
                 this.calculateSizes()
                 this.generateAccuracyBounds()
             })

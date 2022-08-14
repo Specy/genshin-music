@@ -147,7 +147,7 @@
 	cursor: pointer;
 }
 .home-content-element:hover {
-	transform: scale(1.03);
+	transform: scale(1.02);
 	filter: brightness(1.1);
 }
 .home-welcome {
@@ -265,15 +265,21 @@
 	flex: 1;
 	max-width: 20rem;
 	grid-template-columns: 1fr 1fr;
-	gap: 1.2rem;
-	padding: 0.6rem 1.2rem;
+	gap: 1rem;
+	padding: 0.6rem 1rem;
 	color: var(--primary-text);
 	text-decoration: unset;
 	background-color: var(--primary);
+	transition: all 0.2s;
+}
+.middle-size-page:hover{
+	filter: brightness(1.1);
+	transform: scale(1.02);
+
 }
 .middle-size-page-icon{
 	color: var(--primary-text);
-	font-size: 2rem;
+	font-size: 1.6rem;
 }
 .current-page {
 	/* Could be added */

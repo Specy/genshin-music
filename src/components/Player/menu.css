@@ -15,7 +15,7 @@
     z-index: 15;
     display: flex;
     margin-left: -4rem;
-    transition: all 0.4s;
+    transition: all 0.3s;
 }
 
 .menu-visible {
@@ -289,6 +289,8 @@
     display: none;
     position: absolute;
     transform: translateX(calc(-100% + 3rem));
+    transform-origin: top;
+    --existing-transform: translateX(calc(-100% + 3rem));
     z-index: 100;
     padding: 0.2rem;
     background-color: var(--primary);
@@ -318,7 +320,7 @@
 
 .floating-dropdown-active .floating-dropdown-children {
     display: flex;
-    animation: fadeIn 0.2s;
+    animation: fadeIn 0.2s ;
     animation-fill-mode: forwards;
 }
 

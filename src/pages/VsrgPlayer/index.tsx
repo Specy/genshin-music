@@ -123,7 +123,12 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         const { audioSong, songAudioPlayer, song } = this.state
         this.lastTimestamp = timestamp
         if (!song) return
-        if (this.lastTimestamp >= song.duration || timestamp < 0) return
+        if(this.lastTimestamp >= song.duration + 2000){
+            console.log('a')
+            this.setState({ isPlaying: false })
+            vsrgPlayerStore.showScore()
+        }
+        if (this.lastTimestamp >= song.duration  || timestamp < 0) return
         if (audioSong) {
             const notes = audioSong.tickPlayback(timestamp)
             notes.forEach(n => {

@@ -119,6 +119,7 @@ function VsrgKey({ letter, isActive, handleClick }: VsrgKeyProps) {
         ref={ref}
         style={{
             width: '3.5rem',
+            fontSize: '1rem',
             height: '3.5rem',
             margin: '0.4rem',
             border: 'none',

@@ -459,7 +459,7 @@ select {
     top: 3.4rem;
     margin-left: 6.6rem;
     z-index: 10;
-    animation: fadeAndScaleIn 0.2s;
+    animation: fadeIn 0.2s;
 }
 .instrument-settings-button {
     flex: 1;
@@ -485,7 +485,7 @@ select {
     flex-direction: column;
     align-items: flex-start;
     overflow: auto;
-    animation: fadeAndScaleIn 0.2s;
+    animation: fadeIn 0.2s;
 }
 
 

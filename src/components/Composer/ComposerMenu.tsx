@@ -29,7 +29,6 @@ import { folderStore } from 'stores/FoldersStore';
 import { useSongs } from 'lib/Hooks/useSongs';
 import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
 import useClickOutside from 'lib/Hooks/useClickOutside';
-import isMobile from 'is-mobile';
 import { fileService } from 'lib/Services/FileService';
 import { songService } from 'lib/Services/SongService';
 import { ComposedSong } from 'lib/Songs/ComposedSong';

@@ -258,7 +258,7 @@ function MiddleSizePage({ href, title, Icon, current }: MiddleSizePageProps) {
         className={`middle-size-page row ${current ? 'current-page' : ''}`}
     >
         <Icon className='middle-size-page-icon' />
-        <span style={{ fontSize: '1.2rem' }}>
+        <span style={{ fontSize: '1.1rem' }}>
             {title}
         </span>
     </Link>
