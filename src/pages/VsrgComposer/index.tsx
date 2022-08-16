@@ -160,7 +160,6 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             return this.setState({ vsrg, selectedHitObject: null })
         }
         const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
-        hitObject.setNote(0)
         this.pressedDownHitObjects[key] = hitObject
         this.setState({ vsrg, selectedHitObject: hitObject })
     }
@@ -229,7 +228,6 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (selectedType === 'tap' && type === ClickType.Left) {
             if (firstNote) return this.setState({ selectedHitObject: firstNote })
             const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
-            hitObject.setNote(0)
             this.playHitObject(hitObject, selectedTrack)
             this.setState({ selectedHitObject: hitObject })
         }
@@ -480,8 +478,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.setState({ vsrg })
     }
     onBreakpointSelect = (direction: -1 | 1) => {
-        const { vsrg } = this.state
+        const { vsrg , isPlaying, audioSong} = this.state
         const breakpoint = vsrg.getClosestBreakpoint(this.lastTimestamp, direction)
+        if(isPlaying) audioSong?.startPlayback(breakpoint)
         vsrgComposerStore.emitEvent('timestampChange', breakpoint)
     }
     render() {

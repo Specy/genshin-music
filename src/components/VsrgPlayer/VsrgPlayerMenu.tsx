@@ -1,17 +1,14 @@
 import { AppButton } from "components/Inputs/AppButton";
-import { SongActionButton } from "components/Inputs/SongActionButton";
 import MenuPanel from "components/Layout/MenuPanel";
 import { SongMenu } from "components/Layout/SongMenu";
 import { MenuItem } from "components/Miscellaneous/MenuItem";
 import { SettingsPane } from "components/Settings/SettingsPane";
 import { asyncConfirm } from "components/Utility/AsyncPrompts";
 import { FloatingDropdownRow, FloatingDropdownText, FloatingDropdown } from "components/Utility/FloatingDropdown";
-import { HelpTooltip } from "components/Utility/HelpTooltip";
 import Memoized from "components/Utility/Memoized";
 import { hasTooltip, Tooltip } from "components/Utility/Tooltip";
-import isMobile from "is-mobile";
 import Analytics from "lib/Analytics";
-import { VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType } from "lib/BaseSettings";
+import { VsrgPlayerSettingsDataType } from "lib/BaseSettings";
 import { Folder } from "lib/Folder";
 import useClickOutside from "lib/Hooks/useClickOutside";
 import { useFolders } from "lib/Hooks/useFolders";
@@ -19,7 +16,6 @@ import { useSongs } from "lib/Hooks/useSongs";
 import { useTheme } from "lib/Hooks/useTheme";
 import { fileService } from "lib/Services/FileService";
 import { songService } from "lib/Services/SongService";
-import { RecordedSong } from "lib/Songs/RecordedSong";
 import { SerializedSong } from "lib/Songs/Song";
 import { VsrgSong } from "lib/Songs/VsrgSong";
 import { VsrgSongSelectType } from "pages/VsrgPlayer";
@@ -51,8 +47,6 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
     }, { active: isOpen && isVisible, ignoreFocusable: true })
-
-
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
         if (selection === selectedMenu && isOpen) {
             return setOpen(false)

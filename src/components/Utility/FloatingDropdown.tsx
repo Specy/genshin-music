@@ -1,5 +1,4 @@
 import useClickOutside from "lib/Hooks/useClickOutside"
-import _ from "lodash"
 import React, { useEffect, useState } from "react"
 import { FaTimes } from "react-icons/fa"
 import { AppButton } from "../Inputs/AppButton"
@@ -45,7 +44,6 @@ export function FloatingDropdown({
     const transform = `translateX(calc(-100% + ${offset}rem)) ${overflows ? `translateY(calc(-100% - 2rem))` : ""}`
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
         <SongActionButton
-            className='include_click_outside'
             style={{
                 margin: 0,
                 ...style,

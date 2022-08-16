@@ -236,5 +236,7 @@
         height: 2.4rem;
         min-height: 2.4rem;
     }
-
+    .multiple-option-slider button {
+        padding: 0 1rem;
+    }
 }

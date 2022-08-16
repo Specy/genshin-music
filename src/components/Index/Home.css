@@ -37,8 +37,6 @@
 
 .logger {
 	position: fixed;
-	margin-left: auto;
-	margin-right: auto;
 	right: 0.8rem;
 	top: 0.8rem;
 	border-radius: 0.4rem;
@@ -55,6 +53,28 @@
 	flex-direction: column;
 	opacity: 0.3;
 	transform: scale(0.8) translateY(calc(-120% - 0.8rem));
+}
+.pill{
+	position: fixed;
+	border-radius: 1.5rem;
+	padding: 0.5rem 1.5rem;
+	transition: all 0.3s;
+	min-height: 2.4rem;
+	background-color: var(--secondary);
+	top: 0.8rem;
+	font-size: 0.8rem;
+	margin-left: auto;
+	z-index: 999;
+	pointer-events: none;
+	margin-right: auto;
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+	color: var(--secondary-text);
+	opacity: 0;
+	transform: translateY(calc(-120% - 0.8rem));
+}
+.pill-visible{
+	opacity: 0.9;
+	transform: translateY(0);
 }
 .logger-visible {
 	opacity: 1;
@@ -235,7 +255,7 @@
 	height: 1.5rem;
 }
 .page-redirect-wrapper {
-	margin-top: 0.5rem;
+	margin-top: 0.8rem;
 	display: flex;
 	flex-wrap: wrap;
 	width: 100%;
@@ -315,7 +335,6 @@
 	border-top: 1px solid var(--secondary);
 	margin-top: 1rem;
 	font-size: 1.1rem;
-	padding-top: 0.5rem;
 	width: 100%;
 }
 .redirect-button {
@@ -341,9 +360,24 @@
 	.home-dont-show-again, .home-app-scaling  {
 		font-size: 0.8rem;
 	}
-
+	.home-separator{
+		margin-top: 0.8rem;
+	}
+	.home-content-element{
+		min-height: 9rem;
+	}
+	.page-redirect-wrapper{
+		margin-top: 0.6rem;
+	}
+	.middle-size-pages-wrapper{
+		margin-top: 0.8rem;
+		gap: 0.8rem;
+	}
+	.home-content{
+		gap: 0.8rem;
+	}
 	.home-content {
-		margin-top: 1rem;
+		margin-top: 0.8rem;
 	}
 	.close-home{
 		left: 0.4rem;

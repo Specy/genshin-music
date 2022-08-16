@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 
 
-export function useObserveObject<T extends Object>(target: T): T{
+export function useObservableObject<T extends Object>(target: T): T{
     const [observedTarget,setObservedTarget] = useState(target)
     useEffect(() => {
         const dispose = subscribeObeservableObject(target, setObservedTarget)

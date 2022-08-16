@@ -34,6 +34,7 @@ export default function useClickOutside<T extends HTMLElement>(callback: Callbac
 }
 export function hasFocusable(e: MouseEvent) {
     const path = e.composedPath()
+
     //@ts-ignore
     return path.some(e => {
         //@ts-ignore

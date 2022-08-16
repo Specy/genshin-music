@@ -3,7 +3,7 @@ import { DefaultPage } from "components/Layout/DefaultPage";
 import BaseNote from "components/Miscellaneous/BaseNote";
 import { Title } from "components/Miscellaneous/Title";
 import useClickOutside from "lib/Hooks/useClickOutside";
-import { useObservableArray } from "lib/Hooks/useObserve";
+import { useObservableArray } from "lib/Hooks/useObservable";
 import { KeyboardProvider } from "lib/Providers/KeyboardProvider";
 import { VsrgSongKeys } from "lib/Songs/VsrgSong";
 import { Fragment, useEffect, useState } from "react";

@@ -107,7 +107,7 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
                     x={isHorizontal ? 30 : keyWidth * index + keyWidth / 2}
                     y={isHorizontal ? keyHeight * index + keyHeight / 2 : sizes.height - 30}
                     anchor={0.5}
-                    text={key}
+                    text={`${index + 1}`}
                     style={textStyle}
                 />
             </Container>
