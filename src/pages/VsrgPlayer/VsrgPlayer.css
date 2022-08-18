@@ -190,10 +190,8 @@
     border-radius: 0.5rem;
     border: solid 2px var(--secondary);
     padding: 1rem;
-    left: 50%;
-    transform-origin: left; /* fix for animation doing the transform from the left*/
-    transform: translateX(-50%);
-    --existing-transform: translateX(-50%);
+    margin-left: auto;
+    margin-right: auto;
     animation: fadeIn 0.4s;
 }
 .floating-score-element{

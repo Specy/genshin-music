@@ -72,9 +72,6 @@ interface VsrgCanvasState {
     draggedHitObject: VsrgHitObject | null
 }
 
-
-
-
 export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasState>{
     wrapperRef = createRef<HTMLDivElement>()
     stageRef = createRef<any>()

@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import KeyboardPlayer from "components/Player/KeyboardPlayer"
 import Menu from "components/Player/Menu"
-import { playerStore, subscribePlayer } from 'stores/PlayerStore'
+import { playerStore } from 'stores/PlayerStore'
 import { RecordedSong } from 'lib/Songs/RecordedSong';
 import { ComposedSong } from 'lib/Songs/ComposedSong';
 import { Recording } from 'lib/Songs/SongClasses';
@@ -26,6 +26,11 @@ import { Lambda } from 'mobx';
 import { NoteLayer } from 'lib/Layer';
 import './Player.css'
 import { IconButton } from 'components/Inputs/IconButton';
+import { subscribeObeservableObject } from 'lib/Hooks/useObservable';
+import { ChangeEvent } from 'react';
+import { SPEED_CHANGERS } from 'appConfig';
+import { playerControlsStore } from 'stores/PlayerControlsStore';
+import { PlayerSongControls } from 'components/Player/PlayerSongControls';
 
 interface PlayerState {
 	settings: MainPageSettingsDataType
@@ -34,8 +39,8 @@ interface PlayerState {
 	isRecordingAudio: boolean
 	isRecording: boolean
 	isMetronomePlaying: boolean
-	isLoadingInstruments: boolean
 	hasSong: boolean
+	speedChanger: typeof SPEED_CHANGERS[number]
 }
 
 class Player extends Component<any, PlayerState>{
@@ -54,9 +59,8 @@ class Player extends Component<any, PlayerState>{
 			isRecording: false,
 			isRecordingAudio: false,
 			isMetronomePlaying: false,
-			isLoadingInstruments: false,
 			hasSong: false,
-
+			speedChanger: SPEED_CHANGERS.find(e => e.name === 'x1') as typeof SPEED_CHANGERS[number]
 		}
 		this.mounted = false
 	}
@@ -66,11 +70,11 @@ class Player extends Component<any, PlayerState>{
 		await this.loadInstrument(settings.instrument.value)
 		AudioProvider.setReverb(settings.caveMode.value)
 		this.registerKeyboardListeners()
-	}	
+	}
 	componentDidMount() {
 		this.mounted = true
 		this.init()
-		this.cleanup.push(subscribePlayer(({ eventType, song }) => {
+		const dispose = subscribeObeservableObject(playerStore.state, ({ eventType, song }) => {
 			const { settings } = this.state
 			if (!settings.syncSongData.value || song === null) return
 			if (['play', 'practice', 'approaching'].includes(eventType))
@@ -81,12 +85,14 @@ class Player extends Component<any, PlayerState>{
 					}, key: 'pitch'
 				})
 			this.syncInstruments(song)
-		}))
+		})
+		this.cleanup.push(dispose)
 	}
 	componentWillUnmount() {
 		KeyboardProvider.unregisterById('player')
 		playerStore.reset()
 		AudioProvider.clear()
+		logger.hidePill()
 		this.state.instruments.forEach(ins => ins.delete())
 		this.cleanup.forEach(c => c())
 		this.mounted = false
@@ -100,10 +106,10 @@ class Player extends Component<any, PlayerState>{
 		this.setState({ hasSong: data })
 	}
 	changeVolume = (obj: SettingVolumeUpdate) => {
-		const { settings } = this.state
+		const { settings, instruments } = this.state
 		if (obj.key === "instrument") {
 			settings.instrument = { ...settings.instrument, volume: obj.value }
-			this.state.instruments.forEach(ins => ins.changeVolume(obj.value))
+			instruments.forEach(ins => ins.changeVolume(obj.value))
 		}
 		this.setState({ settings }, this.updateSettings)
 	}
@@ -126,6 +132,18 @@ class Player extends Component<any, PlayerState>{
 			isLoadingInstrument: false
 		}, () => AudioProvider.setReverb(settings.caveMode.value))
 	}
+	handleSpeedChanger = (e: ChangeEvent<HTMLSelectElement>) => {
+		const changer = SPEED_CHANGERS.find(el => el.name === e.target.value)
+		if (!changer) return
+		this.setState({
+			speedChanger: changer
+		}, () => this.restartSong())
+	}
+	restartSong = async (override?: number) => {
+		if (!this.mounted) return
+		playerStore.restart((typeof override === 'number') ? override : playerControlsStore.position, playerControlsStore.end)
+	}
+
 	syncInstruments = async (song: ComposedSong | RecordedSong) => {
 		const { instruments } = this.state
 		//remove excess instruments
@@ -134,14 +152,14 @@ class Player extends Component<any, PlayerState>{
 			AudioProvider.disconnect(ins.endNode)
 			ins.delete()
 		})
-		this.setState({ isLoadingInstruments: true })
+		logger.showPill("Loading instruments...")
 		const promises = song.instruments.map(async (ins, i) => {
 			if (instruments[i] === undefined) {
 				//If it doesn't have a layer, create one
 				const instrument = new Instrument(ins.name)
 				instruments[i] = instrument
 				const loaded = await instrument.load()
-                if (!loaded) logger.error("There was an error loading the instrument")
+				if (!loaded) logger.error("There was an error loading the instrument")
 				if (!this.mounted) return instrument.delete()
 				AudioProvider.connect(instrument.endNode)
 				instrument.changeVolume(ins.volume)
@@ -159,7 +177,7 @@ class Player extends Component<any, PlayerState>{
 				const instrument = new Instrument(ins.name)
 				instruments[i] = instrument
 				const loaded = await instrument.load()
-                if (!loaded) logger.error("There was an error loading the instrument")
+				if (!loaded) logger.error("There was an error loading the instrument")
 				if (!this.mounted) return instrument.delete()
 				AudioProvider.connect(instrument.endNode)
 				instrument.changeVolume(ins.volume)
@@ -168,7 +186,8 @@ class Player extends Component<any, PlayerState>{
 		})
 		const newInstruments = await Promise.all(promises) as Instrument[]
 		if (!this.mounted) return
-		this.setState({ instruments: newInstruments, isLoadingInstruments:false })
+		logger.hidePill()
+		this.setState({ instruments: newInstruments })
 	}
 	playSound = (index: number, layers?: NoteLayer) => {
 		const { state } = this
@@ -241,7 +260,7 @@ class Player extends Component<any, PlayerState>{
 			metronome.stop()
 		} else {
 			metronome.bpm = settings.bpm.value
-			metronome.beats = settings.metronomeBeats.value	
+			metronome.beats = settings.metronomeBeats.value
 			metronome.changeVolume(settings.metronomeVolume.value)
 			metronome.start()
 		}
@@ -282,7 +301,7 @@ class Player extends Component<any, PlayerState>{
 	}
 	render() {
 		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, toggleMetronome } = this
-		const { settings, isLoadingInstruments, isLoadingInstrument, instruments, hasSong, isRecordingAudio, isRecording, isMetronomePlaying } = state
+		const { settings, isLoadingInstrument, instruments, hasSong, isRecordingAudio, isRecording, isMetronomePlaying, speedChanger } = state
 		return <>
 			<Title text="Player" />
 			<Menu
@@ -313,36 +332,23 @@ class Player extends Component<any, PlayerState>{
 							hasSong,
 							hasAnimation: settings.noteAnimation.value,
 							approachRate: settings.approachSpeed.value,
-							keyboardYPosition: settings.keyboardYPosition.value
+							keyboardYPosition: settings.keyboardYPosition.value,
+							speedChanger,
 						}}
 						functions={{ playSound, setHasSong }}
 					/>
 				</div>
 			</div>
-			{isLoadingInstruments &&
-				<div style={{ position: 'absolute', bottom: '0.5rem', left:'50%', transform:"translateX(-50%)", fontSize: '0.9rem'}}>
-					Loading song instruments...
-				</div>
-			}
-
-			{playerStore.eventType !== 'approaching' &&
-				<div className='record-button'>
-					<AppButton
-						toggled={isRecordingAudio}
-						onClick={() => this.toggleRecordAudio()}
-					>
-						{isRecordingAudio ? "Finish recording" : "Record audio"}
-					</AppButton>
-				</div>
-			}
-			<IconButton 
-				toggled={isMetronomePlaying} 
-				onClick={toggleMetronome} 
-				className='metronome-button'
-				ariaLabel='Toggle metronome'
-			>
-				<GiMetronome size={22} />
-			</IconButton>
+			<PlayerSongControls
+				isRecordingAudio={isRecording}
+				onToggleRecordAudio={this.toggleRecordAudio}
+				onRestart={this.restartSong}
+				isMetronomePlaying={isMetronomePlaying}
+				onToggleMetronome={toggleMetronome}
+				onRawSpeedChange={this.handleSpeedChanger}
+				hasSong={hasSong}
+				speedChanger={speedChanger}
+			/>
 		</>
 	}
 }

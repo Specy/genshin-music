@@ -230,14 +230,7 @@
         opacity: 0;
     }
 }
-.upper-right {
-	display: flex;
-	width: 100%;
-	position: relative;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
+
 .record-btn {
 	width: fit-content;
 }

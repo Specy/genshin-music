@@ -1,7 +1,8 @@
 import { Chunk, RecordedSong } from "lib/Songs/RecordedSong";
-import { observable, observe } from "mobx";
+import { makeObservable, observable, observe } from "mobx";
+import { ApproachingScore } from "types/GeneralTypes";
 
-interface PlayerTopStoreProps {
+interface PlayerControlsState {
     position: number
     current: number
     size: number
@@ -11,45 +12,48 @@ interface PlayerTopStoreProps {
     currentChunkIndex: number
     currentPage: Chunk[]
 }
-interface PlayerTopStoreData {
-    data: PlayerTopStoreProps
-}
 
-class PlayerTopStore {
-    state: PlayerTopStoreData
+
+class PlayerControlsStore {
+    @observable
+    state: PlayerControlsState = {
+        position: 0,
+        current: 0,
+        size: 0,
+        end: 0,
+        pages: [],
+        currentPageIndex: 0,
+        currentChunkIndex: 0,
+        currentPage: []
+    }
+    @observable
+    score: ApproachingScore = {
+        correct: 1,
+        wrong: 1,
+        score: 0,
+        combo: 0
+    }
     constructor() {
-        this.state = observable({
-            data: {
-                position: 0,
-                current: 0,
-                size: 0,
-                end: 0,
-                pages: [],
-                currentPageIndex: 0,
-                currentChunkIndex: 0,
-                currentPage: []
-            }
-        })
+        makeObservable(this)
     }
     get currentChunkIndex(): number {
-        return this.state.data.currentChunkIndex
+        return this.state.currentChunkIndex
     }
     get currentChunk(): Chunk | undefined {
-        return this.state.data.currentPage[this.state.data.currentChunkIndex]
+        return this.state.currentPage[this.state.currentChunkIndex]
     }
     get position(): number {
-        return this.state.data.position
+        return this.state.position
     }
     get current(): number {
-        return this.state.data.current
+        return this.state.current
     }
-
     get size(): number {
-        return this.state.data.size
+        return this.state.size
     }
 
     get end(): number {
-        return this.state.data.end
+        return this.state.end
     }
 
     setSong = (song: RecordedSong) => {
@@ -59,6 +63,29 @@ class PlayerTopStore {
             current: 0
         })
         this.setPages([])
+    }
+    resetScore = () => {
+        this.score = {
+            correct: 1,
+            wrong: 1,
+            score: 0,
+            combo: 0
+        }
+    }
+    increaseScore = (correct: boolean, debuff?: number) => {
+        const { score } = this
+        if (correct) {
+            this.setScoreState({
+                correct: score.correct + 1,
+                combo: score.combo + 1,
+                score: score.score + score.combo * (debuff ?? 1)
+            })
+        } else {
+            this.setScoreState({
+                wrong: score.wrong + 1,
+                combo: 0,   
+            })
+        }
     }
     setPages = (pages: Chunk[][]) => {
         const clone = pages.map(p => p.map(c => c.clone()))
@@ -77,8 +104,11 @@ class PlayerTopStore {
             currentPage: []
         })
     }
-    setState = (state: Partial<PlayerTopStoreProps>) => {
-        this.state.data = { ...this.state.data, ...state }
+    setState = (state: Partial<PlayerControlsState>) => {
+        Object.assign(this.state, state)
+    }
+    setScoreState = (state: Partial<ApproachingScore>) => {
+        Object.assign(this.score, state)
     }
     setPosition = (position: number) => {
         this.setState({ position })
@@ -87,7 +117,7 @@ class PlayerTopStore {
         this.setState({ current: this.current + 1 })
     }
     incrementChunkPositionAndSetCurrent = (current?: number) => {
-        const { pages, currentPageIndex } = this.state.data
+        const { pages, currentPageIndex } = this.state
         current = current ?? this.current
         const nextChunkPosition = this.currentChunkIndex + 1
         if (nextChunkPosition >= (pages[currentPageIndex]?.length ?? 0)) {
@@ -118,11 +148,5 @@ class PlayerTopStore {
 }
 
 
-export const playerTopStore = new PlayerTopStore()
-export function subscribePlayerTopStore(callback: (data: PlayerTopStoreProps) => void) {
-    const dispose = observe(playerTopStore.state, () => {
-        callback({ ...playerTopStore.state.data })
-    })
-    callback({ ...playerTopStore.state.data })
-    return dispose
-}
+export const playerControlsStore = new PlayerControlsStore()
+

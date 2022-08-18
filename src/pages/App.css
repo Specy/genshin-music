@@ -183,46 +183,11 @@ body {
 	display: none !important;
 }
 
-.slider-select {
-	width: 3rem;
-	font-size: 0.8rem;
-	height: 2rem;
-	text-align: center;
-	font-weight: bold;
-	border: none;
-	-moz-appearance: none;
-	appearance: none;
-	-webkit-appearance: none;
-	background-image: none;
-	border-radius: 0.3rem;
-	background-color: var(--primary);
-	color: var(--primary-text);
-	margin-left: 0.5rem;
-}
-.metronome-button{
-	position: absolute;
-	right: 0.8rem;
-	bottom: 0.8rem;
-}
+
 .hidden-opacity {
 	opacity: 0;
 	pointer-events: none;
 }
-
-.slider-wrapper {
-	width: 100%;
-	display: flex;
-	justify-content: center;
-	transition: all 0.3s;
-	opacity: 1;
-	margin-top: 1.6rem;
-	margin-left: 3.5rem;
-}
-
-.slider-wrapper button {
-	margin: 0;
-}
-
 .red {
 	background-color: red;
 }
@@ -440,16 +405,11 @@ a {
 	background: #555;
 }
 
-.record-button {
-	position: absolute;
-	right: 0.8rem;
-	top: 0.8rem;
-}
 
 .approaching-accuracy {
 	position: absolute;
 	top: 0.5rem;
-	right: 0.5rem;
+	margin: 0 auto;
 	color: var(--primary-text);
 	padding: 0.4rem;
 	background-color: var(--primary);
@@ -504,9 +464,8 @@ a {
 	}
 	.has-tooltip:hover:not(:focus) .tooltip{
 		display: block;
-		animation: fadeIn 0.2s;
+		animation: fadeIn 0.2s forwards;
 		animation-delay: 0.5s;
-		animation-fill-mode: forwards;
 	}
 
 }
@@ -516,9 +475,8 @@ a {
 	}
 	.has-tooltip:active .tooltip{
 		display: block;
-		animation: fadeIn 0.2s;
+		animation: fadeIn 0.2s forwards;
 		animation-delay: 0.5s;
-		animation-fill-mode: forwards;
 	}
 }
 
@@ -552,14 +510,16 @@ a {
 	top: -0.4rem;
 }
 
-.tooltip-left {
-	transform: translateX(-50%);
-	--existing-transform: translateX(-50%);
+.tooltip-right {
+	transform: translateX(calc(100% + 0.4rem));
+	top: 0;
+	--existing-transform: translateX(calc(100% + 0.4rem));
 }
 
-.tooltip-right {
-	transform: translateY(-50%);
-	--existing-transform: translateY(-50%);
+.tooltip-left {
+	transform: translateX(calc(-100% - 0.4rem));
+	top: 0;
+	--existing-transform: translateX(calc(-100% - 0.4rem));
 }
 
 .tooltip::before {
@@ -734,11 +694,6 @@ a {
 	.floating-prompt {
 		width: 45vw;
 		padding: 0.5rem;
-	}
-
-	.slider-wrapper {
-		margin-left: 0;
-		margin-top: 0.8rem;
 	}
 
 	.default-page {

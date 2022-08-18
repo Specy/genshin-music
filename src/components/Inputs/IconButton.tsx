@@ -12,6 +12,9 @@ export function IconButton(props: IconButtonProps) {
         style={{
             width: props.size ?? '2rem',
             height: props.size ?? '2rem',
+            minWidth: props.size ?? '2rem',
+            minHeight: props.size ?? '2rem',
+            ...props.style
         }}
         className={`icon-app-button flex-centered ${props.className ?? ''}`}
     >
