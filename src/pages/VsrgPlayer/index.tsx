@@ -124,7 +124,6 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         this.lastTimestamp = timestamp
         if (!song) return
         if(this.lastTimestamp >= song.duration + 2000){
-            console.log('a')
             this.setState({ isPlaying: false })
             vsrgPlayerStore.showScore()
         }

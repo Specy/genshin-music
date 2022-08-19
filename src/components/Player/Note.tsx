@@ -46,7 +46,6 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
     const animation = {
         transition: `background-color ${state.delay}ms  ${state.delay === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
-    const className = parseClass(note.status)
     const clickColor = INSTRUMENTS_DATA[instrument]?.clickColor
     return <button
         onPointerDown={(e) => {
@@ -69,7 +68,7 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
             />
         }
         <div
-            className={className}
+            className={`${NOTES_CSS_CLASSES.note} ${parseClass(note.status)}`}
             style={{
                 ...animation,
                 ...(clickColor && state.status === 'clicked' && ThemeProvider.isDefault('accent')
@@ -131,16 +130,14 @@ function parseBorderFill(status: NoteStatus) {
 }
 
 function parseClass(status: NoteStatus) {
-    let className = NOTES_CSS_CLASSES.note
     switch (status) {
-        case 'clicked': className += " click-event"; break;
-        case 'toClick': className += " note-red"; break;
-        case 'toClickNext': className += " note-border-click"; break;
-        case 'toClickAndNext': className += " note-red note-border-click"; break;
-        case 'approach-wrong': className += " click-event approach-wrong"; break;
-        case 'approach-correct': className += " click-event approach-correct"; break;
-        default: break;
+        case 'clicked': return "click-event"
+        case 'toClick': return "note-red"
+        case 'toClickNext': return "note-border-click"
+        case 'toClickAndNext': return "note-red note-border-click"
+        case 'approach-wrong': return "click-event approach-wrong"
+        case 'approach-correct': return "click-event approach-correct"
+        default: return ''
     }
-    return className
 }
 

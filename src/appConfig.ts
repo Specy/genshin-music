@@ -2,25 +2,15 @@ import isMobile from "is-mobile"
 import { Tauri } from "types/TauriTypes"
 
 const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '2.8.1' as const
+const APP_VERSION = '3.0' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? `
-        (2.8.1 is a bug fix, changelog below is for 2.8.0)
-        Increased instrument limit in the composer to 30
-        Redesigned the tools in the composer
-        Added paste/insert to certain layer
-        Added metronome in player
-        Added multiple instruments in player
-        And more...
+        Check the updates page for more info
     `.trim() :
-    `(2.8.1 is a bug fix, changelog below is for 2.8.0)
-        Increased instrument limit in the composer to 30
-        Redesigned the tools in the composer
-        Added paste/insert to certain layer
-        Added metronome in player
-        Added multiple instruments in player
-        And more...
+    `
+        Check the updates page for more info
+
     `.trim()
 
 //@ts-ignore

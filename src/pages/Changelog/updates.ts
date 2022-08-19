@@ -7,10 +7,12 @@ type Update = {
 
 export const updates: Update[] = [
     {
-        version: '2.8.1',
+        version: '3.0',
         title: 'Bug fixes',
         date: '2022 - 22/07',
         changes: [
+            "Added VSRG mode",
+            "Improved player performance",
             "Added app scaling",
             "Fixed bug that would remove a song from the folder when saved",
             "Fixed issues when opening/saving songs in the composer",

@@ -38,8 +38,7 @@ class PlayerStore {
     get start(): number {
         return this.state.start
     }
-    setKeyboardLayout = (keyboard: NoteData[]) => {
-        
+    setKeyboardLayout = (keyboard: NoteData[]) => { 
         this.keyboard.splice(0, this.keyboard.length, ...keyboard)
     }
     resetKeyboardLayout = () => {

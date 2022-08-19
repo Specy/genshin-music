@@ -237,25 +237,26 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         const notes = this.applySpeedChange(song.notes).slice(start, end)
         const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map(n => n.clone()))
         playerControlsStore.setPages(groupArrayEvery(mergedNotes, 10))
-        let previous = notes[start].time
-        let pastError = 0
-        let previousTime = Date.now()
+        await delay(200) //add small start offset
+        const startOffset = notes[0].time 
+        let previous = startOffset
+        let delayOffset = 0
+        let startTime = Date.now()
         let chunkPlayedNotes = 0
         for (let i = 0; i < notes.length; i++) {
             const delayTime = notes[i].time - previous
             previous = notes[i].time
-            previousTime = Date.now()
-            if (delayTime > 16) await delay(delayTime - pastError)
+            if (delayTime > 16) await delay(delayTime + delayOffset)
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
             this.handleClick(keyboard[notes[i].index], notes[i].layer)
-            pastError = Date.now() - previousTime - delayTime
             if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
                 chunkPlayedNotes = 1
                 playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1)
-                continue
+            }else{
+                chunkPlayedNotes++
+                playerControlsStore.setCurrent(start + i + 1)
             }
-            chunkPlayedNotes++
-            playerControlsStore.setCurrent(start + i + 1)
+            delayOffset = startTime + previous - startOffset - Date.now() 
         }
     }
     applySpeedChange = (notes: RecordedNote[]) => {
