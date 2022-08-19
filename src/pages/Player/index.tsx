@@ -64,15 +64,10 @@ class Player extends Component<any, PlayerState>{
 		}
 		this.mounted = false
 	}
-
-	init = async () => {
-		const { settings } = this.state
-		await this.loadInstrument(settings.instrument.value)
-		AudioProvider.setReverb(settings.caveMode.value)
-		this.registerKeyboardListeners()
-	}
 	componentDidMount() {
 		this.mounted = true
+		const instrument = this.state.instruments[0]
+		if(instrument) playerStore.setKeyboardLayout(instrument.layout)
 		this.init()
 		const dispose = subscribeObeservableObject(playerStore.state, ({ eventType, song }) => {
 			const { settings } = this.state
@@ -86,11 +81,21 @@ class Player extends Component<any, PlayerState>{
 				})
 			this.syncInstruments(song)
 		})
+		
 		this.cleanup.push(dispose)
+	}
+	init = async () => {
+		const { settings } = this.state
+		await this.loadInstrument(settings.instrument.value)
+		AudioProvider.setReverb(settings.caveMode.value)
+		this.registerKeyboardListeners()
 	}
 	componentWillUnmount() {
 		KeyboardProvider.unregisterById('player')
-		playerStore.reset()
+		playerStore.resetSong()
+		playerStore.resetKeyboardLayout()
+		playerControlsStore.clearPages()
+		playerControlsStore.resetScore()
 		AudioProvider.clear()
 		logger.hidePill()
 		this.state.instruments.forEach(ins => ins.delete())
@@ -126,6 +131,7 @@ class Player extends Component<any, PlayerState>{
 		const loaded = await instrument.load()
 		if (!loaded) logger.error("There was an error loading the instrument")
 		if (!this.mounted) return
+		playerStore.setKeyboardLayout(instrument.layout)
 		instruments.splice(0, 1, instrument)
 		this.setState({
 			instruments,
@@ -141,7 +147,7 @@ class Player extends Component<any, PlayerState>{
 	}
 	restartSong = async (override?: number) => {
 		if (!this.mounted) return
-		playerStore.restart((typeof override === 'number') ? override : playerControlsStore.position, playerControlsStore.end)
+		playerStore.restartSong((typeof override === 'number') ? override : playerControlsStore.position, playerControlsStore.end)
 	}
 
 	syncInstruments = async (song: ComposedSong | RecordedSong) => {
@@ -325,7 +331,7 @@ class Player extends Component<any, PlayerState>{
 						key={instruments[0].layout.length}
 						data={{
 							isLoading: isLoadingInstrument,
-							keyboard: instruments[0],
+							instrument: instruments[0],
 							pitch: settings.pitch.value,
 							keyboardSize: settings.keyboardSize.value,
 							noteNameType: settings.noteNameType.value,

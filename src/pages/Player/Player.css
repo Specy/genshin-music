@@ -26,7 +26,6 @@
 	align-items: center;
     gap: 0.6rem;
 	max-height: 25rem;
-    animation: fadeIn 0.2s;
 }
 .slider-wrapper button {
 	margin: 0;

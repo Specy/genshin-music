@@ -21,7 +21,7 @@ export type UnknownSerializedRecordedSong = SerializedRecordedSong
 export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     instruments: InstrumentData[]
     notes: RecordedNote[]
-    timestamp: number
+    timestamp = 0
     private lastPlayedNote = -1
     constructor(name: string, notes?: RecordedNote[], instruments: InstrumentName[] = []) {
         super(name, 2, 'recorded', {
@@ -32,7 +32,6 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         this.notes = notes || []
         this.instruments = []
         instruments.forEach(instrument => this.addInstrument(instrument))
-        this.timestamp = 0
     }
     get isComposed(): false {
         return false

@@ -80,9 +80,8 @@ function Menu({ data, functions }: MenuProps) {
 
     const toggleMenu = useCallback((override?: boolean) => {
         if (typeof override !== "boolean") override = undefined
-        const newState = override !== undefined ? override : !isOpen
-        setVisible(newState)
-    }, [isOpen])
+        setVisible((old) => override !== undefined ? override : !old)
+    }, [])
 
     const removeSong = useCallback(async (name: string, id: string) => {
         const confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
@@ -151,7 +150,7 @@ function Menu({ data, functions }: MenuProps) {
         <div className="menu-wrapper" ref={menuRef}>
 
             <div className={menuClass}>
-                <MenuItem onClick={() => toggleMenu(false)} className='close-menu' ariaLabel='Close menu'>
+                <MenuItem onClick={() => toggleMenu()} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon" />
                 </MenuItem>
                 <MenuItem onClick={updateThisSong} className={hasUnsaved} ariaLabel='Save'>

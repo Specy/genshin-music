@@ -1,27 +1,31 @@
+import { APP_NAME } from "appConfig";
+import { NoteData, NoteDataState } from "lib/Instrument";
 import { ComposedSong } from "lib/Songs/ComposedSong";
 import { RecordedSong } from "lib/Songs/RecordedSong";
-import { makeObservable, observable, observe } from "mobx";
+import { makeObservable, observable } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
 type SongTypes = RecordedSong | ComposedSong | null
 type SongTypesNonNull = RecordedSong | ComposedSong
 type PlayerStoreState = {
     song: SongTypes,
+    playId: number,
     eventType: eventType,
     start: number,
     end: number,
-    restarted: boolean
 }
 
 class PlayerStore {
     @observable
     state: PlayerStoreState = {
         song: null,
+        playId: 0,
         eventType: 'stop',
-        restarted: false,
-        end: 0,
-        start: 0
+        start: 0,
+        end: 0
     }
+    @observable
+    keyboard: NoteData[] = []
     constructor() {
         makeObservable(this)
     }
@@ -34,7 +38,22 @@ class PlayerStore {
     get start(): number {
         return this.state.start
     }
-
+    setKeyboardLayout = (keyboard: NoteData[]) => {
+        
+        this.keyboard.splice(0, this.keyboard.length, ...keyboard)
+    }
+    resetKeyboardLayout = () => {
+        this.keyboard.forEach(note => note.setState({
+            status: '',
+            delay: APP_NAME === 'Genshin' ? 100 : 200
+        }))
+    }
+    resetOutgoingAnimation = () => {
+        this.keyboard.forEach(n => n.setState({animationId: 0}))
+    }
+    setNoteState = (index: number, state: Partial<NoteDataState>) => {
+        this.keyboard[index].setState(state)
+    }
     setState = (state: Partial<PlayerStoreState>) => {
         Object.assign(this.state, state)
     }
@@ -43,7 +62,8 @@ class PlayerStore {
             song,
             start,
             eventType: 'play',
-            end
+            end,
+            playId: this.state.playId + 1
         })
     }
     practice = (song: SongTypesNonNull, start: number = 0, end: number) => {
@@ -51,7 +71,9 @@ class PlayerStore {
             song,
             start,
             eventType: 'practice',
-            end
+            end,
+            playId: this.state.playId + 1
+
         })
     }
     approaching = (song: SongTypesNonNull, start: number = 0, end: number) => {
@@ -59,19 +81,26 @@ class PlayerStore {
             song,
             start,
             eventType: 'approaching',
-            end
+            end,
+            playId: this.state.playId + 1
+
         })
     }
-    reset = () => {
+    resetSong = () => {
         this.setState({
             song: null,
             eventType: 'stop',
             start: 0,
-            end: 0
+            end: 0,
+            playId: 0
         })
     }
-    restart = (start: number, end: number) => {
-        this.setState({ start, end })
+    restartSong = (start: number, end: number) => {
+        this.setState({ 
+            start, 
+            end,
+            playId: this.state.playId + 1
+        })
     }
 }
 

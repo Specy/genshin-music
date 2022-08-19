@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "appConfig"
 import GenshinNoteBorder from 'components/Miscellaneous/GenshinNoteBorder'
 import SvgNote from 'components/SvgNotes'
@@ -7,6 +7,7 @@ import { ThemeProvider } from 'stores/ThemeStore'
 import type { NoteData } from 'lib/Instrument'
 import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
 import type { ApproachingNote } from 'lib/Songs/SongClasses'
+import { useObservableObject } from 'lib/Hooks/useObservable'
 
 function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')
@@ -23,19 +24,15 @@ function getTextColor() {
 
 interface NoteProps {
     note: NoteData
-    renderId: number
     data: {
         approachRate: number
         instrument: InstrumentName
     }
     approachingNotes: ApproachingNote[]
-    outgoingAnimation: {
-        key: number
-    }
     noteText: string
     handleClick: (note: NoteData) => void
 }
-function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText, data }: NoteProps) {
+function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
         const dispose = observe(ThemeProvider.state.data, () => {
@@ -43,9 +40,11 @@ function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText
         })
         return dispose
     }, [])
+
+    const state = useObservableObject(note.data)
     const { approachRate, instrument } = data
     const animation = {
-        transition: `background-color ${note.data.delay}ms  ${note.data.delay === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
+        transition: `background-color ${state.delay}ms  ${state.delay === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
     const className = parseClass(note.status)
     const clickColor = INSTRUMENTS_DATA[instrument]?.clickColor
@@ -63,17 +62,17 @@ function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText
                 approachRate={approachRate}
             />
         )}
-        {outgoingAnimation.key !== 0 &&
-              <div
-              key={outgoingAnimation.key}
-              className={NOTES_CSS_CLASSES.noteAnimation}
-          />
+        {state.animationId !== 0 &&
+            <div
+                key={state.animationId}
+                className={NOTES_CSS_CLASSES.noteAnimation}
+            />
         }
         <div
             className={className}
             style={{
                 ...animation,
-                ...(clickColor && note.status === 'clicked' && ThemeProvider.isDefault('accent')
+                ...(clickColor && state.status === 'clicked' && ThemeProvider.isDefault('accent')
                     ? { backgroundColor: clickColor } : {}
                 )
             }}
@@ -85,7 +84,7 @@ function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText
 
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
-                fill={parseBorderFill(note.status)}
+                fill={parseBorderFill(state.status)}
             />}
             <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
                 {noteText}
@@ -93,7 +92,10 @@ function Note({ note, approachingNotes, outgoingAnimation, handleClick, noteText
         </div>
     </button>
 }
-
+export default memo(Note, (p, n) => {
+    return p.note === n.note && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
+        && p.handleClick === n.handleClick && p.noteText === n.noteText && p.approachingNotes === n.approachingNotes
+}) as typeof Note
 
 function getApproachCircleColor(index: number) {
     const numOfNotes = APP_NAME === "Sky" ? 5 : 7
@@ -142,7 +144,3 @@ function parseClass(status: NoteStatus) {
     return className
 }
 
-export default memo(Note, (p, n) => {
-    return p.renderId === n.renderId && p.note === n.note && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
-        && p.handleClick === n.handleClick && p.noteText === n.noteText && p.outgoingAnimation === n.outgoingAnimation && p.approachingNotes === n.approachingNotes
-}) as typeof Note

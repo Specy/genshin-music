@@ -7,12 +7,14 @@ interface PlayerControlsState {
     current: number
     size: number
     end: number
+
+}
+interface PagesState{
     pages: Chunk[][]
     currentPageIndex: number
     currentChunkIndex: number
     currentPage: Chunk[]
 }
-
 
 class PlayerControlsStore {
     @observable
@@ -21,6 +23,10 @@ class PlayerControlsStore {
         current: 0,
         size: 0,
         end: 0,
+
+    }
+    @observable 
+    pagesState: PagesState = {
         pages: [],
         currentPageIndex: 0,
         currentChunkIndex: 0,
@@ -37,10 +43,10 @@ class PlayerControlsStore {
         makeObservable(this)
     }
     get currentChunkIndex(): number {
-        return this.state.currentChunkIndex
+        return this.pagesState.currentChunkIndex
     }
     get currentChunk(): Chunk | undefined {
-        return this.state.currentPage[this.state.currentChunkIndex]
+        return this.pagesState.currentPage[this.pagesState.currentChunkIndex]
     }
     get position(): number {
         return this.state.position
@@ -65,12 +71,12 @@ class PlayerControlsStore {
         this.setPages([])
     }
     resetScore = () => {
-        this.score = {
+        this.setScoreState({
             correct: 1,
             wrong: 1,
             score: 0,
             combo: 0
-        }
+        })
     }
     increaseScore = (correct: boolean, debuff?: number) => {
         const { score } = this
@@ -89,7 +95,7 @@ class PlayerControlsStore {
     }
     setPages = (pages: Chunk[][]) => {
         const clone = pages.map(p => p.map(c => c.clone()))
-        this.setState({
+        this.setPagesState({
             pages: clone,
             currentPageIndex: 0,
             currentChunkIndex: 0,
@@ -97,7 +103,7 @@ class PlayerControlsStore {
         })
     }
     clearPages = () => {
-        this.setState({
+        this.setPagesState({
             pages: [],
             currentPageIndex: 0,
             currentChunkIndex: 0,
@@ -110,29 +116,33 @@ class PlayerControlsStore {
     setScoreState = (state: Partial<ApproachingScore>) => {
         Object.assign(this.score, state)
     }
+    setPagesState = (state: Partial<PagesState>) => {
+        Object.assign(this.pagesState, state)
+    }
     setPosition = (position: number) => {
         this.setState({ position })
     }
     incrementCurrent = () => {
         this.setState({ current: this.current + 1 })
     }
+    //TODO since it has been split again, consider removing this method
     incrementChunkPositionAndSetCurrent = (current?: number) => {
-        const { pages, currentPageIndex } = this.state
+        const { pages, currentPageIndex } = this.pagesState
         current = current ?? this.current
         const nextChunkPosition = this.currentChunkIndex + 1
         if (nextChunkPosition >= (pages[currentPageIndex]?.length ?? 0)) {
             if (currentPageIndex === pages.length - 1) return
-            this.setState({
+            this.setPagesState({
                 currentPageIndex: currentPageIndex + 1,
                 currentChunkIndex: 0,
                 currentPage: pages[currentPageIndex + 1],
-                current
             })
+            this.setState({ current })
         } else {
-            this.setState({
+            this.setPagesState({
                 currentChunkIndex: nextChunkPosition,
-                current
             })
+            this.setState({ current })
         }
     }
 

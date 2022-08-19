@@ -1,4 +1,5 @@
 import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME } from "appConfig"
+import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteStatus } from "types/GeneralTypes"
 import { NoteImage } from "types/Keyboard"
 import { getPitchChanger } from "./Utilities"
@@ -151,32 +152,29 @@ interface NoteName {
     keyboard: string,
     mobile: string
 }
-
+export type NoteDataState = {
+    status: NoteStatus,
+    delay: number
+    animationId: number
+}
 export class NoteData {
     index: number
-    renderId: number
-    noteImage: NoteImage
-    instrument: InstrumentName
+    noteImage: NoteImage = APP_NAME === "Genshin" ? "do" : "cr"
+    instrument: InstrumentName = INSTRUMENTS[0]
     noteNames: NoteName
     url: string
-    buffer: ArrayBuffer
-    data: {
-        status: NoteStatus
-        delay: number
+    buffer: ArrayBuffer = new ArrayBuffer(8)
+    @observable
+    data: NoteDataState = {
+        status: '',
+        delay: 0,
+        animationId: 0
     }
-
     constructor(index: number, noteNames: NoteName, url: string) {
         this.index = index
         this.noteNames = noteNames
         this.url = url
-        this.noteImage = APP_NAME === "Genshin" ? "do" : "cr"
-        this.instrument = INSTRUMENTS[0]
-        this.renderId = Math.floor(Math.random() * 10000)
-        this.buffer = new ArrayBuffer(8)
-        this.data = {
-            status: '',
-            delay: 0
-        }
+        makeObservable(this)
     }
     get status(): NoteStatus {
         return this.data.status
@@ -185,18 +183,15 @@ export class NoteData {
     setStatus(status: NoteStatus) {
         return this.setState({ status })
     }
-    setState(data: Partial<{
-        status: NoteStatus
-        delay: number
-    }>) {
+    setState(data: Partial<NoteDataState>) {
         Object.assign(this.data, data)
-        this.renderId++
     }
     clone() {
         const obj = new NoteData(this.index, this.noteNames, this.url)
         obj.buffer = this.buffer
         obj.noteImage = this.noteImage
-        obj.data = { ...this.data }
+        obj.instrument = this.instrument
+        obj.setState(this.data)
         return obj
     }
 }

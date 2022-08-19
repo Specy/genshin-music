@@ -61,9 +61,9 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
     }, { active: (isOpen && isVisible), ignoreFocusable: true })
     const toggleMenu = useCallback((override?: boolean) => {
         if (typeof override !== "boolean") override = undefined
-        const newState = override !== undefined ? override : !isOpen
-        setVisible(newState)
-    }, [isOpen])
+        setVisible((old) => override !== undefined ? override : !old)
+    }, [])
+
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
         if (selection === selectedMenu && isOpen) {
             return setOpen(false)

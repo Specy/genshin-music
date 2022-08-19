@@ -1,5 +1,5 @@
 import { ChangeEvent, Component } from 'react'
-import {  APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "appConfig"
+import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "appConfig"
 import Note from 'components/Player/Note'
 import { playerStore } from 'stores/PlayerStore'
 import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "lib/Utilities"
@@ -9,18 +9,17 @@ import { playerControlsStore } from 'stores/PlayerControlsStore'
 import { ApproachingNote, RecordedNote } from 'lib/Songs/SongClasses'
 import type { NoteData } from 'lib/Instrument'
 import type Instrument from 'lib/Instrument'
-import type {  NoteNameType } from 'types/GeneralTypes'
+import type { NoteNameType } from 'types/GeneralTypes'
 import { Chunk, RecordedSong } from 'lib/Songs/RecordedSong'
 import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider'
 import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider'
 import { NoteLayer } from 'lib/Layer'
-import { subscribeObeservableObject } from 'lib/Hooks/useObservable'
-import { PlayerSongControls } from './PlayerSongControls'
+import { subscribeObeservableObject, subscribeObservableArray } from 'lib/Hooks/useObservable'
 
 interface KeyboardPlayerProps {
     data: {
         isLoading: boolean
-        keyboard: Instrument
+        instrument: Instrument
         pitch: Pitch
         keyboardSize: number
         noteNameType: NoteNameType
@@ -31,7 +30,7 @@ interface KeyboardPlayerProps {
         speedChanger: typeof SPEED_CHANGERS[number]
     }
     functions: {
-        playSound: (index:number, layer?:NoteLayer) => void
+        playSound: (index: number, layer?: NoteLayer) => void
         setHasSong: (override: boolean) => void
     }
 }
@@ -39,21 +38,18 @@ interface KeyboardPlayerState {
     playTimestamp: number
     songToPractice: Chunk[]
     approachingNotes: ApproachingNote[][]
-    outgoingAnimation: {
-        key: number
-    }[]
     keyboard: NoteData[]
 }
 export default class KeyboardPlayer extends Component<KeyboardPlayerProps, KeyboardPlayerState> {
     state: KeyboardPlayerState
     approachRate: number
     approachingNotesList: ApproachingNote[]
-    songTimestamp: number
     nextChunkDelay: number
     tickTime: number
     tickInterval: number
     mounted: boolean
-    dispose: () => void
+    songTimestamp = 0
+    toDispose: (() => void)[]
 
     constructor(props: KeyboardPlayerProps) {
         super(props)
@@ -61,18 +57,12 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             playTimestamp: Date.now(),
             songToPractice: [],
             approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
-            outgoingAnimation: new Array(APP_NAME === 'Sky' ? 15 : 21).fill({ key: 0 }),
-            keyboard: this.props.data.keyboard.layout.map(note => {
-                const cloned = note.clone()
-                cloned.data.status = ''
-                return cloned
-            }),
+            keyboard: playerStore.keyboard
         }
         this.approachRate = 1500
         this.approachingNotesList = []
-        this.songTimestamp = 0
         this.nextChunkDelay = 0
-        this.dispose = () => { }
+        this.toDispose = []
         this.tickTime = 50
         this.tickInterval = 0
         this.mounted = true
@@ -81,18 +71,18 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     componentDidMount() {
         const id = 'keyboard-player'
         this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
-        KeyboardProvider.registerLetter('S',() => {
+        KeyboardProvider.registerLetter('S', () => {
             if (this.props.data.hasSong) this.stopAndClear()
-        }, {shift: true, id})
-        KeyboardProvider.registerLetter('R',() => {
+        }, { shift: true, id })
+        KeyboardProvider.registerLetter('R', () => {
             if (!this.props.data.hasSong) return
             if (['practice', 'play', 'approaching'].includes(playerStore.eventType)) {
                 this.restartSong(0)
             }
-        }, {shift: true, id})
+        }, { shift: true, id })
         KeyboardProvider.listen(this.handleKeyboard, { id })
         MIDIProvider.addListener(this.handleMidi)
-        this.dispose = subscribeObeservableObject(playerStore.state, async () => {
+        this.toDispose.push(subscribeObeservableObject(playerStore.state, async () => {
             const value = playerStore.state
             const song = playerStore.song
             const type = playerStore.eventType
@@ -125,21 +115,24 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                     end,
                     current: value.start
                 })
-
             }
-        })
+        }))
+        this.toDispose.push(subscribeObservableArray(playerStore.keyboard, () => {
+            this.setState({ keyboard: playerStore.keyboard })
+        }))
     }
     componentWillUnmount() {
         MIDIProvider.removeListener(this.handleMidi)
-        this.dispose()
+        this.toDispose.forEach(d => d())
         KeyboardProvider.unregisterById('keyboard-player')
         this.songTimestamp = 0
+        playerStore.resetSong()
         this.mounted = false
         clearInterval(this.tickInterval)
     }
     handleMidi = ([eventType, note, velocity]: MIDIEvent) => {
         if (!this.mounted) return
-        const instrument = this.props.data.keyboard
+        const instrument = this.props.data.instrument
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
@@ -147,11 +140,11 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             })
         }
     }
-    handleKeyboard = async ({letter, shift, event}:KeyboardEventData) => {
-        if(event.repeat) return
+    handleKeyboard = async ({ letter, shift, event }: KeyboardEventData) => {
+        if (event.repeat) return
         const { keyboard } = this.state
         if (!shift) {
-            const index = this.props.data.keyboard.getNoteFromCode(letter)
+            const index = this.props.data.instrument.getNoteFromCode(letter)
             if (index === null) return
             const note = keyboard[index]
             if (note) this.handleClick(note)
@@ -256,8 +249,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             if (!this.mounted || this.songTimestamp !== song.timestamp) return
             this.handleClick(keyboard[notes[i].index], notes[i].layer)
             pastError = Date.now() - previousTime - delayTime
-            if(chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)){
-                //to prevent a rerender on every tick...
+            if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
                 chunkPlayedNotes = 1
                 playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1)
                 continue
@@ -273,11 +265,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             return note
         })
     }
-    resetOutgoingAnimation = () => {
-        this.setState({
-            outgoingAnimation: this.state.outgoingAnimation.map(_ => ({key: 0}))
-        })
-    }
+
     practiceSong = (song: RecordedSong, start = 0, end?: number) => {
         //TODO move this to the song class
         end = end ? end : song.notes.length
@@ -288,7 +276,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         this.nextChunkDelay = 0
         const firstChunk = chunks[0]
         firstChunk.notes.forEach(note => {
-            keyboard[note.index].setState({
+            playerStore.setNoteState(note.index, {
                 status: 'toClick',
                 delay: APP_NAME === 'Genshin' ? 100 : 200
             })
@@ -302,27 +290,21 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         this.props.functions.setHasSong(true)
         playerControlsStore.setPages(groupArrayEvery(chunks, 10))
         this.setState({
-            songToPractice: chunks,
-            keyboard
+            songToPractice: chunks
         })
     }
 
-	restartSong = async (override?: number) => {
+    restartSong = async (override?: number) => {
         await this.stopSong()
-		if (!this.mounted) return
-		playerStore.restart((typeof override === 'number') ? override : playerControlsStore.position, playerControlsStore.end)
-	}
+        if (!this.mounted) return
+        playerStore.restartSong((typeof override === 'number') ? override : playerControlsStore.position, playerControlsStore.end)
+    }
     stopSong = (): Promise<void> => {
+        this.songTimestamp = 0
         return new Promise(res => {
-            const { keyboard } = this.state
-            this.songTimestamp = 0
-            keyboard.forEach(note => note.setState({
-                status: '',
-                delay: APP_NAME === 'Genshin' ? 100 : 200
-            }))
+            playerStore.resetKeyboardLayout()
             this.approachingNotesList = []
             this.setState({
-                keyboard,
                 songToPractice: [],
                 approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21)
             }, res)
@@ -332,7 +314,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
 
     stopAndClear = () => {
         this.stopSong()
-        playerStore.reset()
+        playerStore.resetSong()
     }
 
     handleApproachClick = (note: NoteData) => {
@@ -358,7 +340,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                     const nextChunk = songToPractice[0]
                     const nextNextChunk = songToPractice[1]
                     nextChunk.notes.forEach(note => {
-                        keyboard[note.index].setState({
+                        playerStore.setNoteState(note.index, {
                             status: 'toClick',
                             delay: nextChunk.delay
                         })
@@ -377,36 +359,31 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         }
     }
     handleClick = (note: NoteData, layers?: NoteLayer) => {
-        const { keyboard, outgoingAnimation } = this.state
+        const { keyboard } = this.state
         const hasAnimation = this.props.data.hasAnimation
-        if(!note) return
+        if (!note) return
         const prevStatus = keyboard[note.index].status
-        keyboard[note.index].setState({
+        playerStore.setNoteState(note.index, {
             status: 'clicked',
-            delay: playerStore.eventType !== 'play' 
-            ? APP_NAME === 'Genshin' ? 100 : 200 
-            : 0
+            delay: playerStore.eventType !== 'play'
+                ? APP_NAME === 'Genshin' ? 100 : 200
+                : 0,
+            animationId: (hasAnimation && playerStore.eventType !== 'approaching') 
+                ? Math.floor(Math.random() * 10000) + Date.now()
+                : 0 
         })
         this.handlePracticeClick(note)
         this.props.functions.playSound(note.index, layers)
-        const approachStatus = this.handleApproachClick(note)
+        const status = this.handleApproachClick(note)
         if (playerStore.eventType === 'approaching') {
-            keyboard[note.index].setStatus(approachStatus)
-            if (approachStatus === 'approach-wrong') playerControlsStore.increaseScore(false)
+            playerStore.setNoteState(note.index, { status })
+            if (status === 'approach-wrong') playerControlsStore.increaseScore(false)
         }
-        if (hasAnimation && playerStore.eventType !== 'approaching') {
-            const key = Math.floor(Math.random() * 10000) + Date.now()
-            outgoingAnimation[note.index] = { key }
-        }
-        this.setState({
-            keyboard,
-            outgoingAnimation
-        })
+        //TODO could add this to the player store
         setTimeout(() => {
             if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[note.index].status)) return
-            if (prevStatus === 'toClickNext') keyboard[note.index].setStatus(prevStatus)
-            else keyboard[note.index].setStatus('')
-            this.setState({ keyboard })
+            if (prevStatus === 'toClickNext') return playerStore.setNoteState(note.index, { status: prevStatus })
+            playerStore.setNoteState(note.index, { status: '' })
         }, APP_NAME === 'Sky' ? 200 : 100)
     }
     render() {
@@ -434,14 +411,12 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                         //@ts-ignore
                         return <Note
                             key={note.index}
-                            renderId={note.renderId}
                             note={note}
                             data={{
                                 approachRate: this.approachRate,
-                                instrument: this.props.data.keyboard.name,
+                                instrument: this.props.data.instrument.name,
                             }}
                             approachingNotes={state.approachingNotes[note.index]}
-                            outgoingAnimation={state.outgoingAnimation[note.index]}
                             handleClick={this.handleClick}
                             //@ts-ignore
                             noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
