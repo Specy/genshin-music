@@ -1,4 +1,4 @@
-import { AUDIO_CONTEXT } from "appConfig";
+import { AUDIO_CONTEXT } from "@/appConfig";
 import MediaRecorderPolyfill from 'audio-recorder-polyfill'
 import { fileService } from "./Services/FileService";
 

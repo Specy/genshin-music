@@ -1,11 +1,11 @@
-import { AppButton } from "components/Inputs/AppButton";
-import { useTheme } from "lib/Hooks/useTheme";
-import { InstrumentData } from "lib/Songs/SongClasses";
+import { AppButton } from "$cmp/Inputs/AppButton";
+import { useTheme } from "$lib/Hooks/useTheme";
+import { InstrumentData } from "$lib/Songs/SongClasses";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus, FaVolumeMute } from "react-icons/fa";
 import { BiSquareRounded } from "react-icons/bi";
 
-import { ThemeStore } from "stores/ThemeStore";
+import { ThemeStore } from "$stores/ThemeStore";
 import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
 
 

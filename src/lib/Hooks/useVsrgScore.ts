@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { subscribeVsrgScore, vsrgPlayerStore } from "stores/VsrgPlayerStore"
+import { subscribeVsrgScore, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
 
 
 export function useVsrgScore(){

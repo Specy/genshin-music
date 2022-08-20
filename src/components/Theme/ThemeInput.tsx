@@ -1,4 +1,4 @@
-import {logger} from "stores/LoggerStore";
+import {logger} from "$stores/LoggerStore";
 
 interface ThemeInputProps{
     name: string, 

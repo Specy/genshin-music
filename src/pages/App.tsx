@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import Analytics from 'lib/Analytics';
-import Home from 'components/Index/Home';
-import HomeStore from 'stores/HomeStore';
-import { logger } from 'stores/LoggerStore';
-import { delay } from "lib/Utilities"
-import { APP_NAME, APP_VERSION, IS_TAURI, TAURI, UPDATE_MESSAGE } from "appConfig"
-import Logger from 'components/Index/Logger'
-import rotateImg from "assets/icons/rotate.svg"
+import Analytics from '$lib/Analytics';
+import Home from '$cmp/Index/Home';
+import HomeStore from '$stores/HomeStore';
+import { logger } from '$stores/LoggerStore';
+import { delay } from "$lib/Utilities"
+import { APP_NAME, APP_VERSION, IS_TAURI, TAURI, UPDATE_MESSAGE } from "@/appConfig"
+import Logger from '$cmp/Index/Logger'
+import rotateImg from "@/assets/icons/rotate.svg"
 
 import { withRouter } from "react-router-dom";
 import './App.css';
 import './Utility.css'
-import { historyTracker } from 'stores/History';
+import { historyTracker } from '$stores/History';
 import isMobile from 'is-mobile';
 import { FaExpandAlt } from 'react-icons/fa';
 

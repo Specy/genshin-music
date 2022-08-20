@@ -1,6 +1,6 @@
-import { Chunk, RecordedSong } from "lib/Songs/RecordedSong";
+import { Chunk, RecordedSong } from "$lib/Songs/RecordedSong";
 import { makeObservable, observable, observe } from "mobx";
-import { ApproachingScore } from "types/GeneralTypes";
+import { ApproachingScore } from "$types/GeneralTypes";
 
 interface PlayerControlsState {
     position: number

@@ -1,6 +1,6 @@
 import { Container, Sprite } from "@inlet/react-pixi";
-import { PIXI_CENTER_X_END_Y } from "appConfig";
-import { VsrgHitObject } from "lib/Songs/VsrgSong";
+import { PIXI_CENTER_X_END_Y } from "@/appConfig";
+import { VsrgHitObject } from "$lib/Songs/VsrgSong";
 import { Fragment } from "react";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { RenderableHitObject, VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas";

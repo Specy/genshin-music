@@ -1,39 +1,39 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone } from 'react-icons/fa';
-import { APP_NAME, IS_MOBILE } from 'appConfig'
-import { MenuItem } from 'components/Miscellaneous/MenuItem'
-import MenuPanel from 'components/Layout/MenuPanel'
-import DonateButton from 'components/Miscellaneous/DonateButton'
-import Memoized from 'components/Utility/Memoized';
-import { IS_MIDI_AVAILABLE } from 'appConfig';
-import Analytics from 'lib/Analytics';
-import { logger } from 'stores/LoggerStore';
-import { AppButton } from 'components/Inputs/AppButton';
-import { SongMenu } from 'components/Layout/SongMenu';
-import { ComposerSettingsDataType } from 'lib/BaseSettings';
-import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { Pages } from 'types/GeneralTypes';
-import { useTheme } from 'lib/Hooks/useTheme';
-import { ThemeStore } from 'stores/ThemeStore';
-import { hasTooltip, Tooltip } from 'components/Utility/Tooltip';
-import { HelpTooltip } from 'components/Utility/HelpTooltip';
-import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/Utility/FloatingDropdown';
+import { APP_NAME, IS_MOBILE } from '@/appConfig'
+import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
+import MenuPanel from '$cmp/Layout/MenuPanel'
+import DonateButton from '$cmp/Miscellaneous/DonateButton'
+import Memoized from '$cmp/Utility/Memoized';
+import { IS_MIDI_AVAILABLE } from '@/appConfig';
+import Analytics from '$lib/Analytics';
+import { logger } from '$stores/LoggerStore';
+import { AppButton } from '$cmp/Inputs/AppButton';
+import { SongMenu } from '$cmp/Layout/SongMenu';
+import { ComposerSettingsDataType } from '$lib/BaseSettings';
+import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
+import { Pages } from '$types/GeneralTypes';
+import { useTheme } from '$lib/Hooks/useTheme';
+import { ThemeStore } from '$stores/ThemeStore';
+import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip';
+import { HelpTooltip } from '$cmp/Utility/HelpTooltip';
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cmp/Utility/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
-import { asyncConfirm, asyncPrompt } from 'components/Utility/AsyncPrompts';
-import { SettingsPane } from "components/Settings/SettingsPane";
-import { SerializedSong, SongType } from 'lib/Songs/Song';
-import { useFolders } from 'lib/Hooks/useFolders';
-import { Folder } from 'lib/Folder';
-import { songsStore } from 'stores/SongsStore';
-import { folderStore } from 'stores/FoldersStore';
-import { useSongs } from 'lib/Hooks/useSongs';
-import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import useClickOutside from 'lib/Hooks/useClickOutside';
-import { fileService } from 'lib/Services/FileService';
-import { songService } from 'lib/Services/SongService';
-import { ComposedSong } from 'lib/Songs/ComposedSong';
-import { RecordedSong } from 'lib/Songs/RecordedSong';
-import { RecordedOrComposed } from 'types/SongTypes';
+import { asyncConfirm, asyncPrompt } from '$cmp/Utility/AsyncPrompts';
+import { SettingsPane } from "$cmp/Settings/SettingsPane";
+import { SerializedSong, SongType } from '$lib/Songs/Song';
+import { useFolders } from '$lib/Hooks/useFolders';
+import { Folder } from '$lib/Folder';
+import { songsStore } from '$stores/SongsStore';
+import { folderStore } from '$stores/FoldersStore';
+import { useSongs } from '$lib/Hooks/useSongs';
+import { KeyboardProvider } from '$lib/Providers/KeyboardProvider';
+import useClickOutside from '$lib/Hooks/useClickOutside';
+import { fileService } from '$lib/Services/FileService';
+import { songService } from '$lib/Services/SongService';
+import { ComposedSong } from '$lib/Songs/ComposedSong';
+import { RecordedSong } from '$lib/Songs/RecordedSong';
+import { RecordedOrComposed } from '$types/SongTypes';
 
 interface MenuProps {
     data: {

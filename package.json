@@ -8,6 +8,7 @@
   "homepage": "./",
   "dependencies": {
     "@inlet/react-pixi": "^6.6.5",
+    "@insertish/zangodb": "^1.0.12-nomemo",
     "@pixi/graphics-smooth": "^0.0.22",
     "@tauri-apps/api": "^1.0.2",
     "@tonejs/midi": "^2.0.27",
@@ -26,7 +27,6 @@
     "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
     "react-router-dom": "^5.3.0",
-    "react-scripts": "5.0.0",
     "recursive-copy": "^2.0.13",
     "typescript": "^4.5.5",
     "use-font-face-observer": "^1.2.1",
@@ -35,13 +35,12 @@
     "workbox-precaching": "^6.3.0",
     "workbox-routing": "^6.3.0",
     "workbox-strategies": "^6.3.0",
-    "worker-timers": "^7.0.45",
-    "zangodb": "^1.0.8"
+    "worker-timers": "^7.0.45"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "tauri": "tauri",
     "build-tauri-deployment": "cross-env REACT_APP_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js true",
     "build-tauri-deployment:no-env": "cross-env REACT_APP_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js false",
@@ -77,6 +76,8 @@
     ]
   },
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
+    "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@tauri-apps/cli": "^1.0.1",
     "@types/color": "^3.0.3",
     "@types/jest": "^27.4.0",
@@ -86,7 +87,10 @@
     "@types/react-dom": "^17.0.11",
     "@types/react-router-dom": "^5.3.3",
     "@types/webmidi": "^2.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
     "cross-env": "^7.0.3",
-    "env-cmd": "^10.1.0"
+    "env-cmd": "^10.1.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "vite": "^3.0.9"
   }
 }

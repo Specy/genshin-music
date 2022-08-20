@@ -1,5 +1,5 @@
-import type{ INSTRUMENTS } from 'appConfig'
-import type { ComposerSettings, MainPageSettings, VsrgComposerSettings } from 'lib/BaseSettings'
+import type{ INSTRUMENTS } from '@/appConfig'
+import type { ComposerSettings, MainPageSettings, VsrgComposerSettings } from '$lib/BaseSettings'
 interface BaseSettingsProp {
     name: string
     songSetting: boolean

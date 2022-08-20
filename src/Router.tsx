@@ -1,29 +1,29 @@
 import { HashRouter, Route, Switch } from "react-router-dom";
-import App from 'pages/App';
-import Player from 'pages/Player';
-import Composer from "pages/Composer"
-import ErrorPage from "pages/ErrorPage"
-import Changelogpage from 'pages/Changelog'
-import Partners from 'pages/Partners';
-import Help from 'pages/Help';
-import SheetVisualizer from 'pages/SheetVisualizer';
-import MidiSetup from 'pages/MidiSetup';
-import Donate from 'pages/Donate'
-import Error404 from 'pages/404';
-import Theme from 'pages/Theme'
-import VsrgPlayer from "pages/VsrgPlayer";
-import VsrgComposer from "pages/VsrgComposer";
-import { ThemeProviderWrapper } from 'components/ProviderWrappers/ThemeProviderWrapper';
-import { AppBackground } from "components/Layout/AppBackground";
-import { MIDIProviderWrapper } from "components/ProviderWrappers/MIDIProviderWrapper";
-import { AudioProviderWrapper } from "components/ProviderWrappers/AudioProviderWrapper";
-import { KeyboardProviderWrapper } from "components/ProviderWrappers/KeyboardProviderWrapper";
+import App from '$pages/App';
+import Player from '$pages/Player';
+import Composer from "$pages/Composer"
+import ErrorPage from "$pages/ErrorPage"
+import Changelogpage from '$pages/Changelog'
+import Partners from '$pages/Partners';
+import Help from '$pages/Help';
+import SheetVisualizer from '$pages/SheetVisualizer';
+import MidiSetup from '$pages/MidiSetup';
+import Donate from '$pages/Donate'
+import Error404 from '$pages/404';
+import Theme from '$pages/Theme'
+import VsrgPlayer from "$pages/VsrgPlayer";
+import VsrgComposer from "$pages/VsrgComposer";
+import { ThemeProviderWrapper } from '$cmp/ProviderWrappers/ThemeProviderWrapper';
+import { AppBackground } from "$cmp/Layout/AppBackground";
+import { MIDIProviderWrapper } from "$cmp/ProviderWrappers/MIDIProviderWrapper";
+import { AudioProviderWrapper } from "$cmp/ProviderWrappers/AudioProviderWrapper";
+import { KeyboardProviderWrapper } from "$cmp/ProviderWrappers/KeyboardProviderWrapper";
 import { useEffect } from "react";
-import { DropZoneProviderWrapper } from "components/ProviderWrappers/DropZoneProviderWrapper";
-import Privacy from "pages/Privacy";
-import ErrorBoundaryRedirect from "components/Utility/ErrorBoundaryRedirect";
-import { logger } from "stores/LoggerStore"
-import { Keybinds } from "pages/Keybinds";
+import { DropZoneProviderWrapper } from "$cmp/ProviderWrappers/DropZoneProviderWrapper";
+import Privacy from "$pages/Privacy";
+import ErrorBoundaryRedirect from "$cmp/Utility/ErrorBoundaryRedirect";
+import { logger } from "$stores/LoggerStore"
+import { Keybinds } from "$pages/Keybinds";
 export function Router() {
 	useEffect(() => {
 		try {

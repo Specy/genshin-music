@@ -1,24 +1,24 @@
 import { Component } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import './VsrgPlayer.css'
-import VsrgPlayerMenu from "components/VsrgPlayer/VsrgPlayerMenu";
-import { VsrgHitObject, VsrgSong } from "lib/Songs/VsrgSong";
-import { settingsService } from "lib/Services/SettingsService";
-import { VsrgPlayerSettingsDataType } from "lib/BaseSettings";
-import { AudioPlayer } from "lib/AudioPlayer";
-import { KeyboardLetter } from "lib/Providers/KeyboardProvider/KeyboardTypes";
-import { VsrgPlayerKeyboard } from "components/VsrgPlayer/VsrgPlayerKeyboard";
-import { DEFAULT_VSRG_KEYS_MAP } from "appConfig";
-import { vsrgPlayerStore } from "stores/VsrgPlayerStore";
-import { defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes } from "components/VsrgPlayer/VsrgPlayerCanvas";
-import { RecordedSong } from "lib/Songs/RecordedSong";
-import { songService } from "lib/Services/SongService";
-import { songsStore } from "stores/SongsStore";
-import { ComposedSong } from "lib/Songs/ComposedSong";
-import { VsrgPlayerRight } from "components/VsrgPlayer/VsrgPlayerRight";
-import { VsrgPlayerLatestScore } from "components/VsrgPlayer/VsrgLatestScore";
-import { SettingUpdate } from "types/SettingsPropriety";
-import { keyBinds } from "stores/Keybinds";
+import VsrgPlayerMenu from "$cmp/VsrgPlayer/VsrgPlayerMenu";
+import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
+import { settingsService } from "$lib/Services/SettingsService";
+import { VsrgPlayerSettingsDataType } from "$lib/BaseSettings";
+import { AudioPlayer } from "$lib/AudioPlayer";
+import { KeyboardLetter } from "$lib/Providers/KeyboardProvider/KeyboardTypes";
+import { VsrgPlayerKeyboard } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard";
+import { DEFAULT_VSRG_KEYS_MAP } from "@/appConfig";
+import { vsrgPlayerStore } from "$stores/VsrgPlayerStore";
+import { defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes } from "$cmp/VsrgPlayer/VsrgPlayerCanvas";
+import { RecordedSong } from "$lib/Songs/RecordedSong";
+import { songService } from "$lib/Services/SongService";
+import { songsStore } from "$stores/SongsStore";
+import { ComposedSong } from "$lib/Songs/ComposedSong";
+import { VsrgPlayerRight } from "$cmp/VsrgPlayer/VsrgPlayerRight";
+import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
+import { SettingUpdate } from "$types/SettingsPropriety";
+import { keyBinds } from "$stores/Keybinds";
 
 type VsrgPlayerProps = RouteComponentProps & {
 

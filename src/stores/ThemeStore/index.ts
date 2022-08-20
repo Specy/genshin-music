@@ -1,11 +1,11 @@
 import { observable } from "mobx";
-import { ThemeSettings } from 'lib/BaseSettings'
-import { BASE_THEME_CONFIG } from 'appConfig'
+import { ThemeSettings } from '$lib/BaseSettings'
+import { BASE_THEME_CONFIG } from '@/appConfig'
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
-import { logger } from 'stores/LoggerStore'
+import { logger } from '$stores/LoggerStore'
 import { baseThemes } from "./defaultThemes";
-import { themeService } from "lib/Services/ThemeService";
+import { themeService } from "$lib/Services/ThemeService";
 
 export type ThemeKeys = keyof typeof ThemeSettings.data
 export type ThemeProp = {

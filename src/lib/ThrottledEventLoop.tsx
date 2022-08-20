@@ -1,4 +1,4 @@
-import { Timer } from "types/GeneralTypes"
+import { Timer } from "$types/GeneralTypes"
 
 type ThrottledEventLoopCallback = (elapsed: number, sinceLast: number) => void
 

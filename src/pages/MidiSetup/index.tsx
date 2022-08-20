@@ -1,21 +1,21 @@
 import './MidiSetup.css'
-import { APP_NAME } from "appConfig"
-import { MIDISettings } from "lib/BaseSettings"
-import BaseNote from "components/Miscellaneous/BaseNote"
-import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
+import { APP_NAME } from "@/appConfig"
+import { MIDISettings } from "$lib/BaseSettings"
+import BaseNote from "$cmp/Miscellaneous/BaseNote"
+import { LAYOUT_IMAGES, MIDI_STATUS } from "@/appConfig"
 import { Component } from 'react'
-import { INSTRUMENTS } from "appConfig"
+import { INSTRUMENTS } from "@/appConfig"
 import Shortcut from "./Shortcut"
-import {logger} from "stores/LoggerStore";
-import type { MIDINote } from "lib/Utilities"
-import { InstrumentName, InstrumentNotesLayout } from "types/GeneralTypes"
-import { MIDIEvent, MIDIProvider } from "lib/Providers/MIDIProvider"
-import { AudioProvider } from "lib/Providers/AudioProvider"
-import { DefaultPage } from "components/Layout/DefaultPage"
-import { NoteImage } from "types/Keyboard"
-import { Title } from 'components/Miscellaneous/Title'
-import { AudioPlayer } from 'lib/AudioPlayer'
-import { InstrumentData } from 'lib/Songs/SongClasses'
+import {logger} from "$stores/LoggerStore";
+import type { MIDINote } from "$lib/Utilities"
+import { InstrumentName, InstrumentNotesLayout } from "$types/GeneralTypes"
+import { MIDIEvent, MIDIProvider } from "$lib/Providers/MIDIProvider"
+import { AudioProvider } from "$lib/Providers/AudioProvider"
+import { DefaultPage } from "$cmp/Layout/DefaultPage"
+import { NoteImage } from "$types/Keyboard"
+import { Title } from '$cmp/Miscellaneous/Title'
+import { AudioPlayer } from '$lib/AudioPlayer'
+import { InstrumentData } from '$lib/Songs/SongClasses'
 
 interface MidiSetupState {
     audioPlayer: AudioPlayer

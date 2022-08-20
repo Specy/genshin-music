@@ -1,6 +1,6 @@
-import { AppError } from "lib/Errors"
+import { AppError } from "$lib/Errors"
 import { makeObservable, observable } from "mobx"
-import { Timer } from "types/GeneralTypes"
+import { Timer } from "$types/GeneralTypes"
 
 export enum LoggerStatus {
     ERROR = 'var(--red)',

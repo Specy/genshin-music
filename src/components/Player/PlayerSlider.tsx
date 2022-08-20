@@ -1,10 +1,10 @@
-import { DEFAULT_DOM_RECT } from "appConfig"
-import Memoized from "components/Utility/Memoized"
-import { useObservableObject } from "lib/Hooks/useObservable"
-import { clamp } from "lib/Utilities"
+import { DEFAULT_DOM_RECT } from "@/appConfig"
+import Memoized from "$cmp/Utility/Memoized"
+import { useObservableObject } from "$lib/Hooks/useObservable"
+import { clamp } from "$lib/Utilities"
 import { memo, useEffect, useRef, useState } from "react"
 import { BsTriangleFill } from "react-icons/bs"
-import { playerControlsStore } from "stores/PlayerControlsStore"
+import { playerControlsStore } from "$stores/PlayerControlsStore"
 
 
 

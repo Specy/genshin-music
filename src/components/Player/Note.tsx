@@ -1,13 +1,13 @@
 import { memo, useEffect, useRef, useState } from 'react'
-import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "appConfig"
-import GenshinNoteBorder from 'components/Miscellaneous/GenshinNoteBorder'
-import SvgNote from 'components/SvgNotes'
+import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "@/appConfig"
+import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
+import SvgNote from '$cmp/SvgNotes'
 import { observe } from 'mobx'
-import { ThemeProvider } from 'stores/ThemeStore'
-import type { NoteData } from 'lib/Instrument'
-import type { InstrumentName, NoteStatus } from 'types/GeneralTypes'
-import type { ApproachingNote } from 'lib/Songs/SongClasses'
-import { useObservableObject } from 'lib/Hooks/useObservable'
+import { ThemeProvider } from '$stores/ThemeStore'
+import type { NoteData } from '$lib/Instrument'
+import type { InstrumentName, NoteStatus } from '$types/GeneralTypes'
+import type { ApproachingNote } from '$lib/Songs/SongClasses'
+import { useObservableObject } from '$lib/Hooks/useObservable'
 
 function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')

@@ -1,5 +1,5 @@
-import { AUDIO_CONTEXT } from "appConfig"
-import AudioRecorder from "lib/AudioRecorder"
+import { AUDIO_CONTEXT } from "@/appConfig"
+import AudioRecorder from "$lib/AudioRecorder"
 
 
 export class AudioProviderClass {

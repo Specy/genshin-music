@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES5",
+    "target": "ESNext",
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext"
+      "esnext",
     ],
+    "types": ["vite/client", "webmidi"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -19,8 +20,16 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "baseUrl": "./src",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      "$cmp/*": ["components/*"],
+      "$lib/*": ["lib/*"],
+      "$pages/*": ["pages/*"],
+      "$stores/*": ["stores/*"],
+      "$types/*": ["types/*"],
+    }
   },
   "include": [
     "**/*.ts",

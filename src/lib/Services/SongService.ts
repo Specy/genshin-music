@@ -1,9 +1,9 @@
-import { APP_NAME } from "appConfig"
-import { ComposedSong } from "lib/Songs/ComposedSong"
-import { RecordedSong } from "lib/Songs/RecordedSong"
-import { SerializedSong, Song } from "lib/Songs/Song"
-import { VsrgSong } from "lib/Songs/VsrgSong"
-import { getSongType } from "lib/Utilities"
+import { APP_NAME } from "@/appConfig"
+import { ComposedSong } from "$lib/Songs/ComposedSong"
+import { RecordedSong } from "$lib/Songs/RecordedSong"
+import { SerializedSong, Song } from "$lib/Songs/Song"
+import { VsrgSong } from "$lib/Songs/VsrgSong"
+import { getSongType } from "$lib/Utilities"
 import { DbInstance } from "./Database/Database"
 
 class SongService{

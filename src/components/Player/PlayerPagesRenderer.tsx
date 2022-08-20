@@ -1,8 +1,8 @@
-import { SheetFrame } from "components/SheetVisualizer/SheetFrame"
-import { useObservableObject } from "lib/Hooks/useObservable"
-import { useTheme } from "lib/Hooks/useTheme"
+import { SheetFrame } from "$cmp/SheetVisualizer/SheetFrame"
+import { useObservableObject } from "$lib/Hooks/useObservable"
+import { useTheme } from "$lib/Hooks/useTheme"
 import { memo } from "react"
-import { playerControlsStore } from "stores/PlayerControlsStore"
+import { playerControlsStore } from "$stores/PlayerControlsStore"
 
 
 

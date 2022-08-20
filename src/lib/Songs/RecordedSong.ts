@@ -1,13 +1,13 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS_DATA } from "appConfig"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS_DATA } from "@/appConfig"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote } from "./SongClasses"
 import { ComposedSong, defaultInstrumentMap } from "./ComposedSong"
-import { groupNotesByIndex, mergeLayers, groupByNotes } from 'lib/Utilities'
+import { groupNotesByIndex, mergeLayers, groupByNotes } from '$lib/Utilities'
 import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "../Layer"
 import { Midi } from "@tonejs/midi"
-import { InstrumentName } from "types/GeneralTypes"
+import { InstrumentName } from "$types/GeneralTypes"
 import { SerializedSong, Song } from "./Song"
-import { OldFormat, OldNote } from "types/SongTypes"
+import { OldFormat, OldNote } from "$types/SongTypes"
 
 
 export type SerializedRecordedSong = SerializedSong & {

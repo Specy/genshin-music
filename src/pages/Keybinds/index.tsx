@@ -1,15 +1,15 @@
-import { APP_NAME, LAYOUT_IMAGES } from "appConfig";
-import { DefaultPage } from "components/Layout/DefaultPage";
-import BaseNote from "components/Miscellaneous/BaseNote";
-import { Title } from "components/Miscellaneous/Title";
-import useClickOutside from "lib/Hooks/useClickOutside";
-import { useObservableArray } from "lib/Hooks/useObservable";
-import { KeyboardProvider } from "lib/Providers/KeyboardProvider";
-import { VsrgSongKeys } from "lib/Songs/VsrgSong";
+import { APP_NAME, LAYOUT_IMAGES } from "@/appConfig";
+import { DefaultPage } from "$cmp/Layout/DefaultPage";
+import BaseNote from "$cmp/Miscellaneous/BaseNote";
+import { Title } from "$cmp/Miscellaneous/Title";
+import useClickOutside from "$lib/Hooks/useClickOutside";
+import { useObservableArray } from "$lib/Hooks/useObservable";
+import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
+import { VsrgSongKeys } from "$lib/Songs/VsrgSong";
 import { Fragment, useEffect, useState } from "react";
-import { keyBinds } from "stores/Keybinds";
-import { InstrumentNotesLayout } from "types/GeneralTypes";
-import { NoteImage } from "types/Keyboard";
+import { keyBinds } from "$stores/Keybinds";
+import { InstrumentNotesLayout } from "$types/GeneralTypes";
+import { NoteImage } from "$types/Keyboard";
 
 
 

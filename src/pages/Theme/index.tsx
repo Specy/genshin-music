@@ -1,26 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
-import { defaultThemes, ThemeKeys, ThemeProvider } from "stores/ThemeStore";
+import { defaultThemes, ThemeKeys, ThemeProvider } from "$stores/ThemeStore";
 import { observe } from "mobx";
-import { AppButton } from "components/Inputs/AppButton";
-import { FileElement, FilePicker } from "components/Inputs/FilePicker"
-import Player from "pages/Player";
-import Composer from "pages/Composer";
-import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts";
+import { AppButton } from "$cmp/Inputs/AppButton";
+import { FileElement, FilePicker } from "$cmp/Inputs/FilePicker"
+import Player from "$pages/Player";
+import Composer from "$pages/Composer";
+import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
 import { ThemePropriety } from "../../components/Theme/ThemePropriety";
 
 import cloneDeep from 'lodash.clonedeep'
-import { Theme } from "stores/ThemeStore";
+import { Theme } from "$stores/ThemeStore";
 import { ThemePreview } from "../../components/Theme/ThemePreview";
 import { FaPlus } from "react-icons/fa";
-import { BaseTheme } from "stores/ThemeStore";
-import { logger } from "stores/LoggerStore";
+import { BaseTheme } from "$stores/ThemeStore";
+import { logger } from "$stores/LoggerStore";
 import { ThemeInput } from "../../components/Theme/ThemeInput";
-import { useTheme } from "lib/Hooks/useTheme";
+import { useTheme } from "$lib/Hooks/useTheme";
 import './Theme.css'
-import { AppBackground } from "components/Layout/AppBackground";
-import { themeService } from "lib/Services/ThemeService";
-import { Title } from "components/Miscellaneous/Title";
-import { DefaultPage } from "components/Layout/DefaultPage";
+import { AppBackground } from "$cmp/Layout/AppBackground";
+import { themeService } from "$lib/Services/ThemeService";
+import { Title } from "$cmp/Miscellaneous/Title";
+import { DefaultPage } from "$cmp/Layout/DefaultPage";
 
 
 function ThemePage() {

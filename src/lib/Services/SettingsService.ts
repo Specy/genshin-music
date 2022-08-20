@@ -1,5 +1,5 @@
-import { APP_NAME } from "appConfig"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, MainPageSettings, MainPageSettingsDataType, MainPageSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType } from "lib/BaseSettings"
+import { APP_NAME } from "@/appConfig"
+import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, MainPageSettings, MainPageSettingsDataType, MainPageSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType } from "$lib/BaseSettings"
 
 
 

@@ -1,20 +1,20 @@
 import { ChangeEvent, Component } from 'react'
-import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "appConfig"
-import Note from 'components/Player/Note'
-import { playerStore } from 'stores/PlayerStore'
-import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "lib/Utilities"
+import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "@/appConfig"
+import Note from '$cmp/Player/Note'
+import { playerStore } from '$stores/PlayerStore'
+import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "$lib/Utilities"
 import "./Keyboard.css"
-import Analytics from 'lib/Analytics';
-import { playerControlsStore } from 'stores/PlayerControlsStore'
-import { ApproachingNote, RecordedNote } from 'lib/Songs/SongClasses'
-import type { NoteData } from 'lib/Instrument'
-import type Instrument from 'lib/Instrument'
-import type { NoteNameType } from 'types/GeneralTypes'
-import { Chunk, RecordedSong } from 'lib/Songs/RecordedSong'
-import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider'
-import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider'
-import { NoteLayer } from 'lib/Layer'
-import { subscribeObeservableObject, subscribeObservableArray } from 'lib/Hooks/useObservable'
+import Analytics from '$lib/Analytics';
+import { playerControlsStore } from '$stores/PlayerControlsStore'
+import { ApproachingNote, RecordedNote } from '$lib/Songs/SongClasses'
+import type { NoteData } from '$lib/Instrument'
+import type Instrument from '$lib/Instrument'
+import type { NoteNameType } from '$types/GeneralTypes'
+import { Chunk, RecordedSong } from '$lib/Songs/RecordedSong'
+import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider'
+import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider'
+import { NoteLayer } from '$lib/Layer'
+import { subscribeObeservableObject, subscribeObservableArray } from '$lib/Hooks/useObservable'
 
 interface KeyboardPlayerProps {
     data: {

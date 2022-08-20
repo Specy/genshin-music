@@ -1,5 +1,5 @@
-import { APP_NAME } from "appConfig"
-import { Theme } from "stores/ThemeStore"
+import { APP_NAME } from "@/appConfig"
+import { Theme } from "$stores/ThemeStore"
 import { Query } from "./Database/Collection"
 import { DbInstance } from "./Database/Database"
 

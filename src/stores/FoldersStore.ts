@@ -1,5 +1,5 @@
-import { Folder } from "lib/Folder";
-import { folderService } from "lib/Services/FolderService";
+import { Folder } from "$lib/Folder";
+import { folderService } from "$lib/Services/FolderService";
 
 import { makeObservable, observable } from "mobx";
 import { songsStore } from "./SongsStore";

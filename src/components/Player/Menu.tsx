@@ -2,46 +2,46 @@ import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
-import { APP_NAME, IS_MIDI_AVAILABLE } from "appConfig"
-import { playerStore } from 'stores/PlayerStore'
-import { HelpTab } from 'components/HelpTab'
-import { MenuItem } from 'components/Miscellaneous/MenuItem'
-import MenuPanel from 'components/Layout/MenuPanel'
-import DonateButton from 'components/Miscellaneous/DonateButton'
-import LibrarySearchedSong from 'components/Miscellaneous/LibrarySearchedSong'
-import { SongActionButton } from 'components/Inputs/SongActionButton'
-import Analytics from 'lib/Analytics';
-import HomeStore from 'stores/HomeStore';
-import { logger } from 'stores/LoggerStore';
-import { AppButton } from 'components/Inputs/AppButton';
-import { SongMenu } from 'components/Layout/SongMenu';
+import { APP_NAME, IS_MIDI_AVAILABLE } from "@/appConfig"
+import { playerStore } from '$stores/PlayerStore'
+import { HelpTab } from '$cmp/HelpTab'
+import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
+import MenuPanel from '$cmp/Layout/MenuPanel'
+import DonateButton from '$cmp/Miscellaneous/DonateButton'
+import LibrarySearchedSong from '$cmp/Miscellaneous/LibrarySearchedSong'
+import { SongActionButton } from '$cmp/Inputs/SongActionButton'
+import Analytics from '$lib/Analytics';
+import HomeStore from '$stores/HomeStore';
+import { logger } from '$stores/LoggerStore';
+import { AppButton } from '$cmp/Inputs/AppButton';
+import { SongMenu } from '$cmp/Layout/SongMenu';
 import { Link } from 'react-router-dom'
-import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
-import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
-import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { MainPageSettingsDataType } from 'lib/BaseSettings';
-import { useTheme } from 'lib/Hooks/useTheme';
-import { SearchedSongType } from 'types/GeneralTypes';
-import { FileElement, FilePicker } from 'components/Inputs/FilePicker';
+import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
+import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
+import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
+import { MainPageSettingsDataType } from '$lib/BaseSettings';
+import { useTheme } from '$lib/Hooks/useTheme';
+import { SearchedSongType } from '$types/GeneralTypes';
+import { FileElement, FilePicker } from '$cmp/Inputs/FilePicker';
 import "./menu.css"
-import { ThemeStore } from 'stores/ThemeStore';
-import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import { hasTooltip, Tooltip } from "components/Utility/Tooltip"
-import { HelpTooltip } from 'components/Utility/HelpTooltip';
-import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from 'components/Utility/FloatingDropdown';
+import { ThemeStore } from '$stores/ThemeStore';
+import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
+import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip"
+import { HelpTooltip } from '$cmp/Utility/HelpTooltip';
+import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cmp/Utility/FloatingDropdown';
 import { Midi } from '@tonejs/midi';
-import { asyncConfirm, asyncPrompt } from 'components/Utility/AsyncPrompts';
-import { SettingsPane } from 'components/Settings/SettingsPane';
-import { SerializedSong, SongType } from 'lib/Songs/Song';
-import { songsStore } from 'stores/SongsStore';
-import { Folder } from 'lib/Folder';
-import { useFolders } from 'lib/Hooks/useFolders';
-import { folderStore } from 'stores/FoldersStore';
-import { useSongs } from 'lib/Hooks/useSongs';
-import useClickOutside from 'lib/Hooks/useClickOutside';
-import { fileService } from 'lib/Services/FileService';
-import { songService } from 'lib/Services/SongService';
-import { RecordedOrComposed } from 'types/SongTypes';
+import { asyncConfirm, asyncPrompt } from '$cmp/Utility/AsyncPrompts';
+import { SettingsPane } from '$cmp/Settings/SettingsPane';
+import { SerializedSong, SongType } from '$lib/Songs/Song';
+import { songsStore } from '$stores/SongsStore';
+import { Folder } from '$lib/Folder';
+import { useFolders } from '$lib/Hooks/useFolders';
+import { folderStore } from '$stores/FoldersStore';
+import { useSongs } from '$lib/Hooks/useSongs';
+import useClickOutside from '$lib/Hooks/useClickOutside';
+import { fileService } from '$lib/Services/FileService';
+import { songService } from '$lib/Services/SongService';
+import { RecordedOrComposed } from '$types/SongTypes';
 
 interface MenuProps {
     functions: {

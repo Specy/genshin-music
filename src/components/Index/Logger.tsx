@@ -1,6 +1,6 @@
-import { LoggerStatus, logger } from "stores/LoggerStore"
+import { LoggerStatus, logger } from "$stores/LoggerStore"
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle } from "react-icons/fa"
-import { useObservableObject } from "lib/Hooks/useObservable"
+import { useObservableObject } from "$lib/Hooks/useObservable"
 export default function FloatingMessage() {
     const loggerData = useObservableObject(logger.toastState)
     const pillData = useObservableObject(logger.pillState)

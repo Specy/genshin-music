@@ -1,4 +1,4 @@
-import { hasTooltip, Tooltip } from "components/Utility/Tooltip";
+import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip";
 
 
 interface CanvasToolProps {

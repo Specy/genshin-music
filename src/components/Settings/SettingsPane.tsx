@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from "types/SettingsPropriety"
+import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from "$types/SettingsPropriety"
 import SettingsRow from "./SettingsRow"
 
 interface SettingsPaneProps {

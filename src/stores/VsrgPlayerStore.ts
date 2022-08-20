@@ -1,5 +1,5 @@
-import { KeyboardLetter } from "lib/Providers/KeyboardProvider/KeyboardTypes"
-import { VsrgSong } from "lib/Songs/VsrgSong"
+import { KeyboardLetter } from "$lib/Providers/KeyboardProvider/KeyboardTypes"
+import { VsrgSong } from "$lib/Songs/VsrgSong"
 import { makeObservable, observable, observe } from "mobx"
 
 export type KeyboardKey = {

@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { logger } from 'stores/LoggerStore';
-import type { SearchedSongType } from 'types/GeneralTypes';
-import { ComposedSong } from 'lib/Songs/ComposedSong';
-import type {  RecordedSong } from 'lib/Songs/RecordedSong';
-import { ThemeStore } from 'stores/ThemeStore';
-import { songService } from 'lib/Services/SongService';
+import { logger } from '$stores/LoggerStore';
+import type { SearchedSongType } from '$types/GeneralTypes';
+import { ComposedSong } from '$lib/Songs/ComposedSong';
+import type {  RecordedSong } from '$lib/Songs/RecordedSong';
+import { ThemeStore } from '$stores/ThemeStore';
+import { songService } from '$lib/Services/SongService';
 
 interface SearchedSongProps{
     onClick: (song: ComposedSong | RecordedSong, start: number) => void,

@@ -1,8 +1,8 @@
 import { Container, Sprite } from "@inlet/react-pixi";
-import { PIXI_CENTER_X_END_Y, PLAY_BAR_OFFSET } from "appConfig";
-import { VsrgHitObject, VsrgTrack } from "lib/Songs/VsrgSong";
-import { parseMouseClick } from "lib/Utilities";
-import { ClickType } from "types/GeneralTypes"
+import { PIXI_CENTER_X_END_Y, PLAY_BAR_OFFSET } from "@/appConfig";
+import { VsrgHitObject, VsrgTrack } from "$lib/Songs/VsrgSong";
+import { parseMouseClick } from "$lib/Utilities";
+import { ClickType } from "$types/GeneralTypes"
 
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";

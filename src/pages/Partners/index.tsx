@@ -1,6 +1,6 @@
 import './Partners.css'
-import { Title } from 'components/Miscellaneous/Title'
-import { DefaultPage } from 'components/Layout/DefaultPage'
+import { Title } from '$cmp/Miscellaneous/Title'
+import { DefaultPage } from '$cmp/Layout/DefaultPage'
 
 export default function Partners() {
     return <DefaultPage className='partners-page'>

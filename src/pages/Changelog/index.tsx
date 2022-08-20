@@ -1,14 +1,14 @@
-import { SimpleMenu } from 'components/Layout/SimpleMenu'
-import { MenuItem } from 'components/Miscellaneous/MenuItem'
+import { SimpleMenu } from '$cmp/Layout/SimpleMenu'
+import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import { FaGithub } from 'react-icons/fa'
 import { ChangelogRow } from './ChangelogRow'
 import './Changelog.css'
 import { updates } from './updates'
-import { APP_VERSION } from 'appConfig'
-import { Title } from 'components/Miscellaneous/Title'
-import { DefaultPage } from 'components/Layout/DefaultPage'
+import { APP_VERSION } from '@/appConfig'
+import { Title } from '$cmp/Miscellaneous/Title'
+import { DefaultPage } from '$cmp/Layout/DefaultPage'
 
-const cacheVersion = process.env.REACT_APP_SW_VERSION
+const cacheVersion = import.meta.env.VITE_SW_VERSION
 export default function Changelogpage() {
     return <DefaultPage excludeMenu={true}>
         <SimpleMenu>

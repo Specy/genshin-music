@@ -1,9 +1,9 @@
 import { Container, Sprite } from "@inlet/react-pixi";
-import { PIXI_VERTICAL_ALIGN, PLAY_BAR_OFFSET } from "appConfig";
-import { RecordedSong } from "lib/Songs/RecordedSong";
-import { RecordedNote } from "lib/Songs/SongClasses";
-import { VsrgSong } from "lib/Songs/VsrgSong";
-import { clamp } from "lib/Utilities";
+import { PIXI_VERTICAL_ALIGN, PLAY_BAR_OFFSET } from "@/appConfig";
+import { RecordedSong } from "$lib/Songs/RecordedSong";
+import { RecordedNote } from "$lib/Songs/SongClasses";
+import { VsrgSong } from "$lib/Songs/VsrgSong";
+import { clamp } from "$lib/Utilities";
 import { InteractionEvent, Rectangle } from "pixi.js";
 import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";

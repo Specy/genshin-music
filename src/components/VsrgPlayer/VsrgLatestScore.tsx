@@ -1,7 +1,7 @@
-import { VSRG_SCORE_COLOR_MAP } from "appConfig"
+import { VSRG_SCORE_COLOR_MAP } from "@/appConfig"
 import { memo, useEffect, useRef, useState } from "react"
-import { subscribeVsrgLatestScore, vsrgPlayerStore } from "stores/VsrgPlayerStore"
-import { Timer } from "types/GeneralTypes"
+import { subscribeVsrgLatestScore, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
+import { Timer } from "$types/GeneralTypes"
 
 
 const defaultStyle = {

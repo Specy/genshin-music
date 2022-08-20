@@ -1,8 +1,8 @@
-import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "appConfig"
+import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "@/appConfig"
 import Color from "color"
 import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
 import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
-import { NoteLayer } from "lib/Layer";
+import { NoteLayer } from "$lib/Layer";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA

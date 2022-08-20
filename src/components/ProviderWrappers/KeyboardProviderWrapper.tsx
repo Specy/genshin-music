@@ -1,4 +1,4 @@
-import { KeyboardProvider } from "lib/Providers/KeyboardProvider";
+import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
 import { useEffect } from "react";
 
 interface KeyboardProviderWrapperProps {

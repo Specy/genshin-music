@@ -1,17 +1,17 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { APP_NAME, isTwa, IS_MOBILE } from "appConfig"
-import HomeStore from 'stores/HomeStore'
+import { APP_NAME, isTwa, IS_MOBILE } from "@/appConfig"
+import HomeStore from '$stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
 import { observe } from 'mobx'
-import { useTheme } from 'lib/Hooks/useTheme'
+import { useTheme } from '$lib/Hooks/useTheme'
 import './Home.css'
-import { MenuItem } from 'components/Miscellaneous/MenuItem'
-import { KeyboardProvider } from 'lib/Providers/KeyboardProvider'
-import { AppButton } from 'components/Inputs/AppButton'
-import { VsrgIcon } from 'components/icons/VsrgIcon'
-import { VsrgComposerIcon } from 'components/icons/VsrgComposerIcon'
+import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
+import { KeyboardProvider } from '$lib/Providers/KeyboardProvider'
+import { AppButton } from '$cmp/Inputs/AppButton'
+import { VsrgIcon } from '$cmp/icons/VsrgIcon'
+import { VsrgComposerIcon } from '$cmp/icons/VsrgComposerIcon'
 
 interface HomeProps {
     askForStorage: () => void,

@@ -1,4 +1,4 @@
-import { settingsService } from "lib/Services/SettingsService"
+import { settingsService } from "$lib/Services/SettingsService"
 import { MIDISettings } from "../BaseSettings"
 
 

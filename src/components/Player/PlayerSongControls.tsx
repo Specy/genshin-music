@@ -1,19 +1,19 @@
-import { DEFAULT_DOM_RECT, SPEED_CHANGERS } from "appConfig"
-import Memoized from "components/Utility/Memoized";
+import { DEFAULT_DOM_RECT, SPEED_CHANGERS } from "@/appConfig"
+import Memoized from "$cmp/Utility/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
 import { memo, useEffect, useState, useRef, ChangeEvent } from "react";
-import { playerStore } from "stores/PlayerStore";
-import { playerControlsStore } from "stores/PlayerControlsStore";
+import { playerStore } from "$stores/PlayerStore";
+import { playerControlsStore } from "$stores/PlayerControlsStore";
 import { BsTriangleFill } from "react-icons/bs";
 import './Track.css'
-import { clamp } from "lib/Utilities";
-import { hasTooltip, Tooltip } from 'components/Utility/Tooltip'
-import { SheetFrame } from "components/SheetVisualizer/SheetFrame";
-import { IconButton } from "components/Inputs/IconButton";
-import { useTheme } from "lib/Hooks/useTheme";
-import { useObservableObject } from "lib/Hooks/useObservable";
+import { clamp } from "$lib/Utilities";
+import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
+import { SheetFrame } from "$cmp/SheetVisualizer/SheetFrame";
+import { IconButton } from "$cmp/Inputs/IconButton";
+import { useTheme } from "$lib/Hooks/useTheme";
+import { useObservableObject } from "$lib/Hooks/useObservable";
 import { GiMetronome } from "react-icons/gi";
-import { AppButton } from "components/Inputs/AppButton";
+import { AppButton } from "$cmp/Inputs/AppButton";
 import { PlayerSlider } from "./PlayerSlider";
 import { PlayerPagesRenderer } from "./PlayerPagesRenderer";
 interface PlayerSongControlsProps {

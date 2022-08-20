@@ -1,36 +1,36 @@
 import { Component } from 'react';
-import KeyboardPlayer from "components/Player/KeyboardPlayer"
-import Menu from "components/Player/Menu"
-import { playerStore } from 'stores/PlayerStore'
-import { RecordedSong } from 'lib/Songs/RecordedSong';
-import { ComposedSong } from 'lib/Songs/ComposedSong';
-import { Recording } from 'lib/Songs/SongClasses';
-import { MainPageSettingsDataType } from "lib/BaseSettings"
-import Instrument from 'lib/Instrument';
-import AudioRecorder from 'lib/AudioRecorder';
-import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts"
-import Analytics from 'lib/Analytics';
+import KeyboardPlayer from "$cmp/Player/KeyboardPlayer"
+import Menu from "$cmp/Player/Menu"
+import { playerStore } from '$stores/PlayerStore'
+import { RecordedSong } from '$lib/Songs/RecordedSong';
+import { ComposedSong } from '$lib/Songs/ComposedSong';
+import { Recording } from '$lib/Songs/SongClasses';
+import { MainPageSettingsDataType } from "$lib/BaseSettings"
+import Instrument from '$lib/Instrument';
+import AudioRecorder from '$lib/AudioRecorder';
+import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
+import Analytics from '$lib/Analytics';
 import { withRouter } from 'react-router-dom'
-import { logger } from 'stores/LoggerStore';
-import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { InstrumentName } from 'types/GeneralTypes';
-import { AppButton } from 'components/Inputs/AppButton';
-import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import { AudioProvider } from 'lib/Providers/AudioProvider';
-import { settingsService } from 'lib/Services/SettingsService';
-import { songsStore } from 'stores/SongsStore';
-import { Title } from 'components/Miscellaneous/Title';
-import { metronome } from 'lib/Metronome';
+import { logger } from '$stores/LoggerStore';
+import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
+import { InstrumentName } from '$types/GeneralTypes';
+import { AppButton } from '$cmp/Inputs/AppButton';
+import { KeyboardProvider } from '$lib/Providers/KeyboardProvider';
+import { AudioProvider } from '$lib/Providers/AudioProvider';
+import { settingsService } from '$lib/Services/SettingsService';
+import { songsStore } from '$stores/SongsStore';
+import { Title } from '$cmp/Miscellaneous/Title';
+import { metronome } from '$lib/Metronome';
 import { GiMetronome } from 'react-icons/gi';
 import { Lambda } from 'mobx';
-import { NoteLayer } from 'lib/Layer';
+import { NoteLayer } from '$lib/Layer';
 import './Player.css'
-import { IconButton } from 'components/Inputs/IconButton';
-import { subscribeObeservableObject } from 'lib/Hooks/useObservable';
+import { IconButton } from '$cmp/Inputs/IconButton';
+import { subscribeObeservableObject } from '$lib/Hooks/useObservable';
 import { ChangeEvent } from 'react';
-import { SPEED_CHANGERS } from 'appConfig';
-import { playerControlsStore } from 'stores/PlayerControlsStore';
-import { PlayerSongControls } from 'components/Player/PlayerSongControls';
+import { SPEED_CHANGERS } from '@/appConfig';
+import { playerControlsStore } from '$stores/PlayerControlsStore';
+import { PlayerSongControls } from '$cmp/Player/PlayerSongControls';
 
 interface PlayerState {
 	settings: MainPageSettingsDataType

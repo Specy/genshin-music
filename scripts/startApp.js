@@ -29,12 +29,13 @@ function deleteAssets() {
 async function execute() {
     await deleteAssets()
     await copyDir(chosenApp === "Sky" ? skyPath : genshinPath, publicPath)
+    await fs.rename(`${publicPath}/index.html`,`index.html`)
     if (process.platform === 'win32') {
         console.log(clc.yellow.bold("Starting on windows"))
-        execSync(`set REACT_APP_NAME=${chosenApp}&& yarn start`, { stdio: 'inherit' })
+        execSync(`set VITE_APP_NAME=${chosenApp}&& yarn start`, { stdio: 'inherit' })
     } else {
         console.log(clc.yellow.bold("Starting on linux"))
-        execSync(`REACT_APP_NAME=${chosenApp} yarn start`, { stdio: 'inherit' })
+        execSync(`VITE_APP_NAME=${chosenApp} yarn start`, { stdio: 'inherit' })
     }
 }
 

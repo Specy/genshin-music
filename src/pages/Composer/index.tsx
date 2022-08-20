@@ -1,42 +1,42 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "appConfig"
-import AddColumn from 'components/icons/AddColumn';
-import RemoveColumn from "components/icons/RemoveColumn"
-import MidiParser from "components/Composer/MidiParser"
-import ComposerTools from "components/Composer/ComposerTools"
-import ComposerKeyboard from "components/Composer/ComposerKeyboard"
-import ComposerCanvas from "components/Composer/Canvas"
-import Menu from "components/Composer/ComposerMenu"
-import Memoized from 'components/Utility/Memoized';
-import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts"
-import { ComposerSettingsDataType } from "lib/BaseSettings"
-import Instrument, { NoteData } from "lib/Instrument"
-import { delay, formatMs, calculateSongLength } from "lib/Utilities"
-import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
-import { Column, InstrumentData } from 'lib/Songs/SongClasses';
-import AudioRecorder from 'lib/AudioRecorder'
-import Analytics from 'lib/Analytics';
+import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "@/appConfig"
+import AddColumn from '$cmp/icons/AddColumn';
+import RemoveColumn from "$cmp/icons/RemoveColumn"
+import MidiParser from "$cmp/Composer/MidiParser"
+import ComposerTools from "$cmp/Composer/ComposerTools"
+import ComposerKeyboard from "$cmp/Composer/ComposerKeyboard"
+import ComposerCanvas from "$cmp/Composer/Canvas"
+import Menu from "$cmp/Composer/ComposerMenu"
+import Memoized from '$cmp/Utility/Memoized';
+import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
+import { ComposerSettingsDataType } from "$lib/BaseSettings"
+import Instrument, { NoteData } from "$lib/Instrument"
+import { delay, formatMs, calculateSongLength } from "$lib/Utilities"
+import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
+import { Column, InstrumentData } from '$lib/Songs/SongClasses';
+import AudioRecorder from '$lib/AudioRecorder'
+import Analytics from '$lib/Analytics';
 import { RouteComponentProps, withRouter } from 'react-router-dom'
-import HomeStore from 'stores/HomeStore';
-import { logger } from 'stores/LoggerStore';
-import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
-import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { Pages } from 'types/GeneralTypes';
+import HomeStore from '$stores/HomeStore';
+import { logger } from '$stores/LoggerStore';
+import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
+import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
+import { Pages } from '$types/GeneralTypes';
 import "./Composer.css"
-import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider';
-import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardTypes';
-import { AudioProvider } from 'lib/Providers/AudioProvider';
-import { CanvasTool } from 'components/Composer/CanvasTool';
-import { settingsService } from 'lib/Services/SettingsService';
-import { SerializedSong } from 'lib/Songs/Song';
-import { songsStore } from 'stores/SongsStore';
-import { InstrumentControls } from 'components/Composer/InstrumentControls';
-import { AppButton } from 'components/Inputs/AppButton';
-import { ThemeProvider, ThemeStore } from 'stores/ThemeStore';
-import { Title } from 'components/Miscellaneous/Title';
-import { songService } from 'lib/Services/SongService';
+import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider';
+import { KeyboardProvider } from '$lib/Providers/KeyboardProvider';
+import type { KeyboardNumber } from '$lib/Providers/KeyboardProvider/KeyboardTypes';
+import { AudioProvider } from '$lib/Providers/AudioProvider';
+import { CanvasTool } from '$cmp/Composer/CanvasTool';
+import { settingsService } from '$lib/Services/SettingsService';
+import { SerializedSong } from '$lib/Songs/Song';
+import { songsStore } from '$stores/SongsStore';
+import { InstrumentControls } from '$cmp/Composer/InstrumentControls';
+import { AppButton } from '$cmp/Inputs/AppButton';
+import { ThemeProvider, ThemeStore } from '$stores/ThemeStore';
+import { Title } from '$cmp/Miscellaneous/Title';
+import { songService } from '$lib/Services/SongService';
 
 interface ComposerState {
     layers: Instrument[]

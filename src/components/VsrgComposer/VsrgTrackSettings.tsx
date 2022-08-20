@@ -1,14 +1,14 @@
-import { InstrumentSelect } from "components/Inputs/InstrumentSelect"
-import { AppButton } from "components/Inputs/AppButton"
-import { VsrgTrack } from "lib/Songs/VsrgSong"
+import { InstrumentSelect } from "$cmp/Inputs/InstrumentSelect"
+import { AppButton } from "$cmp/Inputs/AppButton"
+import { VsrgTrack } from "$lib/Songs/VsrgSong"
 import { FaTrash } from "react-icons/fa"
-import { PitchSelect } from "components/Inputs/PitchSelect"
-import { HelpTooltip } from "components/Utility/HelpTooltip"
-import { ColorPicker } from "components/Inputs/ColorPicker"
+import { PitchSelect } from "$cmp/Inputs/PitchSelect"
+import { HelpTooltip } from "$cmp/Utility/HelpTooltip"
+import { ColorPicker } from "$cmp/Inputs/ColorPicker"
 import { useState } from "react"
 import Color from "color"
-import { vsrgComposerStore } from "stores/VsrgComposerStore"
-import { Pitch } from "appConfig"
+import { vsrgComposerStore } from "$stores/VsrgComposerStore"
+import { Pitch } from "@/appConfig"
 
 interface TrackSelectorProps {
     track: VsrgTrack

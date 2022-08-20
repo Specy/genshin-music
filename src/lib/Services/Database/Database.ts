@@ -1,9 +1,9 @@
-import ZangoDb from "zangodb"
-import { APP_NAME, IS_TAURI } from "appConfig"
+import ZangoDb from "@insertish/zangodb"
+import { APP_NAME, IS_TAURI } from "@/appConfig"
 import { Collection, TauriCollection, ZangoCollection } from "./Collection"
-import { SerializedSong } from "lib/Songs/Song"
-import { SerializedTheme } from "stores/ThemeStore"
-import { SerializedFolder } from "lib/Folder"
+import { SerializedSong } from "$lib/Songs/Song"
+import { SerializedTheme } from "$stores/ThemeStore"
+import { SerializedFolder } from "$lib/Folder"
 
 class DB{
     private instance: ZangoDb.Db

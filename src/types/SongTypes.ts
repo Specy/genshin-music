@@ -1,6 +1,6 @@
-import { ComposedSong, UnknownSerializedComposedSong } from "lib/Songs/ComposedSong";
-import { RecordedSong, SerializedRecordedSong } from "lib/Songs/RecordedSong";
-import { SerializedVsrgSong } from "lib/Songs/VsrgSong";
+import { ComposedSong, UnknownSerializedComposedSong } from "$lib/Songs/ComposedSong";
+import { RecordedSong, SerializedRecordedSong } from "$lib/Songs/RecordedSong";
+import { SerializedVsrgSong } from "$lib/Songs/VsrgSong";
 import { InstrumentName } from "./GeneralTypes";
 
 export type _LegacySongInstruments = [InstrumentName,InstrumentName,InstrumentName,InstrumentName]

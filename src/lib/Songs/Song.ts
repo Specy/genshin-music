@@ -1,4 +1,4 @@
-import { APP_NAME, Pitch, PITCHES } from "appConfig"
+import { APP_NAME, Pitch, PITCHES } from "@/appConfig"
 import { InstrumentData, SerializedInstrumentData, SongData } from "./SongClasses"
 
 export type SongType = 'recorded' | 'composed' | 'midi' | 'vsrg'

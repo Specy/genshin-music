@@ -1,13 +1,13 @@
 import { memo , useEffect, useState } from 'react'
-import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA,BASE_THEME_CONFIG } from "appConfig"
-import GenshinNoteBorder from 'components/Miscellaneous/GenshinNoteBorder'
-import SvgNote from 'components/SvgNotes'
-import { ThemeProvider } from 'stores/ThemeStore'
+import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA,BASE_THEME_CONFIG } from "@/appConfig"
+import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
+import SvgNote from '$cmp/SvgNotes'
+import { ThemeProvider } from '$stores/ThemeStore'
 import { observe } from 'mobx'
-import { NoteImage } from 'types/Keyboard'
-import { NoteData } from 'lib/Instrument'
-import { InstrumentName } from 'types/GeneralTypes'
-import { LayerStatus } from 'lib/Layer'
+import { NoteImage } from '$types/Keyboard'
+import { NoteData } from '$lib/Instrument'
+import { InstrumentName } from '$types/GeneralTypes'
+import { LayerStatus } from '$lib/Layer'
 
 function getTextColor(){
     const noteBg = ThemeProvider.get('note_background')

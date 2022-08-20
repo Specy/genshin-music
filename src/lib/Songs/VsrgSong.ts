@@ -1,4 +1,4 @@
-import { InstrumentName } from "types/GeneralTypes";
+import { InstrumentName } from "$types/GeneralTypes";
 import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";
 import { InstrumentData, RecordedNote, SerializedInstrumentData } from "./SongClasses";

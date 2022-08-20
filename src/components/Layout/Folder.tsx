@@ -1,10 +1,10 @@
-import { Folder } from "lib/Folder"
-import { fileService } from "lib/Services/FileService"
+import { Folder } from "$lib/Folder"
+import { fileService } from "$lib/Services/FileService"
 import cloneDeep from "lodash.clonedeep"
 import { useEffect, useRef, useState } from "react"
 import { BsChevronRight } from "react-icons/bs"
 import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
-import { folderStore } from "stores/FoldersStore"
+import { folderStore } from "$stores/FoldersStore"
 import { asyncConfirm } from "../Utility/AsyncPrompts"
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "../Utility/FloatingDropdown"
 

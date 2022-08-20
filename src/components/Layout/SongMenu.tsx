@@ -1,12 +1,12 @@
-import { useTheme } from "lib/Hooks/useTheme";
-import { ComposedSong } from "lib/Songs/ComposedSong";
-import { RecordedSong } from "lib/Songs/RecordedSong";
+import { useTheme } from "$lib/Hooks/useTheme";
+import { ComposedSong } from "$lib/Songs/ComposedSong";
+import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { useEffect, useState } from "react"
 import { SongFolder, SongFolderContent } from "./Folder";
-import { Folder } from "lib/Folder";
-import { SerializedSong, SongType } from "lib/Songs/Song";
-import { useFolders } from "lib/Hooks/useFolders";
-import { VsrgSong } from "lib/Songs/VsrgSong";
+import { Folder } from "$lib/Folder";
+import { SerializedSong, SongType } from "$lib/Songs/Song";
+import { useFolders } from "$lib/Hooks/useFolders";
+import { VsrgSong } from "$lib/Songs/VsrgSong";
 
 
 

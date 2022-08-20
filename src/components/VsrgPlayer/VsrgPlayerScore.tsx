@@ -1,5 +1,5 @@
-import { VSRG_SCORE_COLOR_MAP } from "appConfig";
-import { useVsrgScore } from "lib/Hooks/useVsrgScore";
+import { VSRG_SCORE_COLOR_MAP } from "@/appConfig";
+import { useVsrgScore } from "$lib/Hooks/useVsrgScore";
 import { memo } from "react";
 
 

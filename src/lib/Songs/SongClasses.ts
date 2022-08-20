@@ -1,5 +1,5 @@
-import { APP_NAME, INSTRUMENTS, MIDI_BOUNDS, MIDI_MAP_TO_NOTE, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "appConfig"
-import { InstrumentName } from "types/GeneralTypes"
+import { APP_NAME, INSTRUMENTS, MIDI_BOUNDS, MIDI_MAP_TO_NOTE, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "@/appConfig"
+import { InstrumentName } from "$types/GeneralTypes"
 import { NoteLayer } from "../Layer"
 import { InstrumentNoteIcon } from "./ComposedSong"
 

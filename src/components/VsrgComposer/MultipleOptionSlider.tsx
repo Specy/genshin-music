@@ -1,4 +1,4 @@
-import { capitalize } from "lodash"
+import { capitalize } from "$lib/Utilities"
 import React, { useEffect, useRef, useState } from "react"
 
 export type Option<T> = {

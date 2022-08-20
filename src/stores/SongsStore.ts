@@ -1,5 +1,5 @@
-import { songService } from "lib/Services/SongService"
-import { SerializedSong, Song } from "lib/Songs/Song"
+import { songService } from "$lib/Services/SongService"
+import { SerializedSong, Song } from "$lib/Songs/Song"
 import { makeObservable, observable } from "mobx"
 
 export interface SongsStoreData{

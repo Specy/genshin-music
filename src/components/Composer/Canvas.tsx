@@ -5,19 +5,19 @@ import { Component, createRef } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
 import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import isMobile from "is-mobile"
-import { ComposerCache } from "components/Composer/TextureCache"
-import { APP_NAME } from "appConfig"
-import Memoized from 'components/Utility/Memoized';
-import { ThemeProvider } from 'stores/ThemeStore';
-import { clamp, nearestEven } from 'lib/Utilities';
-import type { Column } from 'lib/Songs/SongClasses';
-import type { ComposerSettingsDataType } from 'lib/BaseSettings';
-import { KeyboardEventData, KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import { isColumnVisible, RenderColumn } from 'components/Composer/RenderColumn';
+import { ComposerCache } from "$cmp/Composer/TextureCache"
+import { APP_NAME } from "@/appConfig"
+import Memoized from '$cmp/Utility/Memoized';
+import { ThemeProvider } from '$stores/ThemeStore';
+import { clamp, nearestEven } from '$lib/Utilities';
+import type { Column } from '$lib/Songs/SongClasses';
+import type { ComposerSettingsDataType } from '$lib/BaseSettings';
+import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
+import { isColumnVisible, RenderColumn } from '$cmp/Composer/RenderColumn';
 import { TimelineButton } from './TimelineButton';
-import { Timer } from 'types/GeneralTypes';
-import { ComposedSong } from 'lib/Songs/ComposedSong';
-import { subscribeTheme } from 'lib/Hooks/useTheme';
+import { Timer } from '$types/GeneralTypes';
+import { ComposedSong } from '$lib/Songs/ComposedSong';
+import { subscribeTheme } from '$lib/Hooks/useTheme';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {

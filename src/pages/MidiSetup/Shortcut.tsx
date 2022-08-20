@@ -1,4 +1,4 @@
-import { AppButton } from "components/Inputs/AppButton"
+import { AppButton } from "$cmp/Inputs/AppButton"
 
 interface ShortcutProps {
     status: string

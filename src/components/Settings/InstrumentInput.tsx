@@ -1,7 +1,7 @@
 import { ChangeEvent } from "react"
-import { ThemeStore } from "stores/ThemeStore"
-import { InstrumentName } from "types/GeneralTypes"
-import { SettingsInstrument, SettingUpdateKey } from "types/SettingsPropriety"
+import { ThemeStore } from "$stores/ThemeStore"
+import { InstrumentName } from "$types/GeneralTypes"
+import { SettingsInstrument, SettingUpdateKey } from "$types/SettingsPropriety"
 
 interface InstrumentInputProps{
     data: SettingsInstrument,

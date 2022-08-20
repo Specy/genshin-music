@@ -1,6 +1,6 @@
 import { ChangeEvent, ReactNode } from "react"
-import { ThemeStore } from "stores/ThemeStore"
-import { SettingsSelect, SettingUpdateKey } from "types/SettingsPropriety"
+import { ThemeStore } from "$stores/ThemeStore"
+import { SettingsSelect, SettingUpdateKey } from "$types/SettingsPropriety"
 
 interface SelectProps {
     value: string | number

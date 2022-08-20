@@ -1,4 +1,4 @@
-import { SerializedFolder } from "lib/Folder"
+import { SerializedFolder } from "$lib/Folder"
 import { DbInstance } from "./Database/Database"
 
 

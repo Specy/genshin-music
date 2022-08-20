@@ -1,8 +1,8 @@
-import { useVsrgKey } from "lib/Hooks/useVsrgKey"
-import { useVsrgKeyboardLayout } from "lib/Hooks/useVsrgKeyboardLayout"
-import { KeyboardProvider } from "lib/Providers/KeyboardProvider"
+import { useVsrgKey } from "$lib/Hooks/useVsrgKey"
+import { useVsrgKeyboardLayout } from "$lib/Hooks/useVsrgKeyboardLayout"
+import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { KeyboardKey, vsrgPlayerStore } from "stores/VsrgPlayerStore"
+import { KeyboardKey, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
 
 
 interface VsrgPlayerKeyboardProps {

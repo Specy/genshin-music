@@ -1,7 +1,7 @@
-import { VSRG_TEMPO_CHANGER } from "appConfig"
-import { AppButton } from "components/Inputs/AppButton"
-import { Select } from "components/Inputs/Select"
-import { VsrgSong } from "lib/Songs/VsrgSong"
+import { VSRG_TEMPO_CHANGER } from "@/appConfig"
+import { AppButton } from "$cmp/Inputs/AppButton"
+import { Select } from "$cmp/Inputs/Select"
+import { VsrgSong } from "$lib/Songs/VsrgSong"
 
 import { FaPause, FaPlay } from "react-icons/fa"
 import { MultipleOptionSlider, Option } from "./MultipleOptionSlider"

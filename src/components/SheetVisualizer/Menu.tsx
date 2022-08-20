@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { SongMenu } from 'components/Layout/SongMenu'
-import { useSongs } from 'lib/Hooks/useSongs'
-import { historyTracker } from 'stores/History'
-import { MenuItem } from 'components/Miscellaneous/MenuItem'
+import { SongMenu } from '$cmp/Layout/SongMenu'
+import { useSongs } from '$lib/Hooks/useSongs'
+import { historyTracker } from '$stores/History'
+import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import { FaArrowLeft, FaHome, FaMusic, FaTimes } from 'react-icons/fa'
-import HomeStore from 'stores/HomeStore'
+import HomeStore from '$stores/HomeStore'
 import { useHistory } from 'react-router-dom'
-import MenuPanel from 'components/Layout/MenuPanel'
-import { SerializedSong } from 'lib/Songs/Song'
-import useClickOutside from 'lib/Hooks/useClickOutside'
+import MenuPanel from '$cmp/Layout/MenuPanel'
+import { SerializedSong } from '$lib/Songs/Song'
+import useClickOutside from '$lib/Hooks/useClickOutside'
 
 interface SheetVisualiserMenuProps {
     currentSong: SerializedSong | null,

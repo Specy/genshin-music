@@ -1,7 +1,7 @@
 import isMobile from "is-mobile"
-import { Tauri } from "types/TauriTypes"
+import { Tauri } from "$types/TauriTypes"
 
-const APP_NAME: AppName = process.env.REACT_APP_NAME as AppName || ["Sky", "Genshin"][1]
+const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '3.0' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
@@ -38,7 +38,6 @@ const MIDI_STATUS = {
     up: 128,
     down: 144
 }
-
 const IS_MIDI_AVAILABLE = !!navigator.requestMIDIAccess
 const INSTRUMENTS = APP_NAME === "Genshin"
     ? [

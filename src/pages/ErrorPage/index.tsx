@@ -1,19 +1,19 @@
 import { FaTrash, FaDownload } from 'react-icons/fa';
-import { asyncConfirm } from "components/Utility/AsyncPrompts"
-import { APP_NAME } from "appConfig"
-import { logger } from 'stores/LoggerStore';
-import { SongMenu } from 'components/Layout/SongMenu';
+import { asyncConfirm } from "$cmp/Utility/AsyncPrompts"
+import { APP_NAME } from "@/appConfig"
+import { logger } from '$stores/LoggerStore';
+import { SongMenu } from '$cmp/Layout/SongMenu';
 import './ErrorPage.css'
-import { AppButton } from 'components/Inputs/AppButton';
-import { SerializedSong } from 'lib/Songs/Song';
-import { useSongs } from 'lib/Hooks/useSongs';
-import { songsStore } from 'stores/SongsStore';
-import { fileService } from 'lib/Services/FileService';
-import { Title } from 'components/Miscellaneous/Title';
-import { DefaultPage } from 'components/Layout/DefaultPage';
-import { songService } from 'lib/Services/SongService';
-import { ComposedSong } from 'lib/Songs/ComposedSong';
-import { RecordedSong } from 'lib/Songs/RecordedSong';
+import { AppButton } from '$cmp/Inputs/AppButton';
+import { SerializedSong } from '$lib/Songs/Song';
+import { useSongs } from '$lib/Hooks/useSongs';
+import { songsStore } from '$stores/SongsStore';
+import { fileService } from '$lib/Services/FileService';
+import { Title } from '$cmp/Miscellaneous/Title';
+import { DefaultPage } from '$cmp/Layout/DefaultPage';
+import { songService } from '$lib/Services/SongService';
+import { ComposedSong } from '$lib/Songs/ComposedSong';
+import { RecordedSong } from '$lib/Songs/RecordedSong';
 
 export function ErrorPage() {
     const [songs] = useSongs()

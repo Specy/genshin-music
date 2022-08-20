@@ -1,4 +1,4 @@
-import { useTheme } from "lib/Hooks/useTheme"
+import { useTheme } from "$lib/Hooks/useTheme"
 
 
 interface SelectProps{

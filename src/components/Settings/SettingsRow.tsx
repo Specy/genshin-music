@@ -1,13 +1,13 @@
 import { useState, useEffect, memo } from 'react'
-import Switch from 'components/Inputs/Switch'
+import Switch from '$cmp/Inputs/Switch'
 import { InstrumentInput } from './InstrumentInput'
 import { Input } from './Input'
 import { Slider } from './Slider'
 import { Select } from './Select'
-import { useTheme } from 'lib/Hooks/useTheme'
+import { useTheme } from '$lib/Hooks/useTheme'
 import './Settings.css'
-import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from 'types/SettingsPropriety'
-import { hasTooltip, Tooltip } from 'components/Utility/Tooltip'
+import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from '$types/SettingsPropriety'
+import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
 
 interface SettingsRowProps {
     data: SettingsPropriety,

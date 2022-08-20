@@ -1,8 +1,8 @@
-import { APP_NAME } from "appConfig";
-import { fileService } from "lib/Services/FileService";
+import { APP_NAME } from "@/appConfig";
+import { fileService } from "$lib/Services/FileService";
 import { FaTrash, FaDownload } from "react-icons/fa";
-import {logger} from "stores/LoggerStore";
-import { Theme } from "stores/ThemeStore";
+import {logger} from "$stores/LoggerStore";
+import { Theme } from "$stores/ThemeStore";
 
 
 interface ThemePreviewProps {

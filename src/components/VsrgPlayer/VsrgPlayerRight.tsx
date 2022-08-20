@@ -1,6 +1,6 @@
-import { IconButton } from "components/Inputs/IconButton";
-import Memoized from "components/Utility/Memoized";
-import { VsrgSong } from "lib/Songs/VsrgSong";
+import { IconButton } from "$cmp/Inputs/IconButton";
+import Memoized from "$cmp/Utility/Memoized";
+import { VsrgSong } from "$lib/Songs/VsrgSong";
 import { FaStop, FaSyncAlt } from "react-icons/fa";
 import { VsrgPlayerScore } from "./VsrgPlayerScore";
 

@@ -1,13 +1,13 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "appConfig"
+import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "@/appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
-import { NoteNameType } from "types/GeneralTypes";
+import { NoteNameType } from "$types/GeneralTypes";
 import { NoteLayer } from "./Layer";
 import { Song } from "./Songs/Song";
 import { ComposedSong } from "./Songs/ComposedSong";
 import { RecordedSong } from "./Songs/RecordedSong";
-import { ClickType } from "types/GeneralTypes"
+import { ClickType } from "$types/GeneralTypes"
 
 
 class FileDownloader {

@@ -1,5 +1,5 @@
-import { INSTRUMENTS } from "appConfig"
-import { InstrumentName } from "types/GeneralTypes"
+import { INSTRUMENTS } from "@/appConfig"
+import { InstrumentName } from "$types/GeneralTypes"
 
 interface InstrumentSelectProps {
     selected: InstrumentName

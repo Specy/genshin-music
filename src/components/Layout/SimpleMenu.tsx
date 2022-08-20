@@ -1,9 +1,9 @@
 import { FaHome, FaDiscord, FaArrowLeft } from 'react-icons/fa';
 
-import {MenuItem} from 'components/Miscellaneous/MenuItem'
-import HomeStore from 'stores/HomeStore';
+import {MenuItem} from '$cmp/Miscellaneous/MenuItem'
+import HomeStore from '$stores/HomeStore';
 import { useHistory } from 'react-router-dom';
-import { historyTracker } from 'stores/History';
+import { historyTracker } from '$stores/History';
 
 interface SimpleMenuProps {
     children?: React.ReactNode,

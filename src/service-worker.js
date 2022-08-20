@@ -9,11 +9,11 @@ import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
-const APP_NAME = process.env.REACT_APP_NAME
-const CACHE = `${APP_NAME}-${process.env.REACT_APP_SW_VERSION}`
-const IS_TAURI = process.env.REACT_APP_IS_TAURI === 'true'
+const APP_NAME = import.meta.env.VITE_APP_NAME
+const CACHE = `${APP_NAME}-${import.meta.env.VITE_SW_VERSION}`
+const IS_TAURI = import.meta.env.VITE_IS_TAURI === 'true'
 clientsClaim();
-const PRECACHE_MANIFEST = self.__WB_MANIFEST
+//const PRECACHE_MANIFEST = self.__WB_MANIFEST
 if (IS_TAURI) {
 	registerRoute(
 		/.*(\.mp3|\.png|\.svg)/g,
@@ -26,7 +26,7 @@ if (IS_TAURI) {
 	// Their URLs are injected into the manifest variable below.
 	// This variable must be present somewhere in your service worker file,
 	// even if you decide not to use precaching. See https://cra.link/PWA
-	precacheAndRoute(PRECACHE_MANIFEST);
+	//precacheAndRoute(PRECACHE_MANIFEST);
 	registerRoute(
 		new RegExp('/*'),
 		new CacheFirst({
