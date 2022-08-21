@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 import { ThemeSettings } from '$lib/BaseSettings'
-import { BASE_THEME_CONFIG } from '@/appConfig'
+import { BASE_THEME_CONFIG } from '$/appConfig'
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import { logger } from '$stores/LoggerStore'

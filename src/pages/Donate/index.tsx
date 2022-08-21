@@ -1,7 +1,7 @@
 import './Donate.css'
-import paypalImg from '@/assets/images/paypalme.png'
-import buyMeACoffeeImg from '@/assets/images/buymeacoffee.svg'
-import kofiImg from '@/assets/images/kofi.png'
+import paypalImg from '$/assets/images/paypalme.png'
+import buyMeACoffeeImg from '$/assets/images/buymeacoffee.svg'
+import kofiImg from '$/assets/images/kofi.png'
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 export default function Donate() {

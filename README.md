@@ -1,7 +1,7 @@
 [![wakatime](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f.svg)](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f)
 # Welcome to Genshin music and Sky music nightly
 
-This repository holds the code relative to the two music apps for Genshin and sky cotl, you can see the published apps at https://specy.app
+This repository holds the code of the two music apps for Genshin and Sky Cotl, you can see the published apps at [specy.app](https://specy.app)
 ![Composer](docs/assets/composer.webp)
 ![Player](docs/assets/player.webp)
 

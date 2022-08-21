@@ -1,4 +1,4 @@
-import { APP_NAME } from "@/appConfig"
+import { APP_NAME } from "$/appConfig"
 import { Chunk } from "$lib/Songs/VisualSong"
 import { getNoteText } from "$lib/Utilities"
 import { memo, useEffect, useState } from "react"

@@ -1,10 +1,10 @@
 import './MidiSetup.css'
-import { APP_NAME } from "@/appConfig"
+import { APP_NAME } from "$/appConfig"
 import { MIDISettings } from "$lib/BaseSettings"
 import BaseNote from "$cmp/Miscellaneous/BaseNote"
-import { LAYOUT_IMAGES, MIDI_STATUS } from "@/appConfig"
+import { LAYOUT_IMAGES, MIDI_STATUS } from "$/appConfig"
 import { Component } from 'react'
-import { INSTRUMENTS } from "@/appConfig"
+import { INSTRUMENTS } from "$/appConfig"
 import Shortcut from "./Shortcut"
 import {logger} from "$stores/LoggerStore";
 import type { MIDINote } from "$lib/Utilities"

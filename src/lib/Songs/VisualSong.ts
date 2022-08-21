@@ -1,4 +1,4 @@
-import { APP_NAME } from "@/appConfig"
+import { APP_NAME } from "$/appConfig"
 import { ComposedSong } from "$lib/Songs/ComposedSong"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
 import { Column, ColumnNote, RecordedNote } from "$lib/Songs/SongClasses"

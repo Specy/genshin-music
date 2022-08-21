@@ -8,7 +8,7 @@ import { VsrgPlayerSettingsDataType } from "$lib/BaseSettings";
 import { AudioPlayer } from "$lib/AudioPlayer";
 import { KeyboardLetter } from "$lib/Providers/KeyboardProvider/KeyboardTypes";
 import { VsrgPlayerKeyboard } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard";
-import { DEFAULT_VSRG_KEYS_MAP } from "@/appConfig";
+import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig";
 import { vsrgPlayerStore } from "$stores/VsrgPlayerStore";
 import { defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes } from "$cmp/VsrgPlayer/VsrgPlayerCanvas";
 import { RecordedSong } from "$lib/Songs/RecordedSong";

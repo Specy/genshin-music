@@ -43,10 +43,11 @@
     border-radius: 0.2rem;
     padding: 0.3rem;
 
+    &::placeholder{
+        color: #b9b9b9;
+    }
 }
-.input::placeholder{
-    color: #b9b9b9;
-}
+
 
 /* DO NOT REMOVE THE COMMA AFTER THE --existing-transform*/
 @keyframes fadeIn{

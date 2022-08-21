@@ -1,4 +1,4 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME } from "@/appConfig"
+import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME } from "$/appConfig"
 import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
 import { NoteImage } from "$types/Keyboard"

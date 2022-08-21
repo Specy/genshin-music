@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
-import { APP_NAME, IS_MIDI_AVAILABLE } from "@/appConfig"
+import { APP_NAME, IS_MIDI_AVAILABLE } from "$/appConfig"
 import { playerStore } from '$stores/PlayerStore'
 import { HelpTab } from '$cmp/HelpTab'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'

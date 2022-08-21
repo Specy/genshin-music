@@ -1,5 +1,5 @@
 import { Container, Sprite, Text, } from "@inlet/react-pixi";
-import { PLAY_BAR_OFFSET } from "@/appConfig";
+import { PLAY_BAR_OFFSET } from "$/appConfig";
 import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
 import { parseMouseClick } from "$lib/Utilities";
 import { ClickType } from "$types/GeneralTypes"

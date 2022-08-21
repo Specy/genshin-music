@@ -1,4 +1,4 @@
-import { APP_NAME } from "@/appConfig"
+import { APP_NAME } from "$/appConfig"
 import { VsrgSongKeys } from "$lib/Songs/VsrgSong"
 import cloneDeep from "lodash.clonedeep"
 import { makeObservable, observable } from "mobx"

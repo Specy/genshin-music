@@ -1,7 +1,7 @@
 import './SheetVisualizer.css'
 
 import { useState } from 'react'
-import { APP_NAME } from '@/appConfig'
+import { APP_NAME } from '$/appConfig'
 import { getNoteText, isComposedOrRecorded } from '$lib/Utilities'
 import Switch from '$cmp/Inputs/Switch'
 import Analytics from '$lib/Analytics'

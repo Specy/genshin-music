@@ -3,7 +3,7 @@ import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/gra
 import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { clamp } from "$lib/Utilities";
-import { PLAY_BAR_OFFSET } from "@/appConfig";
+import { PLAY_BAR_OFFSET } from "$/appConfig";
 import isMobile from "is-mobile";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL

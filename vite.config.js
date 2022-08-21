@@ -5,6 +5,7 @@ import { resolve } from "path";
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import rollupNodePolyFill from 'rollup-plugin-node-polyfills'
+
 const vite = ({ mode }) => {
     return defineConfig({
 
@@ -14,7 +15,7 @@ const vite = ({ mode }) => {
         base: './',
         resolve: {
             alias: {
-                '@': resolve(__dirname, "src"),
+                '$': resolve(__dirname, "src"),
                 '$cmp': resolve(__dirname, "src/components"),
                 '$lib': resolve(__dirname, "src/lib"),
                 '$pages': resolve(__dirname, "src/pages"),
@@ -76,17 +77,18 @@ const vite = ({ mode }) => {
         },
         plugins: [react()],
         build: {
+            sourcemap: true,
             outDir: process.env.BUILD_PATH || 'build',
             rollupOptions: {
                 plugins: [rollupNodePolyFill()],
                 input: {
                     app: './index.html',
-                    'service-worker': 'src/service-worker.js'
+                    'service-worker': 'src/service-worker.ts'
                 },
                 output: {
                     entryFileNames: assetInfo =>
                         assetInfo.name === 'service-worker'
-                            ? 'service-worker.js'           
+                            ? 'service-worker.js'
                             : 'assets/[name]-[hash].js'
                 }
             },

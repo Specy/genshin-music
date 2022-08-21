@@ -23,7 +23,7 @@
     "jsx": "react-jsx",
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"],
+      "$/*": ["*"],
       "$cmp/*": ["components/*"],
       "$lib/*": ["lib/*"],
       "$pages/*": ["pages/*"],

@@ -1,4 +1,4 @@
-import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "@/appConfig"
+import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "$/appConfig"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"

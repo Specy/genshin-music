@@ -1,5 +1,5 @@
 import { ChangeEvent, Component } from 'react'
-import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "@/appConfig"
+import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "$/appConfig"
 import Note from '$cmp/Player/Note'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "$lib/Utilities"

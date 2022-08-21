@@ -1,6 +1,6 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { APP_NAME, isTwa, IS_MOBILE } from "@/appConfig"
+import { APP_NAME, isTwa, IS_MOBILE } from "$/appConfig"
 import HomeStore from '$stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'

@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from "@inlet/react-pixi";
-import { PLAY_BAR_OFFSET } from "@/appConfig";
+import { PLAY_BAR_OFFSET } from "$/appConfig";
 import { Rectangle, TextStyle } from "pixi.js";
 import { memo, useEffect, useState } from "react";
 import useFontFaceObserver from "use-font-face-observer";

@@ -1,6 +1,6 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "@/appConfig"
+import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/appConfig"
 import AddColumn from '$cmp/icons/AddColumn';
 import RemoveColumn from "$cmp/icons/RemoveColumn"
 import MidiParser from "$cmp/Composer/MidiParser"

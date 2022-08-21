@@ -28,7 +28,7 @@ import './Player.css'
 import { IconButton } from '$cmp/Inputs/IconButton';
 import { subscribeObeservableObject } from '$lib/Hooks/useObservable';
 import { ChangeEvent } from 'react';
-import { SPEED_CHANGERS } from '@/appConfig';
+import { SPEED_CHANGERS } from '$/appConfig';
 import { playerControlsStore } from '$stores/PlayerControlsStore';
 import { PlayerSongControls } from '$cmp/Player/PlayerSongControls';
 

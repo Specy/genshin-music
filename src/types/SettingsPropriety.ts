@@ -1,4 +1,4 @@
-import type{ INSTRUMENTS } from '@/appConfig'
+import type{ INSTRUMENTS } from '$/appConfig'
 import type { ComposerSettings, MainPageSettings, VsrgComposerSettings } from '$lib/BaseSettings'
 interface BaseSettingsProp {
     name: string

@@ -4,13 +4,13 @@ import Home from '$cmp/Index/Home';
 import HomeStore from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
-import { APP_NAME, APP_VERSION, IS_TAURI, TAURI, UPDATE_MESSAGE } from "@/appConfig"
+import { APP_NAME, APP_VERSION, IS_TAURI, TAURI, UPDATE_MESSAGE } from "$/appConfig"
 import Logger from '$cmp/Index/Logger'
-import rotateImg from "@/assets/icons/rotate.svg"
+import rotateImg from "$/assets/icons/rotate.svg"
 
 import { withRouter } from "react-router-dom";
 import './App.css';
-import './Utility.css'
+import './Utility.scss'
 import { historyTracker } from '$stores/History';
 import isMobile from 'is-mobile';
 import { FaExpandAlt } from 'react-icons/fa';
@@ -142,6 +142,7 @@ function App({ history }: any) {
 			askForStorage={askForStorage}
 		/>
 		<div className="rotate-screen">
+
 			{isOnMobile && <>
 				<img src={rotateImg} alt="icon for the rotating screen"/>
 				<p>

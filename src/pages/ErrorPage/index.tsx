@@ -1,6 +1,6 @@
 import { FaTrash, FaDownload } from 'react-icons/fa';
 import { asyncConfirm } from "$cmp/Utility/AsyncPrompts"
-import { APP_NAME } from "@/appConfig"
+import { APP_NAME } from "$/appConfig"
 import { logger } from '$stores/LoggerStore';
 import { SongMenu } from '$cmp/Layout/SongMenu';
 import './ErrorPage.css'

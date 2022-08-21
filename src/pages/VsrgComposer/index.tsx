@@ -20,7 +20,7 @@ import { SerializedSong } from "$lib/Songs/Song";
 import { songService } from "$lib/Services/SongService";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { isFocusable } from "$lib/Utilities";
-import { DEFAULT_VSRG_KEYS_MAP } from "@/appConfig";
+import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig";
 import { ClickType } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
 

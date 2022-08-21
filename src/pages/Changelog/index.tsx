@@ -4,7 +4,7 @@ import { FaGithub } from 'react-icons/fa'
 import { ChangelogRow } from './ChangelogRow'
 import './Changelog.css'
 import { updates } from './updates'
-import { APP_VERSION } from '@/appConfig'
+import { APP_VERSION } from '$/appConfig'
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 

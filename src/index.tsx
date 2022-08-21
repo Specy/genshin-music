@@ -4,6 +4,7 @@ import { render } from 'react-dom';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { Router } from './Router'
 import { setIfInTWA } from '$lib/Utilities'
+
 render(
 	<StrictMode>
 		<Router />
@@ -13,10 +14,4 @@ render(
 
 setIfInTWA()
 serviceWorkerRegistration.register()
-
-
-
-
-
-
 
