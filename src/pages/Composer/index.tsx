@@ -34,7 +34,7 @@ import { SerializedSong } from '$lib/Songs/Song';
 import { songsStore } from '$stores/SongsStore';
 import { InstrumentControls } from '$cmp/Composer/InstrumentControls';
 import { AppButton } from '$cmp/Inputs/AppButton';
-import { ThemeProvider, ThemeStore } from '$stores/ThemeStore';
+import { ThemeProvider, ThemeStore } from '$/stores/ThemeStore/ThemeProvider';
 import { Title } from '$cmp/Miscellaneous/Title';
 import { songService } from '$lib/Services/SongService';
 

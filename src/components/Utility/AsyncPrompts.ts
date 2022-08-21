@@ -1,5 +1,5 @@
 import {logger} from "$stores/LoggerStore";
-import { ThemeProvider } from '$stores/ThemeStore'
+import { ThemeProvider } from '$/stores/ThemeStore/ThemeProvider'
 import isMobile from 'is-mobile'
 async function asyncPrompt(question: string):Promise<string | null> {
     return new Promise(resolve => {

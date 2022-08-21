@@ -9,7 +9,6 @@ interface SerializedKeybinds {
     vsrg: {
         k4: string[]
         k6: string[]
-        k8: string[]
     }
     keyboard: {
         sky: string[],
@@ -21,8 +20,8 @@ class KeyBinds {
     version: number = 1
     @observable
     private vsrg = {
-        4: ['A', 'S', 'J', 'K'],
-        6: ['A', 'S', 'D', 'H', 'J', 'K'],
+        k4: ['A', 'S', 'J', 'K'],
+        k6: ['A', 'S', 'D', 'H', 'J', 'K'],
     }
     @observable
     private keyboard = {
@@ -43,14 +42,14 @@ class KeyBinds {
     }
 
     getVsrgKeybinds(keyCount: VsrgSongKeys) {
-        return this.vsrg[keyCount]
+        return this.vsrg[`k${keyCount}`]
     }
     setVsrgKeybind(keyCount: VsrgSongKeys, index: number, keybind: string) {
-        this.vsrg[keyCount][index] = keybind
+        this.vsrg[`k${keyCount}`][index] = keybind
         this.save()
     }
     setVsrgKeybinds(keyCount: VsrgSongKeys, keybinds: string[]) {
-        this.vsrg[keyCount].splice(0, keybinds.length, ...keybinds)
+        this.vsrg[`k${keyCount}`].splice(0, keybinds.length, ...keybinds)
         this.save()
     }
     getKeyboardKeybinds() {

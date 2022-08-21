@@ -26,7 +26,7 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import HomeStore from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
-import { ThemeStore } from "$stores/ThemeStore";
+import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 

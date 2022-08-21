@@ -36,6 +36,9 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         song.breakpoints = obj.breakpoints ?? []
         return song
     }
+    static isSerializedType(obj: any){
+        return obj?.type === 'vsrg'
+    }
 
     setAudioSong(song: Song){
         if(this.audioSongId === song.id) return

@@ -1,6 +1,8 @@
-import { Theme } from "./index"
-const baseThemes: Theme[] = [
+import { SerializedTheme } from "./ThemeProvider"
+const baseThemes: SerializedTheme[] = [
     {
+        id: null,
+        type: 'theme',
         editable: false,
         other: {
             backgroundImageMain: "",
@@ -62,6 +64,8 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: null,
+        type: 'theme',
         other: {
             backgroundImageMain: "",
             backgroundImageComposer: "",
@@ -122,6 +126,8 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: null,
+        type: 'theme',
         other: {
             backgroundImageMain: "./assets/images/Rainy_Theme.png",
             backgroundImageComposer: "./assets/images/Rainy_Theme.png",
@@ -182,6 +188,8 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: null,
+        type: 'theme',
         other: {
             backgroundImageMain: "./assets/images/Liyue_Theme.jpg",
             backgroundImageComposer: "./assets/images/Liyue_Theme.jpg",
@@ -242,6 +250,8 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: null,
+        type: 'theme',
         other: {
             backgroundImageMain: "",
             backgroundImageComposer: "",
@@ -301,6 +311,8 @@ const baseThemes: Theme[] = [
     },
     {
         editable: false,
+        id: null,
+        type: 'theme',
         other: {
             backgroundImageMain: "./assets/images/Snow_Theme.gif",
             backgroundImageComposer: "./assets/images/Snow_Theme.gif",

@@ -300,6 +300,8 @@ export const MIDISettings = {
 
 export const ThemeSettings = {
     editable: false,
+    id: null,
+    type: 'theme',
     other: {
         backgroundImageMain: '',
         backgroundImageComposer: '',

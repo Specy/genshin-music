@@ -3,7 +3,7 @@ import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import SvgNote from '$cmp/SvgNotes'
 import { observe } from 'mobx'
-import { ThemeProvider } from '$stores/ThemeStore'
+import { ThemeProvider } from '$/stores/ThemeStore/ThemeProvider'
 import type { NoteData } from '$lib/Instrument'
 import type { InstrumentName, NoteStatus } from '$types/GeneralTypes'
 import type { ApproachingNote } from '$lib/Songs/SongClasses'

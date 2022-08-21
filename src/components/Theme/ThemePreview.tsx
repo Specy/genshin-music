@@ -2,14 +2,14 @@ import { APP_NAME } from "$/appConfig";
 import { fileService } from "$lib/Services/FileService";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import {logger} from "$stores/LoggerStore";
-import { Theme } from "$stores/ThemeStore";
+import { SerializedTheme } from "$/stores/ThemeStore/ThemeProvider";
 
 
 interface ThemePreviewProps {
-    theme: Theme,
+    theme: SerializedTheme,
     current: boolean,
-    onClick?: (theme: Theme) => void,
-    onDelete?: (theme: Theme) => void,
+    onClick?: (theme: SerializedTheme) => void,
+    onDelete?: (theme: SerializedTheme) => void,
     downloadable?: boolean
 }
 export function ThemePreview({ theme, onClick, onDelete, current, downloadable }: ThemePreviewProps) {

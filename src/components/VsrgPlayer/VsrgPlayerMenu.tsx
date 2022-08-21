@@ -24,7 +24,7 @@ import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPe
 import { Link } from "react-router-dom";
 import HomeStore from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
-import { ThemeStore } from "$stores/ThemeStore";
+import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 
 type MenuTabs = 'Songs' | 'Settings'

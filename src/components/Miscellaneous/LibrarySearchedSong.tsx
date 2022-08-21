@@ -4,7 +4,7 @@ import { logger } from '$stores/LoggerStore';
 import type { SearchedSongType } from '$types/GeneralTypes';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import type {  RecordedSong } from '$lib/Songs/RecordedSong';
-import { ThemeStore } from '$stores/ThemeStore';
+import { ThemeStore } from '$/stores/ThemeStore/ThemeProvider';
 import { songService } from '$lib/Services/SongService';
 
 interface SearchedSongProps{

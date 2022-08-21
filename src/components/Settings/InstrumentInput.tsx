@@ -1,5 +1,5 @@
 import { ChangeEvent } from "react"
-import { ThemeStore } from "$stores/ThemeStore"
+import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider"
 import { InstrumentName } from "$types/GeneralTypes"
 import { SettingsInstrument, SettingUpdateKey } from "$types/SettingsPropriety"
 

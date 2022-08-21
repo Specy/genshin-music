@@ -42,10 +42,8 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
 
     static stripMetadata(song: SerializedSong): SerializedSong{
         const obj = {...song}
-        obj.id = null
         //@ts-ignore
         delete obj._id
-        obj.folderId = null
         return obj
     }
     static getSongType(song: SerializedSong): SongType | null{

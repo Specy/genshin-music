@@ -5,7 +5,7 @@ import { resolve } from "path";
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import rollupNodePolyFill from 'rollup-plugin-node-polyfills'
-
+import checker from 'vite-plugin-checker';
 const vite = ({ mode }) => {
     return defineConfig({
 
@@ -75,7 +75,12 @@ const vite = ({ mode }) => {
                 ]
             }
         },
-        plugins: [react()],
+        plugins: [
+            react(),
+            checker({
+                typescript: true
+            })
+        ],
         build: {
             sourcemap: true,
             outDir: process.env.BUILD_PATH || 'build',

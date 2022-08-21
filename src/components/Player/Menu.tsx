@@ -24,7 +24,7 @@ import { useTheme } from '$lib/Hooks/useTheme';
 import { SearchedSongType } from '$types/GeneralTypes';
 import { FileElement, FilePicker } from '$cmp/Inputs/FilePicker';
 import "./menu.css"
-import { ThemeStore } from '$stores/ThemeStore';
+import { ThemeStore } from '$/stores/ThemeStore/ThemeProvider';
 import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip"
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip';

@@ -1,6 +1,6 @@
 import { BodyDropper, DroppedFile } from "$cmp/Utility/BodyDropper"
-import { fileService, UnknownSongImport } from "$lib/Services/FileService"
-import {logger} from "$stores/LoggerStore";
+import { FileKind, FileService, fileService, UnknownSong, UnknownSongImport } from "$lib/Services/FileService"
+import { logger } from "$stores/LoggerStore";
 
 interface DropZoneProviderProps {
     children: React.ReactNode
@@ -8,27 +8,38 @@ interface DropZoneProviderProps {
 export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
 
     const handleDrop = async (files: DroppedFile<UnknownSongImport>[]) => {
-        try{
+        try {
             for (const file of files) {
-                const songs = file.data
-                const result = await fileService.addSongs(songs)
-                if(result.ok){
-                    const success = result.successful.map(e => e.name)
-                    const firstSong = result.successful[0]
-                    //@ts-ignore
-                    const type = firstSong.type ?? (firstSong.data?.isComposedVersion ? "composed" : "recorded")
+                const data = file.data
+                const result = await fileService.importUnknownFile(data)
+                if (result.ok) {
+                    const success = result.successful.filter(e => FileService.getSerializedObjectType(e) === FileKind.Song) as UnknownSong[]
+                    const firstSong = success[0]
+                    if (firstSong) {
+                        //@ts-ignore
+                        const type = firstSong.type ?? (firstSong.data?.isComposedVersion ? "composed" : "recorded")
 
-                    if(success.length === 1){
-                        logger.success(`Song added to the ${type} tab!`, 4000)
-                    }else if (success.length > 1){
-                        logger.success(`${success.length} songs added!`, 4000)
+                        if (success.length === 1) {
+                            logger.success(`Song added to the ${type} tab!`, 4000)
+                        } else if (success.length > 1) {
+                            logger.success(`${success.length} songs added!`, 4000)
+                        }
+                    } else {
+                        console.log('a')
+                        logger.success('File imported!', 4000)
                     }
+
                 } else {
-                    const errors = result.errors.map(s => s.name || "UNKNOWN").join(", ")
-                    logger.error(`There was an error importing the song: ${errors}`)
+                    const errors = result.errors.filter(e => FileService.getSerializedObjectType(e) === FileKind.Song) as UnknownSong[]
+                    const firstError = errors[0]
+                    if (firstError) {
+                        logger.error(`Error importing the song ${firstError.name}!`, 4000)
+                    }else{
+                        logger.error(`Error importing the file!`, 4000)
+                    }
                 }
             }
-        }catch(e){
+        } catch (e) {
             console.error(e)
             logger.error("Error importing file")
         }

@@ -102,6 +102,13 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         }
         return parsed
     }
+    static isSerializedType(obj: any){
+        if(typeof obj !== 'object') return false
+        if(obj.type === 'composed') return true
+        //legacy format
+        if(obj?.data?.isComposedVersion === true) return true 
+        return false
+    }
     get isComposed(): true {
         return true
     }

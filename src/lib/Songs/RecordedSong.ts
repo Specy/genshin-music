@@ -59,7 +59,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         
         if(song.instruments.length === 0) song.instruments = [new InstrumentData()]
         if (version === 1) {
-            const clonedNotes: [] = Array.isArray(notes) ? clonedeep(notes) : []
+            const clonedNotes = Array.isArray(notes) ? clonedeep(notes) : []
             song.notes = clonedNotes.map(note => {
                 return RecordedNote.deserialize([note[0], note[1], note[2] || 1] as SerializedRecordedNote)
             })
@@ -67,6 +67,13 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             song.notes = notes.map(note => RecordedNote.deserialize(note))
         }
         return song
+    }
+    static isSerializedType(obj: any){
+        if(typeof obj !== 'object') return false
+        if(obj.type === 'recorded') return true
+        //legacy format
+        if(obj?.data?.isComposedVersion === false) return true 
+        return false
     }
     serialize = (): SerializedRecordedSong => {
         return {

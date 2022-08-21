@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { ThemeKeys, ThemeProvider } from "$stores/ThemeStore";
+import { ThemeKeys, ThemeProvider } from "$/stores/ThemeStore/ThemeProvider";
 import { capitalize } from "$lib/Utilities";
 import Color from "color";
 import { HexColorInput, HexColorPicker } from "react-colorful";

@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { makeObservable, observable } from "mobx";
 import { ThemeSettings } from '$lib/BaseSettings'
 import { BASE_THEME_CONFIG } from '$/appConfig'
 import cloneDeep from 'lodash.clonedeep'
@@ -6,7 +6,9 @@ import Color from 'color'
 import { logger } from '$stores/LoggerStore'
 import { baseThemes } from "./defaultThemes";
 import { themeService } from "$lib/Services/ThemeService";
+import { themeStore } from "./ThemeStore";
 
+//TODO cleanup everything here, it's held together with tape
 export type ThemeKeys = keyof typeof ThemeSettings.data
 export type ThemeProp = {
     name: ThemeKeys
@@ -17,45 +19,60 @@ export type ThemeProp = {
 export type ThemeConfig = { [key in ThemeKeys]: ThemeProp }
 export type BackgroundProps = 'Composer' | 'Main'
 export type OtherKeys = keyof typeof ThemeSettings.other
-export interface Theme {
-    data: ThemeConfig,
-    other: {
-        [key in OtherKeys]: string
-    },
-    editable: boolean
-}
 
-export type SerializedTheme = Theme & {
-    id: string
-}
+
+export type SerializedTheme = ThemeState 
 
 
 export class BaseTheme {
-    state: Theme
+    state: ThemeState
     constructor(name: string) {
-        this.state = cloneDeep(ThemeSettings as Theme)
+        this.state = cloneDeep(ThemeSettings as ThemeState)
         this.state.other.name = name
         this.state.editable = true
     }
     toJson = () => {
         return JSON.stringify(this.state)
     }
-    toObject = (): Theme => {
-        return cloneDeep(this.state)
+    serialize(): SerializedTheme{
+        return {
+            ...cloneDeep(this.state),
+            id: null,
+            type: 'theme'
+        }
     }
 }
 
-const defaultThemes: Theme[] = [
-    ThemeSettings as Theme,
+const defaultThemes: ThemeState[] = [
+    ThemeSettings as ThemeState,
     ...baseThemes
 ]
+
+export interface ThemeState {
+    data: ThemeConfig,
+    other: {
+        [key in OtherKeys]: string
+    },
+    id: string | null,
+    type: 'theme'
+    editable: boolean
+}
+
 export class ThemeStore {
-    state: Theme
-    baseTheme: Theme
-    constructor(baseTheme: Theme) {
+    state: ThemeState
+    baseTheme: ThemeState
+    constructor(baseTheme: ThemeState) {
         this.baseTheme = cloneDeep(baseTheme)
         this.state = observable(cloneDeep(baseTheme))
         this.load()
+    }
+
+    static isSerializedType(obj:any){
+        if(typeof obj !== 'object') return false
+        if(obj.type === 'theme') return true
+        //legacy format recognition
+        if(obj.data && obj.other) return true
+        return false
     }
     load = async () => {
         try {
@@ -108,8 +125,12 @@ export class ThemeStore {
             return value.isDark() ? value.lighten(amount * 1.1) : value.darken(amount)
         }
     }
-    toJson = () => {
-        return JSON.stringify(this.state)
+    serialize = (): SerializedTheme => {
+        return {
+            ...cloneDeep(this.state),
+            id: this.state.other.id ?? null,
+            type: 'theme'
+        }
     }
     setBackground = (url: string, type: 'Composer' | 'Main') => {
         //@ts-ignore
@@ -141,7 +162,7 @@ export class ThemeStore {
             logger.error("There was an error loading the theme", 4000)
         }
     }
-    loadFromTheme = (theme: Theme) => {
+    loadFromTheme = (theme: ThemeState) => {
         for (const [key, value] of Object.entries(theme.data)) {
             this.set(key as ThemeKeys, value.value)
         }
@@ -150,17 +171,22 @@ export class ThemeStore {
         }
         this.state.editable = Boolean(theme.editable)
     }
-    sanitize = (obj: any): Theme => {
-        const sanitized = cloneDeep(this.baseTheme)
+    sanitize = (obj: any): SerializedTheme => {
+        const sanitized = cloneDeep(this.baseTheme) as SerializedTheme
         Object.entries(obj.data).forEach(([key, value]: [string, any]) => {
+                //@ts-ignore
             if (sanitized.data[key] !== undefined) {
                 const filtered = Color(value.value)
+                //@ts-ignore
                 sanitized.data[key].value = filtered.toString()
+                //@ts-ignore
                 sanitized.data[key].text = filtered.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
             }
         })
         Object.entries(obj.other).forEach(([key, value]: [string, any]) => {
+                //@ts-ignore
             if (sanitized.other[key] !== undefined) {
+                //@ts-ignore
                 sanitized.other[key] = value
             }
         })
@@ -183,9 +209,9 @@ export class ThemeStore {
         }
     }
     save = () => {
-        themeService.setCurrentThemeId(this.getId())
+        themeStore.setCurrentThemeId(this.getId())
         if(!this.state.editable) return
-        return themeService.updateTheme(this.state.other.id, cloneDeep(this.state))
+        return themeStore.updateTheme(this.state.other.id, cloneDeep(this.state))
     }
 }
 

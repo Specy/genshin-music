@@ -6,7 +6,7 @@ import { isNumberCloseTo } from "$lib/Utilities";
 import { Application } from "pixi.js";
 import { Component, createRef } from "react";
 import { keyBinds } from "$stores/Keybinds";
-import { ThemeStore } from "$stores/ThemeStore";
+import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
 import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";

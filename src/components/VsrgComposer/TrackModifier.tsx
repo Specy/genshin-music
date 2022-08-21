@@ -1,7 +1,7 @@
 import { AppButton } from "$cmp/Inputs/AppButton";
 import { VsrgTrackModifier } from "$lib/Songs/VsrgSong";
 import { FaEye, FaEyeSlash, FaVolumeMute, FaVolumeUp } from "react-icons/fa";
-import { ThemeStore } from "$stores/ThemeStore";
+import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
 
 
 interface TrackModifierProps{
