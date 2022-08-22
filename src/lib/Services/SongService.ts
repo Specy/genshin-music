@@ -6,6 +6,8 @@ import { VsrgSong } from "$lib/Songs/VsrgSong"
 import { getSongType } from "$lib/Utilities"
 import { DbInstance } from "./Database/Database"
 
+
+//TODO instead of using SerializedSong, switch to SerializedSongKind
 class SongService{
     songCollection = DbInstance.collections.songs
     async getSongs(): Promise<SerializedSong[]>{

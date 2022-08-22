@@ -17,7 +17,7 @@ interface SerializedKeybinds {
 }
 
 class KeyBinds {
-    version: number = 1
+    version: number = 2
     @observable
     private vsrg = {
         k4: ['A', 'S', 'J', 'K'],

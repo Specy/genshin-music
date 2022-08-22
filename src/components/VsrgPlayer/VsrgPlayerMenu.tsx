@@ -26,6 +26,7 @@ import HomeStore from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
 import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
+import { IS_MOBILE } from "$/appConfig";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -45,6 +46,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
     const [songs] = useSongs()
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
+        if(IS_MOBILE) return setIsVisible(false)
         setOpen(false)
     }, { active: isOpen && isVisible, ignoreFocusable: true })
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
@@ -134,11 +136,13 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                         marginTop: '0.6rem',
                         justifyContent: 'flex-end'
                     }}>
-                        <Link to={'/Keybinds'}>
-                            <AppButton>
-                                Change keybinds
-                            </AppButton>
-                        </Link>
+                        {!IS_MOBILE &&
+                            <Link to={'/Keybinds'}>
+                                <AppButton>
+                                    Change keybinds
+                                </AppButton>
+                            </Link>
+                        }
                     </div>
 
                 </MenuPanel>

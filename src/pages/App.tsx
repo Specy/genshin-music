@@ -16,6 +16,7 @@ import isMobile from 'is-mobile';
 import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
 import { IconButton } from '$/components/Inputs/IconButton';
 import { metronome } from '$/lib/Metronome';
+import { logsStore } from '$/stores/LogsStore';
 
 function App({ history }: any) {
 	const [hasVisited, setHasVisited] = useState(false)
@@ -28,8 +29,23 @@ function App({ history }: any) {
 	}, [])
 	useEffect(() => {
 		AUDIO_CONTEXT.addEventListener('statechange', handleAudioContextStateChange)
-		return () => AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
+		const originalErrorLog = console.error
+		//intercept console errors and log them to the logger store
+		const logCallback = (...args: any[]) => {
+			originalErrorLog(...args)
+			logsStore.addLog({
+				error: args.find(arg => arg instanceof Error),
+				message: args.map(arg => typeof arg === 'string' ? arg : JSON.stringify(arg)).join(' ')
+			})
+		}
+		console.error = logCallback
+		return () => {
+			AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
+			console.error = originalErrorLog
+		}
 	},[])
+
+
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
 		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")

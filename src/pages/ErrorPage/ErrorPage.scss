@@ -12,6 +12,20 @@
 	justify-content: space-between;
 	margin-top: 4vh;
 }
+.error-logs{
+	display: flex;
+	flex-direction: column-reverse;
+	padding: 0.5rem;
+	background-color: var(--primary);
+	color: var(--primary-text);
+	border-radius: 0.5rem;
+	.error-log-row{
+		word-break: break-word;
+		border-top: solid 1px var(--secondary);
+		padding: 0.5rem;
+	}
+}
+
 .error-songs-wrapper {
 	padding: 0.4rem;
 	margin-top: 4vh;

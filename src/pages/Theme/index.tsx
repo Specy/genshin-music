@@ -145,6 +145,11 @@ function ThemePage() {
             onChange={(e) => ThemeProvider.setOther('name', e)}
             onLeave={() => ThemeProvider.save()}
         />
+        <div style={{textAlign:'center', marginTop: '1rem'}}>
+            <span style={{color: 'var(--red)'}}>
+            Warning
+            </span>: GIF backgrounds could reduce performance
+        </div>
         <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
             Your Themes
         </div>

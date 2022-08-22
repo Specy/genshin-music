@@ -118,7 +118,7 @@ export function SongMenu<T>({
                     )}
                     {noFolderVsrg.songs.length === 0 &&
                         <div style={{ padding: '0.2rem', fontSize: '0.9rem' }}>
-                            No songs here, record one!
+                            No songs here, create one!
                         </div>
                     }
                 </SongFolderContent>

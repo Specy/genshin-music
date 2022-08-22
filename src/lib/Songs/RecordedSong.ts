@@ -75,6 +75,12 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         if(obj?.data?.isComposedVersion === false) return true 
         return false
     }
+    static isOldFormatSerializedType(obj:any){
+        if(typeof obj !== 'object') return false
+        if(obj.type) return false
+        if(Array.isArray(obj.songNotes) && !obj.composedSong) return true
+        return false
+    }
     serialize = (): SerializedRecordedSong => {
         return {
             name: this.name,

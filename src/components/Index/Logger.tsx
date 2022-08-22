@@ -34,7 +34,9 @@ function Toast({ toast }: ToastProps) {
         key={id}
         className={visible ? "logger-toast" : "logger-toast logger-toast-hidden"}
         style={{ maxWidth: isBig ? '24rem' : '19rem' }}
-        onClick={() => logger.removeToast(id)}
+        onClick={() => {
+            logger.removeToast(id)
+        }}
     >
         <div className="logger-content">
             {!isBig &&

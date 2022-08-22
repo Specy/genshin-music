@@ -47,6 +47,6 @@
 }
 @media only screen and (max-width: 900px) {
     .player-chunks-page{
-        margin-left: 0;
+        width: 45vw;
     }
 }

@@ -136,15 +136,7 @@ function Menu({ functions, data }: MenuProps) {
         for (const file of files) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
-                const result = await fileService.importUnknownFile(songs)
-                const successfulSongs = result.getSuccessfulSongs()
-                const errorSongs = result.getSongErrors()
-                successfulSongs.forEach(s => {
-                    logger.success(`${s.type} song imported successfully`)
-                })
-                errorSongs.forEach(s => {
-                    logger.error(`${s.file?.name} song import failed: ${s.error}`)
-                })
+                await fileService.importAndLog(songs)
             } catch (e) {
                 console.error(e)
                 if (file.file.name.includes?.(".mid")) {

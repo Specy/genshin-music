@@ -11,31 +11,7 @@ export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
         try {
             for (const file of files) {
                 const data = file.data
-                const result = await fileService.importUnknownFile(data)
-                const songs = result.getSuccessfulSongs()
-                const songErrors = result.getSongErrors()
-                for (const song of songs) {
-                    logger.success(`Imported ${song.name}`)
-                }  
-                for (const file of songErrors) {
-                    logger.error(`Error importing ${file.file?.name ?? ''}: ${file.error}`)
-                }
-                const folders = result.getSuccessfulFolders()
-                const folderErrors = result.getFolderErrors()
-                for (const folder of folders) {
-                    logger.success(`Imported folder ${folder.name}`)
-                }
-                for (const file of folderErrors) {
-                    logger.error(`Error importing ${file.file?.name ?? ''}: ${file.error}`)
-                }
-                const themes = result.getSuccessfulThemes()
-                const themeErrors = result.getThemeErrors()
-                for (const theme of themes) {
-                    logger.success(`Imported ${theme?.other?.name ?? ''}`)
-                }
-                for (const file of themeErrors) {
-                    logger.error(`Error importing theme: ${file.error}`)
-                }
+                await fileService.importAndLog(data)
             }
         } catch (e) {
             console.error(e)

@@ -68,7 +68,6 @@
 @supports(aspect-ratio: 16 / 9){
 	.frame-outer {
 		padding-bottom: unset;
-		width: unset;
 		height: unset;
 		flex: 1;
 		aspect-ratio: 16 / 9;
