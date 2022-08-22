@@ -6,7 +6,7 @@ import MenuPanel from '$cmp/Layout/MenuPanel'
 import DonateButton from '$cmp/Miscellaneous/DonateButton'
 import Memoized from '$cmp/Utility/Memoized';
 import { IS_MIDI_AVAILABLE } from '$/appConfig';
-import Analytics from '$lib/Analytics';
+import Analytics from '$/lib/Stats';
 import { logger } from '$stores/LoggerStore';
 import { AppButton } from '$cmp/Inputs/AppButton';
 import { SongMenu } from '$cmp/Layout/SongMenu';

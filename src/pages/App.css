@@ -17,6 +17,7 @@
 	--whitish: #ede5d8;
 	--hint-main: #949494;
 	--red: rgb(242 75 91);
+	--red-color: #ede5d8;
 	--red-bg: rgb(193 81 92);
 	--green: #358a55;
 	--orange: #dd8d46;
@@ -404,7 +405,14 @@ a {
 ::-webkit-scrollbar-thumb:hover {
 	background: #555;
 }
-
+.resume-audio-context{
+	position: fixed;
+	z-index: 10;
+	color: var(--red-color);
+	background-color: var(--red);
+	bottom: 0.8rem;
+	right: 0.8rem;
+}
 
 .approaching-accuracy {
 	position: absolute;

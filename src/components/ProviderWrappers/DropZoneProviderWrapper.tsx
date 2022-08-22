@@ -12,31 +12,29 @@ export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
             for (const file of files) {
                 const data = file.data
                 const result = await fileService.importUnknownFile(data)
-                if (result.ok) {
-                    const success = result.successful.filter(e => FileService.getSerializedObjectType(e) === FileKind.Song) as UnknownSong[]
-                    const firstSong = success[0]
-                    if (firstSong) {
-                        //@ts-ignore
-                        const type = firstSong.type ?? (firstSong.data?.isComposedVersion ? "composed" : "recorded")
-
-                        if (success.length === 1) {
-                            logger.success(`Song added to the ${type} tab!`, 4000)
-                        } else if (success.length > 1) {
-                            logger.success(`${success.length} songs added!`, 4000)
-                        }
-                    } else {
-                        console.log('a')
-                        logger.success('File imported!', 4000)
-                    }
-
-                } else {
-                    const errors = result.errors.filter(e => FileService.getSerializedObjectType(e) === FileKind.Song) as UnknownSong[]
-                    const firstError = errors[0]
-                    if (firstError) {
-                        logger.error(`Error importing the song ${firstError.name}!`, 4000)
-                    }else{
-                        logger.error(`Error importing the file!`, 4000)
-                    }
+                const songs = result.getSuccessfulSongs()
+                const songErrors = result.getSongErrors()
+                for (const song of songs) {
+                    logger.success(`Imported ${song.name}`)
+                }  
+                for (const file of songErrors) {
+                    logger.error(`Error importing ${file.file?.name ?? ''}: ${file.error}`)
+                }
+                const folders = result.getSuccessfulFolders()
+                const folderErrors = result.getFolderErrors()
+                for (const folder of folders) {
+                    logger.success(`Imported folder ${folder.name}`)
+                }
+                for (const file of folderErrors) {
+                    logger.error(`Error importing ${file.file?.name ?? ''}: ${file.error}`)
+                }
+                const themes = result.getSuccessfulThemes()
+                const themeErrors = result.getThemeErrors()
+                for (const theme of themes) {
+                    logger.success(`Imported ${theme?.other?.name ?? ''}`)
+                }
+                for (const file of themeErrors) {
+                    logger.error(`Error importing theme: ${file.error}`)
                 }
             }
         } catch (e) {

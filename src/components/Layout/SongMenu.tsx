@@ -37,15 +37,18 @@ export function SongMenu<T>({
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
     const [noFolderVsrg, setNoFolderVsrg] = useState<Folder>()
     const [filteredSongs, setFilteredSongs] = useState<SongKinds[]>([])
+    const [folders] = useFolders(filteredSongs)
     useEffect(() => {
         setFilteredSongs(songs.filter(s => !exclude?.includes(s.type) ?? true))
     }, [songs, exclude])
     useEffect(() => {
-        setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !song.folderId && song.type === 'recorded')))
-        setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !song.folderId && song.type === 'composed')))
-        setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !song.folderId && song.type === 'vsrg')))
-    }, [filteredSongs])
-    const [folders] = useFolders(filteredSongs)
+        function isInFolder(song: SongKinds) {
+            return folders.some(f => f.id === song.folderId)
+        }
+        setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'recorded')))
+        setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'composed')))
+        setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'vsrg')))
+    }, [filteredSongs,folders])
     const [theme] = useTheme()
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
     return <div className={className} style={style}>

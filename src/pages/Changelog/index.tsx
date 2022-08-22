@@ -22,7 +22,7 @@ export default function Changelogpage() {
 
         <div className='changelog-page-title'>
             Changelog
-            <span style={{ fontSize: '1.2rem' }}>
+            <span style={{ fontSize: '1.2rem', marginLeft: '1rem' }}>
                 v{APP_VERSION}
             </span>
         </div>

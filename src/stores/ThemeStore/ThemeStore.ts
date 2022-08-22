@@ -1,5 +1,5 @@
 import { Query } from "$/lib/Services/Database/Collection";
-import { themeService } from "$/lib/Services/ThemeService";
+import { _themeService } from "$/lib/Services/ThemeService";
 import { makeObservable, observable } from "mobx";
 import { SerializedTheme } from "./ThemeProvider";
 
@@ -15,33 +15,33 @@ export class ThemeStore{
         this.sync()
     }
     async sync(){
-        const themes = await themeService.getThemes()
+        const themes = await _themeService.getThemes()
         this.themes.splice(0, this.themes.length, ...themes)
     }
 
     async addTheme(theme: SerializedTheme) {
-        const id = await themeService.addTheme(theme)
+        const id = await _themeService.addTheme(theme)
         await this.sync()
         return id
     }
     async updateTheme(id: string, data: SerializedTheme) {
-        await themeService.updateTheme(id, data)
+        await _themeService.updateTheme(id, data)
         await this.sync()
     }
     async removeTheme(query: Query<SerializedTheme>) {
-        await themeService.removeTheme(query)
+        await _themeService.removeTheme(query)
         await this.sync()
         
     }
     async removeThemeById(id: string) {
-        await themeService.removeThemeById(id)
+        await _themeService.removeThemeById(id)
         await this.sync()
     }
     getCurrentThemeId() {
-        return themeService.getCurrentThemeId()
+        return _themeService.getCurrentThemeId()
     }
     setCurrentThemeId(id: string) {
-        return themeService.setCurrentThemeId(id)
+        return _themeService.setCurrentThemeId(id)
     }
 } 
 

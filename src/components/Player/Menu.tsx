@@ -10,7 +10,7 @@ import MenuPanel from '$cmp/Layout/MenuPanel'
 import DonateButton from '$cmp/Miscellaneous/DonateButton'
 import LibrarySearchedSong from '$cmp/Miscellaneous/LibrarySearchedSong'
 import { SongActionButton } from '$cmp/Inputs/SongActionButton'
-import Analytics from '$lib/Analytics';
+import Analytics from '$/lib/Stats';
 import HomeStore from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { AppButton } from '$cmp/Inputs/AppButton';
@@ -19,7 +19,7 @@ import { Link } from 'react-router-dom'
 import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
 import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
-import { MainPageSettingsDataType } from '$lib/BaseSettings';
+import { PlayerSettingsDataType } from '$lib/BaseSettings';
 import { useTheme } from '$lib/Hooks/useTheme';
 import { SearchedSongType } from '$types/GeneralTypes';
 import { FileElement, FilePicker } from '$cmp/Inputs/FilePicker';
@@ -42,6 +42,7 @@ import useClickOutside from '$lib/Hooks/useClickOutside';
 import { fileService } from '$lib/Services/FileService';
 import { songService } from '$lib/Services/SongService';
 import { RecordedOrComposed } from '$types/SongTypes';
+import { _folderService } from '$/lib/Services/FolderService';
 
 interface MenuProps {
     functions: {
@@ -52,7 +53,7 @@ interface MenuProps {
         changeVolume: (override: SettingVolumeUpdate) => void
     }
     data: {
-        settings: MainPageSettingsDataType
+        settings: PlayerSettingsDataType
     }
 }
 
@@ -135,15 +136,15 @@ function Menu({ functions, data }: MenuProps) {
         for (const file of files) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
-                const result = await fileService.addSongs(songs)
-                if(result.ok){
-                    if(result.successful.length === 1) {
-                        return logger.success(`${result.successful[0].type} song imported successfully`)
-                    }
-                    return logger.success(`${result.successful.length} songs imported successfully`)
-                }
-                console.error(result.errors)
-                logger.error(`There were ${result.errors.length} errors while importing the file`)
+                const result = await fileService.importUnknownFile(songs)
+                const successfulSongs = result.getSuccessfulSongs()
+                const errorSongs = result.getSongErrors()
+                successfulSongs.forEach(s => {
+                    logger.success(`${s.type} song imported successfully`)
+                })
+                errorSongs.forEach(s => {
+                    logger.error(`${s.file?.name} song import failed: ${s.error}`)
+                })
             } catch (e) {
                 console.error(e)
                 if (file.file.name.includes?.(".mid")) {
@@ -180,7 +181,7 @@ function Menu({ functions, data }: MenuProps) {
             8000
         )
     }, [])
-    function downloadAllSongs() {
+    async function downloadAllSongs() {
         try {
             const toDownload = songs.map(song => {
                 if (APP_NAME === 'Sky') {
@@ -190,7 +191,9 @@ function Menu({ functions, data }: MenuProps) {
                 return song
             })
             const date = new Date().toISOString().split('T')[0]
-            fileService.downloadSong(toDownload, `${APP_NAME}_Backup_${date}`)
+            const folders = await _folderService.getFolders()
+            const files = [...folders, ...toDownload]
+            fileService.downloadFiles(files, `${APP_NAME}_Backup_${date}`)
             logger.success("Song backup downloaded")
         } catch (e) {
             console.error(e)

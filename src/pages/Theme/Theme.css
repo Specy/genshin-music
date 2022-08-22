@@ -172,7 +172,7 @@
     width: 100%;
     height: fit-content;
     border-radius: 0.6rem;
-    transition: all 0.2s;
+    transition: filter 0.2s;
     cursor: pointer;
     overflow: hidden;
     min-height: 8rem;

@@ -20,7 +20,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
             backgroundColor: theme.data.background.value,
             color: theme.data.background.text,
             ...(current ?
-                { border: 'solid 2px var(--accent)' } :
+                { outline: 'solid 0.1rem var(--accent)' } :
                 { boxShadow: `0px 0px 10px 0px rgba(0,0,0,0.4)` })
         }}
     >

@@ -8,7 +8,7 @@ export enum LoggerStatus {
     SUCCESS = 'var(--accent)'
 }
 
-export interface LoggerState {
+export interface ToastState {
     timestamp: number
     visible: boolean
     text: string
@@ -23,16 +23,9 @@ export interface PillState {
 }
 
 export class LoggerStore {
+    private lastId = 0
     @observable
-    toastState: LoggerState = {
-        timestamp: 0,
-        visible: false,
-        text: "",
-        timeout: 3000,
-        id: 0,
-        type: LoggerStatus.WARN
-    }
-    private toastTimeout: Timer = 0
+    toasts: ToastState[] = []
     @observable
     pillState: PillState = {
         visible: false,
@@ -46,24 +39,25 @@ export class LoggerStore {
         timeout: number = 3500,
         type: LoggerStatus = LoggerStatus.SUCCESS,
     ) => {
-        Object.assign(this.toastState, {
+        const id = ++this.lastId
+        this.toasts.push({
             text,
             timestamp: Date.now(),
-            visible: true,
             timeout,
-            id: ++this.toastState.id,
+            visible: true,
+            id,
             type
         })
-        if (this.toastTimeout !== undefined) clearTimeout(this.toastTimeout)
-        this.toastTimeout = setTimeout(this.close, timeout)
+        setTimeout(() => this.hideToast(id), timeout)
+        setTimeout(() => this.removeToast(id), timeout + 300)
     }
     error = (text: string, timeout?: number) => {
         this.log(text, timeout, LoggerStatus.ERROR)
     }
     logAppError = (error: Error) => {
-        if(error instanceof AppError){
+        if (error instanceof AppError) {
             this.error(error.message)
-        }else{
+        } else {
             console.error(error)
         }
     }
@@ -73,11 +67,21 @@ export class LoggerStore {
     warn = (text: string, timeout?: number) => {
         this.log(text, timeout, LoggerStatus.WARN)
     }
-    close = () => {
-        this.setState({ visible: false })
+    clearToasts = () => {
+        this.toasts.splice(0, this.toasts.length)
     }
-    setState = (state: Partial<LoggerState>) => {
-        Object.assign(this.toastState, state)
+    hideToast = (id: number) => {
+        this.setState(id, { visible: false })
+    }
+    removeToast = (id: number) => {
+        this.toasts.splice(0, this.toasts.length, ...this.toasts.filter(t => t.id !== id))
+    }
+    setState = (id: number, state: Partial<ToastState>) => {
+        const toast = this.toasts.find(t => t.id === id)
+        if (toast) {
+            Object.assign(toast, state)
+        }
+
     }
     setPillState = (state: Partial<PillState>) => {
         Object.assign(this.pillState, state)

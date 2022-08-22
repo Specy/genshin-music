@@ -5,11 +5,11 @@ import { playerStore } from '$stores/PlayerStore'
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { Recording } from '$lib/Songs/SongClasses';
-import { MainPageSettingsDataType } from "$lib/BaseSettings"
+import { PlayerSettingsDataType } from "$lib/BaseSettings"
 import Instrument from '$lib/Instrument';
 import AudioRecorder from '$lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
-import Analytics from '$lib/Analytics';
+import Analytics from '$/lib/Stats';
 import { withRouter } from 'react-router-dom'
 import { logger } from '$stores/LoggerStore';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
@@ -33,7 +33,7 @@ import { playerControlsStore } from '$stores/PlayerControlsStore';
 import { PlayerSongControls } from '$cmp/Player/PlayerSongControls';
 
 interface PlayerState {
-	settings: MainPageSettingsDataType
+	settings: PlayerSettingsDataType
 	instruments: Instrument[]
 	isLoadingInstrument: boolean
 	isRecordingAudio: boolean
@@ -208,7 +208,7 @@ class Player extends Component<any, PlayerState>{
 		}
 	}
 
-	updateSettings = (override?: MainPageSettingsDataType) => {
+	updateSettings = (override?: PlayerSettingsDataType) => {
 		settingsService.updatePlayerSettings(override !== undefined ? override : this.state.settings)
 	}
 
@@ -346,7 +346,7 @@ class Player extends Component<any, PlayerState>{
 				</div>
 			</div>
 			<PlayerSongControls
-				isRecordingAudio={isRecording}
+				isRecordingAudio={isRecordingAudio}
 				onToggleRecordAudio={this.toggleRecordAudio}
 				onRestart={this.restartSong}
 				isMetronomePlaying={isMetronomePlaying}

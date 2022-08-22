@@ -103,8 +103,8 @@ class SongService{
     }
 }
 
-const songService = new SongService()
+const _songService = new SongService()
 
 export {
-    songService
+    _songService as songService
 }

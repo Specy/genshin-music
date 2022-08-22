@@ -7,7 +7,7 @@ import { asyncConfirm } from "$cmp/Utility/AsyncPrompts";
 import { FloatingDropdownRow, FloatingDropdownText, FloatingDropdown } from "$cmp/Utility/FloatingDropdown";
 import Memoized from "$cmp/Utility/Memoized";
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip";
-import Analytics from "$lib/Analytics";
+import Analytics from "$/lib/Stats";
 import { VsrgPlayerSettingsDataType } from "$lib/BaseSettings";
 import { Folder } from "$lib/Folder";
 import useClickOutside from "$lib/Hooks/useClickOutside";
@@ -232,7 +232,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => {
+                <FloatingDropdownRow onClick={async () => {
                     fileService.downloadSong(data, data.name)
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />

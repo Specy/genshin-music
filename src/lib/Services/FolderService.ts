@@ -21,8 +21,4 @@ class FolderService{
     }
 }
 
-const folderService = new FolderService()
-
-export {
-    folderService
-}
+export const _folderService = new FolderService()

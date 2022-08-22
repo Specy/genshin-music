@@ -35,10 +35,20 @@
 	}
 }
 
-.logger {
+.logger-wrapper{
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.4rem;
 	position: fixed;
-	right: 0.8rem;
-	top: 0.8rem;
+	max-height: 100vh;
+	overflow-y: scroll;
+	right: 0;
+	top: 0rem;
+	padding: 0.8rem 0;
+	padding-right: 0.8rem;
+	z-index: 999;
+}
+.logger-toast {
 	border-radius: 0.4rem;
 	border: solid 2px var(--secondary);
 	background-color: var(--primary);
@@ -47,11 +57,26 @@
 	display: flex;
 	pointer-events: none;
 	padding: 0.5rem;
-	z-index: 999;
 	transition: all 0.3s;
 	display: flex;
 	flex-direction: column;
-	opacity: 0.3;
+	opacity: 1;
+	transform: scale(1) translateY(0);
+	animation: toastAppear 0.3s;
+}
+
+@keyframes toastAppear {
+	0% {
+		opacity: 0.3;
+		transform: scale(0.8) translateY(calc(-120% - 0.8rem));
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+.logger-toast-hidden{
+	opacity: 0;
 	transform: scale(0.8) translateY(calc(-120% - 0.8rem));
 }
 .pill{
@@ -76,11 +101,6 @@
 	opacity: 0.9;
 	transform: translateY(0);
 }
-.logger-visible {
-	opacity: 1;
-	pointer-events: unset;
-	transform: scale(1) translateY(0);
-}
 .logger-content{
 	display: flex;
 	flex-direction: row;
@@ -98,7 +118,7 @@
 	height: 100%;
 	width: 100%;
 	background-color: var(--accent);
-	animation: logger-animation linear 1s;
+	animation: logger-animation linear 1s forwards;
 }
 @keyframes logger-animation {
 	from{

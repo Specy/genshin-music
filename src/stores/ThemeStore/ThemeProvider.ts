@@ -5,7 +5,7 @@ import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
 import { logger } from '$stores/LoggerStore'
 import { baseThemes } from "./defaultThemes";
-import { themeService } from "$lib/Services/ThemeService";
+import { _themeService } from "$lib/Services/ThemeService";
 import { themeStore } from "./ThemeStore";
 
 //TODO cleanup everything here, it's held together with tape
@@ -76,11 +76,11 @@ export class ThemeStore {
     }
     load = async () => {
         try {
-            const themeId = themeService.getCurrentThemeId()
+            const themeId = _themeService.getCurrentThemeId()
             if (themeId !== null) {
                 const defaultTheme = defaultThemes.find(t => t.other.id === themeId)
                 if(defaultTheme) return this.loadFromTheme(defaultTheme)
-                const theme = await themeService.getTheme(themeId)
+                const theme = await _themeService.getTheme(themeId)
                 if (theme) return this.loadFromTheme(theme)
             }
         } catch (e) {

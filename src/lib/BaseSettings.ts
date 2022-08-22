@@ -6,6 +6,12 @@ import { NoteNameType } from "$types/GeneralTypes"
 import { VsrgSongKeys } from "./Songs/VsrgSong"
 import { VsrgKeyboardLayout } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard"
 
+export type BaseSettings<T> = {
+    data: T,
+    other: {
+        settingVersion: string
+    }
+}
 export type ComposerSettingsDataType = {
     bpm: SettingsNumber
     beatMarks: SettingsSelect<number>
@@ -16,12 +22,7 @@ export type ComposerSettingsDataType = {
     autosave: SettingsCheckbox
     syncTabs: SettingsCheckbox
 }
-export type ComposerSettingsType = {
-    other: {
-        settingVersion: string
-    }
-    data: ComposerSettingsDataType
-}
+export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
         settingVersion: APP_NAME + 43,
@@ -127,7 +128,7 @@ export const ComposerSettings: ComposerSettingsType = {
 
 }
 
-export type MainPageSettingsDataType = {
+export type PlayerSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
     caveMode: SettingsCheckbox
@@ -141,13 +142,8 @@ export type MainPageSettingsDataType = {
     metronomeVolume: SettingsSlider
     syncSongData: SettingsCheckbox
 }
-export type MainPageSettingsType = {
-    other: {
-        settingVersion: string,
-    },
-    data: MainPageSettingsDataType
-}
-export const MainPageSettings: MainPageSettingsType = {
+export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
+export const PlayerSettings: PlayerSettingsType = {
     other: {
         settingVersion: APP_NAME + 44
     },
@@ -370,12 +366,7 @@ export type VsrgComposerSettingsDataType = {
     maxFps: SettingsSelect<number>
     difficulty: SettingsSelect<number>
 }
-export type VsrgComposerSettingsType = {
-    other: {
-        settingVersion: string,
-    },
-    data: VsrgComposerSettingsDataType
-}
+export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
         settingVersion: APP_NAME + 7
@@ -461,12 +452,7 @@ export type VsrgPlayerSettingsDataType = {
     scrollSpeed: SettingsNumber
     keyboardLayout: SettingsSelect<VsrgKeyboardLayout>
 }
-export type VsrgPlayerSettingsType = {
-    other: {
-        settingVersion: string,
-    },
-    data: VsrgPlayerSettingsDataType
-}
+export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
         settingVersion: APP_NAME + 7

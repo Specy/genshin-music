@@ -4,7 +4,7 @@ import Note from '$cmp/Player/Note'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "$lib/Utilities"
 import "./Keyboard.css"
-import Analytics from '$lib/Analytics';
+import Analytics from '$/lib/Stats';
 import { playerControlsStore } from '$stores/PlayerControlsStore'
 import { ApproachingNote, RecordedNote } from '$lib/Songs/SongClasses'
 import type { NoteData } from '$lib/Instrument'

@@ -7,6 +7,7 @@ import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
 import { folderStore } from "$stores/FoldersStore"
 import { asyncConfirm } from "../Utility/AsyncPrompts"
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "../Utility/FloatingDropdown"
+import { SerializedSongKind } from "$/types/SongTypes"
 
 
 
@@ -113,9 +114,15 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                         <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
                     </FloatingDropdownRow>
                     <FloatingDropdownRow
-                        onClick={() => {
-                            const clone = cloneDeep(data.songs)
-                            fileService.downloadSong(clone, `${data.name}-folder`)
+                        onClick={async () => {
+                            const songs = cloneDeep(data.songs)
+                            const promises = songs.map(s => fileService.prepareSongDownload(s as SerializedSongKind))
+                            const relatedSongs = (await Promise.all(promises)).flat()
+                            const filtered = relatedSongs.filter((item, pos, self) =>  {
+                                return self.findIndex(e => e.id === item.id) == pos;
+                            })
+                            const files = [...filtered, data.serialize()]
+                            fileService.downloadFiles(files, `${data.name}-folder`)
                         }}
                     >
                         <FaDownload style={{ marginRight: "0.4rem" }} size={14} />

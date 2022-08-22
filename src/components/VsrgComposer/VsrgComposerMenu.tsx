@@ -10,7 +10,7 @@ import { HelpTooltip } from "$cmp/Utility/HelpTooltip";
 import Memoized from "$cmp/Utility/Memoized";
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip";
 import isMobile from "is-mobile";
-import Analytics from "$lib/Analytics";
+import Analytics from "$/lib/Stats";
 import { VsrgComposerSettingsDataType } from "$lib/BaseSettings";
 import { Folder } from "$lib/Folder";
 import useClickOutside from "$lib/Hooks/useClickOutside";
@@ -29,6 +29,7 @@ import { songsStore } from "$stores/SongsStore";
 import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
+import { SerializedSongKind } from "$/types/SongTypes";
 
 type MenuTabs = 'Songs' | 'Settings'
 const isOnMobile = isMobile()
@@ -254,7 +255,7 @@ function SelectSongRow({ data, onClick }: SeelctSongRowProps) {
 
 
 interface SongRowProps {
-    data: SerializedSong
+    data: SerializedSongKind
     theme: ThemeStore
     folders: Folder[]
     functions: {

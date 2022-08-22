@@ -1,109 +1,64 @@
 import { APP_NAME } from "$/appConfig"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, MainPageSettings, MainPageSettingsDataType, MainPageSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType } from "$lib/BaseSettings"
+import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, PlayerSettings, PlayerSettingsDataType, PlayerSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType, BaseSettings } from "$lib/BaseSettings"
 
 
 
-class SettingsService{
-
-
-    getComposerSettings(){
-        const json = localStorage.getItem(APP_NAME + "_Composer_Settings")
+class SettingsService {
+    private getLatestSettings<T>(baseSettings: BaseSettings<T>, keyName: string) {
+        const json = localStorage.getItem(keyName)
+        const result = {
+            data: baseSettings.data,
+            hadUpdate: false,
+        }
         try {
-            const storedSettings = JSON.parse(json || 'null') as ComposerSettingsType | null
+            const storedSettings = JSON.parse(json || 'null') as BaseSettings<T>
             if (storedSettings) {
-                if (storedSettings.other?.settingVersion !== ComposerSettings.other.settingVersion) {
-                    this.updateComposerSettings(ComposerSettings.data)
-                    return ComposerSettings.data
+                if (storedSettings.other?.settingVersion !== baseSettings.other.settingVersion) {
+                    result.data = baseSettings.data
+                    result.hadUpdate = true
+                    return result
                 }
-                return storedSettings.data
+                result.data = storedSettings.data
             }
-            return ComposerSettings.data
         } catch (e) {
-            return ComposerSettings.data
+            console.error(e)
         }
+        return result
     }
-    updateComposerSettings(settings: ComposerSettingsDataType){
-        const state = {
-            other: ComposerSettings.other,
-            data: settings
+
+    getComposerSettings(): ComposerSettingsDataType {
+        const { data, hadUpdate } = this.getLatestSettings(ComposerSettings, APP_NAME + "_Composer_Settings")
+        if (hadUpdate) {
+            this.updateComposerSettings(data)
         }
-        localStorage.setItem(APP_NAME + "_Composer_Settings", JSON.stringify(state))
+        return data
     }
-    getVsrgComposerSettings(){
-        const json = localStorage.getItem(APP_NAME + "_VsrgComposer_Settings")
-		try {
-			const storedSettings = JSON.parse(json || 'null') as VsrgComposerSettingsType | null
-			if (storedSettings) {
-				if (storedSettings.other?.settingVersion !== VsrgComposerSettings.other.settingVersion) {
-					this.updateVsrgComposerSettings(VsrgComposerSettings.data)
-					return VsrgComposerSettings.data
-				}
-				return storedSettings.data
-			}
-			return VsrgComposerSettings.data
-		} catch (e) {
-			return VsrgComposerSettings.data
-		}
-    }
-    updateVsrgComposerSettings(settings: VsrgComposerSettingsDataType){
-        const state = {
-            other: VsrgComposerSettings.other,
-            data: settings
+
+    getVsrgComposerSettings(): VsrgComposerSettingsDataType {
+        const { data, hadUpdate } = this.getLatestSettings(VsrgComposerSettings, APP_NAME + "_VsrgComposer_Settings")
+        if (hadUpdate) {
+            this.updateVsrgComposerSettings(data)
         }
-        localStorage.setItem(APP_NAME + "_VsrgComposer_Settings", JSON.stringify(state))
-
-    }
-    getPlayerSettings(){
-        const json = localStorage.getItem(APP_NAME + "_Player_Settings")
-		try {
-			const storedSettings = JSON.parse(json || 'null') as MainPageSettingsType | null
-			if (storedSettings) {
-				if (storedSettings.other?.settingVersion !== MainPageSettings.other.settingVersion) {
-					this.updatePlayerSettings(MainPageSettings.data)
-					return MainPageSettings.data
-				}
-				return storedSettings.data
-			}
-			return MainPageSettings.data
-		} catch (e) {
-			return MainPageSettings.data
-		}
-    }
-    updatePlayerSettings(settings: MainPageSettingsDataType){
-		const state = {
-			other: MainPageSettings.other,
-			data: settings
-		}
-		localStorage.setItem(APP_NAME + "_Player_Settings", JSON.stringify(state))
-    }
-    getVsrgPlayerSettings(){
-        const json = localStorage.getItem(APP_NAME + "_VsrgPlayer_Settings")
-		try {
-			const storedSettings = JSON.parse(json || 'null') as VsrgPlayerSettingsType | null
-			if (storedSettings) {
-				if (storedSettings.other?.settingVersion !== VsrgPlayerSettings.other.settingVersion) {
-					this.updateVsrgPlayerSettings(VsrgPlayerSettings.data)
-					return VsrgPlayerSettings.data
-				}
-				return storedSettings.data
-			}
-			return VsrgPlayerSettings.data
-		} catch (e) {
-			return VsrgPlayerSettings.data
-		}
-
-    }
-    updateVsrgPlayerSettings(settings: VsrgPlayerSettingsDataType){
-        const state = {
-			other: VsrgPlayerSettings.other,
-			data: settings
-		}
-		localStorage.setItem(APP_NAME + "_VsrgPlayer_Settings", JSON.stringify(state))
+        return data
     }
 
+    getVsrgPlayerSettings(): VsrgPlayerSettingsDataType {
+        const { data, hadUpdate } = this.getLatestSettings(VsrgPlayerSettings, APP_NAME + "_VsrgPlayer_Settings")
+        if (hadUpdate) {
+            this.updateVsrgPlayerSettings(data)
+        }
+        return data
+    }
 
+    getPlayerSettings(): PlayerSettingsDataType {
+        const { data, hadUpdate } = this.getLatestSettings(PlayerSettings, APP_NAME + "_Player_Settings")
+        if (hadUpdate) {
+            this.updatePlayerSettings(data)
+        }
+        return data
+    }
     
-    getMIDISettings(){
+    getMIDISettings() {
         try {
             const settings = JSON.parse(localStorage.getItem(`${APP_NAME}_MIDI_Settings`) || 'null') as any
             if (settings !== null && settings.settingVersion === MIDISettings.settingVersion) {
@@ -116,14 +71,47 @@ class SettingsService{
             return MIDISettings
         }
     }
-    updateMIDISettings(settings: typeof MIDISettings){
+    updateVsrgComposerSettings(settings: VsrgComposerSettingsDataType) {
+        const state = {
+            other: VsrgComposerSettings.other,
+            data: settings
+        }
+        localStorage.setItem(APP_NAME + "_VsrgComposer_Settings", JSON.stringify(state))
+
+    }
+
+    updatePlayerSettings(settings: PlayerSettingsDataType) {
+        const state = {
+            other: PlayerSettings.other,
+            data: settings
+        }
+        localStorage.setItem(APP_NAME + "_Player_Settings", JSON.stringify(state))
+    }
+
+    updateComposerSettings(settings: ComposerSettingsDataType) {
+        const state = {
+            other: ComposerSettings.other,
+            data: settings
+        }
+        localStorage.setItem(APP_NAME + "_Composer_Settings", JSON.stringify(state))
+    }
+
+    updateVsrgPlayerSettings(settings: VsrgPlayerSettingsDataType) {
+        const state = {
+            other: VsrgPlayerSettings.other,
+            data: settings
+        }
+        localStorage.setItem(APP_NAME + "_VsrgPlayer_Settings", JSON.stringify(state))
+    }
+
+    updateMIDISettings(settings: typeof MIDISettings) {
         localStorage.setItem(`${APP_NAME}_MIDI_Settings`, JSON.stringify(settings))
     }
 
 }
 
 
-const settingsService = new SettingsService()
+const _settingsService = new SettingsService()
 export {
-    settingsService
+    _settingsService as settingsService
 }

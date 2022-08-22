@@ -54,4 +54,4 @@ class ThemeService {
     }
 }
 
-export const themeService = new ThemeService()
+export const _themeService = new ThemeService()

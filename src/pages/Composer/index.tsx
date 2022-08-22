@@ -16,7 +16,7 @@ import { delay, formatMs, calculateSongLength } from "$lib/Utilities"
 import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
 import { Column, InstrumentData } from '$lib/Songs/SongClasses';
 import AudioRecorder from '$lib/AudioRecorder'
-import Analytics from '$lib/Analytics';
+import Analytics from '$/lib/Stats';
 import { RouteComponentProps, withRouter } from 'react-router-dom'
 import HomeStore from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';

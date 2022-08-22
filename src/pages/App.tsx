@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import Analytics from '$lib/Analytics';
+import Analytics from '$/lib/Stats';
 import Home from '$cmp/Index/Home';
 import HomeStore from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
-import { APP_NAME, APP_VERSION, IS_TAURI, TAURI, UPDATE_MESSAGE } from "$/appConfig"
+import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, IS_TAURI, TAURI, UPDATE_MESSAGE } from "$/appConfig"
 import Logger from '$cmp/Index/Logger'
 import rotateImg from "$/assets/icons/rotate.svg"
 
@@ -13,13 +13,23 @@ import './App.css';
 import './Utility.scss'
 import { historyTracker } from '$stores/History';
 import isMobile from 'is-mobile';
-import { FaExpandAlt } from 'react-icons/fa';
+import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
+import { IconButton } from '$/components/Inputs/IconButton';
+import { metronome } from '$/lib/Metronome';
 
 function App({ history }: any) {
 	const [hasVisited, setHasVisited] = useState(false)
+	const [audioContextState, setAudioContextState] = useState(AUDIO_CONTEXT.state)
 	const [checkedUpdate, setCheckedUpdate] = useState(false)
 	const [pageHeight, setPageHeight] = useState(0)
 	const [isOnMobile, setIsOnMobile] = useState(false)
+	const handleAudioContextStateChange = useCallback(() => {
+		setAudioContextState(AUDIO_CONTEXT.state)
+	}, [])
+	useEffect(() => {
+		AUDIO_CONTEXT.addEventListener('statechange', handleAudioContextStateChange)
+		return () => AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
+	},[])
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
 		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
@@ -132,7 +142,6 @@ function App({ history }: any) {
 			historyTracker.addPage(path.pathName)
 		})
 	}, [history])
-
 	return <>
 		<Logger />
 		<Home
@@ -141,8 +150,18 @@ function App({ history }: any) {
 			setDontShowHome={setDontShowHome}
 			askForStorage={askForStorage}
 		/>
+		{audioContextState !== 'running' &&
+			<IconButton 
+				className='resume-audio-context box-shadow' 
+				size='3rem'
+				onClick={() => {
+					metronome.tick()
+				}}
+			>
+				<FaVolumeMute style={{ width: '1.4rem', height: '1.4rem'}}/>
+			</IconButton>
+		}
 		<div className="rotate-screen">
-
 			{isOnMobile && <>
 				<img src={rotateImg} alt="icon for the rotating screen"/>
 				<p>
