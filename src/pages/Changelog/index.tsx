@@ -7,6 +7,8 @@ import { updates } from './updates'
 import { APP_VERSION } from '$/appConfig'
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
+import { AppButton } from '$/components/Inputs/AppButton'
+import { Link } from 'react-router-dom'
 
 const cacheVersion = import.meta.env.VITE_SW_VERSION
 export default function Changelogpage() {
@@ -26,8 +28,13 @@ export default function Changelogpage() {
                 v{APP_VERSION}
             </span>
         </div>
-        <div style={{ fontSize: '0.8rem' }}>
+        <div className='row' style={{ fontSize: '0.8rem', justifyContent: 'space-between', alignItems: 'center' }}>
             Cache: {cacheVersion || 'DEV'}
+            <Link to='/Error'>
+                <AppButton>
+                    View Error logs
+                </AppButton>
+            </Link>
         </div>
         <div style={{ marginTop: '2rem' }} />
 

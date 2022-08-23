@@ -9,6 +9,8 @@ interface VsrgPlayerKeyboardProps {
     hitObjectSize: number
     keyboardLayout: VsrgKeyboardLayout
     offset: number
+    verticalOffset: number
+    horizontalOffset: number
 }
 export type VsrgKeyboardLayout = 'line' | 'circles'
 interface RenderLayout {
@@ -17,9 +19,8 @@ interface RenderLayout {
     right: KeyboardKey[]
 }
 
-export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout }: VsrgPlayerKeyboardProps) {
+export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, verticalOffset, horizontalOffset }: VsrgPlayerKeyboardProps) {
     const layout = useVsrgKeyboardLayout()
-
     useEffect(() => {
         //TODO not sure if this is the best place
         KeyboardProvider.listen(({ letter, event }) => {
@@ -49,7 +50,8 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout }: Vs
                 <div
                     className="vsrg-player-keyboard-control-left"
                     style={{
-                        '--vertical-offset': `-${left.length * 2}vw`
+                        '--vertical-offset': `calc(-${left.length * 2}vw + ${verticalOffset * 0.1}rem)`,
+                        '--horizontal-offset': `${horizontalOffset * 0.1 + 1}rem`
                     } as React.CSSProperties}
                 >
                     {left.map(letter =>
@@ -68,7 +70,8 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout }: Vs
 
                     className="vsrg-player-keyboard-control-right"
                     style={{
-                        '--vertical-offset': `-${left.length * 2}vw`
+                        '--vertical-offset': `calc(-${left.length * 2}vw + ${verticalOffset * 0.1}rem)`,
+                        '--horizontal-offset': `${horizontalOffset * 0.1 + 1}rem`
                     } as React.CSSProperties}
                 >
                     {right.map(letter =>

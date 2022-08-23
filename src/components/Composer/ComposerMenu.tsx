@@ -64,9 +64,9 @@ function Menu({ data, functions }: MenuProps) {
     const { loadSong, changePage, renameSong, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, updateThisSong } = functions
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
-        if(IS_MOBILE){
+        if (IS_MOBILE) {
             setVisible(false)
-        }else{
+        } else {
             setOpen(false)
         }
     }, { active: (isOpen && isVisible), ignoreFocusable: true })
@@ -280,7 +280,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     useEffect(() => {
         setSongName(data.name)
     }, [data.name])
-    if(data.type === 'vsrg') return <div className='row'>
+    if (data.type === 'vsrg') return <div className='row'>
         Invalid song
     </div>
     return <div className="song-row">
@@ -353,7 +353,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FloatingDropdownRow onClick={() => {
                         const song = songService.parseSong(data) as RecordedOrComposed
                         downloadSong(song.toMidi())
-                }}>
+                    }}>
                         <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                         <FloatingDropdownText text='Download MIDI' />
                     </FloatingDropdownRow>

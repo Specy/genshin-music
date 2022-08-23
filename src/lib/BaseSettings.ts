@@ -451,11 +451,13 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
 export type VsrgPlayerSettingsDataType = {
     scrollSpeed: SettingsNumber
     keyboardLayout: SettingsSelect<VsrgKeyboardLayout>
+    horizontalOffset: SettingsSlider
+    verticalOffset: SettingsSlider
 }
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 7
+        settingVersion: APP_NAME + 9
     },
     data: {
         scrollSpeed: {
@@ -479,6 +481,24 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
                 'circles',
                 'line'
             ]
+        },
+        verticalOffset: {
+            name: "Vertical position",
+            tooltip: "The Vertical offset for the line layout",
+            type: "slider",
+            songSetting: false,
+            value: -0,
+            category: "Layout Settings",
+            threshold: [-40, 40]
+        },
+        horizontalOffset: {
+            name: "Horizontal position",
+            tooltip: "The Horizontal offset for the line layout",
+            type: "slider",
+            songSetting: false,
+            value: 0,
+            category: "Layout Settings",
+            threshold: [-40, 40]
         },
     }
 }

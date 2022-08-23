@@ -47,7 +47,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             canvasSizes: defaultVsrgPlayerSizes,
             songAudioPlayer: new AudioPlayer("C"),
             keyboardAudioPlayer: new AudioPlayer("C"),
-            currentLayout: keyBinds.getVsrgKeybinds(4),
+            currentLayout: keyBinds.getVsrgKeybinds(6),
             isLoadingInstruments: false,
             isPlaying: false
         }
@@ -171,6 +171,8 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                         keyboardLayout={settings.keyboardLayout.value}
                         offset={canvasSizes.verticalOffset}
                         hitObjectSize={canvasSizes.hitObjectSize}
+                        verticalOffset={settings.verticalOffset.value}
+                        horizontalOffset={settings.horizontalOffset.value}
                     />
                 </div>
                 <VsrgPlayerRight

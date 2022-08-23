@@ -1,6 +1,6 @@
-import { ChangeEvent, Component } from 'react'
+import {  Component } from 'react'
 import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "$/appConfig"
-import Note from '$cmp/Player/Note'
+import Note from '$/components/Player/PlayerNote'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "$lib/Utilities"
 import "./Keyboard.css"
@@ -9,7 +9,7 @@ import { playerControlsStore } from '$stores/PlayerControlsStore'
 import { ApproachingNote, RecordedNote } from '$lib/Songs/SongClasses'
 import type { NoteData } from '$lib/Instrument'
 import type Instrument from '$lib/Instrument'
-import type { NoteNameType } from '$types/GeneralTypes'
+import type { NoteNameType, Timer } from '$types/GeneralTypes'
 import { Chunk, RecordedSong } from '$lib/Songs/RecordedSong'
 import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider'
 import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider'
@@ -42,15 +42,15 @@ interface KeyboardPlayerState {
 }
 export default class KeyboardPlayer extends Component<KeyboardPlayerProps, KeyboardPlayerState> {
     state: KeyboardPlayerState
-    approachRate: number
-    approachingNotesList: ApproachingNote[]
-    nextChunkDelay: number
-    tickTime: number
-    tickInterval: number
+    approachRate: number = 1500
+    approachingNotesList: ApproachingNote[] = []
+    nextChunkDelay: number = 0
+    tickTime: number = 50
+    tickInterval: number = 0
     mounted: boolean
     songTimestamp = 0
-    toDispose: (() => void)[]
-
+    toDispose: (() => void)[] = []
+    timeouts: Timer[] = []
     constructor(props: KeyboardPlayerProps) {
         super(props)
         this.state = {
@@ -59,12 +59,6 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             approachingNotes: Array2d.from(APP_NAME === 'Sky' ? 15 : 21),
             keyboard: playerStore.keyboard
         }
-        this.approachRate = 1500
-        this.approachingNotesList = []
-        this.nextChunkDelay = 0
-        this.toDispose = []
-        this.tickTime = 50
-        this.tickInterval = 0
         this.mounted = true
     }
 
@@ -381,7 +375,9 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             if (status === 'approach-wrong') playerControlsStore.increaseScore(false)
         }
         //TODO could add this to the player store
-        setTimeout(() => {
+        if(this.timeouts[note.index] > 0 && playerStore.eventType ==='play') clearTimeout(this.timeouts[note.index])
+        this.timeouts[note.index] = setTimeout(() => {
+            this.timeouts[note.index] = 0
             if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[note.index].status)) return
             if (prevStatus === 'toClickNext') return playerStore.setNoteState(note.index, { status: prevStatus })
             playerStore.setNoteState(note.index, { status: '' })

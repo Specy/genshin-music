@@ -23,7 +23,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
     const menuRef = useClickOutside<HTMLDivElement>(() => {
         setSelectedPage("")
     }, { ignoreFocusable: true, active: selectedPage !== "" })
-    return <div className="menu-wrapper" ref={menuRef}>
+    return <div className="menu-wrapper noprint" ref={menuRef}>
         <div className="menu menu-visible" style={{ justifyContent: 'flex-end' }}>
             {(historyTracker.hasNavigated && selectedPage === "") &&
                 <MenuItem

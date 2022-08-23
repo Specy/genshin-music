@@ -1,5 +1,6 @@
 :root{
     --menu-size: 4rem;
+    --panel-size: 40vw;
 }
 .menu {
     width: var(--menu-size);
@@ -106,25 +107,24 @@
 }
 
 .side-menu {
-    width: 40vw;
+    width: var(--panel-size);
     border-radius: 0.3rem;
     border-top-left-radius: unset;
     border-bottom-left-radius: unset;
     height: 100%;
     background-color: var(--menu-background);
     color: var(--menu-background-text);
-    transform: scale(0.9);
+    transform: scale(0.9) translateX(0);
     transition: all 0.3s;
     opacity: 0;
     padding: 1rem;
     display: flex;
-    left: -40vw;
+    left: calc(var(--panel-size) * -1);
     position: fixed;
 }
 
 .menu-open {
-    transform: scale(1);
-    left: 4rem !important;
+    transform: scale(1) translateX(calc(var(--panel-size) + var(--menu-size)));
     opacity: 1;
     --backdrop-amount: 2px;
     animation: delayBackdrop 0.3s;
@@ -412,9 +412,7 @@
     }
     .side-menu {
         padding: 0.5rem;
-        width: 60vw;
-        left: -60vw;
-        opacity: 1;
+        --panel-size: 60vw;
     }
 
     .menu-title {
@@ -433,10 +431,6 @@
         width: 2.8rem;
         height: 2.8rem;
         margin-bottom: 0.4rem;
-    }
-
-    .menu-open {
-        left: 3.6rem !important;
     }
 
     .tab-selector-wrapper {

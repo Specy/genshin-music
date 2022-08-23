@@ -2,12 +2,11 @@
 	background-color: #863545;
 	color: white;
 	flex-direction: column;
-	align-items: center;
+	justify-content: center;
 	padding-top: 10vh;
 }
 .error-buttons-wrapper {
 	display: flex;
-	width: 50vw;
 	flex-direction: row;
 	justify-content: space-between;
 	margin-top: 4vh;
@@ -24,6 +23,9 @@
 		border-top: solid 1px var(--secondary);
 		padding: 0.5rem;
 	}
+	:last-child{
+		border-top: unset;
+	}
 }
 
 .error-songs-wrapper {
@@ -31,25 +33,12 @@
 	margin-top: 4vh;
 	border-radius: 0.5rem;
 	display: grid;
-	width: 50vw;
 	gap: 0.4rem;
 	max-height: 40vh;
-	overflow-y: auto;
 	min-height: 3.6rem;
 }
 .error-go-back {
 	position: absolute;
 	left: 1rem;
 	top: 1rem;
-}
-.error-text-wrapper {
-	width: 50vw;
-	text-align: center;
-}
-@media only screen and (orientation: portrait) {
-	.error-songs-wrapper,
-	.error-text-wrapper,
-	.error-buttons-wrapper {
-		width: 90vw;
-	}
 }

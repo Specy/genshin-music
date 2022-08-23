@@ -1,6 +1,6 @@
 import { Component } from 'react';
-import KeyboardPlayer from "$cmp/Player/KeyboardPlayer"
-import Menu from "$cmp/Player/Menu"
+import KeyboardPlayer from "$/components/Player/PlayerKeyboard"
+import Menu from "$/components/Player/PlayerMenu"
 import { playerStore } from '$stores/PlayerStore'
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { ComposedSong } from '$lib/Songs/ComposedSong';

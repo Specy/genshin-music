@@ -55,10 +55,22 @@ export function ErrorPage() {
     return <DefaultPage className='error-page'>
         <Title text="Error" />
 
-        <div className="error-text-wrapper">
+        <div style={{textAlign: 'center'}}>
             There seems to be an error. <br />
-            Here you can download or delete your songs,
-            try to find what song caused the error and remove it.
+            Here you can download or delete your songs, if one caused an error, delete it.
+            If you need help, join our 
+            <a 
+                href='https://discord.gg/Arsf65YYHq' 
+                target='_blank' 
+                rel='noreferrer' 
+                style={{
+                    margin: '0 0.4rem',
+                    color: 'var(--accent)'
+                }}
+            >
+                Discord
+            </a> 
+            and send the log file below.
         </div>
         <div className="error-buttons-wrapper">
             <AppButton onClick={resetSettings}>
@@ -97,7 +109,6 @@ export function ErrorPage() {
                 <div
                     key={i}
                     className='error-log-row row'
-                    style={i === errors.length - 1 ? { borderTop: 'none' } : {}}
                 >
                     {e.message}
                 </div>
