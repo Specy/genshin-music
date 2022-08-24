@@ -17,17 +17,6 @@ if (!['Genshin', 'Sky', "All"].includes(chosenApp)) {
     process.exit(1)
 }
 
-async function deleteAssets() {
-    const files = await fs.readdir(publicPath)
-    await Promise.all(files.map(file => {
-        if (file !== 'assets') {
-            if (!file.includes('.')) return fs.rm(`${publicPath}/${file}`, { recursive: true })
-            return fs.unlink(`${publicPath}/${file}`)
-        }
-        return new Promise(resolve => resolve()) 
-    }))
-}
-
 
 
 async function execute() {
@@ -35,8 +24,7 @@ async function execute() {
     try{
         for (const app of toBuild) {
             console.log(clc.bold.yellow(`Building ${app}...`))
-            await deleteAssets()
-            await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
+            await fse.copy(chosenApp === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
             await fs.rename(`${publicPath}/index.html`,`index.html`)
             if (process.platform === 'win32') {
                 console.log(clc.italic("Building on windows"))

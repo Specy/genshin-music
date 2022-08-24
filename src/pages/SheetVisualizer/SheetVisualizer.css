@@ -65,14 +65,6 @@
 	padding-bottom: 50%;
 	position: relative;
 }
-@supports(aspect-ratio: 16 / 9){
-	.frame-outer {
-		padding-bottom: unset;
-		height: unset;
-		flex: 1;
-		aspect-ratio: 16 / 9;
-	}
-}
 
 .frame-note-s {
 	border-radius: 0.2rem;

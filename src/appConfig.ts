@@ -12,6 +12,10 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         Check the updates page for more info
 
     `.trim()
+const UPDATE_URL = process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:3000/updates.json'
+    : 'https://raw.githubusercontent.com/Specy/genshin-music/main/public/updates.json'
+
 
 //@ts-ignore
 const TAURI: Tauri = window?.__TAURI__
@@ -515,7 +519,8 @@ export {
     DEFAULT_DOM_RECT,
     PIXI_CENTER_X_END_Y,
     IS_MOBILE,
-    VSRG_SCORE_COLOR_MAP
+    VSRG_SCORE_COLOR_MAP,
+    UPDATE_URL
 }
 export type {
     Pitch

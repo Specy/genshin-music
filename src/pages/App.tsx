@@ -4,7 +4,7 @@ import Home from '$cmp/Index/Home';
 import HomeStore from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
-import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, IS_TAURI, TAURI, UPDATE_MESSAGE } from "$/appConfig"
+import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, UPDATE_MESSAGE } from "$/appConfig"
 import Logger from '$cmp/Index/Logger'
 import rotateImg from "$/assets/icons/rotate.svg"
 
@@ -17,6 +17,8 @@ import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
 import { IconButton } from '$/components/Inputs/IconButton';
 import { metronome } from '$/lib/Metronome';
 import { logsStore } from '$/stores/LogsStore';
+import { needsUpdate } from '$/lib/needsUpdate';
+
 
 function App({ history }: any) {
 	const [hasVisited, setHasVisited] = useState(false)
@@ -43,9 +45,7 @@ function App({ history }: any) {
 			AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
 			console.error = originalErrorLog
 		}
-	},[])
-
-
+	}, [])
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
 		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
@@ -56,17 +56,11 @@ function App({ history }: any) {
 			isInPosition: false,
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 		})
-		async function checkUpdate(){
-			const update = await fetch(`https://raw.githubusercontent.com/Specy/genshin-music/main/src-tauri/tauri-${APP_NAME.toLowerCase()}.update.json`)
-								.then(res => res.json())
-			console.log(update)
-			const currentVersion = await TAURI.app.getVersion()
-			console.log(currentVersion)
-		}
-		if(IS_TAURI) checkUpdate()
+
 		setIsOnMobile(isMobile())
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
+		needsUpdate()
 	}, [])
 
 	const setHeight = useCallback((h: number) => {
@@ -167,19 +161,19 @@ function App({ history }: any) {
 			askForStorage={askForStorage}
 		/>
 		{audioContextState !== 'running' &&
-			<IconButton 
-				className='resume-audio-context box-shadow' 
+			<IconButton
+				className='resume-audio-context box-shadow'
 				size='3rem'
 				onClick={() => {
 					metronome.tick()
 				}}
 			>
-				<FaVolumeMute style={{ width: '1.4rem', height: '1.4rem'}}/>
+				<FaVolumeMute style={{ width: '1.4rem', height: '1.4rem' }} />
 			</IconButton>
 		}
 		<div className="rotate-screen">
 			{isOnMobile && <>
-				<img src={rotateImg} alt="icon for the rotating screen"/>
+				<img src={rotateImg} alt="icon for the rotating screen" />
 				<p>
 					For a better experience, add the website to the home screen, and rotate your device
 				</p>
