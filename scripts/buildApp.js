@@ -1,4 +1,3 @@
-const copyDir = require('recursive-copy')
 const fs = require('fs/promises')
 const clc = require("cli-color");
 const { execSync } = require('child_process')
