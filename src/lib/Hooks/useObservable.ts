@@ -8,9 +8,7 @@ export function useObservableObject<T extends Object>(target: T): T{
     const [observedTarget,setObservedTarget] = useState(target)
     useEffect(() => {
         const dispose = subscribeObeservableObject(target, setObservedTarget)
-        return () => {
-            dispose()
-        }
+        return dispose
     },[target]) 
     return observedTarget
 }
@@ -19,9 +17,7 @@ export function useObservableArray<T>(target: T[]): T[]{
     const [observedTarget,setObservedTarget] = useState(target)
     useEffect(() => {
         const dispose = subscribeObservableArray(target, setObservedTarget)
-        return () => {
-            dispose()
-        }
+        return dispose
     },[target]) 
     return observedTarget
 }

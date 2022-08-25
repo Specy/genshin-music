@@ -1,26 +1,23 @@
-import { observable } from "mobx";
+import { makeObservable, observable } from "mobx";
 
-type HomeDataProps = {
+type HomeStoreState = {
     canShow: boolean,
     visible: boolean,
     isInPosition: boolean,
     hasPersistentStorage: boolean,
 }
-type HomeData = {
-    data: HomeDataProps
-}
+
 
 class HomeStore {
-    state: HomeData
+    @observable
+    state: HomeStoreState = {
+        canShow: false,
+        visible: false,
+        isInPosition: false,
+        hasPersistentStorage: false
+    }
     constructor() {
-        this.state = observable({
-            data: {
-                canShow: false,
-                visible: false,
-                isInPosition: false,
-                hasPersistentStorage: false
-            }
-        })
+        makeObservable(this)
     }
     open = () => {
         this.setState({ visible: true, isInPosition: false})
@@ -35,8 +32,8 @@ class HomeStore {
         if (override) this.open()
         else this.close()
     }
-    setState = (state: Partial<HomeDataProps>) => {
-        this.state.data = { ...this.state.data, ...state }
+    setState = (state: Partial<HomeStoreState>) => {
+        Object.assign(this.state, state)
     }
 }
 

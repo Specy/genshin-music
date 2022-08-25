@@ -4,6 +4,7 @@ import { RecordedSong } from "$lib/Songs/RecordedSong"
 import { SerializedSong, Song } from "$lib/Songs/Song"
 import { VsrgSong } from "$lib/Songs/VsrgSong"
 import { getSongType } from "$lib/Utilities"
+import { AppError } from "../Errors"
 import { DbInstance } from "./Database/Database"
 
 
@@ -81,24 +82,24 @@ class SongService{
         if (type === "oldSky") {
             const parsed = RecordedSong.fromOldFormat(song)
             if (parsed === null) {
-                throw new Error("Error Invalid song")
+                throw new Error("Error parsing old format song")
             }
             return parsed
         }
         if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
             console.log(song)
-            throw new Error("Error Invalid song")
+            throw new Error("Error Invalid song, it's not a Sky song")
         }
         if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
             if (song.type === 'vsrg') return VsrgSong.deserialize(song).toGenshin()
             //always put those below because of the legacy format
-            if (song.data?.isComposedVersion === true || song.type === 'composed') return ComposedSong.deserialize(song).toGenshin()
-            if (song.data?.isComposedVersion === false|| song.type === 'recorded') return RecordedSong.deserialize(song).toGenshin()
+            if (song.type === 'composed' || song.data?.isComposedVersion === true) return ComposedSong.deserialize(song).toGenshin()
+            if (song.type === 'recorded' || song.data?.isComposedVersion === false) return RecordedSong.deserialize(song).toGenshin()
         }
         if(type === 'vsrg') return VsrgSong.deserialize(song)
         if (type === 'newComposed') return ComposedSong.deserialize(song)
         if (type === 'newRecorded') return RecordedSong.deserialize(song)
-        throw new Error("Error Invalid song")
+        throw new AppError("Error Invalid song")
     }
     removeSong(id: string){
         return this.songCollection.removeById(id)

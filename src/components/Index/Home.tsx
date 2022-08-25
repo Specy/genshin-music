@@ -4,7 +4,6 @@ import { APP_NAME, isTwa, IS_MOBILE } from "$/appConfig"
 import HomeStore from '$stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
-import { observe } from 'mobx'
 import { useTheme } from '$lib/Hooks/useTheme'
 import './Home.css'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
@@ -12,6 +11,7 @@ import { KeyboardProvider } from '$lib/Providers/KeyboardProvider'
 import { AppButton } from '$cmp/Inputs/AppButton'
 import { VsrgIcon } from '$cmp/icons/VsrgIcon'
 import { VsrgComposerIcon } from '$cmp/icons/VsrgComposerIcon'
+import { useObservableObject } from '$/lib/Hooks/useObservable'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -21,9 +21,9 @@ interface HomeProps {
 }
 
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }: HomeProps) {
-    const [data, setData] = useState(HomeStore.state.data)
+    const data = useObservableObject(HomeStore.state)
     const [appScale, setAppScale] = useState(100)
-    const [currentPage, setCurrentPage] = useState('')
+    const [currentPage, setCurrentPage] = useState('Unknown')
     const [breakpoint, setBreakpoint] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
     const history = useHistory()
@@ -36,14 +36,13 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     }, [])
     useEffect(() => {
         const html = document.querySelector('html')
-        if (html) {
-            localStorage.setItem(APP_NAME + '-font-size', `${appScale}`)
-            if (appScale === 100) {
-                html.style.removeProperty("font-size")
-                return
-            }
-            html.style.fontSize = `${appScale}%`
+        if (!html) return
+        localStorage.setItem(APP_NAME + '-font-size', `${appScale}`)
+        if (appScale === 100) {
+            html.style.removeProperty("font-size")
+            return
         }
+        html.style.fontSize = `${appScale}%`
     }, [appScale])
 
     useEffect(() => {
@@ -51,7 +50,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             setCurrentPage(path.pathname.replace('/', ''))
         })
         KeyboardProvider.register("Escape", () => {
-            if (HomeStore.state.data.visible) {
+            if (HomeStore.state.visible) {
                 HomeStore.close()
             }
         }, { id: "home" })
@@ -62,12 +61,6 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         }
     }, [history])
 
-    useEffect(() => {
-        const dispose = observe(HomeStore.state, (newState) => {
-            setData(newState.object.data)
-        })
-        return dispose
-    }, [])
     return <div
         className={`${homeClass} ignore_click_outside column`}
         style={{

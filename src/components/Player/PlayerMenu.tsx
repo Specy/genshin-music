@@ -308,7 +308,7 @@ function Menu({ functions, data }: MenuProps) {
                     {isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     {isPersistentStorage 
                         ? <Tooltip position='top' style={{maxWidth: 'unset'}}>
-                            Your data is persisted in the browser, the browser should not automtically clear it. 
+                            Your data is persisted in the browser, the browser should not automatically clear it. 
                             Always make sure to download a backup sometimes, especially when you will not use the app 
                             for a long time
                         </Tooltip>

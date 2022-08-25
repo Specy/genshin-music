@@ -242,7 +242,7 @@ export class FileService {
     }
     downloadTheme(theme: SerializedTheme, fileName?: string) {
         fileName = (fileName || `${theme.other.name}.theme`).replace(".json", "")
-        FileDownloader.download(JSON.stringify(theme), fileName + ".json")
+        this.downloadFiles([theme], fileName)
     }
 }
 

@@ -25,7 +25,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 46,
+        settingVersion: APP_NAME + 47,
     },
     data: {
         bpm: {
@@ -34,7 +34,7 @@ export const ComposerSettings: ComposerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 1600],
+            threshold: [0, 3600],
             value: 220,
             category: "Song Settings",
         },
@@ -147,7 +147,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 46
+        settingVersion: APP_NAME + 47
     },
     data: {
         instrument: {
@@ -175,7 +175,7 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 1600],
+            threshold: [0, 3600],
             value: 220,
             category: "Song Settings",
         },
@@ -379,7 +379,7 @@ export type VsrgComposerSettingsDataType = {
 export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 7
+        settingVersion: APP_NAME + 8
     },
     data: {
         keys: {
@@ -400,7 +400,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 1600],
+            threshold: [0, 3600],
             value: 220,
             category: "Song Settings",
         },

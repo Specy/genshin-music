@@ -162,29 +162,19 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 		} else {
 			//current format
 			if(song.type === 'vsrg') return 'vsrg'
-			if ((song.data.isComposedVersion === true) || song.type === 'composed') {
-				if (typeof song.name !== "string") return "none"
-				if (!PITCHES.includes(song.pitch)) return "none"
-				if (Array.isArray(song.breakpoints)) {
-					if (song.breakpoints.length > 0) {
-						if (typeof song.breakpoints[0] !== "number") return "none"
-					}
-				} else {
-					return "none"
-				}
+			if (song.type === 'composed' || song.data.isComposedVersion === true) {
 				if (Array.isArray(song.columns)) {
-					if (song.columns.length > 0) {
-						const column = song.columns[0]
-						if (typeof column[0] !== "number") return "none"
-					}
 					return "newComposed"
 				} else {
 					return "none"
 				}
-			} else if ((song.data.isComposedVersion === false) || song.type === 'recorded') {
-				if (typeof song.name !== "string") return "none"
-				if (!PITCHES.includes(song.pitch)) return "none"
-				return "newRecorded"
+			}
+			if (song.type === 'recorded' || song.data.isComposedVersion === false) {
+				if (Array.isArray(song.notes)) {
+					return "newRecorded"
+				} else {
+					return "none"
+				}
 			}
 		}
 	} catch (e) {

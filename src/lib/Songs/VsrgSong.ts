@@ -1,3 +1,4 @@
+import { IMPORT_NOTE_POSITIONS } from "$/appConfig";
 import { InstrumentName } from "$types/GeneralTypes";
 import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";
@@ -55,8 +56,14 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         return duration
     }
     toGenshin() {
-        return this
-        //TODO implement
+        const song = this.clone()
+        song.tracks.forEach(t => {
+            t.instrument.name = "DunDun"
+            t.hitObjects.forEach(h => {
+                h.notes = h.notes.map(n => IMPORT_NOTE_POSITIONS[n])
+            })
+        })
+        return song
     }
     startPlayback(timestamp: number){
         this.tracks.forEach(track => track.startPlayback(timestamp))
