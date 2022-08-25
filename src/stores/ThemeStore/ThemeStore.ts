@@ -40,7 +40,7 @@ export class ThemeStore{
     getCurrentThemeId() {
         return _themeService.getCurrentThemeId()
     }
-    setCurrentThemeId(id: string) {
+    setCurrentThemeId(id: string | null) {
         return _themeService.setCurrentThemeId(id)
     }
 } 

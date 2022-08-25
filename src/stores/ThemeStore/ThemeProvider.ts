@@ -78,7 +78,7 @@ export class ThemeStore {
         try {
             const themeId = _themeService.getCurrentThemeId()
             if (themeId !== null) {
-                const defaultTheme = defaultThemes.find(t => t.other.id === themeId)
+                const defaultTheme = defaultThemes.find(t => t.id === themeId)
                 if(defaultTheme) return this.loadFromTheme(defaultTheme)
                 const theme = await _themeService.getTheme(themeId)
                 if (theme) return this.loadFromTheme(theme)
@@ -88,7 +88,7 @@ export class ThemeStore {
         }
     }
     getId = () => {
-        return this.state.other.id
+        return this.state.id
     }
     get = (prop: ThemeKeys) => {
         return Color(this.state.data[prop].value)
@@ -128,7 +128,7 @@ export class ThemeStore {
     serialize = (): SerializedTheme => {
         return {
             ...cloneDeep(this.state),
-            id: this.state.other.id ?? null,
+            id: this.state.id ?? null,
             type: 'theme'
         }
     }
@@ -170,6 +170,8 @@ export class ThemeStore {
             this.setOther(key as OtherKeys, value)
         }
         this.state.editable = Boolean(theme.editable)
+        this.state.id = theme.id
+        
     }
     sanitize = (obj: any): SerializedTheme => {
         const sanitized = cloneDeep(this.baseTheme) as SerializedTheme
@@ -211,7 +213,7 @@ export class ThemeStore {
     save = () => {
         themeStore.setCurrentThemeId(this.getId())
         if(!this.state.editable) return
-        return themeStore.updateTheme(this.state.other.id, cloneDeep(this.state))
+        return themeStore.updateTheme(this.state.id!, cloneDeep(this.state))
     }
 }
 

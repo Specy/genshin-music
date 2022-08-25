@@ -9,8 +9,10 @@ class ThemeService {
     async getTheme(id: string): Promise<SerializedTheme | null> {
         const theme = await this.themeCollection.findOneById(id)
         if (theme) {
+            //@ts-ignore
+            const legacyId = theme.other.id
             theme.type = 'theme'
-            theme.id = theme.id ?? null
+            theme.id = (theme.id || legacyId) ?? null
             //@ts-ignore
             delete theme._id
         }
@@ -18,11 +20,12 @@ class ThemeService {
     }
     async getThemes(): Promise<SerializedTheme[]> {
         const themes = await this.themeCollection.find({})
-
         //legacy format
         themes.forEach(theme => {
+            //@ts-ignore
+            const legacyId = theme.other.id
             theme.type = 'theme'
-            theme.id = theme.id ?? null
+            theme.id = (theme.id || legacyId) ?? null
             //@ts-ignore
             delete theme._id
         })
@@ -31,13 +34,11 @@ class ThemeService {
     async addTheme(theme: SerializedTheme) {
         const id = DbInstance.generateId()
         theme.id = id
-        theme.other.id = id
         await this.themeCollection.insert(theme)
         return id
     }
     updateTheme(id: string, data: SerializedTheme) {
         data.id = id
-        data.other.id = id
         return this.themeCollection.updateById(id, data)
     }
     removeTheme(query: Query<SerializedTheme>) {
@@ -49,8 +50,8 @@ class ThemeService {
     getCurrentThemeId() {
         return localStorage.getItem(APP_NAME + '_Theme')
     }
-    setCurrentThemeId(id: string) {
-        localStorage.setItem(APP_NAME + '_Theme', id)
+    setCurrentThemeId(id: string | null) {
+        localStorage.setItem(APP_NAME + '_Theme', id ?? '')
     }
 }
 

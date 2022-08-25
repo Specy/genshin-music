@@ -5,7 +5,7 @@ import { songsStore } from "$stores/SongsStore"
 import toWav from 'audiobuffer-to-wav'
 import { SerializedSong, Song } from "$lib/Songs/Song"
 import { Midi } from "@tonejs/midi"
-import { SerializedTheme, ThemeStore } from "$/stores/ThemeStore/ThemeProvider"
+import { SerializedTheme, ThemeProvider, ThemeStore } from "$/stores/ThemeStore/ThemeProvider"
 import { songService } from "./SongService"
 import { Folder, SerializedFolder } from "../Folder"
 import { folderStore } from "$/stores/FoldersStore"
@@ -99,6 +99,7 @@ export class FileService {
         const themeErrors = result.getThemeErrors()
         themes.forEach(t => logger.success(`Imported theme: "${t?.other?.name ?? ''}"`))
         themeErrors.forEach(e => logger.error(`Error importing theme: "${e.file?.other?.name ?? ''}" | ${e.error}`))
+        return result
     }
     async importUnknownFile(unknownFile: UnknownFile): Promise<UnknownFileResult> {
         const result = new UnknownFileResult()
@@ -149,8 +150,8 @@ export class FileService {
         for (const theme of split.themes) {
             try {
                 theme.id = null
-                theme.other.id = ''
-                await themeStore.addTheme(theme)
+                const sanitised = ThemeProvider.sanitize(theme)
+                await themeStore.addTheme(sanitised)
                 result.appendSuccessful(theme)
             } catch (e) {
                 result.appendError(theme, AppError.getMessageFromAny(e))

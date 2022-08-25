@@ -312,7 +312,6 @@ export const ThemeSettings = {
         backgroundImageMain: '',
         backgroundImageComposer: '',
         name: 'Default',
-        id: 'default',
     },
     data: {
         background: {

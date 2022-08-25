@@ -21,6 +21,7 @@ import { Title } from "$cmp/Miscellaneous/Title";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import { useObservableArray } from "$/lib/Hooks/useObservable";
 import { themeStore } from "$/stores/ThemeStore/ThemeStore";
+import { fileService } from "$/lib/Services/FileService";
 
 
 function ThemePage() {
@@ -48,23 +49,18 @@ function ThemePage() {
         await ThemeProvider.save()
     }
 
-    async function handleImport(file: FileElement<SerializedTheme>[]) {
-        if (file.length) {
-            const theme = file[0].data as SerializedTheme
-            try {
-                if (theme.data && theme.other) {
-                    const sanitized = ThemeProvider.sanitize(theme)
-                    const id = await themeStore.addTheme(sanitized)
-                    sanitized.other.id = id
-                    sanitized.id = id
-                    ThemeProvider.loadFromJson(sanitized)
-                } else {
+    async function handleImport(files: FileElement<SerializedTheme>[]) {
+            for (const file of files){
+                const theme = file.data as SerializedTheme
+                try {
+                        const result = await fileService.importAndLog(theme)
+                        const firstTheme = result.getSuccessfulThemes()[0]
+                        if (firstTheme) ThemeProvider.loadFromJson(firstTheme)
+                } catch (e) {
                     logImportError()
                 }
-            } catch (e) {
-                logImportError()
             }
-        }
+
     }
     const logImportError = useCallback((error?: any) => {
         if (error) console.error(error)
@@ -86,7 +82,6 @@ function ThemePage() {
     }
     async function addNewTheme(newTheme: BaseTheme) {
         const id = await themeStore.addTheme(newTheme.serialize())
-        newTheme.state.other.id = id
         newTheme.state.id = id
         ThemeProvider.loadFromJson(newTheme.serialize())
         return id
@@ -178,9 +173,9 @@ function ThemePage() {
         <div className="theme-preview-wrapper">
             {defaultThemes.map(theme =>
                 <ThemePreview
-                    key={theme.other.id}
+                    key={theme.id}
                     theme={theme}
-                    current={theme.other.id === ThemeProvider.getId()}
+                    current={theme.id === ThemeProvider.getId()}
                     onClick={(theme) => {
                         ThemeProvider.loadFromTheme(theme)
                         ThemeProvider.save()
