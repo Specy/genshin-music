@@ -26,7 +26,7 @@
 .slider-full{
     height: 100%;
     width: 100%;
-	background-color: var(--primary);
+	background-color: var(--primary-darken-10);
 	border-radius: 0.2rem;
     overflow: hidden;
 }

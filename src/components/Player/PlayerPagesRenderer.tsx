@@ -7,7 +7,7 @@ import { playerControlsStore } from "$stores/PlayerControlsStore"
 
 
 
-function _PlayerPagesRenderer(){
+function _PlayerVisualSheetRenderer(){
     const pagesState = useObservableObject(playerControlsStore.pagesState)
     const [theme] = useTheme()
     return <>
@@ -27,4 +27,4 @@ function _PlayerPagesRenderer(){
     }
     </>
 }
-export const PlayerPagesRenderer = memo(_PlayerPagesRenderer, () => true)
+export const PlayerVisualSheetRenderer = memo(_PlayerVisualSheetRenderer, () => true)

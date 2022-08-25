@@ -15,19 +15,20 @@ import { useObservableObject } from "$lib/Hooks/useObservable";
 import { GiMetronome } from "react-icons/gi";
 import { AppButton } from "$cmp/Inputs/AppButton";
 import { PlayerSlider } from "./PlayerSlider";
-import { PlayerPagesRenderer } from "./PlayerPagesRenderer";
+import { PlayerVisualSheetRenderer } from "./PlayerPagesRenderer";
 interface PlayerSongControlsProps {
     onRestart: () => void
     onRawSpeedChange: (event: ChangeEvent<HTMLSelectElement>) => void
     onToggleRecordAudio: (override: boolean) => void
     onToggleMetronome: () => void
     speedChanger: typeof SPEED_CHANGERS[number]
+    isVisualSheetVisible: boolean
     hasSong: boolean
     isMetronomePlaying: boolean
     isRecordingAudio: boolean
 }
 
-function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSong, isMetronomePlaying, onToggleMetronome, isRecordingAudio, onToggleRecordAudio }: PlayerSongControlsProps) {
+function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSong, isMetronomePlaying, onToggleMetronome, isRecordingAudio, onToggleRecordAudio , isVisualSheetVisible}: PlayerSongControlsProps) {
     const songData = useObservableObject(playerStore.state)
     return <>
         {songData.eventType === 'approaching' &&
@@ -49,7 +50,7 @@ function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSon
             <div className="slider-wrapper column" style={!hasSong ? { display: 'none' } : {}} >
                 <div className="row" style={{ width: '100%' }}>
 
-                    <div className={`${hasTooltip(true)} row`} style={{ marginRight: '0.4rem', flex: 1}}>
+                    <div className={`${hasTooltip(true)} row`} style={{ marginRight: '0.4rem', flex: 1 }}>
                         <select
                             className='slider-select'
                             onChange={onRawSpeedChange}
@@ -73,7 +74,7 @@ function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSon
                             playerControlsStore.clearPages()
                             playerControlsStore.resetScore()
                         }}
-                        style={{flex: 1}}
+                        style={{ flex: 1 }}
                         tooltip='Stop'
                         ariaLabel="Stop song"
                     >
@@ -100,12 +101,14 @@ function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSon
                 <GiMetronome size={22} />
             </IconButton>
         </div>
-        <PlayerPagesRenderer />
+        {isVisualSheetVisible &&
+            <PlayerVisualSheetRenderer />
+        }
     </>
 }
 export const PlayerSongControls = memo(_PlayerSongControls, (prev, next) => {
     return prev.speedChanger === next.speedChanger && prev.hasSong === next.hasSong && prev.isMetronomePlaying === next.isMetronomePlaying
-        && prev.isRecordingAudio === next.isRecordingAudio
+        && prev.isRecordingAudio === next.isRecordingAudio && prev.isVisualSheetVisible === next.isVisualSheetVisible
 })
 
 

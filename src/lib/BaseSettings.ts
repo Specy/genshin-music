@@ -25,7 +25,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 43,
+        settingVersion: APP_NAME + 46,
     },
     data: {
         bpm: {
@@ -52,7 +52,7 @@ export const ComposerSettings: ComposerSettingsType = {
             type: "select",
             songSetting: false,
             value: 3,
-            category: "General Settings",
+            category: "Composer Settings",
             options: [
                 3,
                 4
@@ -63,7 +63,7 @@ export const ComposerSettings: ComposerSettingsType = {
             tooltip: "The type of text which will be written on the note",
             type: "select",
             songSetting: false,
-            category: "General Settings",
+            category: "Composer Settings",
             value: APP_NAME === "Genshin"
                 ? isMobile()
                     ? "Do Re Mi"
@@ -86,9 +86,10 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         columnsPerCanvas: {
             name: "Number of visible columns",
+            tooltip: "How many columns are visible at a time, more columns might cause lag",
             type: "select",
             songSetting: false,
-            category: "General Settings",
+            category: "Composer Settings",
             value: 35,
             options: [
                 20,
@@ -103,7 +104,7 @@ export const ComposerSettings: ComposerSettingsType = {
         caveMode: {
             name: "Reverb (cave mode)",
             tooltip: "Makes it sound like you are in a cave",
-            category: "General Settings",
+            category: "Composer Settings",
             type: "checkbox",
             songSetting: false,
             value: false,
@@ -112,7 +113,7 @@ export const ComposerSettings: ComposerSettingsType = {
             name: "Autosave changes",
             tooltip: "Autosaves the changes to a song every 5 edits, and when you change page/change song",
             type: "checkbox",
-            category: "General Settings",
+            category: "Composer Settings",
             songSetting: false,
             value: false,
         },
@@ -120,7 +121,7 @@ export const ComposerSettings: ComposerSettingsType = {
             name: "Autoplay in all tabs (pc only)",
             tooltip: "Advanced feature, it syncs other browser tabs to all play at the same time",
             type: "checkbox",
-            category: "General Settings",
+            category: "Composer Settings",
             songSetting: false,
             value: false
         }
@@ -141,18 +142,19 @@ export type PlayerSettingsDataType = {
     bpm: SettingsNumber
     metronomeVolume: SettingsSlider
     syncSongData: SettingsCheckbox
+    showVisualSheet: SettingsCheckbox
 }
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 44
+        settingVersion: APP_NAME + 46
     },
     data: {
         instrument: {
             name: "Instrument",
             tooltip: "The main instrument of the player, will also be saved in the song you record",
             type: "instrument",
-            songSetting: false,
+            songSetting: true,
             value: INSTRUMENTS[0],
             volume: 100,
             options: [...INSTRUMENTS],
@@ -183,7 +185,7 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "checkbox",
             songSetting: false,
             value: true,
-            category: "General Settings",
+            category: "Player Settings",
         },
         metronomeBeats: {
             name: "Metronome beats",
@@ -193,7 +195,7 @@ export const PlayerSettings: PlayerSettingsType = {
             increment: 1,
             value: 4,
             threshold: [0, 16],
-            category: "General Settings",
+            category: "Player Settings",
         },
         metronomeVolume: {
             name: "Metronome volume",
@@ -201,7 +203,7 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: 50,
-            category: "General Settings",
+            category: "Player Settings",
             threshold: [0, 120]
         },
         caveMode: {
@@ -210,14 +212,14 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "checkbox",
             songSetting: false,
             value: false,
-            category: "General Settings",
+            category: "Player Settings",
         },
         noteNameType: {
             name: "Note name type",
             tooltip: "The type of text which will be written on the note",
             type: "select",
             songSetting: false,
-            category: "General Settings",
+            category: "Player Settings",
             value: APP_NAME === "Genshin"
                 ? isMobile()
                     ? "Do Re Mi"
@@ -245,7 +247,7 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: 100,
-            category: "General Settings",
+            category: "Player Settings",
             threshold: [80, 150]
         },
         keyboardYPosition: {
@@ -254,7 +256,7 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: -20,
-            category: "General Settings",
+            category: "Player Settings",
             threshold: [-60, 80]
         },
         approachSpeed: {
@@ -264,17 +266,25 @@ export const PlayerSettings: PlayerSettingsType = {
             increment: 50,
             songSetting: false,
             value: 1500,
-            category: "General Settings",
+            category: "Player Settings",
             threshold: [0, 5000]
         },
         noteAnimation: {
             name: "Note animation",
-            tooltip: "Toggle the animation of the notes",
+            tooltip: "Toggle the animation of the notes (will reduce performance)",
             type: "checkbox",
-            category: "General Settings",
+            category: "Player Settings",
             songSetting: false,
             value: false
-        }
+        },
+        showVisualSheet: {
+            name: "Show visual sheet",
+            tooltip: "Show the sheet above the keyboard (might reduce performance)",
+            type: "checkbox",
+            songSetting: false,
+            value: true,
+            category: "Player Settings",
+        },
     }
 }
 

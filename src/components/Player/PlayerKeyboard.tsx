@@ -393,7 +393,6 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
         const style = size !== 1 ? { transform: `scale(${size})` } : {}
         return <>
-
             <div
                 className={keyboardClass}
                 style={{

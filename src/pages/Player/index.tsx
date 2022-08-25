@@ -347,10 +347,12 @@ class Player extends Component<any, PlayerState>{
 			</div>
 			<PlayerSongControls
 				isRecordingAudio={isRecordingAudio}
+				isVisualSheetVisible={settings.showVisualSheet.value}
 				onToggleRecordAudio={this.toggleRecordAudio}
 				onRestart={this.restartSong}
 				isMetronomePlaying={isMetronomePlaying}
 				onToggleMetronome={toggleMetronome}
+
 				onRawSpeedChange={this.handleSpeedChanger}
 				hasSong={hasSong}
 				speedChanger={speedChanger}
