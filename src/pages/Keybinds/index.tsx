@@ -1,4 +1,4 @@
-import { APP_NAME, LAYOUT_IMAGES } from "$/appConfig";
+import { APP_NAME } from "$/appConfig";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import BaseNote from "$cmp/Miscellaneous/BaseNote";
 import { Title } from "$cmp/Miscellaneous/Title";
@@ -10,10 +10,11 @@ import { Fragment, useEffect, useState } from "react";
 import { keyBinds } from "$stores/Keybinds";
 import { InstrumentNotesLayout } from "$types/GeneralTypes";
 import { NoteImage } from "$types/Keyboard";
+import Instrument from "$/lib/Instrument";
 
 
 
-
+const baseInstrument = new Instrument()
 export function Keybinds() {
     const keyboard = useObservableArray(keyBinds.getKeyboardKeybinds())
     const [selected, setSelected] = useState({
@@ -60,7 +61,7 @@ export function Keybinds() {
                             data={{
                                 status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
                             }}
-                            noteImage={LAYOUT_IMAGES[keyboard.length as InstrumentNotesLayout][i] as NoteImage}
+                            noteImage={baseInstrument.notes[i].noteImage}
                             noteText={key}
                             handleClick={() => {
                                 setSelected({

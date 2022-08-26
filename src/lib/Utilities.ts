@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/appConfig"
+import { APP_NAME, PITCHES, LAYOUT_KINDS, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
@@ -82,25 +82,6 @@ function blurEvent(e: any) {
 }
 
 
-
-function getNoteText(
-	type: NoteNameType,
-	index: number,
-	pitch: Pitch,
-	layoutLength: keyof typeof LAYOUT_DATA,
-	baseNote: BaseNote, 
-
-) {
-	try {
-		const layout = LAYOUT_DATA[layoutLength]
-		if (type === "Note name") return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
-		if (type === "Keyboard layout") return layout.keyboardLayout[index]
-		if (type === "Do Re Mi") return layout.mobileLayout[index]
-		if (type === "ABC") return layout.abcLayout[index]
-		if (type === "No Text") return ''
-	} catch (e) { }
-	return ''
-}
 function isFocusable(el: HTMLElement | EventTarget | null | undefined){
 	const focusableElements = ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'];
 	if(!el) return false
@@ -266,7 +247,6 @@ export {
 	delay,
 	Array2d,
 	MIDINote,
-	getNoteText,
 	MIDIShortcut,
 	capitalize,
 	clamp,

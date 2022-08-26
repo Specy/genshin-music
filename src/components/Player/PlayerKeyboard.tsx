@@ -2,7 +2,7 @@ import {  Component } from 'react'
 import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "$/appConfig"
 import Note from '$/components/Player/PlayerNote'
 import { playerStore } from '$stores/PlayerStore'
-import { Array2d, getNoteText, delay, clamp, groupArrayEvery } from "$lib/Utilities"
+import { Array2d, delay, clamp, groupArrayEvery } from "$lib/Utilities"
 import "./Keyboard.css"
 import Analytics from '$/lib/Stats';
 import { playerControlsStore } from '$stores/PlayerControlsStore'
@@ -130,7 +130,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
-                this.handleClick(instrument.layout[keyboardNote.index])
+                this.handleClick(instrument.notes[keyboardNote.index])
             })
         }
     }
@@ -386,6 +386,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     render() {
         const { state, props } = this
         const { data } = props
+        const { instrument, noteNameType, pitch } = data
         const { keyboard } = state
         const size = clamp(data.keyboardSize / 100, 0.5, 1.5)
         let keyboardClass = "keyboard" + (playerStore.eventType === 'play' ? " keyboard-playback" : "")
@@ -404,23 +405,16 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                     ? <div className="loading">Loading...</div>
 
                     : keyboard.map(note => {
-
                         return <Note
                             key={note.index}
                             note={note}
                             data={{
                                 approachRate: this.approachRate,
-                                instrument: this.props.data.instrument.name,
+                                instrument: instrument.name,
                             }}
                             approachingNotes={state.approachingNotes[note.index]}
                             handleClick={this.handleClick}
-                            noteText={getNoteText(
-                                data.noteNameType, 
-                                note.index, 
-                                data.pitch, 
-                                keyboard.length as 8 | 15 | 21,
-                                note.baseNote
-                            )}
+                            noteText={instrument.getNoteText(note.index, noteNameType, pitch)}
                         />
 
                     })

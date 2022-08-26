@@ -22,7 +22,6 @@ interface RenderLayout {
 export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, verticalOffset, horizontalOffset }: VsrgPlayerKeyboardProps) {
     const layout = useVsrgKeyboardLayout()
     useEffect(() => {
-        //TODO not sure if this is the best place
         KeyboardProvider.listen(({ letter, event }) => {
             if (event.repeat) return
             const index = layout.findIndex((l) => l.key === letter)

@@ -1,8 +1,7 @@
 
 import ComposerNote from "$cmp/Composer/ComposerNote"
-import { getNoteText } from '$lib/Utilities'
 import { Column, InstrumentData } from "$lib/Songs/SongClasses"
-import { LAYOUT_IMAGES, Pitch, TEMPO_CHANGERS } from "$/appConfig"
+import { Pitch, TEMPO_CHANGERS } from "$/appConfig"
 import { ThemeProvider } from "$/stores/ThemeStore/ThemeProvider"
 import Instrument, { NoteData } from "$lib/Instrument"
 import { NoteNameType } from "$types/GeneralTypes"
@@ -41,27 +40,19 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
             </h1>
         </div>
     }
-    if (keyboard.layout.length === 15) keyboardClass += " keyboard-5"
-    if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
+    if (keyboard.notes.length === 15) keyboardClass += " keyboard-5"
+    if (keyboard.notes.length === 8) keyboardClass += " keyboard-4"
 
     return <>
         <div className="composer-keyboard-wrapper">
             <div
                 className={keyboardClass}
             >
-                {keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
-                {keyboard.layout.map((note, i) => {
+                {keyboard.notes.length === 0 ? <div className="loading">Loading...</div> : null}
+                {keyboard.notes.map((note, i) => {
                     try {
                         const index = currentColumn.notes.findIndex((e) => e.index === i)
-                        //@ts-ignore
-                        const noteImage = LAYOUT_IMAGES[keyboard.layout.length][note.index]
-                        const noteText = getNoteText(
-                            noteNameType, 
-                            note.index, 
-                            pitch,
-                            keyboard.layout.length as 8 | 15 | 21,
-                            note.baseNote
-                        )
+
                         return <ComposerNote
                             key={note.index}
                             layer={(index >= 0
@@ -69,9 +60,9 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                                 : 0
                             )}
                             data={note}
-                            noteText={noteText}
+                            noteText={keyboard.getNoteText(i, noteNameType, pitch)}
                             instrument={keyboard.name}
-                            noteImage={noteImage as NoteImage}
+                            noteImage={note.noteImage}
                             clickAction={handleClick}
                         />
                     } catch (e) {

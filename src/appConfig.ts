@@ -1,5 +1,6 @@
 import isMobile from "is-mobile"
 import type { Tauri } from "$types/TauriTypes"
+import type { NoteImage } from "./types/Keyboard"
 
 const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '3.0' as const
@@ -85,183 +86,14 @@ const NOTE_SCALE = {
 } as const
 type BaseNote = keyof typeof NOTE_SCALE
 const INSTRUMENT_NOTE_LAYOUT_KINDS = {
-    skyStandard: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
-    genshinStandard: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
+    defaultSky: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
+    defaultGenshin: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
     noName: ["", "", "", "", "", "", "", ""]
 } as const
 Object.freeze(NOTE_SCALE)
 Object.freeze(INSTRUMENT_NOTE_LAYOUT_KINDS)
-
-//TODO add the instrument data like layout kinds here instead of LAYOUT_DATA
-const BaseinstrumentsData = {
-    Lyre: {
-        notes: 21,
-        family: "strings",
-        midiName: "pizzicato strings",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard
-    },
-    Zither: {
-        notes: 21,
-        fill: '#cdb68e',
-        family: "strings",
-        midiName: "pizzicato strings", //maybe koto?
-        clickColor: '#ddcba8',
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard
-
-    },
-    "Old-Zither": {
-        notes: 21,
-        fill: '#cdb68e',
-        family: "strings",
-        midiName: "pizzicato strings",
-        clickColor: '#ddcba8',
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard
-
-    },
-    DunDun: {
-        notes: 8,
-        family: "percussive",
-        midiName: "synth drum",
-        ...(APP_NAME === "Genshin" ? {
-            fill: '#F99C55',
-            clickColor: '#f5a262'
-        } : {}),
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
-    },
-    Panflute: {
-        notes: 15,
-        family: "pipe",
-        midiName: "pan flute",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    LightGuitar: {
-        notes: 15,
-        family: "guitar",
-        midiName: "electric guitar (clean)",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-
-    },
-    Bells: {
-        notes: 8,
-        family: "chromatic percussion",
-        midiName: "tubular bells",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
-    },
-    Trumpet: {
-        notes: 15,
-        family: "brass",
-        midiName: "trumpet",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Contrabass: {
-        notes: 15,
-        family: "guitar",
-        midiName: "contrabass",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Drum: {
-        notes: 8,
-        family: "percussive",
-        midiName: "synth drum",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
-    },
-    Flute: {
-        notes: 15,
-        family: "pipe",
-        midiName: "flute",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Guitar: {
-        notes: 15,
-        family: "guitar",
-        midiName: "acoustic guitar (steel)",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    HandPan: {
-        notes: 8,
-        family: "percussive",
-        midiName: "steel drums",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
-    },
-    ToyUkulele: {
-        notes: 15,
-        family: "guitar",
-        midiName: "acoustic guitar (nylon)",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Harp: {
-        notes: 15,
-        family: "strings",
-        midiName: "orchestral harp",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Horn: {
-        notes: 15,
-        family: "brass",
-        midiName: "tuba",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Piano: {
-        notes: 15,
-        family: "piano",
-        midiName: "acoustic grand piano",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Pipa: {
-        notes: 15,
-        family: "reed",
-        midiName: "oboe",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Kalimba: {
-        notes: 15,
-        family: "piano",
-        midiName: "bright acoustic piano",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    WinterPiano: {
-        notes: 15,
-        family: "piano",
-        midiName: "bright acoustic piano",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Xylophone: {
-        notes: 15,
-        family: "chromatic percussion",
-        midiName: "xylophone",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    },
-    Ocarina: {
-        notes: 15,
-        family: "pipe",
-        midiName: "pan flute",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
-    }
-}
-type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
-type InstrumentsDataProps = {
-    [key in InstrumentsDataKeys]: {
-        notes: 8 | 15 | 21
-        fill?: string
-        clickColor?: string
-        family: string,
-        midiName: string,
-        baseNotes: BaseNote[]
-
-    }
-}
-
-//@ts-ignore
-const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
-interface LayoutDataType {
-    keyboardLayout: string[],
-    mobileLayout: string[],
-    keyboardCodes: string[],
-    abcLayout: string[],
-}
-
-const LAYOUT_DATA = {
-    21: {
+const LAYOUT_KINDS = {
+    defaultGenshin: {
         keyboardLayout: (
             "Q W E R T Y U " +
             "A S D F G H J " +
@@ -281,7 +113,7 @@ const LAYOUT_DATA = {
             "B1 B2 B3 B4 B5 B6 B7 " +
             "C1 C2 C3 C4 C5 C6 C7").split(" ")
     },
-    8: {
+    defaultDrums: {
         keyboardLayout: (
             "Q W E R " +
             "A S D F").split(" "),
@@ -297,7 +129,7 @@ const LAYOUT_DATA = {
             "A1 A2 A3 A4" +
             "B1 B2 B3 B4").split(" ")
     },
-    15: {
+    defaultSky: {
         keyboardLayout: (
             "Q W E R T " +
             "A S D F G " +
@@ -317,11 +149,218 @@ const LAYOUT_DATA = {
             "B1 B2 B3 B4 B5 " +
             "C1 C2 C3 C4 C5").split(" ")
     }
-} as {
-    8: LayoutDataType,
-    15: LayoutDataType
-    21: LayoutDataType,
 }
+//TODO add the instrument data like layout kinds here instead of LAYOUT_KINDS
+const LAYOUT_ICONS_KINDS = {
+    defaultSky: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" ") as NoteImage[],
+    defaultSkyDrums: "cr dm cr dm cr dm cr dm".split(" ") as NoteImage[],
+    defaultGenshinDrums: "do re mi fa do re mi fa".split(" ") as NoteImage[],
+    defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[]
+}
+
+const BaseinstrumentsData = {
+    Lyre: {
+        notes: 21,
+        family: "strings",
+        midiName: "pizzicato strings",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
+        layout: LAYOUT_KINDS.defaultGenshin,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+    },
+    Zither: {
+        notes: 21,
+        fill: '#cdb68e',
+        family: "strings",
+        midiName: "pizzicato strings", //maybe koto?
+        clickColor: '#ddcba8',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
+        layout: LAYOUT_KINDS.defaultGenshin,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+
+    },
+    "Old-Zither": {
+        notes: 21,
+        fill: '#cdb68e',
+        family: "strings",
+        midiName: "pizzicato strings",
+        clickColor: '#ddcba8',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
+        layout: LAYOUT_KINDS.defaultGenshin,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+    },
+    DunDun: {
+        notes: 8,
+        family: "percussive",
+        midiName: "synth drum",
+        ...(APP_NAME === "Genshin" ? {
+            fill: '#F99C55',
+            clickColor: '#f5a262'
+        } : {}),
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: APP_NAME === 'Genshin' 
+            ?  LAYOUT_ICONS_KINDS.defaultGenshinDrums
+            : LAYOUT_ICONS_KINDS.defaultSkyDrums
+    },
+    Panflute: {
+        notes: 15,
+        family: "pipe",
+        midiName: "pan flute",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    LightGuitar: {
+        notes: 15,
+        family: "guitar",
+        midiName: "electric guitar (clean)",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Bells: {
+        notes: 8,
+        family: "chromatic percussion",
+        midiName: "tubular bells",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
+    },
+    Trumpet: {
+        notes: 15,
+        family: "brass",
+        midiName: "trumpet",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+
+    },
+    Contrabass: {
+        notes: 15,
+        family: "guitar",
+        midiName: "contrabass",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Drum: {
+        notes: 8,
+        family: "percussive",
+        midiName: "synth drum",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
+    },
+    Flute: {
+        notes: 15,
+        family: "pipe",
+        midiName: "flute",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+
+    },
+    Guitar: {
+        notes: 15,
+        family: "guitar",
+        midiName: "acoustic guitar (steel)",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+
+    },
+    HandPan: {
+        notes: 8,
+        family: "percussive",
+        midiName: "steel drums",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
+
+    },
+    ToyUkulele: {
+        notes: 15,
+        family: "guitar",
+        midiName: "acoustic guitar (nylon)",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Harp: {
+        notes: 15,
+        family: "strings",
+        midiName: "orchestral harp",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Horn: {
+        notes: 15,
+        family: "brass",
+        midiName: "tuba",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Piano: {
+        notes: 15,
+        family: "piano",
+        midiName: "acoustic grand piano",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Pipa: {
+        notes: 15,
+        family: "reed",
+        midiName: "oboe",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Kalimba: {
+        notes: 15,
+        family: "piano",
+        midiName: "bright acoustic piano",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    WinterPiano: {
+        notes: 15,
+        family: "piano",
+        midiName: "bright acoustic piano",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Xylophone: {
+        notes: 15,
+        family: "chromatic percussion",
+        midiName: "xylophone",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Ocarina: {
+        notes: 15,
+        family: "pipe",
+        midiName: "pan flute",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    }
+}
+type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
+type InstrumentsDataProps = {
+    [key in InstrumentsDataKeys]:  typeof BaseinstrumentsData[key] & {
+        fill? : string,
+        clickColor? : string,
+    }
+}
+
+const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
+
 const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
     return {
         name: `x${e}`,
@@ -333,14 +372,7 @@ const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"
 const PITCH_TO_INDEX = new Map<Pitch, number>(PITCHES.map((pitch, index) => [pitch, index]))
 type Pitch = typeof PITCHES[number]
 const COMPOSER_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
-
 const IMPORT_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-
-const LAYOUT_IMAGES = {
-    15: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" "),
-    8: APP_NAME === "Sky" ? "cr dm cr dm cr dm cr dm".split(" ") : "do re mi fa do re mi fa".split(" "),
-    21: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ")
-}
 
 const CACHE_DATA = {
     noteData: {
@@ -506,12 +538,11 @@ export {
     COMPOSER_NOTE_POSITIONS,
     IMPORT_NOTE_POSITIONS,
     APP_NAME,
-    LAYOUT_DATA,
+    LAYOUT_KINDS,
     NOTES_CSS_CLASSES,
     NOTES_PER_COLUMN,
     NOTE_SCALE,
     PITCHES,
-    LAYOUT_IMAGES,
     APP_VERSION,
     SPEED_CHANGERS,
     AUDIO_CONTEXT,

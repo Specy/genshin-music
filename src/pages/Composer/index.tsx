@@ -180,7 +180,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             const shouldEditKeyboard = isPlaying || event.shiftKey
             if (shouldEditKeyboard) {
                 const note = this.currentInstrument.getNoteFromCode(letter)
-                if (note !== null) this.handleClick(this.currentInstrument.layout[note])
+                if (note !== null) this.handleClick(this.currentInstrument.notes[note])
             }
         }, { id })
     }
@@ -205,7 +205,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
-                this.handleClick(this.currentInstrument.layout[keyboardNote.index])
+                this.handleClick(this.currentInstrument.notes[keyboardNote.index])
             })
             const shortcut = MIDIProvider.settings.shortcuts.find(e => e.midi === note)
             if (!shortcut) return
@@ -339,7 +339,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
     playSound = (layer: number, index: number) => {
         const instrument = this.state.layers[layer]
-        const note = instrument?.layout[index]
+        const note = instrument?.notes[index]
         if (note === undefined) return
         if(this.state.song.instruments[layer].muted) return
         const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value 

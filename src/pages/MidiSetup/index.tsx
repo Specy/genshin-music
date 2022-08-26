@@ -2,7 +2,7 @@ import './MidiSetup.css'
 import { APP_NAME } from "$/appConfig"
 import { MIDISettings } from "$lib/BaseSettings"
 import BaseNote from "$cmp/Miscellaneous/BaseNote"
-import { LAYOUT_IMAGES, MIDI_STATUS } from "$/appConfig"
+import { MIDI_STATUS } from "$/appConfig"
 import { Component } from 'react'
 import { INSTRUMENTS } from "$/appConfig"
 import Shortcut from "./Shortcut"
@@ -16,6 +16,7 @@ import { NoteImage } from "$types/Keyboard"
 import { Title } from '$cmp/Miscellaneous/Title'
 import { AudioPlayer } from '$lib/AudioPlayer'
 import { InstrumentData } from '$lib/Songs/SongClasses'
+import Instrument from '$/lib/Instrument'
 
 interface MidiSetupState {
     audioPlayer: AudioPlayer
@@ -26,6 +27,7 @@ interface MidiSetupState {
     selectedSource: WebMidi.MIDIInput | null
 }
 
+const baseInstrument = new Instrument()
 export default class MidiSetup extends Component<any, MidiSetupState> {
     state: MidiSetupState
     mounted: boolean
@@ -193,12 +195,11 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                     style={{ marginTop: 'auto', width: 'fit-content' }}
                 >
                     {settings.notes.map((note, i) => {
-                        const noteImage = LAYOUT_IMAGES[settings.notes.length as InstrumentNotesLayout][note.index]
                         return <BaseNote
                             key={i}
                             handleClick={this.handleClick}
                             data={note}
-                            noteImage={noteImage as NoteImage}
+                            noteImage={baseInstrument.notes[i].noteImage}
                             noteText={note.midi < 0 ? 'NA' : String(note.midi)}
                         />
                     })}

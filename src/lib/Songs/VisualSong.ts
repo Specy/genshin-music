@@ -1,8 +1,8 @@
 import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/appConfig"
 import { ComposedSong } from "$lib/Songs/ComposedSong"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
-import { Column, ColumnNote, RecordedNote } from "$lib/Songs/SongClasses"
-import { getNoteText } from "$lib/Utilities"
+import { Column, ColumnNote, InstrumentData, RecordedNote } from "$lib/Songs/SongClasses"
+import Instrument from "../Instrument"
 import { NoteLayer } from "../Layer"
 
 
@@ -12,22 +12,15 @@ type NoteDifference = {
     layer: NoteLayer
     time: number
 }
-function getChunkNoteText(i: number) {
-    const text = getNoteText(
-        APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', 
-        i, 
-        'C', 
-        APP_NAME === "Genshin" ? 21 : 15,
-        APP_NAME === "Genshin" ? INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard[i] : INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard[i]
-    )
-    return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
-}
 export class VisualSong {
     private baseChunks: _Chunk[] = []
     type: 'song' | 'composed' = 'song'
     chunks: _Chunk[] = []
     text: string = ''
-
+    instruments: Instrument[] = []
+    constructor(){
+        this.instruments = [new Instrument()]
+    }
     get currentChunk() {
         return this.baseChunks[this.baseChunks.length - 1]
     }
@@ -72,7 +65,8 @@ export class VisualSong {
         this.text = this.baseChunks.map(chunk => chunk.toString()).join(' ')
     }
     createChunk(changer?: ChunkTempoChanger){
-        const chunk = new _Chunk(changer || 1)
+        //TODO need to remove instrument here
+        const chunk = new _Chunk(this.instruments[0], changer || 1)
         this.baseChunks.push(chunk)
         return chunk
     }
@@ -121,8 +115,10 @@ const tempoChangerMap = {
 export class _Chunk{
     columns: ChunkColumn[] = []
     tempoChanger: ChunkTempoChanger
-    constructor(changer?:ChunkTempoChanger){
+    instrument: Instrument
+    constructor(instrument: Instrument, changer?:ChunkTempoChanger){
         this.tempoChanger = changer || 0
+        this.instrument = instrument
     }
     get tempoString(){
         return tempoChangerMap[this.tempoChanger]
@@ -132,7 +128,9 @@ export class _Chunk{
     }
     toString(){
         const notes = this.columns.map(column => column.notes).flat()
-        const text = notes.map(note => getChunkNoteText(note.index)).join('')
+        const text = notes.map(note => 
+            this.instrument.getNoteText(note.index, APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', 'C')
+        ).join('')
         return notes.length ? text : `[${this.tempoString}${text}]`
     }
 }

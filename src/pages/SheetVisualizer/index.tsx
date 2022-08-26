@@ -2,7 +2,7 @@ import './SheetVisualizer.css'
 
 import { useState } from 'react'
 import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from '$/appConfig'
-import { getNoteText, isComposedOrRecorded } from '$lib/Utilities'
+import { isComposedOrRecorded } from '$lib/Utilities'
 import Switch from '$cmp/Inputs/Switch'
 import Analytics from '$/lib/Stats'
 import { RecordedSong } from '$lib/Songs/RecordedSong'
@@ -18,13 +18,14 @@ import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import { songService } from '$lib/Services/SongService'
 import { ComposedSong } from '$lib/Songs/ComposedSong'
 import { useTheme } from '$lib/Hooks/useTheme'
+import Instrument from '$/lib/Instrument'
 
 const THRESHOLDS = {
     joined: 50,
     pause: 400,
 }
 
-
+const defaultInstrument = new Instrument()
 export default function SheetVisualizer() {
     const [theme] = useTheme()
     const [sheet, setSheet] = useState<Chunk[]>([])
@@ -43,13 +44,7 @@ export default function SheetVisualizer() {
     }
 
     function getChunkNoteText(i: number) {
-        const text = getNoteText(
-            APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', 
-            i, 
-            'C', 
-            APP_NAME === "Genshin" ? 21 : 15,
-            APP_NAME === "Genshin" ? INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard[i] : INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard[i]
-            )
+        const text = defaultInstrument.getNoteText(i, APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', "C")
         return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
     function loadSong(song: SerializedSong) {

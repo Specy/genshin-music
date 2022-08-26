@@ -1,13 +1,15 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME, BaseNote } from "$/appConfig"
+import { INSTRUMENTS_DATA, LAYOUT_KINDS, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX } from "$/appConfig"
 import { makeObservable, observable } from "mobx"
-import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
+import { InstrumentName, NoteNameType, NoteStatus } from "$types/GeneralTypes"
 import { NoteImage } from "$types/Keyboard"
 import { getPitchChanger } from "./Utilities"
+import { AppError } from "./Errors"
 
 type Layouts = {
     keyboard: string[]
     mobile: string[]
     keyCodes: string[]
+    abc: string[]
 }
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 
@@ -16,12 +18,13 @@ const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 
 export default class Instrument {
     name: InstrumentName
-    volumeNode: GainNode | null
-    layout: NoteData[] = []
+    volumeNode: GainNode | null = null
+    notes: NoteData[] = []
     layouts: Layouts = {
         keyboard: [],
         mobile: [],
-        keyCodes: []
+        keyCodes: [],
+        abc: []
     }
     buffers: AudioBuffer[] = []
     isDeleted: boolean = false
@@ -36,13 +39,13 @@ export default class Instrument {
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
         this.name = name
         if (!INSTRUMENTS.includes(this.name as any)) this.name = INSTRUMENTS[0]
-        this.volumeNode = AUDIO_CONTEXT.createGain()
         const instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]
-        const layouts = LAYOUT_DATA[instrumentData.notes]
+        const layouts = instrumentData.layout
         this.layouts = {
             keyboard: layouts.keyboardLayout,
             mobile: layouts.mobileLayout,
-            keyCodes: layouts.keyboardCodes
+            keyCodes: layouts.keyboardCodes,
+            abc: layouts.abcLayout
         }
         this.layouts.keyboard.forEach((noteName, i) => {
             const noteNames = {
@@ -52,18 +55,29 @@ export default class Instrument {
             const url = `./assets/audio/${this.name}/${i}.mp3`
             const note = new NoteData(i, noteNames, url, instrumentData.baseNotes[i])
             note.instrument = this.name
-            //@ts-ignore
-            note.noteImage = LAYOUT_IMAGES[this.layouts.keyboard.length][i]
-            this.layout.push(note)
+            note.noteImage = instrumentData.icons[i]
+            this.notes.push(note)
         })
 
-        this.volumeNode.gain.value = 0.8
     }
     getNoteFromCode = (code: number | string) => {
         const index = this.layouts.keyboard.findIndex(e => e === String(code))
         return index !== -1 ? index : null
     }
-
+    getNoteText = (index: number, type: NoteNameType, pitch: Pitch) => {
+        const layout = this.layouts
+        try {
+            if (type === "Note name"){
+                const baseNote = this.notes[index].baseNote
+                return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
+            }
+            if (type === "Keyboard layout") return layout.keyboard[index]
+            if (type === "Do Re Mi") return layout.mobile[index]
+            if (type === "ABC") return layout.abc[index]
+            if (type === "No Text") return ''
+        } catch (e) { }
+        return ''
+    }
     changeVolume = (amount: number) => {
         let newVolume = Number((amount / 135).toFixed(2))
         if (amount < 5) newVolume = 0
@@ -86,10 +100,12 @@ export default class Instrument {
         player.addEventListener('ended', handleEnd, { once: true })
     }
     load = async () => {
+        this.volumeNode = AUDIO_CONTEXT.createGain()
+        this.volumeNode.gain.value = 0.8
         let loadedCorrectly = true
         if (!INSTRUMENT_BUFFER_POOL.has(this.name)) {
             const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
-            const requests: Promise<AudioBuffer>[] = this.layout.map(note => {
+            const requests: Promise<AudioBuffer>[] = this.notes.map(note => {
                 //dont change any of this, safari bug
                 return new Promise(resolve => {
                     fetch(note.url)

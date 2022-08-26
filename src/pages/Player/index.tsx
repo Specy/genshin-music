@@ -67,7 +67,7 @@ class Player extends Component<any, PlayerState>{
 	componentDidMount() {
 		this.mounted = true
 		const instrument = this.state.instruments[0]
-		if(instrument) playerStore.setKeyboardLayout(instrument.layout)
+		if(instrument) playerStore.setKeyboardLayout(instrument.notes)
 		this.init()
 		const dispose = subscribeObeservableObject(playerStore.state, ({ eventType, song }) => {
 			const { settings } = this.state
@@ -126,12 +126,12 @@ class Player extends Component<any, PlayerState>{
 		const { settings, instruments } = this.state
 		const instrument = new Instrument(name)
 		instrument.changeVolume(settings.instrument.volume || 100)
-		AudioProvider.connect(instrument.endNode)
 		this.setState({ isLoadingInstrument: true })
 		const loaded = await instrument.load()
 		if (!loaded) logger.error("There was an error loading the instrument")
+		AudioProvider.connect(instrument.endNode)
 		if (!this.mounted) return
-		playerStore.setKeyboardLayout(instrument.layout)
+		playerStore.setKeyboardLayout(instrument.notes)
 		instruments.splice(0, 1, instrument)
 		this.setState({
 			instruments,
@@ -328,7 +328,7 @@ class Player extends Component<any, PlayerState>{
 				</div>
 				<div className="keyboard-wrapper">
 					<KeyboardPlayer
-						key={instruments[0].layout.length}
+						key={instruments[0].notes.length}
 						data={{
 							isLoading: isLoadingInstrument,
 							instrument: instruments[0],
