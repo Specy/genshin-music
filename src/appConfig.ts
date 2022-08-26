@@ -1,5 +1,5 @@
 import isMobile from "is-mobile"
-import { Tauri } from "$types/TauriTypes"
+import type { Tauri } from "$types/TauriTypes"
 
 const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '3.0' as const
@@ -12,7 +12,7 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         Check the updates page for more info
 
     `.trim()
-const UPDATE_URL = process.env.NODE_ENV === 'development' 
+const UPDATE_URL = process.env.NODE_ENV === 'development'
     ? 'http://localhost:3000/updates.json'
     : 'https://raw.githubusercontent.com/Specy/genshin-music/main/public/updates.json'
 
@@ -73,11 +73,32 @@ const INSTRUMENTS = APP_NAME === "Genshin"
     ] as const
 const PLAY_BAR_OFFSET = 200
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
+const NOTE_SCALE = {
+    C: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"],
+    D: ["D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "C", "C#"],
+    E: ["E", "F", "F#", "G", "G#", "A", "Bb", "B", "C", "C#", "D", "D#"],
+    F: ["F", "Gb", "G", "Ab", "A", "Bb", "Cb", "C", "Db", "D", "Eb", "E"],
+    G: ["G", "Ab", "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "F#"],
+    A: ["A", "Bb", "B", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#"],
+    B: ["B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#"],
+    "": ["", "", "", "", "", "", "", "", "", "", "", ""]
+} as const
+type BaseNote = keyof typeof NOTE_SCALE
+const INSTRUMENT_NOTE_LAYOUT_KINDS = {
+    skyStandard: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
+    genshinStandard: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
+    noName: ["", "", "", "", "", "", "", ""]
+} as const
+Object.freeze(NOTE_SCALE)
+Object.freeze(INSTRUMENT_NOTE_LAYOUT_KINDS)
+
+//TODO add the instrument data like layout kinds here instead of LAYOUT_DATA
 const BaseinstrumentsData = {
     Lyre: {
         notes: 21,
         family: "strings",
         midiName: "pizzicato strings",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard
     },
     Zither: {
         notes: 21,
@@ -85,6 +106,8 @@ const BaseinstrumentsData = {
         family: "strings",
         midiName: "pizzicato strings", //maybe koto?
         clickColor: '#ddcba8',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard
+
     },
     "Old-Zither": {
         notes: 21,
@@ -92,6 +115,8 @@ const BaseinstrumentsData = {
         family: "strings",
         midiName: "pizzicato strings",
         clickColor: '#ddcba8',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard
+
     },
     DunDun: {
         notes: 8,
@@ -100,97 +125,117 @@ const BaseinstrumentsData = {
         ...(APP_NAME === "Genshin" ? {
             fill: '#F99C55',
             clickColor: '#f5a262'
-        } : {})
+        } : {}),
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
     },
     Panflute: {
         notes: 15,
         family: "pipe",
-        midiName: "pan flute"
+        midiName: "pan flute",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     LightGuitar: {
         notes: 15,
         family: "guitar",
-        midiName: "electric guitar (clean)"
+        midiName: "electric guitar (clean)",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
+
     },
     Bells: {
         notes: 8,
         family: "chromatic percussion",
-        midiName: "tubular bells"
+        midiName: "tubular bells",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
     },
     Trumpet: {
         notes: 15,
         family: "brass",
-        midiName: "trumpet"
+        midiName: "trumpet",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Contrabass: {
         notes: 15,
         family: "guitar",
-        midiName: "contrabass"
+        midiName: "contrabass",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Drum: {
         notes: 8,
         family: "percussive",
-        midiName: "synth drum"
+        midiName: "synth drum",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
     },
     Flute: {
         notes: 15,
         family: "pipe",
-        midiName: "flute"
+        midiName: "flute",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Guitar: {
         notes: 15,
         family: "guitar",
-        midiName: "acoustic guitar (steel)"
+        midiName: "acoustic guitar (steel)",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     HandPan: {
         notes: 8,
         family: "percussive",
-        midiName: "steel drums"
+        midiName: "steel drums",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName
     },
     ToyUkulele: {
         notes: 15,
         family: "guitar",
-        midiName: "acoustic guitar (nylon)"
+        midiName: "acoustic guitar (nylon)",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Harp: {
         notes: 15,
         family: "strings",
-        midiName: "orchestral harp"
+        midiName: "orchestral harp",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Horn: {
         notes: 15,
         family: "brass",
-        midiName: "tuba"
+        midiName: "tuba",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Piano: {
         notes: 15,
         family: "piano",
-        midiName: "acoustic grand piano"
+        midiName: "acoustic grand piano",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Pipa: {
         notes: 15,
         family: "reed",
-        midiName: "oboe"
+        midiName: "oboe",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Kalimba: {
         notes: 15,
         family: "piano",
-        midiName: "bright acoustic piano"
+        midiName: "bright acoustic piano",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     WinterPiano: {
         notes: 15,
         family: "piano",
-        midiName: "bright acoustic piano"
+        midiName: "bright acoustic piano",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Xylophone: {
         notes: 15,
         family: "chromatic percussion",
-        midiName: "xylophone"
+        midiName: "xylophone",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     },
     Ocarina: {
         notes: 15,
         family: "pipe",
-        midiName: "pan flute"
+        midiName: "pan flute",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
     }
 }
 type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
@@ -200,16 +245,19 @@ type InstrumentsDataProps = {
         fill?: string
         clickColor?: string
         family: string,
-        midiName: string
+        midiName: string,
+        baseNotes: BaseNote[]
+
     }
 }
+
 //@ts-ignore
 const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
 interface LayoutDataType {
     keyboardLayout: string[],
     mobileLayout: string[],
     keyboardCodes: string[],
-    abcLayout: string[]
+    abcLayout: string[],
 }
 
 const LAYOUT_DATA = {
@@ -274,37 +322,6 @@ const LAYOUT_DATA = {
     15: LayoutDataType
     21: LayoutDataType,
 }
-
-const NOTE_NAMES = {
-    Sky: {
-        0: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
-        1: ["Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db"],
-        2: ["D", "E", "F#", "G", "A", "B", "C#", "D", "E", "F#", "G", "A", "B", "C#", "D"],
-        3: ["Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb"],
-        4: ["E", "F#", "G#", "A", "B", "C#", "D#", "E", "F#", "G#", "A", "B", "C#", "D#", "E"],
-        5: ["F", "G", "A", "Bb", "C", "D", "E", "F", "G", "A", "Bb", "C", "D", "E", "F"],
-        6: ["Gb", "Ab", "Bb", "Cb", "Db", "Eb", "F", "Gb", "Ab", "Bb", "Cb", "Db", "Eb", "F", "Gb"],
-        7: ["G", "A", "B", "C", "D", "E", "F#", "G", "A", "B", "C", "D", "E", "F#", "G"],
-        8: ["Ab", "Bb", "C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "Db", "Eb", "F", "G", "Ab"],
-        9: ["A", "B", "C#", "D", "E", "F#", "G#", "A", "B", "C#", "D", "E", "F#", "G#", "A"],
-        10: ["Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
-        11: ["B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B"]
-    },
-    Genshin: {
-        0: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
-        1: ["Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db", "Eb", "F", "Gb", "Ab", "Bb", "C", "Db"],
-        2: ["D", "E", "F#", "G", "A", "B", "C#", "D", "E", "F#", "G", "A", "B", "C#", "D", "E", "F#", "G", "A", "B", "C#", "D"],
-        3: ["Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb"],
-        4: ["E", "F#", "G#", "A", "B", "C#", "D#", "E", "F#", "G#", "A", "B", "C#", "D#", "E", "F#", "G#", "A", "B", "C#", "D#", "E"],
-        5: ["F", "G", "A", "Bb", "C", "D", "E", "F", "G", "A", "Bb", "C", "D", "E", "F", "G", "A", "Bb", "C", "D", "E", "F"],
-        6: ["Gb", "Ab", "Bb", "Cb", "Db", "Eb", "F", "Gb", "Ab", "Bb", "Cb", "Db", "Eb", "F", "Gb", "Ab", "Bb", "Cb", "Db", "Eb", "F", "Gb"],
-        7: ["G", "A", "B", "C", "D", "E", "F#", "G", "A", "B", "C", "D", "E", "F#", "G", "A", "B", "C", "D", "E", "F#", "G"],
-        8: ["Ab", "Bb", "C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "Db", "Eb", "F", "G", "Ab"],
-        9: ["A", "B", "C#", "D", "E", "F#", "G#", "A", "B", "C#", "D", "E", "F#", "G#", "A", "B", "C#", "D", "E", "F#", "G#", "A"],
-        10: ["Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
-        11: ["B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B", "C#", "D#", "E", "F#", "G#", "A#", "B"]
-    }
-}
 const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
     return {
         name: `x${e}`,
@@ -313,6 +330,7 @@ const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
 })
 
 const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] as const
+const PITCH_TO_INDEX = new Map<Pitch, number>(PITCHES.map((pitch, index) => [pitch, index]))
 type Pitch = typeof PITCHES[number]
 const COMPOSER_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
 
@@ -453,7 +471,7 @@ const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
         84: [6, false],
     })))
 const DEFAULT_VSRG_KEYS_MAP = {
-    4: ["A", "S", "G", "H"] ,
+    4: ["A", "S", "G", "H"],
     6: ["A", "S", "D", "G", "H", "J"],
 }
 const VSRG_SCORE_COLOR_MAP = {
@@ -491,7 +509,7 @@ export {
     LAYOUT_DATA,
     NOTES_CSS_CLASSES,
     NOTES_PER_COLUMN,
-    NOTE_NAMES,
+    NOTE_SCALE,
     PITCHES,
     LAYOUT_IMAGES,
     APP_VERSION,
@@ -520,8 +538,11 @@ export {
     PIXI_CENTER_X_END_Y,
     IS_MOBILE,
     VSRG_SCORE_COLOR_MAP,
-    UPDATE_URL
+    UPDATE_URL,
+    PITCH_TO_INDEX,
+    INSTRUMENT_NOTE_LAYOUT_KINDS
 }
 export type {
-    Pitch
+    Pitch,
+    BaseNote
 }

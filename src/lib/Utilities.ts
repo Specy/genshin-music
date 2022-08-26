@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "$/appConfig"
+import { APP_NAME, PITCHES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
@@ -82,20 +82,22 @@ function blurEvent(e: any) {
 }
 
 
+
 function getNoteText(
-	noteNameType: NoteNameType,
+	type: NoteNameType,
 	index: number,
 	pitch: Pitch,
-	layoutLength: keyof typeof LAYOUT_DATA
+	layoutLength: keyof typeof LAYOUT_DATA,
+	baseNote: BaseNote, 
+
 ) {
 	try {
 		const layout = LAYOUT_DATA[layoutLength]
-		//@ts-ignore
-		if (noteNameType === "Note name") return NOTE_NAMES[APP_NAME][PITCHES.indexOf(pitch)][index]
-		if (noteNameType === "Keyboard layout") return layout.keyboardLayout[index]
-		if (noteNameType === "Do Re Mi") return layout.mobileLayout[index]
-		if (noteNameType === "ABC") return layout.abcLayout[index]
-		if (noteNameType === "No Text") return ''
+		if (type === "Note name") return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
+		if (type === "Keyboard layout") return layout.keyboardLayout[index]
+		if (type === "Do Re Mi") return layout.mobileLayout[index]
+		if (type === "ABC") return layout.abcLayout[index]
+		if (type === "No Text") return ''
 	} catch (e) { }
 	return ''
 }

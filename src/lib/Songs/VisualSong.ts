@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/appConfig"
+import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/appConfig"
 import { ComposedSong } from "$lib/Songs/ComposedSong"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
 import { Column, ColumnNote, RecordedNote } from "$lib/Songs/SongClasses"
@@ -13,7 +13,13 @@ type NoteDifference = {
     time: number
 }
 function getChunkNoteText(i: number) {
-    const text = getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === "Genshin" ? 21 : 15)
+    const text = getNoteText(
+        APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', 
+        i, 
+        'C', 
+        APP_NAME === "Genshin" ? 21 : 15,
+        APP_NAME === "Genshin" ? INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard[i] : INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard[i]
+    )
     return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
 }
 export class VisualSong {

@@ -1,4 +1,4 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME } from "$/appConfig"
+import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME, BaseNote } from "$/appConfig"
 import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
 import { NoteImage } from "$types/Keyboard"
@@ -11,6 +11,7 @@ type Layouts = {
 }
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 
+//TODO refactor everything here
 
 
 export default class Instrument {
@@ -49,7 +50,7 @@ export default class Instrument {
                 mobile: this.layouts.mobile[i]
             }
             const url = `./assets/audio/${this.name}/${i}.mp3`
-            const note = new NoteData(i, noteNames, url)
+            const note = new NoteData(i, noteNames, url, instrumentData.baseNotes[i])
             note.instrument = this.name
             //@ts-ignore
             note.noteImage = LAYOUT_IMAGES[this.layouts.keyboard.length][i]
@@ -163,6 +164,7 @@ export class NoteData {
     instrument: InstrumentName = INSTRUMENTS[0]
     noteNames: NoteName
     url: string
+    baseNote: BaseNote = "C"
     buffer: ArrayBuffer = new ArrayBuffer(8)
     @observable
     data: NoteDataState = {
@@ -170,10 +172,11 @@ export class NoteData {
         delay: 0,
         animationId: 0
     }
-    constructor(index: number, noteNames: NoteName, url: string) {
+    constructor(index: number, noteNames: NoteName, url: string, baseNote: BaseNote) {
         this.index = index
         this.noteNames = noteNames
         this.url = url
+        this.baseNote = baseNote
         makeObservable(this)
     }
     get status(): NoteStatus {
@@ -187,7 +190,7 @@ export class NoteData {
         Object.assign(this.data, data)
     }
     clone() {
-        const obj = new NoteData(this.index, this.noteNames, this.url)
+        const obj = new NoteData(this.index, this.noteNames, this.url, this.baseNote)
         obj.buffer = this.buffer
         obj.noteImage = this.noteImage
         obj.instrument = this.instrument

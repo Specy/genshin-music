@@ -404,7 +404,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                     ? <div className="loading">Loading...</div>
 
                     : keyboard.map(note => {
-                        //@ts-ignore
+
                         return <Note
                             key={note.index}
                             note={note}
@@ -414,8 +414,13 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                             }}
                             approachingNotes={state.approachingNotes[note.index]}
                             handleClick={this.handleClick}
-                            //@ts-ignore
-                            noteText={getNoteText(data.noteNameType, note.index, data.pitch, keyboard.length)}
+                            noteText={getNoteText(
+                                data.noteNameType, 
+                                note.index, 
+                                data.pitch, 
+                                keyboard.length as 8 | 15 | 21,
+                                note.baseNote
+                            )}
                         />
 
                     })

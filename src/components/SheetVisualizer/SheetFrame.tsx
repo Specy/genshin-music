@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/appConfig"
+import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/appConfig"
 import { Chunk } from "$lib/Songs/VisualSong"
 import { getNoteText } from "$lib/Utilities"
 import { memo, useEffect, useState } from "react"
@@ -15,7 +15,7 @@ interface SheetFrameProps {
 }
 
 
-
+const baseNoteNames = APP_NAME === "Genshin" ? INSTRUMENT_NOTE_LAYOUT_KINDS.genshinStandard : INSTRUMENT_NOTE_LAYOUT_KINDS.skyStandard
 export function _SheetFrame({ chunk, rows, hasText, selected, theme }: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const [color, setColor] = useState('var(--primary)')
@@ -45,7 +45,13 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme }: SheetFram
                         style={!exists ? { backgroundColor: color } : {}}
                     >
                         {(exists && hasText)
-                            ? getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === 'Genshin' ? 21 : 15)
+                            ? getNoteText(
+                                APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC',
+                                i, 
+                                'C', 
+                                APP_NAME === 'Genshin' ? 21 : 15,
+                                baseNoteNames[i]
+                            )
                             : null
                         }
                     </div>

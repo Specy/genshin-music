@@ -55,7 +55,13 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         const index = currentColumn.notes.findIndex((e) => e.index === i)
                         //@ts-ignore
                         const noteImage = LAYOUT_IMAGES[keyboard.layout.length][note.index]
-                        const noteText = getNoteText(noteNameType, note.index, pitch, keyboard.layout.length as 8 | 15 | 21)
+                        const noteText = getNoteText(
+                            noteNameType, 
+                            note.index, 
+                            pitch,
+                            keyboard.layout.length as 8 | 15 | 21,
+                            note.baseNote
+                        )
                         return <ComposerNote
                             key={note.index}
                             layer={(index >= 0
