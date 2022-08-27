@@ -8,8 +8,6 @@ import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
 import { VsrgSongKeys } from "$lib/Songs/VsrgSong";
 import { Fragment, useEffect, useState } from "react";
 import { keyBinds } from "$stores/Keybinds";
-import { InstrumentNotesLayout } from "$types/GeneralTypes";
-import { NoteImage } from "$/types/KeyboardTypes";
 import Instrument from "$/lib/Instrument";
 
 

@@ -13,9 +13,8 @@ import labNote from "./genshin/lab";
 import tiNote from "./genshin/ti";
 import tibNote from "./genshin/tib";
 
-import { memo } from "react";
-import { NoteImage } from "$/types/KeyboardTypes";
-const notes = {
+import React, { memo } from "react";
+const noteIconsMap =  {
     cr: crNote,
     dm: dmNote,
     dmcr: dmcrNote,
@@ -31,6 +30,7 @@ const notes = {
     ti: tiNote,
     tib: tibNote,
 }
+export type NoteImage = keyof typeof noteIconsMap;
 interface SvgNoteProps{
     name: NoteImage
     color?: string
@@ -42,7 +42,7 @@ export interface SvgNoteImageProps{
     background?: string
 }
 function SvgNote({name,color = 'currentColor', background}: SvgNoteProps){
-    const NoteComponent = notes[name]
+    const NoteComponent = noteIconsMap[name]
     return <NoteComponent style={{fill: color,stroke: color}} background={background}/>
 }
 

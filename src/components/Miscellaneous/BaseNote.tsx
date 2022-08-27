@@ -3,8 +3,7 @@ import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
 import { ThemeProvider } from "$/stores/ThemeStore/ThemeProvider"
-import { NoteImage } from "$/types/KeyboardTypes"
-import SvgNotes from "../SvgNotes"
+import SvgNotes, { NoteImage } from "$cmp/SvgNotes"
 
 
 interface BaseNoteProps {

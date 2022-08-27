@@ -109,6 +109,9 @@
 	border-color: #d75c5c;
 	color: white;
 }
+.note-red .svg-b{
+	stroke: #f06565 !important;
+}
 .note-red .svg-note {
 	fill: white !important;
 	stroke: white !important;
@@ -157,7 +160,7 @@
 	transform-origin: 50% 50%;
 	pointer-events: none;
 	opacity: 0;
-	transform: scale(2.7);
+	transform: scale(2.3);
 
 }
 .approach-circle-sky{

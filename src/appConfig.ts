@@ -1,6 +1,6 @@
 import isMobile from "is-mobile"
 import type { Tauri } from "$types/TauriTypes"
-import type { NoteImage } from "./types/KeyboardTypes"
+import { NoteImage } from "./components/SvgNotes"
 
 const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '3.0' as const

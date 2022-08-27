@@ -32,6 +32,8 @@ interface NoteProps {
     noteText: string
     handleClick: (note: NoteData) => void
 }
+
+//TODO use css vars for the colors
 function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
@@ -64,6 +66,9 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
         {state.animationId !== 0 &&
             <div
                 key={state.animationId}
+                style={clickColor && ThemeProvider.isDefault('accent')
+                    ? { borderColor: clickColor} : {}
+                }
                 className={NOTES_CSS_CLASSES.noteAnimation}
             />
         }

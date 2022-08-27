@@ -5,7 +5,6 @@ import { Pitch, TEMPO_CHANGERS } from "$/appConfig"
 import { ThemeProvider } from "$/stores/ThemeStore/ThemeProvider"
 import Instrument, { NoteData } from "$lib/Instrument"
 import { NoteNameType } from "$types/GeneralTypes"
-import { NoteImage } from "$/types/KeyboardTypes"
 
 interface ComposerKeyboardProps {
     data: {
