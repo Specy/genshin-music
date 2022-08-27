@@ -76,15 +76,18 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
                 )
             }}
         >
-            <SvgNote
-                name={note.noteImage}
-                color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
-            />
-
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderFill(state.status)}
             />}
+            <SvgNote
+                name={note.noteImage}
+                color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
+                background={state.status === 'clicked' 
+                ? (clickColor && ThemeProvider.isDefault('accent')) ? clickColor : 'var(--accent)'
+                : 'var(--note-background)'}
+            />
+
             <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
                 {noteText}
             </div>

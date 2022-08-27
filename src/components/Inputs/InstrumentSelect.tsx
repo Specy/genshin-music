@@ -13,6 +13,13 @@ export function InstrumentSelect({ selected, onChange, style }: InstrumentSelect
         onChange={(e) => onChange(e.target.value as InstrumentName)}
         value={selected}
     >
-        {INSTRUMENTS.map(ins => <option key={ins}>{ins}</option>)}
+        {INSTRUMENTS.map(ins =>
+            <option
+                key={ins}
+                value={ins}
+            >
+                {ins.replace("-", " ")}
+            </option>
+        )}
     </select>
 }

@@ -308,7 +308,12 @@ select {
     background-color: #d3bd8e !important;
     border-color: #ab9361 !important;
 }
-
+.layer-2 .svg-b{
+    stroke: #d75c5c !important;
+}
+.layer-1 .svg-b{
+    stroke: #d3bd8e !important;
+}
 .layer-1 .svg-note {
     fill: #f2ecec !important;
     stroke: #f2ecec !important;

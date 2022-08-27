@@ -1,6 +1,6 @@
 import isMobile from "is-mobile"
 import type { Tauri } from "$types/TauriTypes"
-import type { NoteImage } from "./types/Keyboard"
+import type { NoteImage } from "./types/KeyboardTypes"
 
 const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '3.0' as const
@@ -47,6 +47,7 @@ const IS_MIDI_AVAILABLE = !!navigator.requestMIDIAccess
 const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
         "Lyre",
+        "Vintage-Lyre",
         "Zither",
         "Old-Zither",
         "DunDun"
@@ -75,20 +76,38 @@ const INSTRUMENTS = APP_NAME === "Genshin"
 const PLAY_BAR_OFFSET = 200
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const NOTE_SCALE = {
-    C: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"],
-    D: ["D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "C", "C#"],
-    E: ["E", "F", "F#", "G", "G#", "A", "Bb", "B", "C", "C#", "D", "D#"],
-    F: ["F", "Gb", "G", "Ab", "A", "Bb", "Cb", "C", "Db", "D", "Eb", "E"],
-    G: ["G", "Ab", "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "F#"],
-    A: ["A", "Bb", "B", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#"],
-    B: ["B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#"],
+    "Cb": ["Cb", "Dbb", "Db", "Ebb", "Eb", "Fb", "Gbb", "Gb", "Abb", "Ab", "Bbb", "Bb"],
+    "C": ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"],
+    "C#": ["C#", "D", "D#", "E", "E#", "F#", "G", "G#", "A", "A#", "B", "B#"],
+    "Db": ["Db", "Ebb", "Eb", "Fb", "F", "Gb", "Abb", "Ab", "Bbb", "Bb", "Cb", "C"],
+    "D": ["D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "C", "C#"],
+    "D#": ["D#", "E", "E#", "F#", "F##", "G#", "A", "A#", "B", "B#", "C#", "C##"],
+    "Eb": ["Eb", "Fb", "F", "Gb", "G", "Ab", "Bbb", "Bb", "Cb", "C", "Db", "D"],
+    "E": ["E", "F", "F#", "G", "G#", "A", "Bb", "B", "C", "C#", "D", "D#"],
+    "E#": ["E#", "F#", "F##", "G#", "G##", "A#", "B", "B#", "C#", "C##", "D#", "D##"],
+    "Fb": ["Fb", "Gbb", "Gb", "Abb", "Ab", "Bbb", "Cbb", "Cb", "Dbb", "Db", "Ebb", "Eb"],
+    "F": ["F", "Gb", "G", "Ab", "A", "Bb", "Cb", "C", "Db", "D", "Eb", "E"],
+    "F#": ["F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "E#"],
+    "Gb": ["Gb", "Abb", "Ab", "Bbb", "Bb", "Cb", "Dbb", "Db", "Ebb", "Eb", "Fb", "F"],
+    "G": ["G", "Ab", "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "F#"],
+    "G#": ["G#", "A", "A#", "B", "B#", "C#", "D", "D#", "E", "E#", "F#", "F##"],
+    "Ab": ["Ab", "Bbb", "Bb", "Cb", "C", "Db", "Ebb", "Eb", "Fb", "F", "Gb", "G"],
+    "A": ["A", "Bb", "B", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#"],
+    "A#": ["A#", "B", "B#", "C#", "C##", "D#", "E", "E#", "F#", "F##", "G#", "G##"],
+    "Bb": ["Bb", "Cb", "C", "Db", "D", "Eb", "Fb", "F", "Gb", "G", "Ab", "A"],
+    "B": ["B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#"],
+    "B#": ["B#", "C#", "C##", "D#", "D##", "E#", "F#", "F##", "G#", "G##", "A#", "A##"],
     "": ["", "", "", "", "", "", "", "", "", "", "", ""]
 } as const
 type BaseNote = keyof typeof NOTE_SCALE
 const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     defaultSky: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
     defaultGenshin: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
-    noName: ["", "", "", "", "", "", "", ""]
+    skyBell: ["C", "D", "G", "A", "C", "D", "G", "A"],
+    skyHandpan: ["D", "A", "C", "D", "F", "G", "A", "C"],
+    defaultNoNameDrums: ["", "", "", "", "", "", "", ""],
+    genshinVintageLyre: ["C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "Db", "Eb", "F", "G", "Ab", "Bb"],
+
 } as const
 Object.freeze(NOTE_SCALE)
 Object.freeze(INSTRUMENT_NOTE_LAYOUT_KINDS)
@@ -155,7 +174,8 @@ const LAYOUT_ICONS_KINDS = {
     defaultSky: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" ") as NoteImage[],
     defaultSkyDrums: "cr dm cr dm cr dm cr dm".split(" ") as NoteImage[],
     defaultGenshinDrums: "do re mi fa do re mi fa".split(" ") as NoteImage[],
-    defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[]
+    defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
+    genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
 
 const BaseinstrumentsData = {
@@ -178,6 +198,16 @@ const BaseinstrumentsData = {
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
 
     },
+    "Vintage-Lyre": {
+        notes: 21,
+        family: "strings",
+        midiName: "pizzicato strings",
+        fill: '#7FB363',
+        clickColor: '#7FB363',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinVintageLyre,
+        layout: LAYOUT_KINDS.defaultGenshin,
+        icons: LAYOUT_ICONS_KINDS.genshinVintageLyre,
+    },
     "Old-Zither": {
         notes: 21,
         fill: '#cdb68e',
@@ -196,7 +226,7 @@ const BaseinstrumentsData = {
             fill: '#F99C55',
             clickColor: '#f5a262'
         } : {}),
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultNoNameDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: APP_NAME === 'Genshin' 
             ?  LAYOUT_ICONS_KINDS.defaultGenshinDrums
@@ -222,7 +252,7 @@ const BaseinstrumentsData = {
         notes: 8,
         family: "chromatic percussion",
         midiName: "tubular bells",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyBell,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
     },
@@ -247,7 +277,7 @@ const BaseinstrumentsData = {
         notes: 8,
         family: "percussive",
         midiName: "synth drum",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultNoNameDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
     },
@@ -273,7 +303,7 @@ const BaseinstrumentsData = {
         notes: 8,
         family: "percussive",
         midiName: "steel drums",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.noName,
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyHandpan,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
 

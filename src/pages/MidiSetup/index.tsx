@@ -12,7 +12,7 @@ import { InstrumentName, InstrumentNotesLayout } from "$types/GeneralTypes"
 import { MIDIEvent, MIDIProvider } from "$lib/Providers/MIDIProvider"
 import { AudioProvider } from "$lib/Providers/AudioProvider"
 import { DefaultPage } from "$cmp/Layout/DefaultPage"
-import { NoteImage } from "$types/Keyboard"
+import { NoteImage } from "$/types/KeyboardTypes"
 import { Title } from '$cmp/Miscellaneous/Title'
 import { AudioPlayer } from '$lib/AudioPlayer'
 import { InstrumentData } from '$lib/Songs/SongClasses'

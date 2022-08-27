@@ -3,19 +3,19 @@ import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
 import { ThemeProvider } from "$/stores/ThemeStore/ThemeProvider"
-import { NoteImage } from "$types/Keyboard"
+import { NoteImage } from "$/types/KeyboardTypes"
 import SvgNotes from "../SvgNotes"
 
 
-interface BaseNoteProps{
+interface BaseNoteProps {
     data: {
         status: 'clicked' | string
-    }, 
+    },
     noteText: string,
-    handleClick: (data:any) => void,
+    handleClick: (data: any) => void,
     noteImage?: NoteImage
 }
-export default function BaseNote({ data, noteText = 'A', handleClick, noteImage }:BaseNoteProps) {
+export default function BaseNote({ data, noteText = 'A', handleClick, noteImage }: BaseNoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
         const dispose = observe(ThemeProvider.state.data, () => {
@@ -35,11 +35,20 @@ export default function BaseNote({ data, noteText = 'A', handleClick, noteImage 
             className={className}
             style={{ borderColor: parseBorderColor(data.status) }}
         >
-            {noteImage && <SvgNotes name={noteImage} />}
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderColor(data.status)}
             />}
+            {noteImage &&
+                <SvgNotes
+                    name={noteImage}
+                    background={
+                        data.status === 'clicked'
+                            ? 'var(--accent)'
+                            : 'var(--note-background)'
+                    }
+                />
+            }
             <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
                 {noteText}
             </div>
@@ -56,7 +65,7 @@ function parseClass(status: string) {
     return className
 }
 
-function parseBorderColor(status:string) {
+function parseBorderColor(status: string) {
     let fill = '#eae5ce'
     if (status === "clicked") fill = "transparent"
     else if (status === 'wrong') fill = "#d66969"

@@ -1,7 +1,7 @@
 import { INSTRUMENTS_DATA, LAYOUT_KINDS, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX } from "$/appConfig"
 import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteNameType, NoteStatus } from "$types/GeneralTypes"
-import { NoteImage } from "$types/Keyboard"
+import { NoteImage } from "$/types/KeyboardTypes"
 import { getPitchChanger } from "./Utilities"
 import { AppError } from "./Errors"
 

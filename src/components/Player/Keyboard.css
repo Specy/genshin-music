@@ -78,6 +78,9 @@
 	height: 80%;
 	top: 5%;
 }
+.svg-note{
+    overflow: visible;
+}
 .note-sky .svg-note, .note-composer-sky .svg-note{
 	width: 80%;
 	height: 80%;
@@ -98,7 +101,7 @@
 	border-color: var(--accent);
 }
 .click-event .svg-note{
-	fill: white !important;
+	fill: white !important; /* should change to the var(--accent-text) but would break existing themes */
 	stroke: white !important;
 }
 .note-red {

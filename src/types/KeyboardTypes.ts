@@ -1,0 +1,1 @@
+export type NoteImage = 'do' | 're' | 'red' | 'tib' | 'lab' | 'mi' | 'mib' | 'fa' | 'so' | 'la' | 'ti' | 'cr' | 'dm' | 'dmcr'
