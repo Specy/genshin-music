@@ -106,7 +106,7 @@ const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     skyBell: ["C", "D", "G", "A", "C", "D", "G", "A"],
     skyHandpan: ["D", "A", "C", "D", "F", "G", "A", "C"],
     defaultNoNameDrums: ["", "", "", "", "", "", "", ""],
-    genshinVintageLyre: ["C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "Db", "Eb", "F", "G", "Ab", "Bb"],
+    genshinVintageLyre: ["C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
 
 } as const
 Object.freeze(NOTE_SCALE)

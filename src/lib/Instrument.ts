@@ -57,7 +57,6 @@ export default class Instrument {
             note.noteImage = instrumentData.icons[i]
             this.notes.push(note)
         })
-
     }
     getNoteFromCode = (code: number | string) => {
         const index = this.layouts.keyboard.findIndex(e => e === String(code))
