@@ -41,7 +41,11 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         return obj?.type === 'vsrg'
     }
 
-    setAudioSong(song: Song){
+    setAudioSong(song: Song | null){
+        if(song === null){
+            this.audioSongId = null
+            return
+        }
         if(this.audioSongId === song.id) return
         this.audioSongId = song.id
         this.trackModifiers = song.instruments.map(ins => {

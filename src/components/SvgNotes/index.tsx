@@ -47,5 +47,5 @@ function SvgNote({name,color = 'currentColor', background}: SvgNoteProps){
 }
 
 export default memo(SvgNote,(p,n) => {
-    return p.color === n.color && p.background === n.background
+    return p.color === n.color && p.background === n.background && p.name === n.name
 })

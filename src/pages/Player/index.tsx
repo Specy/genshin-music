@@ -192,6 +192,7 @@ class Player extends Component<any, PlayerState>{
 		})
 		const newInstruments = await Promise.all(promises) as Instrument[]
 		if (!this.mounted) return
+		if(instruments[0]) playerStore.setKeyboardLayout(instruments[0].notes)
 		logger.hidePill()
 		this.setState({ instruments: newInstruments })
 	}

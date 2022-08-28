@@ -148,7 +148,6 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (key >= 0) {
             this.endHitObjectTap(key)
         }
-
     }
     startHitObjectTap = (key: number) => {
         const { vsrg, selectedTrack, selectedType } = this.state
@@ -255,19 +254,22 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     setAudioSong = (song: SerializedSong | null) => {
         const { vsrg } = this.state
         this.changes++
-        if (song === null) return this.setState({ audioSong: null })
+        if (song === null) {
+            vsrg.setAudioSong(null)
+            return this.setState({ audioSong: null, renderableNotes: [] })
+        }
         const parsed = songService.parseSong(song)
         if (parsed instanceof RecordedSong) {
             vsrg.setAudioSong(parsed)
-            const renderableNotes = vsrg.getRenderableNotes(parsed)
             vsrg.setDurationFromNotes(parsed.notes)
+            const renderableNotes = vsrg.getRenderableNotes(parsed)
             this.setState({ audioSong: parsed, renderableNotes }, this.syncAudioSongInstruments)
         }
         if (parsed instanceof ComposedSong) {
             const recorded = parsed.toRecordedSong(0)
-            const renderableNotes = vsrg.getRenderableNotes(recorded)
             vsrg.setDurationFromNotes(recorded.notes)
             vsrg.setAudioSong(parsed) //set as composed song because it's the original song
+            const renderableNotes = vsrg.getRenderableNotes(recorded)
             this.setState({ audioSong: recorded, renderableNotes }, this.syncAudioSongInstruments)
         }
     }
@@ -291,7 +293,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrg.addTrack()
             const id = await songsStore.addSong(vsrg)
             vsrg.set({ id })
-            this.setState({ vsrg }, () => {
+            this.setState({ vsrg , renderableNotes: []}, () => {
                 vsrgComposerStore.emitEvent('songLoad')
                 this.calculateSnapPoints()
                 this.syncInstruments()
@@ -409,7 +411,6 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         settings.pitch.value = song.pitch
         this.updateSettings()
         this.changes++
-
         this.setState({
             vsrg: song,
             selectedTrack: 0,
