@@ -192,9 +192,12 @@ class Player extends Component<any, PlayerState>{
 		})
 		const newInstruments = await Promise.all(promises) as Instrument[]
 		if (!this.mounted) return
-		if(instruments[0]) playerStore.setKeyboardLayout(instruments[0].notes)
+		const { settings } = this.state
+		if(instruments[0]) {
+			settings.instrument = { ...settings.instrument, value: instruments[0].name }
+		}
 		logger.hidePill()
-		this.setState({ instruments: newInstruments })
+		this.setState({ instruments: newInstruments, settings}, this.updateSettings)
 	}
 	playSound = (index: number, layers?: NoteLayer) => {
 		const { state } = this
@@ -213,6 +216,7 @@ class Player extends Component<any, PlayerState>{
 		settingsService.updatePlayerSettings(override !== undefined ? override : this.state.settings)
 	}
 
+	//TODO make method to sync settings to the song
 	handleSettingChange = (setting: SettingUpdate) => {
 		const { settings } = this.state
 		const { data } = setting
@@ -228,7 +232,7 @@ class Player extends Component<any, PlayerState>{
 		if (setting.key === 'metronomeBeats') metronome.beats = data.value as number
 		if (setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number)
 		this.setState({
-			settings: settings,
+			settings,
 		}, this.updateSettings)
 	}
 

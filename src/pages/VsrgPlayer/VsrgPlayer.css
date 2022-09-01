@@ -141,7 +141,8 @@
     width: 100%;
     height: 100%;
     border-radius: 50rem;
-    outline: solid 3px var(--secondary);
+    margin: -0.15rem;
+    border: solid 0.15rem var(--secondary);
 }
 
 .vsrg-player-key-line {

@@ -3,7 +3,7 @@ import { PIXI_CENTER_X_END_Y } from "$/appConfig";
 import { VsrgHitObject } from "$lib/Songs/VsrgSong";
 import { Fragment } from "react";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
-import { RenderableHitObject, VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas";
+import { HitObjectStatus, RenderableHitObject, VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas";
 
 
 interface VsrgHitObjectsRendererProps {
@@ -32,6 +32,10 @@ export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache,
                 const hitObject = renderableHitObject.hitObject
                 const x = hitObject.index * sizes.keyWidth + sizes.keyWidth / 2
                 const y = -(hitObject.timestamp * scale)
+                if(
+                    renderableHitObject.status === HitObjectStatus.Hit || 
+                    renderableHitObject.status === HitObjectStatus.Missed
+                ) return
                 if (hitObject.isHeld) {
                     return <Fragment key={hitObject.renderId}>
                         <Sprite

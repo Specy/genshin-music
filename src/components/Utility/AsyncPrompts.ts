@@ -60,8 +60,9 @@ async function asyncPrompt(question: string):Promise<string | null> {
             if (key === 'Escape') cancelListener()
         }
 
-        function handleOverlay(e: any) {
-            if (e?.path?.[0] === overlay) cancelListener()
+        function handleOverlay(e: Event) {
+            const path = e.composedPath()
+            if (path[0] === overlay) cancelListener()
         }
 
         if (!isMobile()) input.focus()
@@ -122,13 +123,14 @@ async function asyncConfirm(question: string, cancellable = true): Promise<boole
             resolve(false)
             dispose()
         }
-        function handleKeyboard(event:any) {
+        function handleKeyboard(event:KeyboardEvent) {
             const key = event.code
             if (key === 'Enter') okListener()
             if (key === 'Escape' && cancellable) cancelListener()
         }
-        function handleOverlay(e:any) {
-            if (e?.path?.[0] === overlay && cancellable) cancelListener()
+        function handleOverlay(e:Event) {
+            const path = e.composedPath()
+            if (path[0] === overlay && cancellable) cancelListener()
         }
         overlay.addEventListener("click", handleOverlay)
         cancel.addEventListener("click", cancelListener)

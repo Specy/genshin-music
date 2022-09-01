@@ -180,7 +180,7 @@ export const PlayerSettings: PlayerSettingsType = {
             category: "Song Settings",
         },
         syncSongData: {
-            name: "Auto use the song's instruments and pitch",
+            name: "Auto sync the song's instruments and pitch",
             tooltip: "Whenever you load a song, the instruments and pitch of that song will be loaded too",
             type: "checkbox",
             songSetting: false,
@@ -458,7 +458,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
 
 
 export type VsrgPlayerSettingsDataType = {
-    scrollSpeed: SettingsNumber
+    approachTime: SettingsNumber
     keyboardLayout: SettingsSelect<VsrgKeyboardLayout>
     horizontalOffset: SettingsSlider
     verticalOffset: SettingsSlider
@@ -469,8 +469,8 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
         settingVersion: APP_NAME + 9
     },
     data: {
-        scrollSpeed: {
-            name: "Scroll speed",
+        approachTime: {
+            name: "Approaching time",
             tooltip: "The time between when the notes appear and when they reach the end (in ms)",
             type: "number",
             songSetting: true,

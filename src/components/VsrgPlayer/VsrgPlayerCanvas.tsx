@@ -1,6 +1,6 @@
 import { Container, Stage } from "@inlet/react-pixi";
 import { subscribeTheme } from "$lib/Hooks/useTheme";
-import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
+import { VsrgAccuracyBounds, VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
 import { ThrottledEventLoop } from "$lib/ThrottledEventLoop";
 import { isNumberCloseTo } from "$lib/Utilities";
 import { Application } from "pixi.js";
@@ -46,7 +46,7 @@ interface VsrgPlayerCanvasProps {
     onTick: (timestamp: number) => void
     playHitObject: (hitObject: VsrgHitObject, instrumentIndex: number) => void
 }
-enum HitObjectStatus {
+export enum HitObjectStatus {
     Idle,
     Pressed,
     Missed,
@@ -64,13 +64,7 @@ export class RenderableHitObject {
     }
 }
 
-type VsrgAccuracyBounds = [
-    awesome: number,
-    perfect: number,
-    great: number,
-    good: number,
-    bad: number,
-]
+
 interface VsrgPlayerCanvasState {
     song: VsrgSong
     timestamp: number
@@ -225,15 +219,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
     }
     generateAccuracyBounds = () => {
         const { song } = this.state
-        const { difficulty } = song
-        const accuracyBounds: VsrgAccuracyBounds = [
-            16,
-            64 - (difficulty * 2),
-            97 - (difficulty * 2),
-            127 - (difficulty * 2),
-            188 - (difficulty * 2)
-        ]
-        this.setState({ accuracyBounds })
+        this.setState({ accuracyBounds: song.getAccuracyBounds() })
     }
     getHitRating = (hitObject: VsrgHitObject, timestamp: number): VsrgPlayerHitType => {
         const { accuracyBounds } = this.state

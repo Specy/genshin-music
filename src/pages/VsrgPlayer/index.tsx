@@ -6,9 +6,7 @@ import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
 import { settingsService } from "$lib/Services/SettingsService";
 import { VsrgPlayerSettingsDataType } from "$lib/BaseSettings";
 import { AudioPlayer } from "$lib/AudioPlayer";
-import { KeyboardLetter } from "$lib/Providers/KeyboardProvider/KeyboardTypes";
 import { VsrgPlayerKeyboard } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard";
-import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig";
 import { vsrgPlayerStore } from "$stores/VsrgPlayerStore";
 import { defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes } from "$cmp/VsrgPlayer/VsrgPlayerCanvas";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
@@ -47,7 +45,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             canvasSizes: defaultVsrgPlayerSizes,
             songAudioPlayer: new AudioPlayer("C"),
             keyboardAudioPlayer: new AudioPlayer("C"),
-            currentLayout: keyBinds.getVsrgKeybinds(6),
+            currentLayout: keyBinds.getVsrgKeybinds(4),
             isLoadingInstruments: false,
             isPlaying: false
         }
@@ -68,6 +66,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         this.setState({ isLoadingInstruments: true })
         if (serializedAudioSong) {
             const parsed = songService.parseSong(serializedAudioSong)
+            songAudioPlayer.basePitch = parsed.pitch
             if (parsed instanceof RecordedSong) {
                 this.setState({ audioSong: parsed })
                 await songAudioPlayer.syncInstruments(parsed.instruments)
@@ -162,7 +161,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     <VsrgPlayerCanvas
                         keyboardLayout={settings.keyboardLayout.value}
                         onTick={this.handleTick}
-                        scrollSpeed={settings.scrollSpeed.value}
+                        scrollSpeed={settings.approachTime.value}
                         onSizeChange={this.onSizeChange}
                         playHitObject={this.playHitObject}
                         isPlaying={this.state.isPlaying}

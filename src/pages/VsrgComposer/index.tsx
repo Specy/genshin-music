@@ -77,6 +77,10 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             tempoChanger: 1,
         }
         this.state.vsrg.addTrack("DunDun")
+        this.state.vsrg.set({
+            bpm: settings.bpm.value,
+            keys: settings.keys.value,
+        })
         this.mounted = false
     }
     addTrack = () => {
@@ -133,6 +137,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const { audioSong, audioPlaybackPlayer } = this.state
         if (audioSong === null) return
         audioPlaybackPlayer.syncInstruments(audioSong.instruments)
+        audioPlaybackPlayer.basePitch = audioSong.pitch
     }
     handleKeyboardDown = ({ event, letter }: KeyboardEventData) => {
         const { vsrg } = this.state
@@ -198,7 +203,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         })
     }
     onSnapPointChange = (snapPoint: SnapPoint) => {
-        this.setState({ snapPoint }, () => {
+        const { vsrg } = this.state
+        vsrg.set({ snapPoint })
+        this.setState({ snapPoint, vsrg }, () => {
             this.calculateSnapPoints()
             vsrgComposerStore.emitEvent("snapPointChange")
         })
@@ -261,6 +268,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const parsed = songService.parseSong(song)
         if (parsed instanceof RecordedSong) {
             vsrg.setAudioSong(parsed)
+            parsed.startPlayback(this.lastTimestamp)
             vsrg.setDurationFromNotes(parsed.notes)
             const renderableNotes = vsrg.getRenderableNotes(parsed)
             this.setState({ audioSong: parsed, renderableNotes }, this.syncAudioSongInstruments)
@@ -268,6 +276,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (parsed instanceof ComposedSong) {
             const recorded = parsed.toRecordedSong(0)
             vsrg.setDurationFromNotes(recorded.notes)
+            recorded.startPlayback(this.lastTimestamp)
             vsrg.setAudioSong(parsed) //set as composed song because it's the original song
             const renderableNotes = vsrg.getRenderableNotes(recorded)
             this.setState({ audioSong: recorded, renderableNotes }, this.syncAudioSongInstruments)
@@ -288,12 +297,13 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             vsrg.set({
                 bpm: this.state.settings.bpm.value,
                 keys: this.state.settings.keys.value,
-                pitch: this.state.settings.pitch.value
+                pitch: this.state.settings.pitch.value,
+                snapPoint: this.state.snapPoint
             })
             vsrg.addTrack()
             const id = await songsStore.addSong(vsrg)
             vsrg.set({ id })
-            this.setState({ vsrg , renderableNotes: []}, () => {
+            this.setState({ vsrg, renderableNotes: [] }, () => {
                 vsrgComposerStore.emitEvent('songLoad')
                 this.calculateSnapPoints()
                 this.syncInstruments()
@@ -413,6 +423,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.changes++
         this.setState({
             vsrg: song,
+            snapPoint: song.snapPoint,
             selectedTrack: 0,
             selectedHitObject: null,
             lastCreatedHitObject: null,
@@ -479,9 +490,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.setState({ vsrg })
     }
     onBreakpointSelect = (direction: -1 | 1) => {
-        const { vsrg , isPlaying, audioSong} = this.state
+        const { vsrg, isPlaying, audioSong } = this.state
         const breakpoint = vsrg.getClosestBreakpoint(this.lastTimestamp, direction)
-        if(isPlaying) audioSong?.startPlayback(breakpoint)
+        if (isPlaying) audioSong?.startPlayback(breakpoint)
         vsrgComposerStore.emitEvent('timestampChange', breakpoint)
     }
     render() {

@@ -153,7 +153,7 @@ export function HelpTab() {
 interface KeyProps{
     children: React.ReactNode
 }
-function Key({children}: KeyProps) {
+export function Key({children}: KeyProps) {
     return <div className='keyboard-key'>
         {children}
     </div>

@@ -1,11 +1,11 @@
-interface MenuPanelProps {
+interface MenuPanelProps<T> {
     title?: string,
-    current?: string,
-    id?: string,
+    current?: T,
+    id?: T,
     children: React.ReactNode
 }
 
-export default function MenuPanel({ title, current, children, id }: MenuPanelProps) {
+export default function MenuPanel<T>({ title, current, children, id }: MenuPanelProps<T>) {
     return <div className={current === id ? "menu-panel menu-panel-visible" : "menu-panel"}>
         {title &&
             <div className="menu-title">

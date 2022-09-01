@@ -281,7 +281,7 @@ export class VsrgCanvasCache {
     generateSelectionRings(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
-        const hitObjectHeight = clamp(sizes.keyHeight / 1.5 * sizes.scaling, sizes.keyHeight / (isMobile() ? 2 : 3), 150)
+        const hitObjectHeight = clamp(sizes.keyHeight / 1.5 * sizes.scaling, sizes.keyHeight / (isMobile() ? 1.2 : 2), 150)
         withError.forEach(color => {
             const ring = new Graphics()
             ring.lineStyle(3, Color(color).rgbNumber())

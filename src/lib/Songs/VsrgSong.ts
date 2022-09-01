@@ -1,4 +1,5 @@
 import { IMPORT_NOTE_POSITIONS } from "$/appConfig";
+import { SnapPoint } from "$/components/VsrgComposer/VsrgBottom";
 import { InstrumentName } from "$types/GeneralTypes";
 import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";
@@ -14,7 +15,15 @@ export type SerializedVsrgSong = SerializedSong & {
     audioSongId: string | null
     breakpoints: number[]
     difficulty: number
+    snapPoint: SnapPoint
 }
+export type VsrgAccuracyBounds = [
+    awesome: number,
+    perfect: number,
+    great: number,
+    good: number,
+    bad: number,
+]
 export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     tracks: VsrgTrack[] = []
     keys: VsrgSongKeys = 4
@@ -23,6 +32,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
     trackModifiers: VsrgTrackModifier[] = []
     breakpoints: number[] = []
     difficulty: number = 5
+    snapPoint: SnapPoint = 1
     constructor(name: string){
         super(name, 1, "vsrg")
         this.bpm = 100
@@ -35,6 +45,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         song.duration = obj.duration ?? 60000
         song.keys = obj.keys ?? 4
         song.breakpoints = obj.breakpoints ?? []
+        song.difficulty = obj.difficulty ?? 5
+        song.snapPoint = obj.snapPoint ?? 1
         return song
     }
     static isSerializedType(obj: any){
@@ -153,6 +165,16 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
         this.tracks.splice(index, 1)
         this.tracks = [...this.tracks]
     }
+    getAccuracyBounds(): VsrgAccuracyBounds{
+        const { difficulty } = this
+        return [
+            16,
+            64 - (difficulty * 2),
+            97 - (difficulty * 2),
+            127 - (difficulty * 2),
+            188 - (difficulty * 2)
+        ]
+    }
     changeKeys(keys: VsrgSongKeys){
         this.keys = keys
     }
@@ -174,6 +196,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1>{
             trackModifiers: this.trackModifiers.map(modifier => modifier.serialize()),
             breakpoints: [...this.breakpoints],
             difficulty: this.difficulty,
+            snapPoint: this.snapPoint,
         }
     }
     set(data: Partial<VsrgSong>){
