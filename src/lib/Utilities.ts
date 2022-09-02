@@ -1,8 +1,7 @@
-import { APP_NAME, PITCHES, LAYOUT_KINDS, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/appConfig"
+import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/appConfig"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
-import { NoteNameType } from "$types/GeneralTypes";
 import { NoteLayer } from "./Layer";
 import { Song } from "./Songs/Song";
 import { ComposedSong } from "./Songs/ComposedSong";
@@ -65,6 +64,11 @@ function groupArrayEvery<T>(array: T[], n: number) {
 	}
 	return groups
 }
+
+function getNearestTo(num: number, lower: number, upper: number) {
+	return Math.abs(num - lower) < Math.abs(num - upper) ? lower : upper
+}
+
 function isNumberBetween(num: number, min: number, max: number) {
 	return num >= min && num <= max
 }
@@ -261,5 +265,6 @@ export {
 	parseMouseClick,
 	groupArrayEvery,
 	isNumberBetween,
-	isNumberCloseTo
+	isNumberCloseTo,
+	getNearestTo
 }

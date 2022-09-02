@@ -15,6 +15,7 @@ import { VsrgCanvasCache } from "./VsrgComposerCache"
 import { VsrgKeysRenderer } from "./VsrgKeysRenderer"
 import { VsrgScrollableTrackRenderer } from "./VsrgScrollableTrackRenderer"
 import { VsrgTimelineRenderer } from "./VsrgTimelineRenderer"
+import { getNearestTo } from "$/lib/Utilities"
 
 
 export type VsrgCanvasSizes = {
@@ -43,6 +44,7 @@ interface VsrgCanvasProps {
     vsrg: VsrgSong
     isPlaying: boolean
     snapPoint: number
+    scrollSnap: boolean
     snapPoints: number[]
     selectedHitObject: VsrgHitObject | null
     audioSong: RecordedSong | null
@@ -77,6 +79,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
     stageRef = createRef<any>()
     toDispose: (() => void)[] = []
     throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => { }, 48)
+    cumulativeScroll = 0
     constructor(props: VsrgCanvasProps) {
         super(props)
         this.state = {
@@ -149,8 +152,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
     handleTick = (elapsed: number, sinceLast: number) => {
         if (this.props.isPlaying) {
             const timestamp = this.state.timestamp + sinceLast * this.props.tempoChanger
-            this.props.onTimestampChange(timestamp)
-            this.setState({ timestamp })
+            this.setTimestamp(timestamp)
         }
     }
     handleBlur = () => {
@@ -183,6 +185,17 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         this.setState({ sizes }, this.generateCache)
     }
     handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+        if(this.props.scrollSnap){
+            this.cumulativeScroll += e.deltaY
+            if(Math.abs(this.cumulativeScroll) < 100) return
+            const { snapPoints } = this.props
+            const nearestSnapPoint = snapPoints.findIndex(s => s > this.state.timestamp)
+            const index = (nearestSnapPoint < 0 ? snapPoints.length : nearestSnapPoint) - 1 + (this.cumulativeScroll < 0 ? -1 : 1)
+            this.cumulativeScroll = 0
+            if(index < 0 || index >= snapPoints.length) return
+            const nextTimestamp = snapPoints[index]
+            return this.setTimestamp(nextTimestamp)
+        }
         const max = Math.max(0, this.state.timestamp + e.deltaY / 1.2)
         const min = Math.min(max, this.props.vsrg.duration)
         this.setState({
@@ -210,6 +223,16 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             //dumbass idk how to make otherwise
             if (draggedHitObject) this.props.releaseHitObject()
             setTimeout(() => this.setState({ preventClick: false }), 200)
+            if(this.props.scrollSnap){
+                const { snapPoints } = this.props
+                const index = snapPoints.findIndex(s => s > this.state.timestamp)
+                if(!index || index < 0) return 
+                const next = snapPoints[index]
+                const previous = snapPoints[index - 1]
+                if(next === undefined || previous === undefined) return
+                const timestamp = getNearestTo( this.state.timestamp, previous, next)
+                this.setTimestamp(timestamp)
+            }
         })
     }
     handleDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {

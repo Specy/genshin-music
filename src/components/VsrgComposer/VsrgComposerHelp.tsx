@@ -41,6 +41,12 @@ export function VsrgComposerHelp() {
                     <tr>
                         <td><Key>{keys.join("/")}</Key></td><td>Add hit object (syncs to the registered keybinds)</td>
                     </tr>
+                    <tr>
+                        <td><Key>1/2/3</Key></td><td>Select tap/hold/delete</td>
+                    </tr>
+                    <tr>
+                        <td><Key>CTRL + W/A/S/D</Key></td><td>Move the selected hit object up / left / down / right, inverts if the editor is horizontal</td>
+                    </tr>
                 </tbody>
             </table>
         </div>

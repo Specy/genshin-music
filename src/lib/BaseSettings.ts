@@ -374,11 +374,12 @@ export type VsrgComposerSettingsDataType = {
     autosave: SettingsCheckbox
     maxFps: SettingsSelect<number>
     difficulty: SettingsSelect<number>
+    scrollSnap: SettingsCheckbox
 }
 export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 8
+        settingVersion: APP_NAME + 9
     },
     data: {
         keys: {
@@ -435,6 +436,14 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
                 90,
                 120
             ]
+        },
+        scrollSnap: {
+            name: "Snap scroll to snap point",
+            tooltip: "When scrolling, snap the timestamp to the closest snap point",
+            type: "checkbox",
+            category: "Editor Settings",
+            songSetting: false,
+            value: false,
         },
         autosave: {
             name: "Autosave changes",

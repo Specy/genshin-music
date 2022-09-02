@@ -105,7 +105,7 @@ const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     defaultGenshin: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
     skyBell: ["C", "D", "G", "A", "C", "D", "G", "A"],
     skyHandpan: ["D", "A", "C", "D", "F", "G", "A", "C"],
-    defaultNoNameDrums: ["", "", "", "", "", "", "", ""],
+    defaultDrums: ["C", "D", "E", "F", "G", "A", "B", "C"],
     genshinVintageLyre: ["C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
 
 } as const
@@ -226,7 +226,7 @@ const BaseinstrumentsData = {
             fill: '#F99C55',
             clickColor: '#f5a262'
         } : {}),
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultNoNameDrums,
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: APP_NAME === 'Genshin' 
             ?  LAYOUT_ICONS_KINDS.defaultGenshinDrums
@@ -277,7 +277,7 @@ const BaseinstrumentsData = {
         notes: 8,
         family: "percussive",
         midiName: "synth drum",
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultNoNameDrums,
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
     },

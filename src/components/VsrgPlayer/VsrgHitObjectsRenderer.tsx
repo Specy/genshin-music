@@ -34,7 +34,8 @@ export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache,
                 const y = -(hitObject.timestamp * scale)
                 if(
                     renderableHitObject.status === HitObjectStatus.Hit || 
-                    renderableHitObject.status === HitObjectStatus.Missed
+                    renderableHitObject.status === HitObjectStatus.Missed &&
+                    !hitObject.isHeld
                 ) return
                 if (hitObject.isHeld) {
                     return <Fragment key={hitObject.renderId}>

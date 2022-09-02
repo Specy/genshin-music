@@ -19,7 +19,7 @@ import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { SerializedSong } from "$lib/Songs/Song";
 import { songService } from "$lib/Services/SongService";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
-import { isFocusable } from "$lib/Utilities";
+import { clamp, isFocusable } from "$lib/Utilities";
 import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig";
 import { ClickType } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
@@ -96,6 +96,60 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         this.calculateSnapPoints()
         this.syncInstruments()
         KeyboardProvider.listen(this.handleKeyboardDown, { id, type: 'keydown' })
+        KeyboardProvider.registerNumber(1, () => {
+            this.setState({ selectedType: 'tap' })
+        }, { id })
+        KeyboardProvider.registerLetter("W", () => {
+            const { selectedHitObject, vsrg, snapPointDuration } = this.state
+            if (!selectedHitObject) return
+            if (this.state.settings.isVertical.value) {
+                selectedHitObject.timestamp = selectedHitObject.timestamp + snapPointDuration
+            } else {
+                selectedHitObject.index = clamp(selectedHitObject.index - 1, 0, vsrg.keys)
+            }
+            this.releaseHitObject()
+        }, { id, shift: true })
+        KeyboardProvider.registerLetter("A", () => {
+            const { selectedHitObject, vsrg, snapPointDuration } = this.state
+            if (!selectedHitObject) return
+            if (this.state.settings.isVertical.value) {
+                selectedHitObject.index = clamp(selectedHitObject.index - 1, 0, vsrg.keys)
+            } else {
+                selectedHitObject.timestamp = selectedHitObject.timestamp - snapPointDuration
+            }
+            this.releaseHitObject()
+        }, { id, shift: true })
+        KeyboardProvider.registerLetter("S", () => {
+            const { selectedHitObject, vsrg, snapPointDuration } = this.state
+            if (!selectedHitObject) return
+            if (this.state.settings.isVertical.value) {
+                selectedHitObject.timestamp = selectedHitObject.timestamp - snapPointDuration
+
+            } else {
+                selectedHitObject.index = clamp(selectedHitObject.index + 1, 0, vsrg.keys)
+            }
+            this.releaseHitObject()
+        }, { id, shift: true })
+        KeyboardProvider.registerLetter("D", () => {
+            const { selectedHitObject, vsrg, snapPointDuration } = this.state
+            if (!selectedHitObject) return
+            if (this.state.settings.isVertical.value) {
+                selectedHitObject.index = clamp(selectedHitObject.index + 1, 0, vsrg.keys)
+
+            } else {
+                selectedHitObject.timestamp = selectedHitObject.timestamp + snapPointDuration
+            }
+            this.releaseHitObject()
+        }, { id, shift: true })
+
+
+        KeyboardProvider.registerNumber(2, () => {
+            this.setState({ selectedType: 'hold' })
+        }, { id })
+        KeyboardProvider.registerNumber(3, () => {
+            this.setState({ selectedType: 'delete' })
+        }, { id })
+
         KeyboardProvider.register("ArrowLeft", () => {
             this.onBreakpointSelect(-1)
         }, { id })
@@ -139,8 +193,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         audioPlaybackPlayer.syncInstruments(audioSong.instruments)
         audioPlaybackPlayer.basePitch = audioSong.pitch
     }
-    handleKeyboardDown = ({ event, letter }: KeyboardEventData) => {
+    handleKeyboardDown = ({ event, letter, shift }: KeyboardEventData) => {
         const { vsrg } = this.state
+        if (shift) return
         const key = DEFAULT_VSRG_KEYS_MAP[vsrg.keys]?.indexOf(letter)
         if (key >= 0) {
             if (event.repeat) return
@@ -212,19 +267,28 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => {
         const selectedType = hitObject.isHeld ? 'hold' : 'tap'
+        const { selectedHitObject, lastCreatedHitObject } = this.state
         if (this.state.selectedType === 'delete' || clickType === ClickType.Right) {
             this.state.vsrg.removeHitObjectInTrack(trackIndex, hitObject)
             this.setState({ selectedHitObject: null, vsrg: this.state.vsrg })
             return
         }
+        const nextHitObject = hitObject === selectedHitObject ? null : hitObject
+        if(this.state.selectedType === 'hold' && clickType === ClickType.Left) {
+            this.setState({
+                selectedHitObject: nextHitObject, 
+                lastCreatedHitObject: nextHitObject, 
+                selectedType
+            })
+        }
         this.setState({
-            selectedHitObject: hitObject,
+            selectedHitObject:nextHitObject,
             selectedTrack: trackIndex,
             selectedType
         })
     }
     onSnapPointSelect = (timestamp: number, key: number, type?: ClickType) => {
-        const { vsrg, selectedType, lastCreatedHitObject, selectedTrack } = this.state
+        const { vsrg, selectedType, lastCreatedHitObject, selectedTrack, selectedHitObject } = this.state
         this.changes++
         if (timestamp < 0) return console.warn("Timestamp is less than 0")
         const existing = vsrg.getHitObjectsAt(timestamp, key)
@@ -241,7 +305,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (selectedType === 'hold' && type === ClickType.Left) {
             if (lastCreatedHitObject !== null) {
                 vsrg.setHeldHitObjectTail(selectedTrack, lastCreatedHitObject, timestamp - lastCreatedHitObject.timestamp)
-                this.setState({ lastCreatedHitObject: null, selectedHitObject: lastCreatedHitObject })
+                this.setState({ lastCreatedHitObject: null, selectedHitObject: null })
             } else {
                 if (firstNote) return this.setState({ selectedHitObject: firstNote })
                 const lastCreatedHitObject = vsrg.createHeldHitObject(selectedTrack, timestamp, key)
@@ -532,6 +596,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                         selectedHitObject={selectedHitObject}
                         isHorizontal={!settings.isVertical.value}
                         tempoChanger={tempoChanger}
+                        scrollSnap={settings.scrollSnap.value}
                         maxFps={settings.maxFps.value}
                         scaling={scaling}
                         audioSong={audioSong}

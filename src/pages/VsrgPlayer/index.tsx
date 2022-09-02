@@ -17,6 +17,7 @@ import { VsrgPlayerRight } from "$cmp/VsrgPlayer/VsrgPlayerRight";
 import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { keyBinds } from "$stores/Keybinds";
+import { logger } from "$/stores/LoggerStore";
 
 type VsrgPlayerProps = RouteComponentProps & {
 
@@ -29,7 +30,6 @@ interface VsrgPlayerState {
     songAudioPlayer: AudioPlayer
     keyboardAudioPlayer: AudioPlayer
     currentLayout: string[]
-    isLoadingInstruments: boolean
     isPlaying: boolean
 }
 
@@ -46,7 +46,6 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             songAudioPlayer: new AudioPlayer("C"),
             keyboardAudioPlayer: new AudioPlayer("C"),
             currentLayout: keyBinds.getVsrgKeybinds(4),
-            isLoadingInstruments: false,
             isPlaying: false
         }
         this.lastTimestamp = 0
@@ -59,11 +58,12 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         songAudioPlayer.destroy()
         keyboardAudioPlayer.destroy()
         vsrgPlayerStore.resetScore()
+        logger.hidePill()
     }
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
         const { songAudioPlayer, keyboardAudioPlayer } = this.state
         const serializedAudioSong = await songsStore.getSongById(song.audioSongId)
-        this.setState({ isLoadingInstruments: true })
+        logger.showPill("Loading instruments...")
         if (serializedAudioSong) {
             const parsed = songService.parseSong(serializedAudioSong)
             songAudioPlayer.basePitch = parsed.pitch
@@ -78,9 +78,9 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             }
         }
         await keyboardAudioPlayer.syncInstruments(song.tracks.map(track => track.instrument))
+        logger.hidePill()
         this.setState({
             song,
-            isLoadingInstruments: false,
             isPlaying: true
         }, () => {
             if (type === 'play') {
@@ -147,7 +147,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         }
     }
     render() {
-        const { isLoadingInstruments, canvasSizes, settings } = this.state
+        const { canvasSizes, settings } = this.state
         return <>
             <div className="vsrg-player-page">
                 <VsrgPlayerMenu
@@ -180,11 +180,6 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     onRetrySong={this.onRetrySong}
                 />
                 <VsrgPlayerLatestScore />
-                {isLoadingInstruments &&
-                    <div className="vsrg-player-loading-instruments">
-                        Loading instruments...
-                    </div>
-                }
             </div>
         </>
     }
