@@ -142,7 +142,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             this.releaseHitObject()
         }, { id, shift: true })
 
-
+        KeyboardProvider.register("Escape", () => {
+            this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
+        }, { id })
         KeyboardProvider.registerNumber(2, () => {
             this.setState({ selectedType: 'hold' })
         }, { id })
@@ -267,22 +269,20 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => {
         const selectedType = hitObject.isHeld ? 'hold' : 'tap'
-        const { selectedHitObject, lastCreatedHitObject } = this.state
         if (this.state.selectedType === 'delete' || clickType === ClickType.Right) {
             this.state.vsrg.removeHitObjectInTrack(trackIndex, hitObject)
             this.setState({ selectedHitObject: null, vsrg: this.state.vsrg })
             return
         }
-        const nextHitObject = hitObject === selectedHitObject ? null : hitObject
         if(this.state.selectedType === 'hold' && clickType === ClickType.Left) {
             this.setState({
-                selectedHitObject: nextHitObject, 
-                lastCreatedHitObject: nextHitObject, 
+                selectedHitObject: hitObject, 
+                lastCreatedHitObject: hitObject, 
                 selectedType
             })
         }
         this.setState({
-            selectedHitObject:nextHitObject,
+            selectedHitObject:hitObject,
             selectedTrack: trackIndex,
             selectedType
         })

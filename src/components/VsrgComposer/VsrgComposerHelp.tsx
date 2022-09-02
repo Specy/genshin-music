@@ -47,6 +47,9 @@ export function VsrgComposerHelp() {
                     <tr>
                         <td><Key>CTRL + W/A/S/D</Key></td><td>Move the selected hit object up / left / down / right, inverts if the editor is horizontal</td>
                     </tr>
+                    <tr>
+                        <td><Key>Esc</Key></td><td> Deselect current hitObject </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
