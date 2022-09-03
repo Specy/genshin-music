@@ -24,7 +24,7 @@ async function execute() {
     try{
         for (const app of toBuild) {
             console.log(clc.bold.yellow(`Building ${app}...`))
-            await fse.copy(chosenApp === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
+            await fse.copy(app === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
             await fs.rename(`${publicPath}/index.html`,`index.html`)
             if (process.platform === 'win32') {
                 console.log(clc.italic("Building on windows"))
