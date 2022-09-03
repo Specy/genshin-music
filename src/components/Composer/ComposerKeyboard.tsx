@@ -26,7 +26,6 @@ interface ComposerKeyboardProps {
 export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
     const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio } = data
     const { handleClick, handleTempoChanger } = functions
-    let keyboardClass = "keyboard"
     if (keyboard === undefined) {
         return <div className="composer-keyboard-wrapper" style={{ marginBottom: '4rem' }}>
             <h1>There was an error with this layer</h1>
@@ -39,6 +38,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
             </h1>
         </div>
     }
+    let keyboardClass = "keyboard"
     if (keyboard.notes.length === 15) keyboardClass += " keyboard-5"
     if (keyboard.notes.length === 8) keyboardClass += " keyboard-4"
 

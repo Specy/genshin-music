@@ -1,5 +1,5 @@
 import { APP_NAME } from "$/appConfig"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, PlayerSettings, PlayerSettingsDataType, PlayerSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType, BaseSettings } from "$lib/BaseSettings"
+import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, PlayerSettings, PlayerSettingsDataType, PlayerSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType, BaseSettings, ZenPlayerSettings, ZenPlayerSettingsDataType } from "$lib/BaseSettings"
 
 
 
@@ -33,7 +33,13 @@ class SettingsService {
         }
         return data
     }
-
+    getZenPlayerSettings(){
+        const { data, hadUpdate } = this.getLatestSettings(ZenPlayerSettings, APP_NAME + "_ZenPlayer_Settings")
+        if (hadUpdate) {
+            this.updateZenPlayerSettings(data)
+        }
+        return data
+    }
     getVsrgComposerSettings(): VsrgComposerSettingsDataType {
         const { data, hadUpdate } = this.getLatestSettings(VsrgComposerSettings, APP_NAME + "_VsrgComposer_Settings")
         if (hadUpdate) {
@@ -77,9 +83,14 @@ class SettingsService {
             data: settings
         }
         localStorage.setItem(APP_NAME + "_VsrgComposer_Settings", JSON.stringify(state))
-
     }
-
+    updateZenPlayerSettings(settings: ZenPlayerSettingsDataType) {
+        const state = {
+            other: ZenPlayerSettings.other,
+            data: settings
+        }
+        localStorage.setItem(APP_NAME + "_ZenPlayer_Settings", JSON.stringify(state))
+    }
     updatePlayerSettings(settings: PlayerSettingsDataType) {
         const state = {
             other: PlayerSettings.other,

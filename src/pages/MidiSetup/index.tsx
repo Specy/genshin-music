@@ -196,7 +196,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                     {settings.notes.map((note, i) => {
                         return <BaseNote
                             key={i}
-                            handleClick={this.handleClick}
+                            handleClick={() => this.handleClick(note)}
                             data={note}
                             noteImage={baseInstrument.notes[i].noteImage}
                             noteText={note.midi < 0 ? 'NA' : String(note.midi)}

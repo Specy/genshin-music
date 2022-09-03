@@ -1,6 +1,6 @@
 import { InstrumentData } from "./Songs/SongClasses"
 
-//1 = has current layer, 2 = has other layers, 3 = has both
+//map of the possible combinations of instruments, in binary, 
 export type LayerStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16
 
 export class NoteLayer {

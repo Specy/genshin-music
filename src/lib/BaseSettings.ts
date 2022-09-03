@@ -465,7 +465,6 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
     }
 }
 
-
 export type VsrgPlayerSettingsDataType = {
     approachTime: SettingsNumber
     keyboardLayout: SettingsSelect<VsrgKeyboardLayout>
@@ -518,5 +517,126 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             category: "Layout Settings",
             threshold: [-40, 40]
         },
+    }
+}
+export type ZenPlayerSettingsDataType = {
+    instrument: SettingsInstrument
+    pitch: SettingsSelect<Pitch>
+    caveMode: SettingsCheckbox
+    noteNameType: SettingsSelect<NoteNameType>
+    keyboardSize: SettingsSlider
+    keyboardYPosition: SettingsSlider
+    metronomeBeats: SettingsNumber
+    metronomeVolume: SettingsSlider
+    metronomeBpm: SettingsNumber
+}
+export type ZenPlayerSettingsType = BaseSettings<ZenPlayerSettingsDataType>
+
+export const ZenPlayerSettings: ZenPlayerSettingsType = {
+    other: {
+        settingVersion: APP_NAME + 3
+    },
+    data: {
+        instrument: {
+            name: "Instrument",
+            tooltip: "The main instrument of the player, will also be saved in the song you record",
+            type: "instrument",
+            songSetting: false,
+            value: INSTRUMENTS[0],
+            volume: 100,
+            options: [...INSTRUMENTS],
+            category: "Keyboard",
+        },
+        pitch: {
+            name: "Pitch",
+            tooltip: "The pitch of the player, will also be saved in the song you record",
+            type: "select",
+            songSetting: false,
+            value: "C",
+            category: "Keyboard",
+            options: [...PITCHES]
+        },
+        metronomeBeats: {
+            name: "Metronome beats",
+            tooltip: "After how many times a stronger beat is played",
+            type: "number",
+            songSetting: false,
+            increment: 1,
+            value: 4,
+            threshold: [0, 16],
+            category: "Metronome",
+        },
+        metronomeVolume: {
+            name: "Metronome volume",
+            tooltip: "The volume of the metronome",
+            type: "slider",
+            songSetting: false,
+            value: 50,
+            category: "Metronome",
+            threshold: [0, 120]
+        },
+        metronomeBpm: {
+            name: "Metronome bpm",
+            tooltip: "The volume of the metronome",
+            type: "number",
+            songSetting: false,
+            value: 200,
+            increment: 5,
+            category: "Metronome",
+            threshold: [0, 3600]
+        },
+        caveMode: {
+            name: "Reverb (cave mode)",
+            tooltip: "Makes it sound like you are in a cave",
+            type: "checkbox",
+            songSetting: false,
+            value: false,
+            category: "Keyboard",
+        },
+        noteNameType: {
+            name: "Note name type",
+            tooltip: "The type of text which will be written on the note",
+            type: "select",
+            songSetting: false,
+            category: "Keyboard",
+            value: APP_NAME === "Genshin"
+                ? isMobile()
+                    ? "Do Re Mi"
+                    : "Keyboard layout"
+                : "Note name",
+
+            options: APP_NAME === "Genshin"
+                ? [
+                    "Note name",
+                    "Keyboard layout",
+                    "Do Re Mi",
+                    "ABC",
+                    "No Text"
+                ]
+                : [
+                    "Note name",
+                    "Keyboard layout",
+                    "ABC",
+                    "No Text"
+                ]
+        },
+        keyboardSize: {
+            name: "Keyboard size",
+            tooltip: "Scales the keyboard size",
+            type: "slider",
+            songSetting: false,
+            value: 100,
+            category: "Keyboard",
+            threshold: [80, 150]
+        },
+        keyboardYPosition: {
+            name: "Vertical position",
+            tooltip: "The vertical position of the keyboard",
+            type: "slider",
+            songSetting: false,
+            value: -20,
+            category: "Keyboard",
+            threshold: [-60, 80]
+        }
     }
 }

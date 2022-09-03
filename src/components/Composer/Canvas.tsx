@@ -5,7 +5,7 @@ import { Component, createRef } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@inlet/react-pixi';
 import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import isMobile from "is-mobile"
-import { ComposerCache } from "$cmp/Composer/TextureCache"
+import { ComposerCache } from "$/components/Composer/ComposerCache"
 import { APP_NAME } from "$/appConfig"
 import Memoized from '$cmp/Utility/Memoized';
 import { ThemeProvider } from '$/stores/ThemeStore/ThemeProvider';

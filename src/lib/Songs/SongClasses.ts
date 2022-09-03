@@ -56,7 +56,7 @@ export class Column {
 		return TEMPO_CHANGERS[this.tempoChanger]
 	}
 }
-const instrumentNoteMap = new Map([['border', 1], ['circle', 2], ['line', 3]])
+const instrumentNoteMap = new Map<InstrumentNoteIcon, number>([['border', 1], ['circle', 2], ['line', 3]])
 export interface SerializedInstrumentData{
     name: InstrumentName
     volume: number

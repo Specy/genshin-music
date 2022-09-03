@@ -168,25 +168,28 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             </div>
             <Separator />
             <div className='page-redirect-wrapper'>
-                <PageRedirect href='Changelog' current={currentPage === 'Changelog'}>
-                    Changelog
-                </PageRedirect>
                 {!isTwa() &&
                     <PageRedirect href='Donate' current={currentPage === 'Donate'}>
                         Donate
                     </PageRedirect>
                 }
-                <PageRedirect href='Partners' current={currentPage === 'Partners'}>
-                    Partners
-                </PageRedirect>
-                <PageRedirect href='Help' current={currentPage === 'Help'}>
-                    Help
+                <PageRedirect href='ZenPlayer' current={currentPage === 'ZenPlayer'}>
+                    Zen player
                 </PageRedirect>
                 <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'}>
                     Sheet visualizer
                 </PageRedirect>
                 <PageRedirect href='Theme' current={currentPage === 'Theme'}>
                     App Theme
+                </PageRedirect>
+                <PageRedirect href='Changelog' current={currentPage === 'Changelog'}>
+                    Changelog
+                </PageRedirect>
+                <PageRedirect href='Partners' current={currentPage === 'Partners'}>
+                    Partners
+                </PageRedirect>
+                <PageRedirect href='Help' current={currentPage === 'Help'}>
+                    Help
                 </PageRedirect>
                 {!IS_MOBILE &&
                     <PageRedirect href='Keybinds' current={currentPage === 'Keybinds'}>

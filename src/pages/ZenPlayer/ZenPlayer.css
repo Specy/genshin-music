@@ -1,0 +1,13 @@
+.zen-keyboard{
+    margin: auto 0;
+    perspective: 5rem;
+}
+.sky-zen-note{
+    opacity: 0.8;
+}
+.sky-zen-click {
+    animation: click-rotate-animation 0.5s forwards;
+}
+@keyframes click-rotate-animation {
+
+}
