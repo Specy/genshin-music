@@ -1,35 +1,37 @@
 import { IconButton } from "$/components/Inputs/IconButton"
-import { ZenKeyboard } from "$/components/ZenPlayer/ZenKeyboard"
-import { ZenPlayerMenu } from "$/components/ZenPlayer/ZenPlayerMenu"
-import { ZenPlayerSettings, ZenPlayerSettingsDataType } from "$/lib/BaseSettings"
+import { ZenKeypad } from "$/components/ZenKeyboard/ZenKeypad"
+import { ZenKeyboardMenu } from "$/components/ZenKeyboard/ZenKeyboardMenu"
+import { ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$/lib/BaseSettings"
 import Instrument, { NoteData } from "$/lib/Instrument"
 import { metronome } from "$/lib/Metronome"
 import { AudioProvider } from "$/lib/Providers/AudioProvider"
 import { settingsService } from "$/lib/Services/SettingsService"
 import { logger } from "$/stores/LoggerStore"
-import { zenPlayerStore } from "$/stores/ZenPlayerStore"
+import { zenKeyboardStore } from "$/stores/ZenKeyboardStore"
 import { InstrumentName } from "$/types/GeneralTypes"
 import { SettingUpdate, SettingVolumeUpdate } from "$/types/SettingsPropriety"
 import { useEffect, useState, useCallback } from "react"
 import { GiMetronome } from "react-icons/gi"
-import "./ZenPlayer.css"
+import "./ZenKeyboard.css"
 
 
-export function ZenPlayer() {
-    const [settings, setSettings] = useState(ZenPlayerSettings.data)
+export function ZenKeyboard() {
+    const [settings, setSettings] = useState(ZenKeyboardSettings.data)
     const [instrument, setInstrument] = useState(new Instrument())
     const [isMetronomePlaying, setIsMetronomePlaying] = useState(false)
     useEffect(() => {
-        const settings = settingsService.getZenPlayerSettings()
+        const settings = settingsService.getZenKeyboardSettings()
         metronome.bpm = settings.metronomeBpm.value
+        setInstrument(new Instrument(settings.instrument.value))
         setSettings(settings)
+        AudioProvider.setReverb(settings.caveMode.value)
         return () => logger.hidePill()
     }, [])
-    const updateSettings = useCallback((settings: ZenPlayerSettingsDataType) => {
-        settingsService.updateZenPlayerSettings(settings)
+    const updateSettings = useCallback((settings: ZenKeyboardSettingsDataType) => {
+        settingsService.updateZenKeyboardSettings(settings)
     }, [])
     useEffect(() => {
-        zenPlayerStore.setKeyboardLayout(instrument.notes)
+        zenKeyboardStore.setKeyboardLayout(instrument.notes)
     }, [instrument])
     const handleSettingChange = async (setting: SettingUpdate) => {
         //@ts-ignore
@@ -61,7 +63,7 @@ export function ZenPlayer() {
     }, [instrument])
     const onNoteClick = (note: NoteData) => {
         instrument.play(note.index, settings.pitch.value)
-        zenPlayerStore.setNoteState(note.index, {
+        zenKeyboardStore.setNoteState(note.index, {
             animationId: note.data.animationId + 1
         })
     }
@@ -73,12 +75,12 @@ export function ZenPlayer() {
         instrument.changeVolume(data.value)
     }, [instrument])
     return <>
-        <ZenPlayerMenu
+        <ZenKeyboardMenu
             settings={settings}
             onVolumeChange={onVolumeChange}
             handleSettingChange={handleSettingChange}
         />
-        <ZenKeyboard
+        <ZenKeypad
             instrument={instrument}
             onNoteClick={onNoteClick}
             noteNameType={settings.noteNameType.value}

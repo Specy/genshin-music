@@ -78,11 +78,10 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName }: 
         <div
             ref={ref}
             className={className}
-            style={{ borderColor: parseBorderColor(status) }}
         >
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
-                fill={parseBorderColor(status)}
+                fill={parseBorderFill(status)}
             />}
             {noteImage &&
                 <SvgNote
@@ -119,7 +118,12 @@ function parseBorderColor(status: string) {
 
     return fill
 }
-
+function parseBorderFill(status: NoteStatus) {
+    if (status === "clicked") return "transparent"
+    else if (status === 'toClickNext' || status === 'toClickAndNext') return '#63aea7'
+    const color = ThemeProvider.get('note_background').desaturate(0.6)
+    return color.isDark() ? color.lighten(0.45).hex() : color.darken(0.18).hex()
+}
 function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')
     if (APP_NAME === 'Genshin') {

@@ -4,19 +4,19 @@ import { FaBars, FaCog, FaHome, FaTimes } from "react-icons/fa"
 import MenuPanel from "../Layout/MenuPanel"
 import { MenuItem } from "../Miscellaneous/MenuItem"
 import { useState } from 'react'
-import { ZenPlayerSettingsDataType } from "$/lib/BaseSettings"
+import { ZenKeyboardSettingsDataType } from "$/lib/BaseSettings"
 import { SettingUpdate, SettingVolumeUpdate } from "$/types/SettingsPropriety"
 import { SettingsPane } from "../Settings/SettingsPane"
 import Memoized from "../Utility/Memoized"
 
-interface ZenPlayerMenuProps {
-    settings: ZenPlayerSettingsDataType
+interface ZenKeyboardMenuProps {
+    settings: ZenKeyboardSettingsDataType
 
     handleSettingChange: (setting: SettingUpdate) => void
     onVolumeChange: (data: SettingVolumeUpdate) => void
 }
 
-export function ZenPlayerMenu({ settings, handleSettingChange, onVolumeChange }: ZenPlayerMenuProps) {
+export function ZenKeyboardMenu({ settings, handleSettingChange, onVolumeChange }: ZenKeyboardMenuProps) {
     const [selectedPage, setSelectedPage] = useState("Settings")
     const [isOpen, setIsOpen] = useState(true)
     const [isVisible, setIsVisible] = useState(false)

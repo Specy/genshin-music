@@ -173,11 +173,11 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                         Donate
                     </PageRedirect>
                 }
-                <PageRedirect href='ZenPlayer' current={currentPage === 'ZenPlayer'}>
-                    Zen player
+                <PageRedirect href='ZenKeyboard' current={currentPage === 'ZenKeyboard'}>
+                    Zen Keyboard
                 </PageRedirect>
                 <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'}>
-                    Sheet visualizer
+                    Sheet Visualizer
                 </PageRedirect>
                 <PageRedirect href='Theme' current={currentPage === 'Theme'}>
                     App Theme

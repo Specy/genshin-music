@@ -1,5 +1,5 @@
 import { APP_NAME } from "$/appConfig"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, PlayerSettings, PlayerSettingsDataType, PlayerSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType, BaseSettings, ZenPlayerSettings, ZenPlayerSettingsDataType } from "$lib/BaseSettings"
+import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, PlayerSettings, PlayerSettingsDataType, PlayerSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType, BaseSettings, ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$lib/BaseSettings"
 
 
 
@@ -33,10 +33,10 @@ class SettingsService {
         }
         return data
     }
-    getZenPlayerSettings(){
-        const { data, hadUpdate } = this.getLatestSettings(ZenPlayerSettings, APP_NAME + "_ZenPlayer_Settings")
+    getZenKeyboardSettings(){
+        const { data, hadUpdate } = this.getLatestSettings(ZenKeyboardSettings, APP_NAME + "_ZenKeyboard_Settings")
         if (hadUpdate) {
-            this.updateZenPlayerSettings(data)
+            this.updateZenKeyboardSettings(data)
         }
         return data
     }
@@ -84,12 +84,12 @@ class SettingsService {
         }
         localStorage.setItem(APP_NAME + "_VsrgComposer_Settings", JSON.stringify(state))
     }
-    updateZenPlayerSettings(settings: ZenPlayerSettingsDataType) {
+    updateZenKeyboardSettings(settings: ZenKeyboardSettingsDataType) {
         const state = {
-            other: ZenPlayerSettings.other,
+            other: ZenKeyboardSettings.other,
             data: settings
         }
-        localStorage.setItem(APP_NAME + "_ZenPlayer_Settings", JSON.stringify(state))
+        localStorage.setItem(APP_NAME + "_ZenKeyboard_Settings", JSON.stringify(state))
     }
     updatePlayerSettings(settings: PlayerSettingsDataType) {
         const state = {

@@ -24,7 +24,7 @@ import Privacy from "$pages/Privacy";
 import ErrorBoundaryRedirect from "$cmp/Utility/ErrorBoundaryRedirect";
 import { logger } from "$stores/LoggerStore"
 import { Keybinds } from "$pages/Keybinds";
-import { ZenPlayer } from "./pages/ZenPlayer";
+import { ZenKeyboard } from "./pages/ZenKeyboard";
 export function Router() {
 	useEffect(() => {
 		try {
@@ -108,10 +108,10 @@ export function Router() {
 									<Route exact path='/Keybinds'>
 										<Keybinds />
 									</Route>
-									<Route exact path='/ZenPlayer'>
+									<Route exact path='/ZenKeyboard'>
 
 										<AppBackground page="Main">
-											<ZenPlayer />
+											<ZenKeyboard />
 										</AppBackground>
 									</Route>
 

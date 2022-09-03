@@ -1,6 +1,6 @@
 import { useObservableArray } from "$/lib/Hooks/useObservable";
 import Instrument, { NoteData } from "$/lib/Instrument";
-import { zenPlayerStore } from "$/stores/ZenPlayerStore";
+import { zenKeyboardStore } from "$/stores/ZenKeyboardStore";
 import { ZenNote } from "./ZenNote";
 import { useEffect } from 'react'
 import { Pitch } from "$/appConfig";
@@ -16,14 +16,14 @@ interface ZenKeyboardProps {
     onNoteClick: (note: NoteData) => void
 }
 
-export function ZenKeyboard({ onNoteClick, instrument, pitch, verticalOffset, scale,noteNameType }: ZenKeyboardProps) {
-    const layout = useObservableArray(zenPlayerStore.keyboard)
+export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale,noteNameType }: ZenKeyboardProps) {
+    const layout = useObservableArray(zenKeyboardStore.keyboard)
     useEffect(() => {
         KeyboardProvider.listen(({ letter }) => {
             const note = instrument.getNoteFromCode(letter)
             if (note !== null) onNoteClick(instrument.notes[note])
-        }, { id: "ZenPlayer" })
-        return () => KeyboardProvider.unregisterById("ZenPlayer")
+        }, { id: "ZenKeyboard" })
+        return () => KeyboardProvider.unregisterById("ZenKeyboard")
     }, [onNoteClick])
     let keyboardClass = "keyboard zen-keyboard"
     if (instrument.notes.length === 15) keyboardClass += " keyboard-5"

@@ -519,7 +519,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
         },
     }
 }
-export type ZenPlayerSettingsDataType = {
+export type ZenKeyboardSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
     caveMode: SettingsCheckbox
@@ -530,9 +530,9 @@ export type ZenPlayerSettingsDataType = {
     metronomeVolume: SettingsSlider
     metronomeBpm: SettingsNumber
 }
-export type ZenPlayerSettingsType = BaseSettings<ZenPlayerSettingsDataType>
+export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
-export const ZenPlayerSettings: ZenPlayerSettingsType = {
+export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
         settingVersion: APP_NAME + 3
     },

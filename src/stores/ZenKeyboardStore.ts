@@ -2,7 +2,7 @@ import { APP_NAME } from "$/appConfig"
 import { NoteData, NoteDataState } from "$/lib/Instrument"
 import { makeObservable, observable } from "mobx"
 
-class ZenPlayerStore {
+class ZenKeyboardStore {
     @observable
     keyboard: NoteData[] = []
     constructor() {
@@ -26,4 +26,4 @@ class ZenPlayerStore {
     }
 }
 
-export const zenPlayerStore = new ZenPlayerStore()
+export const zenKeyboardStore = new ZenKeyboardStore()
