@@ -26,6 +26,9 @@ export type VsrgPlayerCacheKinds = {
     trails: {
         [key: string]: Texture
     }
+    lines: {
+        [key: string]: Texture
+    }
 }
 
 export class VsrgPlayerCache {
@@ -45,6 +48,7 @@ export class VsrgPlayerCache {
             hitObjects: {},
             heldHitObjects: {},
             trails: {},
+            lines: {},
             sizes: {
                 hitObject: 0,
                 trail: 0
@@ -66,7 +70,8 @@ export class VsrgPlayerCache {
         const { app } = this
         if (!app) return
         this.generateTrackCache(app)
-        this.generateTrails(app)
+        this.generateTrailsCache(app)
+        this.generateLinesCache(app)
     }
 
     getHitObjectCache(color: string) {
@@ -78,9 +83,11 @@ export class VsrgPlayerCache {
     getHeldHitObjectCache(color: string) {
         return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#FF0000']
     }
+    getLinesCache(color: string) {
+        return this.textures.lines[color] || this.textures.lines['#FF0000']
+    }
 
-
-    generateTrails(app: Application) {
+    generateTrailsCache(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = sizes.hitObjectSize
@@ -98,6 +105,24 @@ export class VsrgPlayerCache {
             trail.destroy(true)
         })
         this.textures.sizes.trail = hitObjectHeight
+    }
+    generateLinesCache(app: Application) {
+        const { sizes, trackColors } = this
+        const withError = [...trackColors, '#FF0000']
+        const lineHeight = 5
+        withError.forEach(color => {
+            const line = new Graphics()
+            line.lineStyle(lineHeight, Color(color).rgbNumber())
+                .moveTo(0, 0)
+                .lineTo(sizes.width, 0)
+            const lineTexture = app.renderer.generateTexture(line, {
+                resolution: 2,
+                scaleMode: SCALE_MODES.LINEAR,
+                region: new Rectangle(0, 0, sizes.width, lineHeight)
+            });
+            this.textures.lines[color] = lineTexture
+            line.destroy(true)
+        })
     }
     generateTrackCache(app: Application) {
         const { colors, sizes, trackColors } = this

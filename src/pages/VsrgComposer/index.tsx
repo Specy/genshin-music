@@ -487,9 +487,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 await this.saveSong()
             }
         }
-        settings.bpm.value = song.bpm
-        settings.keys.value = song.keys
-        settings.pitch.value = song.pitch
+        settings.bpm = { ...settings.bpm , value: song.bpm }
+        settings.keys = { ...settings.keys , value: song.keys }
+        settings.pitch = { ...settings.pitch , value: song.pitch }
         this.updateSettings()
         this.changes++
         this.setState({

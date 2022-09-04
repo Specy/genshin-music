@@ -27,10 +27,10 @@ interface MidiSetupState {
 }
 
 const baseInstrument = new Instrument()
-export default class MidiSetup extends Component<any, MidiSetupState> {
+export default class MidiSetup extends Component<{}, MidiSetupState> {
     state: MidiSetupState
     mounted: boolean
-    constructor(props: any) {
+    constructor(props: {}) {
         super(props)
         this.state = {
             audioPlayer: new AudioPlayer("C"),

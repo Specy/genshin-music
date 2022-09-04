@@ -97,7 +97,6 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
     startPlayback(timestamp:number){
         this.lastPlayedNote = -1
-        console.log("Started playback")
         for(let i = 0; i < this.notes.length; i++){
             if(this.notes[i].time >= timestamp) break
             this.lastPlayedNote = i

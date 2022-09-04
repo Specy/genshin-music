@@ -14,10 +14,10 @@ function _VsrgPlayerCountDown({ time }: VsrgPlayerProps) {
         const element = ref.current
         if (element) {
             element.animate([
-                { transform: 'scale(1.5)' },
+                { transform: 'scale(1.4)' },
                 { transform: 'scale(1)' },
             ], {
-                duration: 1000,
+                duration: 500,
                 iterations: 1
             })
         }

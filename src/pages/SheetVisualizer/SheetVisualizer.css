@@ -45,7 +45,6 @@
 	display: grid;
 	grid-template-columns: repeat(7, 1fr);
 	grid-template-rows: repeat(3, 1fr);
-	background-color: var(--primary);
 	justify-items: center;
 	align-items: center;
 }
@@ -79,8 +78,8 @@
 }
 .frame-note-ns {
 	border-radius: 50%;
-	width: 40%;
-	padding-bottom: 40%;
+	width: 25%;
+	padding-bottom: 25%;
 	background-color: var(--primary);
 }
 

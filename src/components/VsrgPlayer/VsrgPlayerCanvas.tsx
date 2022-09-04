@@ -138,7 +138,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         vsrgPlayerStore.resetScore()
         const { scrollSpeed } = this.props
         if (type === 'play' && song) {
-            const countDown = 3000
+            const countDown = 3000 / 2
             this.setState({ song, timestamp: - countDown - scrollSpeed, renderableHitObjects: [] }, () => {
                 song.startPlayback(0)
                 this.calculateSizes()
@@ -324,7 +324,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             >
                 {(timestamp + scrollSpeed) < 0 &&
                     <VsrgPlayerCountDown
-                        time={Math.abs(Math.ceil((timestamp + scrollSpeed) / 1000)) + 1}
+                        time={Math.abs(Math.ceil((timestamp + scrollSpeed ) / 1000 * 2)) + 1}
                     />
                 }
                 <Stage
@@ -347,12 +347,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                             renderableHitObjects={renderableHitObjects}
                             timestamp={timestamp}
                         />
-                        <Container
-                            x={sizes.width / 2}
-                            y={sizes.height * 0.7}
-                            anchor={0.5}
-                        >
-                        </Container>
+
                     </>
                     }
                 </Stage>

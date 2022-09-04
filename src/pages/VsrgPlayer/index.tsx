@@ -49,7 +49,6 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             currentLayout: keyBinds.getVsrgKeybinds(4),
             isPlaying: false
         }
-        this.lastTimestamp = 0
     }
     componentDidMount() {
         vsrgPlayerStore.setLayout(this.state.currentLayout)
@@ -77,6 +76,8 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                 this.setState({ audioSong: recorded })
                 await songAudioPlayer.syncInstruments(recorded.instruments)
             }
+        }else{
+            this.setState({ audioSong: null })
         }
         await keyboardAudioPlayer.syncInstruments(song.tracks.map(track => track.instrument))
         logger.hidePill()

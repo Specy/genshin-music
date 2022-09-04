@@ -43,12 +43,12 @@ interface PlayerState {
 	speedChanger: typeof SPEED_CHANGERS[number]
 }
 
-class Player extends Component<any, PlayerState>{
+class Player extends Component<{}, PlayerState>{
 	state: PlayerState
 	recording: Recording
 	mounted: boolean
 	cleanup: (Function | Lambda)[] = []
-	constructor(props: any) {
+	constructor(props: {}) {
 		super(props)
 		this.recording = new Recording()
 		const settings = settingsService.getPlayerSettings()
@@ -357,7 +357,6 @@ class Player extends Component<any, PlayerState>{
 				onRestart={this.restartSong}
 				isMetronomePlaying={isMetronomePlaying}
 				onToggleMetronome={toggleMetronome}
-
 				onRawSpeedChange={this.handleSpeedChanger}
 				hasSong={hasSong}
 				speedChanger={speedChanger}
