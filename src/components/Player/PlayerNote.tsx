@@ -42,6 +42,7 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
         })
         return dispose
     }, [])
+
     const state = useObservableObject(note.data)
     const { approachRate, instrument } = data
     const animation = {

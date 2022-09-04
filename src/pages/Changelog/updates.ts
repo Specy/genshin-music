@@ -8,12 +8,15 @@ type Update = {
 export const updates: Update[] = [
     {
         version: '3.0',
-        title: 'Bug fixes',
+        title: 'VSRG mode, Zen keyboard and more!',
         date: '2022 - 22/07',
         changes: [
-            "Added VSRG mode",
+            "Added VSRG mode to compose and play vsrg songs",
+            "Added Zen keyboard, where you can simply focus on playing by hand",
+            "Added Visual sheet to the player",
             "Improved player performance",
             "Added app scaling",
+            "Multi type export, you can now export/import songs,folders,themes etc ",
             "Fixed bug that would remove a song from the folder when saved",
             "Fixed issues when opening/saving songs in the composer",
             "Fixed bug in pasting notes in the composer",

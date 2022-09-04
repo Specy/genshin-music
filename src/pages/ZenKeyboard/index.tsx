@@ -44,7 +44,6 @@ export function ZenKeyboard() {
         if (setting.key === 'caveMode') {
             AudioProvider.setReverb(data.value as boolean)
         }
-        console.log(setting.key, data.value)
         if (setting.key === 'metronomeBpm') metronome.bpm = data.value as number
         if (setting.key === 'metronomeBeats') metronome.beats = data.value as number
         if (setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number)
@@ -71,6 +70,7 @@ export function ZenKeyboard() {
         if (isMetronomePlaying) metronome.start()
         else metronome.stop()
     }, [isMetronomePlaying])
+    
     const onVolumeChange = useCallback((data: SettingVolumeUpdate) => {
         instrument.changeVolume(data.value)
     }, [instrument])
@@ -94,8 +94,8 @@ export function ZenKeyboard() {
             className='metronome-button'
             style={{
                 position: 'absolute',
-                bottom: "0.5rem",
-                right: "0.5rem",
+                bottom: "0.8rem",
+                right: "0.8rem",
             }}
             ariaLabel='Toggle metronome'
         >

@@ -1,5 +1,5 @@
 import { APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES } from "$/appConfig"
-import { useObservableObject } from "$/lib/Hooks/useObservable"
+import { subscribeObeservableObject, useObservableObject } from "$/lib/Hooks/useObservable"
 import Instrument, { NoteData } from "$/lib/Instrument"
 import SvgNote, { NoteImage } from "../SvgNotes"
 import { useCallback, useRef, useEffect, useState } from "react"
@@ -26,40 +26,34 @@ const skyKeyframes = [
     }
 ]
 export function ZenNote({ note, onClick, noteImage, noteText, instrumentName }: ZenKeyboardProps) {
-    const state = useObservableObject(note.data)
     const [status, setStatus] = useState<NoteStatus>("")
     const [statusId, setStatusId] = useState(0)
+    const [textColor, setTextColor] = useState(BASE_THEME_CONFIG.text.light)
     const ref = useRef<HTMLDivElement>(null)
     const handleClick = useCallback((e: any) => {
         e.preventDefault()
         onClick(note)
     }, [onClick, note])
     useEffect(() => {
-    }, [note.data])
-    useEffect(() => {
-        setStatus(state.status)
-        setStatusId((v) => v + 1)
-    }, [state.status])
-    useEffect(() => {
-        if (APP_NAME === 'Genshin') {
-            setStatus("clicked")
-            setStatusId((v) => v + 1)
-            state.status = 'clicked'
-            setTimeout(() => setStatus(""), 100)
-        } else {
-            const current = ref.current
-            if (!current) return
-            current.animate(skyKeyframes, { duration: 400 })
+        function onStatusChange(){
+            if (APP_NAME === 'Genshin') {
+                setStatus("clicked")
+                setStatusId((v) => v + 1)
+                setTimeout(() => setStatus(""), 100)
+            } else {
+                const current = ref.current
+                if (!current) return
+                current.animate(skyKeyframes, { duration: 400 })
+            }
         }
-    }, [state.animationId, ref, state])
-
-    const [textColor, setTextColor] = useState(getTextColor())
+        return subscribeObeservableObject(note.data, onStatusChange)
+    }, [note, ref])
     useEffect(() => {
-        const dispose = observe(ThemeProvider.state.data, () => {
+        return subscribeObeservableObject(ThemeProvider.state.data, () => {
             setTextColor(getTextColor())
         })
-        return dispose
     }, [])
+ 
     const className = parseClass(status) + (APP_NAME === 'Genshin' ? '' : ' sky-zen-note')
     const clickColor = INSTRUMENTS_DATA[instrumentName]?.clickColor
     return <button

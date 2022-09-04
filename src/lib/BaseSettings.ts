@@ -534,12 +534,12 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 3
+        settingVersion: APP_NAME + 4
     },
     data: {
         instrument: {
             name: "Instrument",
-            tooltip: "The main instrument of the player, will also be saved in the song you record",
+            tooltip: "The main instrument of the keyboard",
             type: "instrument",
             songSetting: false,
             value: INSTRUMENTS[0],
@@ -549,7 +549,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
         },
         pitch: {
             name: "Pitch",
-            tooltip: "The pitch of the player, will also be saved in the song you record",
+            tooltip: "The pitch of the keyboard",
             type: "select",
             songSetting: false,
             value: "C",
@@ -577,7 +577,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
         },
         metronomeBpm: {
             name: "Metronome bpm",
-            tooltip: "The volume of the metronome",
+            tooltip: "The bpm of the metronome",
             type: "number",
             songSetting: false,
             value: 200,
@@ -634,9 +634,9 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             tooltip: "The vertical position of the keyboard",
             type: "slider",
             songSetting: false,
-            value: -20,
+            value: 0,
             category: "Keyboard",
-            threshold: [-60, 80]
+            threshold: [-100, 100]
         }
     }
 }

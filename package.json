@@ -54,12 +54,6 @@
     "start:sky": "node ./scripts/startApp.js Sky",
     "start:genshin": "node ./scripts/startApp.js Genshin"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -86,11 +80,20 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/semver": "^7.3.12",
     "@types/webmidi": "^2.0.6",
+    "@typescript-eslint/eslint-plugin": "^4.0.0",
+    "@typescript-eslint/parser": "^4.0.0",
     "@vitejs/plugin-react": "^2.0.1",
     "cli-color": "^2.0.2",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.1",
     "env-cmd": "^10.1.0",
+    "eslint": "^8.0.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-flowtype": "^5.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-react": "^7.20.3",
+    "eslint-plugin-react-hooks": "^4.0.8",
     "fs-extra": "^10.1.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sass": "^1.54.5",

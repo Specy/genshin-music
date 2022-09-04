@@ -24,7 +24,7 @@ export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scal
             if (note !== null) onNoteClick(instrument.notes[note])
         }, { id: "ZenKeyboard" })
         return () => KeyboardProvider.unregisterById("ZenKeyboard")
-    }, [onNoteClick])
+    }, [onNoteClick, instrument])
     let keyboardClass = "keyboard zen-keyboard"
     if (instrument.notes.length === 15) keyboardClass += " keyboard-5"
     if (instrument.notes.length === 8) keyboardClass += " keyboard-4"
