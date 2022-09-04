@@ -46,7 +46,11 @@ const baseScoreMap = {
     miss: 0
 }
 
-
+export type VsrgPlayerEvent = 'fpsChange'
+type VsrgPlayerCallback = {
+    callback: (data: VsrgPlayerEvent) => void
+    id: string
+}
 class VsrgPlayerStore {
     @observable keyboard: KeyboardKey[] = []
     @observable.shallow currentSong: VsrgPlayerSong = {
@@ -70,6 +74,7 @@ class VsrgPlayerStore {
             combo: 0
         }
     }
+    private listeners: VsrgPlayerCallback[] = []
     private keyboardListeners: VsrcPlayerKeyboardCallback[] = []
     constructor() {
         makeObservable(this)
@@ -83,6 +88,18 @@ class VsrgPlayerStore {
                     isPressed: false
                 }
             }))
+    }
+    addEventListener = (callback: (data: VsrgPlayerEvent) => void, id: string) => {
+        this.listeners.push({
+            callback,
+            id
+        })
+    }
+    emitEvent = (event: VsrgPlayerEvent) => {
+        this.listeners.forEach(listener => listener.callback(event))
+    }
+    removeEventListener = (id: string) => {
+        this.listeners = this.listeners.filter(l => l.id !== id)
     }
     resetScore = () => {
         const resetScore:VsrgPlayerScore = {
@@ -156,7 +173,7 @@ class VsrgPlayerStore {
 
 export const vsrgPlayerStore = new VsrgPlayerStore()
 
-export function subscribeCurrentSong(callback: (data: VsrgPlayerSong) => void) {
+export function subscribeCurrentVsrgSong(callback: (data: VsrgPlayerSong) => void) {
     const dispose = observe(vsrgPlayerStore.currentSong, () => {
         callback(vsrgPlayerStore.currentSong)
     })

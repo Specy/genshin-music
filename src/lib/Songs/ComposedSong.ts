@@ -135,6 +135,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             totalTime += Math.floor(msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer)
         })
         recordedSong.instruments = this.instruments.map(ins => ins.clone())
+        
         return recordedSong
     }
 

@@ -467,6 +467,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
 
 export type VsrgPlayerSettingsDataType = {
     approachTime: SettingsNumber
+    maxFps: SettingsSelect<number>
     keyboardLayout: SettingsSelect<VsrgKeyboardLayout>
     horizontalOffset: SettingsSlider
     verticalOffset: SettingsSlider
@@ -474,7 +475,7 @@ export type VsrgPlayerSettingsDataType = {
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 10
+        settingVersion: APP_NAME + 11
     },
     data: {
         approachTime: {
@@ -483,9 +484,25 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 100,
-            threshold: [200, 5000],
+            threshold: [1, 5000],
             value: 2000,
             category: "Player Settings",
+        },
+        maxFps: {
+            name: "Max FPS",
+            tooltip: "The FPS limiter of the player, too high values could cause lag or stutters",
+            type: "select",
+            songSetting: true,
+            value: IS_MOBILE ? 48 : 60,
+            category: "Song Settings",
+            options: [
+                24,
+                30,
+                48,
+                60,
+                90,
+                120
+            ]
         },
         keyboardLayout: {
             name: "Keyboard layout",
@@ -534,7 +551,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 4
+        settingVersion: APP_NAME + 5
     },
     data: {
         instrument: {
@@ -603,7 +620,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
                 ? isMobile()
                     ? "Do Re Mi"
                     : "Keyboard layout"
-                : "Note name",
+                : "No Text",
 
             options: APP_NAME === "Genshin"
                 ? [
@@ -627,7 +644,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             songSetting: false,
             value: 100,
             category: "Keyboard",
-            threshold: [80, 150]
+            threshold: [70, 150]
         },
         keyboardYPosition: {
             name: "Vertical position",

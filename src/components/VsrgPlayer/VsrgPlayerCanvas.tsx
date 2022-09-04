@@ -7,7 +7,7 @@ import { Application } from "pixi.js";
 import { Component, createRef } from "react";
 import { keyBinds } from "$stores/Keybinds";
 import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
-import { KeyboardKey, subscribeCurrentSong, VsrgKeyboardPressType, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
+import { KeyboardKey, subscribeCurrentVsrgSong, VsrgKeyboardPressType, VsrgPlayerEvent, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
 import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
@@ -42,6 +42,7 @@ interface VsrgPlayerCanvasProps {
     isPlaying: boolean
     scrollSpeed: number
     keyboardLayout: VsrgKeyboardLayout
+    maxFps: number
     onSizeChange: (sizes: VsrgPlayerCanvasSizes) => void
     onTick: (timestamp: number) => void
     playHitObject: (hitObject: VsrgHitObject, instrumentIndex: number) => void
@@ -88,7 +89,7 @@ export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
 }
 
 export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlayerCanvasState>{
-    throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => { }, 48)
+    throttledEventLoop: ThrottledEventLoop
     wrapperRef: React.RefObject<HTMLDivElement>
     stageRef: React.RefObject<any>
     toDispose: (() => void)[] = []
@@ -113,6 +114,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             cache: null,
             renderableHitObjects: []
         }
+        this.throttledEventLoop = new ThrottledEventLoop(() => { }, this.props.maxFps)
         this.wrapperRef = createRef()
         this.stageRef = createRef()
     }
@@ -124,9 +126,10 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             id: 'vsrg-player-canvas'
         })
         this.toDispose.push(() => vsrgPlayerStore.removeKeyboardListener({ id: 'vsrg-player-canvas' }))
-        this.toDispose.push(subscribeCurrentSong(this.onSongPick))
+        this.toDispose.push(subscribeCurrentVsrgSong(this.onSongPick))
         this.toDispose.push(subscribeTheme(this.handleThemeChange))
-
+        vsrgPlayerStore.addEventListener(this.handleVsrgEvent, "vsrg-player-canvas")
+        this.toDispose.push(() => vsrgPlayerStore.removeEventListener("vsrg-player-canvas"))
         window.addEventListener('resize', this.calculateSizes)
         this.toDispose.push(() => window.removeEventListener('resize', this.calculateSizes))
         this.calculateSizes()
@@ -148,6 +151,9 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         this.throttledEventLoop.stop()
         vsrgPlayerStore.setLayout(keyBinds.getVsrgKeybinds(4))
         this.toDispose.forEach(d => d())
+    }
+    handleVsrgEvent = (data: VsrgPlayerEvent) => {
+        if(data === 'fpsChange') this.throttledEventLoop.changeMaxFps(this.props.maxFps)
     }
     handleKeyboard = (key: KeyboardKey, type: VsrgKeyboardPressType) => {
         const { renderableHitObjects, timestamp, accuracy } = this.state

@@ -97,6 +97,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
     startPlayback(timestamp:number){
         this.lastPlayedNote = -1
+        console.log("Started playback")
         for(let i = 0; i < this.notes.length; i++){
             if(this.notes[i].time >= timestamp) break
             this.lastPlayedNote = i
@@ -119,6 +120,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const newInstrument: InstrumentData = new InstrumentData({ name })
         this.instruments = [...this.instruments, newInstrument]
     }
+
     toComposedSong = (precision = 4) => {
         const bpmToMs = Math.floor(60000 / this.bpm)
         const song = new ComposedSong(this.name, this.instruments.map(ins => ins.name))

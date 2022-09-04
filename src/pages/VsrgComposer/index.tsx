@@ -336,7 +336,10 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             parsed.startPlayback(this.lastTimestamp)
             vsrg.setDurationFromNotes(parsed.notes)
             const renderableNotes = vsrg.getRenderableNotes(parsed)
-            this.setState({ audioSong: parsed, renderableNotes }, this.syncAudioSongInstruments)
+            this.setState({ audioSong: parsed, renderableNotes }, () => {
+                this.syncAudioSongInstruments()
+                this.calculateSnapPoints()
+            })
         }
         if (parsed instanceof ComposedSong) {
             const recorded = parsed.toRecordedSong(0)
@@ -344,7 +347,10 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             recorded.startPlayback(this.lastTimestamp)
             vsrg.setAudioSong(parsed) //set as composed song because it's the original song
             const renderableNotes = vsrg.getRenderableNotes(recorded)
-            this.setState({ audioSong: recorded, renderableNotes }, this.syncAudioSongInstruments)
+            this.setState({ audioSong: recorded, renderableNotes }, () => {
+                this.syncAudioSongInstruments()
+                this.calculateSnapPoints()
+            })
         }
     }
     askForSongUpdate = async () => {
@@ -557,7 +563,10 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     onBreakpointSelect = (direction: -1 | 1) => {
         const { vsrg, isPlaying, audioSong } = this.state
         const breakpoint = vsrg.getClosestBreakpoint(this.lastTimestamp, direction)
-        if (isPlaying) audioSong?.startPlayback(breakpoint)
+        if (isPlaying) {
+            audioSong?.startPlayback(breakpoint)
+            vsrg.startPlayback(breakpoint)
+        }
         vsrgComposerStore.emitEvent('timestampChange', breakpoint)
     }
     render() {

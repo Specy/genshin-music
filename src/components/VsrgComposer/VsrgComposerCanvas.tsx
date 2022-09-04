@@ -280,7 +280,6 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
     }
     setTimestamp = (timestamp: number) => {
         this.setState({ timestamp })
-        if(this.props.isPlaying) this.props.audioSong?.startPlayback(timestamp)
         this.props.onTimestampChange(timestamp)
     }
     handleThemeChange = (theme: ThemeStore) => {

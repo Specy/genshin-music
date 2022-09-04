@@ -19,7 +19,8 @@ interface ZenKeyboardProps {
 export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale,noteNameType }: ZenKeyboardProps) {
     const layout = useObservableArray(zenKeyboardStore.keyboard)
     useEffect(() => {
-        KeyboardProvider.listen(({ letter }) => {
+        KeyboardProvider.listen(({ letter, event }) => {
+            if(event.repeat) return
             const note = instrument.getNoteFromCode(letter)
             if (note !== null) onNoteClick(instrument.notes[note])
         }, { id: "ZenKeyboard" })

@@ -100,6 +100,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             settings: { ...settings }
         }, () => {
             this.updateSettings()
+            if(setting.key === 'maxFps') vsrgPlayerStore.emitEvent("fpsChange")
         })
     }
     updateSettings = (override?: VsrgPlayerSettingsDataType) => {
@@ -163,6 +164,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     <VsrgPlayerCanvas
                         keyboardLayout={settings.keyboardLayout.value}
                         onTick={this.handleTick}
+                        maxFps={settings.maxFps.value}
                         scrollSpeed={settings.approachTime.value}
                         onSizeChange={this.onSizeChange}
                         playHitObject={this.playHitObject}
