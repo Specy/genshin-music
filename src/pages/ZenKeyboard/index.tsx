@@ -13,6 +13,7 @@ import { SettingUpdate, SettingVolumeUpdate } from "$/types/SettingsPropriety"
 import { useEffect, useState, useCallback } from "react"
 import { GiMetronome } from "react-icons/gi"
 import "./ZenKeyboard.css"
+import { Title } from "$/components/Miscellaneous/Title"
 
 
 export function ZenKeyboard() {
@@ -75,6 +76,7 @@ export function ZenKeyboard() {
         instrument.changeVolume(data.value)
     }, [instrument])
     return <>
+    <Title text="Zen Keyboard"/>
         <ZenKeyboardMenu
             settings={settings}
             onVolumeChange={onVolumeChange}

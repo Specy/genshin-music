@@ -23,6 +23,7 @@ import { clamp, isFocusable } from "$lib/Utilities";
 import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig";
 import { ClickType } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
+import { Title } from "$/components/Miscellaneous/Title";
 
 type VsrgComposerProps = RouteComponentProps & {
 
@@ -562,6 +563,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     render() {
         const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes, tempoChanger } = this.state
         return <>
+            <Title text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`}/>
             <VsrgMenu
                 trackModifiers={vsrg.trackModifiers}
                 hasChanges={this.changes > 0}

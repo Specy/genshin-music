@@ -18,6 +18,7 @@ import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { keyBinds } from "$stores/Keybinds";
 import { logger } from "$/stores/LoggerStore";
+import { Title } from "$/components/Miscellaneous/Title";
 
 type VsrgPlayerProps = RouteComponentProps & {
 
@@ -149,6 +150,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     render() {
         const { canvasSizes, settings } = this.state
         return <>
+            <Title text="Vsrg Player" />
             <div className="vsrg-player-page">
                 <VsrgPlayerMenu
                     settings={settings}
