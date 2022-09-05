@@ -23,11 +23,21 @@ function _VsrgPlayerScore() {
                 <ScoreElement text='Great' number={score.great} color={VSRG_SCORE_COLOR_MAP.great} gridArea='c' />
                 <ScoreElement text='Good' number={score.good} color={VSRG_SCORE_COLOR_MAP.good} gridArea='d' />
                 <ScoreElement text='Miss' number={score.miss} color={VSRG_SCORE_COLOR_MAP.miss} gridArea='e' />
+                <div className="row space-between" style={{ width: '100%', alignItems: 'center', gridArea: 'f'}}>
+                    <div style={{ fontSize: '1.2rem'}}>
+                        Combo: {score.combo}x
+                    </div>
+                    <div className='flex' style={{ fontSize: '0.8rem', alignItems: 'center'}}>
+                        {score.score}
+                    </div>
+                </div>
             </div>
         }
     </>
 }
-
+export const VsrgPlayerScore = memo(_VsrgPlayerScore, (p, n) => {
+    return false
+})
 interface ScoreElementProps {
     number: number
     text: string
@@ -44,6 +54,3 @@ function ScoreElement({ text, color, number, gridArea }: ScoreElementProps) {
         </span>
     </div>
 }
-export const VsrgPlayerScore = memo(_VsrgPlayerScore, (p, n) => {
-    return false
-})

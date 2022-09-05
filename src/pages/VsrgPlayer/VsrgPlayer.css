@@ -184,13 +184,15 @@
     grid-template-areas: 
         'a b'
         'c d'
-        'e e';
+        'e e'
+        'f f';
     ;
     gap: 2rem;
     background-color: var(--primary);
     border-radius: 0.5rem;
     border: solid 2px var(--secondary);
     padding: 1rem;
+    z-index: 10;
     margin-left: auto;
     margin-right: auto;
     animation: fadeIn 0.4s;

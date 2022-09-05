@@ -16,7 +16,7 @@ export const updates: Update[] = [
             "Added Visual sheet to the player",
             "Improved player performance",
             "Added app scaling",
-            "Multi type export, you can now export/import songs,folders,themes etc ",
+            "Multi type export, you can now export/import songs,folders,themes etc",
             "Fixed bug that would remove a song from the folder when saved",
             "Fixed issues when opening/saving songs in the composer",
             "Fixed bug in pasting notes in the composer",

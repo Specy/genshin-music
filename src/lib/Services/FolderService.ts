@@ -5,7 +5,12 @@ import { DbInstance } from "./Database/Database"
 class FolderService{
     foldersCollection = DbInstance.collections.folders
     async getFolders():Promise<SerializedFolder[]>{
-        return this.foldersCollection.find({})
+        const folders = await this.foldersCollection.find({})
+        folders.forEach(folder => {
+            //@ts-ignore
+            delete folder._id
+        })
+        return folders
     }
     async addFolder(data: SerializedFolder) : Promise<string>{
         const id = DbInstance.generateId()

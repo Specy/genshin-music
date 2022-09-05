@@ -41,7 +41,10 @@ export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache,
                 let min = renderableHitObject.hitObject.index
                 let max = min
                 for (const note of renderableHitObjects) {
-                    if (note === renderableHitObject) continue
+                    if (note === renderableHitObject || 
+                        note.status === HitObjectStatus.Missed ||
+                        note.status === HitObjectStatus.Hit
+                    ) continue
                     if (note.hitObject.timestamp === hitObject.timestamp) {
                         if (note.hitObject.index < min) min = note.hitObject.index
                         if (note.hitObject.index > max) max = note.hitObject.index

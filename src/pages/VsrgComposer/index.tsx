@@ -146,6 +146,12 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         KeyboardProvider.register("Escape", () => {
             this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
         }, { id })
+        KeyboardProvider.register("Backspace", () => {
+            const { selectedHitObject, vsrg, selectedTrack } = this.state
+            if (!selectedHitObject) return
+            vsrg.removeHitObjectInTrackAtTimestamp(selectedTrack, selectedHitObject.timestamp, selectedHitObject.index)
+            this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
+        })
         KeyboardProvider.registerNumber(2, () => {
             this.setState({ selectedType: 'hold' })
         }, { id })
@@ -275,15 +281,15 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             this.setState({ selectedHitObject: null, vsrg: this.state.vsrg })
             return
         }
-        if(this.state.selectedType === 'hold' && clickType === ClickType.Left) {
+        if (this.state.selectedType === 'hold' && clickType === ClickType.Left) {
             this.setState({
-                selectedHitObject: hitObject, 
-                lastCreatedHitObject: hitObject, 
+                selectedHitObject: hitObject,
+                lastCreatedHitObject: hitObject,
                 selectedType
             })
         }
         this.setState({
-            selectedHitObject:hitObject,
+            selectedHitObject: hitObject,
             selectedTrack: trackIndex,
             selectedType
         })
@@ -487,9 +493,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 await this.saveSong()
             }
         }
-        settings.bpm = { ...settings.bpm , value: song.bpm }
-        settings.keys = { ...settings.keys , value: song.keys }
-        settings.pitch = { ...settings.pitch , value: song.pitch }
+        settings.bpm = { ...settings.bpm, value: song.bpm }
+        settings.keys = { ...settings.keys, value: song.keys }
+        settings.pitch = { ...settings.pitch, value: song.pitch }
         this.updateSettings()
         this.changes++
         this.setState({
@@ -572,7 +578,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     render() {
         const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes, tempoChanger } = this.state
         return <>
-            <Title text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`}/>
+            <Title text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`} />
             <VsrgMenu
                 trackModifiers={vsrg.trackModifiers}
                 hasChanges={this.changes > 0}
