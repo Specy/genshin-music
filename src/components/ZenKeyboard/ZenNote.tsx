@@ -3,7 +3,7 @@ import { subscribeObeservableObject, useObservableObject } from "$/lib/Hooks/use
 import Instrument, { NoteData } from "$/lib/Instrument"
 import SvgNote, { NoteImage } from "../SvgNotes"
 import { useCallback, useRef, useEffect, useState } from "react"
-import { ThemeProvider } from "$/stores/ThemeStore/ThemeProvider"
+import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import { observe } from "mobx"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { InstrumentName, NoteStatus } from "$/types/GeneralTypes"

@@ -22,9 +22,9 @@ import { VsrgSongSelectType } from "$pages/VsrgPlayer";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaTimes, FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import HomeStore from "$stores/HomeStore";
+import {homeStore} from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
-import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
+import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { IS_MOBILE } from "$/appConfig";
 
@@ -95,7 +95,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                         <FaCog className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => HomeStore.open()} ariaLabel='Open home menu'>
+                <MenuItem onClick={() => homeStore.open()} ariaLabel='Open home menu'>
                     <Memoized>
                         <FaHome className="icon" />
                     </Memoized>

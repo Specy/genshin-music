@@ -14,7 +14,7 @@ import { ComposerSettingsDataType } from '$lib/BaseSettings';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
 import { Pages } from '$types/GeneralTypes';
 import { useTheme } from '$lib/Hooks/useTheme';
-import { ThemeStore } from '$/stores/ThemeStore/ThemeProvider';
+import { ThemeStore } from '$stores/ThemeStore/ThemeProvider';
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip';
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cmp/Utility/FloatingDropdown';
@@ -359,7 +359,13 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     </FloatingDropdownRow>
                 }
 
-                <FloatingDropdownRow onClick={() => songsStore.addSong(songService.parseSong(data))}
+                <FloatingDropdownRow 
+                    onClick={async () => {
+                        const parsed = songService.parseSong(data)
+                        await songsStore.addSong(parsed)
+                        logger.log(`Cloned song: ${data.name}`)
+                        toggleMenu(false)
+                    }}
                 >
                     <FaClone style={{ marginRight: "0.4rem" }} />
                     <FloatingDropdownText text='Clone song' />

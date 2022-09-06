@@ -18,7 +18,15 @@ export function useFolders(songs?: SerializedSong[]): UseFolders {
         if (!songs) return setParsedFolders(folders)
         setParsedFolders(folders.map(folder => {
             const clone = folder.clone()
-            clone.songs = songs.filter(song => song.folderId === folder.id)
+            const filtered = songs.filter(song => song.folderId === folder.id)
+
+            if(folder.filterType === 'date-created'){
+                clone.songs = filtered
+            }else if(folder.filterType === 'alphabetical'){
+                clone.songs = filtered.sort((a,b) => a.name.localeCompare(b.name))
+            }else{
+                clone.songs = filtered
+            }
             return clone
         }))
     }, [songs, folders])

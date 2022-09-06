@@ -18,7 +18,7 @@ import { Column, InstrumentData } from '$lib/Songs/SongClasses';
 import AudioRecorder from '$lib/AudioRecorder'
 import Analytics from '$/lib/Stats';
 import { RouteComponentProps, withRouter } from 'react-router-dom'
-import HomeStore from '$stores/HomeStore';
+import {homeStore} from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
@@ -34,7 +34,7 @@ import { SerializedSong } from '$lib/Songs/Song';
 import { songsStore } from '$stores/SongsStore';
 import { InstrumentControls } from '$cmp/Composer/InstrumentControls';
 import { AppButton } from '$cmp/Inputs/AppButton';
-import { ThemeProvider, ThemeStore } from '$/stores/ThemeStore/ThemeProvider';
+import { ThemeProvider, ThemeStore } from '$stores/ThemeStore/ThemeProvider';
 import { Title } from '$cmp/Miscellaneous/Title';
 import { songService } from '$lib/Services/SongService';
 
@@ -308,7 +308,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 return instrument
             }
         })
-        const instruments = await Promise.all(promises) as Instrument[]
+        const instruments = (await Promise.all(promises)) as Instrument[]
         if (!this.mounted) return
         this.setState({ layers: instruments })
     }
@@ -544,7 +544,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
     changePage = async (page: Pages | 'Home') => {
         const { song, settings } = this.state
-        if (page === 'Home') return HomeStore.open()
+        if (page === 'Home') return homeStore.open()
         if (this.changes !== 0) {
             if (settings.autosave.value) {
                 await this.updateSong(song)

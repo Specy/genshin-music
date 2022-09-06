@@ -5,15 +5,15 @@ import { songsStore } from "$stores/SongsStore"
 import toWav from 'audiobuffer-to-wav'
 import { SerializedSong, Song } from "$lib/Songs/Song"
 import { Midi } from "@tonejs/midi"
-import { SerializedTheme, ThemeProvider, ThemeStore } from "$/stores/ThemeStore/ThemeProvider"
+import { SerializedTheme, ThemeProvider, ThemeStore } from "$stores/ThemeStore/ThemeProvider"
 import { songService } from "./SongService"
 import { Folder, SerializedFolder } from "../Folder"
-import { folderStore } from "$/stores/FoldersStore"
+import { folderStore } from "$stores/FoldersStore"
 import { SerializedVsrgSong, VsrgSong } from "../Songs/VsrgSong"
-import { themeStore } from "$/stores/ThemeStore/ThemeStore"
+import { themeStore } from "$stores/ThemeStore/ThemeStore"
 import { AppError } from "../Errors"
 import { SerializedSongKind } from "$/types/SongTypes"
-import { logger } from "$/stores/LoggerStore"
+import { logger } from "$stores/LoggerStore"
 export type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedSong | SerializedVsrgSong
 type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded | SerializedFolder | SerializedTheme
 type UnknownFile = UnknownFileTypes | UnknownFileTypes[]

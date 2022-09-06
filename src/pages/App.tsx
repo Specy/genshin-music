@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Analytics from '$/lib/Stats';
 import Home from '$cmp/Index/Home';
-import HomeStore from '$stores/HomeStore';
+import {homeStore} from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
 import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, UPDATE_MESSAGE } from "$/appConfig"
@@ -16,7 +16,7 @@ import isMobile from 'is-mobile';
 import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
 import { IconButton } from '$/components/Inputs/IconButton';
 import { metronome } from '$/lib/Metronome';
-import { logsStore } from '$/stores/LogsStore';
+import { logsStore } from '$stores/LogsStore';
 import { needsUpdate } from '$/lib/needsUpdate';
 
 
@@ -31,26 +31,43 @@ function App({ history }: any) {
 	}, [])
 	useEffect(() => {
 		AUDIO_CONTEXT.addEventListener('statechange', handleAudioContextStateChange)
-		const originalErrorLog = console.error
+		return () => {
+			AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
+		}
+	}, [handleAudioContextStateChange])
+	useEffect(() => {
+		const originalErrorLog = console.error.bind(console)
 		//intercept console errors and log them to the logger store
-		const logCallback = (...args: any[]) => {
+		console.error = (...args: any[]) => {
 			originalErrorLog(...args)
 			logsStore.addLog({
 				error: args.find(arg => arg instanceof Error),
-				message: args.map(arg => typeof arg === 'string' ? arg : JSON.stringify(arg)).join(' ')
+				message: args.map(arg => {
+					if (arg instanceof Error) {
+						return arg.stack
+					}
+					return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : arg
+				}).join(' ')
 			})
 		}
-		console.error = logCallback
+		const windowIntercepter = (e: ErrorEvent) => {
+			//intercept window errors and log them to the logger store
+			logsStore.addLog({
+				error: e.error,
+				message: e.error.stack
+			})
+		}
+		window.addEventListener("error", windowIntercepter)
 		return () => {
-			AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
 			console.error = originalErrorLog
+			window.removeEventListener("error", windowIntercepter)
 		}
 	}, [])
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
 		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
 		canShowHome = canShowHome === null ? 'true' : canShowHome
-		HomeStore.setState({
+		homeStore.setState({
 			canShow: canShowHome === 'true',
 			visible: canShowHome === 'true',
 			isInPosition: false,
@@ -88,10 +105,9 @@ function App({ history }: any) {
 		if (active && active.tagName === 'INPUT') active?.blur()
 		resetHeight()
 	}, [resetHeight])
-
 	const setDontShowHome = useCallback((override = false) => {
 		localStorage.setItem(APP_NAME + "_ShowHome", JSON.stringify(override))
-		HomeStore.setState({ canShow: override })
+		homeStore.setState({ canShow: override })
 	}, [])
 
 	const askForStorage = async () => {

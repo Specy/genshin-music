@@ -1,13 +1,15 @@
-import { Folder } from "$lib/Folder"
+import { Folder, FolderFilterType } from "$lib/Folder"
 import { fileService } from "$lib/Services/FileService"
 import cloneDeep from "lodash.clonedeep"
 import { useEffect, useRef, useState } from "react"
 import { BsChevronRight } from "react-icons/bs"
-import { FaDownload, FaEllipsisH, FaPen, FaTrash } from "react-icons/fa"
+import { FaDownload, FaEllipsisH, FaFilter, FaPen, FaTrash } from "react-icons/fa"
 import { folderStore } from "$stores/FoldersStore"
 import { asyncConfirm } from "../Utility/AsyncPrompts"
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "../Utility/FloatingDropdown"
 import { SerializedSongKind } from "$/types/SongTypes"
+import { FOLDER_FILTER_TYPES } from "$/appConfig"
+import { capitalize } from "$/lib/Utilities"
 
 
 
@@ -113,12 +115,27 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                         <FaPen style={{ marginRight: "0.4rem" }} size={14} />
                         <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
                     </FloatingDropdownRow>
+                    <FloatingDropdownRow style={{ padding: '0 0.4rem' }}>
+                        <FaFilter style={{ marginRight: "0.4rem" }} />
+                        <select className='dropdown-select'
+                            value={data.filterType}
+                            onChange={(e) => {
+                                const filterType = e.target.value as FolderFilterType
+                                data.set({ filterType })
+                                folderStore.updateFolder(data)
+                            }}
+                        >
+                            {FOLDER_FILTER_TYPES.map(folder =>
+                                <option key={folder} value={folder}>{capitalize(folder.replaceAll("-", " "))}</option>
+                            )}
+                        </select>
+                    </FloatingDropdownRow>
                     <FloatingDropdownRow
                         onClick={async () => {
                             const songs = cloneDeep(data.songs)
                             const promises = songs.map(s => fileService.prepareSongDownload(s as SerializedSongKind))
                             const relatedSongs = (await Promise.all(promises)).flat()
-                            const filtered = relatedSongs.filter((item, pos, self) =>  {
+                            const filtered = relatedSongs.filter((item, pos, self) => {
                                 return self.findIndex(e => e.id === item.id) == pos;
                             })
                             const files = [...filtered, data.serialize()]

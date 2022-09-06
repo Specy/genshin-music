@@ -24,9 +24,9 @@ import { SerializedSong } from "$lib/Songs/Song";
 import { VsrgSong, VsrgTrackModifier } from "$lib/Songs/VsrgSong";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaInfo, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
-import HomeStore from "$stores/HomeStore";
+import {homeStore} from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
-import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
+import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 import { SerializedSongKind } from "$/types/SongTypes";
@@ -117,7 +117,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                         <FaCog className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => HomeStore.open()} ariaLabel='Open home menu'>
+                <MenuItem onClick={() => homeStore.open()} ariaLabel='Open home menu'>
                     <Memoized>
                         <FaHome className="icon" />
                     </Memoized>

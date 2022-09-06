@@ -545,6 +545,8 @@ const VSRG_SCORE_COLOR_MAP = {
     miss: '#f24b5b',
     '': '#ffffff',
 }
+const FOLDER_FILTER_TYPES = ["alphabetical", "date-created"] as const
+
 const MIDI_BOUNDS = APP_NAME === "Genshin"
     ? {
         upper: 84,
@@ -601,7 +603,8 @@ export {
     VSRG_SCORE_COLOR_MAP,
     UPDATE_URL,
     PITCH_TO_INDEX,
-    INSTRUMENT_NOTE_LAYOUT_KINDS
+    INSTRUMENT_NOTE_LAYOUT_KINDS,
+    FOLDER_FILTER_TYPES
 }
 export type {
     Pitch,

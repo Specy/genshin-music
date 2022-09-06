@@ -17,7 +17,7 @@ import { VsrgPlayerRight } from "$cmp/VsrgPlayer/VsrgPlayerRight";
 import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { keyBinds } from "$stores/Keybinds";
-import { logger } from "$/stores/LoggerStore";
+import { logger } from "$stores/LoggerStore";
 import { Title } from "$/components/Miscellaneous/Title";
 
 type VsrgPlayerProps = RouteComponentProps & {

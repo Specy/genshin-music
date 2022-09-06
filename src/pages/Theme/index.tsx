@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { defaultThemes, SerializedTheme, ThemeKeys, ThemeProvider } from "$/stores/ThemeStore/ThemeProvider";
+import { defaultThemes, SerializedTheme, ThemeKeys, ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
 import { observe } from "mobx";
 import { AppButton } from "$cmp/Inputs/AppButton";
 import { FileElement, FilePicker } from "$cmp/Inputs/FilePicker"
@@ -11,7 +11,7 @@ import { ThemePropriety } from "../../components/Theme/ThemePropriety";
 import cloneDeep from 'lodash.clonedeep'
 import { ThemePreview } from "../../components/Theme/ThemePreview";
 import { FaPlus } from "react-icons/fa";
-import { BaseTheme } from "$/stores/ThemeStore/ThemeProvider";
+import { BaseTheme } from "$stores/ThemeStore/ThemeProvider";
 import { logger } from "$stores/LoggerStore";
 import { ThemeInput } from "../../components/Theme/ThemeInput";
 import { useTheme } from "$lib/Hooks/useTheme";
@@ -20,7 +20,7 @@ import { AppBackground } from "$cmp/Layout/AppBackground";
 import { Title } from "$cmp/Miscellaneous/Title";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import { useObservableArray } from "$/lib/Hooks/useObservable";
-import { themeStore } from "$/stores/ThemeStore/ThemeStore";
+import { themeStore } from "$stores/ThemeStore/ThemeStore";
 import { fileService } from "$/lib/Services/FileService";
 
 

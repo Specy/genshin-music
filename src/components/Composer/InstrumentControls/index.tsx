@@ -5,7 +5,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus, FaVolumeMute } from "react-icons/fa";
 import { BiSquareRounded } from "react-icons/bi";
 
-import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
+import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
 
 

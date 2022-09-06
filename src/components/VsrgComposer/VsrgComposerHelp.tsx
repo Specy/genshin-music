@@ -1,7 +1,7 @@
 import helpImg from '$/assets/images/help-vsrg-composer.png';
 import { useObservableArray } from '$/lib/Hooks/useObservable';
-import { keyBinds } from '$/stores/Keybinds';
-import { vsrgPlayerStore } from '$/stores/VsrgPlayerStore';
+import { keyBinds } from '$stores/Keybinds';
+import { vsrgPlayerStore } from '$stores/VsrgPlayerStore';
 import { Key } from '../HelpTab';
 
 

@@ -15,7 +15,7 @@ import { songService } from '$lib/Services/SongService';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { useObservableArray } from '$/lib/Hooks/useObservable';
-import { logsStore } from '$/stores/LogsStore';
+import { logsStore } from '$stores/LogsStore';
 
 export function ErrorPage() {
     const [songs] = useSongs()

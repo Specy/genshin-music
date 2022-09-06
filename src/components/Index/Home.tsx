@@ -1,7 +1,6 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
 import { APP_NAME, isTwa, IS_MOBILE } from "$/appConfig"
-import HomeStore from '$stores/HomeStore'
 import { useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
 import { useTheme } from '$lib/Hooks/useTheme'
@@ -12,6 +11,7 @@ import { AppButton } from '$cmp/Inputs/AppButton'
 import { VsrgIcon } from '$cmp/icons/VsrgIcon'
 import { VsrgComposerIcon } from '$cmp/icons/VsrgComposerIcon'
 import { useObservableObject } from '$/lib/Hooks/useObservable'
+import { homeStore } from '$stores/HomeStore'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -21,7 +21,7 @@ interface HomeProps {
 }
 
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }: HomeProps) {
-    const data = useObservableObject(HomeStore.state)
+    const data = useObservableObject(homeStore.state)
     const [appScale, setAppScale] = useState(100)
     const [currentPage, setCurrentPage] = useState('Unknown')
     const [breakpoint, setBreakpoint] = useState(false)
@@ -50,8 +50,8 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             setCurrentPage(path.pathname.replace('/', ''))
         })
         KeyboardProvider.register("Escape", () => {
-            if (HomeStore.state.visible) {
-                HomeStore.close()
+            if (homeStore.state.visible) {
+                homeStore.close()
             }
         }, { id: "home" })
         setBreakpoint(window.innerWidth > 900)
@@ -70,7 +70,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     >
         <MenuItem
             className='close-home'
-            onClick={HomeStore.close}
+            onClick={homeStore.close}
             ariaLabel='Close home menu'
         >
             <FaTimes size={25} />
@@ -110,7 +110,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                         <Link
                             to='Privacy'
                             style={{ color: 'var(--primary-text)', textDecoration: "underline" }}
-                            onClick={HomeStore.close}
+                            onClick={homeStore.close}
                         >
                             here
                         </Link>
@@ -250,7 +250,7 @@ interface MiddleSizePageProps {
 function MiddleSizePage({ href, title, Icon, current }: MiddleSizePageProps) {
     return <Link
         to={href}
-        onClick={HomeStore.close}
+        onClick={homeStore.close}
         className={`middle-size-page row ${current ? 'current-page' : ''}`}
     >
         <Icon className='middle-size-page-icon' />
@@ -267,7 +267,7 @@ interface PageRedirectProps {
     href: string
 }
 function PageRedirect({ children, current, href }: PageRedirectProps) {
-    return <Link onClick={HomeStore.close} to={href} className={current ? 'current-page' : ''}>
+    return <Link onClick={homeStore.close} to={href} className={current ? 'current-page' : ''}>
         {children}
     </Link>
 }
@@ -286,7 +286,7 @@ function MainContentElement({ title, icon, children, background, current, href, 
     return <Link
         className={`home-content-element ${current ? 'current-page' : ''}`}
         to={href}
-        onClick={HomeStore.close}
+        onClick={homeStore.close}
     >
         <div className='home-content-background' style={{ backgroundImage: `url(${background})` }}>
         </div>

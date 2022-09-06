@@ -21,9 +21,10 @@ import { songService } from "$lib/Services/SongService";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { clamp, isFocusable } from "$lib/Utilities";
 import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig";
-import { ClickType } from "$types/GeneralTypes"
+import { ClickType, Pages } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { Title } from "$/components/Miscellaneous/Title";
+import {homeStore} from "$stores/HomeStore";
 
 type VsrgComposerProps = RouteComponentProps & {
 
@@ -56,6 +57,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     mounted: boolean = false
     heldKeys: (boolean | undefined)[] = []
     pressedDownHitObjects: (VsrgHitObject | undefined)[] = []
+    unblock: (() => void) = () => { }
     constructor(props: VsrgComposerProps) {
         super(props)
         const settings = settingsService.getVsrgComposerSettings()
@@ -96,6 +98,12 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const id = 'vsrg-composer'
         this.calculateSnapPoints()
         this.syncInstruments()
+        this.unblock = this.props.history.block((data: any) => {
+            if (this.changes !== 0) {
+                this.changePage(data.pathname)
+                return false
+            }
+        })
         KeyboardProvider.listen(this.handleKeyboardDown, { id, type: 'keydown' })
         KeyboardProvider.registerNumber(1, () => {
             this.setState({ selectedType: 'tap' })
@@ -265,6 +273,22 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             if (setting.key === 'isVertical') vsrgComposerStore.emitEvent('updateOrientation')
             if (setting.key === 'maxFps') vsrgComposerStore.emitEvent('maxFpsChange')
         })
+    }
+    changePage = async (page: Pages | 'Home') => {
+        const { vsrg, settings } = this.state
+        if (page === 'Home') return homeStore.open()
+        if (this.changes !== 0) {
+            if (settings.autosave.value) {
+                await this.saveSong()
+            } else {
+                const confirm = await asyncConfirm(`You have unsaved changes to the song: "${vsrg.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                if (confirm) {
+                    await this.saveSong()
+                }
+            }
+        }
+        this.unblock()
+        this.props.history.push(page)
     }
     onSnapPointChange = (snapPoint: SnapPoint) => {
         const { vsrg } = this.state
@@ -531,7 +555,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     saveSong = async () => {
         const { vsrg } = this.state
-        const name = vsrg.name !== 'Untitled' ? vsrg.name : await asyncPrompt('Enter song name')
+        const name = vsrg.id !== null ? vsrg.name : await asyncPrompt('Enter song name')
         if (name === null) return
         vsrg.set({ name })
         if (vsrg.id === null) {

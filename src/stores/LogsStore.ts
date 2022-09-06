@@ -12,6 +12,8 @@ class LogsStore{
         makeObservable(this)
     }
     addLog(log: Log){
+        //prevent duplicate of the same error
+        if(this.logs.find(l => l.error === log.error)) return
         this.logs.push(log)
     }
     clearLogs(){

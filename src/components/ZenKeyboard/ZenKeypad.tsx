@@ -1,6 +1,6 @@
 import { useObservableArray } from "$/lib/Hooks/useObservable";
 import Instrument, { NoteData } from "$/lib/Instrument";
-import { zenKeyboardStore } from "$/stores/ZenKeyboardStore";
+import { zenKeyboardStore } from "$stores/ZenKeyboardStore";
 import { ZenNote } from "./ZenNote";
 import { useEffect } from 'react'
 import { Pitch } from "$/appConfig";

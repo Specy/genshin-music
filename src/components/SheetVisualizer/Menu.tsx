@@ -4,7 +4,7 @@ import { useSongs } from '$lib/Hooks/useSongs'
 import { historyTracker } from '$stores/History'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import { FaArrowLeft, FaHome, FaMusic, FaTimes } from 'react-icons/fa'
-import HomeStore from '$stores/HomeStore'
+import {homeStore} from '$stores/HomeStore'
 import { useHistory } from 'react-router-dom'
 import MenuPanel from '$cmp/Layout/MenuPanel'
 import { SerializedSong } from '$lib/Songs/Song'
@@ -52,7 +52,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
             </MenuItem>
 
 
-            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
+            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

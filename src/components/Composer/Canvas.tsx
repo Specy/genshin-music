@@ -8,7 +8,7 @@ import isMobile from "is-mobile"
 import { ComposerCache } from "$/components/Composer/ComposerCache"
 import { APP_NAME } from "$/appConfig"
 import Memoized from '$cmp/Utility/Memoized';
-import { ThemeProvider } from '$/stores/ThemeStore/ThemeProvider';
+import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
 import { clamp, nearestEven } from '$lib/Utilities';
 import type { Column } from '$lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from '$lib/BaseSettings';

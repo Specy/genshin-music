@@ -1,5 +1,5 @@
 import { APP_NAME, APP_VERSION, IS_TAURI, UPDATE_URL } from "$/appConfig"
-import { logger } from "$/stores/LoggerStore"
+import { logger } from "$stores/LoggerStore"
 import semverLt from 'semver/functions/lt'
 import semverCoerce from 'semver/functions/coerce'
 import { delay } from "./Utilities"

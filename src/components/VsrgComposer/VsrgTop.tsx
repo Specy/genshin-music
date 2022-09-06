@@ -6,7 +6,7 @@ import { useTheme } from "$lib/Hooks/useTheme"
 import { VsrgHitObject, VsrgSong, VsrgTrack } from "$lib/Songs/VsrgSong"
 import { useEffect, useState } from "react"
 import { FaCog, FaMinus, FaPlus, FaStepBackward, FaStepForward } from "react-icons/fa"
-import { ThemeStore } from "$/stores/ThemeStore/ThemeProvider"
+import { ThemeStore } from "$stores/ThemeStore/ThemeProvider"
 import { VsrgComposerKeyboard } from "./VsrgComposerKeyboard"
 import { VsrgTrackSettings } from "./VsrgTrackSettings"
 

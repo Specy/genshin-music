@@ -1,5 +1,5 @@
 import useClickOutside from "$/lib/Hooks/useClickOutside"
-import HomeStore from "$/stores/HomeStore"
+import {homeStore} from "$stores/HomeStore"
 import { FaBars, FaCog, FaHome, FaTimes } from "react-icons/fa"
 import MenuPanel from "../Layout/MenuPanel"
 import { MenuItem } from "../Miscellaneous/MenuItem"
@@ -54,7 +54,7 @@ export function ZenKeyboardMenu({ settings, handleSettingChange, onVolumeChange 
             >
                 <FaCog className="icon" />
             </MenuItem>
-            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
+            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

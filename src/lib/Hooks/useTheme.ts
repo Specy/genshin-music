@@ -1,4 +1,4 @@
-import { ThemeProvider, ThemeStore } from "$/stores/ThemeStore/ThemeProvider";
+import { ThemeProvider, ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { useState, useEffect } from "react";
 import { observe } from "mobx";
 

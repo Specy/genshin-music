@@ -4,6 +4,7 @@
 	flex-direction: column;
 	justify-content: center;
 	padding-top: 10vh;
+	overflow-y: auto;
 }
 .error-buttons-wrapper {
 	display: flex;
@@ -34,7 +35,6 @@
 	border-radius: 0.5rem;
 	display: grid;
 	gap: 0.4rem;
-	max-height: 40vh;
 	min-height: 3.6rem;
 }
 .error-go-back {

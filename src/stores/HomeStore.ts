@@ -37,4 +37,4 @@ class HomeStore {
     }
 }
 
-export default new HomeStore()
+export const homeStore = new HomeStore()

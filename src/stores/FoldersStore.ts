@@ -35,6 +35,10 @@ export class FolderStore {
         await _folderService.updateFolder(folder.id!, folder.serialize())
         this.sync()
     }
+    updateFolder = async (folder: Folder) => {
+        await _folderService.updateFolder(folder.id!, folder.serialize())
+        this.sync()
+    }
 }
 export const folderStore = new FolderStore()
 folderStore.sync()

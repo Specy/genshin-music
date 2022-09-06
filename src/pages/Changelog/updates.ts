@@ -14,8 +14,10 @@ export const updates: Update[] = [
             "Added VSRG mode to compose and play vsrg songs",
             "Added Zen keyboard, where you can simply focus on playing by hand",
             "Added Visual sheet to the player",
-            "Improved player performance",
             "Added app scaling",
+            "Added alphabetical folder ordering",
+            "Improved player performance",
+        
             "Multi type export, you can now export/import songs,folders,themes etc",
             "Fixed bug that would remove a song from the folder when saved",
             "Fixed issues when opening/saving songs in the composer",

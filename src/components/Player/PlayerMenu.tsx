@@ -11,7 +11,7 @@ import DonateButton from '$cmp/Miscellaneous/DonateButton'
 import LibrarySearchedSong from '$cmp/Miscellaneous/LibrarySearchedSong'
 import { SongActionButton } from '$cmp/Inputs/SongActionButton'
 import Analytics from '$/lib/Stats';
-import HomeStore from '$stores/HomeStore';
+import { homeStore } from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { AppButton } from '$cmp/Inputs/AppButton';
 import { SongMenu } from '$cmp/Layout/SongMenu';
@@ -24,7 +24,7 @@ import { useTheme } from '$lib/Hooks/useTheme';
 import { SearchedSongType } from '$types/GeneralTypes';
 import { FileElement, FilePicker } from '$cmp/Inputs/FilePicker';
 import "./menu.css"
-import { ThemeStore } from '$/stores/ThemeStore/ThemeProvider';
+import { ThemeStore } from '$stores/ThemeStore/ThemeProvider';
 import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip"
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip';
@@ -215,7 +215,7 @@ function Menu({ functions, data }: MenuProps) {
             <MenuItem onClick={() => selectSideMenu("Settings")} isActive={selectedMenu === "Settings" && isOpen} ariaLabel='Open settings'>
                 <FaCog className="icon" />
             </MenuItem>
-            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
+            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

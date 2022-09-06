@@ -2,7 +2,7 @@ import { APP_NAME } from "$/appConfig";
 import { fileService } from "$lib/Services/FileService";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import {logger} from "$stores/LoggerStore";
-import { SerializedTheme } from "$/stores/ThemeStore/ThemeProvider";
+import { SerializedTheme } from "$stores/ThemeStore/ThemeProvider";
 
 
 interface ThemePreviewProps {

@@ -416,6 +416,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             const instrument = INSTRUMENTS_DATA[ins.name]
             if (!instrument || !midi.tracks[i]) return
             midi.tracks[i].instrument.name = instrument.midiName
+            midi.tracks[i].name = `${ins.pitch} | ${ins.alias ?? ins.name}`
         })
         return midi
     }
