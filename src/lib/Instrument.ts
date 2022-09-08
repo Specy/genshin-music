@@ -7,7 +7,6 @@ import { NoteImage } from "$/components/SvgNotes"
 type Layouts = {
     keyboard: string[]
     mobile: string[]
-    keyCodes: string[]
     abc: string[]
 }
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
@@ -18,11 +17,11 @@ const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 export default class Instrument {
     name: InstrumentName
     volumeNode: GainNode | null = null
+    instrumentData: typeof INSTRUMENTS_DATA[InstrumentName]
     notes: NoteData[] = []
     layouts: Layouts = {
         keyboard: [],
         mobile: [],
-        keyCodes: [],
         abc: []
     }
     buffers: AudioBuffer[] = []
@@ -39,14 +38,15 @@ export default class Instrument {
         this.name = name
         if (!INSTRUMENTS.includes(this.name as any)) this.name = INSTRUMENTS[0]
         const instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]
+        this.instrumentData = instrumentData
         const layouts = instrumentData.layout
         this.layouts = {
             keyboard: layouts.keyboardLayout,
             mobile: layouts.mobileLayout,
-            keyCodes: layouts.keyboardCodes,
             abc: layouts.abcLayout
         }
-        this.layouts.keyboard.forEach((noteName, i) => {
+        for (let i = 0; i < instrumentData.notes; i++) {
+            const noteName = this.layouts.keyboard[i]
             const noteNames = {
                 keyboard: noteName,
                 mobile: this.layouts.mobile[i]
@@ -56,7 +56,7 @@ export default class Instrument {
             note.instrument = this.name
             note.noteImage = instrumentData.icons[i]
             this.notes.push(note)
-        })
+        }
     }
     getNoteFromCode = (code: number | string) => {
         const index = this.layouts.keyboard.findIndex(e => e === String(code))
@@ -65,7 +65,7 @@ export default class Instrument {
     getNoteText = (index: number, type: NoteNameType, pitch: Pitch) => {
         const layout = this.layouts
         try {
-            if (type === "Note name"){
+            if (type === "Note name") {
                 const baseNote = this.notes[index].baseNote
                 return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
             }
@@ -103,28 +103,13 @@ export default class Instrument {
         let loadedCorrectly = true
         if (!INSTRUMENT_BUFFER_POOL.has(this.name)) {
             const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
-            const requests: Promise<AudioBuffer>[] = this.notes.map(note => {
-                //dont change any of this, safari bug
-                return new Promise(resolve => {
-                    fetch(note.url)
-                        .then(result => result.arrayBuffer())
-                        .then(buffer => {
-                            AUDIO_CONTEXT.decodeAudioData(buffer, resolve, (e) => {
-                                console.error(e)
-                                loadedCorrectly = false
-                                resolve(emptyBuffer)
-                            }).catch(e => {
-                                console.error(e)
-                                loadedCorrectly = false
-                                resolve(emptyBuffer)
-                            })
-                        }).catch(e => {
-                            console.error(e)
-                            loadedCorrectly = false
-                            resolve(emptyBuffer)
-                        })
-                })
-            })
+            const requests: Promise<AudioBuffer>[] = this.notes.map(note =>
+                fetchAudioBuffer(note.url)
+                    .catch(() => {
+                        loadedCorrectly = false
+                        return emptyBuffer
+                    })
+            )
             this.buffers = await Promise.all(requests)
             if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers)
         } else {
@@ -147,19 +132,20 @@ export default class Instrument {
         this.volumeNode = null
     }
 }
-export function fetchAudioBuffer(url: string): Promise<AudioBuffer>{
-    return new Promise((res,rej) => {
+export function fetchAudioBuffer(url: string): Promise<AudioBuffer> {
+    //dont change any of this, safari bug
+    return new Promise((res, rej) => {
         fetch(url)
-        .then(result => result.arrayBuffer())
-        .then(buffer => {
-            AUDIO_CONTEXT.decodeAudioData(buffer, res, (e) => {
-                console.error(e)
-                rej()
-            }).catch(e => {
-                console.error(e)
-                return rej()
+            .then(result => result.arrayBuffer())
+            .then(buffer => {
+                AUDIO_CONTEXT.decodeAudioData(buffer, res, (e) => {
+                    console.error(e)
+                    rej()
+                }).catch(e => {
+                    console.error(e)
+                    rej()
+                })
             })
-        })
     })
 }
 

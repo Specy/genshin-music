@@ -6,6 +6,12 @@ interface InstrumentSelectProps {
     onChange: (instrument: InstrumentName) => void
     style?: React.CSSProperties
 }
+const instruments: InstrumentName[] = []
+const SFXInstruments: InstrumentName[] = []
+for (const instrument of INSTRUMENTS) {
+    if (instrument.startsWith("SFX")) SFXInstruments.push(instrument)
+    else instruments.push(instrument)
+}
 export function InstrumentSelect({ selected, onChange, style }: InstrumentSelectProps) {
     return <select
         className="select"
@@ -13,13 +19,39 @@ export function InstrumentSelect({ selected, onChange, style }: InstrumentSelect
         onChange={(e) => onChange(e.target.value as InstrumentName)}
         value={selected}
     >
-        {INSTRUMENTS.map(ins =>
-            <option
-                key={ins}
-                value={ins}
-            >
-                {ins.replace("-", " ")}
-            </option>
-        )}
+        {SFXInstruments.length === 0
+            ? <>
+                {instruments.map(ins =>
+                    <option
+                        key={ins}
+                        value={ins}
+                    >
+                        {ins.replace("-", " ")}
+                    </option>
+                )}
+            </>
+            : <>
+                <optgroup label="Instruments">
+                    {instruments.map(ins =>
+                        <option
+                            key={ins}
+                            value={ins}
+                        >
+                            {ins.replace("-", " ")}
+                        </option>
+                    )}
+                </optgroup>
+                <optgroup label="SFX">
+                    {SFXInstruments.map(ins =>
+                        <option
+                            key={ins}
+                            value={ins}
+                        >
+                            {ins.replace("-", " ").replace("SFX_", "")}
+                        </option>
+                    )}
+                </optgroup>
+            </>
+        }
     </select>
 }

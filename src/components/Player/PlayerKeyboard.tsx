@@ -392,6 +392,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         let keyboardClass = "keyboard" + (playerStore.eventType === 'play' ? " keyboard-playback" : "")
         if (keyboard.length === 15) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
+        if (keyboard.length === 6) keyboardClass += " keyboard-3"
         const style = size !== 1 ? { transform: `scale(${size})` } : {}
         return <>
             <div

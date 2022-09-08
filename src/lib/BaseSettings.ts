@@ -25,7 +25,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 48,
+        settingVersion: APP_NAME + 49,
     },
     data: {
         bpm: {
@@ -147,7 +147,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 48
+        settingVersion: APP_NAME + 49
     },
     data: {
         instrument: {
@@ -475,7 +475,7 @@ export type VsrgPlayerSettingsDataType = {
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 11
+        settingVersion: APP_NAME + 1
     },
     data: {
         approachTime: {

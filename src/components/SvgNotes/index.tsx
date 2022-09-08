@@ -14,7 +14,7 @@ import tiNote from "./genshin/ti";
 import tibNote from "./genshin/tib";
 
 import React, { memo } from "react";
-const noteIconsMap =  {
+const noteIconsMap = {
     cr: crNote,
     dm: dmNote,
     dmcr: dmcrNote,
@@ -31,21 +31,25 @@ const noteIconsMap =  {
     tib: tibNote,
 }
 export type NoteImage = keyof typeof noteIconsMap;
-interface SvgNoteProps{
+interface SvgNoteProps {
     name: NoteImage
     color?: string
     fill?: string
     background?: string
 }
-export interface SvgNoteImageProps{
+export interface SvgNoteImageProps {
     style: React.CSSProperties,
     background?: string
 }
-function SvgNote({name,color = 'currentColor', background}: SvgNoteProps){
+function SvgNote({ name, color = 'currentColor', background }: SvgNoteProps) {
     const NoteComponent = noteIconsMap[name]
-    return <NoteComponent style={{fill: color,stroke: color}} background={background}/>
+    return NoteComponent ?
+        <NoteComponent style={{ fill: color, stroke: color }} background={background} />
+        : <>
+            "N/A"
+        </>
 }
 
-export default memo(SvgNote,(p,n) => {
+export default memo(SvgNote, (p, n) => {
     return p.color === n.color && p.background === n.background && p.name === n.name
 })

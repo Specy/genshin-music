@@ -4,11 +4,11 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
+import { visualizer } from "rollup-plugin-visualizer";
 import rollupNodePolyFill from 'rollup-plugin-node-polyfills'
 import checker from 'vite-plugin-checker';
 const vite = ({ mode }) => {
     return defineConfig({
-
         server: {
             port: 3000,
         },
@@ -79,13 +79,18 @@ const vite = ({ mode }) => {
             react(),
             checker({
                 typescript: true
+            }),
+            visualizer({
+                filename: "./build-stats.html",
             })
         ],
         build: {
             sourcemap: true,
             outDir: process.env.BUILD_PATH || 'build',
             rollupOptions: {
-                plugins: [rollupNodePolyFill()],
+                plugins: [
+                    rollupNodePolyFill()
+                ],
                 input: {
                     app: './index.html',
                     'service-worker': 'src/service-worker.ts'

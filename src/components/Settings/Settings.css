@@ -10,6 +10,12 @@
     color: var(--primary-text);
     padding: 0.5rem;
 }
+.select:focus{
+    outline: none;
+}
+.select option:checked{
+    color: var(--accent);
+}
 .instrument-picker input[type="range"]{
     margin-top: 0.2rem;
 }

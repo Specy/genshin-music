@@ -72,6 +72,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Bells",
         "DunDun",
         "HandPan",
+        "SFX_Dance"
     ] as const
 const PLAY_BAR_OFFSET = 200
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
@@ -106,6 +107,7 @@ const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     skyBell: ["C", "D", "G", "A", "C", "D", "G", "A"],
     skyHandpan: ["D", "A", "C", "D", "F", "G", "A", "C"],
     defaultDrums: ["C", "D", "E", "F", "G", "A", "B", "C"],
+    skySFX6: ["", "", "", "", "", ""],
     genshinVintageLyre: ["C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
 
 } as const
@@ -123,10 +125,6 @@ const LAYOUT_KINDS = {
             "do re mi fa so la ti " +
             "do re mi fa so la ti").split(" "),
 
-        keyboardCodes: (
-            "81 87 69 82 84 89 85 " +
-            "65 83 68 70 71 72 74 " +
-            "90 88 67 86 66 78 77").split(" "),
         abcLayout: (
             "A1 A2 A3 A4 A5 A6 A7 " +
             "B1 B2 B3 B4 B5 B6 B7 " +
@@ -141,9 +139,7 @@ const LAYOUT_KINDS = {
             "do re mi fa " +
             "do re mi fa").split(" "),
 
-        keyboardCodes: (
-            "81 87 69 82 " +
-            "65 83 68 70").split(" "),
+
         abcLayout: (
             "A1 A2 A3 A4" +
             "B1 B2 B3 B4").split(" ")
@@ -159,14 +155,22 @@ const LAYOUT_KINDS = {
             "do re mi fa so " +
             "do re mi fa so").split(" "),
 
-        keyboardCodes: (
-            "81 87 69 82 84 " +
-            "65 83 68 70 71 " +
-            "90 88 67 86 66").split(" "),
         abcLayout: (
             "A1 A2 A3 A4 A5 " +
             "B1 B2 B3 B4 B5 " +
             "C1 C2 C3 C4 C5").split(" ")
+    },
+    skySFX6: {
+        keyboardLayout: (
+            "Q W E " +
+            "A S D").split(" "),
+        mobileLayout: (
+            "do re mi " +
+            "do re mi").split(" "),
+
+        abcLayout: (
+            "A1 A2 A3 " +
+            "B1 B2 B3").split(" ")
     }
 }
 //TODO add the instrument data like layout kinds here instead of LAYOUT_KINDS
@@ -174,11 +178,22 @@ const LAYOUT_ICONS_KINDS = {
     defaultSky: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" ") as NoteImage[],
     defaultSkyDrums: "cr dm cr dm cr dm cr dm".split(" ") as NoteImage[],
     defaultGenshinDrums: "do re mi fa do re mi fa".split(" ") as NoteImage[],
+    skySFX6: "cr dm cr cr dm cr".split(" ") as NoteImage[],
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
     genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
 
-const BaseinstrumentsData = {
+type InstrumentDataType = {
+    notes: number
+    family: string
+    midiName: string
+    baseNotes: readonly BaseNote[]
+    layout: typeof LAYOUT_KINDS[keyof typeof LAYOUT_KINDS]
+    icons: readonly NoteImage[]
+    clickColor?: string
+    fill?: string
+}
+const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
     Lyre: {
         notes: 21,
         family: "strings",
@@ -231,6 +246,14 @@ const BaseinstrumentsData = {
         icons: APP_NAME === 'Genshin' 
             ?  LAYOUT_ICONS_KINDS.defaultGenshinDrums
             : LAYOUT_ICONS_KINDS.defaultSkyDrums
+    },
+    "SFX_Dance": {
+        notes: 6,
+        family: "percussive",
+        midiName: "synth drum",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skySFX6,
+        layout: LAYOUT_KINDS.skySFX6,
+        icons: LAYOUT_ICONS_KINDS.skySFX6
     },
     Panflute: {
         notes: 15,
@@ -381,12 +404,10 @@ const BaseinstrumentsData = {
         icons: LAYOUT_ICONS_KINDS.defaultSky,
     }
 }
+
 type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
 type InstrumentsDataProps = {
-    [key in InstrumentsDataKeys]:  typeof BaseinstrumentsData[key] & {
-        fill? : string,
-        clickColor? : string,
-    }
+    [key in InstrumentsDataKeys]:  InstrumentDataType
 }
 
 const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
