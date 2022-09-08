@@ -6,6 +6,7 @@ interface InstrumentSelectProps {
     onChange: (instrument: InstrumentName) => void
     style?: React.CSSProperties
 }
+
 const instruments: InstrumentName[] = []
 const SFXInstruments: InstrumentName[] = []
 for (const instrument of INSTRUMENTS) {
