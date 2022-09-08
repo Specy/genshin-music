@@ -1,5 +1,5 @@
 import { APP_NAME } from "$/appConfig";
-import { NoteData, NoteDataState } from "$lib/Instrument";
+import { ObservableNote, NoteDataState } from "$lib/Instrument";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { makeObservable, observable } from "mobx";
@@ -25,7 +25,7 @@ class PlayerStore {
         end: 0
     }
     @observable
-    keyboard: NoteData[] = []
+    keyboard: ObservableNote[] = []
     constructor() {
         makeObservable(this)
     }
@@ -38,7 +38,7 @@ class PlayerStore {
     get start(): number {
         return this.state.start
     }
-    setKeyboardLayout = (keyboard: NoteData[]) => { 
+    setKeyboardLayout = (keyboard: ObservableNote[]) => { 
         this.keyboard.splice(0, this.keyboard.length, ...keyboard)
     }
     resetKeyboardLayout = () => {

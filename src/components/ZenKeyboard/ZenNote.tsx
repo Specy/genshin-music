@@ -1,6 +1,6 @@
 import { APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES } from "$/appConfig"
 import { subscribeObeservableObject, useObservableObject } from "$/lib/Hooks/useObservable"
-import Instrument, { NoteData } from "$/lib/Instrument"
+import Instrument, { ObservableNote } from "$/lib/Instrument"
 import SvgNote, { NoteImage } from "../SvgNotes"
 import { useCallback, useRef, useEffect, useState } from "react"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
@@ -8,11 +8,11 @@ import { observe } from "mobx"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { InstrumentName, NoteStatus } from "$/types/GeneralTypes"
 interface ZenKeyboardProps {
-    note: NoteData
+    note: ObservableNote
     noteText: string
     noteImage: NoteImage
     instrumentName: InstrumentName
-    onClick: (note: NoteData) => void
+    onClick: (note: ObservableNote) => void
 }
 const skyKeyframes = [
     {

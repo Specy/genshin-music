@@ -7,7 +7,7 @@ import "./Keyboard.css"
 import Analytics from '$/lib/Stats';
 import { playerControlsStore } from '$stores/PlayerControlsStore'
 import { ApproachingNote, RecordedNote } from '$lib/Songs/SongClasses'
-import type { NoteData } from '$lib/Instrument'
+import type { ObservableNote } from '$lib/Instrument'
 import type Instrument from '$lib/Instrument'
 import type { NoteNameType, Timer } from '$types/GeneralTypes'
 import { Chunk, RecordedSong } from '$lib/Songs/RecordedSong'
@@ -38,7 +38,7 @@ interface KeyboardPlayerState {
     playTimestamp: number
     songToPractice: Chunk[]
     approachingNotes: ApproachingNote[][]
-    keyboard: NoteData[]
+    keyboard: ObservableNote[]
 }
 export default class KeyboardPlayer extends Component<KeyboardPlayerProps, KeyboardPlayerState> {
     state: KeyboardPlayerState
@@ -136,12 +136,9 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     }
     handleKeyboard = async ({ letter, shift, event }: KeyboardEventData) => {
         if (event.repeat) return
-        const { keyboard } = this.state
         if (!shift) {
-            const index = this.props.data.instrument.getNoteFromCode(letter)
-            if (index === null) return
-            const note = keyboard[index]
-            if (note) this.handleClick(note)
+            const note = this.props.data.instrument.getNoteFromCode(letter)
+            if (note !== null) this.handleClick(note)
         }
     }
     approachingSong = async (song: RecordedSong, start = 0, end?: number) => {
@@ -312,7 +309,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         playerStore.resetSong()
     }
 
-    handleApproachClick = (note: NoteData) => {
+    handleApproachClick = (note: ObservableNote) => {
         const { approachingNotes } = this.state
         const approachingNote = approachingNotes[note.index][0]
         if (approachingNote) {
@@ -321,7 +318,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         }
         return "approach-wrong"
     }
-    handlePracticeClick = (note: NoteData) => {
+    handlePracticeClick = (note: ObservableNote) => {
         const { keyboard, songToPractice } = this.state
         if (songToPractice.length > 0) {
             const clickedNoteIndex = songToPractice[0]?.notes.findIndex(e => e.index === note.index)
@@ -353,7 +350,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             }
         }
     }
-    handleClick = (note: NoteData, layers?: NoteLayer) => {
+    handleClick = (note: ObservableNote, layers?: NoteLayer) => {
         const { keyboard } = this.state
         const hasAnimation = this.props.data.hasAnimation
         if (!note) return

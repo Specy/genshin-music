@@ -98,7 +98,7 @@ class Player extends Component<{}, PlayerState>{
 		playerControlsStore.resetScore()
 		AudioProvider.clear()
 		logger.hidePill()
-		this.state.instruments.forEach(ins => ins.delete())
+		this.state.instruments.forEach(ins => ins.dispose())
 		this.cleanup.forEach(c => c())
 		this.mounted = false
 		metronome.stop()
@@ -122,7 +122,7 @@ class Player extends Component<{}, PlayerState>{
 	loadInstrument = async (name: InstrumentName) => {
 		const oldInstrument = this.state.instruments[0]
 		AudioProvider.disconnect(oldInstrument.endNode)
-		this.state.instruments[0].delete()
+		this.state.instruments[0].dispose()
 		const { settings, instruments } = this.state
 		const instrument = new Instrument(name)
 		instrument.changeVolume(settings.instrument.volume || 100)
@@ -156,7 +156,7 @@ class Player extends Component<{}, PlayerState>{
 		const extraInstruments = instruments.splice(song.instruments.length)
 		extraInstruments.forEach(ins => {
 			AudioProvider.disconnect(ins.endNode)
-			ins.delete()
+			ins.dispose()
 		})
 		logger.showPill("Loading instruments...")
 		const promises = song.instruments.map(async (ins, i) => {
@@ -166,7 +166,7 @@ class Player extends Component<{}, PlayerState>{
 				instruments[i] = instrument
 				const loaded = await instrument.load()
 				if (!loaded) logger.error("There was an error loading the instrument")
-				if (!this.mounted) return instrument.delete()
+				if (!this.mounted) return instrument.dispose()
 				AudioProvider.connect(instrument.endNode)
 				instrument.changeVolume(ins.volume)
 				return instrument
@@ -179,12 +179,12 @@ class Player extends Component<{}, PlayerState>{
 				//if it has a layer and it's different, delete the layer and create a new one
 				const old = instruments[i]
 				AudioProvider.disconnect(old.endNode)
-				old.delete()
+				old.dispose()
 				const instrument = new Instrument(ins.name)
 				instruments[i] = instrument
 				const loaded = await instrument.load()
 				if (!loaded) logger.error("There was an error loading the instrument")
-				if (!this.mounted) return instrument.delete()
+				if (!this.mounted) return instrument.dispose()
 				AudioProvider.connect(instrument.endNode)
 				instrument.changeVolume(ins.volume)
 				return instrument

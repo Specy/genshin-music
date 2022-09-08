@@ -2,7 +2,7 @@ import { IconButton } from "$/components/Inputs/IconButton"
 import { ZenKeypad } from "$/components/ZenKeyboard/ZenKeypad"
 import { ZenKeyboardMenu } from "$/components/ZenKeyboard/ZenKeyboardMenu"
 import { ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$/lib/BaseSettings"
-import Instrument, { NoteData } from "$/lib/Instrument"
+import Instrument, { ObservableNote } from "$/lib/Instrument"
 import { metronome } from "$/lib/Metronome"
 import { AudioProvider } from "$/lib/Providers/AudioProvider"
 import { settingsService } from "$/lib/Services/SettingsService"
@@ -61,11 +61,9 @@ export function ZenKeyboard() {
         load()
         return () => { AudioProvider.disconnect(instrument.endNode) }
     }, [instrument])
-    const onNoteClick = (note: NoteData) => {
+    const onNoteClick = (note: ObservableNote) => {
         instrument.play(note.index, settings.pitch.value)
-        zenKeyboardStore.setNoteState(note.index, {
-            animationId: note.data.animationId + 1
-        })
+        zenKeyboardStore.animateNote(note.index)
     }
     useEffect(() => {
         if (isMetronomePlaying) metronome.start()

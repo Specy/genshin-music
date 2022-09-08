@@ -3,7 +3,7 @@ import ComposerNote from "$cmp/Composer/ComposerNote"
 import { Column, InstrumentData } from "$lib/Songs/SongClasses"
 import { Pitch, TEMPO_CHANGERS } from "$/appConfig"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
-import Instrument, { NoteData } from "$lib/Instrument"
+import Instrument, { ObservableNote } from "$lib/Instrument"
 import { NoteNameType } from "$types/GeneralTypes"
 
 interface ComposerKeyboardProps {
@@ -18,7 +18,7 @@ interface ComposerKeyboardProps {
         noteNameType: NoteNameType
     },
     functions: {
-        handleClick: (note: NoteData) => void
+        handleClick: (note: ObservableNote) => void
         handleTempoChanger: (tempoChanger: typeof TEMPO_CHANGERS[number]) => void
     }
 }

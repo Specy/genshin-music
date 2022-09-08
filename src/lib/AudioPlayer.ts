@@ -14,7 +14,7 @@ export class AudioPlayer{
     destroy(){
         this.audioInstruments.forEach(ins => {
             AudioProvider.disconnect(ins.endNode)
-            ins.delete()
+            ins.dispose()
         })
     }
     syncInstruments(instruments: InstrumentData[]){
@@ -27,7 +27,7 @@ export class AudioPlayer{
         const extraInstruments = audioInstruments.splice(instruments.length)
         extraInstruments.forEach(ins => {
             AudioProvider.disconnect(ins.endNode)
-            ins.delete()
+            ins.dispose()
         })
         const promises = instruments.map(async (ins, i) => {
             if (audioInstruments[i] === undefined) {
@@ -47,7 +47,7 @@ export class AudioPlayer{
                 //if it has a instrument but it's different, delete the layer and create a new one
                 const old = audioInstruments[i]
                 AudioProvider.disconnect(old.endNode)
-                old.delete()
+                old.dispose()
                 const instrument = new Instrument(ins.name)
                 audioInstruments[i] = instrument
                 await instrument.load()

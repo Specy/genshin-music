@@ -4,7 +4,7 @@ import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import SvgNote from '$cmp/SvgNotes'
 import { observe } from 'mobx'
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider'
-import type { NoteData } from '$lib/Instrument'
+import type { ObservableNote } from '$lib/Instrument'
 import type { InstrumentName, NoteStatus } from '$types/GeneralTypes'
 import type { ApproachingNote } from '$lib/Songs/SongClasses'
 import { useObservableObject } from '$lib/Hooks/useObservable'
@@ -23,14 +23,14 @@ function getTextColor() {
 }
 
 interface NoteProps {
-    note: NoteData
+    note: ObservableNote
     data: {
         approachRate: number
         instrument: InstrumentName
     }
     approachingNotes: ApproachingNote[]
     noteText: string
-    handleClick: (note: NoteData) => void
+    handleClick: (note: ObservableNote) => void
 }
 
 //TODO use css vars for the colors

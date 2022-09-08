@@ -1,16 +1,20 @@
 import { APP_NAME } from "$/appConfig"
-import { NoteData, NoteDataState } from "$/lib/Instrument"
+import { ObservableNote, NoteDataState } from "$/lib/Instrument"
+import { NoteStatus } from "$/types/GeneralTypes"
 import { makeObservable, observable } from "mobx"
 
 class ZenKeyboardStore {
     @observable
-    keyboard: NoteData[] = []
+    keyboard: ObservableNote[] = []
     constructor() {
         makeObservable(this)
     }
 
-    setKeyboardLayout = (keyboard: NoteData[]) => { 
+    setKeyboardLayout = (keyboard: ObservableNote[]) => { 
         this.keyboard.splice(0, this.keyboard.length, ...keyboard)
+    }
+    animateNote = (index: number, status?: NoteStatus) => {
+        this.keyboard[index].triggerAnimation(status)
     }
     resetKeyboardLayout = () => {
         this.keyboard.forEach(note => note.setState({

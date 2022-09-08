@@ -169,7 +169,7 @@ function Menu({ functions, data }: MenuProps) {
     const logImportError = useCallback((error?: any) => {
         if (error) console.error(error)
         logger.error(
-            `Error importing song, invalid format (Only supports the ${APP_NAME.toLowerCase()}sheet.json format)`,
+            `Error importing file, invalid format`,
             8000
         )
     }, [])

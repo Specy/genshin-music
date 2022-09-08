@@ -4,7 +4,7 @@ import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import SvgNote, { NoteImage } from '$cmp/SvgNotes'
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider'
 import { observe } from 'mobx'
-import { NoteData } from '$lib/Instrument'
+import { ObservableNote } from '$lib/Instrument'
 import { InstrumentName } from '$types/GeneralTypes'
 import { LayerStatus } from '$lib/Layer'
 
@@ -23,10 +23,10 @@ function getTextColor() {
 
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
 interface ComposerNoteProps {
-    data: NoteData
+    data: ObservableNote
     layer: LayerStatus
     instrument: InstrumentName
-    clickAction: (data: NoteData) => void
+    clickAction: (data: ObservableNote) => void
     noteText: string
     noteImage: NoteImage
 }

@@ -18,7 +18,7 @@ export default class Instrument {
     name: InstrumentName
     volumeNode: GainNode | null = null
     instrumentData: typeof INSTRUMENTS_DATA[InstrumentName]
-    notes: NoteData[] = []
+    notes: ObservableNote[] = []
     layouts: Layouts = {
         keyboard: [],
         mobile: [],
@@ -37,30 +37,32 @@ export default class Instrument {
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
         this.name = name
         if (!INSTRUMENTS.includes(this.name as any)) this.name = INSTRUMENTS[0]
-        const instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]
-        this.instrumentData = instrumentData
-        const layouts = instrumentData.layout
+        this.instrumentData  = {...INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]}
+        const layouts =  this.instrumentData.layout
         this.layouts = {
-            keyboard: layouts.keyboardLayout,
-            mobile: layouts.mobileLayout,
-            abc: layouts.abcLayout
+            keyboard: [...layouts.keyboardLayout],
+            mobile: [...layouts.mobileLayout],
+            abc: [...layouts.abcLayout]
         }
-        for (let i = 0; i < instrumentData.notes; i++) {
+        for (let i = 0; i <  this.instrumentData.notes; i++) {
             const noteName = this.layouts.keyboard[i]
             const noteNames = {
                 keyboard: noteName,
                 mobile: this.layouts.mobile[i]
             }
             const url = `./assets/audio/${this.name}/${i}.mp3`
-            const note = new NoteData(i, noteNames, url, instrumentData.baseNotes[i])
+            const note = new ObservableNote(i, noteNames, url, this.instrumentData.baseNotes[i])
             note.instrument = this.name
-            note.noteImage = instrumentData.icons[i]
+            note.noteImage =  this.instrumentData.icons[i]
             this.notes.push(note)
         }
     }
-    getNoteFromCode = (code: number | string) => {
-        const index = this.layouts.keyboard.findIndex(e => e === String(code))
-        return index !== -1 ? index : null
+    getNoteFromCode = (code: string) => {
+        const index = this.getNoteIndexFromCode(code)
+        return index !== -1 ? this.notes[index] : null
+    }
+    getNoteIndexFromCode = (code: string) => {
+        return this.layouts.keyboard.findIndex(e => e === code)
     }
     getNoteText = (index: number, type: NoteNameType, pitch: Pitch) => {
         const layout = this.layouts
@@ -125,7 +127,7 @@ export default class Instrument {
     connect = (node: AudioNode) => {
         this.volumeNode?.connect(node)
     }
-    delete = () => {
+    dispose = () => {
         this.disconnect()
         this.isDeleted = true
         this.buffers = []
@@ -158,7 +160,7 @@ export type NoteDataState = {
     delay: number
     animationId: number
 }
-export class NoteData {
+export class ObservableNote {
     index: number
     noteImage: NoteImage = APP_NAME === "Genshin" ? "do" : "cr"
     instrument: InstrumentName = INSTRUMENTS[0]
@@ -167,7 +169,7 @@ export class NoteData {
     baseNote: BaseNote = "C"
     buffer: ArrayBuffer = new ArrayBuffer(8)
     @observable
-    data: NoteDataState = {
+    readonly data: NoteDataState = {
         status: '',
         delay: 0,
         animationId: 0
@@ -186,11 +188,17 @@ export class NoteData {
     setStatus(status: NoteStatus) {
         return this.setState({ status })
     }
+    triggerAnimation(status?: NoteStatus){
+        this.setState({
+            animationId: this.data.animationId + 1,
+            status
+        })
+    }
     setState(data: Partial<NoteDataState>) {
         Object.assign(this.data, data)
     }
     clone() {
-        const obj = new NoteData(this.index, this.noteNames, this.url, this.baseNote)
+        const obj = new ObservableNote(this.index, this.noteNames, this.url, this.baseNote)
         obj.buffer = this.buffer
         obj.noteImage = this.noteImage
         obj.instrument = this.instrument

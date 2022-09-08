@@ -11,7 +11,7 @@ import Menu from "$cmp/Composer/ComposerMenu"
 import Memoized from '$cmp/Utility/Memoized';
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
 import { ComposerSettingsDataType } from "$lib/BaseSettings"
-import Instrument, { NoteData } from "$lib/Instrument"
+import Instrument, { ObservableNote } from "$lib/Instrument"
 import { delay, formatMs, calculateSongLength } from "$lib/Utilities"
 import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
 import { Column, InstrumentData } from '$lib/Songs/SongClasses';
@@ -117,7 +117,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { layers } = state
         this.mounted = false
         AudioProvider.clear()
-        layers.forEach(instrument => instrument.delete())
+        layers.forEach(instrument => instrument.dispose())
         this.broadcastChannel?.close?.()
         state.isPlaying = false
         this.unblock()
@@ -180,7 +180,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             const shouldEditKeyboard = isPlaying || event.shiftKey
             if (shouldEditKeyboard) {
                 const note = this.currentInstrument.getNoteFromCode(letter)
-                if (note !== null) this.handleClick(this.currentInstrument.notes[note])
+                if (note !== null) this.handleClick(note)
             }
         }, { id })
     }
@@ -275,7 +275,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const extraInstruments = layers.splice(song.instruments.length)
         extraInstruments.forEach(ins => {
             AudioProvider.disconnect(ins.endNode)
-            ins.delete()
+            ins.dispose()
         })
         const promises = song.instruments.map(async (ins, i) => {
             if (layers[i] === undefined) {
@@ -284,7 +284,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 layers[i] = instrument
                 const loaded = await instrument.load()
                 if (!loaded) logger.error("There was an error loading the instrument")
-                if (!this.mounted) return instrument.delete()
+                if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode)
                 instrument.changeVolume(ins.volume)
                 return instrument
@@ -297,12 +297,12 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 //if it has a layer and it's different, delete the layer and create a new one
                 const old = layers[i]
                 AudioProvider.disconnect(old.endNode)
-                old.delete()
+                old.dispose()
                 const instrument = new Instrument(ins.name)
                 layers[i] = instrument
                 const loaded = await instrument.load()
                 if (!loaded) logger.error("There was an error loading the instrument")
-                if (!this.mounted) return instrument.delete()
+                if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode)
                 instrument.changeVolume(ins.volume)
                 return instrument
@@ -350,7 +350,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         settings.pitch = { ...settings.pitch, value }
         this.setState({ settings: { ...settings } }, this.updateSettings)
     }
-    handleClick = (note: NoteData) => {
+    handleClick = (note: ObservableNote) => {
         const { song, layer } = this.state
         const column = song.selectedColumn
         const index = column.getNoteIndex(note.index)
