@@ -45,7 +45,6 @@
 	right: 0;
 	top: 0rem;
 	padding: 0.8rem 0;
-	padding-right: 0.8rem;
 	z-index: 999;
 }
 .logger-toast {
@@ -60,6 +59,7 @@
 	display: flex;
 	flex-direction: column;
 	opacity: 1;
+	margin: 0 0.8rem;
 	transform: scale(1) translateY(0);
 	animation: toastAppear 0.3s;
 }

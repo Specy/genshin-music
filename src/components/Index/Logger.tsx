@@ -1,6 +1,7 @@
 import { LoggerStatus, logger, ToastState } from "$stores/LoggerStore"
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle } from "react-icons/fa"
 import { useObservableArray, useObservableObject } from "$lib/Hooks/useObservable"
+import { DecorationBorderedBox } from "../Miscellaneous/BorderDecoration"
 export default function FloatingMessage() {
     const toasts = useObservableArray(logger.toasts)
     const pillData = useObservableObject(logger.pillState)
@@ -30,7 +31,7 @@ function Toast({ toast }: ToastProps) {
     const observableToast = useObservableObject(toast)
     const { text, type, id, timeout, visible } = observableToast
     const isBig = text.length > 150
-    return <div
+    return <DecorationBorderedBox
         key={id}
         className={visible ? "logger-toast" : "logger-toast logger-toast-hidden"}
         style={{ maxWidth: isBig ? '24rem' : '19rem' }}
@@ -63,5 +64,5 @@ function Toast({ toast }: ToastProps) {
                 key={id}
             />
         </div>
-    </div>
+    </DecorationBorderedBox>
 }
