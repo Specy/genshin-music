@@ -16,6 +16,8 @@ export const updates: Update[] = [
             "Added Visual sheet to the player",
             "Added app scaling",
             "Added alphabetical folder ordering",
+            "Added backup page",
+            "Changed metronome sounds",
             "(Sky) Added SFX sounds for dance emote",
             "Improved player performance",
             "Multi type export, you can now export/import songs,folders,themes etc",

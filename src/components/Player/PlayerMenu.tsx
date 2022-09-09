@@ -246,7 +246,7 @@ function Menu({ functions, data }: MenuProps) {
                         </AppButton>
                     </Link>
                     <FilePicker<SerializedSong | SerializedSong[]>
-                        onChange={importSong}
+                        onPick={importSong}
                         onError={logImportError}
                         as='json'
                         multiple={true}

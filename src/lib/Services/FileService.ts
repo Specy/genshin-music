@@ -15,7 +15,7 @@ import { AppError } from "../Errors"
 import { SerializedSongKind } from "$/types/SongTypes"
 import { logger } from "$stores/LoggerStore"
 export type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedSong | SerializedVsrgSong
-type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded | SerializedFolder | SerializedTheme
+export type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded | SerializedFolder | SerializedTheme
 type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
 export type UnknownSongImport = UnknownSong | UnknownSong[]
 
@@ -154,6 +154,7 @@ export class FileService {
                 await themeStore.addTheme(sanitised)
                 result.appendSuccessful(theme)
             } catch (e) {
+                console.error(e)
                 result.appendError(theme, AppError.getMessageFromAny(e))
             }
         }
@@ -197,7 +198,7 @@ export class FileService {
         const promises = files.map(s => this.prepareSongDownload(s as SerializedSongKind))
         const relatedSongs = (await Promise.all(promises)).flat() as SerializedSongKind[]
         const filtered = relatedSongs.filter((item, pos, self) => {
-            return self.findIndex(e => e.id === item.id) == pos;
+            return self.findIndex(e => e.id === item.id) === pos;
         })
         this.downloadFiles(filtered, fileName)
     }

@@ -25,6 +25,7 @@ import ErrorBoundaryRedirect from "$cmp/Utility/ErrorBoundaryRedirect";
 import { logger } from "$stores/LoggerStore"
 import { Keybinds } from "$pages/Keybinds";
 import { ZenKeyboard } from "./pages/ZenKeyboard";
+import { Backup } from "./pages/Backup";
 export function Router() {
 	useEffect(() => {
 		try {
@@ -109,12 +110,13 @@ export function Router() {
 										<Keybinds />
 									</Route>
 									<Route exact path='/ZenKeyboard'>
-
 										<AppBackground page="Main">
 											<ZenKeyboard />
 										</AppBackground>
 									</Route>
-
+									<Route exact path='/Backup'>
+										<Backup />
+									</Route>
 								</ErrorBoundaryRedirect>
 								<Route path='*'>
 									<Error404 />

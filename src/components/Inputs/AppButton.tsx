@@ -1,4 +1,4 @@
-import { Tooltip,hasTooltip } from "../Utility/Tooltip"
+import { Tooltip,hasTooltip, TooltipPosition } from "../Utility/Tooltip"
 
 export interface AppButtonProps {
     style?: React.CSSProperties,
@@ -9,6 +9,7 @@ export interface AppButtonProps {
     disabled?: boolean,
     visible?: boolean,
     tooltip?: string,
+    tooltipPosition?: TooltipPosition
     ariaLabel?: string
 }
 export function AppButton({ 
@@ -20,7 +21,8 @@ export function AppButton({
         disabled = false, 
         visible = true, 
         tooltip,
-        ariaLabel
+        ariaLabel,
+        tooltipPosition
     }: AppButtonProps) {
     return <button
         className={`app-button ${className} ${toggled ? 'active' : ''} ${hasTooltip(tooltip)}`}
@@ -37,7 +39,9 @@ export function AppButton({
     >
         {children}
         {tooltip && 
-            <Tooltip>
+            <Tooltip
+                position={tooltipPosition}
+            >
                 {tooltip}
             </Tooltip>
         }

@@ -98,7 +98,7 @@ function ThemePage() {
     return <DefaultPage>
         <Title text="Themes" />
         <div style={{ display: 'flex', alignItems: 'center' }}>
-            <FilePicker onChange={handleImport} as='json' onError={logImportError}>
+            <FilePicker onPick={handleImport} as='json' onError={logImportError}>
                 <AppButton style={{ margin: '0.25rem' }}>
                     Import Theme
                 </AppButton>

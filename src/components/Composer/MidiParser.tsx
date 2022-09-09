@@ -242,7 +242,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 className='midi-row separator-border'
                 style={{ width: '100%' }}
             >
-                <FilePicker onChange={handleFile} as='buffer'>
+                <FilePicker onPick={handleFile} as='buffer'>
                     <button className="midi-btn" style={midiInputsStyle}>
                         Open midi file
                     </button>

@@ -49,6 +49,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         const dispose = history.listen((path) => {
             setCurrentPage(path.pathname.replace('/', ''))
         })
+        setCurrentPage(window.location.hash.replace("#/", ""))
         KeyboardProvider.register("Escape", () => {
             if (homeStore.state.visible) {
                 homeStore.close()
@@ -135,7 +136,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                     background={`./manifestData/composer.webp`}
                     href='Composer'
-                    current={currentPage === 'Composer'}
+                    isCurrent={currentPage === 'Composer'}
                 >
                     Create or edit songs with a fully fledged music composer. Also with MIDI.
                 </MainContentElement>
@@ -145,7 +146,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                     background={`./manifestData/main.webp`}
                     href=''
-                    current={currentPage === '' || currentPage === 'Player'}
+                    isCurrent={currentPage === '' || currentPage === 'Player'}
                 >
                     Play, download, record and import songs. Learn a song with approaching circle
                     mode and practice mode.
@@ -190,6 +191,9 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 </PageRedirect>
                 <PageRedirect href='Help' current={currentPage === 'Help'}>
                     Help
+                </PageRedirect>
+                <PageRedirect href='Backup' current={currentPage === 'Backup'}>
+                    Backup
                 </PageRedirect>
                 {!IS_MOBILE &&
                     <PageRedirect href='Keybinds' current={currentPage === 'Keybinds'}>
@@ -277,14 +281,14 @@ interface MainContentElementProps {
     icon: React.ReactNode,
     children: React.ReactNode,
     background: string,
-    current: boolean,
+    isCurrent: boolean,
     href: string,
     style?: React.CSSProperties
 
 }
-function MainContentElement({ title, icon, children, background, current, href, style = {} }: MainContentElementProps) {
+function MainContentElement({ title, icon, children, background, isCurrent, href, style = {} }: MainContentElementProps) {
     return <Link
-        className={`home-content-element ${current ? 'current-page' : ''}`}
+        className={`home-content-element ${isCurrent ? 'current-page' : ''}`}
         to={href}
         onClick={homeStore.close}
     >

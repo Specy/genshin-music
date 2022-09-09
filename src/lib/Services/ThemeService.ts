@@ -53,6 +53,9 @@ class ThemeService {
     setCurrentThemeId(id: string | null) {
         localStorage.setItem(APP_NAME + '_Theme', id ?? '')
     }
+    _clearAll(){
+        return this.themeCollection.remove({})
+    }
 }
 
 export const _themeService = new ThemeService()

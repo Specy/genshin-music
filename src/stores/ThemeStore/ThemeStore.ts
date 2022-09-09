@@ -37,6 +37,10 @@ export class ThemeStore{
         await _themeService.removeThemeById(id)
         await this.sync()
     }
+    async _DANGEROUS_CLEAR_ALL_THEMES(){
+        await _themeService._clearAll()
+        await this.sync()
+    }
     getCurrentThemeId() {
         return _themeService.getCurrentThemeId()
     }
