@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react'
-import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "$/appConfig"
+import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "$/Config"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import SvgNote from '$cmp/SvgNotes'
 import { observe } from 'mobx'

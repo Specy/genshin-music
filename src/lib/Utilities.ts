@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/appConfig"
+import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/Config"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
@@ -171,6 +171,14 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 	return "none"
 }
 
+type ConditionalClass = [condition:boolean, trueClass: string, falseClass?: string] | string
+export function cn(...args: ConditionalClass[]){
+	const result = args.map(a => {
+		if(typeof a === 'string') return a
+		return a[0] ? a[1] : (a[2] ?? '') 
+	}).join(' ')
+	return result
+}
 
 function groupByNotes(notes: RecordedNote[], threshold: number) {
 	const result = []

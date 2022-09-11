@@ -4,7 +4,7 @@ import { render } from 'react-dom';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { Router } from './Router'
 import { setIfInTWA } from '$lib/Utilities'
-import { IS_TAURI } from './appConfig';
+import { IS_TAURI } from './Config';
 
 render(
 	<StrictMode>
@@ -12,9 +12,10 @@ render(
 	</StrictMode>,
 	document.getElementById('root')
 )
-
-setIfInTWA()
-if(!IS_TAURI) serviceWorkerRegistration.register()
+if(!IS_TAURI){
+	setIfInTWA()
+	serviceWorkerRegistration.register()
+}
 
 
 

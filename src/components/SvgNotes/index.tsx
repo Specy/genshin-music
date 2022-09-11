@@ -45,9 +45,7 @@ function SvgNote({ name, color = 'currentColor', background }: SvgNoteProps) {
     const NoteComponent = noteIconsMap[name]
     return NoteComponent ?
         <NoteComponent style={{ fill: color, stroke: color }} background={background} />
-        : <>
-            "N/A"
-        </>
+        : <></>
 }
 
 export default memo(SvgNote, (p, n) => {

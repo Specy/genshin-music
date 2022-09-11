@@ -1,5 +1,5 @@
 import {  Component } from 'react'
-import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "$/appConfig"
+import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "$/Config"
 import Note from '$/components/Player/PlayerNote'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, delay, clamp, groupArrayEvery } from "$lib/Utilities"
@@ -388,6 +388,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         const size = clamp(data.keyboardSize / 100, 0.5, 1.5)
         let keyboardClass = "keyboard" + (playerStore.eventType === 'play' ? " keyboard-playback" : "")
         if (keyboard.length === 15) keyboardClass += " keyboard-5"
+        if (keyboard.length === 14) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
         if (keyboard.length === 6) keyboardClass += " keyboard-3"
         const style = size !== 1 ? { transform: `scale(${size})` } : {}

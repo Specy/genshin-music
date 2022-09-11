@@ -4,7 +4,7 @@ import Home from '$cmp/Index/Home';
 import {homeStore} from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
-import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, UPDATE_MESSAGE } from "$/appConfig"
+import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, UPDATE_MESSAGE } from "$/Config"
 import Logger from '$cmp/Index/Logger'
 import rotateImg from "$/assets/icons/rotate.svg"
 
@@ -18,6 +18,7 @@ import { IconButton } from '$/components/Inputs/IconButton';
 import { metronome } from '$/lib/Metronome';
 import { logsStore } from '$stores/LogsStore';
 import { needsUpdate } from '$/lib/needsUpdate';
+import { AsyncPromptWrapper } from '$/components/Utility/AsyncPrompt';
 
 
 function App({ history }: any) {
@@ -36,6 +37,7 @@ function App({ history }: any) {
 		}
 	}, [handleAudioContextStateChange])
 	useEffect(() => {
+		if(window.location.hostname === "localhost") return
 		const originalErrorLog = console.error.bind(console)
 		//intercept console errors and log them to the logger store
 		console.error = (...args: any[]) => {
@@ -176,6 +178,7 @@ function App({ history }: any) {
 			setDontShowHome={setDontShowHome}
 			askForStorage={askForStorage}
 		/>
+		<AsyncPromptWrapper />
 		{audioContextState !== 'running' &&
 			<IconButton
 				className='resume-audio-context box-shadow'

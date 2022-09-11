@@ -20,7 +20,7 @@ import { SerializedSong } from "$lib/Songs/Song";
 import { songService } from "$lib/Services/SongService";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { clamp, isFocusable } from "$lib/Utilities";
-import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig";
+import { DEFAULT_VSRG_KEYS_MAP } from "$/Config";
 import { ClickType, Pages } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { Title } from "$/components/Miscellaneous/Title";
@@ -282,6 +282,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 await this.saveSong()
             } else {
                 const confirm = await asyncConfirm(`You have unsaved changes to the song: "${vsrg.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                if(confirm === null) return
                 if (confirm) {
                     await this.saveSong()
                 }
@@ -388,7 +389,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     createNewSong = async () => {
         if (this.state.vsrg.name !== "Untitled" && this.changes > 0) {
-            if (await this.askForSongUpdate()) {
+            const promptResult = await this.askForSongUpdate()
+            if (promptResult === null) return
+            if (promptResult) {
                 await this.saveSong()
             }
         }
@@ -511,7 +514,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (this.changes !== 0) {
             let confirm = settings.autosave.value && vsrg.name !== "Untitled"
             if (!confirm) {
-                confirm = await asyncConfirm(`You have unsaved changes to the song: "${vsrg.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                const promptResult = await asyncConfirm(`You have unsaved changes to the song: "${vsrg.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                if(promptResult === null) return
+                confirm = promptResult
             }
             if (confirm) {
                 await this.saveSong()

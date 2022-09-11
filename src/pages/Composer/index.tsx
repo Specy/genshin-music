@@ -1,6 +1,6 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/appConfig"
+import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/Config"
 import AddColumn from '$cmp/icons/AddColumn';
 import RemoveColumn from "$cmp/icons/RemoveColumn"
 import MidiParser from "$cmp/Composer/MidiParser"
@@ -426,7 +426,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.changes > 0) {
-            if (await this.askForSongUpdate()) {
+            const promptResult = await this.askForSongUpdate()
+            if(promptResult === null) return
+            if (promptResult) {
                 await this.updateSong(this.state.song)
             }
         }
@@ -459,7 +461,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
             if (!confirm && state.song.columns.length > 0) {
-                confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                const promptResult =  await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                if(promptResult === null) return
+                confirm = promptResult
             }
             if (confirm) {
                 await this.updateSong(state.song)
@@ -550,6 +554,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 await this.updateSong(song)
             } else {
                 const confirm = await asyncConfirm(`You have unsaved changes to the song: "${song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                console.log(confirm)
                 if (confirm) {
                     await this.updateSong(song)
                 }

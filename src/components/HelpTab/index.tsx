@@ -1,4 +1,4 @@
-import { APP_NAME } from '$/appConfig'
+import { APP_NAME } from '$/Config'
 import composerImg from '$/assets/images/help-composer.png'
 import playerImg from '$/assets/images/help-player.png'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'

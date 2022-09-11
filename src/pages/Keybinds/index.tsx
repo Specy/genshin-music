@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/appConfig";
+import { APP_NAME } from "$/Config";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import BaseNote from "$cmp/Miscellaneous/BaseNote";
 import { Title } from "$cmp/Miscellaneous/Title";

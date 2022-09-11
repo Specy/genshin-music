@@ -1,4 +1,4 @@
-import { APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES } from "$/appConfig"
+import { APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES } from "$/Config"
 import { subscribeObeservableObject, useObservableObject } from "$/lib/Hooks/useObservable"
 import Instrument, { ObservableNote } from "$/lib/Instrument"
 import SvgNote, { NoteImage } from "../SvgNotes"

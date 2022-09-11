@@ -4,7 +4,7 @@ import Menu from "$/components/Player/PlayerMenu"
 import { playerStore } from '$stores/PlayerStore'
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
-import { Recording } from '$lib/Songs/SongClasses';
+import { InstrumentData, Recording } from '$lib/Songs/SongClasses';
 import { PlayerSettingsDataType } from "$lib/BaseSettings"
 import Instrument from '$lib/Instrument';
 import AudioRecorder from '$lib/AudioRecorder';
@@ -21,14 +21,12 @@ import { settingsService } from '$lib/Services/SettingsService';
 import { songsStore } from '$stores/SongsStore';
 import { Title } from '$cmp/Miscellaneous/Title';
 import { metronome } from '$lib/Metronome';
-import { GiMetronome } from 'react-icons/gi';
 import { Lambda } from 'mobx';
 import { NoteLayer } from '$lib/Layer';
 import './Player.css'
-import { IconButton } from '$cmp/Inputs/IconButton';
 import { subscribeObeservableObject } from '$lib/Hooks/useObservable';
 import { ChangeEvent } from 'react';
-import { SPEED_CHANGERS } from '$/appConfig';
+import { SPEED_CHANGERS } from '$/Config';
 import { playerControlsStore } from '$stores/PlayerControlsStore';
 import { PlayerSongControls } from '$cmp/Player/PlayerSongControls';
 
@@ -64,11 +62,11 @@ class Player extends Component<{}, PlayerState>{
 		}
 		this.mounted = false
 	}
-	componentDidMount() {
+	async componentDidMount() {
 		this.mounted = true
 		const instrument = this.state.instruments[0]
 		if(instrument) playerStore.setKeyboardLayout(instrument.notes)
-		this.init()
+		await this.init()
 		const dispose = subscribeObeservableObject(playerStore.state, ({ eventType, song }) => {
 			const { settings } = this.state
 			if (!settings.syncSongData.value || song === null) return
@@ -79,16 +77,16 @@ class Player extends Component<{}, PlayerState>{
 						value: song.pitch
 					}, key: 'pitch'
 				})
-			this.syncInstruments(song)
+			this.loadInstruments(song.instruments)
 		})
-		
 		this.cleanup.push(dispose)
 	}
 	init = async () => {
 		const { settings } = this.state
+		await AudioProvider.waitReverb()
 		await this.loadInstrument(settings.instrument.value)
-		AudioProvider.setReverb(settings.caveMode.value)
 		this.registerKeyboardListeners()
+		AudioProvider.setReverb(settings.caveMode.value)
 	}
 	componentWillUnmount() {
 		KeyboardProvider.unregisterById('player')
@@ -150,16 +148,16 @@ class Player extends Component<{}, PlayerState>{
 		playerStore.restartSong((typeof override === 'number') ? override : playerControlsStore.position, playerControlsStore.end)
 	}
 
-	syncInstruments = async (song: ComposedSong | RecordedSong) => {
+	loadInstruments = async (toLoad: InstrumentData[]) => {
 		const { instruments } = this.state
 		//remove excess instruments
-		const extraInstruments = instruments.splice(song.instruments.length)
+		const extraInstruments = instruments.splice(toLoad.length)
 		extraInstruments.forEach(ins => {
 			AudioProvider.disconnect(ins.endNode)
 			ins.dispose()
 		})
 		logger.showPill("Loading instruments...")
-		const promises = song.instruments.map(async (ins, i) => {
+		const promises = toLoad.map(async (ins, i) => {
 			if (instruments[i] === undefined) {
 				//If it doesn't have a layer, create one
 				const instrument = new Instrument(ins.name)
@@ -195,6 +193,7 @@ class Player extends Component<{}, PlayerState>{
 		const { settings } = this.state
 		if(instruments[0]) {
 			settings.instrument = { ...settings.instrument, value: instruments[0].name }
+			playerStore.setKeyboardLayout(instruments[0].notes)
 		}
 		logger.hidePill()
 		this.setState({ instruments: newInstruments, settings}, this.updateSettings)
@@ -333,7 +332,6 @@ class Player extends Component<{}, PlayerState>{
 				</div>
 				<div className="keyboard-wrapper">
 					<KeyboardPlayer
-						key={instruments[0].notes.length}
 						data={{
 							isLoading: isLoadingInstrument,
 							instrument: instruments[0],

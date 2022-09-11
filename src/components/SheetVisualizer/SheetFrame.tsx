@@ -1,4 +1,4 @@
-import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/appConfig"
+import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/Config"
 import { Chunk } from "$lib/Songs/VisualSong"
 import { memo, useEffect, useState } from "react"
 import { ThemeStore } from "$stores/ThemeStore/ThemeProvider"

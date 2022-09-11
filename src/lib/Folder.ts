@@ -1,4 +1,4 @@
-import { FOLDER_FILTER_TYPES } from "$/appConfig"
+import { FOLDER_FILTER_TYPES } from "$/Config"
 import { SerializedSong } from "./Songs/Song"
 
 

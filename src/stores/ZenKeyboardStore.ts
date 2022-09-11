@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/appConfig"
+import { APP_NAME } from "$/Config"
 import { ObservableNote, NoteDataState } from "$/lib/Instrument"
 import { NoteStatus } from "$/types/GeneralTypes"
 import { makeObservable, observable } from "mobx"

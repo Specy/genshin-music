@@ -1,4 +1,4 @@
-import { APP_NAME, INSTRUMENTS, Pitch } from "$/appConfig"
+import { APP_NAME, INSTRUMENTS, Pitch } from "$/Config"
 import { InstrumentName } from "$types/GeneralTypes"
 import { InstrumentNoteIcon } from "./ComposedSong"
 

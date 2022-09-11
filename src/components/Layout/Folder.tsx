@@ -8,7 +8,7 @@ import { folderStore } from "$stores/FoldersStore"
 import { asyncConfirm } from "../Utility/AsyncPrompts"
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "../Utility/FloatingDropdown"
 import { SerializedSongKind } from "$/types/SongTypes"
-import { FOLDER_FILTER_TYPES } from "$/appConfig"
+import { FOLDER_FILTER_TYPES } from "$/Config"
 import { capitalize } from "$/lib/Utilities"
 
 

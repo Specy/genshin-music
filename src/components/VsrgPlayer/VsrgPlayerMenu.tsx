@@ -26,7 +26,7 @@ import {homeStore} from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
 import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
-import { IS_MOBILE } from "$/appConfig";
+import { IS_MOBILE } from "$/Config";
 
 type MenuTabs = 'Songs' | 'Settings'
 

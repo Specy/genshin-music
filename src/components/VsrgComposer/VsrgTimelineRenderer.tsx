@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@inlet/react-pixi";
-import { PIXI_VERTICAL_ALIGN, PLAY_BAR_OFFSET } from "$/appConfig";
+import { PIXI_VERTICAL_ALIGN, PLAY_BAR_OFFSET } from "$/Config";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { VsrgSong } from "$lib/Songs/VsrgSong";

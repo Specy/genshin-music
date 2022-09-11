@@ -33,8 +33,10 @@ function Toast({ toast }: ToastProps) {
     const isBig = text.length > 150
     return <DecorationBorderedBox
         key={id}
-        className={visible ? "logger-toast" : "logger-toast logger-toast-hidden"}
-        style={{ maxWidth: isBig ? '24rem' : '19rem' }}
+        boxProps={{
+            className: visible ? "logger-toast" : "logger-toast logger-toast-hidden",
+            style: { maxWidth: isBig ? '24rem' : '19rem' }
+        }}
         onClick={() => {
             logger.removeToast(id)
         }}

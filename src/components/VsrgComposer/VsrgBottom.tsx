@@ -1,4 +1,4 @@
-import { VSRG_TEMPO_CHANGER } from "$/appConfig"
+import { VSRG_TEMPO_CHANGER } from "$/Config"
 import { AppButton } from "$cmp/Inputs/AppButton"
 import { Select } from "$cmp/Inputs/Select"
 import { VsrgSong } from "$lib/Songs/VsrgSong"

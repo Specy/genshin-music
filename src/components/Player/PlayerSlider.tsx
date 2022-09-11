@@ -1,4 +1,4 @@
-import { DEFAULT_DOM_RECT } from "$/appConfig"
+import { DEFAULT_DOM_RECT } from "$/Config"
 import Memoized from "$cmp/Utility/Memoized"
 import { useObservableObject } from "$lib/Hooks/useObservable"
 import { clamp } from "$lib/Utilities"

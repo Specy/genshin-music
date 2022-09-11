@@ -1,4 +1,4 @@
-import { AUDIO_CONTEXT } from "$/appConfig";
+import { AUDIO_CONTEXT } from "$/Config";
 import { fetchAudioBuffer } from "./Instrument";
 import { delay } from "./Utilities";
 

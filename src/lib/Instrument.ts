@@ -1,4 +1,4 @@
-import { INSTRUMENTS_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX } from "$/appConfig"
+import { INSTRUMENTS_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX } from "$/Config"
 import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteNameType, NoteStatus } from "$types/GeneralTypes"
 import { getPitchChanger } from "./Utilities"

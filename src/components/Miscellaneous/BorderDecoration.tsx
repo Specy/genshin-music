@@ -1,70 +1,89 @@
-
+import { forwardRef } from 'react';
 interface RawBorderDecorationProps {
-    decorationColor?: string;
+    decorationColor?: string
+    size?: string
+    offset?: string
 }
 
-export function RawBorderDecoration({ decorationColor }: RawBorderDecorationProps) {
+export function RawBorderDecoration({ decorationColor, size, offset = "0" }: RawBorderDecorationProps) {
     const defaultStyle: React.CSSProperties = {
         position: "absolute",
-        width: '1.2rem',
-        height: '1.2rem',
-        color: decorationColor ?? "var(--accent)",
+        width: size ?? '0.8rem',
+        height: size ?? '0.8rem',
+        color: decorationColor ?? "var(--secondary)",
     }
+
     return <>
         <StarBorderSvg
             style={{
                 ...defaultStyle,
-                top: 0,
-                right: 0,
-                transform: 'translate(50%, -50%) rotate(90deg)',
+                top: offset,
+                right: offset,
+                transform: 'translate(50%, -50%) rotate(-135deg)',
             }}
         />
         <StarBorderSvg
             style={{
                 ...defaultStyle,
-                top: 0,
-                left: 0,
-                transform: 'translate(-50%, -50%)',
+                top: offset,
+                left: offset,
+                transform: 'translate(-50%, -50%) rotate(135deg)',
             }}
         />
         <StarBorderSvg
             style={{
                 ...defaultStyle,
-                bottom: 0,
-                right: 0,
-                transform: 'translate(50%, 50%) rotate(180deg)',
+                bottom: offset,
+                right: offset,
+                transform: 'translate(50%, 50%) rotate(-45deg)',
             }}
         />
         <StarBorderSvg
             style={{
                 ...defaultStyle,
-                bottom: 0,
-                left: 0,
-                transform: 'translate(-50%, 50%) rotate(270deg)',
+                bottom: offset,
+                left: offset,
+                transform: 'translate(-50%, 50%) rotate(45deg)',
             }}
         />
     </>
 }
 
-interface DecorationBorderedBoxProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+interface DecorationBorderedBoxProps {
+    boxProps?: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
     children: React.ReactNode;
+    size?: string;
     decorationColor?: string;
+    isRelative?: boolean;
+    onClick?: () => void;
+    offset?: string
 }
-export function DecorationBorderedBox(props: DecorationBorderedBoxProps) {
-    return <div {...props}>
-        <RawBorderDecoration decorationColor={props.decorationColor} />
+export const DecorationBorderedBox = forwardRef<HTMLDivElement, DecorationBorderedBoxProps>(function DecorationBorderedBox(props: DecorationBorderedBoxProps, ref) {
+    const isRelative = props.isRelative ?? true;
+    return <div
+        {...props.boxProps}
+        ref={ref}
+        style={{
+            ...(isRelative ? { position: 'relative' } : {}),
+            ...(props.boxProps?.style ?? {})
+        }}
+        onClick={props.onClick}
+    >
         {props.children}
+        <RawBorderDecoration
+            decorationColor={props.decorationColor}
+            size={props.size}
+            offset={props.offset}
+        />
     </div>
-}
+})
 
 interface StarBorderSvgProps {
     style?: React.CSSProperties
 }
 function StarBorderSvg({ style }: StarBorderSvgProps) {
-    return <svg style={style} width="85" height="85" viewBox="0 0 85 85" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M23.6227 62.5569C22.7783 62.9244 21.9014 62.0548 22.2549 61.2045C28.9472 45.107 28.5696 35.9799 21.2127 21.2131C36.7738 28.3289 45.9318 28.5721 61.042 22.324C61.9123 21.9641 62.7952 22.891 62.3956 23.7438C61.0524 26.6106 60.0298 29.2988 59.3267 31.9404C58.8538 33.717 57.5792 35.1963 55.8585 35.8436C45.633 39.6907 41.0049 44.5738 37.2901 55.504C36.6812 57.2956 35.1693 58.6342 33.3359 59.1026C30.2902 59.8807 27.1108 61.0383 23.6227 62.5569Z"
-            fill="currentColor" />
-    </svg>
+    return <svg style={style} viewBox="0 0 121 121" fill="currentColor" xmlns="http://www.w3.org/2000/svg" >
+        <path d="M115.674 57.8647C117.754 58.9629 117.77 61.9275 115.739 63.113C89.4847 78.4378 76.7901 90.8857 63.8487 114.065C62.3174 116.808 58.346 116.913 56.6888 114.244C41.4088 89.6383 28.3853 77.334 3.39872 62.2065C2.08229 61.4095 2.11774 59.4753 3.467 58.7352C46.8754 34.9254 72.7237 35.1787 115.674 57.8647Z" />
 
+    </svg>
 }

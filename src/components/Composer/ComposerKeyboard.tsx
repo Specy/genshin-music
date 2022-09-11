@@ -1,7 +1,7 @@
 
 import ComposerNote from "$cmp/Composer/ComposerNote"
 import { Column, InstrumentData } from "$lib/Songs/SongClasses"
-import { Pitch, TEMPO_CHANGERS } from "$/appConfig"
+import { Pitch, TEMPO_CHANGERS } from "$/Config"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import Instrument, { ObservableNote } from "$lib/Instrument"
 import { NoteNameType } from "$types/GeneralTypes"
@@ -40,6 +40,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
     }
     let keyboardClass = "keyboard"
     if (keyboard.notes.length === 15) keyboardClass += " keyboard-5"
+    if (keyboard.notes.length === 14) keyboardClass += " keyboard-5"
     if (keyboard.notes.length === 8) keyboardClass += " keyboard-4"
     if (keyboard.notes.length === 6) keyboardClass += " keyboard-3"
 

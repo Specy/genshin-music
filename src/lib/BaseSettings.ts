@@ -1,5 +1,5 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE } from "$/appConfig"
+import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE } from "$/Config"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
 import { NoteNameType } from "$types/GeneralTypes"
@@ -25,7 +25,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 50,
+        settingVersion: APP_NAME + 51,
     },
     data: {
         bpm: {
@@ -147,7 +147,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 50
+        settingVersion: APP_NAME + 51
     },
     data: {
         instrument: {

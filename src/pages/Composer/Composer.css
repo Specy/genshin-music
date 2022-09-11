@@ -476,10 +476,9 @@ select {
     position: absolute;
     margin-left: auto;
     margin-right: auto;
-    bottom: 0.5rem;
-    height: 48vh;
+    bottom: 2rem;
+    max-height: 48vh;
     border-radius: 0.5rem;
-    padding: 0.8rem;
     background-color: var(--menu-background);
     border: solid 2px var(--secondary);
     color: var(--menu-background-text);
@@ -489,10 +488,14 @@ select {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    overflow: auto;
     animation: fadeIn 0.2s;
 }
-
+.floating-midi-content{
+    padding: 0.8rem;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
 
 .floating-midi * {
     font-size: 0.9rem;
@@ -704,13 +707,14 @@ select {
     }
 
     .floating-midi {
-        padding: 0.4rem;
         bottom: 0.2rem;
         height: 50vh;
         max-width: 70vw;
         width: 70vw;
     }
-
+    .floating-midi-content{
+        padding: 0.4rem;
+    }
     .song-info {
         font-size: 0.9rem;
     }

@@ -1,4 +1,4 @@
-import { Pitch, PITCHES } from "$/appConfig"
+import { Pitch, PITCHES } from "$/Config"
 
 interface PitchSelectProps {
     selected: Pitch

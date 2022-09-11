@@ -3,7 +3,7 @@ import Instrument, { ObservableNote } from "$/lib/Instrument";
 import { zenKeyboardStore } from "$stores/ZenKeyboardStore";
 import { ZenNote } from "./ZenNote";
 import { useEffect } from 'react'
-import { Pitch } from "$/appConfig";
+import { Pitch } from "$/Config";
 import { KeyboardProvider } from "$/lib/Providers/KeyboardProvider";
 import { NoteNameType } from "$/types/GeneralTypes";
 
@@ -28,7 +28,9 @@ export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scal
     }, [onNoteClick, instrument])
     let keyboardClass = "keyboard zen-keyboard"
     if (instrument.notes.length === 15) keyboardClass += " keyboard-5"
+    if (instrument.notes.length === 14) keyboardClass += " keyboard-5"
     if (instrument.notes.length === 8) keyboardClass += " keyboard-4"
+    if (instrument.notes.length === 6) keyboardClass += " keyboard-3"
     return <div className={keyboardClass}
         style={{
             transform: `scale(${scale / 100}) translateY(${verticalOffset}px)`,

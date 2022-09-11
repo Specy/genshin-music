@@ -213,7 +213,9 @@ body {
 	z-index: 1000;
 	word-break: break-word;
 	transition: 0.3s all;
-	animation: prompt-show 0.2s;
+	opacity: 1;
+	transform: translateY(0%);
+	animation: prompt-show 0.3s;
 }
 
 @keyframes prompt-show {
@@ -231,6 +233,7 @@ body {
 .floating-prompt-hidden {
 	opacity: 0;
 	transform: translateY(-20%);
+	pointer-events: none;
 }
 
 .prompt-button {
@@ -246,6 +249,7 @@ body {
 	margin-top: 0.5rem;
 	border-radius: 0.3rem;
 	border: none;
+	cursor: text;
 	padding: 0.3rem;
 }
 

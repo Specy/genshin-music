@@ -1,5 +1,5 @@
 import { Stage } from "@inlet/react-pixi"
-import { DEFAULT_VSRG_KEYS_MAP } from "$/appConfig"
+import { DEFAULT_VSRG_KEYS_MAP } from "$/Config"
 import isMobile from "is-mobile"
 import { subscribeTheme } from "$lib/Hooks/useTheme"
 import { RecordedSong } from "$lib/Songs/RecordedSong"

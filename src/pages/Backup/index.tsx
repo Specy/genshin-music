@@ -13,7 +13,7 @@ import { asyncConfirm, asyncPrompt } from "$/components/Utility/AsyncPrompts";
 import { logger } from "$/stores/LoggerStore";
 import { fileService, UnknownFileTypes } from "$/lib/Services/FileService";
 import { Folder, SerializedFolder } from "$/lib/Folder";
-import { APP_NAME } from "$/appConfig";
+import { APP_NAME } from "$/Config";
 import { FileElement, FilePicker } from "$/components/Inputs/FilePicker";
 import { delay } from "$/lib/Utilities";
 import { useSongs } from "$/lib/Hooks/useSongs";

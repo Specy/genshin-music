@@ -72,7 +72,14 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Bells",
         "DunDun",
         "HandPan",
-        "SFX_Dance"
+        "SFX_Dance",
+        "SFX_BirdCall",
+        "SFX_CrabCall",
+        "SFX_FishCall",
+        "SFX_GhostMantaCall",
+        "SFX_JellyCall",
+        "SFX_MantaCall",
+        "SFX_MothCall"
     ] as const
 const PLAY_BAR_OFFSET = 200
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
@@ -108,6 +115,7 @@ const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     skyHandpan: ["D", "A", "C", "D", "F", "G", "A", "C"],
     defaultDrums: ["C", "D", "E", "F", "G", "A", "B", "C"],
     skySFX6: ["", "", "", "", "", ""],
+    skySFX14: ["C#", "E", "G", "A#", "C#", "E", "G", "A#", "C#", "E", "G", "A#", "C#", "E"],
     genshinVintageLyre: ["C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
 
 } as const
@@ -171,7 +179,8 @@ const LAYOUT_KINDS = {
         abcLayout: (
             "A1 A2 A3 " +
             "B1 B2 B3").split(" ")
-    }
+    },
+
 }
 //TODO add the instrument data like layout kinds here instead of LAYOUT_KINDS
 const LAYOUT_ICONS_KINDS = {
@@ -192,6 +201,16 @@ type InstrumentDataType = {
     icons: readonly NoteImage[]
     clickColor?: string
     fill?: string
+}
+
+
+const skySfx14 = {
+    notes: 15,
+    family: "percussive",
+    midiName: "synth drum",
+    baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+    layout: LAYOUT_KINDS.defaultSky,
+    icons: LAYOUT_ICONS_KINDS.defaultSky
 }
 const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
     Lyre: {
@@ -255,6 +274,13 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
         layout: LAYOUT_KINDS.skySFX6,
         icons: LAYOUT_ICONS_KINDS.skySFX6
     },
+    "SFX_BirdCall": skySfx14,
+    "SFX_CrabCall": skySfx14,
+    "SFX_FishCall": skySfx14,
+    "SFX_GhostMantaCall": skySfx14,
+    "SFX_JellyCall": skySfx14,
+    "SFX_MantaCall": skySfx14,
+    "SFX_MothCall": skySfx14,
     Panflute: {
         notes: 15,
         family: "pipe",

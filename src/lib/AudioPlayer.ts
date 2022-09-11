@@ -1,4 +1,4 @@
-import { Pitch } from "$/appConfig";
+import { Pitch } from "$/Config";
 import Instrument from "./Instrument"
 import { AudioProvider } from "./Providers/AudioProvider";
 import { InstrumentData } from "./Songs/SongClasses";
