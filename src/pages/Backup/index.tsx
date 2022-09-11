@@ -197,7 +197,6 @@ export function Backup() {
                         padding: '0.8rem'
                     }}
                 >
-
                     <FaFileImport style={{ ...iconStyle, fontSize: '1rem', marginRight: '0.5rem' }} />
                     Import backup
                 </AppButton>

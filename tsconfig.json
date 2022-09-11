@@ -42,6 +42,5 @@
     "node_modules",
     "build",
     "src-tauri"
-  
   ]
 }

@@ -76,7 +76,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "SFX_BirdCall",
         "SFX_CrabCall",
         "SFX_FishCall",
-        "SFX_GhostMantaCall",
+        "SFX_SpiritMantaCall",
         "SFX_JellyCall",
         "SFX_MantaCall",
         "SFX_MothCall"
@@ -277,7 +277,7 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
     "SFX_BirdCall": skySfx14,
     "SFX_CrabCall": skySfx14,
     "SFX_FishCall": skySfx14,
-    "SFX_GhostMantaCall": skySfx14,
+    "SFX_SpiritMantaCall": skySfx14,
     "SFX_JellyCall": skySfx14,
     "SFX_MantaCall": skySfx14,
     "SFX_MothCall": skySfx14,
