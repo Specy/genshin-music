@@ -45,7 +45,7 @@ export function VsrgComposerHelp() {
                         <td><Key>1/2/3</Key></td><td>Select tap/hold/delete</td>
                     </tr>
                     <tr>
-                        <td><Key>CTRL + W/A/S/D</Key></td><td>Move the selected hit object up / left / down / right, inverts if the editor is horizontal</td>
+                        <td><Key>Shift + W/A/S/D</Key></td><td>Move the selected hit object up / left / down / right, inverts if the editor is horizontal</td>
                     </tr>
                     <tr>
                         <td><Key>Esc</Key></td><td> Deselect current hitObject </td>

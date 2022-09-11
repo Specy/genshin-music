@@ -469,13 +469,14 @@ export type VsrgPlayerSettingsDataType = {
     approachTime: SettingsNumber
     maxFps: SettingsSelect<number>
     keyboardLayout: SettingsSelect<VsrgKeyboardLayout>
+    offset: SettingsNumber
     horizontalOffset: SettingsSlider
     verticalOffset: SettingsSlider
 }
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 1
+        settingVersion: APP_NAME + 2
     },
     data: {
         approachTime: {
@@ -515,6 +516,16 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
                 'circles',
                 'line'
             ]
+        },
+        offset: {
+            name: "Audio Offset",
+            tooltip: "An offset to the audio if it plays too early/late (in ms)",
+            type: "number",
+            songSetting: true,
+            increment: 2,
+            threshold: [-1000, 1000],
+            value: 0,
+            category: "Player Settings",
         },
         verticalOffset: {
             name: "Vertical position",

@@ -554,7 +554,6 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 await this.updateSong(song)
             } else {
                 const confirm = await asyncConfirm(`You have unsaved changes to the song: "${song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
-                console.log(confirm)
                 if (confirm) {
                     await this.updateSong(song)
                 }

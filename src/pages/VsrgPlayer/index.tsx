@@ -122,7 +122,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         this.onSongSelect(song, 'play')
     }
     handleTick = (timestamp: number) => {
-        const { audioSong, songAudioPlayer, song } = this.state
+        const { audioSong, songAudioPlayer, song , settings} = this.state
         this.lastTimestamp = timestamp
         if (!song) return
         if(this.lastTimestamp >= song.duration + 2000){
@@ -131,7 +131,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         }
         if (this.lastTimestamp >= song.duration  || timestamp < 0) return
         if (audioSong) {
-            const notes = audioSong.tickPlayback(timestamp)
+            const notes = audioSong.tickPlayback(timestamp + settings.offset.value)
             notes.forEach(n => {
                 const layers = n.layer.toArray()
                 layers.forEach((l, i) => {

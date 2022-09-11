@@ -8,7 +8,7 @@ type Update = {
 export const updates: Update[] = [
     {
         version: '3.0',
-        title: 'VSRG mode, Zen keyboard and more!',
+        title: 'VSRG mode, Zen keyboard, Calls and more!',
         date: '2022 - 22/07',
         changes: [
             "Added VSRG mode to compose and play vsrg songs",
@@ -17,11 +17,12 @@ export const updates: Update[] = [
             "Added app scaling",
             "Added alphabetical folder ordering",
             "Added backup page",
+            "(Sky) Added SFX of the calls and dance emote",
             "Changed metronome sounds",
-            "(Sky) Added SFX sounds for dance emote",
             "Improved player performance",
             "Multi type export, you can now export/import songs,folders,themes etc",
             "Fixed bug that would remove a song from the folder when saved",
+            "Fixed bug that would not play audio",
             "Fixed issues when opening/saving songs in the composer",
             "Fixed bug in pasting notes in the composer",
             "Exporting a song would not work in sky music and sky studio",
