@@ -52,7 +52,10 @@ interface ComposerState {
     isPlaying: boolean
     theme: ThemeStore
 }
-type ComposerProps = RouteComponentProps & {
+type HistoryProps = {
+    songId: string
+}
+type ComposerProps = RouteComponentProps<{},{},HistoryProps> & {
     inPreview?: boolean
 }
 class Composer extends Component<ComposerProps, ComposerState>{
@@ -136,6 +139,17 @@ class Composer extends Component<ComposerProps, ComposerState>{
         AudioProvider.setReverb(settings.caveMode.value)
         MIDIProvider.addListener(this.handleMidi)
         this.registerKeyboardListeners()
+        try{
+            const historyState = this.props?.history?.location?.state
+            const id = historyState?.songId
+            if(!id) return 
+            const song = await songService.getSongById(id)
+            if(!song) return
+            this.loadSong(song)
+        }catch(e){
+            console.log("Error loading song")
+            console.error(e)
+        }
     }
     registerKeyboardListeners = () => {
         const id = 'composer'

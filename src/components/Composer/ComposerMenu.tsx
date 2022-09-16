@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone } from 'react-icons/fa';
+import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone, FaEdit } from 'react-icons/fa';
 import { APP_NAME, IS_MOBILE } from '$/Config'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import MenuPanel from '$cmp/Layout/MenuPanel'
@@ -345,6 +345,17 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
+                <FloatingDropdownRow 
+                        style={{width: '100%'}} 
+                        onClick={() => {
+                            if(data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
+                            loadSong(data)
+                            toggleMenu(false)
+                        }}
+                    >
+                        <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
+                        <FloatingDropdownText text='Edit song' />
+                    </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={() => downloadSong(data)}>
                     <FaDownload style={{ marginRight: "0.4rem" }} />
                     <FloatingDropdownText text='Download' />

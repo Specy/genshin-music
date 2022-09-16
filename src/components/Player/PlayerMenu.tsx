@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder } from 'react-icons/fa';
+import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder, FaEdit } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
 import { APP_NAME, IS_MIDI_AVAILABLE } from "$/Config"
@@ -306,19 +306,19 @@ function Menu({ functions, data }: MenuProps) {
                 </div>
                 <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }} className={hasTooltip(true)}>
                     {isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
-                    {isPersistentStorage 
-                        ? <Tooltip position='top' style={{maxWidth: 'unset'}}>
-                            Your data is persisted in the browser, the browser should not automatically clear it. 
-                            Always make sure to download a backup sometimes, especially when you will not use the app 
+                    {isPersistentStorage
+                        ? <Tooltip position='top' style={{ maxWidth: 'unset' }}>
+                            Your data is persisted in the browser, the browser should not automatically clear it.
+                            Always make sure to download a backup sometimes, especially when you will not use the app
                             for a long time
                         </Tooltip>
                         : <Tooltip position='top'>
-                            The browser didn't allow to store data persistently, it might happen that you will loose data 
+                            The browser didn't allow to store data persistently, it might happen that you will loose data
                             when cache is automatically cleared. To get persistent storage, add the app to the home screen.
                             If that still doesn't work, make sure you do a backup often
                         </Tooltip>
                     }
-                    
+
                 </div>
                 <DonateButton />
             </MenuPanel>
@@ -416,7 +416,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     useEffect(() => {
         setSongName(data.name)
     }, [data.name])
-    if(data.type === 'vsrg') return <div className='row'>
+    if (data.type === 'vsrg') return <div className='row'>
         Invalid song
     </div>
     return <div className="song-row">
@@ -503,6 +503,25 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
+                <Link
+                    to={{
+                        pathname: "/Composer",
+                        state: {
+                            songId: data.id,
+                        }
+                    }}
+                    style={{width: '100%'}}
+                >
+                    <FloatingDropdownRow 
+                        style={{width: '100%'}} 
+                        onClick={() => {
+                            if(data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
+                        }}
+                    >
+                        <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
+                        <FloatingDropdownText text='Edit song' />
+                    </FloatingDropdownRow>
+                </Link>
                 <FloatingDropdownRow onClick={() => {
                     const song = songService.parseSong(data) as RecordedOrComposed
                     downloadSong(song)
