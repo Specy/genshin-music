@@ -6,25 +6,25 @@ import { delay } from "./Utilities"
 
 type AppUpdateSchema = {
     version: string,
-    shouldNotify: boolean,
-    isUrgent: boolean,
+    urgentMessage?: string,
+    message?: string
     tauriDestinationUrl: string,
-    message: string
 }
 type UpdateSchema = {
     Sky: AppUpdateSchema,
     Genshin: AppUpdateSchema
 }
 
-export async function needsUpdate() {
+export async function checkIfneedsUpdate() {
     try {
         await delay(2000)
         const appUpdate: UpdateSchema = await fetch(UPDATE_URL).then(r => r.json())
         const currentVersion = semverCoerce(APP_VERSION)
         const latestVersion = semverCoerce(appUpdate[APP_NAME].version)
+
         if (currentVersion && latestVersion && semverLt(currentVersion, latestVersion)) {
-            const { shouldNotify, message } = appUpdate[APP_NAME]
-            if (shouldNotify) {
+            const { message, urgentMessage } = appUpdate[APP_NAME]
+            if (message) {
                 logger.warn(
                     `A New version of the app is available.
                         ${!IS_TAURI
@@ -32,7 +32,10 @@ export async function needsUpdate() {
                             : ""
                         } 
                     ${message ? `Update Message: "${message}"` : ""}
-                    `.trim(), 30000)
+                    `.trim(), 20000)
+            }
+            if (urgentMessage) {
+                logger.error(urgentMessage, 20000)
             }
         }
     } catch (e) {

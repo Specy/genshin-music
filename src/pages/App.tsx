@@ -17,7 +17,7 @@ import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
 import { IconButton } from '$/components/Inputs/IconButton';
 import { metronome } from '$/lib/Metronome';
 import { logsStore } from '$stores/LogsStore';
-import { needsUpdate } from '$/lib/needsUpdate';
+import { checkIfneedsUpdate } from '$/lib/needsUpdate';
 import { AsyncPromptWrapper } from '$/components/Utility/AsyncPrompt';
 
 
@@ -79,7 +79,7 @@ function App({ history }: any) {
 		setIsOnMobile(isMobile())
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
-		needsUpdate()
+		checkIfneedsUpdate()
 	}, [])
 
 	const setHeight = useCallback((h: number) => {

@@ -127,7 +127,7 @@
 	opacity: 0.5;
 }
 
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
 	.displayer-page {
 		padding: 1rem 5vw;
 	}

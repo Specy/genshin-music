@@ -7,6 +7,7 @@ import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
+import { clamp } from "../Utilities"
 
 interface OldFormatNoteType {
     key: string,
@@ -382,8 +383,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     }
     deleteColumns = (selectedColumns: number[]) => {
         this.columns = this.columns.filter((e, i) => !selectedColumns.includes(i))
-        if (this.selected > this.columns.length - 1) this.selected = this.columns.length - 1
-        if (this.selected <= 0) this.selected = 0
+        let min = Math.min(...selectedColumns)
+        this.selected = clamp(min, 0, this.columns.length - 1)
         if (this.columns.length === 0) this.addColumns(12, 0)
         return this
     }

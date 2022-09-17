@@ -65,7 +65,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
     async function deleteFolder() {
         const confirm = await asyncConfirm(
             `Are you sure you want to delete "${data.name}"?  
-            The songs will be automatically removed from it`
+            The songs won't be deleted`
         )
         if (!confirm) return
         folderStore.removeFolder(data)

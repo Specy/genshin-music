@@ -99,7 +99,7 @@ export function FloatingDropdownRow({ children, onClick, style }: FloatingDropdo
     return <AppButton
         ariaLabel="Floating Dropdown Button"
         className='row row-centered'
-        style={{ padding: "0.5rem", minWidth: "unset", ...style }}
+        style={{ padding: "0.4rem", minWidth: "unset", ...style }}
         onClick={onClick}
     >
         {children}

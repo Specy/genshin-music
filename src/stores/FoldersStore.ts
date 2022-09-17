@@ -39,6 +39,10 @@ export class FolderStore {
         await _folderService.updateFolder(folder.id!, folder.serialize())
         this.sync()
     }
+    _DANGEROUS_CLEAR_ALL_FOLDERS = async () => {
+        await _folderService._deleteAllFolders()
+        this.sync()
+    }
 }
 export const folderStore = new FolderStore()
 folderStore.sync()

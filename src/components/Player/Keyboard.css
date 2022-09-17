@@ -248,7 +248,7 @@
 .record-btn {
 	width: fit-content;
 }
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
 	.keyboard-playback .click-event{
 		transform: unset; /*performance reasons for mobile*/
 	}

@@ -34,15 +34,16 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
     }, [isHidden])
 
     useEffect(() => {
+        if(!deferred) return
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
             asyncPromptStore.answerConfirm(false)
-        }, { id: 'AsyncPrompt' })
+        }, { id: 'AsyncConfirm' })
         KeyboardProvider.register("Enter", () => {
             asyncPromptStore.answerConfirm(true)
-        }, { id: 'AsyncPrompt' })
-        return () => KeyboardProvider.unregisterById('AsyncPrompt')
-    }, [cancellable])
+        }, { id: 'AsyncConfirm' })
+        return () => KeyboardProvider.unregisterById('AsyncConfirm')
+    }, [cancellable, deferred])
 
     function onOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
         if (e.nativeEvent.composedPath()[0] !== ref.current || !cancellable) return
@@ -124,6 +125,7 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
     }, [inputRef, deferred])
 
     useEffect(() => {
+        if(!deferred) return
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
             asyncPromptStore.answerPrompt(null)
@@ -133,7 +135,7 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
             asyncPromptStore.answerPrompt(value)
         }, { id: 'AsyncPrompt' })
         return () => KeyboardProvider.unregisterById('AsyncPrompt')
-    }, [cancellable, value])
+    }, [cancellable, value, deferred])
 
     function onOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
         if (e.nativeEvent.composedPath()[0] !== ref.current || !cancellable) return

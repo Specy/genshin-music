@@ -4,6 +4,7 @@
     max-width: 40rem;
     margin-left: auto;
     margin-right: auto;
+    z-index: -1;
     top: 0.8rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -45,7 +46,7 @@
 	background-color: var(--primary);
 	color: var(--primary-text);
 }
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
     .player-chunks-page{
         width: 45vw;
     }

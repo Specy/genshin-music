@@ -157,15 +157,28 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     Icon={VsrgComposerIcon}
                     current={currentPage === 'VsrgComposer'}
                     href='VsrgComposer'
-                    title='Vsrg Composer'
-                />
+                >
+                    <span style={{ fontSize: '1rem' }} className='row-centered'>
+                        Vsrg Composer
+                        <span style={{ fontSize: '0.7rem' ,marginLeft: '0.3rem' }}>
+                            (beta)
+                        </span>
+                    </span>
+
+                </MiddleSizePage>
 
                 <MiddleSizePage
                     Icon={VsrgIcon}
                     current={currentPage === 'VsrgPlayer'}
                     href='VsrgPlayer'
-                    title='Vsrg Player'
-                />
+                >
+                    <span style={{ fontSize: '1rem' }} className='row-centered'>
+                        Vsrg Player
+                        <span style={{ fontSize: '0.7rem' ,marginLeft: '0.3rem' }}>
+                            (beta)
+                        </span>
+                    </span>
+                </MiddleSizePage>
             </div>
             <Separator />
             <div className='page-redirect-wrapper'>
@@ -246,21 +259,19 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
 }
 
 interface MiddleSizePageProps {
-    title: string
+    children: React.ReactNode,
     href: string
     current: boolean
     Icon: React.FC<{ className?: string }>
 }
-function MiddleSizePage({ href, title, Icon, current }: MiddleSizePageProps) {
+function MiddleSizePage({ href, children, Icon, current }: MiddleSizePageProps) {
     return <Link
         to={href}
         onClick={homeStore.close}
         className={`middle-size-page row ${current ? 'current-page' : ''}`}
     >
         <Icon className='middle-size-page-icon' />
-        <span style={{ fontSize: '1.1rem' }}>
-            {title}
-        </span>
+        {children}
     </Link>
 }
 

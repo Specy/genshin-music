@@ -696,7 +696,7 @@ a {
 
 }
 
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
 	.folder-header{
 		padding: 0.4rem;
 	}

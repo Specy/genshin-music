@@ -91,13 +91,14 @@ export function Backup() {
             }
         }
     }
-    async function deleteAllSongs() {
+    async function deleteAllSongsAndFolders() {
         const confirm = await asyncPrompt("Write 'delete' if you want to delete all songs, press cancel to ignore")
         if (confirm !== 'delete') return logger.warn('Action cancelled')
         await delay(200)
         const confirmAgain = await asyncConfirm("Are you REALLY sure you want to delete all songs?")
         if (!confirmAgain) return logger.warn('Action cancelled')
         await songsStore._DANGEROUS_CLEAR_ALL_SONGS()
+        await folderStore._DANGEROUS_CLEAR_ALL_FOLDERS()
         logger.success("Deleted all songs")
     }
     async function deleteAllThemes() {
@@ -237,7 +238,7 @@ export function Backup() {
                     backgroundColor: "var(--red-bg)",
                     color: "var(--red-text)"
                 }}
-                onClick={deleteAllSongs}
+                onClick={deleteAllSongsAndFolders}
             >
                 <FaTrash style={iconStyle} />
                 Delete songs and folders

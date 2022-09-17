@@ -419,7 +419,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             } else {
                 //if it doesn't exist, add it
                 if (song.name.includes("- Composed")) {
-                    const name = await asyncPrompt("Write song name, press cancel to ignore")
+                    const name = await asyncPrompt("Write the song name for the composed version, press cancel to ignore")
                     if (name === null) return resolve()
                     song.name = name
                     this.addSong(song)
@@ -673,6 +673,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { song, selectedColumns } = this.state
         this.addToHistory()
         song.deleteColumns(selectedColumns)
+        console.log(song.selected)
         this.changes++
         this.setState({
             song,

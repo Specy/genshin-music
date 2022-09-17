@@ -241,7 +241,7 @@
         background-color: var(--primary);
     }
 }
-@media  (max-width:900px) {
+@media  (max-width:920px) {
     .theme-row{
         margin-top: 0.5rem;
     }

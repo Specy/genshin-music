@@ -7,11 +7,12 @@ const APP_VERSION = '3.0' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? `
-        Check the updates page for more info
+        Added VSRG mode, zen keyboard, visual sheet in the player and more!
+        Check the changelog page for more info
     `.trim() :
     `
-        Check the updates page for more info
-
+        Added VSRG mode, zen keyboard, player calls, visual sheet in the player and more!
+        Check the changelog page for more info
     `.trim()
 const UPDATE_URL = process.env.NODE_ENV === 'development'
     ? 'http://localhost:3000/updates.json'

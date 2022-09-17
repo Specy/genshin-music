@@ -50,6 +50,7 @@
 .logger-toast {
 	border-radius: 0.4rem;
 	border: solid 2px var(--secondary);
+	min-width: 15rem;
 	background-color: var(--primary);
 	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 	color: var(--primary-text);
@@ -373,7 +374,7 @@
 	background-color: #515c6f;
 	margin-bottom: 0.5rem;
 }
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
 	.home-padded {
 		padding: 0.6rem 15vw;
 	}

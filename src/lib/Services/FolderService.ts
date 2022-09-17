@@ -24,6 +24,9 @@ class FolderService{
     removeFolder(id: string){
         return this.foldersCollection.removeById(id)
     }
+    _deleteAllFolders(){
+        return this.foldersCollection.remove({})
+    }
 }
 
 export const _folderService = new FolderService()

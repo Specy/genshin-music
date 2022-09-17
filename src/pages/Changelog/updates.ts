@@ -20,16 +20,15 @@ export const updates: Update[] = [
             "(Sky) Added SFX of the calls and dance emote",
             "Changed metronome sounds",
             "Improved player performance",
-            "Multi type export, you can now export/import songs,folders,themes etc",
+            "Multi type export, you can now export/import songs, folders, themes etc",
             "Fixed bug that would remove a song from the folder when saved",
             "Fixed bug that would not play audio",
             "Fixed issues when opening/saving songs in the composer",
             "Fixed bug in pasting notes in the composer",
             "Exporting a song would not work in sky music and sky studio",
-            "Other bug fixes...",
+            "Other bug fixes and features...",
         ]
     },{
-
         version: '2.8',
         title: 'More Composer layers and UI rework',
         date: '2022 - 7/07',

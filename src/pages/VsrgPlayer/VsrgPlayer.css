@@ -222,7 +222,7 @@
     font-size: 3rem;
     opacity: 0.8;
 }
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
     .vsrg-floating-score {
         font-size: 1.8rem;
         top: 65%;
