@@ -64,6 +64,7 @@ export interface SerializedInstrumentData{
     visible: boolean
     icon: InstrumentNoteIcon
 	alias: string
+	muted: boolean
 }
 export class InstrumentData{
     name: InstrumentName = INSTRUMENTS[0]
@@ -83,7 +84,8 @@ export class InstrumentData{
 			pitch: this.pitch,
 			visible: this.visible,
 			icon: this.icon,
-			alias: this.alias
+			alias: this.alias,
+			muted: this.muted
 		}
 	}
 	static deserialize(data: SerializedInstrumentData): InstrumentData{
@@ -93,7 +95,8 @@ export class InstrumentData{
 			pitch: data.pitch ?? "C",
 			visible: data.visible ?? true,
 			icon: data.icon ?? 'circle',
-			alias: data.alias ?? ""
+			alias: data.alias ?? "",
+			muted: data.muted ?? false
 		})
 	}
 	set(data: Partial<InstrumentData>){
