@@ -673,7 +673,6 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { song, selectedColumns } = this.state
         this.addToHistory()
         song.deleteColumns(selectedColumns)
-        console.log(song.selected)
         this.changes++
         this.setState({
             song,

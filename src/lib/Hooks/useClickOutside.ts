@@ -42,6 +42,6 @@ export function hasFocusable(e: MouseEvent) {
         return e.classList?.contains?.("ignore_click_outside")
     })
 }
-
+export const IGNORE_CLICK_CLASS = 'ignore_click_outside'
 
 

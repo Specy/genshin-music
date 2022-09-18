@@ -81,7 +81,14 @@ class UnknownFileResult {
 
 export class FileService {
     async importAndLog(files: UnknownFile) {
-        const result = await fileService.importUnknownFile(files)
+        logger.showPill("Importing files...")
+        const result = await fileService.importUnknownFile(files).catch(e => {
+            logger.hidePill()
+            logger.error("Error importing files")
+            console.error(e)
+            throw e
+        })
+        logger.hidePill()
         if (result.hasErrors()){
             logger.error(`${result.errors.length} thing${result.errors.length === 1 ? '' : 's'} failed to import`)
         }

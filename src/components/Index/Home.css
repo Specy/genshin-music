@@ -86,7 +86,7 @@
 	padding: 0.5rem 1.5rem;
 	transition: all 0.3s;
 	min-height: 2.4rem;
-	background-color: var(--secondary);
+	background-color: rgba(var(--secondary-rgb), 0.9);
 	top: 0.8rem;
 	font-size: 0.8rem;
 	margin-left: auto;
@@ -99,8 +99,9 @@
 	transform: translateY(calc(-120% - 0.8rem));
 }
 .pill-visible{
-	opacity: 0.9;
+	opacity: 1;
 	transform: translateY(0);
+	animation: delayBackdrop 0.2s forwards;
 }
 .logger-content{
 	display: flex;

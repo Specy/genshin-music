@@ -2,7 +2,7 @@ import { AppButton } from "$/components/Inputs/AppButton";
 import { DefaultPage } from "$/components/Layout/DefaultPage";
 import { Title } from "$/components/Miscellaneous/Title";
 import { FaFileDownload, FaFileImport, FaTrash } from "react-icons/fa";
-import { useState, useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import { songService } from "$/lib/Services/SongService";
 import { _themeService } from "$/lib/Services/ThemeService";
 import { SerializedSong } from "$/lib/Songs/Song";
@@ -26,7 +26,11 @@ export function Backup() {
     const [songs] = useSongs()
     const userThemes = useObservableArray<SerializedTheme>(themeStore.themes)
 
+    useEffect(() => {
+        return () => logger.hidePill()
+    },[])
     async function validateSongs(): Promise<SerializedSong[] | null> {
+        logger.showPill("Validating songs...")
         const songs = await songService.getSongs()
         const errors: SerializedSong[] = []
         for (const song of songs) {
@@ -42,10 +46,11 @@ export function Backup() {
             const keepDownloading = await asyncPrompt("There were errors validating some songs. Do you want to continue downloading?")
             if (!keepDownloading) return null
         }
-
+        logger.hidePill()
         return [...songs]
     }
     async function validateFolders(): Promise<SerializedFolder[] | null> {
+        logger.showPill("Validating folders...")
         const folderErrors: SerializedFolder[] = []
         const folders = await _folderService.getFolders()
         for (const folder of folders) {
@@ -61,9 +66,11 @@ export function Backup() {
             const keepDownloading = await asyncPrompt("There were errors validating some folders. Do you want to continue downloading?")
             if (!keepDownloading) return null
         }
+        logger.hidePill()
         return [...folders]
     }
     async function validateThemes(): Promise<SerializedTheme[] | null> {
+        logger.showPill("Validating themes...")
         const themes = await _themeService.getThemes()
         const errors: SerializedTheme[] = []
         for (const theme of themes) {
@@ -78,6 +85,7 @@ export function Backup() {
             const keepDownloading = await asyncPrompt("There were errors validating some themes. Do you want to continue downloading?")
             if (!keepDownloading) return null
         }
+        logger.hidePill()
         return [...themes]
     }
     async function onFilePick(files: FileElement<UnknownFileTypes[] | UnknownFileTypes>[]) {

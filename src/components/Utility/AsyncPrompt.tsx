@@ -6,6 +6,7 @@ import { useTheme } from "$/lib/Hooks/useTheme"
 import { IS_MOBILE } from "$/Config"
 import { cn } from "$/lib/Utilities"
 import { KeyboardProvider } from "$/lib/Providers/KeyboardProvider"
+import { IGNORE_CLICK_CLASS } from "$/lib/Hooks/useClickOutside"
 
 export function AsyncPromptWrapper() {
     const confirmState = useObservableObject(asyncPromptStore.confirmState)
@@ -52,13 +53,13 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
     return <div
         style={!isMounted ? { display: 'none' } : {}}
         onClick={onOverlayClick}
-        className={cn('prompt-overlay', [isHidden, 'prompt-overlay-hidden'])}
+        className={cn(`prompt-overlay ${IGNORE_CLICK_CLASS}`, [isHidden, 'prompt-overlay-hidden'])}
         ref={ref}
     >
 
         <DecorationBorderedBox
             boxProps={{
-                className: cn('floating-prompt', [!deferred, 'floating-prompt-hidden'])
+                className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
             }}
             isRelative={false}
             size={'1.1rem'}
@@ -145,11 +146,11 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
         ref={ref}
         style={!isMounted ? { display: 'none' } : {}}
         onClick={onOverlayClick}
-        className={cn('prompt-overlay', [isHidden, 'prompt-overlay-hidden'])}
+        className={cn(`prompt-overlay ${IGNORE_CLICK_CLASS}`, [isHidden, 'prompt-overlay-hidden'])}
     >
         <DecorationBorderedBox
             boxProps={{
-                className: cn(`floating-prompt`, [!deferred, 'floating-prompt-hidden'])
+                className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
             }}
             isRelative={false}
             size={'1.1rem'}
