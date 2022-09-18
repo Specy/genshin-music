@@ -12,10 +12,11 @@ import { CacheFirst } from 'workbox-strategies';
 const APP_NAME = import.meta.env.VITE_APP_NAME
 const CACHE = `${APP_NAME}-${import.meta.env.VITE_SW_VERSION}`
 const IS_TAURI = import.meta.env.VITE_IS_TAURI === 'true'
-
+console.log(CACHE)
 declare var self: ServiceWorkerGlobalScope
 clientsClaim();
-//const PRECACHE_MANIFEST = self.__WB_MANIFEST
+//@ts-ignore
+const PRECACHE_MANIFEST = self.__WB_MANIFEST
 if (IS_TAURI) {
 
 } else {
@@ -24,6 +25,7 @@ if (IS_TAURI) {
 	// This variable must be present somewhere in your service worker file,
 	// even if you decide not to use precaching. See https://cra.link/PWA
 	//precacheAndRoute(PRECACHE_MANIFEST);
+	console.log("registering routes")
 	registerRoute(
 		new RegExp('/*'),
 		new CacheFirst({
@@ -50,7 +52,8 @@ self.addEventListener('activate', (evt) => {
 					console.log('[ServiceWorker] Removing old cache', key);
 					return caches.delete(key)
 				}
-				return new Promise(resolve => resolve(false)) //not sure if i need to return false
+				//@ts-ignore
+				return new Promise(resolve => resolve())
 			}));
 			return promises
 		})
