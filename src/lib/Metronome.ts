@@ -29,8 +29,8 @@ class Metronome{
     }
     async loadBuffers(){
         const promises = [
-            fetchAudioBuffer("./assets/audio/_Metronome/bar.mp3").catch(() => emptyBuffer),
-            fetchAudioBuffer("./assets/audio/_Metronome/quarter.mp3").catch(() => emptyBuffer)
+            fetchAudioBuffer("./assets/audio/MetronomeSFX/bar.mp3").catch(() => emptyBuffer),
+            fetchAudioBuffer("./assets/audio/MetronomeSFX/quarter.mp3").catch(() => emptyBuffer)
         ]
         const result = await Promise.all(promises)
         this.indicatorBuffer = result[0]
