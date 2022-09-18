@@ -1,12 +1,13 @@
-import { Theme } from "./index"
-const baseThemes: Theme[] = [
+import { SerializedTheme } from "./ThemeProvider"
+const baseThemes: SerializedTheme[] = [
     {
+        id: "Pink",
+        type: 'theme',
         editable: false,
         other: {
             backgroundImageMain: "",
             backgroundImageComposer: "",
             name: "Pink",
-            id: "Pink"
         },
         data: {
             background: {
@@ -62,11 +63,12 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: "Blue",
+        type: 'theme',
         other: {
             backgroundImageMain: "",
             backgroundImageComposer: "",
             name: "Blue",
-            id: "Blue"
         },
         data: {
             background: {
@@ -122,11 +124,12 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: "Rainy_Lullaby",
+        type: 'theme',
         other: {
             backgroundImageMain: "./assets/images/Rainy_Theme.png",
             backgroundImageComposer: "./assets/images/Rainy_Theme.png",
             name: "Rainy Lullaby",
-            id: "Rainy_Lullaby"
         },
         data: {
             background: {
@@ -182,11 +185,12 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: "Liyue",
+        type: 'theme',
         other: {
             backgroundImageMain: "./assets/images/Liyue_Theme.jpg",
             backgroundImageComposer: "./assets/images/Liyue_Theme.jpg",
             name: "Liyue",
-            id: "Liyue"
         },
         data: {
             background: {
@@ -242,11 +246,12 @@ const baseThemes: Theme[] = [
 
     {
         editable: false,
+        id: "Hacker_Theme",
+        type: 'theme',
         other: {
             backgroundImageMain: "",
             backgroundImageComposer: "",
             name: "Hacker",
-            id: "Hacker_Theme"
         },
         data: {
             background: {
@@ -301,11 +306,12 @@ const baseThemes: Theme[] = [
     },
     {
         editable: false,
+        id: "Snowy Night",
+        type: 'theme',
         other: {
             backgroundImageMain: "./assets/images/Snow_Theme.gif",
             backgroundImageComposer: "./assets/images/Snow_Theme.gif",
             name: "Snowy Night",
-            id: "Snowy Night"
         },
         data: {
             background: {

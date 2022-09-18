@@ -17,6 +17,9 @@
     border-top-right-radius: 0.4rem;
     overflow: hidden;
 }
+.canvas-relative canvas{
+    cursor: pointer !important;
+}
 select {
     -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='gray'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
@@ -160,6 +163,7 @@ select {
     display: flex;
     width: 100%;
     overflow: hidden;
+    cursor: pointer;
     border-radius: 0.3rem;
 }
 
@@ -267,6 +271,7 @@ select {
     bottom: 1.4rem;
     transform: scale(1);
     opacity: 1;
+    --backdrop-amount: 2px
     animation: delayBackdrop 0.4s;
     animation-fill-mode: forwards;
 }
@@ -303,7 +308,12 @@ select {
     background-color: #d3bd8e !important;
     border-color: #ab9361 !important;
 }
-
+.layer-2 .svg-b{
+    stroke: #d75c5c !important;
+}
+.layer-1 .svg-b{
+    stroke: #d3bd8e !important;
+}
 .layer-1 .svg-note {
     fill: #f2ecec !important;
     stroke: #f2ecec !important;
@@ -359,10 +369,6 @@ select {
     height: 3vw;
 }
 
-
-canvas {
-    cursor: pointer !important;
-}
 
 .tempo-changers-wrapper button {
     flex: 1;
@@ -458,7 +464,7 @@ canvas {
     top: 3.4rem;
     margin-left: 6.6rem;
     z-index: 10;
-    animation: fadeAndScaleIn 0.2s;
+    animation: fadeIn 0.2s;
 }
 .instrument-settings-button {
     flex: 1;
@@ -470,10 +476,9 @@ canvas {
     position: absolute;
     margin-left: auto;
     margin-right: auto;
-    bottom: 0.5rem;
-    height: 48vh;
+    bottom: 2rem;
+    max-height: 48vh;
     border-radius: 0.5rem;
-    padding: 0.8rem;
     background-color: var(--menu-background);
     border: solid 2px var(--secondary);
     color: var(--menu-background-text);
@@ -483,10 +488,14 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    overflow: auto;
-    animation: fadeAndScaleIn 0.2s;
+    animation: fadeIn 0.2s;
 }
-
+.floating-midi-content{
+    padding: 0.8rem;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
 
 .floating-midi * {
     font-size: 0.9rem;
@@ -654,7 +663,7 @@ canvas {
         opacity: 1;
     }
 }
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
     .canvas-buttons{
         display: flex;
     }
@@ -698,13 +707,14 @@ canvas {
     }
 
     .floating-midi {
-        padding: 0.4rem;
         bottom: 0.2rem;
         height: 50vh;
         max-width: 70vw;
         width: 70vw;
     }
-
+    .floating-midi-content{
+        padding: 0.4rem;
+    }
     .song-info {
         font-size: 0.9rem;
     }

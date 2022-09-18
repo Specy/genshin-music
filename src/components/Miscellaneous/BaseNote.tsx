@@ -1,21 +1,24 @@
-import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "appConfig"
-import GenshinNoteBorder from 'components/Miscellaneous/GenshinNoteBorder'
+import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "$/Config"
+import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
-import { ThemeProvider } from "stores/ThemeStore"
-import { NoteImage } from "types/Keyboard"
-import SvgNotes from "../SvgNotes"
+import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
+import SvgNotes, { NoteImage } from "$cmp/SvgNotes"
 
 
-interface BaseNoteProps{
-    data: {
-        status: 'clicked' | string
-    }, //TODO do this
-    noteText: string,
-    handleClick: (data:any) => void,
-    noteImage: NoteImage
+type BaseNoteData = {
+    status: 'clicked' | string
 }
-export default function BaseNote({ data, noteText = 'A', handleClick, noteImage }:BaseNoteProps) {
+interface BaseNoteProps<T>{
+    data: T & BaseNoteData
+    clickClass?: string
+    noteClass?: string
+    noteRef?: React.RefObject<HTMLDivElement>
+    noteText: string,
+    handleClick: (data: T & BaseNoteData) => void,
+    noteImage?: NoteImage
+}
+export default function BaseNote<T>({ data, noteText = 'A', handleClick, noteImage, clickClass = '', noteClass = '', noteRef }: BaseNoteProps<T>) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
         const dispose = observe(ThemeProvider.state.data, () => {
@@ -23,7 +26,7 @@ export default function BaseNote({ data, noteText = 'A', handleClick, noteImage 
         })
         return dispose
     }, [])
-    const className = parseClass(data.status)
+    const className = parseClass(data.status, clickClass) + ` ${noteClass}`
     return <button
         onPointerDown={(e) => {
             e.preventDefault()
@@ -32,14 +35,24 @@ export default function BaseNote({ data, noteText = 'A', handleClick, noteImage 
         className="button-hitbox-bigger"
     >
         <div
+            ref={noteRef}
             className={className}
             style={{ borderColor: parseBorderColor(data.status) }}
         >
-            <SvgNotes name={noteImage} />
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
                 fill={parseBorderColor(data.status)}
             />}
+            {noteImage &&
+                <SvgNotes
+                    name={noteImage}
+                    background={
+                        data.status === 'clicked'
+                            ? 'var(--accent)'
+                            : 'var(--note-background)'
+                    }
+                />
+            }
             <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
                 {noteText}
             </div>
@@ -47,17 +60,17 @@ export default function BaseNote({ data, noteText = 'A', handleClick, noteImage 
     </button>
 }
 
-function parseClass(status: string) {
+function parseClass(status: string, clickClass: string) {
     let className = NOTES_CSS_CLASSES.note
     switch (status) {
-        case 'clicked': className += " click-event"; break;
+        case 'clicked': className += ` click-event ${clickClass}`; break;
         default: break;
     }
     return className
 }
 
-function parseBorderColor(status:string) {
-    let fill = '#eae5ce'
+function parseBorderColor(status: string) {
+    let fill = APP_NAME === "Genshin" ? '#eae5ce' : ''
     if (status === "clicked") fill = "transparent"
     else if (status === 'wrong') fill = "#d66969"
     else if (status === 'right') fill = "#358a55"

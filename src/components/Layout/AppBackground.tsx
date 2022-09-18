@@ -1,4 +1,4 @@
-import { useThemeOther } from "lib/Hooks/useThemeOther"
+import { useThemeOther } from "$lib/Hooks/useThemeOther"
 
 interface AppBackgroundProps {
     children: React.ReactNode,

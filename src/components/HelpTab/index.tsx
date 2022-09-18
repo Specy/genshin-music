@@ -1,7 +1,7 @@
-import { APP_NAME } from 'appConfig'
-import composerImg from 'assets/images/help-composer.png'
-import playerImg from 'assets/images/help-player.png'
-import { HelpTooltip } from 'components/Utility/HelpTooltip'
+import { APP_NAME } from '$/Config'
+import composerImg from '$/assets/images/help-composer.png'
+import playerImg from '$/assets/images/help-player.png'
+import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import isMobile from 'is-mobile'
 import './HelpComponent.css'
 
@@ -153,7 +153,7 @@ export function HelpTab() {
 interface KeyProps{
     children: React.ReactNode
 }
-function Key({children}: KeyProps) {
+export function Key({children}: KeyProps) {
     return <div className='keyboard-key'>
         {children}
     </div>

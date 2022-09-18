@@ -1,25 +1,27 @@
-import { APP_NAME, PITCHES, NOTE_NAMES, LAYOUT_DATA, Pitch, TEMPO_CHANGERS, isTwa } from "appConfig"
+import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/Config"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
+import { ColumnNote } from "./Songs/SongClasses";
+import { NoteLayer } from "./Layer";
+import { Song } from "./Songs/Song";
 import { ComposedSong } from "./Songs/ComposedSong";
 import { RecordedSong } from "./Songs/RecordedSong";
-import { ColumnNote } from "./Songs/SongClasses";
-import { NoteNameType } from "types/GeneralTypes";
-import { NoteLayer } from "./Layer";
+import { ClickType } from "$types/GeneralTypes"
+
 
 class FileDownloader {
-	static download(file: string | Blob, name: string, as: string = "text/json"){
+	static download(file: string | Blob, name: string, as: string = "text/json") {
 		const a = document.createElement("a")
 		a.style.display = 'none'
 		a.className = 'ignore_click_outside'
 		a.download = name
 		document.body.appendChild(a)
 
-		if(typeof file === "string"){
+		if (typeof file === "string") {
 			a.href = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
 			a.click();
 		}
-		if(file instanceof Blob){
+		if (file instanceof Blob) {
 			const url = URL.createObjectURL(file)
 			a.href = url
 			a.click();
@@ -55,7 +57,24 @@ class MIDIShortcut {
 	}
 }
 
+function groupArrayEvery<T>(array: T[], n: number) {
+	let groups: T[][] = []
+	for (let i = 0; i < array.length; i += n) {
+		groups.push(array.slice(i, i + n))
+	}
+	return groups
+}
 
+function getNearestTo(num: number, lower: number, upper: number) {
+	return Math.abs(num - lower) < Math.abs(num - upper) ? lower : upper
+}
+
+function isNumberBetween(num: number, min: number, max: number) {
+	return num >= min && num <= max
+}
+function isNumberCloseTo(num: number, target: number, range: number) {
+	return num >= target - range && num <= target + range
+}
 
 function capitalize(str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);
@@ -67,31 +86,40 @@ function blurEvent(e: any) {
 }
 
 
-function getNoteText(
-	noteNameType: NoteNameType,
-	index: number,
-	pitch: Pitch,
-	layoutLength: keyof typeof LAYOUT_DATA
-) {
-	try {
-		const layout = LAYOUT_DATA[layoutLength]
-		//@ts-ignore
-		if (noteNameType === "Note name") return NOTE_NAMES[APP_NAME][PITCHES.indexOf(pitch)][index]
-		if (noteNameType === "Keyboard layout") return layout.keyboardLayout[index]
-		if (noteNameType === "Do Re Mi") return layout.mobileLayout[index]
-		if (noteNameType === "ABC") return layout.abcLayout[index]
-		if (noteNameType === "No Text") return ''
-	} catch (e) { }
-	return ''
+function isFocusable(el: HTMLElement | EventTarget | null | undefined){
+	const focusableElements = ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'];
+	if(!el) return false
+	//@ts-ignore
+	return focusableElements.includes(el.tagName)
 }
 
+function parseMouseClick(event: number){
+	if(event === 0) return ClickType.Left
+	if(event === 2) return ClickType.Right
+	return ClickType.Unknown
+}
 class Array2d {
 	static from(height: number) {
 		return new Array(height).fill(0).map(() => { return [] })
 	}
 }
+function insertionSort<T>(array: T[], compare: (a: T, b: T) => number) {
+	let n = array.length;
+	for (let i = 1; i < n; i++) {
+		let current = array[i];
+		let j = i - 1;
+		while ((j > -1) && (compare(current, array[j]) < 0)) {
+			array[j + 1] = array[j];
+			j--;
+		}
+		array[j + 1] = current;
+	}
+	return array;
+}
 
-
+function isComposedOrRecorded(song: Song){
+	return song instanceof ComposedSong || song instanceof RecordedSong
+}
 function formatMs(ms: number) {
 	const minutes = Math.floor(ms / 60000);
 	const seconds = Number(((ms % 60000) / 1000).toFixed(0))
@@ -108,33 +136,9 @@ function setIfInTWA() {
 	sessionStorage.setItem('isTwa', JSON.stringify(isInTwa))
 }
 
-function parseSong(song: any): RecordedSong | ComposedSong {
-	song = Array.isArray(song) ? song[0] : song
-	const type = getSongType(song)
-	if (type === "none") {
-		throw new Error("Error Invalid song")
-	}
-	if (type === "oldSky") {
-		const parsed = RecordedSong.fromOldFormat(song)
-		if (parsed === null) {
-			throw new Error("Error Invalid song")
-		}
-		return parsed
-	}
-	if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
-		throw new Error("Error Invalid song")
-	}
-	if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
-		if (song.data?.isComposedVersion === true || song.type === 'composed') return ComposedSong.deserialize(song).toGenshin()
-		if (song.data?.isComposedVersion === false|| song.type === 'recorded') return RecordedSong.deserialize(song).toGenshin()
-	}
-	if (type === 'newComposed') return ComposedSong.deserialize(song)
-	if (type === 'newRecorded') return RecordedSong.deserialize(song)
-	throw new Error("Error Invalid song")
-}
 
 //TODO improve this detection
-function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' {
+function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorded' | 'vsrg' {
 	try {
 		if (song.data === undefined) {
 			//oldSky format
@@ -144,29 +148,20 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 			}
 		} else {
 			//current format
-			if ((song.data.isComposedVersion === true) || song.type === 'composed') {
-				if (typeof song.name !== "string") return "none"
-				if (!PITCHES.includes(song.pitch)) return "none"
-				if (Array.isArray(song.breakpoints)) {
-					if (song.breakpoints.length > 0) {
-						if (typeof song.breakpoints[0] !== "number") return "none"
-					}
-				} else {
-					return "none"
-				}
+			if(song.type === 'vsrg') return 'vsrg'
+			if (song.type === 'composed' || song.data.isComposedVersion === true) {
 				if (Array.isArray(song.columns)) {
-					if (song.columns.length > 0) {
-						const column = song.columns[0]
-						if (typeof column[0] !== "number") return "none"
-					}
 					return "newComposed"
 				} else {
 					return "none"
 				}
-			} else if((song.data.isComposedVersion === false) || song.type === 'recorded'){
-				if (typeof song.name !== "string") return "none"
-				if (!PITCHES.includes(song.pitch)) return "none"
-				return "newRecorded"
+			}
+			if (song.type === 'recorded' || song.data.isComposedVersion === false) {
+				if (Array.isArray(song.notes)) {
+					return "newRecorded"
+				} else {
+					return "none"
+				}
 			}
 		}
 	} catch (e) {
@@ -176,6 +171,14 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
 	return "none"
 }
 
+type ConditionalClass = [condition:boolean, trueClass: string, falseClass?: string] | string
+export function cn(...args: ConditionalClass[]){
+	const result = args.map(a => {
+		if(typeof a === 'string') return a
+		return a[0] ? a[1] : (a[2] ?? '') 
+	}).join(' ')
+	return result
+}
 
 function groupByNotes(notes: RecordedNote[], threshold: number) {
 	const result = []
@@ -190,18 +193,18 @@ function groupByNotes(notes: RecordedNote[], threshold: number) {
 	return result
 }
 
+const pitchMap = new Map(PITCHES.map((pitch, i) => [pitch, i]))
 function getPitchChanger(pitch: Pitch) {
-	let index = PITCHES.indexOf(pitch)
-	if (index < 0) index = 0
+	const index = pitchMap.get(pitch) ?? 0
 	return Number(Math.pow(2, index / 12).toFixed(4))
 }
 function calculateSongLength(columns: Column[], bpm: number, end: number) {
-	const bpmPerMs = Math.floor(60000 / bpm)
+	const msPerBeat = Math.floor(60000 / bpm)
 	let totalLength = 0
 	let currentLength = 0
 	let increment = 0
 	for (let i = 0; i < columns.length; i++) {
-		increment = bpmPerMs * TEMPO_CHANGERS[columns[i].tempoChanger].changer
+		increment = msPerBeat * TEMPO_CHANGERS[columns[i].tempoChanger].changer
 		if (i < end) currentLength += increment
 		totalLength += increment
 	}
@@ -250,14 +253,12 @@ export {
 	FileDownloader,
 	getPitchChanger,
 	getSongType,
-	parseSong,
 	groupByNotes,
 	mergeLayers,
 	groupNotesByIndex,
 	delay,
 	Array2d,
 	MIDINote,
-	getNoteText,
 	MIDIShortcut,
 	capitalize,
 	clamp,
@@ -265,5 +266,13 @@ export {
 	formatMs,
 	calculateSongLength,
 	setIfInTWA,
-	blurEvent
+	blurEvent,
+	insertionSort,
+	isComposedOrRecorded,
+	isFocusable,
+	parseMouseClick,
+	groupArrayEvery,
+	isNumberBetween,
+	isNumberCloseTo,
+	getNearestTo
 }

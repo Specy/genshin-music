@@ -1,12 +1,14 @@
-import { observable } from "mobx"
+import { AppError } from "$lib/Errors"
+import { makeObservable, observable } from "mobx"
+import { Timer } from "$types/GeneralTypes"
 
-export enum LoggerStatus{
+export enum LoggerStatus {
     ERROR = 'var(--red)',
     WARN = 'var(--orange)',
     SUCCESS = 'var(--accent)'
 }
 
-export interface LoggerDataProps{
+export interface ToastState {
     timestamp: number
     visible: boolean
     text: string
@@ -14,43 +16,50 @@ export interface LoggerDataProps{
     id: number
     type: LoggerStatus
 }
-type LoggerData = {
-    data: LoggerDataProps
+
+export interface PillState {
+    visible: boolean
+    text: string
 }
+
 export class LoggerStore {
-    state: LoggerData
-    timeout: any
+    private lastId = 0
+    @observable
+    toasts: ToastState[] = []
+    @observable
+    pillState: PillState = {
+        visible: false,
+        text: ""
+    }
     constructor() {
-        this.state = observable({
-            data: {
-                timestamp: 0,
-                visible: false,
-                text: "Text",
-                timeout: 3000,
-                id: 0,
-                type: LoggerStatus.WARN
-            }
-        })
-        this.timeout = undefined
+        makeObservable(this)
     }
     log = (
-        text: string, 
-        timeout: number = 3500, 
+        text: string,
+        timeout: number = 3500,
         type: LoggerStatus = LoggerStatus.SUCCESS,
     ) => {
-        this.state.data = {
+        const id = ++this.lastId
+        this.toasts.push({
             text,
-            timestamp: new Date().getTime(),
-            visible: true,
+            timestamp: Date.now(),
             timeout,
-            id: ++this.state.data.id,
+            visible: true,
+            id,
             type
-        }
-        if(this.timeout !== undefined) clearTimeout(this.timeout)
-        this.timeout = setTimeout(this.close, timeout)
+        })
+        setTimeout(() => this.hideToast(id), timeout)
+        setTimeout(() => this.removeToast(id), timeout + 300)
     }
     error = (text: string, timeout?: number) => {
         this.log(text, timeout, LoggerStatus.ERROR)
+    }
+    logAppError = (error: Error) => {
+        if (error instanceof AppError) {
+            this.error(error.message)
+        } else {
+            console.error(error)
+        }
     }
     success = (text: string, timeout?: number) => {
         this.log(text, timeout, LoggerStatus.SUCCESS)
@@ -58,11 +67,33 @@ export class LoggerStore {
     warn = (text: string, timeout?: number) => {
         this.log(text, timeout, LoggerStatus.WARN)
     }
-    close = () => {
-        this.setState({visible: false})
+    clearToasts = () => {
+        this.toasts.splice(0, this.toasts.length)
     }
-    setState = (state: Partial<LoggerDataProps>) => {
-        this.state.data = {...this.state.data, ...state}
+    hideToast = (id: number) => {
+        this.setState(id, { visible: false })
+    }
+    removeToast = (id: number) => {
+        this.toasts.splice(0, this.toasts.length, ...this.toasts.filter(t => t.id !== id))
+    }
+    setState = (id: number, state: Partial<ToastState>) => {
+        const toast = this.toasts.find(t => t.id === id)
+        if (toast) {
+            Object.assign(toast, state)
+        }
+
+    }
+    setPillState = (state: Partial<PillState>) => {
+        Object.assign(this.pillState, state)
+    }
+    showPill = (text?: string) => {
+        this.setPillState({
+            text,
+            visible: true
+        })
+    }
+    hidePill = () => {
+        this.setPillState({ visible: false })
     }
 }
 

@@ -1,28 +1,29 @@
 import { FaTrash, FaDownload } from 'react-icons/fa';
-import { parseSong } from "lib/Utilities"
-import { asyncConfirm } from "components/Utility/AsyncPrompts"
-import { APP_NAME } from "appConfig"
-import { SimpleMenu } from 'components/Layout/SimpleMenu'
-import { logger } from 'stores/LoggerStore';
-import { SongMenu } from 'components/Layout/SongMenu';
-
-
-import './ErrorPage.css'
-import { AppButton } from 'components/Inputs/AppButton';
-import { SerializedSong } from 'lib/Songs/Song';
-import { useSongs } from 'lib/Hooks/useSongs';
-import { songsStore } from 'stores/SongsStore';
-import { fileService } from 'lib/Services/FileService';
-import { Title } from 'components/Miscellaneous/Title';
+import { asyncConfirm } from "$cmp/Utility/AsyncPrompts"
+import { APP_NAME } from "$/Config"
+import { logger } from '$stores/LoggerStore';
+import { SongMenu } from '$cmp/Layout/SongMenu';
+import './ErrorPage.scss'
+import { AppButton } from '$cmp/Inputs/AppButton';
+import { SerializedSong } from '$lib/Songs/Song';
+import { useSongs } from '$lib/Hooks/useSongs';
+import { songsStore } from '$stores/SongsStore';
+import { fileService } from '$lib/Services/FileService';
+import { Title } from '$cmp/Miscellaneous/Title';
+import { DefaultPage } from '$cmp/Layout/DefaultPage';
+import { songService } from '$lib/Services/SongService';
+import { ComposedSong } from '$lib/Songs/ComposedSong';
+import { RecordedSong } from '$lib/Songs/RecordedSong';
+import { useObservableArray } from '$/lib/Hooks/useObservable';
+import { logsStore } from '$stores/LogsStore';
 
 export function ErrorPage() {
     const [songs] = useSongs()
-
-
+    const errors = useObservableArray(logsStore.logs)
     const deleteSong = async (name: string, id: string) => {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
             await songsStore.removeSong(id)
-        }   
+        }
 
     }
     const deleteAllSongs = async () => {
@@ -36,26 +37,40 @@ export function ErrorPage() {
         logger.success("Settings have been reset")
     }
     const downloadSong = (song: SerializedSong) => {
-        try{
+        try {
             const songName = song.name
-            const parsed = parseSong(song)
-            const converted = [APP_NAME === 'Sky' ? parsed.toOldFormat() : parsed.serialize()]
-            fileService.downloadSong(converted,`${songName}.${APP_NAME.toLowerCase()}sheet`)
+            const parsed = songService.parseSong(song)
+            const converted = [APP_NAME === 'Sky' && (parsed instanceof ComposedSong || parsed instanceof RecordedSong)
+                ? parsed.toOldFormat()
+                : parsed.serialize()
+            ]
+            fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
             logger.success("Song downloaded")
-        }catch(e){
+        } catch (e) {
             console.error(e)
             logger.error('Error downloading song')
         }
 
     }
-    return <div className="default-page error-page">
+    return <DefaultPage className='error-page'>
         <Title text="Error" />
-        
-        <SimpleMenu />
-        <div className="error-text-wrapper">
+
+        <div style={{textAlign: 'center'}}>
             There seems to be an error. <br />
-            Here you can download or delete your songs,
-            try to find what song caused the error and remove it.
+            Here you can download or delete your songs, if one caused an error, delete it.
+            If you need help, join our 
+            <a 
+                href='https://discord.gg/Arsf65YYHq' 
+                target='_blank' 
+                rel='noreferrer' 
+                style={{
+                    margin: '0 0.4rem',
+                    color: 'var(--accent)'
+                }}
+            >
+                Discord
+            </a> 
+            and send the log file below.
         </div>
         <div className="error-buttons-wrapper">
             <AppButton onClick={resetSettings}>
@@ -74,18 +89,40 @@ export function ErrorPage() {
                     deleteSong,
                     download: downloadSong
                 }}
-
             />
         </div>
-    </div>
+        <div className='row space-between' style={{margin: '1rem 0'}}>
+            <div style={{fontSize: '2rem'}}>
+                Error logs
+            </div>
+            <AppButton
+                onClick={() => {
+                    const logs = logsStore.logs.map(l => l.message)
+                    fileService.downloadObject(logs, `${APP_NAME}_logs`)
+                }}
+            >
+                Download logs
+            </AppButton>
+        </div>
+        <div className='error-logs'>
+            {errors.map((e, i) =>
+                <div
+                    key={i}
+                    className='error-log-row row'
+                >
+                    {e.message}
+                </div>
+            )}
+        </div>
+    </DefaultPage>
 }
 
-interface SongRowProps{
+interface SongRowProps {
     data: SerializedSong
     deleteSong: (name: string, id: string) => void
     download: (song: SerializedSong) => void
 }
-function SongRow({data, deleteSong, download } : SongRowProps) {
+function SongRow({ data, deleteSong, download }: SongRowProps) {
     return <div className="song-row">
         <div className="song-name">
             {data.name}
@@ -93,7 +130,6 @@ function SongRow({data, deleteSong, download } : SongRowProps) {
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={() => download(data)} aria-label={`Download song ${data.name}`}>
                 <FaDownload />
-
             </button>
             <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)} aria-label={`Delete song ${data.name}`}>
                 <FaTrash color="#ed4557" />

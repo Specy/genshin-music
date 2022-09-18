@@ -79,7 +79,7 @@
     flex-direction: column;
     box-shadow: 1px 1px 5px #45455994;
     animation: show 0.2s;
-
+    width: 13.6rem;
 }
 
 .color-picker-input{
@@ -110,7 +110,6 @@
     display: flex;
     height: 2rem;
     margin-top: 0.3rem;
-    max-width: 100%;
 }
 .color-picker-check{
     width: 2rem;
@@ -146,6 +145,8 @@
 
 .react-colorful{
     border-radius: 0.5rem !important;
+    width: 13rem !important;
+    height: 13rem !important;
     box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
 }
 .react-colorful__pointer{
@@ -171,7 +172,7 @@
     width: 100%;
     height: fit-content;
     border-radius: 0.6rem;
-    transition: all 0.2s;
+    transition: filter 0.2s;
     cursor: pointer;
     overflow: hidden;
     min-height: 8rem;
@@ -240,7 +241,7 @@
         background-color: var(--primary);
     }
 }
-@media  (max-width:900px) {
+@media  (max-width:920px) {
     .theme-row{
         margin-top: 0.5rem;
     }

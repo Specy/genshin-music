@@ -1,6 +1,5 @@
-import { TAURI } from "appConfig"
-import ZangoDb from "zangodb"
-import type TauriFs from '@tauri-apps/api/fs';
+import { TAURI } from "$/Config"
+import ZangoDb from "@insertish/zangodb"
 
 export type BaseObject = Object & {
     id: string | null
@@ -16,7 +15,6 @@ export interface Collection<T extends BaseObject> {
     findOneById(id: string): Promise<T | null>
     find(query: Query<T>): Promise<T[]>
 }
-
 
 export class ZangoCollection<T extends BaseObject> implements Collection<T>{
     private instance: ZangoDb.Collection
@@ -41,7 +39,7 @@ export class ZangoCollection<T extends BaseObject> implements Collection<T>{
     findOneById(id: string): Promise<T | null> {
         return this.instance.findOne({ id }) as Promise<T | null>
     }
-    remove(query:  Query<T>): Promise<void> {
+    remove(query: Query<T>): Promise<void> {
         return this.instance.remove(query as Object)
     }
     removeById(id: string): Promise<void> {
@@ -50,7 +48,7 @@ export class ZangoCollection<T extends BaseObject> implements Collection<T>{
 }
 
 export class TauriCollection<T extends BaseObject> implements Collection<T>{
-    private fs: typeof TauriFs = TAURI?.fs
+    private fs = TAURI?.fs
     readonly table: string
     private baseSettings: any
     private initializing: Promise<any> | false

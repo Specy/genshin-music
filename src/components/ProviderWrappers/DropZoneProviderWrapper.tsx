@@ -1,6 +1,6 @@
-import { BodyDropper, DroppedFile } from "components/Utility/BodyDropper"
-import { fileService, UnknownSongImport } from "lib/Services/FileService"
-import {logger} from "stores/LoggerStore";
+import { BodyDropper, DroppedFile } from "$cmp/Utility/BodyDropper"
+import { FileKind, FileService, fileService, UnknownSong, UnknownSongImport } from "$lib/Services/FileService"
+import { logger } from "$stores/LoggerStore";
 
 interface DropZoneProviderProps {
     children: React.ReactNode
@@ -8,27 +8,12 @@ interface DropZoneProviderProps {
 export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
 
     const handleDrop = async (files: DroppedFile<UnknownSongImport>[]) => {
-        try{
+        try {
             for (const file of files) {
-                const songs = file.data
-                const result = await fileService.addSongs(songs)
-                if(result.ok){
-                    const success = result.successful.map(e => e.name)
-                    const firstSong = result.successful[0]
-                    //@ts-ignore
-                    const type = firstSong.type ?? (firstSong.data?.isComposedVersion ? "composed" : "recorded")
-
-                    if(success.length === 1){
-                        logger.success(`Song added to the ${type} tab!`, 4000)
-                    }else if (success.length > 1){
-                        logger.success(`${success.length} songs added!`, 4000)
-                    }
-                } else {
-                    const errors = result.errors.map(s => s.name || "UNKNOWN").join(", ")
-                    logger.error(`There was an error importing the song: ${errors}`)
-                }
+                const data = file.data
+                await fileService.importAndLog(data)
             }
-        }catch(e){
+        } catch (e) {
             console.error(e)
             logger.error("Error importing file")
         }

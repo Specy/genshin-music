@@ -1,46 +1,42 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-
-import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "appConfig"
-
-import AddColumn from 'components/icons/AddColumn';
-import RemoveColumn from "components/icons/RemoveColumn"
-
-import MidiParser from "components/Composer/MidiParser"
-import ComposerTools from "components/Composer/ComposerTools"
-import ComposerKeyboard from "components/Composer/ComposerKeyboard"
-import ComposerCanvas from "components/Composer/Canvas"
-import Menu from "components/Composer/Menu"
-import Memoized from 'components/Utility/Memoized';
-import { asyncConfirm, asyncPrompt } from "components/Utility/AsyncPrompts"
-import { ComposerSettingsDataType } from "lib/BaseSettings"
-import Instrument, { NoteData } from "lib/Instrument"
-import { delay, formatMs, calculateSongLength } from "lib/Utilities"
-import { ComposedSong, UnknownSerializedComposedSong } from 'lib/Songs/ComposedSong';
-import { Column, InstrumentData } from 'lib/Songs/SongClasses';
-import AudioRecorder from 'lib/AudioRecorder'
-
-import Analytics from 'lib/Analytics';
+import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/Config"
+import AddColumn from '$cmp/icons/AddColumn';
+import RemoveColumn from "$cmp/icons/RemoveColumn"
+import MidiParser from "$cmp/Composer/MidiParser"
+import ComposerTools from "$cmp/Composer/ComposerTools"
+import ComposerKeyboard from "$cmp/Composer/ComposerKeyboard"
+import ComposerCanvas from "$cmp/Composer/Canvas"
+import Menu from "$cmp/Composer/ComposerMenu"
+import Memoized from '$cmp/Utility/Memoized';
+import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
+import { ComposerSettingsDataType } from "$lib/BaseSettings"
+import Instrument, { ObservableNote } from "$lib/Instrument"
+import { delay, formatMs, calculateSongLength } from "$lib/Utilities"
+import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
+import { Column, InstrumentData } from '$lib/Songs/SongClasses';
+import AudioRecorder from '$lib/AudioRecorder'
+import Analytics from '$/lib/Stats';
 import { RouteComponentProps, withRouter } from 'react-router-dom'
-import HomeStore from 'stores/HomeStore';
-import { logger } from 'stores/LoggerStore';
-import { SerializedRecordedSong, RecordedSong } from 'lib/Songs/RecordedSong';
-import { SettingUpdate, SettingVolumeUpdate } from 'types/SettingsPropriety';
-import { NoteNameType, Pages } from 'types/GeneralTypes';
+import {homeStore} from '$stores/HomeStore';
+import { logger } from '$stores/LoggerStore';
+import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
+import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
+import { Pages } from '$types/GeneralTypes';
 import "./Composer.css"
-import { MIDIEvent, MIDIProvider } from 'lib/Providers/MIDIProvider';
-import { KeyboardProvider } from 'lib/Providers/KeyboardProvider';
-import type { KeyboardNumber } from 'lib/Providers/KeyboardProvider/KeyboardTypes';
-import { AudioProvider } from 'lib/Providers/AudioProvider';
-import { CanvasTool } from 'components/Composer/CanvasTool';
-import { settingsService } from 'lib/Services/SettingsService';
-import { SerializedSong } from 'lib/Songs/Song';
-import { songsStore } from 'stores/SongsStore';
-import { InstrumentControls } from 'components/Composer/InstrumentControls';
-import { AppButton } from 'components/Inputs/AppButton';
-import { ThemeProvider, ThemeStoreClass } from 'stores/ThemeStore';
-import { Title } from 'components/Miscellaneous/Title';
-import { songService } from 'lib/Services/SongService';
+import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider';
+import { KeyboardProvider } from '$lib/Providers/KeyboardProvider';
+import type { KeyboardNumber } from '$lib/Providers/KeyboardProvider/KeyboardTypes';
+import { AudioProvider } from '$lib/Providers/AudioProvider';
+import { CanvasTool } from '$cmp/Composer/CanvasTool';
+import { settingsService } from '$lib/Services/SettingsService';
+import { SerializedSong } from '$lib/Songs/Song';
+import { songsStore } from '$stores/SongsStore';
+import { InstrumentControls } from '$cmp/Composer/InstrumentControls';
+import { AppButton } from '$cmp/Inputs/AppButton';
+import { ThemeProvider, ThemeStore } from '$stores/ThemeStore/ThemeProvider';
+import { Title } from '$cmp/Miscellaneous/Title';
+import { songService } from '$lib/Services/SongService';
 
 interface ComposerState {
     layers: Instrument[]
@@ -54,9 +50,12 @@ interface ComposerState {
     isMidiVisible: boolean
     isRecordingAudio: boolean
     isPlaying: boolean
-    theme: ThemeStoreClass
+    theme: ThemeStore
 }
-type ComposerProps = RouteComponentProps & {
+type HistoryProps = {
+    songId: string
+}
+type ComposerProps = RouteComponentProps<{},{},HistoryProps> & {
     inPreview?: boolean
 }
 class Composer extends Component<ComposerProps, ComposerState>{
@@ -121,7 +120,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { layers } = state
         this.mounted = false
         AudioProvider.clear()
-        layers.forEach(instrument => instrument.delete())
+        layers.forEach(instrument => instrument.dispose())
         this.broadcastChannel?.close?.()
         state.isPlaying = false
         this.unblock()
@@ -140,6 +139,17 @@ class Composer extends Component<ComposerProps, ComposerState>{
         AudioProvider.setReverb(settings.caveMode.value)
         MIDIProvider.addListener(this.handleMidi)
         this.registerKeyboardListeners()
+        try{
+            const historyState = this.props?.history?.location?.state
+            const id = historyState?.songId
+            if(!id) return 
+            const song = await songService.getSongById(id)
+            if(!song) return
+            this.loadSong(song)
+        }catch(e){
+            console.log("Error loading song")
+            console.error(e)
+        }
     }
     registerKeyboardListeners = () => {
         const id = 'composer'
@@ -184,7 +194,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             const shouldEditKeyboard = isPlaying || event.shiftKey
             if (shouldEditKeyboard) {
                 const note = this.currentInstrument.getNoteFromCode(letter)
-                if (note !== null) this.handleClick(this.currentInstrument.layout[note])
+                if (note !== null) this.handleClick(note)
             }
         }, { id })
     }
@@ -209,7 +219,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (MIDI_STATUS.down === eventType && velocity !== 0) {
             const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
-                this.handleClick(this.currentInstrument.layout[keyboardNote.index])
+                this.handleClick(this.currentInstrument.notes[keyboardNote.index])
             })
             const shortcut = MIDIProvider.settings.shortcuts.find(e => e.midi === note)
             if (!shortcut) return
@@ -279,7 +289,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const extraInstruments = layers.splice(song.instruments.length)
         extraInstruments.forEach(ins => {
             AudioProvider.disconnect(ins.endNode)
-            ins.delete()
+            ins.dispose()
         })
         const promises = song.instruments.map(async (ins, i) => {
             if (layers[i] === undefined) {
@@ -288,7 +298,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 layers[i] = instrument
                 const loaded = await instrument.load()
                 if (!loaded) logger.error("There was an error loading the instrument")
-                if (!this.mounted) return instrument.delete()
+                if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode)
                 instrument.changeVolume(ins.volume)
                 return instrument
@@ -301,18 +311,18 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 //if it has a layer and it's different, delete the layer and create a new one
                 const old = layers[i]
                 AudioProvider.disconnect(old.endNode)
-                old.delete()
+                old.dispose()
                 const instrument = new Instrument(ins.name)
                 layers[i] = instrument
                 const loaded = await instrument.load()
                 if (!loaded) logger.error("There was an error loading the instrument")
-                if (!this.mounted) return instrument.delete()
+                if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode)
                 instrument.changeVolume(ins.volume)
                 return instrument
             }
         })
-        const instruments = await Promise.all(promises) as Instrument[]
+        const instruments = (await Promise.all(promises)) as Instrument[]
         if (!this.mounted) return
         this.setState({ layers: instruments })
     }
@@ -343,10 +353,10 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
     playSound = (layer: number, index: number) => {
         const instrument = this.state.layers[layer]
-        const note = instrument?.layout[index]
+        const note = instrument?.notes[index]
         if (note === undefined) return
         if(this.state.song.instruments[layer].muted) return
-        const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value as Pitch
+        const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value 
         instrument.play(note.index, pitch)
     }
     changePitch = (value: Pitch) => {
@@ -354,7 +364,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         settings.pitch = { ...settings.pitch, value }
         this.setState({ settings: { ...settings } }, this.updateSettings)
     }
-    handleClick = (note: NoteData) => {
+    handleClick = (note: ObservableNote) => {
         const { song, layer } = this.state
         const column = song.selectedColumn
         const index = column.getNoteIndex(note.index)
@@ -409,7 +419,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             } else {
                 //if it doesn't exist, add it
                 if (song.name.includes("- Composed")) {
-                    const name = await asyncPrompt("Write song name, press cancel to ignore")
+                    const name = await asyncPrompt("Write the song name for the composed version, press cancel to ignore")
                     if (name === null) return resolve()
                     song.name = name
                     this.addSong(song)
@@ -430,7 +440,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.changes > 0) {
-            if (await this.askForSongUpdate()) {
+            const promptResult = await this.askForSongUpdate()
+            if(promptResult === null) return
+            if (promptResult) {
                 await this.updateSong(this.state.song)
             }
         }
@@ -463,7 +475,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (this.changes !== 0) {
             let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
             if (!confirm && state.song.columns.length > 0) {
-                confirm = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                const promptResult =  await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                if(promptResult === null) return
+                confirm = promptResult
             }
             if (confirm) {
                 await this.updateSong(state.song)
@@ -496,8 +510,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
 
     removeColumns = (amount: number, position: number) => {
-        const { song } = this.state
-        if (song.columns.length < 16) return
+        const { song, settings } = this.state
+        if (song.columns.length < (settings.beatMarks.value * 4)) return
         song.removeColumns(amount, position)
         if (song.columns.length <= song.selected) this.selectColumn(song.selected - 1)
         this.handleAutoSave()
@@ -511,17 +525,17 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 isPlaying: newState
             }, async () => {
                 if (this.state.isPlaying) this.selectColumn(this.state.song.selected)
-                let pastError = 0
-                let previousTime = new Date().getTime()
+                let delayOffset = 0
+                let previousTime = Date.now()
                 while (this.state.isPlaying) {
                     const { song, settings } = this.state
                     const tempoChanger = song.selectedColumn.getTempoChanger().changer
-                    const msPerBPM = Math.floor(60000 / settings.bpm.value * tempoChanger) + pastError
-                    previousTime = new Date().getTime()
-                    await delay(msPerBPM)
+                    const msPerBeat = Math.floor(60000 / settings.bpm.value * tempoChanger) + delayOffset
+                    previousTime = Date.now()
+                    await delay(msPerBeat)
                     if (!this.state.isPlaying || !this.mounted) break
                     this.handleTick()
-                    pastError = previousTime + msPerBPM - new Date().getTime()
+                    delayOffset = previousTime + msPerBeat - Date.now()
                 }
                 resolve()
             })
@@ -548,7 +562,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
     }
     changePage = async (page: Pages | 'Home') => {
         const { song, settings } = this.state
-        if (page === 'Home') return HomeStore.open()
+        if (page === 'Home') return homeStore.open()
         if (this.changes !== 0) {
             if (settings.autosave.value) {
                 await this.updateSong(song)
@@ -624,6 +638,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.addToHistory()
         if (layer === 'all') song.pasteColumns(copiedColumns, insert)
         else if (Number.isFinite(layer)) song.pasteLayer(copiedColumns, insert, layer)
+        this.syncInstruments()
         this.changes++
         this.setState({ song })
     }
@@ -771,8 +786,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
                         instruments: song.instruments,
                         keyboard: layers[layer],
                         currentColumn: song.selectedColumn,
-                        pitch: song.instruments[layer]?.pitch || settings.pitch.value as Pitch,
-                        noteNameType: settings.noteNameType.value as NoteNameType,
+                        pitch: song.instruments[layer]?.pitch || settings.pitch.value,
+                        noteNameType: settings.noteNameType.value,
                     }}
                 />
             </div>

@@ -12,8 +12,16 @@
 	grid-template-columns: repeat(5, 1fr);
 	grid-template-rows: repeat(3, 1fr);
 }
+.keyboard-7-2{
+	grid-template-columns: repeat(7, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+}
 .keyboard-4 {
 	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+}
+.keyboard-3{
+	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: repeat(2, 1fr);
 }
 
@@ -78,6 +86,9 @@
 	height: 80%;
 	top: 5%;
 }
+.svg-note{
+    overflow: visible;
+}
 .note-sky .svg-note, .note-composer-sky .svg-note{
 	width: 80%;
 	height: 80%;
@@ -91,19 +102,23 @@
 	width: 100% !important;
 	height: 100% !important;
 }
+
 .click-event {
 	transform: scale(0.9);
 	background-color: var(--clicked-note);
 	border-color: var(--accent);
 }
 .click-event .svg-note{
-	fill: white !important;
+	fill: white !important; /* should change to the var(--accent-text) but would break existing themes */
 	stroke: white !important;
 }
 .note-red {
 	background-color: #f06565;
 	border-color: #d75c5c;
 	color: white;
+}
+.note-red .svg-b{
+	stroke: #f06565 !important;
 }
 .note-red .svg-note {
 	fill: white !important;
@@ -153,7 +168,7 @@
 	transform-origin: 50% 50%;
 	pointer-events: none;
 	opacity: 0;
-	transform: scale(2.7);
+	transform: scale(2.3);
 
 }
 .approach-circle-sky{
@@ -229,16 +244,14 @@
         opacity: 0;
     }
 }
-.upper-right {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
+
 .record-btn {
 	width: fit-content;
 }
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 920px) {
+	.keyboard-playback .click-event{
+		transform: unset; /*performance reasons for mobile*/
+	}
 	.note {
 		width: 6.7vw;
 		height: 6.7vw;

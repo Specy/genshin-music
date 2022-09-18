@@ -1,4 +1,4 @@
-import { AUDIO_CONTEXT } from "appConfig";
+import { AUDIO_CONTEXT } from "$/Config";
 import { fetchAudioBuffer } from "./Instrument";
 import { delay } from "./Utilities";
 
@@ -29,8 +29,8 @@ class Metronome{
     }
     async loadBuffers(){
         const promises = [
-            fetchAudioBuffer("./assets/audio/Drum/0.mp3").catch(() => emptyBuffer),
-            fetchAudioBuffer("./assets/audio/Drum/1.mp3").catch(() => emptyBuffer)
+            fetchAudioBuffer("./assets/audio/_Metronome/bar.mp3").catch(() => emptyBuffer),
+            fetchAudioBuffer("./assets/audio/_Metronome/quarter.mp3").catch(() => emptyBuffer)
         ]
         const result = await Promise.all(promises)
         this.indicatorBuffer = result[0]

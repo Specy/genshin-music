@@ -1,12 +1,11 @@
-import { HelpTab } from "components/HelpTab"
-import { SimpleMenu } from "components/Layout/SimpleMenu"
-import { Title } from "components/Miscellaneous/Title"
+import { HelpTab } from "$cmp/HelpTab"
+import { DefaultPage } from "$cmp/Layout/DefaultPage"
+import { Title } from "$cmp/Miscellaneous/Title"
 
 export default function Help(){
-    return <div className="default-page">
+    return <DefaultPage>
         <Title text="Help" />
 
-        <SimpleMenu/>
         <div>
             <div style={{fontSize: '2rem', margin: '1rem 0'}}>
                 Info about the app
@@ -23,5 +22,5 @@ export default function Help(){
             </div>
             <HelpTab />
         </div>
-    </div>
+    </DefaultPage>
 }

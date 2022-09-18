@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { SongMenu } from 'components/Layout/SongMenu'
-import { useSongs } from 'lib/Hooks/useSongs'
-import { historyTracker } from 'stores/History'
-import { MenuItem } from 'components/Miscellaneous/MenuItem'
+import { SongMenu } from '$cmp/Layout/SongMenu'
+import { useSongs } from '$lib/Hooks/useSongs'
+import { historyTracker } from '$stores/History'
+import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import { FaArrowLeft, FaHome, FaMusic, FaTimes } from 'react-icons/fa'
-import HomeStore from 'stores/HomeStore'
+import {homeStore} from '$stores/HomeStore'
 import { useHistory } from 'react-router-dom'
-import MenuPanel from 'components/Layout/MenuPanel'
-import { SerializedSong } from 'lib/Songs/Song'
-import useClickOutside from 'lib/Hooks/useClickOutside'
+import MenuPanel from '$cmp/Layout/MenuPanel'
+import { SerializedSong } from '$lib/Songs/Song'
+import useClickOutside from '$lib/Hooks/useClickOutside'
 
 interface SheetVisualiserMenuProps {
     currentSong: SerializedSong | null,
@@ -23,7 +23,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
     const menuRef = useClickOutside<HTMLDivElement>(() => {
         setSelectedPage("")
     }, { ignoreFocusable: true, active: selectedPage !== "" })
-    return <div className="menu-wrapper" ref={menuRef}>
+    return <div className="menu-wrapper noprint" ref={menuRef}>
         <div className="menu menu-visible" style={{ justifyContent: 'flex-end' }}>
             {(historyTracker.hasNavigated && selectedPage === "") &&
                 <MenuItem
@@ -52,7 +52,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
             </MenuItem>
 
 
-            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
+            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>
@@ -61,6 +61,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
                 <SongMenu<SongRowProps>
                     songs={songs}
                     className='noprint'
+                    exclude={['vsrg']}
                     SongComponent={SongRow}
                     componentProps={{
                         current: currentSong,

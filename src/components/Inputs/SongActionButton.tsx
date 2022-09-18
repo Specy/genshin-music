@@ -6,13 +6,14 @@ interface SongActionButtonProps {
     style?: React.CSSProperties
     tooltip?: string
     ariaLabel?: string
+    className?: string
     children: React.ReactNode
 }
 
-export function SongActionButton({ onClick, children, style, tooltip, ariaLabel }: SongActionButtonProps) {
+export function SongActionButton({ onClick, children, style, tooltip, ariaLabel, className }: SongActionButtonProps) {
     return <>
-        <button 
-            className={`song-button ${hasTooltip(tooltip)}`} 
+        <button
+            className={`song-button ${hasTooltip(tooltip)} ${className ?? ''}`}
             onClick={onClick || (() => { })}
             style={style}
             aria-label={ariaLabel}

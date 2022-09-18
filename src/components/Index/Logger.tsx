@@ -1,14 +1,45 @@
-import { LoggerStatus, logger } from "stores/LoggerStore"
-import { useLogger } from "lib/Hooks/useLogger"
+import { LoggerStatus, logger, ToastState } from "$stores/LoggerStore"
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle } from "react-icons/fa"
+import { useObservableArray, useObservableObject } from "$lib/Hooks/useObservable"
+import { DecorationBorderedBox } from "../Miscellaneous/BorderDecoration"
 export default function FloatingMessage() {
-    const [data] = useLogger()
-    const { type, text, visible, timeout, id } = data
+    const toasts = useObservableArray(logger.toasts)
+    const pillData = useObservableObject(logger.pillState)
+    return <>
+        <div className="logger-wrapper">
+            {toasts.map(toast => {
+                return <Toast 
+                    toast={toast}
+                    key={toast.id}
+                />
+            })}
+        </div>
+        <div
+            className={`flex-centered pill ${pillData.visible ? "pill-visible" : ""}`}
+        >
+            {pillData.text}
+        </div>
+    </>
+}
+
+interface ToastProps {
+    toast: ToastState
+}
+
+
+function Toast({ toast }: ToastProps) {
+    const observableToast = useObservableObject(toast)
+    const { text, type, id, timeout, visible } = observableToast
     const isBig = text.length > 150
-    return <div
-        className={visible ? "logger logger-visible" : "logger"}
-        style={{ maxWidth: (isBig && visible) ? '24rem' : '19rem' }}
-        onClick={logger.close}
+    return <DecorationBorderedBox
+        key={id}
+        boxProps={{
+            className: visible ? "logger-toast" : "logger-toast logger-toast-hidden",
+            style: { maxWidth: isBig ? '24rem' : '19rem' }
+        }}
+        onClick={() => {
+            logger.removeToast(id)
+        }}
     >
         <div className="logger-content">
             {!isBig &&
@@ -28,16 +59,12 @@ export default function FloatingMessage() {
                 {text}
             </div>
         </div>
-        {visible &&
-            <div className="logger-progress-outer">
-
-                <div
-                    className="logger-progress-bar"
-                    style={{ animation: `logger-animation ${timeout}ms linear`, backgroundColor: type }}
-                    key={id}
-                />
-            </div>
-
-        }
-    </div>
+        <div className="logger-progress-outer">
+            <div
+                className="logger-progress-bar"
+                style={{ animation: `logger-animation ${timeout}ms linear forwards`, backgroundColor: type }}
+                key={id}
+            />
+        </div>
+    </DecorationBorderedBox>
 }

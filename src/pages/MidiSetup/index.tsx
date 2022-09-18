@@ -1,23 +1,24 @@
 import './MidiSetup.css'
-import { APP_NAME } from "appConfig"
-import { MIDISettings } from "lib/BaseSettings"
-import BaseNote from "components/Miscellaneous/BaseNote"
-import { LAYOUT_IMAGES, MIDI_STATUS } from "appConfig"
+import { APP_NAME } from "$/Config"
+import { MIDISettings } from "$lib/BaseSettings"
+import BaseNote from "$cmp/Miscellaneous/BaseNote"
+import { MIDI_STATUS } from "$/Config"
 import { Component } from 'react'
-import { INSTRUMENTS } from "appConfig"
-import Instrument from "lib/Instrument"
+import { INSTRUMENTS } from "$/Config"
 import Shortcut from "./Shortcut"
-import {logger} from "stores/LoggerStore";
-import type { MIDINote } from "lib/Utilities"
-import { InstrumentName, InstrumentNotesLayout } from "types/GeneralTypes"
-import { MIDIEvent, MIDIProvider } from "lib/Providers/MIDIProvider"
-import { AudioProvider } from "lib/Providers/AudioProvider"
-import { DefaultPage } from "components/Layout/DefaultPage"
-import { NoteImage } from "types/Keyboard"
-import { Title } from 'components/Miscellaneous/Title'
+import {logger} from "$stores/LoggerStore";
+import type { MIDINote } from "$lib/Utilities"
+import { InstrumentName } from "$types/GeneralTypes"
+import { MIDIEvent, MIDIProvider } from "$lib/Providers/MIDIProvider"
+import { AudioProvider } from "$lib/Providers/AudioProvider"
+import { DefaultPage } from "$cmp/Layout/DefaultPage"
+import { Title } from '$cmp/Miscellaneous/Title'
+import { AudioPlayer } from '$lib/AudioPlayer'
+import { InstrumentData } from '$lib/Songs/SongClasses'
+import Instrument from '$/lib/Instrument'
 
 interface MidiSetupState {
-    instrument: Instrument
+    audioPlayer: AudioPlayer
     settings: typeof MIDISettings
     selectedNote: MIDINote | null
     selectedShortcut: string | null
@@ -25,13 +26,14 @@ interface MidiSetupState {
     selectedSource: WebMidi.MIDIInput | null
 }
 
-export default class MidiSetup extends Component<any, MidiSetupState> {
+const baseInstrument = new Instrument()
+export default class MidiSetup extends Component<{}, MidiSetupState> {
     state: MidiSetupState
     mounted: boolean
-    constructor(props: any) {
+    constructor(props: {}) {
         super(props)
         this.state = {
-            instrument: new Instrument(),
+            audioPlayer: new AudioPlayer("C"),
             settings: MIDIProvider.settings,
             selectedNote: null,
             selectedShortcut: null,
@@ -45,6 +47,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
     }
     componentWillUnmount() {
         this.mounted = false
+        this.state.audioPlayer.destroy()
         MIDIProvider.clear()
         AudioProvider.clear()
     }
@@ -83,14 +86,11 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
         this.setState({ settings })
     }
     loadInstrument = async (name: InstrumentName) => {
-        AudioProvider.disconnect(this.state.instrument.endNode)
-        this.state.instrument.delete()
-        const instrument = new Instrument(name)
-        const loaded = await instrument.load()
-        if (!loaded) logger.error("There was an error loading the instrument")
-        if (!this.mounted) return
-        AudioProvider.connect(instrument.endNode)
-        this.setState({ instrument })
+        const { audioPlayer } = this.state
+        const result = await audioPlayer.syncInstruments([new InstrumentData({name})])
+        if(result.some(e => !e)) return logger.error('Error loading instrument')
+        if (!this.mounted) return audioPlayer.destroy()
+        this.setState({ audioPlayer })
     }
     checkIfUsed = (midi: number, type: 'all' | 'shortcuts' | 'notes') => {
         const { shortcuts, notes } = this.state.settings
@@ -158,7 +158,8 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
     }
     playSound = (note: MIDINote) => {
         if (note === undefined) return
-        this.state.instrument.play(note.index, 'C')
+        const { audioPlayer } = this.state
+        audioPlayer.playNoteOfInstrument(0, note.index)
     }
 
     render() {
@@ -170,6 +171,7 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                     Select MIDI device:
                     <select
                             className="midi-select"
+                            style={{ marginLeft: '0.5rem' }}
                             value={selectedSource ? selectedSource.id : 'None'}
                             onChange={(e) => {
                                 this.selectMidi(sources.find(s => s.id === e.target.value))
@@ -192,12 +194,11 @@ export default class MidiSetup extends Component<any, MidiSetupState> {
                     style={{ marginTop: 'auto', width: 'fit-content' }}
                 >
                     {settings.notes.map((note, i) => {
-                        const noteImage = LAYOUT_IMAGES[settings.notes.length as InstrumentNotesLayout][note.index]
                         return <BaseNote
                             key={i}
-                            handleClick={this.handleClick}
+                            handleClick={() => this.handleClick(note)}
                             data={note}
-                            noteImage={noteImage as NoteImage}
+                            noteImage={baseInstrument.notes[i].noteImage}
                             noteText={note.midi < 0 ? 'NA' : String(note.midi)}
                         />
                     })}

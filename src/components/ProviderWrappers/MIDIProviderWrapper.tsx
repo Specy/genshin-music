@@ -1,4 +1,4 @@
-import { MIDIProvider } from "lib/Providers/MIDIProvider"
+import { MIDIProvider } from "$lib/Providers/MIDIProvider"
 import { useEffect } from "react"
 
 interface MIDIListenerProviderProps{

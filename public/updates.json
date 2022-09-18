@@ -1,0 +1,14 @@
+{
+    "Sky": {
+        "version": "3.0",
+        "tauriDestinationUrl": "",
+        "urgentMessage": "test 2",
+        "message": "test 1"
+    },
+    "Genshin": {
+        "version": "3.0",
+        "tauriDestinationUrl": "",
+        "urgentMessage": "",
+        "message": ""
+    }
+}

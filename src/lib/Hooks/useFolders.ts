@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { observe } from "mobx";
-import { folderStore } from "stores/FoldersStore";
-import { Folder } from "lib/Folder";
-import { SerializedSong } from "lib/Songs/Song";
+import { folderStore } from "$stores/FoldersStore";
+import { Folder } from "$lib/Folder";
+import { SerializedSong } from "$lib/Songs/Song";
 
 type UseFolders = [Folder[]]
 export function useFolders(songs?: SerializedSong[]): UseFolders {
@@ -17,8 +17,17 @@ export function useFolders(songs?: SerializedSong[]): UseFolders {
     useEffect(() => {
         if (!songs) return setParsedFolders(folders)
         setParsedFolders(folders.map(folder => {
-            folder.songs = songs.filter(song => song.folderId === folder.id)
-            return folder
+            const clone = folder.clone()
+            const filtered = songs.filter(song => song.folderId === folder.id)
+
+            if(folder.filterType === 'date-created'){
+                clone.songs = filtered
+            }else if(folder.filterType === 'alphabetical'){
+                clone.songs = filtered.sort((a,b) => a.name.localeCompare(b.name))
+            }else{
+                clone.songs = filtered
+            }
+            return clone
         }))
     }, [songs, folders])
 

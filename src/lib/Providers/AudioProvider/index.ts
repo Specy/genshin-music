@@ -1,5 +1,5 @@
-import { AUDIO_CONTEXT } from "appConfig"
-import AudioRecorder from "lib/AudioRecorder"
+import { AUDIO_CONTEXT } from "$/Config"
+import AudioRecorder from "$lib/AudioRecorder"
 
 
 export class AudioProviderClass {
@@ -10,13 +10,14 @@ export class AudioProviderClass {
     hasReverb: boolean = false
     recorder: AudioRecorder | null
     isRecording: boolean = false
+    reverbLoading: Promise<void> | null = null
     constructor(context: AudioContext) {
         this.audioContext = context
         this.recorder = new AudioRecorder()
     }
 
     private loadReverb = (): Promise<void> => {
-        return new Promise(resolve => {
+        this.reverbLoading =  new Promise(resolve => {
             fetch("./assets/audio/reverb4.wav")
                 .then(r => r.arrayBuffer())
                 .then(b => {
@@ -30,21 +31,30 @@ export class AudioProviderClass {
                             gainNode.connect(this.audioContext.destination)
                             this.reverbNode = convolver
                             this.reverbVolumeNode = gainNode
+                            this.reverbLoading = null
                             resolve()
                         })
                     }
                 }).catch((e) => {
-                    console.log("Error with reverb", e)
+                    console.error(e)
+                    this.reverbLoading = null
+                    resolve()
                 })
         })
+        return this.reverbLoading
     }
 
+    waitReverb = async (): Promise<void> => {
+        if (this.reverbLoading) {
+            await this.reverbLoading
+        }
+    }
     init = async () => {
         await this.loadReverb()
         this.setAudioDestinations()
         return this
     }
-    
+
     connect = (node: AudioNode | null) => {
         if (!node) return this
         this.nodes.push(node)
@@ -108,12 +118,16 @@ export class AudioProviderClass {
         return recording
     }
 
-    setAudioDestinations = () => {
+    setAudioDestinations = async () => {
         this.nodes.forEach(node => {
             if (this.hasReverb) {
-                if (!this.reverbNode) return console.log("Couldn't connect to reverb")
                 node.disconnect()
-                node.connect(this.reverbNode)
+                if (!this.reverbNode) {
+                    console.log("Couldn't connect to reverb")
+                    if (this.audioContext) node.connect(this.audioContext.destination)
+                } else {
+                    node.connect(this.reverbNode)
+                }
             } else {
                 node.disconnect()
                 if (this.audioContext) node.connect(this.audioContext.destination)

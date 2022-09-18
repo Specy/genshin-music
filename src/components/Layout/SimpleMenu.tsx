@@ -1,9 +1,9 @@
 import { FaHome, FaDiscord, FaArrowLeft } from 'react-icons/fa';
 
-import {MenuItem} from 'components/Miscellaneous/MenuItem'
-import HomeStore from 'stores/HomeStore';
+import {MenuItem} from '$cmp/Miscellaneous/MenuItem'
 import { useHistory } from 'react-router-dom';
-import { historyTracker } from 'stores/History';
+import { historyTracker } from '$stores/History';
+import { homeStore } from '$stores/HomeStore';
 
 interface SimpleMenuProps {
     children?: React.ReactNode,
@@ -31,7 +31,7 @@ export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuP
                 </a>
             </MenuItem>
 
-            <MenuItem onClick={HomeStore.open} ariaLabel='Open home menu'>
+            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

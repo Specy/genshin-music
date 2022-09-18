@@ -1,21 +1,20 @@
 {
   "name": "genshin-music",
   "engines": {
-    "node": "16.13.0"
+    "node": "16.17.0"
   },
   "version": "0.1.0",
   "private": true,
   "homepage": "./",
   "dependencies": {
     "@inlet/react-pixi": "^6.6.5",
+    "@insertish/zangodb": "^1.0.12-nomemo",
     "@pixi/graphics-smooth": "^0.0.22",
     "@tauri-apps/api": "^1.0.2",
     "@tonejs/midi": "^2.0.27",
     "audio-recorder-polyfill": "^0.4.1",
     "audiobuffer-to-wav": "^1.0.0",
-    "cli-color": "^2.0.2",
     "color": "^4.2.0",
-    "dotenv": "^16.0.1",
     "is-mobile": "^3.0.0",
     "lodash.clonedeep": "^4.5.0",
     "mobx": "^6.3.7",
@@ -26,41 +25,33 @@
     "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
     "react-router-dom": "^5.3.0",
-    "react-scripts": "5.0.0",
-    "recursive-copy": "^2.0.13",
+    "semver": "^7.3.7",
     "typescript": "^4.5.5",
-    "web-vitals": "^2.1.4",
+    "use-font-face-observer": "^1.2.1",
     "workbox-core": "^6.3.0",
-    "workbox-precaching": "^6.3.0",
     "workbox-routing": "^6.3.0",
     "workbox-strategies": "^6.3.0",
-    "worker-timers": "^7.0.45",
-    "zangodb": "^1.0.8"
+    "worker-timers": "^7.0.45"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "tauri": "tauri",
-    "build-tauri-deployment": "cross-env REACT_APP_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js true",
-    "build-tauri-deployment:no-env": "cross-env REACT_APP_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js false",
-    "build-tauri:sky": "cross-env REACT_APP_IS_TAURI=true env-cmd yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
-    "build-tauri:sky-no-env": "cross-env REACT_APP_IS_TAURI=true yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
-    "build-tauri:genshin": "cross-env REACT_APP_IS_TAURI=true env-cmd yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
-    "build-tauri:genshin-no-env": "cross-env REACT_APP_IS_TAURI=true yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
-    "build-tauri:all": "cross-env REACT_APP_IS_TAURI=true yarn build-tauri:sky && yarn build-tauri:genshin",
+    "build-tauri-deployment": "cross-env VITE_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js true",
+    "build-tauri-deployment:no-env": "cross-env VITE_IS_TAURI=true node ./scripts/buildAndPrepareTauriRelease.js false",
+    "build-tauri:sky": "cross-env VITE_IS_TAURI=true env-cmd yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
+    "build-tauri:sky-no-env": "cross-env VITE_IS_TAURI=true yarn tauri build --config ./src-tauri/tauri-sky.conf.json",
+    "build-tauri:genshin": "cross-env VITE_IS_TAURI=true env-cmd yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
+    "build-tauri:genshin-no-env": "cross-env VITE_IS_TAURI=true yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
+    "build-tauri:all": "cross-env VITE_IS_TAURI=true yarn build-tauri:sky && yarn build-tauri:genshin",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
     "build:all": "node ./scripts/buildApp.js All",
-    "start-tauri": "yarn tauri dev",
+    "start-tauri:sky": "yarn tauri dev --config ./src-tauri/tauri-sky.conf.json",
+    "start-tauri:genshin": "yarn tauri dev --config ./src-tauri/tauri-genshin.conf.json",
     "start:sky": "node ./scripts/startApp.js Sky",
     "start:genshin": "node ./scripts/startApp.js Genshin"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [
@@ -75,7 +66,10 @@
     ]
   },
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
+    "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@tauri-apps/cli": "^1.0.1",
+    "@types/audiobuffer-to-wav": "^1.0.2",
     "@types/color": "^3.0.3",
     "@types/jest": "^27.4.0",
     "@types/lodash.clonedeep": "^4.5.7",
@@ -83,8 +77,27 @@
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.11",
     "@types/react-router-dom": "^5.3.3",
+    "@types/semver": "^7.3.12",
     "@types/webmidi": "^2.0.6",
+    "@typescript-eslint/eslint-plugin": "^4.0.0",
+    "@typescript-eslint/parser": "^4.0.0",
+    "@vitejs/plugin-react": "^2.0.1",
+    "cli-color": "^2.0.2",
     "cross-env": "^7.0.3",
-    "env-cmd": "^10.1.0"
+    "dotenv": "^16.0.1",
+    "env-cmd": "^10.1.0",
+    "eslint": "^8.0.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-flowtype": "^5.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-react": "^7.20.3",
+    "eslint-plugin-react-hooks": "^4.0.8",
+    "fs-extra": "^10.1.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "rollup-plugin-visualizer": "^5.8.1",
+    "sass": "^1.54.5",
+    "vite": "^3.0.9",
+    "vite-plugin-checker": "^0.5.1"
   }
 }

@@ -1,0 +1,53 @@
+.player-chunks-page{
+    position: absolute;
+    width: 50vw;
+    max-width: 40rem;
+    margin-left: auto;
+    margin-right: auto;
+    z-index: -1;
+    top: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.2rem
+}
+.player-right-controls{
+    position: absolute;
+    align-items: flex-end;
+    padding: 0.8rem;
+    right: 0.2rem;
+    height: 100%;
+    margin-left: 3.5rem;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+.slider-wrapper {
+	height: 100%;
+    align-self: center;
+    width: 100%;
+	align-items: center;
+    gap: 0.6rem;
+	max-height: 25rem;
+}
+.slider-wrapper button {
+	margin: 0;
+}
+.slider-select {
+	font-size: 0.8rem;
+    flex: 1;
+	height: 2rem;
+	text-align: center;
+	font-weight: bold;
+	border: none;
+	-moz-appearance: none;
+	appearance: none;
+	-webkit-appearance: none;
+	background-image: none;
+	border-radius: 0.3rem;
+	background-color: var(--primary);
+	color: var(--primary-text);
+}
+@media only screen and (max-width: 920px) {
+    .player-chunks-page{
+        width: 45vw;
+    }
+}

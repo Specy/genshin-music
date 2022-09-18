@@ -1,12 +1,11 @@
 import './Partners.css'
-import { SimpleMenu } from 'components/Layout/SimpleMenu'
-import { Title } from 'components/Miscellaneous/Title'
+import { Title } from '$cmp/Miscellaneous/Title'
+import { DefaultPage } from '$cmp/Layout/DefaultPage'
 
 export default function Partners() {
-    return <div className='default-page partners-page'>
+    return <DefaultPage className='partners-page'>
         <Title text="Partners" />
-        <SimpleMenu/>
-        <div className='default-content partner-wrapper'>
+        <div className='partner-wrapper'>
             <Partner
                 name='Specy'
                 description='The youtube channel that collects videos created by users of this app'
@@ -46,8 +45,7 @@ export default function Partners() {
 
             </Partner>
         </div>
-
-    </div>
+    </DefaultPage>
 }
 
 interface PartnerImgProps{

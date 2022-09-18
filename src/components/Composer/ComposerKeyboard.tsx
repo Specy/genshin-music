@@ -1,12 +1,10 @@
 
-import ComposerNote from "components/Composer/ComposerNote"
-import { getNoteText } from 'lib/Utilities'
-import { Column, InstrumentData } from "lib/Songs/SongClasses"
-import { LAYOUT_IMAGES, Pitch, TEMPO_CHANGERS } from "appConfig"
-import { ThemeProvider } from "stores/ThemeStore"
-import Instrument, { NoteData } from "lib/Instrument"
-import { NoteNameType } from "types/GeneralTypes"
-import { NoteImage } from "types/Keyboard"
+import ComposerNote from "$cmp/Composer/ComposerNote"
+import { Column, InstrumentData } from "$lib/Songs/SongClasses"
+import { Pitch, TEMPO_CHANGERS } from "$/Config"
+import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
+import Instrument, { ObservableNote } from "$lib/Instrument"
+import { NoteNameType } from "$types/GeneralTypes"
 
 interface ComposerKeyboardProps {
     data: {
@@ -20,7 +18,7 @@ interface ComposerKeyboardProps {
         noteNameType: NoteNameType
     },
     functions: {
-        handleClick: (note: NoteData) => void
+        handleClick: (note: ObservableNote) => void
         handleTempoChanger: (tempoChanger: typeof TEMPO_CHANGERS[number]) => void
     }
 }
@@ -28,7 +26,6 @@ interface ComposerKeyboardProps {
 export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
     const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio } = data
     const { handleClick, handleTempoChanger } = functions
-    let keyboardClass = "keyboard"
     if (keyboard === undefined) {
         return <div className="composer-keyboard-wrapper" style={{ marginBottom: '4rem' }}>
             <h1>There was an error with this layer</h1>
@@ -41,21 +38,22 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
             </h1>
         </div>
     }
-    if (keyboard.layout.length === 15) keyboardClass += " keyboard-5"
-    if (keyboard.layout.length === 8) keyboardClass += " keyboard-4"
+    let keyboardClass = "keyboard"
+    if (keyboard.notes.length === 15) keyboardClass += " keyboard-5"
+    if (keyboard.notes.length === 14) keyboardClass += " keyboard-5"
+    if (keyboard.notes.length === 8) keyboardClass += " keyboard-4"
+    if (keyboard.notes.length === 6) keyboardClass += " keyboard-3"
 
     return <>
         <div className="composer-keyboard-wrapper">
             <div
                 className={keyboardClass}
             >
-                {keyboard.layout.length === 0 ? <div className="loading">Loading...</div> : null}
-                {keyboard.layout.map((note, i) => {
+                {keyboard.notes.length === 0 ? <div className="loading">Loading...</div> : null}
+                {keyboard.notes.map((note, i) => {
                     try {
                         const index = currentColumn.notes.findIndex((e) => e.index === i)
-                        //@ts-ignore
-                        const noteImage = LAYOUT_IMAGES[keyboard.layout.length][note.index]
-                        const noteText = getNoteText(noteNameType, note.index, pitch, keyboard.layout.length as 8 | 15 | 21)
+
                         return <ComposerNote
                             key={note.index}
                             layer={(index >= 0
@@ -63,9 +61,9 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                                 : 0
                             )}
                             data={note}
-                            noteText={noteText}
+                            noteText={keyboard.getNoteText(i, noteNameType, pitch)}
                             instrument={keyboard.name}
-                            noteImage={noteImage as NoteImage}
+                            noteImage={note.noteImage}
                             clickAction={handleClick}
                         />
                     } catch (e) {

@@ -7,6 +7,28 @@ type Update = {
 
 export const updates: Update[] = [
     {
+        version: '3.0',
+        title: 'VSRG mode, Zen keyboard, Calls and more!',
+        date: '2022 - 22/07',
+        changes: [
+            "Added VSRG mode to compose and play vsrg songs",
+            "Added Zen keyboard, where you can simply focus on playing by hand",
+            "Added Visual sheet to the player",
+            "Added app scaling",
+            "Added alphabetical folder ordering",
+            "Added backup page",
+            "(Sky) Added SFX of the calls and dance emote",
+            "Changed metronome sounds",
+            "Improved player performance",
+            "Multi type export, you can now export/import songs, folders, themes etc",
+            "Fixed bug that would remove a song from the folder when saved",
+            "Fixed bug that would not play audio",
+            "Fixed issues when opening/saving songs in the composer",
+            "Fixed bug in pasting notes in the composer",
+            "Exporting a song would not work in sky music and sky studio",
+            "Other bug fixes and features...",
+        ]
+    },{
         version: '2.8',
         title: 'More Composer layers and UI rework',
         date: '2022 - 7/07',

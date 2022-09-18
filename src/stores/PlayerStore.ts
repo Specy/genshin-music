@@ -1,67 +1,78 @@
-import { ComposedSong } from "lib/Songs/ComposedSong";
-import { RecordedSong } from "lib/Songs/RecordedSong";
-import { observable, observe } from "mobx";
+import { APP_NAME } from "$/Config";
+import { ObservableNote, NoteDataState } from "$lib/Instrument";
+import { ComposedSong } from "$lib/Songs/ComposedSong";
+import { RecordedSong } from "$lib/Songs/RecordedSong";
+import { makeObservable, observable } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
 type SongTypes = RecordedSong | ComposedSong | null
 type SongTypesNonNull = RecordedSong | ComposedSong
-type SongStoreProps = {
+type PlayerStoreState = {
     song: SongTypes,
+    playId: number,
     eventType: eventType,
     start: number,
     end: number,
-    restarted: boolean
 }
 
-interface PlayerStoreState{
-    data:SongStoreProps | SongStoreProps & {
-        song: null
-        eventType: 'stop'
+class PlayerStore {
+    @observable
+    state: PlayerStoreState = {
+        song: null,
+        playId: 0,
+        eventType: 'stop',
+        start: 0,
+        end: 0
     }
-}
-
-class PlayerStore{
-    state:PlayerStoreState
-    constructor(){
-        this.state = observable({
-            data: {
-                song: null,
-                eventType: 'stop',
-                restarted: false,
-                end: 0,
-                start: 0
-            }
-        })
+    @observable
+    keyboard: ObservableNote[] = []
+    constructor() {
+        makeObservable(this)
     }
-    get song():RecordedSong | ComposedSong | null{
-        return this.state.data.song
+    get song(): RecordedSong | ComposedSong | null {
+        return this.state.song
     }
-    get eventType(): eventType{
-        return this.state.data.eventType
+    get eventType(): eventType {
+        return this.state.eventType
     }
-    get start(): number{
-        return this.state.data.start
+    get start(): number {
+        return this.state.start
     }
-    get data(): SongStoreProps{
-        return this.state.data
+    setKeyboardLayout = (keyboard: ObservableNote[]) => { 
+        this.keyboard.splice(0, this.keyboard.length, ...keyboard)
     }
-    setState = (state: Partial<SongStoreProps>) => {
-        this.state.data = {...this.state.data, ...state}
+    resetKeyboardLayout = () => {
+        this.keyboard.forEach(note => note.setState({
+            status: '',
+            delay: APP_NAME === 'Genshin' ? 100 : 200
+        }))
     }
-    play = (song:SongTypesNonNull, start:number = 0, end?: number) => {
+    resetOutgoingAnimation = () => {
+        this.keyboard.forEach(n => n.setState({animationId: 0}))
+    }
+    setNoteState = (index: number, state: Partial<NoteDataState>) => {
+        this.keyboard[index].setState(state)
+    }
+    setState = (state: Partial<PlayerStoreState>) => {
+        Object.assign(this.state, state)
+    }
+    play = (song: SongTypesNonNull, start: number = 0, end?: number) => {
         this.setState({
             song,
             start,
             eventType: 'play',
-            end 
+            end,
+            playId: this.state.playId + 1
         })
     }
-    practice = (song: SongTypesNonNull, start:number = 0, end: number) => {
+    practice = (song: SongTypesNonNull, start: number = 0, end: number) => {
         this.setState({
             song,
             start,
             eventType: 'practice',
-            end
+            end,
+            playId: this.state.playId + 1
+
         })
     }
     approaching = (song: SongTypesNonNull, start: number = 0, end: number) => {
@@ -69,26 +80,27 @@ class PlayerStore{
             song,
             start,
             eventType: 'approaching',
-            end
-        }) 
+            end,
+            playId: this.state.playId + 1
+
+        })
     }
-    reset = () => {
+    resetSong = () => {
         this.setState({
             song: null,
             eventType: 'stop',
             start: 0,
-            end: 0
+            end: 0,
+            playId: 0
         })
     }
-    restart = (start:number,end:number) => {
-        this.setState({start,end})
+    restartSong = (start: number, end: number) => {
+        this.setState({ 
+            start, 
+            end,
+            playId: this.state.playId + 1
+        })
     }
 }
-export function subscribePlayer(callback: (data: SongStoreProps) => void){
-    const dispose = observe(playerStore.state,() => {
-        callback({...playerStore.state.data})
-    })
-    callback({...playerStore.state.data})
-    return dispose
-}
+
 export const playerStore = new PlayerStore()

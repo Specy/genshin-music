@@ -8,20 +8,18 @@
     border-radius: 0.2rem;
     border: none;
     color: var(--primary-text);
+    padding: 0.5rem;
+}
+.select:focus{
+    outline: none;
+}
+.select option:checked{
+    color: var(--accent);
 }
 .instrument-picker input[type="range"]{
     margin-top: 0.2rem;
 }
-.settings-group{
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-.settings-group-wrapper{
-    display: flex;
-    flex-direction: column;
-    padding: 0 0 0 0rem;
-}
+
 .settings-group-title{
     font-size: 1.3rem;
     margin: 0.5rem 0;

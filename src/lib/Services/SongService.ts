@@ -1,6 +1,14 @@
-import { SerializedSong, Song } from "lib/Songs/Song"
+import { APP_NAME } from "$/Config"
+import { ComposedSong } from "$lib/Songs/ComposedSong"
+import { RecordedSong } from "$lib/Songs/RecordedSong"
+import { SerializedSong, Song } from "$lib/Songs/Song"
+import { VsrgSong } from "$lib/Songs/VsrgSong"
+import { getSongType } from "$lib/Utilities"
+import { AppError } from "../Errors"
 import { DbInstance } from "./Database/Database"
 
+
+//TODO instead of using SerializedSong, switch to SerializedSongKind
 class SongService{
     songCollection = DbInstance.collections.songs
     async getSongs(): Promise<SerializedSong[]>{
@@ -63,13 +71,43 @@ class SongService{
     _clearAll(){
         return this.songCollection.remove({})
     }
+    //TODO not sure this is the best place for this
+    parseSong(song: any): ComposedSong | RecordedSong | VsrgSong{
+        song = Array.isArray(song) ? song[0] : song
+        const type = getSongType(song)
+        if (type === "none") {
+            console.log(song)
+            throw new Error("Error Invalid song")
+        }
+        if (type === "oldSky") {
+            const parsed = RecordedSong.fromOldFormat(song)
+            if (parsed === null) {
+                throw new Error("Error parsing old format song")
+            }
+            return parsed
+        }
+        if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
+            console.log(song)
+            throw new Error("Error Invalid song, it's not a Sky song")
+        }
+        if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
+            if (song.type === 'vsrg') return VsrgSong.deserialize(song).toGenshin()
+            //always put those below because of the legacy format
+            if (song.type === 'composed' || song.data?.isComposedVersion === true) return ComposedSong.deserialize(song).toGenshin()
+            if (song.type === 'recorded' || song.data?.isComposedVersion === false) return RecordedSong.deserialize(song).toGenshin()
+        }
+        if(type === 'vsrg') return VsrgSong.deserialize(song)
+        if (type === 'newComposed') return ComposedSong.deserialize(song)
+        if (type === 'newRecorded') return RecordedSong.deserialize(song)
+        throw new AppError("Error Invalid song")
+    }
     removeSong(id: string){
         return this.songCollection.removeById(id)
     }
 }
 
-const songService = new SongService()
+const _songService = new SongService()
 
 export {
-    songService
+    _songService as songService
 }

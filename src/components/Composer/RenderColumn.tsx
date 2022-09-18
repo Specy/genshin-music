@@ -1,8 +1,8 @@
-import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "appConfig"
-import type { ColumnNote, InstrumentData } from 'lib/Songs/SongClasses';
+import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "$/Config"
+import type { ColumnNote, InstrumentData } from '$lib/Songs/SongClasses';
 import type { Texture } from 'pixi.js';
 import { Container, Sprite } from '@inlet/react-pixi';
-import { ComposerCacheData } from "./TextureCache";
+import { ComposerCacheData } from "./ComposerCache";
 import { useCallback } from "react";
 
 interface RenderColumnProps {

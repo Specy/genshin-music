@@ -1,0 +1,94 @@
+
+
+.row{
+    display: flex;
+    flex-direction: row;
+}
+.row-centered{
+    display: flex;
+    align-items: center;
+}
+.flex-grow{
+    display: flex;
+    flex: 1;
+}
+.space-between{
+    justify-content: space-between;
+}
+.space-around{
+    justify-content: space-around;
+}
+.flex-centered{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.column {
+	display: flex;
+	flex-direction: column;
+}
+.text-ellipsis{
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.box-shadow{
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+.input{
+    font-family: Bonobo;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    border-radius: 0.2rem;
+    padding: 0.3rem;
+
+    &::placeholder{
+        color: #b9b9b9;
+    }
+}
+
+
+/* DO NOT REMOVE THE COMMA AFTER THE --existing-transform*/
+@keyframes fadeIn{
+    from{
+        opacity: 0;
+        transform: scale(0.95) var(--existing-transform, ); 
+    }
+    to{
+        opacity: 1;
+        transform: scale(1) var(--existing-transform, );
+    }
+}
+@keyframes appearLeft{
+    from{
+        transform: translateX(-0.5rem) var(--existing-transform, );
+        opacity: 0.6;
+    }
+    to{
+        transform: translateX(0) var(--existing-transform, );
+        opacity: 1;
+    }
+}
+@keyframes disappearAbove{
+    from{
+        transform: translateY(0) var(--existing-transform, );
+        opacity: 1;
+    }
+    to{
+        transform: translateY(-1rem) var(--existing-transform, );
+        opacity: 0;
+    }
+}
+@keyframes delayBackdrop{
+    0%{
+        backdrop-filter: unset;
+    }
+    99%{
+        backdrop-filter: unset;
+    }
+    100%{
+        backdrop-filter: blur(var(--backdrop-amount,2px));
+    }
+}
+

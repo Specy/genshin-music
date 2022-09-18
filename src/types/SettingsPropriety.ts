@@ -1,5 +1,5 @@
-import type{ INSTRUMENTS } from 'appConfig'
-import type { ComposerSettings, MainPageSettings } from 'lib/BaseSettings'
+import type{ INSTRUMENTS } from '$/Config'
+import type { ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings } from '$lib/BaseSettings'
 interface BaseSettingsProp {
     name: string
     songSetting: boolean
@@ -37,13 +37,17 @@ export type SettingsSlider = BaseSettingsProp & {
     value: number
     threshold: [number, number]
 }
-export type SettingsSelect = BaseSettingsProp & {
+export type SettingsSelect<T = string | number> = BaseSettingsProp & {
     type: 'select'
-    value: string | number
-    options: string[] | number[]
+    value: T
+    options: T[]
 }
 
-export type SettingUpdateKey = keyof typeof ComposerSettings.data | keyof typeof MainPageSettings.data
+export type SettingUpdateKey = 
+    keyof typeof ComposerSettings.data 
+  | keyof typeof PlayerSettings.data 
+  | keyof typeof VsrgComposerSettings.data
+  | keyof typeof ZenKeyboardSettings.data
 export type SettingUpdate = {
     key: SettingUpdateKey, 
     data: SettingsPropriety

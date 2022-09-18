@@ -1,5 +1,5 @@
 import { ChangeEvent } from "react"
-import { SettingsSlider, SettingUpdateKey } from "types/SettingsPropriety"
+import { SettingsSlider, SettingUpdateKey } from "$types/SettingsPropriety"
 interface SliderProps{
     data: SettingsSlider,
     objectKey: SettingUpdateKey,

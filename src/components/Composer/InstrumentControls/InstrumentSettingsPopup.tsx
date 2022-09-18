@@ -1,12 +1,13 @@
-import { Pitch, PITCHES } from "appConfig"
-import { AppButton } from "components/Inputs/AppButton"
-import { HelpTooltip } from "components/Utility/HelpTooltip"
-import useClickOutside from "lib/Hooks/useClickOutside"
-import { InstrumentNoteIcon } from "lib/Songs/ComposedSong"
-import { InstrumentData } from "lib/Songs/SongClasses"
-import { capitalize } from "lodash"
+import { Pitch } from "$/Config"
+import { AppButton } from "$cmp/Inputs/AppButton"
+import { PitchSelect } from "$cmp/Inputs/PitchSelect"
+import { HelpTooltip } from "$cmp/Utility/HelpTooltip"
+import useClickOutside from "$lib/Hooks/useClickOutside"
+import { InstrumentNoteIcon } from "$lib/Songs/ComposedSong"
+import { InstrumentData } from "$lib/Songs/SongClasses"
+import { capitalize } from "$lib/Utilities"
 import { FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp } from "react-icons/fa"
-import { InstrumentSelector } from "./InstrumentSelector"
+import { InstrumentSelect } from "../../Inputs/InstrumentSelect"
 
 interface InstrumentSettingsPopupProps {
     currentLayer: number
@@ -39,29 +40,23 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
 
         <div className="row space-between" style={{ marginTop: '0.4rem' }}>
             Instrument
-            <InstrumentSelector
+            <InstrumentSelect
                 style={{ width: '8rem' }}
-                selected={instrument}
+                selected={instrument.name}
                 onChange={(name) => onChange(instrument.set({ name }))}
             />
         </div>
         <div className="row space-between" style={{ marginTop: '0.4rem' }}>
             Pitch
-            <select
-                className="select"
+            <PitchSelect
                 style={{ padding: '0.3rem', width: '8rem' }}
-                value={instrument.pitch}
-                onChange={e => onChange(instrument.set({ pitch: e.target.value as Pitch }))}
+                selected={instrument.pitch as Pitch}
+                onChange={pitch => onChange(instrument.set({ pitch }))}
             >
                 <option value="">
                     Use song pitch
                 </option>
-                {PITCHES.map(pitch =>
-                    <option key={pitch} value={pitch}>
-                        {pitch}
-                    </option>
-                )}
-            </select>
+            </PitchSelect>
         </div>
 
         <div className="row space-between" style={{ marginTop: '0.4rem' }}>

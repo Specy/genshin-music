@@ -1,25 +1,28 @@
-import { INSTRUMENTS_DATA, LAYOUT_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, LAYOUT_IMAGES, APP_NAME } from "appConfig"
-import { InstrumentName, NoteStatus } from "types/GeneralTypes"
-import { NoteImage } from "types/Keyboard"
+import { INSTRUMENTS_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX } from "$/Config"
+import { makeObservable, observable } from "mobx"
+import { InstrumentName, NoteNameType, NoteStatus } from "$types/GeneralTypes"
 import { getPitchChanger } from "./Utilities"
+import { NoteImage } from "$/components/SvgNotes"
 
 type Layouts = {
     keyboard: string[]
     mobile: string[]
-    keyCodes: string[]
+    abc: string[]
 }
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 
+//TODO refactor everything here
 
 
 export default class Instrument {
     name: InstrumentName
-    volumeNode: GainNode | null
-    layout: NoteData[] = []
+    volumeNode: GainNode | null = null
+    instrumentData: typeof INSTRUMENTS_DATA[InstrumentName]
+    notes: ObservableNote[] = []
     layouts: Layouts = {
         keyboard: [],
         mobile: [],
-        keyCodes: []
+        abc: []
     }
     buffers: AudioBuffer[] = []
     isDeleted: boolean = false
@@ -34,34 +37,47 @@ export default class Instrument {
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
         this.name = name
         if (!INSTRUMENTS.includes(this.name as any)) this.name = INSTRUMENTS[0]
-        this.volumeNode = AUDIO_CONTEXT.createGain()
-        const instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]
-        const layouts = LAYOUT_DATA[instrumentData.notes]
+        this.instrumentData  = {...INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]}
+        const layouts =  this.instrumentData.layout
         this.layouts = {
-            keyboard: layouts.keyboardLayout,
-            mobile: layouts.mobileLayout,
-            keyCodes: layouts.keyboardCodes
+            keyboard: [...layouts.keyboardLayout],
+            mobile: [...layouts.mobileLayout],
+            abc: [...layouts.abcLayout]
         }
-        this.layouts.keyboard.forEach((noteName, i) => {
+        for (let i = 0; i <  this.instrumentData.notes; i++) {
+            const noteName = this.layouts.keyboard[i]
             const noteNames = {
                 keyboard: noteName,
                 mobile: this.layouts.mobile[i]
             }
             const url = `./assets/audio/${this.name}/${i}.mp3`
-            const note = new NoteData(i, noteNames, url)
+            const note = new ObservableNote(i, noteNames, url, this.instrumentData.baseNotes[i])
             note.instrument = this.name
-            //@ts-ignore
-            note.noteImage = LAYOUT_IMAGES[this.layouts.keyboard.length][i]
-            this.layout.push(note)
-        })
-
-        this.volumeNode.gain.value = 0.8
+            note.noteImage =  this.instrumentData.icons[i]
+            this.notes.push(note)
+        }
     }
-    getNoteFromCode = (code: number | string) => {
-        const index = this.layouts.keyboard.findIndex(e => e === String(code))
-        return index !== -1 ? index : null
+    getNoteFromCode = (code: string) => {
+        const index = this.getNoteIndexFromCode(code)
+        return index !== -1 ? this.notes[index] : null
     }
-
+    getNoteIndexFromCode = (code: string) => {
+        return this.layouts.keyboard.findIndex(e => e === code)
+    }
+    getNoteText = (index: number, type: NoteNameType, pitch: Pitch) => {
+        const layout = this.layouts
+        try {
+            if (type === "Note name") {
+                const baseNote = this.notes[index].baseNote
+                return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
+            }
+            if (type === "Keyboard layout") return layout.keyboard[index]
+            if (type === "Do Re Mi") return layout.mobile[index]
+            if (type === "ABC") return layout.abc[index]
+            if (type === "No Text") return ''
+        } catch (e) { }
+        return ''
+    }
     changeVolume = (amount: number) => {
         let newVolume = Number((amount / 135).toFixed(2))
         if (amount < 5) newVolume = 0
@@ -84,37 +100,24 @@ export default class Instrument {
         player.addEventListener('ended', handleEnd, { once: true })
     }
     load = async () => {
+        this.volumeNode = AUDIO_CONTEXT.createGain()
+        this.volumeNode.gain.value = 0.8
         let loadedCorrectly = true
         if (!INSTRUMENT_BUFFER_POOL.has(this.name)) {
             const emptyBuffer = AUDIO_CONTEXT.createBuffer(2, AUDIO_CONTEXT.sampleRate, AUDIO_CONTEXT.sampleRate)
-            const requests: Promise<AudioBuffer>[] = this.layout.map(note => {
-                //dont change any of this, safari bug
-                return new Promise(resolve => {
-                    fetch(note.url)
-                        .then(result => result.arrayBuffer())
-                        .then(buffer => {
-                            AUDIO_CONTEXT.decodeAudioData(buffer, resolve, () => {
-                                loadedCorrectly = false
-                                resolve(emptyBuffer)
-                            }).catch(e => {
-                                console.error(e)
-                                loadedCorrectly = false
-                                return resolve(emptyBuffer)
-                            })
-                        }).catch(e => {
-                            console.error(e)
-                            loadedCorrectly = false
-                            return resolve(emptyBuffer)
-                        })
-                })
-            })
+            const requests: Promise<AudioBuffer>[] = this.notes.map(note =>
+                fetchAudioBuffer(note.url)
+                    .catch(() => {
+                        loadedCorrectly = false
+                        return emptyBuffer
+                    })
+            )
             this.buffers = await Promise.all(requests)
             if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers)
         } else {
             this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!
         }
         this.isLoaded = true
-        console.log('loaded', loadedCorrectly)
         return loadedCorrectly
     }
     disconnect = (node?: AudioNode) => {
@@ -124,26 +127,27 @@ export default class Instrument {
     connect = (node: AudioNode) => {
         this.volumeNode?.connect(node)
     }
-    delete = () => {
+    dispose = () => {
         this.disconnect()
         this.isDeleted = true
         this.buffers = []
-        //TODO why was this not garbage collected?
         this.volumeNode = null
     }
 }
-export function fetchAudioBuffer(url: string): Promise<AudioBuffer>{
-    return new Promise((res,rej) => {
+export function fetchAudioBuffer(url: string): Promise<AudioBuffer> {
+    //dont change any of this, safari bug
+    return new Promise((res, rej) => {
         fetch(url)
-        .then(result => result.arrayBuffer())
-        .then(buffer => {
-            AUDIO_CONTEXT.decodeAudioData(buffer, res, () => {
-                rej()
-            }).catch(e => {
-                console.error(e)
-                return rej()
+            .then(result => result.arrayBuffer())
+            .then(buffer => {
+                AUDIO_CONTEXT.decodeAudioData(buffer, res, (e) => {
+                    console.error(e)
+                    rej()
+                }).catch(e => {
+                    console.error(e)
+                    rej()
+                })
             })
-        })
     })
 }
 
@@ -151,32 +155,31 @@ interface NoteName {
     keyboard: string,
     mobile: string
 }
-
-export class NoteData {
+export type NoteDataState = {
+    status: NoteStatus,
+    delay: number
+    animationId: number
+}
+export class ObservableNote {
     index: number
-    renderId: number
-    noteImage: NoteImage
-    instrument: InstrumentName
+    noteImage: NoteImage = APP_NAME === "Genshin" ? "do" : "cr"
+    instrument: InstrumentName = INSTRUMENTS[0]
     noteNames: NoteName
     url: string
-    buffer: ArrayBuffer
-    data: {
-        status: NoteStatus
-        delay: number
+    baseNote: BaseNote = "C"
+    buffer: ArrayBuffer = new ArrayBuffer(8)
+    @observable
+    readonly data: NoteDataState = {
+        status: '',
+        delay: 0,
+        animationId: 0
     }
-
-    constructor(index: number, noteNames: NoteName, url: string) {
+    constructor(index: number, noteNames: NoteName, url: string, baseNote: BaseNote) {
         this.index = index
         this.noteNames = noteNames
         this.url = url
-        this.noteImage = APP_NAME === "Genshin" ? "do" : "cr"
-        this.instrument = INSTRUMENTS[0]
-        this.renderId = Math.floor(Math.random() * 10000)
-        this.buffer = new ArrayBuffer(8)
-        this.data = {
-            status: '',
-            delay: 0
-        }
+        this.baseNote = baseNote
+        makeObservable(this)
     }
     get status(): NoteStatus {
         return this.data.status
@@ -185,18 +188,21 @@ export class NoteData {
     setStatus(status: NoteStatus) {
         return this.setState({ status })
     }
-    setState(data: Partial<{
-        status: NoteStatus
-        delay: number
-    }>) {
+    triggerAnimation(status?: NoteStatus){
+        this.setState({
+            animationId: this.data.animationId + 1,
+            status
+        })
+    }
+    setState(data: Partial<NoteDataState>) {
         Object.assign(this.data, data)
-        this.renderId++
     }
     clone() {
-        const obj = new NoteData(this.index, this.noteNames, this.url)
+        const obj = new ObservableNote(this.index, this.noteNames, this.url, this.baseNote)
         obj.buffer = this.buffer
         obj.noteImage = this.noteImage
-        obj.data = { ...this.data }
+        obj.instrument = this.instrument
+        obj.setState(this.data)
         return obj
     }
 }

@@ -1,6 +1,6 @@
 import { ChangeEvent } from "react"
 import { FaPlus, FaMinus } from 'react-icons/fa'
-import { SettingsNumber, SettingsText, SettingUpdateKey } from "types/SettingsPropriety"
+import { SettingsNumber, SettingsText, SettingUpdateKey } from "$types/SettingsPropriety"
 
 interface InputProps {
     data: SettingsText | SettingsNumber,
@@ -12,6 +12,8 @@ interface InputProps {
         data: any
     }) => void
 }
+
+//TODO add better debouncing
 export function Input({ data, value, onChange, onComplete, objectKey }: InputProps) {
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {

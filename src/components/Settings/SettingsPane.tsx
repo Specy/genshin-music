@@ -1,11 +1,12 @@
-import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from "types/SettingsPropriety"
+import { Fragment } from "react"
+import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from "$types/SettingsPropriety"
 import SettingsRow from "./SettingsRow"
 
 interface SettingsPaneProps {
     settings: {
         [key: string]: SettingsPropriety
     },
-    changeVolume: (data: SettingVolumeUpdate) => void,
+    changeVolume?: (data: SettingVolumeUpdate) => void,
     onUpdate: (data: SettingUpdate) => void
 }
 interface Group {
@@ -29,12 +30,13 @@ export function SettingsPane({ settings, changeVolume, onUpdate }: SettingsPaneP
         map.get(setting.category)!.settings[key] = setting
     })
     return <>
-        {Array.from(map.values()).map(group => 
-            <div key={group.category} className='settings-group'>
-                <h1 className="settings-group-title">
-                    {group.category}
-                </h1>
-                <div className='settings-group-wrapper'>
+    
+        {Array.from(map.values()).map(group =>
+            <Fragment key={group.category}>
+                <div className="column">
+                    <h1 className="settings-group-title">
+                        {group.category}
+                    </h1>
                     {Object.entries(group.settings).map(([key, setting]) =>
                         <SettingsRow
                             key={key}
@@ -45,7 +47,7 @@ export function SettingsPane({ settings, changeVolume, onUpdate }: SettingsPaneP
                         />
                     )}
                 </div>
-            </div>
+            </Fragment>
         )}
     </>
 }

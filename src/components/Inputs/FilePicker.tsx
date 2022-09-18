@@ -2,7 +2,7 @@ import { useRef, useCallback } from "react"
 interface FilePickerProps<T> {
     children: React.ReactNode,
     as: 'json' | 'text' | 'buffer'
-    onChange: (files: FileElement<T>[]) => void,
+    onPick: (files: FileElement<T>[]) => void,
     onError?: (error: any) => void,
     style?: object,
     multiple?: boolean
@@ -11,7 +11,7 @@ export interface FileElement<T> {
     data: Buffer | object | string | T,
     file: File
 }
-export function FilePicker<T>({ children, onChange, style = {}, as, multiple = false, onError }: FilePickerProps<T>) {
+export function FilePicker<T>({ children, onPick, style = {}, as, multiple = false, onError }: FilePickerProps<T>) {
     const input = useRef<HTMLInputElement>(null)
 
     const handleEvent = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,14 +42,14 @@ export function FilePicker<T>({ children, onChange, style = {}, as, multiple = f
         })
         try {
             const result = await Promise.all(promises)
-            onChange(result)
+            onPick(result)
         } catch (e) {
             console.error(e)
             onError?.(e)
         }
 
         if (input.current !== null) input.current.value = ''
-    }, [as, onChange, onError])
+    }, [as, onPick, onError])
 
     return <>
         <input type='file' style={{ display: 'none' }} ref={input} onChange={handleEvent} multiple={multiple} />

@@ -1,28 +1,33 @@
 import './SheetVisualizer.css'
 
 import { useState } from 'react'
-import { APP_NAME } from 'appConfig'
-import { getNoteText, parseSong } from 'lib/Utilities'
-import Switch from 'components/Switch'
-import Analytics from 'lib/Analytics'
-import { RecordedSong } from 'lib/Songs/RecordedSong'
-import { RecordedNote } from 'lib/Songs/SongClasses'
-import { AppButton } from 'components/Inputs/AppButton'
-import { logger } from 'stores/LoggerStore'
-import { SerializedSong } from 'lib/Songs/Song'
-import { SheetVisualiserMenu } from 'components/SheetVisualizer/Menu'
-import { SheetFrame } from 'components/SheetVisualizer/SheetFrame'
-import { Chunk } from 'lib/Songs/VisualSong'
-import { Title } from 'components/Miscellaneous/Title'
+import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from '$/Config'
+import { isComposedOrRecorded } from '$lib/Utilities'
+import Switch from '$cmp/Inputs/Switch'
+import Analytics from '$/lib/Stats'
+import { RecordedSong } from '$lib/Songs/RecordedSong'
+import { RecordedNote } from '$lib/Songs/SongClasses'
+import { AppButton } from '$cmp/Inputs/AppButton'
+import { logger } from '$stores/LoggerStore'
+import { SerializedSong } from '$lib/Songs/Song'
+import { SheetVisualiserMenu } from '$cmp/SheetVisualizer/Menu'
+import { SheetFrame } from '$cmp/SheetVisualizer/SheetFrame'
+import { Chunk } from '$lib/Songs/VisualSong'
+import { Title } from '$cmp/Miscellaneous/Title'
+import { DefaultPage } from '$cmp/Layout/DefaultPage'
+import { songService } from '$lib/Services/SongService'
+import { ComposedSong } from '$lib/Songs/ComposedSong'
+import { useTheme } from '$lib/Hooks/useTheme'
+import Instrument from '$/lib/Instrument'
 
 const THRESHOLDS = {
     joined: 50,
     pause: 400,
 }
 
-
+const defaultInstrument = new Instrument()
 export default function SheetVisualizer() {
-
+    const [theme] = useTheme()
     const [sheet, setSheet] = useState<Chunk[]>([])
     const [framesPerRow, setFramesPerRow] = useState(7)
     const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
@@ -39,14 +44,16 @@ export default function SheetVisualizer() {
     }
 
     function getChunkNoteText(i: number) {
-        const text = getNoteText(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', i, 'C', APP_NAME === "Genshin" ? 21 : 15)
+        const text = defaultInstrument.getNoteText(i, APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', "C")
         return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
     }
     function loadSong(song: SerializedSong) {
         setCurrentSong(song)
         try {
-            const temp = parseSong(song)
-            const lostReference = temp instanceof RecordedSong ? temp : temp.toRecordedSong()
+            const temp = songService.parseSong(song)
+            const isValid = isComposedOrRecorded(temp)
+            if(!isValid) return
+            const lostReference = temp instanceof RecordedSong ? temp : (temp as ComposedSong).toRecordedSong()
             const notes = lostReference.notes
             const chunks: Chunk[] = []
             let previousChunkDelay = 0
@@ -83,7 +90,7 @@ export default function SheetVisualizer() {
 
         Analytics.songEvent({ type: 'visualize' })
     }
-    return <div className='default-page' style={{ overflowY: 'scroll' }}>
+    return <DefaultPage style={{ overflowY: 'scroll' }} excludeMenu={true}>
         <Title text="Sheet Visualizer" />
 
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
@@ -134,8 +141,9 @@ export default function SheetVisualizer() {
                 {sheet.map((frame, i) =>
                     <SheetFrame
                         key={i}
-                        frame={frame}
+                        chunk={frame}
                         rows={3}
+                        theme={theme}
                         hasText={hasText}
                     />
                 )}
@@ -145,7 +153,7 @@ export default function SheetVisualizer() {
             </pre>}
 
         </div>
-    </div>
+    </DefaultPage>
 }
 
 

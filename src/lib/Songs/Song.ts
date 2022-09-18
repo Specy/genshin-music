@@ -1,10 +1,7 @@
-import { Midi } from "@tonejs/midi"
-import { APP_NAME, Pitch } from "appConfig"
-import { ComposedSong } from "./ComposedSong"
-import { RecordedSong } from "./RecordedSong"
-import { SongData } from "./SongClasses"
+import { APP_NAME, Pitch, PITCHES } from "$/Config"
+import { InstrumentData, SerializedInstrumentData, SongData } from "./SongClasses"
 
-export type SongType = 'recorded' | 'composed' | 'midi'
+export type SongType = 'recorded' | 'composed' | 'midi' | 'vsrg'
 
 export interface SerializedSong {
     id: string | null,
@@ -14,26 +11,27 @@ export interface SerializedSong {
     data: SongData,
     bpm: number,
     pitch: Pitch,
-    version: number
+    version: number,
+    instruments: SerializedInstrumentData[]
+
 }
 
 export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number>{
-    id: string | null
+    id: string | null = null
     type: SongType
-    folderId: string | null
+    folderId: string | null = null
     name: string
     data: SongData
-    bpm: number
-    pitch: Pitch
+    bpm: number = 220
+    pitch: Pitch = "C"
     version: T3
+
+    //TODO Might not be ideal to have instrument data here
+    instruments: InstrumentData[] = []
     constructor(name: string, version: T3, type: SongType,  data?: SongData){
         this.name = name
         this.version = version
-        this.bpm = 220
         this.type = type
-        this.id = null
-        this.folderId = null
-        this.pitch = "C"
         this.data = {
             isComposed: false,
             isComposedVersion: false,
@@ -44,8 +42,8 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
 
     static stripMetadata(song: SerializedSong): SerializedSong{
         const obj = {...song}
-        obj.id = null
-        obj.folderId = null
+        //@ts-ignore
+        delete obj._id
         return obj
     }
     static getSongType(song: SerializedSong): SongType | null{
@@ -54,11 +52,19 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
         if(song.data.isComposedVersion === false) return 'recorded'
         return null
     }
-    abstract toMidi(): Midi
+    static deserializeTo<T extends Song>(to: T, fromSong: Partial<SerializedSong>): T{
+        const sanitizedBpm = Number(fromSong.bpm)
+        const instruments = Array.isArray(fromSong.instruments) ? fromSong.instruments.map(InstrumentData.deserialize) : []
+        to.id = fromSong.id ?? null
+        to.folderId = fromSong.folderId ?? null
+        to.name = fromSong.name ?? "Untitled"
+        to.data = { ...to.data, ...fromSong.data }
+        to.bpm = Number.isFinite(sanitizedBpm) ? sanitizedBpm : 220
+        to.pitch = PITCHES.includes(fromSong.pitch!) ? fromSong.pitch! : "C"
+        to.instruments = instruments
+        return to
+    }
     abstract serialize(): T2
-    abstract toRecordedSong(): RecordedSong
-    abstract toComposedSong(): ComposedSong
-    abstract toGenshin(): T
     abstract clone(): T
 }
 

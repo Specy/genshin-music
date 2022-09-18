@@ -1,38 +1,85 @@
 import { useCallback, useEffect, useState } from 'react';
-import Analytics from 'lib/Analytics';
-import Home from 'components/Index/Home';
-import HomeStore from 'stores/HomeStore';
-import { logger } from 'stores/LoggerStore';
-import { delay } from "lib/Utilities"
-import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "appConfig"
-import Logger from 'components/Index/Logger'
-import rotateImg from "assets/icons/rotate.svg"
+import Analytics from '$/lib/Stats';
+import Home from '$cmp/Index/Home';
+import {homeStore} from '$stores/HomeStore';
+import { logger } from '$stores/LoggerStore';
+import { delay } from "$lib/Utilities"
+import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, UPDATE_MESSAGE } from "$/Config"
+import Logger from '$cmp/Index/Logger'
+import rotateImg from "$/assets/icons/rotate.svg"
 
 import { withRouter } from "react-router-dom";
 import './App.css';
-import './Utility.css'
-import { historyTracker } from 'stores/History';
+import './Utility.scss'
+import { historyTracker } from '$stores/History';
 import isMobile from 'is-mobile';
-import { FaExpandAlt } from 'react-icons/fa';
+import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
+import { IconButton } from '$/components/Inputs/IconButton';
+import { metronome } from '$/lib/Metronome';
+import { logsStore } from '$stores/LogsStore';
+import { checkIfneedsUpdate } from '$/lib/needsUpdate';
+import { AsyncPromptWrapper } from '$/components/Utility/AsyncPrompt';
+
 
 function App({ history }: any) {
 	const [hasVisited, setHasVisited] = useState(false)
+	const [audioContextState, setAudioContextState] = useState(AUDIO_CONTEXT.state)
 	const [checkedUpdate, setCheckedUpdate] = useState(false)
 	const [pageHeight, setPageHeight] = useState(0)
 	const [isOnMobile, setIsOnMobile] = useState(false)
+	const handleAudioContextStateChange = useCallback(() => {
+		setAudioContextState(AUDIO_CONTEXT.state)
+	}, [])
+	useEffect(() => {
+		AUDIO_CONTEXT.addEventListener('statechange', handleAudioContextStateChange)
+		return () => {
+			AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
+		}
+	}, [handleAudioContextStateChange])
+	useEffect(() => {
+		if(window.location.hostname === "localhost") return
+		const originalErrorLog = console.error.bind(console)
+		//intercept console errors and log them to the logger store
+		console.error = (...args: any[]) => {
+			originalErrorLog(...args)
+			logsStore.addLog({
+				error: args.find(arg => arg instanceof Error),
+				message: args.map(arg => {
+					if (arg instanceof Error) {
+						return arg.stack
+					}
+					return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : arg
+				}).join(' ')
+			})
+		}
+		const windowIntercepter = (e: ErrorEvent) => {
+			//intercept window errors and log them to the logger store
+			logsStore.addLog({
+				error: e.error,
+				message: e.error.stack
+			})
+		}
+		window.addEventListener("error", windowIntercepter)
+		return () => {
+			console.error = originalErrorLog
+			window.removeEventListener("error", windowIntercepter)
+		}
+	}, [])
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
 		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
 		canShowHome = canShowHome === null ? 'true' : canShowHome
-		HomeStore.setState({
+		homeStore.setState({
 			canShow: canShowHome === 'true',
 			visible: canShowHome === 'true',
 			isInPosition: false,
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 		})
+
 		setIsOnMobile(isMobile())
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
+		checkIfneedsUpdate()
 	}, [])
 
 	const setHeight = useCallback((h: number) => {
@@ -60,10 +107,9 @@ function App({ history }: any) {
 		if (active && active.tagName === 'INPUT') active?.blur()
 		resetHeight()
 	}, [resetHeight])
-
 	const setDontShowHome = useCallback((override = false) => {
 		localStorage.setItem(APP_NAME + "_ShowHome", JSON.stringify(override))
-		HomeStore.setState({ canShow: override })
+		homeStore.setState({ canShow: override })
 	}, [])
 
 	const askForStorage = async () => {
@@ -124,7 +170,6 @@ function App({ history }: any) {
 			historyTracker.addPage(path.pathName)
 		})
 	}, [history])
-
 	return <>
 		<Logger />
 		<Home
@@ -133,9 +178,21 @@ function App({ history }: any) {
 			setDontShowHome={setDontShowHome}
 			askForStorage={askForStorage}
 		/>
+		<AsyncPromptWrapper />
+		{audioContextState !== 'running' &&
+			<IconButton
+				className='resume-audio-context box-shadow'
+				size='3rem'
+				onClick={() => {
+					metronome.tick()
+				}}
+			>
+				<FaVolumeMute style={{ width: '1.4rem', height: '1.4rem' }} />
+			</IconButton>
+		}
 		<div className="rotate-screen">
 			{isOnMobile && <>
-				<img src={rotateImg} alt="icon for the rotating screen"/>
+				<img src={rotateImg} alt="icon for the rotating screen" />
 				<p>
 					For a better experience, add the website to the home screen, and rotate your device
 				</p>

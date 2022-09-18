@@ -1,5 +1,5 @@
-const copyDir = require('recursive-copy')
 const fs = require('fs/promises')
+const fse = require('fs-extra')
 const clc = require("cli-color");
 const { execSync } = require('child_process')
 const skyPath = './src/appData/sky'
@@ -17,17 +17,6 @@ if (!['Genshin', 'Sky', "All"].includes(chosenApp)) {
     process.exit(1)
 }
 
-async function deleteAssets() {
-    const files = await fs.readdir(publicPath)
-    await Promise.all(files.map(file => {
-        if (file !== 'assets') {
-            if (!file.includes('.')) return fs.rm(`${publicPath}/${file}`, { recursive: true })
-            return fs.unlink(`${publicPath}/${file}`)
-        }
-        return new Promise(resolve => resolve()) 
-    }))
-}
-
 
 
 async function execute() {
@@ -35,18 +24,18 @@ async function execute() {
     try{
         for (const app of toBuild) {
             console.log(clc.bold.yellow(`Building ${app}...`))
-            await deleteAssets()
-            await copyDir(app === "Sky" ? skyPath : genshinPath, publicPath)
+            await fse.copy(app === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
+            await fs.rename(`${publicPath}/index.html`,`index.html`)
             if (process.platform === 'win32') {
                 console.log(clc.italic("Building on windows"))
                 execSync(
-                    `set REACT_APP_NAME=${app}&& set REACT_APP_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`,
+                    `set VITE_APP_NAME=${app}&& set VITE_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`,
                     { stdio: 'inherit' }
                 )
             } else {
                 console.log(clc.italic("Building on Linux"))
                 execSync(
-                    `REACT_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} REACT_APP_SW_VERSION=${SW_VERSION} yarn build`,
+                    `VITE_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} VITE_SW_VERSION=${SW_VERSION} yarn build`,
                     { stdio: 'inherit' }
                 )
             }
