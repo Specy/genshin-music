@@ -17,6 +17,7 @@ export const updates: Update[] = [
             "Added app scaling",
             "Added alphabetical folder ordering",
             "Added backup page",
+            "(Genshin) added vintage lyre",
             "(Sky) Added SFX of the calls and dance emote",
             "Changed metronome sounds",
             "Improved player performance",
