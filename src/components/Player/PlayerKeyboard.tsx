@@ -51,6 +51,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     songTimestamp = 0
     toDispose: (() => void)[] = []
     timeouts: Timer[] = []
+    debouncedStateUpdate: Timer = 0
     constructor(props: KeyboardPlayerProps) {
         super(props)
         this.state = {
@@ -77,39 +78,43 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         KeyboardProvider.listen(this.handleKeyboard, { id })
         MIDIProvider.addListener(this.handleMidi)
         this.toDispose.push(subscribeObeservableObject(playerStore.state, async () => {
-            const value = playerStore.state
-            const song = playerStore.song
-            const type = playerStore.eventType
-            await this.stopSong()
-            if (!this.mounted) return
-            if (type === 'stop') {
-                this.props.functions.setHasSong(false)
-            } else {
-                if (!song) return
-                const lostReference = song.isComposed
-                    ? song.toRecordedSong().clone()
-                    : song.clone()
-
-                lostReference.timestamp = Date.now()
-                const end = value.end || lostReference?.notes?.length || 0
-                if (type === 'play') {
-                    this.playSong(lostReference, value.start, end)
+            //this is because mobx calls for each prop changed while i want to batch it and execute all at once
+            if(this.debouncedStateUpdate) clearTimeout(this.debouncedStateUpdate)
+            this.debouncedStateUpdate = setTimeout(async () => {
+                const state = playerStore.state
+                const song = playerStore.song
+                const type = playerStore.eventType
+                await this.stopSong()
+                if (!this.mounted) return
+                if (type === 'stop') {
+                    this.props.functions.setHasSong(false)
+                } else {
+                    if (!song) return
+                    const lostReference = song.isComposed
+                        ? song.toRecordedSong().clone()
+                        : song.clone()
+    
+                    lostReference.timestamp = Date.now()
+                    const end = state.end || lostReference?.notes?.length || 0
+                    if (type === 'play') {
+                        this.playSong(lostReference, state.start, end)
+                    }
+                    if (type === 'practice') {
+                        this.practiceSong(lostReference, state.start, end)
+                    }
+                    if (type === 'approaching') {
+                        this.approachingSong(lostReference, state.start, end)
+                    }
+                    this.props.functions.setHasSong(true)
+                    Analytics.songEvent({ type })
+                    playerControlsStore.setState({
+                        size: lostReference?.notes?.length || 1,
+                        position: state.start,
+                        end,
+                        current: state.start
+                    })
                 }
-                if (type === 'practice') {
-                    this.practiceSong(lostReference, value.start, end)
-                }
-                if (type === 'approaching') {
-                    this.approachingSong(lostReference, value.start, end)
-                }
-                this.props.functions.setHasSong(true)
-                Analytics.songEvent({ type })
-                playerControlsStore.setState({
-                    size: lostReference?.notes?.length || 1,
-                    position: value.start,
-                    end,
-                    current: value.start
-                })
-            }
+            }, 4)
         }))
         this.toDispose.push(subscribeObservableArray(playerStore.keyboard, () => {
             this.setState({ keyboard: playerStore.keyboard })
@@ -397,6 +402,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                 className={keyboardClass}
                 style={{
                     ...style,
+                    zIndex: 2,
                     marginBottom: `${size * 6 + (data.keyboardYPosition / 10)}vh`
                 }}
             >

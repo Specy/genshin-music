@@ -1,4 +1,4 @@
-import { observe } from "mobx"
+import { IObjectDidChange, observe } from "mobx"
 import { useEffect, useState } from "react"
 
 
@@ -29,9 +29,9 @@ export function subscribeObservableArray<T>(target: T[], callback: (target: T[])
     return dispose
 }
 
-export function subscribeObeservableObject<T extends Object>(target: T, callback: (target: T) => void) {
-    const dispose = observe(target, () => {
-        callback({...target})
+export function subscribeObeservableObject<T extends Object>(target: T, callback: (target: T, change?: IObjectDidChange<T>) => void) {
+    const dispose = observe(target, (change) => {
+        callback({...target}, change)
     })
     callback({...target})
     return dispose

@@ -2,7 +2,7 @@ import { APP_NAME } from "$/Config";
 import { ObservableNote, NoteDataState } from "$lib/Instrument";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
-import { makeObservable, observable } from "mobx";
+import { action, makeObservable, observable } from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
 type SongTypes = RecordedSong | ComposedSong | null
@@ -38,21 +38,26 @@ class PlayerStore {
     get start(): number {
         return this.state.start
     }
+    @action
     setKeyboardLayout = (keyboard: ObservableNote[]) => { 
         this.keyboard.splice(0, this.keyboard.length, ...keyboard)
     }
+    @action
     resetKeyboardLayout = () => {
         this.keyboard.forEach(note => note.setState({
             status: '',
             delay: APP_NAME === 'Genshin' ? 100 : 200
         }))
     }
+    @action
     resetOutgoingAnimation = () => {
         this.keyboard.forEach(n => n.setState({animationId: 0}))
     }
+    @action
     setNoteState = (index: number, state: Partial<NoteDataState>) => {
         this.keyboard[index].setState(state)
     }
+    @action
     setState = (state: Partial<PlayerStoreState>) => {
         Object.assign(this.state, state)
     }
@@ -72,7 +77,6 @@ class PlayerStore {
             eventType: 'practice',
             end,
             playId: this.state.playId + 1
-
         })
     }
     approaching = (song: SongTypesNonNull, start: number = 0, end: number) => {
@@ -82,7 +86,6 @@ class PlayerStore {
             eventType: 'approaching',
             end,
             playId: this.state.playId + 1
-
         })
     }
     resetSong = () => {

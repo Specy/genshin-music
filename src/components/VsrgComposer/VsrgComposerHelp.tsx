@@ -1,7 +1,5 @@
 import helpImg from '$/assets/images/help-vsrg-composer.png';
-import { useObservableArray } from '$/lib/Hooks/useObservable';
 import { keyBinds } from '$stores/Keybinds';
-import { vsrgPlayerStore } from '$stores/VsrgPlayerStore';
 import { Key } from '../HelpTab';
 
 
@@ -9,6 +7,27 @@ export function VsrgComposerHelp() {
     const keys = keyBinds.getVsrgKeybinds(6)
     return <>
         <div className="column">
+            <div className='column' style={{padding: '0.4rem'}}>
+                <h2 style={{margin: 0}}>Vsrg Composer info</h2>
+                <p style={{marginLeft: '0.4rem'}}>
+                    This is a composer to create beatmaps for the songs you have in the app.
+                    Here are explained how the composer works and how to use it.
+                </p>
+                <h2 style={{margin: 0}}> 
+                    How to use
+                </h2>
+                <p style={{marginLeft: '0.4rem'}}>
+                    You start off by selecting the song you want to create a beatmap for, you can find it in the Settings
+                    as "background song", you can mute and hide the layers of the song, the shown layers will have the notes appear in the 
+                    timeline above the composer. 
+                    <br /><br />
+                    Then you can select the bpm of the beatmap, usually it should be the same of the song or /2 or /4 of it.
+                    You can then select the different snap points, it's where the notes will be placed when you click on the editor.
+                    Then you can add notes to the editor by clicking them or using the keyboard. 
+                    Once finished you can test the song in the vsrg player
+                </p>
+            </div>
+
 
             <img src={helpImg} className="help-img" alt="tutorial for the vsrg composer page" loading="lazy" />
             <ol>
