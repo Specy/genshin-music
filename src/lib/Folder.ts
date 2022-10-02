@@ -17,7 +17,7 @@ export class Folder {
     songs: SerializedSong[]
     filterType: FolderFilterType
     constructor(name?: string, id?: string | null, songs?: SerializedSong[]) {
-        this.id = id || null
+        this.id = id ?? null
         this.name = name || "Unnamed folder"
         this.songs = songs ?? []
         this.filterType = "date-created"
