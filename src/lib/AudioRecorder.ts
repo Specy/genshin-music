@@ -7,7 +7,7 @@ export default class AudioRecorder {
     recorder: MediaRecorder
     constructor() {
         this.node = AUDIO_CONTEXT.createMediaStreamDestination()
-        if(!window.MediaRecorder){
+        if(!window?.MediaRecorder){
             console.log("Audio recorder Polyfill")
             this.recorder = new MediaRecorderPolyfill(this.node.stream)
         }else{
