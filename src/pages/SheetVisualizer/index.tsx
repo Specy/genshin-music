@@ -1,7 +1,7 @@
 import './SheetVisualizer.css'
 
 import { useState } from 'react'
-import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from '$/Config'
+import { APP_NAME } from '$/Config'
 import { isComposedOrRecorded } from '$lib/Utilities'
 import Switch from '$cmp/Inputs/Switch'
 import Analytics from '$/lib/Stats'

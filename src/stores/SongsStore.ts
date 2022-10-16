@@ -1,21 +1,15 @@
 import { songService } from "$lib/Services/SongService"
-import { SerializedSong, Song } from "$lib/Songs/Song"
+import { SerializedSong, Song, SongStorable } from "$lib/Songs/Song"
 import { makeObservable, observable } from "mobx"
 
-export interface SongsStoreData{
-    songs: SerializedSong[]
-}
-export interface SongsStoreState{
-    data: SongsStoreData
-}
 
 export class SongsStore{
-    @observable.shallow songs: SerializedSong[] = []
+    @observable.shallow songs: SongStorable[] = []
     constructor(){
         makeObservable(this)
     }
     sync = async () => {
-        const songs = await songService.getSongs()
+        const songs = await songService.getStorableSongs()
         songs.forEach(song => {
             if(!song.type) song.type = Song.getSongType(song)!
             if(song.folderId === undefined) song.folderId = null
@@ -53,10 +47,13 @@ export class SongsStore{
         this.sync()
     }
     clearSongsInFolder = async (folderId: string) => {
-        const songs = this.songs.filter(song => song.folderId === folderId)
+        const storedSongs = this.songs.filter(song => song.folderId === folderId)
+        const songs = await songService.getManySerializedFromStorable(storedSongs)
         for(const song of songs){
-            song.folderId = null
-            await songService.updateSong(song.id!, song)
+            if(song != null){
+                song.folderId = null
+                await songService.updateSong(song.id!, song)
+            }
         }
         this.sync()
     }

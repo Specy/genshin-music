@@ -1,6 +1,14 @@
 import { APP_NAME, Pitch, PITCHES } from "$/Config"
 import { InstrumentData, SerializedInstrumentData, SongData } from "./SongClasses"
 
+//bad thing i need to do to fix type infer
+export interface SongStorable {
+    id: string | null,
+    folderId: string | null
+    name: string
+    type: SongType
+    _thisIsNotASerializedSong: null
+}
 export type SongType = 'recorded' | 'composed' | 'midi' | 'vsrg'
 
 export interface SerializedSong {
@@ -13,7 +21,6 @@ export interface SerializedSong {
     pitch: Pitch,
     version: number,
     instruments: SerializedInstrumentData[]
-
 }
 
 export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number>{
@@ -46,10 +53,12 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
         delete obj._id
         return obj
     }
-    static getSongType(song: SerializedSong): SongType | null{
+    static getSongType(song: SerializedSong | SongStorable): SongType | null{
         if(song.type) return song.type
-        if(song.data.isComposedVersion === true) return "composed"
-        if(song.data.isComposedVersion === false) return 'recorded'
+        //@ts-ignore legacy format support
+        if(song.data?.isComposedVersion === true) return "composed"
+        //@ts-ignore
+        if(song.data?.isComposedVersion === false) return 'recorded'
         return null
     }
     static deserializeTo<T extends Song>(to: T, fromSong: Partial<SerializedSong>): T{
@@ -68,3 +77,13 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
     abstract clone(): T
 }
 
+
+export function extractStorable<T extends SerializedSong>(song: T): SongStorable{
+    return {
+        id: song.id,
+        folderId: song.folderId,
+        name: song.name,
+        type: song.type,
+        _thisIsNotASerializedSong: null,
+    }
+}

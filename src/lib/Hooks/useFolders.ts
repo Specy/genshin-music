@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { observe } from "mobx";
 import { folderStore } from "$stores/FoldersStore";
 import { Folder } from "$lib/Folder";
-import { SerializedSong } from "$lib/Songs/Song";
+import { SongStorable } from "$lib/Songs/Song";
 
 type UseFolders = [Folder[]]
-export function useFolders(songs?: SerializedSong[]): UseFolders {
+export function useFolders(songs?: SongStorable[]): UseFolders {
     const [folders, setFolders] = useState(folderStore.folders)
     const [parsedFolders, setParsedFolders] = useState<Folder[]>([])
     useEffect(() => {

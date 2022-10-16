@@ -94,9 +94,12 @@ export class FileService {
         }
         const songs = result.getSuccessfulSongs()
         const songErrors = result.getSongErrors()
-        songs.forEach(s => logger.success(`Imported ${s.type} song: "${s.name}"`))
+        if(songs.length > 5){
+            logger.success(`Imported ${songs.length} songs`)
+        }else{
+            songs.forEach(s => logger.success(`Imported ${s.type} song: "${s.name}"`))
+        }
         songErrors.forEach(e => logger.error(`Error importing song: "${e.file?.name ?? ''}" | ${e.error}`))
-
         const folders = result.getSuccessfulFolders()
         const folderErrors = result.getFolderErrors()
         folders.forEach(f => logger.success(`Imported folder: "${f.name}"`))

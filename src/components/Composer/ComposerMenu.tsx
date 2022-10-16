@@ -21,7 +21,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cm
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm, asyncPrompt } from '$cmp/Utility/AsyncPrompts';
 import { SettingsPane } from "$cmp/Settings/SettingsPane";
-import { SerializedSong, SongType } from '$lib/Songs/Song';
+import { SerializedSong, SongStorable, SongType } from '$lib/Songs/Song';
 import { useFolders } from '$lib/Hooks/useFolders';
 import { Folder } from '$lib/Folder';
 import { songsStore } from '$stores/SongsStore';
@@ -260,7 +260,7 @@ function Menu({ data, functions }: MenuProps) {
 
 
 interface SongRowProps {
-    data: SerializedSong
+    data: SongStorable
     theme: ThemeStore
     folders: Folder[]
     functions: {
@@ -284,9 +284,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         Invalid song
     </div>
     return <div className="song-row">
-        <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
+        <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
-            loadSong(data)
+            const song = await songService.getOneSerializedFromStorable(data)
+            if(!song) return logger.error("Could not find song")
+            loadSong(song)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -332,9 +334,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaFolder style={{ marginRight: "0.4rem" }} />
                     <select className='dropdown-select'
                         value={data.folderId || "_None"}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                             const id = e.target.value
-                            songsStore.addSongToFolder(data, id !== "_None" ? id : null)
+                            const song = await songService.getOneSerializedFromStorable(data)
+                            if(!song) return logger.error("Could not find song")
+                            songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                         }}
                     >
                         <option value={"_None"}>
@@ -347,22 +351,28 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 </FloatingDropdownRow>
                 <FloatingDropdownRow 
                         style={{width: '100%'}} 
-                        onClick={() => {
+                        onClick={async () => {
                             if(data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
-                            loadSong(data)
+                            const song = await songService.getOneSerializedFromStorable(data)
+                            if(!song) return logger.error("Could not find song")
+                            loadSong(song)
                             toggleMenu(false)
                         }}
                     >
                         <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
                         <FloatingDropdownText text='Edit song' />
                     </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(data)}>
+                <FloatingDropdownRow onClick={async () =>{
+                    const song = await songService.getOneSerializedFromStorable(data)
+                    if(!song) return logger.error("Could not find song")
+                    downloadSong(song)
+                }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
                 {(data.type === 'recorded' || data.type === "composed") &&
-                    <FloatingDropdownRow onClick={() => {
-                        const song = songService.parseSong(data) as RecordedOrComposed
+                    <FloatingDropdownRow onClick={async () => {
+                        const song = await songService.fromStorableSong(data) as RecordedOrComposed
                         downloadSong(song.toMidi())
                     }}>
                         <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
@@ -372,7 +382,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
 
                 <FloatingDropdownRow 
                     onClick={async () => {
-                        const parsed = songService.parseSong(data)
+                        const parsed = await songService.fromStorableSong(data)
                         await songsStore.addSong(parsed)
                         logger.log(`Cloned song: ${data.name}`)
                         toggleMenu(false)

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { observe } from "mobx";
 import { songsStore } from "$stores/SongsStore";
-import { SerializedSong } from "$lib/Songs/Song";
+import { SongStorable } from "$lib/Songs/Song";
 
 
-type UseSongs = [SerializedSong[]]
+type UseSongs = [SongStorable[]]
 export function useSongs(): UseSongs{
     const [songs,setSongs] = useState(songsStore.songs)
     useEffect(() => {
@@ -17,7 +17,7 @@ export function useSongs(): UseSongs{
 }
 
 
-export function subscribeSongs(callback: (songs: SerializedSong[]) => void){
+export function subscribeSongs(callback: (songs: SongStorable[]) => void){
     const dispose = observe(songsStore.songs,() => {
         callback([...songsStore.songs])
     })

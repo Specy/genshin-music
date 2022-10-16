@@ -20,7 +20,7 @@ import { useTheme } from "$lib/Hooks/useTheme";
 import { fileService } from "$lib/Services/FileService";
 import { songService } from "$lib/Services/SongService";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
-import { SerializedSong } from "$lib/Songs/Song";
+import { SerializedSong, SongStorable } from "$lib/Songs/Song";
 import { VsrgSong, VsrgTrackModifier } from "$lib/Songs/VsrgSong";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaInfo, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
@@ -31,6 +31,7 @@ import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 import { SerializedSongKind } from "$/types/SongTypes";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
+import { logger } from "workbox-core/_private";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 const isOnMobile = isMobile()
@@ -241,15 +242,17 @@ export default memo(VsrgMenu, (p, n) => {
 
 
 interface SeelctSongRowProps {
-    data: SerializedSong
+    data: SongStorable
     onClick: (song: SerializedSong) => void
 }
 function SelectSongRow({ data, onClick }: SeelctSongRowProps) {
     return <>
         <div
             className={`song-row ${hasTooltip(true)}`}
-            onClick={() => {
-                onClick(data)
+            onClick={async () => {
+                const song = await songService.getOneSerializedFromStorable(data)
+                if(!song) return logger.error("Could not find song")
+                onClick(song)
             }}
             style={{ cursor: 'pointer' }}
         >
@@ -266,7 +269,7 @@ function SelectSongRow({ data, onClick }: SeelctSongRowProps) {
 
 
 interface SongRowProps {
-    data: SerializedSongKind
+    data: SongStorable
     theme: ThemeStore
     folders: Folder[]
     functions: {
@@ -287,9 +290,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         Invalid song
     </div>
     return <div className="song-row">
-        <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
+        <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
-            onClick(songService.parseSong(data) as VsrgSong)
+            const song = await songService.fromStorableSong(data)
+            if(!song) return logger.error("Could not find song")
+            onClick(song as VsrgSong)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -334,9 +339,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaFolder style={{ marginRight: "0.4rem" }} />
                     <select className='dropdown-select'
                         value={data.folderId || "_None"}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                             const id = e.target.value
-                            songsStore.addSongToFolder(data, id !== "_None" ? id : null)
+                            const song = await songService.getOneSerializedFromStorable(data)
+                            if(!song) return logger.error("Could not find song")
+                            songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                         }}
                     >
                         <option value={"_None"}>
@@ -347,8 +354,10 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => {
-                    fileService.downloadSong(data, data.name)
+                <FloatingDropdownRow onClick={async () => {
+                    const song = await songService.getOneSerializedFromStorable(data)
+                    if(!song) return logger.error("Could not find song")
+                    fileService.downloadSong(song, data.name)
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />

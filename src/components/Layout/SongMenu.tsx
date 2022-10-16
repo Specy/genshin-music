@@ -1,18 +1,14 @@
 import { useTheme } from "$lib/Hooks/useTheme";
-import { ComposedSong } from "$lib/Songs/ComposedSong";
-import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { useEffect, useState } from "react"
 import { SongFolder, SongFolderContent } from "./Folder";
 import { Folder } from "$lib/Folder";
-import { SerializedSong, SongType } from "$lib/Songs/Song";
+import { SongStorable, SongType } from "$lib/Songs/Song";
 import { useFolders } from "$lib/Hooks/useFolders";
-import { VsrgSong } from "$lib/Songs/VsrgSong";
 
 
 
-type SongKinds = SerializedSong | RecordedSong | ComposedSong | VsrgSong
 interface SongMenuProps<T> {
-    songs: SongKinds[],
+    songs: SongStorable[],
     SongComponent: Function,
     componentProps: Omit<T, "data">
     className?: string,
@@ -36,13 +32,13 @@ export function SongMenu<T>({
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
     const [noFolderVsrg, setNoFolderVsrg] = useState<Folder>()
-    const [filteredSongs, setFilteredSongs] = useState<SongKinds[]>([])
+    const [filteredSongs, setFilteredSongs] = useState<SongStorable[]>([])
     const [folders] = useFolders(filteredSongs)
     useEffect(() => {
         setFilteredSongs(songs.filter(s => !exclude?.includes(s.type) ?? true))
     }, [songs, exclude])
     useEffect(() => {
-        function isInFolder(song: SongKinds) {
+        function isInFolder(song: SongStorable) {
             return folders.some(f => f.id === song.folderId)
         }
         setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'recorded')))

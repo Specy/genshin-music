@@ -7,8 +7,10 @@ import { FaArrowLeft, FaHome, FaMusic, FaTimes } from 'react-icons/fa'
 import {homeStore} from '$stores/HomeStore'
 import { useHistory } from 'react-router-dom'
 import MenuPanel from '$cmp/Layout/MenuPanel'
-import { SerializedSong } from '$lib/Songs/Song'
+import { SerializedSong, SongStorable } from '$lib/Songs/Song'
 import useClickOutside from '$lib/Hooks/useClickOutside'
+import { songService } from '$/lib/Services/SongService'
+import { logger } from 'workbox-core/_private'
 
 interface SheetVisualiserMenuProps {
     currentSong: SerializedSong | null,
@@ -74,16 +76,20 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
 }
 
 interface SongRowProps {
-    data: SerializedSong
+    data: SongStorable
     current: SerializedSong | null
     onClick: (song: SerializedSong) => void
 }
 function SongRow({ data, current, onClick }: SongRowProps) {
-    const selectedStyle = current === data ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
+    const selectedStyle = current?.id === data.id ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
     return <div
         className="song-row"
         style={selectedStyle}
-        onClick={() => onClick(data)}>
+        onClick={async () => {
+            const song = await songService.getOneSerializedFromStorable(data)
+            if(!song) return logger.error("Could not load song")
+            onClick(song)
+        }}>
         <div className="song-name">
             {data.name}
         </div>
