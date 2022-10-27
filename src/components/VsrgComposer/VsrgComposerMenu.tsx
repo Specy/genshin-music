@@ -29,9 +29,8 @@ import { songsStore } from "$stores/SongsStore";
 import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
-import { SerializedSongKind } from "$/types/SongTypes";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
-import { logger } from "workbox-core/_private";
+import { logger } from "$/stores/LoggerStore";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 const isOnMobile = isMobile()

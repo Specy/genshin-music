@@ -12,7 +12,7 @@ import { DbInstance } from "./Database/Database"
 //TODO instead of using SerializedSong, switch to SerializedSongKind
 class SongService{
     songCollection = DbInstance.collections.songs
-    async getStorableSongs(): Promise<SongStorable[]>{
+    async   getStorableSongs(): Promise<SongStorable[]>{
         const songs = await this.getSongs()
         return songs.map(extractStorable)
     }
@@ -33,6 +33,8 @@ class SongService{
                     await this.songCollection.update({name: song.name}, song)
                     hasChanges = true
                 } 
+                if(song.folderId === undefined) song.folderId = null
+                if(!song.type) song.type = Song.getSongType(song)!
                 resolve(hasChanges)
             })
         })
@@ -59,7 +61,8 @@ class SongService{
         return song
     }
     getManySerializedFromStorable(storables: SongStorable[]): Promise<(SerializedSong | null)[]>{
-        return Promise.all(storables.map(storable => this.getOneSerializedFromStorable(storable)))
+        const promises = storables.map(storable => this.getOneSerializedFromStorable(storable))
+        return Promise.all(promises)
     }
     async songExists(id: string): Promise<boolean>{
         return (await this.getSongById(id)) !== null

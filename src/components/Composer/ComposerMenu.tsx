@@ -286,7 +286,9 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
+            logger.showPill("Loading song...")
             const song = await songService.getOneSerializedFromStorable(data)
+            logger.hidePill()
             if(!song) return logger.error("Could not find song")
             loadSong(song)
             toggleMenu(false)

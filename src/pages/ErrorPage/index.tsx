@@ -128,7 +128,7 @@ function SongRow({ data, deleteSong, download }: SongRowProps) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={async () => {
+            <button className="song-button" onClick={async () => {  
                 const song = await songService.getOneSerializedFromStorable(data)
                 if(!song) return logger.error("Could not find song")
                 download(song)

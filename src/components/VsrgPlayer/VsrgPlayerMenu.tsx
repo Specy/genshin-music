@@ -16,7 +16,7 @@ import { useSongs } from "$lib/Hooks/useSongs";
 import { useTheme } from "$lib/Hooks/useTheme";
 import { fileService } from "$lib/Services/FileService";
 import { songService } from "$lib/Services/SongService";
-import { SerializedSong, SongStorable } from "$lib/Songs/Song";
+import { SongStorable } from "$lib/Songs/Song";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
 import { VsrgSongSelectType } from "$pages/VsrgPlayer";
 import { memo, useCallback, useEffect, useState } from "react";
@@ -27,7 +27,7 @@ import { songsStore } from "$stores/SongsStore";
 import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { IS_MOBILE } from "$/Config";
-import { logger } from "workbox-core/_private";
+import { logger } from "$/stores/LoggerStore";
 
 type MenuTabs = 'Songs' | 'Settings'
 

@@ -322,8 +322,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 return instrument
             }
         })
-        const instruments = (await Promise.all(promises)) as Instrument[]
         if (!this.mounted) return
+        const instruments = (await Promise.all(promises)) as Instrument[]
         this.setState({ layers: instruments })
     }
     changeVolume = (obj: SettingVolumeUpdate) => {
@@ -396,16 +396,16 @@ class Composer extends Component<ComposerProps, ComposerState>{
         song.id = id
         return song
     }
-    updateSong = async (song: ComposedSong): Promise<void> => {
+    updateSong = async (song: ComposedSong): Promise<boolean> => {
         //if it is the default song, ask for name and add it
         if (song.name === "Untitled") {
             const name = await asyncPrompt("Write song name, press cancel to ignore")
-            if (name === null || !this.mounted) return
+            if (name === null || !this.mounted) return false
             song.name = name
             this.changes = 0
             this.setState({})
             await this.addSong(song)
-            return
+            return true
         }
         return new Promise(async resolve => {
             //if it exists, update it
@@ -420,16 +420,16 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 //if it doesn't exist, add it
                 if (song.name.includes("- Composed")) {
                     const name = await asyncPrompt("Write the song name for the composed version, press cancel to ignore")
-                    if (name === null) return resolve()
+                    if (name === null) return resolve(false)
                     song.name = name
                     this.addSong(song)
-                    return resolve()
+                    return resolve(true)
                 }
                 console.log("song doesn't exist")
                 song.name = "Untitled"
                 this.updateSong(song)
             }
-            resolve()
+            resolve(true)
         })
     }
     updateThisSong = async () => {
@@ -555,8 +555,15 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.setState({ song })
     }
     handleTempoChanger = (changer: TempoChanger) => {
-        const { song } = this.state
-        song.selectedColumn.setTempoChanger(changer)
+        const { song, selectedColumns } = this.state
+        if(selectedColumns.length){
+            this.addToHistory()
+            selectedColumns.forEach(column => {
+                song.columns[column]?.setTempoChanger(changer)
+            })
+        }else{
+            song.selectedColumn.setTempoChanger(changer)
+        }
         this.handleAutoSave()
         this.setState({ song })
     }
@@ -569,7 +576,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             } else {
                 const confirm = await asyncConfirm(`You have unsaved changes to the song: "${song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
                 if (confirm) {
-                    await this.updateSong(song)
+                    if(!await this.updateSong(song)) return console.log("Blocking redirect")
                 }
             }
         }

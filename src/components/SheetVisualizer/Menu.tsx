@@ -10,7 +10,7 @@ import MenuPanel from '$cmp/Layout/MenuPanel'
 import { SerializedSong, SongStorable } from '$lib/Songs/Song'
 import useClickOutside from '$lib/Hooks/useClickOutside'
 import { songService } from '$/lib/Services/SongService'
-import { logger } from 'workbox-core/_private'
+import { logger } from '$/stores/LoggerStore'
 
 interface SheetVisualiserMenuProps {
     currentSong: SerializedSong | null,
@@ -86,6 +86,7 @@ function SongRow({ data, current, onClick }: SongRowProps) {
         className="song-row"
         style={selectedStyle}
         onClick={async () => {
+            logger.showPill('Loading song...')
             const song = await songService.getOneSerializedFromStorable(data)
             if(!song) return logger.error("Could not load song")
             onClick(song)
