@@ -6,7 +6,7 @@ import { NoteLayer } from "./Layer";
 import { Song } from "./Songs/Song";
 import { ComposedSong } from "./Songs/ComposedSong";
 import { RecordedSong } from "./Songs/RecordedSong";
-import { ClickType } from "$types/GeneralTypes"
+import { ClickType, Timer } from "$types/GeneralTypes"
 
 
 class FileDownloader {
@@ -248,6 +248,14 @@ function nearestEven(num: number) {
 }
 
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
+export type Debouncer = (func: () => void) => void
+function createDebouncer(delay:number): Debouncer{
+    let timeoutId:Timer
+    return function(callback:() => void){
+        clearTimeout(timeoutId)
+        timeoutId = setTimeout(callback, delay)
+    }
+}
 
 export {
 	FileDownloader,
@@ -262,6 +270,7 @@ export {
 	MIDIShortcut,
 	capitalize,
 	clamp,
+	createDebouncer,
 	nearestEven,
 	formatMs,
 	calculateSongLength,

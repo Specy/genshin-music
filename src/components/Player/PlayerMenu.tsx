@@ -253,7 +253,7 @@ function Menu({ functions, data }: MenuProps) {
                         multiple={true}
                     >
                         <AppButton>
-                            Import song
+                            Import song sheet
                         </AppButton>
                     </FilePicker>
 

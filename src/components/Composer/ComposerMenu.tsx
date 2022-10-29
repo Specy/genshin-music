@@ -34,6 +34,7 @@ import { songService } from '$lib/Services/SongService';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { RecordedOrComposed } from '$types/SongTypes';
+import { FileElement, FilePicker } from '../Inputs/FilePicker';
 
 interface MenuProps {
     data: {
@@ -106,7 +107,24 @@ function Menu({ data, functions }: MenuProps) {
             Analytics.UIEvent('menu', { tab: selection })
         }
     }, [isOpen, selectedMenu])
-
+    const importSong = useCallback(async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
+        for (const file of files) {
+            try {
+                const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
+                await fileService.importAndLog(songs)
+            } catch (e) {
+                console.error(e)
+                if (file.file.name.includes?.(".mid")) {
+                    return logger.error("Midi files should be imported in the composer")
+                }
+                if (e) console.error(e)
+                logger.error(
+                    `Error importing file, invalid format`,
+                    8000
+                )
+            }
+        }
+    },[])
     const downloadSong = useCallback(async (song: SerializedSong | Midi) => {
         try {
             if (song instanceof Midi) {
@@ -211,7 +229,23 @@ function Menu({ data, functions }: MenuProps) {
                             functions: songFunctions
                         }}
                     />
-                    <div className='row' style={{ justifyContent: "flex-end" }}>
+                    <div className='row' style={{ justifyContent: "flex-end", gap: '0.2rem' }}>
+                        <FilePicker<SerializedSong | SerializedSong[]>
+                            onPick={importSong}
+                            onError={(e) => {
+                                if (e) console.error(e)
+                                logger.error(
+                                    `Error importing file, invalid format`,
+                                    8000
+                                )
+                            }}
+                            as='json'
+                            multiple={true}
+                        >
+                            <AppButton>
+                                Import song sheet
+                            </AppButton>
+                        </FilePicker>
                         <AppButton onClick={createFolder}>
                             Create folder
                         </AppButton>
@@ -289,7 +323,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
             logger.showPill("Loading song...")
             const song = await songService.getOneSerializedFromStorable(data)
             logger.hidePill()
-            if(!song) return logger.error("Could not find song")
+            if (!song) return logger.error("Could not find song")
             loadSong(song)
             toggleMenu(false)
         }}>
@@ -339,7 +373,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         onChange={async (e) => {
                             const id = e.target.value
                             const song = await songService.getOneSerializedFromStorable(data)
-                            if(!song) return logger.error("Could not find song")
+                            if (!song) return logger.error("Could not find song")
                             songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                         }}
                     >
@@ -351,22 +385,22 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow 
-                        style={{width: '100%'}} 
-                        onClick={async () => {
-                            if(data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
-                            const song = await songService.getOneSerializedFromStorable(data)
-                            if(!song) return logger.error("Could not find song")
-                            loadSong(song)
-                            toggleMenu(false)
-                        }}
-                    >
-                        <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
-                        <FloatingDropdownText text='Edit song' />
-                    </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={async () =>{
+                <FloatingDropdownRow
+                    style={{ width: '100%' }}
+                    onClick={async () => {
+                        if (data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
+                        const song = await songService.getOneSerializedFromStorable(data)
+                        if (!song) return logger.error("Could not find song")
+                        loadSong(song)
+                        toggleMenu(false)
+                    }}
+                >
+                    <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
+                    <FloatingDropdownText text='Edit song' />
+                </FloatingDropdownRow>
+                <FloatingDropdownRow onClick={async () => {
                     const song = await songService.getOneSerializedFromStorable(data)
-                    if(!song) return logger.error("Could not find song")
+                    if (!song) return logger.error("Could not find song")
                     downloadSong(song)
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} />
@@ -382,7 +416,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     </FloatingDropdownRow>
                 }
 
-                <FloatingDropdownRow 
+                <FloatingDropdownRow
                     onClick={async () => {
                         const parsed = await songService.fromStorableSong(data)
                         await songsStore.addSong(parsed)

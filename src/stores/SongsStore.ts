@@ -1,3 +1,4 @@
+import { createDebouncer, Debouncer } from "$/lib/Utilities"
 import { songService } from "$lib/Services/SongService"
 import { SerializedSong, Song, SongStorable } from "$lib/Songs/Song"
 import { makeObservable, observable } from "mobx"
@@ -5,12 +6,16 @@ import { makeObservable, observable } from "mobx"
 
 export class SongsStore{
     @observable.shallow songs: SongStorable[] = []
+    debouncer = createDebouncer(10)
     constructor(){
         makeObservable(this)
     }
     sync = async () => {
-        const songs = await songService.getStorableSongs()
-        this.songs.splice(0,this.songs.length,...songs)
+        //debounces syncing to prevent multiple syncs in a short period of time
+        this.debouncer(async () => {
+            const songs = await songService.getStorableSongs()
+            this.songs.splice(0,this.songs.length,...songs)
+        })
     }
     _DANGEROUS_CLEAR_ALL_SONGS = async () => {
         await songService._clearAll()
@@ -30,6 +35,10 @@ export class SongsStore{
         this.sync()
     }
     updateSong = async (song: Song) => {
+        /*TODO this method causes syncing frequently with the composer auto save, it might be useful
+        to only fetch from db every few times, maybe with a parameter, as to reduce the amount of db calls for syncing.
+        while also possible to store the song in the current memory, but could cause issues of the song being out of sync with the db
+        */
         await songService.updateSong(song.id!, song.serialize())
         this.sync()
     }
