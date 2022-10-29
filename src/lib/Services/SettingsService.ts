@@ -1,11 +1,11 @@
 import { APP_NAME } from "$/Config"
-import { ComposerSettings, ComposerSettingsDataType, ComposerSettingsType, PlayerSettings, PlayerSettingsDataType, PlayerSettingsType, MIDISettings, VsrgComposerSettingsType, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, VsrgPlayerSettingsType, BaseSettings, ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$lib/BaseSettings"
+import { ComposerSettings, ComposerSettingsDataType, PlayerSettings, PlayerSettingsDataType, MIDISettings, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, BaseSettings, ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$lib/BaseSettings"
 
 
 
 class SettingsService {
     private getLatestSettings<T>(baseSettings: BaseSettings<T>, keyName: string) {
-        const json = localStorage.getItem(keyName)
+        const json = localStorage?.getItem(keyName)
         const result = {
             data: baseSettings.data,
             hadUpdate: false,
@@ -66,7 +66,7 @@ class SettingsService {
     
     getMIDISettings() {
         try {
-            const settings = JSON.parse(localStorage.getItem(`${APP_NAME}_MIDI_Settings`) || 'null') as any
+            const settings = JSON.parse(localStorage?.getItem(`${APP_NAME}_MIDI_Settings`) || 'null') as any
             if (settings !== null && settings.settingVersion === MIDISettings.settingVersion) {
                 return settings
             } else {

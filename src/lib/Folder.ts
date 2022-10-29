@@ -1,5 +1,5 @@
 import { FOLDER_FILTER_TYPES } from "$/Config"
-import { SerializedSong } from "./Songs/Song"
+import { SongStorable } from "./Songs/Song"
 
 
 
@@ -14,16 +14,16 @@ export interface SerializedFolder {
 export class Folder {
     id: string | null
     name: string
-    songs: SerializedSong[]
+    songs: SongStorable[]
     filterType: FolderFilterType
-    constructor(name?: string, id?: string | null, songs?: SerializedSong[]) {
+    constructor(name?: string, id?: string | null, songs?: SongStorable[]) {
         this.id = id ?? null
         this.name = name || "Unnamed folder"
         this.songs = songs ?? []
         this.filterType = "date-created"
     }
 
-    addSong(song: SerializedSong) {
+    addSong(song: SongStorable) {
         this.songs.push(song)
     }
     static deserialize(data: Partial<SerializedFolder>) {

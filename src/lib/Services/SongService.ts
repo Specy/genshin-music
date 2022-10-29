@@ -1,22 +1,27 @@
 import { APP_NAME } from "$/Config"
 import { ComposedSong } from "$lib/Songs/ComposedSong"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
-import { SerializedSong, Song } from "$lib/Songs/Song"
+import { extractStorable, SerializedSong, Song, SongStorable } from "$lib/Songs/Song"
 import { VsrgSong } from "$lib/Songs/VsrgSong"
 import { getSongType } from "$lib/Utilities"
 import { AppError } from "../Errors"
 import { DbInstance } from "./Database/Database"
 
 
+
 //TODO instead of using SerializedSong, switch to SerializedSongKind
 class SongService{
     songCollection = DbInstance.collections.songs
+    async   getStorableSongs(): Promise<SongStorable[]>{
+        const songs = await this.getSongs()
+        return songs.map(extractStorable)
+    }
+
     async getSongs(): Promise<SerializedSong[]>{
         const songs = await this.songCollection.find({})
         const migrationEnsured = await this.ensureMigration(songs)
         return migrationEnsured.map(this.stripDbId)
     }
-
     private async ensureMigration(songs: SerializedSong[]){
         const migratedId = songs.map(song => {
             return new Promise(async resolve => {
@@ -28,6 +33,8 @@ class SongService{
                     await this.songCollection.update({name: song.name}, song)
                     hasChanges = true
                 } 
+                if(song.folderId === undefined) song.folderId = null
+                if(!song.type) song.type = Song.getSongType(song)!
                 resolve(hasChanges)
             })
         })
@@ -38,12 +45,25 @@ class SongService{
         return this.songCollection.find({})
     }
 
+    
     private stripDbId(song:SerializedSong){
         //@ts-ignore
         delete song._id
         return song
     }
-
+    async getOneSerializedFromStorable(storable: SongStorable): Promise<SerializedSong | null>{
+        if(storable.id === null) {
+            console.error("ERROR: Storable id is null, this should not happen")
+            return null
+        }
+        const song = await this.getSongById(storable.id)
+        if(!song) console.error("ERROR: Storable song not found, this should not happen")
+        return song
+    }
+    getManySerializedFromStorable(storables: SongStorable[]): Promise<(SerializedSong | null)[]>{
+        const promises = storables.map(storable => this.getOneSerializedFromStorable(storable))
+        return Promise.all(promises)
+    }
     async songExists(id: string): Promise<boolean>{
         return (await this.getSongById(id)) !== null
     }
@@ -70,6 +90,11 @@ class SongService{
 
     _clearAll(){
         return this.songCollection.remove({})
+    }
+    async fromStorableSong(s: SongStorable): Promise<ComposedSong | RecordedSong | VsrgSong>{
+        const song = await this.getOneSerializedFromStorable(s)
+        if(song === null) throw new Error("Error: Song not found")
+        return this.parseSong(song)
     }
     //TODO not sure this is the best place for this
     parseSong(song: any): ComposedSong | RecordedSong | VsrgSong{

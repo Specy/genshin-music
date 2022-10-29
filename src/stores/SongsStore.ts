@@ -1,26 +1,21 @@
+import { createDebouncer, Debouncer } from "$/lib/Utilities"
 import { songService } from "$lib/Services/SongService"
-import { SerializedSong, Song } from "$lib/Songs/Song"
+import { SerializedSong, Song, SongStorable } from "$lib/Songs/Song"
 import { makeObservable, observable } from "mobx"
 
-export interface SongsStoreData{
-    songs: SerializedSong[]
-}
-export interface SongsStoreState{
-    data: SongsStoreData
-}
 
 export class SongsStore{
-    @observable.shallow songs: SerializedSong[] = []
+    @observable.shallow songs: SongStorable[] = []
+    debouncer = createDebouncer(10)
     constructor(){
         makeObservable(this)
     }
     sync = async () => {
-        const songs = await songService.getSongs()
-        songs.forEach(song => {
-            if(!song.type) song.type = Song.getSongType(song)!
-            if(song.folderId === undefined) song.folderId = null
+        //debounces syncing to prevent multiple syncs in a short period of time
+        this.debouncer(async () => {
+            const songs = await songService.getStorableSongs()
+            this.songs.splice(0,this.songs.length,...songs)
         })
-        this.songs.splice(0,this.songs.length,...songs)
     }
     _DANGEROUS_CLEAR_ALL_SONGS = async () => {
         await songService._clearAll()
@@ -40,6 +35,10 @@ export class SongsStore{
         this.sync()
     }
     updateSong = async (song: Song) => {
+        /*TODO this method causes syncing frequently with the composer auto save, it might be useful
+        to only fetch from db every few times, maybe with a parameter, as to reduce the amount of db calls for syncing.
+        while also possible to store the song in the current memory, but could cause issues of the song being out of sync with the db
+        */
         await songService.updateSong(song.id!, song.serialize())
         this.sync()
     }
@@ -53,10 +52,13 @@ export class SongsStore{
         this.sync()
     }
     clearSongsInFolder = async (folderId: string) => {
-        const songs = this.songs.filter(song => song.folderId === folderId)
+        const storedSongs = this.songs.filter(song => song.folderId === folderId)
+        const songs = await songService.getManySerializedFromStorable(storedSongs)
         for(const song of songs){
-            song.folderId = null
-            await songService.updateSong(song.id!, song)
+            if(song != null){
+                song.folderId = null
+                await songService.updateSong(song.id!, song)
+            }
         }
         this.sync()
     }

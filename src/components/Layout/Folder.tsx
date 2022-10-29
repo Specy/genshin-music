@@ -10,6 +10,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "../
 import { SerializedSongKind } from "$/types/SongTypes"
 import { FOLDER_FILTER_TYPES } from "$/Config"
 import { capitalize } from "$/lib/Utilities"
+import { songService } from "$/lib/Services/SongService"
 
 
 
@@ -132,11 +133,11 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                     </FloatingDropdownRow>
                     <FloatingDropdownRow
                         onClick={async () => {
-                            const songs = cloneDeep(data.songs)
+                            const songs = await songService.getManySerializedFromStorable(cloneDeep(data.songs)) 
                             const promises = songs.map(s => fileService.prepareSongDownload(s as SerializedSongKind))
                             const relatedSongs = (await Promise.all(promises)).flat()
                             const filtered = relatedSongs.filter((item, pos, self) => {
-                                return self.findIndex(e => e.id === item.id) == pos;
+                                return self.findIndex(e => e.id === item.id) === pos;
                             })
                             const files = [...filtered, data.serialize()]
                             fileService.downloadFiles(files, `${data.name}-folder`)

@@ -40,7 +40,7 @@ export function FloatingDropdown({
         const bounds = el.getBoundingClientRect()
         setBounds(bounds)
     }, [isActive, ref])
-    const overflows = bounds.top + bounds.height > window.innerHeight
+    const overflows = bounds.top + bounds.height > (window?.innerHeight ?? 0) 
     const transform = `translateX(calc(-100% + ${offset}rem)) ${overflows ? `translateY(calc(-100% - 2rem))` : ""}`
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
         <SongActionButton

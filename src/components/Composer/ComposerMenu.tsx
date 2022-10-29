@@ -21,7 +21,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cm
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm, asyncPrompt } from '$cmp/Utility/AsyncPrompts';
 import { SettingsPane } from "$cmp/Settings/SettingsPane";
-import { SerializedSong, SongType } from '$lib/Songs/Song';
+import { SerializedSong, SongStorable, SongType } from '$lib/Songs/Song';
 import { useFolders } from '$lib/Hooks/useFolders';
 import { Folder } from '$lib/Folder';
 import { songsStore } from '$stores/SongsStore';
@@ -34,6 +34,7 @@ import { songService } from '$lib/Services/SongService';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { RecordedOrComposed } from '$types/SongTypes';
+import { FileElement, FilePicker } from '../Inputs/FilePicker';
 
 interface MenuProps {
     data: {
@@ -106,7 +107,24 @@ function Menu({ data, functions }: MenuProps) {
             Analytics.UIEvent('menu', { tab: selection })
         }
     }, [isOpen, selectedMenu])
-
+    const importSong = useCallback(async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
+        for (const file of files) {
+            try {
+                const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
+                await fileService.importAndLog(songs)
+            } catch (e) {
+                console.error(e)
+                if (file.file.name.includes?.(".mid")) {
+                    return logger.error("Midi files should be imported in the composer")
+                }
+                if (e) console.error(e)
+                logger.error(
+                    `Error importing file, invalid format`,
+                    8000
+                )
+            }
+        }
+    },[])
     const downloadSong = useCallback(async (song: SerializedSong | Midi) => {
         try {
             if (song instanceof Midi) {
@@ -211,7 +229,23 @@ function Menu({ data, functions }: MenuProps) {
                             functions: songFunctions
                         }}
                     />
-                    <div className='row' style={{ justifyContent: "flex-end" }}>
+                    <div className='row' style={{ justifyContent: "flex-end", gap: '0.2rem' }}>
+                        <FilePicker<SerializedSong | SerializedSong[]>
+                            onPick={importSong}
+                            onError={(e) => {
+                                if (e) console.error(e)
+                                logger.error(
+                                    `Error importing file, invalid format`,
+                                    8000
+                                )
+                            }}
+                            as='json'
+                            multiple={true}
+                        >
+                            <AppButton>
+                                Import song sheet
+                            </AppButton>
+                        </FilePicker>
                         <AppButton onClick={createFolder}>
                             Create folder
                         </AppButton>
@@ -260,7 +294,7 @@ function Menu({ data, functions }: MenuProps) {
 
 
 interface SongRowProps {
-    data: SerializedSong
+    data: SongStorable
     theme: ThemeStore
     folders: Folder[]
     functions: {
@@ -284,9 +318,13 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         Invalid song
     </div>
     return <div className="song-row">
-        <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
+        <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
-            loadSong(data)
+            logger.showPill("Loading song...")
+            const song = await songService.getOneSerializedFromStorable(data)
+            logger.hidePill()
+            if (!song) return logger.error("Could not find song")
+            loadSong(song)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -332,9 +370,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaFolder style={{ marginRight: "0.4rem" }} />
                     <select className='dropdown-select'
                         value={data.folderId || "_None"}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                             const id = e.target.value
-                            songsStore.addSongToFolder(data, id !== "_None" ? id : null)
+                            const song = await songService.getOneSerializedFromStorable(data)
+                            if (!song) return logger.error("Could not find song")
+                            songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                         }}
                     >
                         <option value={"_None"}>
@@ -345,24 +385,30 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow 
-                        style={{width: '100%'}} 
-                        onClick={() => {
-                            if(data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
-                            loadSong(data)
-                            toggleMenu(false)
-                        }}
-                    >
-                        <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
-                        <FloatingDropdownText text='Edit song' />
-                    </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => downloadSong(data)}>
+                <FloatingDropdownRow
+                    style={{ width: '100%' }}
+                    onClick={async () => {
+                        if (data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
+                        const song = await songService.getOneSerializedFromStorable(data)
+                        if (!song) return logger.error("Could not find song")
+                        loadSong(song)
+                        toggleMenu(false)
+                    }}
+                >
+                    <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
+                    <FloatingDropdownText text='Edit song' />
+                </FloatingDropdownRow>
+                <FloatingDropdownRow onClick={async () => {
+                    const song = await songService.getOneSerializedFromStorable(data)
+                    if (!song) return logger.error("Could not find song")
+                    downloadSong(song)
+                }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
                 {(data.type === 'recorded' || data.type === "composed") &&
-                    <FloatingDropdownRow onClick={() => {
-                        const song = songService.parseSong(data) as RecordedOrComposed
+                    <FloatingDropdownRow onClick={async () => {
+                        const song = await songService.fromStorableSong(data) as RecordedOrComposed
                         downloadSong(song.toMidi())
                     }}>
                         <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
@@ -370,9 +416,9 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     </FloatingDropdownRow>
                 }
 
-                <FloatingDropdownRow 
+                <FloatingDropdownRow
                     onClick={async () => {
-                        const parsed = songService.parseSong(data)
+                        const parsed = await songService.fromStorableSong(data)
                         await songsStore.addSong(parsed)
                         logger.log(`Cloned song: ${data.name}`)
                         toggleMenu(false)

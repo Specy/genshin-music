@@ -7,9 +7,20 @@ type Update = {
 
 export const updates: Update[] = [
     {
+        version: '3.0.1',
+        title: 'Performance and bug fixes',
+        date: '2022 - 01/11',
+        changes: [
+            "Fixed an IOS bug preventing audio from playing",
+            "Improved performance for users that have many songs",
+            "Added tempo changer quick selection in the composer tools",
+            "Other bug fixes and improvements"
+        ]
+    },
+    {
         version: '3.0',
         title: 'VSRG mode, Zen keyboard, Calls and more!',
-        date: '2022 - 22/07',
+        date: '2022 - 18/09',
         changes: [
             "Added VSRG mode to compose and play vsrg songs",
             "Added Zen keyboard, where you can simply focus on playing by hand",

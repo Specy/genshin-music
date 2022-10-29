@@ -16,7 +16,7 @@ import { useSongs } from "$lib/Hooks/useSongs";
 import { useTheme } from "$lib/Hooks/useTheme";
 import { fileService } from "$lib/Services/FileService";
 import { songService } from "$lib/Services/SongService";
-import { SerializedSong } from "$lib/Songs/Song";
+import { SongStorable } from "$lib/Songs/Song";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
 import { VsrgSongSelectType } from "$pages/VsrgPlayer";
 import { memo, useCallback, useEffect, useState } from "react";
@@ -27,6 +27,7 @@ import { songsStore } from "$stores/SongsStore";
 import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { IS_MOBILE } from "$/Config";
+import { logger } from "$/stores/LoggerStore";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -157,7 +158,7 @@ export default memo(VsrgMenu, (p, n) => {
 
 
 interface SongRowProps {
-    data: SerializedSong
+    data: SongStorable
     theme: ThemeStore
     folders: Folder[]
     functions: {
@@ -178,9 +179,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         Invalid song
     </div>
     return <div className="song-row">
-        <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
+        <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
-            onSongSelect(songService.parseSong(data) as VsrgSong, 'play')
+            const song = await songService.fromStorableSong(data)
+            if(!song) return logger.error("Could not find song")
+            onSongSelect(song as VsrgSong, 'play')
             setMenuVisible(false)
         }}>
             {isRenaming
@@ -223,9 +226,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaFolder style={{ marginRight: "0.4rem" }} />
                     <select className='dropdown-select'
                         value={data.folderId || "_None"}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                             const id = e.target.value
-                            songsStore.addSongToFolder(data, id !== "_None" ? id : null)
+                            const song = await songService.getOneSerializedFromStorable(data)
+                            if(!song) return logger.error("Could not find song")
+                            songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                         }}
                     >
                         <option value={"_None"}>
@@ -237,7 +242,9 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     </select>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={async () => {
-                    fileService.downloadSong(data, data.name)
+                    const song = await songService.getOneSerializedFromStorable(data)
+                    if(!song) return logger.error("Could not find song")
+                    fileService.downloadSong(song, data.name)
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />

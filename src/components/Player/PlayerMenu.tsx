@@ -32,7 +32,7 @@ import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cm
 import { Midi } from '@tonejs/midi';
 import { asyncConfirm, asyncPrompt } from '$cmp/Utility/AsyncPrompts';
 import { SettingsPane } from '$cmp/Settings/SettingsPane';
-import { SerializedSong, SongType } from '$lib/Songs/Song';
+import { SerializedSong, SongStorable, SongType } from '$lib/Songs/Song';
 import { songsStore } from '$stores/SongsStore';
 import { Folder } from '$lib/Folder';
 import { useFolders } from '$lib/Hooks/useFolders';
@@ -175,6 +175,7 @@ function Menu({ functions, data }: MenuProps) {
     }, [])
     async function downloadAllSongs() {
         try {
+            const songs = await songService.getSongs();
             const toDownload = songs.map(song => {
                 if (APP_NAME === 'Sky') {
                     if (song.type === 'composed') ComposedSong.deserialize(song as UnknownSerializedComposedSong).toOldFormat()
@@ -252,7 +253,7 @@ function Menu({ functions, data }: MenuProps) {
                         multiple={true}
                     >
                         <AppButton>
-                            Import song
+                            Import song sheet
                         </AppButton>
                     </FilePicker>
 
@@ -397,7 +398,7 @@ function Menu({ functions, data }: MenuProps) {
 
 
 interface SongRowProps {
-    data: SerializedSong
+    data: SongStorable
     theme: ThemeStore
     folders: Folder[]
     functions: {
@@ -420,9 +421,9 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         Invalid song
     </div>
     return <div className="song-row">
-        <div className={`song-name ${hasTooltip(true)}`} onClick={() => {
+        <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
-            playerStore.play(songService.parseSong(data) as RecordedOrComposed, 0)
+            playerStore.play(await songService.fromStorableSong(data) as RecordedOrComposed, 0)
             toggleMenu(false)
         }}>
             {isRenaming
@@ -443,8 +444,8 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         </div>
         <div className="song-buttons-wrapper">
             <SongActionButton
-                onClick={() => {
-                    const parsed = songService.parseSong(data) as RecordedOrComposed
+                onClick={async () => {
+                    const parsed = await songService.fromStorableSong(data) as RecordedOrComposed
                     playerStore.practice(parsed, 0, parsed.notes.length)
                     toggleMenu(false)
                 }}
@@ -455,8 +456,8 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FaCrosshairs />
             </SongActionButton>
 
-            <SongActionButton onClick={() => {
-                const parsed = songService.parseSong(data) as RecordedOrComposed
+            <SongActionButton onClick={async () => {
+                const parsed = await songService.fromStorableSong(data) as RecordedOrComposed
                 playerStore.approaching(parsed, 0, parsed.notes.length)
                 toggleMenu(false)
 
@@ -490,9 +491,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     <FaFolder style={{ marginRight: "0.4rem" }} />
                     <select className='dropdown-select'
                         value={data.folderId || "_None"}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                             const id = e.target.value
-                            songsStore.addSongToFolder(data, id !== "_None" ? id : null)
+                            const song = await songService.getOneSerializedFromStorable(data)
+                            if(!song) return logger.error("Could not find song")
+                            songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                         }}
                     >
                         <option value={"_None"}>
@@ -522,15 +525,15 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         <FloatingDropdownText text='Edit song' />
                     </FloatingDropdownRow>
                 </Link>
-                <FloatingDropdownRow onClick={() => {
-                    const song = songService.parseSong(data) as RecordedOrComposed
+                <FloatingDropdownRow onClick={async () => {
+                    const song = await songService.fromStorableSong(data) as RecordedOrComposed
                     downloadSong(song)
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />
                 </FloatingDropdownRow>
-                <FloatingDropdownRow onClick={() => {
-                    const song = songService.parseSong(data) as RecordedOrComposed
+                <FloatingDropdownRow onClick={async () => {
+                    const song = await songService.fromStorableSong(data) as RecordedOrComposed
                     downloadSong(song.toMidi())
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />

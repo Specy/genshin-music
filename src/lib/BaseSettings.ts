@@ -425,9 +425,9 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             name: "Max FPS (high values could lag)",
             tooltip: "The FPS limiter of the editor, higher values could more lag",
             type: "select",
-            songSetting: true,
+            songSetting: false,
             value: 48,
-            category: "Song Settings",
+            category: "Editor Settings",
             options: [
                 24,
                 30,
@@ -493,9 +493,9 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             name: "Max FPS",
             tooltip: "The FPS limiter of the player, too high values could cause lag or stutters",
             type: "select",
-            songSetting: true,
+            songSetting: false,
             value: IS_MOBILE ? 48 : 60,
-            category: "Song Settings",
+            category: "Player Settings",
             options: [
                 24,
                 30,

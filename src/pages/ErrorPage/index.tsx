@@ -5,7 +5,7 @@ import { logger } from '$stores/LoggerStore';
 import { SongMenu } from '$cmp/Layout/SongMenu';
 import './ErrorPage.scss'
 import { AppButton } from '$cmp/Inputs/AppButton';
-import { SerializedSong } from '$lib/Songs/Song';
+import { SerializedSong, SongStorable } from '$lib/Songs/Song';
 import { useSongs } from '$lib/Hooks/useSongs';
 import { songsStore } from '$stores/SongsStore';
 import { fileService } from '$lib/Services/FileService';
@@ -118,7 +118,7 @@ export function ErrorPage() {
 }
 
 interface SongRowProps {
-    data: SerializedSong
+    data: SongStorable
     deleteSong: (name: string, id: string) => void
     download: (song: SerializedSong) => void
 }
@@ -128,7 +128,11 @@ function SongRow({ data, deleteSong, download }: SongRowProps) {
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={() => download(data)} aria-label={`Download song ${data.name}`}>
+            <button className="song-button" onClick={async () => {  
+                const song = await songService.getOneSerializedFromStorable(data)
+                if(!song) return logger.error("Could not find song")
+                download(song)
+            }} aria-label={`Download song ${data.name}`}>
                 <FaDownload />
             </button>
             <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)} aria-label={`Delete song ${data.name}`}>
