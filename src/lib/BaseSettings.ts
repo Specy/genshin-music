@@ -21,11 +21,12 @@ export type ComposerSettingsDataType = {
     caveMode: SettingsCheckbox
     autosave: SettingsCheckbox
     syncTabs: SettingsCheckbox
+    useKeyboardSideButtons: SettingsCheckbox
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 52,
+        settingVersion: APP_NAME + 53,
     },
     data: {
         bpm: {
@@ -117,6 +118,14 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: false,
             value: false,
         },
+        useKeyboardSideButtons: {
+            name: "Put next/previous column buttons around keyboard",
+            tooltip: "Puts the buttons to select the next/previous column on the left/right of the keyboard",
+            type: "checkbox",
+            category: "Composer Settings",
+            songSetting: false,
+            value: false
+        },
         syncTabs: {
             name: "Autoplay in all tabs (pc only)",
             tooltip: "Advanced feature, it syncs other browser tabs to all play at the same time",
@@ -124,7 +133,7 @@ export const ComposerSettings: ComposerSettingsType = {
             category: "Composer Settings",
             songSetting: false,
             value: false
-        }
+        },
     }
 
 }

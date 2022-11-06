@@ -1,9 +1,13 @@
 import { settingsService } from "$lib/Services/SettingsService"
 import { MIDISettings } from "../BaseSettings"
 
-
+export enum PresetMidi{
+    Start = 250,
+    Continue = 251,
+    Stop = 252,
+}
 export type MIDIEvent = [eventType: number, note: number, velocity: number]
-type MIDICallback = (event: MIDIEvent) => void
+type MIDICallback = (event: MIDIEvent, preset?: PresetMidi) => void
 type InputsCallback = (inputs: WebMidi.MIDIInput[]) => void
 
 export class MIDIListener {
@@ -84,8 +88,22 @@ export class MIDIListener {
     handleEvent = (e: WebMidi.MIDIMessageEvent) => {
         const { data } = e
         const event = [data[0], data[1], data[2]] as MIDIEvent
-        this.listeners.forEach(l => l(event))
+        let preset: PresetMidi | undefined
+        switch (event[0]) {
+            case PresetMidi.Start: preset = PresetMidi.Start; break
+            case PresetMidi.Continue: preset = PresetMidi.Continue; break
+            case PresetMidi.Stop: preset = PresetMidi.Stop; break   
+        }
+        this.listeners.forEach(l => l(event, preset))
     }
+    //any of the channels
+    isUp = (code: number) => {
+        return code > 127 && code < 144
+    }
+    isDown = (code: number) => {
+        return code > 143 && code < 160
+    }
+
     addListener = (listener: MIDICallback) => {
         this.listeners.push(listener)
     }

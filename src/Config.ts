@@ -40,10 +40,6 @@ const BASE_THEME_CONFIG = {
         note: APP_NAME === 'Genshin' ? '#aaaa82' : '#212121'
     }
 }
-const MIDI_STATUS = {
-    up: 128,
-    down: 144
-}
 const IS_MIDI_AVAILABLE = !!navigator.requestMIDIAccess
 const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
@@ -629,7 +625,6 @@ export {
     isTwa,
     CACHE_DATA,
     UPDATE_MESSAGE,
-    MIDI_STATUS,
     IS_MIDI_AVAILABLE,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,

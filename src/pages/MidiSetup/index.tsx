@@ -2,7 +2,6 @@ import './MidiSetup.css'
 import { APP_NAME } from "$/Config"
 import { MIDISettings } from "$lib/BaseSettings"
 import BaseNote from "$cmp/Miscellaneous/BaseNote"
-import { MIDI_STATUS } from "$/Config"
 import { Component } from 'react'
 import { INSTRUMENTS } from "$/Config"
 import Shortcut from "./Shortcut"
@@ -100,7 +99,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
     }
     handleMidi = ([eventType, note, velocity]: MIDIEvent) => {
         const { selectedNote, settings, selectedShortcut } = this.state
-        if (MIDI_STATUS.down === eventType && velocity !== 0) {
+        if (MIDIProvider.isDown(eventType) && velocity !== 0) {
             if (selectedNote) {
                 if (this.checkIfUsed(note, 'shortcuts')) return logger.warn('Key already used')
                 selectedNote.midi = note

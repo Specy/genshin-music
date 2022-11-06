@@ -1,5 +1,5 @@
 import {  Component } from 'react'
-import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "$/Config"
+import { APP_NAME, SPEED_CHANGERS, Pitch } from "$/Config"
 import Note from '$/components/Player/PlayerNote'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, delay, clamp, groupArrayEvery } from "$lib/Utilities"
@@ -132,7 +132,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     handleMidi = ([eventType, note, velocity]: MIDIEvent) => {
         if (!this.mounted) return
         const instrument = this.props.data.instrument
-        if (MIDI_STATUS.down === eventType && velocity !== 0) {
+        if (MIDIProvider.isDown(eventType) && velocity !== 0) {
             const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.notes[keyboardNote.index])
