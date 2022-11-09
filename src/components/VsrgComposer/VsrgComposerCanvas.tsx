@@ -8,7 +8,7 @@ import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong"
 import { ThrottledEventLoop } from "$lib/ThrottledEventLoop"
 import { Application } from "pixi.js"
 import React, { Component, createRef } from "react"
-import { ThemeProvider, ThemeStore } from "$stores/ThemeStore/ThemeProvider"
+import { ThemeProvider, Theme } from "$stores/ThemeStore/ThemeProvider"
 import { VsrgComposerEvents, vsrgComposerStore } from "$stores/VsrgComposerStore"
 import { ClickType } from "$types/GeneralTypes"
 import { VsrgCanvasCache } from "./VsrgComposerCache"
@@ -282,7 +282,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         this.setState({ timestamp })
         this.props.onTimestampChange(timestamp)
     }
-    handleThemeChange = (theme: ThemeStore) => {
+    handleThemeChange = (theme: Theme) => {
         const bg_plain = theme.get('primary')
         const bg_line = theme.getText('primary')
         const bg_line_10 = bg_line.darken(0.5).desaturate(1)

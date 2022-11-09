@@ -1,13 +1,13 @@
 import { AppButton } from "$cmp/Inputs/AppButton";
 import { VsrgTrackModifier } from "$lib/Songs/VsrgSong";
 import { FaEye, FaEyeSlash, FaVolumeMute, FaVolumeUp } from "react-icons/fa";
-import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
+import { Theme } from "$stores/ThemeStore/ThemeProvider";
 
 
 interface TrackModifierProps{
     data: VsrgTrackModifier
     style?: React.CSSProperties
-    theme: ThemeStore
+    theme: Theme
     onChange: (data: VsrgTrackModifier) => void
     onVisibilityChange: (visible: boolean) => void
 }

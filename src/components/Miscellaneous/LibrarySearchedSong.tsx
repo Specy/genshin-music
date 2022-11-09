@@ -4,14 +4,14 @@ import { logger } from '$stores/LoggerStore';
 import type { SearchedSongType } from '$types/GeneralTypes';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import type {  RecordedSong } from '$lib/Songs/RecordedSong';
-import { ThemeStore } from '$stores/ThemeStore/ThemeProvider';
+import { Theme } from '$stores/ThemeStore/ThemeProvider';
 import { songService } from '$lib/Services/SongService';
 
 interface SearchedSongProps{
     onClick: (song: ComposedSong | RecordedSong, start: number) => void,
     importSong: (song: ComposedSong | RecordedSong) => void, 
     data: SearchedSongType
-    theme: ThemeStore
+    theme: Theme
 }
 
 export default function SearchedSong({ onClick, data, importSong, theme }:SearchedSongProps) {

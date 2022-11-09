@@ -14,7 +14,7 @@ import { ComposerSettingsDataType } from '$lib/BaseSettings';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
 import { Pages } from '$types/GeneralTypes';
 import { useTheme } from '$lib/Hooks/useTheme';
-import { ThemeStore } from '$stores/ThemeStore/ThemeProvider';
+import { Theme } from '$stores/ThemeStore/ThemeProvider';
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip';
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cmp/Utility/FloatingDropdown';
@@ -295,7 +295,7 @@ function Menu({ data, functions }: MenuProps) {
 
 interface SongRowProps {
     data: SongStorable
-    theme: ThemeStore
+    theme: Theme
     folders: Folder[]
     functions: {
         removeSong: (name: string, id: string) => void

@@ -58,7 +58,7 @@ export interface ThemeState {
     editable: boolean
 }
 
-export class ThemeStore {
+export class Theme {
     state: ThemeState
     baseTheme: ThemeState
     constructor(baseTheme: ThemeState) {
@@ -217,7 +217,7 @@ export class ThemeStore {
     }
 }
 
-export const ThemeProvider = new ThemeStore(defaultThemes[0])
+export const ThemeProvider = new Theme(defaultThemes[0])
 
 export {
     defaultThemes

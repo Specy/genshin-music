@@ -5,17 +5,17 @@ import { groupNotesByIndex, mergeLayers } from '$lib/Utilities'
 import { ColumnNote, Column, MidiNote, InstrumentData } from '$lib/Songs/SongClasses'
 import { ComposedSong } from '$lib/Songs/ComposedSong'
 import { PITCHES, Pitch } from '$/Config'
-import { FaArrowDown, FaArrowUp, FaEllipsisH } from 'react-icons/fa'
 import useDebounce from '$lib/Hooks/useDebounce'
 import { logger } from '$stores/LoggerStore'
-import { ThemeProvider, ThemeStore } from '$stores/ThemeStore/ThemeProvider'
+import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider'
 import { observe } from 'mobx'
 import Switch from '$cmp/Inputs/Switch'
 import { NoteLayer } from '$lib/Layer'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
-import { Select } from '$cmp/Inputs/Select'
 import { PitchSelect } from '$cmp/Inputs/PitchSelect'
-import { DecorationBorderedBox } from '../Miscellaneous/BorderDecoration'
+import { DecorationBorderedBox } from '$cmp/Miscellaneous/BorderDecoration'
+import { TrackInfo } from './TrackInfo'
+import { NumericalInput } from './Numericalinput'
 interface MidiImportProps {
     data: {
         instruments: InstrumentData[]
@@ -27,12 +27,14 @@ interface MidiImportProps {
         loadSong: (song: ComposedSong) => void
     }
 }
-type CustomTrack = Track & {
+export type CustomTrack = {
+    track: Track
     selected: boolean
     layer: number
     name: string
     numberOfAccidentals: number
     localOffset: number | null
+    maxScaling: number
     outOfRangeBounds: {
         lower: number
         upper: number
@@ -50,7 +52,7 @@ interface MidiImportState {
     totalNotes: number
     includeAccidentals: boolean
     ignoreEmptytracks: boolean
-    theme: ThemeStore
+    theme: Theme
 }
 
 class MidiImport extends Component<MidiImportProps, MidiImportState> {
@@ -88,21 +90,23 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             const bpm = midi.header.tempos[0]?.bpm
             const key = midi.header.keySignatures[0]?.key
             const tracks = midi.tracks.map((track, i) => {
-                return {
-                    ...track,
+                const customtrack: CustomTrack = {
+                    track,
                     selected: true,
                     layer: 0,
                     name: track.name || `Track n.${i + 1}`,
                     numberOfAccidentals: 0,
+                    maxScaling: 0,
                     outOfRangeBounds: {
                         lower: 0,
                         upper: 0
                     },
                     localOffset: null
                 }
-            }) as CustomTrack[]
+                return customtrack
+            })
             this.setState({
-                tracks: tracks,
+                tracks,
                 fileName: file.file.name,
                 bpm: Math.floor(bpm * 4) || 220,
                 offset: 0,
@@ -125,12 +129,13 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             track.numberOfAccidentals = 0
             track.outOfRangeBounds.upper = 0
             track.outOfRangeBounds.lower = 0
-            track.notes.forEach(midiNote => {
+            track.track.notes.forEach(midiNote => {
                 totalNotes++
                 const note = MidiNote.fromMidi(
                     track.layer,
                     Math.floor(midiNote.time * 1000),
                     midiNote.midi - (track.localOffset ?? offset),
+                    track.maxScaling
                 )
                 if (note.data.isAccidental) {
                     accidentals++
@@ -238,12 +243,12 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             backgroundColor: theme.layer('primary', 0.2).toString(),
             color: theme.getText('primary').toString()
         }
-        return <DecorationBorderedBox 
+        return <DecorationBorderedBox
             boxProps={{
-                className:'floating-midi' 
+                className: 'floating-midi'
             }}
-            size='1.2rem' 
-            isRelative={false} 
+            size='1.2rem'
+            isRelative={false}
             offset="0.1rem"
         >
             <div className='column floating-midi-content'>
@@ -272,7 +277,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 </div>
                 <div className='midi-table-row'>
                     <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
-                    <NumberInput
+                    <NumericalInput
                         value={bpm}
                         onChange={changeBpm}
                         delay={600}
@@ -289,7 +294,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         </HelpTooltip>
                     </div>
 
-                    <NumberInput
+                    <NumericalInput
                         value={offset}
                         onChange={changeOffset}
                         delay={600}
@@ -327,16 +332,15 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     <div className='midi-column' style={{ width: '100%' }}>
                         <div>Select midi tracks</div>
                         {tracks.map((track, i) =>
-                            ignoreEmptytracks && track.notes.length === 0
-                                ? null
-                                : <TrackInfo
-                                    data={track}
-                                    instruments={data.instruments}
-                                    key={i}
-                                    index={i}
-                                    onChange={editTrack}
-                                    theme={theme}
-                                />
+                            !(ignoreEmptytracks && track.track.notes.length === 0) &&
+                            <TrackInfo
+                                data={track}
+                                instruments={data.instruments}
+                                key={i}
+                                index={i}
+                                onChange={editTrack}
+                                theme={theme}
+                            />
                         )}
                     </div>
                 </div>
@@ -367,150 +371,10 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
     }
 }
 
-interface TrackProps {
-    data: CustomTrack
-    index: number
-    instruments: InstrumentData[]
-    onChange: (index: number, data: Partial<CustomTrack>) => void
-    theme: ThemeStore
-}
 
-function TrackInfo({ data, index, onChange, theme, instruments }: TrackProps) {
-    const [dataShown, setDataShown] = useState(false)
-    const background = { backgroundColor: theme.layer('menu_background', 0.15).toString() }
-    const [offset, setOffset] = useState(`${data.localOffset ?? ""}`)
-    const debounced = useDebounce<string>(offset, 600)
-    useEffect(() => {
-        const parsedOffset = parseInt(debounced)
-        const localOffset = Number.isFinite(parsedOffset) ? parsedOffset : null
-        setOffset(`${localOffset ?? ""}`)
-        onChange(index, { localOffset })
-    }, [debounced, onChange, index]);
-    useEffect(() => {
-        setOffset(`${data.localOffset ?? ""}`)
-    }, [data.localOffset])
-    return <div className='midi-track-column' style={background}>
-        <div className='midi-track-wrapper'>
-            <div className='midi-track-center'>
-                <input type='checkbox' onChange={() => onChange(index, { selected: !data.selected })} checked={data.selected} />
-                {`${data.name} `}
-                (
-                {data.notes.length},
-                {` ${data.instrument.family}`}
-                )
-
-            </div>
-            <div className='midi-track-center'>
-                <Select
-                    onChange={(event) => onChange(index, { layer: Number(event.target.value) })}
-                    value={data.layer}
-                    className='midi-select'
-                    style={{
-                        marginLeft: '0.2rem',
-                    }}
-                >
-                    {instruments.map((ins, i) =>
-                        <option value={i} key={i}>
-                            {ins.alias || ins.name} - {`Layer ${i + 1}`}
-                        </option>
-                    )}
-                </Select>
-
-                <FaEllipsisH
-                    size={22}
-                    color={"var(--primary)"}
-                    onClick={() => setDataShown(!dataShown)}
-                    cursor='pointer'
-                />
-            </div>
-        </div>
-        <div
-            className='midi-track-data'
-            style={{
-                display: dataShown ? "flex" : "none"
-            }}
-        >
-            <div className='midi-track-data-row'>
-                <div>
-                    Track offset:
-                </div>
-                <input
-                    type='text'
-                    value={offset}
-                    placeholder='No offset'
-                    className='midi-input'
-                    style={{ width: '6rem' }}
-                    onChange={(e) => setOffset(e.target.value)}
-                />
-            </div>
-            <div className='midi-track-data-row'>
-                <div>Instrument:</div>
-                <div>{data.instrument.name}</div>
-            </div>
-            <div className='midi-track-data-row'>
-                <div>Number of notes:</div>
-                <div>{data.notes.length}</div>
-            </div>
-            <div className='midi-track-data-row'>
-                <div>Accidentals:</div>
-                <div>{data.numberOfAccidentals}</div>
-            </div>
-            <div className='midi-track-data-row'>
-                <div>Out of range: ({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
-                <div className='row' style={{ width: 'fit-content' }}>
-                    <div className='row' style={{ marginRight: '0.4rem' }}>
-                        <FaArrowUp style={{ marginRight: '0.2rem' }} />
-                        {data.outOfRangeBounds.upper}
-                    </div>
-                    <div className='row'>
-                        <FaArrowDown style={{ marginRight: '0.2rem' }} />
-                        {data.outOfRangeBounds.lower}
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-}
 
 export default MidiImport
 
 
-interface NumberInputProps {
-    onChange: (value: number) => void
-    value: number
-    delay: number
-    step: number
-    style: React.CSSProperties
-}
-function NumberInput({ onChange, value, delay = 500, step = 1, style }: NumberInputProps) {
-    const [elementValue, setElementValue] = useState(value)
-    const debounced = useDebounce<number>(elementValue, delay)
-    useEffect(() => {
-        onChange(debounced)
-    }, [debounced, onChange]);
-    useEffect(() => {
-        setElementValue(value)
-    }, [value])
-    return <div style={{ display: 'flex', justifyContent: 'flex-end' }} >
-        <button
-            onClick={() => setElementValue(elementValue - step)}
-            className='midi-btn-small'
-            style={style}
-        >-</button>
-        <input
-            type="text"
-            value={elementValue}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setElementValue(Number(e.target.value))}
-            className='midi-input'
-            style={{ margin: '0 0.3rem', ...style }}
-        />
-        <button
-            onClick={() => setElementValue(elementValue + step)}
-            className='midi-btn-small'
-            style={style}
-        >+</button>
-    </div>
-}
 
 

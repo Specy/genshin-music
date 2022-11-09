@@ -26,7 +26,7 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaInfo, FaMusic, FaPen, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import {homeStore} from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
-import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
+import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
@@ -269,7 +269,7 @@ function SelectSongRow({ data, onClick }: SeelctSongRowProps) {
 
 interface SongRowProps {
     data: SongStorable
-    theme: ThemeStore
+    theme: Theme
     folders: Folder[]
     functions: {
         onClick: (song: VsrgSong) => void

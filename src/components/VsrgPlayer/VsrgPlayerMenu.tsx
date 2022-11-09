@@ -24,7 +24,7 @@ import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPe
 import { Link } from "react-router-dom";
 import {homeStore} from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
-import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
+import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { IS_MOBILE } from "$/Config";
 import { logger } from "$/stores/LoggerStore";
@@ -159,7 +159,7 @@ export default memo(VsrgMenu, (p, n) => {
 
 interface SongRowProps {
     data: SongStorable
-    theme: ThemeStore
+    theme: Theme
     folders: Folder[]
     functions: {
         onSongSelect: (song: VsrgSong, type: VsrgSongSelectType) => void

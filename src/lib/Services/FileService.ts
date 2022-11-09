@@ -5,7 +5,7 @@ import { songsStore } from "$stores/SongsStore"
 import toWav from 'audiobuffer-to-wav'
 import { SerializedSong, Song } from "$lib/Songs/Song"
 import { Midi } from "@tonejs/midi"
-import { SerializedTheme, ThemeProvider, ThemeStore } from "$stores/ThemeStore/ThemeProvider"
+import { SerializedTheme, ThemeProvider, Theme } from "$stores/ThemeStore/ThemeProvider"
 import { songService } from "./SongService"
 import { Folder, SerializedFolder } from "../Folder"
 import { folderStore } from "$stores/FoldersStore"
@@ -195,7 +195,7 @@ export class FileService {
                 ComposedSong.isOldFormatSerializedType(file) 
             ) return FileKind.Song
             if (Folder.isSerializedType(file)) return FileKind.Folder
-            if (ThemeStore.isSerializedType(file)) return FileKind.Theme
+            if (Theme.isSerializedType(file)) return FileKind.Theme
         } catch (e) {
             console.log(e)
         }

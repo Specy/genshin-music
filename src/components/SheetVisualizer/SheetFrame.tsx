@@ -1,7 +1,7 @@
 import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/Config"
 import { Chunk } from "$lib/Songs/VisualSong"
 import { memo, useEffect, useState } from "react"
-import { ThemeStore } from "$stores/ThemeStore/ThemeProvider"
+import { Theme } from "$stores/ThemeStore/ThemeProvider"
 import Instrument from "$/lib/Instrument"
 
 
@@ -11,7 +11,7 @@ interface SheetFrameProps {
     rows: number
     hasText: boolean
     selected?: boolean
-    theme: ThemeStore
+    theme: Theme
 }
 
 

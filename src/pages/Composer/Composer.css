@@ -560,7 +560,7 @@ select {
     flex-direction: column;
     margin-top: 0.5rem;
     padding: 0.4rem;
-    border-radius: 0.2rem;
+    border-top: solid 0.1rem var(--secondary);
 }
 
 .midi-track-data-row {
@@ -663,6 +663,7 @@ select {
     font-size: 2rem;
     color: var(--icon-color);
     border-radius: 0.4rem;
+    cursor: pointer;
     width: 4rem;
 }
 @media (hover: none) and (pointer: coarse) {
