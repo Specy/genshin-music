@@ -1,12 +1,11 @@
 import { BodyDropper, DroppedFile } from "$cmp/Utility/BodyDropper"
-import { FileKind, FileService, fileService, UnknownSong, UnknownSongImport } from "$lib/Services/FileService"
+import { fileService, UnknownSongImport } from "$lib/Services/FileService"
 import { logger } from "$stores/LoggerStore";
 
 interface DropZoneProviderProps {
     children: React.ReactNode
 }
 export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
-
     const handleDrop = async (files: DroppedFile<UnknownSongImport>[]) => {
         try {
             for (const file of files) {
@@ -22,7 +21,6 @@ export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
         logger.error("There was an error importing the file! Was it the correct format?")
 
     }
-
     return <>
         <BodyDropper
             showDropArea={true}
