@@ -127,7 +127,9 @@ export class TauriCollection<T extends BaseObject> implements Collection<T>{
         return true
     }
 }
+
 //this black magic type excludes all keys from an object which aren't strings, numbers or null
+
 export type Query<T> = Partial<T> & Partial<Record<keyof T, QueryableTypes>>
 type QueryableTypes = string | number | null
 

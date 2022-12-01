@@ -9,18 +9,23 @@ interface NumberInputProps {
     step?: number
     style?: React.CSSProperties
 }
-export function NumericalInput({ onChange, value, delay = 500, step = 1, style, placeholder, className }: NumberInputProps) {
-    const [elementValue, setElementValue] = useState(value)
-    const debounced = useDebounce<number>(elementValue, delay)
+export function NumericalInput({ onChange, value, delay = 800, step = 1, style, placeholder, className }: NumberInputProps) {
+    const [elementValue, setElementValue] = useState(`${value}`)
+    const debounced = useDebounce<string>(elementValue, delay)
     useEffect(() => {
-        onChange(debounced)
+        const parsed = Number(debounced)
+        if(Number.isFinite(parsed)){
+            onChange(parsed)
+        }else{
+            setElementValue('0')
+        }
     }, [debounced, onChange]);
     useEffect(() => {
-        setElementValue(value)
+        setElementValue(`${value}`)
     }, [value])
     return <div style={{ display: 'flex', justifyContent: 'flex-end' }} className={className}>
         <button
-            onClick={() => setElementValue(elementValue - step)}
+            onClick={() => setElementValue(`${Number(elementValue) - step}`)}
             className='midi-btn-small'
             style={style}
         >-</button>
@@ -28,12 +33,12 @@ export function NumericalInput({ onChange, value, delay = 500, step = 1, style, 
             type="text"
             placeholder={placeholder}
             value={elementValue}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setElementValue(Number(e.target.value))}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setElementValue(e.target.value)}
             className='midi-input'
             style={{ margin: '0 0.3rem', ...style }}
         />
         <button
-            onClick={() => setElementValue(elementValue + step)}
+            onClick={() => setElementValue(`${Number(elementValue) + step}`)}
             className='midi-btn-small'
             style={style}
         >+</button>

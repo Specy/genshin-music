@@ -142,7 +142,7 @@ class ShortcutsProvider {
     load() {
         try {
             const stored = JSON.parse(localStorage.getItem(`${APP_NAME}_shortcuts`) ?? "{}") as ShortcutStorage
-            if (stored.meta.version === this.meta.version) {
+            if (stored?.meta?.version === this.meta.version) {
                 const families = Object.keys(this.families) as Families[]
                 for (const family of families) {
                     stored.families[family]?.shortcuts.forEach(([key, value]) => {
