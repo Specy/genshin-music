@@ -207,4 +207,6 @@ function App({ history }: any) {
 	</>
 }
 
+
 export default withRouter(App)
+
