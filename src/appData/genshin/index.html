@@ -36,7 +36,6 @@
     -->
 	<title>Genshin Music Nightly</title>
 </head>
-
 <body>
 	<noscript>You need to enable JavaScript to run this app.</noscript>
 	<div id="root">
@@ -121,7 +120,7 @@
 				width: 70vw;
 			}
 
-			#errors-wrapper div {
+			.loading-error {
 				border-top: solid 2px gray;
 				padding: 0.4rem;
 			}
@@ -138,13 +137,17 @@
 				</div>
 			</div>
 			<div id="errors-wrapper">
-				<h2 style="font-weight: bold; margin-bottom: 0.4rem;">
-					Logs
-				</h2>
+				<div style="display: flex; align-items: center; justify-content: space-between;">
+					<div style="font-weight: bold; margin-bottom: 0.4rem; font-size: 1.6rem;">
+						Logs
+					</div>
+					<div>
+						If you have problems,
+						<a href="https://discord.gg/Arsf65YYHq" target="_blank" style="color: teal;">Join our disord</a>
+					</div>
+				</div>
 			</div>
 		</div>
-
-
 	</div>
 	<script>
 		try {
@@ -160,7 +163,8 @@
 				if (!wrapper) return
 				wrapper.style.display = "flex"
 				const div = document.createElement("div")
-				div.innerText = `${e.error}\n${e.error.stack}`
+				div.className = "loading-error"
+				div.innerText = `${e.error.stack}`
 				wrapper.append(div)
 			}
 			window.addEventListener("error", onError)
@@ -170,5 +174,4 @@
 	</script>
 	<script type="module" src="/src/index.tsx"></script>
 </body>
-
 </html>
