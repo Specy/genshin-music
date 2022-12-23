@@ -63,6 +63,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Flute",
         "Panflute",
         "Ocarina",
+        "Aurora",
         "Kalimba",
         "ToyUkulele",
         "Drum",
@@ -209,6 +210,7 @@ const skySfx14 = {
     layout: LAYOUT_KINDS.defaultSky,
     icons: LAYOUT_ICONS_KINDS.defaultSky
 }
+
 const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
     Lyre: {
         notes: 21,
@@ -309,7 +311,14 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
-
+    },
+    Aurora: {
+        notes: 15,
+        family: "vocal",
+        midiName: "voice oohs",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
     },
     Contrabass: {
         notes: 15,

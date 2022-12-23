@@ -87,7 +87,6 @@
     align-items: center;
     margin: 0;
     width: calc(100% - 4.6rem);
-    padding: 0.4rem;
     box-sizing: border-box;
     border: none;
     border-radius: 0.4rem;
@@ -98,12 +97,13 @@
     transform: translateY(0.05rem);
 }
 .color-picker-input input{
+    padding: 0.4rem;
     display: flex;
     margin: 0;
     width: 100%;
-    padding: 0;
     background-color: transparent;
     box-sizing: border-box;
+    outline: none;
     border: none;
 }
 .color-picker-row{

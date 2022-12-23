@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ThemeKeys, ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
 import { capitalize } from "$lib/Utilities";
 import Color from "color";
-import { HexColorInput, HexColorPicker } from "react-colorful";
+import { HexColorInput, HexAlphaColorPicker } from "react-colorful";
 import { BASE_THEME_CONFIG } from "$/Config";
 import { FaCheck, FaTimes } from 'react-icons/fa'
 import { AppButton } from "$cmp/Inputs/AppButton";
@@ -29,7 +29,8 @@ export function ThemePropriety({ name, value, onChange, isModified, setSelectedP
         setColor(Color(e))
     }
     function sendEvent() {
-        onChange(name, color.toString())
+        const parsed = color.alpha() === 1 ? color.hex() : color.hexa()
+        onChange(name, parsed)
         setSelectedProp('')
     }
 
@@ -51,7 +52,7 @@ export function ThemePropriety({ name, value, onChange, isModified, setSelectedP
             }
             {isSelected
                 ? <div className="color-picker">
-                    <HexColorPicker onChange={handleChange} color={color.hex()} />
+                    <HexAlphaColorPicker onChange={handleChange} color={color.hexa()} />
                     <div className="color-picker-row">
                         <div
                             className="color-picker-input"
@@ -60,10 +61,11 @@ export function ThemePropriety({ name, value, onChange, isModified, setSelectedP
                                 color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark,
                             }}
                         >
-                            <div style={{ fontFamily: 'Arial' }}>#</div>
                             <HexColorInput
+                                prefixed={true}
+                                alpha={true}
                                 onChange={handleChange}
-                                color={color.hex()}
+                                color={color.alpha() === 1 ? color.hex() : color.hexa()}
                                 style={{
                                     color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark,
                                 }}
