@@ -64,6 +64,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Panflute",
         "Ocarina",
         "Aurora",
+        "Aurora_Short",
         "Kalimba",
         "ToyUkulele",
         "Drum",
@@ -313,6 +314,14 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
         icons: LAYOUT_ICONS_KINDS.defaultSky,
     },
     Aurora: {
+        notes: 15,
+        family: "vocal",
+        midiName: "voice oohs",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Aurora_Short: {
         notes: 15,
         family: "vocal",
         midiName: "voice oohs",

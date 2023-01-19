@@ -184,6 +184,7 @@ function App({ history }: any) {
 				className='resume-audio-context box-shadow'
 				size='3rem'
 				onClick={() => {
+					setAudioContextState("running") //ignore if it doesn't update
 					metronome.tick()
 				}}
 			>
