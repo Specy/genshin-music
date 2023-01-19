@@ -88,7 +88,6 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                     style={{
                         backgroundColor: value.value,
                         color: value.text,
-                        opacity: image ? 0.95 : 1
                     }}
                 >
                 </div>
