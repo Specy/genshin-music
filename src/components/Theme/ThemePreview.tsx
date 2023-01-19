@@ -30,6 +30,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
             className="theme-preview-bg"
             style={{
                 backgroundImage: `url(${image})`,
+                zIndex: 1
             }}
         >
         </div>
@@ -81,7 +82,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                 }
             </div>
         </div>
-        <div className="theme-preview-colors">
+        <div className="theme-preview-colors" style={{zIndex: 2}}>
             {Object.entries(theme.data).map(([key, value]) =>
                 <div
                     key={key}
