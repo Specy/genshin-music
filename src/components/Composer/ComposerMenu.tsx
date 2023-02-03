@@ -107,7 +107,7 @@ function Menu({ data, functions }: MenuProps) {
             Analytics.UIEvent('menu', { tab: selection })
         }
     }, [isOpen, selectedMenu])
-    const importSong = useCallback(async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
+    const importFile = useCallback(async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
         for (const file of files) {
             try {
                 const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
@@ -124,7 +124,7 @@ function Menu({ data, functions }: MenuProps) {
                 )
             }
         }
-    },[])
+    }, [])
     const downloadSong = useCallback(async (song: SerializedSong | Midi) => {
         try {
             if (song instanceof Midi) {
@@ -231,13 +231,21 @@ function Menu({ data, functions }: MenuProps) {
                     />
                     <div className='row' style={{ justifyContent: "flex-end", gap: '0.2rem' }}>
                         <FilePicker<SerializedSong | SerializedSong[]>
-                            onPick={importSong}
-                            onError={(e) => {
+                            onPick={importFile}
+                            onError={(e, files) => {
                                 if (e) console.error(e)
-                                logger.error(
-                                    `Error importing file, invalid format`,
-                                    8000
-                                )
+                                const hasMidi = files?.some(f => f?.name?.endsWith('.mid'))
+                                const isOne = files?.length === 1
+                                if (hasMidi && isOne) {
+                                    logger.warn(`Opening the midi importer to import a MIDI file, please reselect the file`, 6000)
+                                    changeMidiVisibility(true)
+                                    toggleMenu()
+                                } else {
+                                    logger.error(
+                                        `Error importing file, invalid format, if it's a MIDI file, use the "Create from MIDI" button`,
+                                        8000
+                                    )
+                                }
                             }}
                             as='json'
                             multiple={true}

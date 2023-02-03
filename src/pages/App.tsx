@@ -19,6 +19,7 @@ import { metronome } from '$/lib/Metronome';
 import { logsStore } from '$stores/LogsStore';
 import { checkIfneedsUpdate } from '$/lib/needsUpdate';
 import { AsyncPromptWrapper } from '$/components/Utility/AsyncPrompt';
+import { settingsService } from '$/lib/Services/SettingsService';
 
 
 function App({ history }: any) {
@@ -80,6 +81,12 @@ function App({ history }: any) {
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
 		checkIfneedsUpdate()
+		const lastBackupWarning = settingsService.getLastBackupWarningTime()
+		//if the last backup warning was more than 2 weeks ago, show the backup warning
+		if (lastBackupWarning > 0 && Date.now() - lastBackupWarning > 1000 * 60 * 60 * 24 * 14) {
+			logger.warn("You haven't backed up your songs in a while, remember to download the backup sometimes!", 8000)
+			settingsService.setLastBackupWarningTime(Date.now())
+		}
 	}, [])
 
 	const setHeight = useCallback((h: number) => {

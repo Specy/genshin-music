@@ -4,6 +4,19 @@ import { ComposerSettings, ComposerSettingsDataType, PlayerSettings, PlayerSetti
 
 
 class SettingsService {
+
+    public setLastBackupWarningTime(time: number) {
+        localStorage.setItem(APP_NAME + "_LastBackupWarningTime", time.toString())
+    }
+    public getLastBackupWarningTime() {
+        const time = localStorage.getItem(APP_NAME + "_LastBackupWarningTime")
+        if (time) {
+            return parseInt(time)
+        }
+        this.setLastBackupWarningTime(Date.now())
+        return -1
+    }
+
     private getLatestSettings<T>(baseSettings: BaseSettings<T>, keyName: string) {
         const json = localStorage?.getItem(keyName)
         const result = {
@@ -25,6 +38,7 @@ class SettingsService {
         }
         return result
     }
+
 
     getComposerSettings(): ComposerSettingsDataType {
         const { data, hadUpdate } = this.getLatestSettings(ComposerSettings, APP_NAME + "_Composer_Settings")

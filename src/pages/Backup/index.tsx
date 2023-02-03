@@ -20,6 +20,7 @@ import { useSongs } from "$/lib/Hooks/useSongs";
 import { useObservableArray } from "$/lib/Hooks/useObservable";
 import { themeStore } from "$/stores/ThemeStore/ThemeStore";
 import { songsStore } from "$/stores/SongsStore";
+import { settingsService } from "$/lib/Services/SettingsService";
 
 export function Backup() {
     const iconStyle = { marginRight: '0.3rem', marginLeft: '-0.4rem' }
@@ -143,6 +144,7 @@ export function Backup() {
                         `${APP_NAME}-all-backup-${getDateString()}.json`,
                     )
                     logger.success("Downloaded backup")
+                    settingsService.setLastBackupWarningTime(Date.now())
                 }}
             >
                 <FaFileDownload style={iconStyle} />
@@ -162,7 +164,7 @@ export function Backup() {
                         `${APP_NAME}-song-backup-${getDateString()}.json`,
                     )
                     logger.success("Downloaded songs backup")
-
+                    settingsService.setLastBackupWarningTime(Date.now())
                 }}
             >
                 <FaFileDownload style={iconStyle} />

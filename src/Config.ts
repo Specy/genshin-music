@@ -64,7 +64,6 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Panflute",
         "Ocarina",
         "Aurora",
-        "Aurora_Short",
         "Kalimba",
         "ToyUkulele",
         "Drum",
@@ -148,7 +147,7 @@ const LAYOUT_KINDS = {
 
 
         abcLayout: (
-            "A1 A2 A3 A4" +
+            "A1 A2 A3 A4 " +
             "B1 B2 B3 B4").split(" ")
     },
     defaultSky: {

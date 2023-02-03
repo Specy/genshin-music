@@ -43,6 +43,7 @@ import { fileService } from '$lib/Services/FileService';
 import { songService } from '$lib/Services/SongService';
 import { RecordedOrComposed } from '$types/SongTypes';
 import { _folderService } from '$/lib/Services/FolderService';
+import { settingsService } from '$/lib/Services/SettingsService';
 
 interface MenuProps {
     functions: {
@@ -178,8 +179,8 @@ function Menu({ functions, data }: MenuProps) {
             const songs = await songService.getSongs();
             const toDownload = songs.map(song => {
                 if (APP_NAME === 'Sky') {
-                    if (song.type === 'composed') ComposedSong.deserialize(song as UnknownSerializedComposedSong).toOldFormat()
-                    if (song.type === 'recorded') RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
+                    if (song.type === 'composed') return ComposedSong.deserialize(song as UnknownSerializedComposedSong).toOldFormat()
+                    if (song.type === 'recorded') return RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat()
                 }
                 return song
             })
@@ -188,6 +189,7 @@ function Menu({ functions, data }: MenuProps) {
             const files = [...folders, ...toDownload]
             fileService.downloadFiles(files, `${APP_NAME}_Backup_${date}`)
             logger.success("Song backup downloaded")
+            settingsService.setLastBackupWarningTime(Date.now())
         } catch (e) {
             console.error(e)
             logger.error("Error downloading songs")

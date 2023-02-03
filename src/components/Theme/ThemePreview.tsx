@@ -34,7 +34,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
             }}
         >
         </div>
-        <div 
+        <div
             className="theme-preview-row"
             style={{
                 backgroundColor: Color(theme.data.background.value).fade(0.3).toString(),
@@ -44,8 +44,8 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
         >
             <div
                 className="text-ellipsis"
-                style={{ 
-                    zIndex: 2, 
+                style={{
+                    zIndex: 2,
                     padding: "0.4rem 0.2rem",
                 }}
             >
@@ -82,7 +82,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                 }
             </div>
         </div>
-        <div className="theme-preview-colors" style={{zIndex: 2}}>
+        <div className="theme-preview-colors" style={{ zIndex: 2 }}>
             {Object.entries(theme.data).map(([key, value]) =>
                 <div
                     key={key}
