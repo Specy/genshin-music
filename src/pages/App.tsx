@@ -12,7 +12,6 @@ import { withRouter } from "react-router-dom";
 import './App.css';
 import './Utility.scss'
 import { historyTracker } from '$stores/History';
-import isMobile from 'is-mobile';
 import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
 import { IconButton } from '$/components/Inputs/IconButton';
 import { metronome } from '$/lib/Metronome';
@@ -77,7 +76,7 @@ function App({ history }: any) {
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 		})
 
-		setIsOnMobile(isMobile())
+		setIsOnMobile("ontouchstart" in window)
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
 		checkIfneedsUpdate()
@@ -105,7 +104,7 @@ function App({ history }: any) {
 		}
 		setHeight(window.innerHeight)
 		resetHeight()
-		setIsOnMobile(isMobile())
+		setIsOnMobile("ontouchstart" in window)
 	}, [pageHeight, resetHeight, setHeight])
 
 	const handleBlur = useCallback(() => {
