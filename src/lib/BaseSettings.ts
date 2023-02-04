@@ -26,7 +26,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 58,
+        settingVersion: APP_NAME + 59,
     },
     data: {
         bpm: {
@@ -82,7 +82,9 @@ export const ComposerSettings: ComposerSettingsType = {
                     "Note name",
                     "Keyboard layout",
                     "ABC",
-                    "No Text"
+                    "No Text",
+                    "Playstation",
+                    "Switch",
                 ]
         },
         columnsPerCanvas: {
@@ -156,7 +158,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 58
+        settingVersion: APP_NAME + 59
     },
     data: {
         instrument: {
@@ -247,7 +249,9 @@ export const PlayerSettings: PlayerSettingsType = {
                     "Note name",
                     "Keyboard layout",
                     "ABC",
-                    "No Text"
+                    "No Text",
+                    "Playstation",
+                    "Switch",
                 ]
         },
         keyboardSize: {
@@ -260,13 +264,13 @@ export const PlayerSettings: PlayerSettingsType = {
             threshold: [80, 150]
         },
         keyboardYPosition: {
-            name: "Vertical position",
+            name: "Keyboard vertical position",
             tooltip: "The vertical position of the keyboard",
             type: "slider",
             songSetting: false,
             value: -20,
             category: "Player Settings",
-            threshold: [-60, 80]
+            threshold: [-60, 180]
         },
         approachSpeed: {
             name: "Approach Rate (AR)",
@@ -571,7 +575,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 6
+        settingVersion: APP_NAME + 7
     },
     data: {
         instrument: {
@@ -654,7 +658,9 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
                     "Note name",
                     "Keyboard layout",
                     "ABC",
-                    "No Text"
+                    "No Text",
+                    "Playstation",
+                    "Switch",
                 ]
         },
         keyboardSize: {

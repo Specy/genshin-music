@@ -125,46 +125,59 @@ const LAYOUT_KINDS = {
             "Q W E R T Y U " +
             "A S D F G H J " +
             "Z X C V B N M").split(" "),
-
         mobileLayout: (
             "do re mi fa so la ti " +
             "do re mi fa so la ti " +
             "do re mi fa so la ti").split(" "),
-
         abcLayout: (
             "A1 A2 A3 A4 A5 A6 A7 " +
             "B1 B2 B3 B4 B5 B6 B7 " +
-            "C1 C2 C3 C4 C5 C6 C7").split(" ")
+            "C1 C2 C3 C4 C5 C6 C7").split(" "),
+        playstationLayout: new Array(21).fill(" "),
+        switchLayout: new Array(21).fill(" "),
     },
     defaultDrums: {
         keyboardLayout: (
             "Q W E R " +
             "A S D F").split(" "),
-
         mobileLayout: (
             "do re mi fa " +
             "do re mi fa").split(" "),
-
-
         abcLayout: (
             "A1 A2 A3 A4 " +
-            "B1 B2 B3 B4").split(" ")
+            "B1 B2 B3 B4").split(" "),
+        playstationLayout: (
+            "🡅 ▲ 🡄 ◼ " +
+            "🡇 X L2 R2"
+        ).split(" "),
+        switchLayout: (
+            "Zl Zr 🡇 B " +
+            "Y 🡅 X 🡆"
+        ).split(" "),
     },
     defaultSky: {
         keyboardLayout: (
             "Q W E R T " +
             "A S D F G " +
             "Z X C V B").split(" "),
-
         mobileLayout: (
             "do re mi fa so " +
             "do re mi fa so " +
             "do re mi fa so").split(" "),
-
         abcLayout: (
             "A1 A2 A3 A4 A5 " +
             "B1 B2 B3 B4 B5 " +
-            "C1 C2 C3 C4 C5").split(" ")
+            "C1 C2 C3 C4 C5").split(" "),
+        playstationLayout: (
+            "L2 R2 X 🡇 🡄 " +
+            "◼ 🡅 ▲ 🡆 ⬤ " +
+            "L1 R1 ❰L ❰R L❱"
+        ).split(" "),
+        switchLayout: (
+            "Zl Zr 🡇 B 🡄 " +
+            "Y 🡅 X 🡆 A " +
+            "L R ❰L ❰R L❱"
+        ).split(" ")
     },
     skySFX6: {
         keyboardLayout: (
@@ -173,10 +186,17 @@ const LAYOUT_KINDS = {
         mobileLayout: (
             "do re mi " +
             "do re mi").split(" "),
-
         abcLayout: (
             "A1 A2 A3 " +
-            "B1 B2 B3").split(" ")
+            "B1 B2 B3").split(" "),
+        playstationLayout: (
+            "🡅 ▲ 🡄 " +
+            "🡇 X L2"
+        ).split(" "),
+        switchLayout: (
+            "Zl Zr 🡇 " +
+            "Y 🡅 X"
+        ).split(" "),
     },
 
 }
@@ -211,7 +231,7 @@ const skySfx14 = {
     icons: LAYOUT_ICONS_KINDS.defaultSky
 }
 
-const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
+const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
     Lyre: {
         notes: 21,
         family: "strings",
@@ -261,8 +281,8 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
         } : {}),
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
-        icons: APP_NAME === 'Genshin' 
-            ?  LAYOUT_ICONS_KINDS.defaultGenshinDrums
+        icons: APP_NAME === 'Genshin'
+            ? LAYOUT_ICONS_KINDS.defaultGenshinDrums
             : LAYOUT_ICONS_KINDS.defaultSkyDrums
     },
     "SFX_Dance": {
@@ -447,7 +467,7 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
 
 type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
 type InstrumentsDataProps = {
-    [key in InstrumentsDataKeys]:  InstrumentDataType
+    [key in InstrumentsDataKeys]: InstrumentDataType
 }
 
 const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
