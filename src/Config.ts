@@ -151,8 +151,8 @@ const LAYOUT_KINDS = {
             "🡇 X L2 R2"
         ).split(" "),
         switchLayout: (
-            "Zl Zr 🡇 B " +
-            "Y 🡅 X 🡆"
+            "🡅 X 🡄 Y " +
+            "🡇 B Zl Zr"
         ).split(" "),
     },
     defaultSky: {
@@ -169,7 +169,7 @@ const LAYOUT_KINDS = {
             "B1 B2 B3 B4 B5 " +
             "C1 C2 C3 C4 C5").split(" "),
         playstationLayout: (
-            "L2 R2 X 🡇 🡄 " +
+            "L2 R2 🡇 X 🡄 " +
             "◼ 🡅 ▲ 🡆 ⬤ " +
             "L1 R1 ❰L ❰R L❱"
         ).split(" "),
