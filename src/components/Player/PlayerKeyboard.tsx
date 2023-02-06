@@ -1,5 +1,5 @@
 import {  Component } from 'react'
-import { APP_NAME, SPEED_CHANGERS, Pitch } from "$/Config"
+import { APP_NAME, SPEED_CHANGERS, Pitch, NoteNameType } from "$/Config"
 import Note from '$/components/Player/PlayerNote'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, delay, clamp, groupArrayEvery } from "$lib/Utilities"
@@ -9,7 +9,7 @@ import { playerControlsStore } from '$stores/PlayerControlsStore'
 import { ApproachingNote, RecordedNote } from '$lib/Songs/SongClasses'
 import type { ObservableNote } from '$lib/Instrument'
 import type Instrument from '$lib/Instrument'
-import type { NoteNameType, Timer } from '$types/GeneralTypes'
+import type { Timer } from '$types/GeneralTypes'
 import { Chunk, RecordedSong } from '$lib/Songs/RecordedSong'
 import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider'
 import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider'

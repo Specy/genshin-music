@@ -1,4 +1,4 @@
-import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/Config"
+import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS, NoteNameType } from "$/Config"
 import { Chunk } from "$lib/Songs/VisualSong"
 import { memo, useEffect, useState } from "react"
 import { Theme } from "$stores/ThemeStore/ThemeProvider"
@@ -10,13 +10,13 @@ interface SheetFrameProps {
     chunk: Chunk
     rows: number
     hasText: boolean
+    keyboardLayout: NoteNameType
     selected?: boolean
     theme: Theme
 }
 
-
 const baseInstrument = new Instrument()
-export function _SheetFrame({ chunk, rows, hasText, selected, theme }: SheetFrameProps) {
+export function _SheetFrame({ chunk, rows, hasText, selected, theme, keyboardLayout }: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const [color, setColor] = useState('var(--primary)')
     useEffect(() => {
@@ -45,7 +45,7 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme }: SheetFram
                         style={!exists ? { backgroundColor: color } : {}}
                     >
                         {(exists && hasText)
-                            ? baseInstrument.getNoteText(i, APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', 'C' )
+                            ? baseInstrument.getNoteText(i,keyboardLayout, 'C' )
                             : null
                         }
                     </div>

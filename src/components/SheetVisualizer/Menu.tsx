@@ -84,12 +84,13 @@ function SongRow({ data, current, onClick }: SongRowProps) {
     const selectedStyle = current?.id === data.id ? { backgroundColor: 'rgb(124, 116, 106)' } : {}
     return <div
         className="song-row"
-        style={selectedStyle}
+        style={{...selectedStyle, padding: '0.5rem 0.8rem'}}
         onClick={async () => {
             logger.showPill('Loading song...')
             const song = await songService.getOneSerializedFromStorable(data)
             if(!song) return logger.error("Could not load song")
             onClick(song)
+            setTimeout(() => logger.hidePill(), 300)
         }}>
         <div className="song-name">
             {data.name}

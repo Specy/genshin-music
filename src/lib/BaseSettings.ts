@@ -1,8 +1,7 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE } from "$/Config"
+import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE, NOTE_NAME_TYPES, NoteNameType } from "$/Config"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
-import { NoteNameType } from "$types/GeneralTypes"
 import { VsrgSongKeys } from "./Songs/VsrgSong"
 import { VsrgKeyboardLayout } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard"
 
@@ -70,22 +69,7 @@ export const ComposerSettings: ComposerSettingsType = {
                     ? "Do Re Mi"
                     : "Keyboard layout"
                 : "Note name",
-            options: APP_NAME === "Genshin"
-                ? [
-                    "Note name",
-                    "Keyboard layout",
-                    "Do Re Mi",
-                    "ABC",
-                    "No Text"
-                ]
-                : [
-                    "Note name",
-                    "Keyboard layout",
-                    "ABC",
-                    "No Text",
-                    "Playstation",
-                    "Switch",
-                ]
+            options: NOTE_NAME_TYPES
         },
         columnsPerCanvas: {
             name: "Number of visible columns",
@@ -237,22 +221,7 @@ export const PlayerSettings: PlayerSettingsType = {
                     : "Keyboard layout"
                 : "Note name",
 
-            options: APP_NAME === "Genshin"
-                ? [
-                    "Note name",
-                    "Keyboard layout",
-                    "Do Re Mi",
-                    "ABC",
-                    "No Text"
-                ]
-                : [
-                    "Note name",
-                    "Keyboard layout",
-                    "ABC",
-                    "No Text",
-                    "Playstation",
-                    "Switch",
-                ]
+            options: NOTE_NAME_TYPES
         },
         keyboardSize: {
             name: "Keyboard size",
@@ -646,22 +615,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
                     : "Keyboard layout"
                 : "No Text",
 
-            options: APP_NAME === "Genshin"
-                ? [
-                    "Note name",
-                    "Keyboard layout",
-                    "Do Re Mi",
-                    "ABC",
-                    "No Text"
-                ]
-                : [
-                    "Note name",
-                    "Keyboard layout",
-                    "ABC",
-                    "No Text",
-                    "Playstation",
-                    "Switch",
-                ]
+            options: NOTE_NAME_TYPES
         },
         keyboardSize: {
             name: "Keyboard size",

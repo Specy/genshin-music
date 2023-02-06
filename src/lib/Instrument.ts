@@ -1,6 +1,6 @@
-import { INSTRUMENTS_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX } from "$/Config"
+import { INSTRUMENTS_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType } from "$/Config"
 import { makeObservable, observable } from "mobx"
-import { InstrumentName, NoteNameType, NoteStatus } from "$types/GeneralTypes"
+import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
 import { getPitchChanger } from "./Utilities"
 import { NoteImage } from "$/components/SvgNotes"
 

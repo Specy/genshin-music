@@ -1,10 +1,9 @@
 
 import ComposerNote from "$cmp/Composer/ComposerNote"
 import { Column, InstrumentData } from "$lib/Songs/SongClasses"
-import { Pitch, TEMPO_CHANGERS } from "$/Config"
+import { NoteNameType, Pitch, TEMPO_CHANGERS } from "$/Config"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import Instrument, { ObservableNote } from "$lib/Instrument"
-import { NoteNameType } from "$types/GeneralTypes"
 import { ComposerSettingsDataType } from "$/lib/BaseSettings"
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
 import { useTheme } from "$/lib/Hooks/useTheme"

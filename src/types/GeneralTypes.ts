@@ -10,7 +10,6 @@ export type ApproachingScore = {
 export type InstrumentNotesLayout = 8 | 15 | 21
 export type Pages = 'Composer' | 'Player' | 'Donate' | 'ErrorPage' | 'Help' | 'Main' | 'MidiSetup' | 'SheetVisualizer'
     | 'Theme' | '404' | 'Changelog'
-export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
 
 export type NoteStatus = 'clicked' | 'toClick' | 'toClickNext' | 'toClickAndNext' | 'approach-wrong' | 'approach-correct' | ''
 

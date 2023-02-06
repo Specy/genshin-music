@@ -209,7 +209,24 @@ const LAYOUT_ICONS_KINDS = {
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
     genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
+type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
 
+const NOTE_NAME_TYPES: NoteNameType[]= APP_NAME === "Genshin"
+    ? [
+        "Note name",
+        "Keyboard layout",
+        "Do Re Mi",
+        "ABC",
+        "No Text"
+    ]
+    : [
+        "Note name",
+        "Keyboard layout",
+        "ABC",
+        "No Text",
+        "Playstation",
+        "Switch",
+    ]
 type InstrumentDataType = {
     notes: number
     family: string
@@ -684,9 +701,11 @@ export {
     UPDATE_URL,
     PITCH_TO_INDEX,
     INSTRUMENT_NOTE_LAYOUT_KINDS,
+    NOTE_NAME_TYPES,
     FOLDER_FILTER_TYPES
 }
 export type {
     Pitch,
-    BaseNote
+    BaseNote,
+    NoteNameType
 }
