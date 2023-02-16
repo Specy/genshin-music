@@ -24,15 +24,11 @@ import { fileService } from "$/lib/Services/FileService";
 
 
 function ThemePage() {
-    const [theme, setTheme] = useTheme()
+    const [theme] = useTheme()
     const userThemes = useObservableArray<SerializedTheme>(themeStore.themes)
     const [selectedProp, setSelectedProp] = useState('')
     const [selectedPagePreview, setSelectedPagePreview] = useState<"player" | "composer">("player")
-    useEffect(() => {
-        return observe(ThemeProvider.state.other, () => {
-            setTheme({ ...ThemeProvider })
-        })
-    }, [])
+
     async function handleChange(name: ThemeKeys, value: string) {
         if (!ThemeProvider.isEditable()) {
             if (value === ThemeProvider.get(name).toString()) return
@@ -49,17 +45,14 @@ function ThemePage() {
     }
 
     async function handleImport(files: FileElement<SerializedTheme>[]) {
-            for (const file of files){
-                const theme = file.data as SerializedTheme
-                try {
-                        const result = await fileService.importAndLog(theme)
-                        const firstTheme = result.getSuccessfulThemes()[0]
-                        if (firstTheme) ThemeProvider.loadFromJson(firstTheme)
-                } catch (e) {
-                    logImportError()
-                }
+        for (const file of files) {
+            const theme = file.data as SerializedTheme
+            try {
+                await fileService.importAndLog(theme)
+            } catch (e) {
+                logImportError()
             }
-
+        }
     }
     const logImportError = useCallback((error?: any) => {
         if (error) console.error(error)
@@ -80,9 +73,11 @@ function ThemePage() {
         }
     }
     async function addNewTheme(newTheme: BaseTheme) {
-        const id = await themeStore.addTheme(newTheme.serialize())
-        newTheme.state.id = id
-        ThemeProvider.loadFromJson(newTheme.serialize())
+        const theme = newTheme.serialize()
+        const id = await themeStore.addTheme(theme)
+        theme.id = id
+        ThemeProvider.loadFromJson(theme, id)
+        ThemeProvider.save()
         return id
     }
     async function handleThemeDelete(theme: SerializedTheme) {
@@ -90,10 +85,9 @@ function ThemePage() {
             if (ThemeProvider.getId() === theme.id) {
                 ThemeProvider.wipe()
             }
-            themeStore.removeThemeById(theme.id!)
+            await themeStore.removeThemeById(theme.id!)
         }
     }
-
     return <DefaultPage>
         <Title text="Themes" />
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -139,9 +133,9 @@ function ThemePage() {
             onChange={(e) => ThemeProvider.setOther('name', e)}
             onLeave={() => ThemeProvider.save()}
         />
-        <div style={{textAlign:'center', marginTop: '1rem'}}>
-            <span style={{color: 'var(--red)'}}>
-            Warning
+        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+            <span style={{ color: 'var(--red)' }}>
+                Warning
             </span>: GIF backgrounds and opaque (transparent) colors could reduce performance
         </div>
         <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
