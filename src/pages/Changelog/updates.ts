@@ -7,6 +7,18 @@ type Update = {
 
 export const updates: Update[] = [
     {
+        version: '3.1.0',
+        title: 'Aurora, transparency and layouts',
+        date: '2022 - 16/02',
+        changes: [
+            "Added aurora (Sky)",
+            "Added switch/playstation layouts (Sky)",
+            "Added backup warnings",
+            "Added tranparency to themes",
+            "Bug fixes and improvements"
+        ]
+    },
+    {
         version: '3.0.1',
         title: 'Performance and bug fixes',
         date: '2022 - 01/11',

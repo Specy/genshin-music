@@ -3,17 +3,23 @@ import type { Tauri } from "$types/TauriTypes"
 import { NoteImage } from "./components/SvgNotes"
 
 const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '3.0' as const
+const APP_VERSION = '3.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? `
-        Added VSRG mode, zen keyboard, visual sheet in the player and more!
-        Check the changelog page for more info
+
+        Added backup warnings
+        Added tranparency to themes
+        Bug fixes and improvement
     `.trim() :
     `
-        Added VSRG mode, zen keyboard, player calls, visual sheet in the player and more!
-        Check the changelog page for more info
+        Added aurora (Sky)
+        Added switch/playstation layouts (Sky)
+        Added backup warnings
+        Added tranparency to themes
+        Bug fixes and improvement
     `.trim()
+
 const UPDATE_URL = process.env.NODE_ENV === 'development'
     ? '/updates.json'
     : 'https://raw.githubusercontent.com/Specy/genshin-music/main/public/updates.json'

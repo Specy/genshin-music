@@ -19,6 +19,7 @@ import { logsStore } from '$stores/LogsStore';
 import { checkIfneedsUpdate } from '$/lib/needsUpdate';
 import { AsyncPromptWrapper } from '$/components/Utility/AsyncPrompt';
 import { settingsService } from '$/lib/Services/SettingsService';
+import { linkServices } from '$/stores/globalLink';
 
 
 function App({ history }: any) {
@@ -59,6 +60,7 @@ function App({ history }: any) {
 				message: e.error.stack
 			})
 		}
+
 		window.addEventListener("error", windowIntercepter)
 		return () => {
 			console.error = originalErrorLog
@@ -80,6 +82,7 @@ function App({ history }: any) {
 		setHasVisited(hasVisited === 'true')
 		setPageHeight(window.innerHeight)
 		checkIfneedsUpdate()
+		linkServices()
 		const lastBackupWarning = settingsService.getLastBackupWarningTime()
 		//if the last backup warning was more than 2 weeks ago, show the backup warning
 		if (lastBackupWarning > 0 && Date.now() - lastBackupWarning > 1000 * 60 * 60 * 24 * 14) {
@@ -176,6 +179,7 @@ function App({ history }: any) {
 			historyTracker.addPage(path.pathName)
 		})
 	}, [history])
+	
 	return <>
 		<Logger />
 		<Home

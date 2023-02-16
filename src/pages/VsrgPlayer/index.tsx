@@ -16,7 +16,7 @@ import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { VsrgPlayerRight } from "$cmp/VsrgPlayer/VsrgPlayerRight";
 import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
 import { SettingUpdate } from "$types/SettingsPropriety";
-import { keyBinds } from "$stores/Keybinds";
+import { keyBinds } from "$/stores/KeybindsStore";
 import { logger } from "$stores/LoggerStore";
 import { Title } from "$/components/Miscellaneous/Title";
 

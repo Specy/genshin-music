@@ -1,5 +1,5 @@
 import helpImg from '$/assets/images/help-vsrg-composer.png';
-import { keyBinds } from '$stores/Keybinds';
+import { keyBinds } from '$/stores/KeybindsStore';
 import { Key } from '../HelpTab';
 
 
