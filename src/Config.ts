@@ -7,7 +7,6 @@ const APP_VERSION = '3.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? `
-
         Added backup warnings
         Added tranparency to themes
         Bug fixes and improvement
