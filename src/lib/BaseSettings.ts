@@ -147,7 +147,7 @@ export const PlayerSettings: PlayerSettingsType = {
     data: {
         instrument: {
             name: "Instrument",
-            tooltip: "The main instrument of the player, will also be saved in the song you record",
+            tooltip: "The main (first) instrument of the player, will also be saved in the song you record",
             type: "instrument",
             songSetting: true,
             value: INSTRUMENTS[0],
