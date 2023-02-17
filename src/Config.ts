@@ -3,17 +3,22 @@ import type { Tauri } from "$types/TauriTypes"
 import { NoteImage } from "./components/SvgNotes"
 
 const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '3.0' as const
+const APP_VERSION = '3.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? `
-        Added VSRG mode, zen keyboard, visual sheet in the player and more!
-        Check the changelog page for more info
+        Added backup warnings
+        Added tranparency to themes
+        Bug fixes and improvement
     `.trim() :
     `
-        Added VSRG mode, zen keyboard, player calls, visual sheet in the player and more!
-        Check the changelog page for more info
+        Added aurora (Sky)
+        Added switch/playstation layouts (Sky)
+        Added backup warnings
+        Added tranparency to themes
+        Bug fixes and improvement
     `.trim()
+
 const UPDATE_URL = process.env.NODE_ENV === 'development'
     ? '/updates.json'
     : 'https://raw.githubusercontent.com/Specy/genshin-music/main/public/updates.json'
@@ -40,10 +45,6 @@ const BASE_THEME_CONFIG = {
         note: APP_NAME === 'Genshin' ? '#aaaa82' : '#212121'
     }
 }
-const MIDI_STATUS = {
-    up: 128,
-    down: 144
-}
 const IS_MIDI_AVAILABLE = !!navigator.requestMIDIAccess
 const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
@@ -67,6 +68,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Flute",
         "Panflute",
         "Ocarina",
+        "Aurora",
         "Kalimba",
         "ToyUkulele",
         "Drum",
@@ -128,46 +130,59 @@ const LAYOUT_KINDS = {
             "Q W E R T Y U " +
             "A S D F G H J " +
             "Z X C V B N M").split(" "),
-
         mobileLayout: (
             "do re mi fa so la ti " +
             "do re mi fa so la ti " +
             "do re mi fa so la ti").split(" "),
-
         abcLayout: (
             "A1 A2 A3 A4 A5 A6 A7 " +
             "B1 B2 B3 B4 B5 B6 B7 " +
-            "C1 C2 C3 C4 C5 C6 C7").split(" ")
+            "C1 C2 C3 C4 C5 C6 C7").split(" "),
+        playstationLayout: new Array(21).fill(" "),
+        switchLayout: new Array(21).fill(" "),
     },
     defaultDrums: {
         keyboardLayout: (
             "Q W E R " +
             "A S D F").split(" "),
-
         mobileLayout: (
             "do re mi fa " +
             "do re mi fa").split(" "),
-
-
         abcLayout: (
-            "A1 A2 A3 A4" +
-            "B1 B2 B3 B4").split(" ")
+            "A1 A2 A3 A4 " +
+            "B1 B2 B3 B4").split(" "),
+        playstationLayout: (
+            "🡅 ▲ 🡄 ◼ " +
+            "🡇 X L2 R2"
+        ).split(" "),
+        switchLayout: (
+            "🡅 X 🡄 Y " +
+            "🡇 B Zl Zr"
+        ).split(" "),
     },
     defaultSky: {
         keyboardLayout: (
             "Q W E R T " +
             "A S D F G " +
             "Z X C V B").split(" "),
-
         mobileLayout: (
             "do re mi fa so " +
             "do re mi fa so " +
             "do re mi fa so").split(" "),
-
         abcLayout: (
             "A1 A2 A3 A4 A5 " +
             "B1 B2 B3 B4 B5 " +
-            "C1 C2 C3 C4 C5").split(" ")
+            "C1 C2 C3 C4 C5").split(" "),
+        playstationLayout: (
+            "L2 R2 🡇 X 🡄 " +
+            "◼ 🡅 ▲ 🡆 ⬤ " +
+            "L1 R1 ❰L ❰R L❱"
+        ).split(" "),
+        switchLayout: (
+            "Zl Zr 🡇 B 🡄 " +
+            "Y 🡅 X 🡆 A " +
+            "L R ❰L ❰R L❱"
+        ).split(" ")
     },
     skySFX6: {
         keyboardLayout: (
@@ -176,10 +191,17 @@ const LAYOUT_KINDS = {
         mobileLayout: (
             "do re mi " +
             "do re mi").split(" "),
-
         abcLayout: (
             "A1 A2 A3 " +
-            "B1 B2 B3").split(" ")
+            "B1 B2 B3").split(" "),
+        playstationLayout: (
+            "🡅 ▲ 🡄 " +
+            "🡇 X L2"
+        ).split(" "),
+        switchLayout: (
+            "Zl Zr 🡇 " +
+            "Y 🡅 X"
+        ).split(" "),
     },
 
 }
@@ -192,7 +214,24 @@ const LAYOUT_ICONS_KINDS = {
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
     genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
+type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
 
+const NOTE_NAME_TYPES: NoteNameType[]= APP_NAME === "Genshin"
+    ? [
+        "Note name",
+        "Keyboard layout",
+        "Do Re Mi",
+        "ABC",
+        "No Text"
+    ]
+    : [
+        "Note name",
+        "Keyboard layout",
+        "ABC",
+        "No Text",
+        "Playstation",
+        "Switch",
+    ]
 type InstrumentDataType = {
     notes: number
     family: string
@@ -213,7 +252,8 @@ const skySfx14 = {
     layout: LAYOUT_KINDS.defaultSky,
     icons: LAYOUT_ICONS_KINDS.defaultSky
 }
-const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
+
+const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
     Lyre: {
         notes: 21,
         family: "strings",
@@ -263,8 +303,8 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
         } : {}),
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
-        icons: APP_NAME === 'Genshin' 
-            ?  LAYOUT_ICONS_KINDS.defaultGenshinDrums
+        icons: APP_NAME === 'Genshin'
+            ? LAYOUT_ICONS_KINDS.defaultGenshinDrums
             : LAYOUT_ICONS_KINDS.defaultSkyDrums
     },
     "SFX_Dance": {
@@ -313,7 +353,22 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
-
+    },
+    Aurora: {
+        notes: 15,
+        family: "vocal",
+        midiName: "voice oohs",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+    },
+    Aurora_Short: {
+        notes: 15,
+        family: "vocal",
+        midiName: "voice oohs",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
     },
     Contrabass: {
         notes: 15,
@@ -434,7 +489,7 @@ const BaseinstrumentsData: {[key in string] : InstrumentDataType} = {
 
 type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
 type InstrumentsDataProps = {
-    [key in InstrumentsDataKeys]:  InstrumentDataType
+    [key in InstrumentsDataKeys]: InstrumentDataType
 }
 
 const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
@@ -629,7 +684,6 @@ export {
     isTwa,
     CACHE_DATA,
     UPDATE_MESSAGE,
-    MIDI_STATUS,
     IS_MIDI_AVAILABLE,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,
@@ -652,9 +706,11 @@ export {
     UPDATE_URL,
     PITCH_TO_INDEX,
     INSTRUMENT_NOTE_LAYOUT_KINDS,
+    NOTE_NAME_TYPES,
     FOLDER_FILTER_TYPES
 }
 export type {
     Pitch,
-    BaseNote
+    BaseNote,
+    NoteNameType
 }

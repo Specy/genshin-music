@@ -54,9 +54,8 @@ export function ErrorPage() {
     }
     return <DefaultPage className='error-page'>
         <Title text="Error" />
-
         <div style={{textAlign: 'center'}}>
-            There seems to be an error. <br />
+            If you unexpectedly see this page it means an error has occoured.
             Here you can download or delete your songs, if one caused an error, delete it.
             If you need help, join our 
             <a 
@@ -78,7 +77,6 @@ export function ErrorPage() {
             </AppButton>
             <AppButton onClick={deleteAllSongs}>
                 Delete all songs
-
             </AppButton>
         </div>
         <div className="error-songs-wrapper">

@@ -3,9 +3,8 @@ import Instrument, { ObservableNote } from "$/lib/Instrument";
 import { zenKeyboardStore } from "$stores/ZenKeyboardStore";
 import { ZenNote } from "./ZenNote";
 import { useEffect } from 'react'
-import { Pitch } from "$/Config";
+import { NoteNameType, Pitch } from "$/Config";
 import { KeyboardProvider } from "$/lib/Providers/KeyboardProvider";
-import { NoteNameType } from "$/types/GeneralTypes";
 
 interface ZenKeyboardProps {
     instrument: Instrument

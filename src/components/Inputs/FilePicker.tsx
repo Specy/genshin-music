@@ -1,23 +1,34 @@
 import { useRef, useCallback } from "react"
-interface FilePickerProps<T> {
+type FilePickerProps<T> = {
     children: React.ReactNode,
-    as: 'json' | 'text' | 'buffer'
-    onPick: (files: FileElement<T>[]) => void,
-    onError?: (error: any) => void,
+    onError?: (error: any, files: File[]) => void,
     style?: object,
     multiple?: boolean
-}
+} & ({
+    as: 'json'
+    onPick: (files: FileElement<T>[]) => void,
+} | {
+    as: 'text'
+    onPick: (files: FileElement<string>[]) => void,
+} | {
+    as: 'buffer'
+    onPick: (files: FileElement<ArrayBuffer>[]) => void,
+} | {
+    as: 'file'
+    onPick: (files: FileElement<File>[]) => void,
+})
 export interface FileElement<T> {
-    data: Buffer | object | string | T,
+    data: T,
     file: File
 }
 export function FilePicker<T>({ children, onPick, style = {}, as, multiple = false, onError }: FilePickerProps<T>) {
     const input = useRef<HTMLInputElement>(null)
 
     const handleEvent = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-
         if (event.target.files === null) return
-        const promises: Promise<FileElement<T>>[] = Array.from(event.target.files).map((file: File) => {
+        const files = Array.from(event.target.files ?? [])
+        if(as === 'file') return onPick(files.map(file => ({ data: file, file })))
+        const promises: Promise<FileElement<T>>[] = files.map((file: File) => {
             return new Promise((resolve, reject) => {
                 const fileReader = new FileReader()
                 function handleLoad() {
@@ -42,10 +53,11 @@ export function FilePicker<T>({ children, onPick, style = {}, as, multiple = fal
         })
         try {
             const result = await Promise.all(promises)
+            //@ts-ignore handled by the union type
             onPick(result)
         } catch (e) {
             console.error(e)
-            onError?.(e)
+            onError?.(e, files)
         }
 
         if (input.current !== null) input.current.value = ''

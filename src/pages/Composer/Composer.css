@@ -74,10 +74,10 @@ select {
     grid-area: c;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
     padding-bottom: 1vh;
     position: absolute;
     bottom: 0;
+    gap: 1.5rem;
     left: 0;
     width: 100%;
 }
@@ -560,7 +560,7 @@ select {
     flex-direction: column;
     margin-top: 0.5rem;
     padding: 0.4rem;
-    border-radius: 0.2rem;
+    border-top: solid 0.1rem var(--secondary);
 }
 
 .midi-track-data-row {
@@ -640,6 +640,7 @@ select {
 .canvas-buttons{
     height: 100%;
     position: absolute;
+    min-width: 2.8rem;
     top: 0;
     background-color: var(--primary);
     color: var(--icon-color);
@@ -653,7 +654,18 @@ select {
     opacity: 0;
     transition: opacity 0.1s;
 }
-
+.keyboard-column-selection-buttons{
+    display: flex;
+    background: transparent;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--icon-color);
+    border-radius: 0.4rem;
+    cursor: pointer;
+    width: 4rem;
+}
 @media (hover: none) and (pointer: coarse) {
     .canvas-buttons{
         display: flex;

@@ -252,8 +252,16 @@ export class MidiNote {
         }
         this.layer = layer
     }
-    static fromMidi(layer: number, time: number, midiNote: number){
+    static fromMidi(layer: number, time: number, midiNote: number, octavesScale: number){
         const toReturn = new MidiNote(time, layer)
+		for(let i = 0; i < octavesScale; i++){
+			if(midiNote < MIDI_BOUNDS.lower){
+				midiNote += 8
+			}
+			if(midiNote > MIDI_BOUNDS.upper){
+				midiNote -= 8
+			}
+		}
         const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean]
         toReturn.data = {
             note: note[0],

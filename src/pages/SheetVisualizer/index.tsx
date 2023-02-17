@@ -1,7 +1,7 @@
 import './SheetVisualizer.css'
 
-import { useState } from 'react'
-import { APP_NAME } from '$/Config'
+import { useState, useCallback, useEffect } from 'react'
+import { APP_NAME, NOTE_NAME_TYPES, NoteNameType } from '$/Config'
 import { isComposedOrRecorded } from '$lib/Utilities'
 import Switch from '$cmp/Inputs/Switch'
 import Analytics from '$/lib/Stats'
@@ -19,6 +19,7 @@ import { songService } from '$lib/Services/SongService'
 import { ComposedSong } from '$lib/Songs/ComposedSong'
 import { useTheme } from '$lib/Hooks/useTheme'
 import Instrument from '$/lib/Instrument'
+import { Select } from '$/components/Inputs/Select'
 
 const THRESHOLDS = {
     joined: 50,
@@ -33,7 +34,7 @@ export default function SheetVisualizer() {
     const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
-
+    const [keyboardLayout, setKeyboardLayout] = useState<NoteNameType>(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC')
     function setFrames(amount: number) {
         const newAmount = framesPerRow + amount
         const frame = document.querySelector('.frame-outer')
@@ -43,16 +44,15 @@ export default function SheetVisualizer() {
         setFramesPerRow(newAmount)
     }
 
-    function getChunkNoteText(i: number) {
-        const text = defaultInstrument.getNoteText(i, APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC', "C")
+    const getChunkNoteText = useCallback((index: number, layout: NoteNameType) => {
+        const text = defaultInstrument.getNoteText(index, layout, "C")
         return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
-    }
-    function loadSong(song: SerializedSong) {
-        setCurrentSong(song)
+    }, [])
+    const loadSong = useCallback((song: SerializedSong, layout: NoteNameType) => {
         try {
             const temp = songService.parseSong(song)
             const isValid = isComposedOrRecorded(temp)
-            if(!isValid) return
+            if (!isValid) return
             const lostReference = temp instanceof RecordedSong ? temp : (temp as ComposedSong).toRecordedSong()
             const notes = lostReference.notes
             const chunks: Chunk[] = []
@@ -75,10 +75,10 @@ export default function SheetVisualizer() {
                 chunks.push(chunk)
                 sheetText += emptyChunks > 2 ? ' \n\n' : "- ".repeat(emptyChunks)
                 if (chunk.notes.length > 1) {
-                    const text = chunk.notes.map(e => getChunkNoteText(e.index)).join('')
+                    const text = chunk.notes.map(e => getChunkNoteText(e.index, layout)).join('')
                     sheetText += APP_NAME === "Genshin" ? `[${text}] ` : `${text} `
                 } else if (chunk.notes.length > 0) {
-                    sheetText += `${getChunkNoteText(chunk.notes[0].index)} `
+                    sheetText += `${getChunkNoteText(chunk.notes[0].index, layout)} `
                 }
             }
             setSongAstext(sheetText)
@@ -87,22 +87,33 @@ export default function SheetVisualizer() {
             console.error(e)
             logger.error('Error visualizing song')
         }
-
         Analytics.songEvent({ type: 'visualize' })
-    }
+    }, [getChunkNoteText])
+    useEffect(() => {
+        if (currentSong) loadSong(currentSong, keyboardLayout)
+    }, [currentSong, hasText, keyboardLayout, loadSong])
     return <DefaultPage style={{ overflowY: 'scroll' }} excludeMenu={true}>
         <Title text="Sheet Visualizer" />
 
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SheetVisualiserMenu
-                onSongLoaded={(song) => loadSong(song)}
+                onSongLoaded={setCurrentSong}
                 currentSong={currentSong}
             />
             <div className='displayer-buttons-wrapper noprint'>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={{ marginRight: '0.5rem' }}>Note names</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div>Note names</div>
                     <Switch checked={hasText} onChange={setHasText} />
+                    {hasText &&
+                        <Select
+                            value={keyboardLayout}
+                            onChange={e => setKeyboardLayout(e.target.value as NoteNameType)}
+                        >
+                            {NOTE_NAME_TYPES.map(t => <option value={t} key={t}>{t}</option>)}
+                        </Select>
+                    }
                 </div>
+
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     Per row: {framesPerRow}
                     <button className='displayer-plus-minus'
@@ -123,9 +134,12 @@ export default function SheetVisualizer() {
                     <h2 className='text-ellipsis'>
                         {currentSong ? currentSong.name : 'No song selected'}
                     </h2>
-                    <AppButton onClick={() => window.print()} style={{ minWidth: 'fit-content', marginLeft: "0.4rem" }}>
-                        Print as PDF
-                    </AppButton>
+                    {currentSong &&
+                        <AppButton onClick={() => window.print()} style={{ minWidth: 'fit-content', marginLeft: "0.4rem" }}>
+                            Print as PDF
+                        </AppButton>
+                    }
+
                 </div>
                 <div style={{ color: 'var(--background-text)' }}>
                     Select a song from the menu on the left.
@@ -141,6 +155,7 @@ export default function SheetVisualizer() {
                 {sheet.map((frame, i) =>
                     <SheetFrame
                         key={i}
+                        keyboardLayout={keyboardLayout}
                         chunk={frame}
                         rows={3}
                         theme={theme}

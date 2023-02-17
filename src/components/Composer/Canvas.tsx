@@ -173,8 +173,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             let width = nearestEven(sizes.width * 0.85 - 45)
             let height = nearestEven(sizes.height * 0.45)
             if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
-            if(inPreview){
-                width =  nearestEven(width * (sizes.width < 900 ? 0.8 : 0.55))
+            if (inPreview) {
+                width = nearestEven(width * (sizes.width < 900 ? 0.8 : 0.55))
                 height = nearestEven(height * (sizes.width < 900 ? 0.8 : 0.6))
             }
             let columnWidth = nearestEven(width / numberOfColumnsPerCanvas)
@@ -302,30 +302,35 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         const isBreakpointSelected = data.breakpoints.includes(data.selected)
         const sideColor = theme.sideButtons.rgb
-        return <div className="canvas-wrapper" style={{ width}}>
+        return <div className="canvas-wrapper" style={{ width }}>
             <div className='canvas-relative'>
-                <button 
-                    onPointerDown={() => functions.selectColumn(data.selected - 1)}
-                    className={`canvas-buttons ${!data.isPlaying ? 'canvas-buttons-visible' : ''}`}
-                    style={{ 
-                        left: '0' ,
-                        paddingRight: '0.5rem',
-                        background: `linear-gradient(90deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
-                    }}
-                >
-                    <FaChevronLeft/>
-                </button>
-                <button 
-                    onPointerDown={() => functions.selectColumn(data.selected + 1)}
-                    className={`canvas-buttons ${!data.isPlaying ? 'canvas-buttons-visible' : ''}`}
-                    style={{ 
-                        right: '0',
-                        paddingLeft: '0.5rem',
-                        background: `linear-gradient(270deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
-                    }}
-                >
-                    <FaChevronRight />
-                </button>
+                {!data.settings.useKeyboardSideButtons.value && <>
+                    <button
+                        onPointerDown={() => functions.selectColumn(data.selected - 1)}
+                        className={`canvas-buttons ${!data.isPlaying ? 'canvas-buttons-visible' : ''}`}
+                        style={{
+                            left: '0',
+                            paddingRight: '0.5rem',
+                            justifyContent: "flex-start",
+                            background: `linear-gradient(90deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
+                        }}
+                    >
+                        <FaChevronLeft />
+                    </button>
+                    <button
+                        onPointerDown={() => functions.selectColumn(data.selected + 1)}
+                        className={`canvas-buttons ${!data.isPlaying ? 'canvas-buttons-visible' : ''}`}
+                        style={{
+                            right: '0',
+                            paddingLeft: '0.5rem',
+                            justifyContent: "flex-end",
+                            background: `linear-gradient(270deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
+                        }}
+                    >
+                        <FaChevronRight />
+                    </button>
+                </>}
+
 
                 <Stage
                     width={width}
@@ -339,11 +344,11 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     }}
                     ref={this.notesStageRef}
                 >
-                    {(cache && !data.isRecordingAudio)  && <Container
+                    {(cache && !data.isRecordingAudio) && <Container
                         x={xPosition}
                         interactive={true}
                         pointerdown={(e) => this.handleClick(e, "downStage")}
-                        pointermove={(e) => this.handleStageSlide(e)}
+                        pointermove={this.handleStageSlide}
                     >
                         {data.columns.map((column, i) => {
                             if (!isColumnVisible(i, data.selected, numberOfColumnsPerCanvas)) return null

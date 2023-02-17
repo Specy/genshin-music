@@ -21,7 +21,7 @@ export type BackgroundProps = 'Composer' | 'Main'
 export type OtherKeys = keyof typeof ThemeSettings.other
 
 
-export type SerializedTheme = ThemeState 
+export type SerializedTheme = ThemeState
 
 
 export class BaseTheme {
@@ -34,7 +34,7 @@ export class BaseTheme {
     toJson = () => {
         return JSON.stringify(this.state)
     }
-    serialize(): SerializedTheme{
+    serialize(): SerializedTheme {
         return {
             ...cloneDeep(this.state),
             id: null,
@@ -58,7 +58,7 @@ export interface ThemeState {
     editable: boolean
 }
 
-export class ThemeStore {
+export class Theme {
     state: ThemeState
     baseTheme: ThemeState
     constructor(baseTheme: ThemeState) {
@@ -67,11 +67,11 @@ export class ThemeStore {
         this.load()
     }
 
-    static isSerializedType(obj:any){
-        if(typeof obj !== 'object') return false
-        if(obj.type === 'theme') return true
+    static isSerializedType(obj: any) {
+        if (typeof obj !== 'object') return false
+        if (obj.type === 'theme') return true
         //legacy format recognition
-        if(obj.data && obj.other) return true
+        if (obj.data && obj.other) return true
         return false
     }
     load = async () => {
@@ -79,7 +79,7 @@ export class ThemeStore {
             const themeId = _themeService.getCurrentThemeId()
             if (themeId !== null) {
                 const defaultTheme = defaultThemes.find(t => t.id === themeId)
-                if(defaultTheme) return this.loadFromTheme(defaultTheme)
+                if (defaultTheme) return this.loadFromTheme(defaultTheme)
                 const theme = await _themeService.getTheme(themeId)
                 if (theme) return this.loadFromTheme(theme)
             }
@@ -110,7 +110,9 @@ export class ThemeStore {
     }
 
     isDefault = (name: ThemeKeys) => {
-        return this.state.data[name].value.toLowerCase() === this.baseTheme.data[name].value.toLowerCase()
+        const a = new Color(this.state.data[name].value)
+        const b = new Color(this.baseTheme.data[name].value)
+        return a.hex().toLowerCase() === b.hex().toLowerCase()
     }
 
     isEditable = () => {
@@ -137,7 +139,7 @@ export class ThemeStore {
         this.setOther(('backgroundImage' + type), url)
         this.save()
     }
-    loadFromJson = (json: any) => {
+    loadFromJson = (json: any, id: string | null) => {
         try {
             this.toArray().forEach(e => {
                 this.reset(e.name)
@@ -149,14 +151,15 @@ export class ThemeStore {
                     this.set(key as ThemeKeys, value.value.includes('rgba') ? filtered.rgb().toString() : filtered.toString())
                 }
             })
+            //keep this above the "other"
+            this.state.editable = Boolean(json.editable)
+            this.state.id = id
             Object.entries(json.other).forEach(([key, value]: [string, any]) => {
                 //@ts-ignore
                 if (this.baseTheme.other[key] !== undefined) {
                     this.setOther(key as OtherKeys, value)
                 }
             })
-            this.state.editable = Boolean(json.editable)
-
         } catch (e) {
             console.error(e)
             logger.error("There was an error loading the theme", 4000)
@@ -171,12 +174,11 @@ export class ThemeStore {
         }
         this.state.editable = Boolean(theme.editable)
         this.state.id = theme.id
-        
     }
     sanitize = (obj: any): SerializedTheme => {
         const sanitized = cloneDeep(this.baseTheme) as SerializedTheme
         Object.entries(obj.data).forEach(([key, value]: [string, any]) => {
-                //@ts-ignore
+            //@ts-ignore
             if (sanitized.data[key] !== undefined) {
                 const filtered = Color(value.value)
                 //@ts-ignore
@@ -186,7 +188,7 @@ export class ThemeStore {
             }
         })
         Object.entries(obj.other).forEach(([key, value]: [string, any]) => {
-                //@ts-ignore
+            //@ts-ignore
             if (sanitized.other[key] !== undefined) {
                 //@ts-ignore
                 sanitized.other[key] = value
@@ -196,7 +198,7 @@ export class ThemeStore {
         return sanitized
     }
     wipe = () => {
-        this.loadFromJson(cloneDeep(this.baseTheme))
+        this.loadFromJson(cloneDeep(this.baseTheme), this.state.id)
     }
 
     setOther = (name: OtherKeys, value: string) => {
@@ -212,12 +214,12 @@ export class ThemeStore {
     }
     save = () => {
         themeStore.setCurrentThemeId(this.getId())
-        if(!this.state.editable) return
+        if (!this.state.editable) return
         return themeStore.updateTheme(this.state.id!, cloneDeep(this.state))
     }
 }
 
-export const ThemeProvider = new ThemeStore(defaultThemes[0])
+export const ThemeProvider = new Theme(defaultThemes[0])
 
 export {
     defaultThemes

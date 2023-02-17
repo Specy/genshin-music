@@ -7,7 +7,7 @@ import { useObservableArray } from "$lib/Hooks/useObservable";
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
 import { VsrgSongKeys } from "$lib/Songs/VsrgSong";
 import { Fragment, useEffect, useState } from "react";
-import { keyBinds } from "$stores/Keybinds";
+import { keyBinds } from "$/stores/KeybindsStore";
 import Instrument from "$/lib/Instrument";
 
 

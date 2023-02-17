@@ -1,6 +1,6 @@
 import { Component } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-import { APP_NAME, MIDI_STATUS , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/Config"
+import { APP_NAME , TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/Config"
 import AddColumn from '$cmp/icons/AddColumn';
 import RemoveColumn from "$cmp/icons/RemoveColumn"
 import MidiParser from "$cmp/Composer/MidiParser"
@@ -34,7 +34,7 @@ import { SerializedSong } from '$lib/Songs/Song';
 import { songsStore } from '$stores/SongsStore';
 import { InstrumentControls } from '$cmp/Composer/InstrumentControls';
 import { AppButton } from '$cmp/Inputs/AppButton';
-import { ThemeProvider, ThemeStore } from '$stores/ThemeStore/ThemeProvider';
+import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider';
 import { Title } from '$cmp/Miscellaneous/Title';
 import { songService } from '$lib/Services/SongService';
 
@@ -50,7 +50,7 @@ interface ComposerState {
     isMidiVisible: boolean
     isRecordingAudio: boolean
     isPlaying: boolean
-    theme: ThemeStore
+    theme: Theme
 }
 type HistoryProps = {
     songId: string
@@ -216,7 +216,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
     handleMidi = ([eventType, note, velocity]: MIDIEvent) => {
         if (!this.mounted) return
         const { song, layer } = this.state
-        if (MIDI_STATUS.down === eventType && velocity !== 0) {
+        if (MIDIProvider.isDown(eventType) && velocity !== 0) {
             const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(this.currentInstrument.notes[keyboardNote.index])
@@ -231,7 +231,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 case 'remove_column': this.removeColumns(1, song.selected); break;
                 case 'change_layer': {
                     let nextLayer = layer + 1
-                    if (nextLayer > this.state.layers.length) nextLayer = 1
+                    if (nextLayer >= this.state.layers.length) nextLayer = 0
                     this.changeLayer(nextLayer)
                     break;
                 }
@@ -602,6 +602,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
             })
         })
     }
+    selectColumnFromDirection = (direction: number) => {
+        this.selectColumn(this.state.song.selected + direction)
+    }
     changeLayer = (layer: number) => {
         this.setState({ layer })
     }
@@ -788,6 +791,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                     functions={this}
                     data={{
                         isPlaying,
+                        settings,
                         isRecordingAudio, 
                         currentLayer: layer,
                         instruments: song.instruments,

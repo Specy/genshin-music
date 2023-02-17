@@ -36,7 +36,6 @@
     -->
 	<title>Genshin Music Nightly</title>
 </head>
-
 <body>
 	<noscript>You need to enable JavaScript to run this app.</noscript>
 	<div id="root">
@@ -52,14 +51,15 @@
 				margin: 0;
 				overflow: hidden;
 			}
-			#root{
+
+			#root {
 				display: flex;
 				align-items: center;
-				justify-content: center;
 				flex-direction: column;
 				width: 100vw;
 				height: 100vh;
 			}
+
 			.loading-anim,
 			.loading-img,
 			.mask,
@@ -76,6 +76,7 @@
 
 			.loading-anim {
 				position: relative;
+				margin-top: -10vh;
 				animation: 1.5s fade ease-in;
 			}
 
@@ -91,14 +92,17 @@
 				animation: load 4s cubic-bezier(0.46, 0.45, 0.17, 0.75);
 				filter: brightness(100);
 			}
-			@keyframes fade{
-				0%{
+
+			@keyframes fade {
+				0% {
 					opacity: 0;
 				}
-				100%{
+
+				100% {
 					opacity: 1;
 				}
 			}
+
 			@keyframes load {
 				0% {
 					width: 0%;
@@ -108,29 +112,66 @@
 					width: 91%;
 				}
 			}
+
+			#errors-wrapper {
+				display: none;
+				flex-direction: column;
+				font-family: Arial;
+				width: 70vw;
+			}
+
+			.loading-error {
+				border-top: solid 2px gray;
+				padding: 0.4rem;
+			}
 		</style>
-		<div class="loading-anim">
-			<img src="./assets/icons/loadingApp.svg" class="loading-img" />
-			<div id="mask">
-				<img 
-					src="./assets/icons/loadingApp.svg" 
-					class="loading-img" 
-					alt="loading..."
-					id="img"
-				/>
+		<div
+			style="display: flex; padding-top: 50vh; flex-direction: column; align-items: center; height: 100vh; overflow-y: auto; width: 100vw;">
+			<div class="loading-anim">
+				<img src="./assets/icons/loadingApp.svg" class="loading-img" />
+				<div id="mask">
+					<img src="./assets/icons/loadingApp.svg" class="loading-img" alt="loading..." id="img" />
+				</div>
+				<div class="loading-text">
+					Loading...
+				</div>
 			</div>
-			<div class="loading-text">
-				Loading...
+			<div id="errors-wrapper">
+				<div style="display: flex; align-items: center; justify-content: space-between;">
+					<div style="font-weight: bold; margin-bottom: 0.4rem; font-size: 1.6rem;">
+						Logs
+					</div>
+					<div>
+						If you have problems,
+						<a href="https://discord.gg/Arsf65YYHq" target="_blank" style="color: teal;">Join our disord</a>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
-	<script type="module" src="/src/index.tsx"></script> 
+	<script>
+		try {
+			const img = document.querySelector('#img');
+			const mask = document.querySelector('#mask');
+			img.addEventListener("load", () => {
+				mask.className = 'mask';
+			});
+			const errors = []
+			function onError(e) {
+				const wrapper = document.getElementById("errors-wrapper")
+				errors.push(e)
+				if (!wrapper) return
+				wrapper.style.display = "flex"
+				const div = document.createElement("div")
+				div.className = "loading-error"
+				div.innerText = `${e.error.stack}`
+				wrapper.append(div)
+			}
+			window.addEventListener("error", onError)
+		} catch (e) {
+			console.error(e)
+		}
+	</script>
+	<script type="module" src="/src/index.tsx"></script>
 </body>
-<script>
-	const img = document.querySelector('#img');
-	const mask = document.querySelector('#mask');
-	img.addEventListener("load", () => {
-		mask.className = 'mask';
-	});
-</script>
 </html>

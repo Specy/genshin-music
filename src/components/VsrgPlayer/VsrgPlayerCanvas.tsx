@@ -5,8 +5,8 @@ import { ThrottledEventLoop } from "$lib/ThrottledEventLoop";
 import { isNumberCloseTo } from "$lib/Utilities";
 import { Application } from "pixi.js";
 import { Component, createRef } from "react";
-import { keyBinds } from "$stores/Keybinds";
-import { ThemeStore } from "$stores/ThemeStore/ThemeProvider";
+import { keyBinds } from "$/stores/KeybindsStore";
+import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { KeyboardKey, subscribeCurrentVsrgSong, VsrgKeyboardPressType, VsrgPlayerEvent, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
@@ -237,7 +237,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         if (diff < accuracyBounds[4]) return 'bad'
         return 'miss'
     }
-    handleThemeChange = (theme: ThemeStore) => {
+    handleThemeChange = (theme: Theme) => {
         const bg_plain = theme.get('primary')
         const bg_line = theme.getText('primary')
         const bg_line_10 = bg_line.darken(0.5).desaturate(1)

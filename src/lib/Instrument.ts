@@ -1,6 +1,6 @@
-import { INSTRUMENTS_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX } from "$/Config"
+import { INSTRUMENTS_DATA, INSTRUMENTS, AUDIO_CONTEXT, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType } from "$/Config"
 import { makeObservable, observable } from "mobx"
-import { InstrumentName, NoteNameType, NoteStatus } from "$types/GeneralTypes"
+import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
 import { getPitchChanger } from "./Utilities"
 import { NoteImage } from "$/components/SvgNotes"
 
@@ -8,6 +8,8 @@ type Layouts = {
     keyboard: string[]
     mobile: string[]
     abc: string[]
+    playstation: string[]
+    switch: string[]
 }
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 
@@ -22,7 +24,9 @@ export default class Instrument {
     layouts: Layouts = {
         keyboard: [],
         mobile: [],
-        abc: []
+        abc: [],
+        playstation: [],
+        switch: []
     }
     buffers: AudioBuffer[] = []
     isDeleted: boolean = false
@@ -42,7 +46,9 @@ export default class Instrument {
         this.layouts = {
             keyboard: [...layouts.keyboardLayout],
             mobile: [...layouts.mobileLayout],
-            abc: [...layouts.abcLayout]
+            abc: [...layouts.abcLayout],
+            playstation: [...layouts.playstationLayout],
+            switch: [...layouts.switchLayout]
         }
         for (let i = 0; i <  this.instrumentData.notes; i++) {
             const noteName = this.layouts.keyboard[i]
@@ -75,6 +81,8 @@ export default class Instrument {
             if (type === "Do Re Mi") return layout.mobile[index]
             if (type === "ABC") return layout.abc[index]
             if (type === "No Text") return ''
+            if (type === "Playstation") return layout.playstation[index]
+            if (type === "Switch") return layout.switch[index]
         } catch (e) { }
         return ''
     }

@@ -1,10 +1,12 @@
 
 import ComposerNote from "$cmp/Composer/ComposerNote"
 import { Column, InstrumentData } from "$lib/Songs/SongClasses"
-import { Pitch, TEMPO_CHANGERS } from "$/Config"
+import { NoteNameType, Pitch, TEMPO_CHANGERS } from "$/Config"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import Instrument, { ObservableNote } from "$lib/Instrument"
-import { NoteNameType } from "$types/GeneralTypes"
+import { ComposerSettingsDataType } from "$/lib/BaseSettings"
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import { useTheme } from "$/lib/Hooks/useTheme"
 
 interface ComposerKeyboardProps {
     data: {
@@ -14,18 +16,21 @@ interface ComposerKeyboardProps {
         currentLayer: number,
         currentColumn: Column,
         pitch: Pitch,
+        settings: ComposerSettingsDataType
         isPlaying: boolean,
         noteNameType: NoteNameType
     },
     functions: {
         handleClick: (note: ObservableNote) => void
+        selectColumnFromDirection: (direction: number) => void
         handleTempoChanger: (tempoChanger: typeof TEMPO_CHANGERS[number]) => void
     }
 }
 
 export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
-    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio } = data
+    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio, settings } = data
     const { handleClick, handleTempoChanger } = functions
+    const [theme] = useTheme()
     if (keyboard === undefined) {
         return <div className="composer-keyboard-wrapper" style={{ marginBottom: '4rem' }}>
             <h1>There was an error with this layer</h1>
@@ -46,6 +51,18 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
 
     return <>
         <div className="composer-keyboard-wrapper">
+            {data.settings.useKeyboardSideButtons.value &&
+                <button
+                    onPointerDown={() => functions.selectColumnFromDirection(-1)}
+                    className={`keyboard-column-selection-buttons ${!data.isPlaying ? 'keyboard-column-selection-buttons-visible' : ''}`}
+                    style={{
+                        paddingRight: '0.5rem',
+                        justifyContent: "flex-end",
+                    }}
+                >
+                    <FaChevronLeft />
+                </button>
+            }
             <div
                 className={keyboardClass}
             >
@@ -71,7 +88,18 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     }
                 })}
             </div>
-
+            {data.settings.useKeyboardSideButtons.value &&
+                <button
+                    onPointerDown={() => functions.selectColumnFromDirection(1)}
+                    className={`keyboard-column-selection-buttons ${!data.isPlaying ? 'keyboard-column-selection-buttons-visible' : ''}`}
+                    style={{
+                        paddingLeft: '0.5rem',
+                        justifyContent: "flex-start",
+                    }}
+                >
+                    <FaChevronRight />
+                </button>
+            }
         </div>
         <div className={`tempo-changers-wrapper ${isPlaying ? "tempo-changers-wrapper-hidden" : ""}`}>
             <div className="bottom-right-text">

@@ -1,8 +1,7 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE } from "$/Config"
+import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE, NOTE_NAME_TYPES, NoteNameType } from "$/Config"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
-import { NoteNameType } from "$types/GeneralTypes"
 import { VsrgSongKeys } from "./Songs/VsrgSong"
 import { VsrgKeyboardLayout } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard"
 
@@ -21,11 +20,12 @@ export type ComposerSettingsDataType = {
     caveMode: SettingsCheckbox
     autosave: SettingsCheckbox
     syncTabs: SettingsCheckbox
+    useKeyboardSideButtons: SettingsCheckbox
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 52,
+        settingVersion: APP_NAME + 59,
     },
     data: {
         bpm: {
@@ -69,20 +69,7 @@ export const ComposerSettings: ComposerSettingsType = {
                     ? "Do Re Mi"
                     : "Keyboard layout"
                 : "Note name",
-            options: APP_NAME === "Genshin"
-                ? [
-                    "Note name",
-                    "Keyboard layout",
-                    "Do Re Mi",
-                    "ABC",
-                    "No Text"
-                ]
-                : [
-                    "Note name",
-                    "Keyboard layout",
-                    "ABC",
-                    "No Text"
-                ]
+            options: NOTE_NAME_TYPES
         },
         columnsPerCanvas: {
             name: "Number of visible columns",
@@ -117,6 +104,14 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: false,
             value: false,
         },
+        useKeyboardSideButtons: {
+            name: "Put next/previous column buttons around keyboard",
+            tooltip: "Puts the buttons to select the next/previous column on the left/right of the keyboard",
+            type: "checkbox",
+            category: "Composer Settings",
+            songSetting: false,
+            value: false
+        },
         syncTabs: {
             name: "Autoplay in all tabs (pc only)",
             tooltip: "Advanced feature, it syncs other browser tabs to all play at the same time",
@@ -124,7 +119,7 @@ export const ComposerSettings: ComposerSettingsType = {
             category: "Composer Settings",
             songSetting: false,
             value: false
-        }
+        },
     }
 
 }
@@ -147,12 +142,12 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 52
+        settingVersion: APP_NAME + 59
     },
     data: {
         instrument: {
             name: "Instrument",
-            tooltip: "The main instrument of the player, will also be saved in the song you record",
+            tooltip: "The main (first) instrument of the player, will also be saved in the song you record",
             type: "instrument",
             songSetting: true,
             value: INSTRUMENTS[0],
@@ -226,20 +221,7 @@ export const PlayerSettings: PlayerSettingsType = {
                     : "Keyboard layout"
                 : "Note name",
 
-            options: APP_NAME === "Genshin"
-                ? [
-                    "Note name",
-                    "Keyboard layout",
-                    "Do Re Mi",
-                    "ABC",
-                    "No Text"
-                ]
-                : [
-                    "Note name",
-                    "Keyboard layout",
-                    "ABC",
-                    "No Text"
-                ]
+            options: NOTE_NAME_TYPES
         },
         keyboardSize: {
             name: "Keyboard size",
@@ -251,13 +233,13 @@ export const PlayerSettings: PlayerSettingsType = {
             threshold: [80, 150]
         },
         keyboardYPosition: {
-            name: "Vertical position",
+            name: "Keyboard vertical position",
             tooltip: "The vertical position of the keyboard",
             type: "slider",
             songSetting: false,
             value: -20,
             category: "Player Settings",
-            threshold: [-60, 80]
+            threshold: [-60, 180]
         },
         approachSpeed: {
             name: "Approach Rate (AR)",
@@ -562,7 +544,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 5
+        settingVersion: APP_NAME + 7
     },
     data: {
         instrument: {
@@ -633,20 +615,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
                     : "Keyboard layout"
                 : "No Text",
 
-            options: APP_NAME === "Genshin"
-                ? [
-                    "Note name",
-                    "Keyboard layout",
-                    "Do Re Mi",
-                    "ABC",
-                    "No Text"
-                ]
-                : [
-                    "Note name",
-                    "Keyboard layout",
-                    "ABC",
-                    "No Text"
-                ]
+            options: NOTE_NAME_TYPES
         },
         keyboardSize: {
             name: "Keyboard size",

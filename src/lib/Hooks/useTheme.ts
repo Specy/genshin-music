@@ -1,9 +1,9 @@
-import { ThemeProvider, ThemeStore } from "$stores/ThemeStore/ThemeProvider";
+import { ThemeProvider, Theme } from "$stores/ThemeStore/ThemeProvider";
 import { useState, useEffect } from "react";
 import { observe } from "mobx";
 
 
-type UseTheme = [ThemeStore, (theme: ThemeStore) => void]
+type UseTheme = [Theme, (theme: Theme) => void]
 export function useTheme(): UseTheme{
     const [theme,setTheme] = useState(ThemeProvider)
     useEffect(() => {
@@ -13,10 +13,16 @@ export function useTheme(): UseTheme{
 }
 
 
-export function subscribeTheme(callback: (theme: ThemeStore) => void) {
+export function subscribeTheme(callback: (theme: Theme) => void) {
     const dispose = observe(ThemeProvider.state.data, () => {
         callback({...ThemeProvider})
     })
+    const dispose2 = observe(ThemeProvider.state.other, () => {
+        callback({...ThemeProvider})
+    })
     callback({...ThemeProvider})
-    return dispose
+    return () => {
+        dispose()
+        dispose2()
+    }
 }

@@ -1,14 +1,14 @@
 {
     "Sky": {
-        "version": "3.0",
-        "tauriDestinationUrl": "",
-        "urgentMessage": "test 2",
-        "message": "test 1"
-    },
-    "Genshin": {
-        "version": "3.0",
+        "version": "3.1",
         "tauriDestinationUrl": "",
         "urgentMessage": "",
-        "message": ""
+        "message": "Added backup warnings and tranparency to themes"
+    },
+    "Genshin": {
+        "version": "3.1",
+        "tauriDestinationUrl": "",
+        "urgentMessage": "",
+        "message": "Added aurora, switch/playstation layouts, backup warnings, tranparency to themes"
     }
 }

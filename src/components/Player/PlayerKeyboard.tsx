@@ -1,5 +1,5 @@
 import {  Component } from 'react'
-import { APP_NAME, SPEED_CHANGERS, MIDI_STATUS, Pitch } from "$/Config"
+import { APP_NAME, SPEED_CHANGERS, Pitch, NoteNameType } from "$/Config"
 import Note from '$/components/Player/PlayerNote'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, delay, clamp, groupArrayEvery } from "$lib/Utilities"
@@ -9,7 +9,7 @@ import { playerControlsStore } from '$stores/PlayerControlsStore'
 import { ApproachingNote, RecordedNote } from '$lib/Songs/SongClasses'
 import type { ObservableNote } from '$lib/Instrument'
 import type Instrument from '$lib/Instrument'
-import type { NoteNameType, Timer } from '$types/GeneralTypes'
+import type { Timer } from '$types/GeneralTypes'
 import { Chunk, RecordedSong } from '$lib/Songs/RecordedSong'
 import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider'
 import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider'
@@ -132,7 +132,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     handleMidi = ([eventType, note, velocity]: MIDIEvent) => {
         if (!this.mounted) return
         const instrument = this.props.data.instrument
-        if (MIDI_STATUS.down === eventType && velocity !== 0) {
+        if (MIDIProvider.isDown(eventType) && velocity !== 0) {
             const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(instrument.notes[keyboardNote.index])
