@@ -311,9 +311,6 @@
 	stroke: white !important;
 }
 @media only screen and (max-width: 800px) {
-	.note-name-sky {
-		font-size: 0.7rem;
-	}
 	.note-animation{
 		border: 2px solid var(--accent);
 	}

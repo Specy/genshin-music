@@ -152,12 +152,12 @@ const LAYOUT_KINDS = {
             "A1 A2 A3 A4 " +
             "B1 B2 B3 B4").split(" "),
         playstationLayout: (
-            "🡅 ▲ 🡄 ◼ " +
-            "🡇 X L2 R2"
+            "⟰ ▲ ⭅ ◼ " +
+            "⟱ X L2 R2"
         ).split(" "),
         switchLayout: (
-            "🡅 X 🡄 Y " +
-            "🡇 B Zl Zr"
+            "⟰ X ⭅ Y " +
+            "⟱ B Zl Zr"
         ).split(" "),
     },
     defaultSky: {
@@ -174,13 +174,13 @@ const LAYOUT_KINDS = {
             "B1 B2 B3 B4 B5 " +
             "C1 C2 C3 C4 C5").split(" "),
         playstationLayout: (
-            "L2 R2 🡇 X 🡄 " +
-            "◼ 🡅 ▲ 🡆 ⬤ " +
+            "L2 R2 ⟱ X ⭅ " +
+            "◼ ⟰ ▲ ⭆ ⬤ " +
             "L1 R1 ❰L ❰R L❱"
         ).split(" "),
         switchLayout: (
-            "Zl Zr 🡇 B 🡄 " +
-            "Y 🡅 X 🡆 A " +
+            "Zl Zr ⟱ B ⭅ " +
+            "Y ⟰ X ⭆ A " +
             "L R ❰L ❰R L❱"
         ).split(" ")
     },
@@ -195,12 +195,12 @@ const LAYOUT_KINDS = {
             "A1 A2 A3 " +
             "B1 B2 B3").split(" "),
         playstationLayout: (
-            "🡅 ▲ 🡄 " +
-            "🡇 X L2"
+            "⟰ ▲ ⭅ " +
+            "⟱ X L2"
         ).split(" "),
         switchLayout: (
-            "Zl Zr 🡇 " +
-            "Y 🡅 X"
+            "Zl Zr ⟱ " +
+            "Y ⟰ X"
         ).split(" "),
     },
 

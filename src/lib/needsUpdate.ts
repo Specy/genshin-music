@@ -28,14 +28,14 @@ export async function checkIfneedsUpdate() {
                 logger.warn(
                     `A New version of the app is available.
                         ${!IS_TAURI
-                            ? "Please restart the app to update."
+                            ? "Please close the app and restart it to update. On the web you need to close all tabs with the app open."
                             : ""
                         } 
-                    ${message ? `Update Message: "${message}"` : ""}
-                    `.trim(), 20000)
+                    ${message ? `\nUpdate Message: "${message}"` : ""}
+                    `.trim(), 15000)
             }
             if (urgentMessage) {
-                logger.error(urgentMessage, 20000)
+                logger.error(urgentMessage, 15000)
             }
         }
     } catch (e) {
