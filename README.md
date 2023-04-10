@@ -1,3 +1,5 @@
+# ⚠️ APP IS BEING REWRITTEN IN NEXT.JS ⚠️
+
 [![wakatime](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f.svg)](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f)
 # Welcome to Genshin music and Sky music nightly
 
