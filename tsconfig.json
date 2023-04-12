@@ -7,7 +7,6 @@
       "esnext"
     ],
     "types": [
-      "vite/client",
       "webmidi"
     ],
     "allowJs": true,

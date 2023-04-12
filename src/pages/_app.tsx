@@ -31,7 +31,7 @@ import AppBase from "./App";
 import { NextComponentType, NextPageContext } from "next";
 import { setIfInTWA } from "$/lib/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"
-import { IS_TAURI } from "$/Config";
+import { BASE_PATH, IS_TAURI } from "$/Config";
 import ErrorBoundaryRedirect from "$/components/Utility/ErrorBoundaryRedirect";
 import { logger } from "$/stores/LoggerStore";
 import Head from "next/head";
@@ -40,7 +40,7 @@ import Script from "next/script";
 interface CustomPageProps {
 
 }
-
+console.log(`BASE_PATH: "${BASE_PATH}"`)
 export default function App({ Component, pageProps }: AppProps<CustomPageProps>) {
 	useEffect(() => {
 		try {
@@ -62,14 +62,13 @@ export default function App({ Component, pageProps }: AppProps<CustomPageProps>)
 	// @ts-ignore
 	const getLayout = Component.getLayout || ((page: NextComponentType<NextPageContext, any, any>) => page)
 	return (<>
-
 		<Head>
-			<link rel="icon" href="/favicon.ico" />
 			<meta name="viewport"
 				content="user-scalable=no, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
 			<meta name="theme-color" content="#63aea7" />
-			<link rel="apple-touch-icon" href="/logo192.png" />
-			<link rel="manifest" href="/manifest.json" />
+			<link rel="icon" href={BASE_PATH + "/favicon.ico"} />
+			<link rel="apple-touch-icon" href={BASE_PATH + "/logo192.png"} />
+			<link rel="manifest" href={BASE_PATH + "/manifest.json"} />
 			{process.env.NEXT_PUBLIC_APP_NAME === "Sky"
 				? <>
 					<meta name="description" content="Sky music nightly, a website to play, practice and compose songs" />

@@ -673,7 +673,11 @@ const DEFAULT_DOM_RECT = {
     y: 0,
 } as DOMRect
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+
+
 export {
+    BASE_PATH,
     INSTRUMENTS,
     INSTRUMENTS_DATA,
     COMPOSER_NOTE_POSITIONS,

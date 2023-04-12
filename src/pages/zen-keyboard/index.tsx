@@ -73,7 +73,7 @@ export default function ZenKeyboard() {
         instrument.changeVolume(data.value)
     }, [instrument])
     return <>
-    <Title text="Zen Keyboard"/>
+    <Title text="Zen Keyboard" description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"/>
         <ZenKeyboardMenu
             settings={settings}
             onVolumeChange={onVolumeChange}

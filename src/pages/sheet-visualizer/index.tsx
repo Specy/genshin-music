@@ -92,7 +92,7 @@ export default function SheetVisualizer() {
         if (currentSong) loadSong(currentSong, keyboardLayout)
     }, [currentSong, hasText, keyboardLayout, loadSong])
     return <DefaultPage style={{ overflowY: 'scroll' }} excludeMenu={true}>
-        <Title text="Sheet Visualizer" />
+        <Title text="Sheet Visualizer" description='Learn a sheet in a visual way, convert the song into text format or print it as pdf' />
 
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <SheetVisualiserMenu

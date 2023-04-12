@@ -41,7 +41,7 @@ export default function Keybinds() {
     const k4 = useObservableArray(keyBinds.getVsrgKeybinds(4))
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
     return <DefaultPage>
-        <Title text="Keybinds" />
+        <Title text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys"/>
         {false && <>
             <h1>
                 Keyboard keybinds

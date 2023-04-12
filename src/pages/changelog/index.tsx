@@ -19,8 +19,7 @@ export default function Changelogpage() {
                 </a>
             </MenuItem>
         </SimpleMenu>
-        <Title text={`Changelog V${APP_VERSION}`} />
-
+        <Title text={`Changelog V${APP_VERSION}`} description={`Changelog V${APP_VERSION}\n${updates[0]?.changes.join(";")}`} />
         <div className='changelog-page-title'>
             Changelog
             <span style={{ fontSize: '1.2rem', marginLeft: '1rem' }}>

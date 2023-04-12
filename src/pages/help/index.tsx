@@ -4,7 +4,7 @@ import { Title } from "$cmp/Miscellaneous/Title"
 
 export default function Help(){
     return <DefaultPage>
-        <Title text="Help" />
+        <Title text="Help" description="Tutorials on how to use the player, composer and all the different shortcuts"/>
 
         <div>
             <div style={{fontSize: '2rem', margin: '1rem 0'}}>

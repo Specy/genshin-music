@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 export default function Partners() {
     return <DefaultPage className='partners-page'>
-        <Title text="Partners" />
+        <Title text="Partners" description='Learn about our partners who helped the development and to make the app more famous'/>
         <div className='partner-wrapper'>
             <Partner
                 name='Specy'

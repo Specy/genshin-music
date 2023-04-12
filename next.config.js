@@ -1,13 +1,13 @@
 /**
  * @type {import('next').NextConfig}
  */
-const nextConfig = {
-    output: 'export',
-    distDir: 'build',
-    trailingSlash: true,
-    images: {
-      unoptimized: true,
-    }
+const config = {
+  output: 'export',
+  distDir: process.env.BUILD_PATH ?? 'build',
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "",
+  images: {
+    unoptimized: true,
   }
-  
-  module.exports = nextConfig
+}
+
+export default config

@@ -120,7 +120,7 @@ export default function Backup() {
         logger.success("Deleted all themes")
     }
     return <DefaultPage>
-        <Title text="Backup" />
+        <Title text="Backup" description="Manage the backups in the app, download or import songs, themes, or all of them" />
         <h1>
             Backup
         </h1>

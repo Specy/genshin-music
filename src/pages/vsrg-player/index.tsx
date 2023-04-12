@@ -150,7 +150,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     render() {
         const { canvasSizes, settings } = this.state
         return <>
-            <Title text="Vsrg Player" />
+            <Title text="Vsrg Player" description="Play or practice VSRG songs"/>
             <div className="vsrg-player-page">
                 <VsrgPlayerMenu
                     settings={settings}

@@ -6,7 +6,7 @@ import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import Image from 'next/image'
 export default function Donate() {
     return <DefaultPage>
-        <Title text="Donate" />
+        <Title text="Donate" description='Please donate to help the development of sky music nightly, genshin music nightly and all the other apps i make.'/>
         <div className="donate-text">
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not

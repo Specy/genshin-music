@@ -163,7 +163,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
     render() {
         const { settings, sources, selectedShortcut, selectedSource } = this.state
         return <DefaultPage>
-            <Title text="MIDI Setup" />
+            <Title text="MIDI Setup" description='Setup the MIDI devices connected to your browser and change the shortcuts/keybinds for each key'/>
             <div className="column midi-setup-column">
                 <div>
                     Select MIDI device:

@@ -3,7 +3,7 @@ import { Title } from '$cmp/Miscellaneous/Title'
 
 export default function Privacy() {
     return <DefaultPage>
-        <Title text="Privacy" />
+        <Title text="Privacy" description='Privacy policy for the app'/>
 
         <span>
             This website uses cookies to collect data about usage of the app through IP anonymized Google Analytics.

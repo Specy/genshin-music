@@ -616,7 +616,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     render() {
         const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes, tempoChanger } = this.state
         return <>
-            <Title text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`} />
+            <Title text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`} description="Create new VSRG songs using existing background songs and create your own beatmap for it."/>
             <VsrgMenu
                 trackModifiers={vsrg.trackModifiers}
                 hasChanges={this.changes > 0}

@@ -704,7 +704,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers, undoHistory } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
-            <Title text={`Composer - ${song.name}`} />
+            <Title text={`Composer - ${song.name}`} description='Create or edit new songs with the composer, using up to 30 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI song into the app format.'/>
             {isMidiVisible &&
                 <MidiParser
                     functions={this}
