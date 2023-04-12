@@ -5,7 +5,6 @@ import { memo, useEffect, useState, useRef, ChangeEvent } from "react";
 import { playerStore } from "$stores/PlayerStore";
 import { playerControlsStore } from "$stores/PlayerControlsStore";
 import { BsTriangleFill } from "react-icons/bs";
-import './Track.css'
 import { clamp } from "$lib/Utilities";
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
 import { SheetFrame } from "$cmp/SheetVisualizer/SheetFrame";

@@ -26,6 +26,7 @@
 }
 .help-img{
 	width: 95%;
+	height: auto;
 	border-radius: 0.4rem;
 	margin-left: 2.5%;
 	box-shadow: 0 0 0px 2px var(--primary);

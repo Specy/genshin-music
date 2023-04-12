@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react"
 import { FaTimes } from "react-icons/fa"
 import { AppButton } from "../Inputs/AppButton"
 import { SongActionButton } from "../Inputs/SongActionButton"
+import { DEFAULT_DOM_RECT } from "$/Config"
 
 
 interface FloatingDropdownProps {
@@ -15,7 +16,7 @@ interface FloatingDropdownProps {
     ignoreClickOutside?: boolean
     onClose?: () => void
 }
-const defaultBounds = new DOMRect(0, 0, 0, 0)
+const defaultBounds = {...DEFAULT_DOM_RECT}
 export function FloatingDropdown({
     children,
     Icon,
@@ -28,7 +29,7 @@ export function FloatingDropdown({
 }: FloatingDropdownProps) {
 
     const [isActive, setActive] = useState(false)
-    const [bounds, setBounds] = useState<DOMRect>(defaultBounds)
+    const [overflows, setOverflows] = useState(false)
     const ref = useClickOutside<HTMLDivElement>(() => {
         if (ignoreClickOutside) return
         setActive(false)
@@ -38,9 +39,8 @@ export function FloatingDropdown({
         const el = ref.current
         if (!el) return
         const bounds = el.getBoundingClientRect()
-        setBounds(bounds)
+        setOverflows(bounds.top + bounds.height > (window.innerHeight ?? 0) )
     }, [isActive, ref])
-    const overflows = bounds.top + bounds.height > (window?.innerHeight ?? 0) 
     const transform = `translateX(calc(-100% + ${offset}rem)) ${overflows ? `translateY(calc(-100% - 2rem))` : ""}`
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>
         <SongActionButton

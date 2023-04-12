@@ -9,7 +9,7 @@ export function AppBackground({ children, page }: AppBackgroundProps) {
     return <div 
         className='app bg-image' 
         //@ts-ignore
-        style={{ backgroundImage: `url(${theme.getOther('backgroundImage' + page)}` }}>
+        style={{ backgroundImage: `url(${theme.getOther('backgroundImage' + page)})` }}>
         {children}
     </div>
 }

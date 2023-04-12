@@ -1,5 +1,5 @@
-import { Stage } from "@inlet/react-pixi"
-import { DEFAULT_VSRG_KEYS_MAP } from "$/Config"
+import { Stage } from "@pixi/react"
+import { DEFAULT_DOM_RECT, DEFAULT_VSRG_KEYS_MAP } from "$/Config"
 import isMobile from "is-mobile"
 import { subscribeTheme } from "$lib/Hooks/useTheme"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
@@ -94,7 +94,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             },
             timestamp: 0,
             sizes: {
-                el: new DOMRect(),
+                el: {...DEFAULT_DOM_RECT},
                 rawWidth: 0,
                 rawHeight: 0,
                 width: 0,

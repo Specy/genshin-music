@@ -1,17 +1,19 @@
-import { AUDIO_CONTEXT } from "$/Config";
-import MediaRecorderPolyfill from 'audio-recorder-polyfill'
+//TODO next import MediaRecorderPolyfill from 'audio-recorder-polyfill'
 import { fileService } from "./Services/FileService";
 
 export default class AudioRecorder {
     node: MediaStreamAudioDestinationNode | null
     recorder: MediaRecorder
-    constructor() {
-        this.node = AUDIO_CONTEXT.createMediaStreamDestination?.() ?? null
+    audioContext: AudioContext
+    constructor(audioContext: AudioContext) {
+        this.audioContext = audioContext
+        this.node = audioContext.createMediaStreamDestination?.() ?? null
         if(!window?.MediaRecorder){
             console.log("Audio recorder Polyfill")
-            this.recorder = new MediaRecorderPolyfill(this.node?.stream)
+            throw new Error("Audio recorder Polyfill not implemented")
+            //TODO next this.recorder = new MediaRecorderPolyfill(this.node?.stream)
         }else{
-            this.recorder = new MediaRecorder(this.node?.stream)
+            this.recorder = new MediaRecorder(this.node?.stream!)
         }
     }
     start() {

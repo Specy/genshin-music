@@ -3,7 +3,7 @@ import composerImg from '$/assets/images/help-composer.png'
 import playerImg from '$/assets/images/help-player.png'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import isMobile from 'is-mobile'
-import './HelpComponent.css'
+import Image from 'next/image'
 
 export function HelpTab() {
     return <>
@@ -32,7 +32,12 @@ export function HelpTab() {
             Main page
         </div>
         <div>
-            <img src={playerImg} className='help-img' alt='tutorial for the main page' loading='lazy'/>
+            <Image 
+                src={playerImg}
+                alt='tutorial for the main page'
+                className='help-img'
+                loading='lazy'
+            />
             <ol>
                 <li>Record the keyboard as an audio file</li>
                 <li>The selection where you want the song to start/end</li>
@@ -82,7 +87,12 @@ export function HelpTab() {
             Composer
         </div>
         <div>
-            <img src={composerImg} className='help-img' alt="tutorial for composer" loading='lazy'/>
+            <Image 
+                src={composerImg}
+                alt='tutorial for the composer'
+                className='help-img'
+                loading='lazy'
+            />
             <ol>
                 <li>Go to the next / previous breakpoint</li>
                 <li>Timeline of the breakpoints</li>

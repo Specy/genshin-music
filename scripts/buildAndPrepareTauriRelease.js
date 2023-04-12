@@ -1,10 +1,12 @@
-require('dotenv').config()
-const fs = require('fs/promises')
+//require('dotenv').config()
+import { spawn } from 'child_process'
+import { promises as fs } from 'fs'
+import clc from "cli-color";
+
 const [_1, _2, useEnv, app] = process.argv
 const version = process.env.VERSION
 const changelog = process.env.CHANGELOG
-const clc = require("cli-color");
-const { spawn } = require('child_process');
+
 const githubEndpoint = 'https://github.com/Specy/genshin-music/releases/download/{version}/{zip-name}'
 const PLATFORM = process.platform
 const folders = {

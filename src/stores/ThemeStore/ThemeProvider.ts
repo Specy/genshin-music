@@ -1,4 +1,4 @@
-import { makeObservable, observable } from "mobx";
+import { observable } from "mobx";
 import { ThemeSettings } from '$lib/BaseSettings'
 import { BASE_THEME_CONFIG } from '$/Config'
 import cloneDeep from 'lodash.clonedeep'
@@ -64,7 +64,6 @@ export class Theme {
     constructor(baseTheme: ThemeState) {
         this.baseTheme = cloneDeep(baseTheme)
         this.state = observable(cloneDeep(baseTheme))
-        this.load()
     }
 
     static isSerializedType(obj: any) {

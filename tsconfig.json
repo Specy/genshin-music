@@ -4,9 +4,11 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext",
+      "esnext"
     ],
-    "types": ["vite/client", "webmidi"],
+    "types": [
+      "webmidi"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -20,16 +22,29 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "baseUrl": "src",
     "paths": {
-      "$/*": ["*"],
-      "$cmp/*": ["components/*"],
-      "$lib/*": ["lib/*"],
-      "$pages/*": ["pages/*"],
-      "$stores/*": ["stores/*"],
-      "$types/*": ["types/*"],
-    }
+      "$/*": [
+        "*"
+      ],
+      "$cmp/*": [
+        "components/*"
+      ],
+      "$lib/*": [
+        "lib/*"
+      ],
+      "$pages/*": [
+        "pages/*"
+      ],
+      "$stores/*": [
+        "stores/*"
+      ],
+      "$types/*": [
+        "types/*"
+      ]
+    },
+    "incremental": true
   },
   "include": [
     "**/*.ts",

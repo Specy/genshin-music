@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, isTwa, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/Config"
+import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/Config"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
@@ -31,6 +31,10 @@ class FileDownloader {
 	}
 }
 
+
+export function isTWA() {
+    return JSON.parse(sessionStorage?.getItem('isTwa') || 'null')
+}
 
 
 
@@ -131,7 +135,7 @@ function formatMs(ms: number) {
 }
 
 function setIfInTWA() {
-	if (isTwa()) return console.log('inTWA')
+	if (isTWA()) return console.log('inTWA')
 	const isInTwa = document.referrer.includes('android-app://')
 	sessionStorage.setItem('isTwa', JSON.stringify(isInTwa))
 }

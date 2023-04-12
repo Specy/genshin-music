@@ -45,5 +45,4 @@ export class FolderStore {
     }
 }
 export const folderStore = new FolderStore()
-folderStore.sync()
 

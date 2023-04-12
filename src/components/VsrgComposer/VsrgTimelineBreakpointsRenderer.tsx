@@ -1,4 +1,4 @@
-import { Container, Sprite } from "@inlet/react-pixi";
+import { Container, Sprite } from "@pixi/react";
 import { memo } from "react";
 import { VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";

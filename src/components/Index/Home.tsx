@@ -1,10 +1,9 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { APP_NAME, isTwa, IS_MOBILE } from "$/Config"
+import { APP_NAME, IS_MOBILE } from "$/Config"
 import { useEffect, useState } from 'react'
-import { useHistory, Link } from 'react-router-dom'
+import Link from 'next/link'
 import { useTheme } from '$lib/Hooks/useTheme'
-import './Home.css'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import { KeyboardProvider } from '$lib/Providers/KeyboardProvider'
 import { AppButton } from '$cmp/Inputs/AppButton'
@@ -12,6 +11,8 @@ import { VsrgIcon } from '$cmp/icons/VsrgIcon'
 import { VsrgComposerIcon } from '$cmp/icons/VsrgComposerIcon'
 import { useObservableObject } from '$/lib/Hooks/useObservable'
 import { homeStore } from '$stores/HomeStore'
+import { useRouter } from 'next/router'
+import { isTWA } from '$/lib/Utilities'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -25,12 +26,14 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     const [appScale, setAppScale] = useState(100)
     const [currentPage, setCurrentPage] = useState('Unknown')
     const [breakpoint, setBreakpoint] = useState(false)
+    const [isTwa, setIsTwa] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
-    const history = useHistory()
+    const history = useRouter()
     const [theme] = useTheme()
 
     useEffect(() => {
         const storedFontScale = JSON.parse(localStorage.getItem(APP_NAME + '-font-size') || '100')
+        setIsTwa(isTWA())
         if (storedFontScale < 75 || storedFontScale > 125) return setAppScale(100)
         setAppScale(storedFontScale)
     }, [])
@@ -46,10 +49,11 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
     }, [appScale])
 
     useEffect(() => {
-        const dispose = history.listen((path) => {
-            setCurrentPage(path.pathname.replace('/', ''))
+        const dispose = ((path: any) => {
+            setCurrentPage(path.replace('/', ''))
         })
-        setCurrentPage(window.location.hash.replace("#/", ""))
+        history.events.on("routeChangeComplete", dispose)
+        setCurrentPage(window.location.pathname.replace("/", ""))
         KeyboardProvider.register("Escape", () => {
             if (homeStore.state.visible) {
                 homeStore.close()
@@ -57,7 +61,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
         }, { id: "home" })
         setBreakpoint(window.innerWidth > 900)
         return () => {
-            dispose()
+            history.events.off("routeChangeComplete", dispose)
             KeyboardProvider.unregisterById("home")
         }
     }, [history])
@@ -90,7 +94,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
 
             {!hasVisited && <div className='home-welcome'>
                 <div>
-                    {!isTwa() && <div className='home-spacing'>
+                    {!isTwa && <div className='home-spacing'>
                         To have the webapp fullscreen and better view, please add the website to the home screen
                     </div>}
                     <div className='home-spacing'>
@@ -109,7 +113,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                             We use cookies for analytics, by continuing to use this app, you agree to our use of cookies, learn more
                         </span>
                         <Link
-                            to='Privacy'
+                            href='privacy'
                             style={{ color: 'var(--primary-text)', textDecoration: "underline" }}
                             onClick={homeStore.close}
                         >
@@ -132,21 +136,21 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <div className='home-content'>
                 <MainContentElement
                     icon={<FaCompactDisc />}
-                    title='Composer'
+                    title='composer'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                     background={`./manifestData/composer.webp`}
-                    href='Composer'
-                    isCurrent={currentPage === 'Composer'}
+                    href='composer'
+                    isCurrent={currentPage === 'composer'}
                 >
                     Create or edit songs with a fully fledged music composer. Also with MIDI.
                 </MainContentElement>
                 <MainContentElement
                     icon={<BsMusicPlayerFill />}
-                    title='Player'
+                    title='player'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                     background={`./manifestData/main.webp`}
-                    href=''
-                    isCurrent={currentPage === '' || currentPage === 'Player'}
+                    href='/'
+                    isCurrent={currentPage === '' || currentPage === 'player'}
                 >
                     Play, download, record and import songs. Learn a song with approaching circle
                     mode and practice mode.
@@ -155,8 +159,8 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <div className='row space-around middle-size-pages-wrapper'>
                 <MiddleSizePage
                     Icon={VsrgComposerIcon}
-                    current={currentPage === 'VsrgComposer'}
-                    href='VsrgComposer'
+                    current={currentPage === 'vsrg-composer'}
+                    href='vsrg-composer'
                 >
                     <span style={{ fontSize: '1rem' }} className='row-centered'>
                         Vsrg Composer
@@ -169,8 +173,8 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
 
                 <MiddleSizePage
                     Icon={VsrgIcon}
-                    current={currentPage === 'VsrgPlayer'}
-                    href='VsrgPlayer'
+                    current={currentPage === 'vsrg-player'}
+                    href='vsrg-player'
                 >
                     <span style={{ fontSize: '1rem' }} className='row-centered'>
                         Vsrg Player
@@ -182,34 +186,34 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             </div>
             <Separator />
             <div className='page-redirect-wrapper'>
-                {!isTwa() &&
-                    <PageRedirect href='Donate' current={currentPage === 'Donate'}>
+                {!isTwa &&
+                    <PageRedirect href='donate' current={currentPage === 'donate'}>
                         Donate
                     </PageRedirect>
                 }
-                <PageRedirect href='ZenKeyboard' current={currentPage === 'ZenKeyboard'}>
+                <PageRedirect href='zen-keyboard' current={currentPage === 'zen-keyboard'}>
                     Zen Keyboard
                 </PageRedirect>
-                <PageRedirect href='SheetVisualizer' current={currentPage === 'SheetVisualizer'}>
+                <PageRedirect href='sheet-visualizer' current={currentPage === 'sheet-visualizer'}>
                     Sheet Visualizer
                 </PageRedirect>
-                <PageRedirect href='Theme' current={currentPage === 'Theme'}>
+                <PageRedirect href='theme' current={currentPage === 'theme'}>
                     App Theme
                 </PageRedirect>
-                <PageRedirect href='Changelog' current={currentPage === 'Changelog'}>
+                <PageRedirect href='changelog' current={currentPage === 'changelog'}>
                     Changelog
                 </PageRedirect>
-                <PageRedirect href='Partners' current={currentPage === 'Partners'}>
+                <PageRedirect href='partners' current={currentPage === 'partners'}>
                     Partners
                 </PageRedirect>
-                <PageRedirect href='Help' current={currentPage === 'Help'}>
+                <PageRedirect href='help' current={currentPage === 'help'}>
                     Help
                 </PageRedirect>
-                <PageRedirect href='Backup' current={currentPage === 'Backup'}>
+                <PageRedirect href='backup' current={currentPage === 'backup'}>
                     Backup
                 </PageRedirect>
                 {!IS_MOBILE &&
-                    <PageRedirect href='Keybinds' current={currentPage === 'Keybinds'}>
+                    <PageRedirect href='keybinds' current={currentPage === 'keybinds'}>
                         Keybinds
                     </PageRedirect>
                 }
@@ -266,7 +270,7 @@ interface MiddleSizePageProps {
 }
 function MiddleSizePage({ href, children, Icon, current }: MiddleSizePageProps) {
     return <Link
-        to={href}
+        href={href}
         onClick={homeStore.close}
         className={`middle-size-page row ${current ? 'current-page' : ''}`}
     >
@@ -281,8 +285,9 @@ interface PageRedirectProps {
     current: boolean,
     href: string
 }
+
 function PageRedirect({ children, current, href }: PageRedirectProps) {
-    return <Link onClick={homeStore.close} to={href} className={current ? 'current-page' : ''}>
+    return <Link onClick={homeStore.close} href={href} className={current ? 'current-page' : ''}>
         {children}
     </Link>
 }
@@ -300,7 +305,7 @@ interface MainContentElementProps {
 function MainContentElement({ title, icon, children, background, isCurrent, href, style = {} }: MainContentElementProps) {
     return <Link
         className={`home-content-element ${isCurrent ? 'current-page' : ''}`}
-        to={href}
+        href={href}
         onClick={homeStore.close}
     >
         <div className='home-content-background' style={{ backgroundImage: `url(${background})` }}>

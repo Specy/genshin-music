@@ -5,7 +5,6 @@ import { Input } from './Input'
 import { Slider } from './Slider'
 import { Select } from './Select'
 import { useTheme } from '$lib/Hooks/useTheme'
-import './Settings.css'
 import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from '$types/SettingsPropriety'
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
 

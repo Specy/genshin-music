@@ -1,9 +1,9 @@
-import { Container, Sprite, Text, } from "@inlet/react-pixi";
+import { Container, Sprite, Text, } from "@pixi/react";
 import { PLAY_BAR_OFFSET } from "$/Config";
 import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
 import { parseMouseClick } from "$lib/Utilities";
 import { ClickType } from "$types/GeneralTypes"
-import { InteractionEvent, TextStyle } from "pixi.js";
+import { TextStyle } from "pixi.js";
 
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
@@ -47,7 +47,7 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
             fill: colors.lineColor[1],
         }))
     }, [isFontLoaded, colors.lineColor])
-    function handleSnapPointClick(event: InteractionEvent) {
+    function handleSnapPointClick(event: any) { //TODO migrate to pixi 7
         if (preventClick) return
         if (isHorizontal) {
             const y = event.data.global.y - sizes.timelineSize

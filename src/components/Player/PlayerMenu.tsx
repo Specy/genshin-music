@@ -15,7 +15,7 @@ import { homeStore } from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { AppButton } from '$cmp/Inputs/AppButton';
 import { SongMenu } from '$cmp/Layout/SongMenu';
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
 import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
@@ -23,7 +23,6 @@ import { PlayerSettingsDataType } from '$lib/BaseSettings';
 import { useTheme } from '$lib/Hooks/useTheme';
 import { SearchedSongType } from '$types/GeneralTypes';
 import { FileElement, FilePicker } from '$cmp/Inputs/FilePicker';
-import "./menu.css"
 import { Theme } from '$stores/ThemeStore/ThemeProvider';
 import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip"
@@ -243,7 +242,7 @@ function Menu({ functions, data }: MenuProps) {
 
                         </ul>
                     </HelpTooltip>
-                    <Link to='Composer' style={{ marginLeft: 'auto' }}>
+                    <Link href='composer' style={{ marginLeft: 'auto' }}>
                         <AppButton>
                             Compose song
                         </AppButton>
@@ -295,13 +294,13 @@ function Menu({ functions, data }: MenuProps) {
                 />
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <Link to={'MidiSetup'}>
+                        <Link href='midi-setup'>
                             <AppButton style={{ width: 'fit-content' }}>
                                 Connect MIDI keyboard
                             </AppButton>
                         </Link>
                     }
-                    <Link to={'Theme'}>
+                    <Link href='theme'>
                         <AppButton style={{ width: 'fit-content' }}>
                             Change app theme
                         </AppButton>
@@ -509,9 +508,9 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     </select>
                 </FloatingDropdownRow>
                 <Link
-                    to={{
-                        pathname: "/Composer",
-                        state: {
+                    href={{
+                        pathname: "composer",
+                        query: {
                             songId: data.id,
                         }
                     }}
