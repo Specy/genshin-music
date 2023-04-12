@@ -1,4 +1,4 @@
-import { Container } from "@inlet/react-pixi"
+import { Container } from "@pixi/react"
 import { VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas"
 
 

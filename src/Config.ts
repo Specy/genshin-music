@@ -2,7 +2,7 @@ import isMobile from "is-mobile"
 import type { Tauri } from "$types/TauriTypes"
 import { NoteImage } from "./components/SvgNotes"
 
-const APP_NAME: AppName = import.meta.env.VITE_APP_NAME as AppName || ["Sky", "Genshin"][1]
+const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '3.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
@@ -25,7 +25,7 @@ const UPDATE_URL = process.env.NODE_ENV === 'development'
 
 
 //@ts-ignore
-const TAURI: Tauri = window?.__TAURI__
+const TAURI: Tauri = undefined //window?.__TAURI__
 //@ts-ignore
 const IS_TAURI = !!TAURI
 const NOTES_CSS_CLASSES = {
@@ -35,8 +35,6 @@ const NOTES_CSS_CLASSES = {
     approachCircle: APP_NAME === "Genshin" ? "approach-circle" : "approach-circle-sky",
     noteName: APP_NAME === "Genshin" ? "note-name" : "note-name-sky"
 }
-//@ts-ignore
-const AUDIO_CONTEXT = new (window.AudioContext || window.webkitAudioContext)()
 
 const BASE_THEME_CONFIG = {
     text: {
@@ -45,7 +43,7 @@ const BASE_THEME_CONFIG = {
         note: APP_NAME === 'Genshin' ? '#aaaa82' : '#212121'
     }
 }
-const IS_MIDI_AVAILABLE = !!navigator.requestMIDIAccess
+const IS_MIDI_AVAILABLE = true //!!navigator.requestMIDIAccess
 const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
         "Lyre",
@@ -560,9 +558,7 @@ const TEMPO_CHANGERS = [
     }
 ] as const
 export type TempoChanger = typeof TEMPO_CHANGERS[number]
-function isTwa() {
-    return JSON.parse(sessionStorage?.getItem('isTwa') || 'null')
-}
+
 export type AppName = 'Sky' | 'Genshin'
 
 const EMPTY_LAYER = "0000"
@@ -666,7 +662,17 @@ const PIXI_CENTER_ALIGN = 0.5
 //get only non accidentals
 const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
 const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
-const DEFAULT_DOM_RECT = new DOMRect()
+const DEFAULT_DOM_RECT = {
+    bottom: 0,
+    height: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    width: 0,
+    x: 0,
+    y: 0,
+} as DOMRect
+
 export {
     INSTRUMENTS,
     INSTRUMENTS_DATA,
@@ -680,8 +686,6 @@ export {
     PITCHES,
     APP_VERSION,
     SPEED_CHANGERS,
-    AUDIO_CONTEXT,
-    isTwa,
     CACHE_DATA,
     UPDATE_MESSAGE,
     IS_MIDI_AVAILABLE,

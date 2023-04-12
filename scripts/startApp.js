@@ -15,13 +15,12 @@ if (!['Genshin', 'Sky'].includes(chosenApp)) {
 
 async function execute() {
     await fse.copy(chosenApp === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
-    await fs.rename(`${publicPath}/index.html`,`index.html`)
     if (process.platform === 'win32') {
         console.log(clc.yellow.bold("Starting on windows"))
-        execSync(`set VITE_APP_NAME=${chosenApp}&& yarn start`, { stdio: 'inherit' })
+        execSync(`set NEXT_PUBLIC_APP_NAME=${chosenApp}&& yarn start`, { stdio: 'inherit' })
     } else {
         console.log(clc.yellow.bold("Starting on linux"))
-        execSync(`VITE_APP_NAME=${chosenApp} yarn start`, { stdio: 'inherit' })
+        execSync(`NEXT_PUBLIC_APP_NAME=${chosenApp} yarn start`, { stdio: 'inherit' })
     }
 }
 

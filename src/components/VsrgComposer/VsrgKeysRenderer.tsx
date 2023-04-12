@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from "@inlet/react-pixi";
+import { Container, Graphics, Text } from "@pixi/react";
 import { PLAY_BAR_OFFSET } from "$/Config";
 import { Rectangle, TextStyle } from "pixi.js";
 import { memo, useEffect, useState } from "react";

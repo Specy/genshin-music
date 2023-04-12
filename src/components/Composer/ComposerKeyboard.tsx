@@ -2,7 +2,6 @@
 import ComposerNote from "$cmp/Composer/ComposerNote"
 import { Column, InstrumentData } from "$lib/Songs/SongClasses"
 import { NoteNameType, Pitch, TEMPO_CHANGERS } from "$/Config"
-import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import Instrument, { ObservableNote } from "$lib/Instrument"
 import { ComposerSettingsDataType } from "$/lib/BaseSettings"
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
@@ -112,13 +111,13 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     style={{
                         ...(tempoChanger.changer === 1
                             ? {
-                                backgroundColor: ThemeProvider.get('primary').toString(),
-                                color: ThemeProvider.getText('primary').toString()
+                                backgroundColor: theme.get('primary').toString(),
+                                color: theme.getText('primary').toString()
                             }
                             : { backgroundColor: "#" + tempoChanger.color.toString(16) })
                         ,
                         outline: data.currentColumn.tempoChanger === tempoChanger.id
-                            ? `3px ${ThemeProvider.get('composer_accent').toString()} solid`
+                            ? `3px ${theme.get('composer_accent').toString()} solid`
                             : '',
                         margin: '',
                         outlineOffset: '-3px'

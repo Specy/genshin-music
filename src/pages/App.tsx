@@ -4,39 +4,28 @@ import Home from '$cmp/Index/Home';
 import {homeStore} from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
-import { APP_NAME, APP_VERSION, AUDIO_CONTEXT, UPDATE_MESSAGE } from "$/Config"
+import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "$/Config"
 import Logger from '$cmp/Index/Logger'
 import rotateImg from "$/assets/icons/rotate.svg"
 
-import { withRouter } from "react-router-dom";
-import './App.css';
-import './Utility.scss'
+
 import { historyTracker } from '$stores/History';
-import { FaExpandAlt, FaVolumeMute } from 'react-icons/fa';
-import { IconButton } from '$/components/Inputs/IconButton';
-import { metronome } from '$/lib/Metronome';
+import { FaExpandAlt } from 'react-icons/fa';
 import { logsStore } from '$stores/LogsStore';
 import { checkIfneedsUpdate } from '$/lib/needsUpdate';
 import { AsyncPromptWrapper } from '$/components/Utility/AsyncPrompt';
 import { settingsService } from '$/lib/Services/SettingsService';
 import { linkServices } from '$/stores/globalLink';
+import { useRouter } from 'next/router';
+import Image from 'next/image';
 
 
-function App({ history }: any) {
+function AppBase() {
 	const [hasVisited, setHasVisited] = useState(false)
-	const [audioContextState, setAudioContextState] = useState(AUDIO_CONTEXT.state)
 	const [checkedUpdate, setCheckedUpdate] = useState(false)
 	const [pageHeight, setPageHeight] = useState(0)
 	const [isOnMobile, setIsOnMobile] = useState(false)
-	const handleAudioContextStateChange = useCallback(() => {
-		setAudioContextState(AUDIO_CONTEXT.state)
-	}, [])
-	useEffect(() => {
-		AUDIO_CONTEXT.addEventListener('statechange', handleAudioContextStateChange)
-		return () => {
-			AUDIO_CONTEXT.removeEventListener('statechange', handleAudioContextStateChange)
-		}
-	}, [handleAudioContextStateChange])
+	const router = useRouter()
 	useEffect(() => {
 		if(window.location.hostname === "localhost") return
 		const originalErrorLog = console.error.bind(console)
@@ -171,14 +160,16 @@ function App({ history }: any) {
 
 	useEffect(() => {
 		Analytics.UIEvent('version', { version: APP_VERSION })
-		Analytics.pageView(history.location.pathname.replace('/', ''))
-		return history.listen((path: any) => {
+		Analytics.pageView({
+			page_title: router.pathname
+		})
+		return router.events.on("beforeHistoryChange",(path: any) => {
 			Analytics.pageView({
 				page_title: path.pathName as string
 			})
 			historyTracker.addPage(path.pathName)
 		})
-	}, [history])
+	}, [router])
 	
 	return <>
 		<Logger />
@@ -189,21 +180,12 @@ function App({ history }: any) {
 			askForStorage={askForStorage}
 		/>
 		<AsyncPromptWrapper />
-		{audioContextState !== 'running' &&
-			<IconButton
-				className='resume-audio-context box-shadow'
-				size='3rem'
-				onClick={() => {
-					setAudioContextState("running") //ignore if it doesn't update
-					metronome.tick()
-				}}
-			>
-				<FaVolumeMute style={{ width: '1.4rem', height: '1.4rem' }} />
-			</IconButton>
-		}
 		<div className="rotate-screen">
 			{isOnMobile && <>
-				<img src={rotateImg} alt="icon for the rotating screen" />
+				<Image 
+					src={rotateImg}
+					alt="icon for the rotating screen"
+				/>
 				<p>
 					For a better experience, add the website to the home screen, and rotate your device
 				</p>
@@ -219,5 +201,5 @@ function App({ history }: any) {
 }
 
 
-export default withRouter(App)
+export default AppBase
 

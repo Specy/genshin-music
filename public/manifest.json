@@ -1,6 +1,6 @@
 {
-  "name": "Genshin Music Nightly",
-  "short_name": "Genshin Music Nightly",
+  "name": "Sky Music Nightly",
+  "short_name": "Sky Music Nightly",
   "description": "A program to record, practice and share music. \nBy downloading the app, you get fullscreen and better overall experience",
   "icons": [
     {
@@ -31,6 +31,7 @@
       "sizes": "1280x720"
     }
   ],
+
   "start_url": ".",
   "display": "fullscreen",
   "orientation":  "landscape",

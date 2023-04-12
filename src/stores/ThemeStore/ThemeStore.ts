@@ -12,7 +12,6 @@ export class ThemeStore{
 
     constructor(){
         makeObservable(this)
-        this.sync()
     }
     async sync(){
         const themes = await _themeService.getThemes()
@@ -48,7 +47,5 @@ export class ThemeStore{
         return _themeService.setCurrentThemeId(id)
     }
 } 
-
-
 
 export const themeStore = new ThemeStore()

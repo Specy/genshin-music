@@ -1,18 +1,21 @@
-//@ts-ignore
-const GA = window?.gtag
-async function callGA(fn: () => Promise<void>) {
+declare global {
+    interface Window {
+        gtag?: (...args: any[]) => Promise<void>
+    }
+}
+async function callGA(fn: () => Promise<void> | undefined) {
     try {
         return {
             data: await fn()
         }
     } catch (e) {
-        if (GA) console.log('Error with GA')
+        if (window.gtag) console.log('Error with GA')
         return { error: e }
     }
 }
 
 function event(action: any, params: any) {
-    return callGA(() => GA('event', action, params))
+    return callGA(() => window?.gtag?.('event', action, params))
 }
 
 function userSongs(type: string, params: any) {

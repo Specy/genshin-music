@@ -1,7 +1,7 @@
 import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "$/Config"
 import type { ColumnNote, InstrumentData } from '$lib/Songs/SongClasses';
 import type { Texture } from 'pixi.js';
-import { Container, Sprite } from '@inlet/react-pixi';
+import { Container, Sprite } from '@pixi/react';
 import { ComposerCacheData } from "./ComposerCache";
 import { useCallback } from "react";
 

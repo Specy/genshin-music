@@ -1,10 +1,10 @@
-import { Container, Sprite } from "@inlet/react-pixi";
+import { Container, Sprite } from "@pixi/react";
 import { PIXI_VERTICAL_ALIGN, PLAY_BAR_OFFSET } from "$/Config";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
 import { clamp } from "$lib/Utilities";
-import { InteractionEvent, Rectangle } from "pixi.js";
+import { Rectangle } from "pixi.js";
 import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
@@ -42,13 +42,13 @@ export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, no
         return () => window.removeEventListener('blur', handleBlur)
     }, [])
 
-    const handleEvent = useCallback((event: InteractionEvent, override?: boolean) => {
+    const handleEvent = useCallback((event: any, override?: boolean) => { //TODO migrate to pixi 7
         if (!isClicking && override !== true) return
         const x = event.data.global.x
         const time = x / sizes.width * song.duration
         onTimelineClick(clamp(time, 0, song.duration))
     }, [sizes, song.duration, onTimelineClick, isClicking])
-    const setClicking = useCallback((e: InteractionEvent) => {
+    const setClicking = useCallback((e: any) => { //TODO migrate to pixi 7
         setIsClicking(true)
         handleEvent(e, true)
     }, [handleEvent])

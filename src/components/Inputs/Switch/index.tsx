@@ -1,4 +1,3 @@
-import './switch.css'
 import { useTheme } from '$lib/Hooks/useTheme'
 
 interface SwitchProps{

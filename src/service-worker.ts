@@ -9,9 +9,9 @@
 import { clientsClaim } from 'workbox-core';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
-const APP_NAME = import.meta.env.VITE_APP_NAME
-const CACHE = `${APP_NAME}-${import.meta.env.VITE_SW_VERSION}`
-const IS_TAURI = import.meta.env.VITE_IS_TAURI === 'true'
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME
+const CACHE = `${APP_NAME}-${process.env.NEXT_PUBLIC_SW_VERSION}`
+const IS_TAURI = process.env.NEXT_PUBLIC_IS_TAURI === 'true'
 console.log(CACHE)
 declare var self: ServiceWorkerGlobalScope
 clientsClaim();
@@ -48,6 +48,7 @@ self.addEventListener('activate', (evt) => {
 	evt.waitUntil(
 		caches.keys().then(async (keyList) => {
 			const promises = await Promise.all(keyList.map((key) => {
+				if(!APP_NAME) return console.error("APP_NAME is not defined")
 				if ((key.includes(APP_NAME) && key !== CACHE)) {
 					console.log('[ServiceWorker] Removing old cache', key);
 					return caches.delete(key)

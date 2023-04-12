@@ -1,4 +1,4 @@
-import { createDebouncer, Debouncer } from "$/lib/Utilities"
+import { createDebouncer } from "$/lib/Utilities"
 import { songService } from "$lib/Services/SongService"
 import { SerializedSong, Song, SongStorable } from "$lib/Songs/Song"
 import { makeObservable, observable } from "mobx"
@@ -64,6 +64,4 @@ export class SongsStore{
     }
 }
 export const songsStore = new SongsStore()
-songsStore.sync()
-
 

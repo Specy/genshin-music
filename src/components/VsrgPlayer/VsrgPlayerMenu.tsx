@@ -18,10 +18,10 @@ import { fileService } from "$lib/Services/FileService";
 import { songService } from "$lib/Services/SongService";
 import { SongStorable } from "$lib/Songs/Song";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
-import { VsrgSongSelectType } from "$pages/VsrgPlayer";
+import { VsrgSongSelectType } from "$/pages/vsrg-player";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaTimes, FaTrash } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import {homeStore} from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
 import { Theme } from "$stores/ThemeStore/ThemeProvider";
@@ -106,7 +106,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
 
                 <MenuPanel current={selectedMenu} id="Songs">
                     <div className="row">
-                        <Link to='/VsrgComposer'>
+                        <Link href='vsrg-composer'>
                             <AppButton>
                                 Create song
                             </AppButton>
@@ -138,7 +138,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                         justifyContent: 'flex-end'
                     }}>
                         {!IS_MOBILE &&
-                            <Link to={'/Keybinds'}>
+                            <Link href='keybinds'>
                                 <AppButton>
                                     Change keybinds
                                 </AppButton>

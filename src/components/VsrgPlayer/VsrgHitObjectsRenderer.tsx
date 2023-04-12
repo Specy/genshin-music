@@ -1,4 +1,4 @@
-import { Container, Sprite } from "@inlet/react-pixi";
+import { Container, Sprite } from "@pixi/react";
 import { PIXI_CENTER_X_END_Y } from "$/Config";
 import { VsrgHitObject } from "$lib/Songs/VsrgSong";
 import { Fragment } from "react";

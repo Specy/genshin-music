@@ -25,17 +25,16 @@ async function execute() {
         for (const app of toBuild) {
             console.log(clc.bold.yellow(`Building ${app}...`))
             await fse.copy(app === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
-            await fs.rename(`${publicPath}/index.html`,`index.html`)
             if (process.platform === 'win32') {
                 console.log(clc.italic("Building on windows"))
                 execSync(
-                    `set VITE_APP_NAME=${app}&& set VITE_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`,
+                    `set NEXT_PUBLIC_APP_NAME=${app}&& set NEXT_PUBLIC_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& yarn build`,
                     { stdio: 'inherit' }
                 )
             } else {
                 console.log(clc.italic("Building on Linux"))
                 execSync(
-                    `VITE_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} VITE_SW_VERSION=${SW_VERSION} yarn build`,
+                    `NEXT_PUBLIC_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} NEXT_PUBLIC_SW_VERSION=${SW_VERSION} yarn build`,
                     { stdio: 'inherit' }
                 )
             }

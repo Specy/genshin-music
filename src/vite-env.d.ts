@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-    readonly VITE_APP_NAME: string
+    readonly NEXT_PUBLIC_APP_NAME: string
   }
   
   interface ImportMeta {
