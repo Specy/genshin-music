@@ -2,16 +2,16 @@ import { useCallback, useState } from "react";
 import { defaultThemes, SerializedTheme, ThemeKeys, ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
 import { AppButton } from "$cmp/Inputs/AppButton";
 import { FileElement, FilePicker } from "$cmp/Inputs/FilePicker"
-import Player from "$/pages/player";
-import Composer from "$/pages/composer";
+import Player from "$pages/player";
+import Composer from "$pages/composer";
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
-import { ThemePropriety } from "$cmp//Theme/ThemePropriety";
+import { ThemePropriety } from "$cmp/Theme/ThemePropriety";
 import cloneDeep from 'lodash.clonedeep'
-import { ThemePreview } from "$cmp//Theme/ThemePreview";
+import { ThemePreview } from "$cmp/Theme/ThemePreview";
 import { FaPlus } from "react-icons/fa";
 import { BaseTheme } from "$stores/ThemeStore/ThemeProvider";
 import { logger } from "$stores/LoggerStore";
-import { ThemeInput } from "$cmp//Theme/ThemeInput";
+import { ThemeInput } from "$cmp/Theme/ThemeInput";
 import { useTheme } from "$lib/Hooks/useTheme";
 import { AppBackground } from "$cmp/Layout/AppBackground";
 import { Title } from "$cmp/Miscellaneous/Title";
