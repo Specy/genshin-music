@@ -626,7 +626,6 @@ a {
 	margin: 0.4rem 0;
 }
 .folder-header{
-	padding: 0.5rem;
 	border-radius: 0.4rem 0.4rem 0 0;
 	display: flex;
 	align-items: center;
@@ -637,7 +636,7 @@ a {
 	align-items: center;
 	flex: 1;
 	cursor: pointer;
-	padding: 0.25rem;
+	padding: 0.75rem;
 }
 .folder-header-button input{
 	background-color: transparent;

@@ -29,6 +29,7 @@ export function GeneralProvidersWrapper({ children }: GeneralProvidersWrapperPro
 			audioContext.removeEventListener('statechange', handleAudioContextStateChange)
 		}
 	}, [handleAudioContextStateChange, audioContext])
+    
     useEffect(() => {
         AudioProvider.init()
         setAudioContext(AudioProvider.getAudioContext())
@@ -41,6 +42,7 @@ export function GeneralProvidersWrapper({ children }: GeneralProvidersWrapperPro
         themeStore.sync()
         keyBinds.load()
         ThemeProvider.load()
+        
         return () => {
             AudioProvider.destroy()
             KeyboardProvider.destroy()

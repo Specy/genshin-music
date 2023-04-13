@@ -331,9 +331,9 @@
 .home-content-open button {
 	padding: 0.4rem 1.5rem;
 	background-color: var(--accent);
+	color: var(--accent-text);
 	border-radius: 0.5rem;
 	font-size: 0.8rem;
-	color: var(--accent-text);
 	border: none;
 	cursor: pointer;
 }

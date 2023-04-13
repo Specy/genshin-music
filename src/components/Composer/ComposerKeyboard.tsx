@@ -27,7 +27,7 @@ interface ComposerKeyboardProps {
 }
 
 export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
-    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio, settings } = data
+    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio } = data
     const { handleClick, handleTempoChanger } = functions
     const [theme] = useTheme()
     if (keyboard === undefined) {
@@ -118,8 +118,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         ,
                         outline: data.currentColumn.tempoChanger === tempoChanger.id
                             ? `3px ${theme.get('composer_accent').toString()} solid`
-                            : '',
-                        margin: '',
+                            : 'unset',
                         outlineOffset: '-3px'
                     }}
                 >

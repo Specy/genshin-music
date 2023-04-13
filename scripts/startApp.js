@@ -32,7 +32,6 @@ async function updateManifest(basePath){
         if(manifest.icons) manifest.icons = manifest.icons.map(icon => ({...icon, src: urlJoin(basePath, icon.src)}))
         if(manifest.start_url) manifest.start_url = basePath 
         if(manifest.screenshots) manifest.screenshots = manifest.screenshots.map(screenshot => ({...screenshot, src: urlJoin(basePath,screenshot.src)}))
-        console.log(manifest)
         await fse.writeFile('./public/manifest.json', JSON.stringify(manifest, null, 2))
     }catch(e){
         console.log(clc.red("[Error]: There was an error updating the manifest"))

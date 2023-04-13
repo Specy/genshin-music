@@ -47,10 +47,12 @@ export function SongMenu<T>({
     }, [filteredSongs,folders])
     const [theme] = useTheme()
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
+    const headerText = theme.getTextColorFromBackground(unselectedColor).toString()
     return <div className={className} style={style}>
         {((!exclude?.includes('composed') ?? true) && noFolderComposed) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
+                headerColor={headerText}
                 color={theme.getText('menu_background').toString()}
                 data={noFolderComposed}
                 isDefault={true}
@@ -75,6 +77,7 @@ export function SongMenu<T>({
         {((!exclude?.includes('recorded') ?? true) && noFolderRecorded) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
+                headerColor={headerText}
                 color={theme.getText('menu_background').toString()}
                 data={noFolderRecorded}
                 isDefault={true}
@@ -99,6 +102,7 @@ export function SongMenu<T>({
         {((!exclude?.includes('vsrg') ?? true) && noFolderVsrg) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
+                headerColor={headerText}
                 color={theme.getText('menu_background').toString()}
                 data={noFolderVsrg}
                 isDefault={true}
@@ -127,6 +131,7 @@ export function SongMenu<T>({
             return <SongFolder
                 key={folder.id}
                 backgroundColor={unselectedColor.toString()}
+                headerColor={headerText}
                 color={theme.getText('menu_background').toString()}
                 data={folder}
             >

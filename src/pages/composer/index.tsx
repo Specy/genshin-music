@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { Component, ReactElement } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
 import { APP_NAME, TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/Config"
 import AddColumn from '$cmp/icons/AddColumn';
@@ -36,6 +36,7 @@ import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider';
 import { Title } from '$cmp/Miscellaneous/Title';
 import { songService } from '$lib/Services/SongService';
 import { NextRouter, useRouter } from 'next/router';
+import { AppBackground } from '$/components/Layout/AppBackground';
 
 interface ComposerState {
     layers: Instrument[]
@@ -846,4 +847,10 @@ export default function ComposerPage({inPreview, songId}: ComposerPageProps) {
         songId={(querySongId as string) ?? songId ?? null}
         inPreview={inPreview ?? false}
     />
+}
+
+ComposerPage.getLayout = function getLayout(page: ReactElement) {
+    return <AppBackground page="Composer">
+        {page}
+    </AppBackground>
 }

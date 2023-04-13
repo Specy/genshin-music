@@ -3,10 +3,10 @@ import { AsyncConfirmState, AsyncPromptState, asyncPromptStore } from "./AsyncPr
 import { useState, useEffect, useRef } from 'react'
 import { DecorationBorderedBox } from "../Miscellaneous/BorderDecoration"
 import { useTheme } from "$/lib/Hooks/useTheme"
-import { IS_MOBILE } from "$/Config"
 import { cn } from "$/lib/Utilities"
 import { KeyboardProvider } from "$/lib/Providers/KeyboardProvider"
 import { IGNORE_CLICK_CLASS } from "$/lib/Hooks/useClickOutside"
+import isMobile from "is-mobile"
 
 export function AsyncPromptWrapper() {
     const confirmState = useObservableObject(asyncPromptStore.confirmState)
@@ -118,7 +118,7 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
     }, [deferred])
 
     useEffect(() => {
-        if (!IS_MOBILE && deferred) {
+        if (!isMobile() && deferred) {
             //focus element once it's visible
             const timeout = setTimeout(() => inputRef.current?.focus(), 300)
             return () => clearTimeout(timeout)

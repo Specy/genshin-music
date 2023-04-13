@@ -22,7 +22,10 @@ export type OtherKeys = keyof typeof ThemeSettings.other
 
 
 export type SerializedTheme = ThemeState
-
+const defaultTextColors = {
+    light: new Color( "#edeae5"),
+    dark: new Color("#151414")
+}
 
 export class BaseTheme {
     state: ThemeState
@@ -125,6 +128,10 @@ export class Theme {
         } else {
             return value.isDark() ? value.lighten(amount * 1.1) : value.darken(amount)
         }
+    }
+
+    getTextColorFromBackground = (color: Color) => {
+        return color.isDark() ? defaultTextColors.light : defaultTextColors.dark
     }
     serialize = (): SerializedTheme => {
         return {

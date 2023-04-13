@@ -7,6 +7,7 @@ import { Song } from "./Songs/Song";
 import { ComposedSong } from "./Songs/ComposedSong";
 import { RecordedSong } from "./Songs/RecordedSong";
 import { ClickType, Timer } from "$types/GeneralTypes"
+import Color from "color";
 
 
 class FileDownloader {
@@ -37,7 +38,9 @@ export function isTWA() {
 }
 
 
-
+export function colorToRGB(color: Color){
+	return [color.red(), color.green(), color.blue()]
+}
 
 class MIDINote {
 	index: number

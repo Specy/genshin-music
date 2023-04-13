@@ -1,5 +1,5 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, IS_MOBILE, NOTE_NAME_TYPES, NoteNameType } from "$/Config"
+import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, NOTE_NAME_TYPES, NoteNameType } from "$/Config"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
 import { VsrgSongKeys } from "./Songs/VsrgSong"
@@ -476,7 +476,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             tooltip: "The FPS limiter of the player, too high values could cause lag or stutters",
             type: "select",
             songSetting: false,
-            value: IS_MOBILE ? 48 : 60,
+            value: 48,
             category: "Player Settings",
             options: [
                 24,
@@ -492,7 +492,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             tooltip: "The keyboard layout of the player",
             type: "select",
             songSetting: true,
-            value: IS_MOBILE ? 'line' : 'circles',
+            value: 'line',
             category: "Player Settings",
             options: [
                 'circles',

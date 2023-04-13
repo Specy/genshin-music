@@ -1,6 +1,6 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { APP_NAME, IS_MOBILE } from "$/Config"
+import { APP_NAME } from "$/Config"
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from '$lib/Hooks/useTheme'
@@ -13,6 +13,7 @@ import { useObservableObject } from '$/lib/Hooks/useObservable'
 import { homeStore } from '$stores/HomeStore'
 import { useRouter } from 'next/router'
 import { isTWA } from '$/lib/Utilities'
+import { useIsMobile } from '$/lib/Hooks/useIsMobile'
 
 interface HomeProps {
     askForStorage: () => void,
@@ -24,6 +25,7 @@ interface HomeProps {
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }: HomeProps) {
     const data = useObservableObject(homeStore.state)
     const [appScale, setAppScale] = useState(100)
+    const isMobile = useIsMobile()
     const [currentPage, setCurrentPage] = useState('Unknown')
     const [breakpoint, setBreakpoint] = useState(false)
     const [isTwa, setIsTwa] = useState(false)
@@ -102,11 +104,10 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                         Clearing your browser cache / storage might delete your songs, make sure you make backups
                     </div>
 
-                    {data.hasPersistentStorage ?
+                    {data.hasPersistentStorage &&
                         <div>
                             <div className="red-text">WARNING</div>: {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}
                         </div>
-                        : null
                     }
                     <div>
                         <span style={{ marginRight: '0.2rem' }}>
@@ -212,7 +213,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 <PageRedirect href='backup' current={currentPage === 'backup'}>
                     Backup
                 </PageRedirect>
-                {!IS_MOBILE &&
+                {!isMobile &&
                     <PageRedirect href='keybinds' current={currentPage === 'keybinds'}>
                         Keybinds
                     </PageRedirect>

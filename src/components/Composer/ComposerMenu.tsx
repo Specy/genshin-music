@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone, FaEdit } from 'react-icons/fa';
-import { APP_NAME, IS_MOBILE } from '$/Config'
+import { APP_NAME } from '$/Config'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import MenuPanel from '$cmp/Layout/MenuPanel'
 import DonateButton from '$cmp/Miscellaneous/DonateButton'
@@ -35,6 +35,7 @@ import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { RecordedOrComposed } from '$types/SongTypes';
 import { FileElement, FilePicker } from '../Inputs/FilePicker';
+import isMobile from 'is-mobile';
 
 interface MenuProps {
     data: {
@@ -65,7 +66,7 @@ function Menu({ data, functions }: MenuProps) {
     const { loadSong, changePage, renameSong, handleSettingChange, changeVolume, createNewSong, changeMidiVisibility, updateThisSong } = functions
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
-        if (IS_MOBILE) {
+        if (isMobile()) {
             setVisible(false)
         } else {
             setOpen(false)
@@ -160,7 +161,7 @@ function Menu({ data, functions }: MenuProps) {
     const hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
     const menuClass = isVisible ? "menu menu-visible" : "menu"
     return <>
-        <div className="hamburger" onClick={() => setVisible(!isVisible)}>
+        <div className="hamburger ignore_click_outside" onClick={() => setVisible(!isVisible)}>
             <Memoized>
                 <FaBars />
             </Memoized>

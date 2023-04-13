@@ -9,7 +9,7 @@ import { ComposerCache } from "$/components/Composer/ComposerCache"
 import { APP_NAME } from "$/Config"
 import Memoized from '$cmp/Utility/Memoized';
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
-import { clamp, nearestEven } from '$lib/Utilities';
+import { clamp, colorToRGB, nearestEven } from '$lib/Utilities';
 import type { Column } from '$lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from '$lib/BaseSettings';
 import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
@@ -102,7 +102,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 },
                 sideButtons: {
                     hex: ThemeProvider.get('primary').darken(0.08).toString(),
-                    rgb: ThemeProvider.get('primary').darken(0.08).rgb().array().map(x => Math.floor(x)).join(",")
+                    rgb: colorToRGB(ThemeProvider.get('primary').darken(0.08)).join(',')
                 }
             },
             cache: null
@@ -127,7 +127,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         let width = nearestEven(sizes.width * 0.85 - 45)
         let height = nearestEven(sizes.height * 0.45)
         if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
-
         this.setState({
             width: Math.floor(width),
             height: Math.floor(height),
@@ -146,21 +145,20 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         KeyboardProvider.listen(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
         this.dispose = subscribeTheme(() => {
-            this.recalculateCacheAndSizes()
             this.setState({
                 theme: {
                     timeline: {
-                        hex: ThemeProvider.layer('primary', 0.1).toString(),
+                        hex: ThemeProvider.layer('primary', 0.1).hex(),
                         hexNumber: ThemeProvider.layer('primary', 0.1).rgbNumber(),
                         selected: ThemeProvider.get('composer_accent').negate().rgbNumber(),
                         border: ThemeProvider.get('composer_accent').rgbNumber()
                     },
                     sideButtons: {
-                        hex: ThemeProvider.get('primary').darken(0.08).toString(),
-                        rgb: ThemeProvider.get('primary').darken(0.08).rgb().array().map(x => Math.floor(x)).join(",")
+                        hex: ThemeProvider.get('primary').darken(0.08).hex(),
+                        rgb: colorToRGB(ThemeProvider.get('primary').darken(0.08)).join(",")
                     }
                 }
-            })
+            }, this.recalculateCacheAndSizes)
         })
     }
 

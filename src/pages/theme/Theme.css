@@ -150,14 +150,16 @@
     box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
 }
 .react-colorful__pointer{
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
+    padding: 0 !important;
+    width: unset !important;
+    height: unset !important;
+    border: 0.15rem solid #fff !important;
 }
 .react-colorful__pointer-fill{
     position: unset !important;
-    width: 90%;
-    height: 90%;
+    width: 1.4rem;
+    margin: 0 !important;
+    height: 1.4rem;
 }
 
 .theme-preview-wrapper{

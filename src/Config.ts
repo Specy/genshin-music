@@ -562,7 +562,6 @@ export type TempoChanger = typeof TEMPO_CHANGERS[number]
 export type AppName = 'Sky' | 'Genshin'
 
 const EMPTY_LAYER = "0000"
-const IS_MOBILE = isMobile()
 const VSRG_TEMPO_CHANGER = [2, 1.75, 1.5, 1.25, 1, 0.75, 0.50, 0.25]
 const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
     ? {
@@ -709,7 +708,6 @@ export {
     VSRG_TEMPO_CHANGER,
     DEFAULT_DOM_RECT,
     PIXI_CENTER_X_END_Y,
-    IS_MOBILE,
     VSRG_SCORE_COLOR_MAP,
     UPDATE_URL,
     PITCH_TO_INDEX,

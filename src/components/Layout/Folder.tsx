@@ -17,6 +17,7 @@ import { songService } from "$/lib/Services/SongService"
 interface FolderProps {
     children: React.ReactNode,
     backgroundColor: string,
+    headerColor: string,
     color: string,
     data: Folder,
     isDefault?: boolean,
@@ -36,7 +37,7 @@ export function SongFolderContent({ children, title }: SongFolderContentProps) {
 }
 
 
-export function SongFolder({ children, backgroundColor, color, data, isDefault, defaultOpen = false }: FolderProps) {
+export function SongFolder({ children, backgroundColor, color, headerColor,  data, isDefault, defaultOpen = false }: FolderProps) {
     const [expanded, setExpanded] = useState(false)
     const [isRenaming, setIsRenaming] = useState(false)
     const [folderName, setFolderName] = useState(data.name)
@@ -79,6 +80,7 @@ export function SongFolder({ children, backgroundColor, color, data, isDefault, 
                 setExpanded(!expanded)
             }}
                 className='folder-header-button'
+                style={{ color: headerColor }}
             >
                 <BsChevronRight
                     strokeWidth={2}

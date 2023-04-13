@@ -40,7 +40,6 @@ import Script from "next/script";
 interface CustomPageProps {
 
 }
-console.log(`BASE_PATH: "${BASE_PATH}"`)
 export default function App({ Component, pageProps }: AppProps<CustomPageProps>) {
 	useEffect(() => {
 		try {
