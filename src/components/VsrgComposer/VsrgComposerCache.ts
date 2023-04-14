@@ -56,6 +56,7 @@ export type VsrgComposerCanvasCache = {
 export class VsrgCanvasCache {
     textures: VsrgComposerCanvasCache
     app: Application | null
+    isMobile: boolean = false
     colors: VsrgCanvasColors
     sizes: VsrgCanvasSizes
     trackColors: string[]
@@ -113,12 +114,12 @@ export class VsrgCanvasCache {
         Object.values(this.textures.selectionRings).forEach(texture => texture?.destroy())
         Object.values(this.textures.timeline).forEach(texture => texture?.destroy())
         this.textures.buttons.time?.destroy()
-
         this.app = null
     }
     generate() {
         const { app } = this
         if (!app) return
+        this.isMobile = isMobile()
         this.generateSnapPoints(app)
         this.generateTrackCache(app)
         this.generateTrails(app)
@@ -185,7 +186,7 @@ export class VsrgCanvasCache {
 
         const noteSize = sizes.timelineSize / 2
         const note = new Graphics()
-        note.lineStyle(isMobile() ? 2 : 3 , colors.secondary[1], 1)
+        note.lineStyle(this.isMobile ? 2 : 3 , colors.secondary[1], 1)
             .drawCircle(sizes.timelineSize / 2 + 1, sizes.timelineSize / 2, noteSize / 2)
         const noteTexture = app.renderer.generateTexture(note, {
             resolution: 1,
@@ -256,7 +257,7 @@ export class VsrgCanvasCache {
     generateTrails(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
-        const hitObjectHeight = clamp(sizes.keyHeight / 2 * sizes.scaling, sizes.keyHeight / (isMobile() ? 3 : 4), 100)
+        const hitObjectHeight = clamp(sizes.keyHeight / 2 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 3 : 4), 100)
         const margin = hitObjectHeight / 2
         withError.forEach(color => {
             const trail = new Graphics()
@@ -281,7 +282,7 @@ export class VsrgCanvasCache {
     generateSelectionRings(app: Application) {
         const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
-        const hitObjectHeight = clamp(sizes.keyHeight / 1.5 * sizes.scaling, sizes.keyHeight / (isMobile() ? 1.2 : 2), 150)
+        const hitObjectHeight = clamp(sizes.keyHeight / 1.5 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 1.2 : 2), 150)
         withError.forEach(color => {
             const ring = new Graphics()
             ring.lineStyle(3, Color(color).rgbNumber())
@@ -297,7 +298,7 @@ export class VsrgCanvasCache {
     }
     generateTrackCache(app: Application) {
         const { colors, sizes, trackColors } = this
-        const hitObjectHeight = clamp(sizes.keyHeight / 1.8 * sizes.scaling, sizes.keyHeight / (isMobile() ? 2 : 3.5), 100)
+        const hitObjectHeight = clamp(sizes.keyHeight / 1.8 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 2 : 3.5), 100)
         const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {
             const hitObject = new Graphics()

@@ -260,13 +260,13 @@ export class FileService {
 
 
 export function blobToAudio(blob: Blob): Promise<AudioBuffer> {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const audioContext = new AudioContext();
         const fileReader = new FileReader();
         function handleLoad() {
             audioContext.decodeAudioData(fileReader.result as ArrayBuffer, (audioBuffer) => {
                 resolve(audioBuffer)
-            })
+            }, reject)
         }
         fileReader.addEventListener('loadend', handleLoad, { once: true })
         fileReader.readAsArrayBuffer(blob);

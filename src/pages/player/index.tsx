@@ -307,7 +307,12 @@ class Player extends Component<{}, PlayerState>{
 			const recording = await AudioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
 			if (!this.mounted || !recording) return
-			if (fileName) AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
+			try{
+				if (fileName) await AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
+			}catch(e){
+				console.error(e)
+				logger.error("There was an error downloading the audio, maybe it's too big?")
+			}
 		}
 	}
 	render() {

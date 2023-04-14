@@ -31,9 +31,9 @@ import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
 import { logger } from "$/stores/LoggerStore";
+import { useIsMobile } from "$/lib/Hooks/useIsMobile";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
-const isOnMobile = isMobile()
 
 interface VsrgMenuProps {
     settings: VsrgComposerSettingsDataType
@@ -59,7 +59,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
-        if (isOnMobile) setVisible(false)
+        if (isMobile()) setVisible(false)
     }, { active: (isOpen && isVisible), ignoreFocusable: true })
     const toggleMenu = useCallback((override?: boolean) => {
         if (typeof override !== "boolean") override = undefined

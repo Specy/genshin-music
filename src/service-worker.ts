@@ -8,7 +8,7 @@
 // service worker, and the Workbox build step will be skipped.
 import { clientsClaim } from 'workbox-core';
 import { registerRoute } from 'workbox-routing';
-import { CacheFirst } from 'workbox-strategies';
+import { CacheFirst, NetworkFirst } from 'workbox-strategies';
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME
 const CACHE = `${APP_NAME}-${process.env.NEXT_PUBLIC_SW_VERSION}`
 const IS_TAURI = process.env.NEXT_PUBLIC_IS_TAURI === 'true'

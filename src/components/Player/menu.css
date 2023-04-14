@@ -67,7 +67,8 @@
     align-items: center;
     padding: 2rem;
     flex-direction: column;
-    background-color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.85);
+    backdrop-filter: blur(4px);
     font-size: 1.5rem;
 }
 
@@ -80,7 +81,7 @@
     width: 60vw;
     height: 60vw;
     margin-bottom: 1rem;
-    background-color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 1);
     color: var(--icon-color);
     filter: brightness(1.1);
     padding: 1.5rem;

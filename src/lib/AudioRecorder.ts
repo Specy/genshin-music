@@ -40,11 +40,10 @@ export default class AudioRecorder {
         })
     }
     static async downloadBlob(urlBlob:Blob, fileName:string){
-        fileService.downloadBlobAsWav(urlBlob, fileName)
-
+        return fileService.downloadBlobAsWav(urlBlob, fileName)
     }
     async download(urlBlob:Blob, fileName:string) {
-        fileService.downloadBlobAsWav(urlBlob, fileName)
+        return fileService.downloadBlobAsWav(urlBlob, fileName)
     }
 }
 
