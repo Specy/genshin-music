@@ -91,14 +91,19 @@ export default function SheetVisualizer() {
     useEffect(() => {
         if (currentSong) loadSong(currentSong, keyboardLayout)
     }, [currentSong, hasText, keyboardLayout, loadSong])
-    return <DefaultPage style={{ overflowY: 'scroll' }} excludeMenu={true}>
+    return <DefaultPage 
+        style={{ overflowY: 'scroll' }} 
+        excludeMenu={true}
+        menu={
+                <SheetVisualiserMenu
+                    onSongLoaded={setCurrentSong}
+                    currentSong={currentSong}
+                />
+            }
+        >
         <Title text="Sheet Visualizer" description='Learn a sheet in a visual way, convert the song into text format or print it as pdf' />
 
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-            <SheetVisualiserMenu
-                onSongLoaded={setCurrentSong}
-                currentSong={currentSong}
-            />
             <div className='displayer-buttons-wrapper noprint'>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div>Note names</div>

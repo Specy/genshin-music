@@ -1,4 +1,7 @@
 import { SerializedTheme } from "./ThemeProvider"
+import Rainy_Theme from "$img/themes/Rainy_Theme.png"
+import Liyue_Theme from "$img/themes/Liyue_Theme.jpg"
+import Snow_Theme from "$img/themes/Snow_Theme.gif"
 const baseThemes: SerializedTheme[] = [
     {
         id: "Pink",
@@ -127,8 +130,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Rainy_Lullaby",
         type: 'theme',
         other: {
-            backgroundImageMain: "./assets/images/Rainy_Theme.png",
-            backgroundImageComposer: "./assets/images/Rainy_Theme.png",
+            backgroundImageMain: Rainy_Theme.src,
+            backgroundImageComposer: Rainy_Theme.src,
             name: "Rainy Lullaby",
         },
         data: {
@@ -188,8 +191,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Liyue",
         type: 'theme',
         other: {
-            backgroundImageMain: "./assets/images/Liyue_Theme.jpg",
-            backgroundImageComposer: "./assets/images/Liyue_Theme.jpg",
+            backgroundImageMain: Liyue_Theme.src,
+            backgroundImageComposer: Liyue_Theme.src,
             name: "Liyue",
         },
         data: {
@@ -309,8 +312,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Snowy Night",
         type: 'theme',
         other: {
-            backgroundImageMain: "./assets/images/Snow_Theme.gif",
-            backgroundImageComposer: "./assets/images/Snow_Theme.gif",
+            backgroundImageMain: Snow_Theme.src,
+            backgroundImageComposer: Snow_Theme.src,
             name: "Snowy Night",
         },
         data: {

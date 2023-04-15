@@ -324,7 +324,7 @@ class Player extends Component<{}, PlayerState>{
 				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
 				data={{ settings }}
 			/>
-			<div className="right-panel">
+			<div className="right-panel appear-on-mount">
 				<div className="upper-right">
 					{!hasSong &&
 						<AppButton

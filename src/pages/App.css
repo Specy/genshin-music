@@ -466,6 +466,22 @@ a {
 	flex-direction: column;
 	flex: 1;
 }
+
+.appear-on-mount{
+	animation: appear-default-page 0.5s;
+}
+
+@keyframes appear-default-page {
+	from {
+		opacity: 0;
+		transform: translateX(-1.5rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);	
+	}
+	
+}
 .has-tooltip{
 	position: relative;
 }

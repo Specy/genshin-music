@@ -1,13 +1,17 @@
 .canvas-wrapper {
-    background-color: var(--primary);
+    background-color: rgb(var(--primary-rgb));
     min-width: 80vw;
-    min-height: calc(45vh + 25px);
+    min-height: calc(45vh + 20px);
     gap: 0.2rem;
     justify-content: space-between;
     display: flex;
     border-radius: 0.4rem;
     align-items: center;
     flex-direction: column;
+}
+.canvas-wrapper-in-preview{
+    min-width: unset;
+    min-height: unset;
 }
 .canvas-relative{
     position: relative;

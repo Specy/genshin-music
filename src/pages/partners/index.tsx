@@ -1,6 +1,7 @@
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
-import Image from 'next/image'
+import partner from 'assets/images/partners/windsong-db.jpg'
+import Image, { StaticImageData } from 'next/image'
 
 export default function Partners() {
     return <DefaultPage className='partners-page'>
@@ -38,7 +39,7 @@ export default function Partners() {
                 description='A Genshin Impact Database for Instrument Gadget Keymaps'
             >
                 <PartnerImg 
-                    img={'./assets/images/partners/windsong-db.jpg'}
+                    img={partner}
                     to='https://genshin-lyre.notion.site/genshin-lyre/Windsong-DB-8012b5f6939b486d857552c7b60e917f'
                     alt='Windsong DB'
                 />
@@ -50,7 +51,7 @@ export default function Partners() {
 
 interface PartnerImgProps{
     to: string
-    img: string
+    img: StaticImageData
     alt: string
 }
 function PartnerImg({to, img, alt}: PartnerImgProps){
@@ -63,7 +64,7 @@ function PartnerImg({to, img, alt}: PartnerImgProps){
         <Image 
             loading='lazy'
             src={img} 
-            style={{width: '100%', objectFit: 'cover'}}
+            style={{width: '100%', objectFit: 'cover', height: 'auto'}}
             alt={alt}
         />
     </a>

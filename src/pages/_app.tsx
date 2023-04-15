@@ -40,6 +40,7 @@ import Script from "next/script";
 interface CustomPageProps {
 
 }
+
 export default function App({ Component, pageProps }: AppProps<CustomPageProps>) {
 	useEffect(() => {
 		try {

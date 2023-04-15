@@ -377,7 +377,7 @@
 }
 @media only screen and (max-width: 920px) {
 	.home-padded {
-		padding: 0.6rem 15vw;
+		padding: 0.6rem 13vw;
 	}
 	.home-dont-show-again, .home-app-scaling  {
 		font-size: 0.8rem;

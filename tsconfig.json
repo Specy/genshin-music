@@ -42,6 +42,9 @@
       ],
       "$types/*": [
         "types/*"
+      ],
+      "$img/*": [
+        "assets/images/*"
       ]
     },
     "incremental": true

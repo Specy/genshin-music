@@ -11,14 +11,18 @@ import Link from 'next/link'
 
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
 export default function Changelogpage() {
-    return <DefaultPage excludeMenu={true}>
-        <SimpleMenu>
-            <MenuItem ariaLabel='Go to github'>
-                <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
-                    <FaGithub />
-                </a>
-            </MenuItem>
-        </SimpleMenu>
+    return <DefaultPage
+        excludeMenu={true}
+        menu={
+            <SimpleMenu>
+                <MenuItem ariaLabel='Go to github'>
+                    <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
+                        <FaGithub />
+                    </a>
+                </MenuItem>
+            </SimpleMenu>
+        }
+    >
         <Title text={`Changelog V${APP_VERSION}`} description={`Changelog V${APP_VERSION}\n${updates[0]?.changes.join(";")}`} />
         <div className='changelog-page-title'>
             Changelog
