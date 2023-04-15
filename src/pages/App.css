@@ -468,17 +468,15 @@ a {
 }
 
 .appear-on-mount{
-	animation: appear-default-page 0.5s;
+	animation: appear-default-page 0.6s;
 }
 
 @keyframes appear-default-page {
 	from {
 		opacity: 0;
-		transform: translateX(-1.5rem);
 	}
 	to {
 		opacity: 1;
-		transform: translateX(0);	
 	}
 	
 }
