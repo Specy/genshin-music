@@ -630,7 +630,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 setAudioSong={this.setAudioSong}
                 handleSettingChange={this.handleSettingChange}
             />
-            <div className="vsrg-page">
+            <div className="vsrg-page appear-on-mount">
                 <VsrgTop
                     vsrg={vsrg}
                     onBreakpointSelect={this.onBreakpointSelect}

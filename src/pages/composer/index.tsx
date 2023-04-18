@@ -720,7 +720,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                     }}
                 />
             }
-            <div className='composer-grid'>
+            <div className='composer-grid appear-on-mount'>
                 <div className="column composer-left-control">
                     <AppButton
                         className='flex-centered'

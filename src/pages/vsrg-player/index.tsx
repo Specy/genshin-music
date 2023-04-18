@@ -151,7 +151,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         const { canvasSizes, settings } = this.state
         return <>
             <Title text="Vsrg Player" description="Play or practice VSRG songs"/>
-            <div className="vsrg-player-page">
+            <div className="vsrg-player-page appear-on-mount">
                 <VsrgPlayerMenu
                     settings={settings}
                     onSettingsUpdate={this.handleSettingChange}
