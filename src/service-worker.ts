@@ -12,7 +12,7 @@ import { CacheFirst, NetworkFirst } from 'workbox-strategies';
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME
 const CACHE = `${APP_NAME}-${process.env.NEXT_PUBLIC_SW_VERSION}`
 const IS_TAURI = process.env.NEXT_PUBLIC_IS_TAURI === 'true'
-console.log(CACHE)
+console.log("CACHE NAME: ",CACHE)
 declare var self: ServiceWorkerGlobalScope
 clientsClaim();
 //@ts-ignore

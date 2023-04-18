@@ -1,5 +1,4 @@
 import { Container, Sprite, Text, } from "@pixi/react";
-import { PLAY_BAR_OFFSET } from "$/Config";
 import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
 import { parseMouseClick } from "$lib/Utilities";
 import { ClickType } from "$types/GeneralTypes"
@@ -11,6 +10,7 @@ import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
 import useFontFaceObserver from "use-font-face-observer";
 import { useEffect, useState } from "react";
 import { defaultVsrgTextStyle } from "./VsrgKeysRenderer";
+import { useDefaultConfig } from "$/lib/Hooks/useConfig";
 
 
 interface VsrgScrollableTrackRendererProps {
@@ -35,6 +35,8 @@ const fontFace = [{
 }]
 export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject, onAddTime, onRemoveTime }: VsrgScrollableTrackRendererProps) {
     const scale = sizes.scaling
+    const { PLAY_BAR_OFFSET }= useDefaultConfig()
+
     const lowerBound = timestamp - (PLAY_BAR_OFFSET + cache.textures.snapPoints.size) / scale
     const upperBound = timestamp + ((isHorizontal ? sizes.width : sizes.height) - PLAY_BAR_OFFSET) / scale 
     const snapPointSize = cache.textures.snapPoints.size

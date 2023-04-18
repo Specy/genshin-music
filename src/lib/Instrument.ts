@@ -1,4 +1,4 @@
-import { INSTRUMENTS_DATA, INSTRUMENTS, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType } from "$/Config"
+import { INSTRUMENTS_DATA, INSTRUMENTS, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType, BASE_PATH } from "$/Config"
 import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
 import { getPitchChanger } from "./Utilities"
@@ -56,7 +56,7 @@ export default class Instrument {
                 keyboard: noteName,
                 mobile: this.layouts.mobile[i]
             }
-            const url = `./assets/audio/${this.name}/${i}.mp3`
+            const url = `${BASE_PATH}/assets/audio/${this.name}/${i}.mp3`
             const note = new ObservableNote(i, noteNames, url, this.instrumentData.baseNotes[i])
             note.instrument = this.name
             note.noteImage =  this.instrumentData.icons[i]

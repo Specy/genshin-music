@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@pixi/react";
-import { PIXI_VERTICAL_ALIGN, PLAY_BAR_OFFSET } from "$/Config";
+import { PIXI_VERTICAL_ALIGN } from "$/Config";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTimelineBreakpointsRenderer } from "./VsrgTimelineBreakpointsRenderer";
+import { useDefaultConfig } from "$/lib/Hooks/useConfig";
 
 
 
@@ -26,6 +27,8 @@ interface VsrgTimelineRendererProps {
 }
 const defaultHitbox = new Rectangle(0, 0, 0, 0)
 export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, notes, onTimelineClick }: VsrgTimelineRendererProps) {
+    const { PLAY_BAR_OFFSET }= useDefaultConfig()
+    
     const [hitbox, setHitbox] = useState(defaultHitbox)
     const [isClicking, setIsClicking] = useState(false)
     const lowerBound = timestamp - (PLAY_BAR_OFFSET + sizes.timelineSize) / sizes.scaling

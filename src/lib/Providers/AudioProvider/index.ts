@@ -1,3 +1,4 @@
+import { BASE_PATH } from "$/Config"
 import AudioRecorder from "$lib/AudioRecorder"
 
 
@@ -13,7 +14,7 @@ export class AudioProviderClass {
 
     private loadReverb = (): Promise<void> => {
         this.reverbLoading =  new Promise(resolve => {
-            fetch("./assets/audio/reverb4.wav")
+            fetch(`${BASE_PATH}/assets/audio/reverb4.wav`)
                 .then(r => r.arrayBuffer())
                 .then(b => {
                     if (this.audioContext) {

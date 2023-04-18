@@ -82,7 +82,6 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "SFX_MantaCall",
         "SFX_MothCall"
     ] as const
-const PLAY_BAR_OFFSET = 200
 const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
 const NOTE_SCALE = {
     "Cb": ["Cb", "Dbb", "Db", "Ebb", "Eb", "Fb", "Gbb", "Gb", "Abb", "Ab", "Bbb", "Bb"],
@@ -700,7 +699,6 @@ export {
     MIDI_BOUNDS,
     IS_TAURI,
     TAURI,
-    PLAY_BAR_OFFSET,
     DEFAULT_VSRG_KEYS_MAP,
     PIXI_VERTICAL_ALIGN,
     PIXI_HORIZONTAL_ALIGN,

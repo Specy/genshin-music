@@ -1,12 +1,12 @@
 import { APP_NAME } from '$/Config'
 import composerImg from '$/assets/images/help-composer.png'
 import playerImg from '$/assets/images/help-player.png'
-import { useIsMobile } from '$/lib/Hooks/useIsMobile'
+import { useDefaultConfig } from '$/lib/Hooks/useConfig'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import Image from 'next/image'
 
 export function HelpTab() {
-    const isMobile = useIsMobile()
+    const { IS_MOBILE } = useDefaultConfig()
     return <>
         <span>
             If you are on PC, hover over the buttons to see a tooltip, if you are on mobile, long press the buttons.
@@ -52,7 +52,7 @@ export function HelpTab() {
             </ol>
         </div>
         {
-            !isMobile && <>
+            !IS_MOBILE && <>
                 <div className='help-title'>
                     Main page shortcuts
                 </div>
@@ -107,7 +107,7 @@ export function HelpTab() {
         </div>
 
         {
-            !isMobile && <>
+            !IS_MOBILE && <>
                 <div className='help-title'>
                     Composer shortcuts
                 </div>

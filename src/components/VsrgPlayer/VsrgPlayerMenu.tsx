@@ -28,7 +28,7 @@ import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { logger } from "$/stores/LoggerStore";
 import isMobile from "is-mobile";
-import { useIsMobile } from "$/lib/Hooks/useIsMobile";
+import { useDefaultConfig } from "$/lib/Hooks/useConfig";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -47,7 +47,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
     const [folders] = useFolders()
     const [songs] = useSongs()
     const [theme] = useTheme()
-    const IS_MOBILE = useIsMobile()
+    const { IS_MOBILE } = useDefaultConfig()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         if(isMobile()) return setIsVisible(false)
         setOpen(false)

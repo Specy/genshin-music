@@ -3,7 +3,6 @@ import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/gra
 import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { clamp } from "$lib/Utilities";
-import { PLAY_BAR_OFFSET } from "$/Config";
 import isMobile from "is-mobile";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
@@ -14,6 +13,7 @@ interface VsrgCacheProps {
     sizes: VsrgCanvasSizes
     trackColors: string[]
     isHorizontal: boolean
+    playbarOffset: number
 }
 
 export type VsrgComposerCanvasCache = {
@@ -56,6 +56,7 @@ export type VsrgComposerCanvasCache = {
 export class VsrgCanvasCache {
     textures: VsrgComposerCanvasCache
     app: Application | null
+    playbarOffset: number
     isMobile: boolean = false
     colors: VsrgCanvasColors
     sizes: VsrgCanvasSizes
@@ -66,7 +67,8 @@ export class VsrgCanvasCache {
         colors,
         sizes,
         trackColors,
-        isHorizontal
+        isHorizontal,
+        playbarOffset
     }: VsrgCacheProps) {
 
         this.textures = {
@@ -100,6 +102,7 @@ export class VsrgCanvasCache {
         this.trackColors = trackColors
         this.colors = colors
         this.isHorizontal = isHorizontal
+        this.playbarOffset = playbarOffset
         this.sizes = sizes
         this.app = app
         this.generate()
@@ -334,7 +337,7 @@ export class VsrgCanvasCache {
 
     }
     generateSnapPoints(app: Application) {
-        const { colors, sizes, isHorizontal } = this
+        const { colors, sizes, isHorizontal, playbarOffset } = this
         const small = new Graphics()
         const large = new Graphics()
         const empty = new Graphics()
@@ -362,13 +365,13 @@ export class VsrgCanvasCache {
             for (let i = 0; i < lines + 2; i++) {
                 const size = lineSize * i - lineSize
                 const y1 = size
-                empty.moveTo(PLAY_BAR_OFFSET, y1)
+                empty.moveTo(playbarOffset, y1)
                 empty.lineTo(0, y1 + lineSize)
             }
             const emptyTexture = app.renderer.generateTexture(empty, {
                 resolution: 1,
                 scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, PLAY_BAR_OFFSET, sizes.height)
+                region: new Rectangle(0, 0, playbarOffset, sizes.height)
             });
             this.textures.snapPoints.size = sizes.snapPointWidth
             this.textures.snapPoints.small = smallTexture
@@ -399,13 +402,13 @@ export class VsrgCanvasCache {
             for (let i = 0; i < lines + 2; i++) {
                 const size = lineSize * i - lineSize
                 const y1 = size
-                empty.moveTo(y1, PLAY_BAR_OFFSET)
+                empty.moveTo(y1, playbarOffset)
                 empty.lineTo(y1 + lineSize, 0)
             }
             const emptyTexture = app.renderer.generateTexture(empty, {
                 resolution: 1,
                 scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, sizes.width, PLAY_BAR_OFFSET)
+                region: new Rectangle(0, 0, sizes.width, playbarOffset)
             });
             this.textures.snapPoints.size = sizes.snapPointWidth
             this.textures.snapPoints.large = largeTexture

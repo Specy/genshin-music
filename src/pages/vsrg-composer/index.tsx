@@ -293,7 +293,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 const confirm = await asyncConfirm(`You have unsaved changes to the song: "${vsrg.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
                 if(confirm === null) return
                 if (confirm) {
-                    await this.saveSong()
+                    if(await this.saveSong() === null) return
                 }
             }
         }
@@ -528,7 +528,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 confirm = promptResult
             }
             if (confirm) {
-                await this.saveSong()
+                if(await this.saveSong() === null) return
             }
         }
         settings.bpm = { ...settings.bpm, value: song.bpm }
@@ -570,7 +570,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     saveSong = async () => {
         const { vsrg } = this.state
         const name = vsrg.id !== null ? vsrg.name : await asyncPrompt('Enter song name')
-        if (name === null) return
+        if (name === null) return null
         vsrg.set({ name })
         if (vsrg.id === null) {
             const id = await songsStore.addSong(vsrg)
@@ -580,6 +580,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         }
         this.changes = 0
         this.setState({ vsrg })
+        return vsrg
     }
     onTrackModifierChange = (trackModifier: VsrgTrackModifier, index: number, recalculate: boolean) => {
         const { vsrg, audioSong } = this.state

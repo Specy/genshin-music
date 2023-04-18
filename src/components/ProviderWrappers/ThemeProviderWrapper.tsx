@@ -2,6 +2,7 @@ import { useTheme } from '$lib/Hooks/useTheme'
 import { useEffect } from 'react';
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
 import { colorToRGB } from '$/lib/Utilities';
+import Head from 'next/head';
 type Props = {
     children?: React.ReactNode;
 }
@@ -14,6 +15,9 @@ export function ThemeProviderWrapper({ children }: Props) {
         ? theme.get('accent').lighten(0.1)
         : theme.get('accent').saturate(0.2).lighten(0.25)
     return <>
+        <Head>
+            <meta name="theme-color" content={theme.get('accent').toString()} />
+        </Head>
         <style>
             {`:root{
                 ${theme.toArray().map(e => {

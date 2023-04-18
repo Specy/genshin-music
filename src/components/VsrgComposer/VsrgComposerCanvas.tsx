@@ -16,6 +16,7 @@ import { VsrgKeysRenderer } from "./VsrgKeysRenderer"
 import { VsrgScrollableTrackRenderer } from "./VsrgScrollableTrackRenderer"
 import { VsrgTimelineRenderer } from "./VsrgTimelineRenderer"
 import { getNearestTo } from "$/lib/Utilities"
+import { globalConfigStore } from "$/stores/GlobalConfig"
 
 
 export type VsrgCanvasSizes = {
@@ -268,7 +269,8 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             sizes,
             colors: canvasColors,
             trackColors,
-            isHorizontal: this.props.isHorizontal
+            isHorizontal: this.props.isHorizontal,
+            playbarOffset: globalConfigStore.get().PLAY_BAR_OFFSET
         })
         this.setState({ cache: newCache }, () => {
             cache?.destroy()

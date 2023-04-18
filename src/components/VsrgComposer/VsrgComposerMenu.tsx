@@ -31,7 +31,6 @@ import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
 import { logger } from "$/stores/LoggerStore";
-import { useIsMobile } from "$/lib/Hooks/useIsMobile";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 

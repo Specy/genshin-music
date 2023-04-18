@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@pixi/react";
-import { PIXI_CENTER_X_END_Y, PLAY_BAR_OFFSET } from "$/Config";
+import { PIXI_CENTER_X_END_Y } from "$/Config";
 import { VsrgHitObject, VsrgTrack } from "$lib/Songs/VsrgSong";
 import { parseMouseClick } from "$lib/Utilities";
 import { ClickType } from "$types/GeneralTypes"
@@ -7,6 +7,7 @@ import { ClickType } from "$types/GeneralTypes"
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
+import { useDefaultConfig } from "$/lib/Hooks/useConfig";
 
 interface VsrgTrackRendererProps {
     track: VsrgTrack
@@ -23,6 +24,7 @@ interface VsrgTrackRendererProps {
 
 
 export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex, timestamp }: VsrgTrackRendererProps) {
+    const { PLAY_BAR_OFFSET }= useDefaultConfig()
     const scale = sizes.scaling
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys

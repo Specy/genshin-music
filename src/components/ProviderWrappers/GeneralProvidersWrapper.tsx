@@ -11,6 +11,7 @@ import { FaVolumeMute } from "react-icons/fa";
 import { keyBinds } from "$/stores/KeybindsStore";
 import { themeStore } from "$/stores/ThemeStore/ThemeStore";
 import { ThemeProvider } from "$/stores/ThemeStore/ThemeProvider";
+import { globalConfigStore } from "$/stores/GlobalConfig";
 
 
 interface GeneralProvidersWrapperProps {
@@ -42,7 +43,7 @@ export function GeneralProvidersWrapper({ children }: GeneralProvidersWrapperPro
         themeStore.sync()
         keyBinds.load()
         ThemeProvider.load()
-        
+        globalConfigStore.load()
         return () => {
             AudioProvider.destroy()
             KeyboardProvider.destroy()

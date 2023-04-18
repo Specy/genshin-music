@@ -1,3 +1,4 @@
+import { BASE_PATH } from "$/Config";
 import { fetchAudioBuffer } from "./Instrument";
 import { delay } from "./Utilities";
 
@@ -36,8 +37,8 @@ class Metronome{
         if(!this.audioContext) return
         this.emptyBuffer = this.audioContext.createBuffer(2, this.audioContext.sampleRate, this.audioContext.sampleRate)
         const promises = [
-            fetchAudioBuffer("./assets/audio/MetronomeSFX/bar.mp3", this.audioContext).catch(() => this.emptyBuffer),
-            fetchAudioBuffer("./assets/audio/MetronomeSFX/quarter.mp3", this.audioContext).catch(() => this.emptyBuffer)
+            fetchAudioBuffer(`${BASE_PATH}/assets/audio/MetronomeSFX/bar.mp3`, this.audioContext).catch(() => this.emptyBuffer),
+            fetchAudioBuffer(`${BASE_PATH}/assets/audio/MetronomeSFX/quarter.mp3`, this.audioContext).catch(() => this.emptyBuffer)
         ]
         const result = await Promise.all(promises)
         this.indicatorBuffer = result[0]
