@@ -11,6 +11,7 @@ import { keyBinds } from "$stores/KeybindsStore";
 import Instrument from "$lib/Instrument";
 import { logger } from "$/stores/LoggerStore";
 import { ShortcutEditor } from "$/components/Keybinds/ShortcutEditor";
+import { useDefaultConfig } from "$/lib/Hooks/useConfig";
 
 
 
@@ -20,6 +21,7 @@ export default function Keybinds() {
     const [keyboard] = useObservableMap(keyBinds.getShortcutMap("keyboard"))
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
     const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
+    const { IS_MOBILE } = useDefaultConfig()
     const [selected, setSelected] = useState({
         type: '',
         index: -1
@@ -49,92 +51,102 @@ export default function Keybinds() {
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
     return <DefaultPage>
         <Title text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys" />
-            <h1>
-                Composer shortcuts
-            </h1>
-            <div className="column">   
-                <ShortcutEditor 
-                    map={composerShortcuts}
-                    onChangeShortcut={(oldKey, newKey) => {
-                        const existing = keyBinds.setShortcut("composer" ,oldKey, newKey)
-                        if(existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
-                    }}
-                />
-            </div>
-            <h1>
-                Player shortcuts
-            </h1>
-            <div className="column">   
-                <ShortcutEditor 
-                    map={playerShortcuts}
-                    onChangeShortcut={(oldKey, newKey) => {
-                        const existing = keyBinds.setShortcut("player" ,oldKey, newKey)
-                        if(existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
-                    }}
-                />
-            </div>
-            <h1>
-                Keyboard keybinds
-            </h1>
-            <div className="flex-centered">
-                <div
-                    className={`keyboard ${APP_NAME === 'Sky' ? 'keyboard-5' : ''}`}
-                    style={{
-                        margin: 0
-                    }}
-                >
-                    {baseInstrument.notes.map((note, i) =>
-                        <BaseNote
-                            key={i}
-                            data={{
-                                status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
-                            }}
-                            noteImage={baseInstrument.notes[i].noteImage}
-                            noteText={(
-                                keyBinds.getKeyOfShortcut(
-                                    "keyboard",
-                                    note.noteNames.keyboard
-                                ) ?? "???")
-                                .replace("Key", "")
-                            }
-                            handleClick={() => {
-                                setSelected({
-                                    type: 'keyboard',
-                                    index: selected.index === i ? -1 : i
-                                })
-                            }}
-                        />
-                    )}
+        {!IS_MOBILE
+            ? <>
+                <h1>
+                    Composer shortcuts
+                </h1>
+                <div className="column">
+                    <ShortcutEditor
+                        map={composerShortcuts}
+                        onChangeShortcut={(oldKey, newKey) => {
+                            const existing = keyBinds.setShortcut("composer", oldKey, newKey)
+                            if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
+                        }}
+                    />
                 </div>
-            </div>
-        <h1>
-            Vsrg keybinds
-        </h1>
-        <div className="column" style={{ marginLeft: '1rem' }}>
-            {[k4, k6].map((keys, j) =>
-                <Fragment key={j}>
-                    <h2>
-                        {keys.length} keys
-                    </h2>
-                    <div className="row">
-                        {keys.map((key, i) =>
-                            <VsrgKey
+                <h1>
+                    Player shortcuts
+                </h1>
+                <div className="column">
+                    <ShortcutEditor
+                        map={playerShortcuts}
+                        onChangeShortcut={(oldKey, newKey) => {
+                            const existing = keyBinds.setShortcut("player", oldKey, newKey)
+                            if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
+                        }}
+                    />
+                </div>
+                <h1>
+                    Keyboard keybinds
+                </h1>
+                <div className="flex-centered">
+                    <div
+                        className={`keyboard ${APP_NAME === 'Sky' ? 'keyboard-5' : ''}`}
+                        style={{
+                            margin: 0
+                        }}
+                    >
+                        {baseInstrument.notes.map((note, i) =>
+                            <BaseNote
                                 key={i}
-                                letter={key}
-                                isActive={selected.type === `k${keys.length}` && selected.index === i}
-                                handleClick={(willBeSelected) =>
-                                    setSelected({
-                                        type: `k${keys.length}`,
-                                        index: willBeSelected ? i : -1
-                                    })
-
+                                data={{
+                                    status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
+                                }}
+                                noteImage={baseInstrument.notes[i].noteImage}
+                                noteText={(
+                                    keyBinds.getKeyOfShortcut(
+                                        "keyboard",
+                                        note.noteNames.keyboard
+                                    ) ?? "???")
+                                    .replace("Key", "")
                                 }
+                                handleClick={() => {
+                                    setSelected({
+                                        type: 'keyboard',
+                                        index: selected.index === i ? -1 : i
+                                    })
+                                }}
                             />
                         )}
                     </div>
-                </Fragment>
-            )}
-        </div>
+                </div>
+                <h1>
+                    Vsrg keybinds
+                </h1>
+                <div className="column" style={{ marginLeft: '1rem' }}>
+                    {[k4, k6].map((keys, j) =>
+                        <Fragment key={j}>
+                            <h2>
+                                {keys.length} keys
+                            </h2>
+                            <div className="row">
+                                {keys.map((key, i) =>
+                                    <VsrgKey
+                                        key={i}
+                                        letter={key}
+                                        isActive={selected.type === `k${keys.length}` && selected.index === i}
+                                        handleClick={(willBeSelected) =>
+                                            setSelected({
+                                                type: `k${keys.length}`,
+                                                index: willBeSelected ? i : -1
+                                            })
+
+                                        }
+                                    />
+                                )}
+                            </div>
+                        </Fragment>
+                    )}
+                </div>
+            </>
+            : <div 
+                className="row" 
+                style={{width: "100%", height: "100%", justifyContent: "center", alignItems: "center", fontSize: "1.4rem"}}
+            >
+                Mobile version doesn't support keybinds
+            </div>
+        }
     </DefaultPage>
 }
 
