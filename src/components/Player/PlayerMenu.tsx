@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder, FaEdit } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
-import { APP_NAME, IS_MIDI_AVAILABLE } from "$/Config"
+import { APP_NAME, IS_MIDI_AVAILABLE } from "$config"
 import { playerStore } from '$stores/PlayerStore'
 import { HelpTab } from '$cmp/HelpTab'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
@@ -10,7 +10,7 @@ import MenuPanel from '$cmp/Layout/MenuPanel'
 import DonateButton from '$cmp/Miscellaneous/DonateButton'
 import LibrarySearchedSong from '$cmp/Miscellaneous/LibrarySearchedSong'
 import { SongActionButton } from '$cmp/Inputs/SongActionButton'
-import Analytics from '$/lib/Stats';
+import Analytics from '$lib/Stats';
 import { homeStore } from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { AppButton } from '$cmp/Inputs/AppButton';
@@ -41,8 +41,8 @@ import useClickOutside from '$lib/Hooks/useClickOutside';
 import { fileService } from '$lib/Services/FileService';
 import { songService } from '$lib/Services/SongService';
 import { RecordedOrComposed } from '$types/SongTypes';
-import { _folderService } from '$/lib/Services/FolderService';
-import { settingsService } from '$/lib/Services/SettingsService';
+import { _folderService } from '$lib/Services/FolderService';
+import { settingsService } from '$lib/Services/SettingsService';
 
 interface MenuProps {
     functions: {

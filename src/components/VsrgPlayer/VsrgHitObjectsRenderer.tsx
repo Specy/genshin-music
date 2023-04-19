@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@pixi/react";
-import { PIXI_CENTER_X_END_Y } from "$/Config";
+import { PIXI_CENTER_X_END_Y } from "$config";
 import { VsrgHitObject } from "$lib/Songs/VsrgSong";
 import { Fragment } from "react";
 import { VsrgPlayerCache } from "./VsgPlayerCache";

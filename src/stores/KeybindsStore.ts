@@ -1,41 +1,80 @@
-import { APP_NAME } from "$/Config"
-import { VsrgSongKeys } from "$lib/Songs/VsrgSong"
+import { APP_NAME } from "$config"
+import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
+import type { VsrgSongKeys } from "$lib/Songs/VsrgSong"
 import cloneDeep from "lodash.clonedeep"
 import { makeObservable, observable } from "mobx"
 
 
+
+const defaultShortcuts = {
+    composer: {
+        "Space": "toggle_play",
+        "KeyA": "previous_column",
+        "KeyD": "next_column",
+        "KeyQ": "remove_column",
+        "KeyE": "add_column",
+        "ArrowUp": "previous_layer",
+        "ArrowDown": "next_layer",
+    },
+    player: {
+        "Space": "toggle_play",
+        "ShiftLeft+KeyS": "stop",
+        "ShiftLeft+KeyR": "restart",
+    },
+    keyboard: Object.fromEntries((APP_NAME === "Genshin"
+        ? (
+            "Q W E R T Y U " +
+            "A S D F G H J " +
+            "Z X C V B N M"
+        ).split(" ")
+        : (
+            "Q W E R T " +
+            "A S D F G " +
+            "Z X C V B"
+        ).split(" ")).map((key, i) => [`Key${key}`, key]))
+} as const
+
+type ValuesOf<T> = T[keyof T]
+type KeysOf<T> = keyof T
+type ShortcutsToMap<T> = {
+    [K in keyof T]: Map<string, ValuesOf<T[K]>>
+}
+export type Shortcuts = ShortcutsToMap<typeof defaultShortcuts>
+export type ShortcutPage = KeysOf<Shortcuts>
 interface SerializedKeybinds {
     version: number
     vsrg: {
         k4: string[]
         k6: string[]
     }
-    keyboard: {
-        sky: string[],
-        genshin: string[]
+
+    shortcuts: {
+        composer: {
+            [key: string]: MapValues<Shortcuts['composer']>
+        }
+        player: {
+            [key: string]: MapValues<Shortcuts['player']>
+        }
+        keyboard: {
+            [key: string]: MapValues<Shortcuts['keyboard']>
+        }
     }
 }
-
 class KeyBinds {
-    version: number = 2
+    version: number = 10
     @observable
     private vsrg = {
         k4: ['A', 'S', 'J', 'K'],
         k6: ['A', 'S', 'D', 'H', 'J', 'K'],
     }
+
     @observable
-    private keyboard = {
-        genshin: (
-            "Q W E R T Y U " +
-            "A S D F G H J " +
-            "Z X C V B N M"
-        ).split(" "),
-        sky: (
-            "Q W E R T " +
-            "A S D F G " +
-            "Z X C V B")
-            .split(" "),
+    private shortcuts: Shortcuts = {
+        composer: new Map(Object.entries(defaultShortcuts.composer)),
+        player: new Map(Object.entries(defaultShortcuts.player)),
+        keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
     }
+
     constructor() {
         makeObservable(this)
     }
@@ -52,23 +91,53 @@ class KeyBinds {
         this.save()
     }
     getKeyboardKeybinds() {
-        return this.keyboard[APP_NAME.toLowerCase() as 'sky' | 'genshin']
+        return this.shortcuts.keyboard
     }
-    setKeyboardKeybinds(keybinds: string[]) {
-        this.keyboard[APP_NAME.toLowerCase() as 'sky' | 'genshin'].splice(0, keybinds.length, ...keybinds)
+    getShortcutMap<T extends ShortcutPage>(page: T) {
+        return this.shortcuts[page]
+    }
+    setKeyboardKeybind(layoutKey: string, keybind: string) {
+        const oldEntry = Array.from(this.shortcuts.keyboard.entries()).find(([key, value]) => value === layoutKey)
+        if (!oldEntry) return
+        const possibleExisting = this.setShortcut("keyboard", oldEntry[0], keybind)
+        return possibleExisting
+    }
+    getKeyOfShortcut<T extends ShortcutPage>(page: T, value: MapValues<Shortcuts[T]>): string | undefined {
+        return Array.from(this.shortcuts[page].entries()).find(([_, val]) => val === value)?.[0]
+    }
+    getShortcut<T extends ShortcutPage>(page: T, key: string | string[]): MapValues<Shortcuts[T]> | undefined {
+        if (Array.isArray(key)) key = key.join("+")
+        return this.shortcuts[page].get(key) as MapValues<Shortcuts[T]> | undefined
+    }
+    setShortcut<T extends ShortcutPage>(page: T, oldKey: string | string[], newKey: string | string[]): MapValues<Shortcuts[T]> | undefined {
+        oldKey = KeyBinds.getShortcutName(oldKey)
+        newKey = KeyBinds.getShortcutName(newKey)
+        const oldShortcut = this.shortcuts[page].get(oldKey)
+        const newKeyExists = this.shortcuts[page].get(newKey)
+        console.log(oldShortcut, newKeyExists)
+        if (!oldShortcut === undefined) return undefined
+        if (newKeyExists !== undefined) return newKeyExists as MapValues<Shortcuts[T]> | undefined
+        this.shortcuts[page].delete(oldKey)
+        // @ts-ignore 
+        this.shortcuts[page].set(newKey, oldShortcut as any)
         this.save()
     }
-    setKeyboardKeybind(index: number, keybind: string) {
-        this.keyboard[APP_NAME.toLowerCase() as 'sky' | 'genshin'][index] = keybind
-        this.save()
+    static getShortcutName(key: string | string[]) {
+        if (typeof key === "string") return key
+        if (key.length === 1) return key[0]
+        return key.sort().join("+")
     }
     load() {
         const data = localStorage.getItem(`${APP_NAME}_keybinds`)
         if (data) {
-            const parsed = JSON.parse(data)
+            const parsed = JSON.parse(data) as SerializedKeybinds
             if (parsed.version !== this.version) return
             this.vsrg = parsed.vsrg
-            this.keyboard = parsed.keyboard
+            this.shortcuts = {
+                composer: new Map(Object.entries(parsed.shortcuts.composer)),
+                player: new Map(Object.entries(parsed.shortcuts.player)),
+                keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
+            }
         }
     }
     save() {
@@ -78,10 +147,69 @@ class KeyBinds {
         return {
             version: this.version,
             vsrg: cloneDeep(this.vsrg),
-            keyboard: cloneDeep(this.keyboard)
+            shortcuts: {
+                composer: Object.fromEntries(this.shortcuts.composer),
+                player: Object.fromEntries(this.shortcuts.player),
+                keyboard: Object.fromEntries(this.shortcuts.keyboard),
+            },
         }
     }
 }
-
-
 export const keyBinds = new KeyBinds();
+
+type ShortcutPressEvent<T> = {
+    code: string
+    event: KeyboardEvent
+    shortcut: T
+    isRepeat: boolean
+}
+export type ShortcutDisposer = () => void
+
+export type ShortcutOptions = {
+    repeat?: boolean
+}
+
+type MapValues<T> = T extends Map<infer _, infer V> ? V : never
+
+export type ShortcutListener<T extends ShortcutPage> = (keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>) => void
+export function createShortcutListener<T extends KeysOf<Shortcuts>>(page: T, id: string, callback: ShortcutListener<T>, options?: ShortcutOptions): ShortcutDisposer {
+    const dispose = createKeyComboComposer(id, ({ code, event, keyCombo }) => {
+        if (!options?.repeat && event.repeat) return
+        const shortcut = keyBinds.getShortcut(page, keyCombo)
+        if (shortcut !== undefined) callback({ code, event, shortcut, isRepeat: event.repeat })
+    })
+    return dispose
+}
+
+export function createKeyboardListener(id: string, callback: ShortcutListener<"keyboard">, options?: ShortcutOptions): ShortcutDisposer {
+    KeyboardProvider.listen(({ code, event }) => {
+        if (!options?.repeat && event.repeat) return
+        const shortcut = keyBinds.getShortcut("keyboard", code)
+        if (shortcut !== undefined) callback({ code, event, shortcut, isRepeat: event.repeat })
+
+    }, { type: "keydown", id: id + "_keyboard_down" })
+    return () => {
+        KeyboardProvider.unregisterById(id + "_keyboard_down")
+    }
+}
+
+type KeyComboListener = (data: { keyCombo: string[], event: KeyboardEvent, code: string }) => void
+export function createKeyComboComposer(id: string, callback: KeyComboListener): ShortcutDisposer {
+    const currentKeybinds: string[] = []
+    KeyboardProvider.listen(({ code, event }) => {
+        if (!currentKeybinds.includes(code)) currentKeybinds.push(code)
+        callback({ keyCombo: currentKeybinds, event, code })
+    }, { type: "keydown", id: id + "_down" })
+    KeyboardProvider.listen(({ code }) => {
+        currentKeybinds.splice(currentKeybinds.indexOf(code), 1)
+    }, { type: "keyup", id: id + "_up" })
+    function reset() {
+        currentKeybinds.splice(0, currentKeybinds.length)
+    }
+    window.addEventListener("blur", reset)
+    return () => {
+        KeyboardProvider.unregisterById(id + "_down")
+        KeyboardProvider.unregisterById(id + "_up")
+        window.removeEventListener("blur", reset)
+    }
+}

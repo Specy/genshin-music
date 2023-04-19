@@ -1,11 +1,11 @@
 
 import ComposerNote from "$cmp/Composer/ComposerNote"
 import { Column, InstrumentData } from "$lib/Songs/SongClasses"
-import { NoteNameType, Pitch, TEMPO_CHANGERS } from "$/Config"
+import { NoteNameType, Pitch, TEMPO_CHANGERS } from "$config"
 import Instrument, { ObservableNote } from "$lib/Instrument"
-import { ComposerSettingsDataType } from "$/lib/BaseSettings"
+import { ComposerSettingsDataType } from "$lib/BaseSettings"
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
-import { useTheme } from "$/lib/Hooks/useTheme"
+import { useTheme } from "$lib/Hooks/useTheme"
 
 interface ComposerKeyboardProps {
     data: {

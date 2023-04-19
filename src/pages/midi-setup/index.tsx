@@ -1,8 +1,8 @@
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 import { MIDISettings } from "$lib/BaseSettings"
 import BaseNote from "$cmp/Miscellaneous/BaseNote"
 import { Component } from 'react'
-import { INSTRUMENTS } from "$/Config"
+import { INSTRUMENTS } from "$config"
 import Shortcut from "$cmp/Inputs/Shortcut"
 import {logger} from "$stores/LoggerStore";
 import type { MIDINote } from "$lib/Utilities"
@@ -13,7 +13,7 @@ import { DefaultPage } from "$cmp/Layout/DefaultPage"
 import { Title } from '$cmp/Miscellaneous/Title'
 import { AudioPlayer } from '$lib/AudioPlayer'
 import { InstrumentData } from '$lib/Songs/SongClasses'
-import Instrument from '$/lib/Instrument'
+import Instrument from '$lib/Instrument'
 
 interface MidiSetupState {
     audioPlayer: AudioPlayer

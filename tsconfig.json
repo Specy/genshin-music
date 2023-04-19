@@ -45,6 +45,9 @@
       ],
       "$img/*": [
         "assets/images/*"
+      ],
+      "$config": [
+        "Config.ts"
       ]
     },
     "incremental": true

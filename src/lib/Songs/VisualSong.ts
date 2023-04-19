@@ -1,4 +1,4 @@
-import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$/Config"
+import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS } from "$config"
 import { ComposedSong } from "$lib/Songs/ComposedSong"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
 import { Column, ColumnNote, InstrumentData, RecordedNote } from "$lib/Songs/SongClasses"

@@ -1,5 +1,5 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, NOTE_NAME_TYPES, NoteNameType } from "$/Config"
+import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, NOTE_NAME_TYPES, NoteNameType } from "$config"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
 import { VsrgSongKeys } from "./Songs/VsrgSong"

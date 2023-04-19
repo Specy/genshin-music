@@ -1,29 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
-import Analytics from '$/lib/Stats';
+import Analytics from '$lib/Stats';
 import Home from '$cmp/Index/Home';
 import {homeStore} from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
-import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "$/Config"
-import Logger from '$cmp/Index/Logger'
+import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "$config"
+
 import rotateImg from "$/assets/icons/rotate.svg"
 
 
 import { historyTracker } from '$stores/History';
 import { FaExpandAlt } from 'react-icons/fa';
 import { logsStore } from '$stores/LogsStore';
-import { checkIfneedsUpdate } from '$/lib/needsUpdate';
-import { AsyncPromptWrapper } from '$/components/Utility/AsyncPrompt';
-import { settingsService } from '$/lib/Services/SettingsService';
-import { linkServices } from '$/stores/globalLink';
+import { checkIfneedsUpdate } from '$lib/needsUpdate';
+import { settingsService } from '$lib/Services/SettingsService';
+import { linkServices } from '$stores/globalLink';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import isMobile from 'is-mobile';
 
 
 function AppBase() {
 	const [hasVisited, setHasVisited] = useState(false)
 	const [checkedUpdate, setCheckedUpdate] = useState(false)
-	const [pageHeight, setPageHeight] = useState(0)
 	const [isOnMobile, setIsOnMobile] = useState(false)
 	const router = useRouter()
 	useEffect(() => {
@@ -42,20 +41,30 @@ function AppBase() {
 				}).join(' ')
 			})
 		}
-		const windowIntercepter = (e: ErrorEvent) => {
+		return () => {
+			console.error = originalErrorLog
+		}
+	}, [])
+	useEffect(() => {
+		function windowIntercepter(e: ErrorEvent){
 			//intercept window errors and log them to the logger store
 			logsStore.addLog({
 				error: e.error,
 				message: e.error.stack
 			})
 		}
-
-		window.addEventListener("error", windowIntercepter)
-		return () => {
-			console.error = originalErrorLog
-			window.removeEventListener("error", windowIntercepter)
+		function handleBlur(){
+			const active = document.activeElement
+			//@ts-ignore
+			if (active && active.tagName === 'INPUT') active?.blur()
 		}
-	}, [])
+		window.addEventListener("error", windowIntercepter)
+		window.addEventListener("blur", handleBlur)
+		return () => {
+			window.removeEventListener("error", windowIntercepter)
+			window.removeEventListener("blur", handleBlur)
+		}
+	})
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
 		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
@@ -66,10 +75,8 @@ function AppBase() {
 			isInPosition: false,
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 		})
-
-		setIsOnMobile("ontouchstart" in window)
+		setIsOnMobile("ontouchstart" in window || isMobile())
 		setHasVisited(hasVisited === 'true')
-		setPageHeight(window.innerHeight)
 		checkIfneedsUpdate()
 		linkServices()
 		const lastBackupWarning = settingsService.getLastBackupWarningTime()
@@ -79,32 +86,6 @@ function AppBase() {
 			settingsService.setLastBackupWarningTime(Date.now())
 		}
 	}, [])
-
-	const setHeight = useCallback((h: number) => {
-		document.body.style.minHeight = h + 'px'
-	}, [])
-
-	const resetHeight = useCallback(() => {
-		//@ts-ignore
-		document.body.style = ''
-	}, [])
-
-	const handleResize = useCallback(() => {
-		if (document.activeElement?.tagName === 'INPUT') {
-			if (pageHeight === window.innerHeight || pageHeight === 0) return
-			return setHeight(pageHeight)
-		}
-		setHeight(window.innerHeight)
-		resetHeight()
-		setIsOnMobile("ontouchstart" in window)
-	}, [pageHeight, resetHeight, setHeight])
-
-	const handleBlur = useCallback(() => {
-		const active = document.activeElement
-		//@ts-ignore
-		if (active && active.tagName === 'INPUT') active?.blur()
-		resetHeight()
-	}, [resetHeight])
 	const setDontShowHome = useCallback((override = false) => {
 		localStorage.setItem(APP_NAME + "_ShowHome", JSON.stringify(override))
 		homeStore.setState({ canShow: override })
@@ -127,37 +108,29 @@ function AppBase() {
 		localStorage.setItem(APP_NAME + "_Visited", JSON.stringify(true))
 		setHasVisited(true)
 	}
-	const checkUpdate = useCallback(async () => {
-		await delay(1000)
-		const visited = localStorage.getItem(APP_NAME + "_Visited")
-		if (checkedUpdate) return
-		const storedVersion = localStorage.getItem(APP_NAME + "_Version")
-		if (!visited) {
-			return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
-		}
-		if (APP_VERSION !== storedVersion) {
-			logger.log("Update V" + APP_VERSION + "\n" + UPDATE_MESSAGE, 6000)
-			localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
-		}
-		setCheckedUpdate(true)
-		if (!visited) return
-		if (navigator.storage && navigator.storage.persist) {
-			let isPersisted = await navigator.storage.persisted()
-			if (!isPersisted) isPersisted = await navigator.storage.persist()
-			console.log(isPersisted ? "Storage Persisted" : "Storage Not persisted")
-		}
-	}, [checkedUpdate])
-
 	useEffect(() => {
-		window.addEventListener('resize', handleResize)
-		window.addEventListener('blur', handleBlur)
-		checkUpdate()
-		return () => {
-			window.removeEventListener('resize', handleResize)
-			window.removeEventListener('blur', handleBlur)
+		async function checkUpdate() {
+			await delay(1000)
+			const visited = localStorage.getItem(APP_NAME + "_Visited")
+			if (checkedUpdate) return
+			const storedVersion = localStorage.getItem(APP_NAME + "_Version")
+			if (!visited) {
+				return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
+			}
+			if (APP_VERSION !== storedVersion) {
+				logger.log("Update V" + APP_VERSION + "\n" + UPDATE_MESSAGE, 6000)
+				localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
+			}
+			setCheckedUpdate(true)
+			if (!visited) return
+			if (navigator.storage && navigator.storage.persist) {
+				let isPersisted = await navigator.storage.persisted()
+				if (!isPersisted) isPersisted = await navigator.storage.persist()
+				console.log(isPersisted ? "Storage Persisted" : "Storage Not persisted")
+			}	
 		}
-	}, [checkUpdate, handleResize, handleBlur])
-
+		checkUpdate()
+	}, [checkedUpdate])
 	useEffect(() => {
 		Analytics.UIEvent('version', { version: APP_VERSION })
 		Analytics.pageView({
@@ -170,16 +143,13 @@ function AppBase() {
 			historyTracker.addPage(path.pathName)
 		})
 	}, [router])
-	
 	return <>
-		<Logger />
 		<Home
 			hasVisited={hasVisited}
 			closeWelcomeScreen={closeWelcomeScreen}
 			setDontShowHome={setDontShowHome}
 			askForStorage={askForStorage}
 		/>
-		<AsyncPromptWrapper />
 		<div className="rotate-screen">
 			{isOnMobile && <>
 				<Image 

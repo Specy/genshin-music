@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import useDebounce from '$lib/Hooks/useDebounce'
 import { Select } from '$cmp/Inputs/Select'
 import { Theme } from '$stores/ThemeStore/ThemeProvider'
-import { hasTooltip, Tooltip } from '$/components/Utility/Tooltip'
+import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
 import { NumericalInput } from './Numericalinput'
 interface TrackProps {
     data: CustomTrack

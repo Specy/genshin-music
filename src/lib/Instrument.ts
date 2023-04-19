@@ -1,8 +1,8 @@
-import { INSTRUMENTS_DATA, INSTRUMENTS, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType, BASE_PATH } from "$/Config"
+import { INSTRUMENTS_DATA, INSTRUMENTS, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType, BASE_PATH } from "$config"
 import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
 import { getPitchChanger } from "./Utilities"
-import { NoteImage } from "$/components/SvgNotes"
+import { NoteImage } from "$cmp/SvgNotes"
 
 type Layouts = {
     keyboard: string[]
@@ -66,6 +66,9 @@ export default class Instrument {
     getNoteFromCode = (code: string) => {
         const index = this.getNoteIndexFromCode(code)
         return index !== -1 ? this.notes[index] : null
+    }
+    getNoteFromIndex = (index: number) => {
+        return this.notes[index] ?? null
     }
     getNoteIndexFromCode = (code: string) => {
         return this.layouts.keyboard.findIndex(e => e === code)

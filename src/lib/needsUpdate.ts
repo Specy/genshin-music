@@ -1,4 +1,4 @@
-import { APP_NAME, APP_VERSION, IS_TAURI, UPDATE_URL } from "$/Config"
+import { APP_NAME, APP_VERSION, IS_TAURI, UPDATE_URL } from "$config"
 import { logger } from "$stores/LoggerStore"
 import semverLt from 'semver/functions/lt'
 import semverCoerce from 'semver/functions/coerce'

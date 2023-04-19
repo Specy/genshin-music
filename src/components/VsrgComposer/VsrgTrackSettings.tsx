@@ -8,7 +8,7 @@ import { ColorPicker } from "$cmp/Inputs/ColorPicker"
 import { useState } from "react"
 import Color from "color"
 import { vsrgComposerStore } from "$stores/VsrgComposerStore"
-import { Pitch } from "$/Config"
+import { Pitch } from "$config"
 
 interface TrackSelectorProps {
     track: VsrgTrack

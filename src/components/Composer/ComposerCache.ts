@@ -1,4 +1,4 @@
-import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "$/Config"
+import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "$config"
 import Color from "color"
 import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
 import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'

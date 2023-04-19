@@ -1,4 +1,4 @@
-import useDebounce from '$/lib/Hooks/useDebounce'
+import useDebounce from '$lib/Hooks/useDebounce'
 import { useEffect, useState, ChangeEvent } from 'react'
 interface NumberInputProps {
     onChange: (value: number) => void

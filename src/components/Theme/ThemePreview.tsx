@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/Config";
+import { APP_NAME } from "$config";
 import { fileService } from "$lib/Services/FileService";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import { logger } from "$stores/LoggerStore";

@@ -7,7 +7,7 @@ import { asyncConfirm } from "$cmp/Utility/AsyncPrompts";
 import { FloatingDropdownRow, FloatingDropdownText, FloatingDropdown } from "$cmp/Utility/FloatingDropdown";
 import Memoized from "$cmp/Utility/Memoized";
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip";
-import Analytics from "$/lib/Stats";
+import Analytics from "$lib/Stats";
 import { VsrgPlayerSettingsDataType } from "$lib/BaseSettings";
 import { Folder } from "$lib/Folder";
 import useClickOutside from "$lib/Hooks/useClickOutside";
@@ -26,9 +26,9 @@ import {homeStore} from "$stores/HomeStore";
 import { songsStore } from "$stores/SongsStore";
 import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
-import { logger } from "$/stores/LoggerStore";
+import { logger } from "$stores/LoggerStore";
 import isMobile from "is-mobile";
-import { useDefaultConfig } from "$/lib/Hooks/useConfig";
+import { useDefaultConfig } from "$lib/Hooks/useConfig";
 
 type MenuTabs = 'Songs' | 'Settings'
 

@@ -1,33 +1,40 @@
-import { APP_NAME } from "$/Config";
+import { APP_NAME } from "$config";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import BaseNote from "$cmp/Miscellaneous/BaseNote";
 import { Title } from "$cmp/Miscellaneous/Title";
 import useClickOutside from "$lib/Hooks/useClickOutside";
-import { useObservableArray } from "$lib/Hooks/useObservable";
+import { useObservableArray, useObservableMap } from "$lib/Hooks/useObservable";
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
 import { VsrgSongKeys } from "$lib/Songs/VsrgSong";
 import { Fragment, useEffect, useState } from "react";
-import { keyBinds } from "$/stores/KeybindsStore";
-import Instrument from "$/lib/Instrument";
+import { keyBinds } from "$stores/KeybindsStore";
+import Instrument from "$lib/Instrument";
+import { logger } from "$/stores/LoggerStore";
+import { ShortcutEditor } from "$/components/Keybinds/ShortcutEditor";
 
 
 
 const baseInstrument = new Instrument()
 export default function Keybinds() {
-    const keyboard = useObservableArray(keyBinds.getKeyboardKeybinds())
+
+    const [keyboard] = useObservableMap(keyBinds.getShortcutMap("keyboard"))
+    const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
+    const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
     const [selected, setSelected] = useState({
         type: '',
         index: -1
     })
     useEffect(() => {
-        KeyboardProvider.listen(({ letter }) => {
+        KeyboardProvider.listen(({ letter, code }) => {
             if (letter === 'Escape') return setSelected({
                 type: '',
                 index: -1
             })
             const { type, index } = selected
+            const note = baseInstrument.getNoteFromIndex(index)
             if (type === 'keyboard' && index !== -1) {
-                keyBinds.setKeyboardKeybind(index, letter)
+                const existing = keyBinds.setKeyboardKeybind(note.noteNames.keyboard, code)
+                if (existing !== undefined) logger.warn(`This keybind is already used by the ${existing + 1}th note`)
                 setSelected({ type: '', index: -1 })
             }
             if (['k4', 'k6', 'k8'].includes(type) && index !== -1) {
@@ -41,8 +48,31 @@ export default function Keybinds() {
     const k4 = useObservableArray(keyBinds.getVsrgKeybinds(4))
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
     return <DefaultPage>
-        <Title text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys"/>
-        {false && <>
+        <Title text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys" />
+            <h1>
+                Composer shortcuts
+            </h1>
+            <div className="column">   
+                <ShortcutEditor 
+                    map={composerShortcuts}
+                    onChangeShortcut={(oldKey, newKey) => {
+                        const existing = keyBinds.setShortcut("composer" ,oldKey, newKey)
+                        if(existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
+                    }}
+                />
+            </div>
+            <h1>
+                Player shortcuts
+            </h1>
+            <div className="column">   
+                <ShortcutEditor 
+                    map={playerShortcuts}
+                    onChangeShortcut={(oldKey, newKey) => {
+                        const existing = keyBinds.setShortcut("player" ,oldKey, newKey)
+                        if(existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
+                    }}
+                />
+            </div>
             <h1>
                 Keyboard keybinds
             </h1>
@@ -53,14 +83,20 @@ export default function Keybinds() {
                         margin: 0
                     }}
                 >
-                    {keyboard.map((key, i) =>
+                    {baseInstrument.notes.map((note, i) =>
                         <BaseNote
                             key={i}
                             data={{
                                 status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
                             }}
                             noteImage={baseInstrument.notes[i].noteImage}
-                            noteText={key}
+                            noteText={(
+                                keyBinds.getKeyOfShortcut(
+                                    "keyboard",
+                                    note.noteNames.keyboard
+                                ) ?? "???")
+                                .replace("Key", "")
+                            }
                             handleClick={() => {
                                 setSelected({
                                     type: 'keyboard',
@@ -71,8 +107,6 @@ export default function Keybinds() {
                     )}
                 </div>
             </div>
-        </>}
-
         <h1>
             Vsrg keybinds
         </h1>

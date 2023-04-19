@@ -4,7 +4,7 @@ import { ThemeKeys, ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
 import { capitalize } from "$lib/Utilities";
 import Color from "color";
 import { HexColorInput, HexAlphaColorPicker } from "react-colorful";
-import { BASE_THEME_CONFIG } from "$/Config";
+import { BASE_THEME_CONFIG } from "$config";
 import { FaCheck, FaTimes } from 'react-icons/fa'
 import { AppButton } from "$cmp/Inputs/AppButton";
 

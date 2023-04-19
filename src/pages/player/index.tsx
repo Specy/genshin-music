@@ -1,6 +1,6 @@
 import { Component, ReactNode } from 'react';
-import KeyboardPlayer from "$/components/Player/PlayerKeyboard"
-import Menu from "$/components/Player/PlayerMenu"
+import KeyboardPlayer from "$cmp/Player/PlayerKeyboard"
+import Menu from "$cmp/Player/PlayerMenu"
 import { playerStore } from '$stores/PlayerStore'
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
@@ -9,12 +9,11 @@ import { PlayerSettingsDataType } from "$lib/BaseSettings"
 import Instrument from '$lib/Instrument';
 import AudioRecorder from '$lib/AudioRecorder';
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
-import Analytics from '$/lib/Stats';
+import Analytics from '$lib/Stats';
 import { logger } from '$stores/LoggerStore';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
 import { InstrumentName } from '$types/GeneralTypes';
 import { AppButton } from '$cmp/Inputs/AppButton';
-import { KeyboardProvider } from '$lib/Providers/KeyboardProvider';
 import { AudioProvider } from '$lib/Providers/AudioProvider';
 import { settingsService } from '$lib/Services/SettingsService';
 import { songsStore } from '$stores/SongsStore';
@@ -24,11 +23,11 @@ import { Lambda } from 'mobx';
 import { NoteLayer } from '$lib/Layer';
 import { subscribeObeservableObject } from '$lib/Hooks/useObservable';
 import { ChangeEvent } from 'react';
-import { SPEED_CHANGERS } from '$/Config';
+import { SPEED_CHANGERS } from '$config';
 import { playerControlsStore } from '$stores/PlayerControlsStore';
 import { PlayerSongControls } from '$cmp/Player/PlayerSongControls';
-import { CustomNextPage } from '$/types/nextjsTypes';
-import { AppBackground } from '$/components/Layout/AppBackground';
+import { AppBackground } from '$cmp/Layout/AppBackground';
+import { createShortcutListener } from '$/stores/KeybindsStore';
 
 interface PlayerState {
 	settings: PlayerSettingsDataType
@@ -86,11 +85,13 @@ class Player extends Component<{}, PlayerState>{
 	init = async (settings: PlayerSettingsDataType) => {
 		await AudioProvider.waitReverb()
 		await this.loadInstrument(settings.instrument.value)
-		this.registerKeyboardListeners()
+		const shortcutDisposer = createShortcutListener("player", "player", ({ shortcut }) => {
+			if(shortcut === "toggle_play") this.toggleRecord()
+		})
+		this.cleanup.push(shortcutDisposer)
 		AudioProvider.setReverb(settings.caveMode.value)
 	}
 	componentWillUnmount() {
-		KeyboardProvider.unregisterById('player')
 		playerStore.resetSong()
 		playerStore.resetKeyboardLayout()
 		playerControlsStore.clearPages()
@@ -101,10 +102,6 @@ class Player extends Component<{}, PlayerState>{
 		this.cleanup.forEach(c => c())
 		this.mounted = false
 		metronome.stop()
-	}
-
-	registerKeyboardListeners = () => {
-		KeyboardProvider.registerLetter('C', () => this.toggleRecord(), { shift: true, id: "player" })
 	}
 	setHasSong = (data: boolean) => {
 		this.setState({ hasSong: data })

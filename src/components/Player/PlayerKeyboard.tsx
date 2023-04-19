@@ -1,9 +1,9 @@
 import {  Component } from 'react'
-import { APP_NAME, SPEED_CHANGERS, Pitch, NoteNameType } from "$/Config"
-import Note from '$/components/Player/PlayerNote'
+import { APP_NAME, SPEED_CHANGERS, Pitch, NoteNameType } from "$config"
+import Note from '$cmp/Player/PlayerNote'
 import { playerStore } from '$stores/PlayerStore'
 import { Array2d, delay, clamp, groupArrayEvery } from "$lib/Utilities"
-import Analytics from '$/lib/Stats';
+import Analytics from '$lib/Stats';
 import { playerControlsStore } from '$stores/PlayerControlsStore'
 import { ApproachingNote, RecordedNote } from '$lib/Songs/SongClasses'
 import type { ObservableNote } from '$lib/Instrument'
@@ -11,9 +11,9 @@ import type Instrument from '$lib/Instrument'
 import type { Timer } from '$types/GeneralTypes'
 import { Chunk, RecordedSong } from '$lib/Songs/RecordedSong'
 import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider'
-import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider'
 import { NoteLayer } from '$lib/Layer'
 import { subscribeObeservableObject, subscribeObservableArray } from '$lib/Hooks/useObservable'
+import { ShortcutListener, createKeyboardListener, createShortcutListener } from '$/stores/KeybindsStore'
 
 interface KeyboardPlayerProps {
     data: {
@@ -63,18 +63,20 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     }
 
     componentDidMount() {
-        const id = 'keyboard-player'
         this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
-        KeyboardProvider.registerLetter('S', () => {
-            if (this.props.data.hasSong) this.stopAndClear()
-        }, { shift: true, id })
-        KeyboardProvider.registerLetter('R', () => {
-            if (!this.props.data.hasSong) return
-            if (['practice', 'play', 'approaching'].includes(playerStore.eventType)) {
-                this.restartSong(0)
+        const disposeShortcuts = createShortcutListener("player", "player_keyboard", ({ shortcut }) => {
+            if(shortcut === "restart"){
+                if (!this.props.data.hasSong) return
+                if (['practice', 'play', 'approaching'].includes(playerStore.eventType)) {
+                    this.restartSong(0)
+                }
             }
-        }, { shift: true, id })
-        KeyboardProvider.listen(this.handleKeyboard, { id })
+            if(shortcut === "stop"){
+                if (this.props.data.hasSong) this.stopAndClear()
+            }
+        })
+        const disposeKeyboard = createKeyboardListener("player_keyboard_keys", this.handleKeyboard)
+        this.toDispose.push(disposeShortcuts, disposeKeyboard)
         MIDIProvider.addListener(this.handleMidi)
         this.toDispose.push(subscribeObeservableObject(playerStore.state, async () => {
             //this is because mobx calls for each prop changed while i want to batch it and execute all at once
@@ -122,7 +124,6 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     componentWillUnmount() {
         MIDIProvider.removeListener(this.handleMidi)
         this.toDispose.forEach(d => d())
-        KeyboardProvider.unregisterById('keyboard-player')
         this.songTimestamp = 0
         playerStore.resetSong()
         this.mounted = false
@@ -138,10 +139,10 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             })
         }
     }
-    handleKeyboard = async ({ letter, shift, event }: KeyboardEventData) => {
+    handleKeyboard: ShortcutListener<"keyboard"> = async ({ event, shortcut }) => {
         if (event.repeat) return
-        if (!shift) {
-            const note = this.props.data.instrument.getNoteFromCode(letter)
+        if (!event.shiftKey) {
+            const note = this.props.data.instrument.getNoteFromCode(shortcut)
             if (note !== null) this.handleClick(note)
         }
     }

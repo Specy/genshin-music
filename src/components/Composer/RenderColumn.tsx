@@ -1,4 +1,4 @@
-import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "$/Config"
+import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "$config"
 import type { ColumnNote, InstrumentData } from '$lib/Songs/SongClasses';
 import type { Texture } from 'pixi.js';
 import { Container, Sprite } from '@pixi/react';

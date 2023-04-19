@@ -1,4 +1,4 @@
-import { BASE_THEME_CONFIG } from "$/Config"
+import { BASE_THEME_CONFIG } from "$config"
 import Color from "color"
 import { useEffect, useState } from "react"
 import { HexColorInput, HexColorPicker } from "react-colorful"

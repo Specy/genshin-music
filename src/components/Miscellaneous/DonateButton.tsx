@@ -1,4 +1,4 @@
-import { isTWA } from '$/lib/Utilities'
+import { isTWA } from '$lib/Utilities'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 export default function DonateButton(){

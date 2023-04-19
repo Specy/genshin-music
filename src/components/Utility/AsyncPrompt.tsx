@@ -1,11 +1,11 @@
-import { useObservableObject } from "$/lib/Hooks/useObservable"
+import { useObservableObject } from "$lib/Hooks/useObservable"
 import { AsyncConfirmState, AsyncPromptState, asyncPromptStore } from "./AsyncPrompts"
 import { useState, useEffect, useRef } from 'react'
 import { DecorationBorderedBox } from "../Miscellaneous/BorderDecoration"
-import { useTheme } from "$/lib/Hooks/useTheme"
-import { cn } from "$/lib/Utilities"
-import { KeyboardProvider } from "$/lib/Providers/KeyboardProvider"
-import { IGNORE_CLICK_CLASS } from "$/lib/Hooks/useClickOutside"
+import { useTheme } from "$lib/Hooks/useTheme"
+import { cn } from "$lib/Utilities"
+import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
+import { IGNORE_CLICK_CLASS } from "$lib/Hooks/useClickOutside"
 import isMobile from "is-mobile"
 
 export function AsyncPromptWrapper() {

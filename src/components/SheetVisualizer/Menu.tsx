@@ -8,8 +8,8 @@ import {homeStore} from '$stores/HomeStore'
 import MenuPanel from '$cmp/Layout/MenuPanel'
 import { SerializedSong, SongStorable } from '$lib/Songs/Song'
 import useClickOutside from '$lib/Hooks/useClickOutside'
-import { songService } from '$/lib/Services/SongService'
-import { logger } from '$/stores/LoggerStore'
+import { songService } from '$lib/Services/SongService'
+import { logger } from '$stores/LoggerStore'
 import { useRouter } from 'next/router'
 
 interface SheetVisualiserMenuProps {

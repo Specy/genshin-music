@@ -1,6 +1,6 @@
 import { Component, ReactElement } from 'react'
 import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-import { APP_NAME, TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$/Config"
+import { APP_NAME, TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$config"
 import AddColumn from '$cmp/icons/AddColumn';
 import RemoveColumn from "$cmp/icons/RemoveColumn"
 import MidiParser from "$cmp/Composer/MidiParser"
@@ -16,7 +16,7 @@ import { delay, formatMs, calculateSongLength } from "$lib/Utilities"
 import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
 import { Column, InstrumentData } from '$lib/Songs/SongClasses';
 import AudioRecorder from '$lib/AudioRecorder'
-import Analytics from '$/lib/Stats';
+import Analytics from '$lib/Stats';
 import { homeStore } from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
@@ -36,7 +36,8 @@ import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider';
 import { Title } from '$cmp/Miscellaneous/Title';
 import { songService } from '$lib/Services/SongService';
 import { NextRouter, useRouter } from 'next/router';
-import { AppBackground } from '$/components/Layout/AppBackground';
+import { AppBackground } from '$cmp/Layout/AppBackground';
+import { ShortcutDisposer, ShortcutListener, createKeyboardListener, createShortcutListener } from '$/stores/KeybindsStore';
 
 interface ComposerState {
     layers: Instrument[]
@@ -65,6 +66,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
     mounted: boolean
     changes: number
     unblock: (...events: any[]) => void = () => { }
+    shortcutDisposer: ShortcutDisposer | null = null
     constructor(props: any) {
         super(props)
         const settings = settingsService.getDefaultComposerSettings()
@@ -96,6 +98,20 @@ class Composer extends Component<ComposerProps, ComposerState>{
     componentDidMount() {
         this.mounted = true
         const settings = settingsService.getComposerSettings()
+        const shortcutListener = createShortcutListener(
+            "composer", 
+            "composer_shortcuts", 
+            this.handleShortcut, 
+            { repeat: true }
+        )
+        const shortcutKeyboardListener = createKeyboardListener(
+            "composer_shortcuts_keyboard", 
+            this.handleKeyboardShortcut, 
+        )
+        this.shortcutDisposer = () => {
+            shortcutListener()
+            shortcutKeyboardListener()
+        }
         this.setState({ settings })
         this.init(settings)
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : null
@@ -130,6 +146,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.broadcastChannel?.close?.()
         state.isPlaying = false
         this.props.router.events.off("routeChangeStart", this.unblock)
+        if (this.shortcutDisposer) this.shortcutDisposer()
         KeyboardProvider.unregisterById('composer')
         MIDIProvider.removeListener(this.handleMidi)
         if (AudioProvider.isRecording) AudioProvider.stopRecording()
@@ -142,7 +159,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
         await this.syncInstruments()
         AudioProvider.setReverb(settings.caveMode.value)
         MIDIProvider.addListener(this.handleMidi)
-        this.registerKeyboardListeners()
+        TEMPO_CHANGERS.forEach((tempoChanger, i) => {
+            KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger), { id: "composer_keyboard" })
+        })
         try {
             const { songId } = this.props
             if (!songId) return
@@ -154,32 +173,32 @@ class Composer extends Component<ComposerProps, ComposerState>{
             console.error(e)
         }
     }
-    registerKeyboardListeners = () => {
-        const id = 'composer'
-        KeyboardProvider.registerLetter('D', () => {
-            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected + 1)
-        }, { id })
-        KeyboardProvider.registerLetter('A', () => {
-            if (!this.state.isPlaying) this.selectColumn(this.state.song.selected - 1)
-        }, { id })
-        KeyboardProvider.registerLetter('Q', () => {
-            if (!this.state.isPlaying) this.removeColumns(1, this.state.song.selected)
-        }, { id })
-        KeyboardProvider.registerLetter('E', () => {
-            if (!this.state.isPlaying) this.addColumns(1, this.state.song.selected)
-        }, { id })
-        TEMPO_CHANGERS.forEach((tempoChanger, i) => {
-            KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger), { id })
-        })
-        KeyboardProvider.register('ArrowUp', () => {
-            const previousLayer = this.state.layer - 1
+
+
+    handleKeyboardShortcut: ShortcutListener<"keyboard"> = ({ shortcut, event }) => {
+        if (event.repeat) return
+        const { isPlaying } = this.state
+        const shouldEditKeyboard = isPlaying || event.shiftKey
+        if (shouldEditKeyboard) {
+            const note = this.currentInstrument.getNoteFromCode(shortcut)
+            if (note !== null) this.handleClick(note)
+        }
+    }
+    handleShortcut: ShortcutListener<"composer"> = ({ shortcut, event }) => {
+        const { isPlaying, layer, layers, settings, song } = this.state
+        if (shortcut === "next_column" && !isPlaying) this.selectColumn(song.selected + 1)
+        if (shortcut === "previous_column" && !isPlaying) this.selectColumn(song.selected - 1)
+        if (shortcut === "remove_column" && !isPlaying) this.removeColumns(1, song.selected)
+        if (shortcut === "add_column" && !isPlaying) this.addColumns(1, song.selected)
+        if (shortcut === "previous_layer") {
+            const previousLayer = layer - 1
             if (previousLayer >= 0) this.changeLayer(previousLayer)
-        }, { id })
-        KeyboardProvider.register('ArrowDown', () => {
-            const nextLayer = this.state.layer + 1
-            if (nextLayer < this.state.layers.length) this.changeLayer(nextLayer)
-        }, { id })
-        KeyboardProvider.register('Space', ({ event }) => {
+        }
+        if (shortcut === "next_layer") {
+            const nextLayer = layer + 1
+            if (nextLayer < layers.length) this.changeLayer(nextLayer)
+        }
+        if (shortcut === "toggle_play") {
             if (event.repeat) return
             //@ts-ignore
             if (event.target?.tagName === "BUTTON") {
@@ -187,19 +206,10 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 event.target?.blur()
             }
             this.togglePlay()
-            if (this.state.settings.syncTabs.value) {
-                this.broadcastChannel?.postMessage?.(this.state.isPlaying ? 'play' : 'stop')
+            if (settings.syncTabs.value) {
+                this.broadcastChannel?.postMessage?.(isPlaying ? 'play' : 'stop')
             }
-        }, { id })
-        KeyboardProvider.listen(({ event, letter }) => {
-            if (event.repeat) return
-            const { isPlaying } = this.state
-            const shouldEditKeyboard = isPlaying || event.shiftKey
-            if (shouldEditKeyboard) {
-                const note = this.currentInstrument.getNoteFromCode(letter)
-                if (note !== null) this.handleClick(note)
-            }
-        }, { id })
+        }
     }
     handleUnload = (event: BeforeUnloadEvent) => {
         event.preventDefault()
@@ -352,9 +362,9 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const recording = await AudioProvider.stopRecording()
         if (!recording) return
         const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
-        try{
+        try {
             if (fileName) await AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
-        }catch(e){
+        } catch (e) {
             console.error(e)
             logger.error("There was an error downloading the audio, maybe it's too big?")
         }
@@ -710,7 +720,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers, undoHistory } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
-            <Title text={`Composer - ${song.name}`} description='Create or edit new songs with the composer, using up to 30 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI song into the app format.'/>
+            <Title text={`Composer - ${song.name}`} description='Create or edit new songs with the composer, using up to 30 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI song into the app format.' />
             {isMidiVisible &&
                 <MidiParser
                     functions={this}
@@ -844,7 +854,7 @@ interface ComposerPageProps {
     inPreview?: boolean
     songId?: string
 }
-export default function ComposerPage({inPreview, songId}: ComposerPageProps) {
+export default function ComposerPage({ inPreview, songId }: ComposerPageProps) {
     const router = useRouter()
     const { songId: querySongId } = router.query
     return <Composer

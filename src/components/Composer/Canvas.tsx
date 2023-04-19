@@ -5,8 +5,8 @@ import { Component, createRef } from 'react'
 import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import isMobile from "is-mobile"
-import { ComposerCache } from "$/components/Composer/ComposerCache"
-import { APP_NAME } from "$/Config"
+import { ComposerCache } from "$cmp/Composer/ComposerCache"
+import { APP_NAME } from "$config"
 import Memoized from '$cmp/Utility/Memoized';
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
 import { clamp, colorToRGB, nearestEven } from '$lib/Utilities';

@@ -1,6 +1,6 @@
 import { Midi } from "@tonejs/midi"
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, COMPOSER_NOTE_POSITIONS } from "$/Config"
-import { TEMPO_CHANGERS } from "$/Config"
+import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, COMPOSER_NOTE_POSITIONS } from "$config"
+import { TEMPO_CHANGERS } from "$config"
 import { InstrumentName } from "$types/GeneralTypes"
 import { OldFormat, _LegacySongInstruments } from "$types/SongTypes"
 import { NoteLayer } from "../Layer"

@@ -10,7 +10,7 @@ import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
 import useFontFaceObserver from "use-font-face-observer";
 import { useEffect, useState } from "react";
 import { defaultVsrgTextStyle } from "./VsrgKeysRenderer";
-import { useDefaultConfig } from "$/lib/Hooks/useConfig";
+import { useDefaultConfig } from "$lib/Hooks/useConfig";
 
 
 interface VsrgScrollableTrackRendererProps {

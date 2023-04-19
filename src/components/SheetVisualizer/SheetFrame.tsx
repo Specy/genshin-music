@@ -1,8 +1,8 @@
-import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS, NoteNameType } from "$/Config"
+import { APP_NAME, INSTRUMENT_NOTE_LAYOUT_KINDS, NoteNameType } from "$config"
 import { Chunk } from "$lib/Songs/VisualSong"
 import { memo, useEffect, useState } from "react"
 import { Theme } from "$stores/ThemeStore/ThemeProvider"
-import Instrument from "$/lib/Instrument"
+import Instrument from "$lib/Instrument"
 
 
 

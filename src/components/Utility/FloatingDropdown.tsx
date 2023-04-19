@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react"
 import { FaTimes } from "react-icons/fa"
 import { AppButton } from "../Inputs/AppButton"
 import { SongActionButton } from "../Inputs/SongActionButton"
-import { DEFAULT_DOM_RECT } from "$/Config"
+import { DEFAULT_DOM_RECT } from "$config"
 
 
 interface FloatingDropdownProps {

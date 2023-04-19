@@ -1,4 +1,4 @@
-import { Pitch } from "$/Config"
+import { Pitch } from "$config"
 import { AppButton } from "$cmp/Inputs/AppButton"
 import { PitchSelect } from "$cmp/Inputs/PitchSelect"
 import { HelpTooltip } from "$cmp/Utility/HelpTooltip"

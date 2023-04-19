@@ -18,12 +18,12 @@ import { SerializedSong } from "$lib/Songs/Song";
 import { songService } from "$lib/Services/SongService";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { clamp, isFocusable } from "$lib/Utilities";
-import { DEFAULT_VSRG_KEYS_MAP } from "$/Config";
+import { DEFAULT_VSRG_KEYS_MAP } from "$config";
 import { ClickType, Pages } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
-import { Title } from "$/components/Miscellaneous/Title";
+import { Title } from "$cmp/Miscellaneous/Title";
 import {homeStore} from "$stores/HomeStore";
-import { AppBackground } from "$/components/Layout/AppBackground";
+import { AppBackground } from "$cmp/Layout/AppBackground";
 import { NextRouter, useRouter } from "next/router";
 
 type VsrgComposerProps = {

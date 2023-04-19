@@ -1,4 +1,4 @@
-import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "$/Config"
+import { NOTES_CSS_CLASSES, APP_NAME, BASE_THEME_CONFIG } from "$config"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { observe } from "mobx"
 import { useEffect, useState } from "react"
@@ -74,7 +74,6 @@ function parseBorderColor(status: string) {
     if (status === "clicked") fill = "transparent"
     else if (status === 'wrong') fill = "#d66969"
     else if (status === 'right') fill = "#358a55"
-
     return fill
 }
 

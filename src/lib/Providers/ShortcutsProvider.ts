@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/Config";
+import { APP_NAME } from "$config";
 
 export enum ComposerShortcuts {
     TogglePlayback = "TogglePlayback",

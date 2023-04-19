@@ -1,12 +1,12 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaSave, FaCog, FaHome, FaTrash, FaDownload, FaTimes, FaPen, FaEllipsisH, FaFolder, FaBars, FaClone, FaEdit } from 'react-icons/fa';
-import { APP_NAME } from '$/Config'
+import { APP_NAME } from '$config'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import MenuPanel from '$cmp/Layout/MenuPanel'
 import DonateButton from '$cmp/Miscellaneous/DonateButton'
 import Memoized from '$cmp/Utility/Memoized';
-import { IS_MIDI_AVAILABLE } from '$/Config';
-import Analytics from '$/lib/Stats';
+import { IS_MIDI_AVAILABLE } from '$config';
+import Analytics from '$lib/Stats';
 import { logger } from '$stores/LoggerStore';
 import { AppButton } from '$cmp/Inputs/AppButton';
 import { SongMenu } from '$cmp/Layout/SongMenu';

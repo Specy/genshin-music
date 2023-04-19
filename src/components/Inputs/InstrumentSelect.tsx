@@ -1,4 +1,4 @@
-import { INSTRUMENTS } from "$/Config"
+import { INSTRUMENTS } from "$config"
 import { InstrumentName } from "$types/GeneralTypes"
 
 interface InstrumentSelectProps {

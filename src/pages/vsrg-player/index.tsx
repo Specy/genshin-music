@@ -14,10 +14,10 @@ import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { VsrgPlayerRight } from "$cmp/VsrgPlayer/VsrgPlayerRight";
 import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
 import { SettingUpdate } from "$types/SettingsPropriety";
-import { keyBinds } from "$/stores/KeybindsStore";
+import { keyBinds } from "$stores/KeybindsStore";
 import { logger } from "$stores/LoggerStore";
-import { Title } from "$/components/Miscellaneous/Title";
-import { AppBackground } from "$/components/Layout/AppBackground";
+import { Title } from "$cmp/Miscellaneous/Title";
+import { AppBackground } from "$cmp/Layout/AppBackground";
 
 type VsrgPlayerProps = {}
 interface VsrgPlayerState {

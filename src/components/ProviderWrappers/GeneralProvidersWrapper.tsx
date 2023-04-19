@@ -1,18 +1,19 @@
 import { AudioProvider } from "$lib/Providers/AudioProvider"
 import { MIDIProvider } from "$lib/Providers/MIDIProvider"
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
-import { shortcutsProvider } from "$/lib/Providers/ShortcutsProvider";
+import { shortcutsProvider } from "$lib/Providers/ShortcutsProvider";
 import { useCallback, useEffect, useState } from "react"
-import { songsStore } from "$/stores/SongsStore";
-import { folderStore } from "$/stores/FoldersStore";
-import { metronome } from "$/lib/Metronome";
+import { songsStore } from "$stores/SongsStore";
+import { folderStore } from "$stores/FoldersStore";
+import { metronome } from "$lib/Metronome";
 import { IconButton } from "../Inputs/IconButton";
 import { FaVolumeMute } from "react-icons/fa";
-import { keyBinds } from "$/stores/KeybindsStore";
-import { themeStore } from "$/stores/ThemeStore/ThemeStore";
-import { ThemeProvider } from "$/stores/ThemeStore/ThemeProvider";
-import { globalConfigStore } from "$/stores/GlobalConfig";
-
+import { keyBinds } from "$stores/KeybindsStore";
+import { themeStore } from "$stores/ThemeStore/ThemeStore";
+import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
+import { globalConfigStore } from "$stores/GlobalConfig";
+import Logger from '$cmp/Index/Logger'
+import { AsyncPromptWrapper } from '$cmp/Utility/AsyncPrompt';
 
 interface GeneralProvidersWrapperProps {
     children: React.ReactNode
@@ -51,6 +52,8 @@ export function GeneralProvidersWrapper({ children }: GeneralProvidersWrapperPro
         }
     }, [])
     return <>
+        <Logger />
+		<AsyncPromptWrapper />
         {audioContextState !== 'running' &&
 			<IconButton
 				className='resume-audio-context box-shadow'

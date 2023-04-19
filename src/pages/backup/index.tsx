@@ -1,26 +1,26 @@
-import { AppButton } from "$/components/Inputs/AppButton";
-import { DefaultPage } from "$/components/Layout/DefaultPage";
-import { Title } from "$/components/Miscellaneous/Title";
+import { AppButton } from "$cmp/Inputs/AppButton";
+import { DefaultPage } from "$cmp/Layout/DefaultPage";
+import { Title } from "$cmp/Miscellaneous/Title";
 import { FaFileDownload, FaFileImport, FaTrash } from "react-icons/fa";
 import { useEffect } from 'react'
-import { songService } from "$/lib/Services/SongService";
-import { _themeService } from "$/lib/Services/ThemeService";
-import { SerializedSong } from "$/lib/Songs/Song";
-import { SerializedTheme } from "$/stores/ThemeStore/ThemeProvider";
-import { folderStore } from "$/stores/FoldersStore";
-import { _folderService } from "$/lib/Services/FolderService";
-import { asyncConfirm, asyncPrompt } from "$/components/Utility/AsyncPrompts";
-import { logger } from "$/stores/LoggerStore";
-import { fileService, UnknownFileTypes } from "$/lib/Services/FileService";
-import { Folder, SerializedFolder } from "$/lib/Folder";
-import { APP_NAME } from "$/Config";
-import { FileElement, FilePicker } from "$/components/Inputs/FilePicker";
-import { delay } from "$/lib/Utilities";
-import { useSongs } from "$/lib/Hooks/useSongs";
-import { useObservableArray } from "$/lib/Hooks/useObservable";
-import { themeStore } from "$/stores/ThemeStore/ThemeStore";
-import { songsStore } from "$/stores/SongsStore";
-import { settingsService } from "$/lib/Services/SettingsService";
+import { songService } from "$lib/Services/SongService";
+import { _themeService } from "$lib/Services/ThemeService";
+import { SerializedSong } from "$lib/Songs/Song";
+import { SerializedTheme } from "$stores/ThemeStore/ThemeProvider";
+import { folderStore } from "$stores/FoldersStore";
+import { _folderService } from "$lib/Services/FolderService";
+import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
+import { logger } from "$stores/LoggerStore";
+import { fileService, UnknownFileTypes } from "$lib/Services/FileService";
+import { Folder, SerializedFolder } from "$lib/Folder";
+import { APP_NAME } from "$config";
+import { FileElement, FilePicker } from "$cmp/Inputs/FilePicker";
+import { delay } from "$lib/Utilities";
+import { useSongs } from "$lib/Hooks/useSongs";
+import { useObservableArray } from "$lib/Hooks/useObservable";
+import { themeStore } from "$stores/ThemeStore/ThemeStore";
+import { songsStore } from "$stores/SongsStore";
+import { settingsService } from "$lib/Services/SettingsService";
 
 export default function Backup() {
     const iconStyle = { marginRight: '0.3rem', marginLeft: '-0.4rem' }

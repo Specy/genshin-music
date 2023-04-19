@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 import { SerializedTheme } from "$stores/ThemeStore/ThemeProvider"
 import { Query } from "./Database/Collection"
 import { DbInstance } from "./Database/Database"

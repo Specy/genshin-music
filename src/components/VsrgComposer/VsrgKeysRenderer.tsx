@@ -3,7 +3,7 @@ import { Rectangle, TextStyle } from "pixi.js";
 import { memo, useEffect, useState } from "react";
 import useFontFaceObserver from "use-font-face-observer";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
-import { useDefaultConfig } from "$/lib/Hooks/useConfig";
+import { useDefaultConfig } from "$lib/Hooks/useConfig";
 
 interface VsrgKeysRendererProps {
     keys: string[]

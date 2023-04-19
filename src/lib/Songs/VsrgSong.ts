@@ -1,5 +1,5 @@
-import { IMPORT_NOTE_POSITIONS } from "$/Config";
-import { SnapPoint } from "$/components/VsrgComposer/VsrgBottom";
+import { IMPORT_NOTE_POSITIONS } from "$config";
+import { SnapPoint } from "$cmp/VsrgComposer/VsrgBottom";
 import { InstrumentName } from "$types/GeneralTypes";
 import { RecordedSong } from "./RecordedSong";
 import { SerializedSong, Song } from "./Song";

@@ -1,9 +1,9 @@
 
 import { useState, useCallback, useEffect } from 'react'
-import { APP_NAME, NOTE_NAME_TYPES, NoteNameType } from '$/Config'
+import { APP_NAME, NOTE_NAME_TYPES, NoteNameType } from '$config'
 import { isComposedOrRecorded } from '$lib/Utilities'
 import Switch from '$cmp/Inputs/Switch'
-import Analytics from '$/lib/Stats'
+import Analytics from '$lib/Stats'
 import { RecordedSong } from '$lib/Songs/RecordedSong'
 import { RecordedNote } from '$lib/Songs/SongClasses'
 import { AppButton } from '$cmp/Inputs/AppButton'
@@ -17,8 +17,8 @@ import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import { songService } from '$lib/Services/SongService'
 import { ComposedSong } from '$lib/Songs/ComposedSong'
 import { useTheme } from '$lib/Hooks/useTheme'
-import Instrument from '$/lib/Instrument'
-import { Select } from '$/components/Inputs/Select'
+import Instrument from '$lib/Instrument'
+import { Select } from '$cmp/Inputs/Select'
 
 const THRESHOLDS = {
     joined: 50,

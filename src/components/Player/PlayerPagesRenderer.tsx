@@ -3,7 +3,7 @@ import { useObservableObject } from "$lib/Hooks/useObservable"
 import { useTheme } from "$lib/Hooks/useTheme"
 import { memo } from "react"
 import { playerControlsStore } from "$stores/PlayerControlsStore"
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 
 
 const layoutType =  APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'

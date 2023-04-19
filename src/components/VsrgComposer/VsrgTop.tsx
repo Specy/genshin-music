@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 import Color from "color"
 import { AppButton } from "$cmp/Inputs/AppButton"
 import Memoized from "$cmp/Utility/Memoized"

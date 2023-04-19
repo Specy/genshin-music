@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@pixi/react";
-import { PIXI_VERTICAL_ALIGN } from "$/Config";
+import { PIXI_VERTICAL_ALIGN } from "$config";
 import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTimelineBreakpointsRenderer } from "./VsrgTimelineBreakpointsRenderer";
-import { useDefaultConfig } from "$/lib/Hooks/useConfig";
+import { useDefaultConfig } from "$lib/Hooks/useConfig";
 
 
 

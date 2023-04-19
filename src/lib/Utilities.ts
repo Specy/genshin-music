@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$/Config"
+import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$config"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";

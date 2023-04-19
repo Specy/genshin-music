@@ -1,10 +1,9 @@
-import { DropZoneProviderWrapper } from "$/components/ProviderWrappers/DropZoneProviderWrapper";
-import { GeneralProvidersWrapper } from "$/components/ProviderWrappers/GeneralProvidersWrapper";
-import { ThemeProviderWrapper } from "$/components/ProviderWrappers/ThemeProviderWrapper";
+import { DropZoneProviderWrapper } from "$cmp/ProviderWrappers/DropZoneProviderWrapper";
+import { GeneralProvidersWrapper } from "$cmp/ProviderWrappers/GeneralProvidersWrapper";
+import { ThemeProviderWrapper } from "$cmp/ProviderWrappers/ThemeProviderWrapper";
 import { useEffect } from "react";
 import '$pages/App.css';
 import '$pages/player/Player.css'
-
 import '$cmp/Index/Home.css'
 import '$cmp/Inputs/Switch/switch.css'
 import '$cmp/Settings/Settings.css'
@@ -12,7 +11,6 @@ import '$pages/Utility.scss'
 import "$cmp/Player/Keyboard.css"
 import "$cmp/Player/menu.css"
 import '$cmp/Player/Track.css'
-
 import "$pages/composer/Composer.css"
 import '$pages/error/ErrorPage.scss'
 import '$pages/changelog/Changelog.css'
@@ -29,11 +27,11 @@ import "$pages/zen-keyboard/ZenKeyboard.css"
 import type { AppProps } from "next/app";
 import AppBase from "./App";
 import { NextComponentType, NextPageContext } from "next";
-import { setIfInTWA } from "$/lib/Utilities";
+import { setIfInTWA } from "$lib/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"
-import { BASE_PATH, IS_TAURI } from "$/Config";
-import ErrorBoundaryRedirect from "$/components/Utility/ErrorBoundaryRedirect";
-import { logger } from "$/stores/LoggerStore";
+import { BASE_PATH, IS_TAURI } from "$config";
+import ErrorBoundaryRedirect from "$cmp/Utility/ErrorBoundaryRedirect";
+import { logger } from "$stores/LoggerStore";
 import Head from "next/head";
 import Script from "next/script";
 

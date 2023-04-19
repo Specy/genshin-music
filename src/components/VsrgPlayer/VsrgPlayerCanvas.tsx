@@ -5,14 +5,14 @@ import { ThrottledEventLoop } from "$lib/ThrottledEventLoop";
 import { isNumberCloseTo } from "$lib/Utilities";
 import { Application } from "pixi.js";
 import { Component, createRef } from "react";
-import { keyBinds } from "$/stores/KeybindsStore";
+import { keyBinds } from "$stores/KeybindsStore";
 import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { KeyboardKey, subscribeCurrentVsrgSong, VsrgKeyboardPressType, VsrgPlayerEvent, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
 import { VsrgPlayerCache } from "./VsgPlayerCache";
 import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
 import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
 import { VsrgKeyboardLayout } from "./VsrgPlayerKeyboard";
-import { DEFAULT_DOM_RECT } from "$/Config";
+import { DEFAULT_DOM_RECT } from "$config";
 
 
 

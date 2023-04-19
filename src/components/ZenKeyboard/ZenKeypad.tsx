@@ -1,10 +1,10 @@
-import { useObservableArray } from "$/lib/Hooks/useObservable";
-import Instrument, { ObservableNote } from "$/lib/Instrument";
+import { useObservableArray } from "$lib/Hooks/useObservable";
+import Instrument, { ObservableNote } from "$lib/Instrument";
 import { zenKeyboardStore } from "$stores/ZenKeyboardStore";
 import { ZenNote } from "./ZenNote";
 import { useEffect } from 'react'
-import { NoteNameType, Pitch } from "$/Config";
-import { KeyboardProvider } from "$/lib/Providers/KeyboardProvider";
+import { NoteNameType, Pitch } from "$config";
+import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
 
 interface ZenKeyboardProps {
     instrument: Instrument

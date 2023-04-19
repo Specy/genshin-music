@@ -1,4 +1,4 @@
-import { VSRG_SCORE_COLOR_MAP } from "$/Config";
+import { VSRG_SCORE_COLOR_MAP } from "$config";
 import { useVsrgScore } from "$lib/Hooks/useVsrgScore";
 import { memo } from "react";
 

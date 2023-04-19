@@ -1,5 +1,5 @@
 import { Stage } from "@pixi/react"
-import { DEFAULT_DOM_RECT, DEFAULT_VSRG_KEYS_MAP } from "$/Config"
+import { DEFAULT_DOM_RECT, DEFAULT_VSRG_KEYS_MAP } from "$config"
 import isMobile from "is-mobile"
 import { subscribeTheme } from "$lib/Hooks/useTheme"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
@@ -15,8 +15,8 @@ import { VsrgCanvasCache } from "./VsrgComposerCache"
 import { VsrgKeysRenderer } from "./VsrgKeysRenderer"
 import { VsrgScrollableTrackRenderer } from "./VsrgScrollableTrackRenderer"
 import { VsrgTimelineRenderer } from "./VsrgTimelineRenderer"
-import { getNearestTo } from "$/lib/Utilities"
-import { globalConfigStore } from "$/stores/GlobalConfig"
+import { getNearestTo } from "$lib/Utilities"
+import { globalConfigStore } from "$stores/GlobalConfig"
 
 
 export type VsrgCanvasSizes = {

@@ -1,7 +1,7 @@
 import { useTheme } from '$lib/Hooks/useTheme'
 import { useEffect } from 'react';
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
-import { colorToRGB } from '$/lib/Utilities';
+import { colorToRGB } from '$lib/Utilities';
 import Head from 'next/head';
 type Props = {
     children?: React.ReactNode;

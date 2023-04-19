@@ -10,7 +10,7 @@ import { HelpTooltip } from "$cmp/Utility/HelpTooltip";
 import Memoized from "$cmp/Utility/Memoized";
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip";
 import isMobile from "is-mobile";
-import Analytics from "$/lib/Stats";
+import Analytics from "$lib/Stats";
 import { VsrgComposerSettingsDataType } from "$lib/BaseSettings";
 import { Folder } from "$lib/Folder";
 import useClickOutside from "$lib/Hooks/useClickOutside";
@@ -30,7 +30,7 @@ import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
-import { logger } from "$/stores/LoggerStore";
+import { logger } from "$stores/LoggerStore";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 

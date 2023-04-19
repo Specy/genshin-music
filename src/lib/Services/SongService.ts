@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 import { ComposedSong } from "$lib/Songs/ComposedSong"
 import { RecordedSong } from "$lib/Songs/RecordedSong"
 import { extractStorable, SerializedSong, Song, SongStorable } from "$lib/Songs/Song"

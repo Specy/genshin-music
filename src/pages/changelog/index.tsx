@@ -3,10 +3,10 @@ import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import { FaGithub } from 'react-icons/fa'
 import { ChangelogRow } from '$cmp/Changelog/ChangelogRow'
 import { updates } from '$lib/updates'
-import { APP_VERSION } from '$/Config'
+import { APP_VERSION } from '$config'
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
-import { AppButton } from '$/components/Inputs/AppButton'
+import { AppButton } from '$cmp/Inputs/AppButton'
 import Link from 'next/link'
 
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION

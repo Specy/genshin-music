@@ -1,5 +1,5 @@
 import { Container, Sprite } from "@pixi/react";
-import { PIXI_CENTER_X_END_Y } from "$/Config";
+import { PIXI_CENTER_X_END_Y } from "$config";
 import { VsrgHitObject, VsrgTrack } from "$lib/Songs/VsrgSong";
 import { parseMouseClick } from "$lib/Utilities";
 import { ClickType } from "$types/GeneralTypes"
@@ -7,7 +7,7 @@ import { ClickType } from "$types/GeneralTypes"
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
-import { useDefaultConfig } from "$/lib/Hooks/useConfig";
+import { useDefaultConfig } from "$lib/Hooks/useConfig";
 
 interface VsrgTrackRendererProps {
     track: VsrgTrack

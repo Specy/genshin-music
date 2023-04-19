@@ -1,4 +1,4 @@
-import { DEFAULT_DOM_RECT, SPEED_CHANGERS } from "$/Config"
+import { DEFAULT_DOM_RECT, SPEED_CHANGERS } from "$config"
 import Memoized from "$cmp/Utility/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
 import { memo, useEffect, useState, useRef, ChangeEvent } from "react";

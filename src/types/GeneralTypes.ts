@@ -1,4 +1,4 @@
-import type { INSTRUMENTS } from "$/Config";
+import type { INSTRUMENTS } from "$config";
 
 export type InstrumentName = typeof INSTRUMENTS[number]
 export type ApproachingScore = {

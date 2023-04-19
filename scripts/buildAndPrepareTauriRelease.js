@@ -1,7 +1,8 @@
-//require('dotenv').config()
+import dotenv from 'dotenv'
 import { spawn } from 'child_process'
 import { promises as fs } from 'fs'
 import clc from "cli-color";
+dotenv.config()
 
 const [_1, _2, useEnv, app] = process.argv
 const version = process.env.VERSION

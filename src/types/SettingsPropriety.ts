@@ -1,4 +1,4 @@
-import type{ INSTRUMENTS } from '$/Config'
+import type{ INSTRUMENTS } from '$config'
 import type { ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings } from '$lib/BaseSettings'
 interface BaseSettingsProp {
     name: string

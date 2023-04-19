@@ -1,7 +1,7 @@
-import { APP_NAME } from '$/Config'
+import { APP_NAME } from '$config'
 import composerImg from '$/assets/images/help-composer.png'
 import playerImg from '$/assets/images/help-player.png'
-import { useDefaultConfig } from '$/lib/Hooks/useConfig'
+import { useDefaultConfig } from '$lib/Hooks/useConfig'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import Image from 'next/image'
 

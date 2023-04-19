@@ -1,4 +1,4 @@
-import { FOLDER_FILTER_TYPES } from "$/Config"
+import { FOLDER_FILTER_TYPES } from "$config"
 import { SongStorable } from "./Songs/Song"
 
 

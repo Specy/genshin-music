@@ -1,4 +1,4 @@
-import { VSRG_SCORE_COLOR_MAP } from "$/Config"
+import { VSRG_SCORE_COLOR_MAP } from "$config"
 import { memo, useEffect, useRef, useState } from "react"
 import { subscribeVsrgLatestScore, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
 import { Timer } from "$types/GeneralTypes"

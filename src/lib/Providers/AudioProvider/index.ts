@@ -1,4 +1,4 @@
-import { BASE_PATH } from "$/Config"
+import { BASE_PATH } from "$config"
 import AudioRecorder from "$lib/AudioRecorder"
 
 

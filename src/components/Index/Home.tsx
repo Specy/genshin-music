@@ -1,6 +1,6 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from '$lib/Hooks/useTheme'
@@ -9,11 +9,11 @@ import { KeyboardProvider } from '$lib/Providers/KeyboardProvider'
 import { AppButton } from '$cmp/Inputs/AppButton'
 import { VsrgIcon } from '$cmp/icons/VsrgIcon'
 import { VsrgComposerIcon } from '$cmp/icons/VsrgComposerIcon'
-import { useObservableObject } from '$/lib/Hooks/useObservable'
+import { useObservableObject } from '$lib/Hooks/useObservable'
 import { homeStore } from '$stores/HomeStore'
 import { useRouter } from 'next/router'
-import { isTWA } from '$/lib/Utilities'
-import { useDefaultConfig } from '$/lib/Hooks/useConfig'
+import { isTWA } from '$lib/Utilities'
+import { useDefaultConfig } from '$lib/Hooks/useConfig'
 
 interface HomeProps {
     askForStorage: () => void,

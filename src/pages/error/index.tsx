@@ -1,6 +1,6 @@
 import { FaTrash, FaDownload } from 'react-icons/fa';
 import { asyncConfirm } from "$cmp/Utility/AsyncPrompts"
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 import { logger } from '$stores/LoggerStore';
 import { SongMenu } from '$cmp/Layout/SongMenu';
 import { AppButton } from '$cmp/Inputs/AppButton';
@@ -13,7 +13,7 @@ import { DefaultPage } from '$cmp/Layout/DefaultPage';
 import { songService } from '$lib/Services/SongService';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { RecordedSong } from '$lib/Songs/RecordedSong';
-import { useObservableArray } from '$/lib/Hooks/useObservable';
+import { useObservableArray } from '$lib/Hooks/useObservable';
 import { logsStore } from '$stores/LogsStore';
 
 export function ErrorPage() {

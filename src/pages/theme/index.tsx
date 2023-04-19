@@ -16,9 +16,9 @@ import { useTheme } from "$lib/Hooks/useTheme";
 import { AppBackground } from "$cmp/Layout/AppBackground";
 import { Title } from "$cmp/Miscellaneous/Title";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { useObservableArray } from "$/lib/Hooks/useObservable";
+import { useObservableArray } from "$lib/Hooks/useObservable";
 import { themeStore } from "$stores/ThemeStore/ThemeStore";
-import { fileService } from "$/lib/Services/FileService";
+import { fileService } from "$lib/Services/FileService";
 
 
 function ThemePage() {

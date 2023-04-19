@@ -1,4 +1,4 @@
-import { APP_NAME } from "$/Config"
+import { APP_NAME } from "$config"
 import { ComposerSettings, ComposerSettingsDataType, PlayerSettings, PlayerSettingsDataType, MIDISettings, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, BaseSettings, ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$lib/BaseSettings"
 
 
