@@ -12,10 +12,16 @@
     background-color: var(--primary);
     color: var(--primary--text);
 }
+
+@media screen and (max-width: 920px) {
+    .shortcut-element{
+        min-width: 50vw;
+    }    
+}
 .shortcut-element-selected{
     outline: solid 0.1rem var(--accent);
 }
 .shortcut-button{
     background-color: var(--secondary);
-    color: var(--secondary--text);
+    color: var(--secondary-text);
 }
