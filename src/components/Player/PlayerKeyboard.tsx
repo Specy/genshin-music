@@ -48,7 +48,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     tickInterval: number = 0
     mounted: boolean
     songTimestamp = 0
-    toDispose: (() => void)[] = []
+    cleanup: (() => void)[] = []
     timeouts: Timer[] = []
     debouncedStateUpdate: Timer = 0
     constructor(props: KeyboardPlayerProps) {
@@ -76,9 +76,8 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             }
         })
         const disposeKeyboard = createKeyboardListener("player_keyboard_keys", this.handleKeyboard)
-        this.toDispose.push(disposeShortcuts, disposeKeyboard)
-        MIDIProvider.addListener(this.handleMidi)
-        this.toDispose.push(subscribeObeservableObject(playerStore.state, async () => {
+        this.cleanup.push(disposeShortcuts, disposeKeyboard)
+        this.cleanup.push(subscribeObeservableObject(playerStore.state, async () => {
             //this is because mobx calls for each prop changed while i want to batch it and execute all at once
             if(this.debouncedStateUpdate) clearTimeout(this.debouncedStateUpdate)
             this.debouncedStateUpdate = setTimeout(async () => {
@@ -117,13 +116,14 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                 }
             }, 4)
         }))
-        this.toDispose.push(subscribeObservableArray(playerStore.keyboard, () => {
+        MIDIProvider.addListener(this.handleMidi)
+        this.cleanup.push(() => MIDIProvider.removeListener(this.handleMidi))
+        this.cleanup.push(subscribeObservableArray(playerStore.keyboard, () => {
             this.setState({ keyboard: playerStore.keyboard })
         }))
     }
     componentWillUnmount() {
-        MIDIProvider.removeListener(this.handleMidi)
-        this.toDispose.forEach(d => d())
+        this.cleanup.forEach(d => d())
         this.songTimestamp = 0
         playerStore.resetSong()
         this.mounted = false

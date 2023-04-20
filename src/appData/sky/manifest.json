@@ -21,12 +21,17 @@
   ],
   "screenshots": [
     {
-      "src": "manifestData/main.webp",
+      "src": "manifestData/player.webp",
       "type": "image/png",
       "sizes": "1280x720"
     },
     {
       "src": "manifestData/composer.webp",
+      "type": "image/png",
+      "sizes": "1280x720"
+    },
+    {
+      "src": "manifestData/zenkeyboard.webp",
       "type": "image/png",
       "sizes": "1280x720"
     }

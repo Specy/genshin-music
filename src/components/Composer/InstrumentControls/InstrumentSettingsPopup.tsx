@@ -5,7 +5,7 @@ import { HelpTooltip } from "$cmp/Utility/HelpTooltip"
 import useClickOutside from "$lib/Hooks/useClickOutside"
 import { InstrumentNoteIcon } from "$lib/Songs/ComposedSong"
 import { InstrumentData } from "$lib/Songs/SongClasses"
-import { capitalize } from "$lib/Utilities"
+import { capitalize, prettyPrintInstrumentName } from "$lib/Utilities"
 import { FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp } from "react-icons/fa"
 import { InstrumentSelect } from "../../Inputs/InstrumentSelect"
 
@@ -34,7 +34,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
                 style={{ width: '7.4rem' }}
                 value={instrument.alias}
                 onChange={e => onChange(instrument.set({ alias: e.target.value }))}
-                placeholder={instrument.name}
+                placeholder={prettyPrintInstrumentName(instrument.name)}
             />
         </div>
 

@@ -2,9 +2,7 @@ import { APP_NAME } from "$config"
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
 import type { VsrgSongKeys } from "$lib/Songs/VsrgSong"
 import cloneDeep from "lodash.clonedeep"
-import { makeObservable, observable } from "mobx"
-
-
+import { makeObservable, observable, observe } from "mobx"
 
 const defaultShortcuts = {
     composer: {
@@ -15,12 +13,33 @@ const defaultShortcuts = {
         "KeyE": "add_column",
         "ArrowUp": "previous_layer",
         "ArrowDown": "next_layer",
+        "ArrowRight": "next_breakpoint",
+        "ArrowLeft": "previous_breakpoint",
     },
     player: {
-        "Space": "toggle_play",
+        "Space": "toggle_record",
         "ShiftLeft+KeyS": "stop",
         "ShiftLeft+KeyR": "restart",
+        "ShiftLeft+KeyM": "toggle_menu",
+        "Escape": "close_menu",
     },
+    vsrg_composer : {
+        "ShiftLeft+KeyW": "move_up",
+        "ShiftLeft+KeyS": "move_down",
+        "ShiftLeft+KeyA": "move_left",
+        "ShiftLeft+KeyD": "move_right",
+        "Escape": "deselect",
+        "Backspace": "delete",
+        "ArrowRight": "next_breakpoint",
+        "ArrowLeft": "previous_breakpoint",
+        "ArrowUp": "previous_track",
+        "ArrowDown": "next_track",
+        "Space": "toggle_play",
+        "Digit1": "set_tap_hand",
+        "Digit2": "set_hold_hand",
+        "Digit3": "set_delete_hand",
+    },
+
     keyboard: Object.fromEntries((APP_NAME === "Genshin"
         ? (
             "Q W E R T Y U " +
@@ -41,6 +60,7 @@ type ShortcutsToMap<T> = {
 }
 export type Shortcuts = ShortcutsToMap<typeof defaultShortcuts>
 export type ShortcutPage = KeysOf<Shortcuts>
+
 interface SerializedKeybinds {
     version: number
     vsrg: {
@@ -58,10 +78,13 @@ interface SerializedKeybinds {
         keyboard: {
             [key: string]: MapValues<Shortcuts['keyboard']>
         }
+        vsrg_composer: {
+            [key: string]: MapValues<Shortcuts['vsrg_composer']>
+        }
     }
 }
 class KeyBinds {
-    version: number = 10
+    version: number = 11
     @observable
     private vsrg = {
         k4: ['A', 'S', 'J', 'K'],
@@ -73,8 +96,8 @@ class KeyBinds {
         composer: new Map(Object.entries(defaultShortcuts.composer)),
         player: new Map(Object.entries(defaultShortcuts.player)),
         keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
+        vsrg_composer: new Map(Object.entries(defaultShortcuts.vsrg_composer)),
     }
-
     constructor() {
         makeObservable(this)
     }
@@ -137,6 +160,7 @@ class KeyBinds {
                 composer: new Map(Object.entries(parsed.shortcuts.composer)),
                 player: new Map(Object.entries(parsed.shortcuts.player)),
                 keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
+                vsrg_composer: new Map(Object.entries(parsed.shortcuts.vsrg_composer)),
             }
         }
     }
@@ -151,6 +175,7 @@ class KeyBinds {
                 composer: Object.fromEntries(this.shortcuts.composer),
                 player: Object.fromEntries(this.shortcuts.player),
                 keyboard: Object.fromEntries(this.shortcuts.keyboard),
+                vsrg_composer: Object.fromEntries(this.shortcuts.vsrg_composer),
             },
         }
     }

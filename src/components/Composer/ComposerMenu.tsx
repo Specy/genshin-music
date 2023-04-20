@@ -5,7 +5,6 @@ import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import MenuPanel from '$cmp/Layout/MenuPanel'
 import DonateButton from '$cmp/Miscellaneous/DonateButton'
 import Memoized from '$cmp/Utility/Memoized';
-import { IS_MIDI_AVAILABLE } from '$config';
 import Analytics from '$lib/Stats';
 import { logger } from '$stores/LoggerStore';
 import { AppButton } from '$cmp/Inputs/AppButton';
@@ -36,6 +35,8 @@ import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { RecordedOrComposed } from '$types/SongTypes';
 import { FileElement, FilePicker } from '../Inputs/FilePicker';
 import isMobile from 'is-mobile';
+import Link from 'next/link';
+import { useDefaultConfig } from '$lib/Hooks/useConfig';
 
 interface MenuProps {
     data: {
@@ -60,6 +61,7 @@ const excludedSongs: SongType[] = ['vsrg']
 function Menu({ data, functions }: MenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
+    const { IS_MIDI_AVAILABLE } = useDefaultConfig()
     const [songs] = useSongs()
     const [folders] = useFolders()
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
@@ -280,19 +282,24 @@ function Menu({ data, functions }: MenuProps) {
                     />
                     <div className='settings-row-wrap'>
                         {IS_MIDI_AVAILABLE &&
+                            <Link href={"midi-setup"}>
+                                <AppButton
+                                    style={{ width: 'fit-content' }}
+                                >
+                                    Connect MIDI keyboard
+                                </AppButton>
+                            </Link>
+
+                        }
+                        <Link href={"theme"}>
                             <AppButton
-                                onClick={() => changePage('MidiSetup')}
+                                onClick={() => changePage('Theme')}
                                 style={{ width: 'fit-content' }}
                             >
-                                Connect MIDI keyboard
+                                Change app theme
                             </AppButton>
-                        }
-                        <AppButton
-                            onClick={() => changePage('Theme')}
-                            style={{ width: 'fit-content' }}
-                        >
-                            Change app theme
-                        </AppButton>
+                        </Link>
+
                     </div>
                     <DonateButton />
                 </MenuPanel>

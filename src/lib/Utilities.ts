@@ -255,13 +255,22 @@ function nearestEven(num: number) {
 }
 
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
-export type Debouncer = (func: () => void) => void
+type Debouncer = (func: () => void) => void
 function createDebouncer(delay:number): Debouncer{
     let timeoutId:Timer
     return function(callback:() => void){
         clearTimeout(timeoutId)
         timeoutId = setTimeout(callback, delay)
     }
+}
+
+
+function prettyPrintInstrumentName(name: string) {
+    return name.replace("SFX_", "")
+}
+
+export type {
+	Debouncer
 }
 
 export {
@@ -290,5 +299,6 @@ export {
 	groupArrayEvery,
 	isNumberBetween,
 	isNumberCloseTo,
-	getNearestTo
+	getNearestTo,
+	prettyPrintInstrumentName
 }

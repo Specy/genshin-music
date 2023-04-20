@@ -7,7 +7,6 @@ import { useEffect } from "react"
 
 export function useShortcut<T extends ShortcutPage >(page: T, id: string,  callback: ShortcutListener<T>, options?: ShortcutOptions){
     useEffect(() => {
-        const demount = createShortcutListener(page, id, callback, options)
-        return demount
+        return createShortcutListener(page, id, callback, options)
     }, [callback, options, page, id])
 }

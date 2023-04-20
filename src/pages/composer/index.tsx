@@ -66,7 +66,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
     mounted: boolean
     changes: number
     unblock: (...events: any[]) => void = () => { }
-    shortcutDisposer: ShortcutDisposer | null = null
+    cleanup: (() => void)[] = []
     constructor(props: any) {
         super(props)
         const settings = settingsService.getDefaultComposerSettings()
@@ -108,10 +108,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             "composer_shortcuts_keyboard", 
             this.handleKeyboardShortcut, 
         )
-        this.shortcutDisposer = () => {
-            shortcutListener()
-            shortcutKeyboardListener()
-        }
+        this.cleanup.push(shortcutKeyboardListener, shortcutListener)
         this.setState({ settings })
         this.init(settings)
         this.broadcastChannel = window.BroadcastChannel ? new BroadcastChannel(APP_NAME + '_composer') : null
@@ -146,7 +143,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.broadcastChannel?.close?.()
         state.isPlaying = false
         this.props.router.events.off("routeChangeStart", this.unblock)
-        if (this.shortcutDisposer) this.shortcutDisposer()
+        this.cleanup.forEach(dispose => dispose())
         KeyboardProvider.unregisterById('composer')
         MIDIProvider.removeListener(this.handleMidi)
         if (AudioProvider.isRecording) AudioProvider.stopRecording()

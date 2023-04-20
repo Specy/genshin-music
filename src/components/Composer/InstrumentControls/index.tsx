@@ -7,6 +7,7 @@ import { BiSquareRounded } from "react-icons/bi";
 
 import { Theme } from "$stores/ThemeStore/ThemeProvider";
 import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
+import { prettyPrintInstrumentName } from "$lib/Utilities";
 
 
 interface InstrumentControlsProps {
@@ -52,9 +53,7 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                     key={ins.name + i}
                 />
             )}
-            <div style={{ minHeight: '1rem' }}>
-
-            </div>
+            <div style={{ minHeight: '1rem' }} />
             <AppButton
                 onClick={(e) => {
                     onInstrumentAdd()
@@ -157,7 +156,7 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
             className='flex-grow flex-centered instrument-name-button'
         >
             <span className="text-ellipsis" style={{ width: '6rem' }}>
-                {instrument.alias || instrument.name}
+                {instrument.alias || prettyPrintInstrumentName(instrument.name)}
             </span>
         </AppButton>
 
@@ -185,6 +184,4 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
         }
     </div>
 }
-
-
 

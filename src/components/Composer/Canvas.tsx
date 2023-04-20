@@ -12,12 +12,12 @@ import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
 import { clamp, colorToRGB, nearestEven } from '$lib/Utilities';
 import type { Column } from '$lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from '$lib/BaseSettings';
-import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
 import { isColumnVisible, RenderColumn } from '$cmp/Composer/RenderColumn';
 import { TimelineButton } from './TimelineButton';
 import { Timer } from '$types/GeneralTypes';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { subscribeTheme } from '$lib/Hooks/useTheme';
+import { createShortcutListener } from '$stores/KeybindsStore';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
@@ -76,7 +76,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     throttleScroll: number
     onSlider: boolean
     cacheRecalculateDebounce: Timer
-    dispose: () => void
+    cleanup: (() => void)[] = []
     constructor(props: ComposerCanvasProps) {
         super(props)
         const numberOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
@@ -116,7 +116,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.sliderOffset = 0
         this.throttleScroll = 0
         this.onSlider = false
-        this.dispose = () => { }
         //TODO memory leak somewhere in this page
         this.cacheRecalculateDebounce = 0
     }
@@ -142,9 +141,12 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             this.recalculateCacheAndSizes()
         })
         window.addEventListener("pointerup", this.resetPointerDown)
-        KeyboardProvider.listen(this.handleKeyboard)
+        const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({ shortcut }) => {
+            if(shortcut === "next_breakpoint") this.handleBreakpoints(1)
+            if(shortcut === "previous_breakpoint") this.handleBreakpoints(-1)
+        })
         this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
-        this.dispose = subscribeTheme(() => {
+        const themeDispose = subscribeTheme(() => {
             this.setState({
                 theme: {
                     timeline: {
@@ -160,15 +162,15 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 }
             }, this.recalculateCacheAndSizes)
         })
+        this.cleanup.push(themeDispose, shortcutDisposer)
     }
 
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
         window.removeEventListener("resize", this.recalculateCacheAndSizes)
         if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
-        KeyboardProvider.unlisten(this.handleKeyboard)
         this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
-        this.dispose()
+        this.cleanup.forEach(fn => fn())
         this.state.cache?.destroy()
         this.notesStageRef = null
         this.breakpointsStageRef = null
@@ -203,10 +205,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 cache: this.getCache(columnWidth, height, isMobile() ? 2 : 4, isMobile() ? 25 : 30),
             })
         }, 50)
-    }
-    handleKeyboard = ({ code }: KeyboardEventData) => {
-        if (code === 'ArrowRight') this.handleBreakpoints(1)
-        else if (code === 'ArrowLeft') this.handleBreakpoints(-1)
     }
 
     getCache(columnWidth: number, height: number, margin: number, timelineHeight: number) {

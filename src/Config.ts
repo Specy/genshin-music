@@ -43,7 +43,6 @@ const BASE_THEME_CONFIG = {
         note: APP_NAME === 'Genshin' ? '#aaaa82' : '#212121'
     }
 }
-const IS_MIDI_AVAILABLE = true //!!navigator.requestMIDIAccess
 const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
         "Lyre",
@@ -213,7 +212,7 @@ const LAYOUT_ICONS_KINDS = {
 }
 type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
 
-const NOTE_NAME_TYPES: NoteNameType[]= APP_NAME === "Genshin"
+const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     ? [
         "Note name",
         "Keyboard layout",
@@ -229,6 +228,7 @@ const NOTE_NAME_TYPES: NoteNameType[]= APP_NAME === "Genshin"
         "Playstation",
         "Switch",
     ]
+
 type InstrumentDataType = {
     notes: number
     family: string
@@ -690,7 +690,6 @@ export {
     SPEED_CHANGERS,
     CACHE_DATA,
     UPDATE_MESSAGE,
-    IS_MIDI_AVAILABLE,
     BASE_THEME_CONFIG,
     TEMPO_CHANGERS,
     EMPTY_LAYER,

@@ -25,6 +25,7 @@ import { Title } from "$cmp/Miscellaneous/Title";
 import {homeStore} from "$stores/HomeStore";
 import { AppBackground } from "$cmp/Layout/AppBackground";
 import { NextRouter, useRouter } from "next/router";
+import { ShortcutListener, createShortcutListener } from "$stores/KeybindsStore";
 
 type VsrgComposerProps = {
     router: NextRouter
@@ -56,6 +57,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     heldKeys: (boolean | undefined)[] = []
     pressedDownHitObjects: (VsrgHitObject | undefined)[] = []
     unblock: (...events: any[]) => void = () => { }
+    cleanup: (() => void)[] = []
     constructor(props: VsrgComposerProps) {
         super(props)
         const settings = settingsService.getDefaultVsrgComposerSettings()
@@ -92,6 +94,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         }, () => vsrgComposerStore.emitEvent("tracksChange"))
     }
     componentDidMount() {
+
         const settings = settingsService.getVsrgComposerSettings()
         this.setState({ settings })
         this.state.audioPlayer.setBasePitch(settings.pitch.value)
@@ -111,92 +114,10 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             this.props.router.push(data)
         })
         this.props.router.events.on("routeChangeStart", this.unblock)
-
+        const disposeShortcuts = createShortcutListener("vsrg_composer", "vsrg_composer", this.handleShortcut)
+        this.cleanup.push(disposeShortcuts)
         KeyboardProvider.listen(this.handleKeyboardDown, { id, type: 'keydown' })
-        KeyboardProvider.registerNumber(1, () => {
-            this.setState({ selectedType: 'tap' })
-        }, { id })
-        KeyboardProvider.registerLetter("W", () => {
-            const { selectedHitObject, vsrg, snapPointDuration } = this.state
-            if (!selectedHitObject) return
-            if (this.state.settings.isVertical.value) {
-                selectedHitObject.timestamp = selectedHitObject.timestamp + snapPointDuration
-            } else {
-                selectedHitObject.index = clamp(selectedHitObject.index - 1, 0, vsrg.keys)
-            }
-            this.releaseHitObject()
-        }, { id, shift: true })
-        KeyboardProvider.registerLetter("A", () => {
-            const { selectedHitObject, vsrg, snapPointDuration } = this.state
-            if (!selectedHitObject) return
-            if (this.state.settings.isVertical.value) {
-                selectedHitObject.index = clamp(selectedHitObject.index - 1, 0, vsrg.keys)
-            } else {
-                selectedHitObject.timestamp = selectedHitObject.timestamp - snapPointDuration
-            }
-            this.releaseHitObject()
-        }, { id, shift: true })
-        KeyboardProvider.registerLetter("S", () => {
-            const { selectedHitObject, vsrg, snapPointDuration } = this.state
-            if (!selectedHitObject) return
-            if (this.state.settings.isVertical.value) {
-                selectedHitObject.timestamp = selectedHitObject.timestamp - snapPointDuration
-
-            } else {
-                selectedHitObject.index = clamp(selectedHitObject.index + 1, 0, vsrg.keys)
-            }
-            this.releaseHitObject()
-        }, { id, shift: true })
-        KeyboardProvider.registerLetter("D", () => {
-            const { selectedHitObject, vsrg, snapPointDuration } = this.state
-            if (!selectedHitObject) return
-            if (this.state.settings.isVertical.value) {
-                selectedHitObject.index = clamp(selectedHitObject.index + 1, 0, vsrg.keys)
-
-            } else {
-                selectedHitObject.timestamp = selectedHitObject.timestamp + snapPointDuration
-            }
-            this.releaseHitObject()
-        }, { id, shift: true })
-
-        KeyboardProvider.register("Escape", () => {
-            this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
-        }, { id })
-        KeyboardProvider.register("Backspace", () => {
-            const { selectedHitObject, vsrg, selectedTrack } = this.state
-            if (!selectedHitObject) return
-            vsrg.removeHitObjectInTrackAtTimestamp(selectedTrack, selectedHitObject.timestamp, selectedHitObject.index)
-            this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
-        })
-        KeyboardProvider.registerNumber(2, () => {
-            this.setState({ selectedType: 'hold' })
-        }, { id })
-        KeyboardProvider.registerNumber(3, () => {
-            this.setState({ selectedType: 'delete' })
-        }, { id })
-
-        KeyboardProvider.register("ArrowLeft", () => {
-            this.onBreakpointSelect(-1)
-        }, { id })
-        KeyboardProvider.register("ArrowRight", () => {
-            this.onBreakpointSelect(1)
-        }, { id })
-        KeyboardProvider.register("ArrowUp", () => {
-            this.selectTrack(Math.max(0, this.state.selectedTrack - 1))
-        }, { id })
-        KeyboardProvider.register("ArrowDown", () => {
-            this.selectTrack(Math.min(this.state.vsrg.tracks.length - 1, this.state.selectedTrack + 1))
-        }, { id })
         KeyboardProvider.listen(this.handleKeyboardUp, { id, type: 'keyup' })
-        KeyboardProvider.register('Space', ({ event }) => {
-            if (event.repeat) return
-            if (isFocusable(document.activeElement)) {
-                //@ts-ignore
-                document.activeElement?.blur()
-                //event.target?.blur()
-            }
-            this.togglePlay()
-        }, { id: 'vsrg-composer' })
     }
     componentWillUnmount() {
         this.mounted = false
@@ -205,6 +126,71 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         const { audioPlaybackPlayer, audioPlayer } = this.state
         audioPlaybackPlayer.destroy()
         audioPlayer.destroy()
+        this.cleanup.forEach(c => c())
+    }
+
+    handleShortcut: ShortcutListener<"vsrg_composer"> = ({ shortcut, event }) => {
+        if(event.code === "Space"){
+            if (event.repeat && shortcut === "toggle_play") return
+            if (isFocusable(document.activeElement)) {
+                //@ts-ignore
+                document.activeElement?.blur()
+                //event.target?.blur()
+            }
+        }
+        const { vsrg, selectedTrack, selectedHitObject, snapPointDuration, settings} = this.state
+        if(shortcut === "set_tap_hand") this.setState({ selectedType: 'tap' })
+        if(shortcut === "set_hold_hand") this.setState({ selectedType: 'hold' })
+        if(shortcut === "set_delete_hand") this.setState({ selectedType: 'delete' })
+        if(shortcut === "deselect") this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
+        if(shortcut === "toggle_play") this.togglePlay()
+        if(shortcut === "next_breakpoint") this.onBreakpointSelect(1)
+        if(shortcut === "previous_breakpoint") this.onBreakpointSelect(-1)
+        if(shortcut === "next_track") this.selectTrack(Math.min(this.state.vsrg.tracks.length - 1, this.state.selectedTrack + 1))
+        if(shortcut === "previous_track") this.selectTrack(Math.max(0, this.state.selectedTrack - 1))
+        if(shortcut === "delete") {
+            if (!selectedHitObject) return
+            vsrg.removeHitObjectInTrackAtTimestamp(selectedTrack, selectedHitObject.timestamp, selectedHitObject.index)
+            this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
+        }
+        if(shortcut === "move_right") {
+            if (!selectedHitObject) return
+            if (settings.isVertical.value) {
+                selectedHitObject.index = clamp(selectedHitObject.index + 1, 0, vsrg.keys)
+
+            } else {
+                selectedHitObject.timestamp = selectedHitObject.timestamp + snapPointDuration
+            }
+            this.releaseHitObject()
+        }
+        if(shortcut === "move_down") {
+            if (!selectedHitObject) return
+            if (settings.isVertical.value) {
+                selectedHitObject.timestamp = selectedHitObject.timestamp - snapPointDuration
+
+            } else {
+                selectedHitObject.index = clamp(selectedHitObject.index + 1, 0, vsrg.keys)
+            }
+            this.releaseHitObject()
+        }
+        if(shortcut === "move_left"){
+            if (!selectedHitObject) return
+            if (settings.isVertical.value) {
+                selectedHitObject.index = clamp(selectedHitObject.index - 1, 0, vsrg.keys)
+            } else {
+                selectedHitObject.timestamp = selectedHitObject.timestamp - snapPointDuration
+            }
+            this.releaseHitObject()
+        }
+        if(shortcut === "move_up"){
+            if (!selectedHitObject) return
+            if (settings.isVertical.value) {
+                selectedHitObject.timestamp = selectedHitObject.timestamp + snapPointDuration
+            } else {
+                selectedHitObject.index = clamp(selectedHitObject.index - 1, 0, vsrg.keys)
+            }
+            this.releaseHitObject()
+        }
     }
     updateSettings = (override?: VsrgComposerSettingsDataType) => {
         settingsService.updateVsrgComposerSettings(override !== undefined ? override : this.state.settings)

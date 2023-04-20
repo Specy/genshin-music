@@ -5,6 +5,7 @@ import { ZenNote } from "./ZenNote";
 import { useEffect } from 'react'
 import { NoteNameType, Pitch } from "$config";
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
+import { createKeyboardListener } from "$stores/KeybindsStore";
 
 interface ZenKeyboardProps {
     instrument: Instrument
@@ -18,12 +19,11 @@ interface ZenKeyboardProps {
 export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale,noteNameType }: ZenKeyboardProps) {
     const layout = useObservableArray(zenKeyboardStore.keyboard)
     useEffect(() => {
-        KeyboardProvider.listen(({ letter, event }) => {
+        return createKeyboardListener("zen_keyboard", ({ shortcut, event }) => {
             if(event.repeat) return
-            const note = instrument.getNoteFromCode(letter)
+            const note = instrument.getNoteFromCode(shortcut)
             if (note !== null) onNoteClick(note)
-        }, { id: "ZenKeyboard" })
-        return () => KeyboardProvider.unregisterById("ZenKeyboard")
+        })
     }, [onNoteClick, instrument])
     let keyboardClass = "keyboard zen-keyboard"
     if (instrument.notes.length === 15) keyboardClass += " keyboard-5"

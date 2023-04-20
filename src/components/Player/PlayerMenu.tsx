@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder, FaEdit } from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
-import { APP_NAME, IS_MIDI_AVAILABLE } from "$config"
+import { APP_NAME } from "$config"
 import { playerStore } from '$stores/PlayerStore'
 import { HelpTab } from '$cmp/HelpTab'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
@@ -43,6 +43,8 @@ import { songService } from '$lib/Services/SongService';
 import { RecordedOrComposed } from '$types/SongTypes';
 import { _folderService } from '$lib/Services/FolderService';
 import { settingsService } from '$lib/Services/SettingsService';
+import { useDefaultConfig } from '$lib/Hooks/useConfig';
+import { createShortcutListener } from '$stores/KeybindsStore';
 
 interface MenuProps {
     functions: {
@@ -67,6 +69,7 @@ function Menu({ functions, data }: MenuProps) {
     const [searchInput, setSearchInput] = useState('')
     const [searchedSongs, setSearchedSongs] = useState<SearchedSongType[]>([])
     const [searchStatus, setSearchStatus] = useState('')
+    const { IS_MIDI_AVAILABLE } = useDefaultConfig()
     const [isPersistentStorage, setPeristentStorage] = useState(false)
     const [theme] = useTheme()
     const [folders] = useFolders()
@@ -74,6 +77,7 @@ function Menu({ functions, data }: MenuProps) {
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
     }, { active: isOpen, ignoreFocusable: true })
+    
     useEffect(() => {
         async function checkStorage() {
             if (navigator.storage && navigator.storage.persist) {
@@ -83,18 +87,11 @@ function Menu({ functions, data }: MenuProps) {
             }
         }
         checkStorage()
+        return createShortcutListener("player", "player_menu", ({ shortcut}) => {
+            if(shortcut === "close_menu") setOpen(false)
+            if(shortcut === "toggle_menu") setOpen((prev) => !prev)
+        })
     }, [])
-    const handleKeyboard = useCallback(({ letter, shift, code }: KeyboardEventData) => {
-        //@ts-ignore
-        document.activeElement?.blur()
-        if (letter === 'M' && shift) setOpen(!isOpen)
-        if (code === 'Escape') setOpen(false)
-    }, [isOpen])
-
-    useEffect(() => {
-        KeyboardProvider.listen(handleKeyboard)
-        return () => KeyboardProvider.unlisten(handleKeyboard)
-    }, [handleKeyboard])
 
     function clearSearch() {
         setSearchInput('')
@@ -239,7 +236,6 @@ function Menu({ functions, data }: MenuProps) {
                             {IS_MIDI_AVAILABLE &&
                                 <li>You can connect a MIDI keyboard to play</li>
                             }
-
                         </ul>
                     </HelpTooltip>
                     <Link href='composer' style={{ marginLeft: 'auto' }}>

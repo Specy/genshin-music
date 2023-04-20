@@ -15,6 +15,7 @@ import { useRouter } from 'next/router'
 import { isTWA } from '$lib/Utilities'
 import { useDefaultConfig } from '$lib/Hooks/useConfig'
 
+
 interface HomeProps {
     askForStorage: () => void,
     setDontShowHome: (override: boolean) => void,
@@ -137,7 +138,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
             <div className='home-content'>
                 <MainContentElement
                     icon={<FaCompactDisc />}
-                    title='composer'
+                    title='Composer'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
                     background={`./manifestData/composer.webp`}
                     href='composer'
@@ -147,9 +148,9 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 </MainContentElement>
                 <MainContentElement
                     icon={<BsMusicPlayerFill />}
-                    title='player'
+                    title='Player'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                    background={`./manifestData/main.webp`}
+                    background={`./manifestData/player.webp`}
                     href='/'
                     isCurrent={currentPage === '' || currentPage === 'player'}
                 >
@@ -165,9 +166,6 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 >
                     <span style={{ fontSize: '1rem' }} className='row-centered'>
                         Vsrg Composer
-                        <span style={{ fontSize: '0.7rem' ,marginLeft: '0.3rem' }}>
-                            (beta)
-                        </span>
                     </span>
 
                 </MiddleSizePage>
@@ -179,9 +177,6 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 >
                     <span style={{ fontSize: '1rem' }} className='row-centered'>
                         Vsrg Player
-                        <span style={{ fontSize: '0.7rem' ,marginLeft: '0.3rem' }}>
-                            (beta)
-                        </span>
                     </span>
                 </MiddleSizePage>
             </div>

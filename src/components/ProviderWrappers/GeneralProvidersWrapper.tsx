@@ -1,7 +1,6 @@
 import { AudioProvider } from "$lib/Providers/AudioProvider"
 import { MIDIProvider } from "$lib/Providers/MIDIProvider"
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
-import { shortcutsProvider } from "$lib/Providers/ShortcutsProvider";
 import { useCallback, useEffect, useState } from "react"
 import { songsStore } from "$stores/SongsStore";
 import { folderStore } from "$stores/FoldersStore";
@@ -38,7 +37,6 @@ export function GeneralProvidersWrapper({ children }: GeneralProvidersWrapperPro
         metronome.init(AudioProvider.getAudioContext())
         KeyboardProvider.create()
         MIDIProvider.init()
-        shortcutsProvider.load()
         songsStore.sync()
         folderStore.sync()
         themeStore.sync()

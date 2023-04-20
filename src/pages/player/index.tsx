@@ -67,6 +67,10 @@ class Player extends Component<{}, PlayerState>{
 		this.mounted = true
 		const instrument = this.state.instruments[0]
 		if(instrument) playerStore.setKeyboardLayout(instrument.notes)
+		const shortcutDisposer = createShortcutListener("player", "player", ({ shortcut }) => {
+			if(shortcut === "toggle_record") this.toggleRecord()
+		})
+		this.cleanup.push(shortcutDisposer)
 		await this.init(settings)
 		const dispose = subscribeObeservableObject(playerStore.state, ({ eventType, song }) => {
 			const { settings } = this.state
@@ -85,10 +89,7 @@ class Player extends Component<{}, PlayerState>{
 	init = async (settings: PlayerSettingsDataType) => {
 		await AudioProvider.waitReverb()
 		await this.loadInstrument(settings.instrument.value)
-		const shortcutDisposer = createShortcutListener("player", "player", ({ shortcut }) => {
-			if(shortcut === "toggle_play") this.toggleRecord()
-		})
-		this.cleanup.push(shortcutDisposer)
+
 		AudioProvider.setReverb(settings.caveMode.value)
 	}
 	componentWillUnmount() {
