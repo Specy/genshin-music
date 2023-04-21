@@ -16,7 +16,7 @@ import { SerializedSongKind } from "$/types/SongTypes"
 import { logger } from "$stores/LoggerStore"
 export type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedSong | SerializedVsrgSong
 export type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded | SerializedFolder | SerializedTheme
-type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
+export type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
 export type UnknownSongImport = UnknownSong | UnknownSong[]
 
 type SplitImports = {

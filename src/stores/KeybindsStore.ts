@@ -39,7 +39,6 @@ const defaultShortcuts = {
         "Digit2": "set_hold_hand",
         "Digit3": "set_delete_hand",
     },
-
     keyboard: Object.fromEntries((APP_NAME === "Genshin"
         ? (
             "Q W E R T Y U " +
@@ -238,3 +237,4 @@ export function createKeyComboComposer(id: string, callback: KeyComboListener): 
         window.removeEventListener("blur", reset)
     }
 }
+
