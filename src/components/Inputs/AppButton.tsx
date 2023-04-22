@@ -8,6 +8,7 @@ export interface AppButtonProps {
     toggled?: boolean,
     disabled?: boolean,
     visible?: boolean,
+    cssVar?: string,
     tooltip?: string,
     tooltipPosition?: TooltipPosition
     ariaLabel?: string
@@ -15,6 +16,7 @@ export interface AppButtonProps {
 export function AppButton({
     style = {},
     className = '',
+    cssVar,
     children,
     toggled = false,
     onClick,
@@ -27,6 +29,7 @@ export function AppButton({
     return <button
         className={`app-button ${className} ${toggled ? 'active' : ''} ${hasTooltip(tooltip)}`}
         style={{
+            ...(cssVar && { backgroundColor: `var(--${cssVar})`, color: `var(--${cssVar}-text)` }),
             ...style,
             ...(!visible
                 ? { display: 'none' }

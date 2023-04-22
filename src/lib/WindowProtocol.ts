@@ -1,14 +1,14 @@
 
-type Ask<T, R> = {
+export type Ask<T, R> = {
     payload: T,
     response: R
 }
-type Tell<T> = {
+export type Tell<T> = {
     message: T
 }
 
 
-type ProtocolDescriptor = Record<string, Ask<any, any> | Tell<any>>
+export type ProtocolDescriptor = Record<string, Ask<any, any> | Tell<any>>
 
 type ExtractEvent<T extends ProtocolDescriptor, E extends (Ask<any, any> | Tell<any>)> = Pick<T, {
     [K in keyof T]: T[K] extends E ? K : never
@@ -52,18 +52,44 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
     askPool = new Map<number, PendingAskRequest<any>>()
     private validDomains
     private target: Window | null = null
+    private connectionPromise: {
+        resolve: () => void
+        reject: (error: any) => void
+    } | null = null
     constructor(validDomains: string[]) {
         this.validDomains = new Set(validDomains)
+        //@ts-ignore
+        this.registerAskHandler("ping", async () => "pong")
+    }
+    async init(target?: Window) {
+        window.addEventListener("message", this.receive)
+        if(target) return this.connect(target)
+    }
+    async connect(to: Window): Promise<void> {
+        this.target = to
+        if(this.connectionPromise) this.connectionPromise.reject("reconnecting")
+        return new Promise((resolve, reject) => {
+            this.connectionPromise = { resolve, reject }
+            let resolved = false
+            const interval = setInterval(async () => {
+                try {
+                    //@ts-ignore
+                    const pong = await this.ask("ping", undefined, to)
+                    if (pong === "pong") {
+                        resolved = true
+                        clearInterval(interval)
+                        resolve()
+                    }
+                } catch (e) {
+                    if (resolved) return
+                    reject(e)
+                    clearInterval(interval)
+                }
+            }, 40)
+        })
     }
 
-    setTarget(target: Window) {
-        this.target = target
-    }
-    init(target?: Window) {
-        window.addEventListener("message", this.receive)
-        this.target = target ?? null
-    }
-    dispose(){
+    dispose() {
         window.removeEventListener("message", this.receive)
         const pool = this.askPool.values()
         for (const pending of pool) {
@@ -72,7 +98,9 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         this.askPool.clear()
         this.askHandlers.clear()
         this.tellHandlers.clear()
-        
+        this.connectionPromise?.reject("disposed")
+        this.connectionPromise = null
+        this.target = null
     }
     public registerAskHandler<K extends keyof A>(key: K, handler: AskHandler<A[K]>) {
         this.askHandlers.set(key, handler)
@@ -108,7 +136,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         } satisfies PayloadMessage<keyof A | keyof T>
         this.send(payload, to ?? this.target!)
     }
-    private async receive(message: MessageEvent<PayloadMessage<keyof A | keyof T>>) {
+    private receive = async (message: MessageEvent<PayloadMessage<keyof A | keyof T>>) => {
         if (!this.validDomains.has(message.origin)) return
         const data = message.data
         if (data.type === "ask") {
@@ -149,7 +177,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
             pending.reject(data.error)
         }
     }
-    private send(payload: any, to: Window | MessageEventSource, origin?: string) {
+    private send = async (payload: any, to: Window | MessageEventSource, origin?: string) => {
         if (to instanceof Window) {
             to.postMessage(payload, origin ?? "*")
         } else {
@@ -157,15 +185,3 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         }
     }
 }
-
-const domains = [
-    "https://specy.github.io",
-    "https://genshin-music.specy.app",
-    "https://sky-music.specy.app",
-]
-type TestProtocol = {
-    sum: Ask<{ a: number, b: number }, number>
-    concat: Ask<{ a: string, b: string }, { result: string }>
-    hello: Tell<string>
-}
-const protocol = new WindowProtocol<TestProtocol>(domains)

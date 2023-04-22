@@ -56,7 +56,7 @@ function ShortcutElement<K extends string, V>({ mapKey, value, selected, setSele
         <div className="row" style={{gap: "0.4rem"}}>
             {selected &&
                 <IconButton
-                    style={{ backgroundColor: "var(--accent)", color: "var(--accent-text)" }}
+                    cssVar="accent"
                     onClick={() => {
                         onChangeShortcut(newKey, value)
                     }} >

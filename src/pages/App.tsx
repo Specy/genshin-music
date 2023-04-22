@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import Analytics from '$lib/Stats';
 import Home from '$cmp/Index/Home';
-import {homeStore} from '$stores/HomeStore';
+import { homeStore } from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
 import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "$config"
-
 import rotateImg from "$/assets/icons/rotate.svg"
-
-
 import { historyTracker } from '$stores/History';
 import { FaExpandAlt } from 'react-icons/fa';
 import { logsStore } from '$stores/LogsStore';
@@ -18,15 +15,33 @@ import { linkServices } from '$stores/globalLink';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import isMobile from 'is-mobile';
+import { useRegisterWindowProtocol } from '$lib/Hooks/useWindowProtocol';
 
 
 function AppBase() {
 	const [hasVisited, setHasVisited] = useState(false)
 	const [checkedUpdate, setCheckedUpdate] = useState(false)
 	const [isOnMobile, setIsOnMobile] = useState(false)
+	const protocol = useRegisterWindowProtocol()
 	const router = useRouter()
 	useEffect(() => {
-		if(window.location.hostname === "localhost") return
+		async function run() {
+			const origin = window.location.origin
+			if (origin === "localhost" || !protocol) return
+			if (origin.includes("specy.app")) {
+				const iframe = document.createElement("iframe")
+				//in new domain, try to transfer data from old domain
+				iframe.src = `https://specy.github.io/${APP_NAME.toLowerCase()}Music`
+				protocol.setTarget(iframe.contentWindow!)
+				const data = await protocol.ask("getAppData", undefined)
+
+			}
+		}
+		return () => protocol?.dispose()
+	}, [protocol])
+
+	useEffect(() => {
+		if (window.location.hostname === "localhost") return
 		const originalErrorLog = console.error.bind(console)
 		//intercept console errors and log them to the logger store
 		console.error = (...args: any[]) => {
@@ -46,14 +61,14 @@ function AppBase() {
 		}
 	}, [])
 	useEffect(() => {
-		function windowIntercepter(e: ErrorEvent){
+		function windowIntercepter(e: ErrorEvent) {
 			//intercept window errors and log them to the logger store
 			logsStore.addLog({
 				error: e.error,
 				message: e.error.stack
 			})
 		}
-		function handleBlur(){
+		function handleBlur() {
 			const active = document.activeElement
 			//@ts-ignore
 			if (active && active.tagName === 'INPUT') active?.blur()
@@ -127,7 +142,7 @@ function AppBase() {
 				let isPersisted = await navigator.storage.persisted()
 				if (!isPersisted) isPersisted = await navigator.storage.persist()
 				console.log(isPersisted ? "Storage Persisted" : "Storage Not persisted")
-			}	
+			}
 		}
 		checkUpdate()
 	}, [checkedUpdate])
@@ -136,7 +151,7 @@ function AppBase() {
 		Analytics.pageView({
 			page_title: router.pathname
 		})
-		return router.events.on("beforeHistoryChange",(path: any) => {
+		return router.events.on("beforeHistoryChange", (path: any) => {
 			Analytics.pageView({
 				page_title: path.pathName as string
 			})
@@ -152,7 +167,7 @@ function AppBase() {
 		/>
 		<div className="rotate-screen">
 			{isOnMobile && <>
-				<Image 
+				<Image
 					src={rotateImg}
 					alt="icon for the rotating screen"
 				/>
