@@ -106,6 +106,30 @@ const NOTE_SCALE = {
     "B#": ["B#", "C#", "C##", "D#", "D##", "E#", "F#", "F##", "G#", "G##", "A#", "A##"],
     "": ["", "", "", "", "", "", "", "", "", "", "", ""]
 } as const
+const DO_RE_MI_NOTE_SCALE = {
+    "Cb":["dob","rebb","reb","mibb","mib","fab","solbb","solb","labb","lab","tibb","tib"],
+    "C":["do","reb","re","mib","mi","fa","solb","sol","lab","la","tib","ti"],
+    "C#":["do#","re","re#","mi","mi#","fa#","sol","sol#","la","la#","ti","ti#"],
+    "Db":["reb","mibb","mib","fab","fa","solb","labb","lab","tibb","tib","dob","do"],
+    "D":["re","mib","mi","fa","fa#","sol","lab","la","tib","ti","do","do#"],
+    "D#":["re#","mi","mi#","fa#","fa##","sol#","la","la#","ti","ti#","do#","do##"],
+    "Eb":["mib","fab","fa","solb","sol","lab","tibb","tib","dob","do","reb","re"],
+    "E":["mi","fa","fa#","sol","sol#","la","tib","ti","do","do#","re","re#"],
+    "E#":["mi#","fa#","fa##","sol#","sol##","la#","ti","ti#","do#","do##","re#","re##"],
+    "Fb":["fab","solbb","solb","labb","lab","tibb","dobb","dob","rebb","reb","mibb","mib"],
+    "F":["fa","solb","sol","lab","la","tib","dob","do","reb","re","mib","mi"],
+    "F#":["fa#","sol","sol#","la","la#","ti","do","do#","re","re#","mi","mi#"],
+    "Gb":["solb","labb","lab","tibb","tib","dob","rebb","reb","mibb","mib","fab","fa"],
+    "G":["sol","lab","la","tib","ti","do","reb","re","mib","mi","fa","fa#"],
+    "G#":["sol#","la","la#","ti","ti#","do#","re","re#","mi","mi#","fa#","fa##"],
+    "Ab":["lab","tibb","tib","dob","do","reb","mibb","mib","fab","fa","solb","sol"],
+    "A":["la","tib","ti","do","do#","re","mib","mi","fa","fa#","sol","sol#"],
+    "A#":["la#","ti","ti#","do#","do##","re#","mi","mi#","fa#","fa##","sol#","sol##"],
+    "Bb":["tib","dob","do","reb","re","mib","fab","fa","solb","sol","lab","la"],
+    "B":["ti","do","do#","re","re#","mi","fa","fa#","sol","sol#","la","la#"],
+    "B#":["ti#","do#","do##","re#","re##","mi#","fa#","fa##","sol#","sol##","la#","la##"],
+    "":["","","","","","","","","","","",""]
+} as const
 type BaseNote = keyof typeof NOTE_SCALE
 const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     defaultSky: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
@@ -223,6 +247,7 @@ const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     : [
         "Note name",
         "Keyboard layout",
+        "Do Re Mi",
         "ABC",
         "No Text",
         "Playstation",
@@ -685,6 +710,7 @@ export {
     NOTES_CSS_CLASSES,
     NOTES_PER_COLUMN,
     NOTE_SCALE,
+    DO_RE_MI_NOTE_SCALE,
     PITCHES,
     APP_VERSION,
     SPEED_CHANGERS,

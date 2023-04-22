@@ -1,4 +1,4 @@
-import { INSTRUMENTS_DATA, INSTRUMENTS, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType, BASE_PATH } from "$config"
+import { INSTRUMENTS_DATA, INSTRUMENTS, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType, BASE_PATH, DO_RE_MI_NOTE_SCALE } from "$config"
 import { makeObservable, observable } from "mobx"
 import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
 import { getPitchChanger } from "./Utilities"
@@ -81,7 +81,10 @@ export default class Instrument {
                 return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
             }
             if (type === "Keyboard layout") return layout.keyboard[index]
-            if (type === "Do Re Mi") return layout.mobile[index]
+            if (type === "Do Re Mi") {
+                const baseNote = this.notes[index].baseNote
+                return DO_RE_MI_NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
+            }
             if (type === "ABC") return layout.abc[index]
             if (type === "No Text") return ''
             if (type === "Playstation") return layout.playstation[index]

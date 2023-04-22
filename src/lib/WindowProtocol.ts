@@ -59,8 +59,20 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
     setTarget(target: Window) {
         this.target = target
     }
-    init() {
+    init(target?: Window) {
         window.addEventListener("message", this.receive)
+        this.target = target ?? null
+    }
+    dispose(){
+        window.removeEventListener("message", this.receive)
+        const pool = this.askPool.values()
+        for (const pending of pool) {
+            pending.reject("disposed")
+        }
+        this.askPool.clear()
+        this.askHandlers.clear()
+        this.tellHandlers.clear()
+        
     }
     public registerAskHandler<K extends keyof A>(key: K, handler: AskHandler<A[K]>) {
         this.askHandlers.set(key, handler)
@@ -128,10 +140,12 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         } else if (data.type === "response") {
             const pending = this.askPool.get(data.id)
             if (!pending) return
+            this.askPool.delete(data.id)
             pending.resolve(data.result)
         } else if (data.type === "error-response") {
             const pending = this.askPool.get(data.id)
             if (!pending) return
+            this.askPool.delete(data.id)
             pending.reject(data.error)
         }
     }
