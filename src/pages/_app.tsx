@@ -34,12 +34,46 @@ import ErrorBoundaryRedirect from "$cmp/Utility/ErrorBoundaryRedirect";
 import { logger } from "$stores/LoggerStore";
 import Head from "next/head";
 import Script from "next/script";
+import { logsStore } from "$stores/LogsStore";
 
 interface CustomPageProps {
 
 }
 
 export default function App({ Component, pageProps }: AppProps<CustomPageProps>) {
+	useEffect(() => {
+		if (window.location.hostname === "localhost") return
+		const originalErrorLog = console.error.bind(console)
+		//intercept console errors and log them to the logger store
+		console.error = (...args: any[]) => {
+			originalErrorLog(...args)
+			logsStore.addLog({
+				error: args.find(arg => arg instanceof Error),
+				message: args.map(arg => {
+					if (arg instanceof Error) {
+						return arg.stack
+					}
+					return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : arg
+				}).join(' ')
+			})
+		}
+		return () => {
+			console.error = originalErrorLog
+		}
+	}, [])
+	useEffect(() => {
+		function windowIntercepter(e: ErrorEvent) {
+			//intercept window errors and log them to the logger store
+			logsStore.addLog({
+				error: e.error,
+				message: e.error.stack
+			})
+		}
+		window.addEventListener("error", windowIntercepter)
+		return () => {
+			window.removeEventListener("error", windowIntercepter)
+		}
+	}, [])
 	useEffect(() => {
 		try {
 			if ('virtualKeyboard' in navigator) {

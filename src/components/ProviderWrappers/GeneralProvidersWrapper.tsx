@@ -16,8 +16,9 @@ import { AsyncPromptWrapper } from '$cmp/Utility/AsyncPrompt';
 
 interface GeneralProvidersWrapperProps {
     children: React.ReactNode
+    onLoaded?: () => void
 }
-export function GeneralProvidersWrapper({ children }: GeneralProvidersWrapperProps) {
+export function GeneralProvidersWrapper({ children, onLoaded }: GeneralProvidersWrapperProps) {
 	const [audioContextState, setAudioContextState] = useState<AudioContext['state'] | null>()
     const [audioContext, setAudioContext] = useState<AudioContext | null>(null)
     const handleAudioContextStateChange = useCallback(() => {
@@ -30,7 +31,6 @@ export function GeneralProvidersWrapper({ children }: GeneralProvidersWrapperPro
 			audioContext.removeEventListener('statechange', handleAudioContextStateChange)
 		}
 	}, [handleAudioContextStateChange, audioContext])
-    
     useEffect(() => {
         AudioProvider.init()
         setAudioContext(AudioProvider.getAudioContext())

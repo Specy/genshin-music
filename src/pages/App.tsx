@@ -8,75 +8,28 @@ import { APP_NAME, APP_VERSION, UPDATE_MESSAGE } from "$config"
 import rotateImg from "$/assets/icons/rotate.svg"
 import { historyTracker } from '$stores/History';
 import { FaExpandAlt } from 'react-icons/fa';
-import { logsStore } from '$stores/LogsStore';
 import { checkIfneedsUpdate } from '$lib/needsUpdate';
 import { settingsService } from '$lib/Services/SettingsService';
 import { linkServices } from '$stores/globalLink';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import isMobile from 'is-mobile';
-import { useRegisterWindowProtocol } from '$lib/Hooks/useWindowProtocol';
 
 
 function AppBase() {
 	const [hasVisited, setHasVisited] = useState(false)
 	const [checkedUpdate, setCheckedUpdate] = useState(false)
 	const [isOnMobile, setIsOnMobile] = useState(false)
-	const protocol = useRegisterWindowProtocol()
 	const router = useRouter()
-	useEffect(() => {
-		async function run() {
-			const origin = window.location.origin
-			if (origin === "localhost" || !protocol) return
-			if (origin.includes("specy.app")) {
-				const iframe = document.createElement("iframe")
-				//in new domain, try to transfer data from old domain
-				iframe.src = `https://specy.github.io/${APP_NAME.toLowerCase()}Music`
-				protocol.setTarget(iframe.contentWindow!)
-				const data = await protocol.ask("getAppData", undefined)
-
-			}
-		}
-		return () => protocol?.dispose()
-	}, [protocol])
 
 	useEffect(() => {
-		if (window.location.hostname === "localhost") return
-		const originalErrorLog = console.error.bind(console)
-		//intercept console errors and log them to the logger store
-		console.error = (...args: any[]) => {
-			originalErrorLog(...args)
-			logsStore.addLog({
-				error: args.find(arg => arg instanceof Error),
-				message: args.map(arg => {
-					if (arg instanceof Error) {
-						return arg.stack
-					}
-					return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : arg
-				}).join(' ')
-			})
-		}
-		return () => {
-			console.error = originalErrorLog
-		}
-	}, [])
-	useEffect(() => {
-		function windowIntercepter(e: ErrorEvent) {
-			//intercept window errors and log them to the logger store
-			logsStore.addLog({
-				error: e.error,
-				message: e.error.stack
-			})
-		}
 		function handleBlur() {
 			const active = document.activeElement
 			//@ts-ignore
 			if (active && active.tagName === 'INPUT') active?.blur()
 		}
-		window.addEventListener("error", windowIntercepter)
 		window.addEventListener("blur", handleBlur)
 		return () => {
-			window.removeEventListener("error", windowIntercepter)
 			window.removeEventListener("blur", handleBlur)
 		}
 	})

@@ -2,13 +2,12 @@ import { AppButton } from "$cmp/Inputs/AppButton";
 import { Select } from "$cmp/Inputs/Select";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import { APP_NAME } from "$config";
-import { useRegisterWindowProtocol } from "$lib/Hooks/useWindowProtocol";
-import { UnknownFile, UnknownFileTypes, fileService } from "$lib/Services/FileService";
-import { songService } from "$lib/Services/SongService";
+import { protocol } from "$lib/Hooks/useWindowProtocol";
 import { logger } from "$stores/LoggerStore";
 import { useState, useEffect, useCallback } from "react";
 import s from "./transfer.module.css"
 import { cn } from "$lib/Utilities";
+import { UnknownFileTypes, fileService } from "$lib/Services/FileService";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
@@ -21,10 +20,8 @@ export default function TransferData() {
     const [validDomains, setValidDomains] = useState<string[]>([])
     const [error, setError] = useState<string>()
     const [importedData, setImportedData] = useState<UnknownFileTypes[]>([])
-    const protocol = useRegisterWindowProtocol()
 
     const fetchData = useCallback(async () => {
-        if (!protocol) return
         const frame = document.createElement("iframe")
         frame.src = selectedDomain
         frame.style.display = "none"
@@ -37,12 +34,12 @@ export default function TransferData() {
             const data = await protocol.ask("getAppData", undefined)
             setImportedData(Array.isArray(data) ? data : [data])
         } catch (e) {
-            logger.error("Error fetching data")
+            logger.error("Error connecting, please visit the domain, there might be updates. ")
             setError(`Error fetching: ${e}`)
         }
         logger.hidePill()
         frame.remove()
-    }, [protocol, selectedDomain])
+    }, [selectedDomain])
 
 
     useEffect(() => {
@@ -67,7 +64,7 @@ export default function TransferData() {
                     style={{ minWidth: "12rem"}}
                     onChange={e => setSelectedDomain(e.target.value)}
                 >
-                    {validDomains.map(d => <option value={d}>{d.replace(/https?:\/\//g, "")}</option>)}
+                    {validDomains.map(d => <option value={d} key={d}>{d.replace(/https?:\/\//g, "")}</option>)}
                 </Select>
                 <AppButton
                     cssVar="accent"
@@ -97,9 +94,10 @@ export default function TransferData() {
                                 </AppButton>
                             </div>
                             <div className="column" style={{gap: "0.3rem"}}>
-                                {importedData.map(d =>
+                                {importedData.map((d,i) =>
                                     <ImportedRow
                                         data={d}
+                                        key={d.id ?? i}
                                         onImport={async data => {
                                             await fileService.importAndLog(data)
                                             setImportedData(importedData.filter(d => d !== data))

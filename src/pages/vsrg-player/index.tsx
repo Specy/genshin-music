@@ -74,7 +74,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                 this.setState({ audioSong: recorded })
                 await songAudioPlayer.syncInstruments(recorded.instruments)
             }
-        }else{
+        } else {
             this.setState({ audioSong: null })
         }
         await keyboardAudioPlayer.syncInstruments(song.tracks.map(track => track.instrument))
@@ -99,7 +99,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             settings: { ...settings }
         }, () => {
             this.updateSettings()
-            if(setting.key === 'maxFps') vsrgPlayerStore.emitEvent("fpsChange")
+            if (setting.key === 'maxFps') vsrgPlayerStore.emitEvent("fpsChange")
         })
     }
     updateSettings = (override?: VsrgPlayerSettingsDataType) => {
@@ -120,14 +120,14 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         this.onSongSelect(song, 'play')
     }
     handleTick = (timestamp: number) => {
-        const { audioSong, songAudioPlayer, song , settings} = this.state
+        const { audioSong, songAudioPlayer, song, settings } = this.state
         this.lastTimestamp = timestamp
         if (!song) return
-        if(this.lastTimestamp >= song.duration + 2000){
+        if (this.lastTimestamp >= song.duration + 2000) {
             this.setState({ isPlaying: false })
             vsrgPlayerStore.showScore()
         }
-        if (this.lastTimestamp >= song.duration  || timestamp < 0) return
+        if (this.lastTimestamp >= song.duration || timestamp < 0) return
         if (audioSong) {
             const notes = audioSong.tickPlayback(timestamp + settings.offset.value)
             notes.forEach(n => {
@@ -150,13 +150,14 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     render() {
         const { canvasSizes, settings } = this.state
         return <>
-            <Title text="Vsrg Player" description="Play or practice VSRG songs"/>
+            <Title text="Vsrg Player" description="Play or practice VSRG songs" />
+            <VsrgPlayerMenu
+                settings={settings}
+                onSettingsUpdate={this.handleSettingChange}
+                onSongSelect={this.onSongSelect}
+            />
             <div className="vsrg-player-page appear-on-mount">
-                <VsrgPlayerMenu
-                    settings={settings}
-                    onSettingsUpdate={this.handleSettingChange}
-                    onSongSelect={this.onSongSelect}
-                />
+
                 <div
                     className="vsrg-player-grid"
                 >

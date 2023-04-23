@@ -65,12 +65,16 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         window.addEventListener("message", this.receive)
         if(target) return this.connect(target)
     }
-    async connect(to: Window): Promise<void> {
+    async connect(to: Window, timeout = 15000): Promise<void> {
         this.target = to
         if(this.connectionPromise) this.connectionPromise.reject("reconnecting")
         return new Promise((resolve, reject) => {
             this.connectionPromise = { resolve, reject }
             let resolved = false
+            const timeoutId = setTimeout(() => {
+                if (resolved) return
+                reject("timeout")
+            }, timeout)
             const interval = setInterval(async () => {
                 try {
                     //@ts-ignore
@@ -78,12 +82,14 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
                     if (pong === "pong") {
                         resolved = true
                         clearInterval(interval)
+                        clearTimeout(timeoutId)
                         resolve()
                     }
                 } catch (e) {
                     if (resolved) return
                     reject(e)
                     clearInterval(interval)
+                    clearTimeout(timeoutId)
                 }
             }, 40)
         })
@@ -185,3 +191,6 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         }
     }
 }
+
+
+

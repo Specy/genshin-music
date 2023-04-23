@@ -21,7 +21,8 @@ import { useObservableArray } from "$lib/Hooks/useObservable";
 import { themeStore } from "$stores/ThemeStore/ThemeStore";
 import { songsStore } from "$stores/SongsStore";
 import { settingsService } from "$lib/Services/SettingsService";
-
+import Link from "next/link";
+import { BiTransferAlt } from "react-icons/bi"
 export default function Backup() {
     const iconStyle = { marginRight: '0.3rem', marginLeft: '-0.4rem' }
     const [songs] = useSongs()
@@ -29,7 +30,7 @@ export default function Backup() {
 
     useEffect(() => {
         return () => logger.hidePill()
-    },[])
+    }, [])
     async function validateSongs(): Promise<SerializedSong[] | null> {
         logger.showPill("Validating songs...")
         const songs = await songService.getSongs()
@@ -122,13 +123,24 @@ export default function Backup() {
     return <DefaultPage>
         <Title text="Backup" description="Manage the backups in the app, download or import songs, themes, or all of them" />
         <h1>
+            Transfer from other domain
+        </h1>
+        <div>
+            If you want to transfer your data from another domain of the app 
+            <Link href={"transfer"} style={{marginLeft: "1rem"}}>
+                <AppButton cssVar="accent" style={{ gap: "0.2rem" }}>
+                    Transfer
+                </AppButton>
+            </Link>
+        </div>
+        <h1>
             Backup
         </h1>
         <div>
             Make sure you create a backup every now and then. Especially if you just finished a new song.
             The browser shouldn't delete your data, especially if you installed the app, but there is always a chance.
         </div>
-        <div className="row space-between" style={{ marginTop: '2rem' }}>
+        <div className="row" style={{ marginTop: '2rem', gap: "0.5rem" }}>
             <AppButton
                 tooltip="Download all the data of the app, aka themes, songs, folders"
                 className="flex-centered"
@@ -219,7 +231,7 @@ export default function Backup() {
             style={{
                 flex: '1',
                 justifyContent: 'center',
-                padding: '2rem 1rem'
+                padding: '1rem'
             }}
         >
             <div
@@ -239,7 +251,7 @@ export default function Backup() {
             If you want, you can also delete all your data here, once deleted it can't be recovered.
             Don't worry you will be asked to confirm before anything is deleted.
         </div>
-        <div className="row space-around" style={{ marginTop: '1rem' }}>
+        <div className="row" style={{ marginTop: '1rem', gap: "0.5rem" }}>
             <AppButton
                 className="flex-centered"
                 tooltip="Here you can delete all your songs and folders"
