@@ -39,6 +39,10 @@ const defaultShortcuts = {
         "Digit2": "set_hold_hand",
         "Digit3": "set_delete_hand",
     },
+    vsrg_player: {
+        "ShiftLeft+KeyR": "restart",
+        "Escape": "stop",
+    },
     keyboard: Object.fromEntries((APP_NAME === "Genshin"
         ? (
             "Q W E R T Y U " +
@@ -80,10 +84,13 @@ interface SerializedKeybinds {
         vsrg_composer: {
             [key: string]: MapValues<Shortcuts['vsrg_composer']>
         }
+        vsrg_player: {
+            [key: string]: MapValues<Shortcuts['vsrg_player']>
+        }
     }
 }
 class KeyBinds {
-    version: number = 11
+    version: number = 12
     @observable
     private vsrg = {
         k4: ['A', 'S', 'J', 'K'],
@@ -96,6 +103,7 @@ class KeyBinds {
         player: new Map(Object.entries(defaultShortcuts.player)),
         keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
         vsrg_composer: new Map(Object.entries(defaultShortcuts.vsrg_composer)),
+        vsrg_player: new Map(Object.entries(defaultShortcuts.vsrg_player)),
     }
     constructor() {
         makeObservable(this)
@@ -160,6 +168,7 @@ class KeyBinds {
                 player: new Map(Object.entries(parsed.shortcuts.player)),
                 keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
                 vsrg_composer: new Map(Object.entries(parsed.shortcuts.vsrg_composer)),
+                vsrg_player: new Map(Object.entries(parsed.shortcuts.vsrg_player)),
             }
         }
     }
@@ -175,6 +184,7 @@ class KeyBinds {
                 player: Object.fromEntries(this.shortcuts.player),
                 keyboard: Object.fromEntries(this.shortcuts.keyboard),
                 vsrg_composer: Object.fromEntries(this.shortcuts.vsrg_composer),
+                vsrg_player: Object.fromEntries(this.shortcuts.vsrg_player),
             },
         }
     }

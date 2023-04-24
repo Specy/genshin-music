@@ -1,10 +1,15 @@
 import withPwa from 'next-pwa'
+import bundleAnalyzer from '@next/bundle-analyzer'
 const dist = process.env.BUILD_PATH ?? 'build'
+
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
 
 /**
  * @type {import('next').NextConfig}
  */
-
 const pwa = withPwa({
     dest: "public",
     disable: process.env.NODE_ENV === 'development',
@@ -22,4 +27,4 @@ const config = pwa({
     unoptimized: true,
   },
 })
-export default config
+export default withBundleAnalyzer(config)

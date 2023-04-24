@@ -27,12 +27,12 @@ interface VsrgTimelineRendererProps {
 }
 const defaultHitbox = new Rectangle(0, 0, 0, 0)
 export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, notes, onTimelineClick }: VsrgTimelineRendererProps) {
-    const { PLAY_BAR_OFFSET }= useDefaultConfig()
-    
+    const { PLAY_BAR_OFFSET } = useDefaultConfig()
+
     const [hitbox, setHitbox] = useState(defaultHitbox)
     const [isClicking, setIsClicking] = useState(false)
     const lowerBound = timestamp - (PLAY_BAR_OFFSET + sizes.timelineSize) / sizes.scaling
-    const upperBound = timestamp + (sizes.width - PLAY_BAR_OFFSET + sizes.timelineSize) / sizes.scaling  
+    const upperBound = timestamp + (sizes.width - PLAY_BAR_OFFSET + sizes.timelineSize) / sizes.scaling
     const setNotClicking = useCallback(() => setIsClicking(false), [])
     useEffect(() => {
         setHitbox(new Rectangle(0, 0, sizes.width, sizes.timelineSize))
@@ -71,7 +71,6 @@ export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, no
             <Sprite
                 x={0}
                 y={0}
-                width={sizes.width}
                 texture={cache.textures.timeline.square!}
             />
             <Container
@@ -88,13 +87,13 @@ export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, no
                     />
                 })}
             </Container>
-            <VsrgTimelineBreakpointsRenderer 
+            <VsrgTimelineBreakpointsRenderer
                 breakpoints={song.breakpoints}
                 cache={cache}
                 sizes={sizes}
                 duration={song.duration}
             />
-            <Sprite 
+            <Sprite
                 x={PLAY_BAR_OFFSET - 2}
                 y={0}
                 texture={cache.textures.timeline.currentTime!}

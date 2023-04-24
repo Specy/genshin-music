@@ -1,6 +1,7 @@
 import { ThemeProvider, Theme } from "$stores/ThemeStore/ThemeProvider";
 import { useState, useEffect } from "react";
 import { observe } from "mobx";
+import { createDebouncer } from "$lib/Utilities";
 
 
 type UseTheme = [Theme, (theme: Theme) => void]
@@ -14,11 +15,12 @@ export function useTheme(): UseTheme{
 
 
 export function subscribeTheme(callback: (theme: Theme) => void) {
+    const debouncer = createDebouncer(50)
     const dispose = observe(ThemeProvider.state.data, () => {
-        callback({...ThemeProvider})
+        debouncer(() => callback({...ThemeProvider}))
     })
     const dispose2 = observe(ThemeProvider.state.other, () => {
-        callback({...ThemeProvider})
+        debouncer(() => callback({...ThemeProvider}))
     })
     callback({...ThemeProvider})
     return () => {

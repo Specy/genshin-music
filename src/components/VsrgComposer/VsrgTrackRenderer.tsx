@@ -24,7 +24,7 @@ interface VsrgTrackRendererProps {
 
 
 export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex, timestamp }: VsrgTrackRendererProps) {
-    const { PLAY_BAR_OFFSET }= useDefaultConfig()
+    const { PLAY_BAR_OFFSET } = useDefaultConfig()
     const scale = sizes.scaling
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys
@@ -32,7 +32,7 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
     const upperBound = timestamp + (isHorizontal ? sizes.width : sizes.height) / scale - PLAY_BAR_OFFSET + cache.textures.sizes.hitObject
     return <>
         {track.hitObjects.map(hitObject => {
-            if(lowerBound > hitObject.timestamp + hitObject.holdDuration || hitObject.timestamp > upperBound) return null
+            if (lowerBound > hitObject.timestamp + hitObject.holdDuration || hitObject.timestamp > upperBound) return null
             const x = isHorizontal
                 ? hitObject.timestamp * scale
                 : positionSizeVertical * hitObject.index + positionSizeVertical / 2

@@ -10,6 +10,7 @@
   "dependencies": {
     "@babel/eslint-parser": "^7.21.3",
     "@insertish/zangodb": "^1.0.12-nomemo",
+    "@next/bundle-analyzer": "^13.3.1",
     "@pixi/graphics-smooth": "^1.1.0",
     "@pixi/react": "^7.0.3",
     "@tauri-apps/api": "^1.2.0",
@@ -48,6 +49,8 @@
     "build-tauri:genshin-no-env": "cross-env NEXT_PUBLIC_IS_TAURI=true yarn tauri build --config ./src-tauri/tauri-genshin.conf.json",
     "build-tauri:all": "cross-env NEXT_PUBLIC_IS_TAURI=true yarn build-tauri:sky && yarn build-tauri:genshin",
     "build:sky": "node ./scripts/buildApp.js Sky",
+    "build:sky:analyze": "cross-env ANALYZE=true yarn build:sky",
+    "build:genshin:analyze": "cross-env ANALYZE=true yarn build:genshin",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
     "build:sky-no-root": "node ./scripts/buildApp.js Sky false",
     "build:genshin-no-root": "node ./scripts/buildApp.js Genshin false",

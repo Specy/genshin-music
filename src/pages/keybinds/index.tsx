@@ -22,6 +22,7 @@ export default function Keybinds() {
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
     const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
     const [vsrgComposerShortcuts] = useObservableMap(keyBinds.getShortcutMap("vsrg_composer"))
+    const [vsrgPlayerShortcuts] =  useObservableMap(keyBinds.getShortcutMap("vsrg_player"))
     const { IS_MOBILE } = useDefaultConfig()
     const [selected, setSelected] = useState({
         type: '',
@@ -89,6 +90,19 @@ export default function Keybinds() {
                         onChangeShortcut={(oldKey, newKey) => {
                             if(oldKey === newKey) return
                             const existing = keyBinds.setShortcut("vsrg_composer", oldKey, newKey)
+                            if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
+                        }}
+                    />
+                </div>
+                <h1>
+                    Vsrg player shortcuts
+                </h1>
+                <div className="column">
+                    <ShortcutEditor
+                        map={vsrgPlayerShortcuts}
+                        onChangeShortcut={(oldKey, newKey) => {
+                            if(oldKey === newKey) return
+                            const existing = keyBinds.setShortcut("vsrg_player", oldKey, newKey)
                             if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
                         }}
                     />

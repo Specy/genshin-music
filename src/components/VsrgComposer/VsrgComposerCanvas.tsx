@@ -264,6 +264,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         const { sizes, canvasColors, cache } = this.state
         const trackColors = this.props.vsrg.tracks.map(t => t.color)
         if (!this.stageRef.current) return
+        this.stageRef.current.app.renderer.background.color = canvasColors.background[0]
         const newCache = new VsrgCanvasCache({
             app: this.stageRef.current.app as Application,
             sizes,
@@ -326,7 +327,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
                     onPointerMove={this.handleDrag}
                     onContextMenu={(e) => e.preventDefault()}
                     options={{
-                        backgroundColor: canvasColors.background[1],
+                        backgroundColor: canvasColors.background_plain[1],
                         autoDensity: false,
                         resolution: window?.devicePixelRatio || 1,
                     }}
@@ -349,7 +350,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
                             onSnapPointSelect={this.props.onSnapPointSelect}
                         />
                     }
-
+                    
                     <VsrgKeysRenderer
                         isHorizontal={isHorizontal}
                         keys={DEFAULT_VSRG_KEYS_MAP[vsrg.keys]}

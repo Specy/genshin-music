@@ -14,7 +14,7 @@ import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { VsrgPlayerRight } from "$cmp/VsrgPlayer/VsrgPlayerRight";
 import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
 import { SettingUpdate } from "$types/SettingsPropriety";
-import { keyBinds } from "$stores/KeybindsStore";
+import { createShortcutListener, keyBinds } from "$stores/KeybindsStore";
 import { logger } from "$stores/LoggerStore";
 import { Title } from "$cmp/Miscellaneous/Title";
 import { AppBackground } from "$cmp/Layout/AppBackground";
@@ -34,6 +34,7 @@ interface VsrgPlayerState {
 export type VsrgSongSelectType = 'play'
 class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     lastTimestamp = 0
+    cleanup: (() => void)[] = []
     constructor(props: VsrgPlayerProps) {
         super(props)
         this.state = {
@@ -50,6 +51,12 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     componentDidMount() {
         this.setState({ settings: settingsService.getVsrgPlayerSettings() })
         vsrgPlayerStore.setLayout(this.state.currentLayout)
+        const shortcutListener = createShortcutListener("vsrg_player", "vsrg_player", ({ shortcut}) => {
+            console.log(shortcut)
+            if(shortcut === "restart") this.onRetrySong()
+            if(shortcut === "stop") this.onStopSong()
+        })
+        this.cleanup.push(shortcutListener)
     }
     componentWillUnmount() {
         const { songAudioPlayer, keyboardAudioPlayer } = this.state
@@ -57,6 +64,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         keyboardAudioPlayer.destroy()
         vsrgPlayerStore.resetScore()
         logger.hidePill()
+        this.cleanup.forEach(c => c())
     }
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
         const { songAudioPlayer, keyboardAudioPlayer } = this.state
