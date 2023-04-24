@@ -4,7 +4,7 @@ import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
 import { clamp } from "$lib/Utilities";
-import { Rectangle } from "pixi.js";
+import { type FederatedPointerEvent, Rectangle } from "pixi.js";
 import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
@@ -45,13 +45,13 @@ export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, no
         return () => window.removeEventListener('blur', handleBlur)
     }, [])
 
-    const handleEvent = useCallback((event: any, override?: boolean) => { //TODO migrate to pixi 7
+    const handleEvent = useCallback((event: FederatedPointerEvent, override?: boolean) => { 
         if (!isClicking && override !== true) return
-        const x = event.data.global.x
+        const x = event.globalX
         const time = x / sizes.width * song.duration
         onTimelineClick(clamp(time, 0, song.duration))
     }, [sizes, song.duration, onTimelineClick, isClicking])
-    const setClicking = useCallback((e: any) => { //TODO migrate to pixi 7
+    const setClicking = useCallback((e: FederatedPointerEvent) => {
         setIsClicking(true)
         handleEvent(e, true)
     }, [handleEvent])
@@ -61,7 +61,7 @@ export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, no
         <Container
             x={0}
             y={0}
-            interactive={true}
+            eventMode="static"
             pointermove={handleEvent}
             pointerdown={setClicking}
             pointerup={setNotClicking}

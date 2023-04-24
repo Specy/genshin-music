@@ -8,6 +8,7 @@ import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { useDefaultConfig } from "$lib/Hooks/useConfig";
+import type { FederatedPointerEvent } from "pixi.js";
 
 interface VsrgTrackRendererProps {
     track: VsrgTrack
@@ -41,9 +42,9 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                 : -(hitObject.timestamp * scale - sizes.height)
             return hitObject.isHeld
                 ? <Container
-                    interactive={true}
-                    pointerdown={(e) => {
-                        selectHitObject(hitObject, trackIndex, parseMouseClick(e.data.button))
+                    eventMode="static"
+                    pointerdown={(e: FederatedPointerEvent) => {
+                        selectHitObject(hitObject, trackIndex, parseMouseClick(e.button))
                     }}
                     key={hitObject.renderId}
                 >
@@ -98,9 +99,9 @@ export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, sel
                     }
                     <Sprite
                         texture={cache.getHitObjectCache(track.color)}
-                        interactive={true}
-                        pointerdown={(e) => {
-                            selectHitObject(hitObject, trackIndex, parseMouseClick(e.data.button))
+                        eventMode="static"
+                        pointerdown={(e: FederatedPointerEvent) => {
+                            selectHitObject(hitObject, trackIndex, parseMouseClick(e.button))
                         }}
                         anchor={0.5}
                         x={x}

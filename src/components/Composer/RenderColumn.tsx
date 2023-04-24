@@ -29,7 +29,7 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,
 
     return <Container
         pointertap={clickCallback}
-        interactive={true}
+        eventMode="static"
         x={sizes.width * index}
     >
         <Sprite

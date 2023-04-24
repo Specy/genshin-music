@@ -26,7 +26,7 @@ const fontFace = [{
 
 //TODO add cache as bitmap
 function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKeyUp }: VsrgKeysRendererProps) {
-    const { PLAY_BAR_OFFSET }= useDefaultConfig()
+    const { PLAY_BAR_OFFSET } = useDefaultConfig()
     const [textStyle, setTextStyle] = useState(defaultVsrgTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
     useEffect(() => {
@@ -99,7 +99,7 @@ function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKey
             return <Container
                 key={key}
                 hitArea={hitArea}
-                interactive={true}
+                eventMode="static"
                 pointerdown={() => onKeyDown(index)}
                 pointerup={() => onKeyUp(index)}
                 pointerupoutside={() => onKeyUp(index)}

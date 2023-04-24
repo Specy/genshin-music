@@ -18,6 +18,7 @@ import { Timer } from '$types/GeneralTypes';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { subscribeTheme } from '$lib/Hooks/useTheme';
 import { createShortcutListener } from '$stores/KeybindsStore';
+import { FederatedPointerEvent } from 'pixi.js';
 
 type ClickEventType = 'up' | 'down' | 'downStage'
 interface ComposerCanvasProps {
@@ -241,8 +242,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     handleWheel = (e: WheelEvent) => {
         this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
     }
-    handleClick = (e: any, type: ClickEventType) => {
-        const x = e.data.global.x
+    handleClick = (e: FederatedPointerEvent, type: ClickEventType) => {
+        const x = e.globalX
         const { width, numberOfColumnsPerCanvas } = this.state
         const { data } = this.props
         if (type === "up") {
@@ -263,8 +264,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             this.stageSelected = true
         }
     }
-    handleStageSlide = (e: any) => {
-        const x = e.data.global.x
+    handleStageSlide = (e: FederatedPointerEvent) => {
+        const x = e.globalX
         if (this.stageSelected === true) {
             if (this.throttleScroll++ < 5) return
             this.throttleScroll = 0
@@ -287,8 +288,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             this.props.functions.selectColumn(breakpoint[0])
         }
     }
-    handleSlide = (e: any) => {
-        const globalX = e.data.global.x
+    handleSlide = (e: FederatedPointerEvent) => {
+        const globalX = e.globalX
         if (this.sliderSelected) {
             if (this.throttleScroll++ < 4) return
             const { width, column } = this.state
@@ -359,7 +360,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 >
                     {(cache && !data.isRecordingAudio) && <Container
                         x={xPosition}
-                        interactive={true}
+                        eventMode='static'
                         pointerdown={(e) => this.handleClick(e, "downStage")}
                         pointermove={this.handleStageSlide}
                     >
@@ -432,7 +433,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         {cache && <Container
                             width={width}
                             height={timelineHeight}
-                            interactive={true}
+                            eventMode='static'
                             pointerdown={(e) => this.handleClick(e, "down")}
                             pointerup={(e) => this.handleClick(e, "up")}
                             pointermove={this.handleSlide}
