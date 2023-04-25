@@ -264,6 +264,15 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             this.stageSelected = true
         }
     }
+    handleClickStage = (e: FederatedPointerEvent) => {
+        this.handleClick(e, "downStage")
+    }
+    handleClickDown = (e: FederatedPointerEvent) => {
+        this.handleClick(e, "down")
+    }
+    handleClickUp = (e: FederatedPointerEvent) => {
+        this.handleClick(e, "up")
+    }
     handleStageSlide = (e: FederatedPointerEvent) => {
         const x = e.globalX
         if (this.stageSelected === true) {
@@ -361,7 +370,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     {(cache && !data.isRecordingAudio) && <Container
                         x={xPosition}
                         eventMode='static'
-                        pointerdown={(e) => this.handleClick(e, "downStage")}
+                        pointerdown={this.handleClickStage}
                         pointermove={this.handleStageSlide}
                     >
                         {data.columns.map((column, i) => {
@@ -434,8 +443,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                             width={width}
                             height={timelineHeight}
                             eventMode='static'
-                            pointerdown={(e) => this.handleClick(e, "down")}
-                            pointerup={(e) => this.handleClick(e, "up")}
+                            pointerdown={this.handleClickDown}
+                            pointerup={this.handleClickUp}
                             pointermove={this.handleSlide}
                         >
                             <Graphics //to fill the space

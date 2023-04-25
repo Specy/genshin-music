@@ -14,6 +14,7 @@ export const updates: Update[] = [
             "All shortcuts and keyboard layout are now customizable",
             "Added Do Re Mi layout with note shifting",
             "Rewrote app in next.js, improving performance and navigation",
+            "Added song search",
             "Added a new theme",
         ]
     },

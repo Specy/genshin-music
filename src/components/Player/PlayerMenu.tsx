@@ -258,6 +258,7 @@ function Menu({ functions, data }: MenuProps) {
                 <SongMenu<SongRowProps>
                     songs={songs}
                     exclude={excludedSongs}
+                    onCreateFolder={createFolder}
                     style={{ marginTop: '0.6rem' }}
                     SongComponent={SongRow}
                     componentProps={{
@@ -266,11 +267,6 @@ function Menu({ functions, data }: MenuProps) {
                         functions: { removeSong, toggleMenu, downloadSong, renameSong }
                     }}
                 />
-                <div className='row' style={{ justifyContent: "flex-end" }}>
-                    <AppButton onClick={createFolder}>
-                        Create folder
-                    </AppButton>
-                </div>
                 <div style={{ marginTop: "auto", paddingTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                     <AppButton
                         style={{ marginLeft: 'auto' }}

@@ -19,18 +19,18 @@ interface GeneralProvidersWrapperProps {
     onLoaded?: () => void
 }
 export function GeneralProvidersWrapper({ children, onLoaded }: GeneralProvidersWrapperProps) {
-	const [audioContextState, setAudioContextState] = useState<AudioContext['state'] | null>()
+    const [audioContextState, setAudioContextState] = useState<AudioContext['state'] | null>()
     const [audioContext, setAudioContext] = useState<AudioContext | null>(null)
     const handleAudioContextStateChange = useCallback(() => {
-		setAudioContextState(audioContext?.state ?? null)
-	}, [audioContext])
-	useEffect(() => {
-        if(!audioContext) return
-		audioContext.addEventListener('statechange', handleAudioContextStateChange)
-		return () => {
-			audioContext.removeEventListener('statechange', handleAudioContextStateChange)
-		}
-	}, [handleAudioContextStateChange, audioContext])
+        setAudioContextState(audioContext?.state ?? null)
+    }, [audioContext])
+    useEffect(() => {
+        if (!audioContext) return
+        audioContext.addEventListener('statechange', handleAudioContextStateChange)
+        return () => {
+            audioContext.removeEventListener('statechange', handleAudioContextStateChange)
+        }
+    }, [handleAudioContextStateChange, audioContext])
     useEffect(() => {
         AudioProvider.init()
         setAudioContext(AudioProvider.getAudioContext())
@@ -51,19 +51,21 @@ export function GeneralProvidersWrapper({ children, onLoaded }: GeneralProviders
     }, [])
     return <>
         <Logger />
-		<AsyncPromptWrapper />
-        {audioContextState !== 'running' &&
-			<IconButton
-				className='resume-audio-context box-shadow'
-				size='3rem'
-				onClick={() => {
-					setAudioContextState("running") //ignore if it doesn't update
-					metronome.tick()
-				}}
-			>
-				<FaVolumeMute style={{ width: '1.4rem', height: '1.4rem' }} />
-			</IconButton>
-		}
+        <AsyncPromptWrapper />
+        {/*
+            {audioContextState !== 'running' &&
+                <IconButton
+                    className='resume-audio-context box-shadow'
+                    size='3rem'
+                    onClick={() => {
+                        setAudioContextState("running") //ignore if it doesn't update
+                        metronome.tick()
+                    }}
+                >
+                    <FaVolumeMute style={{ width: '1.4rem', height: '1.4rem' }} />
+                </IconButton>
+            }
+        */}
         {children}
     </>
 }

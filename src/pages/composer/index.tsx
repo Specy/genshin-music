@@ -37,7 +37,7 @@ import { Title } from '$cmp/Miscellaneous/Title';
 import { songService } from '$lib/Services/SongService';
 import { NextRouter, useRouter } from 'next/router';
 import { AppBackground } from '$cmp/Layout/AppBackground';
-import { ShortcutDisposer, ShortcutListener, createKeyboardListener, createShortcutListener } from '$/stores/KeybindsStore';
+import { ShortcutListener, createKeyboardListener, createShortcutListener } from '$/stores/KeybindsStore';
 
 interface ComposerState {
     layers: Instrument[]

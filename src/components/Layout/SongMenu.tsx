@@ -4,22 +4,27 @@ import { SongFolder, SongFolderContent } from "./Folder";
 import { Folder } from "$lib/Folder";
 import { SongStorable, SongType } from "$lib/Songs/Song";
 import { useFolders } from "$lib/Hooks/useFolders";
+import s from './SongMenu.module.css'
+import FuzzySearch from "fuzzy-search";
+import { AppButton } from "$cmp/Inputs/AppButton";
+import { FaSearch, FaTimes } from "react-icons/fa";
+import { IconButton } from "$cmp/Inputs/IconButton";
 
 
-
-interface SongMenuProps<T> {
+interface SongMenuProps<T extends { data: SongStorable }> {
     songs: SongStorable[],
-    SongComponent: Function,
+    SongComponent: Function, //TODO improve this
     componentProps: Omit<T, "data">
     className?: string,
     style?: React.CSSProperties,
     baseType?: SongType
     exclude?: SongType[]
+    onCreateFolder?: () => void
 }
 
 
 
-export function SongMenu<T>({
+export function SongMenu<T extends { data: SongStorable }>({
     songs,
     SongComponent,
     componentProps,
@@ -27,16 +32,20 @@ export function SongMenu<T>({
     style,
     baseType,
     exclude,
-
+    onCreateFolder,
 }: SongMenuProps<T>) {
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
     const [noFolderVsrg, setNoFolderVsrg] = useState<Folder>()
     const [filteredSongs, setFilteredSongs] = useState<SongStorable[]>([])
+    const [searchValue, setSearchValue] = useState<string>('')
     const [folders] = useFolders(filteredSongs)
     useEffect(() => {
-        setFilteredSongs(songs.filter(s => !exclude?.includes(s.type) ?? true))
-    }, [songs, exclude])
+        const excluded = songs.filter(s => !exclude?.includes(s.type) ?? true)
+        const searcher = new FuzzySearch(excluded, ['name'], { caseSensitive: false, sort: true })
+        if (searchValue === '') return setFilteredSongs(excluded)
+        setFilteredSongs(searcher.search(searchValue))
+    }, [songs, exclude, searchValue])
     useEffect(() => {
         function isInFolder(song: SongStorable) {
             return folders.some(f => f.id === song.folderId)
@@ -44,11 +53,47 @@ export function SongMenu<T>({
         setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'recorded')))
         setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'composed')))
         setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'vsrg')))
-    }, [filteredSongs,folders])
+    }, [filteredSongs, folders])
     const [theme] = useTheme()
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
     const headerText = theme.getTextColorFromBackground(unselectedColor).toString()
     return <div className={className} style={style}>
+        <div className="row" style={{ justifyContent: "space-between", gap: "0.5rem" }}>
+            <div className={s['search']}
+                style={{
+                    backgroundColor: unselectedColor.toString(),
+                    color: theme.getText('menu_background').toString(),
+                    outline: 'solid 0.2rem transparent',
+                    outlineOffset: '-0.2rem',
+                    outlineColor: searchValue === "" ? "transparent" : "var(--accent)" 
+                }}
+            >
+                <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchValue}
+                    onChange={e => setSearchValue(e.target.value)}
+                    style={{
+                        color: theme.getText('menu_background').toString()
+                    }}
+                />
+                <IconButton 
+                    size="1rem" 
+                    style={{ backgroundColor: "transparent", color: "inherit" }}
+                    onClick={() => setSearchValue("")}
+                >
+                    {searchValue === ""
+                        ? <FaSearch />
+                        : <FaTimes />
+                    }
+                </IconButton>
+            </div>
+            {onCreateFolder &&
+                <AppButton onClick={onCreateFolder}>
+                    Create folder
+                </AppButton>
+            }
+        </div>
         {((!exclude?.includes('composed') ?? true) && noFolderComposed) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}

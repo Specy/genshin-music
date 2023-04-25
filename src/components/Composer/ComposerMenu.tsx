@@ -226,6 +226,7 @@ function Menu({ data, functions }: MenuProps) {
                         exclude={excludedSongs}
                         SongComponent={SongRow}
                         style={{ marginTop: '0.6rem' }}
+                        onCreateFolder={createFolder}
                         componentProps={{
                             theme,
                             folders,
@@ -257,9 +258,7 @@ function Menu({ data, functions }: MenuProps) {
                                 Import song sheet
                             </AppButton>
                         </FilePicker>
-                        <AppButton onClick={createFolder}>
-                            Create folder
-                        </AppButton>
+    
                     </div>
 
                     <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>

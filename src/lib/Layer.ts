@@ -31,11 +31,12 @@ export class NoteLayer {
     }
     toLayerStatus(position: number, instruments?: InstrumentData[]): LayerStatus {
         if(instruments){ 
-            const layers = this.toArray().map((e, i) => +(i !== position && e && instruments[i].visible))
             let note = this.test(position) ? 1 : 0
-            layers.forEach((layer, i) => {
-                note |= layer ? (1 << instruments[i].toNoteIcon()) : 0
-            })
+            for(let i = 0; i < instruments.length; i++){
+                if(i !== position && this.test(i) && instruments[i].visible){
+                    note |= (1 << instruments[i].toNoteIcon())
+                }
+            }
             return note as LayerStatus
         }else{
             const isSelected = this.test(position)
@@ -43,6 +44,7 @@ export class NoteLayer {
             return isSelected ? 3 : 2
         }
     }
+
     toArray() {
         return this.serializeBin().split('').map(x => parseInt(x)).reverse()
     }

@@ -2964,6 +2964,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/fuzzy-search@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "@types/fuzzy-search@npm:2.1.2"
+  checksum: ac030b111571360f211cb4f29ef71f082fca55cd093197ee2e9e2fb8f5eb693fd62d175f4b523b52bc6d455b7dd232d623f14d6e6e6f690ac9cc29c792764393
+  languageName: node
+  linkType: hard
+
 "@types/glob@npm:^7.1.1":
   version: 7.2.0
   resolution: "@types/glob@npm:7.2.0"
@@ -5458,6 +5465,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fuzzy-search@npm:^3.2.1":
+  version: 3.2.1
+  resolution: "fuzzy-search@npm:3.2.1"
+  checksum: 65d50909e69216f830a6e88eade08df00662e2c081edb02063404cc922cc7319ef8958eff781aa4e3e64543a394a912cd8c80abb4c6b158c119e811364e7cfb9
+  languageName: node
+  linkType: hard
+
 "gauge@npm:^4.0.3":
   version: 4.0.4
   resolution: "gauge@npm:4.0.4"
@@ -5490,6 +5504,7 @@ __metadata:
     "@tonejs/midi": ^2.0.28
     "@types/audiobuffer-to-wav": ^1.0.2
     "@types/color": ^3.0.3
+    "@types/fuzzy-search": ^2.1.2
     "@types/jest": ^29.5.0
     "@types/lodash.clonedeep": ^4.5.7
     "@types/next-pwa": ^5.6.2
@@ -5516,6 +5531,7 @@ __metadata:
     eslint-plugin-react: ^7.32.2
     eslint-plugin-react-hooks: ^4.6.0
     fs-extra: ^11.1.1
+    fuzzy-search: ^3.2.1
     is-mobile: ^4.0.0
     lodash.clonedeep: ^4.5.0
     mobx: ^6.9.0
