@@ -87,7 +87,6 @@ function ThemePage() {
         }
     }
     return <DefaultPage>
-        <Title text="Themes" description="Change the app theme, set the different colors, backgrounds, opacity and customisations"/>
         <div style={{ display: 'flex', alignItems: 'center' }}>
             <FilePicker onPick={handleImport} as='json' onError={logImportError}>
                 <AppButton style={{ margin: '0.25rem' }}>
@@ -197,6 +196,8 @@ function ThemePage() {
                 </AppBackground>
             }
         </div>
+        {/*Keep this at the bottom because it gets overwritten by the preview apps above */}
+        <Title text="Themes" description="Change the app theme, set the different colors, backgrounds, opacity and customisations"/>
     </DefaultPage>
 }
 

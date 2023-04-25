@@ -7,7 +7,7 @@ const genshinPath = './src/appData/genshin'
 const publicPath = './public'
 const chosenApp = process.argv[2]
 const date = new Date()
-const SW_VERSION = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}}`
+const SW_VERSION = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}`
 const PATH_NAMES = {
     Sky: "skyMusic",
     Genshin: "genshinMusic"
