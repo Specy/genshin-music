@@ -19,7 +19,7 @@ export function ThemeProviderWrapper({ children }: Props) {
 
     return <>
         <Head>
-            <meta name="theme-color" content={theme.get(mounted ? "secondary" : "accent").toString()} />
+            <meta name="theme-color" content={theme.get(mounted ? "primary" : "accent").toString()} />
         </Head>
         <style>
             {`:root{
