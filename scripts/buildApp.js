@@ -55,7 +55,7 @@ async function updateManifest(basePath){
     try{
         const manifest = await fse.readJson('./public/manifest.json')
         if(manifest.icons) manifest.icons = manifest.icons.map(icon => ({...icon, src: urlJoin(basePath, icon.src)}))
-        if(manifest.start_url) manifest.start_url = basePath 
+        if(manifest.start_url) manifest.start_url = basePath || "."
         if(manifest.screenshots) manifest.screenshots = manifest.screenshots.map(screenshot => ({...screenshot, src: urlJoin(basePath,screenshot.src)}))
         await fse.writeFile('./public/manifest.json', JSON.stringify(manifest, null, 2))
     }catch(e){
