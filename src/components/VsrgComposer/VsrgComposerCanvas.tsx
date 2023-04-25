@@ -95,7 +95,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             },
             timestamp: 0,
             sizes: {
-                el: {...DEFAULT_DOM_RECT},
+                el: { ...DEFAULT_DOM_RECT },
                 rawWidth: 0,
                 rawHeight: 0,
                 width: 0,
@@ -131,7 +131,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         this.throttledEventLoop.start()
         window.addEventListener('blur', this.handleBlur)
         this.state.cache?.destroy()
-        this.toDispose.push(() => window.removeEventListener('blur', this.handleBlur))
+        this.toDispose.push(() => window.removeEventListener('blur', this.handleBlur))        
         this.handleThemeChange(ThemeProvider)
     }
     componentWillUnmount() {
@@ -186,14 +186,14 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         this.setState({ sizes }, this.generateCache)
     }
     handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-        if(this.props.scrollSnap){
+        if (this.props.scrollSnap) {
             this.cumulativeScroll += e.deltaY
-            if(Math.abs(this.cumulativeScroll) < 100) return
+            if (Math.abs(this.cumulativeScroll) < 100) return
             const { snapPoints } = this.props
             const nearestSnapPoint = snapPoints.findIndex(s => s > this.state.timestamp)
             const index = (nearestSnapPoint < 0 ? snapPoints.length : nearestSnapPoint) - 1 + (this.cumulativeScroll < 0 ? -1 : 1)
             this.cumulativeScroll = 0
-            if(index < 0 || index >= snapPoints.length) return
+            if (index < 0 || index >= snapPoints.length) return
             const nextTimestamp = snapPoints[index]
             return this.setTimestamp(nextTimestamp)
         }
@@ -210,7 +210,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
     }
     setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
         const { sizes } = this.state
-        if((e.clientY - sizes.el.top) > sizes.timelineSize){
+        if ((e.clientY - sizes.el.top) > sizes.timelineSize) {
             this.setState({
                 isPressing: true,
                 previousPosition: this.props.isHorizontal ? e.clientX : -e.clientY
@@ -224,14 +224,14 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             //dumbass idk how to make otherwise
             if (draggedHitObject) this.props.releaseHitObject()
             setTimeout(() => this.setState({ preventClick: false }), 200)
-            if(this.props.scrollSnap){
+            if (this.props.scrollSnap) {
                 const { snapPoints } = this.props
                 const index = snapPoints.findIndex(s => s > this.state.timestamp)
-                if(!index || index < 0) return 
+                if (!index || index < 0) return
                 const next = snapPoints[index]
                 const previous = snapPoints[index - 1]
-                if(next === undefined || previous === undefined) return
-                const timestamp = getNearestTo( this.state.timestamp, previous, next)
+                if (next === undefined || previous === undefined) return
+                const timestamp = getNearestTo(this.state.timestamp, previous, next)
                 this.setTimestamp(timestamp)
             }
         })
@@ -274,7 +274,10 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             playbarOffset: globalConfigStore.get().PLAY_BAR_OFFSET
         })
         this.setState({ cache: newCache }, () => {
-            cache?.destroy()
+            //TODO not sure why pixi is still using old textures
+            setTimeout(() => {
+                cache?.destroy()
+            }, 500)
         })
     }
     selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => {
@@ -350,7 +353,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
                             onSnapPointSelect={this.props.onSnapPointSelect}
                         />
                     }
-                    
+
                     <VsrgKeysRenderer
                         isHorizontal={isHorizontal}
                         keys={DEFAULT_VSRG_KEYS_MAP[vsrg.keys]}

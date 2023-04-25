@@ -14,9 +14,12 @@ export function ThemeProviderWrapper({ children }: Props) {
     }, [])
     const [theme] = useTheme()
     const clickColor = theme.get('accent').isDark()
-        ? theme.get('accent').lighten(0.1)
-        : theme.get('accent').saturate(0.2).lighten(0.25)
-
+        ? theme.get('accent').mix(theme.get("note_background")).lighten(0.1)
+        : theme.get('accent').mix(theme.get("note_background")).lighten(0.2)
+    const backgroundDesaturate = ThemeProvider.get('note_background').desaturate(0.6)
+    const borderFill = backgroundDesaturate.isDark() 
+        ? backgroundDesaturate.lighten(0.50).toString() 
+        : backgroundDesaturate.darken(0.18).toString()
     return <>
         <Head>
             <meta name="theme-color" content={theme.get(mounted ? "primary" : "accent").toString()} />
@@ -36,6 +39,7 @@ export function ThemeProviderWrapper({ children }: Props) {
                             `
             }).join('\n')}
                 --clicked-note:${clickColor};
+                --note-border-fill:${borderFill};
             }`}
         </style>
         {children}

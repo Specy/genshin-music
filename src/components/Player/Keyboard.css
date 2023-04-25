@@ -51,7 +51,7 @@
 .note-sky,
 .note-composer-sky {
 	border-radius: 1.3vw;
-	border: 0.4vw solid var(--note-background);
+	border: 0.4vw solid transparent;
     transform-origin: 50% 50%;
 	transition: all 0.1s;
     user-select: none;

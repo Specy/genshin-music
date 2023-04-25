@@ -366,6 +366,66 @@ const baseThemes: SerializedTheme[] = [
                 text: "#edeae5"
             }
         }
+    },
+    {
+        editable: false,
+        id: "Eons of times",
+        type: "theme",
+        other: {
+            backgroundImageMain: "https://cdn.discordapp.com/attachments/1032573337823625326/1044395721916416040/firstBackgroundDay.jpg",
+            backgroundImageComposer: "https://cdn.discordapp.com/attachments/1032573337823625326/1044395721916416040/firstBackgroundDay.jpg",
+            name: "Eons of times"
+        },
+        data: {
+            background: {
+                name: "background",
+                css: "background",
+                value: "rgb(124, 101, 76)",
+                text: "#edeae5"
+            },
+            primary: {
+                name: "primary",
+                css: "primary",
+                value: "#453427d9",
+                text: "#edeae5"
+            },
+            secondary: {
+                name: "secondary",
+                css: "secondary",
+                value: "rgb(105, 80, 54)",
+                text: "#edeae5"
+            },
+            accent: {
+                name: "accent",
+                css: "accent",
+                value: "rgb(251, 155, 110)",
+                text: "#151414"
+            },
+            composer_accent: {
+                name: "composer_accent",
+                css: "composer-accent",
+                value: "rgb(110, 57, 40)",
+                text: "#edeae5"
+            },
+            icon_color: {
+                name: "icon_color",
+                css: "icon-color",
+                value: "rgb(187, 154, 119)",
+                text: "#151414"
+            },
+            menu_background: {
+                name: "menu_background",
+                css: "menu-background",
+                value: "rgba(130, 108, 84, 0.8392156862745098)",
+                text: "#edeae5"
+            },
+            note_background: {
+                name: "note_background",
+                css: "note-background",
+                value: "#453427d9",
+                text: "#edeae5"
+            }
+        }
     }
 ]
 

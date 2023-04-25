@@ -224,7 +224,10 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             trackColors: this.state.song.tracks.map(track => track.color),
         })
         this.setState({ cache: newCache }, () => {
-            cache?.destroy()
+            setTimeout(() => {
+                //TODO not sure why pixi reuses textures from the old cache
+                cache?.destroy()
+            }, 500)
         })
     }
     generateAccuracyBounds = () => {
