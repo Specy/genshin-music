@@ -1,5 +1,5 @@
 import { AppButton } from "$cmp/Inputs/AppButton"
-
+import s from '$pages/midi-setup/MidiSetup.module.css'
 interface ShortcutProps {
     status: string
     onClick: (data: string) => void
@@ -9,7 +9,7 @@ interface ShortcutProps {
 }
 
 export default function Shortcut({ status, onClick, type, selected, midi }: ShortcutProps) {
-    return <AppButton className={`midi-shortcut ${status}`} toggled={selected} onClick={() => onClick(type)}>
+    return <AppButton className={`${s['midi-shortcut']} ${status}`} toggled={selected} onClick={() => onClick(type)}>
         {prepareText(type) + ` (${midi === -1 ? 'NA' : midi})`}
     </AppButton>
 }

@@ -109,7 +109,7 @@ select {
     border-radius: 0.3rem;
     color: var(--icon-color);
     background-color: var(--primary-darken-10);
-    transition: filter 0.2s;
+    transition: background-color 0.2s;
     cursor: pointer;
     margin: 0;
 }
@@ -125,7 +125,7 @@ select {
 
 .tool:hover,
 .tool-slim:hover {
-    filter: brightness(1.15);
+    background-color: var(--primary-layer-15);
 }
 
 select {

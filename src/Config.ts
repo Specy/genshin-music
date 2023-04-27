@@ -1,4 +1,3 @@
-import isMobile from "is-mobile"
 import type { Tauri } from "$types/TauriTypes"
 import { NoteImage } from "./components/SvgNotes"
 

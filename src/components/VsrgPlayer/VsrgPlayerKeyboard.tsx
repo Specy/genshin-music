@@ -1,9 +1,9 @@
 import { useVsrgKey } from "$lib/Hooks/useVsrgKey"
 import { useVsrgKeyboardLayout } from "$lib/Hooks/useVsrgKeyboardLayout"
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
-import React, { Fragment, useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect } from "react"
 import { KeyboardKey, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
-
+import s from "./VsrgPlayerKeyboard.module.css"
 
 interface VsrgPlayerKeyboardProps {
     hitObjectSize: number
@@ -13,11 +13,6 @@ interface VsrgPlayerKeyboardProps {
     horizontalOffset: number
 }
 export type VsrgKeyboardLayout = 'line' | 'circles'
-interface RenderLayout {
-    left: KeyboardKey[]
-    center: KeyboardKey[]
-    right: KeyboardKey[]
-}
 
 export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, verticalOffset, horizontalOffset }: VsrgPlayerKeyboardProps) {
     const layout = useVsrgKeyboardLayout()
@@ -47,7 +42,7 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, vert
         {keyboardLayout === 'line' &&
             <>
                 <div
-                    className="vsrg-player-keyboard-control-left"
+                    className={s['vsrg-player-keyboard-control-left']}
                     style={{
                         '--vertical-offset': `calc(-${left.length * 2}vw + ${verticalOffset * 0.1}rem)`,
                         '--horizontal-offset': `${horizontalOffset * 0.1 + 1}rem`
@@ -67,7 +62,7 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, vert
                 </div>
                 <div
 
-                    className="vsrg-player-keyboard-control-right"
+                    className={s['vsrg-player-keyboard-control-right']}
                     style={{
                         '--vertical-offset': `calc(-${left.length * 2}vw + ${verticalOffset * 0.1}rem)`,
                         '--horizontal-offset': `${horizontalOffset * 0.1 + 1}rem`
@@ -89,7 +84,7 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, vert
             </>
         }
         <div
-            className={`vsrg-player-keyboard-circles`}
+            className={s['vsrg-player-keyboard-circles']}
         >
             {layout.map(letter =>
                 <VsrgPlayerKeyboardKey
@@ -128,7 +123,7 @@ function VsrgPlayerKeyboardKey({ index, layout, size, layoutType, offset }: Vsrg
 
     if (layoutType === 'circles') {
         return <button
-            className="vsrg-player-key-hitbox-circle flex-centered"
+            className={`${s['vsrg-player-key-hitbox-circle']} flex-centered`}
             style={{
                 paddingBottom: `${offset}px`,
             }}
@@ -136,7 +131,7 @@ function VsrgPlayerKeyboardKey({ index, layout, size, layoutType, offset }: Vsrg
             onPointerUp={releaseKey}
         >
             <div
-                className={`vsrg-player-key-circle ${data.isPressed ? 'vsrg-key-pressed' : ''}`}
+                className={`${s['vsrg-player-key-circle']} ${data.isPressed ? s['vsrg-key-pressed'] : ''}`}
                 style={{
                     width: size,
                     height: size,
@@ -148,12 +143,12 @@ function VsrgPlayerKeyboardKey({ index, layout, size, layoutType, offset }: Vsrg
     }
     if (layoutType === 'line') {
         return <button
-            className="vsrg-player-key-hitbox-line"
+            className={s['vsrg-player-key-hitbox-line']}
             onPointerDown={pressKey}
             onPointerUp={releaseKey}
         >
             <div
-                className={`vsrg-player-key-line ${data.isPressed ? 'vsrg-key-pressed' : ''}`}
+                className={`${s['vsrg-player-key-line']} ${data.isPressed ? s['vsrg-key-pressed'] : ''}`}
                 style={{
                     height: `${offset}px`,
                 }}

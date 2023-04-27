@@ -2,11 +2,11 @@ import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import partner from 'assets/images/partners/windsong-db.jpg'
 import Image, { StaticImageData } from 'next/image'
-
+import s from './Partners.module.css'
 export default function Partners() {
-    return <DefaultPage className='partners-page'>
+    return <DefaultPage className={s['partners-page']}>
         <Title text="Partners" description='Learn about our partners who helped the development and to make the app more famous'/>
-        <div className='partner-wrapper'>
+        <div className={s['partner-wrapper']}>
             <Partner
                 name='Specy'
                 description='The youtube channel that collects videos created by users of this app'
@@ -89,11 +89,11 @@ interface PartnerProps{
     children: React.ReactNode
 }
 function Partner({name, description, children}: PartnerProps) {
-    return <div className='partner'>
-        <div className='partner-title'>
+    return <div className={s.partner}>
+        <div className={s['partner-title']}>
             {name}
         </div>
-        <div className='partner-description'>
+        <div className={s['partner-description']}>
             {description}
         </div>
         {children}

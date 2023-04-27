@@ -4,10 +4,11 @@ import kofiImg from '$/assets/images/kofi.png'
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import Image from 'next/image'
+import s from './Donate.module.css'
 export default function Donate() {
     return <DefaultPage>
         <Title text="Donate" description='Please donate to help the development of sky music nightly, genshin music nightly and all the other apps i make.'/>
-        <div className="donate-text">
+        <div className={s['donate-text']}>
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not
             worry so much about how much I spend on the server, giving you the best
@@ -19,8 +20,8 @@ export default function Donate() {
             I would be really thankful if you could consider donating in order to fund
             development and costs.
         </div>
-        <div className="donation-wrapper">
-            <a href="https://paypal.me/specyDev" target="_blank" className="paypal" rel="noreferrer">
+        <div className={s['donation-wrapper']}>
+            <a href="https://paypal.me/specyDev" target="_blank" className={s.paypal} rel="noreferrer">
                 <Image 
                     src={paypalImg}
                     alt='paypalme'
@@ -28,7 +29,7 @@ export default function Donate() {
                     style={{ height: "3rem", width: "auto" }}
                 />
             </a>
-            <a href="https://ko-fi.com/specy" target="_blank" className="kofi" rel="noreferrer">
+            <a href="https://ko-fi.com/specy" target="_blank" className={s.kofi} rel="noreferrer">
                 <Image 
                     src={kofiImg}
                     alt='kofi'

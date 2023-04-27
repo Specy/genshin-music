@@ -18,7 +18,7 @@ import { createShortcutListener, keyBinds } from "$stores/KeybindsStore";
 import { logger } from "$stores/LoggerStore";
 import { Title } from "$cmp/Miscellaneous/Title";
 import { AppBackground } from "$cmp/Layout/AppBackground";
-
+import s from "$pages/vsrg-player/VsrgPlayer.module.css";
 type VsrgPlayerProps = {}
 interface VsrgPlayerState {
     song: VsrgSong | null
@@ -164,10 +164,10 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                 onSettingsUpdate={this.handleSettingChange}
                 onSongSelect={this.onSongSelect}
             />
-            <div className="vsrg-player-page appear-on-mount">
+            <div className={`${s['vsrg-player-page']} appear-on-mount`}>
 
                 <div
-                    className="vsrg-player-grid"
+                    className={s['vsrg-player-grid']}
                 >
                     <VsrgPlayerCanvas
                         keyboardLayout={settings.keyboardLayout.value}

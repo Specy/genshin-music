@@ -39,10 +39,30 @@
 	left: 0;
     top: 0;
 }
-.hidden-slider {
-	width: 100%;
-	margin: 0;
-    height: 100%;
-    cursor: pointer;
+.slider-select {
+	font-size: 0.8rem;
+    flex: 1;
+	height: 2rem;
+	text-align: center;
+	font-weight: bold;
+	border: none;
+	-moz-appearance: none;
+	appearance: none;
+	-webkit-appearance: none;
+	background-image: none;
+	border-radius: 0.3rem;
+	background-color: var(--primary);
+	color: var(--primary-text);
 }
 
+.slider-wrapper {
+	height: 100%;
+    align-self: center;
+    width: 100%;
+	align-items: center;
+    gap: 0.6rem;
+	max-height: 25rem;
+}
+.slider-wrapper button {
+	margin: 0;
+}

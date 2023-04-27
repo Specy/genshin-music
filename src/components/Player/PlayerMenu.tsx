@@ -24,7 +24,6 @@ import { useTheme } from '$lib/Hooks/useTheme';
 import { SearchedSongType } from '$types/GeneralTypes';
 import { FileElement, FilePicker } from '$cmp/Inputs/FilePicker';
 import { Theme } from '$stores/ThemeStore/ThemeProvider';
-import { KeyboardEventData, KeyboardProvider } from '$lib/Providers/KeyboardProvider';
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip"
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip';
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from '$cmp/Utility/FloatingDropdown';
@@ -45,7 +44,7 @@ import { _folderService } from '$lib/Services/FolderService';
 import { settingsService } from '$lib/Services/SettingsService';
 import { useDefaultConfig } from '$lib/Hooks/useConfig';
 import { createShortcutListener } from '$stores/KeybindsStore';
-
+import sh from '$cmp/HelpTab/HelpTab.module.css'
 interface MenuProps {
     functions: {
         addSong: (song: RecordedSong | ComposedSong) => void
@@ -373,12 +372,12 @@ function Menu({ functions, data }: MenuProps) {
 
             </MenuPanel>
             <MenuPanel title="Help" current={selectedMenu} id='Help'>
-                <div className='help-icon-wrapper'>
+                <div className={sh['help-icon-wrapper']}>
                     <a href='https://discord.gg/Arsf65YYHq' >
-                        <FaDiscord className='help-icon' />
+                        <FaDiscord className={sh['help-icon']} />
                     </a>
                     <a href='https://github.com/Specy/genshin-music' >
-                        <FaGithub className='help-icon' />
+                        <FaGithub className={sh['help-icon']} />
                     </a>
                 </div>
                 <HelpTab />

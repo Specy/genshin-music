@@ -2,7 +2,7 @@ import helpImg from '$/assets/images/help-vsrg-composer.png';
 import { keyBinds } from '$stores/KeybindsStore';
 import Image from 'next/image';
 import { Key } from '../HelpTab';
-
+import sh from "$cmp/HelpTab/HelpTab.module.css"
 
 export function VsrgComposerHelp() {
     const keys = keyBinds.getVsrgKeybinds(6)
@@ -31,7 +31,7 @@ export function VsrgComposerHelp() {
             <Image 
                 src={helpImg}
                 alt="tutorial for the vsrg composer page"
-                className="help-img"
+                className={sh['help-img']}
                 loading="lazy"
             />
             <ol>

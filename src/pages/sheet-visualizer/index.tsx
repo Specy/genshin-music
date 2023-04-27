@@ -19,7 +19,7 @@ import { ComposedSong } from '$lib/Songs/ComposedSong'
 import { useTheme } from '$lib/Hooks/useTheme'
 import Instrument from '$lib/Instrument'
 import { Select } from '$cmp/Inputs/Select'
-
+import s from "./SheetVisualizer.module.css"
 const THRESHOLDS = {
     joined: 50,
     pause: 400,
@@ -91,20 +91,20 @@ export default function SheetVisualizer() {
     useEffect(() => {
         if (currentSong) loadSong(currentSong, keyboardLayout)
     }, [currentSong, hasText, keyboardLayout, loadSong])
-    return <DefaultPage 
-        style={{ overflowY: 'scroll' }} 
+    return <DefaultPage
+        style={{ overflowY: 'scroll' }}
         excludeMenu={true}
         menu={
-                <SheetVisualiserMenu
-                    onSongLoaded={setCurrentSong}
-                    currentSong={currentSong}
-                />
-            }
-        >
+            <SheetVisualiserMenu
+                onSongLoaded={setCurrentSong}
+                currentSong={currentSong}
+            />
+        }
+    >
         <Title text="Sheet Visualizer" description='Learn a sheet in a visual way, convert the song into text format or print it as pdf' />
 
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-            <div className='displayer-buttons-wrapper noprint'>
+            <div className={`${s['visualizer-buttons-wrapper']} noprint`}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div>Note names</div>
                     <Switch checked={hasText} onChange={setHasText} />
@@ -120,11 +120,11 @@ export default function SheetVisualizer() {
 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     Per row: {framesPerRow}
-                    <button className='displayer-plus-minus'
+                    <button className={s['visualizer-plus-minus']}
                         onClick={() => setFrames(-1)}>
                         -
                     </button>
-                    <button className='displayer-plus-minus'
+                    <button className={s['visualizer-plus-minus']}
                         onClick={() => setFrames(1)}>
                         +
                     </button>
@@ -152,7 +152,7 @@ export default function SheetVisualizer() {
                 </div>
             </div>
             <div
-                className='displayer-frame-wrapper'
+                className={s['visualizer-frame-wrapper']}
                 style={{ gridTemplateColumns: `repeat(${framesPerRow},1fr)` }}
             >
 
@@ -167,7 +167,7 @@ export default function SheetVisualizer() {
                     />
                 )}
             </div>
-            {songAsText.trim().length > 0 && <pre className='text-notation-wrapper'>
+            {songAsText.trim().length > 0 && <pre className={s['text-notation-wrapper']}>
                 {songAsText}
             </pre>}
 

@@ -14,7 +14,7 @@ import { Title } from '$cmp/Miscellaneous/Title'
 import { AudioPlayer } from '$lib/AudioPlayer'
 import { InstrumentData } from '$lib/Songs/SongClasses'
 import Instrument from '$lib/Instrument'
-
+import s from './MidiSetup.module.css'
 interface MidiSetupState {
     audioPlayer: AudioPlayer
     settings: typeof MIDISettings
@@ -164,7 +164,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         const { settings, sources, selectedShortcut, selectedSource } = this.state
         return <DefaultPage>
             <Title text="MIDI Setup" description='Setup the MIDI devices connected to your browser and change the shortcuts/keybinds for each key'/>
-            <div className="column midi-setup-column">
+            <div className={`column ${s['midi-setup-column']}`}>
                 <div>
                     Select MIDI device:
                     <select
@@ -186,7 +186,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                     Click on the note to map, then press your MIDI keyboard
                 </div>
             </div>
-            <div className="midi-setup-content">
+            <div className={s['midi-setup-content']}>
                 <div
                     className={APP_NAME === 'Genshin' ? "keyboard" : "keyboard keyboard-5"}
                     style={{ marginTop: 'auto', width: 'fit-content' }}
@@ -201,11 +201,11 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                         />
                     })}
                 </div>
-                <div className="midi-shortcuts-wrapper">
+                <div className={s['midi-shortcuts-wrapper']}>
                     <div style={{ fontSize: '1.5rem' }}>
                         Shortcuts
                     </div>
-                    <div className="midi-shortcuts">
+                    <div className={s['midi-shortcuts']}>
                         {settings.shortcuts.map(shortcut =>
                             <Shortcut
                                 key={shortcut.type}

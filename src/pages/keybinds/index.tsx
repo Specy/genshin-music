@@ -12,7 +12,7 @@ import Instrument from "$lib/Instrument";
 import { logger } from "$/stores/LoggerStore";
 import { ShortcutEditor } from "$/components/Keybinds/ShortcutEditor";
 import { useDefaultConfig } from "$/lib/Hooks/useConfig";
-
+import svs from "$cmp/VsrgPlayer/VsrgPlayerKeyboard.module.css"
 
 
 const baseInstrument = new Instrument()
@@ -190,7 +190,7 @@ function VsrgKey({ letter, isActive, handleClick }: VsrgKeyProps) {
     const ref = useClickOutside<HTMLButtonElement>(() => handleClick(false), { ignoreFocusable: true, active: isActive })
 
     return <button
-        className="vsrg-player-key-circle"
+        className={svs['vsrg-player-key-circle']}
         ref={ref}
         style={{
             width: '3.5rem',

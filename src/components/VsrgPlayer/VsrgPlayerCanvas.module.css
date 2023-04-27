@@ -1,0 +1,19 @@
+.vsrg-player-canvas {
+    position: absolute;
+    bottom: 0;
+    width: 50vw;
+    /* height: 190vh; magic number */
+    height: 100vh;
+    max-width: 35rem;
+    background-color: var(--background-darken-10);
+    border-left: solid 2px var(--secondary);
+    border-right: solid 2px var(--secondary);
+    /* transform-origin: bottom;
+    transform: rotateX(35deg); */
+    display: flex;
+}
+
+.vsrg-player-canvas canvas {
+    position: absolute;
+    border-radius: 0.6rem;
+}

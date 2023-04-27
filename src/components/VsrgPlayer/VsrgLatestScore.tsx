@@ -2,7 +2,7 @@ import { VSRG_SCORE_COLOR_MAP } from "$config"
 import { memo, useEffect, useRef, useState } from "react"
 import { subscribeVsrgLatestScore, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
 import { Timer } from "$types/GeneralTypes"
-
+import s from "./VsrgPlayerScore.module.css"
 
 const defaultStyle = {
     transform: 'rotate(0) scale(1)',
@@ -49,12 +49,12 @@ function _VsrgPlayerLatestScore() {
         <div
             ref={ref}
             style={style}
-            className="vsrg-floating-score"
+            className={s['vsrg-floating-score']}
         >
             {data.type}
         </div>
         <div
-            className='vsrg-floating-combo'
+            className={s['vsrg-floating-combo']}
         >
             {data.combo > 0 && `${data.combo}x`}
         </div>

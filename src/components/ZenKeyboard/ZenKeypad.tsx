@@ -4,8 +4,8 @@ import { zenKeyboardStore } from "$stores/ZenKeyboardStore";
 import { ZenNote } from "./ZenNote";
 import { useEffect } from 'react'
 import { NoteNameType, Pitch } from "$config";
-import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
 import { createKeyboardListener } from "$stores/KeybindsStore";
+import s from './ZenKeyboard.module.css'
 
 interface ZenKeyboardProps {
     instrument: Instrument
@@ -16,20 +16,24 @@ interface ZenKeyboardProps {
     onNoteClick: (note: ObservableNote) => void
 }
 
-export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale,noteNameType }: ZenKeyboardProps) {
+let cssBase = `keyboard ${s['zen-keyboard']}}`
+const keyboardClasses = new Map<number, string>([
+    [15, `${cssBase} keyboard-5`],
+    [14, `${cssBase} keyboard-5`],
+    [8, `${cssBase} keyboard-4`],
+    [6, `${cssBase} keyboard-3`],
+])
+
+export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale, noteNameType }: ZenKeyboardProps) {
     const layout = useObservableArray(zenKeyboardStore.keyboard)
     useEffect(() => {
         return createKeyboardListener("zen_keyboard", ({ shortcut, event }) => {
-            if(event.repeat) return
+            if (event.repeat) return
             const note = instrument.getNoteFromCode(shortcut)
             if (note !== null) onNoteClick(note)
         })
     }, [onNoteClick, instrument])
-    let keyboardClass = "keyboard zen-keyboard"
-    if (instrument.notes.length === 15) keyboardClass += " keyboard-5"
-    if (instrument.notes.length === 14) keyboardClass += " keyboard-5"
-    if (instrument.notes.length === 8) keyboardClass += " keyboard-4"
-    if (instrument.notes.length === 6) keyboardClass += " keyboard-3"
+    let keyboardClass = keyboardClasses.get(layout.length) || cssBase
     return <div className={keyboardClass}
         style={{
             transform: `scale(${scale / 100}) translateY(${verticalOffset}px)`,

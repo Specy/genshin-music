@@ -1,20 +1,18 @@
-import { DEFAULT_DOM_RECT, SPEED_CHANGERS } from "$config"
+import { SPEED_CHANGERS } from "$config"
 import Memoized from "$cmp/Utility/Memoized";
 import { FaSyncAlt, FaStop } from "react-icons/fa";
-import { memo, useEffect, useState, useRef, ChangeEvent } from "react";
+import { memo, ChangeEvent } from "react";
 import { playerStore } from "$stores/PlayerStore";
 import { playerControlsStore } from "$stores/PlayerControlsStore";
-import { BsTriangleFill } from "react-icons/bs";
-import { clamp } from "$lib/Utilities";
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
-import { SheetFrame } from "$cmp/SheetVisualizer/SheetFrame";
 import { IconButton } from "$cmp/Inputs/IconButton";
-import { useTheme } from "$lib/Hooks/useTheme";
 import { useObservableObject } from "$lib/Hooks/useObservable";
 import { GiMetronome } from "react-icons/gi";
 import { AppButton } from "$cmp/Inputs/AppButton";
 import { PlayerSlider } from "./PlayerSlider";
 import { PlayerVisualSheetRenderer } from "./PlayerPagesRenderer";
+import s from './Slider.module.css'
+import svs from './VisualSheet.module.css'
 interface PlayerSongControlsProps {
     onRestart: () => void
     onRawSpeedChange: (event: ChangeEvent<HTMLSelectElement>) => void
@@ -27,15 +25,14 @@ interface PlayerSongControlsProps {
     isRecordingAudio: boolean
 }
 
-function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSong, isMetronomePlaying, onToggleMetronome, isRecordingAudio, onToggleRecordAudio , isVisualSheetVisible}: PlayerSongControlsProps) {
+function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSong, isMetronomePlaying, onToggleMetronome, isRecordingAudio, onToggleRecordAudio, isVisualSheetVisible }: PlayerSongControlsProps) {
     const songData = useObservableObject(playerStore.state)
     return <>
         {songData.eventType === 'approaching' &&
             <Score />
         }
-        <div className='column player-right-controls' >
-            {//this div is here to keep an empty element to keep the styling consistent
-            }
+        <div className={`column ${svs['player-controls']}`}>
+            {/*this div is here to keep an empty element to keep the styling consistent */}
             <div>
                 {songData.eventType !== 'approaching' &&
                     <AppButton
@@ -46,12 +43,12 @@ function _PlayerSongControls({ onRestart, onRawSpeedChange, speedChanger, hasSon
                     </AppButton>
                 }
             </div>
-            <div className="slider-wrapper column" style={!hasSong ? { display: 'none' } : {}} >
+            <div className={`column ${s['slider-wrapper']}`} style={!hasSong ? { display: 'none' } : {}} >
                 <div className="row" style={{ width: '100%' }}>
 
                     <div className={`${hasTooltip(true)} row`} style={{ marginRight: '0.4rem', flex: 1 }}>
                         <select
-                            className='slider-select'
+                            className={s['slider-select']}
                             onChange={onRawSpeedChange}
                             value={speedChanger.name}
                             style={{ backgroundImage: 'none' }}

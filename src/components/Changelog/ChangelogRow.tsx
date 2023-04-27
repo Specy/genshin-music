@@ -1,3 +1,5 @@
+import s from "$pages/changelog/Changelog.module.css"
+
 interface ChangelogRowProps{
     version: string  | number,
     title: string, 
@@ -7,16 +9,16 @@ interface ChangelogRowProps{
 
 export function ChangelogRow({version, title, changes, date }:ChangelogRowProps) {
     return <div>
-        <div className='changelog-title'>
-            <div className='clt-1'>
+        <div className={s['changelog-title']}>
+            <div className={s['clt-1']}>
                 {version}
             </div>
-            <div className='clt-2'>
+            <div className={s['clt-2']}>
                 {date}
             </div>
         </div>
-        <div className='changelog-list'>
-            <div className='cll-1'>
+        <div className={s['changelog-list']}>
+            <div className={s['cll-1']}>
                 {title}
             </div>
             <ul>
@@ -26,7 +28,7 @@ export function ChangelogRow({version, title, changes, date }:ChangelogRowProps)
                             if (i === 0) {
                                 return <div key={i}>{item}</div>
                             }
-                            return <p key={i} className='cll-new-line'>
+                            return <p key={i} className={s['cll-new-line']}>
                                 {item}
                             </p>
                         })}

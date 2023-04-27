@@ -27,7 +27,6 @@
     color: var(--accent);
 }
 .changelog-list{
-
     margin:0;
     margin-left: 2.5rem;
     border-left: solid 2px var(--secondary);
@@ -37,31 +36,13 @@
 .changelog-list ul li{
     margin-top: 0.4rem;
 }
-.absolute-changelog-btn{
-    position: fixed;
-    top: 0.5rem;
-    left: 0.5rem;
-    background-color: #576377;
-    border-radius: 0.3rem;
-    width: 4rem;
-    height: 3rem;
-    display: flex;
-    justify-content: center;
-    color: var(--whitish);
-    cursor: pointer;
-    align-items: center;
-}
+
 .cll-new-line{
     margin: 0;
     margin-top: 0.2rem;
     margin-left: 1rem;
 }
-.go-to-changelog{
-    margin-top: 1rem;
-    text-align: center;
-    height: 3rem;
-    width: 100%;
-}
+
 .changelog-ending{
     height: 2.5rem;
     min-height: 2.5rem;

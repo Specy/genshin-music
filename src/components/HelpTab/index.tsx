@@ -4,7 +4,7 @@ import playerImg from '$/assets/images/help-player.png'
 import { useDefaultConfig } from '$lib/Hooks/useConfig'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import Image from 'next/image'
-
+import sh from '$cmp/HelpTab/HelpTab.module.css'
 export function HelpTab() {
     const { IS_MOBILE } = useDefaultConfig()
     return <>
@@ -29,14 +29,14 @@ export function HelpTab() {
         {APP_NAME === "Sky" && <span>
             The images are from the genshin version of the app, but the functionality is the same    
         </span>}
-        <div className='help-title'>
+        <div className={sh['help-title']}>
             Main page
         </div>
         <div>
             <Image 
                 src={playerImg}
                 alt='tutorial for the main page'
-                className='help-img'
+                className={sh['help-img']}
                 loading='lazy'
             />
             <ol>
@@ -53,10 +53,10 @@ export function HelpTab() {
         </div>
         {
             !IS_MOBILE && <>
-                <div className='help-title'>
+                <div className={sh['help-title']}>
                     Main page shortcuts
                 </div>
-                <div className='help-margin-left'>
+                <div className={sh['help-margin-left']}>
                     <div style={{ marginBottom: '0.5rem' }}>
                         The main page has shortcuts for PC users:
                     </div>
@@ -84,14 +84,14 @@ export function HelpTab() {
             </>
         }
 
-        <div className='help-title'>
+        <div className={sh['help-title']}>
             Composer
         </div>
         <div>
             <Image 
                 src={composerImg}
                 alt='tutorial for the composer'
-                className='help-img'
+                className={sh['help-img']}
                 loading='lazy'
             />
             <ol>
@@ -108,10 +108,10 @@ export function HelpTab() {
 
         {
             !IS_MOBILE && <>
-                <div className='help-title'>
+                <div className={sh['help-title']}>
                     Composer shortcuts
                 </div>
-                <div className='help-margin-left'>
+                <div className={sh['help-margin-left']}>
 
                     <div style={{ marginBottom: '0.5rem' }}>
                         The composer has shortcuts for PC users:

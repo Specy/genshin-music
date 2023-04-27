@@ -1,7 +1,7 @@
 import { VSRG_SCORE_COLOR_MAP } from "$config";
 import { useVsrgScore } from "$lib/Hooks/useVsrgScore";
 import { memo } from "react";
-
+import s from "./VsrgPlayerScore.module.css"
 
 
 
@@ -9,7 +9,7 @@ import { memo } from "react";
 function _VsrgPlayerScore() {
     const score = useVsrgScore()
     return <>
-        <div className="vsrg-player-score">
+        <div className={s['vsrg-player-score']}>
             <div className="column space-between">
                 <div>
                     {score.score}
@@ -17,7 +17,7 @@ function _VsrgPlayerScore() {
             </div>
         </div>
         {score.scoreVisible &&
-            <div className="vsrg-final-score box-shadow">
+            <div className={`${s['vsrg-final-score']} box-shadow`}>
                 <ScoreElement text='Amazing' number={score.amazing} color={VSRG_SCORE_COLOR_MAP.amazing} gridArea='a' />
                 <ScoreElement text='Perfect' number={score.perfect} color={VSRG_SCORE_COLOR_MAP.perfect} gridArea='b' />
                 <ScoreElement text='Great' number={score.great} color={VSRG_SCORE_COLOR_MAP.great} gridArea='c' />
@@ -45,7 +45,7 @@ interface ScoreElementProps {
     gridArea: string
 }
 function ScoreElement({ text, color, number, gridArea }: ScoreElementProps) {
-    return <div className='row floating-score-element' style={{ gridArea }}>
+    return <div className={`${s['floating-score-element']} row`} style={{ gridArea }}>
         <span style={{ color }}>
             {text}
         </span>

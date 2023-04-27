@@ -3,7 +3,7 @@ import { Chunk } from "$lib/Songs/VisualSong"
 import { memo, useEffect, useState } from "react"
 import { Theme } from "$stores/ThemeStore/ThemeProvider"
 import Instrument from "$lib/Instrument"
-
+import s from "./SheetFrame.module.css"
 
 
 interface SheetFrameProps {
@@ -27,7 +27,7 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme, keyboardLay
         notes[note.index] = true
     })
     return <div
-        className={`frame-outer ${chunk.notes.length === 0 ? 'displayer-ball' : ''}`}
+        className={`${s['frame-outer']} ${chunk.notes.length === 0 ? s['visualizer-ball'] : ''}`}
         style={selected
             ? {
                 borderColor: 'var(--accent)',
@@ -37,10 +37,10 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme, keyboardLay
     >
         {chunk.notes.length === 0
             ? <div></div>
-            : <div className='displayer-frame' style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
+            : <div className={s['visualizer-frame']} style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
                 {notes.map((exists, i) => {
                     return <div
-                        className={exists ? 'frame-note-s' : 'frame-note-ns'}
+                        className={exists ? s['frame-note-s'] : s['frame-note-ns']}
                         key={i}
                         style={!exists ? { backgroundColor: color } : {}}
                     >

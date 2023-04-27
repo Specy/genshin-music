@@ -92,3 +92,16 @@
     }
 }
 
+.onprint {
+	display: none;
+}
+@media print {
+	.noprint {
+		display: none;
+	}
+	.onprint {
+		display: flex;
+	}
+}
+
+

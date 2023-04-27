@@ -3,7 +3,7 @@ import Memoized from "$cmp/Utility/Memoized";
 import { VsrgSong } from "$lib/Songs/VsrgSong";
 import { FaStop, FaSyncAlt } from "react-icons/fa";
 import { VsrgPlayerScore } from "./VsrgPlayerScore";
-
+import s from "./VsrgPlayerRight.module.css";
 
 
 interface VsrgPlayerRightProps {
@@ -15,7 +15,7 @@ interface VsrgPlayerRightProps {
 export function VsrgPlayerRight({ song, onStopSong, onRetrySong }: VsrgPlayerRightProps) {
     if (!song) return null
     return <>
-        <div className="vsrg-player-right">
+        <div className={s['vsrg-player-right']}>
             <div className="row space-between" style={{gap: '0.2rem'}}>
                 <IconButton onClick={onStopSong}>
                     <Memoized>

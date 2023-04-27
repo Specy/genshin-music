@@ -15,7 +15,7 @@ import { ComposedSong } from '$lib/Songs/ComposedSong';
 import { RecordedSong } from '$lib/Songs/RecordedSong';
 import { useObservableArray } from '$lib/Hooks/useObservable';
 import { logsStore } from '$stores/LogsStore';
-
+import s from './ErrorPage.module.scss'
 export function ErrorPage() {
     const [songs] = useSongs()
     const errors = useObservableArray(logsStore.logs)
@@ -51,7 +51,7 @@ export function ErrorPage() {
         }
 
     }
-    return <DefaultPage className='error-page'>
+    return <DefaultPage className={s['error-page']}>
         <Title text="Error" />
         <div style={{textAlign: 'center'}}>
             If you unexpectedly see this page it means an error has occoured.
@@ -70,7 +70,7 @@ export function ErrorPage() {
             </a> 
             and send the log file below.
         </div>
-        <div className="error-buttons-wrapper">
+        <div className={s["error-buttons-wrapper"]}>
             <AppButton onClick={resetSettings}>
                 Reset settings
             </AppButton>
@@ -78,7 +78,7 @@ export function ErrorPage() {
                 Delete all songs
             </AppButton>
         </div>
-        <div className="error-songs-wrapper">
+        <div className={s["error-songs-wrapper"]}>
             <SongMenu<SongRowProps>
                 SongComponent={SongRow}
                 songs={songs}
@@ -101,7 +101,7 @@ export function ErrorPage() {
                 Download logs
             </AppButton>
         </div>
-        <div className='error-logs'>
+        <div className={s['error-logs']}>
             {errors.map((e, i) =>
                 <div
                     key={i}

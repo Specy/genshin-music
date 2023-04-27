@@ -7,7 +7,7 @@ import { Select } from './Select'
 import { useTheme } from '$lib/Hooks/useTheme'
 import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from '$types/SettingsPropriety'
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
-
+import s from './Settings.module.css'
 interface SettingsRowProps {
     data: SettingsPropriety,
     update: (data: SettingUpdate) => void,
@@ -34,7 +34,7 @@ function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
     }
 
     return <div
-        className={`settings-row`}
+        className={s['settings-row']}
 
         style={{ backgroundColor: theme.layer('menu_background', 0.15).toString() }}
     >

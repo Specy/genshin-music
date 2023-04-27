@@ -1,0 +1,9 @@
+
+.vsrg-player-right {
+    position: absolute;
+    padding: 0.5rem;
+    right: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+}

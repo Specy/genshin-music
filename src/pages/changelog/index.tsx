@@ -8,7 +8,7 @@ import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import { AppButton } from '$cmp/Inputs/AppButton'
 import Link from 'next/link'
-
+import s from './Changelog.module.css'
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
 export default function Changelogpage() {
     return <DefaultPage
@@ -24,7 +24,7 @@ export default function Changelogpage() {
         }
     >
         <Title text={`Changelog V${APP_VERSION}`} description={`Changelog V${APP_VERSION}\n${updates[0]?.changes.join(";")}`} />
-        <div className='changelog-page-title'>
+        <div className={s['changelog-page-title']}>
             Changelog
             <span style={{ fontSize: '1.2rem', marginLeft: '1rem' }}>
                 v{APP_VERSION}
@@ -44,6 +44,6 @@ export default function Changelogpage() {
             {...data}
             key={data.version}
         />)}
-        <div className='changelog-ending' />
+        <div className={s['changelog-ending']}/>
     </DefaultPage>
 }

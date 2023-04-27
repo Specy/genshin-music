@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef } from "react";
-
+import s from "./VsrgPlayerCountdown.module.css"
 
 
 interface VsrgPlayerProps {
@@ -23,7 +23,7 @@ function _VsrgPlayerCountDown({ time }: VsrgPlayerProps) {
         }
     }, [time])
     return <>
-        <div className="vsrg-player-countdown flex-centered" ref={ref}>
+        <div className={`${s['vsrg-player-countdown']} flex-centered`}ref={ref}>
             {time}
         </div>
     </>

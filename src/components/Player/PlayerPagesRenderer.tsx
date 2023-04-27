@@ -4,7 +4,7 @@ import { useTheme } from "$lib/Hooks/useTheme"
 import { memo } from "react"
 import { playerControlsStore } from "$stores/PlayerControlsStore"
 import { APP_NAME } from "$config"
-
+import s from './VisualSheet.module.css'
 
 const layoutType =  APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'
 
@@ -13,7 +13,7 @@ function _PlayerVisualSheetRenderer(){
     const [theme] = useTheme()
     return <>
     {pagesState.pages.length > 0 &&
-        <div className="player-chunks-page">
+        <div className={s['player-chunks-page']}>
             {pagesState.currentPage?.map((e, i) =>
                 <SheetFrame
                     key={i}

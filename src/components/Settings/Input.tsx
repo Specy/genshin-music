@@ -1,7 +1,7 @@
 import { ChangeEvent } from "react"
 import { FaPlus, FaMinus } from 'react-icons/fa'
 import { SettingsNumber, SettingsText, SettingUpdateKey } from "$types/SettingsPropriety"
-
+import s from './Settings.module.css'
 interface InputProps {
     data: SettingsText | SettingsNumber,
     objectKey: SettingUpdateKey,
@@ -47,11 +47,11 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
         })
     }
     
-    return <div className="settings-input">
+    return <div className={s['settings-input']}>
         {data.type === 'number' &&
             <button 
                 onClick={() => handleIncrement(-1)}
-                className="settings-input-button"
+                className={s['settings-input-button']}
                 style={{marginRight: '0.15rem'}}
                 aria-label="Decrement"
             >
@@ -69,7 +69,7 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
         {data.type === 'number' &&
             <button 
                 onClick={() => handleIncrement(1)}
-                className="settings-input-button"
+                className={s['settings-input-button']}
                 style={{marginLeft: '0.15rem'}}
                 aria-label="Increment"
             >   

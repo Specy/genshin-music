@@ -5,7 +5,7 @@ import { clamp } from "$lib/Utilities"
 import { memo, useEffect, useRef, useState } from "react"
 import { BsTriangleFill } from "react-icons/bs"
 import { playerControlsStore } from "$stores/PlayerControlsStore"
-
+import sl from "./Slider.module.css"
 
 
 
@@ -66,21 +66,21 @@ export function _PlayerSlider() {
     const end = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
     return <>
         <div
-            className="slider-outer"
+            className={sl["slider-outer"]}
             ref={slider}
             onPointerUp={handleSliderLeave}
             onPointerMove={handleSliderMove}
             onPointerDown={handleSliderClick}
         >
-            <div className="slider-full">
+            <div className={sl["slider-full"]}>
                 <div
-                    className="slider-current"
+                    className={sl["slider-current"]}
                     style={{ transform: `translateY(${(100 - sliderState.current / sliderState.size * 100).toFixed(1)}%)` }}
                 />
             </div>
-            <div className="two-way-slider">
+            <div className={sl["two-way-slider"]}>
 
-                <div className="two-way-slider-thumb" style={{ bottom: `calc(${end}% - 18px)` }} ref={thumb2}>
+                <div className={sl["two-way-slider-thumb"]} style={{ bottom: `calc(${end}% - 18px)` }} ref={thumb2}>
                     <div style={{ fontSize: '0.8rem' }}>
                         {sliderState.end}
                     </div>
@@ -89,7 +89,7 @@ export function _PlayerSlider() {
                     </Memoized>
 
                 </div>
-                <div className="two-way-slider-thumb" style={{ bottom: `calc(${start}% - 14px)` }} ref={thumb1}>
+                <div className={sl["two-way-slider-thumb"]} style={{ bottom: `calc(${start}% - 14px)` }} ref={thumb1}>
                     <div style={{ fontSize: '0.8rem' }}>
                         {sliderState.position}
                     </div>

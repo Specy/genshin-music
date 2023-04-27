@@ -1,4 +1,4 @@
-import { Container, Stage } from "@pixi/react";
+import { Stage } from "@pixi/react";
 import { subscribeTheme } from "$lib/Hooks/useTheme";
 import { VsrgAccuracyBounds, VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
 import { ThrottledEventLoop } from "$lib/ThrottledEventLoop";
@@ -13,6 +13,7 @@ import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
 import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
 import { VsrgKeyboardLayout } from "./VsrgPlayerKeyboard";
 import { DEFAULT_DOM_RECT } from "$config";
+import s from "./VsrgPlayerCanvas.module.css";
 
 
 
@@ -323,7 +324,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         const { scrollSpeed } = this.props
         return <>
             <div 
-                className="vsrg-player-canvas box-shadow"
+                className={`${s['vsrg-player-canvas']} box-shadow`}
                 style={{
                     backgroundColor: colors.background_layer_10[0]
                 }} 

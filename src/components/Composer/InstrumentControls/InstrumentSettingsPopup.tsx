@@ -8,7 +8,7 @@ import { InstrumentData } from "$lib/Songs/SongClasses"
 import { capitalize, prettyPrintInstrumentName } from "$lib/Utilities"
 import { FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp } from "react-icons/fa"
 import { InstrumentSelect } from "../../Inputs/InstrumentSelect"
-
+import s from '$cmp/Settings/Settings.module.css'
 interface InstrumentSettingsPopupProps {
     currentLayer: number
     instruments: InstrumentData[]
@@ -62,7 +62,7 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
         <div className="row space-between" style={{ marginTop: '0.4rem' }}>
             Note icon
             <select
-                className="select"
+                className={s.select}
                 style={{ padding: '0.3rem', width: '8rem' }}
                 value={instrument.icon}
                 onChange={e => onChange(instrument.set({ icon: e.target.value as InstrumentNoteIcon }))}

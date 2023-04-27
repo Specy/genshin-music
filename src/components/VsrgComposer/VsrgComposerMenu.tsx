@@ -31,7 +31,7 @@ import { SettingUpdate } from "$types/SettingsPropriety";
 import { TrackModifier } from "./TrackModifier";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
 import { logger } from "$stores/LoggerStore";
-
+import ss from "$cmp/Settings/Settings.module.css"
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 
 interface VsrgMenuProps {
@@ -153,7 +153,7 @@ function VsrgMenu({ onSave, onSongOpen, settings, handleSettingChange, hasChange
                         onUpdate={handleSettingChange}
                     />
                     <div className="column vsrg-select-song-wrapper">
-                        <h1 className={`settings-group-title row-centered`}>
+                        <h1 className={`${ss['settings-group-title']} row-centered`}>
                             Background Song
                             <HelpTooltip buttonStyle={{ width: '1.2rem', height: '1.2rem', marginLeft: '0.5rem' }}>
                                 You can select one of your songs to be played on the background

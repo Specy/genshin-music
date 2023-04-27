@@ -17,8 +17,8 @@ export function ThemeProviderWrapper({ children }: Props) {
         ? theme.get('accent').mix(theme.get("note_background")).lighten(0.1)
         : theme.get('accent').mix(theme.get("note_background")).lighten(0.2)
     const backgroundDesaturate = ThemeProvider.get('note_background').desaturate(0.6)
-    const borderFill = backgroundDesaturate.isDark() 
-        ? backgroundDesaturate.lighten(0.50).toString() 
+    const borderFill = backgroundDesaturate.isDark()
+        ? backgroundDesaturate.lighten(0.50).toString()
         : backgroundDesaturate.darken(0.18).toString()
     return <>
         <Head>
@@ -27,16 +27,16 @@ export function ThemeProviderWrapper({ children }: Props) {
         <style>
             {`:root{
                 ${theme.toArray().map(e => {
-                return `--${e.css}:${e.value};
-                            --${e.css}-rgb:${colorToRGB(ThemeProvider.get(e.name))};
-                            --${e.css}-text: ${e.text};
-                            ${new Array(2).fill(0).map((_, i) =>
-                    `--${e.css}-darken-${i * 10 + 10}: ${ThemeProvider.get(e.name).darken(i * 0.1 + 0.1).toString()};`
-                ).join('\n')}
-                            ${new Array(2).fill(0).map((_, i) =>
-                    `--${e.css}-lighten-${i * 10 + 10}: ${ThemeProvider.get(e.name).lighten(i * 0.1 + 0.1).toString()};`
-                ).join('\n')}
-                            `
+                const layers = [10, 20]
+                const layersMore = [10, 15, 20]
+                return `
+                        --${e.css}:${e.value};
+                        --${e.css}-rgb:${colorToRGB(theme.get(e.name))};
+                        --${e.css}-text: ${e.text};
+                        ${layers.map(v => `--${e.css}-darken-${v}: ${theme.get(e.name).darken(v / 100).toString()};`).join('\n')}
+                        ${layers.map(v => `--${e.css}-lighten-${v}: ${theme.get(e.name).lighten(v / 100).toString()};`).join('\n')}
+                        ${layersMore.map(v => `--${e.css}-layer-${v}: ${theme.layer(e.name, v / 100)};`).join('\n')}
+                    `
             }).join('\n')}
                 --clicked-note:${clickColor};
                 --note-border-fill:${borderFill};

@@ -2,27 +2,16 @@ import { DropZoneProviderWrapper } from "$cmp/ProviderWrappers/DropZoneProviderW
 import { GeneralProvidersWrapper } from "$cmp/ProviderWrappers/GeneralProvidersWrapper";
 import { ThemeProviderWrapper } from "$cmp/ProviderWrappers/ThemeProviderWrapper";
 import { useEffect } from "react";
+
+
 import '$pages/App.css';
-import '$pages/player/Player.css'
 import '$cmp/Index/Home.css'
-import '$cmp/Inputs/Switch/switch.css'
-import '$cmp/Settings/Settings.css'
 import '$pages/Utility.scss'
 import "$cmp/Player/Keyboard.css"
 import "$cmp/Player/menu.css"
-import '$cmp/Player/Track.css'
 import "$pages/composer/Composer.css"
-import '$pages/error/ErrorPage.scss'
-import '$pages/changelog/Changelog.css'
-import '$pages/partners/Partners.css'
-import '$cmp/HelpTab/HelpComponent.css'
-import '$pages/sheet-visualizer/SheetVisualizer.css'
-import '$pages/midi-setup/MidiSetup.css'
-import '$pages/donate/Donate.css'
 import '$pages/theme/Theme.css'
-import '$pages/vsrg-player/VsrgPlayer.css'
 import '$pages/vsrg-composer/VsrgComposer.css';
-import "$pages/zen-keyboard/ZenKeyboard.css"
 
 import type { AppProps } from "next/app";
 import AppBase from "./App";

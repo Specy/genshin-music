@@ -1,8 +1,7 @@
 .help-icon{
 	width: 3rem;
 	height: 3rem;
-	color: var(--primary);
-	filter: brightness(1.1);
+	color: var(--primary-layer-10);
 }
 .help-icon-wrapper{
 	display: flex;

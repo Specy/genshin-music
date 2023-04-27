@@ -1,0 +1,24 @@
+.vsrg-player-page {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+}
+
+.vsrg-player-grid {
+    opacity: 0.96;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    justify-items: center;
+    align-items: flex-end;
+    grid-template-areas:
+        'a'
+        'b';
+    perspective: 100vh;
+    grid-template-rows: 1fr min-content;
+}
+
+
+

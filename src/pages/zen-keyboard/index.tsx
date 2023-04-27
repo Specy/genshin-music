@@ -14,7 +14,6 @@ import { useEffect, useState, useCallback, ReactElement } from "react"
 import { GiMetronome } from "react-icons/gi"
 import { Title } from "$cmp/Miscellaneous/Title"
 import { AppBackground } from "$cmp/Layout/AppBackground"
-
 export default function ZenKeyboard() {
     const [settings, setSettings] = useState(ZenKeyboardSettings.data)
     const [instrument, setInstrument] = useState(new Instrument())

@@ -1,12 +1,12 @@
 import { APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES } from "$config"
-import { subscribeObeservableObject, useObservableObject } from "$lib/Hooks/useObservable"
-import Instrument, { ObservableNote } from "$lib/Instrument"
+import { subscribeObeservableObject } from "$lib/Hooks/useObservable"
+import { ObservableNote } from "$lib/Instrument"
 import SvgNote, { NoteImage } from "../SvgNotes"
 import { useCallback, useRef, useEffect, useState } from "react"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
-import { observe } from "mobx"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { InstrumentName, NoteStatus } from "$/types/GeneralTypes"
+import s from "$pages/zen-keyboard/ZenKeyboard.module.css"
 interface ZenKeyboardProps {
     note: ObservableNote
     noteText: string
@@ -54,7 +54,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName }: 
         })
     }, [])
  
-    const className = parseClass(status) + (APP_NAME === 'Genshin' ? '' : ' sky-zen-note')
+    const className = `${parseClass(status)} ${(APP_NAME === 'Genshin' ? '' : s['sky-zen-note'])}`
     const clickColor = INSTRUMENTS_DATA[instrumentName]?.clickColor
     return <button
         onPointerDown={handleClick}
@@ -103,20 +103,10 @@ function parseClass(status: string) {
     }
     return className
 }
-
-function parseBorderColor(status: string) {
-    let fill = APP_NAME === "Genshin" ? '#eae5ce' : ''
-    if (status === "clicked") fill = "transparent"
-    else if (status === 'wrong') fill = "#d66969"
-    else if (status === 'right') fill = "#358a55"
-
-    return fill
-}
 function parseBorderFill(status: NoteStatus) {
     if (status === "clicked") return "transparent"
     else if (status === 'toClickNext' || status === 'toClickAndNext') return '#63aea7'
-    const color = ThemeProvider.get('note_background').desaturate(0.6)
-    return color.isDark() ? color.lighten(0.45).hex() : color.darken(0.18).hex()
+    return 'var(--note-border-fill)'
 }
 function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')

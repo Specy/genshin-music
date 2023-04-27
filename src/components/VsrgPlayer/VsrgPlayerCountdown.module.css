@@ -1,0 +1,10 @@
+.vsrg-player-countdown {
+    position: absolute;
+    top: 50%;
+    left: calc(50% - 2.5rem);
+    font-size: 5rem;
+    width: 5rem;
+    font-weight: bold;
+    text-shadow: 0 0 0.5rem #252525;
+    transition: all 0.1s;
+}
