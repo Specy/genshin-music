@@ -15,7 +15,6 @@ interface ZenKeyboardProps {
     verticalOffset: number
     onNoteClick: (note: ObservableNote) => void
 }
-
 let cssBase = `keyboard ${s['zen-keyboard']}}`
 const keyboardClasses = new Map<number, string>([
     [15, `${cssBase} keyboard-5`],
