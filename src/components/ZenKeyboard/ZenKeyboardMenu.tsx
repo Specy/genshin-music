@@ -1,13 +1,13 @@
 import useClickOutside from "$lib/Hooks/useClickOutside"
 import {homeStore} from "$stores/HomeStore"
 import { FaBars, FaCog, FaHome, FaTimes } from "react-icons/fa"
-import MenuPanel from "../Layout/MenuPanel"
-import { MenuItem } from "../Miscellaneous/MenuItem"
+import MenuPanel from "$cmp/Layout/MenuPanel"
+import { MenuItem } from "$cmp/Miscellaneous/MenuItem"
 import { useState } from 'react'
 import { ZenKeyboardSettingsDataType } from "$lib/BaseSettings"
 import { SettingUpdate, SettingVolumeUpdate } from "$/types/SettingsPropriety"
-import { SettingsPane } from "../Settings/SettingsPane"
-import Memoized from "../Utility/Memoized"
+import { SettingsPane } from "$cmp/Settings/SettingsPane"
+import Memoized from "$cmp/Utility/Memoized"
 
 interface ZenKeyboardMenuProps {
     settings: ZenKeyboardSettingsDataType

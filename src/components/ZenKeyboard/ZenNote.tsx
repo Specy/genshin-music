@@ -6,7 +6,7 @@ import { useCallback, useRef, useEffect, useState } from "react"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { InstrumentName, NoteStatus } from "$/types/GeneralTypes"
-import s from "$pages/zen-keyboard/ZenKeyboard.module.css"
+import s from "./ZenKeyboard.module.css"
 interface ZenKeyboardProps {
     note: ObservableNote
     noteText: string
