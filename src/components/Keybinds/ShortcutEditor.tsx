@@ -1,7 +1,8 @@
+
 import { capitalize, cn } from "$/lib/Utilities";
 import { useState, useEffect } from "react";
-import { AppButton } from "../Inputs/AppButton";
-import { createKeyComboComposer } from "$/stores/KeybindsStore";
+import { AppButton } from "$cmp/Inputs/AppButton";
+import { createKeyComboComposer } from "$stores/KeybindsStore";
 import { FaCheck } from "react-icons/fa";
 import s from './ShortcutEditor.module.css'
 import { IconButton } from "$cmp/Inputs/IconButton";

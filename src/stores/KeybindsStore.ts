@@ -23,7 +23,7 @@ const defaultShortcuts = {
         "ShiftLeft+KeyM": "toggle_menu",
         "Escape": "close_menu",
     },
-    vsrg_composer : {
+    vsrg_composer: {
         "ShiftLeft+KeyW": "move_up",
         "ShiftLeft+KeyS": "move_down",
         "ShiftLeft+KeyA": "move_left",
@@ -90,7 +90,7 @@ interface SerializedKeybinds {
     }
 }
 class KeyBinds {
-    version: number = 12
+    version: number = 12 //change only if breaking changes are made, creating or removing a key is not a breaking change
     @observable
     private vsrg = {
         k4: ['A', 'S', 'J', 'K'],
@@ -98,13 +98,10 @@ class KeyBinds {
     }
 
     @observable
-    private shortcuts: Shortcuts = {
-        composer: new Map(Object.entries(defaultShortcuts.composer)),
-        player: new Map(Object.entries(defaultShortcuts.player)),
-        keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
-        vsrg_composer: new Map(Object.entries(defaultShortcuts.vsrg_composer)),
-        vsrg_player: new Map(Object.entries(defaultShortcuts.vsrg_player)),
-    }
+    private shortcuts: Shortcuts = Object.fromEntries(
+        Object.entries(defaultShortcuts).map(([key, value]) => [key, new Map(Object.entries(value))])
+    ) as Shortcuts
+
     constructor() {
         makeObservable(this)
     }
@@ -144,7 +141,6 @@ class KeyBinds {
         newKey = KeyBinds.getShortcutName(newKey)
         const oldShortcut = this.shortcuts[page].get(oldKey)
         const newKeyExists = this.shortcuts[page].get(newKey)
-        console.log(oldShortcut, newKeyExists)
         if (!oldShortcut === undefined) return undefined
         if (newKeyExists !== undefined) return newKeyExists as MapValues<Shortcuts[T]> | undefined
         this.shortcuts[page].delete(oldKey)
@@ -163,12 +159,19 @@ class KeyBinds {
             const parsed = JSON.parse(data) as SerializedKeybinds
             if (parsed.version !== this.version) return
             this.vsrg = parsed.vsrg
-            this.shortcuts = {
-                composer: new Map(Object.entries(parsed.shortcuts.composer)),
-                player: new Map(Object.entries(parsed.shortcuts.player)),
-                keyboard: new Map(Object.entries(defaultShortcuts.keyboard)),
-                vsrg_composer: new Map(Object.entries(parsed.shortcuts.vsrg_composer)),
-                vsrg_player: new Map(Object.entries(parsed.shortcuts.vsrg_player)),
+            //.map(([key, value]) => [key, new Map(Object.entries(value))])
+            for(const outer of Object.entries(parsed.shortcuts)){
+                const [pageKey, pageValue] = outer as [ShortcutPage, SerializedKeybinds['shortcuts'][ShortcutPage]]
+                for(const inner of Object.entries(pageValue)){
+                    const [shortcutKey, shortcutValue] = inner 
+                    // @ts-ignore
+                    const key = this.getKeyOfShortcut(pageKey, shortcutValue)
+                    if (!key){
+                        console.log("Skipping keybind", pageKey, shortcutKey, shortcutValue)
+                        continue
+                    }
+                    this.setShortcut(pageKey, key, shortcutKey)
+                }
             }
         }
     }
@@ -179,13 +182,10 @@ class KeyBinds {
         return {
             version: this.version,
             vsrg: cloneDeep(this.vsrg),
-            shortcuts: {
-                composer: Object.fromEntries(this.shortcuts.composer),
-                player: Object.fromEntries(this.shortcuts.player),
-                keyboard: Object.fromEntries(this.shortcuts.keyboard),
-                vsrg_composer: Object.fromEntries(this.shortcuts.vsrg_composer),
-                vsrg_player: Object.fromEntries(this.shortcuts.vsrg_player),
-            },
+            shortcuts: Object.fromEntries(
+                Object.entries(this.shortcuts)
+                    .map(([key, value]) => [key, Object.fromEntries(value)])
+            ) as SerializedKeybinds['shortcuts']
         }
     }
 }

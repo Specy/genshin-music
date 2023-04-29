@@ -369,7 +369,7 @@ const baseThemes: SerializedTheme[] = [
     },
     {
         editable: false,
-        id: "Eons of times",
+        id: "Eons of time",
         type: "theme",
         other: {
             backgroundImageMain: "https://cdn.discordapp.com/attachments/1032573337823625326/1044395721916416040/firstBackgroundDay.jpg",

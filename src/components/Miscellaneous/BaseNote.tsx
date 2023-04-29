@@ -70,11 +70,10 @@ function parseClass(status: string, clickClass: string) {
 }
 
 function parseBorderColor(status: string) {
-    let fill = APP_NAME === "Genshin" ? '#eae5ce' : ''
-    if (status === "clicked") fill = "transparent"
-    else if (status === 'wrong') fill = "#d66969"
-    else if (status === 'right') fill = "#358a55"
-    return fill
+    if (status === "clicked") return "transparent"
+    if (status === 'wrong') return "#d66969"
+    if (status === 'right') return  "#358a55"
+    return APP_NAME === "Genshin" ? '#eae5ce' : 'unset'
 }
 
 function getTextColor() {
