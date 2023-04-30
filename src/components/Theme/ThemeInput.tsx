@@ -1,15 +1,17 @@
-import {logger} from "$stores/LoggerStore";
+import { logger } from "$stores/LoggerStore";
+import { useState } from "react";
 
-interface ThemeInputProps{
-    name: string, 
-    value: string, 
-    disabled: boolean, 
-    onChange: (value:string) => void,
+interface ThemeInputProps {
+    name: string,
+    value: string,
+    disabled: boolean,
+    onChange: (value: string) => void,
     onLeave?: () => void
 }
 
 
-export function ThemeInput({ name , onChange, disabled, value, onLeave}: ThemeInputProps) {
+export function ThemeInput({ name, onChange, disabled, value, onLeave }: ThemeInputProps) {
+    const [clicking, setClicking] = useState(false)
     return <div className="theme-row">
         <div>
             {name}
@@ -21,9 +23,16 @@ export function ThemeInput({ name , onChange, disabled, value, onLeave}: ThemeIn
             disabled={disabled}
             value={value}
             onPointerDown={() => {
-                if(disabled) logger.warn('Create a new theme first')
+                setClicking(true)
             }}
-            onBlur={() => { if(onLeave) onLeave()}}
+            onPointerUp={() => {
+                setClicking(false)
+                if (disabled && clicking) logger.warn('Create a new theme first')
+            }}
+            onPointerLeave={() => {
+                setClicking(false)
+            }}
+            onBlur={() => { if (onLeave) onLeave() }}
             onChange={(e) => onChange(e.target.value)}
         />
     </div>
