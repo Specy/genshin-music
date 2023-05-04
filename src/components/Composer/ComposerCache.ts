@@ -77,9 +77,7 @@ export class ComposerCache {
         this.cache.columnsLarger.forEach(e => e.destroy(true))
         this.cache.standardLarger.forEach(e => e.destroy(true))
         this.cache.breakpoints.forEach(e => e.destroy(true))
-        Object.entries(this.cache.notes).forEach(([_, value]) => {
-            value.destroy(true)
-        })
+        Object.values(this.cache.notes).forEach(e => e.destroy(true))
         this.app = null
         this.breakpointsApp = null
     }

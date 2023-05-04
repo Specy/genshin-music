@@ -1,6 +1,6 @@
 import Color from "color"
 import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
-import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
+import { Application, Texture, SCALE_MODES, Rectangle,  } from 'pixi.js'
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { clamp } from "$lib/Utilities";
 import isMobile from "is-mobile";
@@ -69,7 +69,7 @@ export class VsrgCanvasCache {
         trackColors,
         isHorizontal,
         playbarOffset
-    }: VsrgCacheProps) {
+    }: VsrgCacheProps) {    
 
         this.textures = {
             hitObjects: {},
@@ -108,15 +108,15 @@ export class VsrgCanvasCache {
         this.generate()
     }
     destroy = () => {
-        this.textures.snapPoints.small?.destroy()
-        this.textures.snapPoints.large?.destroy()
-        this.textures.snapPoints.empty?.destroy()
-        Object.values(this.textures.hitObjects).forEach(texture => texture?.destroy())
-        Object.values(this.textures.heldHitObjects).forEach(texture => texture?.destroy())
-        Object.values(this.textures.trails).forEach(texture => texture?.destroy())
-        Object.values(this.textures.selectionRings).forEach(texture => texture?.destroy())
-        Object.values(this.textures.timeline).forEach(texture => texture?.destroy())
-        this.textures.buttons.time?.destroy()
+        this.textures.snapPoints.small?.destroy(true)
+        this.textures.snapPoints.large?.destroy(true)
+        this.textures.snapPoints.empty?.destroy(true)
+        Object.values(this.textures.hitObjects).forEach(texture => texture?.destroy(true))
+        Object.values(this.textures.heldHitObjects).forEach(texture => texture?.destroy(true))
+        Object.values(this.textures.trails).forEach(texture => texture?.destroy(true))
+        Object.values(this.textures.selectionRings).forEach(texture => texture?.destroy(true))
+        Object.values(this.textures.timeline).forEach(texture => texture?.destroy(true))
+        this.textures.buttons.time?.destroy(true)
         this.app = null
     }
     generate() {
@@ -157,11 +157,13 @@ export class VsrgCanvasCache {
             scaleMode: SCALE_MODES.LINEAR,
             region: new Rectangle(0, 0, this.sizes.width, this.sizes.timelineSize)
         })
+
         this.textures.timeline.square = squareTexture
         const margin = isHorizontal ? sizes.height / 16 : sizes.width / 16
 
         const thumbSize = clamp(sizes.timelineSize / 4, 8, 100)
         const thumb = new Graphics()
+
         //draw a line with two triangles on top and bottom
         thumb.beginFill(colors.accent[1])
             .moveTo(0, 0)
@@ -189,6 +191,7 @@ export class VsrgCanvasCache {
 
         const noteSize = sizes.timelineSize / 2
         const note = new Graphics()
+
         note.lineStyle(this.isMobile ? 2 : 3 , colors.secondary[1], 1)
             .drawCircle(sizes.timelineSize / 2 + 1, sizes.timelineSize / 2, noteSize / 2)
         const noteTexture = app.renderer.generateTexture(note, {
@@ -198,6 +201,7 @@ export class VsrgCanvasCache {
         })
         this.textures.timeline.note = noteTexture
         const currentTime = new Graphics()
+
         currentTime.lineStyle(12, colors.accent[1], 1)
             .moveTo(0, 0)
             .lineTo(0, sizes.timelineSize)
@@ -212,6 +216,7 @@ export class VsrgCanvasCache {
             scaleMode: SCALE_MODES.LINEAR,
             region: new Rectangle(0, 0, thumbSize, sizes.timelineSize)
         })
+
         this.textures.timeline.thumb = thumbTexture
 
         const breakpoint = new Graphics()
@@ -224,6 +229,7 @@ export class VsrgCanvasCache {
             .lineTo(thumbSize, 0)
             .lineTo(thumbSize / 2, -thumbSize)
             .lineTo(0, 0)
+
         const breakpointTexture = app.renderer.generateTexture(breakpoint, {
             resolution: 1,
             scaleMode: SCALE_MODES.LINEAR,
@@ -232,6 +238,7 @@ export class VsrgCanvasCache {
         this.textures.timeline.breakpoint = breakpointTexture
         //buttons
         const time = new Graphics()
+
         time.beginFill(colors.background_10[1])
         if (isHorizontal) {
             time.drawRoundedRect(margin / 2, margin / 2, sizes.width / 2 - margin, sizes.height / 2 - margin, 16)
@@ -254,6 +261,12 @@ export class VsrgCanvasCache {
             this.textures.buttons.height = sizes.height / 3
             this.textures.buttons.time = timeTexture
         }
+        square.destroy(true)
+        thumb.destroy(true)
+        note.destroy(true)
+        currentTime.destroy(true)
+        breakpoint.destroy(true)
+        time.destroy(true)
     }
 
 
@@ -278,7 +291,6 @@ export class VsrgCanvasCache {
                 region: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight)
             });
             this.textures.trails[color] = trailTexture
-            trail.destroy(true)
         })
         this.textures.sizes.trail = hitObjectHeight
     }

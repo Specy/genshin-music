@@ -61,9 +61,11 @@ export class VsrgPlayerCache {
         this.generate()
     }
     destroy = () => {
-        Object.values(this.textures.hitObjects).forEach(texture => texture?.destroy())
-        Object.values(this.textures.heldHitObjects).forEach(texture => texture?.destroy())
-        Object.values(this.textures.trails).forEach(texture => texture?.destroy())
+        Object.values(this.textures.hitObjects).forEach(texture => texture?.destroy(true))
+        Object.values(this.textures.heldHitObjects).forEach(texture => texture?.destroy(true))
+        Object.values(this.textures.trails).forEach(texture => texture?.destroy(true))
+        Object.values(this.textures.lines).forEach(texture => texture?.destroy(true))
+
         this.app = null
     }
     generate() {

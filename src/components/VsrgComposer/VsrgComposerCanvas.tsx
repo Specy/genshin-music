@@ -131,7 +131,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         this.throttledEventLoop.start()
         window.addEventListener('blur', this.handleBlur)
         this.state.cache?.destroy()
-        this.toDispose.push(() => window.removeEventListener('blur', this.handleBlur))        
+        this.toDispose.push(() => window.removeEventListener('blur', this.handleBlur))
         this.handleThemeChange(ThemeProvider)
     }
     componentWillUnmount() {
@@ -273,10 +273,11 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             isHorizontal: this.props.isHorizontal,
             playbarOffset: globalConfigStore.get().PLAY_BAR_OFFSET
         })
+        const oldCache = this.state.cache
         this.setState({ cache: newCache }, () => {
             //TODO not sure why pixi is still using old textures
             setTimeout(() => {
-                cache?.destroy()
+                oldCache?.destroy()
             }, 500)
         })
     }
@@ -376,7 +377,6 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
                             colors={canvasColors}
                         />
                     }
-
                 </Stage>
             }
         </div>
