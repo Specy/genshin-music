@@ -2,46 +2,54 @@ import { APP_NAME } from "$config"
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
 import type { VsrgSongKeys } from "$lib/Songs/VsrgSong"
 import cloneDeep from "lodash.clonedeep"
-import { makeObservable, observable, observe } from "mobx"
+import { makeObservable, observable } from "mobx"
+
+export type Shortcut<T extends string> = {
+    name: T
+    holdable: boolean
+}
+function createShortcut<T extends string>(name: T, isHoldable = false): Shortcut<T> {
+    return { name, holdable: isHoldable } as const
+}
 
 const defaultShortcuts = {
     composer: {
-        "Space": "toggle_play",
-        "KeyA": "previous_column",
-        "KeyD": "next_column",
-        "KeyQ": "remove_column",
-        "KeyE": "add_column",
-        "ArrowUp": "previous_layer",
-        "ArrowDown": "next_layer",
-        "ArrowRight": "next_breakpoint",
-        "ArrowLeft": "previous_breakpoint",
+        "Space": createShortcut("toggle_play"),
+        "KeyA": createShortcut("previous_column", true),
+        "KeyD": createShortcut("next_column", true),
+        "KeyQ": createShortcut("remove_column", true),
+        "KeyE": createShortcut("add_column", true),
+        "ArrowUp": createShortcut("previous_layer", true),
+        "ArrowDown": createShortcut("next_layer", true),
+        "ArrowRight": createShortcut("next_breakpoint", true),
+        "ArrowLeft": createShortcut("previous_breakpoint", true),
     },
     player: {
-        "Space": "toggle_record",
-        "ShiftLeft+KeyS": "stop",
-        "ShiftLeft+KeyR": "restart",
-        "ShiftLeft+KeyM": "toggle_menu",
-        "Escape": "close_menu",
+        "Space": createShortcut("toggle_record"),
+        "ShiftLeft+KeyS": createShortcut("stop"),
+        "ShiftLeft+KeyR": createShortcut("restart"),
+        "ShiftLeft+KeyM": createShortcut("toggle_menu"),
+        "Escape": createShortcut("close_menu"),
     },
     vsrg_composer: {
-        "ShiftLeft+KeyW": "move_up",
-        "ShiftLeft+KeyS": "move_down",
-        "ShiftLeft+KeyA": "move_left",
-        "ShiftLeft+KeyD": "move_right",
-        "Escape": "deselect",
-        "Backspace": "delete",
-        "ArrowRight": "next_breakpoint",
-        "ArrowLeft": "previous_breakpoint",
-        "ArrowUp": "previous_track",
-        "ArrowDown": "next_track",
-        "Space": "toggle_play",
-        "Digit1": "set_tap_hand",
-        "Digit2": "set_hold_hand",
-        "Digit3": "set_delete_hand",
+        "ShiftLeft+KeyW": createShortcut("move_up", true),
+        "ShiftLeft+KeyS": createShortcut("move_down", true),
+        "ShiftLeft+KeyA": createShortcut("move_left", true),
+        "ShiftLeft+KeyD": createShortcut("move_right", true),
+        "Escape": createShortcut("deselect"),
+        "Backspace": createShortcut("delete"),
+        "ArrowRight": createShortcut("next_breakpoint", true),
+        "ArrowLeft": createShortcut("previous_breakpoint", true),
+        "ArrowUp": createShortcut("previous_track", true),
+        "ArrowDown": createShortcut("next_track", true),
+        "Space": createShortcut("toggle_play"),
+        "Digit1": createShortcut("set_tap_hand"),
+        "Digit2": createShortcut("set_hold_hand"),
+        "Digit3": createShortcut("set_delete_hand"),
     },
     vsrg_player: {
-        "ShiftLeft+KeyR": "restart",
-        "Escape": "stop",
+        "ShiftLeft+KeyR": createShortcut("restart"),
+        "Escape": createShortcut("stop"),
     },
     keyboard: Object.fromEntries((APP_NAME === "Genshin"
         ? (
@@ -53,8 +61,8 @@ const defaultShortcuts = {
             "Q W E R T " +
             "A S D F G " +
             "Z X C V B"
-        ).split(" ")).map((key, i) => [`Key${key}`, key]))
-} as const
+        ).split(" ")).map((key, i) => [`Key${key}`, createShortcut(key)]))
+} satisfies Record<string, Record<string, Shortcut<string>>>
 
 type ValuesOf<T> = T[keyof T]
 type KeysOf<T> = keyof T
@@ -62,6 +70,7 @@ type ShortcutsToMap<T> = {
     [K in keyof T]: Map<string, ValuesOf<T[K]>>
 }
 export type Shortcuts = ShortcutsToMap<typeof defaultShortcuts>
+
 export type ShortcutPage = KeysOf<Shortcuts>
 
 interface SerializedKeybinds {
@@ -90,7 +99,7 @@ interface SerializedKeybinds {
     }
 }
 class KeyBinds {
-    version: number = 12 //change only if breaking changes are made, creating or removing a key is not a breaking change
+    version: number = 13 //change only if breaking changes are made, creating or removing a key is not a breaking change
     @observable
     private vsrg = {
         k4: ['A', 'S', 'J', 'K'],
@@ -124,13 +133,13 @@ class KeyBinds {
         return this.shortcuts[page]
     }
     setKeyboardKeybind(layoutKey: string, keybind: string) {
-        const oldEntry = Array.from(this.shortcuts.keyboard.entries()).find(([key, value]) => value === layoutKey)
+        const oldEntry = Array.from(this.shortcuts.keyboard.entries()).find(([_, value]) => value.name === layoutKey)
         if (!oldEntry) return
         const possibleExisting = this.setShortcut("keyboard", oldEntry[0], keybind)
         return possibleExisting
     }
     getKeyOfShortcut<T extends ShortcutPage>(page: T, value: MapValues<Shortcuts[T]>): string | undefined {
-        return Array.from(this.shortcuts[page].entries()).find(([_, val]) => val === value)?.[0]
+        return Array.from(this.shortcuts[page].entries()).find(([_, val]) => (val as Shortcut<string>).name === (value as Shortcut<string>).name)?.[0]
     }
     getShortcut<T extends ShortcutPage>(page: T, key: string | string[]): MapValues<Shortcuts[T]> | undefined {
         if (Array.isArray(key)) key = key.join("+")
@@ -160,13 +169,13 @@ class KeyBinds {
             if (parsed.version !== this.version) return
             this.vsrg = parsed.vsrg
             //.map(([key, value]) => [key, new Map(Object.entries(value))])
-            for(const outer of Object.entries(parsed.shortcuts)){
+            for (const outer of Object.entries(parsed.shortcuts)) {
                 const [pageKey, pageValue] = outer as [ShortcutPage, SerializedKeybinds['shortcuts'][ShortcutPage]]
-                for(const inner of Object.entries(pageValue)){
-                    const [shortcutKey, shortcutValue] = inner 
+                for (const inner of Object.entries(pageValue)) {
+                    const [shortcutKey, shortcutValue] = inner
                     // @ts-ignore
                     const key = this.getKeyOfShortcut(pageKey, shortcutValue)
-                    if (!key){
+                    if (!key) {
                         console.log("Skipping keybind", pageKey, shortcutKey, shortcutValue)
                         continue
                     }
@@ -203,23 +212,28 @@ export type ShortcutOptions = {
     repeat?: boolean
 }
 
-type MapValues<T> = T extends Map<infer _, infer V> ? V : never
+type MapValues<T extends Map<string, Shortcut<string>>> = T extends Map<infer _, infer V> ? V : never
 
 export type ShortcutListener<T extends ShortcutPage> = (keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>) => void
-export function createShortcutListener<T extends KeysOf<Shortcuts>>(page: T, id: string, callback: ShortcutListener<T>, options?: ShortcutOptions): ShortcutDisposer {
-    const dispose = createKeyComboComposer(id, ({ code, event, keyCombo }) => {
-        if (!options?.repeat && event.repeat) return
+export function createShortcutListener<T extends KeysOf<Shortcuts>>(page: T, id: string, callback: ShortcutListener<T>): ShortcutDisposer {
+    return createKeyComboComposer(id, ({ code, event, keyCombo }) => {
         const shortcut = keyBinds.getShortcut(page, keyCombo)
-        if (shortcut !== undefined) callback({ code, event, shortcut, isRepeat: event.repeat })
+        if (shortcut !== undefined) {
+            if (!(shortcut as Shortcut<string>).holdable && event.repeat) return
+            console.log('calling')
+            callback({ code, event, shortcut, isRepeat: event.repeat })
+        }
     })
-    return dispose
 }
 
 export function createKeyboardListener(id: string, callback: ShortcutListener<"keyboard">, options?: ShortcutOptions): ShortcutDisposer {
     KeyboardProvider.listen(({ code, event }) => {
         if (!options?.repeat && event.repeat) return
         const shortcut = keyBinds.getShortcut("keyboard", code)
-        if (shortcut !== undefined) callback({ code, event, shortcut, isRepeat: event.repeat })
+        if (shortcut !== undefined) {
+            if ((shortcut as Shortcut<string>).holdable && event.repeat) return
+            callback({ code, event, shortcut, isRepeat: event.repeat })
+        }
 
     }, { type: "keydown", id: id + "_keyboard_down" })
     return () => {

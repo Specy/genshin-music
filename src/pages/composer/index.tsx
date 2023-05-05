@@ -102,7 +102,6 @@ class Composer extends Component<ComposerProps, ComposerState>{
             "composer", 
             "composer_shortcuts", 
             this.handleShortcut, 
-            { repeat: true }
         )
         const shortcutKeyboardListener = createKeyboardListener(
             "composer_shortcuts_keyboard", 
@@ -177,25 +176,26 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { isPlaying } = this.state
         const shouldEditKeyboard = isPlaying || event.shiftKey
         if (shouldEditKeyboard) {
-            const note = this.currentInstrument.getNoteFromCode(shortcut)
+            const note = this.currentInstrument.getNoteFromCode(shortcut.name)
             if (note !== null) this.handleClick(note)
         }
     }
     handleShortcut: ShortcutListener<"composer"> = ({ shortcut, event }) => {
         const { isPlaying, layer, layers, settings, song } = this.state
-        if (shortcut === "next_column" && !isPlaying) this.selectColumn(song.selected + 1)
-        if (shortcut === "previous_column" && !isPlaying) this.selectColumn(song.selected - 1)
-        if (shortcut === "remove_column" && !isPlaying) this.removeColumns(1, song.selected)
-        if (shortcut === "add_column" && !isPlaying) this.addColumns(1, song.selected)
-        if (shortcut === "previous_layer") {
+        const { name } = shortcut
+        if (name === "next_column" && !isPlaying) this.selectColumn(song.selected + 1)
+        if (name === "previous_column" && !isPlaying) this.selectColumn(song.selected - 1)
+        if (name === "remove_column" && !isPlaying) this.removeColumns(1, song.selected)
+        if (name === "add_column" && !isPlaying) this.addColumns(1, song.selected)
+        if (name === "previous_layer") {
             const previousLayer = layer - 1
             if (previousLayer >= 0) this.changeLayer(previousLayer)
         }
-        if (shortcut === "next_layer") {
+        if (name === "next_layer") {
             const nextLayer = layer + 1
             if (nextLayer < layers.length) this.changeLayer(nextLayer)
         }
-        if (shortcut === "toggle_play") {
+        if (name === "toggle_play") {
             if (event.repeat) return
             //@ts-ignore
             if (event.target?.tagName === "BUTTON") {

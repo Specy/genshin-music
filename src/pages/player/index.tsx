@@ -68,7 +68,8 @@ class Player extends Component<{}, PlayerState>{
 		const instrument = this.state.instruments[0]
 		if(instrument) playerStore.setKeyboardLayout(instrument.notes)
 		const shortcutDisposer = createShortcutListener("player", "player", ({ shortcut }) => {
-			if(shortcut === "toggle_record") this.toggleRecord()
+			const { name } = shortcut
+			if(name === "toggle_record") this.toggleRecord()
 		})
 		this.cleanup.push(shortcutDisposer)
 		await this.init(settings)

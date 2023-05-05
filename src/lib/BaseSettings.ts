@@ -343,6 +343,18 @@ export const ThemeSettings = {
             css: 'note-background',
             value: APP_NAME === 'Genshin' ? '#fff9ef' : '#495466',
             text: BASE_THEME_CONFIG.text.note
+        },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
         }
     }
 }

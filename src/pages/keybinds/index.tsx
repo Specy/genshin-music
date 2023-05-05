@@ -38,7 +38,7 @@ export default function Keybinds() {
             const note = baseInstrument.getNoteFromIndex(index)
             if (type === 'keyboard' && index !== -1) {
                 const existing = keyBinds.setKeyboardKeybind(note.noteNames.keyboard, code)
-                if (existing !== undefined) logger.warn(`This keybind is already used by the ${existing + 1}th note`)
+                if (existing !== undefined) logger.warn(`This keybind is already used by the ${existing.name} note`)
                 setSelected({ type: '', index: -1 })
             }
             if (['k4', 'k6', 'k8'].includes(type) && index !== -1) {
@@ -127,7 +127,7 @@ export default function Keybinds() {
                                 noteText={(
                                     keyBinds.getKeyOfShortcut(
                                         "keyboard",
-                                        note.noteNames.keyboard
+                                        {name: note.noteNames.keyboard, holdable: false}
                                     ) ?? "???")
                                     .replace("Key", "")
                                 }

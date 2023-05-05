@@ -65,13 +65,14 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     componentDidMount() {
         this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
         const disposeShortcuts = createShortcutListener("player", "player_keyboard", ({ shortcut }) => {
-            if(shortcut === "restart"){
+            const { name } = shortcut
+            if(name === "restart"){
                 if (!this.props.data.hasSong) return
                 if (['practice', 'play', 'approaching'].includes(playerStore.eventType)) {
                     this.restartSong(0)
                 }
             }
-            if(shortcut === "stop"){
+            if(name === "stop"){
                 if (this.props.data.hasSong) this.stopAndClear()
             }
         })
@@ -142,7 +143,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     handleKeyboard: ShortcutListener<"keyboard"> = async ({ event, shortcut }) => {
         if (event.repeat) return
         if (!event.shiftKey) {
-            const note = this.props.data.instrument.getNoteFromCode(shortcut)
+            const note = this.props.data.instrument.getNoteFromCode(shortcut.name)
             if (note !== null) this.handleClick(note)
         }
     }

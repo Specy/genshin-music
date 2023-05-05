@@ -51,10 +51,10 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     componentDidMount() {
         this.setState({ settings: settingsService.getVsrgPlayerSettings() })
         vsrgPlayerStore.setLayout(this.state.currentLayout)
-        const shortcutListener = createShortcutListener("vsrg_player", "vsrg_player", ({ shortcut}) => {
-            console.log(shortcut)
-            if(shortcut === "restart") this.onRetrySong()
-            if(shortcut === "stop") this.onStopSong()
+        const shortcutListener = createShortcutListener("vsrg_player", "vsrg_player", ({ shortcut }) => {
+            const { name } = shortcut
+            if (name === "restart") this.onRetrySong()
+            if (name === "stop") this.onStopSong()
         })
         this.cleanup.push(shortcutListener)
     }

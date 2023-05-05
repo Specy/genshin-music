@@ -130,8 +130,9 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
 
     handleShortcut: ShortcutListener<"vsrg_composer"> = ({ shortcut, event }) => {
+        const { name } = shortcut
         if(event.code === "Space"){
-            if (event.repeat && shortcut === "toggle_play") return
+            if (event.repeat && name === "toggle_play") return
             if (isFocusable(document.activeElement)) {
                 //@ts-ignore
                 document.activeElement?.blur()
@@ -139,21 +140,21 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             }
         }
         const { vsrg, selectedTrack, selectedHitObject, snapPointDuration, settings} = this.state
-        if(shortcut === "set_tap_hand") this.setState({ selectedType: 'tap' })
-        if(shortcut === "set_hold_hand") this.setState({ selectedType: 'hold' })
-        if(shortcut === "set_delete_hand") this.setState({ selectedType: 'delete' })
-        if(shortcut === "deselect") this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
-        if(shortcut === "toggle_play") this.togglePlay()
-        if(shortcut === "next_breakpoint") this.onBreakpointSelect(1)
-        if(shortcut === "previous_breakpoint") this.onBreakpointSelect(-1)
-        if(shortcut === "next_track") this.selectTrack(Math.min(this.state.vsrg.tracks.length - 1, this.state.selectedTrack + 1))
-        if(shortcut === "previous_track") this.selectTrack(Math.max(0, this.state.selectedTrack - 1))
-        if(shortcut === "delete") {
+        if(name === "set_tap_hand") this.setState({ selectedType: 'tap' })
+        if(name === "set_hold_hand") this.setState({ selectedType: 'hold' })
+        if(name === "set_delete_hand") this.setState({ selectedType: 'delete' })
+        if(name === "deselect") this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
+        if(name === "toggle_play") this.togglePlay()
+        if(name === "next_breakpoint") this.onBreakpointSelect(1)
+        if(name === "previous_breakpoint") this.onBreakpointSelect(-1)
+        if(name === "next_track") this.selectTrack(Math.min(this.state.vsrg.tracks.length - 1, this.state.selectedTrack + 1))
+        if(name === "previous_track") this.selectTrack(Math.max(0, this.state.selectedTrack - 1))
+        if(name === "delete") {
             if (!selectedHitObject) return
             vsrg.removeHitObjectInTrackAtTimestamp(selectedTrack, selectedHitObject.timestamp, selectedHitObject.index)
             this.setState({ selectedHitObject: null, lastCreatedHitObject: null })
         }
-        if(shortcut === "move_right") {
+        if(name === "move_right") {
             if (!selectedHitObject) return
             if (settings.isVertical.value) {
                 selectedHitObject.index = clamp(selectedHitObject.index + 1, 0, vsrg.keys)
@@ -163,7 +164,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             }
             this.releaseHitObject()
         }
-        if(shortcut === "move_down") {
+        if(name === "move_down") {
             if (!selectedHitObject) return
             if (settings.isVertical.value) {
                 selectedHitObject.timestamp = selectedHitObject.timestamp - snapPointDuration
@@ -173,7 +174,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             }
             this.releaseHitObject()
         }
-        if(shortcut === "move_left"){
+        if(name === "move_left"){
             if (!selectedHitObject) return
             if (settings.isVertical.value) {
                 selectedHitObject.index = clamp(selectedHitObject.index - 1, 0, vsrg.keys)
@@ -182,7 +183,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             }
             this.releaseHitObject()
         }
-        if(shortcut === "move_up"){
+        if(name === "move_up"){
             if (!selectedHitObject) return
             if (settings.isVertical.value) {
                 selectedHitObject.timestamp = selectedHitObject.timestamp + snapPointDuration

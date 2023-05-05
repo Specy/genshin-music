@@ -155,8 +155,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         })
         window.addEventListener("pointerup", this.resetPointerDown)
         const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({ shortcut }) => {
-            if (shortcut === "next_breakpoint") this.handleBreakpoints(1)
-            if (shortcut === "previous_breakpoint") this.handleBreakpoints(-1)
+            const { name } = shortcut
+            if (name === "next_breakpoint") this.handleBreakpoints(1)
+            if (name === "previous_breakpoint") this.handleBreakpoints(-1)
         })
         this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
         const themeDispose = subscribeTheme(this.handleThemeChange)
@@ -252,18 +253,22 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             timelineHeight,
             app: this.notesStageRef.current.app,
             breakpointsApp: this.breakpointsStageRef.current.app,
-            composerAccent: ThemeProvider.get('composer_accent').rotate(20).darken(0.5),
-            standardsColors: [
-                {
-                    color: colors.l.rgbNumber() //lighter
-                }, {
-                    color: colors.d.rgbNumber() //darker
-                }, {
-                    color: ThemeProvider.get('composer_accent').rgbNumber() //current
-                }, {
-                    color: ThemeProvider.get('composer_accent').negate().rgbNumber()
-                }
-            ]
+            colors: {
+                accent: ThemeProvider.get('composer_accent').rotate(20).darken(0.5),
+                mainLayer: ThemeProvider.get('composer_main_layer'),
+                secondLayer: ThemeProvider.get('composer_secondary_layer'),
+                bars: [
+                    {
+                        color: colors.l.rgbNumber() //lighter
+                    }, {
+                        color: colors.d.rgbNumber() //darker
+                    }, {
+                        color: ThemeProvider.get('composer_accent').rgbNumber() //current
+                    }, {
+                        color: ThemeProvider.get('composer_accent').negate().rgbNumber()
+                    }
+                ]
+            }
         })
         return newCache
     }

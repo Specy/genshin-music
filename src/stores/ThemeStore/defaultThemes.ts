@@ -2,6 +2,10 @@ import { SerializedTheme } from "./ThemeProvider"
 import Rainy_Theme from "$img/themes/Rainy_Theme.png"
 import Liyue_Theme from "$img/themes/Liyue_Theme.jpg"
 import Snow_Theme from "$img/themes/Snow_Theme.gif"
+import cloneDeep from "lodash.clonedeep"
+import { BASE_THEME_CONFIG } from "$config"
+
+
 const baseThemes: SerializedTheme[] = [
     {
         id: "Pink",
@@ -60,11 +64,21 @@ const baseThemes: SerializedTheme[] = [
                 css: "note-background",
                 value: "rgb(13, 6, 33)",
                 text: "#edeae5"
-            }
+            },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
         }
-    },
-
-    {
+        }
+    },{
         editable: false,
         id: "Blue",
         type: 'theme',
@@ -121,7 +135,20 @@ const baseThemes: SerializedTheme[] = [
                 css: "note-background",
                 value: "rgb(14, 32, 46)",
                 text: "#edeae5"
-            }
+            },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
+        }
+
         }
     },
 
@@ -182,7 +209,20 @@ const baseThemes: SerializedTheme[] = [
                 css: "note-background",
                 value: "#203141",
                 text: "#edeae5"
-            }
+            },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
+        }
+
         }
     },
 
@@ -243,7 +283,20 @@ const baseThemes: SerializedTheme[] = [
                 css: "note-background",
                 value: "rgb(255, 229, 209)",
                 text: "#151414"
-            }
+            },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
+        }
+
         }
     },
 
@@ -304,7 +357,20 @@ const baseThemes: SerializedTheme[] = [
                 css: "note-background",
                 value: "#141a14",
                 text: "#edeae5"
-            }
+            },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
+        }
+
         }
     },
     {
@@ -364,7 +430,20 @@ const baseThemes: SerializedTheme[] = [
                 css: "note-background",
                 value: "rgb(0, 0, 0)",
                 text: "#edeae5"
-            }
+            },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
+        }
+
         }
     },
     {
@@ -424,7 +503,19 @@ const baseThemes: SerializedTheme[] = [
                 css: "note-background",
                 value: "#453427d9",
                 text: "#edeae5"
-            }
+            },
+        composer_main_layer: {
+            name: "composer_main_layer",
+            css: "composer-main-layer",
+            value: "#d3bd8e",
+            text: BASE_THEME_CONFIG.text.dark
+        },
+        composer_secondary_layer: {
+            name: "composer_secondary_layer",
+            css: "composer-secondary-layer",
+            value: "#de6b45",
+            text: BASE_THEME_CONFIG.text.dark
+        }
         }
     }
 ]

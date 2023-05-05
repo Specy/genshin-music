@@ -5,16 +5,20 @@ import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
 import { NoteLayer } from "$lib/Layer";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
-const { noteData, horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
+const { horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
 interface ComposerCacheProps {
     width: number
     height: number
     margin: number
     timelineHeight: number
-    standardsColors: typeof standards
     app: Application
     breakpointsApp: Application
-    composerAccent: Color
+    colors: {
+        accent: Color,
+        mainLayer: Color,
+        secondLayer: Color, 
+        bars: typeof standards
+    }
 }
 
 export type ComposerCacheData = {
@@ -36,19 +40,22 @@ export class ComposerCache {
     margin: number
     noteWidth: number
     noteHeight: number
-    standardsColors: typeof standards
     app: Application | null
     breakpointsApp: Application | null
-    composerAccent: Color
+    colors: {
+        accent: Color,
+        mainLayer: Color,
+        secondLayer: Color, 
+        bars: {color: number}[]
+    }
     constructor({
         width,
         height,
         margin = 4,
         timelineHeight = 30,
-        standardsColors,
         app,
         breakpointsApp,
-        composerAccent
+        colors
     }: ComposerCacheProps) {
 
         this.cache = {
@@ -65,10 +72,9 @@ export class ComposerCache {
         this.margin = margin
         this.noteWidth = this.width
         this.noteHeight = this.height / NOTES_PER_COLUMN
-        this.standardsColors = standardsColors || standards
+        this.colors = colors
         this.app = app
         this.breakpointsApp = breakpointsApp
-        this.composerAccent = composerAccent
         this.generate()
     }
     destroy = () => {
@@ -86,11 +92,11 @@ export class ComposerCache {
             const texture = this.drawColumn(tempoChanger, 1)
             if (texture) this.cache.columns.push(texture)
         })
-        this.standardsColors.forEach(standardColumn => {
+        this.colors.bars.forEach(standardColumn => {
             const texture = this.drawColumn(standardColumn, 1)
             if (texture) this.cache.standard.push(texture)
         })
-        this.standardsColors.forEach(standardColumn => {
+        this.colors.bars.forEach(standardColumn => {
             const texture = this.drawColumn(standardColumn, 3)
             if (texture) this.cache.standardLarger.push(texture)
         })
@@ -101,8 +107,8 @@ export class ComposerCache {
             const layer = new NoteLayer(note)
             const g = new Graphics()
             if (layer.test(0)) { //layer 1
-                g.beginFill(new Color(noteData.background).rgbNumber())
-                    .lineStyle(1, new Color(noteData.background).rgbNumber())
+                g.beginFill(new Color(this.colors.mainLayer).rgbNumber())
+                    .lineStyle(1, new Color(this.colors.mainLayer).rgbNumber())
                     .drawRoundedRect(
                         this.margin / 2 - 0.25,
                         this.margin / 2,
@@ -112,7 +118,7 @@ export class ComposerCache {
                     ).endFill()
             }
             if (layer.test(1)) { //layer 2
-                g.lineStyle(this.margin === 4 ? 3 : 2, new Color(noteData.border).rgbNumber())
+                g.lineStyle(this.margin === 4 ? 3 : 2, new Color(this.colors.secondLayer).rgbNumber())
                     .drawRoundedRect(
                         this.margin / 2 - 0.25,
                         this.margin / 2,
@@ -122,8 +128,8 @@ export class ComposerCache {
                     ).endFill()
             }
             if (layer.test(2)) { //layer 3
-                g.beginFill(new Color(noteData.center).rgbNumber())
-                    .lineStyle(1, new Color(noteData.center).rgbNumber())
+                g.beginFill(new Color(this.colors.secondLayer).rgbNumber())
+                    .lineStyle(1, new Color(this.colors.secondLayer).rgbNumber())
                     .drawCircle(
                         noteWidth / 2 - 0.25,
                         noteHeight / 2,
@@ -133,7 +139,7 @@ export class ComposerCache {
 
             if (layer.test(3)) { //layer 4
                 const lineWidth = this.margin === 4 ? 3 : 2
-                g.lineStyle(lineWidth, new Color(noteData.border).darken(0.15).rgbNumber())
+                g.lineStyle(lineWidth, new Color(this.colors.secondLayer).darken(0.15).rgbNumber())
                     .moveTo(this.margin / 2 + 0.5, noteHeight / 2)
                     .lineTo(noteWidth - this.margin + 0.5, noteHeight / 2)
                     .endFill()
@@ -155,7 +161,7 @@ export class ComposerCache {
             const g = new Graphics()
             const size = this.timelineHeight / 6
             if (breakpoint.type === "short") {
-                g.beginFill(this.composerAccent.rgbNumber())
+                g.beginFill(this.colors.accent.rgbNumber())
                 g.drawCircle(
                     size,
                     this.timelineHeight / 2,
@@ -170,22 +176,22 @@ export class ComposerCache {
                 this.cache.breakpoints.push(texture)
                 g.destroy(true)
             } else {
-                g.beginFill(this.composerAccent.rgbNumber())
+                g.beginFill(this.colors.accent.rgbNumber())
                     .moveTo(0, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(0, this.height - this.noteHeight)
                     .endFill();
-                g.beginFill(this.composerAccent.rgbNumber())
+                g.beginFill(this.colors.accent.rgbNumber())
                     .moveTo(this.width, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(this.width, this.height - this.noteHeight)
                     .endFill();
-                g.beginFill(this.composerAccent.rgbNumber())
+                g.beginFill(this.colors.accent.rgbNumber())
                     .moveTo(0, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(0, this.noteHeight)
                     .endFill();
-                g.beginFill(this.composerAccent.rgbNumber())
+                g.beginFill(this.colors.accent.rgbNumber())
                     .moveTo(this.width, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(this.width, this.noteHeight)

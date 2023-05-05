@@ -76,7 +76,7 @@ function Menu({ functions, data }: MenuProps) {
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
     }, { active: isOpen, ignoreFocusable: true })
-    
+
     useEffect(() => {
         async function checkStorage() {
             if (navigator.storage && navigator.storage.persist) {
@@ -86,9 +86,10 @@ function Menu({ functions, data }: MenuProps) {
             }
         }
         checkStorage()
-        return createShortcutListener("player", "player_menu", ({ shortcut}) => {
-            if(shortcut === "close_menu") setOpen(false)
-            if(shortcut === "toggle_menu") setOpen((prev) => !prev)
+        return createShortcutListener("player", "player_menu", ({ shortcut }) => {
+            const { name } = shortcut
+            if (name === "close_menu") setOpen(false)
+            if (name === "toggle_menu") setOpen((prev) => !prev)
         })
     }, [])
 
@@ -486,7 +487,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         onChange={async (e) => {
                             const id = e.target.value
                             const song = await songService.getOneSerializedFromStorable(data)
-                            if(!song) return logger.error("Could not find song")
+                            if (!song) return logger.error("Could not find song")
                             songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                         }}
                     >
@@ -505,12 +506,12 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                             songId: data.id,
                         }
                     }}
-                    style={{width: '100%'}}
+                    style={{ width: '100%' }}
                 >
-                    <FloatingDropdownRow 
-                        style={{width: '100%'}} 
+                    <FloatingDropdownRow
+                        style={{ width: '100%' }}
                         onClick={() => {
-                            if(data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
+                            if (data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
                         }}
                     >
                         <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
