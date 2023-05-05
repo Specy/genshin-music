@@ -8,19 +8,6 @@ import { ObservableNote } from '$lib/Instrument'
 import { InstrumentName } from '$types/GeneralTypes'
 import { LayerStatus } from '$lib/Layer'
 
-function getTextColor() {
-    const noteBg = ThemeProvider.get('note_background')
-    if (APP_NAME === 'Genshin') {
-        if (noteBg.luminosity() > 0.65) {
-            return BASE_THEME_CONFIG.text.note
-        } else {
-            return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
-        }
-    } else {
-        return noteBg.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
-    }
-}
-
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
 interface ComposerNoteProps {
     data: ObservableNote
@@ -47,13 +34,7 @@ const classNameMap = new Map<LayerStatus, string>(
         })
 )
 export default memo(function ComposerNote({ data, layer, instrument, clickAction, noteText, noteImage }: ComposerNoteProps) {
-    const [textColor, setTextColor] = useState(getTextColor())
-    useEffect(() => {
-        const dispose = observe(ThemeProvider.state.data, () => {
-            setTextColor(getTextColor())
-        })
-        return dispose
-    }, [])
+
 
     let className = classNameMap.get(layer) ?? NOTES_CSS_CLASSES.noteComposer
     const color = ThemeProvider.get('note_background').desaturate(0.6)
@@ -74,7 +55,6 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
             </div>
             <div
                 className={APP_NAME === "Sky" ? "note-name-sky" : "note-name"}
-                style={{ color: textColor }}
             >
                 {noteText}
             </div>

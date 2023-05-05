@@ -253,11 +253,9 @@ select {
     display: flex;
     margin-right: auto;
     margin-left: auto;
-    overflow-y: auto;
-    overflow-x: hidden;
     border-radius: 0.5rem;
     box-shadow: -2px -1px 27px 4px rgba(0, 0, 0, 0.25);
-    background-color: var(--menu-background);
+	background-color: rgba(var(--menu-background-rgb), 0.9);
     z-index: 10;
     opacity: 0;
     border: solid 2px var(--secondary);
@@ -265,6 +263,11 @@ select {
     transform: scale(0.7);
     padding: 0.6rem;
     color: white;
+}
+.floating-tools-content{
+    display: flex;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 .tools-right{
     margin-left: 1rem;
@@ -282,9 +285,8 @@ select {
     bottom: 1.4rem;
     transform: scale(1);
     opacity: 1;
-    --backdrop-amount: 2px
-    animation: delayBackdrop 0.4s;
-    animation-fill-mode: forwards;
+    --backdrop-amount: 3px;
+    animation: delayBackdrop 0.4s forwards;
 }
 
 
@@ -316,54 +318,62 @@ select {
 }
 
 .layer-1 {
-    background-color: #d3bd8e !important;
-    border-color: #ab9361 !important;
+    background-color: var(--composer-main-layer) !important;
+    border-color: var(--composer-main-layer-layer-20) !important;
+}
+.layer-1 .note-name-sky{
+    color: var(--composer-main-layer-text) !important;
 }
 .layer-2 .svg-b{
-    stroke: #d75c5c !important;
+    stroke: var(--composer-secondary-layer) !important;
 }
 .layer-1 .svg-b{
-    stroke: #d3bd8e !important;
+    stroke: var(--composer-main-layer) !important;
 }
 .layer-1 .svg-note {
-    fill: #f2ecec !important;
-    stroke: #f2ecec !important;
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
 }
 
 .layer-1 .genshin-border {
-    fill: #f2ecec !important;
-    stroke: #f2ecec !important;
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
 }
 
 .layer-1 .note-name {
-    color: white !important;
+    color: var(--composer-main-layer-text) !important;
 }
 
 .layer-2,
 .layer-2 .genshin-border {
-    border-color: #d75c5c !important;
-    fill: #d75c5c !important;
-    stroke: #d75c5c !important;
+    border-color: var(--composer-secondary-layer) !important;
+    fill: var(--composer-secondary-layer) !important;
+    stroke: var(--composer-secondary-layer) !important;
 }
 .layer-3-ball, .layer-3-ball-bigger{
     position: absolute;
-    background-color: #d75c5c;
+    background-color: var(--composer-secondary-layer);
     width: 1.5vw;
     height: 1.5vw;
     border-radius: 50%;
     visibility: hidden;
 }
 .layer-4-line{
-    height: 20%;
+    height: 25%;
     width: 100%;
     position: absolute;
-    background-color: #d75c5c;
+    background-color: var(--composer-secondary-layer);
     border-radius: 0.2vw;
     visibility: hidden;
 }
-.note-composer.layer-3 .svg-note{
-    fill: #f2ecec !important;
-    stroke: #f2ecec !important;
+.layer-4 .note-name-sky,
+.layer-3 .note-name-sky{
+    color: var(--composer-secondary-layer-text) !important;
+}
+.note-composer.layer-3 .svg-note,
+.note-composer.layer-4 .svg-note{
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
 }
 .layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
     visibility: visible;
@@ -493,7 +503,7 @@ select {
     bottom: 2rem;
     max-height: 48vh;
     border-radius: 0.5rem;
-    background-color: var(--menu-background);
+    background-color: rgba(var(--menu-background-rgb), 0.9);
     border: solid 2px var(--secondary);
     color: var(--menu-background-text);
     max-width: 60vw;
@@ -502,7 +512,8 @@ select {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    animation: fadeIn 0.2s;
+    --backdrop-amount: 4px;
+    animation: fadeIn 0.4s, delayBackdrop 0.4s forwards;
 }
 .floating-midi-content{
     padding: 0.8rem;
@@ -714,7 +725,7 @@ select {
         padding: 0.4rem;
     }
     .tools-visible{
-        bottom: 0.2rem;
+        bottom: 0.4rem;
     }
     .tools-icon{
         font-size: 1.1rem;
@@ -733,8 +744,9 @@ select {
     }
 
     .floating-midi {
-        bottom: 0.2rem;
+        bottom: 0.8rem;
         height: 50vh;
+        max-height: 50vh;
         max-width: 70vw;
         width: 70vw;
     }

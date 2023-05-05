@@ -89,18 +89,17 @@
 	background-color: rgba(var(--secondary-rgb), 0.9);
 	top: 0.8rem;
 	font-size: 0.8rem;
-	margin-left: auto;
+	right: 50vw;
 	z-index: 999;
 	pointer-events: none;
-	margin-right: auto;
 	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 	color: var(--secondary-text);
 	opacity: 0;
-	transform: translateY(calc(-120% - 0.8rem));
+	transform: translateX(50%) translateY(calc(-120% - 0.8rem));
 }
 .pill-visible{
 	opacity: 1;
-	transform: translateY(0);
+	transform: translateY(0) translateX(50%);
 	animation: delayBackdrop 0.2s forwards;
 }
 .logger-content{

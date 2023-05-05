@@ -28,7 +28,7 @@ export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scal
     useEffect(() => {
         return createKeyboardListener("zen_keyboard", ({ shortcut, event }) => {
             if (event.repeat) return
-            const note = instrument.getNoteFromCode(shortcut)
+            const note = instrument.getNoteFromCode(shortcut.name)
             if (note !== null) onNoteClick(note)
         })
     }, [onNoteClick, instrument])

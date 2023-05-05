@@ -20,28 +20,37 @@ export function ThemeProviderWrapper({ children }: Props) {
     const borderFill = backgroundDesaturate.isDark()
         ? backgroundDesaturate.lighten(0.50).toString()
         : backgroundDesaturate.darken(0.18).toString()
+
+    const map = new Map<string, string>()
+    map.set('--clicked-note', clickColor.toString())
+    map.set('--note-border-fill', borderFill.toString())
+    theme.toArray().forEach(e => {
+        const layers = [10, 20]
+        const layersMore = [10, 15, 20]
+        map.set(`--${e.css}`, e.value)
+        map.set(`--${e.css}-rgb`, colorToRGB(theme.get(e.name)).join(','))
+        map.set(`--${e.css}-text`, e.text)
+        layers.forEach(v => map.set(`--${e.css}-darken-${v}`, theme.get(e.name).darken(v / 100).toString()))
+        layers.forEach(v => map.set(`--${e.css}-lighten-${v}`, theme.get(e.name).lighten(v / 100).toString()))
+        layersMore.forEach(v => map.set(`--${e.css}-layer-${v}`, theme.layer(e.name, v / 100).toString()))
+    })
+    const obj = Object.fromEntries(map)
+
+
     return <>
         <Head>
             <meta name="theme-color" content={theme.get(mounted ? "primary" : "accent").toString()} />
         </Head>
         <style>
-            {`:root{
-                ${theme.toArray().map(e => {
-                const layers = [10, 20]
-                const layersMore = [10, 15, 20]
-                return `
-                        --${e.css}:${e.value};
-                        --${e.css}-rgb:${colorToRGB(theme.get(e.name))};
-                        --${e.css}-text: ${e.text};
-                        ${layers.map(v => `--${e.css}-darken-${v}: ${theme.get(e.name).darken(v / 100).toString()};`).join('\n')}
-                        ${layers.map(v => `--${e.css}-lighten-${v}: ${theme.get(e.name).lighten(v / 100).toString()};`).join('\n')}
-                        ${layersMore.map(v => `--${e.css}-layer-${v}: ${theme.layer(e.name, v / 100)};`).join('\n')}
-                    `
-            }).join('\n')}
-                --clicked-note:${clickColor};
-                --note-border-fill:${borderFill};
-            }`}
+            {`
+                :root{
+                    --background: ${theme.get('background').toString()};
+                    --background-text: ${theme.getText('background')};
+                }
+            `}
         </style>
-        {children}
+        <div style={{ ...obj, display: 'flex', width: "100%", height: "100%" }}>
+            {children}
+        </div>
     </>
 }
