@@ -39,7 +39,7 @@ const BASE_THEME_CONFIG = {
     text: {
         light: '#edeae5',
         dark: '#151414',
-        note: APP_NAME === 'Genshin' ? '#aaaa82' : '#212121'
+        note: APP_NAME === 'Genshin' ? '#aaaa82' : '#edeae5'
     }
 }
 const INSTRUMENTS = APP_NAME === "Genshin"

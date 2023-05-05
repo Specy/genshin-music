@@ -1,19 +1,4 @@
 :root {
-	--primary: #495466;
-	--primary-text: #ede5d8;
-	--secondary: #8c7063;
-	--secondary-text: #ede5d8;
-	--background: #394248;
-	--background-text: #ede5d8;
-	--accent: #63aea7;
-	--accent-text: #151414;
-	--menu-background: rgba(237, 229, 216, 0.95);
-	--menu-background-text: ;
-	--icon-color: #d3bd8e;
-	--icon-color-text: #151414;
-	--note-background: #fff9ef;
-	--note-background-text: #aaaa82;
-	--clicked-note: #8fedd9;
 	--whitish: #ede5d8;
 	--hint-main: #949494;
 	--red: rgb(242 75 91);
