@@ -59,7 +59,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                         onClick={(e) => {
                             e.stopPropagation()
                             logger.success(`The theme "${theme.other.name}" was downloaded`)
-                            fileService.downloadTheme(theme, `${theme.other.name || APP_NAME}.theme`)
+                            fileService.downloadTheme(theme, `${theme.other.name || APP_NAME}.${APP_NAME.toLowerCase()}theme.json`)
                         }}
                         size={18}
                         cursor='pointer'

@@ -14,6 +14,8 @@ import { linkServices } from '$stores/globalLink';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import isMobile from 'is-mobile';
+import { asyncConfirm } from '$cmp/Utility/AsyncPrompts';
+import { fileService } from '$lib/Services/FileService';
 
 
 function AppBase() {
@@ -54,6 +56,31 @@ function AppBase() {
 			settingsService.setLastBackupWarningTime(Date.now())
 		}
 	}, [])
+
+	useEffect(() => {
+		if ("launchQueue" in window) {
+			async function consumer(launchParams: any){
+				console.log(launchParams)
+				if (launchParams.files && launchParams.files.length) {
+					const confirm = await asyncConfirm("You opened a file, do you want to import it?", false)
+					if (!confirm) return
+					for (const file of launchParams.files) {
+						const blob = await file.getFile()
+						blob.handle = file
+						const text = await blob.text()
+						const parsedFile = JSON.parse(text)
+						if (parsedFile) {
+							fileService.importAndLog(parsedFile)	
+						}
+					}
+				}
+			}
+			window.launchQueue.setConsumer(consumer)
+			//not sure if this is needed
+			return () => window.launchQueue.setConsumer(() => { })
+		}
+	}, [])
+
 	const setDontShowHome = useCallback((override = false) => {
 		localStorage.setItem(APP_NAME + "_ShowHome", JSON.stringify(override))
 		homeStore.setState({ canShow: override })

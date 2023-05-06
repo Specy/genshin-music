@@ -26,14 +26,21 @@ async function execute() {
     }
 }
 
-async function updateManifest(basePath){
-    try{
+async function updateManifest(basePath) {
+    try {
         const manifest = await fse.readJson('./public/manifest.json')
-        if(manifest.icons) manifest.icons = manifest.icons.map(icon => ({...icon, src: urlJoin(basePath, icon.src)}))
-        if(manifest.start_url) manifest.start_url = basePath 
-        if(manifest.screenshots) manifest.screenshots = manifest.screenshots.map(screenshot => ({...screenshot, src: urlJoin(basePath,screenshot.src)}))
+        if (manifest.icons) manifest.icons = manifest.icons.map(icon => ({ ...icon, src: urlJoin(basePath, icon.src) }))
+        if (manifest.start_url) manifest.start_url = basePath
+        if (manifest.screenshots) manifest.screenshots = manifest.screenshots.map(screenshot => ({ ...screenshot, src: urlJoin(basePath, screenshot.src) }))
+        if (manifest.file_handlers) {
+            manifest.file_handlers = manifest.file_handlers.map(handler => {
+                const icons = handler.icons.map(icon => ({ ...icon, src: urlJoin(basePath, icon.src) }))
+                const action = basePath || "."
+                return { ...handler, icons, action }
+            })
+        }
         await fse.writeFile('./public/manifest.json', JSON.stringify(manifest, null, 2))
-    }catch(e){
+    } catch (e) {
         console.log(clc.red("[Error]: There was an error updating the manifest"))
         console.error(e)
         process.exit(1)

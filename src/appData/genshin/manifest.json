@@ -19,6 +19,36 @@
       "sizes": "512x512"
     }
   ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "name": "Import file in genshin music",
+      "accept": {
+        "text/json": [
+          ".genshinsheet.json",
+          ".theme.json",
+          ".genshinbackup.json"
+        ]
+      },
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "48x48",
+          "type": "image/x-icon"
+        },
+        {
+          "src": "/logo192.png",
+          "type": "image/png",
+          "sizes": "192x192"
+        },
+        {
+          "src": "/logo512.png",
+          "type": "image/png",
+          "sizes": "512x512"
+        }
+      ]
+    }
+  ],
   "screenshots": [
     {
       "src": "manifestData/player.webp",
@@ -38,7 +68,7 @@
   ],
   "start_url": ".",
   "display": "fullscreen",
-  "orientation":  "landscape",
+  "orientation": "landscape",
   "theme_color": "#63aea7",
   "background_color": "#495466"
 }

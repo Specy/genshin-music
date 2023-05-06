@@ -153,7 +153,7 @@ export default function Backup() {
                     if (!themes) return
                     fileService.downloadFiles(
                         [...songs, ...folders, ...themes],
-                        `${APP_NAME}-all-backup-${getDateString()}.json`,
+                        `${getDateString()}-all.${APP_NAME.toLowerCase()}backup.json`,
                     )
                     logger.success("Downloaded backup")
                     settingsService.setLastBackupWarningTime(Date.now())
@@ -173,7 +173,7 @@ export default function Backup() {
                     if (!folders) return
                     fileService.downloadFiles(
                         [...songs, ...folders],
-                        `${APP_NAME}-song-backup-${getDateString()}.json`,
+                        `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup.json`,
                     )
                     logger.success("Downloaded songs backup")
                     settingsService.setLastBackupWarningTime(Date.now())
@@ -190,7 +190,7 @@ export default function Backup() {
                     if (!themes) return
                     fileService.downloadFiles(
                         themes,
-                        `${APP_NAME}-themes-backup-${getDateString()}.json`,
+                        `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup.json`,
                     )
                     logger.success("Downloaded themes backup")
                 }}

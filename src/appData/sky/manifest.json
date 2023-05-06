@@ -19,6 +19,36 @@
       "sizes": "512x512"
     }
   ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "name": "Import file in sky music",
+      "accept": {
+        "text/json": [
+          ".skysheet.json",
+          ".theme.json",
+          ".skybackup.json"
+        ]
+      },
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "48x48",
+          "type": "image/x-icon"
+        },
+        {
+          "src": "/logo192.png",
+          "type": "image/png",
+          "sizes": "192x192"
+        },
+        {
+          "src": "/logo512.png",
+          "type": "image/png",
+          "sizes": "512x512"
+        }
+      ]
+    }
+  ],
   "screenshots": [
     {
       "src": "manifestData/player.webp",
