@@ -26,8 +26,10 @@
       "accept": {
         "text/json": [
           ".skysheet.json",
+          ".skysheet",
           ".theme.json",
-          ".skybackup.json"
+          ".skybackup.json",
+          ".skybackup"
         ]
       },
       "icons": [
