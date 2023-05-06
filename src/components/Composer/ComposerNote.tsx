@@ -3,11 +3,9 @@ import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import SvgNote, { NoteImage } from '$cmp/SvgNotes'
 import { Theme, ThemeProvider } from '$stores/ThemeStore/ThemeProvider'
-import { observe } from 'mobx'
 import { ObservableNote } from '$lib/Instrument'
 import { InstrumentName } from '$types/GeneralTypes'
 import { LayerStatus } from '$lib/Layer'
-import { useTheme } from '$lib/Hooks/useTheme'
 
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
 interface ComposerNoteProps {
@@ -48,6 +46,7 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
             isAccentDefault: ThemeProvider.isDefault('accent'),
         })
     }, [theme])
+
     let className = classNameMap.get(layer) ?? NOTES_CSS_CLASSES.noteComposer
     return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
         <div className={className} >

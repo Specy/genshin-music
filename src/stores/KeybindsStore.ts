@@ -220,7 +220,6 @@ export function createShortcutListener<T extends KeysOf<Shortcuts>>(page: T, id:
         const shortcut = keyBinds.getShortcut(page, keyCombo)
         if (shortcut !== undefined) {
             if (!(shortcut as Shortcut<string>).holdable && event.repeat) return
-            console.log('calling')
             callback({ code, event, shortcut, isRepeat: event.repeat })
         }
     })

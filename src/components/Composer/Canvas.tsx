@@ -117,7 +117,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     backgroundOpacity: ThemeProvider.get('primary').alpha()
                 },
             },
-
             cache: null
         }
         this.notesStageRef = createRef()
@@ -153,6 +152,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             window.addEventListener("resize", this.recalculateCacheAndSizes)
             this.recalculateCacheAndSizes()
         })
+        
         window.addEventListener("pointerup", this.resetPointerDown)
         const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({ shortcut }) => {
             const { name } = shortcut
@@ -200,7 +200,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             }
         }, () => {
             this.recalculateCacheAndSizes()
-            if (this.notesStageRef.current) {
+            if (this.notesStageRef?.current) {
                 this.notesStageRef.current.app.renderer.background.color = this.state.theme.main.background
             }
         })
@@ -358,6 +358,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         const isBreakpointSelected = data.breakpoints.includes(data.selected)
         const sideColor = theme.sideButtons.rgb
+        console.log(this.notesStageRef)
         return <div
             className={"canvas-wrapper " + (data.inPreview ? "canvas-wrapper-in-preview" : "")}
             style={{
@@ -370,6 +371,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     width={width}
                     height={height}
                     raf={false}
+                    onMount={this.recalculateCacheAndSizes}
                     style={{ opacity: theme.main.backgroundOpacity }}
                     renderOnComponentChange={true}
                     options={{
