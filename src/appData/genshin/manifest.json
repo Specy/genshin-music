@@ -24,7 +24,7 @@
       "action": "/",
       "name": "Import file in genshin music",
       "accept": {
-        "text/json": [
+        "application/json": [
           ".genshinsheet.json",
           ".genshinsheet",
           ".theme.json",
