@@ -110,7 +110,7 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
     }, [isHidden])
 
     useEffect(() => {
-        setColor(theme.layer('primary', 0.1).hex())
+        setColor(theme.layer('primary', 0.1).toString())
     }, [theme])
 
     useEffect(() => {

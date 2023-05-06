@@ -114,7 +114,7 @@ export class Theme {
     isDefault = (name: ThemeKeys) => {
         const a = new Color(this.state.data[name].value)
         const b = new Color(this.baseTheme.data[name].value)
-        return a.hex().toLowerCase() === b.hex().toLowerCase()
+        return a.hexa().toLowerCase() === b.hexa().toLowerCase()
     }
 
     isEditable = () => {

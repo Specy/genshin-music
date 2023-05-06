@@ -20,7 +20,7 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme, keyboardLay
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const [color, setColor] = useState('var(--primary)')
     useEffect(() => {
-        setColor(theme.layer('primary', 0.2).hex())
+        setColor(theme.layer('primary', 0.2).toString())
     },[theme])
     const notes = new Array(columnsPerRow * rows).fill(false)
     chunk.notes.forEach(note => {

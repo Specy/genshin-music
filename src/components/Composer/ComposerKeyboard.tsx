@@ -57,6 +57,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     style={{
                         paddingRight: '0.5rem',
                         justifyContent: "flex-end",
+                        visibility: data.isPlaying ? 'hidden' : 'visible'
                     }}
                 >
                     <FaChevronLeft />
@@ -77,6 +78,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                                 : 0
                             )}
                             data={note}
+                            theme={theme}
                             noteText={keyboard.getNoteText(i, noteNameType, pitch)}
                             instrument={keyboard.name}
                             noteImage={note.noteImage}
@@ -94,6 +96,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                     style={{
                         paddingLeft: '0.5rem',
                         justifyContent: "flex-start",
+                        visibility: data.isPlaying ? 'hidden' : 'visible'
                     }}
                 >
                     <FaChevronRight />

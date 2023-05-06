@@ -2,11 +2,12 @@ import { memo, useEffect, useState } from 'react'
 import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "$config"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import SvgNote, { NoteImage } from '$cmp/SvgNotes'
-import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider'
+import { Theme, ThemeProvider } from '$stores/ThemeStore/ThemeProvider'
 import { observe } from 'mobx'
 import { ObservableNote } from '$lib/Instrument'
 import { InstrumentName } from '$types/GeneralTypes'
 import { LayerStatus } from '$lib/Layer'
+import { useTheme } from '$lib/Hooks/useTheme'
 
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
 interface ComposerNoteProps {
@@ -16,6 +17,7 @@ interface ComposerNoteProps {
     clickAction: (data: ObservableNote) => void
     noteText: string
     noteImage: NoteImage
+    theme: Theme
 }
 /*
     if ((layer & 1) !== 0) className += " layer-1"
@@ -33,20 +35,29 @@ const classNameMap = new Map<LayerStatus, string>(
             return [i as LayerStatus, className]
         })
 )
-export default memo(function ComposerNote({ data, layer, instrument, clickAction, noteText, noteImage }: ComposerNoteProps) {
-
-
+const baseTheme = {
+    note_background: ThemeProvider.get('note_background').desaturate(0.6).toString(),
+    isAccentDefault: ThemeProvider.isDefault('accent'),
+} as const
+export default memo(function ComposerNote({ data, layer, instrument, clickAction, noteText, noteImage, theme }: ComposerNoteProps) {
+    const [colors, setColors] = useState(baseTheme)
+    useEffect(() => {
+        const color = ThemeProvider.get('note_background').desaturate(0.6)
+        setColors({
+            note_background: color.isDark() ? color.lighten(0.45).toString() : color.darken(0.18).toString(),
+            isAccentDefault: ThemeProvider.isDefault('accent'),
+        })
+    }, [theme])
     let className = classNameMap.get(layer) ?? NOTES_CSS_CLASSES.noteComposer
-    const color = ThemeProvider.get('note_background').desaturate(0.6)
     return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
         <div className={className} >
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
-                fill={color.isDark() ? color.lighten(0.45).hex() : color.darken(0.18).hex()}
+                fill={colors.note_background}
                 className='genshin-border'
             />}
             <SvgNote
                 name={noteImage}
-                color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
+                color={colors.isAccentDefault ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
                 background={'var(--note-background)'}
             />
             <div className="layer-3-ball-bigger">

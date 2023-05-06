@@ -278,7 +278,7 @@ interface SongRowProps {
 
 function SongRow({ data, functions, theme, folders }: SongRowProps) {
     const { toggleMenu, onClick } = functions
-    const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).hex() }
+    const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).toString() }
     const [isRenaming, setIsRenaming] = useState(false)
     const [songName, setSongName] = useState(data.name)
     useEffect(() => {
