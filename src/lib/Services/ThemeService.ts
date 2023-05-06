@@ -1,5 +1,5 @@
 import { APP_NAME } from "$config"
-import { SerializedTheme } from "$stores/ThemeStore/ThemeProvider"
+import { SerializedTheme, ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import { Query } from "./Database/Collection"
 import { DbInstance } from "./Database/Database"
 
@@ -29,7 +29,7 @@ class ThemeService {
             //@ts-ignore
             delete theme._id
         })
-        return themes
+        return themes.map(theme => ThemeProvider.sanitize(theme))
     }
     async addTheme(theme: SerializedTheme) {
         const id = DbInstance.generateId()

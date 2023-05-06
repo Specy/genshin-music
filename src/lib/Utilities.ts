@@ -11,7 +11,8 @@ import Color from "color";
 
 
 class FileDownloader {
-	static download(file: string | Blob, name: string, as: string = "text/json") {
+	//TODO shouldn tthis be application/json?
+	static download(file: string | Blob, name: string, as: string = "application/json") {
 		const a = document.createElement("a")
 		a.style.display = 'none'
 		a.className = 'ignore_click_outside'

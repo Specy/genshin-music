@@ -24,10 +24,12 @@
       "action": "/",
       "name": "Import file in sky music",
       "accept": {
-        "text/json": [
+        "application/json": [
           ".skysheet.json",
-          ".skytheme.json",
-          ".skybackup.json"
+          ".skysheet",
+          ".theme.json",
+          ".skybackup.json",
+          ".skybackup"
         ]
       },
       "icons": [

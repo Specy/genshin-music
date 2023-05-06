@@ -200,6 +200,7 @@ export class Theme {
                 sanitized.other[key] = value
             }
         })
+        sanitized.id = obj.id
         sanitized.editable = Boolean(obj.editable)
         return sanitized
     }
