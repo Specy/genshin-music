@@ -358,7 +358,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         const isBreakpointSelected = data.breakpoints.includes(data.selected)
         const sideColor = theme.sideButtons.rgb
-        console.log(this.notesStageRef)
         return <div
             className={"canvas-wrapper " + (data.inPreview ? "canvas-wrapper-in-preview" : "")}
             style={{
