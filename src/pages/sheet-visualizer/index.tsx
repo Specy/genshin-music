@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { APP_NAME, NOTE_NAME_TYPES, NoteNameType } from '$config'
 import { isComposedOrRecorded } from '$lib/Utilities'
 import Switch from '$cmp/Inputs/Switch'
@@ -34,15 +34,16 @@ export default function SheetVisualizer() {
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
     const [keyboardLayout, setKeyboardLayout] = useState<NoteNameType>(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC')
+    const ref = useRef<HTMLDivElement>(null)
     function setFrames(amount: number) {
+        if(!ref.current) return
         const newAmount = framesPerRow + amount
-        const frame = document.querySelector('.frame-outer')
+        const frame = ref.current.children[0]
         if (!frame || newAmount < 1) return
         const width = frame.getBoundingClientRect().width
         if (width < 50 && amount === 1) return
         setFramesPerRow(newAmount)
     }
-
     const getChunkNoteText = useCallback((index: number, layout: NoteNameType) => {
         const text = defaultInstrument.getNoteText(index, layout, "C")
         return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
@@ -154,6 +155,7 @@ export default function SheetVisualizer() {
             <div
                 className={s['visualizer-frame-wrapper']}
                 style={{ gridTemplateColumns: `repeat(${framesPerRow},1fr)` }}
+                ref={ref}
             >
 
                 {sheet.map((frame, i) =>

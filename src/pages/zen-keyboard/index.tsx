@@ -67,25 +67,28 @@ export default function ZenKeyboard() {
         if (isMetronomePlaying) metronome.start()
         else metronome.stop()
     }, [isMetronomePlaying])
-    
+
     const onVolumeChange = useCallback((data: SettingVolumeUpdate) => {
         instrument.changeVolume(data.value)
     }, [instrument])
     return <>
-    <Title text="Zen Keyboard" description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"/>
+        <Title text="Zen Keyboard" description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome" />
         <ZenKeyboardMenu
             settings={settings}
             onVolumeChange={onVolumeChange}
             handleSettingChange={handleSettingChange}
         />
-        <ZenKeypad
-            instrument={instrument}
-            onNoteClick={onNoteClick}
-            noteNameType={settings.noteNameType.value}
-            pitch={settings.pitch.value}
-            scale={settings.keyboardSize.value}
-            verticalOffset={settings.keyboardYPosition.value}
-        />
+        <div className="flex-centered">
+            <ZenKeypad
+                instrument={instrument}
+                onNoteClick={onNoteClick}
+                noteNameType={settings.noteNameType.value}
+                pitch={settings.pitch.value}
+                scale={settings.keyboardSize.value}
+                verticalOffset={settings.keyboardYPosition.value}
+            />
+        </div>
+
         <IconButton
             toggled={isMetronomePlaying}
             onClick={() => setIsMetronomePlaying(!isMetronomePlaying)}

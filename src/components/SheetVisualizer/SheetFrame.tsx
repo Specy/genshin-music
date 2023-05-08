@@ -21,7 +21,7 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme, keyboardLay
     const [color, setColor] = useState('var(--primary)')
     useEffect(() => {
         setColor(theme.layer('primary', 0.2).toString())
-    },[theme])
+    }, [theme])
     const notes = new Array(columnsPerRow * rows).fill(false)
     chunk.notes.forEach(note => {
         notes[note.index] = true
@@ -45,7 +45,7 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme, keyboardLay
                         style={!exists ? { backgroundColor: color } : {}}
                     >
                         {(exists && hasText)
-                            ? baseInstrument.getNoteText(i,keyboardLayout, 'C' )
+                            ? baseInstrument.getNoteText(i, keyboardLayout, 'C')
                             : null
                         }
                     </div>

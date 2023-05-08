@@ -28,4 +28,5 @@ yarn-error.log*
 .tauri
 .yarn
 .next
+.idea
 build-stats.html

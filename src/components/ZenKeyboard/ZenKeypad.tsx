@@ -36,6 +36,7 @@ export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scal
     return <div className={keyboardClass}
         style={{
             transform: `scale(${scale / 100}) translateY(${verticalOffset}px)`,
+            marginTop: "unset"
         }}
     >
         {layout.map((note, index) =>
