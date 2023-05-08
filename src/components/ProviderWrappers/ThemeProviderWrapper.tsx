@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
 import { colorToRGB } from '$lib/Utilities';
 import Head from 'next/head';
+import { TEMPO_CHANGERS } from '$config';
+import Color from 'color';
 type Props = {
     children?: React.ReactNode;
 }
@@ -33,6 +35,9 @@ export function ThemeProviderWrapper({ children }: Props) {
         layers.forEach(v => map.set(`--${e.css}-darken-${v}`, theme.get(e.name).darken(v / 100).toString()))
         layers.forEach(v => map.set(`--${e.css}-lighten-${v}`, theme.get(e.name).lighten(v / 100).toString()))
         layersMore.forEach(v => map.set(`--${e.css}-layer-${v}`, theme.layer(e.name, v / 100).toString()))
+    })
+    TEMPO_CHANGERS.forEach(t => {
+        map.set(`--tempo-changer-${t.id}`, Color(t.color).toString())
     })
     const obj = Object.fromEntries(map)
 

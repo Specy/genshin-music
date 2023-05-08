@@ -11,7 +11,7 @@ import { logger } from '$stores/LoggerStore'
 import { SerializedSong } from '$lib/Songs/Song'
 import { SheetVisualiserMenu } from '$cmp/SheetVisualizer/Menu'
 import { SheetFrame } from '$cmp/SheetVisualizer/SheetFrame'
-import { Chunk } from '$lib/Songs/VisualSong'
+import { Chunk, VisualSong } from '$lib/Songs/VisualSong'
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import { songService } from '$lib/Services/SongService'
@@ -20,39 +20,13 @@ import { useTheme } from '$lib/Hooks/useTheme'
 import Instrument from '$lib/Instrument'
 import { Select } from '$cmp/Inputs/Select'
 import s from "./SheetVisualizer.module.css"
+import { SheetFrame2 } from '$cmp/SheetVisualizer/SheetFrame2'
 const THRESHOLDS = {
     joined: 50,
     pause: 400,
 }
+/*
 
-const defaultInstrument = new Instrument()
-export default function SheetVisualizer() {
-    const [theme] = useTheme()
-    const [sheet, setSheet] = useState<Chunk[]>([])
-    const [framesPerRow, setFramesPerRow] = useState(7)
-    const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
-    const [hasText, setHasText] = useState(false)
-    const [songAsText, setSongAstext] = useState('')
-    const [keyboardLayout, setKeyboardLayout] = useState<NoteNameType>(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC')
-    const ref = useRef<HTMLDivElement>(null)
-    function setFrames(amount: number) {
-        if(!ref.current) return
-        const newAmount = framesPerRow + amount
-        const frame = ref.current.children[0]
-        if (!frame || newAmount < 1) return
-        const width = frame.getBoundingClientRect().width
-        if (width < 50 && amount === 1) return
-        setFramesPerRow(newAmount)
-    }
-    const getChunkNoteText = useCallback((index: number, layout: NoteNameType) => {
-        const text = defaultInstrument.getNoteText(index, layout, "C")
-        return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
-    }, [])
-    const loadSong = useCallback((song: SerializedSong, layout: NoteNameType) => {
-        try {
-            const temp = songService.parseSong(song)
-            const isValid = isComposedOrRecorded(temp)
-            if (!isValid) return
             const lostReference = temp instanceof RecordedSong ? temp : (temp as ComposedSong).toRecordedSong()
             const notes = lostReference.notes
             const chunks: Chunk[] = []
@@ -83,12 +57,43 @@ export default function SheetVisualizer() {
             }
             setSongAstext(sheetText)
             setSheet(chunks)
+*/
+
+
+
+const defaultInstrument = new Instrument()
+export default function SheetVisualizer() {
+    const [theme] = useTheme()
+    const [sheet, setSheet] = useState<VisualSong | null>(null)
+    const [framesPerRow, setFramesPerRow] = useState(7)
+    const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
+    const [hasText, setHasText] = useState(false)
+    const [songAsText, setSongAstext] = useState('')
+    const [keyboardLayout, setKeyboardLayout] = useState<NoteNameType>(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC')
+    const ref = useRef<HTMLDivElement>(null)
+    function setFrames(amount: number) {
+        if (!ref.current) return
+        const newAmount = framesPerRow + amount
+        const frame = ref.current.children[0]
+        if (!frame || newAmount < 1) return
+        const width = frame.getBoundingClientRect().width
+        if (width < 50 && amount === 1) return
+        setFramesPerRow(newAmount)
+    }
+    const loadSong = useCallback((song: SerializedSong, layout: NoteNameType) => {
+        try {
+            const temp = songService.parseSong(song)
+            const isValid = isComposedOrRecorded(temp)
+            if (!isValid) return logger.error('Invalid song, it is not composed or recorded')
+            const vs = VisualSong.from(temp)
+            setSheet(vs)
+            setSongAstext(vs.toText(layout))
         } catch (e) {
             console.error(e)
             logger.error('Error visualizing song')
         }
         Analytics.songEvent({ type: 'visualize' })
-    }, [getChunkNoteText])
+    }, [])
     useEffect(() => {
         if (currentSong) loadSong(currentSong, keyboardLayout)
     }, [currentSong, hasText, keyboardLayout, loadSong])
@@ -157,15 +162,14 @@ export default function SheetVisualizer() {
                 style={{ gridTemplateColumns: `repeat(${framesPerRow},1fr)` }}
                 ref={ref}
             >
-
-                {sheet.map((frame, i) =>
-                    <SheetFrame
+                {sheet && sheet.chunks.map((chunk, i) =>
+                    <SheetFrame2
                         key={i}
-                        keyboardLayout={keyboardLayout}
-                        chunk={frame}
+                        chunk={chunk}
                         rows={3}
                         theme={theme}
                         hasText={hasText}
+                        keyboardLayout={keyboardLayout}
                     />
                 )}
             </div>

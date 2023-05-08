@@ -16,6 +16,7 @@ export const updates: Update[] = [
             "Rewrote app in next.js, improving performance and navigation",
             "Improved theming in the composer",
             "Added opacity to the composer and custom layers colors",
+            "Added new visual sheet format with more info",
             "Added song search",
             "Added a new theme",
         ]
