@@ -61,7 +61,6 @@ const THRESHOLDS = {
 
 
 
-const defaultInstrument = new Instrument()
 export default function SheetVisualizer() {
     const [theme] = useTheme()
     const [sheet, setSheet] = useState<VisualSong | null>(null)
@@ -74,7 +73,7 @@ export default function SheetVisualizer() {
     function setFrames(amount: number) {
         if (!ref.current) return
         const newAmount = framesPerRow + amount
-        const frame = ref.current.children[0]
+        const frame = ref.current.children[0]?.children[0] as HTMLDivElement | undefined
         if (!frame || newAmount < 1) return
         const width = frame.getBoundingClientRect().width
         if (width < 50 && amount === 1) return
@@ -85,9 +84,17 @@ export default function SheetVisualizer() {
             const temp = songService.parseSong(song)
             const isValid = isComposedOrRecorded(temp)
             if (!isValid) return logger.error('Invalid song, it is not composed or recorded')
-            const vs = VisualSong.from(temp)
-            setSheet(vs)
-            setSongAstext(vs.toText(layout))
+            try {
+                const vs = VisualSong.from(temp)
+                setSheet(vs)
+                setSongAstext(vs.toText(layout))
+            } catch (e) {
+                console.error(e)
+                logger.error("Error converting song to visual song")
+                setSheet(null)
+                setSongAstext("")
+            }
+
         } catch (e) {
             console.error(e)
             logger.error('Error visualizing song')
@@ -173,10 +180,11 @@ export default function SheetVisualizer() {
                     />
                 )}
             </div>
-            {songAsText.trim().length > 0 && <pre className={s['text-notation-wrapper']}>
-                {songAsText}
-            </pre>}
-
+            {songAsText.trim().length > 0 &&
+                <pre className={s['text-notation-wrapper']}>
+                    {songAsText}
+                </pre>
+            }
         </div>
     </DefaultPage>
 }

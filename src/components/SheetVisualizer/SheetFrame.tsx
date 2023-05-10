@@ -27,7 +27,7 @@ export function _SheetFrame({ chunk, rows, hasText, selected, theme, keyboardLay
         notes[note.index] = true
     })
     return <div
-        className={`${s['frame-outer']} ${chunk.notes.length === 0 ? s['visualizer-ball'] : ''}`}
+        className={`${s['frame-outer-smaller']} ${chunk.notes.length === 0 ? s['visualizer-ball'] : ''}`}
         style={selected
             ? {
                 borderColor: 'var(--accent)',

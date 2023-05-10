@@ -25,7 +25,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 60,
+        settingVersion: APP_NAME + 61,
     },
     data: {
         bpm: {
@@ -142,7 +142,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 60
+        settingVersion: APP_NAME + 61
     },
     data: {
         instrument: {
@@ -556,7 +556,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 8
+        settingVersion: APP_NAME + 9
     },
     data: {
         instrument: {
