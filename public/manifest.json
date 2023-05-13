@@ -21,7 +21,7 @@
   ],
   "file_handlers": [
     {
-      "action": "/",
+      "action": ".",
       "name": "Import file in sky music",
       "accept": {
         "application/json": [
@@ -34,17 +34,17 @@
       },
       "icons": [
         {
-          "src": "/favicon.ico",
+          "src": "favicon.ico",
           "sizes": "48x48",
           "type": "image/x-icon"
         },
         {
-          "src": "/logo192.png",
+          "src": "logo192.png",
           "type": "image/png",
           "sizes": "192x192"
         },
         {
-          "src": "/logo512.png",
+          "src": "logo512.png",
           "type": "image/png",
           "sizes": "512x512"
         }
@@ -68,10 +68,9 @@
       "sizes": "1280x720"
     }
   ],
-
   "start_url": ".",
   "display": "fullscreen",
-  "orientation":  "landscape",
+  "orientation": "landscape",
   "theme_color": "#63aea7",
   "background_color": "#495466"
 }

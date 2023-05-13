@@ -287,7 +287,7 @@ class Player extends Component<{}, PlayerState>{
 				song.bpm = settings.bpm.value
 				song.pitch = settings.pitch.value
 				this.addSong(song)
-				Analytics.userSongs('record', { name: songName, page: 'player' })
+				Analytics.userSongs('record', { page: 'player' })
 			}
 		} else {
 			this.recording = new Recording()

@@ -88,10 +88,10 @@ function Menu({ data, functions }: MenuProps) {
     }, [])
 
     const removeSong = useCallback(async (name: string, id: string) => {
-        const confirm = await asyncConfirm("Are you sure you want to delete the song: " + name)
+        const confirm = await asyncConfirm(`Are you sure you want to delete the song: "${name}"?`)
         if (confirm) {
             await songsStore.removeSong(id)
-            Analytics.userSongs('delete', { name: name, page: 'composer' })
+            Analytics.userSongs('delete', { page: 'composer' })
         }
     }, [])
     const createFolder = useCallback(async () => {
@@ -146,7 +146,7 @@ function Menu({ data, functions }: MenuProps) {
             ]
             fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
             logger.success("Song downloaded")
-            Analytics.userSongs('download', { name: parsed.name, page: 'composer' })
+            Analytics.userSongs('download', { page: 'composer' })
         } catch (e) {
             console.log(e)
             logger.error('Error downloading song')
@@ -434,9 +434,10 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FloatingDropdownRow
                     onClick={async () => {
                         const parsed = await songService.fromStorableSong(data)
-                        await songsStore.addSong(parsed)
+                        const clone = parsed.clone()
+                        clone.name = `${parsed.name} - (clone)`
+                        await songsStore.addSong(clone)
                         logger.log(`Cloned song: ${data.name}`)
-                        toggleMenu(false)
                     }}
                 >
                     <FaClone style={{ marginRight: "0.4rem" }} />

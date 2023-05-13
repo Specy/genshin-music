@@ -27,7 +27,6 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
     const isHidden = !deferred
     const [isMounted, setIsMounted] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
-
     useEffect(() => {
         if (!isHidden) return setIsMounted(true)
         const timeout = setTimeout(() => setIsMounted(false), 300)
@@ -36,6 +35,9 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
 
     useEffect(() => {
         if(!deferred) return
+        //@ts-ignore
+        document.activeElement?.blur()
+        console.log('focus')
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
             asyncPromptStore.answerConfirm(false)

@@ -155,7 +155,7 @@ function Menu({ functions, data }: MenuProps) {
         const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
         fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
         logger.success("Song downloaded")
-        Analytics.userSongs('download', { name: songName, page: 'player' })
+        Analytics.userSongs('download', { page: 'player' })
     }
     const createFolder = useCallback(async () => {
         const name = await asyncPrompt("Write the folder name")

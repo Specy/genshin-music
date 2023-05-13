@@ -100,15 +100,7 @@ export function FloatingDropdownRow({ children, onClick, style }: FloatingDropdo
         ariaLabel="Floating Dropdown Button"
         className='row row-centered'
         style={{ padding: "0.4rem", minWidth: "unset", ...style }}
-        onClick={(e) => {
-            if(!onClick) return
-            //disables enter key from triggering onClick again
-            e.preventDefault()
-            e.stopPropagation()
-            //@ts-ignore
-            e.target.blur?.()
-            onClick()
-        }}
+        onClick={onClick}
     >
         {children}
     </AppButton>

@@ -27,4 +27,5 @@ const config = pwa({
     unoptimized: true,
   },
 })
+
 export default withBundleAnalyzer(config)
