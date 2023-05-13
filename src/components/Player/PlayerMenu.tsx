@@ -183,6 +183,7 @@ function Menu({ functions, data }: MenuProps) {
             const date = new Date().toISOString().split('T')[0]
             const folders = await _folderService.getFolders()
             const files = [...folders, ...toDownload]
+            if(files.length === 0) return logger.warn("There are no songs to backup")
             fileService.downloadFiles(files, `${APP_NAME}_Backup_${date}`)
             logger.success("Song backup downloaded")
             settingsService.setLastBackupWarningTime(Date.now())
@@ -286,7 +287,7 @@ function Menu({ functions, data }: MenuProps) {
                 />
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <Link href='midi-setup'>
+                        <Link href='keybinds'>
                             <AppButton style={{ width: 'fit-content' }}>
                                 Connect MIDI keyboard
                             </AppButton>

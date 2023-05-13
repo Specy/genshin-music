@@ -62,7 +62,6 @@ export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,
             >
             </Sprite>
         })}
-
     </Container>
 }
 

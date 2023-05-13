@@ -33,7 +33,8 @@
 		padding: unset;
 		aspect-ratio: 1.5;
 	}
-	.frame-outer-smaller{
+
+	.frame-outer-smaller {
 		padding: unset;
 		aspect-ratio: 1.8;
 	}
@@ -73,4 +74,18 @@
 	background-color: #606876;
 	border-radius: 50%;
 	opacity: 0.5;
+}
+
+@media print {
+	.frame-outer {
+		background-color: transparent;
+		border: solid 0.2rem var(--primary)
+	}
+
+	.frame-outer-background {
+		background-color: transparent !important;
+		background: transparent !important;
+	}
+
+
 }

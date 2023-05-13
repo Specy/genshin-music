@@ -126,8 +126,8 @@ export default function Backup() {
             Transfer from other domain
         </h1>
         <div>
-            If you want to transfer your data from another domain of the app 
-            <Link href={"transfer"} style={{marginLeft: "1rem"}}>
+            If you want to transfer your data from another domain of the app
+            <Link href={"transfer"} style={{ marginLeft: "1rem" }}>
                 <AppButton cssVar="accent" style={{ gap: "0.2rem" }}>
                     Transfer
                 </AppButton>
@@ -151,8 +151,10 @@ export default function Backup() {
                     if (!folders) return
                     const themes = await validateThemes()
                     if (!themes) return
+                    const files = [...songs, ...folders, ...themes]
+                    if (files.length === 0) return logger.warn("There is nothing to backup")
                     fileService.downloadFiles(
-                        [...songs, ...folders, ...themes],
+                        files,
                         `${getDateString()}-all.${APP_NAME.toLowerCase()}backup.json`,
                     )
                     logger.success("Downloaded backup")
@@ -171,8 +173,10 @@ export default function Backup() {
                     if (!songs) return
                     const folders = await validateFolders()
                     if (!folders) return
+                    const files = [...songs, ...folders]
+                    if (files.length === 0) return logger.warn("There are no songs to backup")
                     fileService.downloadFiles(
-                        [...songs, ...folders],
+                        files,
                         `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup.json`,
                     )
                     logger.success("Downloaded songs backup")
@@ -188,6 +192,7 @@ export default function Backup() {
                 onClick={async () => {
                     const themes = await validateThemes()
                     if (!themes) return
+                    if (themes.length === 0) return logger.warn("There are no themes to backup")
                     fileService.downloadFiles(
                         themes,
                         `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup.json`,

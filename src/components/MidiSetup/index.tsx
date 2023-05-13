@@ -3,14 +3,12 @@ import { MIDISettings } from "$lib/BaseSettings"
 import BaseNote from "$cmp/Miscellaneous/BaseNote"
 import { Component } from 'react'
 import { INSTRUMENTS } from "$config"
-import Shortcut from "$cmp/Inputs/Shortcut"
+import Shortcut from "$cmp/MidiSetup/Shortcut"
 import {logger} from "$stores/LoggerStore";
 import type { MIDINote } from "$lib/Utilities"
 import { InstrumentName } from "$types/GeneralTypes"
 import { MIDIEvent, MIDIProvider } from "$lib/Providers/MIDIProvider"
 import { AudioProvider } from "$lib/Providers/AudioProvider"
-import { DefaultPage } from "$cmp/Layout/DefaultPage"
-import { Title } from '$cmp/Miscellaneous/Title'
 import { AudioPlayer } from '$lib/AudioPlayer'
 import { InstrumentData } from '$lib/Songs/SongClasses'
 import Instrument from '$lib/Instrument'
@@ -162,8 +160,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
 
     render() {
         const { settings, sources, selectedShortcut, selectedSource } = this.state
-        return <DefaultPage>
-            <Title text="MIDI Setup" description='Setup the MIDI devices connected to your browser and change the shortcuts/keybinds for each key'/>
+        return <>
             <div className={`column ${s['midi-setup-column']}`}>
                 <div>
                     Select MIDI device:
@@ -203,7 +200,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                 </div>
                 <div className={s['midi-shortcuts-wrapper']}>
                     <div style={{ fontSize: '1.5rem' }}>
-                        Shortcuts
+                       MIDI Shortcuts
                     </div>
                     <div className={s['midi-shortcuts']}>
                         {settings.shortcuts.map(shortcut =>
@@ -219,6 +216,6 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                     </div>
                 </div>
             </div>
-        </DefaultPage>
+        </>
     }
 }

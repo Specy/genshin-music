@@ -97,28 +97,29 @@ export class VisualSong {
 
     toText(type: NoteNameType) {
         const chunks = this.chunks.map(chunk => chunk.toText(type))
-        let final = ""
-        let empty = 0
+        const tokens: string[] = []
+        let empties = 0
         for(const chunk of chunks){
             if(chunk === ""){
-                empty++
+                empties++
             }else{
-                const voids = Math.round((empty * this.bpm / 60000) / 500)
-                if(voids <= 2) final += "- ".repeat(voids)
-                else final += `\n\n`.repeat(Math.round(voids / 2))
-                final += ` ${chunk}`
+                if(empties){
+                    const voids = Math.round((60000 / (empties * this.bpm)) / THRESHOLDS.pause)
+                    if(voids <= 2) tokens.push(Array.from({length: voids}, () => `-`).join(" "))
+                    else tokens.push(`\n\n`.repeat(Math.round(voids / 2)))
+                    empties = 0
+                }
+                tokens.push(chunk)
             }
         }
-        return final.trim()
+        return tokens.join(" ").trim()
     }
     addChunk(chunk: TempoChunk, delay: number) {
         const numberOfEmptyChunks = Math.floor(delay / THRESHOLDS.pause)
         const emptyChunks = Array.from({ length: numberOfEmptyChunks }, () => new TempoChunk(0, []))
         this.chunks.push(chunk, ...emptyChunks)
     }
-
 }
-
 
 
 class TempoChunkNote {
@@ -143,7 +144,12 @@ const TEMPO_CHANGERS = new Map<number, string>([
     [2, "~"],
     [3, "^"],
 ])
-
+const TEMPO_CHANGER_2 = new Map<number, string[]>([
+    [0, ["", ""]],
+    [1, ["(", ")"]],
+    [2, ["[", "]"]],
+    [3, ["{", "}"]],
+])
 
 class TempoChunkColumn {
     notes: TempoChunkNote[]
@@ -182,12 +188,10 @@ export class TempoChunk {
         )
     }
     toText(type: NoteNameType) {
-        const changer = TEMPO_CHANGERS.get(this.tempoChanger) ?? ""
-        const notes = this.columns.map(column => column.toText(type)).join(" ")
-        if (changer !== "") {
-            return `${changer}[${notes}]`
-        }
-        return notes
+        const [start, end] = TEMPO_CHANGER_2.get(this.tempoChanger) ?? ["", ""]
+        const notes = this.columns.map(column => column.toText(type)).join(" ").trim()
+        if(!notes) return ""
+        return `${start}${notes}${end}`
     }
 }
 

@@ -281,7 +281,7 @@ function Menu({ data, functions }: MenuProps) {
                     />
                     <div className='settings-row-wrap'>
                         {IS_MIDI_AVAILABLE &&
-                            <Link href={"midi-setup"}>
+                            <Link href={"keybinds"}>
                                 <AppButton
                                     style={{ width: 'fit-content' }}
                                 >

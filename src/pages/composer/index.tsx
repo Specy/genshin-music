@@ -649,8 +649,14 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const history = undoHistory.pop()
         if (!history) return
         song.columns = history
-        song.selected = song.columns.length > song.selected ? song.selected : song.columns.length - 1
-        this.setState({ undoHistory: [...undoHistory], song })
+        song.selected = (song.columns.length > song.selected) ? song.selected : song.columns.length - 1
+        this.setState({ undoHistory: [...undoHistory], song }, () => {
+            setTimeout(() => {
+                if(!this.mounted) return
+                //TODO not sure why this is needed but it doesn't render
+                this.setState({})
+            }, 100)
+        })
     }
     copyColumns = (layer: number | 'all') => {
         const { selectedColumns, song } = this.state

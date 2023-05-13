@@ -159,7 +159,7 @@
 	width: 100%;
 	padding: 0.4rem;
 	color: var(--background-text);
-	padding-top: 0.5rem;
+	padding-top: 0rem;
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
@@ -261,7 +261,6 @@
 	display: flex;
 	justify-content: center;
 	margin-top: auto;
-	padding-top: 0.3rem;
 }
 .home-app-scaling *, .home-dont-show-again *{
 	white-space:nowrap;
@@ -382,13 +381,17 @@
 		font-size: 0.8rem;
 	}
 	.home-separator{
-		margin-top: 0.8rem;
+		margin-top: 0.6rem;
 	}
 	.home-content-element{
-		min-height: 9rem;
+		min-height: 8.5rem;
 	}
+	.home-content-title{
+		font-size: 1.1rem;
+	}
+
 	.page-redirect-wrapper{
-		margin-top: 0.6rem;
+		margin-top: 0.4rem;
 	}
 	.middle-size-pages-wrapper{
 		margin-top: 0.8rem;

@@ -1,5 +1,5 @@
 import { AppButton } from "$cmp/Inputs/AppButton"
-import s from '$pages/midi-setup/MidiSetup.module.css'
+import s from './MidiSetup.module.css'
 interface ShortcutProps {
     status: string
     onClick: (data: string) => void

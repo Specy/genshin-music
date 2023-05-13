@@ -43,7 +43,9 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
         KeyboardProvider.register("Enter", () => {
             asyncPromptStore.answerConfirm(true)
         }, { id: 'AsyncConfirm' })
-        return () => KeyboardProvider.unregisterById('AsyncConfirm')
+        return () => {
+            KeyboardProvider.unregisterById('AsyncConfirm')
+        }
     }, [cancellable, deferred])
 
     function onOverlayClick(e: React.MouseEvent<HTMLDivElement>) {

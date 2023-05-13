@@ -242,7 +242,7 @@ body {
 	width: 100%;
 	height: 100%;
 	background-color: rgba(var(--primary-rgb), 0.7);
-	position: absolute;
+	position: fixed;
 	top: 0;
 	left: 0;
 	z-index: 1000;
@@ -437,7 +437,6 @@ a {
 
 .default-page {
 	display: flex;
-	overflow-y: auto;
 	max-height: 100%;
 	width: 100%;
 	padding: 2rem 20vw;

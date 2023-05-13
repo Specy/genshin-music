@@ -13,6 +13,7 @@ import { logger } from "$/stores/LoggerStore";
 import { ShortcutEditor } from "$/components/Keybinds/ShortcutEditor";
 import { useDefaultConfig } from "$/lib/Hooks/useConfig";
 import svs from "$cmp/VsrgPlayer/VsrgPlayerKeyboard.module.css"
+import MidiSetup from "$cmp/MidiSetup";
 
 
 const baseInstrument = new Instrument()
@@ -53,6 +54,10 @@ export default function Keybinds() {
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
     return <DefaultPage>
         <Title text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys" />
+        <h1>
+            MIDI keybinds
+        </h1>
+        <MidiSetup />
         {!IS_MOBILE
             ? <>
                 <h1>

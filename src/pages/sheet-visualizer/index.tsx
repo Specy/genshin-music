@@ -4,27 +4,19 @@ import { APP_NAME, NOTE_NAME_TYPES, NoteNameType } from '$config'
 import { isComposedOrRecorded } from '$lib/Utilities'
 import Switch from '$cmp/Inputs/Switch'
 import Analytics from '$lib/Stats'
-import { RecordedSong } from '$lib/Songs/RecordedSong'
-import { RecordedNote } from '$lib/Songs/SongClasses'
 import { AppButton } from '$cmp/Inputs/AppButton'
 import { logger } from '$stores/LoggerStore'
 import { SerializedSong } from '$lib/Songs/Song'
 import { SheetVisualiserMenu } from '$cmp/SheetVisualizer/Menu'
-import { SheetFrame } from '$cmp/SheetVisualizer/SheetFrame'
-import { Chunk, VisualSong } from '$lib/Songs/VisualSong'
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import { songService } from '$lib/Services/SongService'
-import { ComposedSong } from '$lib/Songs/ComposedSong'
 import { useTheme } from '$lib/Hooks/useTheme'
-import Instrument from '$lib/Instrument'
 import { Select } from '$cmp/Inputs/Select'
 import s from "./SheetVisualizer.module.css"
 import { SheetFrame2 } from '$cmp/SheetVisualizer/SheetFrame2'
-const THRESHOLDS = {
-    joined: 50,
-    pause: 400,
-}
+import { VisualSong } from '$lib/Songs/VisualSong'
+
 /*
 
             const lostReference = temp instanceof RecordedSong ? temp : (temp as ComposedSong).toRecordedSong()
@@ -70,6 +62,7 @@ export default function SheetVisualizer() {
     const [songAsText, setSongAstext] = useState('')
     const [keyboardLayout, setKeyboardLayout] = useState<NoteNameType>(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC')
     const ref = useRef<HTMLDivElement>(null)
+
     function setFrames(amount: number) {
         if (!ref.current) return
         const newAmount = framesPerRow + amount
@@ -105,7 +98,6 @@ export default function SheetVisualizer() {
         if (currentSong) loadSong(currentSong, keyboardLayout)
     }, [currentSong, hasText, keyboardLayout, loadSong])
     return <DefaultPage
-        style={{ overflowY: 'scroll' }}
         excludeMenu={true}
         menu={
             <SheetVisualiserMenu
@@ -115,7 +107,6 @@ export default function SheetVisualizer() {
         }
     >
         <Title text="Sheet Visualizer" description='Learn a sheet in a visual way, convert the song into text format or print it as pdf' />
-
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <div className={`${s['visualizer-buttons-wrapper']} noprint`}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -143,7 +134,7 @@ export default function SheetVisualizer() {
                     </button>
                 </div>
             </div>
-            <h1 className='onprint'>
+            <h1 className='onprint' style={{ color: "black" }}>
                 {currentSong ? currentSong?.name : ''}
             </h1>
             <div style={{ width: '100%' }} className='noprint'>

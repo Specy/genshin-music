@@ -50,6 +50,7 @@ export function ThemeProviderWrapper({ children }: Props) {
             {`
                 :root{
                     --background: ${theme.get('background').toString()};
+                    --primary: ${theme.get('primary').toString()};
                     --background-text: ${theme.getText('background')};
                 }
             `}

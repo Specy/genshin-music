@@ -11,7 +11,7 @@ interface PageProps {
 export function DefaultPage({ excludeMenu = false, children, className = "", style, menu, cropped = true }: PageProps) {
     const pageStyle = !cropped ? { ...style, padding: 0 } : style
     return <div className={"default-page " + className} style={pageStyle}>
-        {(!excludeMenu || menu) && <SimpleMenu />}
+        {(!excludeMenu || !menu) && <SimpleMenu />}
         {menu}
         <div className="default-content appear-on-mount">
             {children}

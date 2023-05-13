@@ -55,7 +55,10 @@
 		border: solid 4px black;
 		border-style: inset;
 	}
-
+	.text-notation-wrapper{
+		background-color: transparent;
+		color: black;
+	}
 	.frame-outer {
 		border: solid 1px black;
 	}
