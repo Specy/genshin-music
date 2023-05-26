@@ -29,6 +29,7 @@ import { SettingUpdate } from "$types/SettingsPropriety";
 import { logger } from "$stores/LoggerStore";
 import isMobile from "is-mobile";
 import { useDefaultConfig } from "$lib/Hooks/useConfig";
+import { APP_NAME } from "$config";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -246,7 +247,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.getOneSerializedFromStorable(data)
                     if(!song) return logger.error("Could not find song")
-                    fileService.downloadSong(song, data.name)
+                    fileService.downloadSong(song, `${data.name}.${APP_NAME.toLowerCase()}sheet`)
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />

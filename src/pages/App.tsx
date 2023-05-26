@@ -49,9 +49,8 @@ function AppBase() {
 		setHasVisited(hasVisited === 'true')
 		checkIfneedsUpdate()
 		linkServices()
-		const lastBackupWarning = settingsService.getLastBackupWarningTime()
-		//if the last backup warning was more than 2 weeks ago, show the backup warning
-		if (lastBackupWarning > 0 && Date.now() - lastBackupWarning > 1000 * 60 * 60 * 24 * 14) {
+		const shouldShowBakcupWarning = settingsService.shouldShowBackupWarning(1000 * 60 * 60 * 24 * 14)
+		if (shouldShowBakcupWarning) {
 			logger.warn("You haven't backed up your songs in a while, remember to download the backup sometimes!", 8000)
 			settingsService.setLastBackupWarningTime(Date.now())
 		}

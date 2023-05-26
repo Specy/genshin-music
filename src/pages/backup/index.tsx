@@ -155,7 +155,7 @@ export default function Backup() {
                     if (files.length === 0) return logger.warn("There is nothing to backup")
                     fileService.downloadFiles(
                         files,
-                        `${getDateString()}-all.${APP_NAME.toLowerCase()}backup.json`,
+                        `${getDateString()}-all.${APP_NAME.toLowerCase()}backup`,
                     )
                     logger.success("Downloaded backup")
                     settingsService.setLastBackupWarningTime(Date.now())
@@ -177,7 +177,7 @@ export default function Backup() {
                     if (files.length === 0) return logger.warn("There are no songs to backup")
                     fileService.downloadFiles(
                         files,
-                        `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup.json`,
+                        `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup`,
                     )
                     logger.success("Downloaded songs backup")
                     settingsService.setLastBackupWarningTime(Date.now())
@@ -195,7 +195,7 @@ export default function Backup() {
                     if (themes.length === 0) return logger.warn("There are no themes to backup")
                     fileService.downloadFiles(
                         themes,
-                        `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup.json`,
+                        `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup`,
                     )
                     logger.success("Downloaded themes backup")
                 }}

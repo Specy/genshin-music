@@ -184,7 +184,7 @@ function Menu({ functions, data }: MenuProps) {
             const folders = await _folderService.getFolders()
             const files = [...folders, ...toDownload]
             if(files.length === 0) return logger.warn("There are no songs to backup")
-            fileService.downloadFiles(files, `${APP_NAME}_Backup_${date}`)
+            fileService.downloadFiles(files, `${APP_NAME}_Backup_${date}.${APP_NAME.toLowerCase()}backup`)
             logger.success("Song backup downloaded")
             settingsService.setLastBackupWarningTime(Date.now())
         } catch (e) {

@@ -14,6 +14,7 @@ import { themeStore } from "$stores/ThemeStore/ThemeStore"
 import { AppError } from "../Errors"
 import { SerializedSongKind } from "$/types/SongTypes"
 import { logger } from "$stores/LoggerStore"
+import { APP_NAME } from "$config"
 export type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedSong | SerializedVsrgSong
 export type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded | SerializedFolder | SerializedTheme
 export type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
@@ -228,8 +229,7 @@ export class FileService {
         return files
     }
     downloadFiles(files: UnknownFileTypes[], fileName: string) {
-        fileName = fileName.replace(".json", "")
-        FileDownloader.download(JSON.stringify(files), `${fileName}.json`)
+        FileDownloader.download(JSON.stringify(files), fileName)
     }
     downloadObject(file: object, fileName: string) {
         FileDownloader.download(JSON.stringify(file), `${fileName}.json`)
@@ -253,7 +253,7 @@ export class FileService {
         )
     }
     downloadTheme(theme: SerializedTheme, fileName?: string) {
-        fileName = (fileName || `${theme.other.name}.theme`).replace(".json", "")
+        fileName = (fileName || `${theme.other.name}.${APP_NAME.toLowerCase()}theme`)
         this.downloadFiles([theme], fileName)
     }
 }

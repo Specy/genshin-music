@@ -8,6 +8,9 @@ class SettingsService {
     public setLastBackupWarningTime(time: number) {
         localStorage.setItem(APP_NAME + "_LastBackupWarningTime", time.toString())
     }
+    public setLastStateEdit(time: number) {
+        localStorage.setItem(APP_NAME + "_LastStateEdit", time.toString())
+    }
     public getLastBackupWarningTime() {
         const time = localStorage.getItem(APP_NAME + "_LastBackupWarningTime")
         if (time) {
@@ -17,6 +20,23 @@ class SettingsService {
         return -1
     }
 
+    public getLastStateEdit() {
+        const time = localStorage.getItem(APP_NAME + "_LastStateEdit")
+        if (time) {
+            return parseInt(time)
+        }
+        this.setLastStateEdit(Date.now())
+        return -1
+    }
+    //2 weeks
+    public shouldShowBackupWarning(elapsedTime = 1000 * 60 * 60 * 24 * 14) {
+        const time = this.getLastBackupWarningTime()
+        const lastEdit = this.getLastStateEdit()
+        if (time === -1 || lastEdit === -1) return false
+        const timeSinceLastEdit = Date.now() - lastEdit
+        const timeSinceLastBackup = Date.now() - time
+        return timeSinceLastEdit > elapsedTime && timeSinceLastBackup > elapsedTime
+    }
     private getLatestSettings<T>(baseSettings: BaseSettings<T>, keyName: string) {
         const json = localStorage?.getItem(keyName)
         const result = {

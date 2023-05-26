@@ -16,7 +16,6 @@ interface FloatingDropdownProps {
     ignoreClickOutside?: boolean
     onClose?: () => void
 }
-const defaultBounds = {...DEFAULT_DOM_RECT}
 export function FloatingDropdown({
     children,
     Icon,
@@ -39,7 +38,10 @@ export function FloatingDropdown({
         const el = ref.current
         if (!el) return
         const bounds = el.getBoundingClientRect()
-        setOverflows(bounds.top + bounds.height > (window.innerHeight ?? 0) )
+        const overflowsBottom = bounds.top + bounds.height > (window.innerHeight ?? 0)
+        const overflowsTop = (bounds.top - bounds.height - 2 * 16) < 0
+        //if it overflows on top, force it to overflow on bottom
+        setOverflows(overflowsTop ? false : overflowsBottom)
     }, [isActive, ref])
     const transform = `translateX(calc(-100% + ${offset}rem)) ${overflows ? `translateY(calc(-100% - 2rem))` : ""}`
     return <div className={`${className} floating-dropdown ${isActive ? "floating-dropdown-active" : ""}`}>

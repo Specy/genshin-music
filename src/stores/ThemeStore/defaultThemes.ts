@@ -2,7 +2,9 @@ import { SerializedTheme } from "./ThemeProvider"
 import Rainy_Theme from "$img/themes/Rainy_Theme.png"
 import Liyue_Theme from "$img/themes/Liyue_Theme.jpg"
 import Snow_Theme from "$img/themes/Snow_Theme.gif"
-import cloneDeep from "lodash.clonedeep"
+import Legacy_Bg from "$img/themes/Legacy_Bg_Theme.png"
+import Desert_Theme from "$img/themes/Desert_Theme.jpg"
+
 import { BASE_THEME_CONFIG } from "$config"
 
 
@@ -65,20 +67,20 @@ const baseThemes: SerializedTheme[] = [
                 value: "rgb(13, 6, 33)",
                 text: "#edeae5"
             },
-        composer_main_layer: {
-            name: "composer_main_layer",
-            css: "composer-main-layer",
-            value: "#d3bd8e",
-            text: BASE_THEME_CONFIG.text.dark
-        },
-        composer_secondary_layer: {
-            name: "composer_secondary_layer",
-            css: "composer-secondary-layer",
-            value: "#de6b45",
-            text: BASE_THEME_CONFIG.text.dark
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "#d3bd8e",
+                text: BASE_THEME_CONFIG.text.dark
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "#de6b45",
+                text: BASE_THEME_CONFIG.text.dark
+            }
         }
-        }
-    },{
+    }, {
         editable: false,
         id: "Blue",
         type: 'theme',
@@ -136,18 +138,18 @@ const baseThemes: SerializedTheme[] = [
                 value: "rgb(14, 32, 46)",
                 text: "#edeae5"
             },
-        composer_main_layer: {
-            name: "composer_main_layer",
-            css: "composer-main-layer",
-            value: "#d3bd8e",
-            text: BASE_THEME_CONFIG.text.dark
-        },
-        composer_secondary_layer: {
-            name: "composer_secondary_layer",
-            css: "composer-secondary-layer",
-            value: "#de6b45",
-            text: BASE_THEME_CONFIG.text.dark
-        }
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "#d3bd8e",
+                text: BASE_THEME_CONFIG.text.dark
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "#de6b45",
+                text: BASE_THEME_CONFIG.text.dark
+            }
 
         }
     },
@@ -210,18 +212,18 @@ const baseThemes: SerializedTheme[] = [
                 value: "#203141",
                 text: "#edeae5"
             },
-        composer_main_layer: {
-            name: "composer_main_layer",
-            css: "composer-main-layer",
-            value: "#d3bd8e",
-            text: BASE_THEME_CONFIG.text.dark
-        },
-        composer_secondary_layer: {
-            name: "composer_secondary_layer",
-            css: "composer-secondary-layer",
-            value: "#de6b45",
-            text: BASE_THEME_CONFIG.text.dark
-        }
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "#d3bd8e",
+                text: BASE_THEME_CONFIG.text.dark
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "#de6b45",
+                text: BASE_THEME_CONFIG.text.dark
+            }
 
         }
     },
@@ -284,18 +286,18 @@ const baseThemes: SerializedTheme[] = [
                 value: "rgb(255, 229, 209)",
                 text: "#151414"
             },
-        composer_main_layer: {
-            name: "composer_main_layer",
-            css: "composer-main-layer",
-            value: "#d3bd8e",
-            text: BASE_THEME_CONFIG.text.dark
-        },
-        composer_secondary_layer: {
-            name: "composer_secondary_layer",
-            css: "composer-secondary-layer",
-            value: "#de6b45",
-            text: BASE_THEME_CONFIG.text.dark
-        }
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "#d3bd8e",
+                text: BASE_THEME_CONFIG.text.dark
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "#de6b45",
+                text: BASE_THEME_CONFIG.text.dark
+            }
 
         }
     },
@@ -358,18 +360,18 @@ const baseThemes: SerializedTheme[] = [
                 value: "#141a14",
                 text: "#edeae5"
             },
-        composer_main_layer: {
-            name: "composer_main_layer",
-            css: "composer-main-layer",
-            value: "#d3bd8e",
-            text: BASE_THEME_CONFIG.text.dark
-        },
-        composer_secondary_layer: {
-            name: "composer_secondary_layer",
-            css: "composer-secondary-layer",
-            value: "#de6b45",
-            text: BASE_THEME_CONFIG.text.dark
-        }
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "#d3bd8e",
+                text: BASE_THEME_CONFIG.text.dark
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "#de6b45",
+                text: BASE_THEME_CONFIG.text.dark
+            }
 
         }
     },
@@ -431,18 +433,18 @@ const baseThemes: SerializedTheme[] = [
                 value: "rgb(0, 0, 0)",
                 text: "#edeae5"
             },
-        composer_main_layer: {
-            name: "composer_main_layer",
-            css: "composer-main-layer",
-            value: "#d3bd8e",
-            text: BASE_THEME_CONFIG.text.dark
-        },
-        composer_secondary_layer: {
-            name: "composer_secondary_layer",
-            css: "composer-secondary-layer",
-            value: "#de6b45",
-            text: BASE_THEME_CONFIG.text.dark
-        }
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "#d3bd8e",
+                text: BASE_THEME_CONFIG.text.dark
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "#de6b45",
+                text: BASE_THEME_CONFIG.text.dark
+            }
 
         }
     },
@@ -451,8 +453,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Eons of time",
         type: "theme",
         other: {
-            backgroundImageMain: "https://cdn.discordapp.com/attachments/1032573337823625326/1044395721916416040/firstBackgroundDay.jpg",
-            backgroundImageComposer: "https://cdn.discordapp.com/attachments/1032573337823625326/1044395721916416040/firstBackgroundDay.jpg",
+            backgroundImageMain: Desert_Theme.src,
+            backgroundImageComposer: Desert_Theme.src,
             name: "Eons of times"
         },
         data: {
@@ -504,18 +506,90 @@ const baseThemes: SerializedTheme[] = [
                 value: "#453427d9",
                 text: "#edeae5"
             },
-        composer_main_layer: {
-            name: "composer_main_layer",
-            css: "composer-main-layer",
-            value: "#d3bd8e",
-            text: BASE_THEME_CONFIG.text.dark
-        },
-        composer_secondary_layer: {
-            name: "composer_secondary_layer",
-            css: "composer-secondary-layer",
-            value: "#de6b45",
-            text: BASE_THEME_CONFIG.text.dark
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "#d3bd8e",
+                text: BASE_THEME_CONFIG.text.dark
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "#de6b45",
+                text: BASE_THEME_CONFIG.text.dark
+            }
         }
+    },
+    {
+        editable: false,
+        id: "2eab2ab9-12ed-3090-cda9",
+        type: "theme",
+        other: {
+            backgroundImageMain: Legacy_Bg.src,
+            backgroundImageComposer: Legacy_Bg.src,
+            name: "Sky Music"
+        },
+        data: {
+            background: {
+                name: "background",
+                css: "background",
+                value: "rgb(57, 66, 72)",
+                text: "#edeae5"
+            },
+            primary: {
+                name: "primary",
+                css: "primary",
+                value: "rgba(23, 23, 23, 0.72)",
+                text: "#edeae5"
+            },
+            secondary: {
+                name: "secondary",
+                css: "secondary",
+                value: "rgb(65, 65, 65)",
+                text: "#edeae5"
+            },
+            accent: {
+                name: "accent",
+                css: "accent",
+                value: "rgb(211, 189, 142)",
+                text: "#151414"
+            },
+            composer_accent: {
+                name: "composer_accent",
+                css: "composer-accent",
+                value: "rgb(42, 140, 132)",
+                text: "#edeae5"
+            },
+            icon_color: {
+                name: "icon_color",
+                css: "icon-color",
+                value: "rgb(211, 189, 142)",
+                text: "#151414"
+            },
+            menu_background: {
+                name: "menu_background",
+                css: "menu-background",
+                value: "rgba(0, 0, 0, 0.50)",
+                text: "#edeae5"
+            },
+            note_background: {
+                name: "note_background",
+                css: "note-background",
+                value: "rgba(33, 33, 33, 0.65)",
+                text: "#edeae5"
+            },
+            composer_main_layer: {
+                name: "composer_main_layer",
+                css: "composer-main-layer",
+                value: "rgb(211, 189, 142)",
+                text: "#151414"
+            },
+            composer_secondary_layer: {
+                name: "composer_secondary_layer",
+                css: "composer-secondary-layer",
+                value: "rgb(222, 107, 69)",
+                text: "#151414"
+            }
         }
     }
 ]

@@ -286,7 +286,7 @@ select {
     transform: scale(1);
     opacity: 1;
     --backdrop-amount: 3px;
-    animation: delayBackdrop 0.4s forwards;
+    animation: delayBackdrop calc(0.4s * 1.2) forwards;
 }
 
 
@@ -513,7 +513,7 @@ select {
     flex-direction: column;
     align-items: flex-start;
     --backdrop-amount: 4px;
-    animation: fadeIn 0.4s, delayBackdrop 0.4s forwards;
+    animation: fadeIn 0.4s, delayBackdrop calc(0.4s * 1.2) forwards;
 }
 .floating-midi-content{
     padding: 0.8rem;

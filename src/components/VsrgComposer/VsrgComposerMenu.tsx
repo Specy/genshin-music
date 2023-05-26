@@ -32,6 +32,7 @@ import { TrackModifier } from "./TrackModifier";
 import { VsrgComposerHelp } from "./VsrgComposerHelp";
 import { logger } from "$stores/LoggerStore";
 import ss from "$cmp/Settings/Settings.module.css"
+import { APP_NAME } from "$config";
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 
 interface VsrgMenuProps {
@@ -355,7 +356,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.getOneSerializedFromStorable(data)
                     if(!song) return logger.error("Could not find song")
-                    fileService.downloadSong(song, data.name)
+                    fileService.downloadSong(song, `${data.name}.${APP_NAME.toLowerCase()}sheet`)
                 }}>
                     <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
                     <FloatingDropdownText text='Download' />

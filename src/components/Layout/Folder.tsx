@@ -8,7 +8,7 @@ import { folderStore } from "$stores/FoldersStore"
 import { asyncConfirm } from "../Utility/AsyncPrompts"
 import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "../Utility/FloatingDropdown"
 import { SerializedSongKind } from "$/types/SongTypes"
-import { FOLDER_FILTER_TYPES } from "$config"
+import { APP_NAME, FOLDER_FILTER_TYPES } from "$config"
 import { capitalize } from "$lib/Utilities"
 import { songService } from "$lib/Services/SongService"
 
@@ -142,7 +142,7 @@ export function SongFolder({ children, backgroundColor, color, headerColor,  dat
                                 return self.findIndex(e => e.id === item.id) === pos;
                             })
                             const files = [...filtered, data.serialize()]
-                            fileService.downloadFiles(files, `${data.name}-folder`)
+                            fileService.downloadFiles(files, `${data.name}-folder.${APP_NAME.toLowerCase()}sheet`)
                         }}
                     >
                         <FaDownload style={{ marginRight: "0.4rem" }} size={14} />

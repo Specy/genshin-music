@@ -127,8 +127,8 @@
 .menu-open {
     transform: scale(1) translateX(calc(var(--panel-size) + var(--menu-size)));
     opacity: 1;
-    --backdrop-amount: 2px;
-    animation: delayBackdrop 0.3s;
+    --backdrop-amount: 4px;
+    animation: delayBackdrop calc(0.3s * 1.2);
     animation-fill-mode: forwards;
 }
 

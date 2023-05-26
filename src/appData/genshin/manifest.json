@@ -25,11 +25,9 @@
       "name": "Import file in genshin music",
       "accept": {
         "application/json": [
-          ".genshinsheet.json",
           ".genshinsheet",
-          ".theme.json",
-          ".genshinbackup.json",
-          ".genshinbackup"
+          ".genshinbackup",
+          ".genshintheme"
         ]
       },
       "icons": [

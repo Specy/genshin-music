@@ -16,7 +16,7 @@
 .home-visible {
 	opacity: 1;
 	--backdrop-amount: 4px;
-	animation: forwards delayBackdrop 0.2s, 0.15s home-appear ease-out;
+	animation: forwards delayBackdrop calc(0.2s * 1.2), 0.15s home-appear ease-out;
 	transform: scale(1);
 }
 .home-padded{
@@ -100,7 +100,7 @@
 .pill-visible{
 	opacity: 1;
 	transform: translateY(0) translateX(50%);
-	animation: delayBackdrop 0.2s forwards;
+	animation: delayBackdrop calc(0.2s * 1.2) forwards;
 }
 .logger-content{
 	display: flex;
