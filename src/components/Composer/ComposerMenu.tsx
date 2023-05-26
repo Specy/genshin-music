@@ -55,10 +55,11 @@ interface MenuProps {
         changeMidiVisibility: (visible: boolean) => void
         startRecordingAudio: (override?: boolean) => void
     }
+    inPreview?: boolean
 }
 export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
-function Menu({ data, functions }: MenuProps) {
+function Menu({ data, functions, inPreview }: MenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const { IS_MIDI_AVAILABLE } = useDefaultConfig()
@@ -168,7 +169,7 @@ function Menu({ data, functions }: MenuProps) {
                 <FaBars />
             </Memoized>
         </div>
-        <div className="menu-wrapper" ref={menuRef}>
+        <div className={`menu-wrapper ${inPreview ? "menu-wrapper-absolute" : ""}`} ref={menuRef}>
 
             <div className={menuClass}>
                 <MenuItem onClick={() => toggleMenu()} className='close-menu' ariaLabel='Close menu'>
@@ -258,7 +259,7 @@ function Menu({ data, functions }: MenuProps) {
                                 Import song sheet
                             </AppButton>
                         </FilePicker>
-    
+
                     </div>
 
                     <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>

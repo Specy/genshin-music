@@ -56,12 +56,13 @@ interface MenuProps {
     data: {
         settings: PlayerSettingsDataType
     }
+    inPreview?: boolean
 }
 
 export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
 
-function Menu({ functions, data }: MenuProps) {
+function Menu({ functions, data, inPreview }: MenuProps) {
     const [songs] = useSongs()
     const [isOpen, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Songs')
@@ -196,7 +197,7 @@ function Menu({ functions, data }: MenuProps) {
     const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
     const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
     const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
-    return <div className="menu-wrapper" ref={menuRef}>
+    return <div className={`menu-wrapper ${inPreview ? "menu-wrapper-absolute" : ""}`} ref={menuRef}>
         <div className="menu menu-visible menu-main-page" >
             {isOpen &&
                 <MenuItem onClick={toggleMenu} className='close-menu' ariaLabel='Close menu'>

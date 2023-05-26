@@ -98,7 +98,9 @@
     flex-direction: row;
     z-index: 11;
 }
-
+.menu-wrapper-absolute{
+    position: absolute;
+}
 .library-search-result-text {
     width: 100%;
     height: 100%;

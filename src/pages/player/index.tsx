@@ -40,7 +40,7 @@ interface PlayerState {
 	speedChanger: typeof SPEED_CHANGERS[number]
 }
 
-class Player extends Component<{}, PlayerState>{
+class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 	state: PlayerState
 	recording: Recording
 	mounted: boolean
@@ -66,10 +66,10 @@ class Player extends Component<{}, PlayerState>{
 		this.setState({ settings })
 		this.mounted = true
 		const instrument = this.state.instruments[0]
-		if(instrument) playerStore.setKeyboardLayout(instrument.notes)
+		if (instrument) playerStore.setKeyboardLayout(instrument.notes)
 		const shortcutDisposer = createShortcutListener("player", "player", ({ shortcut }) => {
 			const { name } = shortcut
-			if(name === "toggle_record") this.toggleRecord()
+			if (name === "toggle_record") this.toggleRecord()
 		})
 		this.cleanup.push(shortcutDisposer)
 		await this.init(settings)
@@ -191,12 +191,12 @@ class Player extends Component<{}, PlayerState>{
 		const newInstruments = await Promise.all(promises) as Instrument[]
 		if (!this.mounted) return
 		const { settings } = this.state
-		if(instruments[0]) {
+		if (instruments[0]) {
 			settings.instrument = { ...settings.instrument, value: instruments[0].name }
 			playerStore.setKeyboardLayout(instruments[0].notes)
 		}
 		logger.hidePill()
-		this.setState({ instruments: newInstruments, settings}, this.updateSettings)
+		this.setState({ instruments: newInstruments, settings }, this.updateSettings)
 	}
 	playSound = (index: number, layers?: NoteLayer) => {
 		const { state } = this
@@ -306,9 +306,9 @@ class Player extends Component<{}, PlayerState>{
 			const recording = await AudioProvider.stopRecording()
 			const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
 			if (!this.mounted || !recording) return
-			try{
+			try {
 				if (fileName) await AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
-			}catch(e){
+			} catch (e) {
 				console.error(e)
 				logger.error("There was an error downloading the audio, maybe it's too big?")
 			}
@@ -322,6 +322,7 @@ class Player extends Component<{}, PlayerState>{
 			<Menu
 				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
 				data={{ settings }}
+				inPreview={this.props.inPreview}
 			/>
 			<div className="right-panel appear-on-mount">
 				<div className="upper-right">
@@ -368,9 +369,8 @@ class Player extends Component<{}, PlayerState>{
 	}
 }
 
-//@ts-ignore
-export default function PlayerPage() {
-	return <Player />
+export default function PlayerPage({ inPreview }: { inPreview?: boolean }) {
+	return <Player  inPreview={inPreview}/>
 }
 
 PlayerPage.getLayout = function getLayout(page: ReactNode) {

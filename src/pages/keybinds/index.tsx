@@ -59,7 +59,7 @@ export default function Keybinds() {
         </h1>
         <MidiSetup />
         {!IS_MOBILE
-            ? <>
+            && <>
                 <h1>
                     Composer shortcuts
                 </h1>
@@ -175,12 +175,6 @@ export default function Keybinds() {
                     )}
                 </div>
             </>
-            : <div 
-                className="row" 
-                style={{width: "100%", height: "100%", justifyContent: "center", alignItems: "center", fontSize: "1.4rem"}}
-            >
-                Mobile version doesn't support keybinds
-            </div>
         }
     </DefaultPage>
 }

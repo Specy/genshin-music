@@ -829,6 +829,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                     hasChanges: this.changes > 0,
                 }}
                 functions={this}
+                inPreview={this.props.inPreview}
             />
             <ComposerTools
                 data={{

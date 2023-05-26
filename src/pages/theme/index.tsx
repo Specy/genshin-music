@@ -187,17 +187,17 @@ function ThemePage() {
             </AppButton>
             {selectedPagePreview === "player" &&
                 <AppBackground page="Main">
-                    <Player />
+                    <Player inPreview={true} />
                 </AppBackground>
             }
             {selectedPagePreview === "composer" &&
                 <AppBackground page="Composer">
-                    <Composer inPreview={true}/>
+                    <Composer inPreview={true} />
                 </AppBackground>
             }
         </div>
         {/*Keep this at the bottom because it gets overwritten by the preview apps above */}
-        <Title text="Themes" description="Change the app theme, set the different colors, backgrounds, opacity and customisations"/>
+        <Title text="Themes" description="Change the app theme, set the different colors, backgrounds, opacity and customisations" />
     </DefaultPage>
 }
 

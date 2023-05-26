@@ -533,7 +533,7 @@ const baseThemes: SerializedTheme[] = [
             background: {
                 name: "background",
                 css: "background",
-                value: "rgb(57, 66, 72)",
+                value: "#0E0E0E",
                 text: "#edeae5"
             },
             primary: {
