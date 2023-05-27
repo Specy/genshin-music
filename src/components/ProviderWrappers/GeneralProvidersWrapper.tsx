@@ -13,6 +13,7 @@ import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
 import { globalConfigStore } from "$stores/GlobalConfig";
 import Logger from '$cmp/Index/Logger'
 import { AsyncPromptWrapper } from '$cmp/Utility/AsyncPrompt';
+import { setupProtocol } from "$lib/Hooks/useWindowProtocol";
 
 interface GeneralProvidersWrapperProps {
     children: React.ReactNode
@@ -32,17 +33,18 @@ export function GeneralProvidersWrapper({ children, onLoaded }: GeneralProviders
         }
     }, [handleAudioContextStateChange, audioContext])
     useEffect(() => {
-        AudioProvider.init()
+        AudioProvider.init().catch(console.error)
         setAudioContext(AudioProvider.getAudioContext())
         metronome.init(AudioProvider.getAudioContext())
         KeyboardProvider.create()
-        MIDIProvider.init()
-        songsStore.sync()
-        folderStore.sync()
-        themeStore.sync()
+        MIDIProvider.init().catch(console.error)
+        songsStore.sync().catch(console.error)
+        folderStore.sync().catch(console.error)
+        themeStore.sync().catch(console.error)
         keyBinds.load()
-        ThemeProvider.load()
+        ThemeProvider.load().catch(console.error)
         globalConfigStore.load()
+        setupProtocol().catch(console.error)
         return () => {
             AudioProvider.destroy()
             KeyboardProvider.destroy()

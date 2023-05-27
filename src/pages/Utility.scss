@@ -68,7 +68,15 @@
         transform: scale(1) var(--existing-transform, );
     }
 }
+@keyframes fadeInOpacity{
+    from {
+        opacity: 0;
+    }
 
+    to {
+        opacity: 1;
+    }
+}
 @keyframes appearLeft {
     from {
         transform: translateX(-0.5rem) var(--existing-transform, );

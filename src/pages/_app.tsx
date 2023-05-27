@@ -128,21 +128,22 @@ export default function App({ Component, pageProps }: AppProps<CustomPageProps>)
 
 			}
 		</Head>
-		<DropZoneProviderWrapper>
-			<ThemeProviderWrapper>
-				<GeneralProvidersWrapper>
-					<ErrorBoundaryRedirect
-						onErrorGoTo="/error"
-						onError={() => logger.error("There was an error with the app!")}
-					>
-						<>
-							<AppBase />
-							{getLayout(<Component {...pageProps} />)}
-						</>
-					</ErrorBoundaryRedirect>
-				</GeneralProvidersWrapper>
-			</ThemeProviderWrapper>
-		</DropZoneProviderWrapper>
+		<ThemeProviderWrapper>
+			<DropZoneProviderWrapper>
+					<GeneralProvidersWrapper>
+						<ErrorBoundaryRedirect
+							onErrorGoTo="/error"
+							onError={() => logger.error("There was an error with the app!")}
+						>
+							<>
+								<AppBase />
+								{getLayout(<Component {...pageProps} />)}
+							</>
+						</ErrorBoundaryRedirect>
+					</GeneralProvidersWrapper>
+			</DropZoneProviderWrapper>
+		</ThemeProviderWrapper>
+
 	</>
 
 

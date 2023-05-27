@@ -2,7 +2,7 @@ import { AppButton } from "$cmp/Inputs/AppButton";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import { Title } from "$cmp/Miscellaneous/Title";
 import { FaFileDownload, FaFileImport, FaTrash } from "react-icons/fa";
-import { useEffect } from 'react'
+import { useEffect, useState } from "react";
 import { songService } from "$lib/Services/SongService";
 import { _themeService } from "$lib/Services/ThemeService";
 import { SerializedSong } from "$lib/Songs/Song";
@@ -22,12 +22,18 @@ import { themeStore } from "$stores/ThemeStore/ThemeStore";
 import { songsStore } from "$stores/SongsStore";
 import { settingsService } from "$lib/Services/SettingsService";
 import Link from "next/link";
-import { BiTransferAlt } from "react-icons/bi"
+import { strToU8, zip } from "fflate";
+import MultiSwitch from "$cmp/Composer/MultiSwitch";
+import { MultipleOptionSlider } from "$cmp/VsrgComposer/MultipleOptionSlider";
+import { useTheme } from "$lib/Hooks/useTheme";
+
+type BackupFormat = 'json' | 'zip'
 export default function Backup() {
+    const [theme] = useTheme()
     const iconStyle = { marginRight: '0.3rem', marginLeft: '-0.4rem' }
     const [songs] = useSongs()
     const userThemes = useObservableArray<SerializedTheme>(themeStore.themes)
-
+    const [downloadFormat, setDownloadFormat] = useState<BackupFormat>('json')
     useEffect(() => {
         return () => logger.hidePill()
     }, [])
@@ -120,27 +126,70 @@ export default function Backup() {
         await themeStore._DANGEROUS_CLEAR_ALL_THEMES()
         logger.success("Deleted all themes")
     }
+    async function downloadFiles(files: UnknownFileTypes[], fileName: string){
+        if(downloadFormat === 'json'){
+            fileService.downloadFiles(files,fileName)
+        }else{
+            try{
+                logger.showPill("Zipping files...")
+                const result = await new Promise<any>((resolve, reject) => {
+                    const fileEntries = files.map(file => {
+                        const nameAndFormat = fileService.getUnknownFileExtensionAndName(file)
+                        if(!nameAndFormat) return [`unknown${Math.floor(Math.random() * 1000)}.${file.type}`, strToU8(JSON.stringify(file))]
+                        const { name, extension} = nameAndFormat
+                        return [`${name}.${extension}`, strToU8(JSON.stringify(file))]
+                    })
+                    zip({
+                        [`${fileName}`]: strToU8(JSON.stringify(files)),
+                        individualFiles: Object.fromEntries(fileEntries)
+                    }, ( err, data) => {
+                        if(err)return reject(err)
+                        fileService.downloadBlob(new Blob([data]),`${fileName}.zip`)
+                        resolve(data)
+                    })
+                })
+                logger.hidePill()
+                return result
+            }catch (e) {
+                logger.hidePill()
+                throw e
+            }
+        }
+    }
     return <DefaultPage>
         <Title text="Backup" description="Manage the backups in the app, download or import songs, themes, or all of them" />
-        <h1>
+        <h1 style={{fontSize: "1.8rem"}}>
             Transfer from other domain
         </h1>
-        <div>
-            If you want to transfer your data from another domain of the app
+        <div style={{gap: "1rem", paddingLeft: '1.5rem'}} className={"row row-centered"}>
+            <div>
+                If you want to transfer your data from another domain of the app, click here
+            </div>
             <Link href={"transfer"} style={{ marginLeft: "1rem" }}>
                 <AppButton cssVar="accent" style={{ gap: "0.2rem" }}>
                     Transfer
                 </AppButton>
             </Link>
         </div>
-        <h1>
-            Backup
-        </h1>
-        <div>
+
+        <div className={"row row-centered"} style={{margin: "1rem 0", gap: "1rem", marginTop: "2rem"}}>
+            <div style={{fontSize: "1.8rem"}}>
+                Backup as
+            </div>
+            <MultipleOptionSlider
+                options={[
+                    { value: "zip", color: theme.getValue("accent").toString()},
+                    { value: "json", color: theme.getValue("accent").toString()},
+                ]}
+                selected={downloadFormat}
+                onChange={setDownloadFormat}
+            />
+        </div>
+        <div style={{paddingLeft: '1.5rem'}}>
             Make sure you create a backup every now and then. Especially if you just finished a new song.
             The browser shouldn't delete your data, especially if you installed the app, but there is always a chance.
         </div>
-        <div className="row" style={{ marginTop: '2rem', gap: "0.5rem" }}>
+        <div className="row" style={{ marginTop: '1rem', gap: "0.5rem", paddingLeft: '1.5rem' }}>
             <AppButton
                 tooltip="Download all the data of the app, aka themes, songs, folders"
                 className="flex-centered"
@@ -153,12 +202,13 @@ export default function Backup() {
                     if (!themes) return
                     const files = [...songs, ...folders, ...themes]
                     if (files.length === 0) return logger.warn("There is nothing to backup")
-                    fileService.downloadFiles(
-                        files,
-                        `${getDateString()}-all.${APP_NAME.toLowerCase()}backup`,
-                    )
-                    logger.success("Downloaded backup")
-                    settingsService.setLastBackupWarningTime(Date.now())
+                    try {
+                        await downloadFiles(files, `${getDateString()}-all.${APP_NAME.toLowerCase()}backup`)
+                        logger.success("Downloaded backup")
+                        settingsService.setLastBackupWarningTime(Date.now())
+                    } catch (e) {
+                        logger.error("Error downloading backup")
+                    }
                 }}
             >
                 <FaFileDownload style={iconStyle} />
@@ -175,12 +225,14 @@ export default function Backup() {
                     if (!folders) return
                     const files = [...songs, ...folders]
                     if (files.length === 0) return logger.warn("There are no songs to backup")
-                    fileService.downloadFiles(
-                        files,
-                        `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup`,
-                    )
-                    logger.success("Downloaded songs backup")
-                    settingsService.setLastBackupWarningTime(Date.now())
+                    try {
+                        await downloadFiles(files, `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup`)
+                        logger.success("Downloaded songs backup")
+                        settingsService.setLastBackupWarningTime(Date.now())
+                    }catch (e) {
+                        logger.error("Error downloading backup")
+                        console.error(e)
+                    }
                 }}
             >
                 <FaFileDownload style={iconStyle} />
@@ -193,19 +245,23 @@ export default function Backup() {
                     const themes = await validateThemes()
                     if (!themes) return
                     if (themes.length === 0) return logger.warn("There are no themes to backup")
-                    fileService.downloadFiles(
-                        themes,
-                        `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup`,
-                    )
-                    logger.success("Downloaded themes backup")
+                    try {
+                        await downloadFiles(themes, `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup`)
+                        logger.success("Downloaded themes backup")
+                    }catch (e) {
+                        logger.error("Error downloading backup")
+                        console.error(e)
+                    }
                 }}
             >
                 <FaFileDownload style={iconStyle} />
-
                 Download themes backup
             </AppButton>
         </div>
-        <div style={{ marginTop: '2rem' }}>
+        <h1 style={{fontSize: "1.8rem"}}>
+            Import a backup
+        </h1>
+        <div style={{paddingLeft: '1.5rem'}}>
             If you have a backup, you can import it here, they will be added to your existing data. (if you already have the same song,
             a duplicate will be created).
         </div>
@@ -252,11 +308,14 @@ export default function Backup() {
                 </span>
             </div>
         </div>
-        <div style={{ marginTop: '1rem' }}>
+        <h1 style={{fontSize: "1.8rem"}}>
+            Delete data
+        </h1>
+        <div style={{paddingLeft: '1.5rem'}}>
             If you want, you can also delete all your data here, once deleted it can't be recovered.
             Don't worry you will be asked to confirm before anything is deleted.
         </div>
-        <div className="row" style={{ marginTop: '1rem', gap: "0.5rem" }}>
+        <div className="row" style={{ marginTop: '1rem', gap: "0.5rem", paddingLeft: '1.5rem' }}>
             <AppButton
                 className="flex-centered"
                 tooltip="Here you can delete all your songs and folders"

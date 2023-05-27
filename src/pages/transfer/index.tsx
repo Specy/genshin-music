@@ -2,7 +2,7 @@ import { AppButton } from "$cmp/Inputs/AppButton";
 import { Select } from "$cmp/Inputs/Select";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import { APP_NAME } from "$config";
-import { protocol } from "$lib/Hooks/useWindowProtocol";
+import { protocol, setupProtocol } from "$lib/Hooks/useWindowProtocol";
 import { logger } from "$stores/LoggerStore";
 import { useState, useEffect, useCallback } from "react";
 import s from "./transfer.module.css"
@@ -11,8 +11,8 @@ import { UnknownFileTypes, fileService } from "$lib/Services/FileService";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
+    `https://beta.${APP_NAME.toLowerCase()}-music.specy.app`,
     `https://specy.github.io/${APP_NAME.toLowerCase()}Music`,
-    'http://localhost:3000'
 ]
 
 export default function TransferData() {
@@ -30,7 +30,9 @@ export default function TransferData() {
         try {
             setError("")
             setImportedData([])
+            console.log(frame)
             await protocol.connect(frame.contentWindow!)
+            console.log("connected")
             const data = await protocol.ask("getAppData", undefined)
             setImportedData(Array.isArray(data) ? data : [data])
         } catch (e) {
@@ -46,6 +48,7 @@ export default function TransferData() {
         const filtered = domains.filter(d => d !== window.location.origin)
         setSelectedDomain(filtered[0])
         setValidDomains(filtered)
+        setupProtocol().catch(console.error)
     }, [])
 
     return <DefaultPage>
@@ -73,6 +76,9 @@ export default function TransferData() {
                     Import
                 </AppButton>
             </div>
+            {importedData.length === 0 &&
+                <h2>No data to import</h2>
+            }
             {importedData.length > 0 && <>
                 {error
                     ? <>

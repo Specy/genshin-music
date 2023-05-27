@@ -522,7 +522,7 @@ const baseThemes: SerializedTheme[] = [
     },
     {
         editable: false,
-        id: "2eab2ab9-12ed-3090-cda9",
+        id: "Sky Music",
         type: "theme",
         other: {
             backgroundImageMain: Legacy_Bg.src,
@@ -533,7 +533,7 @@ const baseThemes: SerializedTheme[] = [
             background: {
                 name: "background",
                 css: "background",
-                value: "#0E0E0E",
+                value: "rgb(49 49 49)",
                 text: "#edeae5"
             },
             primary: {

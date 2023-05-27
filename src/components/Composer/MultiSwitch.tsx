@@ -3,7 +3,7 @@ import { ReactNode, memo } from "react"
 interface MultiSwitchProps<T extends ReactNode> {
     options: readonly T[]
     selected: T
-    buttonsClass: string
+    buttonsClass?: string
     onSelect: (selected: T) => void
 }
 

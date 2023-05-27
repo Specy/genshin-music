@@ -55,7 +55,7 @@ export function ThemeProviderWrapper({ children }: Props) {
                 }
             `}
         </style>
-        <div style={{ ...obj, display: 'flex', width: "100%", height: "100%" }}>
+        <div style={{  display: 'flex', width: "100%", flex: 1, ...obj }}>
             {children}
         </div>
     </>

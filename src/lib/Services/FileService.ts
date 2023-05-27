@@ -256,6 +256,35 @@ export class FileService {
         fileName = (fileName || `${theme.other.name}.${APP_NAME.toLowerCase()}theme`)
         this.downloadFiles([theme], fileName)
     }
+    getUnknownFileExtensionAndName(file: UnknownFileTypes) {
+        const type = file.type
+        switch (type){
+            case "vsrg":
+            case "composed":
+            case "recorded":
+                return {
+                    extension: `${APP_NAME.toLowerCase()}sheet`,
+                    name: file.name
+                }
+            case "folder":
+                return {
+                    extension: `${APP_NAME.toLowerCase()}folder`,
+                    name: file.name
+                }
+            case "theme":
+                return {
+                    extension: `${APP_NAME.toLowerCase()}theme`,
+                    name: file.other.name
+                }
+            case "midi":
+                return {
+                    extension: "mid",
+                    name: file.name
+                }
+            default:
+                return null
+        }
+    }
 }
 
 

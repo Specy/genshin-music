@@ -45,6 +45,7 @@ import { settingsService } from '$lib/Services/SettingsService';
 import { useDefaultConfig } from '$lib/Hooks/useConfig';
 import { createShortcutListener } from '$stores/KeybindsStore';
 import sh from '$cmp/HelpTab/HelpTab.module.css'
+import { themeStore } from "$stores/ThemeStore/ThemeStore";
 interface MenuProps {
     functions: {
         addSong: (song: RecordedSong | ComposedSong) => void
@@ -197,6 +198,8 @@ function Menu({ functions, data, inPreview }: MenuProps) {
     const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
     const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
     const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
+    const layer1ColorText = theme.getTextColorFromBackground(layer1Color)
+    const layer2ColorText = theme.getTextColorFromBackground(layer2Color)
     return <div className={`menu-wrapper ${inPreview ? "menu-wrapper-absolute" : ""}`} ref={menuRef}>
         <div className="menu menu-visible menu-main-page" >
             {isOpen &&
@@ -222,6 +225,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
         </div>
         <div className={sideClass}>
             <MenuPanel title="No selection" current={selectedMenu} id='No selection'>
+                Select a menu
             </MenuPanel>
             <MenuPanel current={selectedMenu} id='Songs'>
                 <div className="songs-buttons-wrapper">
@@ -240,7 +244,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                             }
                         </ul>
                     </HelpTooltip>
-                    <Link href='composer' style={{ marginLeft: 'auto' }}>
+                    <Link href='/composer' style={{ marginLeft: 'auto' }}>
                         <AppButton>
                             Compose song
                         </AppButton>
@@ -288,13 +292,13 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                 />
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <Link href='keybinds'>
+                        <Link href='/keybinds'>
                             <AppButton style={{ width: 'fit-content' }}>
                                 Connect MIDI keyboard
                             </AppButton>
                         </Link>
                     }
-                    <Link href='theme'>
+                    <Link href='/theme'>
                         <AppButton style={{ width: 'fit-content' }}>
                             Change app theme
                         </AppButton>
@@ -326,7 +330,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                 <div className='library-search-row' >
                     <input
                         className='library-search-input'
-                        style={{ backgroundColor: layer1Color.toString() }}
+                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()  }}
                         placeholder='Song name'
                         onKeyDown={(e) => {
                             if (e.code === "Enter") searchSongs()
@@ -337,20 +341,20 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     <button
                         className='library-search-btn'
                         onClick={clearSearch}
-                        style={{ backgroundColor: layer1Color.toString() }}
+                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString() }}
                     >
                         <FaTimes />
                     </button>
                     <button
                         className='library-search-btn'
                         onClick={searchSongs}
-                        style={{ backgroundColor: layer1Color.toString() }}
+                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()  }}
                     >
                         <FaSearch />
                     </button>
                 </div>
                 {(searchStatus || searchedSongs.length > 0) &&
-                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.toString() }}>
+                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.toString(), color: layer2ColorText.toString() }}>
                         {searchStatus === "success" ?
                             searchedSongs.length > 0
                                 ? searchedSongs.map(song =>

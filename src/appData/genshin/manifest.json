@@ -27,7 +27,8 @@
         "application/json": [
           ".genshinsheet",
           ".genshinbackup",
-          ".genshintheme"
+          ".genshintheme",
+          ".genshinfolder"
         ]
       },
       "icons": [

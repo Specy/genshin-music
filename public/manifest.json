@@ -25,11 +25,9 @@
       "name": "Import file in sky music",
       "accept": {
         "application/json": [
-          ".skysheet.json",
           ".skysheet",
-          ".theme.json",
-          ".skybackup.json",
-          ".skybackup"
+          ".skybackup",
+          ".skytheme"
         ]
       },
       "icons": [

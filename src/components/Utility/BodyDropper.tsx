@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react"
+import useDebounce from "$lib/Hooks/useDebounce";
 
 export interface DroppedFile<T = Buffer | object | string> {
     data: T
@@ -20,28 +21,29 @@ function hasFiles(event: DragEvent) {
 
 
 function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropArea = false ,dropAreaStyle = {}}: BodyDropperProps<T>) {
-    const [isHovering, setIsHovering] = useState(false)
-    const resetDrag = useCallback(() => {
-
+    const [_isHovering, setIsHovering] = useState(false)
+    const debouncedIsHovering = useDebounce(_isHovering, 50)
+    const resetDrag = useCallback((e?: any) => {
         setIsHovering(false)
-        onHoverChange?.(false)
-    }, [onHoverChange])
-
+    }, [])
     const handleDragOver = useCallback((e: DragEvent) => {
         e.preventDefault()
         if(!hasFiles(e)) return
         setIsHovering(true)
-        onHoverChange?.(true)
-    }, [onHoverChange])
+    }, [])
 
     const handleDrag = useCallback((e: DragEvent) => {
         if(!hasFiles(e)) return
         e.preventDefault()
         setIsHovering(true)
-        onHoverChange?.(true)
-    }, [onHoverChange])
+    }, [])
+
+    useEffect(() => {
+        onHoverChange?.(debouncedIsHovering)
+    }, [debouncedIsHovering, onHoverChange])
 
     const handleDrop = useCallback(async (e: DragEvent) => {
+
         resetDrag()
         e.preventDefault()
         const promises: Promise<DroppedFile<T>>[] = Array.from(e.dataTransfer?.files || []).map((file: File) => {
@@ -78,22 +80,22 @@ function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropA
 
     }, [resetDrag, onDrop, onError, as])
     useEffect(() => {
-        document.body.addEventListener('drop', handleDrop)
-        return () => document.body.removeEventListener('drop', handleDrop)
+        window.addEventListener('drop', handleDrop)
+        return () => window.removeEventListener('drop', handleDrop)
     }, [handleDrop])
 
     useEffect(() => {
-        document.body.addEventListener('dragenter', handleDrag)
-        document.body.addEventListener('dragleave', resetDrag)
-        document.body.addEventListener('dragover', handleDragOver)
+        window.addEventListener('dragenter', handleDrag)
+        window.addEventListener('dragleave', resetDrag)
+        window.addEventListener('dragover', handleDragOver)
         return () => {
-            document.body.removeEventListener('dragenter', handleDrag)
-            document.body.removeEventListener('dragleave', resetDrag)
-            document.body.removeEventListener('dragover', handleDragOver)
+            window.removeEventListener('dragenter', handleDrag)
+            window.removeEventListener('dragleave', resetDrag)
+            window.removeEventListener('dragover', handleDragOver)
         }
     }, [resetDrag, handleDrag, handleDragOver])
     return <>
-        {showDropArea && <DropHoverHinter isHovering={isHovering} style={dropAreaStyle}>
+        {showDropArea && <DropHoverHinter isHovering={debouncedIsHovering} style={dropAreaStyle}>
             Drop files here
         </DropHoverHinter>
         }

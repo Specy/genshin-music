@@ -24,7 +24,6 @@ export function DropZoneProviderWrapper({ children }: DropZoneProviderProps) {
     return <>
         <BodyDropper
             showDropArea={true}
-            dropAreaStyle={{ paddingTop: '15vh' }}
             onDrop={handleDrop}
             as='json'
             onError={handleDropError}
