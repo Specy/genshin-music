@@ -26,6 +26,7 @@ export class VisualSong {
     }
     static from(song: Song | ComposedSong) {
         song = song.clone()
+        console.log(song)
         const vs = new VisualSong(song.bpm)
         if (song instanceof RecordedSong) {
             const first = song.notes.shift()
@@ -182,8 +183,10 @@ export class TempoChunk {
     }
 
     static from(columns: Column[], tempoChanger?: number) {
+        tempoChanger = tempoChanger ?? columns[0]?.tempoChanger
+        if(tempoChanger === undefined) console.log( "tempoChanger is undefined", columns, tempoChanger)
         return new TempoChunk(
-            tempoChanger ?? columns[0].tempoChanger,
+            tempoChanger ?? 0,
             columns.map(column => TempoChunkColumn.from(column))
         )
     }
