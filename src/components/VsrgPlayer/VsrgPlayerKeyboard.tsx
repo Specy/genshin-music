@@ -35,7 +35,6 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, vert
     const middle = layout.length - perSide * 2
     const left = layout.slice(0, perSide)
     const right = layout.slice(perSide + middle)
-    //const center = layout.slice(perSide, perSide + middle)
 
     return <>
 
@@ -51,7 +50,6 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, vert
                     {left.map(letter =>
                         <VsrgPlayerKeyboardKey
                             key={`${letter.key}-${layout.length}`}
-
                             index={letter.index}
                             layout={layout}
                             offset={offset}
@@ -71,7 +69,6 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, vert
                     {right.map(letter =>
                         <VsrgPlayerKeyboardKey
                             key={`${letter.key}-${layout.length}`}
-
                             index={letter.index}
                             layout={layout}
                             offset={offset}
@@ -129,6 +126,7 @@ function VsrgPlayerKeyboardKey({ index, layout, size, layoutType, offset }: Vsrg
             }}
             onPointerDown={pressKey}
             onPointerUp={releaseKey}
+            onPointerLeave={releaseKey}
         >
             <div
                 className={`${s['vsrg-player-key-circle']} ${data.isPressed ? s['vsrg-key-pressed'] : ''}`}
@@ -146,6 +144,7 @@ function VsrgPlayerKeyboardKey({ index, layout, size, layoutType, offset }: Vsrg
             className={s['vsrg-player-key-hitbox-line']}
             onPointerDown={pressKey}
             onPointerUp={releaseKey}
+            onPointerLeave={releaseKey}
         >
             <div
                 className={`${s['vsrg-player-key-line']} ${data.isPressed ? s['vsrg-key-pressed'] : ''}`}

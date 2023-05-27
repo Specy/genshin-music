@@ -56,13 +56,13 @@ export function SongMenu<T extends { data: SongStorable }>({
     }, [filteredSongs, folders])
     const [theme] = useTheme()
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
-    const headerText = theme.getTextColorFromBackground(unselectedColor).toString()
+    const unselectedColorText = theme.getTextColorFromBackground(unselectedColor).toString()
     return <div className={className} style={style}>
         <div className="row" style={{ justifyContent: "space-between", gap: "0.5rem" }}>
             <div className={s['search']}
                 style={{
                     backgroundColor: unselectedColor.toString(),
-                    color: theme.getText('menu_background').toString(),
+                    color: unselectedColorText,
                     outline: 'solid 0.2rem transparent',
                     outlineOffset: '-0.2rem',
                     outlineColor: searchValue === "" ? "transparent" : "var(--accent)" 
@@ -74,7 +74,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                     value={searchValue}
                     onChange={e => setSearchValue(e.target.value)}
                     style={{
-                        color: theme.getText('menu_background').toString()
+                        color: unselectedColorText
                     }}
                 />
                 <IconButton 
@@ -97,7 +97,7 @@ export function SongMenu<T extends { data: SongStorable }>({
         {((!exclude?.includes('composed') ?? true) && noFolderComposed) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
-                headerColor={headerText}
+                headerColor={unselectedColorText}
                 color={theme.getText('menu_background').toString()}
                 data={noFolderComposed}
                 isDefault={true}
@@ -122,7 +122,7 @@ export function SongMenu<T extends { data: SongStorable }>({
         {((!exclude?.includes('recorded') ?? true) && noFolderRecorded) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
-                headerColor={headerText}
+                headerColor={unselectedColorText}
                 color={theme.getText('menu_background').toString()}
                 data={noFolderRecorded}
                 isDefault={true}
@@ -147,7 +147,7 @@ export function SongMenu<T extends { data: SongStorable }>({
         {((!exclude?.includes('vsrg') ?? true) && noFolderVsrg) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
-                headerColor={headerText}
+                headerColor={unselectedColorText}
                 color={theme.getText('menu_background').toString()}
                 data={noFolderVsrg}
                 isDefault={true}
@@ -176,7 +176,7 @@ export function SongMenu<T extends { data: SongStorable }>({
             return <SongFolder
                 key={folder.id}
                 backgroundColor={unselectedColor.toString()}
-                headerColor={headerText}
+                headerColor={unselectedColorText}
                 color={theme.getText('menu_background').toString()}
                 data={folder}
             >
