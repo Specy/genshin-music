@@ -38,6 +38,7 @@ import { songService } from '$lib/Services/SongService';
 import { NextRouter, useRouter } from 'next/router';
 import { AppBackground } from '$cmp/Layout/AppBackground';
 import { ShortcutListener, createKeyboardListener, createShortcutListener } from '$/stores/KeybindsStore';
+import { NoteLayer } from "$lib/Layer";
 
 interface ComposerState {
     layers: Instrument[]
@@ -269,7 +270,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
     addInstrument = () => {
         const { song } = this.state
 
-        if (song.instruments.length >= 30) return logger.error("You can't add more than 30 instruments!")
+        if (song.instruments.length >= NoteLayer.MAX_LAYERS) return logger.error(`You can't add more than ${NoteLayer.MAX_LAYERS} instruments!`)
 
         song.addInstrument(INSTRUMENTS[0])
         this.setState({ song })

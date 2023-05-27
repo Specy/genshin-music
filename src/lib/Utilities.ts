@@ -270,6 +270,31 @@ function prettyPrintInstrumentName(name: string) {
     return name.replace("SFX_", "")
 }
 
+function max(bound: number | bigint, nums: number[]): number
+function max(bound: number | bigint, nums: bigint[]): bigint
+function max(bound: number | bigint, nums: number[] | bigint[]) {
+	if(nums.length === 0) return bound
+	if(typeof nums[0] === 'bigint'){
+		// @ts-ignore
+		const max = nums.reduce((a,b) => a > b ? a : b)
+		return BigInt(max > bound ? bound : max)
+	}
+	// @ts-ignore
+	return Math.max(bound, ...nums)
+}
+
+function min(bound: number | bigint, nums: number[]): number
+function min(bound: number | bigint, nums: bigint[]): bigint
+function min(bound: number | bigint, nums: number[] | bigint[]) {
+	if(nums.length === 0) return bound
+	if(typeof nums[0] === 'bigint'){
+		// @ts-ignore
+		const min = nums.reduce((a,b) => a < b ? a : b)
+		return BigInt(min < bound ? bound : min)
+	}
+	// @ts-ignore
+	return Math.min(bound, ...nums)
+}
 export type {
 	Debouncer
 }
@@ -301,5 +326,7 @@ export {
 	isNumberBetween,
 	isNumberCloseTo,
 	getNearestTo,
-	prettyPrintInstrumentName
+	prettyPrintInstrumentName,
+	max,
+	min,
 }

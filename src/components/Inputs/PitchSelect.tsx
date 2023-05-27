@@ -11,7 +11,10 @@ export function PitchSelect({ selected, onChange, style, children, className}: P
     return <select
         className={`${s.select} ${className ?? ''}`}
         style={{ width: '100%', padding: '0.3rem', ...style }}
-        onChange={(e) => onChange(e.target.value as Pitch)}
+        onChange={(e) => {
+            onChange(e.target.value as Pitch)
+            e.target.blur()
+        }}
         value={selected}
     >   
         {children}

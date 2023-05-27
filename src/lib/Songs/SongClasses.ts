@@ -144,7 +144,7 @@ export class ColumnNote {
 		this.layer.set(layer2, tmp)
 	}
 	clearLayer(){
-		this.layer.setData(0)
+		this.layer.clear()
 	}
 
 	setLayer(layerIndex: number, value: boolean) {

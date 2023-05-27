@@ -17,7 +17,10 @@ export function InstrumentSelect({ selected, onChange, style }: InstrumentSelect
     return <select
         className={s.select}
         style={{ width: '100%', padding: '0.3rem', ...style }}
-        onChange={(e) => onChange(e.target.value as InstrumentName)}
+        onChange={(e) => {
+            onChange(e.target.value as InstrumentName)
+            e.target.blur()
+        }}
         value={selected}
     >
         {SFXInstruments.length === 0

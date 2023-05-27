@@ -1,7 +1,7 @@
 import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS_DATA } from "$config"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote } from "./SongClasses"
 import { ComposedSong, defaultInstrumentMap } from "./ComposedSong"
-import { groupNotesByIndex, mergeLayers, groupByNotes } from '$lib/Utilities'
+import { groupNotesByIndex, mergeLayers, groupByNotes, max } from "$lib/Utilities";
 import clonedeep from 'lodash.clonedeep'
 import { NoteLayer } from "../Layer"
 import { Midi } from "@tonejs/midi"
@@ -202,8 +202,8 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             }
     }
         song.columns = converted
-        const highestLayer = Math.max(0, ...song.columns.map(column => {
-            return Math.max(...column.notes.map(note => note.layer.asNumber()))
+        const highestLayer = max(0, song.columns.map(column => {
+            return max(0,column.notes.map(note => note.layer.asNumber()))
         }))
         song.instruments = highestLayer.toString(2).split("").map((_,i) => {
             const ins = new InstrumentData()
@@ -249,7 +249,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             ticks: 0,
         })
         midi.name = this.name
-        const highestLayer = Math.max(...this.notes.map(note => note.layer.asNumber()))
+        const highestLayer = max(0, this.notes.map(note => note.layer.asNumber()))
         const numberOfTracks = highestLayer.toString(2).length
         for (let i = 0; i < numberOfTracks; i++) {
             const notes = this.notes.filter(note => note.layer.test(i))
@@ -284,7 +284,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer)
                 converted.notes.push(recordedNote)
             })
-            const highestLayer = Math.max(...converted.notes.map(note => note.layer.asNumber()))
+            const highestLayer = max(0,converted.notes.map(note => note.layer.asNumber()))
             const numberOfInstruments = highestLayer.toString(2).length
             converted.instruments = new Array(numberOfInstruments).fill(0).map(_ => new InstrumentData())
             if ([true, "true"].includes(song.isComposed)) {

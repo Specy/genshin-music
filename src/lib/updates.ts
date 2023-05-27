@@ -8,7 +8,7 @@ type Update = {
 export const updates: Update[] = [
     {
         version: '3.2.0',
-        title: "Shortcuts, Do Re Mi, performance",
+        title: "Shortcuts, Do Re Mi, performance, Layers",
         date: '2023 - 25/04',
         changes: [
             "All shortcuts and keyboard layout are now customizable",
@@ -18,7 +18,11 @@ export const updates: Update[] = [
             "Added opacity to the composer and custom layers colors",
             "Added new visual sheet format with more info",
             "Added song search",
-            "Added a new theme",
+            "Increased composer layers limit to 52",
+            "Changed the file formats so they can be double clicked to open",
+            "Added export as zip file",
+            "Added two new default themes",
+            "Other bug fixes and improvements"
         ]
     },
     {
@@ -30,7 +34,7 @@ export const updates: Update[] = [
             "Added switch/playstation layouts (Sky)",
             "Added backup warnings",
             "Added tranparency to themes",
-            "Bug fixes and improvements"
+            "Other bug fixes and improvements"
         ]
     },
     {
@@ -65,7 +69,7 @@ export const updates: Update[] = [
             "Fixed issues when opening/saving songs in the composer",
             "Fixed bug in pasting notes in the composer",
             "Exporting a song would not work in sky music and sky studio",
-            "Other bug fixes and features...",
+            "Other bug fixes and improvements",
         ]
     },{
         version: '2.8',

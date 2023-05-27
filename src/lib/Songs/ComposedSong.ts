@@ -7,7 +7,7 @@ import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
-import { clamp } from "../Utilities"
+import { clamp, max } from "../Utilities";
 
 interface OldFormatNoteType {
     key: string,
@@ -79,8 +79,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         if (song.version === 2 || song.version === 3) {
             parsed.columns = song.columns.map(column => Column.deserialize(column))
         }
-        const highestLayer = Math.max(0, ...parsed.columns.map(column => {
-            return Math.max(...column.notes.map(note => note.layer.asNumber()))
+        const highestLayer = max(0, parsed.columns.map(column => {
+            return max(0, column.notes.map(note => note.layer.asNumber()))
         }))
         //make sure there are enough instruments for all layers
         parsed.instruments = highestLayer.toString(2).split("").map((_,i) => {
@@ -150,8 +150,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     }
     ensureInstruments(){
         const {columns, instruments} = this
-        const highestLayer = Math.max(0, ...columns.map(column => {
-            return Math.max(...column.notes.map(note => note.layer.asNumber()))
+        const highestLayer = max(0, columns.map(column => {
+            return max(0, column.notes.map(note => note.layer.asNumber()))
         })).toString(2).split("").length
         if(highestLayer > instruments.length){
             const newInstruments = new Array(highestLayer - instruments.length).fill(0).map(_ => new InstrumentData())
@@ -287,7 +287,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         const layerColumns = copiedColumns.map(col => {
             const clone = col.clone()
             clone.notes = clone.notes.map(note => {
-                note.layer.setData(0)
+                note.layer.clear()
                 note.layer.set(layer, true)
                 return note
             }).filter(note => !note.layer.isEmpty())

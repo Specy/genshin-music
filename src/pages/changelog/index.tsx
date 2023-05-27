@@ -10,7 +10,7 @@ import { AppButton } from '$cmp/Inputs/AppButton'
 import Link from 'next/link'
 import s from './Changelog.module.css'
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
-export default function Changelogpage() {
+export default function ChangelogPage() {
     return <DefaultPage
         excludeMenu={true}
         menu={

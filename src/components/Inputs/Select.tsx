@@ -1,5 +1,6 @@
 import { useTheme } from "$lib/Hooks/useTheme"
 import s from '$cmp/Settings/Settings.module.css'
+import { useCallback } from "react";
 
 interface SelectProps{
     onChange: (value: React.ChangeEvent<HTMLSelectElement>) => void
@@ -10,8 +11,13 @@ interface SelectProps{
 }
 export function Select({onChange, value, children, style}: SelectProps) {
     const [theme] = useTheme()
+    const callback = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+        onChange(e)
+        e.target.blur()
+        console.log(document.activeElement)
+    },[onChange])
     return <select
-        onChange={onChange}
+        onChange={callback}
         value={value}
         className={s.select}
         style={{

@@ -23,6 +23,7 @@ export function Select({ value, onChange, data, objectKey , children, theme, typ
                 value: typeof type === 'number' ? parseInt(e.target.value) : e.target.value 
             }
         })
+        e.target.blur()
     }
     return <select value={value}
         onChange={handleChange}

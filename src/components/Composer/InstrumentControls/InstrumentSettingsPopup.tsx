@@ -65,7 +65,10 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
                 className={s.select}
                 style={{ padding: '0.3rem', width: '8rem' }}
                 value={instrument.icon}
-                onChange={e => onChange(instrument.set({ icon: e.target.value as InstrumentNoteIcon }))}
+                onChange={e => {
+                    onChange(instrument.set({ icon: e.target.value as InstrumentNoteIcon }))
+                    e.target.blur()
+                }}
             >
                 {noteIcons.map(icon =>
                     <option key={icon} value={icon}>
