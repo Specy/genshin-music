@@ -137,7 +137,8 @@ export default function Backup() {
                         const nameAndFormat = fileService.getUnknownFileExtensionAndName(file)
                         if(!nameAndFormat) return [`unknown${Math.floor(Math.random() * 1000)}.${file.type}`, strToU8(JSON.stringify(file))]
                         const { name, extension} = nameAndFormat
-                        return [`${name}.${extension}`, strToU8(JSON.stringify(file))]
+                        const arrayFile = Array.isArray(file) ? file : [file]
+                        return [`${name}.${extension}`, strToU8(JSON.stringify(arrayFile))]
                     })
                     zip({
                         [`${fileName}`]: strToU8(JSON.stringify(files)),
