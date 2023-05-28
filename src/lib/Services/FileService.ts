@@ -72,6 +72,9 @@ class UnknownFileResult {
     getThemeErrors(): ImportError<SerializedTheme>[] {
         return this.errors.filter(error => FileService.getSerializedObjectType(error.file) === FileKind.Theme) as ImportError<SerializedTheme>[]
     }
+    getUnknownErrors(): ImportError<any>[] {
+        return this.errors.filter(error => FileService.getSerializedObjectType(error.file) === null) as ImportError<any>[]
+    }
     appendError(file: UnknownFile | any, error: string) {
         this.errors.push({
             file,
@@ -92,6 +95,7 @@ export class FileService {
         logger.hidePill()
         if (result.hasErrors()){
             logger.error(`${result.errors.length} thing${result.errors.length === 1 ? '' : 's'} failed to import`)
+            console.error("failed to import: ", result.errors)
         }
         const songs = result.getSuccessfulSongs()
         const songErrors = result.getSongErrors()
@@ -101,15 +105,28 @@ export class FileService {
             songs.forEach(s => logger.success(`Imported ${s.type} song: "${s.name}"`))
         }
         songErrors.forEach(e => logger.error(`Error importing song: "${e.file?.name ?? ''}" | ${e.error}`))
+        const unknown = result.getUnknownErrors()
+        unknown.forEach(e => logger.error(`Error importing unknown file: "${e.file?.name ?? ''}" | ${e.error}`))
+
         const folders = result.getSuccessfulFolders()
+        if(folders.length > 5){
+            logger.success(`Imported ${folders.length} folders`)
+        }else{
+            folders.forEach(f => logger.success(`Imported folder: "${f.name}"`))
+        }
         const folderErrors = result.getFolderErrors()
-        folders.forEach(f => logger.success(`Imported folder: "${f.name}"`))
         folderErrors.forEach(e => logger.error(`Error importing folder: "${e.file?.name ?? ''}" | ${e.error}`))
 
         const themes = result.getSuccessfulThemes()
+        if(themes.length > 5){
+            logger.success(`Imported ${themes.length} themes`)
+        }else{
+            themes.forEach(t => logger.success(`Imported theme: "${t?.other?.name ?? ''}"`))
+        }
         const themeErrors = result.getThemeErrors()
-        themes.forEach(t => logger.success(`Imported theme: "${t?.other?.name ?? ''}"`))
         themeErrors.forEach(e => logger.error(`Error importing theme: "${e.file?.other?.name ?? ''}" | ${e.error}`))
+
+
         return result
     }
     async importUnknownFile(unknownFile: UnknownFile): Promise<UnknownFileResult> {

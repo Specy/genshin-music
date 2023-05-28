@@ -6,6 +6,7 @@ export type LayerStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 /*
 class NoteLayerClassic {
     static MAX_LAYERS = 30
+    stastic MIN_LAYERS = 0
     private data: number
     static EMPTY_LAYER = new NoteLayerInt(0)
     constructor(layer: number = 0) {
@@ -75,6 +76,7 @@ class NoteLayerClassic {
 */
 export class NoteLayer {
     static MAX_LAYERS = 52
+    static MIN_LAYERS = 0n
     private data: bigint
     static EMPTY_LAYER = new NoteLayer(0n)
     constructor(layer: bigint| number = 0n) {

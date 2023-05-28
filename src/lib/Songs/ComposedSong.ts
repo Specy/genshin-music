@@ -79,8 +79,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         if (song.version === 2 || song.version === 3) {
             parsed.columns = song.columns.map(column => Column.deserialize(column))
         }
-        const highestLayer = max(0, parsed.columns.map(column => {
-            return max(0, column.notes.map(note => note.layer.asNumber()))
+        const highestLayer = max(NoteLayer.MIN_LAYERS, parsed.columns.map(column => {
+            return max(NoteLayer.MIN_LAYERS, column.notes.map(note => note.layer.asNumber()))
         }))
         //make sure there are enough instruments for all layers
         parsed.instruments = highestLayer.toString(2).split("").map((_,i) => {
@@ -150,8 +150,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     }
     ensureInstruments(){
         const {columns, instruments} = this
-        const highestLayer = max(0, columns.map(column => {
-            return max(0, column.notes.map(note => note.layer.asNumber()))
+        const highestLayer = max(NoteLayer.MIN_LAYERS, columns.map(column => {
+            return max(NoteLayer.MIN_LAYERS, column.notes.map(note => note.layer.asNumber()))
         })).toString(2).split("").length
         if(highestLayer > instruments.length){
             const newInstruments = new Array(highestLayer - instruments.length).fill(0).map(_ => new InstrumentData())

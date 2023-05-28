@@ -27,7 +27,8 @@
         "application/json": [
           ".skysheet",
           ".skybackup",
-          ".skytheme"
+          ".skytheme",
+          ".skyfolder"
         ]
       },
       "icons": [

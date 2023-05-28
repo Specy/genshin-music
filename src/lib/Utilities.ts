@@ -270,6 +270,8 @@ function prettyPrintInstrumentName(name: string) {
     return name.replace("SFX_", "")
 }
 
+
+//TODO watchout this might be a bit buggy if the array is empty, it returns the bound which might not be a big int
 function max(bound: number | bigint, nums: number[]): number
 function max(bound: number | bigint, nums: bigint[]): bigint
 function max(bound: number | bigint, nums: number[] | bigint[]) {
@@ -280,7 +282,7 @@ function max(bound: number | bigint, nums: number[] | bigint[]) {
 		return BigInt(max > bound ? bound : max)
 	}
 	// @ts-ignore
-	return Math.max(bound, ...nums)
+	return Number(Math.max(bound, ...nums))
 }
 
 function min(bound: number | bigint, nums: number[]): number
