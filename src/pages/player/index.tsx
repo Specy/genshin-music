@@ -204,7 +204,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 			instrumentsData: toLoad
 		}, () => {
 			logger.hidePill()
-			this.updateSettings
+			this.updateSettings()
 		})
 	}
 	playSound = (index: number, layers?: NoteLayer) => {
