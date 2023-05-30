@@ -23,7 +23,7 @@ import { Lambda } from 'mobx';
 import { NoteLayer } from '$lib/Layer';
 import { subscribeObeservableObject } from '$lib/Hooks/useObservable';
 import { ChangeEvent } from 'react';
-import { SPEED_CHANGERS } from '$config';
+import { INSTRUMENTS, SPEED_CHANGERS } from '$config';
 import { playerControlsStore } from '$stores/PlayerControlsStore';
 import { PlayerSongControls } from '$cmp/Player/PlayerSongControls';
 import { AppBackground } from '$cmp/Layout/AppBackground';
@@ -32,6 +32,7 @@ import { createShortcutListener } from '$/stores/KeybindsStore';
 interface PlayerState {
 	settings: PlayerSettingsDataType
 	instruments: Instrument[]
+	instrumentsData: InstrumentData[]
 	isLoadingInstrument: boolean
 	isRecordingAudio: boolean
 	isRecording: boolean
@@ -49,7 +50,8 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 		super(props)
 		this.recording = new Recording()
 		this.state = {
-			instruments: [new Instrument()],
+			instruments: [new Instrument(INSTRUMENTS[0])],
+			instrumentsData: [new InstrumentData({name: INSTRUMENTS[0]})],
 			settings: settingsService.getDefaultPlayerSettings(),
 			isLoadingInstrument: true,
 			isRecording: false,
@@ -118,22 +120,25 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 	}
 
 	loadInstrument = async (name: InstrumentName) => {
-		const oldInstrument = this.state.instruments[0]
+		const { settings, instruments, instrumentsData } = this.state
+		const oldInstrument = instruments[0]
 		AudioProvider.disconnect(oldInstrument.endNode)
 		this.state.instruments[0].dispose()
-		const { settings, instruments } = this.state
 		const instrument = new Instrument(name)
-		instrument.changeVolume(settings.instrument.volume || 100)
+		const volume = settings.instrument.volume ?? 100
+		instrument.changeVolume(volume)
 		this.setState({ isLoadingInstrument: true })
 		const loaded = await instrument.load(AudioProvider.getAudioContext())
 		if (!loaded) logger.error("There was an error loading the instrument")
 		AudioProvider.connect(instrument.endNode)
 		if (!this.mounted) return
 		playerStore.setKeyboardLayout(instrument.notes)
-		instruments.splice(0, 1, instrument)
+		instruments[0] = instrument
+		instrumentsData[0] = new InstrumentData({ name, volume })
 		this.setState({
-			instruments,
-			isLoadingInstrument: false
+			instruments: [...instruments],
+			isLoadingInstrument: false,
+			instrumentsData: [...instrumentsData]
 		}, () => AudioProvider.setReverb(settings.caveMode.value))
 	}
 	handleSpeedChanger = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -149,7 +154,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 	}
 
 	loadInstruments = async (toLoad: InstrumentData[]) => {
-		const { instruments } = this.state
+		const { instruments, settings } = this.state
 		//remove excess instruments
 		const extraInstruments = instruments.splice(toLoad.length)
 		extraInstruments.forEach(ins => {
@@ -168,8 +173,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 				AudioProvider.connect(instrument.endNode)
 				instrument.changeVolume(ins.volume)
 				return instrument
-			}
-			if (instruments[i].name === ins.name) {
+			} else if (instruments[i].name === ins.name) {
 				//if it has a layer and it's the same, just set the volume
 				instruments[i].changeVolume(ins.volume)
 				return instruments[i]
@@ -190,23 +194,33 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 		})
 		const newInstruments = await Promise.all(promises) as Instrument[]
 		if (!this.mounted) return
-		const { settings } = this.state
 		if (instruments[0]) {
 			settings.instrument = { ...settings.instrument, value: instruments[0].name }
 			playerStore.setKeyboardLayout(instruments[0].notes)
 		}
-		logger.hidePill()
-		this.setState({ instruments: newInstruments, settings }, this.updateSettings)
+		this.setState({
+			instruments: newInstruments,
+			settings,
+			instrumentsData: toLoad
+		}, () => {
+			logger.hidePill()
+			this.updateSettings
+		})
 	}
 	playSound = (index: number, layers?: NoteLayer) => {
 		const { state } = this
-		const { settings, instruments } = state
+		const { settings, instruments, instrumentsData } = state
 		if (state.isRecording) this.handleRecording(index)
 		if (!layers) {
 			instruments[0].play(index, settings.pitch.value)
 		} else {
 			instruments.forEach((ins, i) => {
-				if (layers.test(i)) ins.play(index, settings.pitch.value)
+				const insData = instrumentsData[i]
+
+				if (layers.test(i) && !insData?.muted) {
+					const pitch = insData?.pitch || settings.pitch.value
+					ins.play(index, pitch)
+				}
 			})
 		}
 	}
@@ -370,7 +384,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 }
 
 export default function PlayerPage({ inPreview }: { inPreview?: boolean }) {
-	return <Player  inPreview={inPreview}/>
+	return <Player inPreview={inPreview} />
 }
 
 PlayerPage.getLayout = function getLayout(page: ReactNode) {
