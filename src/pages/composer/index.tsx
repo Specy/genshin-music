@@ -21,7 +21,6 @@ import { homeStore } from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
-import { Pages } from '$types/GeneralTypes';
 import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider';
 import { KeyboardProvider } from '$lib/Providers/KeyboardProvider';
 import type { KeyboardNumber } from '$lib/Providers/KeyboardProvider/KeyboardTypes';
@@ -583,7 +582,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.handleAutoSave()
         this.setState({ song })
     }
-    changePage = async (page: Pages | 'Home') => {
+    changePage = async (page: string | 'Home') => {
         const { song, settings } = this.state
         if (page === 'Home') return homeStore.open()
         if (this.changes !== 0) {

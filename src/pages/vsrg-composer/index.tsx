@@ -19,7 +19,7 @@ import { songService } from "$lib/Services/SongService";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
 import { clamp, isFocusable } from "$lib/Utilities";
 import { DEFAULT_VSRG_KEYS_MAP } from "$config";
-import { ClickType, Pages } from "$types/GeneralTypes"
+import { ClickType } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
 import { Title } from "$cmp/Miscellaneous/Title";
 import {homeStore} from "$stores/HomeStore";
@@ -270,7 +270,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             if (setting.key === 'maxFps') vsrgComposerStore.emitEvent('maxFpsChange')
         })
     }
-    changePage = async (page: Pages | 'Home') => {
+    changePage = async (page: string | 'Home') => {
         const { vsrg, settings } = this.state
         if (page === 'Home') return homeStore.open()
         if (this.changes !== 0) {

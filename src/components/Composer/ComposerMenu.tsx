@@ -11,7 +11,6 @@ import { AppButton } from '$cmp/Inputs/AppButton';
 import { SongMenu } from '$cmp/Layout/SongMenu';
 import { ComposerSettingsDataType } from '$lib/BaseSettings';
 import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
-import { Pages } from '$types/GeneralTypes';
 import { useTheme } from '$lib/Hooks/useTheme';
 import { Theme } from '$stores/ThemeStore/ThemeProvider';
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip';
@@ -48,7 +47,7 @@ interface MenuProps {
         loadSong: (song: SerializedSong) => void
         renameSong: (newName: string, id: string) => void
         createNewSong: () => void
-        changePage: (page: Pages | 'Home') => void
+        changePage: (page: string | 'Home') => void
         updateThisSong: () => void
         handleSettingChange: (data: SettingUpdate) => void
         changeVolume: (data: SettingVolumeUpdate) => void
@@ -170,7 +169,6 @@ function Menu({ data, functions, inPreview }: MenuProps) {
             </Memoized>
         </div>
         <div className={`menu-wrapper ${inPreview ? "menu-wrapper-absolute" : ""}`} ref={menuRef}>
-
             <div className={menuClass}>
                 <MenuItem onClick={() => toggleMenu()} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon" />
@@ -197,7 +195,6 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                 </MenuItem>
             </div>
             <div className={sideClass}>
-
                 <MenuPanel current={selectedMenu} id="Songs">
                     <div className="songs-buttons-wrapper">
                         <HelpTooltip>
@@ -259,9 +256,7 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                                 Import song sheet
                             </AppButton>
                         </FilePicker>
-
                     </div>
-
                     <div className="songs-buttons-wrapper" style={{ marginTop: 'auto' }}>
                         <AppButton
                             style={{ marginTop: '0.5rem' }}
@@ -291,9 +286,9 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                             </Link>
 
                         }
-                        <Link href={"theme"}>
+                        <Link href={"theme"} onClick={(e) => e.preventDefault()}>
                             <AppButton
-                                onClick={() => changePage('Theme')}
+                                onClick={() => changePage('theme')}
                                 style={{ width: 'fit-content' }}
                             >
                                 Change app theme

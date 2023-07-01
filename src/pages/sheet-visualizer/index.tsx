@@ -16,6 +16,9 @@ import { Select } from '$cmp/Inputs/Select'
 import s from "./SheetVisualizer.module.css"
 import { SheetFrame2 } from '$cmp/SheetVisualizer/SheetFrame2'
 import { VisualSong } from '$lib/Songs/VisualSong'
+import { ComposedSong } from '$lib/Songs/ComposedSong'
+import { RecordedSong } from '$lib/Songs/RecordedSong'
+import { VsrgSong } from '$lib/Songs/VsrgSong'
 
 /*
 
@@ -83,9 +86,17 @@ export default function SheetVisualizer() {
                 setSongAstext(vs.toText(layout))
             } catch (e) {
                 console.error(e)
-                logger.error("Error converting song to visual song")
-                setSheet(null)
-                setSongAstext("")
+                logger.error("Error converting song to visual song, trying to convert to recorded song first...")
+                try {
+                    const vs = VisualSong.from((temp as RecordedSong | ComposedSong).toRecordedSong())
+                    setSheet(vs)
+                    setSongAstext(vs.toText(layout))
+                } catch (e) {
+                    console.error(e)
+                    logger.error("Error converting song to visual song")
+                    setSheet(null)
+                    setSongAstext("")
+                }
             }
 
         } catch (e) {
@@ -179,6 +190,7 @@ export default function SheetVisualizer() {
         </div>
     </DefaultPage>
 }
+
 
 
 
