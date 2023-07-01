@@ -66,6 +66,8 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         if(target) return this.connect(target)
     }
     async connect(to: Window, timeout = 15000): Promise<void> {
+        if(window === to) return console.warn("cannot connect to self")
+        console.log("connecting to", to)
         this.target = to
         if(this.connectionPromise) this.connectionPromise.reject("reconnecting")
         return new Promise((resolve, reject) => {

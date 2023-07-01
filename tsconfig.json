@@ -50,14 +50,21 @@
         "*"
       ]
     },
-    "incremental": true
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-    "src"
+    "src",
+    "build/types/**/*.ts",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

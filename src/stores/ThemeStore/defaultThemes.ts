@@ -569,7 +569,7 @@ const baseThemes: SerializedTheme[] = [
             menu_background: {
                 name: "menu_background",
                 css: "menu-background",
-                value: "rgba(0, 0, 0, 0.50)",
+                value: "rgba(34, 34, 34, 0.72)",
                 text: "#edeae5"
             },
             note_background: {

@@ -149,7 +149,7 @@ select {
     padding: 0.2rem 0;
     border-bottom-left-radius: 0.4rem;
     border-bottom-right-radius: 0.4rem;
-    background-color: rgb(var(--primary-rgb));
+    background-color: var(--primary);
     width: 100%;
 }
 .timeline-button {

@@ -6,7 +6,7 @@ import RemoveColumn from "$cmp/icons/RemoveColumn"
 import MidiParser from "$cmp/Composer/MidiParser"
 import ComposerTools from "$cmp/Composer/ComposerTools"
 import ComposerKeyboard from "$cmp/Composer/ComposerKeyboard"
-import ComposerCanvas from "$cmp/Composer/Canvas"
+import ComposerCanvas from "$cmp/Composer/ComposerCanvas"
 import Menu from "$cmp/Composer/ComposerMenu"
 import Memoized from '$cmp/Utility/Memoized';
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
@@ -100,13 +100,13 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.mounted = true
         const settings = settingsService.getComposerSettings()
         const shortcutListener = createShortcutListener(
-            "composer", 
-            "composer_shortcuts", 
-            this.handleShortcut, 
+            "composer",
+            "composer_shortcuts",
+            this.handleShortcut,
         )
         const shortcutKeyboardListener = createKeyboardListener(
-            "composer_shortcuts_keyboard", 
-            this.handleKeyboardShortcut, 
+            "composer_shortcuts_keyboard",
+            this.handleKeyboardShortcut,
         )
         this.cleanup.push(shortcutKeyboardListener, shortcutListener)
         this.setState({ settings })
@@ -653,7 +653,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         song.selected = (song.columns.length > song.selected) ? song.selected : song.columns.length - 1
         this.setState({ undoHistory: [...undoHistory], song }, () => {
             setTimeout(() => {
-                if(!this.mounted) return
+                if (!this.mounted) return
                 //TODO not sure why this is needed but it doesn't render
                 this.setState({})
             }, 100)
@@ -738,7 +738,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 <div className="column composer-left-control">
                     <AppButton
                         className='flex-centered'
-                        style={{ height: '3rem', borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)" }}
+                        style={{ height: '3rem', minHeight: "3rem", borderRadius: '0.3rem', backgroundColor: "var(--primary-darken-10)" }}
                         onClick={_ => {
                             this.togglePlay()
                             if (settings.syncTabs.value) {

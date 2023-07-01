@@ -195,7 +195,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 main: {
                     background: ThemeProvider.get('primary').rgbNumber(),
                     backgroundHex: ThemeProvider.get('primary').hexa(),
-                    backgroundOpacity: Math.max(ThemeProvider.get('primary').alpha(), 0.9)
+                    backgroundOpacity: Math.max(ThemeProvider.get('primary').alpha(), 0.8)
                 }
             }
         }, () => {

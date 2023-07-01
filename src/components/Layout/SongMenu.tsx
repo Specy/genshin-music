@@ -13,7 +13,7 @@ import { IconButton } from "$cmp/Inputs/IconButton";
 
 interface SongMenuProps<T extends { data: SongStorable }> {
     songs: SongStorable[],
-    SongComponent: Function, //TODO improve this
+    SongComponent: React.FC<any>, //TODO improve this
     componentProps: Omit<T, "data">
     className?: string,
     style?: React.CSSProperties,
