@@ -323,7 +323,7 @@
 
 .floating-dropdown-active .floating-dropdown-children {
     display: flex;
-    animation: fadeIn 0.2s ;
+    animation: fadeIn 0.2s, delayBackdrop 0.2s;
     animation-fill-mode: forwards;
 }
 

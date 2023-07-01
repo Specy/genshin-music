@@ -7,7 +7,7 @@ import { NoteLayer } from "../Layer"
 import { RecordedSong } from "./RecordedSong"
 import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
 import { SerializedSong, Song } from "./Song"
-import { clamp, max } from "../Utilities";
+import { clamp } from "../Utilities";
 
 interface OldFormatNoteType {
     key: string,
@@ -79,9 +79,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         if (song.version === 2 || song.version === 3) {
             parsed.columns = song.columns.map(column => Column.deserialize(column))
         }
-        const highestLayer = max(NoteLayer.MIN_LAYERS, parsed.columns.map(column => {
-            return max(NoteLayer.MIN_LAYERS, column.notes.map(note => note.layer.asNumber()))
-        }))
+        const highestLayer = NoteLayer.maxLayer(parsed.columns.flatMap(column => column.notes.map(note => note.layer)))
         //make sure there are enough instruments for all layers
         parsed.instruments = highestLayer.toString(2).split("").map((_,i) => {
             const ins = new InstrumentData()
@@ -150,11 +148,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
     }
     ensureInstruments(){
         const {columns, instruments} = this
-        const highestLayer = max(NoteLayer.MIN_LAYERS, columns.map(column => {
-            return max(NoteLayer.MIN_LAYERS, column.notes.map(note => note.layer.asNumber()))
-        })).toString(2).split("").length
-        if(highestLayer > instruments.length){
-            const newInstruments = new Array(highestLayer - instruments.length).fill(0).map(_ => new InstrumentData())
+        const highestLayer = NoteLayer.maxLayer(columns.flatMap(column => column.notes.map(note => note.layer)))
+        const numberOfInstruments = highestLayer.toString(2).split("").length
+        if(numberOfInstruments > instruments.length){
+            const newInstruments = new Array(numberOfInstruments - instruments.length).fill(0).map(_ => new InstrumentData())
             this.instruments = [...instruments, ...newInstruments]
         }
 

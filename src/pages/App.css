@@ -195,7 +195,7 @@ input[type="text"],input[type="number"] {
 	transition: 0.3s all;
 	opacity: 1;
 	transform: translateY(0%);
-	animation: prompt-show 0.3s;
+	animation: prompt-show 0.3s, delayBackdrop 0.3s forwards;
 }
 
 @keyframes prompt-show {

@@ -82,7 +82,13 @@ export class NoteLayer {
     constructor(layer: bigint| number = 0n) {
         this.data = BigInt(layer)
     }
-
+    static maxLayer(layers: NoteLayer[]) {
+        let max = NoteLayer.MIN_LAYERS
+        for (const layer of layers) {
+            if (layer.data > max) max = layer.data
+        }
+        return max
+    }
     clear(){
         this.data = 0n
     }

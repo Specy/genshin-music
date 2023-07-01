@@ -271,32 +271,7 @@ function prettyPrintInstrumentName(name: string) {
 }
 
 
-//TODO watchout this might be a bit buggy if the array is empty, it returns the bound which might not be a big int
-function max(bound: number | bigint, nums: number[]): number
-function max(bound: number | bigint, nums: bigint[]): bigint
-function max(bound: number | bigint, nums: number[] | bigint[]) {
-	if(nums.length === 0) return bound
-	if(typeof nums[0] === 'bigint'){
-		// @ts-ignore
-		const max = nums.reduce((a,b) => a > b ? a : b)
-		return BigInt(max > bound ? bound : max)
-	}
-	// @ts-ignore
-	return Number(Math.max(bound, ...nums))
-}
 
-function min(bound: number | bigint, nums: number[]): number
-function min(bound: number | bigint, nums: bigint[]): bigint
-function min(bound: number | bigint, nums: number[] | bigint[]) {
-	if(nums.length === 0) return bound
-	if(typeof nums[0] === 'bigint'){
-		// @ts-ignore
-		const min = nums.reduce((a,b) => a < b ? a : b)
-		return BigInt(min < bound ? bound : min)
-	}
-	// @ts-ignore
-	return Math.min(bound, ...nums)
-}
 export type {
 	Debouncer
 }
@@ -329,6 +304,4 @@ export {
 	isNumberCloseTo,
 	getNearestTo,
 	prettyPrintInstrumentName,
-	max,
-	min,
 }
