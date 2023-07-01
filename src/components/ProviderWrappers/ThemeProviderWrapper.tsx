@@ -49,6 +49,7 @@ export function ThemeProviderWrapper({ children }: Props) {
         <style>
             {`
                 :root{
+                    --html-background: ${theme.get('background').alpha(1).toString()};
                     --background: ${theme.get('background').toString()};
                     --primary: ${theme.get('primary').toString()};
                     --background-text: ${theme.getText('background')};

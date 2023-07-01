@@ -37,7 +37,7 @@ body {
 body {
 	position: absolute;
 	-webkit-text-size-adjust: none;
-	background-color: var(--background);
+	background-color: var(--html-background);
 	color: var(--background-text);
 }
 
@@ -75,11 +75,6 @@ input[type="text"],input[type="number"] {
 	outline: none;
 	-webkit-tap-highlight-color: transparent;
 }
-
-body {
-	background-color: var(--background);
-}
-
 .disabled {
 	filter: brightness(0.7);
 }

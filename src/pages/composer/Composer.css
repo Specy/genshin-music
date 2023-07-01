@@ -266,6 +266,7 @@ select {
 }
 .floating-tools-content{
     display: flex;
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -488,7 +489,7 @@ select {
     top: 3.4rem;
     margin-left: 6.6rem;
     z-index: 10;
-    animation: fadeIn 0.2s;
+    animation: fadeIn 0.2s, delayBackdrop 0.2s forwards;
 }
 .instrument-settings-button {
     flex: 1;
