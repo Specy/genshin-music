@@ -51,6 +51,6 @@ export async function setupProtocol(){
         await fileService.importAndLog(data)
     })
     hasSetup = true
-    await protocol.init(window.parent)
+    await protocol.init()
 }
 

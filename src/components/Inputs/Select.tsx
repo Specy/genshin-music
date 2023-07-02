@@ -14,7 +14,6 @@ export function Select({onChange, value, children, style}: SelectProps) {
     const callback = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
         onChange(e)
         e.target.blur()
-        console.log(document.activeElement)
     },[onChange])
     return <select
         onChange={callback}

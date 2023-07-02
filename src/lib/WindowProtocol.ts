@@ -61,39 +61,46 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         //@ts-ignore
         this.registerAskHandler("ping", async () => "pong")
     }
-    async init(target?: Window) {
-        window.addEventListener("message", this.receive)
-        if(target) return this.connect(target)
+    async init() {
+        //listen for messages only if it has a parent
+        if (window.parent !== window) { 
+            window.addEventListener("message", this.receive)
+            console.log(`window ${window.location.href} ready to listen for messages`)
+        }
     }
     async connect(to: Window, timeout = 15000): Promise<void> {
         if(window === to) return console.warn("cannot connect to self")
-        console.log("connecting to", to)
+        console.log(`connecting from ${window.location.href} to`, to)
         this.target = to
         if(this.connectionPromise) this.connectionPromise.reject("reconnecting")
         return new Promise((resolve, reject) => {
             this.connectionPromise = { resolve, reject }
             let resolved = false
-            const timeoutId = setTimeout(() => {
-                if (resolved) return
-                reject("timeout")
-            }, timeout)
+            let intervalTime = 500
+            let retries = timeout / intervalTime
             const interval = setInterval(async () => {
                 try {
+                    retries--
+                    if (retries <= 0) {
+                        if (resolved) return
+                        reject("timeout")
+                        clearInterval(interval)
+                        return
+                    }
                     //@ts-ignore
                     const pong = await this.ask("ping", undefined, to)
                     if (pong === "pong") {
                         resolved = true
                         clearInterval(interval)
-                        clearTimeout(timeoutId)
                         resolve()
                     }
                 } catch (e) {
                     if (resolved) return
                     reject(e)
                     clearInterval(interval)
-                    clearTimeout(timeoutId)
                 }
-            }, 40)
+            }, 500)
+            
         })
     }
 

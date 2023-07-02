@@ -19,22 +19,17 @@ interface RenderColumnProps {
     isBreakpoint: boolean
     isSelected: boolean
     isToolsSelected: boolean
-    onClick: (index: number) => void
 }
 
-export function RenderColumn({ notes, index, sizes, onClick, cache, instruments,  backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
-    const clickCallback = useCallback(() => {
-        onClick(index)
-    }, [index, onClick])
+export function RenderColumn({ notes, index, sizes, cache, instruments,  backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
+
 
     return <Container
-        pointertap={clickCallback}
         eventMode="static"
         x={sizes.width * index}
     >
         <Sprite
             texture={backgroundCache}
-            interactiveChildren={false}
         >
             {(isSelected || isToolsSelected) &&
                 <Sprite

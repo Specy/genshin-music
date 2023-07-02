@@ -9,7 +9,7 @@ import { ComposerCache } from "$cmp/Composer/ComposerCache"
 import { APP_NAME } from "$config"
 import Memoized from '$cmp/Utility/Memoized';
 import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
-import { clamp, colorToRGB, createDebouncer, nearestEven } from '$lib/Utilities';
+import { clamp, colorToRGB, nearestEven } from '$lib/Utilities';
 import type { Column } from '$lib/Songs/SongClasses';
 import type { ComposerSettingsDataType } from '$lib/BaseSettings';
 import { isColumnVisible, RenderColumn } from '$cmp/Composer/RenderColumn';
@@ -20,7 +20,7 @@ import { subscribeTheme } from '$lib/Hooks/useTheme';
 import { createShortcutListener } from '$stores/KeybindsStore';
 import { FederatedPointerEvent } from 'pixi.js';
 
-type ClickEventType = 'up' | 'down' | 'downStage'
+type ClickEventType = 'up' | 'down-slider' | 'down-stage'
 interface ComposerCanvasProps {
     data: {
         columns: Column[],
@@ -68,7 +68,6 @@ interface ComposerCanvasState {
             backgroundOpacity: number
         }
     }
-
     cache: ComposerCache | null
 }
 export default class ComposerCanvas extends Component<ComposerCanvasProps, ComposerCanvasState> {
@@ -79,6 +78,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     sliderSelected: boolean
     hasSlided: boolean
     stagePreviousPositon: number
+    stageXMovement: number
+    stageMovementAmount: number
     sliderOffset: number
     throttleScroll: number
     onSlider: boolean
@@ -117,7 +118,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     backgroundOpacity: ThemeProvider.get('primary').alpha()
                 },
             },
-            cache: null
+            cache: null,
         }
         this.notesStageRef = createRef()
         this.breakpointsStageRef = createRef()
@@ -125,7 +126,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.sliderSelected = false
         this.hasSlided = false
         this.stagePreviousPositon = 0
+        this.stageMovementAmount = 0
         this.sliderOffset = 0
+        this.stageXMovement = 0
         this.throttleScroll = 0
         this.onSlider = false
         //TODO memory leak somewhere in this page
@@ -152,8 +155,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             window.addEventListener("resize", this.recalculateCacheAndSizes)
             this.recalculateCacheAndSizes()
         })
-        
+
         window.addEventListener("pointerup", this.resetPointerDown)
+        window.addEventListener("blur", this.resetPointerDown)
         const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({ shortcut }) => {
             const { name } = shortcut
             if (name === "next_breakpoint") this.handleBreakpoints(1)
@@ -166,6 +170,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
 
     componentWillUnmount() {
         window.removeEventListener("pointerup", this.resetPointerDown)
+        window.removeEventListener("blur", this.resetPointerDown)
         window.removeEventListener("resize", this.recalculateCacheAndSizes)
         if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
         this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
@@ -279,10 +284,12 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const x = e.globalX
         const { width, numberOfColumnsPerCanvas } = this.state
         const { data } = this.props
+        this.stageXMovement = 0
+        this.stageMovementAmount = 0
         if (type === "up") {
             this.sliderSelected = false
         }
-        if (type === "down") {
+        if (type === "down-slider") {
             this.sliderSelected = true
             const relativeColumnWidth = width / data.columns.length
             const stageSize = relativeColumnWidth * (numberOfColumnsPerCanvas + 1)
@@ -290,33 +297,46 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             this.onSlider = x > stagePosition && x < stagePosition + stageSize
             this.sliderOffset = stagePosition + stageSize / 2 - x
             this.throttleScroll = Number.MAX_SAFE_INTEGER
-            this.handleSlide(e)
+            this.handleSliderSlide(e)
         }
-        if (type === "downStage") {
+        if (type === "down-stage") {
             this.stagePreviousPositon = x
             this.stageSelected = true
         }
     }
     handleClickStage = (e: FederatedPointerEvent) => {
-        this.handleClick(e, "downStage")
+        this.handleClick(e, "down-stage")
     }
+    handleClickStageUp = (e: FederatedPointerEvent) => {
+        this.stageSelected = false
+        if (this.stageMovementAmount === 0) {
+            const middle = (this.state.numberOfColumnsPerCanvas / 2) * this.state.column.width
+            const clickedOffset = Math.floor((e.globalX - middle) / this.state.column.width + 1)
+            if (clickedOffset === 0) return
+            const { data, functions } = this.props
+            const newPosition = data.selected + Math.round(clickedOffset)
+            functions.selectColumn(clamp(newPosition, 0, data.columns.length - 1), true)
+        }
+    }
+
     handleClickDown = (e: FederatedPointerEvent) => {
-        this.handleClick(e, "down")
+        this.handleClick(e, "down-slider")
     }
     handleClickUp = (e: FederatedPointerEvent) => {
         this.handleClick(e, "up")
     }
     handleStageSlide = (e: FederatedPointerEvent) => {
         const x = e.globalX
-        if (this.stageSelected === true) {
-            if (this.throttleScroll++ < 5) return
-            this.throttleScroll = 0
+        const amount = (this.stagePreviousPositon - x)
+        this.stagePreviousPositon = x
+        if (this.stageSelected) {
+            const threshold = this.state.column.width
             const { data, functions } = this.props
-            const amount = clamp(Math.ceil(Math.abs(this.stagePreviousPositon - x) / 8), 0, 4)
-            const sign = this.stagePreviousPositon < x ? -1 : 1
-            this.stagePreviousPositon = x
-            const newPosition = data.selected + sign * amount
-            if (data.selected === newPosition) return
+            this.stageXMovement += amount
+            const amountToMove = (this.stageXMovement - this.stageMovementAmount * threshold) / threshold
+            if (Math.abs(amountToMove) < 1) return
+            this.stageMovementAmount += Math.round(amountToMove)
+            const newPosition = data.selected + Math.round(amountToMove)
             functions.selectColumn(clamp(newPosition, 0, data.columns.length - 1), true)
         }
     }
@@ -330,7 +350,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             this.props.functions.selectColumn(breakpoint[0])
         }
     }
-    handleSlide = (e: FederatedPointerEvent) => {
+    handleSliderSlide = (e: FederatedPointerEvent) => {
         const globalX = e.globalX
         if (this.sliderSelected) {
             if (this.throttleScroll++ < 4) return
@@ -341,10 +361,24 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             const totalWidth = column.width * data.columns.length
             const x = this.onSlider ? (globalX + this.sliderOffset) : globalX
             const relativePosition = Math.floor(x / width * totalWidth / column.width)
-            this.props.functions.selectColumn(relativePosition, true)
+            this.props.functions.selectColumn(clamp(relativePosition, 0, data.columns.length - 1), true)
         }
     }
-
+    testStageHitarea = {
+        contains: (x: number, y: number) => {
+            if(this.stageSelected) return true //if stage is selected, we want to be able to move it even if we are outside the timeline
+            const width = this.state.column.width * this.props.data.columns.length
+            if (x < 0 || x > width || y < 0 || y > this.state.height) return false
+            return true
+        }
+    }
+    testTimelineHitarea = {
+        contains: (x: number, y: number) => {
+            if(this.sliderSelected) return true //if slider is selected, we want to be able to move it even if we are outside the timeline
+            if (x < 0 || x > this.state.width || y < 0 || y > this.state.timelineHeight) return false
+            return true
+        }
+    }
     render() {
         const { width, timelineHeight, height, theme, numberOfColumnsPerCanvas, pixelRatio } = this.state
         const { data, functions } = this.props
@@ -384,7 +418,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         x={xPosition}
                         eventMode='static'
                         pointerdown={this.handleClickStage}
+                        pointerup={this.handleClickStageUp}
                         pointermove={this.handleStageSlide}
+                        interactiveChildren={false}
+                        hitArea={this.testStageHitarea}
                     >
                         {data.columns.map((column, i) => {
                             if (!isColumnVisible(i, data.selected, numberOfColumnsPerCanvas)) return null
@@ -403,7 +440,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                 currentLayer={data.currentLayer}
                                 backgroundCache={background}
                                 isToolsSelected={data.selectedColumns.includes(i)}
-                                onClick={functions.selectColumn}
                                 isSelected={i === data.selected}
                                 isBreakpoint={data.breakpoints.includes(i)}
                             />
@@ -486,7 +522,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                 eventMode='static'
                                 pointerdown={this.handleClickDown}
                                 pointerup={this.handleClickUp}
-                                pointermove={this.handleSlide}
+                                pointermove={this.handleSliderSlide}
+                                interactiveChildren={false}
+                                hitArea={this.testTimelineHitarea}
                             >
                                 <Graphics //to fill the space
                                     draw={(g) => {
@@ -514,6 +552,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                     <Sprite
                                         texture={cache.breakpoints[0]}
                                         key={breakpoint}
+                                        interactive={false}
                                         anchor={[0.5, 0]}
                                         x={(width / (data.columns.length - 1)) * breakpoint}
                                     >

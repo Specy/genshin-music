@@ -19,6 +19,7 @@ export const updates: Update[] = [
             "Added new visual sheet format with more info",
             "Added song search",
             "Increased composer layers limit to 52",
+            "Improved composer sliding controls",
             "Changed the file formats so they can be double clicked to open",
             "Added export as zip file",
             "Added two new default themes",

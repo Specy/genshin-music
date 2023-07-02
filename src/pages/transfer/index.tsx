@@ -13,6 +13,7 @@ const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
     `https://beta.${APP_NAME.toLowerCase()}-music.specy.app`,
     `https://specy.github.io/${APP_NAME.toLowerCase()}Music`,
+    `http://localhost:3000`,
 ]
 
 export default function TransferData() {
