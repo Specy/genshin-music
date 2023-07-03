@@ -24,18 +24,17 @@ export class MIDIListener {
         this.settings = settingsService.getMIDISettings()
         if (!this.settings.enabled) return null
         if (this.MIDIAccess) return this.MIDIAccess
-        if (navigator.requestMIDIAccess) {
-            try{
+        try{
+            if (navigator.requestMIDIAccess) {
                 const access = await navigator.requestMIDIAccess()
                 this.handleMIDIState(access)
                 return access
-            }catch(e){
-                console.error(e)
+            } else {
+                console.log("Midi not available")
                 return null
             }
-
-        } else {
-            console.log("Midi not available")
+        }catch(e){
+            console.error(e)
             return null
         }
     }

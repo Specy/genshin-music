@@ -315,7 +315,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             if (clickedOffset === 0) return
             const { data, functions } = this.props
             const newPosition = data.selected + Math.round(clickedOffset)
-            functions.selectColumn(clamp(newPosition, 0, data.columns.length - 1), true)
+            functions.selectColumn(clamp(newPosition, 0, data.columns.length - 1))
         }
     }
 

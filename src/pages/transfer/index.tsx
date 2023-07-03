@@ -29,9 +29,12 @@ export default function TransferData() {
         document.body.appendChild(frame)
         logger.showPill("Conneting please wait...")
         try {
+            await new Promise((res, rej) => {
+                frame.onload = res
+                frame.onerror = rej
+            })
             setError("")
             setImportedData([])
-            console.log(frame)
             await protocol.connect(frame.contentWindow!)
             console.log("connected")
             const data = await protocol.ask("getAppData", undefined)
@@ -42,6 +45,10 @@ export default function TransferData() {
         }
         logger.hidePill()
         frame.remove()
+        return () => {
+            logger.hidePill()
+            frame.remove()
+        }
     }, [selectedDomain])
 
 

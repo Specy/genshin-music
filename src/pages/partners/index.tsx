@@ -1,6 +1,7 @@
 import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import partner from 'assets/images/partners/windsong-db.jpg'
+import skyMusicianNetwork from 'assets/images/partners/sky-musician-network.jpg'
 import Image, { StaticImageData } from 'next/image'
 import s from './Partners.module.css'
 export default function Partners() {
@@ -17,12 +18,13 @@ export default function Partners() {
                 />
             </Partner>
             <Partner
-                name='ChaconneScott_ACG'
-                description='YouTube pianist and arranger, features Genshin Impact OST'
+                name='Sky Musician Network'
+                description='A community discord server focused on music in Sky Cotl'
             >
-                <Iframe
-                    src='https://www.youtube.com/embed/ltE8zfGfUVo'
-                    title="ChaconneScott_ACG"
+                <PartnerImg
+                    to='https://discord.com/invite/TCW33m6MN2'  
+                    img={skyMusicianNetwork}
+                    alt='Sky musician network'
                 />
             </Partner>
             <Partner
@@ -44,6 +46,15 @@ export default function Partners() {
                     alt='Windsong DB'
                 />
 
+            </Partner>
+            <Partner
+                name='ChaconneScott_ACG'
+                description='YouTube pianist and arranger, features Genshin Impact OST'
+            >
+                <Iframe
+                    src='https://www.youtube.com/embed/ltE8zfGfUVo'
+                    title="ChaconneScott_ACG"
+                />
             </Partner>
         </div>
     </DefaultPage>

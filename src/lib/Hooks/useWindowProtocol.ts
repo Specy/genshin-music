@@ -31,7 +31,6 @@ let hasSetup = false
 export async function setupProtocol(){
     if(hasSetup) return console.log("protocol already setup")
     //connect to parent window
-    console.log("setup window protocol to:", window.parent)
     protocol.registerAskHandler("getAppData", async () => {
         const folders = await _folderService.getFolders()
         const songs = await songService.getSongs()

@@ -1,3 +1,4 @@
+import { delay } from "./Utilities"
 
 export type Ask<T, R> = {
     payload: T,
@@ -56,23 +57,24 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         resolve: () => void
         reject: (error: any) => void
     } | null = null
+    inited = false
     constructor(validDomains: string[]) {
         this.validDomains = new Set(validDomains)
         //@ts-ignore
         this.registerAskHandler("ping", async () => "pong")
     }
     async init() {
+        if (this.inited) return console.warn("already inited window protocol")
         //listen for messages only if it has a parent
-        if (window.parent !== window) { 
-            window.addEventListener("message", this.receive)
-            console.log(`window ${window.location.href} ready to listen for messages`)
-        }
+        window.addEventListener("message", this.receive, false)
+        this.inited = true
+        console.log(`window ${window.location.href} ready to listen for messages`)
     }
-    async connect(to: Window, timeout = 15000): Promise<void> {
-        if(window === to) return console.warn("cannot connect to self")
+    connect = async (to: Window, timeout = 6000): Promise<void> => {
+        if (window === to) return console.warn("cannot connect to self")
         console.log(`connecting from ${window.location.href} to`, to)
         this.target = to
-        if(this.connectionPromise) this.connectionPromise.reject("reconnecting")
+        if (this.connectionPromise) this.connectionPromise.reject("reconnecting")
         return new Promise((resolve, reject) => {
             this.connectionPromise = { resolve, reject }
             let resolved = false
@@ -87,6 +89,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
                         clearInterval(interval)
                         return
                     }
+
                     //@ts-ignore
                     const pong = await this.ask("ping", undefined, to)
                     if (pong === "pong") {
@@ -99,8 +102,8 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
                     reject(e)
                     clearInterval(interval)
                 }
-            }, 500)
-            
+            }, 1000)
+
         })
     }
 
@@ -165,7 +168,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
                     id: data.id,
                     eventName: data.eventName,
                 } satisfies PayloadMessage<keyof A | keyof T>
-                this.send(response, message.source!, message.origin)
+                this.send(response, message.source!)
             } catch (e) {
                 console.error(e)
                 const response = {
@@ -174,7 +177,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
                     id: data.id,
                     eventName: data.eventName,
                 } satisfies PayloadMessage<keyof A | keyof T>
-                this.send(response, message.source!, message.origin)
+                this.send(response, message.source!)
             }
         } else if (data.type === "tell") {
             const handler = this.tellHandlers.get(data.eventName as keyof T)
@@ -192,11 +195,12 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
             pending.reject(data.error)
         }
     }
-    private send = async (payload: any, to: Window | MessageEventSource, origin?: string) => {
-        if (to instanceof Window) {
-            to.postMessage(payload, origin ?? "*")
-        } else {
-            to.postMessage(payload)
+    private send = async (payload: any, to: Window | MessageEventSource) => {
+        try {
+            //@ts-ignore
+            to.postMessage(payload, "*")
+        } catch {
+            console.warn("failed to send message to", to)
         }
     }
 }
