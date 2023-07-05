@@ -98,7 +98,7 @@ export default class Instrument {
         if (this.volumeNode) this.volumeNode.gain.value = newVolume
     }
 
-    play = (note: number, pitch: Pitch) => {
+    play = (note: number, pitch: Pitch, delay?: number) => {
         if (this.isDeleted || !this.volumeNode || !this.audioContext) return
         const pitchChanger = getPitchChanger(pitch)
         const player = this.audioContext.createBufferSource()
@@ -106,7 +106,11 @@ export default class Instrument {
         player.connect(this.volumeNode)
         //player.detune.value = pitch * 100, pitch should be 0 indexed from C
         player.playbackRate.value = pitchChanger
-        player.start(0)
+        if(delay){
+            player.start(this.audioContext.currentTime + delay)
+        }else{
+            player.start()
+        }
         function handleEnd() {
             player.stop()
             player.disconnect()

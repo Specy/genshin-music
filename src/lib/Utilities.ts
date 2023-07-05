@@ -255,7 +255,11 @@ function nearestEven(num: number) {
 	return 2 * Math.round(num / 2);
 }
 
-const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
+function clamp(num: number, min: number, max: number) {
+	num = num <= max ? num : max
+	return num >= min ? num : min
+}
+
 type Debouncer = (func: () => void) => void
 function createDebouncer(delay:number): Debouncer{
     let timeoutId:Timer

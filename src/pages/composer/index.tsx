@@ -366,13 +366,13 @@ class Composer extends Component<ComposerProps, ComposerState>{
             logger.error("There was an error downloading the audio, maybe it's too big?")
         }
     }
-    playSound = (layer: number, index: number) => {
+    playSound = (layer: number, index: number, delay?: number) => {
         const instrument = this.state.layers[layer]
         const note = instrument?.notes[index]
         if (note === undefined) return
         if (this.state.song.instruments[layer].muted) return
         const pitch = this.state.song.instruments[layer].pitch || this.state.settings.pitch.value
-        instrument.play(note.index, pitch)
+        instrument.play(note.index, pitch, delay)
     }
     changePitch = (value: Pitch) => {
         const { settings } = this.state
@@ -539,29 +539,31 @@ class Composer extends Component<ComposerProps, ComposerState>{
             this.setState({
                 isPlaying: newState
             }, async () => {
-                if (this.state.isPlaying) this.selectColumn(this.state.song.selected)
+                if (this.state.isPlaying) this.selectColumn(this.state.song.selected, false, this.state.settings.lookaheadTime.value / 1000)
                 let delayOffset = 0
                 let previousTime = Date.now()
                 while (this.state.isPlaying) {
                     const { song, settings } = this.state
                     const tempoChanger = song.selectedColumn.getTempoChanger().changer
-                    const msPerBeat = Math.floor(60000 / settings.bpm.value * tempoChanger) + delayOffset
+                    const msPerBeat = Math.floor((60000 / settings.bpm.value * tempoChanger) + delayOffset)
                     previousTime = Date.now()
                     await delay(msPerBeat)
                     if (!this.state.isPlaying || !this.mounted) break
-                    this.handleTick()
                     delayOffset = previousTime + msPerBeat - Date.now()
+                    const lookaheadTime = settings.lookaheadTime.value / 1000
+                    //this schedules the next column counting for the error delay so that timing is more accurate
+                    this.handlePlaybackTick(Math.max(0, lookaheadTime + delayOffset / 1000))
                 }
                 resolve()
             })
         })
     }
-    handleTick = () => {
+    handlePlaybackTick = (errorDelay: number) => {
         const newIndex = this.state.song.selected + 1
         if (this.state.isPlaying && newIndex > this.state.song.columns.length - 1) {
             return this.togglePlay(false)
         }
-        this.selectColumn(newIndex)
+        this.selectColumn(newIndex, false, errorDelay)
     }
     toggleBreakpoint = (override?: number) => {
         const { song } = this.state
@@ -598,7 +600,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         this.props.router.events.off('routeChangeStart', this.unblock)
         this.props.router.push(page)
     }
-    selectColumn = (index: number, ignoreAudio?: boolean) => {
+    selectColumn = (index: number, ignoreAudio?: boolean, delay?: number) => {
         const { song, isToolsVisible, layers, copiedColumns } = this.state
         let selectedColumns = this.state.selectedColumns
         if (index < 0 || index > song.columns.length - 1) return
@@ -613,7 +615,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (ignoreAudio) return
         song.selectedColumn.notes.forEach(note => {
             layers.forEach((_, i) => {
-                if (note.isLayerToggled(i)) this.playSound(i, note.index)
+                if (note.isLayerToggled(i)) this.playSound(i, note.index, delay)
             })
         })
     }

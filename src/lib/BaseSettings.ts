@@ -21,11 +21,12 @@ export type ComposerSettingsDataType = {
     autosave: SettingsCheckbox
     syncTabs: SettingsCheckbox
     useKeyboardSideButtons: SettingsCheckbox
+    lookaheadTime: SettingsNumber
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 61,
+        settingVersion: APP_NAME + 63,
     },
     data: {
         bpm: {
@@ -120,6 +121,16 @@ export const ComposerSettings: ComposerSettingsType = {
             songSetting: false,
             value: false
         },
+        lookaheadTime: {
+            name: "Lookahead time",
+            tooltip: "How many milliseconds ahead the composer will look for notes to play, a higher value improves playback accuracy but feels less responsive",
+            type: "number",
+            category: "Composer Settings",
+            songSetting: false,
+            value: 300,
+            increment: 50,
+            threshold: [0, 500]
+        }
     }
 
 }

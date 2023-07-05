@@ -13,7 +13,7 @@ export class AudioProviderClass {
     reverbLoading: Promise<void> | null = null
 
     private loadReverb = (): Promise<void> => {
-        this.reverbLoading =  new Promise(resolve => {
+        this.reverbLoading = new Promise(resolve => {
             fetch(`${BASE_PATH}/assets/audio/reverb4.wav`)
                 .then(r => r.arrayBuffer())
                 .then(b => {
@@ -120,7 +120,12 @@ export class AudioProviderClass {
         this.setAudioDestinations()
         return recording
     }
-
+    now = () => {
+        return this.audioContext?.currentTime ?? 0
+    }
+    nowMs = () => {
+        return (this.audioContext?.currentTime ?? 0) * 1000
+    }
     setAudioDestinations = async () => {
         this.nodes.forEach(node => {
             if (this.hasReverb) {

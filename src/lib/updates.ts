@@ -23,6 +23,7 @@ export const updates: Update[] = [
             "Changed the file formats so they can be double clicked to open",
             "Added export as zip file",
             "Added two new default themes",
+            "Added lookahead settings to the composer to improve audio accuracy",
             "Other bug fixes and improvements"
         ]
     },
