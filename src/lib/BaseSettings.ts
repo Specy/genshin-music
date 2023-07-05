@@ -127,7 +127,7 @@ export const ComposerSettings: ComposerSettingsType = {
             type: "number",
             category: "Composer Settings",
             songSetting: false,
-            value: 300,
+            value: 200,
             increment: 50,
             threshold: [0, 500]
         }
