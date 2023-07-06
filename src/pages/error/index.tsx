@@ -23,7 +23,6 @@ export function ErrorPage() {
         if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
             await songsStore.removeSong(id)
         }
-
     }
     const deleteAllSongs = async () => {
         if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
@@ -103,12 +102,12 @@ export function ErrorPage() {
         </div>
         <div className={s['error-logs']}>
             {errors.map((e, i) =>
-                <div
+                <pre
                     key={i}
-                    className='error-log-row row'
+                    className={`${s['error-log-row']} row`}
                 >
                     {e.message}
-                </div>
+                </pre>
             )}
         </div>
     </DefaultPage>

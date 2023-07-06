@@ -11,12 +11,23 @@ type ErrorBoundaryRedirectProps = {
 type ErrorBoundaryRedirectPropsWithRouter = ErrorBoundaryRedirectProps & {
     router: NextRouter
 }
-class ErrorBoundaryRedirect extends Component<ErrorBoundaryRedirectPropsWithRouter>{
+type ErrorBoundaryRedirectState = {
+    hasError: boolean
+}
 
+class ErrorBoundaryRedirect extends Component<ErrorBoundaryRedirectPropsWithRouter, ErrorBoundaryRedirectState>{
+
+    constructor(props: ErrorBoundaryRedirectPropsWithRouter){
+        super(props);
+        this.state = { hasError: false };
+    }
     componentDidCatch(error:any, info:any) {
         console.error(error, info);
         if(window.location.hostname === "localhost") return console.error("Prevent localhost redirect")
         this.props.router.push(this.props.onErrorGoTo);
+    }
+    static getDerivedStateFromError(error:any) {
+        return { hasError: true };
     }
 
     render(){

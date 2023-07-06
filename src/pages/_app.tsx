@@ -50,7 +50,7 @@ export default function App({ Component, pageProps }: AppProps<CustomPageProps>)
 			console.error = originalErrorLog
 		}
 	}, [])
-	useEffect(() => {
+	useEffect(() => {	
 		function windowIntercepter(e: ErrorEvent) {
 			//intercept window errors and log them to the logger store
 			logsStore.addLog({
