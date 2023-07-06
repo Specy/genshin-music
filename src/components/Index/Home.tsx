@@ -1,6 +1,6 @@
 import { FaCompactDisc, FaMinus, FaPlus, FaTimes } from 'react-icons/fa'
 import { BsMusicPlayerFill } from 'react-icons/bs'
-import { APP_NAME } from "$config"
+import { APP_NAME, BASE_PATH } from "$config"
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from '$lib/Hooks/useTheme'
@@ -140,7 +140,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     icon={<FaCompactDisc />}
                     title='Composer'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                    background={`./manifestData/composer.webp`}
+                    background={`${BASE_PATH}/manifestData/composer.webp`}
                     href='composer'
                     isCurrent={currentPage === 'composer'}
                 >
@@ -150,7 +150,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     icon={<BsMusicPlayerFill />}
                     title='Player'
                     style={{ backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString() }}
-                    background={`./manifestData/player.webp`}
+                    background={`${BASE_PATH}/manifestData/player.webp`}
                     href='/'
                     isCurrent={currentPage === '' || currentPage === 'player'}
                 >
@@ -330,3 +330,4 @@ function Separator({ children }: SeparatorProps) {
         {children}
     </div>
 }
+

@@ -23,7 +23,7 @@ function isLocalhost() {
 }
 
 //TODO not sure what config type is
-export function register(config?: any) {
+export async function register(config?: any) {
   if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(window.location.href);
@@ -31,28 +31,27 @@ export function register(config?: any) {
       // Our service worker won't work if PUBLIC_URL is on a different origin
       // from what our page is served on. This might happen if a CDN is used to
       // serve assets; see https://github.com/facebook/create-react-app/issues/2374
-      return;
+      return console.log("public url is not the same as window location origin")
     }
-    window.addEventListener('load', () => {
-      const swUrl = `${BASE_PATH}/service-worker.js`;
-      if (isLocalhost()) {
-        // This is running on localhost. Let's check if a service worker still exists or not.
-        checkValidServiceWorker(swUrl, config);
+    await waitForPageLoad()
+    const swUrl = `${BASE_PATH}/service-worker.js`;
+    if (isLocalhost()) {
+      // This is running on localhost. Let's check if a service worker still exists or not.
+      checkValidServiceWorker(swUrl, config);
 
-        // Add some additional logging to localhost, pointing developers to the
-        // service worker/PWA documentation.
-        navigator.serviceWorker.ready.then(() => {
-          console.log(
-            'This web app is being served cache-first by a service ' +
-            'worker. To learn more, visit https://cra.link/PWA'
-          );
-        });
-      } else {
-        // Is not localhost. Just register service worker
-        registerValidSW(swUrl, config);
-      }
-    });
-  }
+      // Add some additional logging to localhost, pointing developers to the
+      // service worker/PWA documentation.
+      navigator.serviceWorker.ready.then(() => {
+        console.log(
+          'This web app is being served cache-first by a service ' +
+          'worker. To learn more, visit https://cra.link/PWA'
+        );
+      });
+    } else {
+      // Is not localhost. Just register service worker
+      registerValidSW(swUrl, config);
+    }
+  } 
 }
 
 function registerValidSW(swUrl: string, config?: any) {
@@ -137,4 +136,15 @@ export function unregister() {
         console.error(error.message);
       });
   }
+}
+
+
+function waitForPageLoad(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.readyState === "complete") {
+      resolve();
+    } else {
+      window.addEventListener("load", () => resolve());
+    }
+  })
 }

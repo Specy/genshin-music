@@ -20,7 +20,6 @@ type Protocol = {
         version: string
         name: string
     }>
-    isFirstVisit: Ask<undefined, boolean>
     importData: Ask<UnknownFile, void>
 }
 
@@ -42,9 +41,6 @@ export async function setupProtocol(){
             version: APP_VERSION,
             name: APP_NAME
         }
-    })
-    protocol.registerAskHandler("isFirstVisit", async () => {
-        return localStorage.getItem(APP_NAME + "_First_Visit") === null
     })
     protocol.registerAskHandler("importData", async (data) => {
         await fileService.importAndLog(data)

@@ -16,21 +16,16 @@ const IS_TAURI = process.env.NEXT_PUBLIC_IS_TAURI === 'true'
 console.log(`CACHE NAME: "${CACHE}"`)
 declare var self: ServiceWorkerGlobalScope
 clientsClaim();
-//@ts-ignore
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+
 const PRECACHE_MANIFEST = self.__WB_MANIFEST as unknown as Array<{ url: string, revision: string }>
 const FILTERED_MANIFEST = PRECACHE_MANIFEST.filter(e => !(
 	e.url.includes(".mp3") || //runtime cached
 	e.url.includes(".md") ||
 	e.url.includes(".json") ||
 	e.url.includes("media") ||//remove images and other static files as they are runtime cached and take too long to precache
-	e.url.includes("manifestData") //not needed
-)).map(e => {
-	return {
-		url: BASE_PATH + e.url,
-		revision: e.revision
-	}
-})
+	e.url.includes("manifestData") ||//not needed
+	e.url.includes("service-worker") //not needed
+))
 console.log("Precached files:", FILTERED_MANIFEST)
 if (IS_TAURI) {
 

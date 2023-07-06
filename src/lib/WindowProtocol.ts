@@ -155,7 +155,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         this.send(payload, to ?? this.target!)
     }
     private receive = async (message: MessageEvent<PayloadMessage<keyof A | keyof T>>) => {
-        if (!this.validDomains.has(message.origin)) return console.warn("invalid domain", message.origin)
+        if (!this.validDomains.has(message.origin)) return console.warn("Blocked window message, invalid domain", message.origin)
         const data = message.data
         if (data.type === "ask") {
             const handler = this.askHandlers.get(data.eventName as keyof A)
