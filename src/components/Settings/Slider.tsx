@@ -21,6 +21,7 @@ export function Slider({data, value, onChange, objectKey}:SliderProps) {
         type="range"
         min={data.threshold[0]}
         max={data.threshold[1]}
+        step={data.step}
         value={value}
         onChange={handleChange}
     />

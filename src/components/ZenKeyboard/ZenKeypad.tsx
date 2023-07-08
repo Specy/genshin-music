@@ -12,6 +12,7 @@ interface ZenKeyboardProps {
     pitch: Pitch
     scale: number
     noteNameType: NoteNameType
+    keySpacing: number
     verticalOffset: number
     onNoteClick: (note: ObservableNote) => void
 }
@@ -23,7 +24,7 @@ const keyboardClasses = new Map<number, string>([
     [6, `${cssBase} keyboard-3`],
 ])
 
-export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale, noteNameType }: ZenKeyboardProps) {
+export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale, noteNameType, keySpacing }: ZenKeyboardProps) {
     const layout = useObservableArray(zenKeyboardStore.keyboard)
     useEffect(() => {
         return createKeyboardListener("zen_keyboard", ({ shortcut, event }) => {
@@ -42,6 +43,7 @@ export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scal
         {layout.map((note, index) =>
             <ZenNote
                 key={index}
+                keyPadding={keySpacing}
                 instrumentName={instrument.name}
                 noteText={instrument.getNoteText(index, noteNameType, pitch)}
                 noteImage={note.noteImage}

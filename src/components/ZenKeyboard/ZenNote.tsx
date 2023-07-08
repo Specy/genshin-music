@@ -12,6 +12,7 @@ interface ZenKeyboardProps {
     noteText: string
     noteImage: NoteImage
     instrumentName: InstrumentName
+    keyPadding: number
     onClick: (note: ObservableNote) => void
 }
 const skyKeyframes = [
@@ -25,7 +26,7 @@ const skyKeyframes = [
         transform: `rotateY(360deg) scale(1)`
     }
 ]
-export function ZenNote({ note, onClick, noteImage, noteText, instrumentName }: ZenKeyboardProps) {
+export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, keyPadding }: ZenKeyboardProps) {
     const [status, setStatus] = useState<NoteStatus>("")
     const [statusId, setStatusId] = useState(0)
     const [textColor, setTextColor] = useState(BASE_THEME_CONFIG.text.light)
@@ -59,6 +60,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName }: 
     return <button
         onPointerDown={handleClick}
         className="button-hitbox-bigger"
+        style={{padding: `${keyPadding}rem`}}
     >
         {APP_NAME === 'Genshin' &&
             <div

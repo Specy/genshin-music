@@ -36,6 +36,7 @@ export type SettingsSlider = BaseSettingsProp & {
     type: 'slider'
     value: number
     threshold: [number, number]
+    step?: number
 }
 export type SettingsSelect<T = string | number> = BaseSettingsProp & {
     type: 'select'

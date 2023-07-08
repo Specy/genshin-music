@@ -559,6 +559,7 @@ export type ZenKeyboardSettingsDataType = {
     noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
+    keyboardSpacing: SettingsSlider
     metronomeBeats: SettingsNumber
     metronomeVolume: SettingsSlider
     metronomeBpm: SettingsNumber
@@ -567,7 +568,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 9
+        settingVersion: APP_NAME + 11
     },
     data: {
         instrument: {
@@ -657,6 +658,16 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             value: 0,
             category: "Keyboard",
             threshold: [-100, 100]
+        },
+        keyboardSpacing: {
+            name: "Keyboard spacing",
+            tooltip: "The spacing between the notes",
+            type: "slider",
+            songSetting: false,
+            value: 0.25,
+            step: 0.01,
+            category: "Keyboard",
+            threshold: [0.15, 1]
         }
     }
 }

@@ -85,6 +85,7 @@ export default function ZenKeyboard() {
                 noteNameType={settings.noteNameType.value}
                 pitch={settings.pitch.value}
                 scale={settings.keyboardSize.value}
+                keySpacing={settings.keyboardSpacing.value}
                 verticalOffset={settings.keyboardYPosition.value}
             />
         </div>
