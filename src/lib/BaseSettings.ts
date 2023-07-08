@@ -664,7 +664,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             tooltip: "The spacing between the notes",
             type: "slider",
             songSetting: false,
-            value: 0.25,
+            value: 0.35,
             step: 0.01,
             category: "Keyboard",
             threshold: [0.15, 1]
