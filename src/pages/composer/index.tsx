@@ -38,6 +38,7 @@ import { NextRouter, useRouter } from 'next/router';
 import { AppBackground } from '$cmp/Layout/AppBackground';
 import { ShortcutListener, createKeyboardListener, createShortcutListener } from '$/stores/KeybindsStore';
 import { NoteLayer } from "$lib/Layer";
+import { globalConfigStore } from '$stores/GlobalConfig';
 
 interface ComposerState {
     layers: Instrument[]
@@ -268,9 +269,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
 
     addInstrument = () => {
         const { song } = this.state
-
-        if (song.instruments.length >= NoteLayer.MAX_LAYERS) return logger.error(`You can't add more than ${NoteLayer.MAX_LAYERS} instruments!`)
-
+        const isUmaMode = globalConfigStore.get().IS_UMA_MODE
+        if (song.instruments.length >= NoteLayer.MAX_LAYERS && !isUmaMode) return logger.error(`You can't add more than ${NoteLayer.MAX_LAYERS} instruments!`)
         song.addInstrument(INSTRUMENTS[0])
         this.setState({ song })
         this.syncInstruments(song)
@@ -483,7 +483,8 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 parsed.name += " - Composed"
             }
             if (song.type === 'composed') {
-                parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong)
+                const isUmaMode = globalConfigStore.get().IS_UMA_MODE
+                parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong, isUmaMode)
             }
         }
         if (!parsed) return

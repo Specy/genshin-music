@@ -11,7 +11,7 @@ import { keyBinds } from "$stores/KeybindsStore";
 import Instrument from "$lib/Instrument";
 import { logger } from "$/stores/LoggerStore";
 import { ShortcutEditor } from "$/components/Keybinds/ShortcutEditor";
-import { useDefaultConfig } from "$/lib/Hooks/useConfig";
+import { useConfig } from "$/lib/Hooks/useConfig";
 import svs from "$cmp/VsrgPlayer/VsrgPlayerKeyboard.module.css"
 import MidiSetup from "$cmp/MidiSetup";
 
@@ -24,7 +24,7 @@ export default function Keybinds() {
     const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
     const [vsrgComposerShortcuts] = useObservableMap(keyBinds.getShortcutMap("vsrg_composer"))
     const [vsrgPlayerShortcuts] =  useObservableMap(keyBinds.getShortcutMap("vsrg_player"))
-    const { IS_MOBILE } = useDefaultConfig()
+    const { IS_MOBILE } = useConfig()
     const [selected, setSelected] = useState({
         type: '',
         index: -1

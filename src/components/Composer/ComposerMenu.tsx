@@ -35,7 +35,7 @@ import { RecordedOrComposed } from '$types/SongTypes';
 import { FileElement, FilePicker } from '../Inputs/FilePicker';
 import isMobile from 'is-mobile';
 import Link from 'next/link';
-import { useDefaultConfig } from '$lib/Hooks/useConfig';
+import { useConfig } from '$lib/Hooks/useConfig';
 
 interface MenuProps {
     data: {
@@ -61,7 +61,7 @@ const excludedSongs: SongType[] = ['vsrg']
 function Menu({ data, functions, inPreview }: MenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
-    const { IS_MIDI_AVAILABLE } = useDefaultConfig()
+    const { IS_MIDI_AVAILABLE } = useConfig()
     const [songs] = useSongs()
     const [folders] = useFolders()
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')

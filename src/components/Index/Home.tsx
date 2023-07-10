@@ -13,7 +13,7 @@ import { useObservableObject } from '$lib/Hooks/useObservable'
 import { homeStore } from '$stores/HomeStore'
 import { useRouter } from 'next/router'
 import { isTWA } from '$lib/Utilities'
-import { useDefaultConfig } from '$lib/Hooks/useConfig'
+import { useConfig } from '$lib/Hooks/useConfig'
 
 
 interface HomeProps {
@@ -26,7 +26,7 @@ interface HomeProps {
 export default function Home({ askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen }: HomeProps) {
     const data = useObservableObject(homeStore.state)
     const [appScale, setAppScale] = useState(100)
-    const { IS_MOBILE } = useDefaultConfig()
+    const { IS_MOBILE } = useConfig()
     const [currentPage, setCurrentPage] = useState('Unknown')
     const [breakpoint, setBreakpoint] = useState(false)
     const [isTwa, setIsTwa] = useState(false)

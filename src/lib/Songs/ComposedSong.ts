@@ -57,7 +57,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.columns = new Array(100).fill(0).map(_ => new Column())
         instruments.forEach(this.addInstrument)
     }
-    static deserialize(song: UnknownSerializedComposedSong): ComposedSong{
+    static deserialize(song: UnknownSerializedComposedSong, ignoreMaxLayer = false): ComposedSong {
         //@ts-ignore
         if (song.version === undefined) song.version = 1
         const parsed = Song.deserializeTo(new ComposedSong(song.name), song)
@@ -77,11 +77,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             })
         }
         if (song.version === 2 || song.version === 3) {
-            parsed.columns = song.columns.map(column => Column.deserialize(column))
+            parsed.columns = song.columns.map(column => Column.deserialize(column, ignoreMaxLayer))
         }
         const highestLayer = NoteLayer.maxLayer(parsed.columns.flatMap(column => column.notes.map(note => note.layer)))
         //make sure there are enough instruments for all layers
-        parsed.instruments = highestLayer.toString(2).split("").map((_,i) => {
+        parsed.instruments = highestLayer.toString(2).split("").map((_, i) => {
             const ins = new InstrumentData()
             ins.icon = defaultInstrumentMap[i % 3]
             return ins
@@ -99,20 +99,22 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
                 parsed.instruments[i] = InstrumentData.deserialize(ins)
             })
         }
+        if (song.instruments.length > NoteLayer.MAX_LAYERS && !ignoreMaxLayer) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
+        
         return parsed
     }
-    static isSerializedType(obj: any){
-        if(typeof obj !== 'object') return false
-        if(obj.type === 'composed') return true
+    static isSerializedType(obj: any) {
+        if (typeof obj !== 'object') return false
+        if (obj.type === 'composed') return true
         //legacy format
-        if(obj?.data?.isComposedVersion === true) return true 
+        if (obj?.data?.isComposedVersion === true) return true
 
         return false
     }
-    static isOldFormatSerializedType(obj: any){
-        if(typeof obj !== 'object') return false
-        if(obj.type) return false
-        if(Array.isArray(obj.songNotes) && obj.composedSong) return true
+    static isOldFormatSerializedType(obj: any) {
+        if (typeof obj !== 'object') return false
+        if (obj.type) return false
+        if (Array.isArray(obj.songNotes) && obj.composedSong) return true
         return false
     }
     get isComposed(): true {
@@ -134,7 +136,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             totalTime += Math.floor(msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer)
         })
         recordedSong.instruments = this.instruments.map(ins => ins.clone())
-        
+
         return recordedSong
     }
 
@@ -146,22 +148,22 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         newInstrument.icon = defaultInstrumentMap[this.instruments.length % 3]
         this.instruments = [...this.instruments, newInstrument]
     }
-    ensureInstruments(){
-        const {columns, instruments} = this
+    ensureInstruments() {
+        const { columns, instruments } = this
         const highestLayer = NoteLayer.maxLayer(columns.flatMap(column => column.notes.map(note => note.layer)))
         const numberOfInstruments = highestLayer.toString(2).split("").length
-        if(numberOfInstruments > instruments.length){
+        if (numberOfInstruments > instruments.length) {
             const newInstruments = new Array(numberOfInstruments - instruments.length).fill(0).map(_ => new InstrumentData())
             this.instruments = [...instruments, ...newInstruments]
         }
 
     }
-    static selection(start: number, end: number){
+    static selection(start: number, end: number) {
         return new Array(end - start).fill(0).map((_, i) => i - start)
     }
     removeInstrument = async (index: number) => {
         this.eraseColumns(ComposedSong.selection(0, this.columns.length), index)
-        
+
         if (index !== this.instruments.length - 1) {
             const toMove = this.instruments.slice(index)
             toMove.forEach((_, i) => {
@@ -280,7 +282,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         }
         return this
     }
-    pasteLayer(copiedColumns: Column[], insert: boolean, layer: number){
+    pasteLayer(copiedColumns: Column[], insert: boolean, layer: number) {
         const layerColumns = copiedColumns.map(col => {
             const clone = col.clone()
             clone.notes = clone.notes.map(note => {
@@ -318,37 +320,37 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.ensureInstruments()
         return this
     }
-    moveNotesBy(selectedColumns:number[], amount: number, layer: number | 'all'){
-        const layoutMax = APP_NAME === 'Genshin' ? 21 : 15 
-        const fromNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n,i) => [n, i]))
-        const toNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n,i) => [i, n]))
+    moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all') {
+        const layoutMax = APP_NAME === 'Genshin' ? 21 : 15
+        const fromNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n, i) => [n, i]))
+        const toNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n, i) => [i, n]))
         if (layer === 'all') {
             selectedColumns.forEach(index => {
                 const column = this.columns[index]
-                if(!column) return
+                if (!column) return
                 column.notes.forEach(note => {
                     const fromPosition = fromNotePosition.get(note.index)
                     const toPosition = toNotePosition.get(fromPosition! + amount)
                     note.index = toPosition ?? -1
                 })
-                column.notes = column.notes.filter(note => note.index >= 0 && note.index < layoutMax) 
+                column.notes = column.notes.filter(note => note.index >= 0 && note.index < layoutMax)
             })
         } else {
             selectedColumns.forEach(index => {
                 const column = this.columns[index]
                 column.notes.sort((a, b) => amount < 0 ? a.index - b.index : b.index - a.index)
-                if(!column) return
+                if (!column) return
                 column.notes.forEach(note => {
                     note = column.notes.find(n => n.index === note.index)!
-                    if(!note.layer.test(layer)) return
+                    if (!note.layer.test(layer)) return
                     const fromPosition = fromNotePosition.get(note.index)
                     const newPosition = toNotePosition.get(fromPosition! + amount)
                     const noteAtPosition = column.notes.find(n => n.index === newPosition)
-                    if (noteAtPosition){
+                    if (noteAtPosition) {
                         noteAtPosition.setLayer(layer, true)
                         note.setLayer(layer, false)
-                    }else{
-                        if(!note.layer.test(layer)) return
+                    } else {
+                        if (!note.layer.test(layer)) return
                         note.setLayer(layer, false)
                         const newNote = new ColumnNote(newPosition ?? -1, new NoteLayer())
                         newNote.setLayer(layer, true)
@@ -433,7 +435,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         return clone
     }
 }
-const LAYERS_MAP:{ [key in string] : number} = {
+const LAYERS_MAP: { [key in string]: number } = {
     '0000': 1, //out of range
     '0010': 2,
     '0110': 2,

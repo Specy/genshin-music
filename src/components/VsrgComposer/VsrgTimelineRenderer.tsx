@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTimelineBreakpointsRenderer } from "./VsrgTimelineBreakpointsRenderer";
-import { useDefaultConfig } from "$lib/Hooks/useConfig";
+import { useConfig } from "$lib/Hooks/useConfig";
 
 
 
@@ -27,7 +27,7 @@ interface VsrgTimelineRendererProps {
 }
 const defaultHitbox = new Rectangle(0, 0, 0, 0)
 export function VsrgTimelineRenderer({ sizes, timestamp, song, cache, hidden, notes, onTimelineClick }: VsrgTimelineRendererProps) {
-    const { PLAY_BAR_OFFSET } = useDefaultConfig()
+    const { PLAY_BAR_OFFSET } = useConfig()
 
     const [hitbox, setHitbox] = useState(defaultHitbox)
     const [isClicking, setIsClicking] = useState(false)

@@ -7,7 +7,7 @@ import { ClickType } from "$types/GeneralTypes"
 import { Fragment } from "react";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
-import { useDefaultConfig } from "$lib/Hooks/useConfig";
+import { useConfig } from "$lib/Hooks/useConfig";
 import type { FederatedPointerEvent } from "pixi.js";
 
 interface VsrgTrackRendererProps {
@@ -25,7 +25,7 @@ interface VsrgTrackRendererProps {
 
 
 export function VsrgTrackRenderer({ track, sizes, keys, cache, isHorizontal, selectedHitObject, selectHitObject, trackIndex, timestamp }: VsrgTrackRendererProps) {
-    const { PLAY_BAR_OFFSET } = useDefaultConfig()
+    const { PLAY_BAR_OFFSET } = useConfig()
     const scale = sizes.scaling
     const positionSizeHorizontal = sizes.height / keys
     const positionSizeVertical = sizes.width / keys

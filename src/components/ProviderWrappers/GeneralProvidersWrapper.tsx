@@ -25,12 +25,12 @@ export function GeneralProvidersWrapper({ children, onLoaded }: GeneralProviders
         metronome.init(AudioProvider.getAudioContext())
         KeyboardProvider.create()
         MIDIProvider.init().catch(console.error)
+        globalConfigStore.load() //before songsStore
         songsStore.sync().catch(console.error)
         folderStore.sync().catch(console.error)
         themeStore.sync().catch(console.error)
         keyBinds.load()
         ThemeProvider.load().catch(console.error)
-        globalConfigStore.load()
         setupProtocol().catch(console.error)
         return () => {
             AudioProvider.destroy()

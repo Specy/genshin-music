@@ -3,7 +3,7 @@ import { Rectangle, TextStyle } from "pixi.js";
 import { memo, useEffect, useState } from "react";
 import useFontFaceObserver from "use-font-face-observer";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
-import { useDefaultConfig } from "$lib/Hooks/useConfig";
+import { useConfig } from "$lib/Hooks/useConfig";
 
 interface VsrgKeysRendererProps {
     keys: string[]
@@ -26,7 +26,7 @@ const fontFace = [{
 
 //TODO add cache as bitmap
 function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKeyUp }: VsrgKeysRendererProps) {
-    const { PLAY_BAR_OFFSET } = useDefaultConfig()
+    const { PLAY_BAR_OFFSET } = useConfig()
     const [textStyle, setTextStyle] = useState(defaultVsrgTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
     useEffect(() => {

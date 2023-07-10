@@ -12,7 +12,7 @@ export class Column {
 		this.notes = []
 		this.tempoChanger = 0
 	}
-	clone(){
+	clone() {
 		const clone = new Column()
 		clone.tempoChanger = this.tempoChanger
 		clone.notes = this.notes.map(note => note.clone())
@@ -30,13 +30,13 @@ export class Column {
 		return note
 	}
 
-	serialize(): SerializedColumn{
+	serialize(): SerializedColumn {
 		return [this.tempoChanger, this.notes.map(note => note.serialize())]
 	}
-	static deserialize(data: SerializedColumn): Column {
+	static deserialize(data: SerializedColumn, ignoreMaxLayer = false): Column {
 		const column = new Column()
 		column.tempoChanger = data[0]
-		column.notes = data[1].map(note => ColumnNote.deserialize(note)).filter(note => !note.layer.isEmpty())
+		column.notes = data[1].map(note => ColumnNote.deserialize(note, ignoreMaxLayer)).filter(note => !note.layer.isEmpty())
 		return column
 	}
 	addColumnNote = (note: ColumnNote) => {
@@ -57,27 +57,27 @@ export class Column {
 	}
 }
 const instrumentNoteMap = new Map<InstrumentNoteIcon, number>([['border', 1], ['circle', 2], ['line', 3]])
-export interface SerializedInstrumentData{
-    name: InstrumentName
-    volume: number
-    pitch: Pitch | ""
-    visible: boolean
-    icon: InstrumentNoteIcon
+export interface SerializedInstrumentData {
+	name: InstrumentName
+	volume: number
+	pitch: Pitch | ""
+	visible: boolean
+	icon: InstrumentNoteIcon
 	alias: string
 	muted: boolean
 }
-export class InstrumentData{
-    name: InstrumentName = INSTRUMENTS[0]
-    volume: number = APP_NAME === 'Genshin' ? 90 : 100
-    pitch: Pitch | "" = ""
-    visible: boolean = true
-    icon: InstrumentNoteIcon = 'circle'
+export class InstrumentData {
+	name: InstrumentName = INSTRUMENTS[0]
+	volume: number = APP_NAME === 'Genshin' ? 90 : 100
+	pitch: Pitch | "" = ""
+	visible: boolean = true
+	icon: InstrumentNoteIcon = 'circle'
 	alias = ''
 	muted = false
 	constructor(data: Partial<InstrumentData> = {}) {
 		Object.assign(this, data)
 	}
-	serialize(): SerializedInstrumentData{
+	serialize(): SerializedInstrumentData {
 		return {
 			name: this.name,
 			volume: this.volume,
@@ -88,7 +88,7 @@ export class InstrumentData{
 			muted: this.muted
 		}
 	}
-	static deserialize(data: SerializedInstrumentData): InstrumentData{
+	static deserialize(data: SerializedInstrumentData): InstrumentData {
 		return new InstrumentData().set({
 			name: data.name ?? INSTRUMENTS[0],
 			volume: data.volume ?? 100,
@@ -99,14 +99,14 @@ export class InstrumentData{
 			muted: data.muted ?? false
 		})
 	}
-	set(data: Partial<InstrumentData>){
+	set(data: Partial<InstrumentData>) {
 		Object.assign(this, data)
 		return this
 	}
-	toNoteIcon(){
+	toNoteIcon() {
 		return instrumentNoteMap.get(this.icon) || 0
 	}
-	clone(){
+	clone() {
 		return new InstrumentData(this)
 	}
 }
@@ -126,8 +126,8 @@ export class ColumnNote {
 		}
 		return SPLIT_EMPTY_LAYER.join('')
 	}
-	static deserialize(serialized: SerializedColumnNote): ColumnNote {
-		return  new ColumnNote(serialized[0], NoteLayer.deserializeHex(serialized[1]))
+	static deserialize(serialized: SerializedColumnNote, ignoreMaxLayer = false): ColumnNote {
+		return new ColumnNote(serialized[0], NoteLayer.deserializeHex(serialized[1], ignoreMaxLayer))
 	}
 
 	serialize(): SerializedColumnNote {
@@ -135,15 +135,15 @@ export class ColumnNote {
 	}
 	switchLayer(from: number, to: number) {
 		const isToggled = this.layer.test(from)
-		if(isToggled) this.layer.set(to, true)
+		if (isToggled) this.layer.set(to, true)
 		this.layer.set(from, false)
 	}
-	swapLayer(layer1: number, layer2: number){
+	swapLayer(layer1: number, layer2: number) {
 		const tmp = this.layer.test(layer1)
 		this.layer.set(layer1, this.layer.test(layer2))
 		this.layer.set(layer2, tmp)
 	}
-	clearLayer(){
+	clearLayer() {
 		this.layer.clear()
 	}
 
@@ -158,7 +158,7 @@ export class ColumnNote {
 	isLayerToggled(layerIndex: number) {
 		return this.layer.test(layerIndex)
 	}
-	clone(){
+	clone() {
 		return new ColumnNote(this.index, this.layer.clone())
 	}
 }
@@ -196,16 +196,16 @@ export class RecordedNote {
 	setLayer(layer: number, value: boolean) {
 		this.layer.set(layer, value)
 	}
-	toMidi(){
+	toMidi() {
 		return NOTE_MAP_TO_MIDI.get(this.index)
 	}
 	serialize(): SerializedRecordedNote {
 		return [this.index, this.time, this.layer.serializeHex()]
 	}
-	static deserialize(data: SerializedRecordedNote) {
-		return new RecordedNote(data[0], data[1], NoteLayer.deserializeHex(data[2]))
+	static deserialize(data: SerializedRecordedNote, ignoreMaxLayer = false) {
+		return new RecordedNote(data[0], data[1], NoteLayer.deserializeHex(data[2], ignoreMaxLayer))
 	}
-	clone(){
+	clone() {
 		return new RecordedNote(this.index, this.time, this.layer.clone())
 	}
 }
@@ -234,42 +234,42 @@ export type SongData = {
 	appName: string
 }
 export type ParsedMidiNote = {
-    note: number
-    isAccidental: boolean
-    outOfRangeBound: 1 | -1 | 0
+	note: number
+	isAccidental: boolean
+	outOfRangeBound: 1 | -1 | 0
 }
 
 export class MidiNote {
-    time: number
-    data: ParsedMidiNote
-    layer: number
-    constructor(time: number, layer: number, data?: ParsedMidiNote,) {
-        this.time = time
-        this.data = data || {
-            note: -1,
-            isAccidental: false,
-            outOfRangeBound: 0
-        }
-        this.layer = layer
-    }
-    static fromMidi(layer: number, time: number, midiNote: number, octavesScale: number){
-        const toReturn = new MidiNote(time, layer)
-		for(let i = 0; i < octavesScale; i++){
-			if(midiNote < MIDI_BOUNDS.lower){
+	time: number
+	data: ParsedMidiNote
+	layer: number
+	constructor(time: number, layer: number, data?: ParsedMidiNote,) {
+		this.time = time
+		this.data = data || {
+			note: -1,
+			isAccidental: false,
+			outOfRangeBound: 0
+		}
+		this.layer = layer
+	}
+	static fromMidi(layer: number, time: number, midiNote: number, octavesScale: number) {
+		const toReturn = new MidiNote(time, layer)
+		for (let i = 0; i < octavesScale; i++) {
+			if (midiNote < MIDI_BOUNDS.lower) {
 				midiNote += 8
 			}
-			if(midiNote > MIDI_BOUNDS.upper){
+			if (midiNote > MIDI_BOUNDS.upper) {
 				midiNote -= 8
 			}
 		}
-        const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean]
-        toReturn.data = {
-            note: note[0],
-            isAccidental: note[1],
-            outOfRangeBound: 0
-        }
-        if(midiNote > MIDI_BOUNDS.upper) toReturn.data.outOfRangeBound = 1
-        if(midiNote < MIDI_BOUNDS.lower) toReturn.data.outOfRangeBound = -1
-        return toReturn
-    }
+		const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean]
+		toReturn.data = {
+			note: note[0],
+			isAccidental: note[1],
+			outOfRangeBound: 0
+		}
+		if (midiNote > MIDI_BOUNDS.upper) toReturn.data.outOfRangeBound = 1
+		if (midiNote < MIDI_BOUNDS.lower) toReturn.data.outOfRangeBound = -1
+		return toReturn
+	}
 }

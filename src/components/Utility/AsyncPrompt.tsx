@@ -37,7 +37,6 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
         if(!deferred) return
         //@ts-ignore
         document.activeElement?.blur()
-        console.log('focus')
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
             asyncPromptStore.answerConfirm(false)
@@ -68,7 +67,7 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
             isRelative={false}
             size={'1.1rem'}
         >
-            <div>
+            <div style={{whiteSpace: "pre-wrap"}}>
                 {question}
             </div>
             <div className="prompt-row">
@@ -159,7 +158,7 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
             isRelative={false}
             size={'1.1rem'}
         >
-            <div>
+            <div style={{whiteSpace: "pre-wrap"}}>
                 {question}
             </div>
             <input

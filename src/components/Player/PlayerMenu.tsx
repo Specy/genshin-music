@@ -42,7 +42,7 @@ import { songService } from '$lib/Services/SongService';
 import { RecordedOrComposed } from '$types/SongTypes';
 import { _folderService } from '$lib/Services/FolderService';
 import { settingsService } from '$lib/Services/SettingsService';
-import { useDefaultConfig } from '$lib/Hooks/useConfig';
+import { useConfig } from '$lib/Hooks/useConfig';
 import { createShortcutListener } from '$stores/KeybindsStore';
 import sh from '$cmp/HelpTab/HelpTab.module.css'
 import { themeStore } from "$stores/ThemeStore/ThemeStore";
@@ -70,7 +70,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
     const [searchInput, setSearchInput] = useState('')
     const [searchedSongs, setSearchedSongs] = useState<SearchedSongType[]>([])
     const [searchStatus, setSearchStatus] = useState('')
-    const { IS_MIDI_AVAILABLE } = useDefaultConfig()
+    const { IS_MIDI_AVAILABLE } = useConfig()
     const [isPersistentStorage, setPeristentStorage] = useState(false)
     const [theme] = useTheme()
     const [folders] = useFolders()

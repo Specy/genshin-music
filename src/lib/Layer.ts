@@ -7,11 +7,15 @@ export type LayerStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 const HAS_BIGINT = typeof BigInt !== 'undefined'
 //ugly way to make it backwards compatible with devices that don't have bigint
 export class NoteLayer {
-    static MAX_LAYERS = typeof BigInt !== 'undefined' ? 52 : 30
+    static MAX_LAYERS = HAS_BIGINT ? 52 : 30
+    static BIGGEST_LAYER = HAS_BIGINT ? (1n << BigInt(NoteLayer.MAX_LAYERS)) : (1 << NoteLayer.MAX_LAYERS)
     static MIN_LAYERS = 0
     private data: bigint | number
     static EMPTY_LAYER = new NoteLayer(0)
-    constructor(layer: bigint | number = 0) {
+    constructor(layer: bigint | number = 0, ignoreMax = false) {
+        if (!ignoreMax && layer > NoteLayer.BIGGEST_LAYER){
+            throw new Error(`Layer ${layer.toString(2).length} Exceeds Max Layers of ${NoteLayer.MAX_LAYERS} layers`)
+        }
         if (HAS_BIGINT) {
             this.data = BigInt(layer)
         } else {
@@ -98,9 +102,9 @@ export class NoteLayer {
     serializeBin() {
         return this.data.toString(2)
     }
-    static deserializeHex(str: string) {
-        if (HAS_BIGINT) return new NoteLayer(BigInt('0x' + str))
-        return new NoteLayer(parseInt(str, 16))
+    static deserializeHex(str: string, ignoreMax = false) {
+        if (HAS_BIGINT) return new NoteLayer(BigInt('0x' + str), ignoreMax)
+        return new NoteLayer(parseInt(str, 16), ignoreMax)
     }
     static deserializeBin(str: string) {
         if (HAS_BIGINT) return new NoteLayer(BigInt('0b' + str))
@@ -114,3 +118,5 @@ export class NoteLayer {
         return new NoteLayer(this.data)
     }
 }
+
+

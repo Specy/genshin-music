@@ -1,12 +1,12 @@
 import { APP_NAME } from '$config'
 import composerImg from '$/assets/images/help-composer.png'
 import playerImg from '$/assets/images/help-player.png'
-import { useDefaultConfig } from '$lib/Hooks/useConfig'
+import { useConfig } from '$lib/Hooks/useConfig'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import Image from 'next/image'
 import sh from '$cmp/HelpTab/HelpTab.module.css'
 export function HelpTab() {
-    const { IS_MOBILE } = useDefaultConfig()
+    const { IS_MOBILE } = useConfig()
     return <>
         <span>
             If you are on PC, hover over the buttons to see a tooltip, if you are on mobile, long press the buttons.
