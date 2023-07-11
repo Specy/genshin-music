@@ -33,10 +33,10 @@ export class Column {
 	serialize(): SerializedColumn {
 		return [this.tempoChanger, this.notes.map(note => note.serialize())]
 	}
-	static deserialize(data: SerializedColumn, ignoreMaxLayer = false): Column {
+	static deserialize(data: SerializedColumn): Column {
 		const column = new Column()
 		column.tempoChanger = data[0]
-		column.notes = data[1].map(note => ColumnNote.deserialize(note, ignoreMaxLayer)).filter(note => !note.layer.isEmpty())
+		column.notes = data[1].map(note => ColumnNote.deserialize(note)).filter(note => !note.layer.isEmpty())
 		return column
 	}
 	addColumnNote = (note: ColumnNote) => {
@@ -126,8 +126,8 @@ export class ColumnNote {
 		}
 		return SPLIT_EMPTY_LAYER.join('')
 	}
-	static deserialize(serialized: SerializedColumnNote, ignoreMaxLayer = false): ColumnNote {
-		return new ColumnNote(serialized[0], NoteLayer.deserializeHex(serialized[1], ignoreMaxLayer))
+	static deserialize(serialized: SerializedColumnNote): ColumnNote {
+		return new ColumnNote(serialized[0], NoteLayer.deserializeHex(serialized[1]))
 	}
 
 	serialize(): SerializedColumnNote {
@@ -202,8 +202,8 @@ export class RecordedNote {
 	serialize(): SerializedRecordedNote {
 		return [this.index, this.time, this.layer.serializeHex()]
 	}
-	static deserialize(data: SerializedRecordedNote, ignoreMaxLayer = false) {
-		return new RecordedNote(data[0], data[1], NoteLayer.deserializeHex(data[2], ignoreMaxLayer))
+	static deserialize(data: SerializedRecordedNote) {
+		return new RecordedNote(data[0], data[1], NoteLayer.deserializeHex(data[2]))
 	}
 	clone() {
 		return new RecordedNote(this.index, this.time, this.layer.clone())

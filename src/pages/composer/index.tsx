@@ -483,8 +483,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 parsed.name += " - Composed"
             }
             if (song.type === 'composed') {
-                const isUmaMode = globalConfigStore.get().IS_UMA_MODE
-                parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong, isUmaMode)
+                parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong)
             }
         }
         if (!parsed) return

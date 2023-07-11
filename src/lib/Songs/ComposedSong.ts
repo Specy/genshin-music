@@ -57,7 +57,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.columns = new Array(100).fill(0).map(_ => new Column())
         instruments.forEach(this.addInstrument)
     }
-    static deserialize(song: UnknownSerializedComposedSong, ignoreMaxLayer = false): ComposedSong {
+    static deserialize(song: UnknownSerializedComposedSong): ComposedSong {
         //@ts-ignore
         if (song.version === undefined) song.version = 1
         const parsed = Song.deserializeTo(new ComposedSong(song.name), song)
@@ -77,7 +77,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             })
         }
         if (song.version === 2 || song.version === 3) {
-            parsed.columns = song.columns.map(column => Column.deserialize(column, ignoreMaxLayer))
+            parsed.columns = song.columns.map(column => Column.deserialize(column))
         }
         const highestLayer = NoteLayer.maxLayer(parsed.columns.flatMap(column => column.notes.map(note => note.layer)))
         //make sure there are enough instruments for all layers
@@ -99,7 +99,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
                 parsed.instruments[i] = InstrumentData.deserialize(ins)
             })
         }
-        if (song.instruments.length > NoteLayer.MAX_LAYERS && !ignoreMaxLayer) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
+        if (song.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
         
         return parsed
     }

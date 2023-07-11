@@ -1,19 +1,19 @@
+import { BASE_LAYER_LIMIT, HAS_BIGINT } from "$config"
 import { InstrumentData } from "./Songs/SongClasses"
 
 //map of the possible combinations of instruments, in binary, 
 export type LayerStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16
 
 
-const HAS_BIGINT = typeof BigInt !== 'undefined'
 //ugly way to make it backwards compatible with devices that don't have bigint
 export class NoteLayer {
-    static MAX_LAYERS = HAS_BIGINT ? 52 : 30
+    static MAX_LAYERS = BASE_LAYER_LIMIT
     static BIGGEST_LAYER = HAS_BIGINT ? (1n << BigInt(NoteLayer.MAX_LAYERS)) : (1 << NoteLayer.MAX_LAYERS)
     static MIN_LAYERS = 0
     private data: bigint | number
     static EMPTY_LAYER = new NoteLayer(0)
-    constructor(layer: bigint | number = 0, ignoreMax = false) {
-        if (!ignoreMax && layer > NoteLayer.BIGGEST_LAYER){
+    constructor(layer: bigint | number = 0) {
+        if (layer > NoteLayer.BIGGEST_LAYER){
             throw new Error(`Layer ${layer.toString(2).length} Exceeds Max Layers of ${NoteLayer.MAX_LAYERS} layers`)
         }
         if (HAS_BIGINT) {
@@ -22,6 +22,12 @@ export class NoteLayer {
             this.data = layer
         }
     }
+
+    static setMaxLayerCount(max: number) {
+        NoteLayer.MAX_LAYERS = max
+        NoteLayer.BIGGEST_LAYER = HAS_BIGINT ? (1n << BigInt(NoteLayer.MAX_LAYERS)) : 32
+    }
+
     static maxLayer(layers: NoteLayer[]) {
         if (layers.length === 0) return NoteLayer.MIN_LAYERS
         let max = layers[0].data
@@ -102,9 +108,9 @@ export class NoteLayer {
     serializeBin() {
         return this.data.toString(2)
     }
-    static deserializeHex(str: string, ignoreMax = false) {
-        if (HAS_BIGINT) return new NoteLayer(BigInt('0x' + str), ignoreMax)
-        return new NoteLayer(parseInt(str, 16), ignoreMax)
+    static deserializeHex(str: string) {
+        if (HAS_BIGINT) return new NoteLayer(BigInt('0x' + str))
+        return new NoteLayer(parseInt(str, 16))
     }
     static deserializeBin(str: string) {
         if (HAS_BIGINT) return new NoteLayer(BigInt('0b' + str))

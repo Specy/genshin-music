@@ -1,4 +1,3 @@
-import { AppButton } from "$cmp/Inputs/AppButton";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
 import { APP_NAME } from "$config";
@@ -88,11 +87,12 @@ export default function UmaMode() {
                 if (!question) return logger.success("A choice worthy of remembrance, join the discord if you want to know the passphrase")
                 if (question.toLowerCase().trim().replaceAll(" ", "") === "unlimitedmultiarrangement") {
                     logger.success("T̶̖̿ḩ̷̈́o̸̲̿u̷̠̍ ̶̥́ ̷̮̽h̵͚̅a̶͚͠s̷͍͂t̶̖̓ ̷̙̒ȅ̷͜n̴͉̋t̶͇͆e̴͎̚r̵̪̽ẻ̷͎d̶̺̊ ̵̦̓t̴̪͛ḧ̵͎́ḙ̸̌ ̴̞̚u̵̖̓m̸̳̀ä̶̬ ̵͉͒m̴̲͠ó̴͇d̴̝̚e̵̳̍,̴̘͘ ̶̳͝ţ̵̅h̵͈̑ó̴̞ǘ̷͍ ̵̏ͅå̷̘ȑ̴̮e̸̡̽ ̴̗̓ ̸̢̒n̴̦͗o̵͍̊t̷̺̃ ̵͎͑p̸̯̈r̵̭͌o̵̬͋t̷̘͑e̸̽ͅć̶͜ṯ̶̉e̸̲̾d̷̦̀ ̴͇̅b̴̦̀y̶̛̬ ̵̗̔t̷͙̒h̷̥̎ê̶̮ ̸͚̀a̵̬͛l̸͈̓m̶̥̽i̶͓̎g̴̘̈h̷̠̔t̶͍̕y̵̗͠ ̶̜̋d̷͙̆e̶̲͆ș̶̏t̷̗͌ř̶̨o̴̼͗y̸̼̆ě̶̫r̸̹̒ ̶̣̿ȏ̷ͅf̸̤͆ ̴̦̓s̶͔̈́h̶̝̅e̶͕̓e̷̦͑t̶͙̔s̵͚͐,̵̘̀ ̴̡̍p̵̻̀r̶̬̉o̵̮̎c̴͙͘e̷̩̊e̸̻͌d̴̘̆ ̸͔̿w̴̗͌i̴̜͗t̵̲̍ḣ̴͖ ̴̗͋c̶̯͒á̷͚u̶͕̇t̴͍͋ḯ̴͖o̶͈̔n̸͉͝", 15000)
-                    return globalConfigStore.setState({ IS_UMA_MODE: true })
+                    return globalConfigStore.setUmaMode(true)
                 }
             }
         }
-        globalConfigStore.setState({ IS_UMA_MODE: false })
+
+        globalConfigStore.setUmaMode(false)
         logger.success("Thou hast ran to salvation, thou are now protected by the almighty destroyer of sheets", 5000)
     }
 

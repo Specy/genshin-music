@@ -1,4 +1,5 @@
-import { APP_NAME } from "$config";
+import { APP_NAME, BASE_LAYER_LIMIT } from "$config";
+import { NoteLayer } from "$lib/Layer";
 import isMobile from "is-mobile";
 import { makeObservable, observable } from "mobx";
 
@@ -15,7 +16,7 @@ class GlobalConfigStore {
     state: GlobalConfig = {
         PLAY_BAR_OFFSET: 200,
         IS_MOBILE: false,
-        IS_MIDI_AVAILABLE: true, 
+        IS_MIDI_AVAILABLE: true,
         IS_UMA_MODE: false
     }
     constructor() {
@@ -23,22 +24,28 @@ class GlobalConfigStore {
     }
     setState = (state: Partial<GlobalConfig>) => {
         Object.assign(this.state, state)
-        if(Object.hasOwn(state, 'IS_UMA_MODE')) {
-            localStorage.setItem(`${APP_NAME}_uma_mode`, JSON.stringify(state.IS_UMA_MODE))
+    }
+    setUmaMode = (isOn: boolean) => {
+        this.setState({IS_UMA_MODE: isOn})
+        if(isOn){
+            NoteLayer.setMaxLayerCount(1024)
+        }else{
+            NoteLayer.setMaxLayerCount(BASE_LAYER_LIMIT)
         }
+        localStorage.setItem(`${APP_NAME}_uma_mode`, JSON.stringify(isOn))
     }
     load = () => {
         const IS_MOBILE = isMobile()
-        const saved = JSON.parse(localStorage.getItem(`${APP_NAME}_uma_mode`) || "false")
         this.setState({
-            IS_MOBILE, 
+            IS_MOBILE,
             PLAY_BAR_OFFSET: IS_MOBILE ? 100 : 200,
-            IS_UMA_MODE: saved,
             IS_MIDI_AVAILABLE: 'requestMIDIAccess' in navigator
         })
+        const umaMode = JSON.parse(localStorage.getItem(`${APP_NAME}_uma_mode`) || "false")
+        this.setUmaMode(umaMode)
     }
     get = () => {
-        return {...this.state}
+        return { ...this.state }
     }
 }
 export const globalConfigStore = new GlobalConfigStore()

@@ -52,7 +52,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         return song
     }
-    static deserialize(obj: SerializedRecordedSong, ignoreMaxLayer = false): RecordedSong {
+    static deserialize(obj: SerializedRecordedSong): RecordedSong {
         const { notes, name } = obj
         const version = obj.version || 1
         const song = Song.deserializeTo(new RecordedSong(name || 'Untitled') , obj)

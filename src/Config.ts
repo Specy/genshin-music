@@ -1,5 +1,5 @@
 import type { Tauri } from "$types/TauriTypes"
-import { NoteImage } from "./components/SvgNotes"
+import type { NoteImage } from "./components/SvgNotes"
 
 const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
 const APP_VERSION = '3.1' as const
@@ -705,6 +705,8 @@ const DEFAULT_DOM_RECT = {
 } as DOMRect
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+const HAS_BIGINT = typeof BigInt !== 'undefined'
+const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
 
 export {
     BASE_PATH,
@@ -713,6 +715,8 @@ export {
     COMPOSER_NOTE_POSITIONS,
     IMPORT_NOTE_POSITIONS,
     APP_NAME,
+    HAS_BIGINT, 
+    BASE_LAYER_LIMIT,
     LAYOUT_KINDS,
     NOTES_CSS_CLASSES,
     NOTES_PER_COLUMN,

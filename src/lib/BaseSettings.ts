@@ -50,6 +50,7 @@ export const ComposerSettings: ComposerSettingsType = {
         },
         beatMarks: {
             name: "Beat marks",
+            tooltip: "The number of beats per measure, 3/4 is 3 beats per measure, 4/4 is 4 beats per measure",
             type: "select",
             songSetting: false,
             value: 3,
