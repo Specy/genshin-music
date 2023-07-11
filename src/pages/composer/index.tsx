@@ -472,46 +472,52 @@ class Composer extends Component<ComposerProps, ComposerState>{
         Analytics.songEvent({ type: 'create' })
     }
     loadSong = async (song: SerializedSong | ComposedSong) => {
-        const state = this.state
-        let parsed: ComposedSong | null = null
-        if (song instanceof ComposedSong) {
-            //TODO not sure if i should clone the song here
-            parsed = song
-        } else {
-            if (song.type === 'recorded') {
-                parsed = RecordedSong.deserialize(song as SerializedRecordedSong).toComposedSong(4)
-                parsed.name += " - Composed"
+        try{
+            const state = this.state
+            let parsed: ComposedSong | null = null
+            if (song instanceof ComposedSong) {
+                //TODO not sure if i should clone the song here
+                parsed = song
+            } else {
+                if (song.type === 'recorded') {
+                    parsed = RecordedSong.deserialize(song as SerializedRecordedSong).toComposedSong(4)
+                    parsed.name += " - Composed"
+                }
+                if (song.type === 'composed') {
+                    parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong)
+                }
             }
-            if (song.type === 'composed') {
-                parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong)
+            if (!parsed) return
+            if (this.changes !== 0) {
+                let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
+                if (!confirm && state.song.columns.length > 0) {
+                    const promptResult = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                    if (promptResult === null) return
+                    confirm = promptResult
+                }
+                if (confirm) {
+                    await this.updateSong(state.song)
+                    //TODO once i change to ID i need to remove this
+                    if (state.song.name === parsed.name) return
+                }
             }
+            const settings = this.state.settings
+            settings.bpm = { ...settings.bpm, value: song.bpm }
+            settings.pitch = { ...settings.pitch, value: song.pitch }
+            if (!this.mounted) return
+            this.changes = 0
+            console.log("song loaded")
+            this.setState({
+                layer: 0,
+                song: parsed,
+                settings: { ...settings },
+                selectedColumns: []
+            }, () => this.syncInstruments())
+        }catch(e){
+            console.error(e)
+            logger.error("There was an error loading this song")
         }
-        if (!parsed) return
-        if (this.changes !== 0) {
-            let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
-            if (!confirm && state.song.columns.length > 0) {
-                const promptResult = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
-                if (promptResult === null) return
-                confirm = promptResult
-            }
-            if (confirm) {
-                await this.updateSong(state.song)
-                //TODO once i change to ID i need to remove this
-                if (state.song.name === parsed.name) return
-            }
-        }
-        const settings = this.state.settings
-        settings.bpm = { ...settings.bpm, value: song.bpm }
-        settings.pitch = { ...settings.pitch, value: song.pitch }
-        if (!this.mounted) return
-        this.changes = 0
-        console.log("song loaded")
-        this.setState({
-            layer: 0,
-            song: parsed,
-            settings: { ...settings },
-            selectedColumns: []
-        }, () => this.syncInstruments())
+
     }
 
     addColumns = (amount = 1, position: number | 'end' = "end"): Promise<void> => {
