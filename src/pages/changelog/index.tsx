@@ -15,11 +15,11 @@ export default function ChangelogPage() {
         excludeMenu={true}
         menu={
             <SimpleMenu>
-                <MenuItem ariaLabel='Go to github'>
-                    <a href='https://github.com/Specy/genshin-music' className='icon' target="_blank" rel='noreferrer'>
-                        <FaGithub />
-                    </a>
-                </MenuItem>
+                <Link href='https://github.com/Specy/genshin-music' target="_blank" rel='noreferrer' title='Go to github'>
+                    <MenuItem ariaLabel='Go to github'>
+                        <FaGithub  className='icon'/>
+                    </MenuItem>
+                </Link>
             </SimpleMenu>
         }
     >
@@ -44,6 +44,6 @@ export default function ChangelogPage() {
             {...data}
             key={data.version}
         />)}
-        <div className={s['changelog-ending']}/>
+        <div className={s['changelog-ending']} />
     </DefaultPage>
 }

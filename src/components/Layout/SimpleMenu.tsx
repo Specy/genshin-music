@@ -1,9 +1,10 @@
 import { FaHome, FaDiscord, FaArrowLeft } from 'react-icons/fa';
 
-import {MenuItem} from '$cmp/Miscellaneous/MenuItem'
+import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import { historyTracker } from '$stores/History';
 import { homeStore } from '$stores/HomeStore';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 interface SimpleMenuProps {
     children?: React.ReactNode,
@@ -25,11 +26,11 @@ export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuP
                 </MenuItem>
             }
             {children}
-            <MenuItem ariaLabel='Go to discord'>
-                <a href='https://discord.gg/Arsf65YYHq' target='_blank' rel='noreferrer' >
+            <Link href='https://discord.gg/Arsf65YYHq' target='_blank' rel='noreferrer' title='Go to discord' >
+                <MenuItem ariaLabel='Go to discord'>
                     <FaDiscord className="icon" />
-                </a>
-            </MenuItem>
+                </MenuItem>
+            </Link>
 
             <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
                 <FaHome className="icon" />

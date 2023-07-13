@@ -79,6 +79,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                 />
                 <IconButton 
                     size="1rem" 
+                    ariaLabel={searchValue === "" ? "Search" : "Clear search"}
                     style={{ backgroundColor: "transparent", color: "inherit" }}
                     onClick={() => setSearchValue("")}
                 >

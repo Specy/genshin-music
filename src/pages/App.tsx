@@ -59,7 +59,6 @@ function AppBase() {
 	useEffect(() => {
 		if ("launchQueue" in window) {
 			async function consumer(launchParams: any){
-				console.log(launchParams)
 				if (launchParams.files && launchParams.files.length) {
 					const confirm = await asyncConfirm("You opened a file, do you want to import it?", false)
 					if (!confirm) return

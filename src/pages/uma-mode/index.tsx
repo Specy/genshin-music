@@ -1,4 +1,5 @@
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
+import { Title } from "$cmp/Miscellaneous/Title";
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
 import { APP_NAME } from "$config";
 import { useConfig } from "$lib/Hooks/useConfig";
@@ -11,6 +12,7 @@ import { useState, useEffect, useRef, CSSProperties } from "react";
 
 const nonUmaModeEmojis = ["👻", "👾", "👺", "👹", "👿", "🔥"]
 const umaModeEmojis = ["💀", "🦴", "☠️", "🪦", "⚰️"]
+const umaModeText = umaModeEmojis.join(" ")
 let id = 0
 function createRandomParticle(bounds: DOMRect, emojis: string[]) {
     const emoji = emojis[Math.floor(Math.random() * emojis.length)]
@@ -97,6 +99,7 @@ export default function UmaMode() {
     }
 
     return <DefaultPage cropped>
+        <Title text={IS_UMA_MODE ?  umaModeText : "Ȕ̶̲͇̦͇̖̈́̐̒m̶͖̰̜̎ā̴̩̅͐͘͠ ̶̯̘͊̑̃m̵̟͕̌̀o̸̮͌d̸̖̯̤̒̈̚̕ë̴̪̟́̉͂̓"} description="Thou whom enter this space shall  not be protected by the almighty destroyer of sheets, who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution"/>
         <div className="column" style={{ gap: "1rem" }}>
             <h1>Uma Mode</h1>
             <div>
@@ -114,7 +117,7 @@ export default function UmaMode() {
                 <div className={`${s['uma-mode-text']}`}>
                     {IS_UMA_MODE ? "Run to salvation" : "Enter Hell"}
                 </div>
-                {particles.map((particle, i) => <Particle key={particle.id} {...particle} />)}
+                {particles.map((particle, i) => <ParticleElement key={particle.id} {...particle} />)}
             </button>
             {IS_UMA_MODE &&
                 <div>
@@ -137,7 +140,7 @@ interface ParticleProps {
     lifetime: number
 
 }
-function Particle({ emoji, x, y, scale, lifetime }: ParticleProps) {
+function ParticleElement({ emoji, x, y, scale, lifetime }: ParticleProps) {
     return <div
         className={`${s['particle']}`}
         key={emoji}

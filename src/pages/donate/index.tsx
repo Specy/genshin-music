@@ -5,9 +5,10 @@ import { Title } from '$cmp/Miscellaneous/Title'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import Image from 'next/image'
 import s from './Donate.module.css'
+import { APP_NAME } from '$config'
 export default function Donate() {
     return <DefaultPage>
-        <Title text="Donate" description='Please donate to help the development of sky music nightly, genshin music nightly and all the other apps i make.'/>
+        <Title text="Donate" description={`Help the development of ${APP_NAME.toLowerCase()} with a donation.` }/>
         <div className={s['donate-text']}>
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not

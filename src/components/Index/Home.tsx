@@ -223,6 +223,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                     App scale
                 </span>
                 <AppButton
+                    ariaLabel='Decrease app scale'
                     className='flex-centered'
                     onClick={() => {
                         const newScale = appScale - 2
@@ -234,6 +235,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 </AppButton>
                 <AppButton
                     className='flex-centered'
+                    ariaLabel='Increase app scale'
                     style={{ marginRight: '0.5rem' }}
                     onClick={() => {
                         const newScale = appScale + 2
@@ -249,10 +251,10 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </span>
             <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>
-                <input type='checkbox' checked={!data.canShow} readOnly />
-                <span>
+                <input type='checkbox' checked={!data.canShow} readOnly id='hide-on-open-checkbox'/>
+                <label htmlFor='hide-on-open-checkbox' >
                     Hide on open
-                </span>
+                </label>
             </div>
         </div>
     </div>

@@ -21,7 +21,6 @@ export async function checkIfneedsUpdate() {
         const appUpdate: UpdateSchema = await fetch(UPDATE_URL).then(r => r.json())
         const currentVersion = semverCoerce(APP_VERSION)
         const latestVersion = semverCoerce(appUpdate[APP_NAME].version)
-
         if (currentVersion && latestVersion && semverLt(currentVersion, latestVersion)) {
             const { message, urgentMessage } = appUpdate[APP_NAME]
             if (message) {

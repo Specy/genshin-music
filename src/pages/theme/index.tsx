@@ -87,6 +87,7 @@ function ThemePage() {
         }
     }
     return <DefaultPage>
+        <Title text="Themes" description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes" />
         <div style={{ display: 'flex', alignItems: 'center' }}>
             <FilePicker onPick={handleImport} as='json' onError={logImportError}>
                 <AppButton style={{ margin: '0.25rem' }}>

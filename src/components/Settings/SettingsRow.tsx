@@ -35,14 +35,13 @@ function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
 
     return <div
         className={s['settings-row']}
-
         style={{ backgroundColor: theme.layer('menu_background', 0.15).toString() }}
     >
 
-        <div className={hasTooltip(data.tooltip)} style={{flex:'1'}}>
+        <div className={hasTooltip(data.tooltip)} style={{ flex: '1' }}>
             {data.name}
             {data.tooltip &&
-                <Tooltip style={{width: '12rem'}}>
+                <Tooltip style={{ width: '12rem' }}>
                     {data.tooltip}
                 </Tooltip>
             }

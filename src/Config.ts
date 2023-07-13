@@ -2,20 +2,32 @@ import type { Tauri } from "$types/TauriTypes"
 import type { NoteImage } from "./components/SvgNotes"
 
 const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '3.1' as const
+const APP_VERSION = '3.2' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? `
-        Added backup warnings
-        Added tranparency to themes
-        Bug fixes and improvement
+        - Improved Do Re Mi layout 
+        - All shortcuts and keyboard layout are customizable
+        - Added song search
+        - Added new visual sheet format with more info
+        - Improved themes in the composer
+        - Improved composer sliding controls
+        - Increased composer layers limit to 52
+        - Changed file format and added export as zip file
+        - Improved composer performance and audio accuracy
+        - Added two new default themes
     `.trim() :
     `
-        Added aurora (Sky)
-        Added switch/playstation layouts (Sky)
-        Added backup warnings
-        Added tranparency to themes
-        Bug fixes and improvement
+        - Added Do Re Mi layout 
+        - All shortcuts and keyboard layout are customizable
+        - Added song search
+        - Added new visual sheet format with more info
+        - Improved themes in the composer
+        - Improved composer sliding controls
+        - Increased composer layers limit to 52
+        - Changed file format and added export as zip file
+        - Improved composer performance and audio accuracy
+        - Added two new default themes
     `.trim()
 
 const UPDATE_URL = process.env.NODE_ENV === 'development'
