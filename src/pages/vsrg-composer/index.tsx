@@ -17,7 +17,7 @@ import { RecordedSong } from "$lib/Songs/RecordedSong";
 import { SerializedSong } from "$lib/Songs/Song";
 import { songService } from "$lib/Services/SongService";
 import { ComposedSong } from "$lib/Songs/ComposedSong";
-import { clamp, isFocusable } from "$lib/Utilities";
+import { clamp, isFocusable, routeChangeBugFix } from "$lib/Utilities";
 import { DEFAULT_VSRG_KEYS_MAP } from "$config";
 import { ClickType } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
@@ -111,7 +111,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 throw 'routeChange aborted.'
             }
             this.props.router.events.off('routeChangeStart', this.unblock)
-            this.props.router.push(data)
+            this.props.router.push(routeChangeBugFix(data))
         })
         this.props.router.events.on("routeChangeStart", this.unblock)
         const disposeShortcuts = createShortcutListener("vsrg_composer", "vsrg_composer", this.handleShortcut)
@@ -285,7 +285,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             }
         }
         this.props.router.events.off('routeChangeStart', this.unblock)
-        this.props.router.push(page)
+        this.props.router.push(routeChangeBugFix(page))
     }
     onSnapPointChange = (snapPoint: SnapPoint) => {
         const { vsrg } = this.state

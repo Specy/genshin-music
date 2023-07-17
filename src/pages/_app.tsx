@@ -14,7 +14,7 @@ import '$pages/theme/Theme.css'
 import '$pages/vsrg-composer/VsrgComposer.css';
 
 import type { AppProps } from "next/app";
-import AppBase from "./App";
+import AppBase from "$cmp/AppBase";
 import { NextComponentType, NextPageContext } from "next";
 import { setIfInTWA } from "$lib/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"

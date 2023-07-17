@@ -1,4 +1,4 @@
-import { APP_NAME, PITCHES, Pitch, TEMPO_CHANGERS, NOTE_SCALE, PITCH_TO_INDEX, BaseNote } from "$config"
+import { PITCHES, Pitch, TEMPO_CHANGERS, BASE_PATH } from "$config"
 import * as workerTimers from 'worker-timers';
 import { Column, RecordedNote } from "./Songs/SongClasses";
 import { ColumnNote } from "./Songs/SongClasses";
@@ -275,6 +275,16 @@ function prettyPrintInstrumentName(name: string) {
 }
 
 
+/*
+	When navigating to /genshinMusic/composer or routes that have a basepath, the router
+	tries to navigate to /genshinMusic/genshinMusic/composer. So remove the basepath from the route
+*/
+function routeChangeBugFix(route: string){
+	if(BASE_PATH === "/" || BASE_PATH === "") return route
+	if(typeof route !== "string") return route
+	if(route.startsWith(BASE_PATH)) return route.slice(BASE_PATH.length) || "/"
+	return route
+}
 
 export type {
 	Debouncer
@@ -300,6 +310,7 @@ export {
 	setIfInTWA,
 	blurEvent,
 	insertionSort,
+	routeChangeBugFix,
 	isComposedOrRecorded,
 	isFocusable,
 	parseMouseClick,

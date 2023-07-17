@@ -1,3 +1,4 @@
+import { routeChangeBugFix } from "$lib/Utilities";
 import { NextRouter, useRouter } from "next/router";
 import { Component, ReactElement } from "react";
 
@@ -24,7 +25,7 @@ class ErrorBoundaryRedirect extends Component<ErrorBoundaryRedirectPropsWithRout
     componentDidCatch(error:any, info:any) {
         console.error(error, info);
         if(window.location.hostname === "localhost") return console.error("Prevent localhost redirect")
-        this.props.router.push(this.props.onErrorGoTo);
+        this.props.router.push(routeChangeBugFix(this.props.onErrorGoTo));
     }
     static getDerivedStateFromError(error:any) {
         return { hasError: true };

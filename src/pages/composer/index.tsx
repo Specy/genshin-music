@@ -12,7 +12,7 @@ import Memoized from '$cmp/Utility/Memoized';
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
 import { ComposerSettingsDataType } from "$lib/BaseSettings"
 import Instrument, { ObservableNote } from "$lib/Instrument"
-import { delay, formatMs, calculateSongLength } from "$lib/Utilities"
+import { delay, formatMs, calculateSongLength, routeChangeBugFix } from "$lib/Utilities"
 import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
 import { Column, InstrumentData } from '$lib/Songs/SongClasses';
 import AudioRecorder from '$lib/AudioRecorder'
@@ -126,7 +126,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 throw 'routeChange aborted.'
             }
             this.props.router.events.off('routeChangeStart', this.unblock)
-            this.props.router.push(data)
+            this.props.router.push(routeChangeBugFix(data))
         })
         this.props.router.events.on("routeChangeStart", this.unblock)
         if (window.location.hostname !== "localhost") {
@@ -604,7 +604,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             }
         }
         this.props.router.events.off('routeChangeStart', this.unblock)
-        this.props.router.push(page)
+        this.props.router.push(routeChangeBugFix(page))
     }
     selectColumn = (index: number, ignoreAudio?: boolean, delay?: number) => {
         const { song, isToolsVisible, layers, copiedColumns } = this.state
