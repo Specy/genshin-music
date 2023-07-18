@@ -1,4 +1,4 @@
-//TODO next import MediaRecorderPolyfill from 'audio-recorder-polyfill'
+import { createAudioRecorderPolyfill } from "./MediaRecorderPolyfill";
 import { fileService } from "./Services/FileService";
 
 export default class AudioRecorder {
@@ -8,10 +8,10 @@ export default class AudioRecorder {
     constructor(audioContext: AudioContext) {
         this.audioContext = audioContext
         this.node = audioContext.createMediaStreamDestination?.() ?? null
-        if(!window?.MediaRecorder){
+        if(!("MediaRecorder" in window)){
             console.log("Audio recorder Polyfill")
-            throw new Error("Audio recorder Polyfill not implemented")
-            //TODO next this.recorder = new MediaRecorderPolyfill(this.node?.stream)
+            // @ts-ignore
+            this.recorder = new (createAudioRecorderPolyfill(window.AudioContext || window.webkitAudioContext))(this.node?.stream!) as any as MediaRecorder
         }else{
             this.recorder = new MediaRecorder(this.node?.stream!)
         }

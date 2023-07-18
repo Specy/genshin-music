@@ -26,7 +26,6 @@ export class VisualSong {
     }
     static from(song: Song | ComposedSong) {
         song = song.clone()
-        console.log(song)
         const vs = new VisualSong(song.bpm)
         if (song instanceof RecordedSong) {
             const first = song.notes.shift()

@@ -104,7 +104,6 @@ class SongService {
         song = Array.isArray(song) ? song[0] : song
         const type = getSongType(song)
         if (type === "none") {
-            console.log(song)
             throw new Error("Error Invalid song")
         }
         if (type === "oldSky") {
@@ -115,7 +114,6 @@ class SongService {
             return parsed
         }
         if (APP_NAME === 'Sky' && song.data?.appName !== 'Sky') {
-            console.log(song)
             throw new Error("Error Invalid song, it's not a Sky song")
         }
         if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
