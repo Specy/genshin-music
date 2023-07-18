@@ -5,6 +5,7 @@ import { historyTracker } from '$stores/History';
 import { homeStore } from '$stores/HomeStore';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { asyncConfirm } from '$cmp/Utility/AsyncPrompts';
 
 interface SimpleMenuProps {
     children?: React.ReactNode,
@@ -26,7 +27,18 @@ export function SimpleMenu({ children = undefined, className = '' }: SimpleMenuP
                 </MenuItem>
             }
             {children}
-            <Link href='https://discord.gg/Arsf65YYHq' target='_blank' rel='noreferrer' title='Go to discord' >
+            <Link 
+                href='https://discord.gg/Arsf65YYHq' 
+                target='_blank' 
+                rel='noreferrer' 
+                title='Go to discord' 
+                onClick={async (e) => {
+                    e.preventDefault()
+                    const confirm = await asyncConfirm('You are leaving the app to go to discord, do you want to continue?')
+                    if (!confirm) return
+                    window.open('https://discord.gg/Arsf65YYHq', '_blank')
+                }}
+            >
                 <MenuItem ariaLabel='Go to discord'>
                     <FaDiscord className="icon" />
                 </MenuItem>
