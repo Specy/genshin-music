@@ -154,7 +154,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 65
+        settingVersion: APP_NAME + 66
     },
     data: {
         instrument: {
@@ -569,7 +569,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 13
+        settingVersion: APP_NAME + 14
     },
     data: {
         instrument: {

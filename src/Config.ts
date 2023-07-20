@@ -87,7 +87,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "SineSynth",
         "BassSynth",
         "PluckSynth",
-        "RythmSynth", 
+        "RhythmSynth", 
         "SFX_Dance",
         "SFX_BirdCall",
         "SFX_CrabCall",
@@ -385,7 +385,7 @@ const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
     },
-    RythmSynth: {
+    RhythmSynth: {
         notes: 8,
         family: "synth",
         midiName: "synth drum",
