@@ -85,8 +85,9 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "DunDun",
         "HandPan",
         "SineSynth",
-        "LightningSynth",
-        "HeartSynth",
+        "BassSynth",
+        "PluckSynth",
+        "RythmSynth", 
         "SFX_Dance",
         "SFX_BirdCall",
         "SFX_CrabCall",
@@ -368,7 +369,7 @@ const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
     },
-    LightningSynth: {
+    BassSynth: {
         notes: 8,
         family: "synth",
         midiName: "synth drum",
@@ -376,7 +377,15 @@ const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
     },
-    HeartSynth: {
+    PluckSynth: {
+        notes: 8,
+        family: "synth",
+        midiName: "synth drum",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+    },
+    RythmSynth: {
         notes: 8,
         family: "synth",
         midiName: "synth drum",
