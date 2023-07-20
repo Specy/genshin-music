@@ -28,6 +28,7 @@
 	position: relative;
 }
 
+/*
 @supports(aspect-ratio: 1.5) {
 	.frame-outer {
 		padding: unset;
@@ -39,6 +40,8 @@
 		aspect-ratio: 1.8;
 	}
 }
+*/
+
 
 .frame-note-s {
 	border-radius: 0.2rem;
