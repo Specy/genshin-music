@@ -20,6 +20,7 @@ export const updates: Update[] = [
             "Added song search",
             "Increased composer layers limit to 52",
             "Improved composer sliding controls",
+            "(Sky) Added new instruments: TR-909, BassSynth, SineSynth, ChimesSynth, ",
             "Changed the file formats so they can be double clicked to open",
             "Added export as zip file",
             "Added two new default themes",

@@ -154,7 +154,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 66
+        settingVersion: APP_NAME + 68 //change when instrument is added
     },
     data: {
         instrument: {
@@ -164,7 +164,7 @@ export const PlayerSettings: PlayerSettingsType = {
             songSetting: true,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS],
+            options: [...INSTRUMENTS], 
             category: "Song Settings",
         },
         pitch: {
@@ -569,7 +569,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 14
+        settingVersion: APP_NAME + 16 //change when instrument is added
     },
     data: {
         instrument: {
