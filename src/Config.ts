@@ -85,6 +85,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "DunDun",
         "HandPan",
         "SFX_SineSynth",
+        "SFX_ShortSineSynth",
         "SFX_BassSynth",
         "SFX_ChimeSynth",
         "SFX_TR-909", 
@@ -362,6 +363,14 @@ const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
     "SFX_MantaCall": skySfx14,
     "SFX_MothCall": skySfx14,
     "SFX_SineSynth": {
+        notes: 8,
+        family: "synth",
+        midiName: "sine",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+    },
+    "SFX_ShortSineSynth": {
         notes: 8,
         family: "synth",
         midiName: "sine",
