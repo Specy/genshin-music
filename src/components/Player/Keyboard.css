@@ -7,7 +7,6 @@
 	justify-items: center;
 	align-items: center;
 	margin-bottom: 2vh;
-	touch-action: none;
 }
 .keyboard-5 {
 	grid-template-columns: repeat(5, 1fr);

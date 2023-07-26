@@ -24,11 +24,14 @@
 	width: 100%;
 	height: 100%;
 	border: solid var(--primary) 0.18rem;
-	padding-bottom: 50%;
+	padding-bottom: 60%;
 	position: relative;
 }
-
-@supports(aspect-ratio: 1.5) {
+.frame-outer-smaller{
+	padding-bottom: 49%;
+}
+/*
+@supports(aspect-ratio: 1.5) { //apparently ios has a bug with aspect-ratio...
 	.frame-outer {
 		padding: unset;
 		aspect-ratio: 1.5;
@@ -39,6 +42,8 @@
 		aspect-ratio: 1.8;
 	}
 }
+*/
+
 
 .frame-note-s {
 	border-radius: 0.2rem;
@@ -71,6 +76,9 @@
 .visualizer-ball div {
 	width: 0.5rem;
 	height: 0.5rem;
+	position: absolute;
+	top: calc(50% - 0.25rem);
+	left: calc(50% - 0.25rem);
 	background-color: #606876;
 	border-radius: 50%;
 	opacity: 0.5;

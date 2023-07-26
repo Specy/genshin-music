@@ -7,6 +7,7 @@ import { Select } from '$cmp/Inputs/Select'
 import { Theme } from '$stores/ThemeStore/ThemeProvider'
 import { hasTooltip, Tooltip } from '$cmp/Utility/Tooltip'
 import { NumericalInput } from './Numericalinput'
+import { prettyPrintInstrumentName } from '$lib/Utilities'
 interface TrackProps {
     data: CustomTrack
     index: number
@@ -53,7 +54,7 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
                 >
                     {instruments.map((ins, i) =>
                         <option value={i} key={i}>
-                            {ins.alias || ins.name} - {`Layer ${i + 1}`}
+                            {ins.alias || prettyPrintInstrumentName(ins.name)} - {`Layer ${i + 1}`}
                         </option>
                     )}
                 </Select>

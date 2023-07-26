@@ -26,7 +26,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 63,
+        settingVersion: APP_NAME + 65,
     },
     data: {
         bpm: {
@@ -154,7 +154,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 61
+        settingVersion: APP_NAME + 70 //change when instrument is added
     },
     data: {
         instrument: {
@@ -164,7 +164,7 @@ export const PlayerSettings: PlayerSettingsType = {
             songSetting: true,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS],
+            options: [...INSTRUMENTS], 
             category: "Song Settings",
         },
         pitch: {
@@ -385,7 +385,7 @@ export type VsrgComposerSettingsDataType = {
 export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 10
+        settingVersion: APP_NAME + 11
     },
     data: {
         keys: {
@@ -569,7 +569,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 11
+        settingVersion: APP_NAME + 18 //change when instrument is added
     },
     data: {
         instrument: {

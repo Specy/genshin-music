@@ -20,6 +20,7 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     `
         - Added Do Re Mi layout 
         - All shortcuts and keyboard layout are customizable
+        - Added 4 new synth instruments
         - Added song search
         - Added new visual sheet format with more info
         - Improved themes in the composer
@@ -84,6 +85,10 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "Bells",
         "DunDun",
         "HandPan",
+        "SFX_SineSynth",
+        "SFX_BassSynth",
+        "SFX_ChimeSynth",
+        "SFX_TR-909", 
         "SFX_Dance",
         "SFX_BirdCall",
         "SFX_CrabCall",
@@ -241,6 +246,7 @@ const LAYOUT_KINDS = {
 const LAYOUT_ICONS_KINDS = {
     defaultSky: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" ") as NoteImage[],
     defaultSkyDrums: "cr dm cr dm cr dm cr dm".split(" ") as NoteImage[],
+    defaultSkySynth: "dmcr dm cr dm cr dm cr dmcr".split(" ") as NoteImage[],
     defaultGenshinDrums: "do re mi fa do re mi fa".split(" ") as NoteImage[],
     skySFX6: "cr dm cr cr dm cr".split(" ") as NoteImage[],
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
@@ -356,6 +362,38 @@ const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
     "SFX_JellyCall": skySfx14,
     "SFX_MantaCall": skySfx14,
     "SFX_MothCall": skySfx14,
+    "SFX_SineSynth": {
+        notes: 8,
+        family: "synth",
+        midiName: "sine",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+    },
+    "SFX_BassSynth": {
+        notes: 8,
+        family: "Bass",
+        midiName: "Electric Bass",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+    },
+    "SFX_ChimeSynth": {
+        notes: 8,
+        family: "percussion",
+        midiName: "Bellchime",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+    },
+    "SFX_TR-909": {
+        notes: 8,
+        family: "percussion",
+        midiName: "Roland TR-808",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+    },
     Panflute: {
         notes: 15,
         family: "pipe",
