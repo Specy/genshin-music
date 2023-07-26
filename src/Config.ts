@@ -20,6 +20,7 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     `
         - Added Do Re Mi layout 
         - All shortcuts and keyboard layout are customizable
+        - Added 4 new synth instruments
         - Added song search
         - Added new visual sheet format with more info
         - Improved themes in the composer
