@@ -9,7 +9,7 @@ export const updates: Update[] = [
     {
         version: '3.2.0',
         title: "Shortcuts, Do Re Mi, performance, Layers",
-        date: '2023 - 25/04',
+        date: '2023 - 26/07', 
         changes: [
             "All shortcuts and keyboard layout are now customizable",
             "Added Do Re Mi layout with note shifting",

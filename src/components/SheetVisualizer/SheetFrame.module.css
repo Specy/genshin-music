@@ -85,15 +85,18 @@
 }
 
 @media print {
+	.frame-note-s {
+		border-radius: 2px;
+	}
 	.frame-outer {
 		background-color: transparent;
 		border: solid 0.2rem var(--primary)
 	}
-
+	.visualizer-ball {
+		border: none !important;
+	}
 	.frame-outer-background {
 		background-color: transparent !important;
 		background: transparent !important;
 	}
-
-
 }

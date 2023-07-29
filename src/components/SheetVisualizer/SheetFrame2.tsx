@@ -69,7 +69,7 @@ export function _SheetFrame2({ chunk, rows, hasText, theme, keyboardLayout }: Sh
                                     style={!exists ? { backgroundColor: color } : {}}
                                 >
                                     {(exists && hasText)
-                                        ? baseInstrument.getNoteText(i, keyboardLayout, 'C')
+                                        ? baseInstrument.getNoteText(j, keyboardLayout, 'C')
                                         : null
                                     }
                                 </div>

@@ -9,7 +9,7 @@ export default function Error404() {
                 404
             </div>
             <div>
-                No page found, open the menu to change page
+                The page was not found, click here to go back to the home page
             </div>
         </Link>
     </DefaultPage>
