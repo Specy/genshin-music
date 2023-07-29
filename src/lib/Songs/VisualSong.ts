@@ -47,6 +47,13 @@ export class VisualSong {
             const delay = song.notes[song.notes.length - 1].time - lastNoteTimestamp
             const chunk = new TempoChunk(0, [TempoChunkColumn.from(stack)])
             vs.addChunk(chunk, delay)
+            //make sure there is at least one column even in empty chunks
+            vs.chunks = vs.chunks.map(chunk => {
+                if(chunk.columns.length === 0){
+                    chunk.columns.push(new TempoChunkColumn([]))
+                }
+                return chunk
+            })
         } else if (song instanceof ComposedSong) {
             const columns = song.columns
             const first = columns[0]

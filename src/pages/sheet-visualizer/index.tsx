@@ -18,7 +18,6 @@ import { SheetFrame2 } from '$cmp/SheetVisualizer/SheetFrame2'
 import { VisualSong } from '$lib/Songs/VisualSong'
 import { ComposedSong } from '$lib/Songs/ComposedSong'
 import { RecordedSong } from '$lib/Songs/RecordedSong'
-import { VsrgSong } from '$lib/Songs/VsrgSong'
 
 /*
 
@@ -110,6 +109,7 @@ export default function SheetVisualizer() {
     }, [currentSong, hasText, keyboardLayout, loadSong])
     return <DefaultPage
         excludeMenu={true}
+        className={s['page-no-print']}
         menu={
             <SheetVisualiserMenu
                 onSongLoaded={setCurrentSong}
@@ -145,6 +145,9 @@ export default function SheetVisualizer() {
                     </button>
                 </div>
             </div>
+            <h1 className='onprint' style={{ color: "black" }}>
+                Sky Music Nightly
+            </h1>
             <h1 className='onprint' style={{ color: "black" }}>
                 {currentSong ? currentSong?.name : ''}
             </h1>

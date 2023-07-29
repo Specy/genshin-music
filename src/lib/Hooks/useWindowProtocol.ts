@@ -10,9 +10,9 @@ const domains = [
     "https://specy.github.io",
     "https://genshin-music.specy.app",
     "https://sky-music.specy.app",
-    "http://localhost:3000",
     "https://beta.genshin-music.specy.app",
     "https://beta.sky-music.specy.app",
+    ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : [])
 ]
 type Protocol = {
     getAppData: Ask<undefined, UnknownFile>

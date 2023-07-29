@@ -50,16 +50,14 @@
 	margin-top: 2rem;
 }
 
+
+
 @media print {
-	.frame-note-s {
-		border: solid 4px black;
-		border-style: inset;
+	.page-no-print{
+		padding: 1rem;
 	}
 	.text-notation-wrapper{
 		background-color: transparent;
 		color: black;
-	}
-	.frame-outer {
-		border: solid 1px black;
 	}
 }
