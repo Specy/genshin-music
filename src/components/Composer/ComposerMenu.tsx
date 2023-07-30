@@ -36,6 +36,7 @@ import { FileElement, FilePicker } from '../Inputs/FilePicker';
 import isMobile from 'is-mobile';
 import Link from 'next/link';
 import { useConfig } from '$lib/Hooks/useConfig';
+import { isAudioFormat, isMidiFormat, isVideoFormat } from '$lib/Utilities';
 
 interface MenuProps {
     data: {
@@ -200,9 +201,10 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                         <HelpTooltip>
                             <ul>
                                 <li>Click the song name to load it</li>
-                                <li>You can use different instruments for each layer</li>
+                                <li>You can use different instruments and pitch for each layer</li>
                                 <li>Tempo changers help you make faster parts of a song without having very high bpm</li>
-                                <li>You can quickly create a song by importing a MIDI file and editing it</li>
+                                <li>You can quickly create a song by importing a MIDI file and editing it, not all songs are convertable directly, you might need to edit it a bit.</li>
+                                <li>You can also quickly create a song from audio / video, this is an experimental feature and not very accurate</li>
                                 <li>
                                     You can add breakpoints to the timeline (the bar below the composer) to quickly jump
                                     between parts of a song
@@ -213,7 +215,7 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                             onClick={() => { changeMidiVisibility(true); toggleMenu() }}
                             style={{ marginLeft: 'auto' }}
                         >
-                            Create from MIDI
+                            Create from MIDI/Audio
                         </AppButton>
                         <AppButton onClick={createNewSong}>
                             Create new song
@@ -236,15 +238,18 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                             onPick={importFile}
                             onError={(e, files) => {
                                 if (e) console.error(e)
-                                const hasMidi = files?.some(f => f?.name?.endsWith('.mid'))
-                                const isOne = files?.length === 1
-                                if (hasMidi && isOne) {
-                                    logger.warn(`Opening the midi importer to import a MIDI file, please reselect the file`, 6000)
+                                if (files?.length > 0) {
+                                    const file = files![0]
+                                    const name = file.name
+                                    if (isMidiFormat(name)) logger.warn(`Opening the midi importer to import a MIDI file, please reselect the file`, 6000)
+                                    else if (isVideoFormat(name)) logger.warn(`Opening the midi importer to import a video file, please reselect the file. Video conversion is not very accurate`, 6000)
+                                    else if (isAudioFormat(name)) logger.warn(`Opening the midi importer to import an audio file, please reselect the file. Audio conversion is not very accurate`, 6000)
+                                    else return logger.error(`Error importing file, invalid format`, 8000)
                                     changeMidiVisibility(true)
                                     toggleMenu()
                                 } else {
                                     logger.error(
-                                        `Error importing file, invalid format, if it's a MIDI file, use the "Create from MIDI" button`,
+                                        `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
                                         8000
                                     )
                                 }

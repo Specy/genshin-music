@@ -11,6 +11,7 @@
     "@insertish/zangodb": "^1.0.12-nomemo",
     "@pixi/graphics-smooth": "^1.1.0",
     "@pixi/react": "^7.1.0",
+    "@spotify/basic-pitch": "^1.0.1",
     "@tauri-apps/api": "^1.4.0",
     "@tonejs/midi": "^2.0.28",
     "audiobuffer-to-wav": "^1.0.0",
@@ -75,15 +76,14 @@
     ]
   },
   "devDependencies": {
-    "typescript": "^5.1.6",
-    "@types/fuzzy-search": "^2.1.2",
-    "@next/bundle-analyzer": "^13.4.10",
     "@babel/eslint-parser": "^7.22.9",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@next/bundle-analyzer": "^13.4.10",
     "@tauri-apps/cli": "^1.4.0",
     "@types/audiobuffer-to-wav": "^1.0.2",
     "@types/color": "^3.0.3",
+    "@types/fuzzy-search": "^2.1.2",
     "@types/jest": "^29.5.3",
     "@types/lodash.clonedeep": "^4.5.7",
     "@types/next-pwa": "^5.6.4",
@@ -108,6 +108,7 @@
     "fs-extra": "^11.1.1",
     "next-pwa": "^5.6.0",
     "sass": "^1.63.6",
+    "typescript": "^5.1.6",
     "url-join": "^5.0.0"
   }
 }

@@ -1,10 +1,10 @@
 import { Component } from 'react'
 import { FileElement, FilePicker } from '$cmp/Inputs/FilePicker'
 import { Midi, Track } from '@tonejs/midi'
-import { groupNotesByIndex, mergeLayers } from '$lib/Utilities'
+import { delay, groupNotesByIndex, isAudioFormat, isVideoFormat, mergeLayers } from '$lib/Utilities'
 import { ColumnNote, Column, MidiNote, InstrumentData } from '$lib/Songs/SongClasses'
 import { ComposedSong } from '$lib/Songs/ComposedSong'
-import { PITCHES, Pitch } from '$config'
+import { BASE_PATH, PITCHES, Pitch } from '$config'
 import { logger } from '$stores/LoggerStore'
 import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider'
 import { observe } from 'mobx'
@@ -15,6 +15,7 @@ import { PitchSelect } from '$cmp/Inputs/PitchSelect'
 import { DecorationBorderedBox } from '$cmp/Miscellaneous/BorderDecoration'
 import { TrackInfo } from './TrackInfo'
 import { NumericalInput } from './Numericalinput'
+import { basicPitchLoader } from '$lib/BasicPitchLoader'
 interface MidiImportProps {
     data: {
         instruments: InstrumentData[]
@@ -56,6 +57,7 @@ interface MidiImportState {
 
 class MidiImport extends Component<MidiImportProps, MidiImportState> {
     dispose: () => void
+    warnedOfExperimental = false
     constructor(props: MidiImportProps) {
         super(props)
         this.state = {
@@ -81,11 +83,104 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
     componentWillUnmount() {
         this.dispose()
     }
-    handleFile = (files: FileElement<ArrayBuffer>[]) => {
+    handleFile = async (files: FileElement<ArrayBuffer>[]) => {
         try {
             if (files.length === 0) return
             const file = files[0]
-            const midi = new Midi(file.data as ArrayBuffer)
+            const name = file.file.name
+            if (isVideoFormat(name)) {
+                const audio = await this.extractAudio(file)
+                this.parseAudioToMidi(audio, name)
+            } else if (isAudioFormat(name)) {
+                const audio = await this.extractAudio(file)
+                this.parseAudioToMidi(audio, name)
+            } else {
+                const midi = new Midi(file.data as ArrayBuffer)
+                return this.mandleMidiFile(midi, name)
+            }
+
+        } catch (e) {
+            console.error(e)
+            logger.hidePill()
+            logger.error('There was an error loading this file')
+        }
+    }
+    extractAudio = async (audio: FileElement<ArrayBuffer>): Promise<AudioBuffer> => {
+        const ctx = new AudioContext({
+            sampleRate: 22050,
+        })
+        const buffer = await new Promise((res, rej) => {
+            ctx!.decodeAudioData(audio.data as ArrayBuffer, res, rej)
+        }) as AudioBuffer
+        ctx.close()
+        return buffer
+    }
+    parseAudioToMidi = async (audio: AudioBuffer, name: string) => {
+        if(!this.warnedOfExperimental) logger.warn("🔬 This feature is experimental, it might not work or get stuck. Audio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manualy", 10000)
+        this.warnedOfExperimental = true
+        const frames: number[][] = []
+        const onsets: number[][] = []
+        const contours: number[][] = []
+        const model = `${BASE_PATH}/assets/audio-midi-model.json`
+        logger.showPill('Loading converter...')
+        const { BasicPitch, noteFramesToTime, addPitchBendsToNoteEvents, outputToNotesPoly } = await basicPitchLoader()
+        const basicPitch = new BasicPitch(model)
+        const mono = audio.getChannelData(0)
+        await basicPitch.evaluateModel(
+            mono,
+            (f, o, c) => {
+                frames.push(...f);
+                onsets.push(...o);
+                contours.push(...c);
+            },
+            (progress) => {
+                logger.showPill(`Detecting notes: ${Math.floor(progress * 100)}%...`)
+            }
+        )
+        logger.showPill(`Converting audio to midi (might take a while)...`)
+        await delay(300)
+        const notes = noteFramesToTime(
+            addPitchBendsToNoteEvents(
+                contours,
+                //TODO find best values for these
+                outputToNotesPoly(
+                    frames,  //frames
+                    onsets, //onsets
+                    0.5,  //onsetThreshold
+                    0.3, //frameThreshold
+                    11,  //minimumDuration
+                    true, //inferOnsets
+                    3000, //maxHz
+                    0, //minHz
+                    false, //smooth
+                )
+            )
+        );
+        const midi = new Midi();
+        const track = midi.addTrack();
+        notes.forEach(note => {
+            track.addNote({
+                midi: note.pitchMidi,
+                time: note.startTimeSeconds,
+                duration: note.durationSeconds,
+                velocity: note.amplitude,
+            });
+            if (note.pitchBends !== undefined && note.pitchBends !== null) {
+                note.pitchBends.forEach((bend, i) => {
+                    track.addPitchBend({
+                        time:
+                            note.startTimeSeconds +
+                            (i * note.durationSeconds) / note.pitchBends!.length,
+                        value: bend,
+                    })
+                })
+            }
+        })
+        logger.hidePill()
+        this.mandleMidiFile(midi, name)
+    }
+    mandleMidiFile = (midi: Midi, name: string) => {
+        try {
             const bpm = midi.header.tempos[0]?.bpm
             const key = midi.header.keySignatures[0]?.key
             const tracks = midi.tracks.map((track, i) => {
@@ -106,7 +201,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             })
             this.setState({
                 tracks,
-                fileName: file.file.name,
+                fileName: name,
                 bpm: Math.floor(bpm * 4) || 220,
                 offset: 0,
                 pitch: (PITCHES.includes(key as never) ? key : 'C') as Pitch,
@@ -116,7 +211,6 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             logger.error('There was an error importing this file, is it a .mid file?')
         }
     }
-
     convertMidi = () => {
         const { tracks, bpm, offset, includeAccidentals, pitch } = this.state
         const selectedTracks = tracks.filter(track => track.selected)
@@ -256,12 +350,12 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     style={{ width: '100%' }}
                 >
                     <FilePicker onPick={handleFile} as='buffer'>
-                        <button className="midi-btn" style={midiInputsStyle}>
-                            Open midi file
+                        <button className="midi-btn" style={{...midiInputsStyle, whiteSpace: 'nowrap'}}>
+                            Open MIDI/Audio/Video file
                         </button>
                     </FilePicker>
                     <div
-                        style={{ margin: '0 0.5rem', maxWidth: '20rem' }}
+                        style={{ margin: '0 0.5rem'}}
                         className='text-ellipsis'
                     >
                         {fileName}
@@ -274,6 +368,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         Close
                     </button>
                 </div>
+
                 <div className='midi-table-row'>
                     <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
                     <NumericalInput

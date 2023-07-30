@@ -289,7 +289,15 @@ function routeChangeBugFix(route: string){
 export type {
 	Debouncer
 }
-
+export function isVideoFormat(fileName: string){
+	return fileName.endsWith(".mp4") || fileName.endsWith(".webm") || fileName.endsWith(".mov")
+}
+export function isMidiFormat(fileName: string){
+	return fileName.endsWith(".mid") || fileName.endsWith(".midi")
+}
+export function isAudioFormat(fileName: string){
+	return fileName.endsWith(".mp3") || fileName.endsWith(".wav") || fileName.endsWith(".ogg")
+}
 export {
 	FileDownloader,
 	getPitchChanger,
