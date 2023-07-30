@@ -22,7 +22,7 @@ export default function Partners() {
                 description='A community discord server focused on music in Sky Cotl'
             >
                 <PartnerImg
-                    to='https://discord.com/invite/TCW33m6MN2'  
+                    to='https://discord.gg/qW7uQgUfj9'  
                     img={skyMusicianNetwork}
                     alt='Sky musician network'
                 />
