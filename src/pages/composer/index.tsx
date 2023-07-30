@@ -54,10 +54,11 @@ interface ComposerState {
     isPlaying: boolean
     theme: Theme
 }
-type HistoryProps = {
+type PageProps = {
     songId: string | null
+    showMidi: boolean
 }
-type ComposerProps = HistoryProps & {
+type ComposerProps = PageProps & {
     inPreview?: boolean
     router: NextRouter
 }
@@ -82,7 +83,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
             undoHistory: [],
             copiedColumns: [],
             isToolsVisible: false,
-            isMidiVisible: false,
+            isMidiVisible: this.props.showMidi || false,
             isRecordingAudio: false,
             theme: ThemeProvider
         }
@@ -868,10 +869,12 @@ interface ComposerPageProps {
 }
 export default function ComposerPage({ inPreview, songId }: ComposerPageProps) {
     const router = useRouter()
-    const { songId: querySongId } = router.query
+    const { songId: querySongId, showMidi } = router.query
+    console.log(showMidi)
     return <Composer
         router={router}
         songId={(querySongId as string) ?? songId ?? null}
+        showMidi={!!showMidi}
         inPreview={inPreview ?? false}
     />
 }

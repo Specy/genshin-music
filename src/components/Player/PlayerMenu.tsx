@@ -45,7 +45,8 @@ import { settingsService } from '$lib/Services/SettingsService';
 import { useConfig } from '$lib/Hooks/useConfig';
 import { createShortcutListener } from '$stores/KeybindsStore';
 import sh from '$cmp/HelpTab/HelpTab.module.css'
-import { themeStore } from "$stores/ThemeStore/ThemeStore";
+import { isAudioFormat, isMidiFormat, isVideoFormat } from '$lib/Utilities';
+import { useRouter } from 'next/router';
 interface MenuProps {
     functions: {
         addSong: (song: RecordedSong | ComposedSong) => void
@@ -64,6 +65,7 @@ export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
 
 function Menu({ functions, data, inPreview }: MenuProps) {
+    const router = useRouter()
     const [songs] = useSongs()
     const [isOpen, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Songs')
@@ -138,17 +140,14 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                 await fileService.importAndLog(songs)
             } catch (e) {
                 console.error(e)
-                if (file.file.name.includes?.(".mid")) {
-                    return logger.error("Midi files should be imported in the composer")
-                }
-                logImportError()
+                logger.error("Error importing file", 8000)
             }
         }
     }
     const downloadSong = async (song: ComposedSong | RecordedSong | Midi) => {
         if (song instanceof Midi) {
             const agrees = await asyncConfirm(
-                `If you use MIDI, the song will loose some information, if you want to share the song with others, use the other format (button above). Do you still want to download?`
+                `If you use MIDI, the song will loose some accuracy, if you want to share the song with others, use the other format (button above). Do you still want to download?`
             )
             if (!agrees) return
             return fileService.downloadMidi(song)
@@ -165,13 +164,26 @@ function Menu({ functions, data, inPreview }: MenuProps) {
         folderStore.createFolder(name)
     }, [])
 
-    const logImportError = useCallback((error?: any) => {
+    const askForComposerImport = useCallback(async (file: File) => {
+        const fileName = file.name || "unknown"
+        if (isAudioFormat(fileName) || isVideoFormat(fileName) || isMidiFormat(fileName)) {
+            const confirm = await asyncConfirm("You cannot directly import this file format. MIDI, Video and Audio files need to be converted in the composer, do you want to open it?")
+            if (confirm) {
+                router.push('/composer?showMidi=true')
+            }
+        }
+    }, [router])
+    const JSONImportError = useCallback(async (error?: any, files?: File[]) => {
         if (error) console.error(error)
-        logger.error(
-            `Error importing file, invalid format`,
-            8000
-        )
-    }, [])
+        if (files) {
+            const first = files[0]
+            if (first) return askForComposerImport(first)
+            else return logger.error("Error importing file, invalid format", 8000)
+        } else {
+            logger.error(`Error importing file, invalid format`, 8000)
+        }
+
+    }, [askForComposerImport])
     async function downloadAllSongs() {
         try {
             const songs = await songService.getSongs();
@@ -185,7 +197,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
             const date = new Date().toISOString().split('T')[0]
             const folders = await _folderService.getFolders()
             const files = [...folders, ...toDownload]
-            if(files.length === 0) return logger.warn("There are no songs to backup")
+            if (files.length === 0) return logger.warn("There are no songs to backup")
             fileService.downloadFiles(files, `${APP_NAME}_Backup_${date}.${APP_NAME.toLowerCase()}backup`)
             logger.success("Song backup downloaded")
             settingsService.setLastBackupWarningTime(Date.now())
@@ -251,7 +263,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     </Link>
                     <FilePicker<SerializedSong | SerializedSong[]>
                         onPick={importSong}
-                        onError={logImportError}
+                        onError={JSONImportError}
                         as='json'
                         multiple={true}
                     >
@@ -330,7 +342,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                 <div className='library-search-row' >
                     <input
                         className='library-search-input'
-                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()  }}
+                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString() }}
                         placeholder='Song name'
                         onKeyDown={(e) => {
                             if (e.code === "Enter") searchSongs()
@@ -348,7 +360,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     <button
                         className='library-search-btn'
                         onClick={searchSongs}
-                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()  }}
+                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString() }}
                     >
                         <FaSearch />
                     </button>
