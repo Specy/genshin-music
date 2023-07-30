@@ -1,5 +1,5 @@
 import { InstrumentData } from '$lib/Songs/SongClasses'
-import { FaArrowDown, FaArrowUp, FaEllipsisH } from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaCog } from 'react-icons/fa'
 import { CustomTrack } from '.'
 import { useState, useEffect, useCallback } from 'react'
 import useDebounce from '$lib/Hooks/useDebounce'
@@ -58,7 +58,7 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
                         </option>
                     )}
                 </Select>
-                <FaEllipsisH
+                <FaCog
                     size={22}
                     color={"var(--primary)"}
                     onClick={() => setDataShown(!dataShown)}

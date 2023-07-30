@@ -90,7 +90,7 @@
 	top: 0.8rem;
 	font-size: 0.8rem;
 	right: 50vw;
-	z-index: 999;
+	z-index: 998; /* Below logger */
 	pointer-events: none;
 	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 	color: var(--secondary-text);
