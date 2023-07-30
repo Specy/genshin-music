@@ -116,22 +116,20 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         return buffer
     }
     parseAudioToMidi = async (audio: AudioBuffer, name: string) => {
-        if(!this.warnedOfExperimental) logger.warn("🔬 This feature is experimental, it might not work or get stuck. Audio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manualy. Use audio and videos that have only one instrument playing, better if it is piano", 15000)
+        if (!this.warnedOfExperimental) logger.warn("🔬 This feature is experimental, it might not work or get stuck. Audio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manualy. Use audio and videos that have only one instrument playing, better if it is piano", 15000)
         this.warnedOfExperimental = true
         const frames: number[][] = []
         const onsets: number[][] = []
-        const contours: number[][] = []
         const model = `${BASE_PATH}/assets/audio-midi-model.json`
         logger.showPill('Loading converter...')
-        const { BasicPitch, noteFramesToTime, addPitchBendsToNoteEvents, outputToNotesPoly } = await basicPitchLoader()
+        const { BasicPitch, noteFramesToTime, outputToNotesPoly } = await basicPitchLoader()
         const basicPitch = new BasicPitch(model)
         const mono = audio.getChannelData(0)
         await basicPitch.evaluateModel(
             mono,
-            (f, o, c) => {
+            (f, o) => {
                 frames.push(...f);
                 onsets.push(...o);
-                contours.push(...c);
             },
             (progress) => {
                 logger.showPill(`Detecting notes: ${Math.floor(progress * 100)}%...`)
@@ -140,20 +138,16 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         logger.showPill(`Converting audio to midi (might take a while)...`)
         await delay(300)
         const notes = noteFramesToTime(
-            addPitchBendsToNoteEvents(
-                contours,
-                //TODO find best values for these
-                outputToNotesPoly(
-                    frames,  //frames
-                    onsets, //onsets
-                    0.5,  //onsetThreshold
-                    0.3, //frameThreshold
-                    11,  //minimumDuration
-                    true, //inferOnsets
-                    3000, //maxHz
-                    0, //minHz
-                    false, //smooth
-                )
+            outputToNotesPoly(
+                frames,  //frames
+                onsets, //onsets
+                0.5,  //onsetThreshold
+                0.3, //frameThreshold
+                11,  //minimumDuration
+                true, //inferOnsets
+                3000, //maxHz
+                0, //minHz
+                true, //smooth
             )
         );
         const midi = new Midi();
@@ -164,17 +158,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 time: note.startTimeSeconds,
                 duration: note.durationSeconds,
                 velocity: note.amplitude,
-            });
-            if (note.pitchBends !== undefined && note.pitchBends !== null) {
-                note.pitchBends.forEach((bend, i) => {
-                    track.addPitchBend({
-                        time:
-                            note.startTimeSeconds +
-                            (i * note.durationSeconds) / note.pitchBends!.length,
-                        value: bend,
-                    })
-                })
-            }
+            })
         })
         logger.hidePill()
         this.mandleMidiFile(midi, name)
@@ -350,12 +334,12 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     style={{ width: '100%' }}
                 >
                     <FilePicker onPick={handleFile} as='buffer'>
-                        <button className="midi-btn" style={{...midiInputsStyle, whiteSpace: 'nowrap'}}>
+                        <button className="midi-btn" style={{ ...midiInputsStyle, whiteSpace: 'nowrap' }}>
                             Open MIDI/Audio/Video file
                         </button>
                     </FilePicker>
                     <div
-                        style={{ margin: '0 0.5rem'}}
+                        style={{ margin: '0 0.5rem' }}
                         className='text-ellipsis'
                     >
                         {fileName}
