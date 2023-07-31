@@ -7,49 +7,50 @@ import { makeObservable, observable } from "mobx"
 export type Shortcut<T extends string> = {
     name: T
     holdable: boolean
+    description?: string
 }
-function createShortcut<T extends string>(name: T, isHoldable = false): Shortcut<T> {
-    return { name, holdable: isHoldable } as const
+function createShortcut<T extends string>(name: T, isHoldable: boolean, description?: string): Shortcut<T> {
+    return { name, holdable: isHoldable, description } as const
 }
 
 const defaultShortcuts = {
     composer: {
-        "Space": createShortcut("toggle_play"),
-        "KeyA": createShortcut("previous_column", true),
-        "KeyD": createShortcut("next_column", true),
-        "KeyQ": createShortcut("remove_column", true),
-        "KeyE": createShortcut("add_column", true),
-        "ArrowUp": createShortcut("previous_layer", true),
-        "ArrowDown": createShortcut("next_layer", true),
-        "ArrowRight": createShortcut("next_breakpoint", true),
-        "ArrowLeft": createShortcut("previous_breakpoint", true),
+        "Space": createShortcut("toggle_play", false, "Toggle play / pause"),
+        "KeyA": createShortcut("previous_column", true, "Select the previous column"),
+        "KeyD": createShortcut("next_column", true, "Select the next column"),
+        "KeyQ": createShortcut("remove_column", true, "Remove the selected column"),
+        "KeyE": createShortcut("add_column", true, "Add a column after the selected column"),
+        "ArrowUp": createShortcut("previous_layer", true, "Select the previous layer"),
+        "ArrowDown": createShortcut("next_layer", true, "Select the next layer"),
+        "ArrowRight": createShortcut("next_breakpoint", true, "Move to the next breakpoint"),
+        "ArrowLeft": createShortcut("previous_breakpoint", true, "Move to the previous breakpoint"),
     },
     player: {
-        "Space": createShortcut("toggle_record"),
-        "ShiftLeft+KeyS": createShortcut("stop"),
-        "ShiftLeft+KeyR": createShortcut("restart"),
-        "ShiftLeft+KeyM": createShortcut("toggle_menu"),
-        "Escape": createShortcut("close_menu"),
+        "Space": createShortcut("toggle_record", false, "Toggle keyboard recording"),
+        "ShiftLeft+KeyS": createShortcut("stop", false, "Stop playing / recording / practicing"),
+        "ShiftLeft+KeyR": createShortcut("restart", false, "Restart the song or practice"),
+        "ShiftLeft+KeyM": createShortcut("toggle_menu", false, "Toggle the menu"),
+        "Escape": createShortcut("close_menu", false, "Close the menu"),
     },
     vsrg_composer: {
-        "ShiftLeft+KeyW": createShortcut("move_up", true),
-        "ShiftLeft+KeyS": createShortcut("move_down", true),
-        "ShiftLeft+KeyA": createShortcut("move_left", true),
-        "ShiftLeft+KeyD": createShortcut("move_right", true),
-        "Escape": createShortcut("deselect"),
-        "Backspace": createShortcut("delete"),
-        "ArrowRight": createShortcut("next_breakpoint", true),
-        "ArrowLeft": createShortcut("previous_breakpoint", true),
-        "ArrowUp": createShortcut("previous_track", true),
-        "ArrowDown": createShortcut("next_track", true),
-        "Space": createShortcut("toggle_play"),
-        "Digit1": createShortcut("set_tap_hand"),
-        "Digit2": createShortcut("set_hold_hand"),
-        "Digit3": createShortcut("set_delete_hand"),
+        "ShiftLeft+KeyW": createShortcut("move_up", true, "Move the selected note up"),
+        "ShiftLeft+KeyS": createShortcut("move_down", true, "Move the selected note down"),
+        "ShiftLeft+KeyA": createShortcut("move_left", true, "Move the selected note left"),
+        "ShiftLeft+KeyD": createShortcut("move_right", true, "Move the selected note right"),
+        "Escape": createShortcut("deselect", false, "Deselect the selected note"),
+        "Backspace": createShortcut("delete", false, "Delete the selected note"),
+        "ArrowRight": createShortcut("next_breakpoint", true, "Move to the next breakpoint"),
+        "ArrowLeft": createShortcut("previous_breakpoint", true, "Move to the previous breakpoint"),
+        "ArrowUp": createShortcut("previous_track", true, "Select the previous track"),
+        "ArrowDown": createShortcut("next_track", true, "Select the next track"),
+        "Space": createShortcut("toggle_play", false, "Toggle play / pause"),
+        "Digit1": createShortcut("set_tap_hand", false, "Set the click to create a tap note"),
+        "Digit2": createShortcut("set_hold_hand", false, "Set the click to create a hold note"),
+        "Digit3": createShortcut("set_delete_hand", false, "Set the click to delete a note"),
     },
     vsrg_player: {
-        "ShiftLeft+KeyR": createShortcut("restart"),
-        "Escape": createShortcut("stop"),
+        "ShiftLeft+KeyR": createShortcut("restart", false, "Restart the song"),
+        "Escape": createShortcut("stop", false, "Stop playing the song"),
     },
     keyboard: Object.fromEntries((APP_NAME === "Genshin"
         ? (
@@ -61,7 +62,7 @@ const defaultShortcuts = {
             "Q W E R T " +
             "A S D F G " +
             "Z X C V B"
-        ).split(" ")).map((key, i) => [`Key${key}`, createShortcut(key)]))
+        ).split(" ")).map((key, i) => [`Key${key}`, createShortcut(key, false)]))
 } satisfies Record<string, Record<string, Shortcut<string>>>
 
 type ValuesOf<T> = T[keyof T]

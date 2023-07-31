@@ -115,11 +115,14 @@ export default function Keybinds() {
                 <h1>
                     Keyboard keybinds
                 </h1>
+                <div>
+                    You can remap the keyboard keys to whatever key on your keyboard
+                </div>
                 <div className="flex-centered">
                     <div
                         className={`keyboard ${APP_NAME === 'Sky' ? 'keyboard-5' : ''}`}
                         style={{
-                            margin: 0
+                            margin: '1rem 0'
                         }}
                     >
                         {baseInstrument.notes.map((note, i) =>

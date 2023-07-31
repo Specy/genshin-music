@@ -366,7 +366,14 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     </button>
                 </div>
                 {(searchStatus || searchedSongs.length > 0) &&
-                    <div className='library-search-songs-wrapper' style={{ backgroundColor: layer2Color.toString(), color: layer2ColorText.toString() }}>
+                    <div 
+                        className='library-search-songs-wrapper'
+                        style={{ 
+                            backgroundColor: layer2Color.toString(), 
+                            color: layer2ColorText.toString(),
+                            marginBottom: "0.5rem"
+                        }}
+                    >
                         {searchStatus === "success" ?
                             searchedSongs.length > 0
                                 ? searchedSongs.map(song =>
@@ -386,8 +393,8 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                             </div>
                         }
                     </div>
-
                 }
+                <DonateButton style={{marginTop: "auto"}} />
 
             </MenuPanel>
             <MenuPanel title="Help" current={selectedMenu} id='Help'>
@@ -400,7 +407,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     </a>
                 </div>
                 <HelpTab />
-                <DonateButton />
+                <DonateButton style={{marginTop: "0.5rem"}} />
             </MenuPanel>
         </div>
     </div>

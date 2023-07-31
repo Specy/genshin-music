@@ -6,6 +6,7 @@ import { Shortcut, createKeyComboComposer } from "$stores/KeybindsStore";
 import { FaCheck } from "react-icons/fa";
 import s from './ShortcutEditor.module.css'
 import { IconButton } from "$cmp/Inputs/IconButton";
+import { Tooltip, hasTooltip } from "$cmp/Utility/Tooltip";
 interface ShortcutEditorProps<K, V> {
     map: Map<K, V>;
     onChangeShortcut: (oldKey: K, newKey: K, shortcut: V) => void;
@@ -51,11 +52,17 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({ mapKey,
     useEffect(() => {
         setNewKey(mapKey)
     }, [mapKey, selected])
-    return <div className={cn(`row ${s["shortcut-element"]}`, [selected, s['shortcut-element-selected']])}>
-        <div className="row-centered" style={{gap: "0.4rem"}}>
+    return <div
+        className={cn(
+            `row ${s["shortcut-element"]}`,
+            [selected, s['shortcut-element-selected']],
+            hasTooltip(value.description)
+        )}
+    >
+        <div className="row-centered" style={{ gap: "0.4rem" }}>
             {capitalize((value.name as string).toString?.().replaceAll("_", " ") ?? value as any)}
-            {value.holdable && 
-                <div style={{fontSize: '0.8rem'}}>
+            {value.holdable &&
+                <div style={{ fontSize: '0.8rem' }}>
                     (Holdable)
                 </div>
             }
@@ -78,6 +85,10 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({ mapKey,
                 {newKey}
             </AppButton>
         </div>
-
+        {value.description &&
+            <Tooltip>
+                {value.description}
+            </Tooltip>
+        }
     </div>
 }

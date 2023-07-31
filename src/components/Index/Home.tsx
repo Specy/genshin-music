@@ -14,6 +14,7 @@ import { homeStore } from '$stores/HomeStore'
 import { useRouter } from 'next/router'
 import { isTWA } from '$lib/Utilities'
 import { useConfig } from '$lib/Hooks/useConfig'
+import { asyncConfirm, asyncPrompt } from '$cmp/Utility/AsyncPrompts'
 
 
 interface HomeProps {
@@ -213,6 +214,14 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                         Keybinds
                     </PageRedirect>
                 }
+                                <Link onClick={async (e) => {
+                    e.preventDefault()
+                    const confirm = await asyncConfirm("You are about to leave the app to go to specy.app, do you want to continue?")
+                    if(!confirm) return
+                    window.open('https://specy.app', '_blank')
+                }} href={'https://specy.app'} target='_blank' >
+                    My Other Apps
+                </Link>
             </div>
 
         </div>
@@ -251,7 +260,7 @@ export default function Home({ askForStorage, hasVisited, setDontShowHome, close
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </span>
             <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>
-                <input type='checkbox' checked={!data.canShow} readOnly id='hide-on-open-checkbox'/>
+                <input type='checkbox' checked={!data.canShow} readOnly id='hide-on-open-checkbox' />
                 <label htmlFor='hide-on-open-checkbox' >
                     Hide on open
                 </label>

@@ -3,7 +3,7 @@ import { MIDISettings } from "$lib/BaseSettings"
 import BaseNote from "$cmp/Miscellaneous/BaseNote"
 import { Component } from 'react'
 import { INSTRUMENTS } from "$config"
-import Shortcut from "$cmp/MidiSetup/Shortcut"
+import MidiShortcut from "$cmp/MidiSetup/MidiShortcut"
 import {logger} from "$stores/LoggerStore";
 import type { MIDINote } from "$lib/Utilities"
 import { InstrumentName } from "$types/GeneralTypes"
@@ -180,13 +180,13 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                         </select>
                 </div>
                 <div style={{ margin: '0.5rem 0' }}>
-                    Click on the note to map, then press your MIDI keyboard
+                    Click on the note to select it, then press your MIDI keyboard to assign that note to the key. You can click it again to change it.
                 </div>
             </div>
             <div className={s['midi-setup-content']}>
                 <div
                     className={APP_NAME === 'Genshin' ? "keyboard" : "keyboard keyboard-5"}
-                    style={{ marginTop: 'auto', width: 'fit-content' }}
+                    style={{ margin: '1.5rem 0', width: 'fit-content' }}
                 >
                     {settings.notes.map((note, i) => {
                         return <BaseNote
@@ -194,17 +194,17 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                             handleClick={() => this.handleClick(note)}
                             data={note}
                             noteImage={baseInstrument.notes[i].noteImage}
-                            noteText={note.midi < 0 ? 'NA' : String(note.midi)}
+                            noteText={note.midi < 0 ? 'N/A' : String(note.midi)}
                         />
                     })}
                 </div>
                 <div className={s['midi-shortcuts-wrapper']}>
-                    <div style={{ fontSize: '1.5rem' }}>
+                    <h1>
                        MIDI Shortcuts
-                    </div>
+                    </h1>
                     <div className={s['midi-shortcuts']}>
                         {settings.shortcuts.map(shortcut =>
-                            <Shortcut
+                            <MidiShortcut
                                 key={shortcut.type}
                                 type={shortcut.type}
                                 status={shortcut.status}

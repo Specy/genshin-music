@@ -8,9 +8,9 @@ interface ShortcutProps {
     midi: number
 }
 
-export default function Shortcut({ status, onClick, type, selected, midi }: ShortcutProps) {
+export default function MidiShortcut({ status, onClick, type, selected, midi }: ShortcutProps) {
     return <AppButton className={`${s['midi-shortcut']} ${status}`} toggled={selected} onClick={() => onClick(type)}>
-        {prepareText(type) + ` (${midi === -1 ? 'NA' : midi})`}
+        {prepareText(type) + ` (${midi === -1 ? 'N/A' : midi})`}
     </AppButton>
 }
 

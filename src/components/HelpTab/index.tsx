@@ -1,18 +1,29 @@
 import { APP_NAME } from '$config'
 import composerImg from '$/assets/images/help-composer.png'
-import playerImg from '$/assets/images/help-player.png'
+import playerImg from '$/assets/images/help-player.webp'
 import { useConfig } from '$lib/Hooks/useConfig'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import Image from 'next/image'
 import sh from '$cmp/HelpTab/HelpTab.module.css'
+import { useObservableMap } from '$lib/Hooks/useObservable'
+import { Shortcut, keyBinds } from '$stores/KeybindsStore'
+import Link from 'next/link'
+import { AppButton } from '$cmp/Inputs/AppButton'
+import { ShortcutsTable } from './ShortcutsHelp'
 export function HelpTab() {
     const { IS_MOBILE } = useConfig()
+    const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
+    const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
+
     return <>
         <span>
-            If you are on PC, hover over the buttons to see a tooltip, if you are on mobile, long press the buttons.
-            
-            When clicking the
-            <HelpTooltip 
+            {IS_MOBILE
+                ? 'Long press the buttons to see a tooltip. '
+                : 'Hover over the buttons to see a tooltip. '
+            }
+
+            When clicking
+            <HelpTooltip
                 parentStyle={{
                     display: 'inline-flex'
                 }}
@@ -23,17 +34,24 @@ export function HelpTab() {
                 }}
             >
                 Example help
-            </HelpTooltip> 
+            </HelpTooltip>
             it will show you more info.
         </span>
         {APP_NAME === "Sky" && <span>
-            The images are from the genshin version of the app, but the functionality is the same    
+            The images are from the genshin version of the app, but the functionality is the same
         </span>}
         <div className={sh['help-title']}>
-            Main page
+            Player
+        </div>
+        <div style={{margin: "1rem"}}>
+                The player is meant to help you record a song by hand or practice an existing song with the two 
+                practice tools. <br/>
+                You can also import songs / record audio of the keybord and play freely, you also have a metronome to help you with the tempo. <br/>
+                If you want a more simple keyboard you can use the <Link style={{color: 'var(--accent)'}} href={'/zen-keyboard'}>Zen keyboard</Link> <br/>
+                In the settings you can change the instrument, pitch, reverb, volume, keyboard size, etc...
         </div>
         <div>
-            <Image 
+            <Image
                 src={playerImg}
                 alt='tutorial for the main page'
                 className={sh['help-img']}
@@ -49,46 +67,37 @@ export function HelpTab() {
                 <li>Public Song library</li>
                 <li>Your songs</li>
                 <li>Open the Page selection menu</li>
+                <li>Visual sheet of the song</li>
             </ol>
         </div>
         {
             !IS_MOBILE && <>
                 <div className={sh['help-title']}>
-                    Main page shortcuts
+                    Player shortcuts
                 </div>
                 <div className={sh['help-margin-left']}>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                        The main page has shortcuts for PC users:
-                    </div>
-                    <table className='keys-table'>
-                        <tbody>
-                            <tr>
-                                <td><Key>Shift + R</Key></td><td>reload song </td>
-                            </tr>
-                            <tr>
-                                <td><Key>Shift + C</Key></td><td>Start/Stop recording when there are no songs playing</td>
-                            </tr>
-                            <tr>
-                                <td><Key>Shift + M</Key></td><td>Open/Close the menu</td>
-                            </tr>
-                            <tr>
-                                <td><Key>Esc</Key></td><td> Close the menu </td>
-                            </tr>
-                            <tr>
-                                <td><Key>Shift + S</Key></td><td>stop song </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <ShortcutsTable shortcuts={playerShortcuts} />
+                    <Link href={'/keybinds'} style={{ marginTop: "1rem" }}>
+                        <AppButton>
+                            Change shortcuts
+                        </AppButton>
+                    </Link>
                 </div>
-
             </>
         }
 
         <div className={sh['help-title']}>
             Composer
         </div>
+        <div style={{margin: "1rem"}}>
+            The composer is meant to help you create songs with many tools and features to help you with creation/transposition of songs. <br/>
+            You can use multiple instruments, each with a different pitch and volume, change tempo in small sections with tempo changers and use breakpoints to more quickly navigate the song. <br/>
+            If you don't want to transpose a song by hand, you can use the automatic MIDI converter which will help you get started with the transposition by converting as much as it can into the app format, as there are no accidentals and because of the size of the keyboard, not all songs can be directly converted. <br/>
+            Alternatively there is also an Audio/Video converter which is less accurate but can convert any one instrument song into the app format. <br/>
+            In the settings you can change the base pitch, bpm, beatmarks etc...
+        </div>
         <div>
-            <Image 
+            <Image
                 src={composerImg}
                 alt='tutorial for the composer'
                 className={sh['help-img']}
@@ -112,60 +121,15 @@ export function HelpTab() {
                     Composer shortcuts
                 </div>
                 <div className={sh['help-margin-left']}>
-
-                    <div style={{ marginBottom: '0.5rem' }}>
-                        The composer has shortcuts for PC users:
-                    </div>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td><Key>A / D</Key></td><td>move left / right</td>
-                            </tr>
-                            <tr>
-                                <td><Key>1 / 2 / 3 / 4</Key></td><td>change tempo</td>
-                            </tr>
-                            <tr>
-                                <td><Key>Space bar</Key></td><td>play / pause song</td>
-                            </tr>
-                            <tr>
-                                <td><Key>Arrow Left</Key></td><td>go to previous breakpoint</td>
-                            </tr>
-                            <tr>
-                                <td><Key>Arrow Right</Key></td><td>go to next breakpoint</td>
-                            </tr>
-                            <tr>
-                                <td><Key>Arrow Up</Key></td><td>select previous layer</td>
-                            </tr>
-                            <tr>
-                                <td><Key>Arrow Down</Key></td><td>select next layer </td>
-                            </tr>
-                            <tr>
-                                <td><Key>Shift + Note</Key></td><td>Adds/remove a note in the column </td>
-                            </tr>
-                            <tr>
-                                <td><Key>Q</Key></td><td>remove current column</td>
-                            </tr>
-                            <tr>
-                                <td><Key>E</Key></td><td>add column </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    When playing a song, you can press on the PC keyboard to add notes
-                    <div style={{ marginBottom: "1rem" }}>
-
-                    </div>
+                    <ShortcutsTable shortcuts={composerShortcuts} />
+                    <Link href={'/keybinds'} style={{ marginTop: "1rem" }}>
+                        <AppButton>
+                            Change shortcuts
+                        </AppButton>
+                    </Link>
                 </div>
-
             </>
         }
     </>
 }
 
-interface KeyProps{
-    children: React.ReactNode
-}
-export function Key({children}: KeyProps) {
-    return <div className='keyboard-key'>
-        {children}
-    </div>
-}
