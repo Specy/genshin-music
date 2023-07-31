@@ -545,7 +545,7 @@ select {
 .midi-btn,
 .midi-btn-small,
 .midi-btn-green {
-    background-color: #576377;
+    background-color: var(--primary);
     color: white;
     border-radius: 0.2rem;
     padding: 0.5rem 1rem;
@@ -617,6 +617,7 @@ select {
 
 .midi-track-center {
     display: flex;
+    gap: 0.2rem;
     align-items: center;
 }
 

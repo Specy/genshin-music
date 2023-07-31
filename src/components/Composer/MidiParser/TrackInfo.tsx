@@ -60,7 +60,7 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
                 </Select>
                 <FaCog
                     size={22}
-                    color={"var(--primary)"}
+                    color={"var(--icon-color)"}
                     onClick={() => setDataShown(!dataShown)}
                     cursor='pointer'
                 />

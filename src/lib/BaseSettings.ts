@@ -31,7 +31,7 @@ export const ComposerSettings: ComposerSettingsType = {
     data: {
         bpm: {
             name: "Bpm",
-            tooltip: "Beats per minute, the speed of the song",
+            tooltip: "Beats per minute, the speed of the song. Usually the BPM inside the app should be 4 times the BPM of the song you are trying to compose",
             type: "number",
             songSetting: true,
             increment: 5,

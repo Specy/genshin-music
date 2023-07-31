@@ -332,7 +332,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, toggleMetronome } = this
 		const { settings, isLoadingInstrument, instruments, hasSong, isRecordingAudio, isRecording, isMetronomePlaying, speedChanger } = state
 		return <>
-			<Title text="Player" description='Learn how to play songs and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace'/>
+			<Title text="Player" description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
 			<Menu
 				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
 				data={{ settings }}
