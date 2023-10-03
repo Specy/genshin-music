@@ -55,6 +55,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
 
         this.setState({ 
             sources: MIDIProvider.inputs,
+            settings: MIDIProvider.settings,
             selectedSource: MIDIProvider.currentMIDISource
          })
     }
@@ -102,6 +103,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                 selectedNote.midi = note
                 this.deselectNotes()
                 this.setState({ selectedNote: null })
+                MIDIProvider.updateLayoutNote(selectedNote.index, note, "right")
                 MIDIProvider.saveSettings()
             }
             if (selectedShortcut) {

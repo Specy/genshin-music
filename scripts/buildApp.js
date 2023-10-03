@@ -30,13 +30,13 @@ async function execute() {
             if (process.platform === 'win32') {
                 console.log(clc.italic("Building on windows"))
                 execSync(
-                    `set NEXT_PUBLIC_APP_NAME=${app}&& set NEXT_PUBLIC_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& set NEXT_PUBLIC_BASE_PATH=${basePath}&& yarn build`,
+                    `set NEXT_PUBLIC_APP_NAME=${app}&& set NEXT_PUBLIC_SW_VERSION=${SW_VERSION}&& set BUILD_PATH=./build/${PATH_NAMES[app]}&& set NEXT_PUBLIC_BASE_PATH=${basePath}&& npm run build`,
                     { stdio: 'inherit' }
                 )
             } else {
                 console.log(clc.italic("Building on Linux"))
                 execSync(
-                    `NEXT_PUBLIC_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} NEXT_PUBLIC_SW_VERSION=${SW_VERSION} NEXT_PUBLIC_BASE_PATH=${basePath} yarn build`,
+                    `NEXT_PUBLIC_APP_NAME=${app} BUILD_PATH=./build/${PATH_NAMES[app]} NEXT_PUBLIC_SW_VERSION=${SW_VERSION} NEXT_PUBLIC_BASE_PATH=${basePath} npm run build`,
                     { stdio: 'inherit' }
                 )
             }

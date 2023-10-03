@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 16.17.0
       - name: Build
-        run: yarn && yarn build:all
+        run: npm i && npm run build:all
         env:
           CI: false
       - name: Publish Genshin Music Nightly

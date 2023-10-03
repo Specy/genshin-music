@@ -42,11 +42,11 @@ export function isTWA() {
 export function colorToRGB(color: Color){
 	return [color.red(), color.green(), color.blue()]
 }
-
+export type MIDINoteStatus = 'wrong' | 'right' | 'clicked'
 class MIDINote {
 	index: number
 	midi: number
-	status: 'wrong' | 'right' | 'clicked'
+	status: MIDINoteStatus
 	constructor(index: number = 0, midi: number = 0) {
 		this.index = index
 		this.midi = midi

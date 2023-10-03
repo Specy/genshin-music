@@ -1,10 +1,10 @@
-import type { Tauri } from "$types/TauriTypes"
-import type { NoteImage } from "./components/SvgNotes"
+import type {Tauri} from "$types/TauriTypes"
+import type {NoteImage} from "./components/SvgNotes"
 
-const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-const APP_VERSION = '3.2' as const
+export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
+export const APP_VERSION = '3.2' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
-const UPDATE_MESSAGE = APP_NAME === 'Genshin'
+export const UPDATE_MESSAGE = APP_NAME === 'Genshin'
     ? `
         - Improved Do Re Mi layout 
         - All shortcuts and keyboard layout are customizable
@@ -31,16 +31,16 @@ const UPDATE_MESSAGE = APP_NAME === 'Genshin'
         - Added two new default themes
     `.trim()
 
-const UPDATE_URL = process.env.NODE_ENV === 'development'
+export const UPDATE_URL = process.env.NODE_ENV === 'development'
     ? '/updates.json'
     : 'https://raw.githubusercontent.com/Specy/genshin-music/main/public/updates.json'
 
 
 //@ts-ignore
-const TAURI: Tauri = undefined //window?.__TAURI__
+export const TAURI: Tauri = undefined //window?.__TAURI__
 //@ts-ignore
-const IS_TAURI = !!TAURI
-const NOTES_CSS_CLASSES = {
+export const IS_TAURI = !!TAURI
+export const NOTES_CSS_CLASSES = {
     noteComposer: APP_NAME === "Genshin" ? "note-composer" : "note-composer-sky",
     note: APP_NAME === "Genshin" ? "note" : "note-sky",
     noteAnimation: APP_NAME === 'Genshin' ? "note-animation" : "note-animation-sky",
@@ -48,14 +48,14 @@ const NOTES_CSS_CLASSES = {
     noteName: APP_NAME === "Genshin" ? "note-name" : "note-name-sky"
 }
 
-const BASE_THEME_CONFIG = {
+export const BASE_THEME_CONFIG = {
     text: {
         light: '#edeae5',
         dark: '#151414',
         note: APP_NAME === 'Genshin' ? '#aaaa82' : '#edeae5'
     }
 }
-const INSTRUMENTS = APP_NAME === "Genshin"
+export const INSTRUMENTS = APP_NAME === "Genshin"
     ? [
         "Lyre",
         "Vintage-Lyre",
@@ -88,7 +88,7 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "SFX_SineSynth",
         "SFX_BassSynth",
         "SFX_ChimeSynth",
-        "SFX_TR-909", 
+        "SFX_TR-909",
         "SFX_Dance",
         "SFX_BirdCall",
         "SFX_CrabCall",
@@ -98,8 +98,8 @@ const INSTRUMENTS = APP_NAME === "Genshin"
         "SFX_MantaCall",
         "SFX_MothCall"
     ] as const
-const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
-const NOTE_SCALE = {
+export const NOTES_PER_COLUMN = APP_NAME === "Genshin" ? 21 : 15
+export const NOTE_SCALE = {
     "Cb": ["Cb", "Dbb", "Db", "Ebb", "Eb", "Fb", "Gbb", "Gb", "Abb", "Ab", "Bbb", "Bb"],
     "C": ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"],
     "C#": ["C#", "D", "D#", "E", "E#", "F#", "G", "G#", "A", "A#", "B", "B#"],
@@ -123,32 +123,32 @@ const NOTE_SCALE = {
     "B#": ["B#", "C#", "C##", "D#", "D##", "E#", "F#", "F##", "G#", "G##", "A#", "A##"],
     "": ["", "", "", "", "", "", "", "", "", "", "", ""]
 } as const
-const DO_RE_MI_NOTE_SCALE = {
-    "Cb":["dob","rebb","reb","mibb","mib","fab","solbb","solb","labb","lab","tibb","tib"],
-    "C":["do","reb","re","mib","mi","fa","solb","sol","lab","la","tib","ti"],
-    "C#":["do#","re","re#","mi","mi#","fa#","sol","sol#","la","la#","ti","ti#"],
-    "Db":["reb","mibb","mib","fab","fa","solb","labb","lab","tibb","tib","dob","do"],
-    "D":["re","mib","mi","fa","fa#","sol","lab","la","tib","ti","do","do#"],
-    "D#":["re#","mi","mi#","fa#","fa##","sol#","la","la#","ti","ti#","do#","do##"],
-    "Eb":["mib","fab","fa","solb","sol","lab","tibb","tib","dob","do","reb","re"],
-    "E":["mi","fa","fa#","sol","sol#","la","tib","ti","do","do#","re","re#"],
-    "E#":["mi#","fa#","fa##","sol#","sol##","la#","ti","ti#","do#","do##","re#","re##"],
-    "Fb":["fab","solbb","solb","labb","lab","tibb","dobb","dob","rebb","reb","mibb","mib"],
-    "F":["fa","solb","sol","lab","la","tib","dob","do","reb","re","mib","mi"],
-    "F#":["fa#","sol","sol#","la","la#","ti","do","do#","re","re#","mi","mi#"],
-    "Gb":["solb","labb","lab","tibb","tib","dob","rebb","reb","mibb","mib","fab","fa"],
-    "G":["sol","lab","la","tib","ti","do","reb","re","mib","mi","fa","fa#"],
-    "G#":["sol#","la","la#","ti","ti#","do#","re","re#","mi","mi#","fa#","fa##"],
-    "Ab":["lab","tibb","tib","dob","do","reb","mibb","mib","fab","fa","solb","sol"],
-    "A":["la","tib","ti","do","do#","re","mib","mi","fa","fa#","sol","sol#"],
-    "A#":["la#","ti","ti#","do#","do##","re#","mi","mi#","fa#","fa##","sol#","sol##"],
-    "Bb":["tib","dob","do","reb","re","mib","fab","fa","solb","sol","lab","la"],
-    "B":["ti","do","do#","re","re#","mi","fa","fa#","sol","sol#","la","la#"],
-    "B#":["ti#","do#","do##","re#","re##","mi#","fa#","fa##","sol#","sol##","la#","la##"],
-    "":["","","","","","","","","","","",""]
+export const DO_RE_MI_NOTE_SCALE = {
+    "Cb": ["dob", "rebb", "reb", "mibb", "mib", "fab", "solbb", "solb", "labb", "lab", "tibb", "tib"],
+    "C": ["do", "reb", "re", "mib", "mi", "fa", "solb", "sol", "lab", "la", "tib", "ti"],
+    "C#": ["do#", "re", "re#", "mi", "mi#", "fa#", "sol", "sol#", "la", "la#", "ti", "ti#"],
+    "Db": ["reb", "mibb", "mib", "fab", "fa", "solb", "labb", "lab", "tibb", "tib", "dob", "do"],
+    "D": ["re", "mib", "mi", "fa", "fa#", "sol", "lab", "la", "tib", "ti", "do", "do#"],
+    "D#": ["re#", "mi", "mi#", "fa#", "fa##", "sol#", "la", "la#", "ti", "ti#", "do#", "do##"],
+    "Eb": ["mib", "fab", "fa", "solb", "sol", "lab", "tibb", "tib", "dob", "do", "reb", "re"],
+    "E": ["mi", "fa", "fa#", "sol", "sol#", "la", "tib", "ti", "do", "do#", "re", "re#"],
+    "E#": ["mi#", "fa#", "fa##", "sol#", "sol##", "la#", "ti", "ti#", "do#", "do##", "re#", "re##"],
+    "Fb": ["fab", "solbb", "solb", "labb", "lab", "tibb", "dobb", "dob", "rebb", "reb", "mibb", "mib"],
+    "F": ["fa", "solb", "sol", "lab", "la", "tib", "dob", "do", "reb", "re", "mib", "mi"],
+    "F#": ["fa#", "sol", "sol#", "la", "la#", "ti", "do", "do#", "re", "re#", "mi", "mi#"],
+    "Gb": ["solb", "labb", "lab", "tibb", "tib", "dob", "rebb", "reb", "mibb", "mib", "fab", "fa"],
+    "G": ["sol", "lab", "la", "tib", "ti", "do", "reb", "re", "mib", "mi", "fa", "fa#"],
+    "G#": ["sol#", "la", "la#", "ti", "ti#", "do#", "re", "re#", "mi", "mi#", "fa#", "fa##"],
+    "Ab": ["lab", "tibb", "tib", "dob", "do", "reb", "mibb", "mib", "fab", "fa", "solb", "sol"],
+    "A": ["la", "tib", "ti", "do", "do#", "re", "mib", "mi", "fa", "fa#", "sol", "sol#"],
+    "A#": ["la#", "ti", "ti#", "do#", "do##", "re#", "mi", "mi#", "fa#", "fa##", "sol#", "sol##"],
+    "Bb": ["tib", "dob", "do", "reb", "re", "mib", "fab", "fa", "solb", "sol", "lab", "la"],
+    "B": ["ti", "do", "do#", "re", "re#", "mi", "fa", "fa#", "sol", "sol#", "la", "la#"],
+    "B#": ["ti#", "do#", "do##", "re#", "re##", "mi#", "fa#", "fa##", "sol#", "sol##", "la#", "la##"],
+    "": ["", "", "", "", "", "", "", "", "", "", "", ""]
 } as const
-type BaseNote = keyof typeof NOTE_SCALE
-const INSTRUMENT_NOTE_LAYOUT_KINDS = {
+export type BaseNote = keyof typeof NOTE_SCALE
+export const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     defaultSky: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C"],
     defaultGenshin: ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"],
     skyBell: ["C", "D", "G", "A", "C", "D", "G", "A"],
@@ -161,7 +161,7 @@ const INSTRUMENT_NOTE_LAYOUT_KINDS = {
 } as const
 Object.freeze(NOTE_SCALE)
 Object.freeze(INSTRUMENT_NOTE_LAYOUT_KINDS)
-const LAYOUT_KINDS = {
+export const LAYOUT_KINDS = {
     defaultGenshin: {
         keyboardLayout: (
             "Q W E R T Y U " +
@@ -243,7 +243,7 @@ const LAYOUT_KINDS = {
 
 }
 //TODO add the instrument data like layout kinds here instead of LAYOUT_KINDS
-const LAYOUT_ICONS_KINDS = {
+export const LAYOUT_ICONS_KINDS = {
     defaultSky: "dmcr dm cr dm cr cr dm dmcr dm cr cr dm cr dm dmcr".split(" ") as NoteImage[],
     defaultSkyDrums: "cr dm cr dm cr dm cr dm".split(" ") as NoteImage[],
     defaultSkySynth: "dmcr dm cr dm cr dm cr dmcr".split(" ") as NoteImage[],
@@ -252,9 +252,9 @@ const LAYOUT_ICONS_KINDS = {
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
     genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
-type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
+export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
 
-const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
+export const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     ? [
         "Note name",
         "Keyboard layout",
@@ -272,7 +272,7 @@ const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
         "Switch",
     ]
 
-type InstrumentDataType = {
+export type InstrumentDataType = {
     notes: number
     family: string
     midiName: string
@@ -293,7 +293,7 @@ const skySfx14 = {
     icons: LAYOUT_ICONS_KINDS.defaultSky
 }
 
-const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
+export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
     Lyre: {
         notes: 21,
         family: "strings",
@@ -572,22 +572,22 @@ type InstrumentsDataProps = {
     [key in InstrumentsDataKeys]: InstrumentDataType
 }
 
-const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
+export const INSTRUMENTS_DATA: InstrumentsDataProps = BaseinstrumentsData
 
-const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
+export const SPEED_CHANGERS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(e => {
     return {
         name: `x${e}`,
         value: e
     }
 })
 
-const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] as const
-const PITCH_TO_INDEX = new Map<Pitch, number>(PITCHES.map((pitch, index) => [pitch, index]))
-type Pitch = typeof PITCHES[number]
-const COMPOSER_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
-const IMPORT_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+export const PITCHES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] as const
+export const PITCH_TO_INDEX = new Map<Pitch, number>(PITCHES.map((pitch, index) => [pitch, index]))
+export type Pitch = typeof PITCHES[number]
+export const COMPOSER_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6].reverse() : [15, 16, 17, 18, 19, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].reverse()
+export const IMPORT_NOTE_POSITIONS = APP_NAME === "Genshin" ? [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
-const CACHE_DATA = {
+export const CACHE_DATA = {
     noteData: {
         background: "#d3bd8e",
         border: "#de6b45",
@@ -616,7 +616,7 @@ const CACHE_DATA = {
         }
     ]
 }
-const TEMPO_CHANGERS = [
+export const TEMPO_CHANGERS = [
     {
         id: 0,
         text: "1",
@@ -643,9 +643,9 @@ export type TempoChanger = typeof TEMPO_CHANGERS[number]
 
 export type AppName = 'Sky' | 'Genshin'
 
-const EMPTY_LAYER = "0000"
-const VSRG_TEMPO_CHANGER = [2, 1.75, 1.5, 1.25, 1, 0.75, 0.50, 0.25]
-const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
+export const EMPTY_LAYER = "0000"
+export const VSRG_TEMPO_CHANGER = [2, 1.75, 1.5, 1.25, 1, 0.75, 0.50, 0.25]
+export const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
     ? {
         60: [0, false],
         61: [0, true],
@@ -712,11 +712,11 @@ const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
         83: [6, false],
         84: [6, false],
     })))
-const DEFAULT_VSRG_KEYS_MAP = {
+export const DEFAULT_VSRG_KEYS_MAP = {
     4: ["A", "S", "G", "H"],
     6: ["A", "S", "D", "G", "H", "J"],
 }
-const VSRG_SCORE_COLOR_MAP = {
+export const VSRG_SCORE_COLOR_MAP = {
     amazing: '#cff3e3',
     perfect: '#d9af0a',
     great: '#358a55 ',
@@ -725,9 +725,9 @@ const VSRG_SCORE_COLOR_MAP = {
     miss: '#f24b5b',
     '': '#ffffff',
 }
-const FOLDER_FILTER_TYPES = ["alphabetical", "date-created"] as const
+export const FOLDER_FILTER_TYPES = ["alphabetical", "date-created"] as const
 
-const MIDI_BOUNDS = APP_NAME === "Genshin"
+export const MIDI_BOUNDS = APP_NAME === "Genshin"
     ? {
         upper: 84,
         lower: 48
@@ -736,14 +736,14 @@ const MIDI_BOUNDS = APP_NAME === "Genshin"
         upper: 84,
         lower: 60
     }
-const PIXI_VERTICAL_ALIGN = [0.5, 0] as [number, number]
-const PIXI_HORIZONTAL_ALIGN = [0, 0.5] as [number, number]
-const PIXI_CENTER_X_END_Y = [0.5, 1] as [number, number]
-const PIXI_CENTER_ALIGN = 0.5
+export const PIXI_VERTICAL_ALIGN = [0.5, 0] as [number, number]
+export const PIXI_HORIZONTAL_ALIGN = [0, 0.5] as [number, number]
+export const PIXI_CENTER_X_END_Y = [0.5, 1] as [number, number]
+export const PIXI_CENTER_ALIGN = 0.5
 //get only non accidentals
 const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
-const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
-const DEFAULT_DOM_RECT = {
+export const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
+export const DEFAULT_DOM_RECT = {
     bottom: 0,
     height: 0,
     left: 0,
@@ -754,53 +754,7 @@ const DEFAULT_DOM_RECT = {
     y: 0,
 } as DOMRect
 
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
-const HAS_BIGINT = typeof BigInt !== 'undefined'
-const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
-
-export {
-    BASE_PATH,
-    INSTRUMENTS,
-    INSTRUMENTS_DATA,
-    COMPOSER_NOTE_POSITIONS,
-    IMPORT_NOTE_POSITIONS,
-    APP_NAME,
-    HAS_BIGINT, 
-    BASE_LAYER_LIMIT,
-    LAYOUT_KINDS,
-    NOTES_CSS_CLASSES,
-    NOTES_PER_COLUMN,
-    NOTE_SCALE,
-    DO_RE_MI_NOTE_SCALE,
-    PITCHES,
-    APP_VERSION,
-    SPEED_CHANGERS,
-    CACHE_DATA,
-    UPDATE_MESSAGE,
-    BASE_THEME_CONFIG,
-    TEMPO_CHANGERS,
-    EMPTY_LAYER,
-    MIDI_MAP_TO_NOTE,
-    NOTE_MAP_TO_MIDI,
-    MIDI_BOUNDS,
-    IS_TAURI,
-    TAURI,
-    DEFAULT_VSRG_KEYS_MAP,
-    PIXI_VERTICAL_ALIGN,
-    PIXI_HORIZONTAL_ALIGN,
-    PIXI_CENTER_ALIGN,
-    VSRG_TEMPO_CHANGER,
-    DEFAULT_DOM_RECT,
-    PIXI_CENTER_X_END_Y,
-    VSRG_SCORE_COLOR_MAP,
-    UPDATE_URL,
-    PITCH_TO_INDEX,
-    INSTRUMENT_NOTE_LAYOUT_KINDS,
-    NOTE_NAME_TYPES,
-    FOLDER_FILTER_TYPES
-}
-export type {
-    Pitch,
-    BaseNote,
-    NoteNameType
-}
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+export const HAS_BIGINT = typeof BigInt !== 'undefined'
+export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
+export const IS_BETA =true || process.env.NEXT_PUBLIC_IS_BETA === "true"

@@ -1,5 +1,6 @@
 import { settingsService } from "$lib/Services/SettingsService"
 import { MIDISettings } from "../BaseSettings"
+import {MIDINote, MIDINoteStatus} from "$lib/Utilities";
 
 export enum PresetMidi{
     Start = 250,
@@ -51,6 +52,7 @@ export class MIDIListener {
         this.currentMIDISource?.removeEventListener('midimessage', this.handleEvent)
         this.MIDIAccess = null
     }
+
     private handleMIDIState = (e: WebMidi.MIDIAccess) => {
         this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess)
         this.MIDIAccess = e
@@ -81,6 +83,14 @@ export class MIDIListener {
         this.currentMIDISource?.removeEventListener('midimessage', this.handleEvent)
         this.currentMIDISource = source
         this.currentMIDISource.addEventListener('midimessage', this.handleEvent)
+    }
+    updateLayoutNote = (index: number, midi: number, status?: MIDINoteStatus) => {
+        const savedNote = this.settings.notes[index]
+        if (savedNote) {
+            savedNote.midi = midi
+            savedNote.status = status ?? savedNote.status
+        }
+        return savedNote
     }
     saveSettings = () => {
         settingsService.updateMIDISettings(this.settings)

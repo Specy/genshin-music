@@ -19,10 +19,10 @@ async function execute() {
     updateManifest("")
     if (process.platform === 'win32') {
         console.log(clc.yellow.bold("Starting on windows"))
-        execSync(`set NEXT_PUBLIC_APP_NAME=${chosenApp}&& yarn start`, { stdio: 'inherit' })
+        execSync(`set NEXT_PUBLIC_APP_NAME=${chosenApp}&& npm run dev`, { stdio: 'inherit' })
     } else {
         console.log(clc.yellow.bold("Starting on linux"))
-        execSync(`NEXT_PUBLIC_APP_NAME=${chosenApp} yarn start`, { stdio: 'inherit' })
+        execSync(`NEXT_PUBLIC_APP_NAME=${chosenApp} npm run dev`, { stdio: 'inherit' })
     }
 }
 

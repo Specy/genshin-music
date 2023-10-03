@@ -21,10 +21,17 @@ function isLocalhost() {
     window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
   );
 }
+function shouldRegister(){
+  return process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator
+}
+type Config = {
+  onSuccess?: (registration: ServiceWorkerRegistration) => void;
+  onUpdate?: (registration: ServiceWorkerRegistration) => void;
+}
 
 //TODO not sure what config type is
-export async function register(config?: any) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+export async function register(config?: Config) {
+  if (shouldRegister()) {
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(window.location.href);
     if (publicUrl.origin !== window.location.origin) {
@@ -41,7 +48,7 @@ export async function register(config?: any) {
 
       // Add some additional logging to localhost, pointing developers to the
       // service worker/PWA documentation.
-      navigator.serviceWorker.ready.then(() => {
+      return navigator.serviceWorker.ready.then(() => {
         console.log(
           'This web app is being served cache-first by a service ' +
           'worker. To learn more, visit https://cra.link/PWA'
@@ -49,13 +56,13 @@ export async function register(config?: any) {
       });
     } else {
       // Is not localhost. Just register service worker
-      registerValidSW(swUrl, config);
+      return registerValidSW(swUrl, config);
     }
   } 
 }
 
-function registerValidSW(swUrl: string, config?: any) {
-  navigator.serviceWorker
+async function registerValidSW(swUrl: string, config?: any) {
+  return navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
       registration.onupdatefound = () => {

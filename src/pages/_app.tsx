@@ -16,7 +16,7 @@ import '$pages/vsrg-composer/VsrgComposer.css';
 import type { AppProps } from "next/app";
 import AppBase from "$cmp/AppBase";
 import { NextComponentType, NextPageContext } from "next";
-import { setIfInTWA } from "$lib/Utilities";
+import { delay, setIfInTWA } from "$lib/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"
 import { BASE_PATH, IS_TAURI } from "$config";
 import ErrorBoundaryRedirect from "$cmp/Utility/ErrorBoundaryRedirect";
@@ -24,6 +24,7 @@ import { logger } from "$stores/LoggerStore";
 import { logsStore } from "$stores/LogsStore";
 import { GoogleAnalyticsScript } from "$cmp/GoogleAnalyticsScript";
 import Head from "next/head";
+import { asyncConfirm } from "$cmp/Utility/AsyncPrompts";
 
 interface CustomPageProps {
 
@@ -64,21 +65,34 @@ export default function App({ Component, pageProps }: AppProps<CustomPageProps>)
 		}
 	}, [])
 	useEffect(() => {
-		try {
-			if ('virtualKeyboard' in navigator) {
-				//@ts-ignore
-				navigator.virtualKeyboard.overlaysContent = true;
-				console.log("virtual keyboard supported")
-			} else {
-				console.log("virtual keyboard not supported")
+		async function register(){
+			try {
+				if ('virtualKeyboard' in navigator) {
+					//@ts-ignore
+					navigator.virtualKeyboard.overlaysContent = true;
+					console.log("virtual keyboard supported")
+				} else {
+					console.log("virtual keyboard not supported")
+				}
+				if (!IS_TAURI) {
+					setIfInTWA()
+					serviceWorker.register({
+						onUpdate: async (registration) => {
+							const confirm = await asyncConfirm("There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app")
+							if (confirm) {
+								registration.waiting?.postMessage({ type: "SKIP_WAITING" })
+								await delay(1000)
+								window.location.reload()
+							}
+						}
+					})
+				}
+			} catch (e) {
+				console.error(e)
 			}
-			if (!IS_TAURI) {
-				setIfInTWA()
-				serviceWorker.register()
-			}
-		} catch (e) {
-			console.error(e)
 		}
+		register()
+
 	}, [])
 	// @ts-ignore
 	const getLayout = Component.getLayout || ((page: NextComponentType<NextPageContext, any, any>) => page)

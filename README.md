@@ -6,23 +6,23 @@ This repository holds the code of the two music apps for Genshin and Sky Cotl, y
 ![Player](docs/assets/player.webp)
 
 # How to run in dev mode
-You need node.js and yarn installed, if you don't have yarn, install it with `npm i yarn --global`.
-Then clone the repo to a folder and install the dependencies with `yarn`, once installed, run the development server with `yarn start`
+You need node.js installed on your computer, you can get it [here](https://nodejs.org/en/).
+Then clone the repo to a folder and install the dependencies with `npm i`, once installed, run the development server with `npm run start`
 
 There are 4 more scripts which might be useful, run as a specific app and build as a specific app.
 
-You can run `yarn start:sky` or `yarn start:genshin`, this will run the webapps for the specific game and swap the assets. 
+You can run `npm run dev:sky` or `npm run dev:genshin`, this will run the webapps for the specific game and swap the assets. 
 
 # How to run desktop app in dev mode
 You need to first start the development server, look [here](#how-to-run-in-dev-mode) for how to do that.
-Then you can run `yarn start-tauri`
+Then you can run `npm run start-tauri`
 # How to build
 
-You can use the scripts `yarn build:genshin` and `yarn build:sky` which will build the correct app, or `yarn build:all` to build both
+You can use the scripts `npm run build:genshin` and `npm run build:sky` which will build the correct app, or `npm run build:all` to build both
 
 # How to build desktop app
 
-The app uses tauri for the desktop bundle which is a sandboxed webview. You can build it by using `yarn build-tauri:genshin`, `yarn build-tauri:sky`, `yarn build-tauri:all`. The config is premade to allow for updates, if you dont have a signing key, the build will fail. If you want to build without updates, go to `src-tauri/tauri.conf.json` and set `updater` to false
+The app uses tauri for the desktop bundle which is a sandboxed webview. You can build it by using `npm run build-tauri:genshin`, `npm run build-tauri:sky`, `npm run build-tauri:all`. The config is premade to allow for updates, if you dont have a signing key, the build will fail. If you want to build without updates, go to `src-tauri/tauri.conf.json` and set `updater` to false
 
 
 # Documentation

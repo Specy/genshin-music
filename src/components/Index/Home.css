@@ -265,6 +265,21 @@
 .home-app-scaling *, .home-dont-show-again *{
 	white-space:nowrap;
 }
+.top-right-home-label{
+	background-color: var(--accent);
+	color: var(--accent-text);
+	display: flex;
+	justify-content: center;
+	align-items: flex-end;
+	position: fixed;
+	top: 0;
+	padding: 0rem 3rem;
+	height: 4rem;
+	font-size: 1.5rem;
+	right: 0;
+	/*kinda hacky way to make this but eh */
+	transform: rotate(45deg) translate(20%, -70%);
+}
 .home-app-scaling  button{
 	margin-left: 0.2rem;
 	min-width: unset;
