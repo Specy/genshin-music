@@ -60,7 +60,7 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
                 </Select>
                 <FaCog
                     size={22}
-                    color={"var(--icon-color)"}
+                    color={'var(--primary)'}
                     onClick={() => setDataShown(!dataShown)}
                     cursor='pointer'
                 />
@@ -77,23 +77,33 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
                     <Tooltip>
                         Changes the index of each note by this amount.
                     </Tooltip>
-                    Track offset:
+                    Local track notes offset
                 </div>
-                <input
-                    type='text'
-                    value={offset}
-                    placeholder='No offset'
-                    className='midi-input'
-                    style={{ width: '6.3rem' }}
-                    onChange={(e) => setOffset(e.target.value)}
-                />
+                <div className={'row'} style={{gap: '0.3rem'}}>
+                    <button
+                        onClick={() => setOffset(`${Number(offset) - 1}`)}
+                        className='midi-btn-small'
+                    >-</button>
+                    <input
+                        type='text'
+                        value={offset}
+                        placeholder='No offset'
+                        className='midi-input'
+                        style={{ width: '4rem' }}
+                        onChange={(e) => setOffset(e.target.value)}
+                    />
+                    <button
+                        onClick={() => setOffset(`${Number(offset) + 1}`)}
+                        className='midi-btn-small'
+                    >+</button>
+                </div>
             </div>
             <div className={'midi-track-data-row'}>
                 <div className={hasTooltip(true)}>
                     <Tooltip>
                         Scale down/up the notes which are out of scale by theose octaves.
                     </Tooltip>
-                    Max notes octave scaling:
+                    Max notes octave scaling
                 </div>
                 <NumericalInput
                     value={data.maxScaling}
@@ -102,19 +112,19 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
                 />
             </div>
             <div className='midi-track-data-row'>
-                <div>Instrument:</div>
+                <div>Instrument</div>
                 <div>{data.track.instrument.name}</div>
             </div>
             <div className='midi-track-data-row'>
-                <div>Number of notes:</div>
+                <div>Number of notes</div>
                 <div>{data.track.notes.length}</div>
             </div>
             <div className='midi-track-data-row'>
-                <div>Accidentals:</div>
+                <div>Accidentals</div>
                 <div>{data.numberOfAccidentals}</div>
             </div>
             <div className='midi-track-data-row'>
-                <div>Out of range: ({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
+                <div>Out of range ({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
                 <div className='row' style={{ width: 'fit-content' }}>
                     <div className='row' style={{ marginRight: '0.4rem' }}>
                         <FaArrowUp style={{ marginRight: '0.2rem' }} />
