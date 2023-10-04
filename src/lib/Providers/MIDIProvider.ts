@@ -90,7 +90,22 @@ export class MIDIListener {
             savedNote.midi = midi
             savedNote.status = status ?? savedNote.status
         }
+        this.saveSettings()
         return savedNote
+    }
+    updateShortcut = (shortcutType: string, midi: number, status?: MIDINoteStatus) => {
+        const savedNote = this.settings.shortcuts.find(s => s.type === shortcutType)
+        if (savedNote) {
+            savedNote.midi = midi
+            savedNote.status = status ?? savedNote.status
+        }
+        this.saveSettings()
+        return savedNote
+
+    }
+    setSettings = (settings: typeof MIDISettings) => {
+        this.settings = settings
+        this.saveSettings()
     }
     saveSettings = () => {
         settingsService.updateMIDISettings(this.settings)

@@ -23,6 +23,7 @@ interface MidiSetupState {
 }
 
 const baseInstrument = new Instrument()
+//TODO refactor this component
 export default class MidiSetup extends Component<{}, MidiSetupState> {
     state: MidiSetupState
     mounted: boolean
@@ -63,9 +64,9 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         if (!this.mounted) return
         const { sources } = this.state
         if (sources.length > inputs.length)
-            logger.warn('Device disconnected')
+            logger.warn('MIDI device disconnected')
         else if (inputs.length > 0)
-            logger.warn('Device connected')
+            logger.warn('MIDI device connected')
         this.setState({ sources: inputs })
     }
     selectMidi = (selectedSource?: WebMidi.MIDIInput) => {
@@ -89,7 +90,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         if (!this.mounted) return audioPlayer.destroy()
         this.setState({ audioPlayer })
     }
-    checkIfUsed = (midi: number, type: 'all' | 'shortcuts' | 'notes') => {
+    checkIfMidiIsUsed = (midi: number, type: 'all' | 'shortcuts' | 'notes') => {
         const { shortcuts, notes } = this.state.settings
         if (shortcuts.find(e => e.midi === midi) && ['all', 'shortcuts'].includes(type)) return true
         if (notes.find(e => e.midi === midi) && ['all', 'notes'].includes(type)) return true
@@ -99,31 +100,27 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         const { selectedNote, settings, selectedShortcut } = this.state
         if (MIDIProvider.isDown(eventType) && velocity !== 0) {
             if (selectedNote) {
-                if (this.checkIfUsed(note, 'shortcuts')) return logger.warn('Key already used')
-                selectedNote.midi = note
+                if (this.checkIfMidiIsUsed(note, 'shortcuts')) return logger.warn('Key already used')
                 this.deselectNotes()
-                this.setState({ selectedNote: null })
                 MIDIProvider.updateLayoutNote(selectedNote.index, note, "right")
-                MIDIProvider.saveSettings()
+                this.setState({ selectedNote: null, settings: MIDIProvider.settings })
             }
             if (selectedShortcut) {
                 const shortcut = settings.shortcuts.find(e => e.type === selectedShortcut)
-                if (this.checkIfUsed(note, 'all')) return logger.warn('Key already used')
+                if (this.checkIfMidiIsUsed(note, 'all')) return logger.warn('Key already used')
                 if (shortcut) {
-                    shortcut.midi = note
-                    shortcut.status = note < 0 ? 'wrong' : 'right'
-                    this.setState({ settings })
-                    MIDIProvider.saveSettings()
+                    MIDIProvider.updateShortcut(shortcut.type, note, note < 0 ? 'wrong' : 'right')
+                    this.setState({ settings: MIDIProvider.settings })
                 }
             }
             const shortcut = settings.shortcuts.find(e => e.midi === note)
             if (shortcut) {
-                shortcut.status = 'clicked'
+                MIDIProvider.updateShortcut(shortcut.type, note, 'clicked')
                 setTimeout(() => {
-                    shortcut.status = note < 0 ? 'wrong' : 'right'
-                    this.setState({ settings })
+                    MIDIProvider.updateShortcut(shortcut.type, note, note < 0 ? 'wrong' : 'right')
+                    this.setState({ settings: MIDIProvider.settings })
                 }, 150)
-                this.setState({ settings })
+                this.setState({ settings: MIDIProvider.settings  })
 
             }
             const keyboardNotes = settings.notes.filter(e => e.midi === note)

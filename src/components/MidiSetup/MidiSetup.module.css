@@ -28,7 +28,7 @@
 }
 
 .midi-shortcut.wrong{
-    background-color: var(--red);
+    background-color: #d66969;
 }
 .midi-shortcut.right{
     background-color: rgb(53, 138, 85);
