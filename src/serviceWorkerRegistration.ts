@@ -32,7 +32,6 @@ type Config = {
 //TODO not sure what config type is
 export async function register(config?: Config) {
   if (shouldRegister()) {
-    console.log("should not register service worker")
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(window.location.href);
     if (publicUrl.origin !== window.location.origin) {
