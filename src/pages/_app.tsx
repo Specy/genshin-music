@@ -65,7 +65,7 @@ export default function App({ Component, pageProps }: AppProps<CustomPageProps>)
 		}
 	}, [])
 	useEffect(() => {
-		async function register(){
+		async function registerSw(){
 			try {
 				if ('virtualKeyboard' in navigator) {
 					//@ts-ignore
@@ -91,8 +91,8 @@ export default function App({ Component, pageProps }: AppProps<CustomPageProps>)
 				console.error(e)
 			}
 		}
-		register()
-
+		console.log("Checking for updates...")
+		registerSw()
 	}, [])
 	// @ts-ignore
 	const getLayout = Component.getLayout || ((page: NextComponentType<NextPageContext, any, any>) => page)

@@ -13,7 +13,7 @@ import { CacheFirst } from 'workbox-strategies';
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME as string
 const CACHE = `${APP_NAME}-${process.env.NEXT_PUBLIC_SW_VERSION}`
 const IS_TAURI = process.env.NEXT_PUBLIC_IS_TAURI === 'true'
-const MAJOR_VERSION = 2
+const MAJOR_VERSION = 3
 const PRECACHE_CACHE = `${MAJOR_VERSION}-precache-${CACHE}`
 const RUNTIME_CACHE = `${MAJOR_VERSION}-runtime-${CACHE}`
 console.log(`CACHE NAME: "${CACHE}"`)
