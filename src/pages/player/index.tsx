@@ -130,7 +130,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 		this.setState({ isLoadingInstrument: true })
 		const loaded = await instrument.load(AudioProvider.getAudioContext())
 		if (!loaded) logger.error("There was an error loading the instrument")
-		AudioProvider.connect(instrument.endNode)
+		AudioProvider.connect(instrument.endNode, null)
 		if (!this.mounted) return
 		playerStore.setKeyboardLayout(instrument.notes)
 		instruments[0] = instrument
@@ -170,12 +170,13 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 				const loaded = await instrument.load(AudioProvider.getAudioContext())
 				if (!loaded) logger.error("There was an error loading the instrument")
 				if (!this.mounted) return instrument.dispose()
-				AudioProvider.connect(instrument.endNode)
+				AudioProvider.connect(instrument.endNode, ins.reverbOverride)
 				instrument.changeVolume(ins.volume)
 				return instrument
 			} else if (instruments[i].name === ins.name) {
-				//if it has a layer and it's the same, just set the volume
+				//if it has a layer and it's the same, just set the volume and reverb
 				instruments[i].changeVolume(ins.volume)
+				AudioProvider.setReverbOfNode(instruments[i].endNode, ins.reverbOverride)
 				return instruments[i]
 			} else {
 				//if it has a layer and it's different, delete the layer and create a new one
@@ -187,7 +188,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 				const loaded = await instrument.load(AudioProvider.getAudioContext())
 				if (!loaded) logger.error("There was an error loading the instrument")
 				if (!this.mounted) return instrument.dispose()
-				AudioProvider.connect(instrument.endNode)
+				AudioProvider.connect(instrument.endNode, ins.reverbOverride)
 				instrument.changeVolume(ins.volume)
 				return instrument
 			}

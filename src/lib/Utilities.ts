@@ -10,6 +10,11 @@ import { ClickType, Timer } from "$types/GeneralTypes"
 import Color from "color";
 
 
+
+export function preventDefault(e: React.MouseEvent) {
+    e.preventDefault()
+}
+
 class FileDownloader {
 	//TODO shouldn tthis be application/json?
 	static download(file: string | Blob, name: string, as: string = "application/json") {

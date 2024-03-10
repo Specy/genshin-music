@@ -65,6 +65,7 @@ export interface SerializedInstrumentData {
 	icon: InstrumentNoteIcon
 	alias: string
 	muted: boolean
+	reverbOverride: boolean | null
 }
 export class InstrumentData {
 	name: InstrumentName = INSTRUMENTS[0]
@@ -72,6 +73,7 @@ export class InstrumentData {
 	pitch: Pitch | "" = ""
 	visible: boolean = true
 	icon: InstrumentNoteIcon = 'circle'
+	reverbOverride: boolean | null = null
 	alias = ''
 	muted = false
 	constructor(data: Partial<InstrumentData> = {}) {
@@ -85,7 +87,8 @@ export class InstrumentData {
 			visible: this.visible,
 			icon: this.icon,
 			alias: this.alias,
-			muted: this.muted
+			muted: this.muted,
+			reverbOverride: this.reverbOverride
 		}
 	}
 	static deserialize(data: SerializedInstrumentData): InstrumentData {
@@ -96,7 +99,8 @@ export class InstrumentData {
 			visible: data.visible ?? true,
 			icon: data.icon ?? 'circle',
 			alias: data.alias ?? "",
-			muted: data.muted ?? false
+			muted: data.muted ?? false,
+			reverbOverride: data.reverbOverride ?? null
 		})
 	}
 	set(data: Partial<InstrumentData>) {

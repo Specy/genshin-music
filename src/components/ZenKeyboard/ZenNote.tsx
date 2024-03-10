@@ -7,6 +7,7 @@ import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import GenshinNoteBorder from '$cmp/Miscellaneous/GenshinNoteBorder'
 import { InstrumentName, NoteStatus } from "$/types/GeneralTypes"
 import s from "./ZenKeyboard.module.css"
+import {preventDefault} from "$lib/Utilities";
 interface ZenKeyboardProps {
     note: ObservableNote
     noteText: string
@@ -32,7 +33,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
     const [textColor, setTextColor] = useState(BASE_THEME_CONFIG.text.light)
     const ref = useRef<HTMLDivElement>(null)
     const handleClick = useCallback((e: any) => {
-        e.preventDefault()
+        preventDefault(e)
         onClick(note)
     }, [onClick, note])
     useEffect(() => {
@@ -59,6 +60,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
     const clickColor = INSTRUMENTS_DATA[instrumentName]?.clickColor
     return <button
         onPointerDown={handleClick}
+        onContextMenu={preventDefault}
         className="button-hitbox-bigger"
         style={{padding: `${keyPadding}rem`}}
     >

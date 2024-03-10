@@ -1,14 +1,16 @@
-import { Pitch } from "$config"
-import { AppButton } from "$cmp/Inputs/AppButton"
-import { PitchSelect } from "$cmp/Inputs/PitchSelect"
-import { HelpTooltip } from "$cmp/Utility/HelpTooltip"
+import {Pitch} from "$config"
+import {AppButton} from "$cmp/Inputs/AppButton"
+import {PitchSelect} from "$cmp/Inputs/PitchSelect"
+import {HelpTooltip} from "$cmp/Utility/HelpTooltip"
 import useClickOutside from "$lib/Hooks/useClickOutside"
-import { InstrumentNoteIcon } from "$lib/Songs/ComposedSong"
-import { InstrumentData } from "$lib/Songs/SongClasses"
-import { capitalize, prettyPrintInstrumentName } from "$lib/Utilities"
-import { FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp } from "react-icons/fa"
-import { InstrumentSelect } from "../../Inputs/InstrumentSelect"
+import {InstrumentNoteIcon} from "$lib/Songs/ComposedSong"
+import {InstrumentData} from "$lib/Songs/SongClasses"
+import {capitalize, prettyPrintInstrumentName} from "$lib/Utilities"
+import {FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp} from "react-icons/fa"
+import {InstrumentSelect} from "../../Inputs/InstrumentSelect"
 import s from '$cmp/Settings/Settings.module.css'
+import {Select} from "$cmp/Inputs/Select";
+
 interface InstrumentSettingsPopupProps {
     currentLayer: number
     instruments: InstrumentData[]
@@ -18,9 +20,29 @@ interface InstrumentSettingsPopupProps {
     onDelete: () => void
     onClose: () => void
 }
+
+function getReverbValue(reverb: boolean | null) {
+    if (reverb === null) return 'Unset'
+    return reverb ? 'On' : 'Off'
+}
+
+function toReverbValue(value: string): boolean | null {
+    if (value === 'Unset') return null
+    return value === 'On'
+}
+
 const noteIcons: InstrumentNoteIcon[] = ['circle', 'border', 'line']
-export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClose, onChangePosition, currentLayer, instruments }: InstrumentSettingsPopupProps) {
-    const ref = useClickOutside<HTMLDivElement>(onClose, { active: true, ignoreFocusable: true })
+
+export function InstrumentSettingsPopup({
+                                            instrument,
+                                            onChange,
+                                            onDelete,
+                                            onClose,
+                                            onChangePosition,
+                                            currentLayer,
+                                            instruments
+                                        }: InstrumentSettingsPopupProps) {
+    const ref = useClickOutside<HTMLDivElement>(onClose, {active: true, ignoreFocusable: true})
     if (!instrument) return <div className="floating-instrument-settings  box-shadow">
         No instrument selected
     </div>
@@ -31,42 +53,63 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
                 type="text"
                 maxLength={50}
                 className="input"
-                style={{ width: '7.4rem' }}
+                style={{width: '7.4rem'}}
                 value={instrument.alias}
-                onChange={e => onChange(instrument.set({ alias: e.target.value }))}
+                onChange={e => onChange(instrument.set({alias: e.target.value}))}
                 placeholder={prettyPrintInstrumentName(instrument.name)}
             />
         </div>
 
-        <div className="row space-between" style={{ marginTop: '0.4rem' }}>
+        <div className="row space-between" style={{marginTop: '0.4rem'}}>
             Instrument
             <InstrumentSelect
-                style={{ width: '8rem' }}
+                style={{width: '8rem'}}
                 selected={instrument.name}
-                onChange={(name) => onChange(instrument.set({ name }))}
+                onChange={(name) => onChange(instrument.set({name}))}
             />
         </div>
-        <div className="row space-between" style={{ marginTop: '0.4rem' }}>
+        <div className="row space-between" style={{marginTop: '0.4rem'}}>
             Pitch
             <PitchSelect
-                style={{ padding: '0.3rem', width: '8rem' }}
+                style={{padding: '0.3rem', width: '8rem'}}
                 selected={instrument.pitch as Pitch}
-                onChange={pitch => onChange(instrument.set({ pitch }))}
+                onChange={pitch => onChange(instrument.set({pitch}))}
             >
                 <option value="">
                     Use song pitch
                 </option>
             </PitchSelect>
         </div>
+        <div className="row space-between" style={{marginTop: '0.4rem'}}>
+            Reverb
+            <Select
+                style={{padding: '0.3rem', width: '8rem'}}
+                onChange={(e) => {
+                    onChange(instrument.set({reverbOverride: toReverbValue(e.target.value)}))
+                }}
+                value={getReverbValue(instrument.reverbOverride)}
+            >
+                <option value={'On'}>
+                    On
+                </option>
+                <option value={'Off'}>
+                    Off
+                </option>
+                <option value={'Unset'}>
+                    Use song reverb
+                </option>
 
-        <div className="row space-between" style={{ marginTop: '0.4rem' }}>
+            </Select>
+        </div>
+
+        <div className="row space-between" style={{marginTop: '0.4rem'}}>
             Note icon
             <select
                 className={s.select}
-                style={{ padding: '0.3rem', width: '8rem' }}
+                style={{padding: '0.3rem', width: '8rem'}}
                 value={instrument.icon}
                 onChange={e => {
-                    onChange(instrument.set({ icon: e.target.value as InstrumentNoteIcon }))
+                    onChange(instrument.set({icon: e.target.value as InstrumentNoteIcon}))
                     e.target.blur()
                 }}
             >
@@ -78,19 +121,19 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
             </select>
         </div>
 
-        <div className="row" style={{ marginTop: '1rem', alignItems: "center" }}>
+        <div className="row" style={{marginTop: '1rem', alignItems: "center"}}>
             Volume
             <span style={{
                 marginLeft: "0.4rem",
                 width: '3rem',
                 ...(instrument.volume > 100
-                    && { color: `hsl(0, ${-40 + instrument.volume}%, 61%)`, marginLeft: "0.4rem" })
+                    && {color: `hsl(0, ${-40 + instrument.volume}%, 61%)`, marginLeft: "0.4rem"})
             }}
             >
                 {instrument.volume}%
             </span>
             <HelpTooltip
-                buttonStyle={{ width: '1.2rem', height: '1.2rem' }}
+                buttonStyle={{width: '1.2rem', height: '1.2rem'}}
                 width={10}
             >
                 If you hear distortion, reduce the volume
@@ -99,54 +142,54 @@ export function InstrumentSettingsPopup({ instrument, onChange, onDelete, onClos
         <div className="row">
             <input
                 type="range"
-                style={{flex: '1', opacity: instrument.muted ? "0.6": '1'}}
+                style={{flex: '1', opacity: instrument.muted ? "0.6" : '1'}}
                 min={0}
                 max={125}
                 value={instrument.volume}
-                onChange={e => onChange(instrument.set({ volume: Number(e.target.value) }))}
+                onChange={e => onChange(instrument.set({volume: Number(e.target.value)}))}
             />
             <AppButton
                 className="flex-centered"
                 toggled={instrument.muted}
-                style={{ padding: 0, minWidth: 'unset', width: '1.6rem', height: '1.6rem', borderRadius: '2rem' }}
+                style={{padding: 0, minWidth: 'unset', width: '1.6rem', height: '1.6rem', borderRadius: '2rem'}}
                 onClick={() => {
-                    if(instrument.volume === 0 && !instrument.muted) return
-                    onChange(instrument.set({ muted: !instrument.muted }))
+                    if (instrument.volume === 0 && !instrument.muted) return
+                    onChange(instrument.set({muted: !instrument.muted}))
                 }}
             >
-                {(instrument.muted || instrument.volume === 0) ? <FaVolumeMute /> : <FaVolumeUp />}
+                {(instrument.muted || instrument.volume === 0) ? <FaVolumeMute/> : <FaVolumeUp/>}
             </AppButton>
         </div>
-        <div className="row space-between" style={{ marginTop: '1rem' }}>
+        <div className="row space-between" style={{marginTop: '1rem'}}>
             <AppButton
                 onClick={() => onChangePosition(-1)}
                 disabled={currentLayer === 0}
                 className='flex-centered'
-                style={{ padding: '0.5rem', flex: '1', marginRight: '0.4rem' }}
+                style={{padding: '0.5rem', flex: '1', marginRight: '0.4rem'}}
             >
-                <FaArrowUp style={{ marginRight: '0.2rem' }} /> Move up
+                <FaArrowUp style={{marginRight: '0.2rem'}}/> Move up
             </AppButton>
             <AppButton
                 onClick={() => onChangePosition(1)}
                 disabled={currentLayer === instruments.length - 1}
                 className='flex-centered'
-                style={{ padding: '0.5rem', flex: '1' }}
+                style={{padding: '0.5rem', flex: '1'}}
             >
-                <FaArrowDown style={{ marginRight: '0.2rem' }} /> Move down
+                <FaArrowDown style={{marginRight: '0.2rem'}}/> Move down
             </AppButton>
         </div>
-        <div className='row space-between' style={{ marginTop: '0.4rem' }}>
+        <div className='row space-between' style={{marginTop: '0.4rem'}}>
             <AppButton
                 className="row-centered"
-                style={{ padding: '0.4rem', width: 'fit-content' }}
+                style={{padding: '0.4rem', width: 'fit-content'}}
                 onClick={onDelete}
             >
-                <FaTrash color="var(--red)" style={{ marginRight: '0.3rem' }} />
+                <FaTrash color="var(--red)" style={{marginRight: '0.3rem'}}/>
                 Delete
             </AppButton>
             <AppButton
                 onClick={onClose}
-                style={{ padding: '0.4rem', width: 'fit-content' }}
+                style={{padding: '0.4rem', width: 'fit-content'}}
             >
                 Ok
             </AppButton>

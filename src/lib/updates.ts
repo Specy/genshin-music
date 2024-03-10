@@ -7,11 +7,14 @@ type Update = {
 
 export const updates: Update[] = [
     {
-        version: '4.0.0',
-        title: "Audio/Video transcription, held instruments, translations",
+        version: '3.3.0',
+        title: "Audio/Video transcription, reverb",
         date: '2023 - 26/07',
         changes: [
             "Added tool in the composer to convert audio/video to a sheet",
+            "Reverb now can be set for each instrument",
+            "Added quick settings in the zen keyboard",
+            //"Added personal custom layout in the visual song",
             "Updated Help page",
             "Other bug fixes and improvements"
         ]

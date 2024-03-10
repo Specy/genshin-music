@@ -6,6 +6,7 @@ import { Theme, ThemeProvider } from '$stores/ThemeStore/ThemeProvider'
 import { ObservableNote } from '$lib/Instrument'
 import { InstrumentName } from '$types/GeneralTypes'
 import { LayerStatus } from '$lib/Layer'
+import {preventDefault} from "$lib/Utilities";
 
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
 interface ComposerNoteProps {
@@ -37,6 +38,9 @@ const baseTheme = {
     note_background: ThemeProvider.get('note_background').desaturate(0.6).toString(),
     isAccentDefault: ThemeProvider.isDefault('accent'),
 } as const
+
+
+
 export default memo(function ComposerNote({ data, layer, instrument, clickAction, noteText, noteImage, theme }: ComposerNoteProps) {
     const [colors, setColors] = useState(baseTheme)
     useEffect(() => {
@@ -48,7 +52,14 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
     }, [theme])
 
     let className = classNameMap.get(layer) ?? NOTES_CSS_CLASSES.noteComposer
-    return <button onPointerDown={() => clickAction(data)} className="button-hitbox">
+    return <button
+        onPointerDown={(e) => {
+            preventDefault(e)
+            clickAction(data)
+        }}
+        className="button-hitbox"
+        onContextMenu={preventDefault}
+    >
         <div className={className} >
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 fill={colors.note_background}

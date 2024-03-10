@@ -310,13 +310,14 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
                 if (!loaded) logger.error("There was an error loading the instrument")
                 if (!this.mounted) return instrument.dispose()
-                AudioProvider.connect(instrument.endNode)
+                AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
                 return instrument
             }
             if (layers[i].name === ins.name) {
-                //if it has a layer and it's the same, just set the volume
+                //if it has a layer and it's the same, just set the volume and reverb
                 layers[i].changeVolume(ins.volume)
+                AudioProvider.setReverbOfNode(layers[i].endNode, ins.reverbOverride)
                 return layers[i]
             } else {
                 //if it has a layer and it's different, delete the layer and create a new one
@@ -328,7 +329,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
                 if (!loaded) logger.error("There was an error loading the instrument")
                 if (!this.mounted) return instrument.dispose()
-                AudioProvider.connect(instrument.endNode)
+                AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
                 return instrument
             }

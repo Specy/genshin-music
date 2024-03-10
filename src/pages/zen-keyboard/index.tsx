@@ -54,7 +54,7 @@ export default function ZenKeyboard() {
             logger.showPill(`Loading instrument: ${instrument.name}...`)
             await instrument.load(AudioProvider.getAudioContext())
             logger.hidePill()
-            AudioProvider.connect(instrument.endNode)
+            AudioProvider.connect(instrument.endNode, null)
         }
         load()
         return () => { AudioProvider.disconnect(instrument.endNode) }
@@ -75,6 +75,8 @@ export default function ZenKeyboard() {
         <Title text="Zen Keyboard" description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome" />
         <ZenKeyboardMenu
             settings={settings}
+            isMetronomePlaying={isMetronomePlaying}
+            setIsMetronomePlaying={setIsMetronomePlaying}
             onVolumeChange={onVolumeChange}
             handleSettingChange={handleSettingChange}
         />
@@ -90,19 +92,6 @@ export default function ZenKeyboard() {
             />
         </div>
 
-        <IconButton
-            toggled={isMetronomePlaying}
-            onClick={() => setIsMetronomePlaying(!isMetronomePlaying)}
-            className='metronome-button'
-            style={{
-                position: 'absolute',
-                bottom: "0.8rem",
-                right: "0.8rem",
-            }}
-            ariaLabel='Toggle metronome'
-        >
-            <GiMetronome size={22} />
-        </IconButton>
     </>
 }
 

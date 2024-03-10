@@ -710,7 +710,6 @@ export const MIDI_MAP_TO_NOTE = new Map(Object.entries((APP_NAME === 'Sky'
         81: [5, false],
         82: [5, true],
         83: [6, false],
-        84: [6, false],
     })))
 export const DEFAULT_VSRG_KEYS_MAP = {
     4: ["A", "S", "G", "H"],

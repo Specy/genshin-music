@@ -4,6 +4,7 @@ import { observe } from "mobx"
 import { useEffect, useState } from "react"
 import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
 import SvgNotes, { NoteImage } from "$cmp/SvgNotes"
+import {preventDefault} from "$lib/Utilities";
 
 
 type BaseNoteData = {
@@ -29,9 +30,10 @@ export default function BaseNote<T>({ data, noteText = 'A', handleClick, noteIma
     const className = parseClass(data.status, clickClass) + ` ${noteClass}`
     return <button
         onPointerDown={(e) => {
-            e.preventDefault()
+            preventDefault(e)
             handleClick(data)
         }}
+        onContextMenu={preventDefault}
         className="button-hitbox-bigger"
     >
         <div

@@ -35,7 +35,7 @@ export const ComposerSettings: ComposerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 3600],
+            threshold: [0, 10000],
             value: 220,
             category: "Song Settings",
         },
@@ -91,8 +91,8 @@ export const ComposerSettings: ComposerSettingsType = {
             ]
         },
         caveMode: {
-            name: "Reverb (cave mode)",
-            tooltip: "Makes it sound like you are in a cave",
+            name: "Default reverb (cave mode)",
+            tooltip: "Makes it sound like you are in a cave, this is the default value applied to every instrument",
             category: "Composer Settings",
             type: "checkbox",
             songSetting: false,
@@ -182,7 +182,7 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 3600],
+            threshold: [0, 10000],
             value: 220,
             category: "Song Settings",
         },
@@ -406,7 +406,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 3600],
+            threshold: [0, 10000],
             value: 220,
             category: "Song Settings",
         },
@@ -618,7 +618,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             value: 200,
             increment: 5,
             category: "Metronome",
-            threshold: [0, 3600]
+            threshold: [0, 10000]
         },
         caveMode: {
             name: "Reverb (cave mode)",
