@@ -57,6 +57,21 @@ class MIDINote {
 		this.midi = midi
 		this.status = midi < 0 ? 'wrong' : 'right'
 	}
+
+	setMidi(midi: number){
+		this.midi = midi
+		this.status = midi < 0 ? 'wrong' : 'right'
+	}
+	serialize(){
+		return {
+			index: this.index,
+			midi: this.midi,
+			status: this.status
+		}
+	}
+	static deserialize(data: any) {
+		return new MIDINote(data.index, data.midi)
+	}
 }
 
 class MIDIShortcut {
@@ -68,6 +83,7 @@ class MIDIShortcut {
 		this.midi = midi
 		this.status = midi < 0 ? 'wrong' : 'right'
 	}
+
 }
 
 function groupArrayEvery<T>(array: T[], n: number) {

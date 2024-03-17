@@ -229,7 +229,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         if (!this.mounted) return
         const { song, layer } = this.state
         if (MIDIProvider.isDown(eventType) && velocity !== 0) {
-            const keyboardNotes = MIDIProvider.settings.notes.filter(e => e.midi === note)
+            const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note)
             keyboardNotes.forEach(keyboardNote => {
                 this.handleClick(this.currentInstrument.notes[keyboardNote.index])
             })

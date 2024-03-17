@@ -16,6 +16,8 @@ import svs from "$cmp/VsrgPlayer/VsrgPlayerKeyboard.module.css"
 import MidiSetup from "$cmp/MidiSetup";
 
 
+
+
 const baseInstrument = new Instrument()
 export default function Keybinds() {
 

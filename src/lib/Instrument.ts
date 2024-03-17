@@ -1,8 +1,19 @@
-import { INSTRUMENTS_DATA, INSTRUMENTS, Pitch, APP_NAME, BaseNote, NOTE_SCALE, PITCH_TO_INDEX, NoteNameType, BASE_PATH, DO_RE_MI_NOTE_SCALE } from "$config"
-import { makeObservable, observable } from "mobx"
-import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
-import { getPitchChanger } from "./Utilities"
-import { NoteImage } from "$cmp/SvgNotes"
+import {
+    INSTRUMENTS_DATA,
+    INSTRUMENTS,
+    Pitch,
+    APP_NAME,
+    BaseNote,
+    NOTE_SCALE,
+    PITCH_TO_INDEX,
+    NoteNameType,
+    BASE_PATH,
+    DO_RE_MI_NOTE_SCALE
+} from "$config"
+import {makeObservable, observable} from "mobx"
+import {InstrumentName, NoteStatus} from "$types/GeneralTypes"
+import {getPitchChanger} from "./Utilities"
+import {NoteImage} from "$cmp/SvgNotes"
 
 type Layouts = {
     keyboard: string[]
@@ -32,17 +43,20 @@ export default class Instrument {
     isDeleted: boolean = false
     isLoaded: boolean = false
     audioContext: AudioContext | null = null
+
     get endNode() {
         return this.volumeNode
     }
+
     static clearPool() {
         INSTRUMENT_BUFFER_POOL.clear()
     }
+
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
         this.name = name
         if (!INSTRUMENTS.includes(this.name as any)) this.name = INSTRUMENTS[0]
-        this.instrumentData  = {...INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]}
-        const layouts =  this.instrumentData.layout
+        this.instrumentData = {...INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]}
+        const layouts = this.instrumentData.layout
         this.layouts = {
             keyboard: [...layouts.keyboardLayout],
             mobile: [...layouts.mobileLayout],
@@ -50,19 +64,20 @@ export default class Instrument {
             playstation: [...layouts.playstationLayout],
             switch: [...layouts.switchLayout]
         }
-        for (let i = 0; i <  this.instrumentData.notes; i++) {
+        for (let i = 0; i < this.instrumentData.notes; i++) {
             const noteName = this.layouts.keyboard[i]
             const noteNames = {
                 keyboard: noteName,
                 mobile: this.layouts.mobile[i]
             }
             const url = `${BASE_PATH}/assets/audio/${this.name}/${i}.mp3`
-            const note = new ObservableNote(i, noteNames, url, this.instrumentData.baseNotes[i])
+            const note = new ObservableNote(i, noteNames, url, this.instrumentData.baseNotes[i], this.instrumentData.midiNotes[i] ?? 0)
             note.instrument = this.name
-            note.noteImage =  this.instrumentData.icons[i]
+            note.noteImage = this.instrumentData.icons[i]
             this.notes.push(note)
         }
     }
+
     getNoteFromCode = (code: string) => {
         const index = this.getNoteIndexFromCode(code)
         return index !== -1 ? this.notes[index] : null
@@ -89,7 +104,8 @@ export default class Instrument {
             if (type === "No Text") return ''
             if (type === "Playstation") return layout.playstation[index]
             if (type === "Switch") return layout.switch[index]
-        } catch (e) { }
+        } catch (e) {
+        }
         return ''
     }
     changeVolume = (amount: number) => {
@@ -106,16 +122,18 @@ export default class Instrument {
         player.connect(this.volumeNode)
         //player.detune.value = pitch * 100, pitch should be 0 indexed from C
         player.playbackRate.value = pitchChanger
-        if(delay){
+        if (delay) {
             player.start(this.audioContext.currentTime + delay)
-        }else{
+        } else {
             player.start()
         }
+
         function handleEnd() {
             player.stop()
             player.disconnect()
         }
-        player.addEventListener('ended', handleEnd, { once: true })
+
+        player.addEventListener('ended', handleEnd, {once: true})
     }
     load = async (audioContext: AudioContext) => {
         this.audioContext = audioContext
@@ -153,6 +171,7 @@ export default class Instrument {
         this.volumeNode = null
     }
 }
+
 export function fetchAudioBuffer(url: string, audioContext: AudioContext): Promise<AudioBuffer> {
     //dont change any of this, safari bug
     return new Promise((res, rej) => {
@@ -174,14 +193,17 @@ interface NoteName {
     keyboard: string,
     mobile: string
 }
+
 export type NoteDataState = {
     status: NoteStatus,
     delay: number
     animationId: number
 }
+
 export class ObservableNote {
     index: number
     noteImage: NoteImage = APP_NAME === "Genshin" ? "do" : "cr"
+    midiNote: number
     instrument: InstrumentName = INSTRUMENTS[0]
     noteNames: NoteName
     url: string
@@ -193,31 +215,37 @@ export class ObservableNote {
         delay: 0,
         animationId: 0
     }
-    constructor(index: number, noteNames: NoteName, url: string, baseNote: BaseNote) {
+
+    constructor(index: number, noteNames: NoteName, url: string, baseNote: BaseNote, midiNote: number) {
         this.index = index
         this.noteNames = noteNames
         this.url = url
         this.baseNote = baseNote
+        this.midiNote = midiNote
         makeObservable(this)
     }
+
     get status(): NoteStatus {
         return this.data.status
     }
 
     setStatus(status: NoteStatus) {
-        return this.setState({ status })
+        return this.setState({status})
     }
-    triggerAnimation(status?: NoteStatus){
+
+    triggerAnimation(status?: NoteStatus) {
         this.setState({
             animationId: this.data.animationId + 1,
             status
         })
     }
+
     setState(data: Partial<NoteDataState>) {
         Object.assign(this.data, data)
     }
+
     clone() {
-        const obj = new ObservableNote(this.index, this.noteNames, this.url, this.baseNote)
+        const obj = new ObservableNote(this.index, this.noteNames, this.url, this.baseNote, this.midiNote)
         obj.buffer = this.buffer
         obj.noteImage = this.noteImage
         obj.instrument = this.instrument

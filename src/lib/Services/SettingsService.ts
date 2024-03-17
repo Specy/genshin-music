@@ -1,4 +1,4 @@
-import { APP_NAME } from "$config"
+import {APP_NAME, MIDIPreset} from "$config"
 import { ComposerSettings, ComposerSettingsDataType, PlayerSettings, PlayerSettingsDataType, MIDISettings, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, BaseSettings, ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$lib/BaseSettings"
 
 
@@ -126,6 +126,7 @@ class SettingsService {
             return MIDISettings
         }
     }
+
     getDefaultMIDISettings() {
         return MIDISettings
     }
@@ -170,7 +171,6 @@ class SettingsService {
     updateMIDISettings(settings: typeof MIDISettings) {
         localStorage.setItem(`${APP_NAME}_MIDI_Settings`, JSON.stringify(settings))
     }
-
 }
 
 

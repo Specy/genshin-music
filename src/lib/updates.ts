@@ -14,6 +14,8 @@ export const updates: Update[] = [
             "Added tool in the composer to convert audio/video to a sheet",
             "Reverb now can be set for each instrument",
             "Added quick settings in the zen keyboard",
+            "Added customisable presets in MIDI settings",
+            "Zen keyboard now emits MIDI notes events when pressed",
             //"Added personal custom layout in the visual song",
             "Updated Help page",
             "Other bug fixes and improvements"

@@ -161,6 +161,30 @@ export const INSTRUMENT_NOTE_LAYOUT_KINDS = {
 } as const
 Object.freeze(NOTE_SCALE)
 Object.freeze(INSTRUMENT_NOTE_LAYOUT_KINDS)
+export const INSTRUMENT_MIDI_LAYOUT_KINDS = {
+    defaultSky: [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
+    defaultGenshin: [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83],
+    skyBell: [60, 62, 67, 69, 72, 74, 79, 81],
+    skyHandpan: [62, 69, 72, 74, 77, 79, 81, 84],
+    defaultDrums: [60, 62, 64, 65, 67, 69, 71, 72],
+    skySFX6: [60, 62, 64, 65, 67, 69],
+    skySFX14: [61, 64, 67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100],
+    genshinVintageLyre: [60, 61, 63, 65, 67, 68, 70, 72, 74, 75, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 95, 96],
+}
+
+export const MIDI_PRESETS = [
+    {
+        name: "default",
+        notes: APP_NAME === "Sky" ? INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky : INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin
+    }
+] satisfies MIDIPreset[]
+
+export type MIDIPreset = {
+    name: string,
+    notes: number[]
+}
+
+
 export const LAYOUT_KINDS = {
     defaultGenshin: {
         keyboardLayout: (
@@ -279,6 +303,7 @@ export type InstrumentDataType = {
     baseNotes: readonly BaseNote[]
     layout: typeof LAYOUT_KINDS[keyof typeof LAYOUT_KINDS]
     icons: readonly NoteImage[]
+    midiNotes: readonly number[]
     clickColor?: string
     fill?: string
 }
@@ -290,7 +315,8 @@ const skySfx14 = {
     midiName: "synth drum",
     baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
     layout: LAYOUT_KINDS.defaultSky,
-    icons: LAYOUT_ICONS_KINDS.defaultSky
+    icons: LAYOUT_ICONS_KINDS.defaultSky,
+    midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
 }
 
 export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
@@ -301,6 +327,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin,
     },
     Zither: {
         notes: 21,
@@ -311,6 +338,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin,
 
     },
     "Vintage-Lyre": {
@@ -322,6 +350,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinVintageLyre,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.genshinVintageLyre,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.genshinVintageLyre,
     },
     "Old-Zither": {
         notes: 21,
@@ -332,6 +361,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin,
     },
     DunDun: {
         notes: 8,
@@ -345,7 +375,8 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         layout: LAYOUT_KINDS.defaultDrums,
         icons: APP_NAME === 'Genshin'
             ? LAYOUT_ICONS_KINDS.defaultGenshinDrums
-            : LAYOUT_ICONS_KINDS.defaultSkyDrums
+            : LAYOUT_ICONS_KINDS.defaultSkyDrums,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
     },
     "SFX_Dance": {
         notes: 6,
@@ -353,7 +384,8 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         midiName: "synth drum",
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skySFX6,
         layout: LAYOUT_KINDS.skySFX6,
-        icons: LAYOUT_ICONS_KINDS.skySFX6
+        icons: LAYOUT_ICONS_KINDS.skySFX6,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.skySFX6
     },
     "SFX_BirdCall": skySfx14,
     "SFX_CrabCall": skySfx14,
@@ -369,6 +401,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
     },
     "SFX_BassSynth": {
         notes: 8,
@@ -377,6 +410,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
     },
     "SFX_ChimeSynth": {
         notes: 8,
@@ -385,6 +419,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
     },
     "SFX_TR-909": {
         notes: 8,
@@ -393,6 +428,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkySynth,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
     },
     Panflute: {
         notes: 15,
@@ -401,6 +437,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     LightGuitar: {
         notes: 15,
@@ -409,6 +446,8 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
+
     },
     Bells: {
         notes: 8,
@@ -417,6 +456,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyBell,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.skyBell,
     },
     Trumpet: {
         notes: 15,
@@ -425,6 +465,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Aurora: {
         notes: 15,
@@ -433,6 +474,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Aurora_Short: {
         notes: 15,
@@ -441,6 +483,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Contrabass: {
         notes: 15,
@@ -449,6 +492,8 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
+
     },
     Drum: {
         notes: 8,
@@ -457,6 +502,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
     },
     Flute: {
         notes: 15,
@@ -465,7 +511,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
-
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Guitar: {
         notes: 15,
@@ -474,7 +520,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
-
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     HandPan: {
         notes: 8,
@@ -483,7 +529,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.skyHandpan,
         layout: LAYOUT_KINDS.defaultDrums,
         icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
-
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.skyHandpan,
     },
     ToyUkulele: {
         notes: 15,
@@ -492,6 +538,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Harp: {
         notes: 15,
@@ -500,6 +547,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Horn: {
         notes: 15,
@@ -508,6 +556,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Piano: {
         notes: 15,
@@ -516,6 +565,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Pipa: {
         notes: 15,
@@ -524,6 +574,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Kalimba: {
         notes: 15,
@@ -532,6 +583,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     WinterPiano: {
         notes: 15,
@@ -540,6 +592,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Xylophone: {
         notes: 15,
@@ -548,6 +601,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Ocarina: {
         notes: 15,
@@ -556,6 +610,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     MantaOcarina: {
         notes: 15,
@@ -564,6 +619,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     }
 }
 
@@ -756,4 +812,4 @@ export const DEFAULT_DOM_RECT = {
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
 export const HAS_BIGINT = typeof BigInt !== 'undefined'
 export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
-export const IS_BETA =true || process.env.NEXT_PUBLIC_IS_BETA === "true"
+export const IS_BETA = true || process.env.NEXT_PUBLIC_IS_BETA === "true"

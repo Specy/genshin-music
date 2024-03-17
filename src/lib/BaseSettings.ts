@@ -1,5 +1,14 @@
 import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, NOTE_NAME_TYPES, NoteNameType } from "$config"
+import {
+    INSTRUMENTS,
+    APP_NAME,
+    BASE_THEME_CONFIG,
+    PITCHES,
+    Pitch,
+    NOTE_NAME_TYPES,
+    NoteNameType,
+    MIDIPreset
+} from "$config"
 import { MIDINote, MIDIShortcut } from "./Utilities"
 import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
 import { VsrgSongKeys } from "./Songs/VsrgSong"
@@ -282,11 +291,15 @@ export const PlayerSettings: PlayerSettingsType = {
     }
 }
 
+
+
+
 export const MIDISettings = {
-    settingVersion: APP_NAME + 4,
+    settingVersion: APP_NAME + 5,
     enabled: false,
     currentSource: '',
-    notes: new Array(APP_NAME === 'Genshin' ? 21 : 15).fill(0).map((e, i) => new MIDINote(i, -1)),
+    selectedPreset: 'default',
+    presets: {} as Record<string, MIDIPreset>,
     shortcuts: [
         new MIDIShortcut('toggle_play', -1),
         new MIDIShortcut('next_column', -1),
@@ -296,6 +309,7 @@ export const MIDISettings = {
         new MIDIShortcut('change_layer', -1)
     ]
 }
+
 
 
 export const ThemeSettings = {

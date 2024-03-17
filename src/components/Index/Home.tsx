@@ -15,6 +15,7 @@ import {useRouter} from 'next/router'
 import {isTWA} from '$lib/Utilities'
 import {useConfig} from '$lib/Hooks/useConfig'
 import {asyncConfirm, asyncPrompt} from '$cmp/Utility/AsyncPrompts'
+import {MdOutlinePiano} from "react-icons/md";
 
 
 interface HomeProps {
@@ -183,6 +184,15 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                         Vsrg Player
                     </span>
                 </MiddleSizePage>
+                <MiddleSizePage
+                    Icon={MdOutlinePiano}
+                    current={currentPage === 'zen-keyboard'}
+                    href='zen-keyboard'
+                >
+                    <span style={{fontSize: '1rem'}} className='row-centered'>
+                        Zen Keyboard
+                    </span>
+                </MiddleSizePage>
             </div>
             <Separator/>
             <div className='page-redirect-wrapper'>
@@ -191,17 +201,15 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                         Donate
                     </PageRedirect>
                 }
-                <PageRedirect href='zen-keyboard' current={currentPage === 'zen-keyboard'}>
-                    Zen Keyboard
-                </PageRedirect>
+
                 <PageRedirect href='sheet-visualizer' current={currentPage === 'sheet-visualizer'}>
                     Sheet Visualizer
                 </PageRedirect>
                 <PageRedirect href='theme' current={currentPage === 'theme'}>
-                    App Theme
+                    Themes
                 </PageRedirect>
-                <PageRedirect href='changelog' current={currentPage === 'changelog'}>
-                    Changelog
+                <PageRedirect href='keybinds' current={currentPage === 'keybinds'}>
+                    Keybinds
                 </PageRedirect>
                 <PageRedirect href='partners' current={currentPage === 'partners'}>
                     Partners
@@ -212,11 +220,10 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <PageRedirect href='backup' current={currentPage === 'backup'}>
                     Backup
                 </PageRedirect>
-                {!IS_MOBILE &&
-                    <PageRedirect href='keybinds' current={currentPage === 'keybinds'}>
-                        Keybinds
-                    </PageRedirect>
-                }
+                 <PageRedirect href='changelog' current={currentPage === 'changelog'}>
+                    Changelog
+                </PageRedirect>
+
                 <Link onClick={async (e) => {
                     e.preventDefault()
                     const confirm = await asyncConfirm("You are about to leave the app to go to specy.app, do you want to continue?")
