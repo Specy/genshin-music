@@ -16,12 +16,12 @@ export const _midiTransposeMetadata: BlogMetadata = {
 }
 
 
-export default function TestPage() {
+export default function BlogPage() {
     return <BaseBlogPost metadata={_midiTransposeMetadata}>
         If you want to compose a song but you don't want to start from 0, you can try to find a MIDI file for the
         song
         and use the MIDI transposing tools to convert it into a music sheet.
-        <Header type={'h1'} margin={'1rem 0'}>
+        <Header  margin={'1rem 0'}>
             Open a MIDI file
         </Header>
         Once you found your MIDI file, visit the <AppLink href={'/composer'}>composer</AppLink> and open the song
@@ -32,7 +32,7 @@ export default function TestPage() {
         pressing the
         "Open MIDI/Audio/Video file" button. If you want to import a video or audio file instead, visit the <AppLink href={'/blog/posts/ai-transpose'}> Ai transpose guide </AppLink>.
         <BlogImage src={'/assets/blog/midi-btn.webp'} height={'20rem'} alt={"MIDI button"}/>
-        <Header type={'h1'} margin={'1rem 0'}>
+        <Header  margin={'1rem 0'}>
             Transpose a MIDI file
         </Header>
         After having selected the file, you can start changing the import settings to best convert the song to the

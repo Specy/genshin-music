@@ -14,7 +14,7 @@ import {homeStore} from '$stores/HomeStore'
 import {useRouter} from 'next/router'
 import {isTWA} from '$lib/Utilities'
 import {useConfig} from '$lib/Hooks/useConfig'
-import {asyncConfirm, asyncPrompt} from '$cmp/Utility/AsyncPrompts'
+import {asyncConfirm} from '$cmp/Utility/AsyncPrompts'
 import {MdOutlinePiano} from "react-icons/md";
 
 
@@ -213,6 +213,9 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 </PageRedirect>
                 <PageRedirect href='partners' current={currentPage === 'partners'}>
                     Partners
+                </PageRedirect>
+                <PageRedirect current={currentPage.startsWith("blog")} href={'blog'}>
+                    Blog / Guides
                 </PageRedirect>
                 <PageRedirect href='help' current={currentPage === 'help'}>
                     Help

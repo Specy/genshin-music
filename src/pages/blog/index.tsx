@@ -3,7 +3,7 @@ import {APP_NAME} from "$config";
 import {BlogMetadata} from "$pages/blog/types";
 import {Card} from "$cmp/shared/layout/Card";
 import Link from "next/link";
-import {_midiDeviceMetadata} from "$pages/blog/posts/midi-device";
+import {_midiDeviceMetadata} from "$pages/blog/posts/connect-midi-device";
 import {Header} from "$cmp/shared/header/Header";
 import {Grid} from "$cmp/shared/layout/Grid";
 import {Column} from "$cmp/shared/layout/Column";
@@ -11,12 +11,16 @@ import s from './blog.module.scss'
 import {_aiTransposeMetadata} from "$pages/blog/posts/ai-transpose";
 import {_midiTransposeMetadata} from "$pages/blog/posts/midi-transpose";
 import {cn} from "$lib/Utilities";
+import {_playerTutorialMetadata} from "$pages/blog/posts/how-to-use-player";
+import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";
 
-const posts = [
+const posts = ([
     _midiDeviceMetadata,
     _midiTransposeMetadata,
     _aiTransposeMetadata,
-] satisfies BlogMetadata[]
+    _playerTutorialMetadata,
+    _composerTutorialMetadata
+] satisfies BlogMetadata[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
 
 export default function Blog() {
@@ -27,7 +31,7 @@ export default function Blog() {
             </Header>
 
             <Column gap={'1rem'}>
-                <Header type={'h1'}>
+                <Header>
                     Posts
                 </Header>
                 <Grid columns={'repeat(2, 1fr)'} gap={'1rem'}>

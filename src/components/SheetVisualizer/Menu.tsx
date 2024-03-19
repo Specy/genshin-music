@@ -54,7 +54,7 @@ export function SheetVisualiserMenu({ currentSong, onSongLoaded }: SheetVisualis
             </MenuItem>
 
 
-            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
+             <MenuItem onClick={homeStore.open} ariaLabel='Open home menu' style={{border: "solid 0.1rem var(--secondary)"}}>
                 <FaHome className="icon" />
             </MenuItem>
         </div>

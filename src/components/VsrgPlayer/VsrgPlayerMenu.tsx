@@ -99,9 +99,10 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                         <FaCog className="icon" />
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => homeStore.open()} ariaLabel='Open home menu'>
+                <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
+                          style={{border: "solid 0.1rem var(--secondary)"}}>
                     <Memoized>
-                        <FaHome className="icon" />
+                        <FaHome className="icon"/>
                     </Memoized>
                 </MenuItem>
             </div>

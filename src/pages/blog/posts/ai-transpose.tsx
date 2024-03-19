@@ -14,13 +14,13 @@ export const _aiTransposeMetadata: BlogMetadata = {
 }
 
 
-export default function TestPage() {
+export default function BlogPage() {
     return <BaseBlogPost metadata={_aiTransposeMetadata}>
         In the V3.3 release, a new experimental feature has been added that allows you to convert any video/audio into a
         sheet, by first
         converting it to MIDI, by using <AppLink href={'https://basicpitch.spotify.com/'}> Spotify&apos;s Basic
         Pitch </AppLink>.
-        <Header type={'h1'} margin={'1rem 0'}>
+        <Header margin={'1rem 0'}>
             Warnings
         </Header>
         This feature is to be used only as a last resort after you cannot find a MIDI song to transpose, or you can't do
@@ -28,13 +28,13 @@ export default function TestPage() {
         It is not meant to create a perfect transposition, as the conversion is very difficult, but mostly as a starting
         point to
         help you transpose a song manually.
-        <Header type={'h1'} margin={'1rem 0'}>
+        <Header margin={'1rem 0'}>
             Best practices
         </Header>
         It is best if you can find a video/audio of a song that uses a single instrument, the piano is the easiest to
         convert. Even
         better if there is no background noise.
-        <Header type={'h1'} margin={'1rem 0'}>
+        <Header  margin={'1rem 0'}>
             How to
         </Header>
         The transposition steps are very similar to the ones of MIDI transposition, if you want to see how to do that,

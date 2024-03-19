@@ -7,14 +7,14 @@ import {AppLink} from "$cmp/shared/link/AppLink";
 
 export const _midiDeviceMetadata: BlogMetadata = {
     title: "Use a MIDI keyboard/device",
-    relativeUrl: "midi-device",
+    relativeUrl: "connect-midi-device",
     image: 'https://picsum.photos/200/300',
     description: "How to connect a MIDI keyboard/device to the app, and how to use it in the player and composer. ",
     createdAt: new Date(),
 }
 
 
-export default function TestPage() {
+export default function BlogPage() {
     return <BaseBlogPost metadata={_midiDeviceMetadata}>
         <div>
             Since vesion V2.3 there has been the possibility to connect a MIDI keyboard to the app. This functionality
@@ -22,7 +22,7 @@ export default function TestPage() {
             available
             everywhere except on Safari browsers.
             <br/>
-            <Header type={'h1'} margin={'1rem 0'}>
+            <Header  margin={'1rem 0'}>
                 How to connect the MIDI device
             </Header>
             To connect the MIDI keyboard to the app, get the appropriate cable to connect it to your device. If you are
@@ -33,7 +33,7 @@ export default function TestPage() {
             href={'/keybinds'}>keybinds</AppLink> page.
             A list of selected devices will appear, select the one you wish to connect and then configure the key mapping.
             A default preset is provided, in case it does not match your keyboard, you can create a new preset.
-            <Header type={'h1'} margin={'1rem 0'}>
+            <Header  margin={'1rem 0'}>
                 Create a new MIDI preset
             </Header>
             To create a new midi preset click the "create new preset" button, you will be asked how to name it, once
@@ -46,7 +46,7 @@ export default function TestPage() {
             You can also assign other keys of your MIDI keyboard to shortcuts in the composer, to map it, follow the
             same technique as the notes,
             click the button of the shortcut you want to map, and then press the corresponding key on your keyboard.
-            <Header type={'h1'} margin={'1rem 0'}>
+            <Header margin={'1rem 0'}>
                 Use your phone/pc as a MIDI keyboard
             </Header>
             Using the app, you can turn your phone or pc into a MIDI keyboard, using the <AppLink

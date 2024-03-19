@@ -12,12 +12,8 @@ export function BlogOl({children, className, ...rest}: MaybeChildren<Stylable>) 
     </ol>
 }
 
-export function BlogLi({children, style, ...rest}: MaybeChildren<Stylable>) {
+export function BlogLi({children, ...rest}: MaybeChildren<Stylable>) {
     return <li
-        style={{
-            margin: '0.5rem 0',
-            ...style
-        }}
         {...rest}
     >
         {children}

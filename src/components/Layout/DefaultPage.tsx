@@ -13,8 +13,8 @@ export function DefaultPage({ excludeMenu = false, children, className = "", sty
     return <div className={"default-page " + className} style={pageStyle}>
         {(!excludeMenu || !menu) && <SimpleMenu />}
         {menu}
-        <div className="default-content appear-on-mount">
+        <main className="default-content appear-on-mount">
             {children}
-        </div>
+        </main>
     </div>
 }

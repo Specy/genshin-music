@@ -59,11 +59,15 @@
   margin: 0;
   padding: 0;
   list-style-type: none;
+  margin-left: 2rem;
 }
 
 .blog-ol li {
   counter-increment: step-counter;
+  position: relative;
+  margin: 0.5rem 0;
 }
+
 
 .blog-ol li::before {
   content: counter(step-counter);
@@ -73,7 +77,7 @@
   transform: translateX(calc(-100% - 0.5rem));
   border-radius: 2rem;
   font-weight: bold;
-  width: 1.5rem;
+  min-width: 1.5rem;
   height: 1.5rem;
   padding: 0;
   text-align: center;

@@ -46,7 +46,7 @@ export function HelpTab() {
         <div style={{margin: "1rem"}}>
                 The player is meant to help you record a song by hand or practice an existing song with the two 
                 practice tools. <br/>
-                You can also import songs / record audio of the keybord and play freely, you also have a metronome to help you with the tempo. <br/>
+                You can also import songs / record audio of the keyboard and play freely, you also have a metronome to help you with the tempo. <br/>
                 If you want a more simple keyboard you can use the <Link style={{color: 'var(--accent)'}} href={'/zen-keyboard'}>Zen keyboard</Link> <br/>
                 In the settings you can change the instrument, pitch, reverb, volume, keyboard size, etc...
         </div>

@@ -6,6 +6,7 @@ import s from './blog.module.scss'
 import {Header} from "$cmp/shared/header/Header";
 import {Column} from "$cmp/shared/layout/Column";
 import {FaChevronLeft} from "react-icons/fa";
+import {PageMeta} from "$cmp/Miscellaneous/PageMeta";
 
 interface BaseBlogPostProps {
     metadata: BlogMetadata
@@ -20,19 +21,25 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
             paddingLeft: 'var(--menu-size)', gap: '1rem', lineHeight: '1.6'
         }}
     >
+        <PageMeta
+            text={metadata.title}
+            description={metadata.description}
+            image={metadata.image}
+        />
+
         <div className={`${s["blog-header"]}`}>
             <a className={`${s['blog-back']}`} href={'/blog'}>
                 <FaChevronLeft/> Go to posts
             </a>
             <img
                 src={metadata.image ?? ""}
+                alt={`${metadata.title} image`}
                 style={{objectFit: "cover", width: "100%", height: "100%"}}
             />
             <div className={`${s["blog-image-mask"]}`}/>
             <div className={s['blog-header-content']}>
                 <Header
                     className={`${s["blog-title"]}`}
-                    type={'h1'}
                     style={{padding: "1rem", fontWeight: 'bold', fontSize: '2.5rem'}}
                 >
 

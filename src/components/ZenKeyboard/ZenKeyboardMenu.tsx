@@ -25,7 +25,13 @@ interface ZenKeyboardMenuProps {
 }
 
 
-export function ZenKeyboardMenu({settings, handleSettingChange, onVolumeChange, isMetronomePlaying, setIsMetronomePlaying}: ZenKeyboardMenuProps) {
+export function ZenKeyboardMenu({
+                                    settings,
+                                    handleSettingChange,
+                                    onVolumeChange,
+                                    isMetronomePlaying,
+                                    setIsMetronomePlaying
+                                }: ZenKeyboardMenuProps) {
     const [selectedPage, setSelectedPage] = useState("Settings")
     const [isOpen, setIsOpen] = useState(true)
     const [isVisible, setIsVisible] = useState(false)
@@ -53,7 +59,7 @@ export function ZenKeyboardMenu({settings, handleSettingChange, onVolumeChange, 
             }}
             ariaLabel='Toggle metronome'
         >
-            <GiMetronome size={18} />
+            <GiMetronome size={18}/>
         </IconButton>
         <div
             style={{
@@ -125,7 +131,8 @@ export function ZenKeyboardMenu({settings, handleSettingChange, onVolumeChange, 
                 >
                     <FaCog className="icon"/>
                 </MenuItem>
-                <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'>
+                <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
+                          style={{border: "solid 0.1rem var(--secondary)"}}>
                     <FaHome className="icon"/>
                 </MenuItem>
             </div>
@@ -177,7 +184,7 @@ function FloatingSelection<T extends string | number>({items, onChange, value, I
             }}
             toggled={open}
         >
-            <Icon  size={18} />
+            <Icon size={18}/>
         </IconButton>
         {open &&
             <div
