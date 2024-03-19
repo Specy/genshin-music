@@ -1,18 +1,17 @@
-import {BlogMetadata} from "$pages/blog/types";
+import {BlogMetadata} from "$cmp/pages/blog/types";
 import {BaseBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {Header} from "$cmp/shared/header/Header";
 import {AppLink} from "$cmp/shared/link/AppLink";
-import {Fragment} from "react";
-import {BlogLi, BlogOl, BlogUl} from "$cmp/pages/blog/BlogUl";
+import {BlogLi, BlogOl} from "$cmp/pages/blog/BlogUl";
 
 
 export const _midiTransposeMetadata: BlogMetadata = {
-    title: "MIDI music transposition",
+    title: "🎛️ MIDI music transposition",
     relativeUrl: "midi-transpose",
     image: '/assets/blog/midi-1.webp',
     description: "Use MIDI songs to transpose music into the app sheet",
-    createdAt: new Date(),
+    createdAt: new Date("2024/03/19"),
 }
 
 
@@ -31,7 +30,7 @@ export default function BlogPage() {
         Now click the "Create from MIDI/Audio", it will open the MIDI transposition tool, and select your file after
         pressing the
         "Open MIDI/Audio/Video file" button. If you want to import a video or audio file instead, visit the <AppLink href={'/blog/posts/ai-transpose'}> Ai transpose guide </AppLink>.
-        <BlogImage src={'/assets/blog/midi-btn.webp'} height={'20rem'} alt={"MIDI button"}/>
+        <BlogImage src={'/assets/blog/midi-btn.webp'} alt={"MIDI button"}/>
         <Header  margin={'1rem 0'}>
             Transpose a MIDI file
         </Header>
@@ -39,7 +38,7 @@ export default function BlogPage() {
         app sheet.
         The MIDI song doesn't perfectly match the music sheet of the app, so you will have to adjust the settings to
         best fit the song.
-        <BlogImage src={'/assets/blog/midi-1.webp'} height={'20rem'} alt={"MIDI import settings"}/>
+        <BlogImage src={'/assets/blog/midi-1.webp'} alt={"MIDI import settings"}/>
         <BlogOl>
             <BlogLi>This is the button to press to select the MIDI file.</BlogLi>
             <BlogLi>
@@ -75,7 +74,7 @@ export default function BlogPage() {
                 This opens the setting of the track, where you can see more information, and override the global values.
             </BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/midi-2.webp'} height={'20rem'} alt={"MIDI track settings"}/>
+        <BlogImage src={'/assets/blog/midi-2.webp'} alt={"MIDI track settings"}/>
         <BlogOl>
             <BlogLi>
                 With this you can override the note offset that you wrote in the global settings, leave it blank to use the same

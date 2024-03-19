@@ -65,7 +65,7 @@
 .blog-ol li {
   counter-increment: step-counter;
   position: relative;
-  margin: 0.5rem 0;
+  margin: 1rem 0;
 }
 
 
@@ -77,8 +77,8 @@
   transform: translateX(calc(-100% - 0.5rem));
   border-radius: 2rem;
   font-weight: bold;
-  min-width: 1.5rem;
-  height: 1.5rem;
+  min-width: 1.3rem;
+  height: 100%;
   padding: 0;
   text-align: center;
 }

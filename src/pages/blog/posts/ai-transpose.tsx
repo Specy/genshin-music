@@ -1,4 +1,4 @@
-import {BlogMetadata} from "$pages/blog/types";
+import {BlogMetadata} from "$cmp/pages/blog/types";
 import {BaseBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {Header} from "$cmp/shared/header/Header";
 import Link from "next/link";
@@ -10,7 +10,7 @@ export const _aiTransposeMetadata: BlogMetadata = {
     relativeUrl: "ai-transpose",
     image: '/assets/blog/midi-btn.webp',
     description: "Use the AI feature in the composer to (try to) convert a song/video into a music sheet. This is a experimental feature",
-    createdAt: new Date(),
+    createdAt: new Date("2024/03/19"),
 }
 
 

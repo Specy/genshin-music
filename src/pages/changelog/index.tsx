@@ -32,7 +32,7 @@ export default function ChangelogPage() {
         </div>
         <div className='row' style={{ fontSize: '0.8rem', justifyContent: 'space-between', alignItems: 'center' }}>
             Cache: {cacheVersion || 'DEV'}
-            <Link href='error'>
+            <Link href='/error'>
                 <AppButton>
                     View Error logs
                 </AppButton>

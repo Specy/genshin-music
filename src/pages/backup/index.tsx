@@ -166,7 +166,7 @@ export default function Backup() {
             <div>
                 If you want to transfer your data from another domain of the app, click here
             </div>
-            <Link href={"transfer"} style={{ marginLeft: "1rem" }}>
+            <Link href={"/transfer"} style={{ marginLeft: "1rem" }}>
                 <AppButton cssVar="accent" style={{ gap: "0.2rem" }}>
                     Transfer
                 </AppButton>

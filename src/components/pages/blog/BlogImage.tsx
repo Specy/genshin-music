@@ -4,11 +4,11 @@ import {Row} from "$cmp/shared/layout/Row";
 export interface BlogImageProps {
     src: string;
     alt: string;
-    height: string
+    height?: string
 }
 
 
-export function BlogImage({src, alt, height}: BlogImageProps) {
+export function BlogImage({src, alt, height = 'min(20rem, 70vh)'}: BlogImageProps) {
     return <Row justify={'center'}>
         <img
             src={src}

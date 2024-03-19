@@ -1,4 +1,4 @@
-import {BlogMetadata} from "$pages/blog/types";
+import {BlogMetadata} from "$cmp/pages/blog/types";
 import {BaseBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {Header} from "$cmp/shared/header/Header";
 import Link from "next/link";
@@ -6,11 +6,11 @@ import {AppLink} from "$cmp/shared/link/AppLink";
 
 
 export const _midiDeviceMetadata: BlogMetadata = {
-    title: "Use a MIDI keyboard/device",
+    title: "🎹 Use a MIDI keyboard/device",
     relativeUrl: "connect-midi-device",
-    image: 'https://picsum.photos/200/300',
+    image: '/assets/blog/zen-keyboard.webp',
     description: "How to connect a MIDI keyboard/device to the app, and how to use it in the player and composer. ",
-    createdAt: new Date(),
+    createdAt: new Date("2024/03/19"),
 }
 
 

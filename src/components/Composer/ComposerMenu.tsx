@@ -282,7 +282,7 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                     />
                     <div className='settings-row-wrap'>
                         {IS_MIDI_AVAILABLE &&
-                            <Link href={"keybinds"}>
+                            <Link href="/keybinds">
                                 <AppButton
                                     style={{ width: 'fit-content' }}
                                 >
@@ -291,7 +291,7 @@ function Menu({ data, functions, inPreview }: MenuProps) {
                             </Link>
 
                         }
-                        <Link href={"theme"} onClick={(e) => e.preventDefault()}>
+                        <Link href="/theme" onClick={(e) => e.preventDefault()}>
                             <AppButton
                                 onClick={() => changePage('theme')}
                                 style={{ width: 'fit-content' }}

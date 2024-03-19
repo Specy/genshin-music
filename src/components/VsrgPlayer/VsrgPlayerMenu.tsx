@@ -110,7 +110,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
 
                 <MenuPanel current={selectedMenu} id="Songs">
                     <div className="row">
-                        <Link href='vsrg-composer'>
+                        <Link href='/vsrg-composer'>
                             <AppButton>
                                 Create song
                             </AppButton>
@@ -142,7 +142,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                         justifyContent: 'flex-end'
                     }}>
                         {!IS_MOBILE &&
-                            <Link href='keybinds'>
+                            <Link href='/keybinds'>
                                 <AppButton>
                                     Change keybinds
                                 </AppButton>

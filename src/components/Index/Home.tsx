@@ -120,7 +120,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                             We use cookies for analytics, by continuing to use this app, you agree to our use of cookies, learn more
                         </span>
                         <Link
-                            href='privacy'
+                            href='/privacy'
                             style={{color: 'var(--primary-text)', textDecoration: "underline"}}
                             onClick={homeStore.close}
                         >
@@ -146,7 +146,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     title='Composer'
                     style={{backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString()}}
                     background={`${BASE_PATH}/manifestData/composer.webp`}
-                    href='composer'
+                    href='/composer'
                     isCurrent={currentPage === 'composer'}
                 >
                     Create or edit songs with a fully fledged music composer. Also with MIDI.
@@ -167,7 +167,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <MiddleSizePage
                     Icon={VsrgComposerIcon}
                     current={currentPage === 'vsrg-composer'}
-                    href='vsrg-composer'
+                    href='/vsrg-composer'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
                         Vsrg Composer
@@ -178,7 +178,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <MiddleSizePage
                     Icon={VsrgIcon}
                     current={currentPage === 'vsrg-player'}
-                    href='vsrg-player'
+                    href='/vsrg-player'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
                         Vsrg Player
@@ -187,7 +187,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <MiddleSizePage
                     Icon={MdOutlinePiano}
                     current={currentPage === 'zen-keyboard'}
-                    href='zen-keyboard'
+                    href='/zen-keyboard'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
                         Zen Keyboard
@@ -197,33 +197,33 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             <Separator/>
             <div className='page-redirect-wrapper'>
                 {!isTwa &&
-                    <PageRedirect href='donate' current={currentPage === 'donate'}>
+                    <PageRedirect href='/donate' current={currentPage === 'donate'}>
                         Donate
                     </PageRedirect>
                 }
 
-                <PageRedirect href='sheet-visualizer' current={currentPage === 'sheet-visualizer'}>
+                <PageRedirect href='/sheet-visualizer' current={currentPage === 'sheet-visualizer'}>
                     Sheet Visualizer
                 </PageRedirect>
-                <PageRedirect href='theme' current={currentPage === 'theme'}>
+                <PageRedirect href='/theme' current={currentPage === 'theme'}>
                     Themes
                 </PageRedirect>
-                <PageRedirect href='keybinds' current={currentPage === 'keybinds'}>
+                <PageRedirect href='/keybinds' current={currentPage === 'keybinds'}>
                     Keybinds
                 </PageRedirect>
-                <PageRedirect href='partners' current={currentPage === 'partners'}>
+                <PageRedirect href='/partners' current={currentPage === 'partners'}>
                     Partners
                 </PageRedirect>
-                <PageRedirect current={currentPage.startsWith("blog")} href={'blog'}>
+                <PageRedirect href={'/blog'} current={currentPage.startsWith("blog")} >
                     Blog / Guides
                 </PageRedirect>
-                <PageRedirect href='help' current={currentPage === 'help'}>
+                <PageRedirect href='/help' current={currentPage === 'help'}>
                     Help
                 </PageRedirect>
-                <PageRedirect href='backup' current={currentPage === 'backup'}>
+                <PageRedirect href='/backup' current={currentPage === 'backup'}>
                     Backup
                 </PageRedirect>
-                 <PageRedirect href='changelog' current={currentPage === 'changelog'}>
+                 <PageRedirect href='/changelog' current={currentPage === 'changelog'}>
                     Changelog
                 </PageRedirect>
 

@@ -13,7 +13,7 @@
   right: 0;
   background-color: var(--accent);
   color: var(--accent-text);
-  font-size: 1rem;
+  font-size: 0.8rem;
   z-index: 4;
   border-radius: 0.2rem;
   padding: 0.2rem 0.5rem;
@@ -29,9 +29,9 @@
 
 .blog-card-title-content {
   z-index: 2;
-  padding-bottom: 0.3rem;
+  padding-bottom: 1.3rem;
   position: relative;
-  text-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.5)
+  text-shadow: 0 0 1.2rem rgb(0, 0, 0)
 }
 
 .blog-card:hover {
@@ -51,8 +51,7 @@
   height: 100%;
   background-repeat: no-repeat;
   background-size: cover;
-
-  filter: blur(2px);
+  filter: blur(3px);
   background-position: center;
   mask-image: linear-gradient(0deg, #00000000, rgba(0, 0, 0, 1));
   transition: transform 0.3s;

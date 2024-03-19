@@ -1,4 +1,4 @@
-import {BlogMetadata} from "$pages/blog/types";
+import {BlogMetadata} from "$cmp/pages/blog/types";
 import {BaseBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
@@ -11,11 +11,11 @@ import {useObservableMap} from "$lib/Hooks/useObservable";
 import {keyBinds} from "$stores/KeybindsStore";
 
 export const _playerTutorialMetadata: BlogMetadata = {
-    title: "How to use the player",
+    title: "🎵 How to use the player",
     relativeUrl: "how-to-use-player",
     image: '/assets/blog/help-player.webp',
     description: "This is a guide to help you learn how to use the player to learn, record and play songs!",
-    createdAt: new Date(),
+    createdAt: new Date("2024/03/19"),
 }
 
 
@@ -41,7 +41,7 @@ export default function BlogPage() {
             The images below are from the genshin version of the app, but the functionality is the same
         </span>}
 
-        <BlogImage src={'/assets/blog/help-player.webp'} alt={"Player UI"} height={'20rem'}/>
+        <BlogImage src={'/assets/blog/help-player.webp'} alt={"Player UI"} />
         <BlogOl>
             <BlogLi>Pressing this button will start an audio recording, everything you play from that moment will be
                 recorded, then downloaded as an audio file </BlogLi>
@@ -64,7 +64,7 @@ export default function BlogPage() {
             <BlogLi>Opens the menu of the app where you can go to all the other pages</BlogLi>
             <BlogLi>Visual sheet of the song</BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/help-player-2.webp'} alt={"Player menu help"} height={'20rem'} />
+        <BlogImage src={'/assets/blog/help-player-2.webp'} alt={"Player menu help"}  />
         When you open the "song menu", you will be shown this window. Your songs will be split between recorded and composed
         songs. The recorded songs are the ones which were recorded by hand, the composed songs are the ones which were composed using
         the <AppLink href={'/composer'}>composer</AppLink>.

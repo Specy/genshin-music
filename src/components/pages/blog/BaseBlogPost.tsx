@@ -1,4 +1,4 @@
-import {BlogMetadata} from "$pages/blog/types";
+import {BlogMetadata} from "$cmp/pages/blog/types";
 import {DefaultPage} from "$cmp/Layout/DefaultPage";
 import {MaybeChildren} from "$lib/UtilTypes";
 import {Separator} from "$cmp/shared/separator/Separator";
@@ -18,7 +18,7 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
     return <DefaultPage
         cropped={false}
         style={{
-            paddingLeft: 'var(--menu-size)', gap: '1rem', lineHeight: '1.6'
+            paddingLeft: 'var(--menu-size)', gap: '1rem', lineHeight: '1.5'
         }}
     >
         <PageMeta
