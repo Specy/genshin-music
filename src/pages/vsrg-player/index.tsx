@@ -16,7 +16,7 @@ import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
 import { SettingUpdate } from "$types/SettingsPropriety";
 import { createShortcutListener, keyBinds } from "$stores/KeybindsStore";
 import { logger } from "$stores/LoggerStore";
-import { Title } from "$cmp/Miscellaneous/Title";
+import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
 import { AppBackground } from "$cmp/Layout/AppBackground";
 import s from "$pages/vsrg-player/VsrgPlayer.module.css";
 type VsrgPlayerProps = {}
@@ -158,7 +158,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     render() {
         const { canvasSizes, settings } = this.state
         return <>
-            <Title text="Vsrg Player" description="Play or practice VSRG songs" />
+            <PageMeta text="Vsrg Player" description="Play or practice VSRG songs" />
             <VsrgPlayerMenu
                 settings={settings}
                 onSettingsUpdate={this.handleSettingChange}

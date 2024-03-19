@@ -32,7 +32,7 @@ import { songsStore } from '$stores/SongsStore';
 import { InstrumentControls } from '$cmp/Composer/InstrumentControls';
 import { AppButton } from '$cmp/Inputs/AppButton';
 import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider';
-import { Title } from '$cmp/Miscellaneous/Title';
+import { PageMeta } from '$cmp/Miscellaneous/PageMeta';
 import { songService } from '$lib/Services/SongService';
 import { NextRouter, useRouter } from 'next/router';
 import { AppBackground } from '$cmp/Layout/AppBackground';
@@ -733,7 +733,7 @@ class Composer extends Component<ComposerProps, ComposerState>{
         const { isMidiVisible, song, isPlaying, copiedColumns, settings, isRecordingAudio, isToolsVisible, layer, selectedColumns, layers, undoHistory } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
-            <Title text={`Composer - ${song.name}`} description='Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet.' />
+            <PageMeta text={`Composer - ${song.name}`} description='Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet.' />
             {isMidiVisible &&
                 <MidiParser
                     functions={this}

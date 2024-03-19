@@ -12,7 +12,7 @@ import {InstrumentName} from "$/types/GeneralTypes"
 import {SettingUpdate, SettingVolumeUpdate} from "$/types/SettingsPropriety"
 import {useEffect, useState, useCallback, ReactElement} from "react"
 import {GiMetronome} from "react-icons/gi"
-import {Title} from "$cmp/Miscellaneous/Title"
+import {PageMeta} from "$cmp/Miscellaneous/PageMeta"
 import {AppBackground} from "$cmp/Layout/AppBackground"
 import {MIDIProvider} from "$lib/Providers/MIDIProvider";
 
@@ -79,8 +79,8 @@ export default function ZenKeyboard() {
         instrument.changeVolume(data.value)
     }, [instrument])
     return <>
-        <Title text="Zen Keyboard"
-               description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"/>
+        <PageMeta text="Zen Keyboard"
+                  description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"/>
         <ZenKeyboardMenu
             settings={settings}
             isMetronomePlaying={isMetronomePlaying}

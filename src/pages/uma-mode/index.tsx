@@ -1,5 +1,5 @@
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { Title } from "$cmp/Miscellaneous/Title";
+import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
 import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
 import { APP_NAME } from "$config";
 import { useConfig } from "$lib/Hooks/useConfig";
@@ -99,7 +99,7 @@ export default function UmaMode() {
     }
 
     return <DefaultPage cropped>
-        <Title text={IS_UMA_MODE ?  umaModeText : "Ȕ̶̲͇̦͇̖̈́̐̒m̶͖̰̜̎ā̴̩̅͐͘͠ ̶̯̘͊̑̃m̵̟͕̌̀o̸̮͌d̸̖̯̤̒̈̚̕ë̴̪̟́̉͂̓"} description="Thou whom enter this space shall  not be protected by the almighty destroyer of sheets, who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution"/>
+        <PageMeta text={IS_UMA_MODE ?  umaModeText : "Ȕ̶̲͇̦͇̖̈́̐̒m̶͖̰̜̎ā̴̩̅͐͘͠ ̶̯̘͊̑̃m̵̟͕̌̀o̸̮͌d̸̖̯̤̒̈̚̕ë̴̪̟́̉͂̓"} description="Thou whom enter this space shall  not be protected by the almighty destroyer of sheets, who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution"/>
         <div className="column" style={{ gap: "1rem" }}>
             <h1>Uma Mode</h1>
             <div>

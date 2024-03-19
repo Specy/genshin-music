@@ -17,7 +17,7 @@ import { AppButton } from '$cmp/Inputs/AppButton';
 import { AudioProvider } from '$lib/Providers/AudioProvider';
 import { settingsService } from '$lib/Services/SettingsService';
 import { songsStore } from '$stores/SongsStore';
-import { Title } from '$cmp/Miscellaneous/Title';
+import { PageMeta } from '$cmp/Miscellaneous/PageMeta';
 import { metronome } from '$lib/Metronome';
 import { Lambda } from 'mobx';
 import { NoteLayer } from '$lib/Layer';
@@ -333,7 +333,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState>{
 		const { state, renameSong, playSound, setHasSong, removeSong, handleSettingChange, changeVolume, addSong, toggleMetronome } = this
 		const { settings, isLoadingInstrument, instruments, hasSong, isRecordingAudio, isRecording, isMetronomePlaying, speedChanger } = state
 		return <>
-			<Title text="Player" description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
+			<PageMeta text="Player" description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
 			<Menu
 				functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
 				data={{ settings }}

@@ -39,16 +39,16 @@ export class Column {
 		column.notes = data[1].map(note => ColumnNote.deserialize(note)).filter(note => !note.layer.isEmpty())
 		return column
 	}
-	addColumnNote = (note: ColumnNote) => {
+	addColumnNote(note: ColumnNote) {
 		this.notes.push(note.clone())
 	}
-	removeAtIndex = (index: number) => {
+	removeAtIndex(index: number){
 		this.notes.splice(index, 1)
 	}
 	setTempoChanger(changer: TempoChanger) {
 		this.tempoChanger = changer.id
 	}
-	getNoteIndex = (index: number): number | null => {
+	getNoteIndex(index: number): number | null{
 		const result = this.notes.findIndex((n) => index === n.index)
 		return result === -1 ? null : result
 	}

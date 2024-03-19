@@ -1,7 +1,7 @@
 import { useObservableObject } from "$lib/Hooks/useObservable"
 import { AsyncConfirmState, AsyncPromptState, asyncPromptStore } from "./AsyncPrompts"
 import { useState, useEffect, useRef } from 'react'
-import { DecorationBorderedBox } from "../Miscellaneous/BorderDecoration"
+import { DecoratedCard } from "../shared/layout/DecoratedCard"
 import { useTheme } from "$lib/Hooks/useTheme"
 import { cn } from "$lib/Utilities"
 import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
@@ -60,7 +60,7 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
         ref={ref}
     >
 
-        <DecorationBorderedBox
+        <DecoratedCard
             boxProps={{
                 className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
             }}
@@ -92,7 +92,7 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
                     Yes
                 </button>
             </div>
-        </DecorationBorderedBox>
+        </DecoratedCard>
     </div>
 }
 
@@ -151,7 +151,7 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
         onClick={onOverlayClick}
         className={cn(`prompt-overlay ${IGNORE_CLICK_CLASS}`, [isHidden, 'prompt-overlay-hidden'])}
     >
-        <DecorationBorderedBox
+        <DecoratedCard
             boxProps={{
                 className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
             }}
@@ -194,6 +194,6 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
                     Ok
                 </button>
             </div>
-        </DecorationBorderedBox>
+        </DecoratedCard>
     </div>
 }

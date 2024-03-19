@@ -1,14 +1,14 @@
 import paypalImg from '$/assets/images/paypalme.png'
 import buyMeACoffeeImg from '$/assets/images/buymeacoffee.svg'
 import kofiImg from '$/assets/images/kofi.png'
-import { Title } from '$cmp/Miscellaneous/Title'
+import { PageMeta } from '$cmp/Miscellaneous/PageMeta'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import Image from 'next/image'
 import s from './Donate.module.css'
 import { APP_NAME } from '$config'
 export default function Donate() {
     return <DefaultPage>
-        <Title text="Donate" description={`Help the development of ${APP_NAME.toLowerCase()} with a donation.` }/>
+        <PageMeta text="Donate" description={`Help the development of ${APP_NAME.toLowerCase()} with a donation.` }/>
         <div className={s['donate-text']}>
             Each App I make takes months of learning and development. Added to that
             are also the costs of hosting. With a higher budget I can afford to not

@@ -14,7 +14,7 @@ import { logger } from "$stores/LoggerStore";
 import { ThemeInput } from "$cmp/Theme/ThemeInput";
 import { useTheme } from "$lib/Hooks/useTheme";
 import { AppBackground } from "$cmp/Layout/AppBackground";
-import { Title } from "$cmp/Miscellaneous/Title";
+import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
 import { useObservableArray } from "$lib/Hooks/useObservable";
 import { themeStore } from "$stores/ThemeStore/ThemeStore";
@@ -87,7 +87,7 @@ function ThemePage() {
         }
     }
     return <DefaultPage>
-        <Title text="Themes" description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes" />
+        <PageMeta text="Themes" description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes" />
         <div style={{ display: 'flex', alignItems: 'center' }}>
             <FilePicker onPick={handleImport} as='json' onError={logImportError}>
                 <AppButton style={{ margin: '0.25rem' }}>
@@ -198,7 +198,7 @@ function ThemePage() {
             }
         </div>
         {/*Keep this at the bottom because it gets overwritten by the preview apps above */}
-        <Title text="Themes" description="Change the app theme, set the different colors, backgrounds, opacity and customisations" />
+        <PageMeta text="Themes" description="Change the app theme, set the different colors, backgrounds, opacity and customisations" />
     </DefaultPage>
 }
 

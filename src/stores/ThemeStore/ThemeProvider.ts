@@ -24,7 +24,9 @@ export type OtherKeys = keyof typeof ThemeSettings.other
 export type SerializedTheme = ThemeState
 const defaultTextColors = {
     light: new Color("#edeae5"),
-    dark: new Color("#151414")
+    dark: new Color("#151414"),
+    lightSubtle: new Color("#b3b3b3"),
+    darkSubtle: new Color("#2a2727")
 }
 
 export class BaseTheme {

@@ -12,7 +12,7 @@ import Switch from '$cmp/Inputs/Switch'
 import { NoteLayer } from '$lib/Layer'
 import { HelpTooltip } from '$cmp/Utility/HelpTooltip'
 import { PitchSelect } from '$cmp/Inputs/PitchSelect'
-import { DecorationBorderedBox } from '$cmp/Miscellaneous/BorderDecoration'
+import { DecoratedCard } from '$cmp/shared/layout/DecoratedCard'
 import { TrackInfo } from './TrackInfo'
 import { NumericalInput } from './Numericalinput'
 import { basicPitchLoader } from '$lib/BasicPitchLoader'
@@ -320,7 +320,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             backgroundColor: theme.layer('primary', 0.2).toString(),
             color: theme.getText('primary').toString()
         }
-        return <DecorationBorderedBox
+        return <DecoratedCard
             boxProps={{
                 className: 'floating-midi'
             }}
@@ -445,7 +445,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     </table>
                 }
             </div>
-        </DecorationBorderedBox>
+        </DecoratedCard>
     }
 }
 

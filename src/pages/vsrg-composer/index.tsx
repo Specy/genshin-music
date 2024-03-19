@@ -21,7 +21,7 @@ import { clamp, isFocusable, routeChangeBugFix } from "$lib/Utilities";
 import { DEFAULT_VSRG_KEYS_MAP } from "$config";
 import { ClickType } from "$types/GeneralTypes"
 import { RecordedNote } from "$lib/Songs/SongClasses";
-import { Title } from "$cmp/Miscellaneous/Title";
+import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
 import {homeStore} from "$stores/HomeStore";
 import { AppBackground } from "$cmp/Layout/AppBackground";
 import { NextRouter, useRouter } from "next/router";
@@ -604,7 +604,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     render() {
         const { settings, selectedTrack, vsrg, lastCreatedHitObject, snapPoints, isPlaying, snapPoint, selectedHitObject, selectedType, audioSong, scaling, renderableNotes, tempoChanger } = this.state
         return <>
-            <Title text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`} description="Create new VSRG songs using existing background songs and create your own beatmap for it."/>
+            <PageMeta text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`} description="Create new VSRG songs using existing background songs and create your own beatmap for it."/>
             <VsrgMenu
                 trackModifiers={vsrg.trackModifiers}
                 hasChanges={this.changes > 0}

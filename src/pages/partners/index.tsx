@@ -1,4 +1,4 @@
-import { Title } from '$cmp/Miscellaneous/Title'
+import { PageMeta } from '$cmp/Miscellaneous/PageMeta'
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
 import partner from 'assets/images/partners/windsong-db.jpg'
 import skyMusicianNetwork from 'assets/images/partners/sky-musician-network.jpg'
@@ -6,7 +6,7 @@ import Image, { StaticImageData } from 'next/image'
 import s from './Partners.module.css'
 export default function Partners() {
     return <DefaultPage className={s['partners-page']}>
-        <Title text="Partners" description='Learn about our partners who helped the development and to make the app more famous'/>
+        <PageMeta text="Partners" description='Learn about our partners who helped the development and to make the app more famous'/>
         <div className={s['partner-wrapper']}>
             <Partner
                 name='Specy'

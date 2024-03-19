@@ -1,5 +1,5 @@
 import { AppButton } from "$cmp/Inputs/AppButton"
-import { DecorationBorderedBox } from "$cmp/Miscellaneous/BorderDecoration"
+import { DecoratedCard } from "$cmp/shared/layout/DecoratedCard"
 import { hasTooltip, Tooltip } from "$cmp/Utility/Tooltip"
 import { useTheme } from "$lib/Hooks/useTheme"
 import { Column } from "$lib/Songs/SongClasses"
@@ -33,7 +33,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
     const { toggleTools, copyColumns, eraseColumns, pasteColumns, deleteColumns, resetSelection, undo, moveNotesBy } = functions
     const { isToolsVisible, hasCopiedColumns, layer, selectedColumns, undoHistory } = data
     const selectedTarget = selectionType === 'all' ? 'all' : layer
-    return <DecorationBorderedBox
+    return <DecoratedCard
         boxProps={{
             className: `floating-tools ${isToolsVisible ? "floating-tools tools-visible" : ""}`
         }}
@@ -164,7 +164,7 @@ function ComposerTools({ data, functions }: ComposerToolsProps) {
             </div>
         </div>
 
-    </DecorationBorderedBox >
+    </DecoratedCard >
 }
 
 export default memo(ComposerTools, (p, n) => {

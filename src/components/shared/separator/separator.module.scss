@@ -1,0 +1,17 @@
+.separator {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin: 0.2rem 0;
+  border-radius: var(--circle);
+}
+
+.separator-content {
+  border-radius: var(--circle);
+  font-size: 0.8rem;
+  padding: 0.2rem 0.8rem;
+}
+
+.separator-part{
+  flex: 1;
+}

@@ -1,9 +1,9 @@
 import { DefaultPage } from '$cmp/Layout/DefaultPage'
-import { Title } from '$cmp/Miscellaneous/Title'
+import { PageMeta } from '$cmp/Miscellaneous/PageMeta'
 
 export default function Privacy() {
     return <DefaultPage>
-        <Title text="Privacy" description='Privacy policy for the app'/>
+        <PageMeta text="Privacy" description='Privacy policy for the app'/>
         <span>
             This website uses cookies to collect data about usage of the app through IP anonymized Google Analytics.
             We use this information to improve user experience and find how our users use the app.

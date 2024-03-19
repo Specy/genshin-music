@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback } from "react";
 import s from "./transfer.module.css"
 import { cn } from "$lib/Utilities";
 import { UnknownFileTypes, fileService } from "$lib/Services/FileService";
-import { Title } from "$cmp/Miscellaneous/Title";
+import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
@@ -61,7 +61,7 @@ export default function TransferData() {
     }, [])
 
     return <DefaultPage>
-        <Title text="Import data" description="A tool to import the data you have in other domains" />
+        <PageMeta text="Import data" description="A tool to import the data you have in other domains" />
         <div className="column">
             <h1>Import data from other domains</h1>
             <p style={{ marginLeft: "1rem" }}>

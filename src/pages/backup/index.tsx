@@ -1,6 +1,6 @@
 import { AppButton } from "$cmp/Inputs/AppButton";
 import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { Title } from "$cmp/Miscellaneous/Title";
+import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
 import { FaFileDownload, FaFileImport, FaTrash } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { songService } from "$lib/Services/SongService";
@@ -158,7 +158,7 @@ export default function Backup() {
         }
     }
     return <DefaultPage>
-        <Title text="Backup" description="Manage the backups in the app, download or import songs, themes, or all of them" />
+        <PageMeta text="Backup" description="Manage the backups in the app, download or import songs, themes, or all of them" />
         <h1 style={{fontSize: "1.8rem"}}>
             Transfer from other domain
         </h1>

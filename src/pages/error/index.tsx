@@ -8,7 +8,7 @@ import { SerializedSong, SongStorable } from '$lib/Songs/Song';
 import { useSongs } from '$lib/Hooks/useSongs';
 import { songsStore } from '$stores/SongsStore';
 import { fileService } from '$lib/Services/FileService';
-import { Title } from '$cmp/Miscellaneous/Title';
+import { PageMeta } from '$cmp/Miscellaneous/PageMeta';
 import { DefaultPage } from '$cmp/Layout/DefaultPage';
 import { songService } from '$lib/Services/SongService';
 import { ComposedSong } from '$lib/Songs/ComposedSong';
@@ -51,7 +51,7 @@ export function ErrorPage() {
 
     }
     return <DefaultPage className={s['error-page']}>
-        <Title text="Error" description='View the errors that happened in the app to send bug reports and to try to recover your songs'/>
+        <PageMeta text="Error" description='View the errors that happened in the app to send bug reports and to try to recover your songs'/>
         <div style={{textAlign: 'center'}}>
             If you unexpectedly see this page it means an error has occoured.
             Here you can download or delete your songs, if one caused an error, delete it.
