@@ -1,4 +1,4 @@
-import {BlogMetadata} from "$cmp/pages/blog/types";
+import {BlogAuthor, BlogMetadata} from "$cmp/pages/blog/types";
 import {DefaultPage} from "$cmp/Layout/DefaultPage";
 import {MaybeChildren} from "$lib/UtilTypes";
 import {Separator} from "$cmp/shared/separator/Separator";
@@ -7,14 +7,34 @@ import {Header} from "$cmp/shared/header/Header";
 import {Column} from "$cmp/shared/layout/Column";
 import {FaChevronLeft} from "react-icons/fa";
 import {PageMeta} from "$cmp/Miscellaneous/PageMeta";
+import Link from "next/link";
+import {SimpleMenu} from "$cmp/Layout/SimpleMenu";
+import {useEffect, useMemo, useState} from "react";
+import {APP_NAME} from "$config";
+import {Row} from "$cmp/shared/layout/Row";
+import {AppLink} from "$cmp/shared/link/AppLink";
+import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
 
 interface BaseBlogPostProps {
     metadata: BlogMetadata
     cropped?: boolean
 }
 
+export const SpecyAuthor = {
+    name: "Specy",
+    picture: '/assets/images/specy.png'
+} satisfies BlogAuthor
+
 
 export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren<BaseBlogPostProps>) {
+    useEffect(() => {
+        const visited = JSON.parse(localStorage.getItem(APP_NAME + '_visited_blog_posts') ?? '{}')
+        visited[metadata.relativeUrl] = true
+        localStorage.setItem(APP_NAME + '_visited_blog_posts', JSON.stringify(visited))
+    }, [metadata.relativeUrl]);
+    const date = useMemo(() => {
+        return new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(metadata.createdAt)
+    }, [metadata.createdAt])
     return <DefaultPage
         cropped={false}
         style={{
@@ -25,12 +45,24 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
             text={metadata.title}
             description={metadata.description}
             image={metadata.image}
-        />
-
+        >
+            <meta name={'author'} content={metadata.author?.name ?? "Specy"}/>
+            <meta name={'date'} content={metadata.createdAt.toISOString()}/>
+            <meta name={'keywords'} content={metadata.tags.join(', ')}/>
+        </PageMeta>
+        <Row justify={'between'} className={`${s['blog-nav']}`}>
+            <Link href={'/blog'}>
+                Posts
+            </Link>
+            <Link href={'/'}>
+                Player
+            </Link>
+            <Link href={'/composer'}>
+                Composer
+            </Link>
+        </Row>
         <div className={`${s["blog-header"]}`}>
-            <a className={`${s['blog-back']}`} href={'/blog'}>
-                <FaChevronLeft/> Go to posts
-            </a>
+
             <img
                 src={metadata.image ?? ""}
                 alt={`${metadata.title} image`}
@@ -47,7 +79,8 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
                 </Header>
             </div>
         </div>
-        <div
+
+        <article
             style={cropped ? {
                 maxWidth: '60rem',
                 margin: '0 auto',
@@ -55,7 +88,32 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
                 paddingLeft: 'calc(var(--menu-size) + 2rem)'
             } : {padding: '2rem'}}
         >
+            <Row
+                align={'center'}
+                gap={'2rem'}
+                style={{
+                    fontSize: '1.2rem',
+                    marginBottom: '1rem'
+                }}
+            >
+                {metadata.author &&
+                    <BlogAuthorRenderer author={metadata.author}/>
+                }
+                <div suppressHydrationWarning={true}>
+                    {date}
+                </div>
+                <BlogTagsRenderer tags={metadata.tags} padding={'0.2rem 1rem'}/>
+            </Row>
+
             {children}
-        </div>
+        </article>
     </DefaultPage>
 }
+
+export function useHasVisitedBlogPost(name: string) {
+    if (typeof window === 'undefined') return false
+    const visited = JSON.parse(localStorage.getItem(APP_NAME + '_visited_blog_posts') ?? '{}')
+    return visited[name] ?? false
+}
+
+

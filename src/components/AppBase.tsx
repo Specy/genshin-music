@@ -37,11 +37,12 @@ function AppBase() {
 	})
 	useEffect(() => {
 		const hasVisited = localStorage.getItem(APP_NAME + "_Visited")
-		let canShowHome = localStorage.getItem(APP_NAME + "_ShowHome")
-		canShowHome = canShowHome === null ? 'true' : canShowHome
+		let canShowHomeStorage = localStorage.getItem(APP_NAME + "_ShowHome")
+		canShowHomeStorage = canShowHomeStorage === null ? 'true' : canShowHomeStorage
+		const canShowHome = canShowHomeStorage === 'true' && !window.location.pathname.startsWith("/blog")
 		homeStore.setState({
-			canShow: canShowHome === 'true',
-			visible: canShowHome === 'true',
+			canShow: canShowHome,
+			visible: canShowHome,
 			isInPosition: false,
 			hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist)
 		})
@@ -68,7 +69,7 @@ function AppBase() {
 						const text = await blob.text()
 						const parsedFile = JSON.parse(text)
 						if (parsedFile) {
-							fileService.importAndLog(parsedFile)	
+							fileService.importAndLog(parsedFile)
 						}
 					}
 				}

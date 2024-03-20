@@ -15,6 +15,11 @@
 	src: url("../assets/font/BonoboBold.ttf");
 	font-display: swap;
 }
+@font-face {
+	font-family: RobotoSerif;
+	src: url("../assets/font/RobotoSerif-Medium.ttf");
+	font-display: swap;
+}
 
 .loading {
 	color: var(--background-text);

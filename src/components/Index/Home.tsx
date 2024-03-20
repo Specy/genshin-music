@@ -16,6 +16,7 @@ import {isTWA} from '$lib/Utilities'
 import {useConfig} from '$lib/Hooks/useConfig'
 import {asyncConfirm} from '$cmp/Utility/AsyncPrompts'
 import {MdOutlinePiano} from "react-icons/md";
+import {usePathname} from "next/navigation";
 
 
 interface HomeProps {
@@ -29,7 +30,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const data = useObservableObject(homeStore.state)
     const [appScale, setAppScale] = useState(100)
     const {IS_MOBILE} = useConfig()
-    const [currentPage, setCurrentPage] = useState('Unknown')
+    const currentPage = usePathname()
     const [breakpoint, setBreakpoint] = useState(false)
     const [isTwa, setIsTwa] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
@@ -54,11 +55,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     }, [appScale])
 
     useEffect(() => {
-        const dispose = ((path: any) => {
-            setCurrentPage(path.replace('/', ''))
-        })
-        history.events.on("routeChangeComplete", dispose)
-        setCurrentPage(window.location.pathname.replace("/", ""))
+
         KeyboardProvider.register("Escape", () => {
             if (homeStore.state.visible) {
                 homeStore.close()
@@ -66,7 +63,6 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
         }, {id: "home"})
         setBreakpoint(window.innerWidth > 900)
         return () => {
-            history.events.off("routeChangeComplete", dispose)
             KeyboardProvider.unregisterById("home")
         }
     }, [history])
@@ -147,7 +143,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     style={{backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString()}}
                     background={`${BASE_PATH}/manifestData/composer.webp`}
                     href='/composer'
-                    isCurrent={currentPage === 'composer'}
+                    isCurrent={currentPage === '/composer'}
                 >
                     Create or edit songs with a fully fledged music composer. Also with MIDI.
                 </MainContentElement>
@@ -157,7 +153,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     style={{backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString()}}
                     background={`${BASE_PATH}/manifestData/player.webp`}
                     href='/'
-                    isCurrent={currentPage === '' || currentPage === 'player'}
+                    isCurrent={currentPage === '/' || currentPage === '/player'}
                 >
                     Play, download, record and import songs. Learn a song with approaching circle
                     mode and practice mode.
@@ -166,7 +162,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             <div className='row space-around middle-size-pages-wrapper'>
                 <MiddleSizePage
                     Icon={VsrgComposerIcon}
-                    current={currentPage === 'vsrg-composer'}
+                    current={currentPage === '/vsrg-composer'}
                     href='/vsrg-composer'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
@@ -177,7 +173,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
 
                 <MiddleSizePage
                     Icon={VsrgIcon}
-                    current={currentPage === 'vsrg-player'}
+                    current={currentPage === '/vsrg-player'}
                     href='/vsrg-player'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
@@ -186,7 +182,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 </MiddleSizePage>
                 <MiddleSizePage
                     Icon={MdOutlinePiano}
-                    current={currentPage === 'zen-keyboard'}
+                    current={currentPage === '/zen-keyboard'}
                     href='/zen-keyboard'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
@@ -197,33 +193,33 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             <Separator/>
             <div className='page-redirect-wrapper'>
                 {!isTwa &&
-                    <PageRedirect href='/donate' current={currentPage === 'donate'}>
+                    <PageRedirect href='/donate' current={currentPage === '/donate'}>
                         Donate
                     </PageRedirect>
                 }
 
-                <PageRedirect href='/sheet-visualizer' current={currentPage === 'sheet-visualizer'}>
+                <PageRedirect href='/sheet-visualizer' current={currentPage === '/sheet-visualizer'}>
                     Sheet Visualizer
                 </PageRedirect>
-                <PageRedirect href='/theme' current={currentPage === 'theme'}>
+                <PageRedirect href='/theme' current={currentPage === '/theme'}>
                     Themes
                 </PageRedirect>
-                <PageRedirect href='/keybinds' current={currentPage === 'keybinds'}>
+                <PageRedirect href='/keybinds' current={currentPage === '/keybinds'}>
                     Keybinds
                 </PageRedirect>
-                <PageRedirect href='/partners' current={currentPage === 'partners'}>
+                <PageRedirect href='/partners' current={currentPage === '/partners'}>
                     Partners
                 </PageRedirect>
-                <PageRedirect href={'/blog'} current={currentPage.startsWith("blog")} >
+                <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")} >
                     Blog / Guides
                 </PageRedirect>
-                <PageRedirect href='/help' current={currentPage === 'help'}>
+                <PageRedirect href='/help' current={currentPage === '/help'}>
                     Help
                 </PageRedirect>
-                <PageRedirect href='/backup' current={currentPage === 'backup'}>
+                <PageRedirect href='/backup' current={currentPage === '/backup'}>
                     Backup
                 </PageRedirect>
-                 <PageRedirect href='/changelog' current={currentPage === 'changelog'}>
+                 <PageRedirect href='/changelog' current={currentPage === '/changelog'}>
                     Changelog
                 </PageRedirect>
 

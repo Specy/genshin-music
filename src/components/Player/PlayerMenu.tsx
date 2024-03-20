@@ -399,10 +399,10 @@ function Menu({ functions, data, inPreview }: MenuProps) {
             </MenuPanel>
             <MenuPanel title="Help" current={selectedMenu} id='Help'>
                 <div className={sh['help-icon-wrapper']}>
-                    <a href='https://discord.gg/Arsf65YYHq' >
+                    <a href='https://discord.gg/Arsf65YYHq' target={"_blank"} >
                         <FaDiscord className={sh['help-icon']} />
                     </a>
-                    <a href='https://github.com/Specy/genshin-music' >
+                    <a href='https://github.com/Specy/genshin-music' target={"_blank"}>
                         <FaGithub className={sh['help-icon']} />
                     </a>
                 </div>

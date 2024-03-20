@@ -1,11 +1,11 @@
 import {BlogMetadata} from "$cmp/pages/blog/types";
-import {BaseBlogPost} from "$cmp/pages/blog/BaseBlogPost";
+import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import Link from "next/link";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {APP_NAME} from "$config";
-import {BlogLi, BlogOl, BlogUl} from "$cmp/pages/blog/BlogUl";
+import {BlogLi, BlogOl, BlogP, BlogUl} from "$cmp/pages/blog/BlogUl";
 import {ShortcutsTable} from "$cmp/HelpTab/ShortcutsHelp";
 import {AppButton} from "$cmp/Inputs/AppButton";
 import {useConfig} from "$lib/Hooks/useConfig";
@@ -16,10 +16,14 @@ import {NoteLayer} from "$lib/Layer";
 
 export const _composerTutorialMetadata: BlogMetadata = {
     title: "📀 How to use the composer",
+    tags: ["Guide"],
+
     relativeUrl: "how-to-use-composer",
     image: '/assets/blog/help-composer.webp',
     description: "This is a guide to help you learn how to use the song composer to create and edit songs!",
     createdAt: new Date("2024/03/19"),
+    author: SpecyAuthor,
+
 }
 
 
@@ -28,10 +32,14 @@ export default function BlogPage() {
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
 
     return <BaseBlogPost metadata={_composerTutorialMetadata}>
-        The composer is made to help you create and edit songs, it allows you to use multiple instruments, each of them
-        with
-        different pitches, reverb, volume etc... <br/>
-        It is a simple music DAW with which you can even create rather complex songs (there will be some examples after)
+        <BlogP>
+            The composer is made to help you create and edit songs, it allows you to use multiple instruments, each of
+            them
+            with
+            different pitches, reverb, volume etc... <br/>
+            It is a simple music DAW with which you can even create rather complex songs (there will be some examples
+            after)
+        </BlogP>
         <BlogImage src={'/assets/blog/help-composer.webp'} alt={"Composer UI"}/>
         <BlogOl>
             <BlogLi>Go to the next / previous breakpoint, a breakpoint can be added from the button in the timeline,
@@ -64,15 +72,19 @@ export default function BlogPage() {
         <Header>
             Composer Tools
         </Header>
-        The composer has useful tools that you can use to make it easier to edit/compose a song. <br/>
-        A very useful tool is the MIDI conversion, which transposes a MIDI song into a format that can be used
-        in the app. For more info on how to use it, go to the <AppLink href={'/blog/midi-conversion'}>Midi conversion
-        guide</AppLink>.
-        Also similar is a video/audio transposer, find more info in the <AppLink href={'/blog/ai-conversion'}>Audio
-        conversion guide</AppLink>.
-        <br/>
-        <br/>
-        This next tools are the ones available by clicking the "tools" button on the right of the composer
+        <BlogP>
+
+            The composer has useful tools that you can use to make it easier to edit/compose a song. <br/>
+            A very useful tool is the MIDI conversion, which transposes a MIDI song into a format that can be used
+            in the app. For more info on how to use it, go to the <AppLink href={'/blog/midi-conversion'}>Midi
+            conversion
+            guide</AppLink>.
+            Also similar is a video/audio transposer, find more info in the <AppLink href={'/blog/ai-conversion'}>Audio
+            conversion guide</AppLink>.
+        </BlogP>
+        <BlogP>
+            This next tools are the ones available by clicking the "tools" button on the right of the composer
+        </BlogP>
         <BlogImage src={'/assets/blog/help-composer-2.webp'} alt={"Composer tools UI"}/>
         <BlogOl>
             <BlogLi>
@@ -111,7 +123,9 @@ export default function BlogPage() {
             </BlogLi>
         </BlogOl>
         <BlogImage src={'/assets/blog/help-composer-3.webp'} alt={"Composer tools selected notes UI"}/>
-        Once having copied the notes you want, you will be inside the "insert" mode.
+        <BlogP>
+            Once having copied the notes you want, you will be inside the "insert" mode.
+        </BlogP>
         <BlogOl>
             <BlogLi>
                 Inserting will put the notes from the currently selected column, without creating new columns <br/>
@@ -125,84 +139,111 @@ export default function BlogPage() {
             </BlogLi>
         </BlogOl>
         <BlogImage src={'/assets/blog/help-composer-4.webp'} alt={"Composer settings"}/>
-        Those are the settings of the composer, you can open it by pressing the settings button in the side menu
+        <BlogP>
+            Those are the settings of the composer, you can open it by pressing the settings button in the side menu
+        </BlogP>
         <BlogOl>
             <BlogLi>
-                Bpm: This setting will set the Beats Per Minute of the whole song, one column will last for as long as (60000ms / bpm), for example
+                Bpm: This setting will set the Beats Per Minute of the whole song, one column will last for as long as
+                (60000ms / bpm), for example
                 with a bpm of 200, one column will last for (60000ms / 200) = 300ms.
             </BlogLi>
             <BlogLi>
-                Base pitch: This is the default pitch of all instruments, you can override the pitch of a single instrument inside the settings of the instrument.
+                Base pitch: This is the default pitch of all instruments, you can override the pitch of a single
+                instrument inside the settings of the instrument.
             </BlogLi>
             <BlogLi>
-                Beat marks: This will cut the canvas into 3 or 4 "sections" of 4 columns, you can use those to help yourself
+                Beat marks: This will cut the canvas into 3 or 4 "sections" of 4 columns, you can use those to help
+                yourself
                 with the tempo of the song.
             </BlogLi>
             <BlogLi>
                 Note name type: The name that the notes in the keyboard of the composer will use.
             </BlogLi>
             <BlogLi>
-                Number of visible columns: The number of columns that will be visible at a time in the canvas. Warning, a high
+                Number of visible columns: The number of columns that will be visible at a time in the canvas. Warning,
+                a high
                 value might cause lags, if you have lag issues, try to reduce this value.
             </BlogLi>
             <BlogLi>
-                Default reverb: This will enable reverb by default for all instruments in the song, you can override this in the
+                Default reverb: This will enable reverb by default for all instruments in the song, you can override
+                this in the
                 instrument.
             </BlogLi>
             <BlogLi>
                 Autosave changes: It will auto save the changes you applied to a song every 5 edits.
             </BlogLi>
             <BlogLi>
-                Put next/previous column buttons around keyboard: This adds two buttons on the left and right of the keyboard that
+                Put next/previous column buttons around keyboard: This adds two buttons on the left and right of the
+                keyboard that
                 selects the previous and next columns.
             </BlogLi>
             <BlogLi>
-                Autoplay in all tabs: This is a feature that will start/stop playing all your browser tabs that have the composer open.
+                Autoplay in all tabs: This is a feature that will start/stop playing all your browser tabs that have the
+                composer open.
             </BlogLi>
             <BlogLi>
-                Lookahead time: To prevent lags from the app affecting audio, notes are "scheduled" to be played a few milliseconds before
-                than they are actually played, this value will give the app a certain amount of time where lags in the app won't affect the
-                audio timing accuracy. This will cause the audio to "lag behind" the canvas, you can reduce or disable this lookahead. If your audio
+                Lookahead time: To prevent lags from the app affecting audio, notes are "scheduled" to be played a few
+                milliseconds before
+                than they are actually played, this value will give the app a certain amount of time where lags in the
+                app won't affect the
+                audio timing accuracy. This will cause the audio to "lag behind" the canvas, you can reduce or disable
+                this lookahead. If your audio
                 stutters, try to increase this value.
             </BlogLi>
             <BlogLi>
-                Connect MIDI keyboard: You can use a MIDI keyboard to make it easier to compose a song, by using the keyboard to select/deselect notes.
-                <br /> If you want to know how to connect your MIDI keyboard, follow the <AppLink href={'/blog/connect-midi-device'}>connect MIDI device</AppLink> guide.
+                Connect MIDI keyboard: You can use a MIDI keyboard to make it easier to compose a song, by using the
+                keyboard to select/deselect notes.
+                <br/> If you want to know how to connect your MIDI keyboard, follow the <AppLink
+                href={'/blog/connect-midi-device'}>connect MIDI device</AppLink> guide.
             </BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/help-composer-5.webp'} alt={"Instrument settings"} />
-        This is the layer settings, on the left there is the layer selection, the highlighted one is the currently selected
-        layer, to create a new layer, press the "+" button. The icon on the top right is the same icon used inside the canvas for that
-        instrument, you can have as many as {NoteLayer.MAX_LAYERS} layers
+        <BlogImage src={'/assets/blog/help-composer-5.webp'} alt={"Instrument settings"}/>
+        <BlogP>
+
+            This is the layer settings, on the left there is the layer selection, the highlighted one is the currently
+            selected
+            layer, to create a new layer, press the "+" button. The icon on the top right is the same icon used inside
+            the
+            canvas for that
+            instrument, you can have as many as {NoteLayer.MAX_LAYERS} layers
+        </BlogP>
         <BlogOl>
             <BlogLi>
                 Opens the settings menu of this layer.
             </BlogLi>
             <BlogLi>
-                Toggles the visibility of this layer inside the canvas. If the layer is hidden, when it is deselected, the notes
+                Toggles the visibility of this layer inside the canvas. If the layer is hidden, when it is deselected,
+                the notes
                 of this layer won't be visible inside the canvas.
             </BlogLi>
             <BlogLi>
-                This is the name of the layer which you will be able to see in the layer selection, if left empty, it will show the
+                This is the name of the layer which you will be able to see in the layer selection, if left empty, it
+                will show the
                 instrument name.
             </BlogLi>
             <BlogLi>
                 This is the instrument of this layer.
             </BlogLi>
             <BlogLi>
-                This is the pitch of this instrument, leave it as "Use song pitch" to use whichever pitch the song is using.
+                This is the pitch of this instrument, leave it as "Use song pitch" to use whichever pitch the song is
+                using.
             </BlogLi>
             <BlogLi>
-                This is the reverb selection, it will set the instrument to have or not the reverb, leave it to "Use song reverb" to
+                This is the reverb selection, it will set the instrument to have or not the reverb, leave it to "Use
+                song reverb" to
                 use the value of the song is using.
             </BlogLi>
             <BlogLi>
-                This lets you choose which icon you want to see inside the canvas for this instrument. As there are only a few icons,
+                This lets you choose which icon you want to see inside the canvas for this instrument. As there are only
+                a few icons,
                 those will have to be repeated in case you have many instruments.
             </BlogLi>
             <BlogLi>
-                This will let you choose the volume for this instrument, a higher value might cause distortions in the audio. If you hear
-                distortions, try to lower the volume of the instrument. You can also press the "mute" button to mute this instrument.
+                This will let you choose the volume for this instrument, a higher value might cause distortions in the
+                audio. If you hear
+                distortions, try to lower the volume of the instrument. You can also press the "mute" button to mute
+                this instrument.
             </BlogLi>
             <BlogLi>
                 This will move the layer one position up or down, just used to organise layers.

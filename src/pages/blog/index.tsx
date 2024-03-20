@@ -16,6 +16,8 @@ import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";
 import {PageMeta} from "$cmp/Miscellaneous/PageMeta";
 import {Row} from "$cmp/shared/layout/Row";
 import {useMemo} from "react";
+import {useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
+import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
 
 const posts = ([
     _midiDeviceMetadata,
@@ -55,7 +57,7 @@ interface BlogPostProps {
 }
 
 function BlogPost({metadata}: BlogPostProps) {
-    const isRecent = new Date(metadata.createdAt).getTime() > new Date().getTime() - 1000 * 60 * 60 * 24 * 7
+    const visited = useHasVisitedBlogPost(metadata.relativeUrl)
     const date = useMemo(() => {
         return new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(metadata.createdAt)
     }, [metadata.createdAt])
@@ -63,7 +65,7 @@ function BlogPost({metadata}: BlogPostProps) {
         href={`/blog/posts/${metadata.relativeUrl}`}
     >
         <Card
-            className={cn(s['blog-card'], [isRecent, s['blog-card-new']])}
+            className={cn(s['blog-card'], [!visited, s['blog-card-new']])}
             style={{height: '100%'}}
         >
             <Header type={'h2'} className={`${s['blog-card-title']}`} style={{marginBottom: '-1.5rem'}}>
@@ -77,14 +79,30 @@ function BlogPost({metadata}: BlogPostProps) {
                     {metadata.title}
 
                 </div>
+                {metadata.author &&
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            right: '0.5rem'
+                        }}
+                    >
+                        <BlogAuthorRenderer author={metadata.author} size={'2rem'} noName/>
+                    </div>
+                }
             </Header>
             <Column padding={'1rem'} style={{paddingTop: '0.5rem'}}>
                 {metadata.description}
             </Column>
-            <Row justify={'end'} align={'end'} style={{padding: '0.2rem 0.5rem'}} flex1>
-                <div suppressHydrationWarning={true}>
-                {date}
+            <Row justify={'between'} align={'end'} style={{padding: '0.5rem'}} flex1>
+                <Row style={{fontSize: '0.8rem'}}>
+                    <BlogTagsRenderer
+                        tags={metadata.tags}
+                    />
+                </Row>
 
+                <div suppressHydrationWarning={true}>
+                    {date}
                 </div>
             </Row>
         </Card>

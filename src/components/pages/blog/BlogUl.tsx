@@ -6,6 +6,7 @@ export function BlogUl({children, ...rest}: MaybeChildren<Stylable>) {
         {children}
     </ul>
 }
+
 export function BlogOl({children, className, ...rest}: MaybeChildren<Stylable>) {
     return <ol {...rest} className={`${className} ${s['blog-ol']}`}>
         {children}
@@ -18,4 +19,14 @@ export function BlogLi({children, ...rest}: MaybeChildren<Stylable>) {
     >
         {children}
     </li>
+}
+
+
+export function BlogP({children, className, ...rest}: MaybeChildren<Stylable>) {
+    return <p
+        className={`${s['blog-p']} ${className}`}
+        {...rest}
+    >
+        {children}
+    </p>
 }

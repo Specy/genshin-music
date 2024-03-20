@@ -1,43 +1,54 @@
 import {BlogMetadata} from "$cmp/pages/blog/types";
-import {BaseBlogPost} from "$cmp/pages/blog/BaseBlogPost";
+import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {Header} from "$cmp/shared/header/Header";
 import {AppLink} from "$cmp/shared/link/AppLink";
-import {BlogLi, BlogOl} from "$cmp/pages/blog/BlogUl";
+import {BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
 
 
 export const _midiTransposeMetadata: BlogMetadata = {
     title: "🎛️ MIDI music transposition",
     relativeUrl: "midi-transpose",
+    tags: ["Guide"],
     image: '/assets/blog/midi-1.webp',
     description: "Use MIDI songs to transpose music into the app sheet",
     createdAt: new Date("2024/03/19"),
+    author: SpecyAuthor,
+
 }
 
 
 export default function BlogPage() {
     return <BaseBlogPost metadata={_midiTransposeMetadata}>
-        If you want to compose a song but you don't want to start from 0, you can try to find a MIDI file for the
-        song
-        and use the MIDI transposing tools to convert it into a music sheet.
-        <Header  margin={'1rem 0'}>
+        <BlogP>
+            If you want to compose a song but you don't want to start from 0, you can try to find a MIDI file for the
+            song
+            and use the MIDI transposing tools to convert it into a music sheet.
+        </BlogP>
+
+        <Header margin={'1rem 0'}>
             Open a MIDI file
         </Header>
-        Once you found your MIDI file, visit the <AppLink href={'/composer'}>composer</AppLink> and open the song
-        menu.
-        <br/>
-        <br/>
+        <BlogP>
+
+            Once you found your MIDI file, visit the <AppLink href={'/composer'}>composer</AppLink> and open the song
+            menu.
+        </BlogP>
         Now click the "Create from MIDI/Audio", it will open the MIDI transposition tool, and select your file after
         pressing the
-        "Open MIDI/Audio/Video file" button. If you want to import a video or audio file instead, visit the <AppLink href={'/blog/posts/ai-transpose'}> Ai transpose guide </AppLink>.
+        "Open MIDI/Audio/Video file" button. If you want to import a video or audio file instead, visit the <AppLink
+        href={'/blog/posts/ai-transpose'}> Ai transpose guide </AppLink>.
         <BlogImage src={'/assets/blog/midi-btn.webp'} alt={"MIDI button"}/>
-        <Header  margin={'1rem 0'}>
+        <Header margin={'1rem 0'}>
             Transpose a MIDI file
         </Header>
-        After having selected the file, you can start changing the import settings to best convert the song to the
-        app sheet.
-        The MIDI song doesn't perfectly match the music sheet of the app, so you will have to adjust the settings to
-        best fit the song.
+        <BlogP>
+            After having selected the file, you can start changing the import settings to best convert the song to the
+            app sheet.
+            The MIDI song doesn't perfectly match the music sheet of the app, so you will have to adjust the settings to
+            best fit the song.
+        </BlogP>
+
         <BlogImage src={'/assets/blog/midi-1.webp'} alt={"MIDI import settings"}/>
         <BlogOl>
             <BlogLi>This is the button to press to select the MIDI file.</BlogLi>
@@ -77,12 +88,15 @@ export default function BlogPage() {
         <BlogImage src={'/assets/blog/midi-2.webp'} alt={"MIDI track settings"}/>
         <BlogOl>
             <BlogLi>
-                With this you can override the note offset that you wrote in the global settings, leave it blank to use the same
+                With this you can override the note offset that you wrote in the global settings, leave it blank to use
+                the same
                 value of the global offset
             </BlogLi>
             <BlogLi>
-                When a note goes over the visible notes of the app, with this value you specify how many times the notes should be
-                tried to be "scaled down" by one octave (8 notes), this might allow you to fit more notes of a track, and make it sound
+                When a note goes over the visible notes of the app, with this value you specify how many times the notes
+                should be
+                tried to be "scaled down" by one octave (8 notes), this might allow you to fit more notes of a track,
+                and make it sound
                 better.
             </BlogLi>
         </BlogOl>

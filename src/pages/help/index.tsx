@@ -15,7 +15,7 @@ export default function Help(){
                 how to use them.
                 <br/><br/>
                 If you have issues, bugs, or suggestions, please join our
-                <a href="https://discord.gg/Arsf65YYHq" style={{color: 'var(--accent)'}}>
+                <a href="https://discord.gg/Arsf65YYHq" style={{color: 'var(--accent)'}} target={"_blank"}>
                 <>&nbsp;</> Discord server
                 </a>
                 . <br/>
