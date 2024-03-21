@@ -15,9 +15,10 @@ import {_playerTutorialMetadata} from "$pages/blog/posts/how-to-use-player";
 import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";
 import {PageMeta} from "$cmp/Miscellaneous/PageMeta";
 import {Row} from "$cmp/shared/layout/Row";
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import {useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
+import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/Inputs/ComboBox/ComboBox";
 
 const posts = ([
     _midiDeviceMetadata,
@@ -27,8 +28,15 @@ const posts = ([
     _composerTutorialMetadata
 ] satisfies BlogMetadata[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
+const tags = Array.from(new Set(posts.flatMap(p => p.tags)).values())
+
 
 export default function Blog() {
+    const [selectedTags, setSelectedTags] = useState(() => tags.map(i => ({item: i, selected: false})))
+    const filteredPosts = useMemo(() => {
+        if(selectedTags.every(t => !t.selected)) return posts
+        return posts.filter(p => selectedTags.some(t => t.selected && p.tags.includes(t.item)))
+    }, [selectedTags])
     return <DefaultPage>
         <PageMeta
             text={`${APP_NAME} Music Nightly Blog`}
@@ -40,11 +48,26 @@ export default function Blog() {
             </Header>
 
             <Column gap={'1rem'}>
-                <Header>
-                    Posts
-                </Header>
+                <Row justify={'between'} align={'center'}>
+                    <Header>
+                        Posts
+                    </Header>
+                    <ComboBox
+                        items={selectedTags}
+                        title={<ComboBoxTitle>Select tags</ComboBoxTitle>}
+                        onChange={setSelectedTags}
+                        style={{zIndex: 3}}
+                    >
+                        {(item, onClick) =>
+                            <ComboBoxItem key={item.item} item={item} onClick={onClick}>
+                                {item.item}
+                            </ComboBoxItem>
+                        }
+                    </ComboBox>
+                </Row>
+
                 <Grid columns={'repeat(2, 1fr)'} gap={'1rem'}>
-                    {posts.map((metadata, i) => <BlogPost key={i} metadata={metadata}/>)}
+                    {filteredPosts.map((metadata) => <BlogPost key={metadata.relativeUrl} metadata={metadata}/>)}
                 </Grid>
             </Column>
         </Column>

@@ -213,9 +213,6 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")} >
                     Blog / Guides
                 </PageRedirect>
-                <PageRedirect href='/help' current={currentPage === '/help'}>
-                    Help
-                </PageRedirect>
                 <PageRedirect href='/backup' current={currentPage === '/backup'}>
                     Backup
                 </PageRedirect>

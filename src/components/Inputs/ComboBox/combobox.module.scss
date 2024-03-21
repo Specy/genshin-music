@@ -1,0 +1,74 @@
+
+.combo-box-title {
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+.combo-box-title-item {
+  padding: 0.5rem 1rem;
+  transition: background-color 0.3s;
+  cursor: pointer;
+  color: var(--primary-text);
+  background-color: var(--primary);
+  border-radius: 0.3rem;
+}
+
+.combo-box-title-item:hover {
+  background-color: var(--primary-layer-10);
+}
+
+.combo-box-wrapper {
+  position: relative;
+  width: fit-content;
+}
+
+.combo-box-items {
+  display: flex;
+  gap: 0.3rem;
+  flex-direction: column;
+  position: absolute;
+  background-color: var(--primary);
+  box-shadow: 0 0.5rem 0.7rem 0.5rem rgba(0, 0, 0, 0.2);
+  transform: translateY(0.2rem);
+  min-width: 100%;
+  padding: 0.3rem;
+  border-radius: 0.4rem;
+  animation: fadeIn 0.2s;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    translate: 0 -0.2rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+
+.combo-box-item {
+  padding: 0.5rem;
+  transition: background-color 0.3s;
+  background-color: var(--primary);
+  cursor: pointer;
+  border-radius: 0.2rem;
+  color: var(--primary-text);
+  border: none;
+}
+
+.combo-box-item:hover:not(.combo-box-item-selected) {
+  background-color: var(--primary-layer-20);
+}
+
+.combo-box-item:last-child {
+  border-bottom: none;
+}
+
+.combo-box-item-selected {
+  background-color: var(--secondary);
+  color: var(--secondary-text);
+  border-radius: 0.2rem;
+}
