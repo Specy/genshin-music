@@ -5,7 +5,7 @@ import s from './blog.module.scss'
 import {Header} from "$cmp/shared/header/Header";
 import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 import Link from "next/link";
-import {useEffect, useMemo} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {APP_NAME} from "$config";
 import {Row} from "$cmp/shared/layout/Row";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
@@ -107,9 +107,12 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
 }
 
 export function useHasVisitedBlogPost(name: string) {
-    if (typeof window === 'undefined') return false
-    const visited = JSON.parse(localStorage.getItem(APP_NAME + '_visited_blog_posts') ?? '{}')
-    return visited[name] ?? false
+    const [visited, setVisited] = useState(true)
+    useEffect(() => {
+        const visited = JSON.parse(localStorage.getItem(APP_NAME + '_visited_blog_posts') ?? '{}')
+        setVisited(visited[name] ?? false)
+    }, []);
+    return visited
 }
 
 

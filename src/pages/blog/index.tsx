@@ -83,6 +83,7 @@ interface BlogPostProps {
 
 function BlogPost({metadata}: BlogPostProps) {
     const visited = useHasVisitedBlogPost(metadata.relativeUrl)
+    console.log(metadata.relativeUrl, [!visited, s['blog-card-new']])
     const date = useMemo(() => {
         return new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(metadata.createdAt)
     }, [metadata.createdAt])
@@ -90,7 +91,7 @@ function BlogPost({metadata}: BlogPostProps) {
         href={`/blog/posts/${metadata.relativeUrl}`}
     >
         <Card
-            className={cn(s['blog-card'], [!visited, s['blog-card-new']])}
+            className={`${s['blog-card']} ${!visited ? s['blog-card-new'] : ""}`}
             style={{height: '100%'}}
         >
             <Header type={'h2'} className={`${s['blog-card-title']}`} style={{marginBottom: '-1.5rem'}}>
