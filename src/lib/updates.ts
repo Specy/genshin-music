@@ -1,7 +1,7 @@
 type Update = {
     version: string
     title: string
-    date: string
+    date: Date
     changes: string[]
 }
 
@@ -9,7 +9,7 @@ export const updates: Update[] = [
     {
         version: '3.3.0',
         title: "Audio/Video transcription, reverb",
-        date: '2023 - 26/07',
+        date: new Date('2023-07-26'),
         changes: [
             "Added tool in the composer to convert audio/video to a sheet",
             "Reverb now can be set for each instrument",
@@ -17,14 +17,14 @@ export const updates: Update[] = [
             "Added customisable presets in MIDI settings",
             "Zen keyboard now emits MIDI notes events when pressed",
             //"Added personal custom layout in the visual song",
-            "Updated Help page",
+            "Added app's blog",
             "Other bug fixes and improvements"
         ]
     },
     {
         version: '3.2.0',
         title: "Shortcuts, Do Re Mi, performance, Layers",
-        date: '2023 - 26/07', 
+        date: new Date('2023-07-26'),
         changes: [
             "All shortcuts and keyboard layout are now customizable",
             "Added Do Re Mi layout with note shifting",
@@ -46,7 +46,7 @@ export const updates: Update[] = [
     {
         version: '3.1.0',
         title: 'Aurora, transparency and layouts',
-        date: '2022 - 16/02',
+        date: new Date('2022-02-16'),
         changes: [
             "Added aurora (Sky)",
             "Added switch/playstation layouts (Sky)",
@@ -58,7 +58,7 @@ export const updates: Update[] = [
     {
         version: '3.0.1',
         title: 'Performance and bug fixes',
-        date: '2022 - 01/11',
+        date: new Date('2022-01-11'),
         changes: [
             "Fixed an IOS bug preventing audio from playing",
             "Improved performance for users that have many songs",
@@ -69,7 +69,7 @@ export const updates: Update[] = [
     {
         version: '3.0',
         title: 'VSRG mode, Zen keyboard, Calls and more!',
-        date: '2022 - 18/09',
+        date: new Date('2022-09-18'),
         changes: [
             "Added VSRG mode to compose and play vsrg songs",
             "Added Zen keyboard, where you can simply focus on playing by hand",
@@ -89,10 +89,10 @@ export const updates: Update[] = [
             "Exporting a song would not work in sky music and sky studio",
             "Other bug fixes and improvements",
         ]
-    },{
+    }, {
         version: '2.8',
         title: 'More Composer layers and UI rework',
-        date: '2022 - 7/07',
+        date: new Date('2022-07-07'),
         changes: [
             "Increased instrument limit in the composer to 30",
             "Redesigned the tools in the composer",
@@ -108,7 +108,7 @@ export const updates: Update[] = [
     {
         version: '2.7',
         title: 'Song rename, MIDI export, folders',
-        date: '2022 - 15/06',
+        date: new Date('2022-06-15'),
         changes: [
             "Added option to rename songs",
             "Song names are not unique anymore",
@@ -121,7 +121,7 @@ export const updates: Update[] = [
     {
         version: '2.6',
         title: 'Light guitar & Tooltips',
-        date: '2022 - 30/05',
+        date: new Date('2022-05-30'),
         changes: [
             "Added tooltips",
             "Added help buttons",
@@ -135,7 +135,7 @@ export const updates: Update[] = [
     {
         version: '2.5',
         title: 'Composer improvements',
-        date: '2022 - 27/03',
+        date: new Date('2022-03-27'),
         changes: [
             'Improved the rendering of the composer to be sherper and easier to see on mobile',
             'Improved performance in the composer',
@@ -148,16 +148,16 @@ export const updates: Update[] = [
     {
         version: '2.4',
         title: 'Multi Slider and Themes',
-        date: '2022 - 15/02',
+        date: new Date('2022-02-15'),
         changes: [
             'Added app themes, fully customise the look of the app',
             'Added start and end slider for selecting which part of the song to play/practice',
             'Bug fixes'
         ]
-    },{
+    }, {
         version: '2.3',
         title: 'MIDI Keyboard and Performance',
-        date: '2022 - 3/02',
+        date: new Date('2022-02-03'),
         changes: [
             'Added MIDI Keyboard support on all pages with custom layouts and shortcuts',
             'Big performance improvements of main page',
@@ -166,10 +166,10 @@ export const updates: Update[] = [
             'Added Panflute (Sky)',
             'UI improvements and bug fixes'
         ]
-    },{
+    }, {
         version: '2.2',
         title: 'Sheet visualizer',
-        date: '2022 - 17/01',
+        date: new Date('2022-01-17'),
         changes: [
             'Added sheet visualizer',
             'Changed timeline behaviour when dragging the scroll bar',
@@ -180,7 +180,7 @@ export const updates: Update[] = [
     {
         version: '2.1.1',
         title: 'Zither and icons',
-        date: '2021 - 16/12',
+        date: new Date('2021-12-16'),
         changes: [
             'Changed note icon and animation (Genshin)',
             'Added Help page',
@@ -191,7 +191,7 @@ export const updates: Update[] = [
     {
         version: '2.1',
         title: 'Home menu and pages',
-        date: '2021 - 11/12',
+        date: new Date('2021-12-11'),
         changes: [
             'Restructured code',
             'Added opacity to some elements',
@@ -206,7 +206,7 @@ export const updates: Update[] = [
     {
         version: '2.0',
         title: 'Approaching circles',
-        date: '2021 - 28/11',
+        date: new Date('2021-11-28'),
         changes: [
             `Added Approaching cirlces mode, a new way to learn a song, or a way to challange yourself.
             You can find it in the main page, next to the practice button`,
@@ -224,7 +224,7 @@ export const updates: Update[] = [
     }, {
         version: '1.7',
         title: 'Zither',
-        date: '2021 - 20/10',
+        date: new Date('2021-10-20'),
         changes: [
             '(For genshin) Added Zither',
             'Added back "do re mi" format'
@@ -232,7 +232,7 @@ export const updates: Update[] = [
     }, {
         version: '1.6',
         title: 'Performance tweaks',
-        date: '2021 - 17/10',
+        date: new Date('2021-10-17'),
         changes: [
             'Performance of composer improved by 2x',
             'Added note names for genshin (made it a setting)',
@@ -243,7 +243,7 @@ export const updates: Update[] = [
     }, {
         version: '1.5',
         title: 'MIDI import',
-        date: '2021 - 14/10',
+        date: new Date('2021-10-14'),
         changes: [
             `Added to both Sky and Genshin music nightly the MIDI import feature $l
             - Music track selection (select or deselect which tracks to include) $l
@@ -255,7 +255,7 @@ export const updates: Update[] = [
     }, {
         version: '1.4',
         title: 'Song library',
-        date: '2021 - 28/08',
+        date: new Date('2021-08-28'),
         changes: [
             'Added song library integration, directly import songs from the app (700+ songs)',
             'Bug fixes'
@@ -263,7 +263,7 @@ export const updates: Update[] = [
     }, {
         version: '1.3',
         title: 'New audio files',
-        date: '2021 - 25/08',
+        date: new Date('2021-08-25'),
         changes: [
             'Changed audio files',
             'Added ocarina',
@@ -273,7 +273,7 @@ export const updates: Update[] = [
     }, {
         version: '1.2',
         title: 'Bug fixes and PWA',
-        date: '2021 - 18/08',
+        date: new Date('2021-08-18'),
         changes: [
             "(For sky) Fixed bug where sheets couldn't be imported in sky studio",
             'Changed app install to more modern approach with description and images'
@@ -281,7 +281,7 @@ export const updates: Update[] = [
     }, {
         version: '1.1',
         title: 'Sheets compatibility',
-        date: '2021 - 07/08',
+        date: new Date('2021-08-07'),
         changes: [
             '(For sky) Added backwards compatibility for sheets, now sheets made in sky music nightly can be imported into sky music and sky studio (with some losses)',
             'Bug fixes',
@@ -290,7 +290,7 @@ export const updates: Update[] = [
     }, {
         version: '1.0',
         title: 'Release',
-        date: '2021 - 22/05',
+        date: new Date('2021-05-22'),
         changes: [
             '3 Instruments composition',
             'Better performance than previous version',
