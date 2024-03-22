@@ -172,7 +172,7 @@ export default function BlogPage() {
             </BlogLi>
         </BlogOl>
         {!IS_MOBILE && <>
-            <Header type={'1rem 0'}>
+            <Header>
                 Player shortcuts
             </Header>
             <BlogP>

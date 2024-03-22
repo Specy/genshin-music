@@ -30,9 +30,8 @@ import {
     FaEllipsisH,
     FaFolder,
     FaHome,
-    FaInfo,
     FaMusic,
-    FaPen,
+    FaPen, FaQuestion,
     FaSave,
     FaTimes,
     FaTrash
@@ -125,7 +124,7 @@ function VsrgMenu({
                     ariaLabel='Help'
                 >
                     <Memoized>
-                        <FaInfo className="icon"/>
+                        <FaQuestion className="icon"/>
                     </Memoized>
                 </MenuItem>
                 <MenuItem

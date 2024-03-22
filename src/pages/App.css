@@ -21,6 +21,10 @@
 	font-display: swap;
 }
 
+p{
+	font-family: RobotoSerif, serif;
+	opacity: 0.9;
+}
 .loading {
 	color: var(--background-text);
 	font-size: 2rem;

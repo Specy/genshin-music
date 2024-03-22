@@ -204,15 +204,17 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <PageRedirect href='/theme' current={currentPage === '/theme'}>
                     Themes
                 </PageRedirect>
+                 <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")} >
+                    Blog & Guides
+                </PageRedirect>
                 <PageRedirect href='/keybinds' current={currentPage === '/keybinds'}>
                     Keybinds
                 </PageRedirect>
+
                 <PageRedirect href='/partners' current={currentPage === '/partners'}>
                     Partners
                 </PageRedirect>
-                <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")} >
-                    Blog / Guides
-                </PageRedirect>
+
                 <PageRedirect href='/backup' current={currentPage === '/backup'}>
                     Backup
                 </PageRedirect>
@@ -226,7 +228,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     if (!confirm) return
                     window.open('https://specy.app', '_blank')
                 }} href={'https://specy.app'} target='_blank'>
-                    My Other Apps
+                    Other Apps
                 </Link>
             </div>
 

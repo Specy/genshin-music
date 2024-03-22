@@ -1,10 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FaMusic, FaTimes, FaCog, FaTrash, FaCrosshairs, FaDownload, FaInfo, FaSearch, FaHome, FaPen, FaEllipsisH, FaRegCircle, FaFolder, FaEdit } from 'react-icons/fa';
+import {
+    FaMusic,
+    FaTimes,
+    FaCog,
+    FaTrash,
+    FaCrosshairs,
+    FaDownload,
+    FaInfo,
+    FaSearch,
+    FaHome,
+    FaPen,
+    FaEllipsisH,
+    FaRegCircle,
+    FaFolder,
+    FaEdit,
+    FaQuestion
+} from 'react-icons/fa';
 import { FaDiscord, FaGithub } from 'react-icons/fa';
 import { RiPlayListFill } from 'react-icons/ri'
 import { APP_NAME } from "$config"
 import { playerStore } from '$stores/PlayerStore'
-import { HelpTab } from '$cmp/HelpTab'
+import {ComposerShortcuts, HelpTab, PlayerShortcuts} from '$cmp/HelpTab'
 import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
 import MenuPanel from '$cmp/Layout/MenuPanel'
 import DonateButton from '$cmp/Miscellaneous/DonateButton'
@@ -220,7 +236,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                 </MenuItem>
             }
             <MenuItem onClick={() => selectSideMenu("Help")} className="margin-top-auto" isActive={selectedMenu === "Help" && isOpen} ariaLabel='Open info menu'>
-                <FaInfo className="icon" />
+                <FaQuestion className="icon" />
             </MenuItem>
             <MenuItem onClick={() => selectSideMenu("Library")} isActive={selectedMenu === "Library" && isOpen} ariaLabel='Open library menu'>
                 <RiPlayListFill className='icon' />
@@ -407,6 +423,8 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     </a>
                 </div>
                 <HelpTab />
+                <PlayerShortcuts />
+                <ComposerShortcuts />
                 <DonateButton style={{marginTop: "0.5rem"}} />
             </MenuPanel>
         </div>
