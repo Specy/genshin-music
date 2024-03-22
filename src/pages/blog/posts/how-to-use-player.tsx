@@ -4,7 +4,7 @@ import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {APP_NAME} from "$config";
-import {BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
+import {BlogB, BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
 import {ShortcutsTable} from "$cmp/HelpTab/ShortcutsHelp";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {useObservableMap} from "$lib/Hooks/useObservable";
@@ -45,12 +45,11 @@ export default function BlogPage() {
         </BlogP>
 
         <Header margin={'1rem 0'}>
-            How to
+            How to use the player
         </Header>
-        {APP_NAME !== "Genshin" && <span>
+        {APP_NAME !== "Genshin" && <BlogP>
             The images below are from the genshin version of the app, but the functionality is the same
-        </span>}
-
+        </BlogP>}
         <BlogImage src={'/assets/blog/help-player.webp'} alt={"Player UI"}/>
         <BlogOl>
             <BlogLi>Pressing this button will start an audio recording, everything you play from that moment will be
@@ -121,12 +120,65 @@ export default function BlogPage() {
                 app which is not this one.
             </BlogLi>
         </BlogOl>
+        <Header margin={'1rem 0'}>
+            Player settings
+        </Header>
+        <BlogImage src={'/assets/blog/help-player-3.webp'} alt={"Player settings"}/>
+        <BlogOl>
+            <BlogLi>
+                <BlogB>Instrument</BlogB>: This is the instrument of the keyboard, you can change the volume
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Pitch</BlogB>: This is the pitch of the instrument
+            </BlogLi>
+            <BlogLi>
+                <BlogB>BPM</BlogB>: The BPM which will be saved when you record the song, also used for the
+                metronome
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Auto sync the song's instrument and pitch</BlogB>: When selecting a song to play, change the
+                current instrument and pitch
+                to match the song
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Metronome beats</BlogB>: Set how many beats to use in the metronome, every nth beats there
+                will be a different sound played
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Metronome volume</BlogB>: The volume of the metronome
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Reverb (cave mode)</BlogB>: Sets if the instrument should use reverb or not.
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Note name type</BlogB>: Sets the kind of text to show inside of the note
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Keyboard size</BlogB>: Scales the size of the keyboard up/down
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Keyboard vertical position</BlogB>: Pushes the keyboard up or down
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Approach rate</BlogB>: When playing the "approaching circles" mode, this is how many ms the note
+                will take from when it appears, to when it should be pressed.
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Note animation</BlogB>: Show an animation when you press the note
+            </BlogLi>
+            <BlogLi>
+                <BlogB>Show visual sheet</BlogB>: Show the visual sheet above the keyboard. This helps to visualize the
+                notes that are about to be played. Useful both in practice and playback of a song.
+            </BlogLi>
+        </BlogOl>
         {!IS_MOBILE && <>
             <Header type={'1rem 0'}>
                 Player shortcuts
             </Header>
-            The player has some shortcuts you can use, if you want to change them, go to the <AppLink
-            href={'/keybinds'}>keybinds page</AppLink>
+            <BlogP>
+                The player has some shortcuts you can use, if you want to change them, go to the <AppLink
+                href={'/keybinds'}>keybinds page</AppLink>
+            </BlogP>
             <ShortcutsTable shortcuts={playerShortcuts} style={{marginTop: '1rem'}}/>
         </>
         }

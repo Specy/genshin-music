@@ -1,9 +1,9 @@
 import { Container, Graphics, Text } from "@pixi/react";
 import { Rectangle, TextStyle } from "pixi.js";
 import { memo, useEffect, useState } from "react";
-import useFontFaceObserver from "use-font-face-observer";
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { useConfig } from "$lib/Hooks/useConfig";
+import {useFontFaceObserver} from "$lib/Hooks/useFontFaceObserver";
 
 interface VsrgKeysRendererProps {
     keys: string[]

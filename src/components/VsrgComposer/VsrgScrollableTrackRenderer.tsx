@@ -7,11 +7,10 @@ import { FederatedPointerEvent, TextStyle, type Sprite as SpriteType } from "pix
 import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
 import { VsrgCanvasCache } from "./VsrgComposerCache";
 import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
-import useFontFaceObserver from "use-font-face-observer";
 import { useEffect, useState } from "react";
 import { defaultVsrgTextStyle } from "./VsrgKeysRenderer";
 import { useConfig } from "$lib/Hooks/useConfig";
-
+import {useFontFaceObserver} from "$lib/Hooks/useFontFaceObserver";
 
 interface VsrgScrollableTrackRendererProps {
     vsrg: VsrgSong

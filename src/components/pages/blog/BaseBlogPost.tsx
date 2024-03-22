@@ -81,6 +81,7 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
         </div>
 
         <article
+            className={`${s['blog-article']}`}
             style={cropped ? {
                 maxWidth: '60rem',
                 margin: '0 auto',

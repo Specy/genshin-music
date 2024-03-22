@@ -1,16 +1,21 @@
 
 .blog-nav {
-  padding: 0.7rem 2rem;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 2rem;
   border-bottom: solid 0.1rem var(--secondary);
   background-color: var(--primary);
   padding-left: calc(var(--menu-size) + 2rem);
   z-index: 1;
+  height: calc(var(--menu-size) - 0.1rem);
   box-shadow: 0 0.5rem 0.7rem 0.5rem rgba(0, 0, 0, 0.2)
 }
+
 
 .blog-nav a {
   color: var(--primary-text);
   font-size: 1.2rem;
+  user-select: text;
 }
 
 .blog-nav a:hover {
@@ -49,6 +54,8 @@
 .blog-title {
   text-align: center;
   text-shadow: 0.1rem 0.1rem 0.3rem rgba(0, 0, 0, 0.6);
+  user-select: text;
+
 }
 
 .blog-tag {
@@ -63,6 +70,7 @@
   margin: 1rem 0;
   font-family: RobotoSerif, serif;
   opacity: 0.9;
+  user-select: text;
 }
 
 .blog-header-content {
@@ -91,15 +99,20 @@
 
 .blog-ol {
   margin: 0;
+  font-family: RobotoSerif, serif;
   padding: 0;
   list-style-type: none;
   margin-left: 2rem;
+  user-select: text;
 }
 
 .blog-ol li {
   counter-increment: step-counter;
   position: relative;
   margin: 1rem 0;
+  font-family: RobotoSerif, serif;
+  opacity: 0.9;
+  user-select: text;
 }
 
 
@@ -111,8 +124,12 @@
   transform: translateX(calc(-100% - 0.5rem));
   border-radius: 2rem;
   font-weight: bold;
-  min-width: 1.3rem;
+  min-width: 1.5rem;
   height: 100%;
   padding: 0;
   text-align: center;
+}
+.blog-b{
+  font-weight: bold;
+  font-family: RobotoSerif, serif;
 }

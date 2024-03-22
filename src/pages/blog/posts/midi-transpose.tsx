@@ -11,7 +11,7 @@ export const _midiTransposeMetadata: BlogMetadata = {
     relativeUrl: "midi-transpose",
     tags: ["Guide"],
     image: '/assets/blog/midi-1.webp',
-    description: "Use MIDI songs to transpose music into the app sheet",
+    description: "Use MIDI songs to transpose music into the app's sheet",
     createdAt: new Date("2024/03/19"),
     author: SpecyAuthor,
 

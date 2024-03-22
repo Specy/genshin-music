@@ -22,7 +22,11 @@ export function BlogAuthorRenderer({author, size = '2.5rem', noName = false}: Bl
                 border: "solid 0.1rem var(--secondary)"
             }}
         />
-        {noName ? "" : author.name}
+        {!noName &&
+            <div>
+                {author.name}
+            </div>
+        }
     </Row>
 }
 
@@ -38,7 +42,7 @@ export function BlogTagsRenderer({tags, padding = '0.2rem 0.5rem'}: BlogTagsProp
                 key={t}
                 style={{
                     padding,
-                    borderRadius: '1rem',
+                    borderRadius: '2rem',
                     backgroundColor: 'var(--secondary)',
                     color: 'var(--secondary-text)',
                 }}

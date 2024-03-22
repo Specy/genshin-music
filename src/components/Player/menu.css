@@ -1,16 +1,18 @@
-:root{
+:root {
     --menu-size: 4rem;
     --panel-size: 40vw;
 }
+
 .menu {
     width: var(--menu-size);
     background-color: var(--primary);
     height: 100%;
     border-right: solid 2px var(--secondary);
+    gap: 0.5rem;
     border-left: solid 2px var(--secondary);
     align-items: center;
     flex-direction: column;
-    padding-top: 0.5rem;
+    padding: 0.4rem 0;
     max-height: 100%;
     overflow-y: auto;
     z-index: 15;
@@ -48,7 +50,8 @@
     align-items: center;
     cursor: pointer;
 }
-.hamburger-top{
+
+.hamburger-top {
     top: 0.5rem;
     bottom: unset;
 }
@@ -98,9 +101,11 @@
     flex-direction: row;
     z-index: 11;
 }
-.menu-wrapper-absolute{
+
+.menu-wrapper-absolute {
     position: absolute;
 }
+
 .library-search-result-text {
     width: 100%;
     height: 100%;
@@ -386,7 +391,6 @@
     width: 2.8rem;
     height: 2.8rem;
     min-height: 2.8rem;
-    margin-bottom: 0.5rem;
     border-radius: 0.5rem;
     display: flex;
     justify-content: center;
@@ -410,9 +414,10 @@
 }
 
 @media only screen and (max-width: 920px) {
-    :root{
+    :root {
         --menu-size: 3.6rem;
     }
+
     .side-menu {
         padding: 0.5rem;
         --panel-size: 60vw;
@@ -427,13 +432,13 @@
 
     .menu {
         width: var(--menu-size);
-        padding-top: 0.3rem;
+        gap: 0.4rem;
+        padding: 0.3rem 0;
     }
 
     .menu-item {
         width: 2.8rem;
         height: 2.8rem;
-        margin-bottom: 0.4rem;
     }
 
     .tab-selector-wrapper {
@@ -446,7 +451,7 @@
     }
 }
 
-@media screen and (orientation:portrait) {
+@media screen and (orientation: portrait) {
     .rotate-screen {
         display: flex;
     }

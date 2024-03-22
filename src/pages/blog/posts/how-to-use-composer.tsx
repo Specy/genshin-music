@@ -5,7 +5,7 @@ import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {APP_NAME} from "$config";
-import {BlogLi, BlogOl, BlogP, BlogUl} from "$cmp/pages/blog/BlogUl";
+import {BlogB, BlogLi, BlogOl, BlogP, BlogUl} from "$cmp/pages/blog/BlogUl";
 import {ShortcutsTable} from "$cmp/HelpTab/ShortcutsHelp";
 import {AppButton} from "$cmp/Inputs/AppButton";
 import {useConfig} from "$lib/Hooks/useConfig";
@@ -17,7 +17,6 @@ import {NoteLayer} from "$lib/Layer";
 export const _composerTutorialMetadata: BlogMetadata = {
     title: "📀 How to use the composer",
     tags: ["Guide"],
-
     relativeUrl: "how-to-use-composer",
     image: '/assets/blog/help-composer.webp',
     description: "This is a guide to help you learn how to use the song composer to create and edit songs!",
@@ -40,6 +39,9 @@ export default function BlogPage() {
             It is a simple music DAW with which you can even create rather complex songs (there will be some examples
             after)
         </BlogP>
+        {APP_NAME !== "Genshin" && <BlogP>
+            The images below are from the genshin version of the app, but the functionality is the same
+        </BlogP>}
         <BlogImage src={'/assets/blog/help-composer.webp'} alt={"Composer UI"}/>
         <BlogOl>
             <BlogLi>Go to the next / previous breakpoint, a breakpoint can be added from the button in the timeline,
@@ -144,46 +146,46 @@ export default function BlogPage() {
         </BlogP>
         <BlogOl>
             <BlogLi>
-                Bpm: This setting will set the Beats Per Minute of the whole song, one column will last for as long as
+                <BlogP>Bpm</BlogP>: This setting will set the Beats Per Minute of the whole song, one column will last for as long as
                 (60000ms / bpm), for example
                 with a bpm of 200, one column will last for (60000ms / 200) = 300ms.
             </BlogLi>
             <BlogLi>
-                Base pitch: This is the default pitch of all instruments, you can override the pitch of a single
+                <BlogB>Base pitch</BlogB>: This is the default pitch of all instruments, you can override the pitch of a single
                 instrument inside the settings of the instrument.
             </BlogLi>
             <BlogLi>
-                Beat marks: This will cut the canvas into 3 or 4 "sections" of 4 columns, you can use those to help
+                <BlogB>Beat marks</BlogB>: This will cut the canvas into 3 or 4 "sections" of 4 columns, you can use those to help
                 yourself
                 with the tempo of the song.
             </BlogLi>
             <BlogLi>
-                Note name type: The name that the notes in the keyboard of the composer will use.
+                <BlogB>Note name type</BlogB>: The name that the notes in the keyboard of the composer will use.
             </BlogLi>
             <BlogLi>
-                Number of visible columns: The number of columns that will be visible at a time in the canvas. Warning,
+                <BlogB>Number of visible columns</BlogB>: The number of columns that will be visible at a time in the canvas. Warning,
                 a high
                 value might cause lags, if you have lag issues, try to reduce this value.
             </BlogLi>
             <BlogLi>
-                Default reverb: This will enable reverb by default for all instruments in the song, you can override
+                <BlogB>Default reverb</BlogB>: This will enable reverb by default for all instruments in the song, you can override
                 this in the
                 instrument.
             </BlogLi>
             <BlogLi>
-                Autosave changes: It will auto save the changes you applied to a song every 5 edits.
+                <BlogB>Autosave changes</BlogB>: It will auto save the changes you applied to a song every 5 edits.
             </BlogLi>
             <BlogLi>
-                Put next/previous column buttons around keyboard: This adds two buttons on the left and right of the
+                <BlogB>Put next/previous column buttons around keyboard</BlogB>: This adds two buttons on the left and right of the
                 keyboard that
                 selects the previous and next columns.
             </BlogLi>
             <BlogLi>
-                Autoplay in all tabs: This is a feature that will start/stop playing all your browser tabs that have the
+                <BlogB>Autoplay in all tabs</BlogB>: This is a feature that will start/stop playing all your browser tabs that have the
                 composer open.
             </BlogLi>
             <BlogLi>
-                Lookahead time: To prevent lags from the app affecting audio, notes are "scheduled" to be played a few
+                <BlogB>Lookahead time</BlogB>: To prevent lags from the app affecting audio, notes are "scheduled" to be played a few
                 milliseconds before
                 than they are actually played, this value will give the app a certain amount of time where lags in the
                 app won't affect the
@@ -192,7 +194,7 @@ export default function BlogPage() {
                 stutters, try to increase this value.
             </BlogLi>
             <BlogLi>
-                Connect MIDI keyboard: You can use a MIDI keyboard to make it easier to compose a song, by using the
+                <BlogB>Connect MIDI keyboard</BlogB>: You can use a MIDI keyboard to make it easier to compose a song, by using the
                 keyboard to select/deselect notes.
                 <br/> If you want to know how to connect your MIDI keyboard, follow the <AppLink
                 href={'/blog/connect-midi-device'}>connect MIDI device</AppLink> guide.
@@ -200,7 +202,6 @@ export default function BlogPage() {
         </BlogOl>
         <BlogImage src={'/assets/blog/help-composer-5.webp'} alt={"Instrument settings"}/>
         <BlogP>
-
             This is the layer settings, on the left there is the layer selection, the highlighted one is the currently
             selected
             layer, to create a new layer, press the "+" button. The icon on the top right is the same icon used inside
@@ -253,8 +254,10 @@ export default function BlogPage() {
             <Header margin={'1rem 0'}>
                 Composer shortcuts
             </Header>
-            The composer has some shortcuts you can use, if you want to change them, go to the <AppLink
-            href={'/keybinds'}>keybinds page</AppLink>
+            <BlogP>
+                The composer has some shortcuts you can use, if you want to change them, go to the <AppLink
+                href={'/keybinds'}>keybinds page</AppLink>
+            </BlogP>
             <ShortcutsTable shortcuts={composerShortcuts} style={{marginTop: '1rem'}}/>
         </>}
     </BaseBlogPost>

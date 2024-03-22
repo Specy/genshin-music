@@ -6,7 +6,7 @@ import {BlogP} from "$cmp/pages/blog/BlogUl";
 
 
 export const _aiTransposeMetadata: BlogMetadata = {
-    title: "🔬 AI music video/audio transposition",
+    title: "🔬 AI video/audio to music transposition",
     tags: ["Guide"],
     relativeUrl: "ai-transpose",
     image: '/assets/blog/midi-btn.webp',

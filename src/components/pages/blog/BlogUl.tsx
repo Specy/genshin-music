@@ -30,3 +30,12 @@ export function BlogP({children, className, ...rest}: MaybeChildren<Stylable>) {
         {children}
     </p>
 }
+
+export function BlogB({children, className, ...rest}: MaybeChildren<Stylable>) {
+    return <b
+        className={`${s['blog-b']} ${className}`}
+        {...rest}
+    >
+        {children}
+    </b>
+}

@@ -19,13 +19,15 @@ import {useMemo, useState} from "react";
 import {useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
 import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/Inputs/ComboBox/ComboBox";
+import {_howUseVsrgComposer} from "$pages/blog/posts/how-to-use-vsrg-composer";
 
 const posts = ([
-    _midiDeviceMetadata,
-    _midiTransposeMetadata,
-    _aiTransposeMetadata,
+    _composerTutorialMetadata,
     _playerTutorialMetadata,
-    _composerTutorialMetadata
+    _midiTransposeMetadata,
+    _midiDeviceMetadata,
+    _aiTransposeMetadata,
+    _howUseVsrgComposer
 ] satisfies BlogMetadata[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
 const tags = Array.from(new Set(posts.flatMap(p => p.tags)).values())
@@ -100,7 +102,6 @@ function BlogPost({metadata}: BlogPostProps) {
                 </div>
                 <div className={`${s['blog-card-title-content']}`}>
                     {metadata.title}
-
                 </div>
                 {metadata.author &&
                     <div
@@ -114,7 +115,11 @@ function BlogPost({metadata}: BlogPostProps) {
                     </div>
                 }
             </Header>
-            <Column padding={'1rem'} style={{paddingTop: '0.5rem'}}>
+            <Column
+                padding={'1rem'}
+                style={{paddingTop: '0.5rem'}}
+                className={`${s['blog-card-description']}`}
+            >
                 {metadata.description}
             </Column>
             <Row justify={'between'} align={'end'} style={{padding: '0.5rem'}} flex1>
