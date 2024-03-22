@@ -1,14 +1,15 @@
-import { SimpleMenu } from '$cmp/Layout/SimpleMenu'
-import { MenuItem } from '$cmp/Miscellaneous/MenuItem'
-import { FaGithub } from 'react-icons/fa'
-import { ChangelogRow } from '$cmp/Changelog/ChangelogRow'
-import { updates } from '$lib/updates'
-import { APP_VERSION } from '$config'
-import { PageMeta } from '$cmp/Miscellaneous/PageMeta'
-import { DefaultPage } from '$cmp/Layout/DefaultPage'
-import { AppButton } from '$cmp/Inputs/AppButton'
+import {SimpleMenu} from '$cmp/shared/pagesLayout/SimpleMenu'
+import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
+import {FaGithub} from 'react-icons/fa'
+import {ChangelogRow} from '$cmp/pages/Changelog/ChangelogRow'
+import {updates} from '$lib/updates'
+import {APP_VERSION} from '$config'
+import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
+import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
+import {AppButton} from '$cmp/shared/Inputs/AppButton'
 import Link from 'next/link'
 import s from './Changelog.module.css'
+
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
 export default function ChangelogPage() {
     return <DefaultPage

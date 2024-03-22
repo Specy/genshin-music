@@ -1,5 +1,5 @@
-import { SerializedFolder } from "$lib/Folder"
-import { DbInstance } from "./Database/Database"
+import {SerializedFolder} from "$lib/Folder"
+import {DbInstance} from "./Database/Database"
 
 
 class FolderService{

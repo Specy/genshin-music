@@ -1,12 +1,12 @@
-import { observable } from "mobx";
-import { ThemeSettings } from '$lib/BaseSettings'
-import { BASE_THEME_CONFIG } from '$config'
+import {observable} from "mobx";
+import {ThemeSettings} from '$lib/BaseSettings'
+import {BASE_THEME_CONFIG} from '$config'
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
-import { logger } from '$stores/LoggerStore'
-import { baseThemes } from "./defaultThemes";
-import { _themeService } from "$lib/Services/ThemeService";
-import { themeStore } from "./ThemeStore";
+import {logger} from '$stores/LoggerStore'
+import {baseThemes} from "./defaultThemes";
+import {_themeService} from "$lib/Services/ThemeService";
+import {themeStore} from "./ThemeStore";
 
 //TODO cleanup everything here, it's held together with tape
 export type ThemeKeys = keyof typeof ThemeSettings.data

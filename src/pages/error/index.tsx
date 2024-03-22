@@ -1,21 +1,22 @@
-import { FaTrash, FaDownload } from 'react-icons/fa';
-import { asyncConfirm } from "$cmp/Utility/AsyncPrompts"
-import { APP_NAME } from "$config"
-import { logger } from '$stores/LoggerStore';
-import { SongMenu } from '$cmp/Layout/SongMenu';
-import { AppButton } from '$cmp/Inputs/AppButton';
-import { SerializedSong, SongStorable } from '$lib/Songs/Song';
-import { useSongs } from '$lib/Hooks/useSongs';
-import { songsStore } from '$stores/SongsStore';
-import { fileService } from '$lib/Services/FileService';
-import { PageMeta } from '$cmp/Miscellaneous/PageMeta';
-import { DefaultPage } from '$cmp/Layout/DefaultPage';
-import { songService } from '$lib/Services/SongService';
-import { ComposedSong } from '$lib/Songs/ComposedSong';
-import { RecordedSong } from '$lib/Songs/RecordedSong';
-import { useObservableArray } from '$lib/Hooks/useObservable';
-import { logsStore } from '$stores/LogsStore';
+import {FaDownload, FaTrash} from 'react-icons/fa';
+import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts"
+import {APP_NAME} from "$config"
+import {logger} from '$stores/LoggerStore';
+import {SongMenu} from '$cmp/shared/pagesLayout/SongMenu';
+import {AppButton} from '$cmp/shared/Inputs/AppButton';
+import {SerializedSong, SongStorable} from '$lib/Songs/Song';
+import {useSongs} from '$lib/Hooks/useSongs';
+import {songsStore} from '$stores/SongsStore';
+import {fileService} from '$lib/Services/FileService';
+import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta';
+import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage';
+import {songService} from '$lib/Services/SongService';
+import {ComposedSong} from '$lib/Songs/ComposedSong';
+import {RecordedSong} from '$lib/Songs/RecordedSong';
+import {useObservableArray} from '$lib/Hooks/useObservable';
+import {logsStore} from '$stores/LogsStore';
 import s from './ErrorPage.module.scss'
+
 export function ErrorPage() {
     const [songs] = useSongs()
     const errors = useObservableArray(logsStore.logs)

@@ -1,6 +1,18 @@
-import {APP_NAME, MIDIPreset} from "$config"
-import { ComposerSettings, ComposerSettingsDataType, PlayerSettings, PlayerSettingsDataType, MIDISettings, VsrgComposerSettings, VsrgComposerSettingsDataType, VsrgPlayerSettingsDataType, VsrgPlayerSettings, BaseSettings, ZenKeyboardSettings, ZenKeyboardSettingsDataType } from "$lib/BaseSettings"
-
+import {APP_NAME} from "$config"
+import {
+    BaseSettings,
+    ComposerSettings,
+    ComposerSettingsDataType,
+    MIDISettings,
+    PlayerSettings,
+    PlayerSettingsDataType,
+    VsrgComposerSettings,
+    VsrgComposerSettingsDataType,
+    VsrgPlayerSettings,
+    VsrgPlayerSettingsDataType,
+    ZenKeyboardSettings,
+    ZenKeyboardSettingsDataType
+} from "$lib/BaseSettings"
 
 
 class SettingsService {

@@ -1,31 +1,31 @@
-import { Component, ReactElement } from "react";
-import VsrgMenu from "$cmp/VsrgComposer/VsrgComposerMenu";
-import { SnapPoint, VsrgBottom, VsrgHitObjectType } from "$cmp/VsrgComposer/VsrgBottom";
-import { VsrgTop } from "$cmp/VsrgComposer/VsrgTop";
-import { VsrgHitObject, VsrgSong, VsrgSongKeys, VsrgTrack, VsrgTrackModifier } from "$lib/Songs/VsrgSong";
-import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
-import { logger } from "$stores/LoggerStore";
-import { VsrgComposerCanvas } from "$cmp/VsrgComposer/VsrgComposerCanvas";
-import { VsrgComposerSettingsDataType } from "$lib/BaseSettings";
-import { settingsService } from "$lib/Services/SettingsService";
-import { SettingUpdate } from "$types/SettingsPropriety";
-import { vsrgComposerStore } from "$stores/VsrgComposerStore";
-import { AudioPlayer } from "$lib/AudioPlayer";
-import { KeyboardEventData, KeyboardProvider } from "$lib/Providers/KeyboardProvider";
-import { songsStore } from "$stores/SongsStore";
-import { RecordedSong } from "$lib/Songs/RecordedSong";
-import { SerializedSong } from "$lib/Songs/Song";
-import { songService } from "$lib/Services/SongService";
-import { ComposedSong } from "$lib/Songs/ComposedSong";
-import { clamp, isFocusable, routeChangeBugFix } from "$lib/Utilities";
-import { DEFAULT_VSRG_KEYS_MAP } from "$config";
-import { ClickType } from "$types/GeneralTypes"
-import { RecordedNote } from "$lib/Songs/SongClasses";
-import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
+import {Component, ReactElement} from "react";
+import VsrgMenu from "$cmp/pages/VsrgComposer/VsrgComposerMenu";
+import {SnapPoint, VsrgBottom, VsrgHitObjectType} from "$cmp/pages/VsrgComposer/VsrgBottom";
+import {VsrgTop} from "$cmp/pages/VsrgComposer/VsrgTop";
+import {VsrgHitObject, VsrgSong, VsrgSongKeys, VsrgTrack, VsrgTrackModifier} from "$lib/Songs/VsrgSong";
+import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
+import {logger} from "$stores/LoggerStore";
+import {VsrgComposerCanvas} from "$cmp/pages/VsrgComposer/VsrgComposerCanvas";
+import {VsrgComposerSettingsDataType} from "$lib/BaseSettings";
+import {settingsService} from "$lib/Services/SettingsService";
+import {SettingUpdate} from "$types/SettingsPropriety";
+import {vsrgComposerStore} from "$stores/VsrgComposerStore";
+import {AudioPlayer} from "$lib/AudioPlayer";
+import {KeyboardEventData, KeyboardProvider} from "$lib/Providers/KeyboardProvider";
+import {songsStore} from "$stores/SongsStore";
+import {RecordedSong} from "$lib/Songs/RecordedSong";
+import {SerializedSong} from "$lib/Songs/Song";
+import {songService} from "$lib/Services/SongService";
+import {ComposedSong} from "$lib/Songs/ComposedSong";
+import {clamp, isFocusable, routeChangeBugFix} from "$lib/Utilities";
+import {DEFAULT_VSRG_KEYS_MAP} from "$config";
+import {ClickType} from "$types/GeneralTypes"
+import {RecordedNote} from "$lib/Songs/SongClasses";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 import {homeStore} from "$stores/HomeStore";
-import { AppBackground } from "$cmp/Layout/AppBackground";
-import { NextRouter, useRouter } from "next/router";
-import { ShortcutListener, createShortcutListener } from "$stores/KeybindsStore";
+import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
+import {NextRouter, useRouter} from "next/router";
+import {createShortcutListener, ShortcutListener} from "$stores/KeybindsStore";
 
 type VsrgComposerProps = {
     router: NextRouter

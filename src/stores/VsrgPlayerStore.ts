@@ -1,6 +1,5 @@
-
-import { VsrgSong } from "$lib/Songs/VsrgSong"
-import { makeObservable, observable, observe } from "mobx"
+import {VsrgSong} from "$lib/Songs/VsrgSong"
+import {makeObservable, observable, observe} from "mobx"
 
 export type KeyboardKey = {
     key: string

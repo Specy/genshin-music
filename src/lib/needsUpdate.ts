@@ -1,8 +1,8 @@
-import { APP_NAME, APP_VERSION, IS_TAURI, UPDATE_URL } from "$config"
-import { logger } from "$stores/LoggerStore"
+import {APP_NAME, APP_VERSION, IS_TAURI, UPDATE_URL} from "$config"
+import {logger} from "$stores/LoggerStore"
 import semverLt from 'semver/functions/lt'
 import semverCoerce from 'semver/functions/coerce'
-import { delay } from "./Utilities"
+import {delay} from "./Utilities"
 
 type AppUpdateSchema = {
     version: string,

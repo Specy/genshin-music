@@ -1,19 +1,19 @@
 import {
-    INSTRUMENTS_DATA,
-    INSTRUMENTS,
-    Pitch,
     APP_NAME,
-    BaseNote,
-    NOTE_SCALE,
-    PITCH_TO_INDEX,
-    NoteNameType,
     BASE_PATH,
-    DO_RE_MI_NOTE_SCALE
+    BaseNote,
+    DO_RE_MI_NOTE_SCALE,
+    INSTRUMENTS,
+    INSTRUMENTS_DATA,
+    NOTE_SCALE,
+    NoteNameType,
+    Pitch,
+    PITCH_TO_INDEX
 } from "$config"
 import {makeObservable, observable} from "mobx"
 import {InstrumentName, NoteStatus} from "$types/GeneralTypes"
 import {getPitchChanger} from "./Utilities"
-import {NoteImage} from "$cmp/SvgNotes"
+import {NoteImage} from "$cmp/shared/SvgNotes"
 
 type Layouts = {
     keyboard: string[]

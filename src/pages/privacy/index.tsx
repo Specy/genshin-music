@@ -1,5 +1,5 @@
-import { DefaultPage } from '$cmp/Layout/DefaultPage'
-import { PageMeta } from '$cmp/Miscellaneous/PageMeta'
+import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
+import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
 
 export default function Privacy() {
     return <DefaultPage>

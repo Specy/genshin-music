@@ -1,6 +1,6 @@
 /* https://github.com/iamskok/use-font-face-observer/blob/master/src/index.ts */
 
-import { useState, useEffect } from "react"
+import {useEffect, useState} from "react"
 import FontFaceObserver from "fontfaceobserver"
 
 /**

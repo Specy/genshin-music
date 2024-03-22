@@ -1,7 +1,7 @@
 import {keyBinds} from "$stores/KeybindsStore";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {useObservableMap} from "$lib/Hooks/useObservable";
-import {Key, ShortcutsTable} from "$cmp/HelpTab/ShortcutsHelp";
+import {Key, ShortcutsTable} from "$cmp/pages/Index/HelpTab/ShortcutsHelp";
 import {BlogMetadata} from "$cmp/pages/blog/types";
 import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogB, BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";

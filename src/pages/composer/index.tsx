@@ -1,44 +1,44 @@
-import { Component, ReactElement } from 'react'
-import { FaPlay, FaPlus, FaPause, FaTools } from 'react-icons/fa';
-import { APP_NAME, TEMPO_CHANGERS, Pitch, TempoChanger, INSTRUMENTS } from "$config"
-import AddColumn from '$cmp/icons/AddColumn';
-import RemoveColumn from "$cmp/icons/RemoveColumn"
-import MidiParser from "$cmp/Composer/MidiParser"
-import ComposerTools from "$cmp/Composer/ComposerTools"
-import ComposerKeyboard from "$cmp/Composer/ComposerKeyboard"
-import ComposerCanvas from "$cmp/Composer/ComposerCanvas"
-import Menu from "$cmp/Composer/ComposerMenu"
-import Memoized from '$cmp/Utility/Memoized';
-import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
-import { ComposerSettingsDataType } from "$lib/BaseSettings"
-import Instrument, { ObservableNote } from "$lib/Instrument"
-import { delay, formatMs, calculateSongLength, routeChangeBugFix } from "$lib/Utilities"
-import { ComposedSong, UnknownSerializedComposedSong } from '$lib/Songs/ComposedSong';
-import { Column, InstrumentData } from '$lib/Songs/SongClasses';
+import {Component, ReactElement} from 'react'
+import {FaPause, FaPlay, FaPlus, FaTools} from 'react-icons/fa';
+import {APP_NAME, INSTRUMENTS, Pitch, TEMPO_CHANGERS, TempoChanger} from "$config"
+import AddColumn from '$cmp/shared/icons/AddColumn';
+import RemoveColumn from "$cmp/shared/icons/RemoveColumn"
+import MidiParser from "$cmp/pages/Composer/MidiParser"
+import ComposerTools from "$cmp/pages/Composer/ComposerTools"
+import ComposerKeyboard from "$cmp/pages/Composer/ComposerKeyboard"
+import ComposerCanvas from "$cmp/pages/Composer/ComposerCanvas"
+import Menu from "$cmp/pages/Composer/ComposerMenu"
+import Memoized from '$cmp/shared/Utility/Memoized';
+import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"
+import {ComposerSettingsDataType} from "$lib/BaseSettings"
+import Instrument, {ObservableNote} from "$lib/Instrument"
+import {calculateSongLength, delay, formatMs, routeChangeBugFix} from "$lib/Utilities"
+import {ComposedSong, UnknownSerializedComposedSong} from '$lib/Songs/ComposedSong';
+import {Column, InstrumentData} from '$lib/Songs/SongClasses';
 import AudioRecorder from '$lib/AudioRecorder'
 import Analytics from '$lib/Stats';
-import { homeStore } from '$stores/HomeStore';
-import { logger } from '$stores/LoggerStore';
-import { SerializedRecordedSong, RecordedSong } from '$lib/Songs/RecordedSong';
-import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
-import { MIDIEvent, MIDIProvider } from '$lib/Providers/MIDIProvider';
-import { KeyboardProvider } from '$lib/Providers/KeyboardProvider';
-import type { KeyboardNumber } from '$lib/Providers/KeyboardProvider/KeyboardTypes';
-import { AudioProvider } from '$lib/Providers/AudioProvider';
-import { CanvasTool } from '$cmp/Composer/CanvasTool';
-import { settingsService } from '$lib/Services/SettingsService';
-import { SerializedSong } from '$lib/Songs/Song';
-import { songsStore } from '$stores/SongsStore';
-import { InstrumentControls } from '$cmp/Composer/InstrumentControls';
-import { AppButton } from '$cmp/Inputs/AppButton';
-import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider';
-import { PageMeta } from '$cmp/Miscellaneous/PageMeta';
-import { songService } from '$lib/Services/SongService';
-import { NextRouter, useRouter } from 'next/router';
-import { AppBackground } from '$cmp/Layout/AppBackground';
-import { ShortcutListener, createKeyboardListener, createShortcutListener } from '$/stores/KeybindsStore';
-import { NoteLayer } from "$lib/Layer";
-import { globalConfigStore } from '$stores/GlobalConfig';
+import {homeStore} from '$stores/HomeStore';
+import {logger} from '$stores/LoggerStore';
+import {RecordedSong, SerializedRecordedSong} from '$lib/Songs/RecordedSong';
+import {SettingUpdate, SettingVolumeUpdate} from '$types/SettingsPropriety';
+import {MIDIEvent, MIDIProvider} from '$lib/Providers/MIDIProvider';
+import {KeyboardProvider} from '$lib/Providers/KeyboardProvider';
+import type {KeyboardNumber} from '$lib/Providers/KeyboardProvider/KeyboardTypes';
+import {AudioProvider} from '$lib/Providers/AudioProvider';
+import {CanvasTool} from '$cmp/pages/Composer/CanvasTool';
+import {settingsService} from '$lib/Services/SettingsService';
+import {SerializedSong} from '$lib/Songs/Song';
+import {songsStore} from '$stores/SongsStore';
+import {InstrumentControls} from '$cmp/pages/Composer/InstrumentControls';
+import {AppButton} from '$cmp/shared/Inputs/AppButton';
+import {Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
+import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta';
+import {songService} from '$lib/Services/SongService';
+import {NextRouter, useRouter} from 'next/router';
+import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
+import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$/stores/KeybindsStore';
+import {NoteLayer} from "$lib/Layer";
+import {globalConfigStore} from '$stores/GlobalConfig';
 
 interface ComposerState {
     layers: Instrument[]

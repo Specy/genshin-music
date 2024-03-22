@@ -1,7 +1,7 @@
-import { Midi, MidiJSON } from "@tonejs/midi";
-import { ComposedSong } from "./ComposedSong";
-import { RecordedSong } from "./RecordedSong";
-import { SerializedSong, Song } from "./Song";
+import {Midi, MidiJSON} from "@tonejs/midi";
+import {ComposedSong} from "./ComposedSong";
+import {RecordedSong} from "./RecordedSong";
+import {SerializedSong, Song} from "./Song";
 
 
 type SerializedMidiSong = SerializedSong & {

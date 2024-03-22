@@ -1,5 +1,6 @@
-import type{ INSTRUMENTS } from '$config'
-import type { ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings } from '$lib/BaseSettings'
+import type {INSTRUMENTS} from '$config'
+import type {ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings} from '$lib/BaseSettings'
+
 interface BaseSettingsProp {
     name: string
     songSetting: boolean

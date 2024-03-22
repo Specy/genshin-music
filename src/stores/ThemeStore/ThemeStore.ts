@@ -1,9 +1,7 @@
-import { Query } from "$lib/Services/Database/Collection";
-import { _themeService } from "$lib/Services/ThemeService";
-import { makeObservable, observable } from "mobx";
-import { SerializedTheme } from "./ThemeProvider";
-
-
+import {Query} from "$lib/Services/Database/Collection";
+import {_themeService} from "$lib/Services/ThemeService";
+import {makeObservable, observable} from "mobx";
+import {SerializedTheme} from "./ThemeProvider";
 
 
 export class ThemeStore{

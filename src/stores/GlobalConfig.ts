@@ -1,7 +1,7 @@
-import { APP_NAME, BASE_LAYER_LIMIT } from "$config";
-import { NoteLayer } from "$lib/Layer";
+import {APP_NAME, BASE_LAYER_LIMIT} from "$config";
+import {NoteLayer} from "$lib/Layer";
 import isMobile from "is-mobile";
-import { makeObservable, observable } from "mobx";
+import {makeObservable, observable} from "mobx";
 
 type GlobalConfig = {
     PLAY_BAR_OFFSET: number,

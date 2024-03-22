@@ -1,7 +1,7 @@
-import { APP_NAME } from "$config"
-import { ObservableNote, NoteDataState } from "$lib/Instrument"
-import { NoteStatus } from "$/types/GeneralTypes"
-import { makeObservable, observable } from "mobx"
+import {APP_NAME} from "$config"
+import {NoteDataState, ObservableNote} from "$lib/Instrument"
+import {NoteStatus} from "$/types/GeneralTypes"
+import {makeObservable, observable} from "mobx"
 
 class ZenKeyboardStore {
     @observable

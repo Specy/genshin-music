@@ -1,6 +1,6 @@
-import { observe } from "mobx"
-import { useEffect, useState } from "react"
-import { KeyboardKey, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
+import {observe} from "mobx"
+import {useEffect, useState} from "react"
+import {KeyboardKey, vsrgPlayerStore} from "$stores/VsrgPlayerStore"
 
 export function useVsrgKeyboardLayout() {
     const [layout, setLayout] = useState<KeyboardKey[]>(vsrgPlayerStore.keyboard)

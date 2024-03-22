@@ -1,30 +1,30 @@
-import { DropZoneProviderWrapper } from "$cmp/ProviderWrappers/DropZoneProviderWrapper";
-import { GeneralProvidersWrapper } from "$cmp/ProviderWrappers/GeneralProvidersWrapper";
-import { ThemeProviderWrapper } from "$cmp/ProviderWrappers/ThemeProviderWrapper";
-import { useEffect } from "react";
+import {DropZoneProviderWrapper} from "$cmp/shared/ProviderWrappers/DropZoneProviderWrapper";
+import {GeneralProvidersWrapper} from "$cmp/shared/ProviderWrappers/GeneralProvidersWrapper";
+import {ThemeProviderWrapper} from "$cmp/shared/ProviderWrappers/ThemeProviderWrapper";
+import {useEffect} from "react";
 
 
 import '$pages/App.css';
-import '$cmp/Index/Home.css'
+import '$cmp/pages/Index/Home.css'
 import '$pages/Utility.scss'
-import "$cmp/Player/Keyboard.css"
-import "$cmp/Player/menu.css"
+import "$cmp/pages/Player/Keyboard.css"
+import "$cmp/pages/Player/menu.css"
 import "$pages/composer/Composer.css"
 import '$pages/theme/Theme.css'
 import '$pages/vsrg-composer/VsrgComposer.css';
 
-import type { AppProps } from "next/app";
+import type {AppProps} from "next/app";
 import AppBase from "$cmp/AppBase";
-import { NextComponentType, NextPageContext } from "next";
-import { delay, setIfInTWA } from "$lib/Utilities";
+import {NextComponentType, NextPageContext} from "next";
+import {delay, setIfInTWA} from "$lib/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"
-import { BASE_PATH, IS_TAURI } from "$config";
-import ErrorBoundaryRedirect from "$cmp/Utility/ErrorBoundaryRedirect";
-import { logger } from "$stores/LoggerStore";
-import { logsStore } from "$stores/LogsStore";
-import { GoogleAnalyticsScript } from "$cmp/GoogleAnalyticsScript";
+import {BASE_PATH, IS_TAURI} from "$config";
+import ErrorBoundaryRedirect from "$cmp/shared/Utility/ErrorBoundaryRedirect";
+import {logger} from "$stores/LoggerStore";
+import {logsStore} from "$stores/LogsStore";
+import {GoogleAnalyticsScript} from "$cmp/GoogleAnalyticsScript";
 import Head from "next/head";
-import { asyncConfirm } from "$cmp/Utility/AsyncPrompts";
+import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 
 interface CustomPageProps {
 

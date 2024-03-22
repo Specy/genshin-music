@@ -1,6 +1,5 @@
-import { FOLDER_FILTER_TYPES } from "$config"
-import { SongStorable } from "./Songs/Song"
-
+import {FOLDER_FILTER_TYPES} from "$config"
+import {SongStorable} from "./Songs/Song"
 
 
 export type FolderFilterType = typeof FOLDER_FILTER_TYPES[number]

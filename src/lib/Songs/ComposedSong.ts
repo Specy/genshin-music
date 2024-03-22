@@ -1,13 +1,20 @@
-import { Midi } from "@tonejs/midi"
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, COMPOSER_NOTE_POSITIONS } from "$config"
-import { TEMPO_CHANGERS } from "$config"
-import { InstrumentName } from "$types/GeneralTypes"
-import { OldFormat, _LegacySongInstruments } from "$types/SongTypes"
-import { NoteLayer } from "../Layer"
-import { RecordedSong } from "./RecordedSong"
-import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
-import { SerializedSong, Song } from "./Song"
-import { clamp } from "../Utilities";
+import {Midi} from "@tonejs/midi"
+import {
+    APP_NAME,
+    COMPOSER_NOTE_POSITIONS,
+    IMPORT_NOTE_POSITIONS,
+    INSTRUMENTS,
+    INSTRUMENTS_DATA,
+    PITCHES,
+    TEMPO_CHANGERS
+} from "$config"
+import {InstrumentName} from "$types/GeneralTypes"
+import {_LegacySongInstruments, OldFormat} from "$types/SongTypes"
+import {NoteLayer} from "../Layer"
+import {RecordedSong} from "./RecordedSong"
+import {Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn} from "./SongClasses"
+import {SerializedSong, Song} from "./Song"
+import {clamp} from "../Utilities";
 
 interface OldFormatNoteType {
     key: string,

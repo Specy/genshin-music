@@ -1,6 +1,6 @@
 // Original source: https://github.com/ai/audio-recorder-polyfill
 
-import { Timer } from "$types/GeneralTypes"
+import {Timer} from "$types/GeneralTypes"
 
 
 type EventName = "start" | "stop" | "pause" | "resume" | "dataavailable" | "error"

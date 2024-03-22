@@ -1,6 +1,6 @@
-import { APP_NAME, INSTRUMENTS, Pitch } from "$config"
-import { InstrumentName } from "$types/GeneralTypes"
-import { InstrumentNoteIcon } from "./ComposedSong"
+import {APP_NAME, INSTRUMENTS, Pitch} from "$config"
+import {InstrumentName} from "$types/GeneralTypes"
+import {InstrumentNoteIcon} from "./ComposedSong"
 
 export interface SerializedTrack{
     name: string

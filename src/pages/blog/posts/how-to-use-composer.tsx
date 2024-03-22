@@ -1,17 +1,14 @@
 import {BlogMetadata} from "$cmp/pages/blog/types";
 import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
-import Link from "next/link";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {APP_NAME} from "$config";
-import {BlogB, BlogLi, BlogOl, BlogP, BlogUl} from "$cmp/pages/blog/BlogUl";
-import {ShortcutsTable} from "$cmp/HelpTab/ShortcutsHelp";
-import {AppButton} from "$cmp/Inputs/AppButton";
+import {BlogB, BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
+import {ShortcutsTable} from "$cmp/pages/Index/HelpTab/ShortcutsHelp";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {useObservableMap} from "$lib/Hooks/useObservable";
 import {keyBinds} from "$stores/KeybindsStore";
-import sh from "$cmp/HelpTab/HelpTab.module.css";
 import {NoteLayer} from "$lib/Layer";
 
 export const _composerTutorialMetadata: BlogMetadata = {

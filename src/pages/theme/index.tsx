@@ -1,24 +1,23 @@
-import { useCallback, useState } from "react";
-import { defaultThemes, SerializedTheme, ThemeKeys, ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
-import { AppButton } from "$cmp/Inputs/AppButton";
-import { FileElement, FilePicker } from "$cmp/Inputs/FilePicker"
+import {useCallback, useState} from "react";
+import {BaseTheme, defaultThemes, SerializedTheme, ThemeKeys, ThemeProvider} from "$stores/ThemeStore/ThemeProvider";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {FileElement, FilePicker} from "$cmp/shared/Inputs/FilePicker"
 import Player from "$pages/player";
 import Composer from "$pages/composer";
-import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
-import { ThemePropriety } from "$cmp/Theme/ThemePropriety";
+import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
+import {ThemePropriety} from "$cmp/pages/Theme/ThemePropriety";
 import cloneDeep from 'lodash.clonedeep'
-import { ThemePreview } from "$cmp/Theme/ThemePreview";
-import { FaPlus } from "react-icons/fa";
-import { BaseTheme } from "$stores/ThemeStore/ThemeProvider";
-import { logger } from "$stores/LoggerStore";
-import { ThemeInput } from "$cmp/Theme/ThemeInput";
-import { useTheme } from "$lib/Hooks/useTheme";
-import { AppBackground } from "$cmp/Layout/AppBackground";
-import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
-import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { useObservableArray } from "$lib/Hooks/useObservable";
-import { themeStore } from "$stores/ThemeStore/ThemeStore";
-import { fileService } from "$lib/Services/FileService";
+import {ThemePreview} from "$cmp/pages/Theme/ThemePreview";
+import {FaPlus} from "react-icons/fa";
+import {logger} from "$stores/LoggerStore";
+import {ThemeInput} from "$cmp/pages/Theme/ThemeInput";
+import {useTheme} from "$lib/Hooks/useTheme";
+import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
+import {useObservableArray} from "$lib/Hooks/useObservable";
+import {themeStore} from "$stores/ThemeStore/ThemeStore";
+import {fileService} from "$lib/Services/FileService";
 
 
 function ThemePage() {

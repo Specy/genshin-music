@@ -1,9 +1,9 @@
-import { IMPORT_NOTE_POSITIONS } from "$config";
-import { SnapPoint } from "$cmp/VsrgComposer/VsrgBottom";
-import { InstrumentName } from "$types/GeneralTypes";
-import { RecordedSong } from "./RecordedSong";
-import { SerializedSong, Song } from "./Song";
-import { InstrumentData, RecordedNote, SerializedInstrumentData } from "./SongClasses";
+import {IMPORT_NOTE_POSITIONS} from "$config";
+import {SnapPoint} from "$cmp/pages/VsrgComposer/VsrgBottom";
+import {InstrumentName} from "$types/GeneralTypes";
+import {RecordedSong} from "./RecordedSong";
+import {SerializedSong, Song} from "./Song";
+import {InstrumentData, RecordedNote, SerializedInstrumentData} from "./SongClasses";
 
 export type VsrgSongKeys = 4 | 6
 export type SerializedVsrgSong = SerializedSong & {

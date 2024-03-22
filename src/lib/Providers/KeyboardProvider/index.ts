@@ -1,4 +1,4 @@
-import { KeyboardCode, KeyboardLetter, KeyboardNumber, KeyboardNumberCode } from "./KeyboardTypes";
+import {KeyboardCode, KeyboardLetter, KeyboardNumber, KeyboardNumberCode} from "./KeyboardTypes";
 
 export type KeyboardListenerOptions = {
     shift?: boolean

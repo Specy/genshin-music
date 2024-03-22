@@ -1,18 +1,13 @@
 import {BlogAuthor, BlogMetadata} from "$cmp/pages/blog/types";
-import {DefaultPage} from "$cmp/Layout/DefaultPage";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
 import {MaybeChildren} from "$lib/UtilTypes";
-import {Separator} from "$cmp/shared/separator/Separator";
 import s from './blog.module.scss'
 import {Header} from "$cmp/shared/header/Header";
-import {Column} from "$cmp/shared/layout/Column";
-import {FaChevronLeft} from "react-icons/fa";
-import {PageMeta} from "$cmp/Miscellaneous/PageMeta";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 import Link from "next/link";
-import {SimpleMenu} from "$cmp/Layout/SimpleMenu";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo} from "react";
 import {APP_NAME} from "$config";
 import {Row} from "$cmp/shared/layout/Row";
-import {AppLink} from "$cmp/shared/link/AppLink";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
 
 interface BaseBlogPostProps {

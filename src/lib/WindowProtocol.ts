@@ -1,5 +1,3 @@
-import { delay } from "./Utilities"
-
 export type Ask<T, R> = {
     payload: T,
     response: R

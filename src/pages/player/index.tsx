@@ -1,33 +1,32 @@
-import { Component, ReactNode } from 'react';
-import KeyboardPlayer from "$cmp/Player/PlayerKeyboard"
-import Menu from "$cmp/Player/PlayerMenu"
-import { playerStore } from '$stores/PlayerStore'
-import { RecordedSong } from '$lib/Songs/RecordedSong';
-import { ComposedSong } from '$lib/Songs/ComposedSong';
-import { InstrumentData, Recording } from '$lib/Songs/SongClasses';
-import { PlayerSettingsDataType } from "$lib/BaseSettings"
+import {ChangeEvent, Component, ReactNode} from 'react';
+import KeyboardPlayer from "$cmp/pages/Player/PlayerKeyboard"
+import Menu from "$cmp/pages/Player/PlayerMenu"
+import {playerStore} from '$stores/PlayerStore'
+import {RecordedSong} from '$lib/Songs/RecordedSong';
+import {ComposedSong} from '$lib/Songs/ComposedSong';
+import {InstrumentData, Recording} from '$lib/Songs/SongClasses';
+import {PlayerSettingsDataType} from "$lib/BaseSettings"
 import Instrument from '$lib/Instrument';
 import AudioRecorder from '$lib/AudioRecorder';
-import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts"
+import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"
 import Analytics from '$lib/Stats';
-import { logger } from '$stores/LoggerStore';
-import { SettingUpdate, SettingVolumeUpdate } from '$types/SettingsPropriety';
-import { InstrumentName } from '$types/GeneralTypes';
-import { AppButton } from '$cmp/Inputs/AppButton';
-import { AudioProvider } from '$lib/Providers/AudioProvider';
-import { settingsService } from '$lib/Services/SettingsService';
-import { songsStore } from '$stores/SongsStore';
-import { PageMeta } from '$cmp/Miscellaneous/PageMeta';
-import { metronome } from '$lib/Metronome';
-import { Lambda } from 'mobx';
-import { NoteLayer } from '$lib/Layer';
-import { subscribeObeservableObject } from '$lib/Hooks/useObservable';
-import { ChangeEvent } from 'react';
-import { INSTRUMENTS, SPEED_CHANGERS } from '$config';
-import { playerControlsStore } from '$stores/PlayerControlsStore';
-import { PlayerSongControls } from '$cmp/Player/PlayerSongControls';
-import { AppBackground } from '$cmp/Layout/AppBackground';
-import { createShortcutListener } from '$/stores/KeybindsStore';
+import {logger} from '$stores/LoggerStore';
+import {SettingUpdate, SettingVolumeUpdate} from '$types/SettingsPropriety';
+import {InstrumentName} from '$types/GeneralTypes';
+import {AppButton} from '$cmp/shared/Inputs/AppButton';
+import {AudioProvider} from '$lib/Providers/AudioProvider';
+import {settingsService} from '$lib/Services/SettingsService';
+import {songsStore} from '$stores/SongsStore';
+import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta';
+import {metronome} from '$lib/Metronome';
+import {Lambda} from 'mobx';
+import {NoteLayer} from '$lib/Layer';
+import {subscribeObeservableObject} from '$lib/Hooks/useObservable';
+import {INSTRUMENTS, SPEED_CHANGERS} from '$config';
+import {playerControlsStore} from '$stores/PlayerControlsStore';
+import {PlayerSongControls} from '$cmp/pages/Player/PlayerSongControls';
+import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
+import {createShortcutListener} from '$/stores/KeybindsStore';
 
 interface PlayerState {
 	settings: PlayerSettingsDataType

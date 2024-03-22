@@ -1,13 +1,13 @@
-import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
-import { asyncConfirm, asyncPrompt } from "$cmp/Utility/AsyncPrompts";
-import { APP_NAME } from "$config";
-import { useConfig } from "$lib/Hooks/useConfig";
-import { cn } from "$lib/Utilities";
-import { globalConfigStore } from "$stores/GlobalConfig";
-import { logger } from "$stores/LoggerStore";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
+import {APP_NAME} from "$config";
+import {useConfig} from "$lib/Hooks/useConfig";
+import {cn} from "$lib/Utilities";
+import {globalConfigStore} from "$stores/GlobalConfig";
+import {logger} from "$stores/LoggerStore";
 import s from "./UmaMode.module.scss";
-import { useState, useEffect, useRef, CSSProperties } from "react";
+import {CSSProperties, useEffect, useRef, useState} from "react";
 
 
 const nonUmaModeEmojis = ["👻", "👾", "👺", "👹", "👿", "🔥"]

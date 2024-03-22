@@ -1,7 +1,16 @@
-import { APP_NAME, INSTRUMENTS, MIDI_BOUNDS, MIDI_MAP_TO_NOTE, NOTE_MAP_TO_MIDI, Pitch, TempoChanger, TEMPO_CHANGERS } from "$config"
-import { InstrumentName } from "$types/GeneralTypes"
-import { NoteLayer } from "../Layer"
-import { InstrumentNoteIcon } from "./ComposedSong"
+import {
+    APP_NAME,
+    INSTRUMENTS,
+    MIDI_BOUNDS,
+    MIDI_MAP_TO_NOTE,
+    NOTE_MAP_TO_MIDI,
+    Pitch,
+    TEMPO_CHANGERS,
+    TempoChanger
+} from "$config"
+import {InstrumentName} from "$types/GeneralTypes"
+import {NoteLayer} from "../Layer"
+import {InstrumentNoteIcon} from "./ComposedSong"
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
 

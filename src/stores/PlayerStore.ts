@@ -1,8 +1,8 @@
-import { APP_NAME } from "$config";
-import { ObservableNote, NoteDataState } from "$lib/Instrument";
-import { ComposedSong } from "$lib/Songs/ComposedSong";
-import { RecordedSong } from "$lib/Songs/RecordedSong";
-import { action, makeObservable, observable } from "mobx";
+import {APP_NAME} from "$config";
+import {NoteDataState, ObservableNote} from "$lib/Instrument";
+import {ComposedSong} from "$lib/Songs/ComposedSong";
+import {RecordedSong} from "$lib/Songs/RecordedSong";
+import {action, makeObservable, observable} from "mobx";
 
 type eventType = "play" | "practice" | "approaching" | "stop"
 type SongTypes = RecordedSong | ComposedSong | null

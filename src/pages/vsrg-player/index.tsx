@@ -1,24 +1,25 @@
-import { Component, ReactElement } from "react";
-import VsrgPlayerMenu from "$cmp/VsrgPlayer/VsrgPlayerMenu";
-import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
-import { settingsService } from "$lib/Services/SettingsService";
-import { VsrgPlayerSettingsDataType } from "$lib/BaseSettings";
-import { AudioPlayer } from "$lib/AudioPlayer";
-import { VsrgPlayerKeyboard } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard";
-import { vsrgPlayerStore } from "$stores/VsrgPlayerStore";
-import { defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes } from "$cmp/VsrgPlayer/VsrgPlayerCanvas";
-import { RecordedSong } from "$lib/Songs/RecordedSong";
-import { songService } from "$lib/Services/SongService";
-import { songsStore } from "$stores/SongsStore";
-import { ComposedSong } from "$lib/Songs/ComposedSong";
-import { VsrgPlayerRight } from "$cmp/VsrgPlayer/VsrgPlayerRight";
-import { VsrgPlayerLatestScore } from "$cmp/VsrgPlayer/VsrgLatestScore";
-import { SettingUpdate } from "$types/SettingsPropriety";
-import { createShortcutListener, keyBinds } from "$stores/KeybindsStore";
-import { logger } from "$stores/LoggerStore";
-import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
-import { AppBackground } from "$cmp/Layout/AppBackground";
+import {Component, ReactElement} from "react";
+import VsrgPlayerMenu from "$cmp/pages/VsrgPlayer/VsrgPlayerMenu";
+import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
+import {settingsService} from "$lib/Services/SettingsService";
+import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
+import {AudioPlayer} from "$lib/AudioPlayer";
+import {VsrgPlayerKeyboard} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard";
+import {vsrgPlayerStore} from "$stores/VsrgPlayerStore";
+import {defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes} from "$cmp/pages/VsrgPlayer/VsrgPlayerCanvas";
+import {RecordedSong} from "$lib/Songs/RecordedSong";
+import {songService} from "$lib/Services/SongService";
+import {songsStore} from "$stores/SongsStore";
+import {ComposedSong} from "$lib/Songs/ComposedSong";
+import {VsrgPlayerRight} from "$cmp/pages/VsrgPlayer/VsrgPlayerRight";
+import {VsrgPlayerLatestScore} from "$cmp/pages/VsrgPlayer/VsrgLatestScore";
+import {SettingUpdate} from "$types/SettingsPropriety";
+import {createShortcutListener, keyBinds} from "$stores/KeybindsStore";
+import {logger} from "$stores/LoggerStore";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import s from "$pages/vsrg-player/VsrgPlayer.module.css";
+
 type VsrgPlayerProps = {}
 interface VsrgPlayerState {
     song: VsrgSong | null

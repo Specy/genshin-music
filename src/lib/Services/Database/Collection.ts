@@ -1,4 +1,4 @@
-import { TAURI } from "$config"
+import {TAURI} from "$config"
 import ZangoDb from "@insertish/zangodb"
 
 export type BaseObject = Object & {

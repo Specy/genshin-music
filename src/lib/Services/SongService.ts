@@ -1,13 +1,12 @@
-import { APP_NAME } from "$config"
-import { ComposedSong } from "$lib/Songs/ComposedSong"
-import { RecordedSong } from "$lib/Songs/RecordedSong"
-import { extractStorable, SerializedSong, Song, SongStorable } from "$lib/Songs/Song"
-import { VsrgSong } from "$lib/Songs/VsrgSong"
-import { getSongType } from "$lib/Utilities"
-import { AppError } from "../Errors"
-import { DbInstance } from "./Database/Database"
-import { settingsService } from "./SettingsService"
-
+import {APP_NAME} from "$config"
+import {ComposedSong} from "$lib/Songs/ComposedSong"
+import {RecordedSong} from "$lib/Songs/RecordedSong"
+import {extractStorable, SerializedSong, Song, SongStorable} from "$lib/Songs/Song"
+import {VsrgSong} from "$lib/Songs/VsrgSong"
+import {getSongType} from "$lib/Utilities"
+import {AppError} from "../Errors"
+import {DbInstance} from "./Database/Database"
+import {settingsService} from "./SettingsService"
 
 
 //TODO instead of using SerializedSong, switch to SerializedSongKind

@@ -1,7 +1,6 @@
-import { observe } from "mobx";
-import { useEffect, useState } from "react";
-import { KeyboardKey, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
-
+import {observe} from "mobx";
+import {useEffect, useState} from "react";
+import {KeyboardKey, vsrgPlayerStore} from "$stores/VsrgPlayerStore";
 
 
 export function useVsrgKey(index: number, layout: KeyboardKey[]) {

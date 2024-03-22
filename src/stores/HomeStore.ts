@@ -1,4 +1,4 @@
-import { makeObservable, observable } from "mobx";
+import {makeObservable, observable} from "mobx";
 
 type HomeStoreState = {
     canShow: boolean,

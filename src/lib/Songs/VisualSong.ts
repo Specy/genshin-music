@@ -1,9 +1,9 @@
-import { APP_NAME, NoteNameType } from "$config"
-import { ComposedSong } from "$lib/Songs/ComposedSong"
-import { RecordedSong } from "$lib/Songs/RecordedSong"
-import { Column, ColumnNote, RecordedNote } from "$lib/Songs/SongClasses"
+import {APP_NAME, NoteNameType} from "$config"
+import {ComposedSong} from "$lib/Songs/ComposedSong"
+import {RecordedSong} from "$lib/Songs/RecordedSong"
+import {Column, ColumnNote, RecordedNote} from "$lib/Songs/SongClasses"
 import Instrument from "../Instrument"
-import { Song } from "./Song"
+import {Song} from "./Song"
 
 const THRESHOLDS = {
     joined: 50,

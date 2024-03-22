@@ -1,6 +1,5 @@
-import {IconButton} from "$cmp/Inputs/IconButton"
-import {ZenKeypad} from "$cmp/ZenKeyboard/ZenKeypad"
-import {ZenKeyboardMenu} from "$cmp/ZenKeyboard/ZenKeyboardMenu"
+import {ZenKeypad} from "$cmp/pages/ZenKeyboard/ZenKeypad"
+import {ZenKeyboardMenu} from "$cmp/pages/ZenKeyboard/ZenKeyboardMenu"
 import {ZenKeyboardSettings, ZenKeyboardSettingsDataType} from "$lib/BaseSettings"
 import Instrument, {ObservableNote} from "$lib/Instrument"
 import {metronome} from "$lib/Metronome"
@@ -10,10 +9,9 @@ import {logger} from "$stores/LoggerStore"
 import {zenKeyboardStore} from "$stores/ZenKeyboardStore"
 import {InstrumentName} from "$/types/GeneralTypes"
 import {SettingUpdate, SettingVolumeUpdate} from "$/types/SettingsPropriety"
-import {useEffect, useState, useCallback, ReactElement} from "react"
-import {GiMetronome} from "react-icons/gi"
-import {PageMeta} from "$cmp/Miscellaneous/PageMeta"
-import {AppBackground} from "$cmp/Layout/AppBackground"
+import {ReactElement, useCallback, useEffect, useState} from "react"
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta"
+import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground"
 import {MIDIProvider} from "$lib/Providers/MIDIProvider";
 
 export default function ZenKeyboard() {

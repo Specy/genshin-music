@@ -1,14 +1,12 @@
-import { PITCHES, Pitch, TEMPO_CHANGERS, BASE_PATH } from "$config"
+import {BASE_PATH, Pitch, PITCHES, TEMPO_CHANGERS} from "$config"
 import * as workerTimers from 'worker-timers';
-import { Column, RecordedNote } from "./Songs/SongClasses";
-import { ColumnNote } from "./Songs/SongClasses";
-import { NoteLayer } from "./Layer";
-import { Song } from "./Songs/Song";
-import { ComposedSong } from "./Songs/ComposedSong";
-import { RecordedSong } from "./Songs/RecordedSong";
-import { ClickType, Timer } from "$types/GeneralTypes"
+import {Column, ColumnNote, RecordedNote} from "./Songs/SongClasses";
+import {NoteLayer} from "./Layer";
+import {Song} from "./Songs/Song";
+import {ComposedSong} from "./Songs/ComposedSong";
+import {RecordedSong} from "./Songs/RecordedSong";
+import {ClickType, Timer} from "$types/GeneralTypes"
 import Color from "color";
-
 
 
 export function preventDefault(e: React.MouseEvent) {

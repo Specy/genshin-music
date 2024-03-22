@@ -5,7 +5,7 @@ import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {APP_NAME} from "$config";
 import {BlogB, BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
-import {ShortcutsTable} from "$cmp/HelpTab/ShortcutsHelp";
+import {ShortcutsTable} from "$cmp/pages/Index/HelpTab/ShortcutsHelp";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {useObservableMap} from "$lib/Hooks/useObservable";
 import {keyBinds} from "$stores/KeybindsStore";

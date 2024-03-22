@@ -1,8 +1,8 @@
-import { APP_NAME } from "$config"
-import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
-import type { VsrgSongKeys } from "$lib/Songs/VsrgSong"
+import {APP_NAME} from "$config"
+import {KeyboardProvider} from "$lib/Providers/KeyboardProvider"
+import type {VsrgSongKeys} from "$lib/Songs/VsrgSong"
 import cloneDeep from "lodash.clonedeep"
-import { makeObservable, observable } from "mobx"
+import {makeObservable, observable} from "mobx"
 
 export type Shortcut<T extends string> = {
     name: T

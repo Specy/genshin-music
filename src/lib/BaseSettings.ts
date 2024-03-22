@@ -1,18 +1,24 @@
-import { isMobile } from "is-mobile"
+import {isMobile} from "is-mobile"
 import {
-    INSTRUMENTS,
     APP_NAME,
     BASE_THEME_CONFIG,
-    PITCHES,
-    Pitch,
+    INSTRUMENTS,
+    MIDIPreset,
     NOTE_NAME_TYPES,
     NoteNameType,
-    MIDIPreset
+    Pitch,
+    PITCHES
 } from "$config"
-import { MIDINote, MIDIShortcut } from "./Utilities"
-import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
-import { VsrgSongKeys } from "./Songs/VsrgSong"
-import { VsrgKeyboardLayout } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard"
+import {MIDIShortcut} from "./Utilities"
+import {
+    SettingsCheckbox,
+    SettingsInstrument,
+    SettingsNumber,
+    SettingsSelect,
+    SettingsSlider
+} from "$types/SettingsPropriety"
+import {VsrgSongKeys} from "./Songs/VsrgSong"
+import {VsrgKeyboardLayout} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard"
 
 export type BaseSettings<T> = {
     data: T,
@@ -553,7 +559,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: -0,
-            category: "Layout Settings",
+            category: "pagesLayout Settings",
             threshold: [-40, 40]
         },
         horizontalOffset: {
@@ -562,7 +568,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: 0,
-            category: "Layout Settings",
+            category: "pagesLayout Settings",
             threshold: [-40, 40]
         },
     }

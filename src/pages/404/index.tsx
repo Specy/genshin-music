@@ -1,6 +1,7 @@
-import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 import Link from 'next/link'
+
 export default function Error404() {
     return <DefaultPage>
         <PageMeta text="404" description="oh no!"/>

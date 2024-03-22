@@ -1,7 +1,5 @@
-import { IObjectDidChange, observe } from "mobx"
-import { useEffect, useState } from "react"
-
-
+import {IObjectDidChange, observe} from "mobx"
+import {useEffect, useState} from "react"
 
 
 export function useObservableObject<T extends Object>(target: T): T{

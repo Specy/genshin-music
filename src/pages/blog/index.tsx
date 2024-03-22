@@ -1,4 +1,4 @@
-import {DefaultPage} from "$cmp/Layout/DefaultPage";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
 import {APP_NAME} from "$config";
 import {BlogMetadata} from "$cmp/pages/blog/types";
 import {Card} from "$cmp/shared/layout/Card";
@@ -13,12 +13,12 @@ import {_midiTransposeMetadata} from "$pages/blog/posts/midi-transpose";
 import {cn} from "$lib/Utilities";
 import {_playerTutorialMetadata} from "$pages/blog/posts/how-to-use-player";
 import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";
-import {PageMeta} from "$cmp/Miscellaneous/PageMeta";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 import {Row} from "$cmp/shared/layout/Row";
 import {useMemo, useState} from "react";
 import {useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
-import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/Inputs/ComboBox/ComboBox";
+import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/shared/Inputs/ComboBox/ComboBox";
 import {_howUseVsrgComposer} from "$pages/blog/posts/how-to-use-vsrg-composer";
 
 const posts = ([

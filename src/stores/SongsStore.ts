@@ -1,7 +1,7 @@
-import { createDebouncer } from "$lib/Utilities"
-import { songService } from "$lib/Services/SongService"
-import { SerializedSong, Song, SongStorable, extractStorable } from "$lib/Songs/Song"
-import { makeObservable, observable } from "mobx"
+import {createDebouncer} from "$lib/Utilities"
+import {songService} from "$lib/Services/SongService"
+import {extractStorable, SerializedSong, Song, SongStorable} from "$lib/Songs/Song"
+import {makeObservable, observable} from "mobx"
 
 
 export class SongsStore {

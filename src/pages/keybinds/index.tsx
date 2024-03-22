@@ -1,21 +1,19 @@
-import { APP_NAME } from "$config";
-import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import BaseNote from "$cmp/Miscellaneous/BaseNote";
-import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
+import {APP_NAME} from "$config";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
+import BaseNote from "$cmp/shared/Miscellaneous/BaseNote";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 import useClickOutside from "$lib/Hooks/useClickOutside";
-import { useObservableArray, useObservableMap } from "$lib/Hooks/useObservable";
-import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
-import { VsrgSongKeys } from "$lib/Songs/VsrgSong";
-import { Fragment, useEffect, useState } from "react";
-import { keyBinds } from "$stores/KeybindsStore";
+import {useObservableArray, useObservableMap} from "$lib/Hooks/useObservable";
+import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
+import {VsrgSongKeys} from "$lib/Songs/VsrgSong";
+import {Fragment, useEffect, useState} from "react";
+import {keyBinds} from "$stores/KeybindsStore";
 import Instrument from "$lib/Instrument";
-import { logger } from "$/stores/LoggerStore";
-import { ShortcutEditor } from "$/components/Keybinds/ShortcutEditor";
-import { useConfig } from "$/lib/Hooks/useConfig";
-import svs from "$cmp/VsrgPlayer/VsrgPlayerKeyboard.module.css"
-import MidiSetup from "$cmp/MidiSetup";
-
-
+import {logger} from "$/stores/LoggerStore";
+import {ShortcutEditor} from "$cmp/pages/Keybinds/ShortcutEditor";
+import {useConfig} from "$/lib/Hooks/useConfig";
+import svs from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard.module.css"
+import MidiSetup from "components/pages/MidiSetup";
 
 
 const baseInstrument = new Instrument()

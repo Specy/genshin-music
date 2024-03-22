@@ -1,7 +1,7 @@
-import { APP_NAME } from "$config"
-import { SerializedTheme, ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
-import { Query } from "./Database/Collection"
-import { DbInstance } from "./Database/Database"
+import {APP_NAME} from "$config"
+import {SerializedTheme, ThemeProvider} from "$stores/ThemeStore/ThemeProvider"
+import {Query} from "./Database/Collection"
+import {DbInstance} from "./Database/Database"
 
 
 class ThemeService {

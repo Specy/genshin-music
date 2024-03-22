@@ -1,11 +1,12 @@
 import paypalImg from '$/assets/images/paypalme.png'
 import buyMeACoffeeImg from '$/assets/images/buymeacoffee.svg'
 import kofiImg from '$/assets/images/kofi.png'
-import { PageMeta } from '$cmp/Miscellaneous/PageMeta'
-import { DefaultPage } from '$cmp/Layout/DefaultPage'
+import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
+import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
 import Image from 'next/image'
 import s from './Donate.module.css'
-import { APP_NAME } from '$config'
+import {APP_NAME} from '$config'
+
 export default function Donate() {
     return <DefaultPage>
         <PageMeta text="Donate" description={`Help the development of ${APP_NAME.toLowerCase()} with a donation.` }/>

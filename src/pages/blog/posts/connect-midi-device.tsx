@@ -1,7 +1,6 @@
 import {BlogMetadata} from "$cmp/pages/blog/types";
 import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import {Header} from "$cmp/shared/header/Header";
-import Link from "next/link";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {BlogP} from "$cmp/pages/blog/BlogUl";
 

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { observe } from "mobx";
-import { songsStore } from "$stores/SongsStore";
-import { SongStorable } from "$lib/Songs/Song";
+import {useEffect, useState} from "react";
+import {observe} from "mobx";
+import {songsStore} from "$stores/SongsStore";
+import {SongStorable} from "$lib/Songs/Song";
 
 
 type UseSongs = [SongStorable[]]

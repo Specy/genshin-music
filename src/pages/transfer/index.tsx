@@ -1,14 +1,14 @@
-import { AppButton } from "$cmp/Inputs/AppButton";
-import { Select } from "$cmp/Inputs/Select";
-import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { APP_NAME } from "$config";
-import { protocol, setupProtocol } from "$lib/Hooks/useWindowProtocol";
-import { logger } from "$stores/LoggerStore";
-import { useState, useEffect, useCallback } from "react";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {Select} from "$cmp/shared/Inputs/Select";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
+import {APP_NAME} from "$config";
+import {protocol, setupProtocol} from "$lib/Hooks/useWindowProtocol";
+import {logger} from "$stores/LoggerStore";
+import {useCallback, useEffect, useState} from "react";
 import s from "./transfer.module.css"
-import { cn } from "$lib/Utilities";
-import { UnknownFileTypes, fileService } from "$lib/Services/FileService";
-import { PageMeta } from "$cmp/Miscellaneous/PageMeta";
+import {cn} from "$lib/Utilities";
+import {fileService, UnknownFileTypes} from "$lib/Services/FileService";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,

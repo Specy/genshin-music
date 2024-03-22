@@ -1,5 +1,5 @@
-import { APP_NAME, Pitch, PITCHES } from "$config"
-import { InstrumentData, SerializedInstrumentData, SongData } from "./SongClasses"
+import {APP_NAME, Pitch, PITCHES} from "$config"
+import {InstrumentData, SerializedInstrumentData, SongData} from "./SongClasses"
 
 //bad thing i need to do to fix type infer
 export interface SongStorable {

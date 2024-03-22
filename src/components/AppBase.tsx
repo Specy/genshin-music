@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Analytics from '$lib/Stats';
-import Home from '$cmp/Index/Home';
+import Home from '$cmp/pages/Index/Home';
 import { homeStore } from '$stores/HomeStore';
 import { logger } from '$stores/LoggerStore';
 import { delay } from "$lib/Utilities"
@@ -14,7 +14,7 @@ import { linkServices } from '$stores/globalLink';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import isMobile from 'is-mobile';
-import { asyncConfirm } from '$cmp/Utility/AsyncPrompts';
+import { asyncConfirm } from '$cmp/shared/Utility/AsyncPrompts';
 import { fileService } from '$lib/Services/FileService';
 
 
