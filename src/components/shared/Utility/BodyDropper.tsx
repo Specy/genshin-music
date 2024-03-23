@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from "react"
+import {memo, useCallback, useEffect, useState} from "react"
 import useDebounce from "$lib/Hooks/useDebounce";
 
 export interface DroppedFile<T = Buffer | object | string> {
@@ -20,7 +20,14 @@ function hasFiles(event: DragEvent) {
 }
 
 
-function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropArea = false ,dropAreaStyle = {}}: BodyDropperProps<T>) {
+function BodyDropperComponent<T>({
+                                     onHoverChange,
+                                     onDrop,
+                                     onError,
+                                     as,
+                                     showDropArea = false,
+                                     dropAreaStyle = {}
+                                 }: BodyDropperProps<T>) {
     const [_isHovering, setIsHovering] = useState(false)
     const debouncedIsHovering = useDebounce(_isHovering, 50)
     const resetDrag = useCallback((e?: any) => {
@@ -28,12 +35,12 @@ function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropA
     }, [])
     const handleDragOver = useCallback((e: DragEvent) => {
         e.preventDefault()
-        if(!hasFiles(e)) return
+        if (!hasFiles(e)) return
         setIsHovering(true)
     }, [])
 
     const handleDrag = useCallback((e: DragEvent) => {
-        if(!hasFiles(e)) return
+        if (!hasFiles(e)) return
         e.preventDefault()
         setIsHovering(true)
     }, [])
@@ -49,6 +56,7 @@ function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropA
         const promises: Promise<DroppedFile<T>>[] = Array.from(e.dataTransfer?.files || []).map((file: File) => {
             return new Promise((resolve, reject) => {
                 const fileReader = new FileReader()
+
                 function handleLoad() {
                     try {
                         const value = fileReader.result as any
@@ -61,8 +69,9 @@ function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropA
                         reject(e)
                     }
                 }
+
                 try {
-                    fileReader.addEventListener('loadend', handleLoad, { once: true })
+                    fileReader.addEventListener('loadend', handleLoad, {once: true})
                     if (as === 'text' || as === 'json') fileReader.readAsText(file)
                     if (as === 'buffer') fileReader.readAsArrayBuffer(file)
                 } catch (e: any) {
@@ -101,12 +110,14 @@ function BodyDropperComponent<T>({ onHoverChange, onDrop, onError, as, showDropA
         }
     </>
 }
+
 interface HoverHinterProps {
     isHovering: boolean
     children: React.ReactNode
     style: any
 }
-export const DropHoverHinter = memo(({ isHovering, children, style }: HoverHinterProps) => {
+
+export const DropHoverHinter = memo(function DropHoverHinter({isHovering, children, style}: HoverHinterProps) {
     return <>
         {isHovering && <div className='drag-n-drop' style={style}>
             {children}

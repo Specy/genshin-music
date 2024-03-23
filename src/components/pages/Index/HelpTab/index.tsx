@@ -58,7 +58,7 @@ export function ComposerShortcuts() {
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
     if (IS_MOBILE) return
     return <>
-        <Header  type={'h2'}>
+        <Header type={'h2'}>
             Composer shortcuts
         </Header>
         <p>
@@ -74,7 +74,7 @@ export function PlayerShortcuts() {
     const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
     if (IS_MOBILE) return
     return <>
-        <Header  type={'h2'}>
+        <Header type={'h2'}>
             Player shortcuts
         </Header>
         <p>

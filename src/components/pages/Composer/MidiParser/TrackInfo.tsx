@@ -1,13 +1,14 @@
-import { InstrumentData } from '$lib/Songs/SongClasses'
-import { FaArrowDown, FaArrowUp, FaCog } from 'react-icons/fa'
-import { CustomTrack } from './index'
-import { useState, useEffect, useCallback } from 'react'
+import {InstrumentData} from '$lib/Songs/SongClasses'
+import {FaArrowDown, FaArrowUp, FaCog} from 'react-icons/fa'
+import {CustomTrack} from './index'
+import {useCallback, useEffect, useState} from 'react'
 import useDebounce from '$lib/Hooks/useDebounce'
-import { Select } from '$cmp/shared/Inputs/Select'
-import { Theme } from '$stores/ThemeStore/ThemeProvider'
-import { hasTooltip, Tooltip } from '$cmp/shared/Utility/Tooltip'
-import { NumericalInput } from './Numericalinput'
-import { prettyPrintInstrumentName } from '$lib/Utilities'
+import {Select} from '$cmp/shared/Inputs/Select'
+import {Theme} from '$stores/ThemeStore/ThemeProvider'
+import {hasTooltip, Tooltip} from '$cmp/shared/Utility/Tooltip'
+import {NumericalInput} from './Numericalinput'
+import {prettyPrintInstrumentName} from '$lib/Utilities'
+
 interface TrackProps {
     data: CustomTrack
     index: number
@@ -16,27 +17,28 @@ interface TrackProps {
     theme: Theme
 }
 
-export function TrackInfo({ data, index, onChange, theme, instruments }: TrackProps) {
+export function TrackInfo({data, index, onChange, theme, instruments}: TrackProps) {
     const [dataShown, setDataShown] = useState(false)
-    const background = { backgroundColor: theme.layer('menu_background', 0.15).toString() }
+    const background = {backgroundColor: theme.layer('menu_background', 0.15).toString()}
     const [offset, setOffset] = useState(`${data.localOffset ?? ""}`)
     const debouncedOffset = useDebounce<string>(offset, 600)
     useEffect(() => {
         const parsedOffset = parseInt(debouncedOffset)
         const localOffset = Number.isFinite(parsedOffset) ? parsedOffset : null
         setOffset(`${localOffset ?? ""}`)
-        onChange(index, { localOffset })
+        onChange(index, {localOffset})
     }, [debouncedOffset, onChange, index]);
     useEffect(() => {
         setOffset(`${data.localOffset ?? ""}`)
     }, [data.localOffset])
     const onMaxScaleChange = useCallback((maxScaling: number) => {
-        onChange(index, { maxScaling: Math.max(0, maxScaling) })
+        onChange(index, {maxScaling: Math.max(0, maxScaling)})
     }, [onChange, index])
     return <div className='midi-track-column' style={background}>
         <div className='midi-track-wrapper'>
             <div className='midi-track-center'>
-                <input type='checkbox' onChange={() => onChange(index, { selected: !data.selected })} checked={data.selected} />
+                <input type='checkbox' onChange={() => onChange(index, {selected: !data.selected})}
+                       checked={data.selected}/>
                 {`${data.name} `}
                 (
                 {data.track.notes.length},
@@ -45,7 +47,7 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
             </div>
             <div className='midi-track-center'>
                 <Select
-                    onChange={(event) => onChange(index, { layer: Number(event.target.value) })}
+                    onChange={(event) => onChange(index, {layer: Number(event.target.value)})}
                     value={data.layer}
                     className='midi-select'
                     style={{
@@ -83,19 +85,21 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
                     <button
                         onClick={() => setOffset(`${Number(offset) - 1}`)}
                         className='midi-btn-small'
-                    >-</button>
+                    >-
+                    </button>
                     <input
                         type='text'
                         value={offset}
                         placeholder='No offset'
                         className='midi-input'
-                        style={{ width: '4rem' }}
+                        style={{width: '4rem'}}
                         onChange={(e) => setOffset(e.target.value)}
                     />
                     <button
                         onClick={() => setOffset(`${Number(offset) + 1}`)}
                         className='midi-btn-small'
-                    >+</button>
+                    >+
+                    </button>
                 </div>
             </div>
             <div className={'midi-track-data-row'}>
@@ -125,13 +129,13 @@ export function TrackInfo({ data, index, onChange, theme, instruments }: TrackPr
             </div>
             <div className='midi-track-data-row'>
                 <div>Out of range ({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
-                <div className='row' style={{ width: 'fit-content' }}>
-                    <div className='row' style={{ marginRight: '0.4rem' }}>
-                        <FaArrowUp style={{ marginRight: '0.2rem' }} />
+                <div className='row' style={{width: 'fit-content'}}>
+                    <div className='row' style={{marginRight: '0.4rem'}}>
+                        <FaArrowUp style={{marginRight: '0.2rem'}}/>
                         {data.outOfRangeBounds.upper}
                     </div>
                     <div className='row'>
-                        <FaArrowDown style={{ marginRight: '0.2rem' }} />
+                        <FaArrowDown style={{marginRight: '0.2rem'}}/>
                         {data.outOfRangeBounds.lower}
                     </div>
                 </div>

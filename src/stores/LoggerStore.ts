@@ -30,9 +30,11 @@ export class LoggerStore {
         visible: false,
         text: ""
     }
+
     constructor() {
         makeObservable(this)
     }
+
     log = (
         text: string,
         timeout: number = 3500,
@@ -70,7 +72,7 @@ export class LoggerStore {
         this.toasts.splice(0, this.toasts.length)
     }
     hideToast = (id: number) => {
-        this.setState(id, { visible: false })
+        this.setState(id, {visible: false})
     }
     removeToast = (id: number) => {
         this.toasts.splice(0, this.toasts.length, ...this.toasts.filter(t => t.id !== id))
@@ -92,7 +94,7 @@ export class LoggerStore {
         })
     }
     hidePill = () => {
-        this.setPillState({ visible: false })
+        this.setPillState({visible: false})
     }
 }
 

@@ -52,22 +52,23 @@ export function ErrorPage() {
 
     }
     return <DefaultPage className={s['error-page']}>
-        <PageMeta text="Error" description='View the errors that happened in the app to send bug reports and to try to recover your songs'/>
+        <PageMeta text="Error"
+                  description='View the errors that happened in the app to send bug reports and to try to recover your songs'/>
         <div style={{textAlign: 'center'}}>
             If you unexpectedly see this page it means an error has occoured.
             Here you can download or delete your songs, if one caused an error, delete it.
-            If you need help, join our 
-            <a 
-                href='https://discord.gg/Arsf65YYHq' 
-                target='_blank' 
-                rel='noreferrer' 
+            If you need help, join our
+            <a
+                href='https://discord.gg/Arsf65YYHq'
+                target='_blank'
+                rel='noreferrer'
                 style={{
                     margin: '0 0.4rem',
                     color: 'var(--accent)'
                 }}
             >
                 Discord
-            </a> 
+            </a>
             and send the log file below.
         </div>
         <div className={s["error-buttons-wrapper"]}>
@@ -119,21 +120,23 @@ interface SongRowProps {
     deleteSong: (name: string, id: string) => void
     download: (song: SerializedSong) => void
 }
-function SongRow({ data, deleteSong, download }: SongRowProps) {
+
+function SongRow({data, deleteSong, download}: SongRowProps) {
     return <div className="song-row">
         <div className="song-name">
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button className="song-button" onClick={async () => {  
+            <button className="song-button" onClick={async () => {
                 const song = await songService.getOneSerializedFromStorable(data)
-                if(!song) return logger.error("Could not find song")
+                if (!song) return logger.error("Could not find song")
                 download(song)
             }} aria-label={`Download song ${data.name}`}>
-                <FaDownload />
+                <FaDownload/>
             </button>
-            <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)} aria-label={`Delete song ${data.name}`}>
-                <FaTrash color="#ed4557" />
+            <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)}
+                    aria-label={`Delete song ${data.name}`}>
+                <FaTrash color="#ed4557"/>
             </button>
         </div>
     </div>

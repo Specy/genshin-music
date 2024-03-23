@@ -1,4 +1,4 @@
-import { hasTooltip, Tooltip } from "$cmp/shared/Utility/Tooltip"
+import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip"
 
 
 interface SongActionButtonProps {
@@ -10,11 +10,12 @@ interface SongActionButtonProps {
     children: React.ReactNode
 }
 
-export function SongActionButton({ onClick, children, style, tooltip, ariaLabel, className }: SongActionButtonProps) {
+export function SongActionButton({onClick, children, style, tooltip, ariaLabel, className}: SongActionButtonProps) {
     return <>
         <button
             className={`song-button ${hasTooltip(tooltip)} ${className ?? ''}`}
-            onClick={onClick || (() => { })}
+            onClick={onClick || (() => {
+            })}
             style={style}
             aria-label={ariaLabel}
         >

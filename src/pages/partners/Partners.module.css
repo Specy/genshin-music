@@ -1,15 +1,17 @@
-.partners-page{
+.partners-page {
     padding: 1rem;
     padding-left: 4rem;
 }
-.partner-wrapper{
+
+.partner-wrapper {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    padding: 1rem;  
+    padding: 1rem;
 }
-.partner{
+
+.partner {
     width: 100%;
     min-height: 11rem;
     height: fit-content;
@@ -25,19 +27,22 @@
     padding: 0.6rem;
     margin: 0.5rem;
 }
-.partner iframe{
+
+.partner iframe {
     border-radius: 0.3rem;
     width: 18.8rem;
     height: 10.5rem;
 }
-.partner-description{
+
+.partner-description {
     width: 100%;
     margin-top: 0.4rem;
     border-top: 1px solid var(--icon-color);
     font-size: 0.9rem;
     padding: 0.4rem;
 }
-.partner-title{
+
+.partner-title {
     font-size: 1.2rem;
     color: var(--primary-text);
 }

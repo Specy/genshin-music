@@ -7,7 +7,8 @@ import s from './Partners.module.css'
 
 export default function Partners() {
     return <DefaultPage className={s['partners-page']}>
-        <PageMeta text="Partners" description='Learn about our partners who helped the development and to make the app more famous'/>
+        <PageMeta text="Partners"
+                  description='Learn about our partners who helped the development and to make the app more famous'/>
         <div className={s['partner-wrapper']}>
             <Partner
                 name='Specy'
@@ -23,7 +24,7 @@ export default function Partners() {
                 description='A community discord server focused on music in Sky Cotl'
             >
                 <PartnerImg
-                    to='https://discord.gg/qW7uQgUfj9'  
+                    to='https://discord.gg/qW7uQgUfj9'
                     img={skyMusicianNetwork}
                     alt='Sky musician network'
                 />
@@ -41,7 +42,7 @@ export default function Partners() {
                 name='Windsong DB'
                 description='A Genshin Impact Database for Instrument Gadget Keymaps'
             >
-                <PartnerImg 
+                <PartnerImg
                     img={partner}
                     to='https://genshin-lyre.notion.site/genshin-lyre/Windsong-DB-8012b5f6939b486d857552c7b60e917f'
                     alt='Windsong DB'
@@ -61,30 +62,33 @@ export default function Partners() {
     </DefaultPage>
 }
 
-interface PartnerImgProps{
+interface PartnerImgProps {
     to: string
     img: StaticImageData
     alt: string
 }
-function PartnerImg({to, img, alt}: PartnerImgProps){
-    return <a 
+
+function PartnerImg({to, img, alt}: PartnerImgProps) {
+    return <a
         href={to}
         style={{width: '18.8rem', height: '10.5rem', overflow: 'hidden', borderRadius: '0.3rem'}}
         target='_blank'
         rel='noreferrer'
     >
-        <Image 
+        <Image
             loading='lazy'
-            src={img} 
+            src={img}
             style={{width: '100%', objectFit: 'cover', height: 'auto'}}
             alt={alt}
         />
     </a>
 }
-interface IframeProps{
+
+interface IframeProps {
     src: string
     title: string
 }
+
 function Iframe({src, title}: IframeProps) {
     return <iframe
         src={src}
@@ -95,11 +99,13 @@ function Iframe({src, title}: IframeProps) {
     >
     </iframe>
 }
-interface PartnerProps{
+
+interface PartnerProps {
     name: string
     description: string
     children: React.ReactNode
 }
+
 function Partner({name, description, children}: PartnerProps) {
     return <div className={s.partner}>
         <div className={s['partner-title']}>

@@ -21,6 +21,7 @@ import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import s from "$pages/vsrg-player/VsrgPlayer.module.css";
 
 type VsrgPlayerProps = {}
+
 interface VsrgPlayerState {
     song: VsrgSong | null
     audioSong: RecordedSong | null
@@ -33,9 +34,11 @@ interface VsrgPlayerState {
 }
 
 export type VsrgSongSelectType = 'play'
+
 class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     lastTimestamp = 0
     cleanup: (() => void)[] = []
+
     constructor(props: VsrgPlayerProps) {
         super(props)
         this.state = {
@@ -49,42 +52,45 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
             isPlaying: false
         }
     }
+
     componentDidMount() {
-        this.setState({ settings: settingsService.getVsrgPlayerSettings() })
+        this.setState({settings: settingsService.getVsrgPlayerSettings()})
         vsrgPlayerStore.setLayout(this.state.currentLayout)
-        const shortcutListener = createShortcutListener("vsrg_player", "vsrg_player", ({ shortcut }) => {
-            const { name } = shortcut
+        const shortcutListener = createShortcutListener("vsrg_player", "vsrg_player", ({shortcut}) => {
+            const {name} = shortcut
             if (name === "restart") this.onRetrySong()
             if (name === "stop") this.onStopSong()
         })
         this.cleanup.push(shortcutListener)
     }
+
     componentWillUnmount() {
-        const { songAudioPlayer, keyboardAudioPlayer } = this.state
+        const {songAudioPlayer, keyboardAudioPlayer} = this.state
         songAudioPlayer.destroy()
         keyboardAudioPlayer.destroy()
         vsrgPlayerStore.resetScore()
         logger.hidePill()
         this.cleanup.forEach(c => c())
     }
+
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
-        const { songAudioPlayer, keyboardAudioPlayer } = this.state
+        const {songAudioPlayer, keyboardAudioPlayer} = this.state
         const serializedAudioSong = await songsStore.getSongById(song.audioSongId)
         logger.showPill("Loading instruments...")
         if (serializedAudioSong) {
             const parsed = songService.parseSong(serializedAudioSong)
             songAudioPlayer.basePitch = parsed.pitch
             if (parsed instanceof RecordedSong) {
-                this.setState({ audioSong: parsed })
+                this.setState({audioSong: parsed})
                 await songAudioPlayer.syncInstruments(parsed.instruments)
             }
             if (parsed instanceof ComposedSong) {
                 const recorded = parsed.toRecordedSong(0)
-                this.setState({ audioSong: recorded })
+                this.setState({audioSong: recorded})
                 await songAudioPlayer.syncInstruments(recorded.instruments)
             }
         } else {
-            this.setState({ audioSong: null })
+            this.setState({audioSong: null})
         }
         await keyboardAudioPlayer.syncInstruments(song.tracks.map(track => track.instrument))
         logger.hidePill()
@@ -99,13 +105,13 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         })
     }
     handleSettingChange = (setting: SettingUpdate) => {
-        const { settings } = this.state
-        const { data } = setting
+        const {settings} = this.state
+        const {data} = setting
         //@ts-ignore
-        settings[setting.key] = { ...settings[setting.key], value: data.value }
+        settings[setting.key] = {...settings[setting.key], value: data.value}
 
         this.setState({
-            settings: { ...settings }
+            settings: {...settings}
         }, () => {
             this.updateSettings()
             if (setting.key === 'maxFps') vsrgPlayerStore.emitEvent("fpsChange")
@@ -115,25 +121,25 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         settingsService.updateVsrgPlayerSettings(override !== undefined ? override : this.state.settings)
     }
     onSizeChange = (sizes: VsrgPlayerCanvasSizes) => {
-        this.setState({ canvasSizes: sizes })
+        this.setState({canvasSizes: sizes})
     }
 
     onStopSong = () => {
-        this.setState({ isPlaying: false, song: null }, () => {
+        this.setState({isPlaying: false, song: null}, () => {
             vsrgPlayerStore.stopSong()
         })
     }
     onRetrySong = () => {
-        const { song } = this.state
+        const {song} = this.state
         if (!song) return
         this.onSongSelect(song, 'play')
     }
     handleTick = (timestamp: number) => {
-        const { audioSong, songAudioPlayer, song, settings } = this.state
+        const {audioSong, songAudioPlayer, song, settings} = this.state
         this.lastTimestamp = timestamp
         if (!song) return
         if (this.lastTimestamp >= song.duration + 2000) {
-            this.setState({ isPlaying: false })
+            this.setState({isPlaying: false})
             vsrgPlayerStore.showScore()
         }
         if (this.lastTimestamp >= song.duration || timestamp < 0) return
@@ -149,17 +155,18 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         }
     }
     playHitObject = (hitObject: VsrgHitObject, instrumentIndex: number) => {
-        const { keyboardAudioPlayer } = this.state
+        const {keyboardAudioPlayer} = this.state
         if (keyboardAudioPlayer) {
             hitObject.notes.forEach(n => {
                 keyboardAudioPlayer.playNoteOfInstrument(instrumentIndex, n)
             })
         }
     }
+
     render() {
-        const { canvasSizes, settings } = this.state
+        const {canvasSizes, settings} = this.state
         return <>
-            <PageMeta text="Vsrg Player" description="Play or practice VSRG songs" />
+            <PageMeta text="Vsrg Player" description="Play or practice VSRG songs"/>
             <VsrgPlayerMenu
                 settings={settings}
                 onSettingsUpdate={this.handleSettingChange}
@@ -192,14 +199,14 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
                     onStopSong={this.onStopSong}
                     onRetrySong={this.onRetrySong}
                 />
-                <VsrgPlayerLatestScore />
+                <VsrgPlayerLatestScore/>
             </div>
         </>
     }
 }
 
 export default function VsrgPlayerPage() {
-    return <VsrgPlayer />
+    return <VsrgPlayer/>
 }
 
 VsrgPlayerPage.getLayout = function getLayout(page: ReactElement) {

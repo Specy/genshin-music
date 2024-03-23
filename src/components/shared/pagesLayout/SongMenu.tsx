@@ -1,14 +1,14 @@
-import { useTheme } from "$lib/Hooks/useTheme";
-import { useEffect, useState } from "react"
-import { SongFolder, SongFolderContent } from "./Folder";
-import { Folder } from "$lib/Folder";
-import { SongStorable, SongType } from "$lib/Songs/Song";
-import { useFolders } from "$lib/Hooks/useFolders";
+import {useTheme} from "$lib/Hooks/useTheme";
+import {useEffect, useState} from "react"
+import {SongFolder, SongFolderContent} from "./Folder";
+import {Folder} from "$lib/Folder";
+import {SongStorable, SongType} from "$lib/Songs/Song";
+import {useFolders} from "$lib/Hooks/useFolders";
 import s from './SongMenu.module.css'
 import FuzzySearch from "fuzzy-search";
-import { AppButton } from "$cmp/shared/Inputs/AppButton";
-import { FaSearch, FaTimes } from "react-icons/fa";
-import { IconButton } from "$cmp/shared/Inputs/IconButton";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {FaSearch, FaTimes} from "react-icons/fa";
+import {IconButton} from "$cmp/shared/Inputs/IconButton";
 
 
 interface SongMenuProps<T extends { data: SongStorable }> {
@@ -23,17 +23,16 @@ interface SongMenuProps<T extends { data: SongStorable }> {
 }
 
 
-
 export function SongMenu<T extends { data: SongStorable }>({
-    songs,
-    SongComponent,
-    componentProps,
-    className,
-    style,
-    baseType,
-    exclude,
-    onCreateFolder,
-}: SongMenuProps<T>) {
+                                                               songs,
+                                                               SongComponent,
+                                                               componentProps,
+                                                               className,
+                                                               style,
+                                                               baseType,
+                                                               exclude,
+                                                               onCreateFolder,
+                                                           }: SongMenuProps<T>) {
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
     const [noFolderVsrg, setNoFolderVsrg] = useState<Folder>()
@@ -42,7 +41,7 @@ export function SongMenu<T extends { data: SongStorable }>({
     const [folders] = useFolders(filteredSongs)
     useEffect(() => {
         const excluded = songs.filter(s => !exclude?.includes(s.type) ?? true)
-        const searcher = new FuzzySearch(excluded, ['name'], { caseSensitive: false, sort: true })
+        const searcher = new FuzzySearch(excluded, ['name'], {caseSensitive: false, sort: true})
         if (searchValue === '') return setFilteredSongs(excluded)
         setFilteredSongs(searcher.search(searchValue))
     }, [songs, exclude, searchValue])
@@ -50,6 +49,7 @@ export function SongMenu<T extends { data: SongStorable }>({
         function isInFolder(song: SongStorable) {
             return folders.some(f => f.id === song.folderId)
         }
+
         setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'recorded')))
         setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'composed')))
         setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'vsrg')))
@@ -58,15 +58,15 @@ export function SongMenu<T extends { data: SongStorable }>({
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
     const unselectedColorText = theme.getTextColorFromBackground(unselectedColor).toString()
     return <div className={className} style={style}>
-        <div className="row" style={{ justifyContent: "space-between", gap: "0.5rem" }}>
+        <div className="row" style={{justifyContent: "space-between", gap: "0.5rem"}}>
             <div className={s['search']}
-                style={{
-                    backgroundColor: unselectedColor.toString(),
-                    color: unselectedColorText,
-                    outline: 'solid 0.2rem transparent',
-                    outlineOffset: '-0.2rem',
-                    outlineColor: searchValue === "" ? "transparent" : "var(--accent)" 
-                }}
+                 style={{
+                     backgroundColor: unselectedColor.toString(),
+                     color: unselectedColorText,
+                     outline: 'solid 0.2rem transparent',
+                     outlineOffset: '-0.2rem',
+                     outlineColor: searchValue === "" ? "transparent" : "var(--accent)"
+                 }}
             >
                 <input
                     type="text"
@@ -77,15 +77,15 @@ export function SongMenu<T extends { data: SongStorable }>({
                         color: unselectedColorText
                     }}
                 />
-                <IconButton 
-                    size="1rem" 
+                <IconButton
+                    size="1rem"
                     ariaLabel={searchValue === "" ? "Search" : "Clear search"}
-                    style={{ backgroundColor: "transparent", color: "inherit" }}
+                    style={{backgroundColor: "transparent", color: "inherit"}}
                     onClick={() => setSearchValue("")}
                 >
                     {searchValue === ""
-                        ? <FaSearch />
-                        : <FaTimes />
+                        ? <FaSearch/>
+                        : <FaTimes/>
                     }
                 </IconButton>
             </div>
@@ -113,7 +113,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                         />
                     )}
                     {noFolderComposed.songs.length === 0 &&
-                        <div style={{ padding: '0.2rem', fontSize: '0.9rem' }}>
+                        <div style={{padding: '0.2rem', fontSize: '0.9rem'}}>
                             No songs here, compose one!
                         </div>
                     }
@@ -138,7 +138,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                         />
                     )}
                     {noFolderRecorded.songs.length === 0 &&
-                        <div style={{ padding: '0.2rem', fontSize: '0.9rem' }}>
+                        <div style={{padding: '0.2rem', fontSize: '0.9rem'}}>
                             No songs here, record one!
                         </div>
                     }
@@ -163,7 +163,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                         />
                     )}
                     {noFolderVsrg.songs.length === 0 &&
-                        <div style={{ padding: '0.2rem', fontSize: '0.9rem' }}>
+                        <div style={{padding: '0.2rem', fontSize: '0.9rem'}}>
                             No songs here, create one!
                         </div>
                     }
@@ -215,7 +215,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                     </SongFolderContent>
                 }
                 {(composed.length === 0 && recorded.length === 0 && vsrg.length === 0) &&
-                    <div style={{ padding: '0.7rem', paddingTop: "0", fontSize: '0.9rem' }}>
+                    <div style={{padding: '0.7rem', paddingTop: "0", fontSize: '0.9rem'}}>
                         The folder is empty
                     </div>
                 }

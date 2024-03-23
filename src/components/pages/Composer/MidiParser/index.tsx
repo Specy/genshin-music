@@ -1,21 +1,22 @@
-import { Component } from 'react'
-import { FileElement, FilePicker } from '$cmp/shared/Inputs/FilePicker'
-import { Midi, Track } from '@tonejs/midi'
-import { delay, groupNotesByIndex, isAudioFormat, isVideoFormat, mergeLayers } from '$lib/Utilities'
-import { ColumnNote, Column, MidiNote, InstrumentData } from '$lib/Songs/SongClasses'
-import { ComposedSong } from '$lib/Songs/ComposedSong'
-import { BASE_PATH, PITCHES, Pitch } from '$config'
-import { logger } from '$stores/LoggerStore'
-import { ThemeProvider, Theme } from '$stores/ThemeStore/ThemeProvider'
-import { observe } from 'mobx'
+import {Component} from 'react'
+import {FileElement, FilePicker} from '$cmp/shared/Inputs/FilePicker'
+import {Midi, Track} from '@tonejs/midi'
+import {delay, groupNotesByIndex, isAudioFormat, isVideoFormat, mergeLayers} from '$lib/Utilities'
+import {Column, ColumnNote, InstrumentData, MidiNote} from '$lib/Songs/SongClasses'
+import {ComposedSong} from '$lib/Songs/ComposedSong'
+import {BASE_PATH, Pitch, PITCHES} from '$config'
+import {logger} from '$stores/LoggerStore'
+import {Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider'
+import {observe} from 'mobx'
 import Switch from '$cmp/shared/Inputs/Switch'
-import { NoteLayer } from '$lib/Layer'
-import { HelpTooltip } from '$cmp/shared/Utility/HelpTooltip'
-import { PitchSelect } from '$cmp/shared/Inputs/PitchSelect'
-import { DecoratedCard } from '$cmp/shared/layout/DecoratedCard'
-import { TrackInfo } from './TrackInfo'
-import { NumericalInput } from './Numericalinput'
-import { basicPitchLoader } from '$lib/BasicPitchLoader'
+import {NoteLayer} from '$lib/Layer'
+import {HelpTooltip} from '$cmp/shared/Utility/HelpTooltip'
+import {PitchSelect} from '$cmp/shared/Inputs/PitchSelect'
+import {DecoratedCard} from '$cmp/shared/layout/DecoratedCard'
+import {TrackInfo} from './TrackInfo'
+import {NumericalInput} from './Numericalinput'
+import {basicPitchLoader} from '$lib/BasicPitchLoader'
+
 interface MidiImportProps {
     data: {
         instruments: InstrumentData[]
@@ -27,6 +28,7 @@ interface MidiImportProps {
         loadSong: (song: ComposedSong) => void
     }
 }
+
 export type CustomTrack = {
     track: Track
     selected: boolean
@@ -58,6 +60,7 @@ interface MidiImportState {
 class MidiImport extends Component<MidiImportProps, MidiImportState> {
     dispose: () => void
     warnedOfExperimental = false
+
     constructor(props: MidiImportProps) {
         super(props)
         this.state = {
@@ -73,16 +76,20 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             includeAccidentals: true,
             theme: ThemeProvider
         }
-        this.dispose = () => { }
+        this.dispose = () => {
+        }
     }
+
     componentDidMount() {
         this.dispose = observe(ThemeProvider.state.data, () => {
-            this.setState({ theme: { ...ThemeProvider } })
+            this.setState({theme: {...ThemeProvider}})
         })
     }
+
     componentWillUnmount() {
         this.dispose()
     }
+
     handleFile = async (files: FileElement<ArrayBuffer>[]) => {
         try {
             if (files.length === 0) return
@@ -122,7 +129,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         const onsets: number[][] = []
         const model = `${BASE_PATH}/assets/audio-midi-model.json`
         logger.showPill('Loading converter...')
-        const { BasicPitch, noteFramesToTime, outputToNotesPoly } = await basicPitchLoader()
+        const {BasicPitch, noteFramesToTime, outputToNotesPoly} = await basicPitchLoader()
         const basicPitch = new BasicPitch(model)
         const mono = audio.getChannelData(0)
         await basicPitch.evaluateModel(
@@ -189,14 +196,16 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 bpm: Math.floor(bpm * 4) || 220,
                 offset: 0,
                 pitch: (PITCHES.includes(key as never) ? key : 'C') as Pitch,
-            }, () => { if (this.state.tracks.length) this.convertMidi() })
+            }, () => {
+                if (this.state.tracks.length) this.convertMidi()
+            })
         } catch (e) {
             console.error(e)
             logger.error('There was an error importing this file, is it a .mid file?')
         }
     }
     convertMidi = () => {
-        const { tracks, bpm, offset, includeAccidentals, pitch } = this.state
+        const {tracks, bpm, offset, includeAccidentals, pitch} = this.state
         const selectedTracks = tracks.filter(track => track.selected)
         const notes: MidiNote[] = []
         let accidentals = 0
@@ -224,7 +233,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     }
                 } else {
                     outOfRange++
-                    if (note.data.outOfRangeBound === - 1) track.outOfRangeBounds.lower++
+                    if (note.data.outOfRangeBound === -1) track.outOfRangeBounds.lower++
                     if (note.data.outOfRangeBound === 1) track.outOfRangeBounds.upper++
                 }
             })
@@ -276,7 +285,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             return logger.warn("There are no notes")
         }
         this.props.functions.loadSong(song)
-        this.setState({ accidentals, totalNotes, outOfRange })
+        this.setState({accidentals, totalNotes, outOfRange})
     }
 
     editTrack = (index: number, data: Partial<CustomTrack>) => {
@@ -284,14 +293,18 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         Object.assign(tracks[index], data)
         this.setState({
             tracks
-        }, () => { if (this.state.tracks.length > 0) this.convertMidi() })
+        }, () => {
+            if (this.state.tracks.length > 0) this.convertMidi()
+        })
     }
     changeOffset = (value: number) => {
         if (!Number.isInteger(value)) value = 0
         if (this.state.offset === value) return
         this.setState({
             offset: value
-        }, () => { if (this.state.tracks.length > 0) this.convertMidi() })
+        }, () => {
+            if (this.state.tracks.length > 0) this.convertMidi()
+        })
     }
     changePitch = (value: Pitch) => {
         this.props.functions.changePitch(value)
@@ -302,20 +315,37 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
     toggleAccidentals = () => {
         this.setState({
             includeAccidentals: !this.state.includeAccidentals
-        }, () => { if (this.state.tracks.length > 0) this.convertMidi() })
+        }, () => {
+            if (this.state.tracks.length > 0) this.convertMidi()
+        })
     }
     changeBpm = (value: number) => {
         if (!Number.isInteger(value)) value = 0
         if (this.state.bpm === value) return
         this.setState({
             bpm: value
-        }, () => { if (this.state.tracks.length > 0) this.convertMidi() })
+        }, () => {
+            if (this.state.tracks.length > 0) this.convertMidi()
+        })
     }
+
     render() {
-        const { handleFile, editTrack, state, changeBpm, changeOffset, changePitch } = this
-        const { tracks, fileName, bpm, offset, pitch, accidentals, outOfRange, totalNotes, includeAccidentals, theme, ignoreEmptytracks } = state
-        const { functions, data } = this.props
-        const { changeMidiVisibility } = functions
+        const {handleFile, editTrack, state, changeBpm, changeOffset, changePitch} = this
+        const {
+            tracks,
+            fileName,
+            bpm,
+            offset,
+            pitch,
+            accidentals,
+            outOfRange,
+            totalNotes,
+            includeAccidentals,
+            theme,
+            ignoreEmptytracks
+        } = state
+        const {functions, data} = this.props
+        const {changeMidiVisibility} = functions
         const midiInputsStyle = {
             backgroundColor: theme.layer('primary', 0.2).toString(),
             color: theme.getText('primary').toString()
@@ -331,22 +361,22 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             <div className='column floating-midi-content'>
                 <div
                     className='midi-row separator-border'
-                    style={{ width: '100%' }}
+                    style={{width: '100%'}}
                 >
                     <FilePicker onPick={handleFile} as='buffer'>
-                        <button className="midi-btn" style={{ ...midiInputsStyle, whiteSpace: 'nowrap' }}>
+                        <button className="midi-btn" style={{...midiInputsStyle, whiteSpace: 'nowrap'}}>
                             Open MIDI/Audio/Video file
                         </button>
                     </FilePicker>
                     <div
-                        style={{ margin: '0 0.5rem' }}
+                        style={{margin: '0 0.5rem'}}
                         className='text-ellipsis'
                     >
                         {fileName}
                     </div>
                     <button
                         className='midi-btn'
-                        style={{ marginLeft: 'auto', ...midiInputsStyle }}
+                        style={{marginLeft: 'auto', ...midiInputsStyle}}
                         onClick={() => changeMidiVisibility(false)}
                     >
                         Close
@@ -354,7 +384,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 </div>
 
                 <div className='midi-table-row'>
-                    <div style={{ marginRight: '0.5rem' }}>Bpm:</div>
+                    <div style={{marginRight: '0.5rem'}}>Bpm:</div>
                     <NumericalInput
                         value={bpm}
                         onChange={changeBpm}
@@ -365,8 +395,8 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 </div>
                 <div className='midi-table-row'>
                     <div className='row flex-centered'>
-                        <span style={{ marginRight: '0.5rem' }}>Global note offset: </span>
-                        <HelpTooltip buttonStyle={{ width: '1.2rem', height: '1.2rem' }}>
+                        <span style={{marginRight: '0.5rem'}}>Global note offset: </span>
+                        <HelpTooltip buttonStyle={{width: '1.2rem', height: '1.2rem'}}>
                             The index of each note will be pushed up/down by this amount, you can use it to make
                             the song fit into the app range. You can also change the offset of each layer.
                         </HelpTooltip>
@@ -381,16 +411,16 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     />
                 </div>
                 <div className='midi-table-row'>
-                    <div style={{ marginRight: '0.5rem' }}>Pitch:</div>
+                    <div style={{marginRight: '0.5rem'}}>Pitch:</div>
                     <PitchSelect
-                        style={{ width: '5rem', ...midiInputsStyle }}
+                        style={{width: '5rem', ...midiInputsStyle}}
                         selected={pitch}
                         onChange={changePitch}
                     />
                 </div>
                 <div className='midi-table-row'>
                     <div className='row'>
-                        <div style={{ marginRight: '0.5rem' }}>Include accidentals:</div>
+                        <div style={{marginRight: '0.5rem'}}>Include accidentals:</div>
                         <Switch
                             checked={includeAccidentals}
                             onChange={this.toggleAccidentals}
@@ -398,16 +428,16 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         />
                     </div>
                     <div className='row'>
-                        <div style={{ marginRight: '0.5rem' }}>Ignore empty tracks:</div>
+                        <div style={{marginRight: '0.5rem'}}>Ignore empty tracks:</div>
                         <Switch
                             checked={ignoreEmptytracks}
-                            onChange={(b) => this.setState({ ignoreEmptytracks: b })}
+                            onChange={(b) => this.setState({ignoreEmptytracks: b})}
                             styleOuter={midiInputsStyle}
                         />
                     </div>
                 </div>
-                {tracks.length > 0 && <div className='midi-column separator-border' style={{ width: '100%' }}>
-                    <div className='midi-column' style={{ width: '100%' }}>
+                {tracks.length > 0 && <div className='midi-column separator-border' style={{width: '100%'}}>
+                    <div className='midi-column' style={{width: '100%'}}>
                         <div>Select midi tracks</div>
                         {tracks.map((track, i) =>
                             !(ignoreEmptytracks && track.track.notes.length === 0) &&
@@ -426,21 +456,21 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 {tracks.length > 0 &&
                     <table>
                         <tbody>
-                            <tr>
-                                <td>Total notes: </td>
-                                <td />
-                                <td>{totalNotes}</td>
-                            </tr>
-                            <tr>
-                                <td>Accidentals: </td>
-                                <td />
-                                <td>{accidentals}</td>
-                            </tr>
-                            <tr>
-                                <td>Out of range: </td>
-                                <td />
-                                <td>{outOfRange}</td>
-                            </tr>
+                        <tr>
+                            <td>Total notes:</td>
+                            <td/>
+                            <td>{totalNotes}</td>
+                        </tr>
+                        <tr>
+                            <td>Accidentals:</td>
+                            <td/>
+                            <td>{accidentals}</td>
+                        </tr>
+                        <tr>
+                            <td>Out of range:</td>
+                            <td/>
+                            <td>{outOfRange}</td>
+                        </tr>
                         </tbody>
                     </table>
                 }
@@ -448,7 +478,6 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         </DecoratedCard>
     }
 }
-
 
 
 export default MidiImport

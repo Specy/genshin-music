@@ -1,14 +1,13 @@
-import { AppButton, AppButtonProps } from "./AppButton"
+import {AppButton, AppButtonProps} from "./AppButton"
 
 
-
-interface IconButtonProps extends AppButtonProps{
+interface IconButtonProps extends AppButtonProps {
     size?: string
 }
 
 export function IconButton(props: IconButtonProps) {
-    return <AppButton 
-        {...props} 
+    return <AppButton
+        {...props}
         style={{
             width: props.size ?? '2rem',
             height: props.size ?? '2rem',

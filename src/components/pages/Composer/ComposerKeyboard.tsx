@@ -1,11 +1,10 @@
-
 import ComposerNote from "$cmp/pages/Composer/ComposerNote"
-import { Column, InstrumentData } from "$lib/Songs/SongClasses"
-import { NoteNameType, Pitch, TEMPO_CHANGERS } from "$config"
-import Instrument, { ObservableNote } from "$lib/Instrument"
-import { ComposerSettingsDataType } from "$lib/BaseSettings"
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
-import { useTheme } from "$lib/Hooks/useTheme"
+import {Column, InstrumentData} from "$lib/Songs/SongClasses"
+import {NoteNameType, Pitch, TEMPO_CHANGERS} from "$config"
+import {Instrument, ObservableNote} from "$lib/Instrument"
+import {ComposerSettingsDataType} from "$lib/BaseSettings"
+import {FaChevronLeft, FaChevronRight} from "react-icons/fa"
+import {useTheme} from "$lib/Hooks/useTheme"
 
 interface ComposerKeyboardProps {
     data: {
@@ -26,17 +25,17 @@ interface ComposerKeyboardProps {
     }
 }
 
-export default function ComposerKeyboard({ data, functions }: ComposerKeyboardProps) {
-    const { keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio } = data
-    const { handleClick, handleTempoChanger } = functions
+export default function ComposerKeyboard({data, functions}: ComposerKeyboardProps) {
+    const {keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio} = data
+    const {handleClick, handleTempoChanger} = functions
     const [theme] = useTheme()
     if (keyboard === undefined) {
-        return <div className="composer-keyboard-wrapper" style={{ marginBottom: '4rem' }}>
+        return <div className="composer-keyboard-wrapper" style={{marginBottom: '4rem'}}>
             <h1>There was an error with this layer</h1>
         </div>
     }
     if (isRecordingAudio) {
-        return <div className="composer-keyboard-wrapper" style={{ marginBottom: '4rem' }}>
+        return <div className="composer-keyboard-wrapper" style={{marginBottom: '4rem'}}>
             <h1>
                 Recording Audio...
             </h1>
@@ -60,7 +59,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         visibility: data.isPlaying ? 'hidden' : 'visible'
                     }}
                 >
-                    <FaChevronLeft />
+                    <FaChevronLeft/>
                 </button>
             }
             <div
@@ -74,8 +73,8 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         return <ComposerNote
                             key={note.index}
                             layer={(index >= 0
-                                ? currentColumn.notes[index].layer.toLayerStatus(currentLayer, data.instruments)
-                                : 0
+                                    ? currentColumn.notes[index].layer.toLayerStatus(currentLayer, data.instruments)
+                                    : 0
                             )}
                             data={note}
                             theme={theme}
@@ -99,7 +98,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                         visibility: data.isPlaying ? 'hidden' : 'visible'
                     }}
                 >
-                    <FaChevronRight />
+                    <FaChevronRight/>
                 </button>
             }
         </div>
@@ -117,7 +116,7 @@ export default function ComposerKeyboard({ data, functions }: ComposerKeyboardPr
                                 backgroundColor: theme.get('primary').toString(),
                                 color: theme.getText('primary').toString()
                             }
-                            : { backgroundColor: "#" + tempoChanger.color.toString(16) })
+                            : {backgroundColor: "#" + tempoChanger.color.toString(16)})
                         ,
                         outline: data.currentColumn.tempoChanger === tempoChanger.id
                             ? `3px ${theme.get('composer_accent').toString()} solid`

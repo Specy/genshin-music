@@ -20,12 +20,14 @@
     transform-origin: top left;
     transform: rotate(-35deg);
 }
+
 .vsrg-player-keyboard-control-right {
     flex-direction: column-reverse;
     right: var(--horizontal-offset);
     transform-origin: top right;
     transform: rotate(35deg);
 }
+
 .vsrg-player-keyboard-control-left .vsrg-player-key-circle,
 .vsrg-player-keyboard-control-right .vsrg-player-key-circle {
     width: 8vw !important;
@@ -46,8 +48,6 @@
 .vsrg-player-keyboard-circles {
     /* transform: rotateX(35deg) translateZ(-4.5vh); magic number */
 }
-
-
 
 
 .vsrg-player-key-hitbox-circle,

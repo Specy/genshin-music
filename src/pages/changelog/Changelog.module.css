@@ -1,16 +1,17 @@
-.changelog-page-title{
+.changelog-page-title {
     font-size: 2.5rem;
     color: var(--background-text);
 }
 
-.changelog-title{
+.changelog-title {
     display: flex;
     width: 100%;
     align-items: center;
     margin: 0.4rem;
     margin-left: 0;
 }
-.clt-1{
+
+.clt-1 {
     background-color: var(--accent);
     color: var(--accent-text);
     padding: 0.2rem;
@@ -18,32 +19,36 @@
     width: 5rem;
     text-align: center;
 }
-.clt-2{
+
+.clt-2 {
     margin-left: 1rem;
     color: var(--background-text);
 }
-.cll-1{
+
+.cll-1 {
     font-size: 1.5rem;
     color: var(--accent);
 }
-.changelog-list{
-    margin:0;
+
+.changelog-list {
+    margin: 0;
     margin-left: 2.5rem;
     border-left: solid 2px var(--secondary);
     padding: 1rem 2rem;
     padding-right: 1rem;
 }
-.changelog-list ul li{
+
+.changelog-list ul li {
     margin-top: 0.4rem;
 }
 
-.cll-new-line{
+.cll-new-line {
     margin: 0;
     margin-top: 0.2rem;
     margin-left: 1rem;
 }
 
-.changelog-ending{
+.changelog-ending {
     height: 2.5rem;
     min-height: 2.5rem;
     width: 1rem;

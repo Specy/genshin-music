@@ -1,13 +1,14 @@
-import { useState, useEffect, memo } from 'react'
+import {memo, useEffect, useState} from 'react'
 import Switch from '$cmp/shared/Inputs/Switch'
-import { InstrumentInput } from './InstrumentInput'
-import { Input } from './Input'
-import { Slider } from './Slider'
-import { Select } from './Select'
-import { useTheme } from '$lib/Hooks/useTheme'
-import { SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate } from '$types/SettingsPropriety'
-import { hasTooltip, Tooltip } from '$cmp/shared/Utility/Tooltip'
+import {InstrumentInput} from './InstrumentInput'
+import {Input} from './Input'
+import {Slider} from './Slider'
+import {Select} from './Select'
+import {useTheme} from '$lib/Hooks/useTheme'
+import {SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate} from '$types/SettingsPropriety'
+import {hasTooltip, Tooltip} from '$cmp/shared/Utility/Tooltip'
 import s from './Settings.module.css'
+
 interface SettingsRowProps {
     data: SettingsPropriety,
     update: (data: SettingUpdate) => void,
@@ -15,11 +16,11 @@ interface SettingsRowProps {
     changeVolume?: (data: SettingVolumeUpdate) => void
 }
 
-function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
+function SettingsRow({data, update, objKey, changeVolume}: SettingsRowProps) {
     const [currentValue, setValue] = useState(data.value)
     const [volume, setVolume] = useState(data.type === 'instrument' ? data.volume : 0)
     const [theme] = useTheme()
-    const { type } = data
+    const {type} = data
     useEffect(() => {
         setValue(data.value)
     }, [data.value])
@@ -28,20 +29,20 @@ function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
         if (type === 'checkbox') {
             update({
                 key: objKey,
-                data: { ...data, value }
+                data: {...data, value}
             })
         }
     }
 
     return <div
         className={s['settings-row']}
-        style={{ backgroundColor: theme.layer('menu_background', 0.15).toString() }}
+        style={{backgroundColor: theme.layer('menu_background', 0.15).toString()}}
     >
 
-        <div className={hasTooltip(data.tooltip)} style={{ flex: '1' }}>
+        <div className={hasTooltip(data.tooltip)} style={{flex: '1'}}>
             {data.name}
             {data.tooltip &&
-                <Tooltip style={{ width: '12rem' }}>
+                <Tooltip style={{width: '12rem'}}>
                     {data.tooltip}
                 </Tooltip>
             }
@@ -97,6 +98,7 @@ function SettingsRow({ data, update, objKey, changeVolume }: SettingsRowProps) {
         }
     </div>
 }
+
 export default memo(SettingsRow, (p, n) => {
     return p.data.value === n.data.value
         //@ts-ignore

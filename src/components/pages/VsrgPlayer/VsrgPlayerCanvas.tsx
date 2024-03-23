@@ -1,20 +1,27 @@
-import { Stage } from "@pixi/react";
-import { subscribeTheme } from "$lib/Hooks/useTheme";
-import { VsrgAccuracyBounds, VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
-import { ThrottledEventLoop } from "$lib/ThrottledEventLoop";
-import { isNumberCloseTo } from "$lib/Utilities";
-import { Application } from "pixi.js";
-import { Component, createRef } from "react";
-import { keyBinds } from "$stores/KeybindsStore";
-import { Theme } from "$stores/ThemeStore/ThemeProvider";
-import { KeyboardKey, subscribeCurrentVsrgSong, VsrgKeyboardPressType, VsrgPlayerEvent, VsrgPlayerHitType, VsrgPlayerSong, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
-import { VsrgPlayerCache } from "./VsgPlayerCache";
-import { VsrgHitObjectsRenderer } from "./VsrgHitObjectsRenderer";
-import { VsrgPlayerCountDown } from "./VsrgPlayerCountDown";
-import { VsrgKeyboardLayout } from "./VsrgPlayerKeyboard";
-import { DEFAULT_DOM_RECT } from "$config";
+import {Stage} from "@pixi/react";
+import {subscribeTheme} from "$lib/Hooks/useTheme";
+import {VsrgAccuracyBounds, VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
+import {ThrottledEventLoop} from "$lib/ThrottledEventLoop";
+import {isNumberCloseTo} from "$lib/Utilities";
+import {Application} from "pixi.js";
+import {Component, createRef} from "react";
+import {keyBinds} from "$stores/KeybindsStore";
+import {Theme} from "$stores/ThemeStore/ThemeProvider";
+import {
+    KeyboardKey,
+    subscribeCurrentVsrgSong,
+    VsrgKeyboardPressType,
+    VsrgPlayerEvent,
+    VsrgPlayerHitType,
+    VsrgPlayerSong,
+    vsrgPlayerStore
+} from "$stores/VsrgPlayerStore";
+import {VsrgPlayerCache} from "./VsgPlayerCache";
+import {VsrgHitObjectsRenderer} from "./VsrgHitObjectsRenderer";
+import {VsrgPlayerCountDown} from "./VsrgPlayerCountDown";
+import {VsrgKeyboardLayout} from "./VsrgPlayerKeyboard";
+import {DEFAULT_DOM_RECT} from "$config";
 import s from "./VsrgPlayerCanvas.module.css";
-
 
 
 export type VsrgPlayerCanvasColors = {
@@ -49,12 +56,14 @@ interface VsrgPlayerCanvasProps {
     onTick: (timestamp: number) => void
     playHitObject: (hitObject: VsrgHitObject, instrumentIndex: number) => void
 }
+
 export enum HitObjectStatus {
     Idle,
     Pressed,
     Missed,
     Hit
 }
+
 export class RenderableHitObject {
     hitObject: VsrgHitObject
     color: string = '#FFFFFF'
@@ -62,6 +71,7 @@ export class RenderableHitObject {
     instrumentIndex: number = 0
     //will be used to give score only every N ms
     heldScoreTimeout = 0
+
     constructor(hitObject: VsrgHitObject) {
         this.hitObject = hitObject
     }
@@ -79,6 +89,7 @@ interface VsrgPlayerCanvasState {
     renderableHitObjects: RenderableHitObject[],
     accuracyBounds: VsrgAccuracyBounds
 }
+
 export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
     el: {...DEFAULT_DOM_RECT},
     rawWidth: 0,
@@ -91,11 +102,12 @@ export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
     verticalOffset: 0,
 }
 
-export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlayerCanvasState>{
+export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlayerCanvasState> {
     throttledEventLoop: ThrottledEventLoop
     wrapperRef: React.RefObject<HTMLDivElement>
     stageRef: React.RefObject<any>
     toDispose: (() => void)[] = []
+
     constructor(props: VsrgPlayerCanvasProps) {
         super(props)
         this.state = {
@@ -118,10 +130,12 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             cache: null,
             renderableHitObjects: []
         }
-        this.throttledEventLoop = new ThrottledEventLoop(() => { }, this.props.maxFps)
+        this.throttledEventLoop = new ThrottledEventLoop(() => {
+        }, this.props.maxFps)
         this.wrapperRef = createRef()
         this.stageRef = createRef()
     }
+
     componentDidMount() {
         this.throttledEventLoop.setCallback(this.handleTick)
         this.throttledEventLoop.start()
@@ -129,8 +143,8 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             callback: this.handleKeyboard,
             id: 'vsrg-player-canvas'
         })
-        this.setState({ devicePixelRatio: window.devicePixelRatio ?? 1.4 })
-        this.toDispose.push(() => vsrgPlayerStore.removeKeyboardListener({ id: 'vsrg-player-canvas' }))
+        this.setState({devicePixelRatio: window.devicePixelRatio ?? 1.4})
+        this.toDispose.push(() => vsrgPlayerStore.removeKeyboardListener({id: 'vsrg-player-canvas'}))
         this.toDispose.push(subscribeCurrentVsrgSong(this.onSongPick))
         this.toDispose.push(subscribeTheme(this.handleThemeChange))
         vsrgPlayerStore.addEventListener(this.handleVsrgEvent, "vsrg-player-canvas")
@@ -139,29 +153,32 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         this.toDispose.push(() => window.removeEventListener('resize', this.calculateSizes))
         this.calculateSizes()
     }
-    onSongPick = ({ type, song }: VsrgPlayerSong) => {
+
+    onSongPick = ({type, song}: VsrgPlayerSong) => {
         vsrgPlayerStore.resetScore()
-        const { scrollSpeed } = this.props
+        const {scrollSpeed} = this.props
         if (type === 'play' && song) {
             const countDown = 3000 / 2
-            this.setState({ song, timestamp: - countDown - scrollSpeed, renderableHitObjects: [] }, () => {
+            this.setState({song, timestamp: -countDown - scrollSpeed, renderableHitObjects: []}, () => {
                 song.startPlayback(0)
                 this.calculateSizes()
                 this.generateAccuracyBounds()
             })
         }
-        if (type === 'stop') this.setState({ song: new VsrgSong(''), timestamp: 0, renderableHitObjects: [] })
+        if (type === 'stop') this.setState({song: new VsrgSong(''), timestamp: 0, renderableHitObjects: []})
     }
+
     componentWillUnmount() {
         this.throttledEventLoop.stop()
         vsrgPlayerStore.setLayout(keyBinds.getVsrgKeybinds(4))
         this.toDispose.forEach(d => d())
     }
+
     handleVsrgEvent = (data: VsrgPlayerEvent) => {
-        if(data === 'fpsChange') this.throttledEventLoop.changeMaxFps(this.props.maxFps)
+        if (data === 'fpsChange') this.throttledEventLoop.changeMaxFps(this.props.maxFps)
     }
     handleKeyboard = (key: KeyboardKey, type: VsrgKeyboardPressType) => {
-        const { renderableHitObjects, timestamp, accuracy } = this.state
+        const {renderableHitObjects, timestamp, accuracy} = this.state
         //rho = renderable hit object
         const rho = renderableHitObjects.find(r => r.hitObject.index === key.index)
         if (!rho) return
@@ -213,10 +230,10 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             canvas.style.height = `${sizes.height}px`
         }
         this.props.onSizeChange(sizes)
-        this.setState({ sizes }, this.generateCache)
+        this.setState({sizes}, this.generateCache)
     }
     generateCache = () => {
-        const { colors, sizes, cache } = this.state
+        const {colors, sizes, cache} = this.state
         const app = this.stageRef.current.app as Application
         const newCache = new VsrgPlayerCache({
             app,
@@ -224,7 +241,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             sizes,
             trackColors: this.state.song.tracks.map(track => track.color),
         })
-        this.setState({ cache: newCache }, () => {
+        this.setState({cache: newCache}, () => {
             setTimeout(() => {
                 //TODO not sure why pixi reuses textures from the old cache
                 cache?.destroy()
@@ -232,11 +249,11 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         })
     }
     generateAccuracyBounds = () => {
-        const { song } = this.state
-        this.setState({ accuracyBounds: song.getAccuracyBounds() })
+        const {song} = this.state
+        this.setState({accuracyBounds: song.getAccuracyBounds()})
     }
     getHitRating = (hitObject: VsrgHitObject, timestamp: number): VsrgPlayerHitType => {
-        const { accuracyBounds } = this.state
+        const {accuracyBounds} = this.state
         const diff = Math.abs(timestamp - hitObject.timestamp)
         if (diff < accuracyBounds[0]) return 'amazing'
         if (diff < accuracyBounds[1]) return 'perfect'
@@ -268,8 +285,8 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         }, this.generateCache)
     }
     handleTick = (elapsed: number, sinceLast: number) => {
-        const { isPlaying, scrollSpeed } = this.props
-        const { song, renderableHitObjects, sizes } = this.state
+        const {isPlaying, scrollSpeed} = this.props
+        const {song, renderableHitObjects, sizes} = this.state
         if (!isPlaying) return
         const timestamp = this.state.timestamp + sinceLast
         const tracks = song.tickPlayback(timestamp + scrollSpeed + sizes.height)
@@ -287,7 +304,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         this.props.onTick(timestamp)
     }
     validateHitObjects = (timestamp: number, renderableHitObjects: RenderableHitObject[], previousTimestamp: number) => {
-        const { accuracy } = this.state
+        const {accuracy} = this.state
         const keyboard = vsrgPlayerStore.keyboard
         for (let i = 0; i < renderableHitObjects.length; i++) {
             const ro = renderableHitObjects[i]
@@ -315,24 +332,24 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             }
         }
         const filtered = renderableHitObjects.filter(r => r.hitObject.timestamp + r.hitObject.holdDuration > timestamp - accuracy)
-        this.setState({ timestamp, renderableHitObjects: filtered })
+        this.setState({timestamp, renderableHitObjects: filtered})
     }
 
 
     render() {
-        const { sizes, cache, renderableHitObjects, timestamp, colors, devicePixelRatio } = this.state
-        const { scrollSpeed } = this.props
+        const {sizes, cache, renderableHitObjects, timestamp, colors, devicePixelRatio} = this.state
+        const {scrollSpeed} = this.props
         return <>
-            <div 
+            <div
                 className={`${s['vsrg-player-canvas']} box-shadow`}
                 style={{
                     backgroundColor: colors.background_layer_10[0]
-                }} 
+                }}
                 ref={this.wrapperRef}
             >
                 {(timestamp + scrollSpeed) < 0 &&
                     <VsrgPlayerCountDown
-                        time={Math.abs(Math.ceil((timestamp + scrollSpeed ) / 1000 * 2)) + 1}
+                        time={Math.abs(Math.ceil((timestamp + scrollSpeed) / 1000 * 2)) + 1}
                     />
                 }
                 <Stage

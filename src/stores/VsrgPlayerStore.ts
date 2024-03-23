@@ -50,6 +50,7 @@ type VsrgPlayerCallback = {
     callback: (data: VsrgPlayerEvent) => void
     id: string
 }
+
 class VsrgPlayerStore {
     @observable keyboard: KeyboardKey[] = []
     @observable.shallow currentSong: VsrgPlayerSong = {
@@ -75,9 +76,11 @@ class VsrgPlayerStore {
     }
     private listeners: VsrgPlayerCallback[] = []
     private keyboardListeners: VsrcPlayerKeyboardCallback[] = []
+
     constructor() {
         makeObservable(this)
     }
+
     setLayout = (layout: string[]) => {
         this.keyboard.splice(0, this.keyboard.length,
             ...layout.map((key, index) => {
@@ -101,7 +104,7 @@ class VsrgPlayerStore {
         this.listeners = this.listeners.filter(l => l.id !== id)
     }
     resetScore = () => {
-        const resetScore:VsrgPlayerScore = {
+        const resetScore: VsrgPlayerScore = {
             scoreVisible: false,
             score: 0,
             amazing: 0,
@@ -133,7 +136,7 @@ class VsrgPlayerStore {
         })
     }
     private getScore = (type: VsrgPlayerHitType) => {
-       return baseScoreMap[type] ?? 0
+        return baseScoreMap[type] ?? 0
     }
     playSong = (song: VsrgSong) => {
         this.currentSong.type = 'play'
@@ -168,8 +171,6 @@ class VsrgPlayerStore {
 }
 
 
-
-
 export const vsrgPlayerStore = new VsrgPlayerStore()
 
 export function subscribeCurrentVsrgSong(callback: (data: VsrgPlayerSong) => void) {
@@ -182,14 +183,14 @@ export function subscribeCurrentVsrgSong(callback: (data: VsrgPlayerSong) => voi
 
 export function subscribeVsrgScore(callback: (data: VsrgPlayerScore) => void) {
     const dispose = observe(vsrgPlayerStore.score, () => {
-        callback({ ...vsrgPlayerStore.score })
+        callback({...vsrgPlayerStore.score})
     })
     return dispose
 }
 
 export function subscribeVsrgLatestScore(callback: (data: VsrgLatestScore) => void) {
     const dispose = observe(vsrgPlayerStore.score, () => {
-        callback({ ...vsrgPlayerStore.score.lastScore })
+        callback({...vsrgPlayerStore.score.lastScore})
     })
     return dispose
 }

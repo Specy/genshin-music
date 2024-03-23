@@ -1,5 +1,5 @@
-import { useTheme } from "$lib/Hooks/useTheme"
-import { blurEvent } from "$lib/Utilities"
+import {useTheme} from "$lib/Hooks/useTheme"
+import {blurEvent} from "$lib/Utilities"
 
 interface MenuItemProps<T> {
     className?: string,
@@ -12,15 +12,15 @@ interface MenuItemProps<T> {
     isActive?: boolean
 }
 
-export function MenuItem<T>({ className = "", onClick, children, data, style, isActive, ariaLabel }: MenuItemProps<T>) {
+export function MenuItem<T>({className = "", onClick, children, data, style, isActive, ariaLabel}: MenuItemProps<T>) {
     const [theme] = useTheme()
     return <button
         className={`menu-item ${className}`}
-        style={{ 
+        style={{
             backgroundColor: isActive
-            ? theme.layer('primary', 0.2).toString()
-            : theme.layer('primary', 0).toString(),
-             ...style 
+                ? theme.layer('primary', 0.2).toString()
+                : theme.layer('primary', 0).toString(),
+            ...style
         }}
         aria-label={ariaLabel}
         onClick={(e) => {

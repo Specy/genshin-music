@@ -1,14 +1,16 @@
-import { useTheme } from '$lib/Hooks/useTheme'
-import { useEffect, useState } from 'react';
-import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
-import { colorToRGB } from '$lib/Utilities';
+import {useTheme} from '$lib/Hooks/useTheme'
+import {useEffect, useState} from 'react';
+import {ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
+import {colorToRGB} from '$lib/Utilities';
 import Head from 'next/head';
-import { TEMPO_CHANGERS } from '$config';
+import {TEMPO_CHANGERS} from '$config';
 import Color from 'color';
+
 type Props = {
     children?: React.ReactNode;
 }
-export function ThemeProviderWrapper({ children }: Props) {
+
+export function ThemeProviderWrapper({children}: Props) {
     const [mounted, setMounted] = useState(false)
     useEffect(() => {
         setMounted(true)
@@ -44,7 +46,7 @@ export function ThemeProviderWrapper({ children }: Props) {
 
     return <>
         <Head>
-            <meta name="theme-color" content={theme.get(mounted ? "primary" : "accent").toString()} />
+            <meta name="theme-color" content={theme.get(mounted ? "primary" : "accent").toString()}/>
         </Head>
         <style>
             {`
@@ -56,7 +58,7 @@ export function ThemeProviderWrapper({ children }: Props) {
                 }
             `}
         </style>
-        <div style={{  display: 'flex', width: "100%", flex: 1, ...obj }}>
+        <div style={{display: 'flex', width: "100%", flex: 1, ...obj}}>
             {children}
         </div>
     </>

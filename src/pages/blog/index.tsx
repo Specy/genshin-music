@@ -10,7 +10,6 @@ import {Column} from "$cmp/shared/layout/Column";
 import s from './blog.module.scss'
 import {_aiTransposeMetadata} from "$pages/blog/posts/ai-transpose";
 import {_midiTransposeMetadata} from "$pages/blog/posts/midi-transpose";
-import {cn} from "$lib/Utilities";
 import {_playerTutorialMetadata} from "$pages/blog/posts/how-to-use-player";
 import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";
 import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
@@ -36,7 +35,7 @@ const tags = Array.from(new Set(posts.flatMap(p => p.tags)).values())
 export default function Blog() {
     const [selectedTags, setSelectedTags] = useState(() => tags.map(i => ({item: i, selected: false})))
     const filteredPosts = useMemo(() => {
-        if(selectedTags.every(t => !t.selected)) return posts
+        if (selectedTags.every(t => !t.selected)) return posts
         return posts.filter(p => selectedTags.some(t => t.selected && p.tags.includes(t.item)))
     }, [selectedTags])
     return <DefaultPage>
@@ -83,7 +82,6 @@ interface BlogPostProps {
 
 function BlogPost({metadata}: BlogPostProps) {
     const visited = useHasVisitedBlogPost(metadata.relativeUrl)
-    console.log(metadata.relativeUrl, [!visited, s['blog-card-new']])
     const date = useMemo(() => {
         return new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(metadata.createdAt)
     }, [metadata.createdAt])

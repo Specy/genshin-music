@@ -1,8 +1,8 @@
-import { BASE_THEME_CONFIG } from "$config"
+import {BASE_THEME_CONFIG} from "$config"
 import Color from "color"
-import { useEffect, useState } from "react"
-import { HexColorInput, HexColorPicker } from "react-colorful"
-import { FaCheck, FaTimes } from "react-icons/fa"
+import {useEffect, useState} from "react"
+import {HexColorInput, HexColorPicker} from "react-colorful"
+import {FaCheck, FaTimes} from "react-icons/fa"
 
 interface ColorPickerProps {
     value: string
@@ -12,8 +12,7 @@ interface ColorPickerProps {
 }
 
 
-
-export function ColorPicker({ onChange, value, absolute = true, style}: ColorPickerProps) {
+export function ColorPicker({onChange, value, absolute = true, style}: ColorPickerProps) {
     const [color, setColor] = useState(Color(value))
     useEffect(() => {
         setColor(Color(value))
@@ -22,19 +21,20 @@ export function ColorPicker({ onChange, value, absolute = true, style}: ColorPic
     function handleChange(e: any) {
         setColor(Color(e))
     }
+
     function sendEvent() {
         onChange?.(color.toString())
     }
 
     return <>
-        <div 
+        <div
             className="color-picker"
-            style={{ 
+            style={{
                 position: absolute ? 'absolute' : 'unset',
                 ...style
             }}
         >
-            <HexColorPicker onChange={handleChange} color={color.hex()} />
+            <HexColorPicker onChange={handleChange} color={color.hex()}/>
             <div className="color-picker-row">
                 <div
                     className="color-picker-input"
@@ -43,7 +43,7 @@ export function ColorPicker({ onChange, value, absolute = true, style}: ColorPic
                         color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark,
                     }}
                 >
-                    <div style={{ fontFamily: 'Arial' }}>#</div>
+                    <div style={{fontFamily: 'Arial'}}>#</div>
                     <HexColorInput
                         onChange={handleChange}
                         color={color.hex()}
@@ -64,7 +64,7 @@ export function ColorPicker({ onChange, value, absolute = true, style}: ColorPic
                         color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
                     }}
                 >
-                    <FaTimes size={16} />
+                    <FaTimes size={16}/>
                 </button>
                 <button
                     className="color-picker-check"
@@ -74,7 +74,7 @@ export function ColorPicker({ onChange, value, absolute = true, style}: ColorPic
                         color: color.isDark() ? BASE_THEME_CONFIG.text.light : BASE_THEME_CONFIG.text.dark
                     }}
                 >
-                    <FaCheck size={16} />
+                    <FaCheck size={16}/>
                 </button>
             </div>
         </div>

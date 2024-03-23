@@ -107,7 +107,7 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
 }
 
 export function useHasVisitedBlogPost(name: string) {
-    const [visited, setVisited] = useState(true)
+    const [visited, setVisited] = useState(false)
     useEffect(() => {
         const visited = JSON.parse(localStorage.getItem(APP_NAME + '_visited_blog_posts') ?? '{}')
         setVisited(visited[name] ?? false)

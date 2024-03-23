@@ -14,6 +14,7 @@ const nonUmaModeEmojis = ["👻", "👾", "👺", "👹", "👿", "🔥"]
 const umaModeEmojis = ["💀", "🦴", "☠️", "🪦", "⚰️"]
 const umaModeText = umaModeEmojis.join(" ")
 let id = 0
+
 function createRandomParticle(bounds: DOMRect, emojis: string[]) {
     const emoji = emojis[Math.floor(Math.random() * emojis.length)]
     const offset = bounds.width / 8
@@ -27,6 +28,7 @@ function createRandomParticle(bounds: DOMRect, emojis: string[]) {
         lifetime: DURATION + Math.random() * DURATION
     }
 }
+
 const DURATION = 2500
 const AMOUNT_OF_PARTICLES = 25
 const wrongMessage = [
@@ -39,13 +41,13 @@ const wrongMessage = [
     "Thou must explore the world to find the passphrase as it is not this one",
 ]
 export default function UmaMode() {
-    const { IS_UMA_MODE } = useConfig()
+    const {IS_UMA_MODE} = useConfig()
     const [particles, setParticles] = useState<Particle[]>([])
     const ref = useRef<HTMLButtonElement>(null)
     const [bounds, setBounds] = useState<DOMRect | null>(null)
     useEffect(() => {
         if (!bounds) return
-        const isUmaMode =  JSON.parse(localStorage.getItem(`${APP_NAME}_uma_mode`) || "false")
+        const isUmaMode = JSON.parse(localStorage.getItem(`${APP_NAME}_uma_mode`) || "false")
         const startEmojis = new Array(AMOUNT_OF_PARTICLES).fill(0).map(() => {
             return createRandomParticle(bounds, isUmaMode ? umaModeEmojis : nonUmaModeEmojis)
         })
@@ -70,9 +72,11 @@ export default function UmaMode() {
                 })
             })
         }
+
         const interval = setInterval(handleFrame, 50)
         return () => clearInterval(interval)
     }, [bounds, IS_UMA_MODE])
+
     async function toggleUmaMode() {
         if (!IS_UMA_MODE) {
             navigator.vibrate(1000)
@@ -99,12 +103,13 @@ export default function UmaMode() {
     }
 
     return <DefaultPage cropped>
-        <PageMeta text={IS_UMA_MODE ?  umaModeText : "Ȕ̶̲͇̦͇̖̈́̐̒m̶͖̰̜̎ā̴̩̅͐͘͠ ̶̯̘͊̑̃m̵̟͕̌̀o̸̮͌d̸̖̯̤̒̈̚̕ë̴̪̟́̉͂̓"} description="Thou whom enter this space shall  not be protected by the almighty destroyer of sheets, who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution"/>
-        <div className="column" style={{ gap: "1rem" }}>
+        <PageMeta text={IS_UMA_MODE ? umaModeText : "Ȕ̶̲͇̦͇̖̈́̐̒m̶͖̰̜̎ā̴̩̅͐͘͠ ̶̯̘͊̑̃m̵̟͕̌̀o̸̮͌d̸̖̯̤̒̈̚̕ë̴̪̟́̉͂̓"}
+                  description="Thou whom enter this space shall  not be protected by the almighty destroyer of sheets, who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution"/>
+        <div className="column" style={{gap: "1rem"}}>
             <h1>Uma Mode</h1>
             <div>
-                Thou whom enter this space shall  not be protected by the almighty destroyer of sheets,
-                who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution
+                Thou whom enter this space shall not be protected by the almighty destroyer of sheets,
+                who dares enter this hell accepts the fate they might succumb to. Proceed with caution
             </div>
             <button
                 ref={ref}
@@ -127,6 +132,7 @@ export default function UmaMode() {
         </div>
     </DefaultPage>
 }
+
 interface Particle extends ParticleProps {
     id: number
     aliveAt: number
@@ -140,7 +146,8 @@ interface ParticleProps {
     lifetime: number
 
 }
-function ParticleElement({ emoji, x, y, scale, lifetime }: ParticleProps) {
+
+function ParticleElement({emoji, x, y, scale, lifetime}: ParticleProps) {
     return <div
         className={`${s['particle']}`}
         key={emoji}

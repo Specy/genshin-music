@@ -1,12 +1,11 @@
-import { DEFAULT_DOM_RECT } from "$config"
+import {DEFAULT_DOM_RECT} from "$config"
 import Memoized from "$cmp/shared/Utility/Memoized"
-import { useObservableObject } from "$lib/Hooks/useObservable"
-import { clamp } from "$lib/Utilities"
-import { memo, useEffect, useRef, useState } from "react"
-import { BsTriangleFill } from "react-icons/bs"
-import { playerControlsStore } from "$stores/PlayerControlsStore"
+import {useObservableObject} from "$lib/Hooks/useObservable"
+import {clamp} from "$lib/Utilities"
+import {memo, useEffect, useRef, useState} from "react"
+import {BsTriangleFill} from "react-icons/bs"
+import {playerControlsStore} from "$stores/PlayerControlsStore"
 import sl from "./Slider.module.css"
-
 
 
 export function _PlayerSlider() {
@@ -20,9 +19,11 @@ export function _PlayerSlider() {
     useEffect(() => {
         //TODO remove the dependency and instead use the callback for the set state
         if (selectedThumb === null) return
+
         function resetSelection() {
             if (selectedThumb !== null) setSelectedThumb(null)
         }
+
         window.addEventListener('pointerup', resetSelection)
         window.addEventListener('blur', resetSelection)
         return () => {
@@ -45,9 +46,11 @@ export function _PlayerSlider() {
             handleSliderMove(event, currentThumb)
         }
     }
+
     function handleSliderLeave() {
         setSelectedThumb(null)
     }
+
     const handleSliderMove = (event: React.PointerEvent<HTMLDivElement>, override?: 'start' | 'end') => {
         if (selectedThumb === null && !override) return
         const currentThumb = override || selectedThumb
@@ -59,7 +62,7 @@ export function _PlayerSlider() {
         if (currentThumb === 'start') {
             if (value - sliderState.end < -1) playerControlsStore.setPosition(value)
         } else {
-            if (value - sliderState.position > 1) playerControlsStore.setState({ end: value })
+            if (value - sliderState.position > 1) playerControlsStore.setState({end: value})
         }
     }
     const start = sliderState.size !== 0 ? sliderState.position / sliderState.size * 100 : 0
@@ -75,26 +78,26 @@ export function _PlayerSlider() {
             <div className={sl["slider-full"]}>
                 <div
                     className={sl["slider-current"]}
-                    style={{ transform: `translateY(${(100 - sliderState.current / sliderState.size * 100).toFixed(1)}%)` }}
+                    style={{transform: `translateY(${(100 - sliderState.current / sliderState.size * 100).toFixed(1)}%)`}}
                 />
             </div>
             <div className={sl["two-way-slider"]}>
 
-                <div className={sl["two-way-slider-thumb"]} style={{ bottom: `calc(${end}% - 18px)` }} ref={thumb2}>
-                    <div style={{ fontSize: '0.8rem' }}>
+                <div className={sl["two-way-slider-thumb"]} style={{bottom: `calc(${end}% - 18px)`}} ref={thumb2}>
+                    <div style={{fontSize: '0.8rem'}}>
                         {sliderState.end}
                     </div>
                     <Memoized>
-                        <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
+                        <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
                     </Memoized>
 
                 </div>
-                <div className={sl["two-way-slider-thumb"]} style={{ bottom: `calc(${start}% - 14px)` }} ref={thumb1}>
-                    <div style={{ fontSize: '0.8rem' }}>
+                <div className={sl["two-way-slider-thumb"]} style={{bottom: `calc(${start}% - 14px)`}} ref={thumb1}>
+                    <div style={{fontSize: '0.8rem'}}>
                         {sliderState.position}
                     </div>
                     <Memoized>
-                        <BsTriangleFill width={16} style={{ filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)' }} />
+                        <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
                     </Memoized>
                 </div>
             </div>

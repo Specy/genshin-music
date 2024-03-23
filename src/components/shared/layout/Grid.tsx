@@ -1,7 +1,7 @@
 import {MaybeChildren, Stylable} from "$lib/UtilTypes";
 
 
-interface GridProps extends Stylable{
+interface GridProps extends Stylable {
     gap?: string;
     columns?: string;
     rows?: string;

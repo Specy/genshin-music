@@ -1,8 +1,6 @@
-import {APP_NAME, MIDI_PRESETS, MIDIPreset} from "$config"
-import {MIDISettings} from "$lib/BaseSettings"
+import {APP_NAME, INSTRUMENTS, MIDI_PRESETS, MIDIPreset} from "$config"
 import BaseNote from "$cmp/shared/Miscellaneous/BaseNote"
 import {Component} from 'react'
-import {INSTRUMENTS} from "$config"
 import MidiShortcut from "$cmp/pages/MidiSetup/MidiShortcut"
 import {logger} from "$stores/LoggerStore";
 import {MIDINote, MIDIShortcut} from "$lib/Utilities"
@@ -11,9 +9,8 @@ import {MIDIEvent, MIDIProvider} from "$lib/Providers/MIDIProvider"
 import {AudioProvider} from "$lib/Providers/AudioProvider"
 import {AudioPlayer} from '$lib/AudioPlayer'
 import {InstrumentData} from '$lib/Songs/SongClasses'
-import Instrument from '$lib/Instrument'
+import {Instrument} from '$lib/Instrument'
 import s from './MidiSetup.module.css'
-import {FloatingDropdown} from "$cmp/shared/Utility/FloatingDropdown";
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {FaPlus, FaTrash} from "react-icons/fa";
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
@@ -127,7 +124,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
             if (selectedNote) {
                 if (this.checkIfMidiIsUsed(note, 'shortcuts')) return logger.warn('Key already used')
                 this.deselectNotes()
-                if(MIDIProvider.isPresetBuiltin(currentPreset)) return logger.warn('Cannot edit built-in preset, create a new one to edit it')
+                if (MIDIProvider.isPresetBuiltin(currentPreset)) return logger.warn('Cannot edit built-in preset, create a new one to edit it')
                 MIDIProvider.updateNoteOfCurrentPreset(selectedNote.index, note, "right")
                 this.setState({selectedNote: null, notes: MIDIProvider.notes})
             }
@@ -256,7 +253,8 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                                 </option>)}
                             </optgroup>
                         </select>
-                        <AppButton onClick={() => this.deletePreset(currentPreset)} className={'flex items-center'} style={{gap: "0.5rem"}}>
+                        <AppButton onClick={() => this.deletePreset(currentPreset)} className={'flex items-center'}
+                                   style={{gap: "0.5rem"}}>
                             <FaTrash/>
                             Delete preset
                         </AppButton>

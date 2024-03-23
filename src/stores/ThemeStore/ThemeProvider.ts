@@ -31,14 +31,17 @@ const defaultTextColors = {
 
 export class BaseTheme {
     state: ThemeState
+
     constructor(name: string) {
         this.state = cloneDeep(ThemeSettings as ThemeState)
         this.state.other.name = name
         this.state.editable = true
     }
+
     toJson = () => {
         return JSON.stringify(this.state)
     }
+
     serialize(): SerializedTheme {
         return {
             ...cloneDeep(this.state),
@@ -66,6 +69,7 @@ export interface ThemeState {
 export class Theme {
     state: ThemeState
     baseTheme: ThemeState
+
     constructor(baseTheme: ThemeState) {
         this.baseTheme = cloneDeep(baseTheme)
         this.state = observable(cloneDeep(baseTheme))
@@ -78,6 +82,7 @@ export class Theme {
         if (obj.data && obj.other) return true
         return false
     }
+
     load = async () => {
         try {
             const themeId = _themeService.getCurrentThemeId()
@@ -110,7 +115,7 @@ export class Theme {
         return Object.values(this.state.data)
     }
     reset = (prop: ThemeKeys) => {
-        this.state.data[prop] = { ...this.baseTheme.data[prop] }
+        this.state.data[prop] = {...this.baseTheme.data[prop]}
     }
 
     isDefault = (name: ThemeKeys) => {

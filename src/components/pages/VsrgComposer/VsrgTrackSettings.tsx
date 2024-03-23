@@ -1,14 +1,14 @@
-import { InstrumentSelect } from "$cmp/shared/Inputs/InstrumentSelect"
-import { AppButton } from "$cmp/shared/Inputs/AppButton"
-import { VsrgTrack } from "$lib/Songs/VsrgSong"
-import { FaTrash } from "react-icons/fa"
-import { PitchSelect } from "$cmp/shared/Inputs/PitchSelect"
-import { HelpTooltip } from "$cmp/shared/Utility/HelpTooltip"
-import { ColorPicker } from "$cmp/shared/Inputs/ColorPicker"
-import { useState } from "react"
+import {InstrumentSelect} from "$cmp/shared/Inputs/InstrumentSelect"
+import {AppButton} from "$cmp/shared/Inputs/AppButton"
+import {VsrgTrack} from "$lib/Songs/VsrgSong"
+import {FaTrash} from "react-icons/fa"
+import {PitchSelect} from "$cmp/shared/Inputs/PitchSelect"
+import {HelpTooltip} from "$cmp/shared/Utility/HelpTooltip"
+import {ColorPicker} from "$cmp/shared/Inputs/ColorPicker"
+import {useState} from "react"
 import Color from "color"
-import { vsrgComposerStore } from "$stores/VsrgComposerStore"
-import { Pitch } from "$config"
+import {vsrgComposerStore} from "$stores/VsrgComposerStore"
+import {Pitch} from "$config"
 
 interface TrackSelectorProps {
     track: VsrgTrack
@@ -17,7 +17,7 @@ interface TrackSelectorProps {
     onChange: (track: VsrgTrack) => void
 }
 
-export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSelectorProps) {
+export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSelectorProps) {
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
     if (!track) return null
     return <>
@@ -28,33 +28,33 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                     type="text"
                     maxLength={50}
                     className="input"
-                    style={{ width: '7.4rem' }}
+                    style={{width: '7.4rem'}}
                     value={track.instrument.alias}
                     onChange={e => {
-                        track.instrument.set({ alias: e.target.value })
+                        track.instrument.set({alias: e.target.value})
                         onChange(track)
                     }}
                     placeholder={track.instrument.name}
                 />
             </div>
-            <div className="row-centered space-between" style={{ marginTop: '0.4rem' }}>
+            <div className="row-centered space-between" style={{marginTop: '0.4rem'}}>
                 Instrument
                 <InstrumentSelect
-                    style={{ width: '8rem' }}
+                    style={{width: '8rem'}}
                     selected={track.instrument.name}
                     onChange={(name) => {
-                        track.instrument.set({ name })
+                        track.instrument.set({name})
                         onChange(track)
                     }}
                 />
             </div>
-            <div className="row-centered space-between" style={{ marginTop: '0.4rem' }}>
+            <div className="row-centered space-between" style={{marginTop: '0.4rem'}}>
                 Pitch
                 <PitchSelect
-                    style={{ width: '8rem' }}
+                    style={{width: '8rem'}}
                     selected={track.instrument.pitch as Pitch}
                     onChange={(pitch) => {
-                        track.instrument.set({ pitch })
+                        track.instrument.set({pitch})
                         onChange(track)
                     }}
                 >
@@ -63,19 +63,19 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                     </option>
                 </PitchSelect>
             </div>
-            <div className="row-centered" style={{ marginTop: '1rem', alignItems: "center" }}>
+            <div className="row-centered" style={{marginTop: '1rem', alignItems: "center"}}>
                 Volume
                 <span style={{
                     marginLeft: "0.4rem",
                     width: '3rem',
                     ...(track.instrument.volume > 100
-                        && { color: `hsl(0, ${-40 + track.instrument.volume}%, 61%)`, marginLeft: "0.4rem" })
+                        && {color: `hsl(0, ${-40 + track.instrument.volume}%, 61%)`, marginLeft: "0.4rem"})
                 }}
                 >
                     {track.instrument.volume}%
                 </span>
                 <HelpTooltip
-                    buttonStyle={{ width: '1.2rem', height: '1.2rem' }}
+                    buttonStyle={{width: '1.2rem', height: '1.2rem'}}
                     width={10}
                 >
                     If you hear distortion, reduce the volume
@@ -84,12 +84,12 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
             <div className="row-centered">
                 <input
                     type="range"
-                    style={{ flex: '1' }}
+                    style={{flex: '1'}}
                     min={0}
                     max={125}
                     value={track.instrument.volume}
-                    onChange={e =>{
-                        track.instrument.set({ volume: parseInt(e.target.value) })
+                    onChange={e => {
+                        track.instrument.set({volume: parseInt(e.target.value)})
                         onChange(track)
                     }}
                 />
@@ -109,18 +109,18 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                     </AppButton>
                 </div>
             </div>
-            <div className='row space-between' style={{ marginTop: '0.4rem' }}>
+            <div className='row space-between' style={{marginTop: '0.4rem'}}>
                 <AppButton
                     className="row-centered"
-                    style={{ padding: '0.4rem', width: 'fit-content' }}
+                    style={{padding: '0.4rem', width: 'fit-content'}}
                     onClick={onDelete}
                 >
-                    <FaTrash color="var(--red)" style={{ marginRight: '0.3rem' }} />
+                    <FaTrash color="var(--red)" style={{marginRight: '0.3rem'}}/>
                     Delete
                 </AppButton>
                 <AppButton
                     onClick={onSave}
-                    style={{ padding: '0.4rem', width: 'fit-content' }}
+                    style={{padding: '0.4rem', width: 'fit-content'}}
                 >
                     Ok
                 </AppButton>
@@ -134,7 +134,7 @@ export function VsrgTrackSettings({ track, onSave, onDelete, onChange }: TrackSe
                 }}
                 value={track.color}
                 onChange={color => {
-                    onChange(track.set({ color }))
+                    onChange(track.set({color}))
                     setIsColorPickerOpen(false)
                     vsrgComposerStore.emitEvent("colorChange")
                 }}

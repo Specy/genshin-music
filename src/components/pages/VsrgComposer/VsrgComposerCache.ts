@@ -1,8 +1,8 @@
 import Color from "color"
-import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
-import { Application, Texture, SCALE_MODES, Rectangle,  } from 'pixi.js'
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
-import { clamp } from "$lib/Utilities";
+import {LINE_SCALE_MODE, settings, SmoothGraphics as Graphics} from '@pixi/graphics-smooth';
+import {Application, Rectangle, SCALE_MODES, Texture,} from 'pixi.js'
+import {VsrgCanvasColors, VsrgCanvasSizes} from "./VsrgComposerCanvas";
+import {clamp} from "$lib/Utilities";
 import isMobile from "is-mobile";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
@@ -62,14 +62,15 @@ export class VsrgCanvasCache {
     sizes: VsrgCanvasSizes
     trackColors: string[]
     isHorizontal: boolean
+
     constructor({
-        app,
-        colors,
-        sizes,
-        trackColors,
-        isHorizontal,
-        playbarOffset
-    }: VsrgCacheProps) {    
+                    app,
+                    colors,
+                    sizes,
+                    trackColors,
+                    isHorizontal,
+                    playbarOffset
+                }: VsrgCacheProps) {
 
         this.textures = {
             hitObjects: {},
@@ -107,6 +108,7 @@ export class VsrgCanvasCache {
         this.app = app
         this.generate()
     }
+
     destroy = () => {
         this.textures.snapPoints.small?.destroy(true)
         this.textures.snapPoints.large?.destroy(true)
@@ -119,8 +121,9 @@ export class VsrgCanvasCache {
         this.textures.buttons.time?.destroy(true)
         this.app = null
     }
+
     generate() {
-        const { app } = this
+        const {app} = this
         if (!app) return
         this.isMobile = isMobile()
         this.generateSnapPoints(app)
@@ -133,18 +136,21 @@ export class VsrgCanvasCache {
     getHitObjectCache(color: string) {
         return this.textures.hitObjects[color] || this.textures.hitObjects['#FF0000']
     }
+
     getHeldTrailCache(color: string) {
         return this.textures.trails[color] || this.textures.trails['#FF0000']
     }
+
     getHeldHitObjectCache(color: string) {
         return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#FF0000']
     }
+
     getSelectionRingsCache(color: string) {
         return this.textures.selectionRings[color] || this.textures.selectionRings['#FF0000']
     }
 
     generateOthers(app: Application) {
-        const { sizes, colors, isHorizontal } = this
+        const {sizes, colors, isHorizontal} = this
         //timeline
         const square = new Graphics()
         square.beginFill(this.colors.background_plain[1])
@@ -192,7 +198,7 @@ export class VsrgCanvasCache {
         const noteSize = sizes.timelineSize / 2
         const note = new Graphics()
 
-        note.lineStyle(this.isMobile ? 2 : 3 , colors.secondary[1], 1)
+        note.lineStyle(this.isMobile ? 2 : 3, colors.secondary[1], 1)
             .drawCircle(sizes.timelineSize / 2 + 1, sizes.timelineSize / 2, noteSize / 2)
         const noteTexture = app.renderer.generateTexture(note, {
             resolution: 1,
@@ -271,7 +277,7 @@ export class VsrgCanvasCache {
 
 
     generateTrails(app: Application) {
-        const { sizes, trackColors } = this
+        const {sizes, trackColors} = this
         const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = clamp(sizes.keyHeight / 2 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 3 : 4), 100)
         const margin = hitObjectHeight / 2
@@ -294,8 +300,9 @@ export class VsrgCanvasCache {
         })
         this.textures.sizes.trail = hitObjectHeight
     }
+
     generateSelectionRings(app: Application) {
-        const { sizes, trackColors } = this
+        const {sizes, trackColors} = this
         const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = clamp(sizes.keyHeight / 1.5 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 1.2 : 2), 150)
         withError.forEach(color => {
@@ -311,8 +318,9 @@ export class VsrgCanvasCache {
             ring.destroy(true)
         })
     }
+
     generateTrackCache(app: Application) {
-        const { colors, sizes, trackColors } = this
+        const {colors, sizes, trackColors} = this
         const hitObjectHeight = clamp(sizes.keyHeight / 1.8 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 2 : 3.5), 100)
         const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {
@@ -348,8 +356,9 @@ export class VsrgCanvasCache {
         this.textures.sizes.hitObject = hitObjectHeight
 
     }
+
     generateSnapPoints(app: Application) {
-        const { colors, sizes, isHorizontal, playbarOffset } = this
+        const {colors, sizes, isHorizontal, playbarOffset} = this
         const small = new Graphics()
         const large = new Graphics()
         const empty = new Graphics()

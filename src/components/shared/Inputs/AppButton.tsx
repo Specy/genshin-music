@@ -1,4 +1,4 @@
-import { Tooltip, hasTooltip, TooltipPosition } from "$cmp/shared/Utility/Tooltip"
+import {hasTooltip, Tooltip, TooltipPosition} from "$cmp/shared/Utility/Tooltip"
 
 export interface AppButtonProps {
     style?: React.CSSProperties,
@@ -13,26 +13,27 @@ export interface AppButtonProps {
     tooltipPosition?: TooltipPosition
     ariaLabel?: string
 }
+
 export function AppButton({
-    style = {},
-    className = '',
-    cssVar,
-    children,
-    toggled = false,
-    onClick,
-    disabled = false,
-    visible = true,
-    tooltip,
-    ariaLabel,
-    tooltipPosition
-}: AppButtonProps) {
+                              style = {},
+                              className = '',
+                              cssVar,
+                              children,
+                              toggled = false,
+                              onClick,
+                              disabled = false,
+                              visible = true,
+                              tooltip,
+                              ariaLabel,
+                              tooltipPosition
+                          }: AppButtonProps) {
     return <button
         className={`app-button ${className} ${toggled ? 'active' : ''} ${hasTooltip(tooltip)}`}
         style={{
-            ...(cssVar && { backgroundColor: `var(--${cssVar})`, color: `var(--${cssVar}-text)` }),
+            ...(cssVar && {backgroundColor: `var(--${cssVar})`, color: `var(--${cssVar}-text)`}),
             ...style,
             ...(!visible
-                ? { display: 'none' }
+                ? {display: 'none'}
                 : {})
         }}
         aria-label={ariaLabel}

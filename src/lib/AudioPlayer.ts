@@ -1,5 +1,5 @@
 import {Pitch} from "$config";
-import Instrument from "./Instrument"
+import {Instrument} from '$lib/Instrument'
 import {AudioProvider} from "./Providers/AudioProvider";
 import {InstrumentData} from "./Songs/SongClasses";
 

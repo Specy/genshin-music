@@ -19,17 +19,19 @@ class GlobalConfigStore {
         IS_MIDI_AVAILABLE: true,
         IS_UMA_MODE: false
     }
+
     constructor() {
         makeObservable(this)
     }
+
     setState = (state: Partial<GlobalConfig>) => {
         Object.assign(this.state, state)
     }
     setUmaMode = (isOn: boolean) => {
         this.setState({IS_UMA_MODE: isOn})
-        if(isOn){
+        if (isOn) {
             NoteLayer.setMaxLayerCount(1024)
-        }else{
+        } else {
             NoteLayer.setMaxLayerCount(BASE_LAYER_LIMIT)
         }
         localStorage.setItem(`${APP_NAME}_uma_mode`, JSON.stringify(isOn))
@@ -45,7 +47,8 @@ class GlobalConfigStore {
         this.setUmaMode(umaMode)
     }
     get = () => {
-        return { ...this.state }
+        return {...this.state}
     }
 }
+
 export const globalConfigStore = new GlobalConfigStore()

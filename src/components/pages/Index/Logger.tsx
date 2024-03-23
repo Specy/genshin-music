@@ -9,7 +9,7 @@ export default function FloatingMessage() {
     return <>
         <div className="logger-wrapper">
             {toasts.map(toast => {
-                return <Toast 
+                return <Toast
                     toast={toast}
                     key={toast.id}
                 />
@@ -28,15 +28,15 @@ interface ToastProps {
 }
 
 
-function Toast({ toast }: ToastProps) {
+function Toast({toast}: ToastProps) {
     const observableToast = useObservableObject(toast)
-    const { text, type, id, timeout, visible } = observableToast
+    const {text, type, id, timeout, visible} = observableToast
     const isBig = text.length > 150
     return <DecoratedCard
         key={id}
         boxProps={{
             className: visible ? "logger-toast" : "logger-toast logger-toast-hidden",
-            style: { maxWidth: isBig ? '24rem' : '19rem' }
+            style: {maxWidth: isBig ? '24rem' : '19rem'}
         }}
         onClick={() => {
             logger.removeToast(id)
@@ -46,13 +46,13 @@ function Toast({ toast }: ToastProps) {
             {!isBig &&
                 <div className="logger-status">
                     {type === LoggerStatus.ERROR &&
-                        <FaTimesCircle color={type} size={20} />
+                        <FaTimesCircle color={type} size={20}/>
                     }
                     {type === LoggerStatus.SUCCESS &&
-                        <FaCheckCircle color={type} size={20} />
+                        <FaCheckCircle color={type} size={20}/>
                     }
                     {type === LoggerStatus.WARN &&
-                        <FaExclamationTriangle color={type} size={20} />
+                        <FaExclamationTriangle color={type} size={20}/>
                     }
                 </div>
             }
@@ -63,7 +63,7 @@ function Toast({ toast }: ToastProps) {
         <div className="logger-progress-outer">
             <div
                 className="logger-progress-bar"
-                style={{ animation: `logger-animation ${timeout}ms linear forwards`, backgroundColor: type }}
+                style={{animation: `logger-animation ${timeout}ms linear forwards`, backgroundColor: type}}
                 key={id}
             />
         </div>

@@ -1,10 +1,10 @@
-import { useObservableArray } from "$lib/Hooks/useObservable";
-import Instrument, { ObservableNote } from "$lib/Instrument";
-import { zenKeyboardStore } from "$stores/ZenKeyboardStore";
-import { ZenNote } from "./ZenNote";
-import { useEffect } from 'react'
-import { NoteNameType, Pitch } from "$config";
-import { createKeyboardListener } from "$stores/KeybindsStore";
+import {useObservableArray} from "$lib/Hooks/useObservable";
+import {Instrument, ObservableNote} from "$lib/Instrument"
+import {zenKeyboardStore} from "$stores/ZenKeyboardStore";
+import {ZenNote} from "./ZenNote";
+import {useEffect} from 'react'
+import {NoteNameType, Pitch} from "$config";
+import {createKeyboardListener} from "$stores/KeybindsStore";
 import s from './ZenKeyboard.module.css'
 
 interface ZenKeyboardProps {
@@ -16,6 +16,7 @@ interface ZenKeyboardProps {
     verticalOffset: number
     onNoteClick: (note: ObservableNote) => void
 }
+
 let cssBase = `keyboard ${s['zen-keyboard']}}`
 const keyboardClasses = new Map<number, string>([
     [15, `${cssBase} keyboard-5`],
@@ -24,10 +25,18 @@ const keyboardClasses = new Map<number, string>([
     [6, `${cssBase} keyboard-3`],
 ])
 
-export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scale, noteNameType, keySpacing }: ZenKeyboardProps) {
+export function ZenKeypad({
+                              onNoteClick,
+                              instrument,
+                              pitch,
+                              verticalOffset,
+                              scale,
+                              noteNameType,
+                              keySpacing
+                          }: ZenKeyboardProps) {
     const layout = useObservableArray(zenKeyboardStore.keyboard)
     useEffect(() => {
-        return createKeyboardListener("zen_keyboard", ({ shortcut, event }) => {
+        return createKeyboardListener("zen_keyboard", ({shortcut, event}) => {
             if (event.repeat) return
             const note = instrument.getNoteFromCode(shortcut.name)
             if (note !== null) onNoteClick(note)
@@ -35,10 +44,10 @@ export function ZenKeypad({ onNoteClick, instrument, pitch, verticalOffset, scal
     }, [onNoteClick, instrument])
     let keyboardClass = keyboardClasses.get(layout.length) || cssBase
     return <div className={keyboardClass}
-        style={{
-            transform: `scale(${scale / 100}) translateY(${verticalOffset}px)`,
-            marginTop: "unset"
-        }}
+                style={{
+                    transform: `scale(${scale / 100}) translateY(${verticalOffset}px)`,
+                    marginTop: "unset"
+                }}
     >
         {layout.map((note, index) =>
             <ZenNote

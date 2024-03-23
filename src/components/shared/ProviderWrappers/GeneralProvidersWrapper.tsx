@@ -1,25 +1,24 @@
-import { AudioProvider } from "$lib/Providers/AudioProvider"
-import { MIDIProvider } from "$lib/Providers/MIDIProvider"
-import { KeyboardProvider } from "$lib/Providers/KeyboardProvider";
-import { useCallback, useEffect, useState } from "react"
-import { songsStore } from "$stores/SongsStore";
-import { folderStore } from "$stores/FoldersStore";
-import { metronome } from "$lib/Metronome";
-import { IconButton } from "$cmp/shared/Inputs/IconButton";
-import { FaVolumeMute } from "react-icons/fa";
-import { keyBinds } from "$stores/KeybindsStore";
-import { themeStore } from "$stores/ThemeStore/ThemeStore";
-import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider";
-import { globalConfigStore } from "$stores/GlobalConfig";
+import {AudioProvider} from "$lib/Providers/AudioProvider"
+import {MIDIProvider} from "$lib/Providers/MIDIProvider"
+import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
+import {useEffect} from "react"
+import {songsStore} from "$stores/SongsStore";
+import {folderStore} from "$stores/FoldersStore";
+import {metronome} from "$lib/Metronome";
+import {keyBinds} from "$stores/KeybindsStore";
+import {themeStore} from "$stores/ThemeStore/ThemeStore";
+import {ThemeProvider} from "$stores/ThemeStore/ThemeProvider";
+import {globalConfigStore} from "$stores/GlobalConfig";
 import Logger from '$cmp/pages/Index/Logger'
-import { AsyncPromptWrapper } from '$cmp/shared/Utility/AsyncPrompt';
-import { setupProtocol } from "$lib/Hooks/useWindowProtocol";
+import {AsyncPromptWrapper} from '$cmp/shared/Utility/AsyncPrompt';
+import {setupProtocol} from "$lib/Hooks/useWindowProtocol";
 
 interface GeneralProvidersWrapperProps {
     children: React.ReactNode
     onLoaded?: () => void
 }
-export function GeneralProvidersWrapper({ children, onLoaded }: GeneralProvidersWrapperProps) {
+
+export function GeneralProvidersWrapper({children, onLoaded}: GeneralProvidersWrapperProps) {
     useEffect(() => {
         AudioProvider.init().catch(console.error)
         metronome.init(AudioProvider.getAudioContext())
@@ -39,8 +38,8 @@ export function GeneralProvidersWrapper({ children, onLoaded }: GeneralProviders
         }
     }, [])
     return <>
-        <Logger />
-        <AsyncPromptWrapper />
+        <Logger/>
+        <AsyncPromptWrapper/>
         {children}
     </>
 }

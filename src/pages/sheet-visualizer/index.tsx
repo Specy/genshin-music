@@ -38,6 +38,7 @@ export default function SheetVisualizer() {
         if (width < 50 && amount === 1) return
         setFramesPerRow(newAmount)
     }
+
     const loadSong = useCallback((song: SerializedSong, layout: NoteNameType) => {
         try {
             const temp = songService.parseSong(song)
@@ -66,7 +67,7 @@ export default function SheetVisualizer() {
             console.error(e)
             logger.error('Error visualizing song')
         }
-        Analytics.songEvent({ type: 'visualize' })
+        Analytics.songEvent({type: 'visualize'})
     }, [])
     useEffect(() => {
         if (currentSong) loadSong(currentSong, keyboardLayout)
@@ -81,12 +82,13 @@ export default function SheetVisualizer() {
             />
         }
     >
-        <PageMeta text="Sheet Visualizer" description='Learn a sheet in a visual way, convert the song into text format or print it as pdf' />
-        <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+        <PageMeta text="Sheet Visualizer"
+                  description='Learn a sheet in a visual way, convert the song into text format or print it as pdf'/>
+        <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
             <div className={`${s['visualizer-buttons-wrapper']} noprint`}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                     <div>Note names</div>
-                    <Switch checked={hasText} onChange={setHasText} />
+                    <Switch checked={hasText} onChange={setHasText}/>
                     {hasText &&
                         <Select
                             value={keyboardLayout}
@@ -97,37 +99,38 @@ export default function SheetVisualizer() {
                     }
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{display: 'flex', alignItems: 'center'}}>
                     Per row: {framesPerRow}
                     <button className={s['visualizer-plus-minus']}
-                        onClick={() => setFrames(-1)}>
+                            onClick={() => setFrames(-1)}>
                         -
                     </button>
                     <button className={s['visualizer-plus-minus']}
-                        onClick={() => setFrames(1)}>
+                            onClick={() => setFrames(1)}>
                         +
                     </button>
                 </div>
             </div>
-            <h1 className='onprint' style={{ color: "black" }}>
+            <h1 className='onprint' style={{color: "black"}}>
                 Sky Music Nightly
             </h1>
-            <h1 className='onprint' style={{ color: "black" }}>
+            <h1 className='onprint' style={{color: "black"}}>
                 {currentSong ? currentSong?.name : ''}
             </h1>
-            <div style={{ width: '100%' }} className='noprint'>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{width: '100%'}} className='noprint'>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <h2 className='text-ellipsis'>
                         {currentSong ? currentSong.name : 'No song selected'}
                     </h2>
                     {currentSong &&
-                        <AppButton onClick={() => window.print()} style={{ minWidth: 'fit-content', marginLeft: "0.4rem" }}>
+                        <AppButton onClick={() => window.print()}
+                                   style={{minWidth: 'fit-content', marginLeft: "0.4rem"}}>
                             Print as PDF
                         </AppButton>
                     }
 
                 </div>
-                <div style={{ color: 'var(--background-text)' }}>
+                <div style={{color: 'var(--background-text)'}}>
                     Select a song from the menu on the left.
                     Remember that you can learn a song with the interactive
                     practice tool in the Player
@@ -135,7 +138,7 @@ export default function SheetVisualizer() {
             </div>
             <div
                 className={s['visualizer-frame-wrapper']}
-                style={{ gridTemplateColumns: `repeat(${framesPerRow},1fr)` }}
+                style={{gridTemplateColumns: `repeat(${framesPerRow},1fr)`}}
                 ref={ref}
             >
                 {sheet && sheet.chunks.map((chunk, i) =>

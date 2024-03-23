@@ -1,5 +1,3 @@
-
-
 export type VsrgComposerEvents =
     'ALL'
     | 'colorChange'
@@ -12,7 +10,7 @@ export type VsrgComposerEvents =
     | 'maxFpsChange'
     | 'timestampChange'
 export type VsrcComposerEventCallback = {
-callback: (event: VsrgComposerEvents, data?: any) => void,
+    callback: (event: VsrgComposerEvents, data?: any) => void,
     id: string
 }
 
@@ -24,6 +22,7 @@ class VsrgComposerStore {
         if (!exists) this.listeners.set(event, [])
         this.listeners.get(event)!.push(callback)
     }
+
     removeEventListener(event: VsrgComposerEvents, callback: Partial<VsrcComposerEventCallback>) {
         const callbacks = this.listeners.get(event)
         if (!callbacks) return
@@ -31,6 +30,7 @@ class VsrgComposerStore {
         if (index === -1) return
         callbacks.splice(index, 1)
     }
+
     emitEvent(event: VsrgComposerEvents, data?: any) {
         const callbacks = [...(this.listeners.get(event) ?? []), ...(this.listeners.get('ALL') ?? [])]
         callbacks.forEach(c => c.callback(event, data))

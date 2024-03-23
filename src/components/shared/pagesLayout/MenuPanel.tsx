@@ -5,7 +5,7 @@ interface MenuPanelProps<T> {
     children: React.ReactNode
 }
 
-export default function MenuPanel<T>({ title, current, children, id }: MenuPanelProps<T>) {
+export default function MenuPanel<T>({title, current, children, id}: MenuPanelProps<T>) {
     return <div className={current === id ? "menu-panel menu-panel-visible" : "menu-panel"}>
         {title &&
             <div className="menu-title">

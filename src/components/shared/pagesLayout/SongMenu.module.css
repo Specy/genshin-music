@@ -1,4 +1,4 @@
-.search{
+.search {
     border-radius: 0.4rem;
     display: flex;
     flex-direction: row;
@@ -6,7 +6,8 @@
     align-items: center;
     padding-right: 0.5rem;
 }
-.search input{
+
+.search input {
     padding: 0.5rem 1rem;
     border: none;
     background-color: transparent;

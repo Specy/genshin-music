@@ -1,4 +1,4 @@
-.player-chunks-page{
+.player-chunks-page {
     position: absolute;
     width: 50vw;
     max-width: 40rem;
@@ -9,12 +9,14 @@
     grid-template-columns: repeat(5, 1fr);
     gap: 0.2rem
 }
+
 @media only screen and (max-width: 920px) {
-    .player-chunks-page{
+    .player-chunks-page {
         width: 45vw;
     }
 }
-.player-controls{
+
+.player-controls {
     position: absolute;
     align-items: flex-end;
     padding: 0.8rem;

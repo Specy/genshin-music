@@ -1,4 +1,4 @@
-import { hasTooltip, Tooltip } from "$cmp/shared/Utility/Tooltip";
+import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
 
 
 interface CanvasToolProps {
@@ -10,10 +10,10 @@ interface CanvasToolProps {
 }
 
 
-export function CanvasTool({ children, tooltip, onClick, style, ariaLabel }: CanvasToolProps) {
-    return <button 
-        className={`tool ${hasTooltip(tooltip)}`} 
-        onClick={onClick} 
+export function CanvasTool({children, tooltip, onClick, style, ariaLabel}: CanvasToolProps) {
+    return <button
+        className={`tool ${hasTooltip(tooltip)}`}
+        onClick={onClick}
         style={style}
         aria-label={ariaLabel}
     >

@@ -9,34 +9,40 @@ type SerializedMidiSong = SerializedSong & {
 }
 
 
-
-export class MidiSong extends Song{
+export class MidiSong extends Song {
     song: Midi
-    constructor(song?: Midi){
+
+    constructor(song?: Midi) {
         super(song?.name || "Untitled", 1, "midi")
         this.song = song || new Midi()
     }
 
-    static deserialize(data: SerializedMidiSong): MidiSong{
+    static deserialize(data: SerializedMidiSong): MidiSong {
         const parsed = new MidiSong()
         parsed.song.fromJSON(data.song)
         return parsed
     }
+
     toMidi(): Midi {
         return this.song
     }
+
     toRecordedSong(): RecordedSong {
         return new RecordedSong(this.name)
     }
+
     toComposedSong(): ComposedSong {
         return new ComposedSong(this.name)
     }
+
     toGenshin() {
-        
-    }
-    clone(){
 
     }
+
+    clone() {
+
+    }
+
     serialize(): SerializedMidiSong {
         return {
             id: this.id,

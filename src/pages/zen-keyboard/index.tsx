@@ -1,7 +1,7 @@
 import {ZenKeypad} from "$cmp/pages/ZenKeyboard/ZenKeypad"
 import {ZenKeyboardMenu} from "$cmp/pages/ZenKeyboard/ZenKeyboardMenu"
 import {ZenKeyboardSettings, ZenKeyboardSettingsDataType} from "$lib/BaseSettings"
-import Instrument, {ObservableNote} from "$lib/Instrument"
+import {Instrument, ObservableNote} from "$lib/Instrument"
 import {metronome} from "$lib/Metronome"
 import {AudioProvider} from "$lib/Providers/AudioProvider"
 import {settingsService} from "$lib/Services/SettingsService"

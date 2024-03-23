@@ -1,21 +1,24 @@
-
-import { capitalize, cn } from "$lib/Utilities";
-import { useState, useEffect } from "react";
-import { AppButton } from "$cmp/shared/Inputs/AppButton";
-import { Shortcut, createKeyComboComposer } from "$stores/KeybindsStore";
-import { FaCheck } from "react-icons/fa";
+import {capitalize, cn} from "$lib/Utilities";
+import {useEffect, useState} from "react";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {createKeyComboComposer, Shortcut} from "$stores/KeybindsStore";
+import {FaCheck} from "react-icons/fa";
 import s from './ShortcutEditor.module.css'
-import { IconButton } from "$cmp/shared/Inputs/IconButton";
-import { Tooltip, hasTooltip } from "$cmp/shared/Utility/Tooltip";
+import {IconButton} from "$cmp/shared/Inputs/IconButton";
+import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
+
 interface ShortcutEditorProps<K, V> {
     map: Map<K, V>;
     onChangeShortcut: (oldKey: K, newKey: K, shortcut: V) => void;
 }
 
-export function ShortcutEditor<K extends string, V extends Shortcut<string>>({ map, onChangeShortcut }: ShortcutEditorProps<K, V>) {
+export function ShortcutEditor<K extends string, V extends Shortcut<string>>({
+                                                                                 map,
+                                                                                 onChangeShortcut
+                                                                             }: ShortcutEditorProps<K, V>) {
     const items = Array.from(map.entries())
     const [selected, setSelected] = useState<K | null>(null)
-    return <div className="column" style={{ gap: "0.4rem" }}>
+    return <div className="column" style={{gap: "0.4rem"}}>
         {items.sort((a, b) => a[1].name < b[1].name ? 1 : -1).map(([key, value], i) =>
             <ShortcutElement
                 key={i}
@@ -41,11 +44,17 @@ interface ShortcutElementProps<K extends string, V> {
     onChangeShortcut: (key: K, shortcut: V) => void;
 }
 
-function ShortcutElement<K extends string, V extends Shortcut<string>>({ mapKey, value, selected, setSelected, onChangeShortcut }: ShortcutElementProps<K, V>) {
+function ShortcutElement<K extends string, V extends Shortcut<string>>({
+                                                                           mapKey,
+                                                                           value,
+                                                                           selected,
+                                                                           setSelected,
+                                                                           onChangeShortcut
+                                                                       }: ShortcutElementProps<K, V>) {
     const [newKey, setNewKey] = useState<K>(mapKey)
     useEffect(() => {
         if (!selected) return
-        return createKeyComboComposer(`shortcut_${value}`, ({ keyCombo }) => {
+        return createKeyComboComposer(`shortcut_${value}`, ({keyCombo}) => {
             setNewKey(keyCombo.join('+') as K)
         })
     }, [selected, value])
@@ -59,23 +68,23 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({ mapKey,
             hasTooltip(value.description)
         )}
     >
-        <div className="row-centered" style={{ gap: "0.4rem" }}>
+        <div className="row-centered" style={{gap: "0.4rem"}}>
             {capitalize((value.name as string).toString?.().replaceAll("_", " ") ?? value as any)}
             {value.holdable &&
-                <div style={{ fontSize: '0.8rem' }}>
+                <div style={{fontSize: '0.8rem'}}>
                     (Holdable)
                 </div>
             }
 
         </div>
-        <div className="row" style={{ gap: "0.4rem" }}>
+        <div className="row" style={{gap: "0.4rem"}}>
             {selected &&
                 <IconButton
                     cssVar="accent"
                     onClick={() => {
                         onChangeShortcut(newKey, value)
-                    }} >
-                    <FaCheck />
+                    }}>
+                    <FaCheck/>
                 </IconButton>
             }
             <AppButton

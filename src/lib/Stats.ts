@@ -3,6 +3,7 @@ declare global {
         gtag?: (...args: any[]) => Promise<void>
     }
 }
+
 async function callGA(fn: () => Promise<void> | undefined) {
     try {
         return {
@@ -10,7 +11,7 @@ async function callGA(fn: () => Promise<void> | undefined) {
         }
     } catch (e) {
         if (window.gtag) console.log('Error with GA')
-        return { error: e }
+        return {error: e}
     }
 }
 

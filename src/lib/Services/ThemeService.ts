@@ -6,6 +6,7 @@ import {DbInstance} from "./Database/Database"
 
 class ThemeService {
     themeCollection = DbInstance.collections.themes
+
     async getTheme(id: string): Promise<SerializedTheme | null> {
         const theme = await this.themeCollection.findOneById(id)
         if (theme) {
@@ -18,6 +19,7 @@ class ThemeService {
         }
         return theme
     }
+
     async getThemes(): Promise<SerializedTheme[]> {
         const themes = await this.themeCollection.find({})
         //legacy format
@@ -31,29 +33,36 @@ class ThemeService {
         })
         return themes.map(theme => ThemeProvider.sanitize(theme))
     }
+
     async addTheme(theme: SerializedTheme) {
         const id = DbInstance.generateId()
         theme.id = id
         await this.themeCollection.insert(theme)
         return id
     }
+
     updateTheme(id: string, data: SerializedTheme) {
         data.id = id
         return this.themeCollection.updateById(id, data)
     }
+
     removeTheme(query: Query<SerializedTheme>) {
         return this.themeCollection.remove(query)
     }
+
     removeThemeById(id: string) {
         return this.themeCollection.removeById(id)
     }
+
     getCurrentThemeId() {
         return localStorage.getItem(APP_NAME + '_Theme')
     }
+
     setCurrentThemeId(id: string | null) {
         localStorage.setItem(APP_NAME + '_Theme', id ?? '')
     }
-    _clearAll(){
+
+    _clearAll() {
         return this.themeCollection.remove({})
     }
 }

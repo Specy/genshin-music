@@ -56,11 +56,13 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         reject: (error: any) => void
     } | null = null
     inited = false
+
     constructor(validDomains: string[]) {
         this.validDomains = new Set(validDomains)
         //@ts-ignore
         this.registerAskHandler("ping", async () => "pong")
     }
+
     async init() {
         if (this.inited) return console.warn("already inited window protocol")
         //listen for messages only if it has a parent
@@ -68,13 +70,14 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         this.inited = true
         console.log(`window ${window.location.href} ready to listen for messages`)
     }
+
     connect = async (to: Window, timeout = 6000): Promise<void> => {
         if (window === to) return console.warn("cannot connect to self")
         console.log(`connecting from ${window.location.href} to`, to)
         this.target = to
         if (this.connectionPromise) this.connectionPromise.reject("reconnecting")
         return new Promise((resolve, reject) => {
-            this.connectionPromise = { resolve, reject }
+            this.connectionPromise = {resolve, reject}
             let resolved = false
             let intervalTime = 500
             let retries = timeout / intervalTime
@@ -118,12 +121,15 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         this.connectionPromise = null
         this.target = null
     }
+
     public registerAskHandler<K extends keyof A>(key: K, handler: AskHandler<A[K]>) {
         this.askHandlers.set(key, handler)
     }
+
     public registerTellHandler<K extends keyof T>(key: K, handler: TellHandler<T[K]>) {
         this.tellHandlers.set(key, handler)
     }
+
     public ask<K extends keyof A>(key: K, payload: Payload<A[K]>, to?: Window): Promise<AskResponse<A[K]>> {
         return new Promise((resolve, reject) => {
             this._id++
@@ -143,6 +149,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
             this.send(message, to ?? this.target!)
         })
     }
+
     public tell<K extends keyof T>(key: K, message: Message<T[K]>, to?: Window) {
         const payload = {
             type: "tell",
@@ -152,6 +159,7 @@ export class WindowProtocol<P extends ProtocolDescriptor, A = AskEvents<P>, T = 
         } satisfies PayloadMessage<keyof A | keyof T>
         this.send(payload, to ?? this.target!)
     }
+
     private receive = async (message: MessageEvent<PayloadMessage<keyof A | keyof T>>) => {
         if (!this.validDomains.has(message.origin)) return console.warn("Blocked window message, invalid domain", message.origin)
         const data = message.data

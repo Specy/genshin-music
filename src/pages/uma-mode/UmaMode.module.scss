@@ -1,103 +1,103 @@
 .uma-mode-button {
-    border: none;
-    background-color: unset;
-    --uma-mode-button-size: 6rem;
-    --uma-mode-padding: 1.5rem;
-    --uma-mode-width: 25rem;
-    height: var(--uma-mode-button-size);
-    width: var(--uma-mode-width);
-    border-radius: 10rem;
-    display: flex;
-    align-items: center;
-    position: relative;
-    padding: var(--uma-mode-padding);
-    background: linear-gradient(145deg, #ff0000, #ff7100, #ffa100, #ffb400, #ff7100, #ff0000);
-    background-size: 150% 150%;
-    animation: rainbow 5s ease infinite;
-    margin: 2rem auto;
-    cursor: pointer;
+  border: none;
+  background-color: unset;
+  --uma-mode-button-size: 6rem;
+  --uma-mode-padding: 1.5rem;
+  --uma-mode-width: 25rem;
+  height: var(--uma-mode-button-size);
+  width: var(--uma-mode-width);
+  border-radius: 10rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: var(--uma-mode-padding);
+  background: linear-gradient(145deg, #ff0000, #ff7100, #ffa100, #ffb400, #ff7100, #ff0000);
+  background-size: 150% 150%;
+  animation: rainbow 5s ease infinite;
+  margin: 2rem auto;
+  cursor: pointer;
 }
 
 .uma-mode-on {
-    background: linear-gradient(145deg, #000000, #4a4949, #575757, #31313d, #1a1a21);
-    background-size: 150% 150%;
-    animation: rainbow 5s ease infinite;
+  background: linear-gradient(145deg, #000000, #4a4949, #575757, #31313d, #1a1a21);
+  background-size: 150% 150%;
+  animation: rainbow 5s ease infinite;
 }
 
 .uma-mode-ball {
-    height: calc(var(--uma-mode-button-size) - var(--uma-mode-padding) * 2);
-    width: calc(var(--uma-mode-button-size) - var(--uma-mode-padding) * 2);
-    border-radius: 10rem;
-    transition: all 0.3s;
-    font-size: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  height: calc(var(--uma-mode-button-size) - var(--uma-mode-padding) * 2);
+  width: calc(var(--uma-mode-button-size) - var(--uma-mode-padding) * 2);
+  border-radius: 10rem;
+  transition: all 0.3s;
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .uma-mode-text {
-    position: absolute;
-    right: calc(var(--uma-mode-padding) + 0.2rem);
-    transition: all 0.3s ease-out;
-    font-size: 2rem;
-    color: white;
-    white-space: nowrap;
+  position: absolute;
+  right: calc(var(--uma-mode-padding) + 0.2rem);
+  transition: all 0.3s ease-out;
+  font-size: 2rem;
+  color: white;
+  white-space: nowrap;
 }
 
 .particle {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    pointer-events: none;
-    animation: wobble var(--lifetime) linear forwards;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  pointer-events: none;
+  animation: wobble var(--lifetime) linear forwards;
 }
 
 @keyframes wobble {
-    0% {
-        opacity: 0;
-        transform: translateX(var(--x)) translateY(calc(var(--y) * -1)) scale(var(--scale));
-    }
+  0% {
+    opacity: 0;
+    transform: translateX(var(--x)) translateY(calc(var(--y) * -1)) scale(var(--scale));
+  }
 
-    30% {
-        opacity: 1;
-        transform: translateX(calc(var(--x) + 0.2rem)) translateY(calc((var(--y) + 21px) * -1)) scale(calc(var(--scale) * 1.05));
-    }
+  30% {
+    opacity: 1;
+    transform: translateX(calc(var(--x) + 0.2rem)) translateY(calc((var(--y) + 21px) * -1)) scale(calc(var(--scale) * 1.05));
+  }
 
-    50% {
-        opacity: 1;
-        transform: translateX(calc(var(--x) - 0.2rem)) translateY(calc((var(--y) + 35px) * -1)) scale(calc(var(--scale) * 1.05));
-    }
+  50% {
+    opacity: 1;
+    transform: translateX(calc(var(--x) - 0.2rem)) translateY(calc((var(--y) + 35px) * -1)) scale(calc(var(--scale) * 1.05));
+  }
 
-    80% {
-        opacity: 1;
-        transform: translateX(calc(var(--x))) translateY(calc((var(--y) + 56px) * -1)) scale(calc(var(--scale) * 1.05));
-    }
+  80% {
+    opacity: 1;
+    transform: translateX(calc(var(--x))) translateY(calc((var(--y) + 56px) * -1)) scale(calc(var(--scale) * 1.05));
+  }
 
-    100% {
-        opacity: 0;
-        transform: translateX(calc(var(--x) + 0.2rem)) translateY(calc((var(--y) + 70px) * -1)) scale(var(--scale));
-    }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(var(--x) + 0.2rem)) translateY(calc((var(--y) + 70px) * -1)) scale(var(--scale));
+  }
 }
 
 
 .uma-mode-on .uma-mode-ball {
-    transform: translateX(calc(var(--uma-mode-width) - var(--uma-mode-button-size)));
+  transform: translateX(calc(var(--uma-mode-width) - var(--uma-mode-button-size)));
 }
 
 .uma-mode-on .uma-mode-text {
-    right: calc(100% - var(--uma-mode-padding) - 0.2rem);
-    transform: translateX(100%);
+  right: calc(100% - var(--uma-mode-padding) - 0.2rem);
+  transform: translateX(100%);
 }
 
 
 @keyframes rainbow {
-    0% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
-      100% {
-        background-position: 0% 50%;
-      }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }

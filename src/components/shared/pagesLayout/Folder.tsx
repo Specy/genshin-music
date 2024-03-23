@@ -1,17 +1,16 @@
-import { Folder, FolderFilterType } from "$lib/Folder"
-import { fileService } from "$lib/Services/FileService"
+import {Folder, FolderFilterType} from "$lib/Folder"
+import {fileService} from "$lib/Services/FileService"
 import cloneDeep from "lodash.clonedeep"
-import { useEffect, useRef, useState } from "react"
-import { BsChevronRight } from "react-icons/bs"
-import { FaDownload, FaEllipsisH, FaFilter, FaPen, FaTrash } from "react-icons/fa"
-import { folderStore } from "$stores/FoldersStore"
-import { asyncConfirm } from "$cmp/shared/Utility/AsyncPrompts"
-import { FloatingDropdown, FloatingDropdownRow, FloatingDropdownText } from "$cmp/shared/Utility/FloatingDropdown"
-import { SerializedSongKind } from "$types/SongTypes"
-import { APP_NAME, FOLDER_FILTER_TYPES } from "$config"
-import { capitalize } from "$lib/Utilities"
-import { songService } from "$lib/Services/SongService"
-
+import {useEffect, useRef, useState} from "react"
+import {BsChevronRight} from "react-icons/bs"
+import {FaDownload, FaEllipsisH, FaFilter, FaPen, FaTrash} from "react-icons/fa"
+import {folderStore} from "$stores/FoldersStore"
+import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts"
+import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown"
+import {SerializedSongKind} from "$types/SongTypes"
+import {APP_NAME, FOLDER_FILTER_TYPES} from "$config"
+import {capitalize} from "$lib/Utilities"
+import {songService} from "$lib/Services/SongService"
 
 
 interface FolderProps {
@@ -23,11 +22,13 @@ interface FolderProps {
     isDefault?: boolean,
     defaultOpen?: boolean
 }
+
 interface SongFolderContentProps {
     children: React.ReactNode
     title?: string,
 }
-export function SongFolderContent({ children, title }: SongFolderContentProps) {
+
+export function SongFolderContent({children, title}: SongFolderContentProps) {
     return <div className="folder-content">
         {title && <h2 className="folder-title">{title}</h2>}
         <div className="folder-songs-wrapper">
@@ -37,7 +38,15 @@ export function SongFolderContent({ children, title }: SongFolderContentProps) {
 }
 
 
-export function SongFolder({ children, backgroundColor, color, headerColor,  data, isDefault, defaultOpen = false }: FolderProps) {
+export function SongFolder({
+                               children,
+                               backgroundColor,
+                               color,
+                               headerColor,
+                               data,
+                               isDefault,
+                               defaultOpen = false
+                           }: FolderProps) {
     const [expanded, setExpanded] = useState(false)
     const [isRenaming, setIsRenaming] = useState(false)
     const [folderName, setFolderName] = useState(data.name)
@@ -63,7 +72,8 @@ export function SongFolder({ children, backgroundColor, color, headerColor,  dat
     useEffect(() => {
         setExpanded(defaultOpen)
     }, [defaultOpen])
-    const style = { backgroundColor, color }
+    const style = {backgroundColor, color}
+
     async function deleteFolder() {
         const confirm = await asyncConfirm(
             `Are you sure you want to delete "${data.name}"?  
@@ -79,12 +89,12 @@ export function SongFolder({ children, backgroundColor, color, headerColor,  dat
                 if (isRenaming) return
                 setExpanded(!expanded)
             }}
-                className='folder-header-button'
-                style={{ color: headerColor }}
+                 className='folder-header-button'
+                 style={{color: headerColor}}
             >
                 <BsChevronRight
                     strokeWidth={2}
-                    style={{ transform: `rotate(${expanded ? 90 : 0}deg)`, transition: 'all 0.2s', }}
+                    style={{transform: `rotate(${expanded ? 90 : 0}deg)`, transition: 'all 0.2s',}}
                     size={18}
                 />
                 {isRenaming
@@ -93,7 +103,7 @@ export function SongFolder({ children, backgroundColor, color, headerColor,  dat
                         onChange={(e) => setFolderName(e.target.value)}
                         className='folder-name'
                     />
-                    : <div className='folder-name text-ellipsis' >
+                    : <div className='folder-name text-ellipsis'>
                         {data.name}
                     </div>
                 }
@@ -115,18 +125,18 @@ export function SongFolder({ children, backgroundColor, color, headerColor,  dat
                             setIsRenaming(!isRenaming)
                         }}
                     >
-                        <FaPen style={{ marginRight: "0.4rem" }} size={14} />
-                        <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
+                        <FaPen style={{marginRight: "0.4rem"}} size={14}/>
+                        <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
                     </FloatingDropdownRow>
-                    <FloatingDropdownRow style={{ padding: '0 0.4rem' }}>
-                        <FaFilter style={{ marginRight: "0.4rem" }} />
+                    <FloatingDropdownRow style={{padding: '0 0.4rem'}}>
+                        <FaFilter style={{marginRight: "0.4rem"}}/>
                         <select className='dropdown-select'
-                            value={data.filterType}
-                            onChange={(e) => {
-                                const filterType = e.target.value as FolderFilterType
-                                data.set({ filterType })
-                                folderStore.updateFolder(data)
-                            }}
+                                value={data.filterType}
+                                onChange={(e) => {
+                                    const filterType = e.target.value as FolderFilterType
+                                    data.set({filterType})
+                                    folderStore.updateFolder(data)
+                                }}
                         >
                             {FOLDER_FILTER_TYPES.map(folder =>
                                 <option key={folder} value={folder}>{capitalize(folder.replaceAll("-", " "))}</option>
@@ -135,7 +145,7 @@ export function SongFolder({ children, backgroundColor, color, headerColor,  dat
                     </FloatingDropdownRow>
                     <FloatingDropdownRow
                         onClick={async () => {
-                            const songs = await songService.getManySerializedFromStorable(cloneDeep(data.songs)) 
+                            const songs = await songService.getManySerializedFromStorable(cloneDeep(data.songs))
                             const promises = songs.map(s => fileService.prepareSongDownload(s as SerializedSongKind))
                             const relatedSongs = (await Promise.all(promises)).flat()
                             const filtered = relatedSongs.filter((item, pos, self) => {
@@ -145,18 +155,18 @@ export function SongFolder({ children, backgroundColor, color, headerColor,  dat
                             fileService.downloadFiles(files, `${data.name}-folder.${APP_NAME.toLowerCase()}sheet`)
                         }}
                     >
-                        <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
-                        <FloatingDropdownText text='Download' />
+                        <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
+                        <FloatingDropdownText text='Download'/>
                     </FloatingDropdownRow>
                     <FloatingDropdownRow onClick={deleteFolder}>
-                        <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14} />
-                        <FloatingDropdownText text='Delete' />
+                        <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}} size={14}/>
+                        <FloatingDropdownText text='Delete'/>
                     </FloatingDropdownRow>
                 </FloatingDropdown>
             }
         </div>
 
-        <div className="column folder-overflow" style={{ maxHeight: expanded ? `${height}px` : 0 }}>
+        <div className="column folder-overflow" style={{maxHeight: expanded ? `${height}px` : 0}}>
             <div className="column folder-overflow-expandible" ref={ref}>
                 {children}
             </div>

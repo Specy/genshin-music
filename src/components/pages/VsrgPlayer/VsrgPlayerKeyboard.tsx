@@ -1,8 +1,8 @@
-import { useVsrgKey } from "$lib/Hooks/useVsrgKey"
-import { useVsrgKeyboardLayout } from "$lib/Hooks/useVsrgKeyboardLayout"
-import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
-import React, { useCallback, useEffect } from "react"
-import { KeyboardKey, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
+import {useVsrgKey} from "$lib/Hooks/useVsrgKey"
+import {useVsrgKeyboardLayout} from "$lib/Hooks/useVsrgKeyboardLayout"
+import {KeyboardProvider} from "$lib/Providers/KeyboardProvider"
+import React, {useCallback, useEffect} from "react"
+import {KeyboardKey, vsrgPlayerStore} from "$stores/VsrgPlayerStore"
 import s from "./VsrgPlayerKeyboard.module.css"
 
 interface VsrgPlayerKeyboardProps {
@@ -12,21 +12,28 @@ interface VsrgPlayerKeyboardProps {
     verticalOffset: number
     horizontalOffset: number
 }
+
 export type VsrgKeyboardLayout = 'line' | 'circles'
 
-export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, verticalOffset, horizontalOffset }: VsrgPlayerKeyboardProps) {
+export function VsrgPlayerKeyboard({
+                                       hitObjectSize,
+                                       offset,
+                                       keyboardLayout,
+                                       verticalOffset,
+                                       horizontalOffset
+                                   }: VsrgPlayerKeyboardProps) {
     const layout = useVsrgKeyboardLayout()
     useEffect(() => {
-        KeyboardProvider.listen(({ letter, event }) => {
+        KeyboardProvider.listen(({letter, event}) => {
             if (event.repeat) return
             const index = layout.findIndex((l) => l.key === letter)
             if (index >= 0) vsrgPlayerStore.pressKey(index)
-        }, { type: 'keydown', id: 'vsrg-player-keyboard' })
-        KeyboardProvider.listen(({ letter, event }) => {
+        }, {type: 'keydown', id: 'vsrg-player-keyboard'})
+        KeyboardProvider.listen(({letter, event}) => {
             if (event.repeat) return
             const index = layout.findIndex((l) => l.key === letter)
             if (index >= 0) vsrgPlayerStore.releaseKey(index)
-        }, { type: 'keyup', id: 'vsrg-player-keyboard' })
+        }, {type: 'keyup', id: 'vsrg-player-keyboard'})
         return () => {
             KeyboardProvider.unregisterById('vsrg-player-keyboard')
         }
@@ -100,7 +107,6 @@ export function VsrgPlayerKeyboard({ hitObjectSize, offset, keyboardLayout, vert
 }
 
 
-
 interface VsrgPlayerKeyboardKeyProps {
     index: number
     layout: KeyboardKey[]
@@ -108,7 +114,8 @@ interface VsrgPlayerKeyboardKeyProps {
     layoutType: VsrgKeyboardLayout
     size: number
 }
-function VsrgPlayerKeyboardKey({ index, layout, size, layoutType, offset }: VsrgPlayerKeyboardKeyProps) {
+
+function VsrgPlayerKeyboardKey({index, layout, size, layoutType, offset}: VsrgPlayerKeyboardKeyProps) {
     const data = useVsrgKey(index, layout)
     const pressKey = useCallback(() => {
         vsrgPlayerStore.pressKey(index)

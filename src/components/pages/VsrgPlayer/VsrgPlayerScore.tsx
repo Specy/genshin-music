@@ -1,9 +1,7 @@
-import { VSRG_SCORE_COLOR_MAP } from "$config";
-import { useVsrgScore } from "$lib/Hooks/useVsrgScore";
-import { memo } from "react";
+import {VSRG_SCORE_COLOR_MAP} from "$config";
+import {useVsrgScore} from "$lib/Hooks/useVsrgScore";
+import {memo} from "react";
 import s from "./VsrgPlayerScore.module.css"
-
-
 
 
 function _VsrgPlayerScore() {
@@ -18,16 +16,16 @@ function _VsrgPlayerScore() {
         </div>
         {score.scoreVisible &&
             <div className={`${s['vsrg-final-score']} box-shadow`}>
-                <ScoreElement text='Amazing' number={score.amazing} color={VSRG_SCORE_COLOR_MAP.amazing} gridArea='a' />
-                <ScoreElement text='Perfect' number={score.perfect} color={VSRG_SCORE_COLOR_MAP.perfect} gridArea='b' />
-                <ScoreElement text='Great' number={score.great} color={VSRG_SCORE_COLOR_MAP.great} gridArea='c' />
-                <ScoreElement text='Good' number={score.good} color={VSRG_SCORE_COLOR_MAP.good} gridArea='d' />
-                <ScoreElement text='Miss' number={score.miss} color={VSRG_SCORE_COLOR_MAP.miss} gridArea='e' />
-                <div className="row space-between" style={{ width: '100%', alignItems: 'center', gridArea: 'f'}}>
-                    <div style={{ fontSize: '1.2rem'}}>
+                <ScoreElement text='Amazing' number={score.amazing} color={VSRG_SCORE_COLOR_MAP.amazing} gridArea='a'/>
+                <ScoreElement text='Perfect' number={score.perfect} color={VSRG_SCORE_COLOR_MAP.perfect} gridArea='b'/>
+                <ScoreElement text='Great' number={score.great} color={VSRG_SCORE_COLOR_MAP.great} gridArea='c'/>
+                <ScoreElement text='Good' number={score.good} color={VSRG_SCORE_COLOR_MAP.good} gridArea='d'/>
+                <ScoreElement text='Miss' number={score.miss} color={VSRG_SCORE_COLOR_MAP.miss} gridArea='e'/>
+                <div className="row space-between" style={{width: '100%', alignItems: 'center', gridArea: 'f'}}>
+                    <div style={{fontSize: '1.2rem'}}>
                         Combo: {score.combo}x
                     </div>
-                    <div className='flex' style={{ fontSize: '0.8rem', alignItems: 'center'}}>
+                    <div className='flex' style={{fontSize: '0.8rem', alignItems: 'center'}}>
                         {score.score}
                     </div>
                 </div>
@@ -35,18 +33,21 @@ function _VsrgPlayerScore() {
         }
     </>
 }
+
 export const VsrgPlayerScore = memo(_VsrgPlayerScore, (p, n) => {
     return false
 })
+
 interface ScoreElementProps {
     number: number
     text: string
     color: string
     gridArea: string
 }
-function ScoreElement({ text, color, number, gridArea }: ScoreElementProps) {
-    return <div className={`${s['floating-score-element']} row`} style={{ gridArea }}>
-        <span style={{ color }}>
+
+function ScoreElement({text, color, number, gridArea}: ScoreElementProps) {
+    return <div className={`${s['floating-score-element']} row`} style={{gridArea}}>
+        <span style={{color}}>
             {text}
         </span>
         <span>

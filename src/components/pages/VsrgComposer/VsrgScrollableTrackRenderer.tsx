@@ -1,15 +1,15 @@
-import { Container, Sprite, Text, } from "@pixi/react";
-import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong";
-import { parseMouseClick } from "$lib/Utilities";
-import { ClickType } from "$types/GeneralTypes"
-import { FederatedPointerEvent, TextStyle, type Sprite as SpriteType } from "pixi.js";
+import {Container, Sprite, Text,} from "@pixi/react";
+import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
+import {parseMouseClick} from "$lib/Utilities";
+import {ClickType} from "$types/GeneralTypes"
+import {FederatedPointerEvent, type Sprite as SpriteType, TextStyle} from "pixi.js";
 
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
-import { VsrgCanvasCache } from "./VsrgComposerCache";
-import { VsrgTrackRenderer } from "./VsrgTrackRenderer";
-import { useEffect, useState } from "react";
-import { defaultVsrgTextStyle } from "./VsrgKeysRenderer";
-import { useConfig } from "$lib/Hooks/useConfig";
+import {VsrgCanvasColors, VsrgCanvasSizes} from "./VsrgComposerCanvas";
+import {VsrgCanvasCache} from "./VsrgComposerCache";
+import {VsrgTrackRenderer} from "./VsrgTrackRenderer";
+import {useEffect, useState} from "react";
+import {defaultVsrgTextStyle} from "./VsrgKeysRenderer";
+import {useConfig} from "$lib/Hooks/useConfig";
 import {useFontFaceObserver} from "$lib/Hooks/useFontFaceObserver";
 
 interface VsrgScrollableTrackRendererProps {
@@ -32,9 +32,25 @@ interface VsrgScrollableTrackRendererProps {
 const fontFace = [{
     family: 'Bonobo'
 }]
-export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp, snapPoints, colors, cache, onSnapPointSelect, preventClick, isHorizontal, selectedHitObject, selectHitObject, onAddTime, onRemoveTime }: VsrgScrollableTrackRendererProps) {
+
+export function VsrgScrollableTrackRenderer({
+                                                vsrg,
+                                                sizes,
+                                                snapPoint,
+                                                timestamp,
+                                                snapPoints,
+                                                colors,
+                                                cache,
+                                                onSnapPointSelect,
+                                                preventClick,
+                                                isHorizontal,
+                                                selectedHitObject,
+                                                selectHitObject,
+                                                onAddTime,
+                                                onRemoveTime
+                                            }: VsrgScrollableTrackRendererProps) {
     const scale = sizes.scaling
-    const { PLAY_BAR_OFFSET } = useConfig()
+    const {PLAY_BAR_OFFSET} = useConfig()
 
     const lowerBound = timestamp - (PLAY_BAR_OFFSET + cache.textures.snapPoints.size) / scale
     const upperBound = timestamp + ((isHorizontal ? sizes.width : sizes.height) - PLAY_BAR_OFFSET) / scale
@@ -48,6 +64,7 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
             fill: colors.lineColor[1],
         }))
     }, [isFontLoaded, colors.lineColor])
+
     function handleSnapPointClick(event: FederatedPointerEvent) {
         if (preventClick) return
         const target = event.target as SpriteType
@@ -61,6 +78,7 @@ export function VsrgScrollableTrackRenderer({ vsrg, sizes, snapPoint, timestamp,
             onSnapPointSelect(y, Math.floor(x / sizes.keyWidth), parseMouseClick(event.button))
         }
     }
+
     return <Container
         x={isHorizontal ? (-timestamp * scale + PLAY_BAR_OFFSET) : 0}
         y={isHorizontal ? sizes.timelineSize : (timestamp * scale - PLAY_BAR_OFFSET)}

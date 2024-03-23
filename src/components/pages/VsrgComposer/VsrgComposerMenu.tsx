@@ -5,7 +5,7 @@ import {SongMenu} from "$cmp/shared/pagesLayout/SongMenu";
 import {MenuItem} from "$cmp/shared/Miscellaneous/MenuItem";
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
-import {FloatingDropdownRow, FloatingDropdownText, FloatingDropdown} from "$cmp/shared/Utility/FloatingDropdown";
+import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown";
 import {HelpTooltip} from "$cmp/shared/Utility/HelpTooltip";
 import Memoized from "$cmp/shared/Utility/Memoized";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
@@ -31,7 +31,8 @@ import {
     FaFolder,
     FaHome,
     FaMusic,
-    FaPen, FaQuestion,
+    FaPen,
+    FaQuestion,
     FaSave,
     FaTimes,
     FaTrash

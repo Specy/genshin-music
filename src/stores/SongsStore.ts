@@ -7,9 +7,11 @@ import {makeObservable, observable} from "mobx"
 export class SongsStore {
     @observable.shallow songs: SongStorable[] = []
     debouncer = createDebouncer(10)
+
     constructor() {
         makeObservable(this)
     }
+
     sync = async () => {
         //debounces syncing to prevent multiple syncs in a short period of time
         this.debouncer(async () => {
@@ -44,7 +46,7 @@ export class SongsStore {
         const index = this.songs.findIndex(s => s.id === song.id)
         if (index !== -1) {
             this.songs[index] = extractStorable(serialized)
-        }else{
+        } else {
             this.sync()
         }
     }
@@ -69,5 +71,6 @@ export class SongsStore {
         this.sync()
     }
 }
+
 export const songsStore = new SongsStore()
 

@@ -36,6 +36,7 @@ function ThemePage() {
         ThemeProvider.set(name, value)
         await ThemeProvider.save()
     }
+
     async function handlePropReset(key: ThemeKeys) {
         ThemeProvider.reset(key)
         await ThemeProvider.save()
@@ -51,10 +52,12 @@ function ThemePage() {
             }
         }
     }
+
     const logImportError = useCallback((error?: any) => {
         if (error) console.error(error)
         logger.error('There was an error importing this theme, is it the correct file?', 4000)
     }, [])
+
     async function cloneTheme(name: string) {
         const theme = new BaseTheme(name)
         theme.state = cloneDeep(ThemeProvider.state)
@@ -62,6 +65,7 @@ function ThemePage() {
         theme.state.editable = true
         await addNewTheme(theme)
     }
+
     async function handleNewThemeClick() {
         const name = await asyncPrompt('How do you want to name the theme?')
         if (name !== null && name !== undefined) {
@@ -69,6 +73,7 @@ function ThemePage() {
             await addNewTheme(theme)
         }
     }
+
     async function addNewTheme(newTheme: BaseTheme) {
         const theme = newTheme.serialize()
         const id = await themeStore.addTheme(theme)
@@ -77,6 +82,7 @@ function ThemePage() {
         ThemeProvider.save()
         return id
     }
+
     async function handleThemeDelete(theme: SerializedTheme) {
         if (await asyncConfirm(`Are you sure you want to delete the theme ${theme.other.name}?`)) {
             if (ThemeProvider.getId() === theme.id) {
@@ -85,19 +91,21 @@ function ThemePage() {
             await themeStore.removeThemeById(theme.id!)
         }
     }
+
     return <DefaultPage>
-        <PageMeta text="Themes" description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes" />
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <PageMeta text="Themes"
+                  description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes"/>
+        <div style={{display: 'flex', alignItems: 'center'}}>
             <FilePicker onPick={handleImport} as='json' onError={logImportError}>
-                <AppButton style={{ margin: '0.25rem' }}>
+                <AppButton style={{margin: '0.25rem'}}>
                     Import Theme
                 </AppButton>
             </FilePicker>
-            <div style={{ marginLeft: '1rem' }}>
+            <div style={{marginLeft: '1rem'}}>
                 {ThemeProvider.getOther('name')}
             </div>
         </div>
-        <div style={{ marginTop: '2.2rem' }}>
+        <div style={{marginTop: '2.2rem'}}>
         </div>
         {theme.toArray().map(e =>
             <ThemePropriety
@@ -130,12 +138,12 @@ function ThemePage() {
             onChange={(e) => ThemeProvider.setOther('name', e)}
             onLeave={() => ThemeProvider.save()}
         />
-        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-            <span style={{ color: 'var(--red)' }}>
+        <div style={{textAlign: 'center', marginTop: '1rem'}}>
+            <span style={{color: 'var(--red)'}}>
                 Warning
             </span>: GIF backgrounds and opaque (transparent) colors could reduce performance
         </div>
-        <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
+        <div style={{fontSize: '1.5rem', marginTop: '2rem'}}>
             Your Themes
         </div>
         <div className="theme-preview-wrapper">
@@ -153,11 +161,11 @@ function ThemePage() {
                 />
             )}
             <button className="new-theme" onClick={handleNewThemeClick}>
-                <FaPlus size={30} />
+                <FaPlus size={30}/>
                 New theme
             </button>
         </div>
-        <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
+        <div style={{fontSize: '1.5rem', marginTop: '2rem'}}>
             Default Themes
         </div>
         <div className="theme-preview-wrapper">
@@ -173,31 +181,32 @@ function ThemePage() {
                 />
             )}
         </div>
-        <div style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
+        <div style={{fontSize: '1.5rem', marginTop: '2rem'}}>
             Preview
         </div>
         <div className="theme-app-preview">
             <AppButton
                 className="box-shadow"
                 toggled={true}
-                style={{ position: 'absolute', right: 0, top: 0, zIndex: 90 }}
+                style={{position: 'absolute', right: 0, top: 0, zIndex: 90}}
                 onClick={() => setSelectedPagePreview(selectedPagePreview === 'composer' ? 'player' : 'composer')}
             >
                 {selectedPagePreview === 'composer' ? 'View player' : 'View composer'}
             </AppButton>
             {selectedPagePreview === "player" &&
                 <AppBackground page="Main">
-                    <Player inPreview={true} />
+                    <Player inPreview={true}/>
                 </AppBackground>
             }
             {selectedPagePreview === "composer" &&
                 <AppBackground page="Composer">
-                    <Composer inPreview={true} />
+                    <Composer inPreview={true}/>
                 </AppBackground>
             }
         </div>
         {/*Keep this at the bottom because it gets overwritten by the preview apps above */}
-        <PageMeta text="Themes" description="Change the app theme, set the different colors, backgrounds, opacity and customisations" />
+        <PageMeta text="Themes"
+                  description="Change the app theme, set the different colors, backgrounds, opacity and customisations"/>
     </DefaultPage>
 }
 

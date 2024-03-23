@@ -1,19 +1,18 @@
 import {Component} from 'react'
-import {APP_NAME, SPEED_CHANGERS, Pitch, NoteNameType} from "$config"
+import {APP_NAME, NoteNameType, Pitch, SPEED_CHANGERS} from "$config"
 import Note from '$cmp/pages/Player/PlayerNote'
 import {playerStore} from '$stores/PlayerStore'
-import {Array2d, delay, clamp, groupArrayEvery} from "$lib/Utilities"
+import {Array2d, clamp, delay, groupArrayEvery} from "$lib/Utilities"
 import Analytics from '$lib/Stats';
 import {playerControlsStore} from '$stores/PlayerControlsStore'
 import {ApproachingNote, RecordedNote} from '$lib/Songs/SongClasses'
-import type {ObservableNote} from '$lib/Instrument'
-import type Instrument from '$lib/Instrument'
+import {Instrument, ObservableNote} from '$lib/Instrument'
 import type {Timer} from '$types/GeneralTypes'
 import {Chunk, RecordedSong} from '$lib/Songs/RecordedSong'
 import {MIDIEvent, MIDIProvider} from '$lib/Providers/MIDIProvider'
 import {NoteLayer} from '$lib/Layer'
 import {subscribeObeservableObject, subscribeObservableArray} from '$lib/Hooks/useObservable'
-import {ShortcutListener, createKeyboardListener, createShortcutListener} from '$stores/KeybindsStore'
+import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$stores/KeybindsStore'
 
 interface KeyboardPlayerProps {
     data: {

@@ -1,4 +1,5 @@
-import { makeObservable, observable } from "mobx";
+import {makeObservable, observable} from "mobx";
+
 async function asyncPrompt(question: string): Promise<string | null> {
     return asyncPromptStore.prompt(question)
 }
@@ -17,6 +18,7 @@ export type AsyncConfirmState = {
     cancellable: boolean
     deferred: ((value: boolean | null) => void) | null
 }
+
 class AsyncPromptStore {
     @observable
     readonly promptState: AsyncPromptState = {
@@ -30,9 +32,11 @@ class AsyncPromptStore {
         cancellable: true,
         deferred: null
     }
+
     constructor() {
         makeObservable(this)
     }
+
     prompt(question: string, cancellable = true) {
         if (this.promptState.deferred) this.promptState.deferred(null)
         return new Promise<string | null>(res => {
@@ -45,9 +49,9 @@ class AsyncPromptStore {
     }
 
     answerPrompt(answer: string | null) {
-        if (this.promptState.deferred){ 
+        if (this.promptState.deferred) {
             this.promptState.deferred(answer)
-        }else{
+        } else {
             console.warn("No deferred prompt")
         }
         this.promptState.deferred = null
@@ -65,18 +69,20 @@ class AsyncPromptStore {
     }
 
     answerConfirm(answer: boolean) {
-        if (this.confirmState.deferred){
+        if (this.confirmState.deferred) {
             this.confirmState.deferred(answer)
-        }else{
+        } else {
             console.warn("No deferred confirm")
         }
         this.confirmState.deferred = null
     }
-    clearAll(){
-        if(this.promptState.deferred) this.promptState.deferred(null)
-        if(this.confirmState.deferred) this.confirmState.deferred(null)
+
+    clearAll() {
+        if (this.promptState.deferred) this.promptState.deferred(null)
+        if (this.confirmState.deferred) this.confirmState.deferred(null)
     }
 }
+
 export const asyncPromptStore = new AsyncPromptStore()
 
 export {

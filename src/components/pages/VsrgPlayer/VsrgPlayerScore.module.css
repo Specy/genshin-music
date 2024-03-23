@@ -18,8 +18,7 @@
         'a b'
         'c d'
         'e e'
-        'f f';
-    ;
+        'f f';;
     gap: 2rem;
     background-color: var(--primary);
     border-radius: 0.5rem;

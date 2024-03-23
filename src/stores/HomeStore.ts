@@ -16,14 +16,16 @@ class HomeStore {
         isInPosition: false,
         hasPersistentStorage: false
     }
+
     constructor() {
         makeObservable(this)
     }
+
     open = () => {
-        this.setState({ visible: true, isInPosition: false})
+        this.setState({visible: true, isInPosition: false})
     }
     close = () => {
-        this.setState({ isInPosition: true})
+        this.setState({isInPosition: true})
         setTimeout(() => {
             this.setState({visible: false})
         }, 150)

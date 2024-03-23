@@ -1,7 +1,7 @@
 import Color from "color"
-import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
-import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
-import { VsrgPlayerCanvasColors, VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas";
+import {LINE_SCALE_MODE, settings, SmoothGraphics as Graphics} from '@pixi/graphics-smooth';
+import {Application, Rectangle, SCALE_MODES, Texture} from 'pixi.js'
+import {VsrgPlayerCanvasColors, VsrgPlayerCanvasSizes} from "./VsrgPlayerCanvas";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 
@@ -37,12 +37,13 @@ export class VsrgPlayerCache {
     colors: VsrgPlayerCanvasColors
     sizes: VsrgPlayerCanvasSizes
     trackColors: string[]
+
     constructor({
-        app,
-        colors,
-        sizes,
-        trackColors,
-    }: VsrgCacheProps) {
+                    app,
+                    colors,
+                    sizes,
+                    trackColors,
+                }: VsrgCacheProps) {
 
         this.textures = {
             hitObjects: {},
@@ -60,6 +61,7 @@ export class VsrgPlayerCache {
         this.app = app
         this.generate()
     }
+
     destroy = () => {
         Object.values(this.textures.hitObjects).forEach(texture => texture?.destroy(true))
         Object.values(this.textures.heldHitObjects).forEach(texture => texture?.destroy(true))
@@ -68,8 +70,9 @@ export class VsrgPlayerCache {
 
         this.app = null
     }
+
     generate() {
-        const { app } = this
+        const {app} = this
         if (!app) return
         this.generateTrackCache(app)
         this.generateTrailsCache(app)
@@ -79,25 +82,28 @@ export class VsrgPlayerCache {
     getHitObjectCache(color: string) {
         return this.textures.hitObjects[color] || this.textures.hitObjects['#FF0000']
     }
+
     getHeldTrailCache(color: string) {
         return this.textures.trails[color] || this.textures.trails['#FF0000']
     }
+
     getHeldHitObjectCache(color: string) {
         return this.textures.heldHitObjects[color] || this.textures.heldHitObjects['#FF0000']
     }
+
     getLinesCache(color: string) {
         return this.textures.lines[color] || this.textures.lines['#FF0000']
     }
 
     generateTrailsCache(app: Application) {
-        const { sizes, trackColors } = this
+        const {sizes, trackColors} = this
         const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = sizes.hitObjectSize
         const margin = hitObjectHeight / 3
         withError.forEach(color => {
             const trail = new Graphics()
             trail.beginFill(Color(color).rgbNumber())
-            .drawRect(margin / 2, 0, hitObjectHeight - margin, hitObjectHeight)
+                .drawRect(margin / 2, 0, hitObjectHeight - margin, hitObjectHeight)
             const trailTexture = app.renderer.generateTexture(trail, {
                 resolution: 1,
                 scaleMode: SCALE_MODES.LINEAR,
@@ -108,8 +114,9 @@ export class VsrgPlayerCache {
         })
         this.textures.sizes.trail = hitObjectHeight
     }
+
     generateLinesCache(app: Application) {
-        const { sizes, trackColors } = this
+        const {sizes, trackColors} = this
         const withError = [...trackColors, '#FF0000']
         const lineHeight = 5
         withError.forEach(color => {
@@ -126,8 +133,9 @@ export class VsrgPlayerCache {
             line.destroy(true)
         })
     }
+
     generateTrackCache(app: Application) {
-        const { colors, sizes, trackColors } = this
+        const {colors, sizes, trackColors} = this
         const hitObjectHeight = sizes.hitObjectSize
         const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {

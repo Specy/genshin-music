@@ -1,11 +1,12 @@
-import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "$config"
+import {CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS} from "$config"
 import Color from "color"
-import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
-import { Application, Texture, SCALE_MODES, Rectangle } from 'pixi.js'
-import { NoteLayer } from "$lib/Layer";
+import {LINE_SCALE_MODE, settings, SmoothGraphics as Graphics} from '@pixi/graphics-smooth';
+import {Application, Rectangle, SCALE_MODES, Texture} from 'pixi.js'
+import {NoteLayer} from "$lib/Layer";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
-const { horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
+const {horizontalLineBreak, standards, layersCombination, breakpoints} = CACHE_DATA
+
 interface ComposerCacheProps {
     width: number
     height: number
@@ -16,7 +17,7 @@ interface ComposerCacheProps {
     colors: {
         accent: Color,
         mainLayer: Color,
-        secondLayer: Color, 
+        secondLayer: Color,
         bars: typeof standards
     }
 }
@@ -45,18 +46,19 @@ export class ComposerCache {
     colors: {
         accent: Color,
         mainLayer: Color,
-        secondLayer: Color, 
-        bars: {color: number}[]
+        secondLayer: Color,
+        bars: { color: number }[]
     }
+
     constructor({
-        width,
-        height,
-        margin = 4,
-        timelineHeight = 30,
-        app,
-        breakpointsApp,
-        colors
-    }: ComposerCacheProps) {
+                    width,
+                    height,
+                    margin = 4,
+                    timelineHeight = 30,
+                    app,
+                    breakpointsApp,
+                    colors
+                }: ComposerCacheProps) {
 
         this.cache = {
             columns: [],
@@ -77,6 +79,7 @@ export class ComposerCache {
         this.breakpointsApp = breakpointsApp
         this.generate()
     }
+
     destroy = () => {
         this.cache.columns.forEach(e => e.destroy(true))
         this.cache.standard.forEach(e => e.destroy(true))

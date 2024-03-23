@@ -1,6 +1,5 @@
 import type {CSSProperties} from "react";
 import s from './separator.module.scss'
-import {ThemeKeys} from "$stores/ThemeStore/ThemeProvider";
 import {MaybeChildren} from "$lib/UtilTypes";
 
 interface SeparatorProps {

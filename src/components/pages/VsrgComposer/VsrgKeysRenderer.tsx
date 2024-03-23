@@ -1,8 +1,8 @@
-import { Container, Graphics, Text } from "@pixi/react";
-import { Rectangle, TextStyle } from "pixi.js";
-import { memo, useEffect, useState } from "react";
-import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
-import { useConfig } from "$lib/Hooks/useConfig";
+import {Container, Graphics, Text} from "@pixi/react";
+import {Rectangle, TextStyle} from "pixi.js";
+import {memo, useEffect, useState} from "react";
+import {VsrgCanvasColors, VsrgCanvasSizes} from "./VsrgComposerCanvas";
+import {useConfig} from "$lib/Hooks/useConfig";
 import {useFontFaceObserver} from "$lib/Hooks/useFontFaceObserver";
 
 interface VsrgKeysRendererProps {
@@ -25,8 +25,8 @@ const fontFace = [{
 }]
 
 //TODO add cache as bitmap
-function _VsrgKeysRenderer({ keys, sizes, colors, isHorizontal, onKeyDown, onKeyUp }: VsrgKeysRendererProps) {
-    const { PLAY_BAR_OFFSET } = useConfig()
+function _VsrgKeysRenderer({keys, sizes, colors, isHorizontal, onKeyDown, onKeyUp}: VsrgKeysRendererProps) {
+    const {PLAY_BAR_OFFSET} = useConfig()
     const [textStyle, setTextStyle] = useState(defaultVsrgTextStyle)
     const isFontLoaded = useFontFaceObserver(fontFace)
     useEffect(() => {

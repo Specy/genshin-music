@@ -81,7 +81,7 @@ interface MenuProps {
 export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
 
-function Menu({ functions, data, inPreview }: MenuProps) {
+function Menu({functions, data, inPreview}: MenuProps) {
     const router = useRouter()
     const [songs] = useSongs()
     const [isOpen, setOpen] = useState(false)
@@ -89,14 +89,14 @@ function Menu({ functions, data, inPreview }: MenuProps) {
     const [searchInput, setSearchInput] = useState('')
     const [searchedSongs, setSearchedSongs] = useState<SearchedSongType[]>([])
     const [searchStatus, setSearchStatus] = useState('')
-    const { IS_MIDI_AVAILABLE } = useConfig()
+    const {IS_MIDI_AVAILABLE} = useConfig()
     const [isPersistentStorage, setPeristentStorage] = useState(false)
     const [theme] = useTheme()
     const [folders] = useFolders()
-    const { handleSettingChange, addSong, removeSong, renameSong } = functions
+    const {handleSettingChange, addSong, removeSong, renameSong} = functions
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setOpen(false)
-    }, { active: isOpen, ignoreFocusable: true })
+    }, {active: isOpen, ignoreFocusable: true})
 
     useEffect(() => {
         async function checkStorage() {
@@ -106,9 +106,10 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                 setPeristentStorage(isPersisted)
             }
         }
+
         checkStorage()
-        return createShortcutListener("player", "player_menu", ({ shortcut }) => {
-            const { name } = shortcut
+        return createShortcutListener("player", "player_menu", ({shortcut}) => {
+            const {name} = shortcut
             if (name === "close_menu") setOpen(false)
             if (name === "toggle_menu") setOpen((prev) => !prev)
         })
@@ -119,6 +120,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
         setSearchStatus('')
         setSearchedSongs([])
     }
+
     const searchSongs = async () => {
         if (searchStatus === "Searching...") return
         if (searchInput.trim().length === 0) {
@@ -134,7 +136,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
         }
         setSearchStatus('success')
         setSearchedSongs(fetchedSongs as SearchedSongType[])
-        Analytics.songSearch({ name: searchInput })
+        Analytics.songSearch({name: searchInput})
     }
     const toggleMenu = (override?: boolean | null) => {
         if (typeof override !== "boolean") override = null
@@ -148,7 +150,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
         clearSearch()
         if (selection) setSelectedMenu(selection)
         setOpen(true)
-        Analytics.UIEvent('menu', { tab: selection })
+        Analytics.UIEvent('menu', {tab: selection})
     }
     const importSong = async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
         for (const file of files) {
@@ -173,7 +175,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
         const converted = [APP_NAME === 'Sky' ? song.toOldFormat() : song.serialize()]
         fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
         logger.success("Song downloaded")
-        Analytics.userSongs('download', { page: 'player' })
+        Analytics.userSongs('download', {page: 'player'})
     }
     const createFolder = useCallback(async () => {
         const name = await asyncPrompt("Write the folder name")
@@ -201,6 +203,7 @@ function Menu({ functions, data, inPreview }: MenuProps) {
         }
 
     }, [askForComposerImport])
+
     async function downloadAllSongs() {
         try {
             const songs = await songService.getSongs();
@@ -230,26 +233,31 @@ function Menu({ functions, data, inPreview }: MenuProps) {
     const layer1ColorText = theme.getTextColorFromBackground(layer1Color)
     const layer2ColorText = theme.getTextColorFromBackground(layer2Color)
     return <div className={`menu-wrapper ${inPreview ? "menu-wrapper-absolute" : ""}`} ref={menuRef}>
-        <div className="menu menu-visible menu-main-page" >
+        <div className="menu menu-visible menu-main-page">
             {isOpen &&
                 <MenuItem onClick={toggleMenu} className='close-menu' ariaLabel='Close menu'>
-                    <FaTimes className="icon" />
+                    <FaTimes className="icon"/>
                 </MenuItem>
             }
-            <MenuItem onClick={() => selectSideMenu("Help")} className="margin-top-auto" isActive={selectedMenu === "Help" && isOpen} ariaLabel='Open info menu'>
-                <FaQuestion className="icon" />
+            <MenuItem onClick={() => selectSideMenu("Help")} className="margin-top-auto"
+                      isActive={selectedMenu === "Help" && isOpen} ariaLabel='Open info menu'>
+                <FaQuestion className="icon"/>
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Library")} isActive={selectedMenu === "Library" && isOpen} ariaLabel='Open library menu'>
-                <RiPlayListFill className='icon' />
+            <MenuItem onClick={() => selectSideMenu("Library")} isActive={selectedMenu === "Library" && isOpen}
+                      ariaLabel='Open library menu'>
+                <RiPlayListFill className='icon'/>
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Songs")} isActive={selectedMenu === "Songs" && isOpen} ariaLabel='Open songs menu'>
-                <FaMusic className="icon" />
+            <MenuItem onClick={() => selectSideMenu("Songs")} isActive={selectedMenu === "Songs" && isOpen}
+                      ariaLabel='Open songs menu'>
+                <FaMusic className="icon"/>
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Settings")} isActive={selectedMenu === "Settings" && isOpen} ariaLabel='Open settings'>
-                <FaCog className="icon" />
+            <MenuItem onClick={() => selectSideMenu("Settings")} isActive={selectedMenu === "Settings" && isOpen}
+                      ariaLabel='Open settings'>
+                <FaCog className="icon"/>
             </MenuItem>
-             <MenuItem onClick={homeStore.open} ariaLabel='Open home menu' style={{border: "solid 0.1rem var(--secondary)"}}>
-                <FaHome className="icon" />
+            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
+                      style={{border: "solid 0.1rem var(--secondary)"}}>
+                <FaHome className="icon"/>
             </MenuItem>
         </div>
         <div className={sideClass}>
@@ -265,15 +273,16 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                                 You can import songs made by other users (does not accept audio files).
                                 Or you can download yours to share
                             </li>
-                            <li>To create your song, you can record the notes you play or create one in the composer</li>
-                            <li><FaCrosshairs style={{ marginRight: '0.2rem' }} />: Start the practice mode</li>
-                            <li><FaRegCircle style={{ marginRight: '0.2rem' }} />: Start the approaching notes mode</li>
+                            <li>To create your song, you can record the notes you play or create one in the composer
+                            </li>
+                            <li><FaCrosshairs style={{marginRight: '0.2rem'}}/>: Start the practice mode</li>
+                            <li><FaRegCircle style={{marginRight: '0.2rem'}}/>: Start the approaching notes mode</li>
                             {IS_MIDI_AVAILABLE &&
                                 <li>You can connect a MIDI keyboard to play</li>
                             }
                         </ul>
                     </HelpTooltip>
-                    <Link href='/composer' style={{ marginLeft: 'auto' }}>
+                    <Link href='/composer' style={{marginLeft: 'auto'}}>
                         <AppButton>
                             Compose song
                         </AppButton>
@@ -294,17 +303,23 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     songs={songs}
                     exclude={excludedSongs}
                     onCreateFolder={createFolder}
-                    style={{ marginTop: '0.6rem' }}
+                    style={{marginTop: '0.6rem'}}
                     SongComponent={SongRow}
                     componentProps={{
                         theme,
                         folders,
-                        functions: { removeSong, toggleMenu, downloadSong, renameSong }
+                        functions: {removeSong, toggleMenu, downloadSong, renameSong}
                     }}
                 />
-                <div style={{ marginTop: "auto", paddingTop: '0.5rem', width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{
+                    marginTop: "auto",
+                    paddingTop: '0.5rem',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'flex-end'
+                }}>
                     <AppButton
-                        style={{ marginLeft: 'auto' }}
+                        style={{marginLeft: 'auto'}}
                         onClick={downloadAllSongs}
 
                     >
@@ -322,44 +337,46 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
                         <Link href='/keybinds'>
-                            <AppButton style={{ width: 'fit-content' }}>
+                            <AppButton style={{width: 'fit-content'}}>
                                 Connect MIDI keyboard
                             </AppButton>
                         </Link>
                     }
                     <Link href='/theme'>
-                        <AppButton style={{ width: 'fit-content' }}>
+                        <AppButton style={{width: 'fit-content'}}>
                             Change app theme
                         </AppButton>
                     </Link>
                 </div>
-                <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }} className={hasTooltip(true)}>
+                <div style={{marginTop: '0.4rem', marginBottom: '0.6rem'}} className={hasTooltip(true)}>
                     {isPersistentStorage ? "Storage is persisted" : "Storage is not persisted"}
                     {isPersistentStorage
-                        ? <Tooltip position='top' style={{ maxWidth: 'unset' }}>
+                        ? <Tooltip position='top' style={{maxWidth: 'unset'}}>
                             Your data is persisted in the browser, the browser should not automatically clear it.
                             Always make sure to download a backup sometimes, especially when you will not use the app
                             for a long time
                         </Tooltip>
                         : <Tooltip position='top'>
-                            The browser didn't allow to store data persistently, it might happen that you will loose data
-                            when cache is automatically cleared. To get persistent storage, add the app to the home screen.
+                            The browser didn't allow to store data persistently, it might happen that you will loose
+                            data
+                            when cache is automatically cleared. To get persistent storage, add the app to the home
+                            screen.
                             If that still doesn't work, make sure you do a backup often
                         </Tooltip>
                     }
 
                 </div>
-                <DonateButton />
+                <DonateButton/>
             </MenuPanel>
 
             <MenuPanel title="Library" current={selectedMenu} id='Library'>
                 <div>
                     Here you can find songs to learn, they are provided by the sky-music library.
                 </div>
-                <div className='library-search-row' >
+                <div className='library-search-row'>
                     <input
                         className='library-search-input'
-                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString() }}
+                        style={{backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()}}
                         placeholder='Song name'
                         onKeyDown={(e) => {
                             if (e.code === "Enter") searchSongs()
@@ -370,23 +387,23 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                     <button
                         className='library-search-btn'
                         onClick={clearSearch}
-                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString() }}
+                        style={{backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()}}
                     >
-                        <FaTimes />
+                        <FaTimes/>
                     </button>
                     <button
                         className='library-search-btn'
                         onClick={searchSongs}
-                        style={{ backgroundColor: layer1Color.toString(), color: layer1ColorText.toString() }}
+                        style={{backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()}}
                     >
-                        <FaSearch />
+                        <FaSearch/>
                     </button>
                 </div>
                 {(searchStatus || searchedSongs.length > 0) &&
-                    <div 
+                    <div
                         className='library-search-songs-wrapper'
-                        style={{ 
-                            backgroundColor: layer2Color.toString(), 
+                        style={{
+                            backgroundColor: layer2Color.toString(),
                             color: layer2ColorText.toString(),
                             marginBottom: "0.5rem"
                         }}
@@ -411,27 +428,26 @@ function Menu({ functions, data, inPreview }: MenuProps) {
                         }
                     </div>
                 }
-                <DonateButton style={{marginTop: "auto"}} />
+                <DonateButton style={{marginTop: "auto"}}/>
 
             </MenuPanel>
             <MenuPanel title="Help" current={selectedMenu} id='Help'>
                 <div className={sh['help-icon-wrapper']}>
-                    <a href='https://discord.gg/Arsf65YYHq' target={"_blank"} >
-                        <FaDiscord className={sh['help-icon']} />
+                    <a href='https://discord.gg/Arsf65YYHq' target={"_blank"}>
+                        <FaDiscord className={sh['help-icon']}/>
                     </a>
                     <a href='https://github.com/Specy/genshin-music' target={"_blank"}>
-                        <FaGithub className={sh['help-icon']} />
+                        <FaGithub className={sh['help-icon']}/>
                     </a>
                 </div>
-                <HelpTab />
-                <PlayerShortcuts />
-                <ComposerShortcuts />
-                <DonateButton style={{marginTop: "0.5rem"}} />
+                <HelpTab/>
+                <PlayerShortcuts/>
+                <ComposerShortcuts/>
+                <DonateButton style={{marginTop: "0.5rem"}}/>
             </MenuPanel>
         </div>
     </div>
 }
-
 
 
 interface SongRowProps {
@@ -446,9 +462,9 @@ interface SongRowProps {
     }
 }
 
-function SongRow({ data, functions, theme, folders }: SongRowProps) {
-    const { removeSong, toggleMenu, downloadSong, renameSong } = functions
-    const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).toString() }
+function SongRow({data, functions, theme, folders}: SongRowProps) {
+    const {removeSong, toggleMenu, downloadSong, renameSong} = functions
+    const buttonStyle = {backgroundColor: theme.layer('primary', 0.15).toString()}
     const [isRenaming, setIsRenaming] = useState(false)
     const [songName, setSongName] = useState(data.name)
     useEffect(() => {
@@ -468,10 +484,10 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     className={`song-name-input ${isRenaming ? "song-rename" : ""}`}
                     disabled={!isRenaming}
                     onChange={(e) => setSongName(e.target.value)}
-                    style={{ width: "100%", color: "var(--primary-text)" }}
+                    style={{width: "100%", color: "var(--primary-text)"}}
                     value={songName}
                 />
-                : <div style={{ marginLeft: '0.3rem' }}>
+                : <div style={{marginLeft: '0.3rem'}}>
                     {songName}
                 </div>
             }
@@ -490,7 +506,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 tooltip='Practice'
                 style={buttonStyle}
             >
-                <FaCrosshairs />
+                <FaCrosshairs/>
             </SongActionButton>
 
             <SongActionButton onClick={async () => {
@@ -499,11 +515,11 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 toggleMenu(false)
 
             }}
-                tooltip='Approach mode'
-                ariaLabel={`Play in Approach mode the song ${data.name}`}
-                style={buttonStyle}
+                              tooltip='Approach mode'
+                              ariaLabel={`Play in Approach mode the song ${data.name}`}
+                              style={buttonStyle}
             >
-                <FaRegCircle />
+                <FaRegCircle/>
             </SongActionButton>
             <FloatingDropdown
                 Icon={FaEllipsisH}
@@ -521,19 +537,19 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         setIsRenaming(!isRenaming)
                     }}
                 >
-                    <FaPen style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
+                    <FaPen style={{marginRight: "0.4rem"}} size={14}/>
+                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow style={{ padding: '0 0.4rem' }}>
-                    <FaFolder style={{ marginRight: "0.4rem" }} />
+                <FloatingDropdownRow style={{padding: '0 0.4rem'}}>
+                    <FaFolder style={{marginRight: "0.4rem"}}/>
                     <select className='dropdown-select'
-                        value={data.folderId || "_None"}
-                        onChange={async (e) => {
-                            const id = e.target.value
-                            const song = await songService.getOneSerializedFromStorable(data)
-                            if (!song) return logger.error("Could not find song")
-                            songsStore.addSongToFolder(song, id !== "_None" ? id : null)
-                        }}
+                            value={data.folderId || "_None"}
+                            onChange={async (e) => {
+                                const id = e.target.value
+                                const song = await songService.getOneSerializedFromStorable(data)
+                                if (!song) return logger.error("Could not find song")
+                                songsStore.addSongToFolder(song, id !== "_None" ? id : null)
+                            }}
                     >
                         <option value={"_None"}>
                             None
@@ -550,35 +566,35 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                             songId: data.id,
                         }
                     }}
-                    style={{ width: '100%' }}
+                    style={{width: '100%'}}
                 >
                     <FloatingDropdownRow
-                        style={{ width: '100%' }}
+                        style={{width: '100%'}}
                         onClick={() => {
                             if (data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
                         }}
                     >
-                        <FaEdit style={{ marginRight: "0.4rem" }} size={14} />
-                        <FloatingDropdownText text='Edit song' />
+                        <FaEdit style={{marginRight: "0.4rem"}} size={14}/>
+                        <FloatingDropdownText text='Edit song'/>
                     </FloatingDropdownRow>
                 </Link>
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.fromStorableSong(data) as RecordedOrComposed
                     downloadSong(song)
                 }}>
-                    <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text='Download' />
+                    <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
+                    <FloatingDropdownText text='Download'/>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.fromStorableSong(data) as RecordedOrComposed
                     downloadSong(song.toMidi())
                 }}>
-                    <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text='Download MIDI' />
+                    <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
+                    <FloatingDropdownText text='Download MIDI'/>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={() => removeSong(data.name, data.id!)}>
-                    <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text='Delete' />
+                    <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}} size={14}/>
+                    <FloatingDropdownText text='Delete'/>
                 </FloatingDropdownRow>
             </FloatingDropdown>
         </div>

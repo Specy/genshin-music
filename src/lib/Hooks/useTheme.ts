@@ -5,12 +5,13 @@ import {createDebouncer} from "$lib/Utilities";
 
 
 type UseTheme = [Theme, (theme: Theme) => void]
-export function useTheme(): UseTheme{
-    const [theme,setTheme] = useState(ThemeProvider)
+
+export function useTheme(): UseTheme {
+    const [theme, setTheme] = useState(ThemeProvider)
     useEffect(() => {
         return subscribeTheme(setTheme)
-    },[]) 
-    return [theme,setTheme]
+    }, [])
+    return [theme, setTheme]
 }
 
 

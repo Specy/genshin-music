@@ -1,5 +1,5 @@
 
-.shortcut-element{
+.shortcut-element {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -14,14 +14,16 @@
 }
 
 @media screen and (max-width: 920px) {
-    .shortcut-element{
+    .shortcut-element {
         min-width: 50vw;
-    }    
+    }
 }
-.shortcut-element-selected{
+
+.shortcut-element-selected {
     outline: solid 0.1rem var(--accent);
 }
-.shortcut-button{
+
+.shortcut-button {
     background-color: var(--secondary);
     color: var(--secondary-text);
 }

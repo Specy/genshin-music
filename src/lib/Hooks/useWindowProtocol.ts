@@ -26,8 +26,8 @@ export const protocol = new WindowProtocol<Protocol>(domains)
 
 let hasSetup = false
 
-export async function setupProtocol(){
-    if(hasSetup) return console.log("protocol already setup")
+export async function setupProtocol() {
+    if (hasSetup) return console.log("protocol already setup")
     //connect to parent window
     protocol.registerAskHandler("getAppData", async () => {
         const folders = await _folderService.getFolders()

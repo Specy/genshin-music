@@ -1,7 +1,8 @@
-import { isTWA } from '$lib/Utilities'
+import {isTWA} from '$lib/Utilities'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-export default function DonateButton({style}: {style?: React.CSSProperties}){
+import {useEffect, useState} from 'react'
+
+export default function DonateButton({style}: { style?: React.CSSProperties }) {
     const [isTwa, setIsTwa] = useState(false)
     useEffect(() => {
         setIsTwa(isTWA())

@@ -1,11 +1,11 @@
-import { useObservableObject } from "$lib/Hooks/useObservable"
-import { AsyncConfirmState, AsyncPromptState, asyncPromptStore } from "./AsyncPrompts"
-import { useState, useEffect, useRef } from 'react'
-import { DecoratedCard } from "../layout/DecoratedCard"
-import { useTheme } from "$lib/Hooks/useTheme"
-import { cn } from "$lib/Utilities"
-import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
-import { IGNORE_CLICK_CLASS } from "$lib/Hooks/useClickOutside"
+import {useObservableObject} from "$lib/Hooks/useObservable"
+import {AsyncConfirmState, AsyncPromptState, asyncPromptStore} from "./AsyncPrompts"
+import {useEffect, useRef, useState} from 'react'
+import {DecoratedCard} from "../layout/DecoratedCard"
+import {useTheme} from "$lib/Hooks/useTheme"
+import {cn} from "$lib/Utilities"
+import {KeyboardProvider} from "$lib/Providers/KeyboardProvider"
+import {IGNORE_CLICK_CLASS} from "$lib/Hooks/useClickOutside"
 import isMobile from "is-mobile"
 
 export function AsyncPromptWrapper() {
@@ -23,7 +23,7 @@ export function AsyncPromptWrapper() {
 }
 
 //TODO this components here look kinda ugly and break the point of react, but it's the best and fastest way to do it for now
-function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
+function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
     const isHidden = !deferred
     const [isMounted, setIsMounted] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
@@ -34,16 +34,16 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
     }, [isHidden])
 
     useEffect(() => {
-        if(!deferred) return
+        if (!deferred) return
         //@ts-ignore
         document.activeElement?.blur()
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
             asyncPromptStore.answerConfirm(false)
-        }, { id: 'AsyncConfirm' })
+        }, {id: 'AsyncConfirm'})
         KeyboardProvider.register("Enter", () => {
             asyncPromptStore.answerConfirm(true)
-        }, { id: 'AsyncConfirm' })
+        }, {id: 'AsyncConfirm'})
         return () => {
             KeyboardProvider.unregisterById('AsyncConfirm')
         }
@@ -53,8 +53,9 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
         if (e.nativeEvent.composedPath()[0] !== ref.current || !cancellable) return
         asyncPromptStore.answerConfirm(false)
     }
+
     return <div
-        style={!isMounted ? { display: 'none' } : {}}
+        style={!isMounted ? {display: 'none'} : {}}
         onClick={onOverlayClick}
         className={cn(`prompt-overlay ${IGNORE_CLICK_CLASS}`, [isHidden, 'prompt-overlay-hidden'])}
         ref={ref}
@@ -96,7 +97,7 @@ function AsyncConfirm({ question, deferred, cancellable }: AsyncConfirmState) {
     </div>
 }
 
-function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
+function AsyncPrompt({question, deferred, cancellable}: AsyncPromptState) {
     const [value, setValue] = useState('')
     const inputRef = useRef<HTMLInputElement>(null)
     const [theme] = useTheme()
@@ -129,15 +130,15 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
     }, [inputRef, deferred])
 
     useEffect(() => {
-        if(!deferred) return
+        if (!deferred) return
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
             asyncPromptStore.answerPrompt(null)
-        }, { id: 'AsyncPrompt' })
+        }, {id: 'AsyncPrompt'})
         KeyboardProvider.register("Enter", () => {
-            if(!value) return
+            if (!value) return
             asyncPromptStore.answerPrompt(value)
-        }, { id: 'AsyncPrompt' })
+        }, {id: 'AsyncPrompt'})
         return () => KeyboardProvider.unregisterById('AsyncPrompt')
     }, [cancellable, value, deferred])
 
@@ -145,9 +146,10 @@ function AsyncPrompt({ question, deferred, cancellable }: AsyncPromptState) {
         if (e.nativeEvent.composedPath()[0] !== ref.current || !cancellable) return
         asyncPromptStore.answerPrompt(null)
     }
+
     return <div
         ref={ref}
-        style={!isMounted ? { display: 'none' } : {}}
+        style={!isMounted ? {display: 'none'} : {}}
         onClick={onOverlayClick}
         className={cn(`prompt-overlay ${IGNORE_CLICK_CLASS}`, [isHidden, 'prompt-overlay-hidden'])}
     >

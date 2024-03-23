@@ -3,7 +3,7 @@ import {homeStore} from "$stores/HomeStore"
 import {FaBars, FaCog, FaHome, FaTimes} from "react-icons/fa"
 import MenuPanel from "$cmp/shared/pagesLayout/MenuPanel"
 import {MenuItem} from "$cmp/shared/Miscellaneous/MenuItem"
-import {FC, useState} from 'react'
+import {useState} from 'react'
 import {ZenKeyboardSettingsDataType} from "$lib/BaseSettings"
 import {SettingUpdate, SettingVolumeUpdate} from "$types/SettingsPropriety"
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane"

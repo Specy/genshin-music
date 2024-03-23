@@ -1,14 +1,13 @@
-import { Container } from "@pixi/react"
-import { VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas"
+import {Container} from "@pixi/react"
+import {VsrgPlayerCanvasSizes} from "./VsrgPlayerCanvas"
 
 
-
-interface VsrgPlayerAccuracyRendererProps{
+interface VsrgPlayerAccuracyRendererProps {
     accuracyBounds: number[]
     sizes: VsrgPlayerCanvasSizes
 }
 
-export function VsrgPlayerAccuracyRenderer({accuracyBounds, sizes}: VsrgPlayerAccuracyRendererProps){
+export function VsrgPlayerAccuracyRenderer({accuracyBounds, sizes}: VsrgPlayerAccuracyRendererProps) {
     //TODO might implement
     return <>
         <Container

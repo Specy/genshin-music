@@ -204,7 +204,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <PageRedirect href='/theme' current={currentPage === '/theme'}>
                     Themes
                 </PageRedirect>
-                 <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")} >
+                <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")}>
                     Blog & Guides
                 </PageRedirect>
                 <PageRedirect href='/keybinds' current={currentPage === '/keybinds'}>
@@ -218,7 +218,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <PageRedirect href='/backup' current={currentPage === '/backup'}>
                     Backup
                 </PageRedirect>
-                 <PageRedirect href='/changelog' current={currentPage === '/changelog'}>
+                <PageRedirect href='/changelog' current={currentPage === '/changelog'}>
                     Changelog
                 </PageRedirect>
 

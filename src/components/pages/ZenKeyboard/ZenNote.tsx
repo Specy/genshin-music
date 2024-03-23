@@ -1,13 +1,14 @@
-import { APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES } from "$config"
-import { subscribeObeservableObject } from "$lib/Hooks/useObservable"
-import { ObservableNote } from "$lib/Instrument"
-import SvgNote, { NoteImage } from "$cmp/shared/SvgNotes"
-import { useCallback, useRef, useEffect, useState } from "react"
-import { ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
+import {APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES} from "$config"
+import {subscribeObeservableObject} from "$lib/Hooks/useObservable"
+import {ObservableNote} from "$lib/Instrument"
+import SvgNote, {NoteImage} from "$cmp/shared/SvgNotes"
+import {useCallback, useEffect, useRef, useState} from "react"
+import {ThemeProvider} from "$stores/ThemeStore/ThemeProvider"
 import GenshinNoteBorder from '$cmp/shared/Miscellaneous/GenshinNoteBorder'
-import { InstrumentName, NoteStatus } from "$types/GeneralTypes"
+import {InstrumentName, NoteStatus} from "$types/GeneralTypes"
 import s from "./ZenKeyboard.module.css"
 import {preventDefault} from "$lib/Utilities";
+
 interface ZenKeyboardProps {
     note: ObservableNote
     noteText: string
@@ -16,6 +17,7 @@ interface ZenKeyboardProps {
     keyPadding: number
     onClick: (note: ObservableNote) => void
 }
+
 const skyKeyframes = [
     {
         transform: `rotateY(0deg) scale(0.8)`
@@ -27,7 +29,8 @@ const skyKeyframes = [
         transform: `rotateY(360deg) scale(1)`
     }
 ]
-export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, keyPadding }: ZenKeyboardProps) {
+
+export function ZenNote({note, onClick, noteImage, noteText, instrumentName, keyPadding}: ZenKeyboardProps) {
     const [status, setStatus] = useState<NoteStatus>("")
     const [statusId, setStatusId] = useState(0)
     const [textColor, setTextColor] = useState(BASE_THEME_CONFIG.text.light)
@@ -37,7 +40,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
         onClick(note)
     }, [onClick, note])
     useEffect(() => {
-        function onStatusChange(){
+        function onStatusChange() {
             if (APP_NAME === 'Genshin') {
                 setStatus("clicked")
                 setStatusId((v) => v + 1)
@@ -45,9 +48,10 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
             } else {
                 const current = ref.current
                 if (!current) return
-                current.animate(skyKeyframes, { duration: 400 })
+                current.animate(skyKeyframes, {duration: 400})
             }
         }
+
         return subscribeObeservableObject(note.data, onStatusChange)
     }, [note, ref])
     useEffect(() => {
@@ -55,7 +59,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
             setTextColor(getTextColor())
         })
     }, [])
- 
+
     const className = `${parseClass(status)} ${(APP_NAME === 'Genshin' ? '' : s['sky-zen-note'])}`
     const clickColor = INSTRUMENTS_DATA[instrumentName]?.clickColor
     return <button
@@ -68,7 +72,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
             <div
                 key={statusId}
                 style={clickColor && ThemeProvider.isDefault('accent')
-                    ? { borderColor: clickColor } : {}
+                    ? {borderColor: clickColor} : {}
                 }
                 className={NOTES_CSS_CLASSES.noteAnimation}
             />
@@ -91,7 +95,7 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
                 />
             }
 
-            <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
+            <div className={NOTES_CSS_CLASSES.noteName} style={{color: textColor}}>
                 {noteText}
             </div>
 
@@ -102,16 +106,21 @@ export function ZenNote({ note, onClick, noteImage, noteText, instrumentName, ke
 function parseClass(status: string) {
     let className = NOTES_CSS_CLASSES.note
     switch (status) {
-        case 'clicked': className += ` click-event`; break;
-        default: break;
+        case 'clicked':
+            className += ` click-event`;
+            break;
+        default:
+            break;
     }
     return className
 }
+
 function parseBorderFill(status: NoteStatus) {
     if (status === "clicked") return "transparent"
     else if (status === 'toClickNext' || status === 'toClickAndNext') return '#63aea7'
     return 'var(--note-border-fill)'
 }
+
 function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')
     if (APP_NAME === 'Genshin') {

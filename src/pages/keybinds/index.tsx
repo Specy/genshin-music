@@ -8,7 +8,7 @@ import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
 import {VsrgSongKeys} from "$lib/Songs/VsrgSong";
 import {Fragment, useEffect, useState} from "react";
 import {keyBinds} from "$stores/KeybindsStore";
-import Instrument from "$lib/Instrument";
+import {Instrument} from '$lib/Instrument'
 import {logger} from "$/stores/LoggerStore";
 import {ShortcutEditor} from "$cmp/pages/Keybinds/ShortcutEditor";
 import {useConfig} from "$/lib/Hooks/useConfig";
@@ -23,41 +23,41 @@ export default function Keybinds() {
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
     const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
     const [vsrgComposerShortcuts] = useObservableMap(keyBinds.getShortcutMap("vsrg_composer"))
-    const [vsrgPlayerShortcuts] =  useObservableMap(keyBinds.getShortcutMap("vsrg_player"))
-    const { IS_MOBILE } = useConfig()
+    const [vsrgPlayerShortcuts] = useObservableMap(keyBinds.getShortcutMap("vsrg_player"))
+    const {IS_MOBILE} = useConfig()
     const [selected, setSelected] = useState({
         type: '',
         index: -1
     })
     useEffect(() => {
-        KeyboardProvider.listen(({ letter, code }) => {
+        KeyboardProvider.listen(({letter, code}) => {
             if (letter === 'Escape') return setSelected({
                 type: '',
                 index: -1
             })
-            const { type, index } = selected
+            const {type, index} = selected
             const note = baseInstrument.getNoteFromIndex(index)
             if (type === 'keyboard' && index !== -1) {
                 const existing = keyBinds.setKeyboardKeybind(note.noteNames.keyboard, code)
                 if (existing !== undefined) logger.warn(`This keybind is already used by the ${existing.name} note`)
-                setSelected({ type: '', index: -1 })
+                setSelected({type: '', index: -1})
             }
             if (['k4', 'k6', 'k8'].includes(type) && index !== -1) {
                 const kind = Number(type.replace('k', '')) as VsrgSongKeys
                 keyBinds.setVsrgKeybind(kind, index, letter)
-                setSelected({ type: '', index: -1 })
+                setSelected({type: '', index: -1})
             }
-        }, { id: 'keybinds' })
+        }, {id: 'keybinds'})
         return () => KeyboardProvider.unregisterById('keybinds')
     }, [selected])
     const k4 = useObservableArray(keyBinds.getVsrgKeybinds(4))
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
     return <DefaultPage>
-        <PageMeta text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys" />
+        <PageMeta text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys"/>
         <h1>
             MIDI keybinds
         </h1>
-        <MidiSetup />
+        <MidiSetup/>
         {!IS_MOBILE
             && <>
                 <h1>
@@ -67,7 +67,7 @@ export default function Keybinds() {
                     <ShortcutEditor
                         map={composerShortcuts}
                         onChangeShortcut={(oldKey, newKey) => {
-                            if(oldKey === newKey) return
+                            if (oldKey === newKey) return
                             const existing = keyBinds.setShortcut("composer", oldKey, newKey)
                             if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
                         }}
@@ -80,7 +80,7 @@ export default function Keybinds() {
                     <ShortcutEditor
                         map={playerShortcuts}
                         onChangeShortcut={(oldKey, newKey) => {
-                            if(oldKey === newKey) return
+                            if (oldKey === newKey) return
                             const existing = keyBinds.setShortcut("player", oldKey, newKey)
                             if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
                         }}
@@ -93,7 +93,7 @@ export default function Keybinds() {
                     <ShortcutEditor
                         map={vsrgComposerShortcuts}
                         onChangeShortcut={(oldKey, newKey) => {
-                            if(oldKey === newKey) return
+                            if (oldKey === newKey) return
                             const existing = keyBinds.setShortcut("vsrg_composer", oldKey, newKey)
                             if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
                         }}
@@ -106,7 +106,7 @@ export default function Keybinds() {
                     <ShortcutEditor
                         map={vsrgPlayerShortcuts}
                         onChangeShortcut={(oldKey, newKey) => {
-                            if(oldKey === newKey) return
+                            if (oldKey === newKey) return
                             const existing = keyBinds.setShortcut("vsrg_player", oldKey, newKey)
                             if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
                         }}
@@ -152,7 +152,7 @@ export default function Keybinds() {
                 <h1>
                     Vsrg keybinds
                 </h1>
-                <div className="column" style={{ marginLeft: '1rem' }}>
+                <div className="column" style={{marginLeft: '1rem'}}>
                     {[k4, k6].map((keys, j) =>
                         <Fragment key={j}>
                             <h2>
@@ -188,8 +188,8 @@ interface VsrgKeyProps {
     handleClick: (status: boolean) => void
 }
 
-function VsrgKey({ letter, isActive, handleClick }: VsrgKeyProps) {
-    const ref = useClickOutside<HTMLButtonElement>(() => handleClick(false), { ignoreFocusable: true, active: isActive })
+function VsrgKey({letter, isActive, handleClick}: VsrgKeyProps) {
+    const ref = useClickOutside<HTMLButtonElement>(() => handleClick(false), {ignoreFocusable: true, active: isActive})
 
     return <button
         className={svs['vsrg-player-key-circle']}

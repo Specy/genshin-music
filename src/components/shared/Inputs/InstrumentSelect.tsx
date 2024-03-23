@@ -1,6 +1,7 @@
-import { INSTRUMENTS } from "$config"
-import { InstrumentName } from "$types/GeneralTypes"
+import {INSTRUMENTS} from "$config"
+import {InstrumentName} from "$types/GeneralTypes"
 import s from '$cmp/shared/Settings/Settings.module.css'
+
 interface InstrumentSelectProps {
     selected: InstrumentName
     onChange: (instrument: InstrumentName) => void
@@ -13,10 +14,11 @@ for (const instrument of INSTRUMENTS) {
     if (instrument.startsWith("SFX")) SFXInstruments.push(instrument)
     else instruments.push(instrument)
 }
-export function InstrumentSelect({ selected, onChange, style }: InstrumentSelectProps) {
+
+export function InstrumentSelect({selected, onChange, style}: InstrumentSelectProps) {
     return <select
         className={s.select}
-        style={{ width: '100%', padding: '0.3rem', ...style }}
+        style={{width: '100%', padding: '0.3rem', ...style}}
         onChange={(e) => {
             onChange(e.target.value as InstrumentName)
             e.target.blur()

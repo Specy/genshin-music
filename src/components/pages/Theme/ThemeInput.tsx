@@ -10,7 +10,7 @@ interface ThemeInputProps {
 }
 
 
-export function ThemeInput({ name, onChange, disabled, value, onLeave }: ThemeInputProps) {
+export function ThemeInput({name, onChange, disabled, value, onLeave}: ThemeInputProps) {
     const [clicking, setClicking] = useState(false)
     return <div className="theme-row">
         <div>
@@ -18,7 +18,7 @@ export function ThemeInput({ name, onChange, disabled, value, onLeave }: ThemeIn
         </div>
         <input
             className="theme-input"
-            style={{ width: '9rem' }}
+            style={{width: '9rem'}}
             placeholder="Write here"
             disabled={disabled}
             value={value}
@@ -32,7 +32,9 @@ export function ThemeInput({ name, onChange, disabled, value, onLeave }: ThemeIn
             onPointerLeave={() => {
                 setClicking(false)
             }}
-            onBlur={() => { if (onLeave) onLeave() }}
+            onBlur={() => {
+                if (onLeave) onLeave()
+            }}
             onChange={(e) => onChange(e.target.value)}
         />
     </div>

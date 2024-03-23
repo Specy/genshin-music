@@ -143,16 +143,19 @@ export default function BlogPage() {
         </BlogP>
         <BlogOl>
             <BlogLi>
-                <BlogP>Bpm</BlogP>: This setting will set the Beats Per Minute of the whole song, one column will last for as long as
+                <BlogP>Bpm</BlogP>: This setting will set the Beats Per Minute of the whole song, one column will last
+                for as long as
                 (60000ms / bpm), for example
                 with a bpm of 200, one column will last for (60000ms / 200) = 300ms.
             </BlogLi>
             <BlogLi>
-                <BlogB>Base pitch</BlogB>: This is the default pitch of all instruments, you can override the pitch of a single
+                <BlogB>Base pitch</BlogB>: This is the default pitch of all instruments, you can override the pitch of a
+                single
                 instrument inside the settings of the instrument.
             </BlogLi>
             <BlogLi>
-                <BlogB>Beat marks</BlogB>: This will cut the canvas into 3 or 4 "sections" of 4 columns, you can use those to help
+                <BlogB>Beat marks</BlogB>: This will cut the canvas into 3 or 4 "sections" of 4 columns, you can use
+                those to help
                 yourself
                 with the tempo of the song.
             </BlogLi>
@@ -160,12 +163,14 @@ export default function BlogPage() {
                 <BlogB>Note name type</BlogB>: The name that the notes in the keyboard of the composer will use.
             </BlogLi>
             <BlogLi>
-                <BlogB>Number of visible columns</BlogB>: The number of columns that will be visible at a time in the canvas. Warning,
+                <BlogB>Number of visible columns</BlogB>: The number of columns that will be visible at a time in the
+                canvas. Warning,
                 a high
                 value might cause lags, if you have lag issues, try to reduce this value.
             </BlogLi>
             <BlogLi>
-                <BlogB>Default reverb</BlogB>: This will enable reverb by default for all instruments in the song, you can override
+                <BlogB>Default reverb</BlogB>: This will enable reverb by default for all instruments in the song, you
+                can override
                 this in the
                 instrument.
             </BlogLi>
@@ -173,16 +178,19 @@ export default function BlogPage() {
                 <BlogB>Autosave changes</BlogB>: It will auto save the changes you applied to a song every 5 edits.
             </BlogLi>
             <BlogLi>
-                <BlogB>Put next/previous column buttons around keyboard</BlogB>: This adds two buttons on the left and right of the
+                <BlogB>Put next/previous column buttons around keyboard</BlogB>: This adds two buttons on the left and
+                right of the
                 keyboard that
                 selects the previous and next columns.
             </BlogLi>
             <BlogLi>
-                <BlogB>Autoplay in all tabs</BlogB>: This is a feature that will start/stop playing all your browser tabs that have the
+                <BlogB>Autoplay in all tabs</BlogB>: This is a feature that will start/stop playing all your browser
+                tabs that have the
                 composer open.
             </BlogLi>
             <BlogLi>
-                <BlogB>Lookahead time</BlogB>: To prevent lags from the app affecting audio, notes are "scheduled" to be played a few
+                <BlogB>Lookahead time</BlogB>: To prevent lags from the app affecting audio, notes are "scheduled" to be
+                played a few
                 milliseconds before
                 than they are actually played, this value will give the app a certain amount of time where lags in the
                 app won't affect the
@@ -191,7 +199,8 @@ export default function BlogPage() {
                 stutters, try to increase this value.
             </BlogLi>
             <BlogLi>
-                <BlogB>Connect MIDI keyboard</BlogB>: You can use a MIDI keyboard to make it easier to compose a song, by using the
+                <BlogB>Connect MIDI keyboard</BlogB>: You can use a MIDI keyboard to make it easier to compose a song,
+                by using the
                 keyboard to select/deselect notes.
                 <br/> If you want to know how to connect your MIDI keyboard, follow the <AppLink
                 href={'/blog/connect-midi-device'}>connect MIDI device</AppLink> guide.

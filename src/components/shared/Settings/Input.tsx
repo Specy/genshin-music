@@ -1,7 +1,8 @@
-import { ChangeEvent } from "react"
-import { FaPlus, FaMinus } from 'react-icons/fa'
-import { SettingsNumber, SettingsText, SettingUpdateKey } from "$types/SettingsPropriety"
+import {ChangeEvent} from "react"
+import {FaMinus, FaPlus} from 'react-icons/fa'
+import {SettingsNumber, SettingsText, SettingUpdateKey} from "$types/SettingsPropriety"
 import s from './Settings.module.css'
+
 interface InputProps {
     data: SettingsText | SettingsNumber,
     objectKey: SettingUpdateKey,
@@ -14,7 +15,7 @@ interface InputProps {
 }
 
 //TODO add better debouncing
-export function Input({ data, value, onChange, onComplete, objectKey }: InputProps) {
+export function Input({data, value, onChange, onComplete, objectKey}: InputProps) {
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
         const el = e.target
@@ -28,13 +29,13 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
         }
     }
 
-    function handleIncrement(sign: number){
-        if(data.type === 'number'){
+    function handleIncrement(sign: number) {
+        if (data.type === 'number') {
             const nextValue = Number(value) + (data.increment || 0) * sign
             if (!data.threshold || nextValue < data.threshold[0] || nextValue > data.threshold[1]) return
             onComplete({
                 key: objectKey,
-                data: { ...data, value: nextValue }
+                data: {...data, value: nextValue}
             })
         }
     }
@@ -43,19 +44,19 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
         if (data.value === value) return
         onComplete({
             key: objectKey,
-            data: { ...data, value: value }
+            data: {...data, value: value}
         })
     }
-    
+
     return <div className={s['settings-input']}>
         {data.type === 'number' &&
-            <button 
+            <button
                 onClick={() => handleIncrement(-1)}
                 className={s['settings-input-button']}
                 style={{marginRight: '0.15rem'}}
                 aria-label="Decrement"
             >
-                <FaMinus />
+                <FaMinus/>
             </button>
         }
         <input
@@ -67,13 +68,13 @@ export function Input({ data, value, onChange, onComplete, objectKey }: InputPro
             aria-label={data.name}
         />
         {data.type === 'number' &&
-            <button 
+            <button
                 onClick={() => handleIncrement(1)}
                 className={s['settings-input-button']}
                 style={{marginLeft: '0.15rem'}}
                 aria-label="Increment"
-            >   
-                <FaPlus />
+            >
+                <FaPlus/>
             </button>
         }
     </div>

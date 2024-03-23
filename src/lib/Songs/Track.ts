@@ -2,7 +2,7 @@ import {APP_NAME, INSTRUMENTS, Pitch} from "$config"
 import {InstrumentName} from "$types/GeneralTypes"
 import {InstrumentNoteIcon} from "./ComposedSong"
 
-export interface SerializedTrack{
+export interface SerializedTrack {
     name: string
     instrument: InstrumentName
     columns: SerializedTrackColumn[]
@@ -11,127 +11,147 @@ export interface SerializedTrack{
     volume: number
     visible: boolean
 }
+
 const instrumentNoteMap = new Map([['border', 1], ['circle', 2], ['line', 3]])
-export class Track{
+
+export class Track {
     instrument: InstrumentName = INSTRUMENTS[0]
     volume: number = APP_NAME === 'Genshin' ? 90 : 100
     pitch: Pitch | "" = ""
     visible: boolean = true
     icon: InstrumentNoteIcon = 'circle'
-	name = ''
+    name = ''
     columns: TrackColumn[] = []
-	constructor(data: Partial<Track> = {}) {
-		Object.assign(this, data)
-	}
-	serialize(): SerializedTrack{
-		return {
-			name: this.name,
-			instrument: this.instrument,
-			volume: this.volume,
-			pitch: this.pitch,
-			visible: this.visible,
-			icon: this.icon,
+
+    constructor(data: Partial<Track> = {}) {
+        Object.assign(this, data)
+    }
+
+    serialize(): SerializedTrack {
+        return {
+            name: this.name,
+            instrument: this.instrument,
+            volume: this.volume,
+            pitch: this.pitch,
+            visible: this.visible,
+            icon: this.icon,
             columns: this.columns.map(c => c.serialize())
-		}
-	}
-	static deserialize(data: SerializedTrack): Track{
+        }
+    }
+
+    static deserialize(data: SerializedTrack): Track {
         const columns = data.columns.map(c => TrackColumn.deserialize(c))
-		return new Track({...data, columns})
-	}
-	set(data: Partial<SerializedTrack>){
-		Object.assign(this, data)
-		return this
-	}
-    setNoteInColumn(column:number, note: Note | number){
+        return new Track({...data, columns})
+    }
+
+    set(data: Partial<SerializedTrack>) {
+        Object.assign(this, data)
+        return this
+    }
+
+    setNoteInColumn(column: number, note: Note | number) {
         this.ensureColumnSize(column)
         return this.columns[column].addNote(note)
     }
-    toggleNoteInColumn(column:number, note: Note | number){
+
+    toggleNoteInColumn(column: number, note: Note | number) {
         this.ensureColumnSize(column)
         return this.columns[column].toggleNote(note)
     }
 
 
-
-    ensureColumnSize(size: number){
-        if(this.columns.length < size){
+    ensureColumnSize(size: number) {
+        if (this.columns.length < size) {
             const columns = new Array(size - this.columns.length).fill(null).map(() => new TrackColumn())
             this.columns.push(...columns)
         }
     }
-	toNoteIcon(){
-		return instrumentNoteMap.get(this.icon) || 0
-	}
 
-	clone(): Track{
+    toNoteIcon() {
+        return instrumentNoteMap.get(this.icon) || 0
+    }
+
+    clone(): Track {
         const columns = this.columns.map(c => c.clone())
-		return new Track({...this, columns})
-	}
+        return new Track({...this, columns})
+    }
 }
 
 export type SerializedTrackColumn = [notes: SerializedNote[]]
-export class TrackColumn{
-    notes:Note [] = []
+
+export class TrackColumn {
+    notes: Note [] = []
+
     constructor(data: Partial<TrackColumn> = {}) {
         Object.assign(this, data)
     }
-	addNote(indexOrNote: number | Note): Note {
-		if (indexOrNote instanceof Note) {
-            if(this.getNoteIndex(indexOrNote.index) !== null) return indexOrNote
-			this.notes.push(indexOrNote.clone())
-			return indexOrNote
-		}
+
+    addNote(indexOrNote: number | Note): Note {
+        if (indexOrNote instanceof Note) {
+            if (this.getNoteIndex(indexOrNote.index) !== null) return indexOrNote
+            this.notes.push(indexOrNote.clone())
+            return indexOrNote
+        }
         const existingNote = this.getNoteIndex(indexOrNote)
-        if(existingNote !== null) return this.notes[existingNote] 
-		const note = new Note(indexOrNote)
-		this.notes.push(note)
-		return note
-	}
-    toggleNote(indexOrNote: number | Note): Note | null{
-        if(indexOrNote instanceof Note){
+        if (existingNote !== null) return this.notes[existingNote]
+        const note = new Note(indexOrNote)
+        this.notes.push(note)
+        return note
+    }
+
+    toggleNote(indexOrNote: number | Note): Note | null {
+        if (indexOrNote instanceof Note) {
             return this.toggleNote(indexOrNote.index)
         }
         const note = this.getNoteIndex(indexOrNote)
-        if(note === null) return this.addNote(indexOrNote)
+        if (note === null) return this.addNote(indexOrNote)
         this.removeAtIndex(note)
         return null
     }
 
-    getNoteIndex(index: number): number | null{
-		const result = this.notes.findIndex((n) => index === n.index)
-		return result === -1 ? null : result
-	}
-	removeAtIndex(index: number) {
-		this.notes.splice(index, 1)
-	}
-    serialize(): SerializedTrackColumn{
+    getNoteIndex(index: number): number | null {
+        const result = this.notes.findIndex((n) => index === n.index)
+        return result === -1 ? null : result
+    }
+
+    removeAtIndex(index: number) {
+        this.notes.splice(index, 1)
+    }
+
+    serialize(): SerializedTrackColumn {
         return [this.notes.map(n => n.serialize())]
     }
-    static deserialize(data: SerializedTrackColumn){
+
+    static deserialize(data: SerializedTrackColumn) {
         return new TrackColumn({notes: data[0].map(n => Note.deserialize(n))})
     }
-    clone(){
+
+    clone() {
         return new TrackColumn({notes: this.notes.map(n => n.clone())})
     }
 }
 
 export type SerializedNote = [index: number]
-export class Note{
+
+export class Note {
     index: number
+
     constructor(index?: number) {
         this.index = index ?? -1
     }
-    static deserialize(data: SerializedNote): Note{
+
+    static deserialize(data: SerializedNote): Note {
         return new Note(data[0])
     }
-    serialize(): SerializedNote{
+
+    serialize(): SerializedNote {
         return [this.index]
     }
-    clone(){
+
+    clone() {
         return new Note(this.index)
     }
 }
-
 
 
 /*

@@ -1,4 +1,4 @@
-import { SimpleMenu } from "./SimpleMenu"
+import {SimpleMenu} from "./SimpleMenu"
 
 interface PageProps {
     excludeMenu?: boolean
@@ -8,10 +8,11 @@ interface PageProps {
     style?: React.CSSProperties
     cropped?: boolean
 }
-export function DefaultPage({ excludeMenu = false, children, className = "", style, menu, cropped = true }: PageProps) {
-    const pageStyle = !cropped ? { ...style, padding: 0 } : style
+
+export function DefaultPage({excludeMenu = false, children, className = "", style, menu, cropped = true}: PageProps) {
+    const pageStyle = !cropped ? {...style, padding: 0} : style
     return <div className={"default-page " + className} style={pageStyle}>
-        {(!excludeMenu || !menu) && <SimpleMenu />}
+        {(!excludeMenu || !menu) && <SimpleMenu/>}
         {menu}
         <main className="default-content appear-on-mount">
             {children}

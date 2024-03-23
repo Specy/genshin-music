@@ -1,9 +1,8 @@
-import { COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN } from "$config"
-import type { ColumnNote, InstrumentData } from '$lib/Songs/SongClasses';
-import type { Texture } from 'pixi.js';
-import { Container, Sprite } from '@pixi/react';
-import { ComposerCacheData } from "./ComposerCache";
-import { useCallback } from "react";
+import {COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN} from "$config"
+import type {ColumnNote, InstrumentData} from '$lib/Songs/SongClasses';
+import type {Texture} from 'pixi.js';
+import {Container, Sprite} from '@pixi/react';
+import {ComposerCacheData} from "./ComposerCache";
 
 interface RenderColumnProps {
     notes: ColumnNote[]
@@ -21,7 +20,18 @@ interface RenderColumnProps {
     isToolsSelected: boolean
 }
 
-export function RenderColumn({ notes, index, sizes, cache, instruments,  backgroundCache, isBreakpoint, isSelected, isToolsSelected, currentLayer }: RenderColumnProps) {
+export function RenderColumn({
+                                 notes,
+                                 index,
+                                 sizes,
+                                 cache,
+                                 instruments,
+                                 backgroundCache,
+                                 isBreakpoint,
+                                 isSelected,
+                                 isToolsSelected,
+                                 currentLayer
+                             }: RenderColumnProps) {
 
 
     return <Container
@@ -47,7 +57,7 @@ export function RenderColumn({ notes, index, sizes, cache, instruments,  backgro
 
         {notes.map((note) => {
             const layerStatus = note.layer.toLayerStatus(currentLayer, instruments)
-            if(layerStatus === 0) return null
+            if (layerStatus === 0) return null
             return <Sprite
                 key={note.index}
                 texture={

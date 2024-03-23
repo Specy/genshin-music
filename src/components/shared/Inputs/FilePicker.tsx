@@ -1,4 +1,5 @@
-import { useRef, useCallback } from "react"
+import {useCallback, useRef} from "react"
+
 type FilePickerProps<T> = {
     children: React.ReactNode,
     onError?: (error: any, files: File[]) => void,
@@ -17,20 +18,23 @@ type FilePickerProps<T> = {
     as: 'file'
     onPick: (files: FileElement<File>[]) => void,
 })
+
 export interface FileElement<T> {
     data: T,
     file: File
 }
-export function FilePicker<T>({ children, onPick, style = {}, as, multiple = false, onError }: FilePickerProps<T>) {
+
+export function FilePicker<T>({children, onPick, style = {}, as, multiple = false, onError}: FilePickerProps<T>) {
     const input = useRef<HTMLInputElement>(null)
 
     const handleEvent = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files === null) return
         const files = Array.from(event.target.files ?? [])
-        if(as === 'file') return onPick(files.map(file => ({ data: file, file })))
+        if (as === 'file') return onPick(files.map(file => ({data: file, file})))
         const promises: Promise<FileElement<T>>[] = files.map((file: File) => {
             return new Promise((resolve, reject) => {
                 const fileReader = new FileReader()
+
                 function handleLoad() {
                     try {
                         const value = fileReader.result as any
@@ -42,8 +46,9 @@ export function FilePicker<T>({ children, onPick, style = {}, as, multiple = fal
                         reject(e)
                     }
                 }
+
                 try {
-                    fileReader.addEventListener('loadend', handleLoad, { once: true })
+                    fileReader.addEventListener('loadend', handleLoad, {once: true})
                     if (as === 'text' || as === 'json') fileReader.readAsText(file)
                     if (as === 'buffer') fileReader.readAsArrayBuffer(file)
                 } catch (e) {
@@ -64,7 +69,7 @@ export function FilePicker<T>({ children, onPick, style = {}, as, multiple = fal
     }, [as, onPick, onError])
 
     return <>
-        <input type='file' style={{ display: 'none' }} ref={input} onChange={handleEvent} multiple={multiple} />
+        <input type='file' style={{display: 'none'}} ref={input} onChange={handleEvent} multiple={multiple}/>
         <div onClick={() => input.current?.click()} style={style}>
             {children}
         </div>

@@ -1,9 +1,8 @@
-import { Container, Sprite } from "@pixi/react";
-import { PIXI_CENTER_X_END_Y } from "$config";
-import { VsrgHitObject } from "$lib/Songs/VsrgSong";
-import { Fragment } from "react";
-import { VsrgPlayerCache } from "./VsgPlayerCache";
-import { HitObjectStatus, RenderableHitObject, VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas";
+import {Container, Sprite} from "@pixi/react";
+import {PIXI_CENTER_X_END_Y} from "$config";
+import {Fragment} from "react";
+import {VsrgPlayerCache} from "./VsgPlayerCache";
+import {HitObjectStatus, RenderableHitObject, VsrgPlayerCanvasSizes} from "./VsrgPlayerCanvas";
 
 
 interface VsrgHitObjectsRendererProps {
@@ -15,8 +14,13 @@ interface VsrgHitObjectsRendererProps {
 }
 
 
-
-export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache, sizes, offset }: VsrgHitObjectsRendererProps) {
+export function VsrgHitObjectsRenderer({
+                                           timestamp,
+                                           renderableHitObjects,
+                                           cache,
+                                           sizes,
+                                           offset
+                                       }: VsrgHitObjectsRendererProps) {
     const scale = sizes.scaling
     const halfWidth = sizes.hitObjectSize / 2
     /*
@@ -41,7 +45,7 @@ export function VsrgHitObjectsRenderer({ timestamp, renderableHitObjects, cache,
                 let min = renderableHitObject.hitObject.index
                 let max = min
                 for (const note of renderableHitObjects) {
-                    if (note === renderableHitObject || 
+                    if (note === renderableHitObject ||
                         note.status === HitObjectStatus.Missed ||
                         note.status === HitObjectStatus.Hit
                     ) continue

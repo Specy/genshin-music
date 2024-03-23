@@ -1,26 +1,34 @@
 //TODO i hate this component with all my heart, the code needs to be improved, but this is the only way to make
 //it half performant, maybe i should get rid of react pixi and do it manually, that might improve garbage collection
 //since sprites are always removed and added to the stage everytime it scrolls
-import { Component, createRef } from 'react'
-import { Stage, Container, Graphics, Sprite } from '@pixi/react';
-import { FaStepBackward, FaStepForward, FaPlusCircle, FaMinusCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import {Component, createRef} from 'react'
+import {Container, Graphics, Sprite, Stage} from '@pixi/react';
+import {
+    FaChevronLeft,
+    FaChevronRight,
+    FaMinusCircle,
+    FaPlusCircle,
+    FaStepBackward,
+    FaStepForward
+} from 'react-icons/fa';
 import isMobile from "is-mobile"
-import { ComposerCache } from "$cmp/pages/Composer/ComposerCache"
-import { APP_NAME } from "$config"
+import {ComposerCache} from "$cmp/pages/Composer/ComposerCache"
+import {APP_NAME} from "$config"
 import Memoized from '$cmp/shared/Utility/Memoized';
-import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
-import { clamp, colorToRGB, nearestEven } from '$lib/Utilities';
-import type { Column } from '$lib/Songs/SongClasses';
-import type { ComposerSettingsDataType } from '$lib/BaseSettings';
-import { isColumnVisible, RenderColumn } from '$cmp/pages/Composer/RenderColumn';
-import { TimelineButton } from './TimelineButton';
-import { Timer } from '$types/GeneralTypes';
-import { ComposedSong } from '$lib/Songs/ComposedSong';
-import { subscribeTheme } from '$lib/Hooks/useTheme';
-import { createShortcutListener } from '$stores/KeybindsStore';
-import { FederatedPointerEvent } from 'pixi.js';
+import {ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
+import {clamp, colorToRGB, nearestEven} from '$lib/Utilities';
+import type {Column} from '$lib/Songs/SongClasses';
+import type {ComposerSettingsDataType} from '$lib/BaseSettings';
+import {isColumnVisible, RenderColumn} from '$cmp/pages/Composer/RenderColumn';
+import {TimelineButton} from './TimelineButton';
+import {Timer} from '$types/GeneralTypes';
+import {ComposedSong} from '$lib/Songs/ComposedSong';
+import {subscribeTheme} from '$lib/Hooks/useTheme';
+import {createShortcutListener} from '$stores/KeybindsStore';
+import {FederatedPointerEvent} from 'pixi.js';
 
 type ClickEventType = 'up' | 'down-slider' | 'down-stage'
+
 interface ComposerCanvasProps {
     data: {
         columns: Column[],
@@ -40,6 +48,7 @@ interface ComposerCanvasProps {
     }
 
 }
+
 interface ComposerCanvasState {
     width: number
     height: number
@@ -70,6 +79,7 @@ interface ComposerCanvasState {
     }
     cache: ComposerCache | null
 }
+
 export default class ComposerCanvas extends Component<ComposerCanvasProps, ComposerCanvasState> {
     state: ComposerCanvasState
     notesStageRef: any
@@ -85,6 +95,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     onSlider: boolean
     cacheRecalculateDebounce: Timer
     cleanup: (() => void)[] = []
+
     constructor(props: ComposerCanvasProps) {
         super(props)
         const numberOfColumnsPerCanvas = Number(this.props.data.settings.columnsPerCanvas.value)
@@ -136,7 +147,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
 
     componentDidMount() {
-        const { numberOfColumnsPerCanvas } = this.state
+        const {numberOfColumnsPerCanvas} = this.state
         const sizes = document.body.getBoundingClientRect()
         let width = nearestEven(sizes.width * 0.85 - 45)
         let height = nearestEven(sizes.height * 0.45)
@@ -158,8 +169,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
 
         window.addEventListener("pointerup", this.resetPointerDown)
         window.addEventListener("blur", this.resetPointerDown)
-        const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({ shortcut }) => {
-            const { name } = shortcut
+        const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({shortcut}) => {
+            const {name} = shortcut
             if (name === "next_breakpoint") this.handleBreakpoints(1)
             if (name === "previous_breakpoint") this.handleBreakpoints(-1)
         })
@@ -179,6 +190,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.notesStageRef = null
         this.breakpointsStageRef = null
     }
+
     resetPointerDown = () => {
         this.stageSelected = false
         this.sliderSelected = false
@@ -215,8 +227,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.cacheRecalculateDebounce = setTimeout(() => {
             if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return
             const sizes = document.body.getBoundingClientRect()
-            const { numberOfColumnsPerCanvas } = this.state
-            const { inPreview } = this.props.data
+            const {numberOfColumnsPerCanvas} = this.state
+            const {inPreview} = this.props.data
             let width = nearestEven(sizes.width * 0.85 - 45)
             let height = nearestEven(sizes.height * 0.45)
             if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
@@ -277,13 +289,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         })
         return newCache
     }
+
     handleWheel = (e: WheelEvent) => {
         this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
     }
     handleClick = (e: FederatedPointerEvent, type: ClickEventType) => {
         const x = e.globalX
-        const { width, numberOfColumnsPerCanvas } = this.state
-        const { data } = this.props
+        const {width, numberOfColumnsPerCanvas} = this.state
+        const {data} = this.props
         this.stageXMovement = 0
         this.stageMovementAmount = 0
         if (type === "up") {
@@ -313,7 +326,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             const middle = (this.state.numberOfColumnsPerCanvas / 2) * this.state.column.width
             const clickedOffset = Math.floor((e.globalX - middle) / this.state.column.width + 1)
             if (clickedOffset === 0) return
-            const { data, functions } = this.props
+            const {data, functions} = this.props
             const newPosition = data.selected + Math.round(clickedOffset)
             functions.selectColumn(clamp(newPosition, 0, data.columns.length - 1))
         }
@@ -331,7 +344,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.stagePreviousPositon = x
         if (this.stageSelected) {
             const threshold = this.state.column.width
-            const { data, functions } = this.props
+            const {data, functions} = this.props
             this.stageXMovement += amount
             const amountToMove = (this.stageXMovement - this.stageMovementAmount * threshold) / threshold
             if (Math.abs(amountToMove) < 1) return
@@ -341,7 +354,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         }
     }
     handleBreakpoints = (direction: 1 | -1) => {
-        const { selected, columns, breakpoints } = this.props.data
+        const {selected, columns, breakpoints} = this.props.data
         const breakpoint = direction === 1 //1 = right, -1 = left
             ? breakpoints.filter((v) => v > selected).sort((a, b) => a - b)
             : breakpoints.filter((v) => v < selected).sort((a, b) => b - a)
@@ -354,8 +367,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const globalX = e.globalX
         if (this.sliderSelected) {
             if (this.throttleScroll++ < 4) return
-            const { width, column } = this.state
-            const { data } = this.props
+            const {width, column} = this.state
+            const {data} = this.props
             this.hasSlided = true
             this.throttleScroll = 0
             const totalWidth = column.width * data.columns.length
@@ -366,7 +379,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     testStageHitarea = {
         contains: (x: number, y: number) => {
-            if(this.stageSelected) return true //if stage is selected, we want to be able to move it even if we are outside the timeline
+            if (this.stageSelected) return true //if stage is selected, we want to be able to move it even if we are outside the timeline
             const width = this.state.column.width * this.props.data.columns.length
             if (x < 0 || x > width || y < 0 || y > this.state.height) return false
             return true
@@ -374,17 +387,18 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     testTimelineHitarea = {
         contains: (x: number, y: number) => {
-            if(this.sliderSelected) return true //if slider is selected, we want to be able to move it even if we are outside the timeline
+            if (this.sliderSelected) return true //if slider is selected, we want to be able to move it even if we are outside the timeline
             if (x < 0 || x > this.state.width || y < 0 || y > this.state.timelineHeight) return false
             return true
         }
     }
+
     render() {
-        const { width, timelineHeight, height, theme, numberOfColumnsPerCanvas, pixelRatio } = this.state
-        const { data, functions } = this.props
+        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, pixelRatio} = this.state
+        const {data, functions} = this.props
         const cache = this.state.cache?.cache
         const sizes = this.state.column
-        const xPosition = (data.selected - numberOfColumnsPerCanvas / 2 + 1) * - sizes.width
+        const xPosition = (data.selected - numberOfColumnsPerCanvas / 2 + 1) * -sizes.width
         const beatMarks = Number(data.settings.beatMarks.value)
         const counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks
         const relativeColumnWidth = width / data.columns.length
@@ -406,7 +420,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     height={height}
                     raf={false}
                     onMount={this.recalculateCacheAndSizes}
-                    style={{ opacity: theme.main.backgroundOpacity }}
+                    style={{opacity: theme.main.backgroundOpacity}}
                     renderOnComponentChange={true}
                     options={{
                         backgroundColor: theme.main.background,
@@ -459,7 +473,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                             background: `linear-gradient(90deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
                         }}
                     >
-                        <FaChevronLeft />
+                        <FaChevronLeft/>
                     </button>
                     <button
                         onPointerDown={() => functions.selectColumn(data.selected + 1)}
@@ -471,13 +485,13 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                             background: `linear-gradient(270deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
                         }}
                     >
-                        <FaChevronRight />
+                        <FaChevronRight/>
                     </button>
                 </>}
             </div>
-            <div className="timeline-wrapper-bg row" >
+            <div className="timeline-wrapper-bg row">
 
-                <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
+                <div className="timeline-wrapper" style={{height: this.state.timelineHeight}}>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(-1)}
                         tooltip='Previous Breakpoint'
@@ -487,7 +501,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         ariaLabel='Previous Breakpoint'
                     >
                         <Memoized>
-                            <FaStepBackward size={16} />
+                            <FaStepBackward size={16}/>
                         </Memoized>
                     </TimelineButton>
                     <TimelineButton
@@ -500,11 +514,11 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         ariaLabel='Next Breakpoint'
                     >
                         <Memoized>
-                            <FaStepForward size={16} />
+                            <FaStepForward size={16}/>
                         </Memoized>
                     </TimelineButton>
 
-                    <div className='timeline-scroll' style={{ backgroundColor: theme.timeline.hex }}>
+                    <div className='timeline-scroll' style={{backgroundColor: theme.timeline.hex}}>
                         <Stage
                             width={width}
                             height={timelineHeight}
@@ -582,8 +596,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     >
                         <Memoized>
                             {isBreakpointSelected
-                                ? <FaMinusCircle key='minus' size={16} />
-                                : <FaPlusCircle key='plus' size={16} />
+                                ? <FaMinusCircle key='minus' size={16}/>
+                                : <FaPlusCircle key='plus' size={16}/>
                             }
                         </Memoized>
                     </TimelineButton>

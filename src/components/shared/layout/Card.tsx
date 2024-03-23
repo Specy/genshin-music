@@ -1,4 +1,3 @@
-import type {CSSProperties} from "react";
 import {MaybeChildren, Stylable} from "$lib/UtilTypes";
 
 

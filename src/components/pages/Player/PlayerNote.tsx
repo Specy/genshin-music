@@ -34,7 +34,7 @@ interface NoteProps {
 }
 
 //TODO use css vars for the colors
-function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps) {
+function Note({note, approachingNotes, handleClick, noteText, data}: NoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
         const dispose = observe(ThemeProvider.state.data, () => {
@@ -44,7 +44,7 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
     }, [])
 
     const state = useObservableObject(note.data)
-    const { approachRate, instrument } = data
+    const {approachRate, instrument} = data
     const animation = {
         transition: `background-color ${state.delay}ms  ${state.delay === (APP_NAME === 'Genshin' ? 100 : 200) ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
     }
@@ -67,7 +67,7 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
             <div
                 key={state.animationId}
                 style={clickColor && ThemeProvider.isDefault('accent')
-                    ? { borderColor: clickColor} : {}
+                    ? {borderColor: clickColor} : {}
                 }
                 className={NOTES_CSS_CLASSES.noteAnimation}
             />
@@ -77,7 +77,7 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
             style={{
                 ...animation,
                 ...(clickColor && state.status === 'clicked' && ThemeProvider.isDefault('accent')
-                    ? { backgroundColor: clickColor } : {}
+                        ? {backgroundColor: clickColor} : {}
                 )
             }}
         >
@@ -88,17 +88,18 @@ function Note({ note, approachingNotes, handleClick, noteText, data }: NoteProps
             <SvgNote
                 name={note.noteImage}
                 color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill : undefined}
-                background={state.status === 'clicked' 
-                ? (clickColor && ThemeProvider.isDefault('accent')) ? clickColor : 'var(--accent)'
-                : 'var(--note-background)'}
+                background={state.status === 'clicked'
+                    ? (clickColor && ThemeProvider.isDefault('accent')) ? clickColor : 'var(--accent)'
+                    : 'var(--note-background)'}
             />
 
-            <div className={NOTES_CSS_CLASSES.noteName} style={{ color: textColor }}>
+            <div className={NOTES_CSS_CLASSES.noteName} style={{color: textColor}}>
                 {noteText}
             </div>
         </div>
     </button>
 }
+
 export default memo(Note, (p, n) => {
     return p.note === n.note && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
         && p.handleClick === n.handleClick && p.noteText === n.noteText && p.approachingNotes === n.approachingNotes
@@ -117,7 +118,8 @@ interface ApproachCircleProps {
     approachRate: number
     index: number
 }
-const ApproachCircle = memo(function ApproachCircle({ approachRate, index }: ApproachCircleProps) {
+
+const ApproachCircle = memo(function ApproachCircle({approachRate, index}: ApproachCircleProps) {
     return <div
         className={NOTES_CSS_CLASSES.approachCircle}
         style={{
@@ -138,13 +140,20 @@ function parseBorderFill(status: NoteStatus) {
 
 function parseClass(status: NoteStatus) {
     switch (status) {
-        case 'clicked': return "click-event"
-        case 'toClick': return "note-red"
-        case 'toClickNext': return "note-border-click"
-        case 'toClickAndNext': return "note-red note-border-click"
-        case 'approach-wrong': return "click-event approach-wrong"
-        case 'approach-correct': return "click-event approach-correct"
-        default: return ''
+        case 'clicked':
+            return "click-event"
+        case 'toClick':
+            return "note-red"
+        case 'toClickNext':
+            return "note-border-click"
+        case 'toClickAndNext':
+            return "note-red note-border-click"
+        case 'approach-wrong':
+            return "click-event approach-wrong"
+        case 'approach-correct':
+            return "click-event approach-correct"
+        default:
+            return ''
     }
 }
 

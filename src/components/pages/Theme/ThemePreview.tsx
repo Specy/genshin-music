@@ -13,17 +13,20 @@ interface ThemePreviewProps {
     onDelete?: (theme: SerializedTheme) => void,
     downloadable?: boolean
 }
-export function ThemePreview({ theme, onClick, onDelete, current, downloadable }: ThemePreviewProps) {
+
+export function ThemePreview({theme, onClick, onDelete, current, downloadable}: ThemePreviewProps) {
     const image = theme.other.backgroundImageMain || theme.other.backgroundImageComposer
     return <div
         className="theme-preview"
-        onClick={() => { if (onClick) onClick(theme) }}
+        onClick={() => {
+            if (onClick) onClick(theme)
+        }}
         style={{
             backgroundColor: theme.data.background.value,
             color: theme.data.background.text,
             ...(current ?
-                { outline: 'solid 0.2rem var(--accent)' } :
-                { boxShadow: `0px 0px 10px 0px rgba(0,0,0,0.4)` })
+                {outline: 'solid 0.2rem var(--accent)'} :
+                {boxShadow: `0px 0px 10px 0px rgba(0,0,0,0.4)`})
         }}
     >
         <div
@@ -52,7 +55,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                 {theme.other.name}
             </div>
 
-            <div style={{ display: "flex", marginLeft: "0.2rem", zIndex: 2, padding: "0.4rem 0.2rem" }}>
+            <div style={{display: "flex", marginLeft: "0.2rem", zIndex: 2, padding: "0.4rem 0.2rem"}}>
                 {downloadable &&
                     <FaDownload
                         color={theme.data.background.text}
@@ -82,7 +85,7 @@ export function ThemePreview({ theme, onClick, onDelete, current, downloadable }
                 }
             </div>
         </div>
-        <div className="theme-preview-colors" style={{ zIndex: 2 }}>
+        <div className="theme-preview-colors" style={{zIndex: 2}}>
             {Object.entries(theme.data).map(([key, value]) =>
                 <div
                     key={key}

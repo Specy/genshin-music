@@ -1,8 +1,9 @@
-import { ChangeEvent } from "react"
-import { Theme } from "$stores/ThemeStore/ThemeProvider"
-import { InstrumentName } from "$types/GeneralTypes"
-import { SettingsInstrument, SettingUpdateKey } from "$types/SettingsPropriety"
+import {ChangeEvent} from "react"
+import {Theme} from "$stores/ThemeStore/ThemeProvider"
+import {InstrumentName} from "$types/GeneralTypes"
+import {SettingsInstrument, SettingUpdateKey} from "$types/SettingsPropriety"
 import s from './Settings.module.css'
+
 interface InstrumentInputProps {
     data: SettingsInstrument,
     theme: Theme,
@@ -20,7 +21,16 @@ interface InstrumentInputProps {
     }) => void
 }
 
-export function InstrumentInput({ data, volume, onVolumeChange, onVolumeComplete, onInstrumentPick, objectKey, instrument, theme }: InstrumentInputProps) {
+export function InstrumentInput({
+                                    data,
+                                    volume,
+                                    onVolumeChange,
+                                    onVolumeComplete,
+                                    onInstrumentPick,
+                                    objectKey,
+                                    instrument,
+                                    theme
+                                }: InstrumentInputProps) {
     const instruments: InstrumentName[] = []
     const SFXInstruments: InstrumentName[] = []
     for (const instrument of data.options) {
@@ -31,28 +41,30 @@ export function InstrumentInput({ data, volume, onVolumeChange, onVolumeComplete
     function handleVolumeChange(e: ChangeEvent<HTMLInputElement>) {
         onVolumeChange(Number(e.target.value))
     }
+
     function handleVolumePick() {
         onVolumeComplete({
             key: objectKey,
             value: volume
         })
     }
+
     function handleInstrument(e: ChangeEvent<HTMLSelectElement>) {
         onInstrumentPick({
             key: objectKey,
-            data: { ...data, value: e.target.value as InstrumentName }
+            data: {...data, value: e.target.value as InstrumentName}
         })
     }
 
     return <div className={s['instrument-picker']}>
         <select value={instrument}
-            style={{
-                textAlign: 'left',
-                paddingLeft: '0.4rem',
-                backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
-            }}
-            className={s.select}
-            onChange={handleInstrument}
+                style={{
+                    textAlign: 'left',
+                    paddingLeft: '0.4rem',
+                    backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
+                }}
+                className={s.select}
+                onChange={handleInstrument}
         >
             {SFXInstruments.length === 0
                 ? <>

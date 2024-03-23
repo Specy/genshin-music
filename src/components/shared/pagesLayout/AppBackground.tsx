@@ -1,4 +1,4 @@
-import { useThemeOther } from "$lib/Hooks/useThemeOther"
+import {useThemeOther} from "$lib/Hooks/useThemeOther"
 
 interface AppBackgroundProps {
     children: React.ReactNode,
@@ -6,12 +6,12 @@ interface AppBackgroundProps {
     style?: React.CSSProperties
 }
 
-export function AppBackground({ children, page, style }: AppBackgroundProps) {
+export function AppBackground({children, page, style}: AppBackgroundProps) {
     const [theme] = useThemeOther()
-    return <div 
-        className='app bg-image' 
+    return <div
+        className='app bg-image'
         //@ts-ignore
-        style={{ backgroundImage: `url(${theme.getOther('backgroundImage' + page)})`, ...style }}>
+        style={{backgroundImage: `url(${theme.getOther('backgroundImage' + page)})`, ...style}}>
         {children}
     </div>
 }

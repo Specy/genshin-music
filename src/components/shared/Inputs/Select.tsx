@@ -1,20 +1,21 @@
-import { useTheme } from "$lib/Hooks/useTheme"
+import {useTheme} from "$lib/Hooks/useTheme"
 import s from '$cmp/shared/Settings/Settings.module.css'
-import { useCallback } from "react";
+import {useCallback} from "react";
 
-interface SelectProps{
+interface SelectProps {
     onChange: (value: React.ChangeEvent<HTMLSelectElement>) => void
     value: React.SelectHTMLAttributes<HTMLSelectElement>['value']
     className?: string
     children?: React.ReactNode
     style?: React.CSSProperties
 }
+
 export function Select({onChange, value, children, style}: SelectProps) {
     const [theme] = useTheme()
     const callback = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
         onChange(e)
         e.target.blur()
-    },[onChange])
+    }, [onChange])
     return <select
         onChange={callback}
         value={value}

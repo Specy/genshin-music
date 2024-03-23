@@ -9,7 +9,8 @@ interface PlayerControlsState {
     end: number
 
 }
-interface PagesState{
+
+interface PagesState {
     pages: Chunk[][]
     currentPageIndex: number
     currentChunkIndex: number
@@ -25,7 +26,7 @@ class PlayerControlsStore {
         end: 0,
 
     }
-    @observable 
+    @observable
     pagesState: PagesState = {
         pages: [],
         currentPageIndex: 0,
@@ -39,21 +40,27 @@ class PlayerControlsStore {
         score: 0,
         combo: 0
     }
+
     constructor() {
         makeObservable(this)
     }
+
     get currentChunkIndex(): number {
         return this.pagesState.currentChunkIndex
     }
+
     get currentChunk(): Chunk | undefined {
         return this.pagesState.currentPage[this.pagesState.currentChunkIndex]
     }
+
     get position(): number {
         return this.state.position
     }
+
     get current(): number {
         return this.state.current
     }
+
     get size(): number {
         return this.state.size
     }
@@ -79,7 +86,7 @@ class PlayerControlsStore {
         })
     }
     increaseScore = (correct: boolean, debuff?: number) => {
-        const { score } = this
+        const {score} = this
         if (correct) {
             this.setScoreState({
                 correct: score.correct + 1,
@@ -89,7 +96,7 @@ class PlayerControlsStore {
         } else {
             this.setScoreState({
                 wrong: score.wrong + 1,
-                combo: 0,   
+                combo: 0,
             })
         }
     }
@@ -120,14 +127,14 @@ class PlayerControlsStore {
         Object.assign(this.pagesState, state)
     }
     setPosition = (position: number) => {
-        this.setState({ position })
+        this.setState({position})
     }
     incrementCurrent = () => {
-        this.setState({ current: this.current + 1 })
+        this.setState({current: this.current + 1})
     }
     //TODO since it has been split again, consider removing this method
     incrementChunkPositionAndSetCurrent = (current?: number) => {
-        const { pages, currentPageIndex } = this.pagesState
+        const {pages, currentPageIndex} = this.pagesState
         current = current ?? this.current
         const nextChunkPosition = this.currentChunkIndex + 1
         if (nextChunkPosition >= (pages[currentPageIndex]?.length ?? 0)) {
@@ -137,23 +144,23 @@ class PlayerControlsStore {
                 currentChunkIndex: 0,
                 currentPage: pages[currentPageIndex + 1],
             })
-            this.setState({ current })
+            this.setState({current})
         } else {
             this.setPagesState({
                 currentChunkIndex: nextChunkPosition,
             })
-            this.setState({ current })
+            this.setState({current})
         }
     }
 
     setCurrent = (current: number) => {
-        this.setState({ current })
+        this.setState({current})
     }
     setEnd = (end: number) => {
-        this.setState({ end })
+        this.setState({end})
     }
     setSize = (size: number) => {
-        this.setState({ size })
+        this.setState({size})
     }
 }
 

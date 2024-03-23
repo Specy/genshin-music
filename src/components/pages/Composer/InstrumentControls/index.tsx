@@ -1,13 +1,13 @@
-import { AppButton } from "$cmp/shared/Inputs/AppButton";
-import { useTheme } from "$lib/Hooks/useTheme";
-import { InstrumentData } from "$lib/Songs/SongClasses";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus, FaVolumeMute } from "react-icons/fa";
-import { BiSquareRounded } from "react-icons/bi";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {useTheme} from "$lib/Hooks/useTheme";
+import {InstrumentData} from "$lib/Songs/SongClasses";
+import {memo, useCallback, useEffect, useRef, useState} from "react";
+import {FaCircle, FaCog, FaEye, FaEyeSlash, FaMinus, FaPlus, FaVolumeMute} from "react-icons/fa";
+import {BiSquareRounded} from "react-icons/bi";
 
-import { Theme } from "$stores/ThemeStore/ThemeProvider";
-import { InstrumentSettingsPopup } from "./InstrumentSettingsPopup";
-import { prettyPrintInstrumentName } from "$lib/Utilities";
+import {Theme} from "$stores/ThemeStore/ThemeProvider";
+import {InstrumentSettingsPopup} from "./InstrumentSettingsPopup";
+import {prettyPrintInstrumentName} from "$lib/Utilities";
 
 
 interface InstrumentControlsProps {
@@ -20,7 +20,15 @@ interface InstrumentControlsProps {
     onChangePosition: (direction: 1 | -1) => void
 }
 
-function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange, onInstrumentDelete, selected, onLayerSelect, onChangePosition }: InstrumentControlsProps) {
+function _InstrumentControls({
+                                 instruments,
+                                 onInstrumentAdd,
+                                 onInstrumentChange,
+                                 onInstrumentDelete,
+                                 selected,
+                                 onLayerSelect,
+                                 onChangePosition
+                             }: InstrumentControlsProps) {
     const [theme] = useTheme()
     const [isEditing, setIsEditing] = useState(false)
     const setNotEditing = useCallback(() => {
@@ -49,11 +57,11 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                     isSelected={i === selected}
                     onEditClick={() => setIsEditing(!isEditing)}
                     onClick={() => onLayerSelect(i)}
-                    onVisibleToggle={(visible) => onInstrumentChange(ins.set({ visible }), i)}
+                    onVisibleToggle={(visible) => onInstrumentChange(ins.set({visible}), i)}
                     key={ins.name + i}
                 />
             )}
-            <div style={{ minHeight: '1rem' }} />
+            <div style={{minHeight: '1rem'}}/>
             <AppButton
                 onClick={(e) => {
                     onInstrumentAdd()
@@ -65,12 +73,13 @@ function _InstrumentControls({ instruments, onInstrumentAdd, onInstrumentChange,
                 ariaLabel='Add new instrument'
                 className="new-instrument-button flex-centered"
             >
-                <FaPlus size={16} color='var(--icon-color)' />
+                <FaPlus size={16} color='var(--icon-color)'/>
             </AppButton>
         </div>
     </>
 
 }
+
 export const InstrumentControls = memo(_InstrumentControls, (p, n) => {
     return p.instruments === n.instruments && p.selected === n.selected
 })
@@ -84,11 +93,19 @@ interface InstrumentButtonProps {
     onEditClick: () => void
     onVisibleToggle: (newState: boolean) => void
 }
-function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick, onVisibleToggle }: InstrumentButtonProps) {
+
+function InstrumentButton({
+                              instrument,
+                              onClick,
+                              isSelected,
+                              theme,
+                              onEditClick,
+                              onVisibleToggle
+                          }: InstrumentButtonProps) {
     const ref = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (!isSelected || !ref.current) return
-        ref.current.scrollIntoView({ behavior: "auto", block: "nearest" })
+        ref.current.scrollIntoView({behavior: "auto", block: "nearest"})
     }, [isSelected, ref])
     let passiveIcon = theme.getText('primary')
     passiveIcon = (passiveIcon.isDark() ? passiveIcon.lighten(0.2) : passiveIcon.darken(0.15))
@@ -102,12 +119,12 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
     >
         {!isSelected &&
             <div className="row"
-                style={{
-                    position: 'absolute',
-                    gap: '0.2rem',
-                    top: '0.2rem',
-                    left: '0.3rem',
-                }}
+                 style={{
+                     position: 'absolute',
+                     gap: '0.2rem',
+                     top: '0.2rem',
+                     left: '0.3rem',
+                 }}
             >
                 {!instrument.visible &&
                     <FaEyeSlash
@@ -135,27 +152,27 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
                 }}
             >
                 {instrument.icon === 'circle' &&
-                    <FaCircle size={8} style={{ display: 'block' }} color={passiveIcon.hex()} />
+                    <FaCircle size={8} style={{display: 'block'}} color={passiveIcon.hex()}/>
                 }
                 {instrument.icon === 'border' &&
                     <BiSquareRounded
                         size={12}
-                        style={{ display: 'block', marginRight: '-2px', marginTop: '-2px', strokeWidth: '2px' }}
+                        style={{display: 'block', marginRight: '-2px', marginTop: '-2px', strokeWidth: '2px'}}
                         color={passiveIcon.hex()}
                     />
                 }
                 {instrument.icon === 'line' &&
-                    <FaMinus size={8} style={{ display: 'block' }} color={passiveIcon.hex()} />
+                    <FaMinus size={8} style={{display: 'block'}} color={passiveIcon.hex()}/>
                 }
             </div>
         }
 
         <AppButton
             onClick={onClick}
-            style={{ backgroundColor: "transparent", width: '100%' }}
+            style={{backgroundColor: "transparent", width: '100%'}}
             className='flex-grow flex-centered instrument-name-button'
         >
-            <span className="text-ellipsis" style={{ width: '6rem' }}>
+            <span className="text-ellipsis" style={{width: '6rem'}}>
                 {instrument.alias || prettyPrintInstrumentName(instrument.name)}
             </span>
         </AppButton>
@@ -167,7 +184,7 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
                     ariaLabel='Settings'
                     className="flex-centered"
                 >
-                    <FaCog size={15} />
+                    <FaCog size={15}/>
                 </AppButton>
                 <AppButton
                     onClick={() => onVisibleToggle(!instrument.visible)}
@@ -175,8 +192,8 @@ function InstrumentButton({ instrument, onClick, isSelected, theme, onEditClick,
                     className="flex-centered"
                 >
                     {instrument.visible
-                        ? <FaEye size={16} />
-                        : <FaEyeSlash size={16} />
+                        ? <FaEye size={16}/>
+                        : <FaEyeSlash size={16}/>
                     }
                 </AppButton>
 

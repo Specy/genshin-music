@@ -46,40 +46,47 @@ export default function BlogPost() {
             <BlogImage src={'/assets/blog/help-vsrg-composer-2.webp'} alt={'VSRG composer settings'}/>
             <BlogOl>
                 <BlogLi>
-                    <BlogB>Keys</BlogB>: This is the number of tracks you want the beatmap to have, choose this wisely as changing it
+                    <BlogB>Keys</BlogB>: This is the number of tracks you want the beatmap to have, choose this wisely
+                    as changing it
                     after
                     you already made most of the beatmap might be difficult. A beatmap with less tracks might be easier
                     to play, but harder
                     to compose.
                 </BlogLi>
                 <BlogLi>
-                    <BlogB> BPM </BlogB>: The bpm of the beatmap, it is used to give you guiding "columns" where to place notes, in the
+                    <BlogB> BPM </BlogB>: The bpm of the beatmap, it is used to give you guiding "columns" where to
+                    place notes, in the
                     composer you can
                     also select the "snap points" from 1/1 to 1/16 of the bpm. The BPM of the beatmap should either be
                     the same
                     of the song, or 1/2th or 1/4th of it
                 </BlogLi>
                 <BlogLi>
-                    <BlogB>Base pitch</BlogB>: This is the base pitch of the instruments of the beatmap, you can use the instruments to
+                    <BlogB>Base pitch</BlogB>: This is the base pitch of the instruments of the beatmap, you can use the
+                    instruments to
                     play sounds when
                     a note is pressed.
                 </BlogLi>
                 <BlogLi>
-                    <BlogB>Difficulty</BlogB>: This is just a number that will be used for the points in your beatmap, it's your choice
+                    <BlogB>Difficulty</BlogB>: This is just a number that will be used for the points in your beatmap,
+                    it's your choice
                     what difficulty to give.
                 </BlogLi>
                 <BlogLi>
-                    <BlogB>Vertical Editor</BlogB>: With this you can decide if either having the editor be oriented vertically or
+                    <BlogB>Vertical Editor</BlogB>: With this you can decide if either having the editor be oriented
+                    vertically or
                     horizontally, it doesn't affect the beatmap.
                 </BlogLi>
                 <BlogLi>
-                    <BlogB>Max FPS</BlogB>: When you "play" the beatmap inside the editor, it moves at a certain FPS, high values might
+                    <BlogB>Max FPS</BlogB>: When you "play" the beatmap inside the editor, it moves at a certain FPS,
+                    high values might
                     make the editor
                     look smoother, but give a bit of inaccuracies in the audio, find a value that is best for your
                     device, it doesn't affect the beatmap.
                 </BlogLi>
                 <BlogLi>
-                    <BlogB>Snap scroll to snap point</BlogB>: When this is enabled, once you release your mouse/finger from moving the
+                    <BlogB>Snap scroll to snap point</BlogB>: When this is enabled, once you release your mouse/finger
+                    from moving the
                     canvas, it will "snap" to the closest
                     snap point it can find.
                 </BlogLi>
@@ -87,7 +94,8 @@ export default function BlogPost() {
                     <BlogB>Auto save changes</BlogB>: Auto saves the changes to a song every 5 edits.
                 </BlogLi>
                 <BlogLi>
-                    <BlogB>Background song</BlogB>: Here you can select which of your songs will be used as a background for the
+                    <BlogB>Background song</BlogB>: Here you can select which of your songs will be used as a background
+                    for the
                     beatmap, look further for more info about
                     this section.
                 </BlogLi>

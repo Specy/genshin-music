@@ -16,22 +16,24 @@ export default function ChangelogPage() {
         excludeMenu={true}
         menu={
             <SimpleMenu>
-                <Link href='https://github.com/Specy/genshin-music' target="_blank" rel='noreferrer' title='Go to github'>
+                <Link href='https://github.com/Specy/genshin-music' target="_blank" rel='noreferrer'
+                      title='Go to github'>
                     <MenuItem ariaLabel='Go to github'>
-                        <FaGithub  className='icon'/>
+                        <FaGithub className='icon'/>
                     </MenuItem>
                 </Link>
             </SimpleMenu>
         }
     >
-        <PageMeta text={`Changelog V${APP_VERSION}`} description={`Changelog V${APP_VERSION}\n${updates[0]?.changes.join(";")}`} />
+        <PageMeta text={`Changelog V${APP_VERSION}`}
+                  description={`Changelog V${APP_VERSION}\n${updates[0]?.changes.join(";")}`}/>
         <div className={s['changelog-page-title']}>
             Changelog
-            <span style={{ fontSize: '1.2rem', marginLeft: '1rem' }}>
+            <span style={{fontSize: '1.2rem', marginLeft: '1rem'}}>
                 v{APP_VERSION}
             </span>
         </div>
-        <div className='row' style={{ fontSize: '0.8rem', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className='row' style={{fontSize: '0.8rem', justifyContent: 'space-between', alignItems: 'center'}}>
             Cache: {cacheVersion || 'DEV'}
             <Link href='/error'>
                 <AppButton>
@@ -39,12 +41,12 @@ export default function ChangelogPage() {
                 </AppButton>
             </Link>
         </div>
-        <div style={{ marginTop: '2rem' }} />
+        <div style={{marginTop: '2rem'}}/>
 
         {updates.map(data => <ChangelogRow
             {...data}
             key={data.version}
         />)}
-        <div className={s['changelog-ending']} />
+        <div className={s['changelog-ending']}/>
     </DefaultPage>
 }

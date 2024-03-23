@@ -1,6 +1,6 @@
-import { SvgNoteImageProps } from "..";
+import {SvgNoteImageProps} from "..";
 
-export default function labNote({ style, background }: SvgNoteImageProps) {
+export default function labNote({style, background}: SvgNoteImageProps) {
     return <svg
         style={style}
         className={'svg-note'}

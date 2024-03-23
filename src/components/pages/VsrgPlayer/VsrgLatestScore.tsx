@@ -1,13 +1,14 @@
-import { VSRG_SCORE_COLOR_MAP } from "$config"
-import { memo, useEffect, useRef, useState } from "react"
-import { subscribeVsrgLatestScore, vsrgPlayerStore } from "$stores/VsrgPlayerStore"
-import { Timer } from "$types/GeneralTypes"
+import {VSRG_SCORE_COLOR_MAP} from "$config"
+import {memo, useEffect, useRef, useState} from "react"
+import {subscribeVsrgLatestScore, vsrgPlayerStore} from "$stores/VsrgPlayerStore"
+import {Timer} from "$types/GeneralTypes"
 import s from "./VsrgPlayerScore.module.css"
 
 const defaultStyle = {
     transform: 'rotate(0) scale(1)',
     color: 'var(--primary-text)'
 }
+
 function _VsrgPlayerLatestScore() {
     const [data, setData] = useState(vsrgPlayerStore.score.lastScore)
     const ref = useRef<HTMLDivElement>(null)
@@ -18,7 +19,7 @@ function _VsrgPlayerLatestScore() {
             setData(d)
             clearTimeout(lastTimeout)
             lastTimeout = setTimeout(() => {
-                setData({ ...d, type: '' })
+                setData({...d, type: ''})
             }, 800)
         })
         return () => {
@@ -32,8 +33,8 @@ function _VsrgPlayerLatestScore() {
         const angle = Math.floor(Math.random() * 25 - 12.5)
         current.animate([
             style,
-            { transform: `rotate(${angle}deg) scale(1.3)`, color: VSRG_SCORE_COLOR_MAP[data.type] },
-            { transform: `rotate(0) scale(1)`, color: VSRG_SCORE_COLOR_MAP[data.type] },
+            {transform: `rotate(${angle}deg) scale(1.3)`, color: VSRG_SCORE_COLOR_MAP[data.type]},
+            {transform: `rotate(0) scale(1)`, color: VSRG_SCORE_COLOR_MAP[data.type]},
         ], {
             duration: 150,
             easing: 'ease-out'
@@ -43,7 +44,7 @@ function _VsrgPlayerLatestScore() {
             color: VSRG_SCORE_COLOR_MAP[data.type]
         })
         //don't need 'style' to dep array since we need to animate only when data changes
-    }, [data]) 
+    }, [data])
 
     return <>
         <div
@@ -60,6 +61,7 @@ function _VsrgPlayerLatestScore() {
         </div>
     </>
 }
+
 export const VsrgPlayerLatestScore = memo(_VsrgPlayerLatestScore, (p, n) => {
     return false
 })

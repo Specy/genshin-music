@@ -1,30 +1,35 @@
-.instrument-picker{
+.instrument-picker {
     display: flex;
     flex-direction: column;
     width: 8rem;
 }
-.select{
+
+.select {
     background-color: var(--primary);
     border-radius: 0.2rem;
     border: none;
     color: var(--primary-text);
     padding: 0.5rem;
 }
-.select:focus{
+
+.select:focus {
     outline: none;
 }
-.select option:checked{
+
+.select option:checked {
     color: var(--accent);
 }
-.instrument-picker input[type="range"]{
+
+.instrument-picker input[type="range"] {
     margin-top: 0.2rem;
 }
 
-.settings-group-title{
+.settings-group-title {
     font-size: 1.3rem;
     margin: 0.5rem 0;
 }
-.settings-row{
+
+.settings-row {
     display: flex;
     justify-content: space-between;
     padding: 0.4rem;
@@ -34,11 +39,12 @@
     margin-bottom: 0.3rem;
 }
 
-.settings-row div{
+.settings-row div {
     display: flex;
     align-items: center;
 }
-.settings-row :is(input,select){
+
+.settings-row :is(input,select) {
     background-color: var(--primary);
     color: var(--primary-text);
     border: none;
@@ -47,18 +53,22 @@
     padding: 0.2rem;
     border-radius: 0.2rem;
 }
-.settings-row input[type=range]{
+
+.settings-row input[type=range] {
     padding: 0;
     margin: 0;
 }
-.settings-row .invalid{
+
+.settings-row .invalid {
     background-color: var(--red) !important;
 }
-.settings-input{
+
+.settings-input {
     display: flex;
     width: 8rem;
 }
-.settings-input input{
+
+.settings-input input {
     width: unset;
     min-width: 0;
     display: flex;
@@ -66,17 +76,19 @@
     height: 1rem;
     flex: 1;
 }
+
 .settings-input input::-webkit-outer-spin-button,
 .settings-input input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 /* Firefox */
 .settings-input input[type=number] {
-  -moz-appearance: textfield;
+    -moz-appearance: textfield;
 }
-.settings-input-button{
+
+.settings-input-button {
     width: 1.4rem;
     height: 1.4rem;
     font-weight: bold;

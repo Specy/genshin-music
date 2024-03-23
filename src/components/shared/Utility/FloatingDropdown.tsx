@@ -1,9 +1,8 @@
 import useClickOutside from "$lib/Hooks/useClickOutside"
-import React, { useEffect, useState } from "react"
-import { FaTimes } from "react-icons/fa"
-import { AppButton } from "$cmp/shared/Inputs/AppButton"
-import { SongActionButton } from "$cmp/shared/Inputs/SongActionButton"
-import { DEFAULT_DOM_RECT } from "$config"
+import React, {useEffect, useState} from "react"
+import {FaTimes} from "react-icons/fa"
+import {AppButton} from "$cmp/shared/Inputs/AppButton"
+import {SongActionButton} from "$cmp/shared/Inputs/SongActionButton"
 
 
 interface FloatingDropdownProps {
@@ -16,16 +15,17 @@ interface FloatingDropdownProps {
     ignoreClickOutside?: boolean
     onClose?: () => void
 }
+
 export function FloatingDropdown({
-    children,
-    Icon,
-    className = "",
-    style = {},
-    onClose,
-    tooltip,
-    offset = 3,
-    ignoreClickOutside,
-}: FloatingDropdownProps) {
+                                     children,
+                                     Icon,
+                                     className = "",
+                                     style = {},
+                                     onClose,
+                                     tooltip,
+                                     offset = 3,
+                                     ignoreClickOutside,
+                                 }: FloatingDropdownProps) {
 
     const [isActive, setActive] = useState(false)
     const [overflows, setOverflows] = useState(false)
@@ -33,7 +33,7 @@ export function FloatingDropdown({
         if (ignoreClickOutside) return
         setActive(false)
         if (onClose) onClose()
-    }, { active: isActive, ignoreFocusable: true })
+    }, {active: isActive, ignoreFocusable: true})
     useEffect(() => {
         const el = ref.current
         if (!el) return
@@ -59,13 +59,13 @@ export function FloatingDropdown({
                 setActive(!isActive)
                 if (isActive && onClose) onClose()
             }}
-            
+
             ariaLabel={isActive ? "Close" : "Open"}
             tooltip={tooltip}
         >
             {isActive
-                ? <FaTimes />
-                : <Icon />
+                ? <FaTimes/>
+                : <Icon/>
             }
         </SongActionButton>
         <div
@@ -88,20 +88,22 @@ interface FloatingDropdownButtonProps {
     onClick?: () => void
     style?: React.CSSProperties
 }
+
 interface FloatingDropdownTextProps {
     text: string
 }
 
-export function FloatingDropdownText({ text }: FloatingDropdownTextProps) {
+export function FloatingDropdownText({text}: FloatingDropdownTextProps) {
     return <div className="floating-dropdown-text">
         {text}
     </div>
 }
-export function FloatingDropdownRow({ children, onClick, style }: FloatingDropdownButtonProps) {
+
+export function FloatingDropdownRow({children, onClick, style}: FloatingDropdownButtonProps) {
     return <AppButton
         ariaLabel="Floating Dropdown Button"
         className='row row-centered'
-        style={{ padding: "0.4rem", minWidth: "unset", ...style }}
+        style={{padding: "0.4rem", minWidth: "unset", ...style}}
         onClick={onClick}
     >
         {children}

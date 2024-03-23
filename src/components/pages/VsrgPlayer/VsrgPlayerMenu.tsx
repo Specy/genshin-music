@@ -1,35 +1,46 @@
-import { AppButton } from "$cmp/shared/Inputs/AppButton";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import MenuPanel from "$cmp/shared/pagesLayout/MenuPanel";
-import { SongMenu } from "$cmp/shared/pagesLayout/SongMenu";
-import { MenuItem } from "$cmp/shared/Miscellaneous/MenuItem";
-import { SettingsPane } from "$cmp/shared/Settings/SettingsPane";
-import { asyncConfirm } from "$cmp/shared/Utility/AsyncPrompts";
-import { FloatingDropdownRow, FloatingDropdownText, FloatingDropdown } from "$cmp/shared/Utility/FloatingDropdown";
+import {SongMenu} from "$cmp/shared/pagesLayout/SongMenu";
+import {MenuItem} from "$cmp/shared/Miscellaneous/MenuItem";
+import {SettingsPane} from "$cmp/shared/Settings/SettingsPane";
+import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
+import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown";
 import Memoized from "$cmp/shared/Utility/Memoized";
-import { hasTooltip, Tooltip } from "$cmp/shared/Utility/Tooltip";
+import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
 import Analytics from "$lib/Stats";
-import { VsrgPlayerSettingsDataType } from "$lib/BaseSettings";
-import { Folder } from "$lib/Folder";
+import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
+import {Folder} from "$lib/Folder";
 import useClickOutside from "$lib/Hooks/useClickOutside";
-import { useFolders } from "$lib/Hooks/useFolders";
-import { useSongs } from "$lib/Hooks/useSongs";
-import { useTheme } from "$lib/Hooks/useTheme";
-import { fileService } from "$lib/Services/FileService";
-import { songService } from "$lib/Services/SongService";
-import { SongStorable } from "$lib/Songs/Song";
-import { VsrgSong } from "$lib/Songs/VsrgSong";
-import { VsrgSongSelectType } from "$pages/vsrg-player";
-import { memo, useCallback, useEffect, useState } from "react";
-import { FaBars, FaCog, FaDownload, FaEllipsisH, FaFolder, FaHome, FaMusic, FaPen, FaTimes, FaTrash } from "react-icons/fa";
+import {useFolders} from "$lib/Hooks/useFolders";
+import {useSongs} from "$lib/Hooks/useSongs";
+import {useTheme} from "$lib/Hooks/useTheme";
+import {fileService} from "$lib/Services/FileService";
+import {songService} from "$lib/Services/SongService";
+import {SongStorable} from "$lib/Songs/Song";
+import {VsrgSong} from "$lib/Songs/VsrgSong";
+import {VsrgSongSelectType} from "$pages/vsrg-player";
+import {memo, useCallback, useEffect, useState} from "react";
+import {
+    FaBars,
+    FaCog,
+    FaDownload,
+    FaEllipsisH,
+    FaFolder,
+    FaHome,
+    FaMusic,
+    FaPen,
+    FaTimes,
+    FaTrash
+} from "react-icons/fa";
 import Link from "next/link";
 import {homeStore} from "$stores/HomeStore";
-import { songsStore } from "$stores/SongsStore";
-import { Theme } from "$stores/ThemeStore/ThemeProvider";
-import { SettingUpdate } from "$types/SettingsPropriety";
-import { logger } from "$stores/LoggerStore";
+import {songsStore} from "$stores/SongsStore";
+import {Theme} from "$stores/ThemeStore/ThemeProvider";
+import {SettingUpdate} from "$types/SettingsPropriety";
+import {logger} from "$stores/LoggerStore";
 import isMobile from "is-mobile";
-import { useConfig } from "$lib/Hooks/useConfig";
-import { APP_NAME } from "$config";
+import {useConfig} from "$lib/Hooks/useConfig";
+import {APP_NAME} from "$config";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -40,19 +51,18 @@ interface VsrgMenuProps {
 }
 
 
-
-function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
+function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const [folders] = useFolders()
     const [songs] = useSongs()
     const [theme] = useTheme()
-    const { IS_MOBILE } = useConfig()
+    const {IS_MOBILE} = useConfig()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
-        if(isMobile()) return setIsVisible(false)
+        if (isMobile()) return setIsVisible(false)
         setOpen(false)
-    }, { active: isOpen && isVisible, ignoreFocusable: true })
+    }, {active: isOpen && isVisible, ignoreFocusable: true})
     const selectSideMenu = useCallback((selection?: MenuTabs) => {
         if (selection === selectedMenu && isOpen) {
             return setOpen(false)
@@ -60,7 +70,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
         setOpen(true)
         if (selection) {
             setSelectedMenu(selection)
-            Analytics.UIEvent('menu', { tab: selection })
+            Analytics.UIEvent('menu', {tab: selection})
         }
     }, [isOpen, selectedMenu])
 
@@ -72,7 +82,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                 onClick={() => setIsVisible(!isVisible)}
             >
                 <Memoized>
-                    <FaBars />
+                    <FaBars/>
                 </Memoized>
             </div>
             <div className={`menu ${isVisible ? "menu-visible" : ""}`}>
@@ -82,21 +92,22 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                     }}
                     ariaLabel="Close Menu"
                 >
-                    <FaTimes className='icon' />
+                    <FaTimes className='icon'/>
                 </MenuItem>
                 <MenuItem
-                    style={{ marginTop: 'auto' }}
+                    style={{marginTop: 'auto'}}
                     onClick={() => selectSideMenu("Songs")}
                     isActive={isOpen && selectedMenu === "Songs"}
                     ariaLabel='Song menu'
                 >
                     <Memoized>
-                        <FaMusic className="icon" />
+                        <FaMusic className="icon"/>
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"} ariaLabel='Settings menu'>
+                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"}
+                          ariaLabel='Settings menu'>
                     <Memoized>
-                        <FaCog className="icon" />
+                        <FaCog className="icon"/>
                     </Memoized>
                 </MenuItem>
                 <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
@@ -120,7 +131,7 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
                     <SongMenu<SongRowProps>
                         songs={songs}
                         exclude={['composed', 'recorded']}
-                        style={{ marginTop: '0.6rem' }}
+                        style={{marginTop: '0.6rem'}}
                         SongComponent={SongRow}
                         componentProps={{
                             theme,
@@ -155,10 +166,10 @@ function VsrgMenu({ onSongSelect, settings, onSettingsUpdate }: VsrgMenuProps) {
         </div>
     </>
 }
+
 export default memo(VsrgMenu, (p, n) => {
     return p.settings === n.settings
 })
-
 
 
 interface SongRowProps {
@@ -171,9 +182,9 @@ interface SongRowProps {
     }
 }
 
-function SongRow({ data, functions, theme, folders }: SongRowProps) {
-    const { setMenuVisible, onSongSelect } = functions
-    const buttonStyle = { backgroundColor: theme.layer('primary', 0.15).toString() }
+function SongRow({data, functions, theme, folders}: SongRowProps) {
+    const {setMenuVisible, onSongSelect} = functions
+    const buttonStyle = {backgroundColor: theme.layer('primary', 0.15).toString()}
     const [isRenaming, setIsRenaming] = useState(false)
     const [songName, setSongName] = useState(data.name)
     useEffect(() => {
@@ -186,7 +197,7 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
         <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
             const song = await songService.fromStorableSong(data)
-            if(!song) return logger.error("Could not find song")
+            if (!song) return logger.error("Could not find song")
             onSongSelect(song as VsrgSong, 'play')
             setMenuVisible(false)
         }}>
@@ -195,10 +206,10 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                     className={`song-name-input ${isRenaming ? "song-rename" : ""}`}
                     disabled={!isRenaming}
                     onChange={(e) => setSongName(e.target.value)}
-                    style={{ width: "100%", color: "var(--primary-text)" }}
+                    style={{width: "100%", color: "var(--primary-text)"}}
                     value={songName}
                 />
-                : <div style={{ marginLeft: '0.3rem' }}>
+                : <div style={{marginLeft: '0.3rem'}}>
                     {songName}
                 </div>
             }
@@ -223,19 +234,19 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                         setIsRenaming(!isRenaming)
                     }}
                 >
-                    <FaPen style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"} />
+                    <FaPen style={{marginRight: "0.4rem"}} size={14}/>
+                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
                 </FloatingDropdownRow>
-                <FloatingDropdownRow style={{ padding: '0 0.4rem' }}>
-                    <FaFolder style={{ marginRight: "0.4rem" }} />
+                <FloatingDropdownRow style={{padding: '0 0.4rem'}}>
+                    <FaFolder style={{marginRight: "0.4rem"}}/>
                     <select className='dropdown-select'
-                        value={data.folderId || "_None"}
-                        onChange={async (e) => {
-                            const id = e.target.value
-                            const song = await songService.getOneSerializedFromStorable(data)
-                            if(!song) return logger.error("Could not find song")
-                            songsStore.addSongToFolder(song, id !== "_None" ? id : null)
-                        }}
+                            value={data.folderId || "_None"}
+                            onChange={async (e) => {
+                                const id = e.target.value
+                                const song = await songService.getOneSerializedFromStorable(data)
+                                if (!song) return logger.error("Could not find song")
+                                songsStore.addSongToFolder(song, id !== "_None" ? id : null)
+                            }}
                     >
                         <option value={"_None"}>
                             None
@@ -247,19 +258,19 @@ function SongRow({ data, functions, theme, folders }: SongRowProps) {
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.getOneSerializedFromStorable(data)
-                    if(!song) return logger.error("Could not find song")
+                    if (!song) return logger.error("Could not find song")
                     fileService.downloadSong(song, `${data.name}.${APP_NAME.toLowerCase()}sheet`)
                 }}>
-                    <FaDownload style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text='Download' />
+                    <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
+                    <FloatingDropdownText text='Download'/>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={async () => {
                     const confirm = await asyncConfirm("Are you sure you want to delete this song?")
                     if (!confirm) return
                     songsStore.removeSong(data.id!)
                 }}>
-                    <FaTrash color="#ed4557" style={{ marginRight: "0.4rem" }} size={14} />
-                    <FloatingDropdownText text='Delete' />
+                    <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}} size={14}/>
+                    <FloatingDropdownText text='Delete'/>
                 </FloatingDropdownRow>
             </FloatingDropdown>
         </div>

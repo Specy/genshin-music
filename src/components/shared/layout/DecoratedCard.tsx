@@ -1,5 +1,4 @@
 import {forwardRef} from 'react';
-import {Stylable} from "$lib/UtilTypes";
 
 interface RawDecoratedBoxProps {
     decorationColor?: string
@@ -51,7 +50,7 @@ export function RawDecoratedBox({decorationColor, size, offset = "0"}: RawDecora
     </>
 }
 
-interface DecoratedCardProps  {
+interface DecoratedCardProps {
     boxProps?: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
     children: React.ReactNode;
     size?: string;

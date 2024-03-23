@@ -1,14 +1,15 @@
-import { memo, useEffect, useState } from 'react'
-import { NOTES_CSS_CLASSES, APP_NAME, INSTRUMENTS_DATA, BASE_THEME_CONFIG } from "$config"
+import {memo, useEffect, useState} from 'react'
+import {APP_NAME, INSTRUMENTS_DATA, NOTES_CSS_CLASSES} from "$config"
 import GenshinNoteBorder from '$cmp/shared/Miscellaneous/GenshinNoteBorder'
-import SvgNote, { NoteImage } from '$cmp/shared/SvgNotes'
-import { Theme, ThemeProvider } from '$stores/ThemeStore/ThemeProvider'
-import { ObservableNote } from '$lib/Instrument'
-import { InstrumentName } from '$types/GeneralTypes'
-import { LayerStatus } from '$lib/Layer'
+import SvgNote, {NoteImage} from '$cmp/shared/SvgNotes'
+import {Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider'
+import {ObservableNote} from '$lib/Instrument'
+import {InstrumentName} from '$types/GeneralTypes'
+import {LayerStatus} from '$lib/Layer'
 import {preventDefault} from "$lib/Utilities";
 
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
+
 interface ComposerNoteProps {
     data: ObservableNote
     layer: LayerStatus
@@ -18,6 +19,7 @@ interface ComposerNoteProps {
     noteImage: NoteImage
     theme: Theme
 }
+
 /*
     if ((layer & 1) !== 0) className += " layer-1"
     if ((layer & 2) !== 0) className += " layer-2"
@@ -40,8 +42,15 @@ const baseTheme = {
 } as const
 
 
-
-export default memo(function ComposerNote({ data, layer, instrument, clickAction, noteText, noteImage, theme }: ComposerNoteProps) {
+export default memo(function ComposerNote({
+                                              data,
+                                              layer,
+                                              instrument,
+                                              clickAction,
+                                              noteText,
+                                              noteImage,
+                                              theme
+                                          }: ComposerNoteProps) {
     const [colors, setColors] = useState(baseTheme)
     useEffect(() => {
         const color = ThemeProvider.get('note_background').desaturate(0.6)
@@ -60,7 +69,7 @@ export default memo(function ComposerNote({ data, layer, instrument, clickAction
         className="button-hitbox"
         onContextMenu={preventDefault}
     >
-        <div className={className} >
+        <div className={className}>
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 fill={colors.note_background}
                 className='genshin-border'

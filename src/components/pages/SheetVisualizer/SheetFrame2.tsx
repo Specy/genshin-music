@@ -1,8 +1,8 @@
-import { APP_NAME, NoteNameType } from "$config"
-import { TempoChunk } from "$lib/Songs/VisualSong"
-import { memo, useEffect, useState } from "react"
-import { Theme } from "$stores/ThemeStore/ThemeProvider"
-import Instrument from "$lib/Instrument"
+import {APP_NAME, NoteNameType} from "$config"
+import {TempoChunk} from "$lib/Songs/VisualSong"
+import {memo, useEffect, useState} from "react"
+import {Theme} from "$stores/ThemeStore/ThemeProvider"
+import {Instrument} from '$lib/Instrument'
 import s from "./SheetFrame.module.css"
 
 
@@ -18,6 +18,7 @@ function getBackgroundColor(tempoChanger: number) {
     if (tempoChanger === 0) return 'transparent'
     return `var(--tempo-changer-${tempoChanger})`
 }
+
 function getBorderStyle(index: number, total: number): React.CSSProperties {
     if (index === 0) {
         return {
@@ -32,8 +33,10 @@ function getBorderStyle(index: number, total: number): React.CSSProperties {
     }
     return {}
 }
+
 const baseInstrument = new Instrument()
-export function _SheetFrame2({ chunk, rows, hasText, theme, keyboardLayout }: SheetFrameProps) {
+
+export function _SheetFrame2({chunk, rows, hasText, theme, keyboardLayout}: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
     const [color, setColor] = useState('var(--primary)')
     useEffect(() => {
@@ -61,12 +64,13 @@ export function _SheetFrame2({ chunk, rows, hasText, theme, keyboardLayout }: Sh
                 >
                     {column.notes.length === 0
                         ? <div></div>
-                        : <div className={s['visualizer-frame']} style={{ gridTemplateColumns: `repeat(${columnsPerRow},1fr)` }}>
+                        : <div className={s['visualizer-frame']}
+                               style={{gridTemplateColumns: `repeat(${columnsPerRow},1fr)`}}>
                             {notes.map((exists, j) => {
                                 return <div
                                     className={exists ? s['frame-note-s'] : s['frame-note-ns']}
                                     key={j}
-                                    style={!exists ? { backgroundColor: color } : {}}
+                                    style={!exists ? {backgroundColor: color} : {}}
                                 >
                                     {(exists && hasText)
                                         ? baseInstrument.getNoteText(j, keyboardLayout, 'C')

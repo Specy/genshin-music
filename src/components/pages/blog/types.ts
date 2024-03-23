@@ -1,6 +1,3 @@
-
-
-
 export type BlogMetadata = {
     title: string,
     tags: string[]

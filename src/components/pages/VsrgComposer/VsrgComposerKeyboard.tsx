@@ -1,16 +1,14 @@
-
-
-interface VsrgComposerKeyboardProps{
+interface VsrgComposerKeyboardProps {
     elements: number[]
     selected?: number[]
     perRow: number
     onClick: (index: number) => void
 }
 
-export function VsrgComposerKeyboard({ elements, perRow, onClick, selected }: VsrgComposerKeyboardProps) {
+export function VsrgComposerKeyboard({elements, perRow, onClick, selected}: VsrgComposerKeyboardProps) {
 
     return <>
-        <div 
+        <div
             className="vsrg-keyboard"
             style={{
                 gridTemplateColumns: `repeat(${perRow}, 1fr)`,
@@ -21,15 +19,15 @@ export function VsrgComposerKeyboard({ elements, perRow, onClick, selected }: Vs
             }}
         >
             {elements.map(el =>
-                <button 
-                    onClick={() => onClick(el)} 
+                <button
+                    onClick={() => onClick(el)}
                     key={el}
                     style={
                         (selected?.includes(el)
-                            ? {
-                                backgroundColor: 'var(--accent)',
-                            }
-                            : {}
+                                ? {
+                                    backgroundColor: 'var(--accent)',
+                                }
+                                : {}
                         )
                     }
                 >

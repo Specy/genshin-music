@@ -1,7 +1,7 @@
-import { Container, Sprite } from "@pixi/react";
-import { memo } from "react";
-import { VsrgCanvasSizes } from "./VsrgComposerCanvas";
-import { VsrgCanvasCache } from "./VsrgComposerCache";
+import {Container, Sprite} from "@pixi/react";
+import {memo} from "react";
+import {VsrgCanvasSizes} from "./VsrgComposerCanvas";
+import {VsrgCanvasCache} from "./VsrgComposerCache";
 
 interface VsrgTimelineBreakpointsRendererProps {
     cache: VsrgCanvasCache
@@ -12,7 +12,7 @@ interface VsrgTimelineBreakpointsRendererProps {
 
 
 //TODO add cache as bitmap
-function _VsrgTimelineBreakpointsRenderer({ cache, breakpoints, sizes, duration }: VsrgTimelineBreakpointsRendererProps) {
+function _VsrgTimelineBreakpointsRenderer({cache, breakpoints, sizes, duration}: VsrgTimelineBreakpointsRendererProps) {
 
     return <>
         <Container>

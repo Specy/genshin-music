@@ -1,20 +1,20 @@
-import { useState } from 'react'
-import { FaDownload, FaSpinner } from 'react-icons/fa';
-import { logger } from '$stores/LoggerStore';
-import type { SearchedSongType } from '$types/GeneralTypes';
-import { ComposedSong } from '$lib/Songs/ComposedSong';
-import type {  RecordedSong } from '$lib/Songs/RecordedSong';
-import { Theme } from '$stores/ThemeStore/ThemeProvider';
-import { songService } from '$lib/Services/SongService';
+import {useState} from 'react'
+import {FaDownload, FaSpinner} from 'react-icons/fa';
+import {logger} from '$stores/LoggerStore';
+import type {SearchedSongType} from '$types/GeneralTypes';
+import {ComposedSong} from '$lib/Songs/ComposedSong';
+import type {RecordedSong} from '$lib/Songs/RecordedSong';
+import {Theme} from '$stores/ThemeStore/ThemeProvider';
+import {songService} from '$lib/Services/SongService';
 
-interface SearchedSongProps{
+interface SearchedSongProps {
     onClick: (song: ComposedSong | RecordedSong, start: number) => void,
-    importSong: (song: ComposedSong | RecordedSong) => void, 
+    importSong: (song: ComposedSong | RecordedSong) => void,
     data: SearchedSongType
     theme: Theme
 }
 
-export default function SearchedSong({ onClick, data, importSong, theme }:SearchedSongProps) {
+export default function SearchedSong({onClick, data, importSong, theme}: SearchedSongProps) {
     const [fetching, setFetching] = useState(false)
     const [cache, setCache] = useState<RecordedSong | ComposedSong | null>(null)
     const download = async function () {
@@ -36,12 +36,12 @@ export default function SearchedSong({ onClick, data, importSong, theme }:Search
     const play = async function () {
         if (fetching) return
         try {
-            if (cache) return onClick(cache,0)
+            if (cache) return onClick(cache, 0)
             setFetching(true)
             let song = await fetch('https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)).then(data => data.json())
             setFetching(false)
             song = songService.parseSong(song)
-            onClick(song,0)
+            onClick(song, 0)
             setCache(song)
         } catch (e) {
             console.error(e)
@@ -54,13 +54,13 @@ export default function SearchedSong({ onClick, data, importSong, theme }:Search
             {data.name}
         </div>
         <div className="song-buttons-wrapper">
-            <button 
-                className="song-button" 
-                onClick={download} 
+            <button
+                className="song-button"
+                onClick={download}
                 aria-label={`Import song ${data.name}`}
-                style={{backgroundColor: theme.layer('primary',0.2).hex(), marginRight: 0}}
+                style={{backgroundColor: theme.layer('primary', 0.2).hex(), marginRight: 0}}
             >
-                {fetching ? <FaSpinner /> : <FaDownload />}
+                {fetching ? <FaSpinner/> : <FaDownload/>}
             </button>
         </div>
     </div>

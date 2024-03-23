@@ -14,7 +14,7 @@ export default function Privacy() {
                 href='https://support.google.com/analytics/answer/11593727'
                 target='_blank'
                 rel="noreferrer"
-                style={{ color: 'var(--primary-text)', textDecoration: "underline", marginLeft: '0.3rem' }}
+                style={{color: 'var(--primary-text)', textDecoration: "underline", marginLeft: '0.3rem'}}
             >
                 here.
             </a>

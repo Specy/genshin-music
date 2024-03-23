@@ -1,4 +1,4 @@
-import { Tooltip, hasTooltip } from "$cmp/shared/Utility/Tooltip";
+import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
 
 interface TimelineButtonProps {
     onClick: () => void;
@@ -8,7 +8,7 @@ interface TimelineButtonProps {
     style?: React.CSSProperties;
 }
 
-export function TimelineButton({onClick, children, tooltip, style, ariaLabel}:TimelineButtonProps) {
+export function TimelineButton({onClick, children, tooltip, style, ariaLabel}: TimelineButtonProps) {
     return <button
         className={`timeline-button ${hasTooltip(tooltip)}`}
         onClick={onClick}

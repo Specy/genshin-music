@@ -179,7 +179,7 @@ export const PlayerSettings: PlayerSettingsType = {
             songSetting: true,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS], 
+            options: [...INSTRUMENTS],
             category: "Song Settings",
         },
         pitch: {
@@ -298,8 +298,6 @@ export const PlayerSettings: PlayerSettingsType = {
 }
 
 
-
-
 export const MIDISettings = {
     settingVersion: APP_NAME + 5,
     enabled: false,
@@ -315,7 +313,6 @@ export const MIDISettings = {
         new MIDIShortcut('change_layer', -1)
     ]
 }
-
 
 
 export const ThemeSettings = {

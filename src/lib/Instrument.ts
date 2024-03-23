@@ -27,7 +27,7 @@ const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 //TODO refactor everything here
 
 
-export default class Instrument {
+export class Instrument {
     name: InstrumentName
     volumeNode: GainNode | null = null
     instrumentData: typeof INSTRUMENTS_DATA[InstrumentName]
