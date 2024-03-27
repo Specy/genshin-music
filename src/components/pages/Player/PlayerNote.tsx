@@ -8,6 +8,7 @@ import type {ObservableNote} from '$lib/Instrument'
 import type {InstrumentName, NoteStatus} from '$types/GeneralTypes'
 import type {ApproachingNote} from '$lib/Songs/SongClasses'
 import {useObservableObject} from '$lib/Hooks/useObservable'
+import {preventDefault} from "$lib/Utilities";
 
 function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')
@@ -54,6 +55,7 @@ function Note({note, approachingNotes, handleClick, noteText, data}: NoteProps) 
             e.preventDefault()
             handleClick(note)
         }}
+        onContextMenu={preventDefault}
         className="button-hitbox-bigger"
     >
         {approachingNotes.map((note) =>
