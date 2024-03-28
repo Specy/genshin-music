@@ -35,7 +35,7 @@ export function HelpTab() {
             Learn how to use the Player
         </Header>
         <p>
-            To learn how to use the Player, visit the <AppLink href={'/blog/how-to-use-player'}>Player guide</AppLink>,
+            To learn how to use the Player, visit the <AppLink href={'/blog/posts/how-to-use-player'}>Player guide</AppLink>,
             it will
             tell you about every feature in the player, and what every setting does.
         </p>
@@ -43,7 +43,7 @@ export function HelpTab() {
             Learn how to use the composer
         </Header>
         <p>
-            To learn how to use the composer, visit the <AppLink href={'/blog/how-to-use-composer'}>Composer
+            To learn how to use the composer, visit the <AppLink href={'/blog/posts/how-to-use-composer'}>Composer
             guide</AppLink>,
             it will tell you about every feature in the composer, what every setting does, and other tutorials on how to
             work with

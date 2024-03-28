@@ -216,7 +216,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                         <FaCog className="icon"/>
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => changePage('Home')} ariaLabel='Open home menu'>
+                <MenuItem onClick={() => changePage('Home')} ariaLabel='Open home menu' style={{border: "solid 0.1rem var(--secondary)"}}>
                     <Memoized>
                         <FaHome className="icon"/>
                     </Memoized>

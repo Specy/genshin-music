@@ -217,10 +217,6 @@
 
 .note-animation, .note-animation-sky {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
     border: 2px solid var(--accent);
     border-radius: 50%;
     animation: note-animation 0.5s cubic-bezier(.25, .46, .45, .94);
@@ -230,6 +226,8 @@
     opacity: 1;
     z-index: 1;
     transform: scale(0.8);
+    width: 6vw;
+    height: 6vw;
 }
 
 .note-animation-sky {
@@ -283,9 +281,14 @@
         font-size: 1rem;
         border-width: 4px;
     }
-
+    .note-animation{
+        width: 6.7vw;
+        height: 6.7vw;
+    }
     .note-animation-sky {
         border-radius: 2.5vw;
+        width: 8.5vw;
+        height: 8.5vw;
     }
 
     .keyboard {

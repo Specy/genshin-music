@@ -586,7 +586,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 18 //change when instrument is added
+        settingVersion: APP_NAME + 19 //change when instrument is added
     },
     data: {
         instrument: {
@@ -666,7 +666,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             songSetting: false,
             value: 100,
             category: "Keyboard",
-            threshold: [70, 150]
+            threshold: [70, 170]
         },
         keyboardYPosition: {
             name: "Vertical position",

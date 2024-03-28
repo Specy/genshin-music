@@ -80,7 +80,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     console.log("Registering service worker")
                     serviceWorker.register({
                         onUpdate: async (registration) => {
-                            const confirm = await asyncConfirm("There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app")
+                            const confirm = await asyncConfirm("There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app", false)
                             if (confirm) {
                                 registration.waiting?.postMessage({type: "SKIP_WAITING"})
                                 await delay(1000)

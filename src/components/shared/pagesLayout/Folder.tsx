@@ -76,7 +76,7 @@ export function SongFolder({
 
     async function deleteFolder() {
         const confirm = await asyncConfirm(
-            `Are you sure you want to delete "${data.name}"?  
+            `Are you sure you want to delete the folder "${data.name}"?  
             The songs won't be deleted`
         )
         if (!confirm) return

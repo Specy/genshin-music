@@ -37,7 +37,7 @@ export class LoggerStore {
 
     log = (
         text: string,
-        timeout: number = 3500,
+        timeout: number = 4500,
         type: LoggerStatus = LoggerStatus.SUCCESS,
     ) => {
         const id = ++this.lastId

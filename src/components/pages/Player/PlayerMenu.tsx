@@ -571,7 +571,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                     <FloatingDropdownRow
                         style={{width: '100%'}}
                         onClick={() => {
-                            if (data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
+                            if (data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate', 5000)
                         }}
                     >
                         <FaEdit style={{marginRight: "0.4rem"}} size={14}/>
