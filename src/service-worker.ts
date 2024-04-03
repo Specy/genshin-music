@@ -48,7 +48,7 @@ if (IS_TAURI) {
     registerRoute(
         new RegExp('/*'),
         new CacheFirst({
-            cacheName: CACHE
+            cacheName: RUNTIME_CACHE
         })
     );
 }
@@ -94,23 +94,30 @@ self.addEventListener('activate', (evt) => {
                 console.log(`Verifying cache "${key}"`)
                 if (key.includes(APP_NAME)) {
                     //cache of this app
-                    if (key.includes("precache") && key !== PRECACHE_CACHE) {
-                        //handle precache versions
-                        console.log(`[ServiceWorker] Removing old precache: "${key}"`);
-                        return caches.delete(key)
+                    if (key.includes("precache")) {
+                        if (key !== PRECACHE_CACHE) {
+                            console.log(`[ServiceWorker] Removing old precache: "${key}"`);
+                            return caches.delete(key)
+                        }
+                        return Promise.resolve()
                     }
-                    if (key.includes("runtime") && key !== RUNTIME_CACHE) {
-                        //handle runtime versions
-                        console.log(`[ServiceWorker] Removing old cache: "${key}"`);
-                        return caches.delete(key)
+                    if (key.includes("runtime")) {
+                        if (key !== RUNTIME_CACHE) {
+                            //handle runtime versions
+                            console.log(`[ServiceWorker] Removing old runtime cache: "${key}"`);
+                            return caches.delete(key)
+                        }
+                        return Promise.resolve()
                     }
+                    console.log(`[ServiceWorker] Removing old unknown cache: "${key}"`)
+                    return caches.delete(key)
                 }
                 if (key.includes("workbox")) {
                     console.log(`[ServiceWorker] Removing old workbox cache: "${key}"`);
                     return caches.delete(key)
                 }
                 //@ts-ignore
-                return new Promise(resolve => resolve())
+                return Promise.resolve()
             }));
             console.log(`[ServiceWorker] Finished removing old caches`, promises);
             return promises
