@@ -323,7 +323,7 @@
     width: 100%;
 }
 
-.page-redirect-wrapper a {
+.page-redirect-wrapper a, .page-redirect-wrapper button {
     background-color: var(--primary);
     margin: 0.2rem;
     color: var(--primary-text);
@@ -335,7 +335,7 @@
     transition: all 0.1s linear;
 }
 
-.page-redirect-wrapper a:hover {
+.page-redirect-wrapper a:hover, .page-redirect-wrapper button:hover {
     filter: brightness(1.1);
 }
 

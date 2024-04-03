@@ -12,11 +12,12 @@ import {VsrgComposerIcon} from '$cmp/shared/icons/VsrgComposerIcon'
 import {useObservableObject} from '$lib/Hooks/useObservable'
 import {homeStore} from '$stores/HomeStore'
 import {useRouter} from 'next/router'
-import {isTWA} from '$lib/Utilities'
+import {clearClientCache, isTWA} from '$lib/Utilities'
 import {useConfig} from '$lib/Hooks/useConfig'
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts'
 import {MdOutlinePiano} from "react-icons/md";
 import {usePathname} from "next/navigation";
+import {logger} from "$stores/LoggerStore";
 
 
 interface HomeProps {
@@ -36,6 +37,20 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const homeClass = data.isInPosition ? "home" : "home home-visible"
     const history = useRouter()
     const [theme] = useTheme()
+
+    function clearCache() {
+        clearClientCache()
+            .then(() => {
+                logger.success("Cache Cleared")
+                setTimeout(() => {
+                    window.location.href = BASE_PATH || "/"
+                }, 1000)
+            })
+            .catch((e) => {
+                console.error(e)
+                logger.error("Error clearing cache")
+            })
+    }
 
     useEffect(() => {
         const storedFontScale = JSON.parse(localStorage.getItem(APP_NAME + '-font-size') || '100')
@@ -230,6 +245,10 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 }} href={'https://specy.app'} target='_blank'>
                     Other Apps
                 </Link>
+                <AppButton onClick={clearCache}>
+                    Clear cache
+                </AppButton>
+
             </div>
 
         </div>
