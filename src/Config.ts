@@ -803,4 +803,4 @@ export const DEFAULT_DOM_RECT = {
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
 export const HAS_BIGINT = typeof BigInt !== 'undefined'
 export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
-export const IS_BETA = true || process.env.NEXT_PUBLIC_IS_BETA === "true"
+export const IS_BETA = process.env.NEXT_PUBLIC_IS_BETA === "true"
