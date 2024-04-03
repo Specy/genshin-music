@@ -216,7 +216,8 @@ function Menu({data, functions, inPreview}: MenuProps) {
                         <FaCog className="icon"/>
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => changePage('Home')} ariaLabel='Open home menu' style={{border: "solid 0.1rem var(--secondary)"}}>
+                <MenuItem onClick={() => changePage('Home')} ariaLabel='Open home menu'
+                          style={{border: "solid 0.1rem var(--secondary)"}}>
                     <Memoized>
                         <FaHome className="icon"/>
                     </Memoized>
@@ -301,11 +302,15 @@ function Menu({data, functions, inPreview}: MenuProps) {
                         <AppButton
                             style={{marginTop: '0.5rem'}}
                             className={`record-btn`}
-                            onClick={() => functions.startRecordingAudio(!data.isRecordingAudio)}
+                            onClick={() => {
+                                setOpen(false)
+                                setTimeout(() => {
+                                    functions.startRecordingAudio(!data.isRecordingAudio)
+                                }, 300)
+                            }}
                             toggled={data.isRecordingAudio}
                         >
                             {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
-
                         </AppButton>
                     </div>
                 </MenuPanel>

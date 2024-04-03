@@ -8,7 +8,7 @@ import ComposerTools from "$cmp/pages/Composer/ComposerTools"
 import ComposerKeyboard from "$cmp/pages/Composer/ComposerKeyboard"
 import ComposerCanvas from "$cmp/pages/Composer/ComposerCanvas"
 import Menu from "$cmp/pages/Composer/ComposerMenu"
-import Memoized from '$cmp/shared/Utility/Memoized';
+import Memoized, {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"
 import {ComposerSettingsDataType} from "$lib/BaseSettings"
 import {Instrument, ObservableNote} from "$lib/Instrument"
@@ -761,8 +761,10 @@ class Composer extends Component<ComposerProps, ComposerState> {
         } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
-            <PageMeta text={`Composer - ${song.name}`}
-                      description='Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet.'/>
+            <PageMeta
+                text={`Composer - ${song.name}`}
+                description='Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet.'
+            />
             {isMidiVisible &&
                 <MidiParser
                     functions={this}
@@ -842,14 +844,10 @@ class Composer extends Component<ComposerProps, ComposerState> {
                                 tooltip='Add new page'
                                 ariaLabel='Add new page'
                             >
-                                <Memoized>
-                                    <FaPlus size={16}/>
-                                </Memoized>
+                                <MemoizedIcon icon={FaPlus} size={16}/>
                             </CanvasTool>
                             <CanvasTool onClick={this.toggleTools} tooltip='Open tools' ariaLabel='Open tools'>
-                                <Memoized>
-                                    <FaTools size={16}/>
-                                </Memoized>
+                                <MemoizedIcon icon={FaTools} size={16}/>
                             </CanvasTool>
                         </div>
                     </div>

@@ -5,6 +5,8 @@ import {Instrument, ObservableNote} from "$lib/Instrument"
 import {ComposerSettingsDataType} from "$lib/BaseSettings"
 import {FaChevronLeft, FaChevronRight} from "react-icons/fa"
 import {useTheme} from "$lib/Hooks/useTheme"
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {Header} from "$cmp/shared/header/Header";
 
 interface ComposerKeyboardProps {
     data: {
@@ -20,6 +22,7 @@ interface ComposerKeyboardProps {
     },
     functions: {
         handleClick: (note: ObservableNote) => void
+        startRecordingAudio: (override?: boolean) => void
         selectColumnFromDirection: (direction: number) => void
         handleTempoChanger: (tempoChanger: typeof TEMPO_CHANGERS[number]) => void
     }
@@ -35,10 +38,16 @@ export default function ComposerKeyboard({data, functions}: ComposerKeyboardProp
         </div>
     }
     if (isRecordingAudio) {
-        return <div className="composer-keyboard-wrapper" style={{marginBottom: '4rem'}}>
-            <h1>
+        return <div
+            className="composer-keyboard-wrapper"
+            style={{marginBottom: '4rem', flexDirection: 'column', alignItems: 'center'}}
+        >
+            <Header>
                 Recording Audio...
-            </h1>
+            </Header>
+            <AppButton onClick={() => functions.startRecordingAudio(false)} toggled>
+                Stop Recording
+            </AppButton>
         </div>
     }
     let keyboardClass = "keyboard"

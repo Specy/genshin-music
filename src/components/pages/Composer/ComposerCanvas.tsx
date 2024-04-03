@@ -2,7 +2,7 @@
 //it half performant, maybe i should get rid of react pixi and do it manually, that might improve garbage collection
 //since sprites are always removed and added to the stage everytime it scrolls
 import {Component, createRef} from 'react'
-import {Container, Graphics, Sprite, Stage} from '@pixi/react';
+import {Container, Graphics, Stage} from '@pixi/react';
 import {
     FaChevronLeft,
     FaChevronRight,
@@ -26,6 +26,7 @@ import {ComposedSong} from '$lib/Songs/ComposedSong';
 import {subscribeTheme} from '$lib/Hooks/useTheme';
 import {createShortcutListener} from '$stores/KeybindsStore';
 import {FederatedPointerEvent} from 'pixi.js';
+import {ComposerBreakpointsRenderer} from "$cmp/pages/Composer/ComposerBreakpointsRenderer";
 
 type ClickEventType = 'up' | 'down-slider' | 'down-stage'
 
@@ -563,16 +564,12 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                     />
                                     : null
                                 }
-                                {data.breakpoints.map(breakpoint =>
-                                    <Sprite
-                                        texture={cache.breakpoints[0]}
-                                        key={breakpoint}
-                                        interactive={false}
-                                        anchor={[0.5, 0]}
-                                        x={(width / (data.columns.length - 1)) * breakpoint}
-                                    >
-                                    </Sprite>
-                                )}
+                                <ComposerBreakpointsRenderer
+                                    breakpoints={data.breakpoints}
+                                    texture={cache.breakpoints[0]}
+                                    width={width}
+                                    columns={data.columns.length}
+                                />
                             </Container>
                             }
                             <Graphics //current visible columns
