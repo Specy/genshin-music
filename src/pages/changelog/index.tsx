@@ -3,15 +3,32 @@ import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
 import {FaGithub} from 'react-icons/fa'
 import {ChangelogRow} from '$cmp/pages/Changelog/ChangelogRow'
 import {updates} from '$lib/updates'
-import {APP_VERSION} from '$config'
+import {APP_VERSION, BASE_PATH} from '$config'
 import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
 import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
 import {AppButton} from '$cmp/shared/Inputs/AppButton'
 import Link from 'next/link'
 import s from './Changelog.module.css'
+import {clearClientCache} from "$lib/Utilities";
+import {logger} from "$stores/LoggerStore";
 
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
 export default function ChangelogPage() {
+
+    function clearCache() {
+        clearClientCache()
+            .then(() => {
+                logger.success("Cache Cleared")
+                setTimeout(() => {
+                    window.location.href = BASE_PATH || "/"
+                }, 1000)
+            })
+            .catch((e) => {
+                console.error(e)
+                logger.error("Error clearing cache")
+            })
+    }
+
     return <DefaultPage
         excludeMenu={true}
         menu={
@@ -35,6 +52,9 @@ export default function ChangelogPage() {
         </div>
         <div className='row' style={{fontSize: '0.8rem', justifyContent: 'space-between', alignItems: 'center'}}>
             Cache: {cacheVersion || 'DEV'}
+            <AppButton onClick={clearCache}>
+                Clear Cache
+            </AppButton>
             <Link href='/error'>
                 <AppButton>
                     View Error logs

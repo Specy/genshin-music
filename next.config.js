@@ -15,6 +15,7 @@ const pwa = withPwa({
     disable: process.env.NODE_ENV === 'development',
     register: false,
     scope: process.env.NEXT_PUBLIC_BASE_PATH ?? "/",
+    reloadOnOnline: false,
     sw: 'service-worker.js',
     swSrc: './src/service-worker.ts',
 })

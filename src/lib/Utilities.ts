@@ -316,6 +316,17 @@ function prettyPrintInstrumentName(name: string) {
     return name.replace("SFX_", "")
 }
 
+export async function clearClientCache() {
+    if ('caches' in window) {
+        await caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => {
+                caches.delete(cacheName);
+            });
+        });
+        return true
+    }
+    return false
+}
 
 /*
 	When navigating to /genshinMusic/composer or routes that have a basepath, the router
