@@ -301,7 +301,6 @@ export const PlayerSettings: PlayerSettingsType = {
 export const MIDISettings = {
     settingVersion: APP_NAME + 5,
     enabled: false,
-    currentSource: '',
     selectedPreset: 'default',
     presets: {} as Record<string, MIDIPreset>,
     shortcuts: [

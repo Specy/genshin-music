@@ -8,7 +8,7 @@ import {Header} from "$cmp/shared/header/Header";
 import {Grid} from "$cmp/shared/layout/Grid";
 import {Column} from "$cmp/shared/layout/Column";
 import s from './blog.module.scss'
-import {_aiTransposeMetadata} from "$pages/blog/posts/ai-transpose";
+import {_aiTransposeMetadata} from "$pages/blog/posts/video-audio-transpose";
 import {_midiTransposeMetadata} from "$pages/blog/posts/midi-transpose";
 import {_playerTutorialMetadata} from "$pages/blog/posts/how-to-use-player";
 import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";

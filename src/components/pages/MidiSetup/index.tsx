@@ -14,6 +14,8 @@ import s from './MidiSetup.module.css'
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {FaPlus, FaTrash} from "react-icons/fa";
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
+import {Row} from "$cmp/shared/layout/Row";
+import {Column} from "$cmp/shared/layout/Column";
 
 interface MidiSetupState {
     audioPlayer: AudioPlayer
@@ -56,7 +58,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
     componentWillUnmount() {
         this.mounted = false
         this.state.audioPlayer.destroy()
-        MIDIProvider.clear()
+        MIDIProvider.removeInputsListener(this.midiStateChange)
         AudioProvider.clear()
     }
 
@@ -72,7 +74,6 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
             currentPreset: MIDIProvider.settings.selectedPreset,
             shortcuts: MIDIProvider.settings.shortcuts,
             presets: MIDIProvider.getPresets(),
-            selectedSource: MIDIProvider.currentMIDISource
         })
     }
     midiStateChange = (inputs: WebMidi.MIDIInput[]) => {
@@ -83,12 +84,6 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         else if (inputs.length > 0)
             logger.warn('MIDI device connected')
         this.setState({sources: inputs})
-    }
-    selectMidi = (selectedSource?: WebMidi.MIDIInput) => {
-        if (!this.mounted || !selectedSource) return
-        MIDIProvider.selectSource(selectedSource)
-        this.setState({selectedSource})
-        MIDIProvider.saveSettings()
     }
 
     deselectNotes = () => {
@@ -213,27 +208,32 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
     render() {
         const {notes, currentPreset, presets, shortcuts, sources, selectedShortcut, selectedSource} = this.state
         return <>
-            <div className={`column`} style={{gap: '1rem'}}>
-                <div className={'row space-between'}>
-                    Select MIDI device:
-                    <select
-                        className="midi-select"
-                        style={{marginLeft: '0.5rem'}}
-                        value={selectedSource ? selectedSource.id : 'None'}
-                        onChange={(e) => {
-                            this.selectMidi(sources.find(s => s.id === e.target.value))
-                        }}
-                    >
-                        <option disabled value={'None'}> None</option>
-                        {sources.map((e, i) => <option value={e.id} key={e.id}>
-                            {e.name} - {e.id}
-                        </option>)}
-                    </select>
-                </div>
-                <div className={'row space-between'} style={{gap: '0.5rem'}}>
-                    MIDI layout preset:
-                    <div className={'row'} style={{gap: '0.5rem'}}>
+            <Column gap={'1rem'}>
+                <Row gap={'1rem'} align={'center'} justify={'between'}>
+                    Connected MIDI devices:
+                    <Row gap={'0.5rem'} style={{flexWrap: 'wrap'}}>
 
+                        {sources.length > 0
+                            ? sources.map(s =>
+                                <div
+                                    key={s.id}
+                                    style={{
+                                        borderRadius: '0.3rem',
+                                        padding: '0.2rem 0.4rem',
+                                        border: 'solid 0.1rem var(--secondary)',
+                                    }}
+                                >
+                                    {s.name} - {s.id}
+                                </div>
+                            )
+                            : 'No connected devices'
+                        }
+                    </Row>
+
+                </Row>
+                <Row justify={'between'} gap={'0.5rem'}>
+                    MIDI layout preset:
+                    <Row gap={'0.5rem'}>
                         <select
                             className="midi-select"
                             style={{marginLeft: '0.5rem'}}
@@ -262,13 +262,13 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                             <FaPlus/>
                             Create new preset
                         </AppButton>
-                    </div>
-                </div>
+                    </Row>
+                </Row>
                 <div style={{margin: '0.5rem 0'}}>
                     Click on the note to select it, then press your MIDI keyboard to assign that note to the key. You
                     can click it again to change it.
                 </div>
-            </div>
+            </Column>
 
             <div className={s['midi-setup-content']}>
                 <div

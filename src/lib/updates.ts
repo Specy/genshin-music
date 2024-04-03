@@ -9,12 +9,13 @@ export const updates: Update[] = [
     {
         version: '3.3.0',
         title: "Audio/Video transcription, reverb",
-        date: new Date('2023-07-26'),
+        date: new Date('2024-04-02'),
         changes: [
             "Added tool in the composer to convert audio/video to a sheet",
             "Reverb now can be set for each instrument",
             "Added quick settings in the zen keyboard",
             "Added customisable presets in MIDI settings",
+            "Improved MIDI connection",
             "Zen keyboard now emits MIDI notes events when pressed",
             //"Added personal custom layout in the visual song",
             "Added app's blog",

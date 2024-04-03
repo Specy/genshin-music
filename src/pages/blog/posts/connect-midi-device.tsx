@@ -39,9 +39,9 @@ export default function BlogPage() {
             <BlogP>
                 Once connected, you must map your keyboard to the app layout, to do this visit the <AppLink
                 href={'/keybinds'}>keybinds</AppLink> page.
-                A list of selected devices will appear, select the one you wish to connect and then configure the key
-                mapping.
-                A default preset is provided, in case it does not match your keyboard, you can create a new preset.
+                A list of all connected devices will appear, you can now start to map the MIDI keys to the app's keys.
+                A default preset is provided, in case it does not match your keyboard, you can create a new preset and assign
+                the keys as you wish.
             </BlogP>
             <Header margin={'1rem 0'}>
                 Create a new MIDI preset

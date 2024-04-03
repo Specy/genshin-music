@@ -1,6 +1,6 @@
 import {settingsService} from "$lib/Services/SettingsService"
 import {MIDISettings} from "../BaseSettings"
-import {MIDINote, MIDINoteStatus} from "$lib/Utilities";
+import {createDebouncer, debounce, MIDINote, MIDINoteStatus} from "$lib/Utilities";
 import {MIDI_PRESETS, MIDIPreset} from "$config";
 
 export enum PresetMidi {
@@ -17,11 +17,10 @@ export class MIDIListener {
     private listeners: MIDICallback[] = []
     private inputsListeners: InputsCallback[] = []
     MIDIAccess: WebMidi.MIDIAccess | null = null
-    currentMIDISource: WebMidi.MIDIInput | null = null
+    connectedMidiSources: WebMidi.MIDIInput[] = []
     settings: typeof MIDISettings
     notes: MIDINote[] = []
     inputs: WebMidi.MIDIInput[] = []
-
     constructor() {
         this.settings = settingsService.getDefaultMIDISettings()
     }
@@ -64,27 +63,30 @@ export class MIDIListener {
         this.MIDIAccess = e
         e.addEventListener('statechange', this.reloadMidiAccess)
         const midiInputs = Array.from(this.MIDIAccess.inputs.values())
-        this.inputs = midiInputs
-        const savedSource = midiInputs.find(input => {
-            return input.name + " " + input.manufacturer === this.settings.currentSource
-        }) || null
-        this.dispatchInputs()
-        if (midiInputs.length) this.selectSource(savedSource || midiInputs[0])
+        this.setSourcesAndConnect(midiInputs)
+        this.setAndDispatchInputs(midiInputs)
     }
     reloadMidiAccess = () => {
         if (this.MIDIAccess) this.handleMIDIState(this.MIDIAccess)
-        this.dispatchInputs()
+        this.setAndDispatchInputs(this.inputs)
     }
-    private dispatchInputs = () => {
+    private setAndDispatchInputs = (inputs: WebMidi.MIDIInput[]) => {
+        this.inputs = inputs
+        this.dispatchInputsChange()
+    }
+    private dispatchInputsChange = debounce(() => {
         this.inputsListeners.forEach(l => l(this.inputs))
-    }
-    selectSource = (source: WebMidi.MIDIInput) => {
-        this.settings.currentSource = source.name + " " + source.manufacturer
-        this.saveSettings()
+    }, 50)
+    disconnectCurrentSources = () => {
         //@ts-ignore
-        this.currentMIDISource?.removeEventListener('midimessage', this.handleEvent)
-        this.currentMIDISource = source
-        this.currentMIDISource.addEventListener('midimessage', this.handleEvent)
+        this.connectedMidiSources.forEach(s => s.removeEventListener('midimessage', this.handleEvent))
+        this.connectedMidiSources = []
+    }
+    setSourcesAndConnect = (sources: WebMidi.MIDIInput[]) => {
+        this.disconnectCurrentSources()
+        this.connectedMidiSources = sources
+        //@ts-ignore
+        sources.forEach(s => s.addEventListener('midimessage', this.handleEvent))
     }
     getCurrentPreset = () => {
         return this.settings.presets[this.settings.selectedPreset]

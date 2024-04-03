@@ -2,34 +2,25 @@ import type {Tauri} from "$types/TauriTypes"
 import type {NoteImage} from "$cmp/shared/SvgNotes"
 
 export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-export const APP_VERSION = '3.2' as const
+export const APP_VERSION = '3.3' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
-export const UPDATE_MESSAGE = APP_NAME === 'Genshin'
+export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-        - Improved Do Re Mi layout 
-        - All shortcuts and keyboard layout are customizable
-        - Added song search
-        - Added new visual sheet format with more info
-        - Improved themes in the composer
-        - Improved composer sliding controls
-        - Increased composer layers limit to 52
-        - Changed file format and added export as zip file
-        - Improved composer performance and audio accuracy
-        - Added two new default themes
-    `.trim() :
+        - In the composer you can now set reverb individually for each layer
+        - Added quick selections in the Zen keyboard
+        - Zen keyboard is now also a MIDI keyboard
+        - Created a blog for the app
+        - Added tool in the composer to convert audio/video to a sheet (experimental)
+        - Bug fixes and improvements
     `
-        - Added Do Re Mi layout 
-        - All shortcuts and keyboard layout are customizable
-        - Added 4 new synth instruments
-        - Added song search
-        - Added new visual sheet format with more info
-        - Improved themes in the composer
-        - Improved composer sliding controls
-        - Increased composer layers limit to 52
-        - Changed file format and added export as zip file
-        - Improved composer performance and audio accuracy
-        - Added two new default themes
-    `.trim()
+    : `
+        - In the composer you can now set reverb individually for each layer
+        - Added quick selections in the Zen keyboard
+        - Zen keyboard is now also a MIDI keyboard
+        - Created a blog for the app
+        - Added tool in the composer to convert audio/video to a sheet (experimental)
+        - Bug fixes and improvements
+    `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
     ? '/updates.json'

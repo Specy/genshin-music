@@ -304,6 +304,13 @@ function createDebouncer(delay: number): Debouncer {
     }
 }
 
+export const debounce = (fn: Function, ms = 300) => {
+    let timeoutId: Timer
+    return function (this: any, ...args: any[]) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), ms);
+    };
+};
 
 function prettyPrintInstrumentName(name: string) {
     return name.replace("SFX_", "")

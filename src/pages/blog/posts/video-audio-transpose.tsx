@@ -6,11 +6,11 @@ import {BlogP} from "$cmp/pages/blog/BlogUl";
 
 
 export const _aiTransposeMetadata: BlogMetadata = {
-    title: "🔬 AI video/audio to music transposition",
+    title: "🔬 Video/audio to music transposition",
     tags: ["Guide"],
-    relativeUrl: "ai-transpose",
+    relativeUrl: "video-audio-transpose",
     image: '/assets/blog/midi-btn.webp',
-    description: "Use the AI feature in the composer to (try to) convert a song/video into a music sheet. This is a experimental feature",
+    description: "Use the new feature in the composer to (try to) convert a audio/video into a music sheet. This is an experimental feature",
     createdAt: new Date("2024/03/19"),
     author: SpecyAuthor,
 }
@@ -19,7 +19,6 @@ export const _aiTransposeMetadata: BlogMetadata = {
 export default function BlogPage() {
     return <BaseBlogPost metadata={_aiTransposeMetadata}>
         <BlogP>
-
             In the V3.3 release, a new experimental feature has been added that allows you to convert any video/audio
             into a
             sheet, by first
