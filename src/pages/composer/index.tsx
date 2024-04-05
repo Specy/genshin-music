@@ -159,7 +159,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
 
     init = async (settings: ComposerSettingsDataType) => {
         await this.syncInstruments()
-        AudioProvider.setReverb(settings.caveMode.value)
+        AudioProvider.setReverb(settings.reverb.value)
         MIDIProvider.addListener(this.handleMidi)
         TEMPO_CHANGERS.forEach((tempoChanger, i) => {
             KeyboardProvider.registerNumber(i + 1 as KeyboardNumber, () => this.handleTempoChanger(tempoChanger), {id: "composer_keyboard"})
@@ -279,7 +279,9 @@ class Composer extends Component<ComposerProps, ComposerState> {
             //@ts-ignore
             song[key] = data.value
         }
-        if (key === "caveMode") AudioProvider.setReverb(data.value as boolean)
+        if (key === "reverb") {
+            AudioProvider.setReverb(data.value as boolean)
+        }
         this.setState({settings: {...settings}, song}, this.updateSettings)
     }
 
@@ -497,7 +499,9 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 parsed = song
             } else {
                 if (song.type === 'recorded') {
-                    parsed = RecordedSong.deserialize(song as SerializedRecordedSong).toComposedSong(4)
+                    const parsedRecorded = RecordedSong.deserialize(song as SerializedRecordedSong)
+                    parsedRecorded.bpm = 400
+                    parsed = parsedRecorded.toComposedSong(4)
                     parsed.name += " - Composed"
                 }
                 if (song.type === 'composed') {
@@ -519,8 +523,10 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 }
             }
             const settings = this.state.settings
-            settings.bpm = {...settings.bpm, value: song.bpm}
-            settings.pitch = {...settings.pitch, value: song.pitch}
+            settings.bpm = {...settings.bpm, value: parsed.bpm}
+            settings.pitch = {...settings.pitch, value: parsed.pitch}
+            settings.reverb = {...settings.reverb, value: parsed.reverb}
+            AudioProvider.setReverb(parsed.reverb)
             if (!this.mounted) return
             this.changes = 0
             console.log("song loaded")

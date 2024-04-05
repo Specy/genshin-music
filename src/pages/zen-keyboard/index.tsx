@@ -23,7 +23,7 @@ export default function ZenKeyboard() {
         metronome.bpm = settings.metronomeBpm.value
         setInstrument(new Instrument(settings.instrument.value))
         setSettings(settings)
-        AudioProvider.setReverb(settings.caveMode.value)
+        AudioProvider.setReverb(settings.reverb.value)
         return () => logger.hidePill()
     }, [])
     const updateSettings = useCallback((settings: ZenKeyboardSettingsDataType) => {
@@ -40,7 +40,7 @@ export default function ZenKeyboard() {
         if (setting.key === "instrument") {
             setInstrument(new Instrument(data.value as InstrumentName))
         }
-        if (setting.key === 'caveMode') {
+        if (setting.key === 'reverb') {
             AudioProvider.setReverb(data.value as boolean)
         }
         if (setting.key === 'metronomeBpm') metronome.bpm = data.value as number

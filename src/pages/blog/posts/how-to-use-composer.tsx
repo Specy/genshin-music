@@ -169,7 +169,7 @@ export default function BlogPage() {
                 value might cause lags, if you have lag issues, try to reduce this value.
             </BlogLi>
             <BlogLi>
-                <BlogB>Default reverb</BlogB>: This will enable reverb by default for all instruments in the song, you
+                <BlogB>Base reverb</BlogB>: This will enable reverb by default for all instruments in the song, you
                 can override
                 this in the
                 instrument.

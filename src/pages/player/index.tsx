@@ -78,13 +78,20 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
         const dispose = subscribeObeservableObject(playerStore.state, ({eventType, song}) => {
             const {settings} = this.state
             if (!settings.syncSongData.value || song === null) return
-            if (['play', 'practice', 'approaching'].includes(eventType))
+            if (['play', 'practice', 'approaching'].includes(eventType)) {
                 this.handleSettingChange({
                     data: {
                         ...settings.pitch,
                         value: song.pitch
                     }, key: 'pitch'
                 })
+                this.handleSettingChange({
+                    data: {
+                        ...settings.reverb,
+                        value: song.reverb
+                    }, key: 'reverb'
+                })
+            }
             this.loadInstruments(song.instruments)
         })
         this.cleanup.push(dispose)
@@ -94,7 +101,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
         await AudioProvider.waitReverb()
         await this.loadInstrument(settings.instrument.value)
 
-        AudioProvider.setReverb(settings.caveMode.value)
+        AudioProvider.setReverb(settings.reverb.value)
     }
 
     componentWillUnmount() {
@@ -142,7 +149,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             instruments: [...instruments],
             isLoadingInstrument: false,
             instrumentsData: [...instrumentsData]
-        }, () => AudioProvider.setReverb(settings.caveMode.value))
+        }, () => AudioProvider.setReverb(settings.reverb.value))
     }
     handleSpeedChanger = (e: ChangeEvent<HTMLSelectElement>) => {
         const changer = SPEED_CHANGERS.find(el => el.name === e.target.value)
@@ -242,9 +249,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
         if (setting.key === "instrument") {
             this.loadInstrument(data.value as InstrumentName)
         }
-        if (setting.key === 'caveMode') {
-            AudioProvider.setReverb(data.value as boolean)
-        }
+        if (setting.key === 'reverb') AudioProvider.setReverb(data.value as boolean)
         if (setting.key === 'bpm') metronome.bpm = data.value as number
         if (setting.key === 'metronomeBeats') metronome.beats = data.value as number
         if (setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number)
@@ -304,6 +309,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
                 const song = new RecordedSong(songName, this.recording.notes, [instruments[0].name])
                 song.bpm = settings.bpm.value
                 song.pitch = settings.pitch.value
+                song.reverb = settings.reverb.value
                 this.addSong(song)
                 Analytics.userSongs('record', {page: 'player'})
             }

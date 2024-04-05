@@ -32,7 +32,7 @@ export type ComposerSettingsDataType = {
     noteNameType: SettingsSelect<NoteNameType>
     pitch: SettingsSelect<Pitch>
     columnsPerCanvas: SettingsSelect
-    caveMode: SettingsCheckbox
+    reverb: SettingsCheckbox
     autosave: SettingsCheckbox
     syncTabs: SettingsCheckbox
     useKeyboardSideButtons: SettingsCheckbox
@@ -41,7 +41,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 65,
+        settingVersion: APP_NAME + 66,
     },
     data: {
         bpm: {
@@ -105,12 +105,12 @@ export const ComposerSettings: ComposerSettingsType = {
                 50
             ]
         },
-        caveMode: {
-            name: "Default reverb (cave mode)",
+        reverb: {
+            name: "Base reverb (cave mode)",
             tooltip: "Makes it sound like you are in a cave, this is the default value applied to every instrument",
-            category: "Composer Settings",
+            category: "Song Settings",
             type: "checkbox",
-            songSetting: false,
+            songSetting: true,
             value: false,
         },
         autosave: {
@@ -154,7 +154,7 @@ export const ComposerSettings: ComposerSettingsType = {
 export type PlayerSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
-    caveMode: SettingsCheckbox
+    reverb: SettingsCheckbox
     noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
@@ -169,7 +169,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 70 //change when instrument is added
+        settingVersion: APP_NAME + 71 //change when instrument is added
     },
     data: {
         instrument: {
@@ -228,13 +228,13 @@ export const PlayerSettings: PlayerSettingsType = {
             category: "Player Settings",
             threshold: [0, 120]
         },
-        caveMode: {
+        reverb: {
             name: "Reverb (cave mode)",
             tooltip: "Makes it sound like you are in a cave",
             type: "checkbox",
-            songSetting: false,
+            songSetting: true,
             value: false,
-            category: "Player Settings",
+            category: "Song Settings",
         },
         noteNameType: {
             name: "Note name type",
@@ -401,7 +401,7 @@ export type VsrgComposerSettingsDataType = {
 export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 11
+        settingVersion: APP_NAME + 12
     },
     data: {
         keys: {
@@ -498,7 +498,7 @@ export type VsrgPlayerSettingsDataType = {
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 3
+        settingVersion: APP_NAME + 4
     },
     data: {
         approachTime: {
@@ -572,7 +572,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
 export type ZenKeyboardSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
-    caveMode: SettingsCheckbox
+    reverb: SettingsCheckbox
     noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
@@ -636,7 +636,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             category: "Metronome",
             threshold: [0, 10000]
         },
-        caveMode: {
+        reverb: {
             name: "Reverb (cave mode)",
             tooltip: "Makes it sound like you are in a cave",
             type: "checkbox",

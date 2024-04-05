@@ -29,6 +29,7 @@ export type BaseSerializedComposedSong = SerializedSong & {
     type: "composed"
     breakpoints: number[]
     columns: SerializedColumn[]
+    reverb: boolean
 }
 export type SerializedComposedSongV1 = BaseSerializedComposedSong & {
     version: 1
@@ -53,6 +54,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
     notes: RecordedNote[] = []
     breakpoints: number[]
     columns: Column[]
+    reverb: boolean = false
     selected: number
 
     constructor(name: string, instruments: InstrumentName[] = []) {
@@ -72,7 +74,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
         //@ts-ignore
         if (song.version === undefined) song.version = 1
         const parsed = Song.deserializeTo(new ComposedSong(song.name), song)
-
+        parsed.reverb = song.reverb ?? false
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
         //parsing columns
         if (song.version === 1) {
@@ -206,6 +208,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
                 ...this.data,
                 appName: APP_NAME
             },
+            reverb: this.reverb,
             breakpoints: [...this.breakpoints],
             instruments: this.instruments.map(instrument => instrument.serialize()),
             columns: this.columns.map(col => col.serialize()),

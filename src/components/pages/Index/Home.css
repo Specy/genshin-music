@@ -433,7 +433,7 @@
 
 @media only screen and (max-width: 920px) {
     .home-padded {
-        padding: 0.6rem 13vw;
+        padding: 0.6rem 8vw;
     }
 
     .home-dont-show-again, .home-app-scaling {

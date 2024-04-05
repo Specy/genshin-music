@@ -12,6 +12,7 @@ import {OldFormat, OldNote} from "$types/SongTypes"
 
 export type SerializedRecordedSong = SerializedSong & {
     type: 'recorded'
+    reverb: boolean
     notes: SerializedRecordedNote[]
 }
 export type OldFormatRecorded = SerializedRecordedSong & OldFormat
@@ -22,6 +23,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     instruments: InstrumentData[]
     notes: RecordedNote[]
     timestamp = 0
+    reverb = false
     private lastPlayedNote = -1
 
     constructor(name: string, notes?: RecordedNote[], instruments: InstrumentName[] = []) {
@@ -60,7 +62,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const {notes, name} = obj
         const version = obj.version || 1
         const song = Song.deserializeTo(new RecordedSong(name || 'Untitled'), obj)
-
+        song.reverb = obj.reverb ?? false
         if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
         if (version === 1) {
             const clonedNotes = Array.isArray(notes) ? clonedeep(notes) : []
@@ -97,6 +99,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             version: this.version,
             pitch: this.pitch,
             bpm: this.bpm,
+            reverb: this.reverb,
             data: {...this.data},
             notes: this.notes.map(note => note.serialize()),
             id: this.id
@@ -134,6 +137,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const song = new ComposedSong(this.name, this.instruments.map(ins => ins.name))
         song.bpm = this.bpm
         song.pitch = this.pitch
+        song.reverb = this.reverb
         const notes = this.notes.map(note => note.clone())
         //remove duplicates
         let converted = []
