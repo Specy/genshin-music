@@ -41,7 +41,7 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 66,
+        settingVersion: APP_NAME + 67,
     },
     data: {
         bpm: {
@@ -169,7 +169,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 71 //change when instrument is added
+        settingVersion: APP_NAME + 72 //change when instrument is added
     },
     data: {
         instrument: {
@@ -299,7 +299,7 @@ export const PlayerSettings: PlayerSettingsType = {
 
 
 export const MIDISettings = {
-    settingVersion: APP_NAME + 5,
+    settingVersion: APP_NAME + 6,
     enabled: false,
     selectedPreset: 'default',
     presets: {} as Record<string, MIDIPreset>,
@@ -401,7 +401,7 @@ export type VsrgComposerSettingsDataType = {
 export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 12
+        settingVersion: APP_NAME + 13
     },
     data: {
         keys: {
@@ -498,7 +498,7 @@ export type VsrgPlayerSettingsDataType = {
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 4
+        settingVersion: APP_NAME + 5
     },
     data: {
         approachTime: {
@@ -585,7 +585,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 19 //change when instrument is added
+        settingVersion: APP_NAME + 20 //change when instrument is added
     },
     data: {
         instrument: {

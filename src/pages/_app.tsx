@@ -36,16 +36,20 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
         const originalErrorLog = console.error.bind(console)
         //intercept console errors and log them to the logger store
         console.error = (...args: any[]) => {
-            originalErrorLog(...args)
-            logsStore.addLog({
-                error: args.find(arg => arg instanceof Error),
-                message: args.map(arg => {
-                    if (arg instanceof Error) {
-                        return arg.stack
-                    }
-                    return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : arg
-                }).join(' ')
-            })
+            try {
+                originalErrorLog(...args)
+                logsStore.addLog({
+                    error: args.find(arg => arg instanceof Error),
+                    message: args.map(arg => {
+                        if (arg instanceof Error) {
+                            return arg.stack
+                        }
+                        return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : arg
+                    }).join(' ')
+                })
+            } catch (e) {
+                console.log("Error logging error", e)
+            }
         }
         return () => {
             console.error = originalErrorLog
