@@ -7,7 +7,6 @@
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 import {clientsClaim, setCacheNameDetails} from 'workbox-core';
-import {precacheAndRoute} from 'workbox-precaching';
 import {registerRoute} from 'workbox-routing';
 import {CacheFirst, NetworkFirst} from 'workbox-strategies';
 
@@ -38,6 +37,14 @@ const FILTERED_MANIFEST = PRECACHE_MANIFEST.filter(e => !(
     return e
 })
 console.log("Precached files:", FILTERED_MANIFEST)
+
+function forbiddenCachedItems(url: URL) {
+    if (url.pathname.includes("service-worker")
+        || url.pathname.includes("manifestData")
+        || url.pathname.endsWith(".json")) return true
+
+}
+
 if (IS_TAURI) {
 
 } else {
@@ -46,11 +53,33 @@ if (IS_TAURI) {
     //precacheAndRoute(FILTERED_MANIFEST);
     console.log("registering routes")
     registerRoute(
-        new RegExp('/*'),
+        ({url}) => {
+            if (forbiddenCachedItems(new URL(url))) {
+                console.log("forbidden", url.pathname)
+                return false
+            }
+            console.log("allowed", url.pathname)
+            return true
+        },
         new NetworkFirst({
             cacheName: RUNTIME_CACHE
         })
     );
+    registerRoute(
+        ({url}) => {
+            if (forbiddenCachedItems(new URL(url))){
+                 return false
+            }
+            if(url.pathname.endsWith(".mp3") || url.pathname.endsWith(".wav")){
+                console.log("runtime cache audio", url.pathname)
+                return true
+            }
+            return false
+        },
+        new CacheFirst({
+            cacheName: RUNTIME_CACHE
+        })
+    )
 }
 
 // This allows the web app to trigger skipWaiting via

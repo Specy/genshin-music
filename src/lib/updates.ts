@@ -9,7 +9,7 @@ export const updates: Update[] = [
     {
         version: '3.3.0',
         title: "Audio/Video transcription, reverb",
-        date: new Date('2024-04-02'),
+        date: new Date('2024-04-08'),
         changes: [
             "Added tool in the composer to convert audio/video to a sheet",
             "Reverb now can be set for each instrument",
