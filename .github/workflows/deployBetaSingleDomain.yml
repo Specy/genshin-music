@@ -9,7 +9,7 @@ on:
         description: Void
         default: v0
         required: false
-        
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -28,15 +28,9 @@ jobs:
         env:
           CI: false
           NEXT_PUBLIC_IS_BETA: true
-      - name: Publish Genshin Music Nightly Beta
+      - name: Publish Genshin/Sky Music Nightly Beta as single domain
         uses: cloudflare/wrangler-action@2.0.0
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages publish ./build/genshinMusic --project-name=beta-genshin-music-nightly
-      - name: Publish Sky Music Nightly Beta
-        uses: cloudflare/wrangler-action@2.0.0
-        with:
-          apiToken: ${{ secrets.CF_PAGES_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages publish ./build/skyMusic --project-name=beta-sky-music-nightly
+          command: pages publish ./build/ --project-name=music-apps-beta
