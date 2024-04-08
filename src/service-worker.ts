@@ -20,6 +20,7 @@ console.log(`CACHE NAME: "${CACHE}"`)
 declare var self: ServiceWorkerGlobalScope
 clientsClaim();
 
+//@ts-ignore
 const PRECACHE_MANIFEST = self.__WB_MANIFEST as unknown as Array<{ url: string, revision: string }>
 const FILTERED_MANIFEST = PRECACHE_MANIFEST.filter(e => !(
     e.url.includes(".mp3") || //runtime cached
