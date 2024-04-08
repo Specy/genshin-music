@@ -123,7 +123,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         return buffer
     }
     parseAudioToMidi = async (audio: AudioBuffer, name: string) => {
-        if (!this.warnedOfExperimental) logger.warn("🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manualy. \nUse audio and videos that have only one instrument playing.", 18000)
+        if (!this.warnedOfExperimental) logger.warn("🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing.", 18000)
         this.warnedOfExperimental = true
         const frames: number[][] = []
         const onsets: number[][] = []

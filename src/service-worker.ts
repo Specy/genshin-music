@@ -55,11 +55,13 @@ if (IS_TAURI) {
     console.log("registering routes")
     registerRoute(
         ({url}) => {
-            if (forbiddenCachedItems(new URL(url))) {
-                console.log("forbidden", url.pathname)
-                return false
+            try {
+                if (forbiddenCachedItems(new URL(url))) {
+                    return false
+                }
+            } catch (e) {
+                console.error("Error caching", e)
             }
-            console.log("allowed", url.pathname)
             return true
         },
         new NetworkFirst({
@@ -68,12 +70,15 @@ if (IS_TAURI) {
     );
     registerRoute(
         ({url}) => {
-            if (forbiddenCachedItems(new URL(url))){
-                 return false
-            }
-            if(url.pathname.endsWith(".mp3") || url.pathname.endsWith(".wav")){
-                console.log("runtime cache audio", url.pathname)
-                return true
+            try {
+                if (forbiddenCachedItems(new URL(url))) {
+                    return false
+                }
+                if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".wav")) {
+                    return true
+                }
+            } catch (e) {
+                console.error("Error caching", e)
             }
             return false
         },

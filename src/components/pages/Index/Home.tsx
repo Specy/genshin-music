@@ -38,7 +38,8 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const history = useRouter()
     const [theme] = useTheme()
 
-    function clearCache() {
+    async function clearCache() {
+        if(await asyncConfirm("Are you sure you want to clear the cache? The page will reload")) return
         clearClientCache()
             .then(() => {
                 logger.success("Cache Cleared")

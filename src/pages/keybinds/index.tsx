@@ -61,6 +61,45 @@ export default function Keybinds() {
         {!IS_MOBILE
             && <>
                 <h1>
+                    Keyboard keybinds
+                </h1>
+                <div>
+                    You can remap the keyboard keys to whatever key on your keyboard, press the note you want to remap
+                    then press the key you want to assign to it.
+                </div>
+                <div className="flex-centered">
+                    <div
+                        className={`keyboard ${APP_NAME === 'Sky' ? 'keyboard-5' : ''}`}
+                        style={{
+                            margin: '1rem 0'
+                        }}
+                    >
+                        {baseInstrument.notes.map((note, i) =>
+                            <BaseNote
+                                key={i}
+                                data={{
+                                    status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
+                                }}
+                                noteImage={baseInstrument.notes[i].noteImage}
+                                noteText={(
+                                    keyBinds.getKeyOfShortcut(
+                                        "keyboard",
+                                        {name: note.noteNames.keyboard, holdable: false}
+                                    ) ?? "???")
+                                    .replace("Key", "")
+                                }
+                                handleClick={() => {
+                                    setSelected({
+                                        type: 'keyboard',
+                                        index: selected.index === i ? -1 : i
+                                    })
+                                }}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                <h1>
                     Composer shortcuts
                 </h1>
                 <div className="column">
@@ -111,43 +150,6 @@ export default function Keybinds() {
                             if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
                         }}
                     />
-                </div>
-                <h1>
-                    Keyboard keybinds
-                </h1>
-                <div>
-                    You can remap the keyboard keys to whatever key on your keyboard
-                </div>
-                <div className="flex-centered">
-                    <div
-                        className={`keyboard ${APP_NAME === 'Sky' ? 'keyboard-5' : ''}`}
-                        style={{
-                            margin: '1rem 0'
-                        }}
-                    >
-                        {baseInstrument.notes.map((note, i) =>
-                            <BaseNote
-                                key={i}
-                                data={{
-                                    status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
-                                }}
-                                noteImage={baseInstrument.notes[i].noteImage}
-                                noteText={(
-                                    keyBinds.getKeyOfShortcut(
-                                        "keyboard",
-                                        {name: note.noteNames.keyboard, holdable: false}
-                                    ) ?? "???")
-                                    .replace("Key", "")
-                                }
-                                handleClick={() => {
-                                    setSelected({
-                                        type: 'keyboard',
-                                        index: selected.index === i ? -1 : i
-                                    })
-                                }}
-                            />
-                        )}
-                    </div>
                 </div>
                 <h1>
                     Vsrg keybinds
