@@ -39,7 +39,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const [theme] = useTheme()
 
     async function clearCache() {
-        if(await asyncConfirm("Are you sure you want to clear the cache? The page will reload")) return
+        if(!await asyncConfirm("Are you sure you want to clear the cache? The page will reload")) return
         clearClientCache()
             .then(() => {
                 logger.success("Cache Cleared")
