@@ -1,4 +1,4 @@
-name: Beta Deploy
+name: Beta Deploy Single Domain
 on:
   push:
     branches:
@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 20.2.0
       - name: Build
-        run: npm i && npm run build:all
+        run: npm i && npm run build:all-no-root
         env:
           CI: false
           NEXT_PUBLIC_IS_BETA: true
