@@ -8,6 +8,7 @@ import {BlogB, BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
 import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {AppLink} from "$cmp/shared/link/AppLink";
+import {BASE_PATH} from "$config";
 
 export const _howUseVsrgComposer: BlogMetadata = {
     title: "🥁 How to use the VSRG composer",
@@ -43,7 +44,7 @@ export default function BlogPost() {
                 related to it.
                 Let's start off exploring all the settings in the VSRG composer!
             </BlogP>
-            <BlogImage src={'/assets/blog/help-vsrg-composer-2.webp'} alt={'VSRG composer settings'}/>
+            <BlogImage src={BASE_PATH + '/assets/blog/help-vsrg-composer-2.webp'} alt={'VSRG composer settings'}/>
             <BlogOl>
                 <BlogLi>
                     <BlogB>Keys</BlogB>: This is the number of tracks you want the beatmap to have, choose this wisely

@@ -3,7 +3,7 @@ import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
-import {APP_NAME} from "$config";
+import {APP_NAME, BASE_PATH} from "$config";
 import {BlogB, BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
 import {ShortcutsTable} from "$cmp/pages/Index/HelpTab/ShortcutsHelp";
 import {useConfig} from "$lib/Hooks/useConfig";
@@ -15,7 +15,7 @@ export const _composerTutorialMetadata: BlogMetadata = {
     title: "📀 How to use the composer",
     tags: ["Guide"],
     relativeUrl: "how-to-use-composer",
-    image: '/assets/blog/help-composer.webp',
+    image: BASE_PATH + '/assets/blog/help-composer.webp',
     description: "This is a guide to help you learn how to use the song composer to create and edit songs!",
     createdAt: new Date("2024/03/19"),
     author: SpecyAuthor,
@@ -39,7 +39,7 @@ export default function BlogPage() {
         {APP_NAME !== "Genshin" && <BlogP>
             The images below are from the genshin version of the app, but the functionality is the same
         </BlogP>}
-        <BlogImage src={'/assets/blog/help-composer.webp'} alt={"Composer UI"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-composer.webp'} alt={"Composer UI"}/>
         <BlogOl>
             <BlogLi>Go to the next / previous breakpoint, a breakpoint can be added from the button in the timeline,
                 it's
@@ -84,7 +84,7 @@ export default function BlogPage() {
         <BlogP>
             This next tools are the ones available by clicking the "tools" button on the right of the composer
         </BlogP>
-        <BlogImage src={'/assets/blog/help-composer-2.webp'} alt={"Composer tools UI"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-composer-2.webp'} alt={"Composer tools UI"}/>
         <BlogOl>
             <BlogLi>
                 This is the currently selected columns, the initial operations like copy/erase/delete will be applied to
@@ -121,7 +121,7 @@ export default function BlogPage() {
                 that whole selection.
             </BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/help-composer-3.webp'} alt={"Composer tools selected notes UI"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-composer-3.webp'} alt={"Composer tools selected notes UI"}/>
         <BlogP>
             Once having copied the notes you want, you will be inside the "insert" mode.
         </BlogP>
@@ -137,7 +137,7 @@ export default function BlogPage() {
                 this will also make you exit the insert mode.
             </BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/help-composer-4.webp'} alt={"Composer settings"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-composer-4.webp'} alt={"Composer settings"}/>
         <BlogP>
             Those are the settings of the composer, you can open it by pressing the settings button in the side menu
         </BlogP>
@@ -206,7 +206,7 @@ export default function BlogPage() {
                 href={'/blog/connect-midi-device'}>connect MIDI device</AppLink> guide.
             </BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/help-composer-5.webp'} alt={"Instrument settings"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-composer-5.webp'} alt={"Instrument settings"}/>
         <BlogP>
             This is the layer settings, on the left there is the layer selection, the highlighted one is the currently
             selected

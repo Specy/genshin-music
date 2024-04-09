@@ -4,13 +4,14 @@ import {BlogImage} from "$cmp/pages/blog/BlogImage";
 import {Header} from "$cmp/shared/header/Header";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
+import {BASE_PATH} from "$config";
 
 
 export const _midiTransposeMetadata: BlogMetadata = {
     title: "🎛️ MIDI music transposition",
     relativeUrl: "midi-transpose",
     tags: ["Guide"],
-    image: '/assets/blog/midi-1.webp',
+    image: BASE_PATH + '/assets/blog/midi-1.webp',
     description: "Use MIDI songs to transpose music into the app's sheet",
     createdAt: new Date("2024/03/19"),
     author: SpecyAuthor,
@@ -38,7 +39,7 @@ export default function BlogPage() {
         pressing the
         "Open MIDI/Audio/Video file" button. If you want to import a video or audio file instead, visit the <AppLink
         href={'/blog/posts/video-audio-transpose'}> Ai transpose guide </AppLink>.
-        <BlogImage src={'/assets/blog/midi-btn.webp'} alt={"MIDI button"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/midi-btn.webp'} alt={"MIDI button"}/>
         <Header margin={'1rem 0'}>
             Transpose a MIDI file
         </Header>
@@ -49,7 +50,7 @@ export default function BlogPage() {
             best fit the song.
         </BlogP>
 
-        <BlogImage src={'/assets/blog/midi-1.webp'} alt={"MIDI import settings"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/midi-1.webp'} alt={"MIDI import settings"}/>
         <BlogOl>
             <BlogLi>This is the button to press to select the MIDI file.</BlogLi>
             <BlogLi>
@@ -85,7 +86,7 @@ export default function BlogPage() {
                 This opens the setting of the track, where you can see more information, and override the global values.
             </BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/midi-2.webp'} alt={"MIDI track settings"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/midi-2.webp'} alt={"MIDI track settings"}/>
         <BlogOl>
             <BlogLi>
                 With this you can override the note offset that you wrote in the global settings, leave it blank to use
