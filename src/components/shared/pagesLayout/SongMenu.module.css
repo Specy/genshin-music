@@ -1,0 +1,16 @@
+.search {
+    border-radius: 0.4rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    padding-right: 0.5rem;
+}
+
+.search input {
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: transparent;
+    max-width: 8rem;
+    outline: none;
+}

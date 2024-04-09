@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "yarn build:genshin",
+    "beforeBuildCommand": "npm run build:genshin",
     "beforeDevCommand": "",
     "devPath": "http://localhost:3000",
     "distDir": "../build/genshinMusic/",

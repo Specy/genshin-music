@@ -9,6 +9,7 @@ on:
         description: Void
         default: v0
         required: false
+        
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,11 +22,12 @@ jobs:
         uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.17.0
+          node-version: 20.2.0
       - name: Build
-        run: yarn && yarn build:all
+        run: npm i && npm run build:all
         env:
           CI: false
+          NEXT_PUBLIC_IS_BETA: true
       - name: Publish Genshin Music Nightly Beta
         uses: cloudflare/wrangler-action@2.0.0
         with:

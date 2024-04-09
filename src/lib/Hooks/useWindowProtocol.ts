@@ -1,10 +1,9 @@
-
-import { APP_NAME, APP_VERSION } from "$config"
-import { UnknownFile, fileService } from "$lib/Services/FileService"
-import { _folderService } from "$lib/Services/FolderService"
-import { songService } from "$lib/Services/SongService"
-import { _themeService } from "$lib/Services/ThemeService"
-import { Ask, WindowProtocol } from "$lib/WindowProtocol"
+import {APP_NAME, APP_VERSION} from "$config"
+import {fileService, UnknownFile} from "$lib/Services/FileService"
+import {_folderService} from "$lib/Services/FolderService"
+import {songService} from "$lib/Services/SongService"
+import {_themeService} from "$lib/Services/ThemeService"
+import {Ask, WindowProtocol} from "$lib/WindowProtocol"
 
 const domains = [
     "https://specy.github.io",
@@ -27,8 +26,8 @@ export const protocol = new WindowProtocol<Protocol>(domains)
 
 let hasSetup = false
 
-export async function setupProtocol(){
-    if(hasSetup) return console.log("protocol already setup")
+export async function setupProtocol() {
+    if (hasSetup) return console.log("protocol already setup")
     //connect to parent window
     protocol.registerAskHandler("getAppData", async () => {
         const folders = await _folderService.getFolders()

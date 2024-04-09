@@ -1,5 +1,5 @@
-import { AppError } from "$lib/Errors"
-import { makeObservable, observable } from "mobx"
+import {AppError} from "$lib/Errors"
+import {makeObservable, observable} from "mobx"
 
 export enum LoggerStatus {
     ERROR = 'var(--red)',
@@ -30,12 +30,14 @@ export class LoggerStore {
         visible: false,
         text: ""
     }
+
     constructor() {
         makeObservable(this)
     }
+
     log = (
         text: string,
-        timeout: number = 3500,
+        timeout: number = 4500,
         type: LoggerStatus = LoggerStatus.SUCCESS,
     ) => {
         const id = ++this.lastId
@@ -70,7 +72,7 @@ export class LoggerStore {
         this.toasts.splice(0, this.toasts.length)
     }
     hideToast = (id: number) => {
-        this.setState(id, { visible: false })
+        this.setState(id, {visible: false})
     }
     removeToast = (id: number) => {
         this.toasts.splice(0, this.toasts.length, ...this.toasts.filter(t => t.id !== id))
@@ -92,7 +94,7 @@ export class LoggerStore {
         })
     }
     hidePill = () => {
-        this.setPillState({ visible: false })
+        this.setPillState({visible: false})
     }
 }
 

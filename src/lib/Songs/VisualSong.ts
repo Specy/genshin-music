@@ -1,9 +1,9 @@
-import { APP_NAME, NoteNameType } from "$config"
-import { ComposedSong } from "$lib/Songs/ComposedSong"
-import { RecordedSong } from "$lib/Songs/RecordedSong"
-import { Column, ColumnNote, RecordedNote } from "$lib/Songs/SongClasses"
-import Instrument from "../Instrument"
-import { Song } from "./Song"
+import {APP_NAME, NoteNameType} from "$config"
+import {ComposedSong} from "$lib/Songs/ComposedSong"
+import {RecordedSong} from "$lib/Songs/RecordedSong"
+import {Column, ColumnNote, RecordedNote} from "$lib/Songs/SongClasses"
+import {Instrument} from '$lib/Instrument'
+import {Song} from "./Song"
 
 const THRESHOLDS = {
     joined: 50,
@@ -13,10 +13,11 @@ const THRESHOLDS = {
 
 const defaultInstrument = new Instrument()
 
-function getNoteText(index: number, layout: NoteNameType){
+function getNoteText(index: number, layout: NoteNameType) {
     const text = defaultInstrument.getNoteText(index, layout, "C")
     return APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
 }
+
 export class VisualSong {
     chunks: TempoChunk[] = []
     bpm
@@ -24,6 +25,7 @@ export class VisualSong {
     constructor(bpm: number) {
         this.bpm = bpm
     }
+
     static from(song: Song | ComposedSong) {
         song = song.clone()
         const vs = new VisualSong(song.bpm)
@@ -49,7 +51,7 @@ export class VisualSong {
             vs.addChunk(chunk, delay)
             //make sure there is at least one column even in empty chunks
             vs.chunks = vs.chunks.map(chunk => {
-                if(chunk.columns.length === 0){
+                if (chunk.columns.length === 0) {
                     chunk.columns.push(new TempoChunkColumn([]))
                 }
                 return chunk
@@ -106,13 +108,13 @@ export class VisualSong {
         const chunks = this.chunks.map(chunk => chunk.toText(type))
         const tokens: string[] = []
         let empties = 0
-        for(const chunk of chunks){
-            if(chunk === ""){
+        for (const chunk of chunks) {
+            if (chunk === "") {
                 empties++
-            }else{
-                if(empties){
+            } else {
+                if (empties) {
                     const voids = Math.round((60000 / (empties * this.bpm)) / THRESHOLDS.pause)
-                    if(voids <= 2) tokens.push(Array.from({length: voids}, () => `-`).join(" "))
+                    if (voids <= 2) tokens.push(Array.from({length: voids}, () => `-`).join(" "))
                     else tokens.push(`\n\n`.repeat(Math.round(voids / 2)))
                     empties = 0
                 }
@@ -121,9 +123,10 @@ export class VisualSong {
         }
         return tokens.join(" ").trim()
     }
+
     addChunk(chunk: TempoChunk, delay: number) {
         const numberOfEmptyChunks = Math.floor(delay / THRESHOLDS.pause)
-        const emptyChunks = Array.from({ length: numberOfEmptyChunks }, () => new TempoChunk(0, []))
+        const emptyChunks = Array.from({length: numberOfEmptyChunks}, () => new TempoChunk(0, []))
         this.chunks.push(chunk, ...emptyChunks)
     }
 }
@@ -131,14 +134,17 @@ export class VisualSong {
 
 class TempoChunkNote {
     note: number
+
     constructor(note: number) {
         this.note = note
     }
+
     static from(note: ColumnNote | RecordedNote) {
         return new TempoChunkNote(
             note.index
         )
     }
+
     toText(type: NoteNameType) {
         return `${getNoteText(this.note, type)}`
     }
@@ -160,9 +166,11 @@ const TEMPO_CHANGER_2 = new Map<number, string[]>([
 
 class TempoChunkColumn {
     notes: TempoChunkNote[]
+
     constructor(notes: TempoChunkNote[]) {
         this.notes = notes
     }
+
     static from(column: Column | RecordedNote[]) {
         if (column instanceof Column) {
             return new TempoChunkColumn(
@@ -174,14 +182,17 @@ class TempoChunkColumn {
             )
         }
     }
+
     toText(type: NoteNameType) {
         return this.notes.map(note => note.toText(type)).join("")
     }
 }
+
 export class TempoChunk {
     tempoChanger: number
     columns: TempoChunkColumn[]
     endingTempoChanger: number
+
     constructor(tempoChanger: number, columns: TempoChunkColumn[]) {
         this.tempoChanger = tempoChanger
         this.endingTempoChanger = tempoChanger
@@ -190,27 +201,26 @@ export class TempoChunk {
 
     static from(columns: Column[], tempoChanger?: number) {
         tempoChanger = tempoChanger ?? columns[0]?.tempoChanger
-        if(tempoChanger === undefined) console.log( "tempoChanger is undefined", columns, tempoChanger)
+        if (tempoChanger === undefined) console.log("tempoChanger is undefined", columns, tempoChanger)
         return new TempoChunk(
             tempoChanger ?? 0,
             columns.map(column => TempoChunkColumn.from(column))
         )
     }
+
     toText(type: NoteNameType) {
         const [start, end] = TEMPO_CHANGER_2.get(this.tempoChanger) ?? ["", ""]
         const notes = this.columns.map(column => column.toText(type)).join(" ").trim()
-        if(!notes) return ""
+        if (!notes) return ""
         return `${start}${notes}${end}`
     }
 }
 
 
-
-
-
 export class Chunk {
     notes: RecordedNote[] = []
     delay = 0
+
     constructor(notes: RecordedNote[] = [], delay: number = 0) {
         this.notes = notes
         this.delay = delay

@@ -1,15 +1,13 @@
 
-
-
-.import-row{
+.import-row {
     background-color: var(--primary);
     color: var(--primary-text);
-    flex:1;
+    flex: 1;
     border-radius: 0.4rem;
     padding: 0.6rem;
 }
 
-.import-type{
+.import-type {
     min-width: 6rem;
     border-right: solid 0.1rem var(--primary-text);
     padding: 0 0.4rem;

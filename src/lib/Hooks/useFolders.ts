@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { observe } from "mobx";
-import { folderStore } from "$stores/FoldersStore";
-import { Folder } from "$lib/Folder";
-import { SongStorable } from "$lib/Songs/Song";
+import {useEffect, useState} from "react";
+import {observe} from "mobx";
+import {folderStore} from "$stores/FoldersStore";
+import {Folder} from "$lib/Folder";
+import {SongStorable} from "$lib/Songs/Song";
 
 type UseFolders = [Folder[]]
+
 export function useFolders(songs?: SongStorable[]): UseFolders {
     const [folders, setFolders] = useState(folderStore.folders)
     const [parsedFolders, setParsedFolders] = useState<Folder[]>([])
@@ -20,11 +21,11 @@ export function useFolders(songs?: SongStorable[]): UseFolders {
             const clone = folder.clone()
             const filtered = songs.filter(song => song.folderId === folder.id)
 
-            if(folder.filterType === 'date-created'){
+            if (folder.filterType === 'date-created') {
                 clone.songs = filtered
-            }else if(folder.filterType === 'alphabetical'){
-                clone.songs = filtered.sort((a,b) => a.name.localeCompare(b.name))
-            }else{
+            } else if (folder.filterType === 'alphabetical') {
+                clone.songs = filtered.sort((a, b) => a.name.localeCompare(b.name))
+            } else {
                 clone.songs = filtered
             }
             return clone

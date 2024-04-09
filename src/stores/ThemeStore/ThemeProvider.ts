@@ -1,12 +1,12 @@
-import { observable } from "mobx";
-import { ThemeSettings } from '$lib/BaseSettings'
-import { BASE_THEME_CONFIG } from '$config'
+import {observable} from "mobx";
+import {ThemeSettings} from '$lib/BaseSettings'
+import {BASE_THEME_CONFIG} from '$config'
 import cloneDeep from 'lodash.clonedeep'
 import Color from 'color'
-import { logger } from '$stores/LoggerStore'
-import { baseThemes } from "./defaultThemes";
-import { _themeService } from "$lib/Services/ThemeService";
-import { themeStore } from "./ThemeStore";
+import {logger} from '$stores/LoggerStore'
+import {baseThemes} from "./defaultThemes";
+import {_themeService} from "$lib/Services/ThemeService";
+import {themeStore} from "./ThemeStore";
 
 //TODO cleanup everything here, it's held together with tape
 export type ThemeKeys = keyof typeof ThemeSettings.data
@@ -24,19 +24,24 @@ export type OtherKeys = keyof typeof ThemeSettings.other
 export type SerializedTheme = ThemeState
 const defaultTextColors = {
     light: new Color("#edeae5"),
-    dark: new Color("#151414")
+    dark: new Color("#151414"),
+    lightSubtle: new Color("#b3b3b3"),
+    darkSubtle: new Color("#2a2727")
 }
 
 export class BaseTheme {
     state: ThemeState
+
     constructor(name: string) {
         this.state = cloneDeep(ThemeSettings as ThemeState)
         this.state.other.name = name
         this.state.editable = true
     }
+
     toJson = () => {
         return JSON.stringify(this.state)
     }
+
     serialize(): SerializedTheme {
         return {
             ...cloneDeep(this.state),
@@ -64,6 +69,7 @@ export interface ThemeState {
 export class Theme {
     state: ThemeState
     baseTheme: ThemeState
+
     constructor(baseTheme: ThemeState) {
         this.baseTheme = cloneDeep(baseTheme)
         this.state = observable(cloneDeep(baseTheme))
@@ -76,6 +82,7 @@ export class Theme {
         if (obj.data && obj.other) return true
         return false
     }
+
     load = async () => {
         try {
             const themeId = _themeService.getCurrentThemeId()
@@ -108,7 +115,7 @@ export class Theme {
         return Object.values(this.state.data)
     }
     reset = (prop: ThemeKeys) => {
-        this.state.data[prop] = { ...this.baseTheme.data[prop] }
+        this.state.data[prop] = {...this.baseTheme.data[prop]}
     }
 
     isDefault = (name: ThemeKeys) => {

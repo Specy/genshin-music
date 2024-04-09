@@ -1,9 +1,9 @@
-import { DefaultPage } from '$cmp/Layout/DefaultPage'
-import { Title } from '$cmp/Miscellaneous/Title'
+import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
+import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
 
 export default function Privacy() {
     return <DefaultPage>
-        <Title text="Privacy" description='Privacy policy for the app'/>
+        <PageMeta text="Privacy" description='Privacy policy for the app'/>
         <span>
             This website uses cookies to collect data about usage of the app through IP anonymized Google Analytics.
             We use this information to improve user experience and find how our users use the app.
@@ -14,7 +14,7 @@ export default function Privacy() {
                 href='https://support.google.com/analytics/answer/11593727'
                 target='_blank'
                 rel="noreferrer"
-                style={{ color: 'var(--primary-text)', textDecoration: "underline", marginLeft: '0.3rem' }}
+                style={{color: 'var(--primary-text)', textDecoration: "underline", marginLeft: '0.3rem'}}
             >
                 here.
             </a>

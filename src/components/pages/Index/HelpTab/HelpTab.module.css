@@ -1,0 +1,47 @@
+.help-icon {
+    width: 3rem;
+    height: 3rem;
+    color: var(--primary-layer-10);
+}
+
+.help-icon-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-top: 1vh;
+    justify-content: space-around;
+}
+
+.help-title {
+    width: 100%;
+    margin-top: 3vh;
+    padding: 1rem;
+    padding-left: 0;
+    font-size: 1.4rem;
+    border-top: 2px solid var(--primary);
+}
+
+.help-margin-left {
+    margin-left: 1rem;
+    margin-right: 0.2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.help-img {
+    width: 95%;
+    height: auto;
+    border-radius: 0.4rem;
+    margin-left: 2.5%;
+    box-shadow: 0 0 0px 2px var(--primary);
+}
+
+.keys-table tr {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.keys-table :nth-child(2) {
+    width: 100%;
+}

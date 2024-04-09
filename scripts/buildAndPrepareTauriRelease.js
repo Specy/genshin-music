@@ -44,10 +44,10 @@ const platformKey = {
 }
 const apps = app === "all" ? ["sky", "genshin"] : [app]
 function buildApp(app){
-    const yarn = PLATFORM === "win32" ? "yarn.cmd" : "yarn"
+    const npm = PLATFORM === "win32" ? "npm.cmd" : "npm"
     return new Promise((res, rej) => {
-       const child =  spawn(yarn,
-            [`build-tauri:${app}${useEnv === 'false' ? "-no-env" : ""}`],
+       const child =  spawn(npm,
+            ['run',`build-tauri:${app}${useEnv === 'false' ? "-no-env" : ""}`],
             {
                 stdio: 'inherit',   
                 cwd: process.cwd()

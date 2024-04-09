@@ -1,15 +1,17 @@
-import { Folder } from "$lib/Folder";
-import { _folderService } from "$lib/Services/FolderService";
+import {Folder} from "$lib/Folder";
+import {_folderService} from "$lib/Services/FolderService";
 
-import { makeObservable, observable } from "mobx";
-import { songsStore } from "./SongsStore";
+import {makeObservable, observable} from "mobx";
+import {songsStore} from "./SongsStore";
 
 
 export class FolderStore {
     @observable.shallow folders: Folder[] = []
+
     constructor() {
         makeObservable(this)
     }
+
     sync = async () => {
         const folders = await _folderService.getFolders()
         this.folders.splice(0, this.folders.length, ...(folders.map(folder => Folder.deserialize(folder))))
@@ -44,5 +46,6 @@ export class FolderStore {
         this.sync()
     }
 }
+
 export const folderStore = new FolderStore()
 

@@ -1,9 +1,9 @@
-import { KeyboardCode, KeyboardLetter, KeyboardNumber, KeyboardNumberCode } from "./KeyboardTypes";
+import {KeyboardCode, KeyboardLetter, KeyboardNumber, KeyboardNumberCode} from "./KeyboardTypes";
 
 export type KeyboardListenerOptions = {
     shift?: boolean
     id?: string
-    type?: 'keydown' | 'keyup' 
+    type?: 'keydown' | 'keyup'
 }
 export type KeyboardRawListenerOptions = {
     id?: string
@@ -15,15 +15,19 @@ export type KeyboardHandler = {
     callback: KeyboardListenerCallback
     options: KeyboardListenerOptions
 }
+
 export class KeyboardProviderClass {
     private handlers: Map<string, KeyboardHandler[]>
     private listeners: KeyboardHandler[] = []
+
     constructor() {
         this.handlers = new Map<string, KeyboardHandler[]>()
     }
+
     static get emptyHandler(): KeyboardHandler {
         return {
-            callback: () => { },
+            callback: () => {
+            },
             options: {
                 shift: false,
                 id: '',
@@ -31,6 +35,7 @@ export class KeyboardProviderClass {
             }
         }
     }
+
     create = () => {
         window.addEventListener('keydown', this.handleEvent)
         window.addEventListener('keyup', this.handleEvent)
@@ -99,7 +104,7 @@ export class KeyboardProviderClass {
         const isKeyDown = e.type === 'keydown'
         const letter = code.replace('Key', '')
         const shiftPressed = e.shiftKey
-        const data = { letter, shift: shiftPressed, event: e, code }
+        const data = {letter, shift: shiftPressed, event: e, code}
         this.listeners.forEach(handler => {
             if (handler.options.type === 'keydown' && isKeyDown) handler.callback(data)
             if (handler.options.type === 'keyup' && isKeyUp) handler.callback(data)

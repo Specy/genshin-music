@@ -1,12 +1,10 @@
 import Script from "next/script";
 
 
-
-
 export function GoogleAnalyticsScript() {
     return process.env.NEXT_PUBLIC_APP_NAME === "Sky"
         ? <>
-            <Script async src="https://www.googletagmanager.com/gtag/js?id=G-YEHPSLXGYT" />
+            <Script async src="https://www.googletagmanager.com/gtag/js?id=G-YEHPSLXGYT"/>
             <Script id="google-analytics">
                 {`
 							window.dataLayer = window.dataLayer || [];
@@ -21,7 +19,7 @@ export function GoogleAnalyticsScript() {
             </Script>
         </>
         : <>
-            <Script async src="https://www.googletagmanager.com/gtag/js?id=G-T3TJDT2NFS" />
+            <Script async src="https://www.googletagmanager.com/gtag/js?id=G-T3TJDT2NFS"/>
             <Script id="google-analytics">
                 {`
 							window.dataLayer = window.dataLayer || [];

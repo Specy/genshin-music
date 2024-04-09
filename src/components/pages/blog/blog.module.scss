@@ -1,0 +1,134 @@
+
+.blog-nav {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 2rem;
+  border-bottom: solid 0.1rem var(--secondary);
+  background-color: var(--primary);
+  padding-left: calc(var(--menu-size) + 2rem);
+  z-index: 1;
+  height: calc(var(--menu-size) - 0.1rem);
+  box-shadow: 0 0.5rem 0.7rem 0.5rem rgba(0, 0, 0, 0.2)
+}
+
+
+.blog-nav a {
+  color: var(--primary-text);
+  font-size: 1.2rem;
+  user-select: text;
+}
+
+.blog-nav a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.blog-header {
+  width: 100%;
+  position: relative;
+  height: 50vh;
+}
+
+
+.blog-back {
+  position: absolute;
+  top: 0;
+  left: var(--menu-size);
+  border: none;
+  background: rgba(var(--primary-rgb), 0.8);
+  border-bottom: solid 0.1rem var(--secondary);
+  border-right: solid 0.1rem var(--secondary);
+  transition: background 0.3s;
+  border-bottom-right-radius: 0.4rem;
+  font-size: 1.2rem;
+  color: var(--primary-text);
+  z-index: 4;
+  cursor: pointer;
+  padding: 1rem 1.5rem;
+}
+
+.blog-back:hover {
+  background: rgba(var(--primary-rgb), 1);
+}
+
+.blog-title {
+  text-align: center;
+  text-shadow: 0.1rem 0.1rem 0.3rem rgba(0, 0, 0, 0.6);
+  user-select: text;
+
+}
+
+.blog-tag {
+  background-color: var(--secondary);
+  color: var(--secondary-text);
+  text-align: center;
+  border-radius: 1rem;
+  padding: 0.2rem 0.8rem;
+}
+
+.blog-p {
+  margin: 1rem 0;
+  user-select: text;
+}
+
+.blog-header-content {
+  z-index: 3;
+  top: 0;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  align-items: flex-end;
+  padding-bottom: 3rem;
+  justify-content: center;
+  display: flex;
+}
+
+.blog-image-mask {
+  z-index: 2;
+  backdrop-filter: blur(8px);
+  position: absolute;
+  mask: linear-gradient(transparent, black 60%);
+  background: linear-gradient(180deg, rgba(var(--background-rgb), 0) 24%, rgba(var(--background-rgb), 1) 94%, rgba(var(--background-rgb), 1) 100%);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.blog-ol {
+  margin: 0;
+  font-family: RobotoSerif, serif;
+  padding: 0;
+  list-style-type: none;
+  margin-left: 2rem;
+  user-select: text;
+}
+
+.blog-ol li {
+  counter-increment: step-counter;
+  position: relative;
+  margin: 1rem 0;
+  font-family: RobotoSerif, serif;
+  opacity: 0.9;
+  user-select: text;
+}
+
+
+.blog-ol li::before {
+  content: counter(step-counter);
+  position: absolute;
+  background-color: var(--accent);
+  color: var(--accent-text);
+  transform: translateX(calc(-100% - 0.5rem));
+  border-radius: 2rem;
+  font-weight: bold;
+  min-width: 1.5rem;
+  height: 100%;
+  padding: 0;
+  text-align: center;
+}
+
+.blog-b {
+  font-weight: bold;
+  font-family: RobotoSerif, serif;
+}

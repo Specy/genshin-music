@@ -1,4 +1,5 @@
 .vsrg-page {
+    max-height: 100vh;
     width: 100%;
     height: 100%;
     display: grid;
@@ -28,28 +29,32 @@
     position: relative;
     cursor: pointer;
 }
+
 .vsrg-top-canvas-wrapper canvas {
     position: absolute;
     opacity: 0.96;
     border-radius: 0.6rem;
 }
+
 .vsrg-top-right {
     display: flex;
     grid-area: b;
     flex-direction: column;
     width: 13.6rem;
 }
-.vsrg-top-right-disabled .vsrg-track-wrapper{
+
+.vsrg-top-right-disabled .vsrg-track-wrapper {
     pointer-events: none;
     opacity: 0.5;
 }
 
-.vsrg-select-song-wrapper{
+.vsrg-select-song-wrapper {
     margin-top: 0.5rem;
     border: dotted 4px var(--accent);
     padding: 0 0.4rem;
     border-radius: 0.4rem;
 }
+
 .vsrg-track {
     height: 3rem;
     min-height: 3rem;
@@ -58,7 +63,8 @@
     overflow: hidden;
     border-bottom: solid 2px var(--secondary);
 }
-.vsrg-track-left{
+
+.vsrg-track-left {
     width: 2rem;
     font-size: 1rem;
     height: 100%;
@@ -98,9 +104,11 @@
     border-radius: 0.6rem;
     overflow-y: auto;
 }
+
 .vsrg-track-wrapper::-webkit-scrollbar-thumb {
     background: var(--secondary);
 }
+
 .vsrg-keyboard {
     margin-top: auto;
     display: grid;
@@ -126,14 +134,17 @@
     margin-left: 3.2rem;
     height: 2.5rem;
 }
-.vsrg-bottom input[type='range']{
+
+.vsrg-bottom input[type='range'] {
     max-width: 30rem;
 }
-.vsrg-name{
+
+.vsrg-name {
     text-align: center;
     margin-left: 1rem;
     max-width: 18vw;
 }
+
 .multiple-option-slider {
     display: grid;
     grid-auto-columns: minmax(0, 1fr);
@@ -177,20 +188,22 @@
     margin-left: 0.6rem;
 }
 
-.track-modifier{
+.track-modifier {
     padding: 0.4rem;
     background-color: var(--menu-background);
     color: var(--menu-background-text);
     border-radius: 0.3rem;
 }
-.vsrg-track-modifier-button{
+
+.vsrg-track-modifier-button {
     min-width: unset;
     padding: 0.2rem;
     height: 1.6rem;
     width: 2rem;
     font-size: 1rem;
 }
-.vsrg-composer-selected-song{
+
+.vsrg-composer-selected-song {
     gap: 0.4rem;
     padding: 0.6rem;
     border-radius: 0.4rem;
@@ -198,7 +211,8 @@
     background-color: var(--primary);
     color: var(--primary-text);
 }
-.vsrg-breakpoints-buttons button{
+
+.vsrg-breakpoints-buttons button {
     display: flex;
     min-width: unset;
     height: 2rem;
@@ -210,32 +224,39 @@
     margin-left: 0.2rem;
 }
 
-@media only screen and (max-width: 1000px){
-    .vsrg-name{
+@media only screen and (max-width: 1000px) {
+    .vsrg-name {
         display: none;
     }
-    .vsrg-top-right{
+
+    .vsrg-top-right {
         width: 12.6rem;
     }
-    .vsrg-page{
+
+    .vsrg-page {
         grid-template-rows: calc(100% - 2.5rem) min-content;
     }
-    .vsrg-bottom{
+
+    .vsrg-bottom {
         height: 2.2rem;
         margin-left: 2.9rem;
     }
+
     .vsrg-keyboard button {
         aspect-ratio: unset;
         min-height: 1.5rem;
     }
-    .vsrg-hamburger{
+
+    .vsrg-hamburger {
         width: 2.2rem;
         height: 2.2rem;
     }
-    .vsrg-track{
+
+    .vsrg-track {
         height: 2.4rem;
         min-height: 2.4rem;
     }
+
     .multiple-option-slider button {
         padding: 0 1rem;
     }

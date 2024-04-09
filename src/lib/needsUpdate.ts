@@ -1,8 +1,8 @@
-import { APP_NAME, APP_VERSION, IS_TAURI, UPDATE_URL } from "$config"
-import { logger } from "$stores/LoggerStore"
+import {APP_NAME, APP_VERSION, IS_TAURI, UPDATE_URL} from "$config"
+import {logger} from "$stores/LoggerStore"
 import semverLt from 'semver/functions/lt'
 import semverCoerce from 'semver/functions/coerce'
-import { delay } from "./Utilities"
+import {delay} from "./Utilities"
 
 type AppUpdateSchema = {
     version: string,
@@ -22,14 +22,14 @@ export async function checkIfneedsUpdate() {
         const currentVersion = semverCoerce(APP_VERSION)
         const latestVersion = semverCoerce(appUpdate[APP_NAME].version)
         if (currentVersion && latestVersion && semverLt(currentVersion, latestVersion)) {
-            const { message, urgentMessage } = appUpdate[APP_NAME]
+            const {message, urgentMessage} = appUpdate[APP_NAME]
             if (message) {
                 logger.warn(
                     `A New version of the app is available.
                         ${!IS_TAURI
-                            ? "Please close the app and restart it to update. On the web you need to close all tabs with the app open."
-                            : ""
-                        } 
+                        ? "Please close the app and restart it to update. On the web you need to close all tabs with the app open."
+                        : ""
+                    } 
                     ${message ? `\nUpdate Message: "${message}"` : ""}
                     `.trim(), 15000)
             }

@@ -1,21 +1,26 @@
-import { ComposedSong, OldFormatComposed, UnknownSerializedComposedSong } from "$lib/Songs/ComposedSong"
-import { OldFormatRecorded, RecordedSong, UnknownSerializedRecordedSong } from "$lib/Songs/RecordedSong"
-import { FileDownloader } from "$lib/Utilities"
-import { songsStore } from "$stores/SongsStore"
+import {ComposedSong, OldFormatComposed, UnknownSerializedComposedSong} from "$lib/Songs/ComposedSong"
+import {OldFormatRecorded, RecordedSong, UnknownSerializedRecordedSong} from "$lib/Songs/RecordedSong"
+import {FileDownloader} from "$lib/Utilities"
+import {songsStore} from "$stores/SongsStore"
 import toWav from 'audiobuffer-to-wav'
-import { SerializedSong, Song } from "$lib/Songs/Song"
-import { Midi } from "@tonejs/midi"
-import { SerializedTheme, ThemeProvider, Theme } from "$stores/ThemeStore/ThemeProvider"
-import { songService } from "./SongService"
-import { Folder, SerializedFolder } from "../Folder"
-import { folderStore } from "$stores/FoldersStore"
-import { SerializedVsrgSong, VsrgSong } from "../Songs/VsrgSong"
-import { themeStore } from "$stores/ThemeStore/ThemeStore"
-import { AppError } from "../Errors"
-import { SerializedSongKind } from "$/types/SongTypes"
-import { logger } from "$stores/LoggerStore"
-import { APP_NAME } from "$config"
-export type UnknownSong = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedSong | SerializedVsrgSong
+import {SerializedSong, Song} from "$lib/Songs/Song"
+import {Midi} from "@tonejs/midi"
+import {SerializedTheme, Theme, ThemeProvider} from "$stores/ThemeStore/ThemeProvider"
+import {songService} from "./SongService"
+import {Folder, SerializedFolder} from "../Folder"
+import {folderStore} from "$stores/FoldersStore"
+import {SerializedVsrgSong, VsrgSong} from "../Songs/VsrgSong"
+import {themeStore} from "$stores/ThemeStore/ThemeStore"
+import {AppError} from "../Errors"
+import {SerializedSongKind} from "$/types/SongTypes"
+import {logger} from "$stores/LoggerStore"
+import {APP_NAME} from "$config"
+
+export type UnknownSong =
+    UnknownSerializedComposedSong
+    | UnknownSerializedRecordedSong
+    | SerializedSong
+    | SerializedVsrgSong
 export type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded | SerializedFolder | SerializedTheme
 export type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
 export type UnknownSongImport = UnknownSong | UnknownSong[]
@@ -34,47 +39,61 @@ export enum FileKind {
     Folder = 'folder',
     Theme = 'theme'
 }
+
 type ImportError<T> = {
     file: Partial<T>
     error: string
 }
+
 class UnknownFileResult {
     successful: UnknownFileTypes[]
     errors: ImportError<UnknownFileTypes>[]
+
     constructor(successful?: UnknownFileTypes[], errors?: ImportError<UnknownFileTypes>[]) {
         this.successful = successful || []
         this.errors = errors || []
     }
+
     hasErrors(): boolean {
         return this.errors.length > 0
     }
+
     private getKinds<T>(file: UnknownFileTypes[], kind: FileKind): T {
         return file.filter(f => FileService.getSerializedObjectType(f) === kind) as unknown as T
     }
+
     getSuccessfulSongs(): UnknownSong[] {
         return this.getKinds(this.successful, FileKind.Song)
     }
+
     getSuccessfulFolders(): SerializedFolder[] {
         return this.getKinds(this.successful, FileKind.Folder)
     }
+
     getSuccessfulThemes(): SerializedTheme[] {
         return this.getKinds(this.successful, FileKind.Theme)
     }
+
     appendSuccessful(file: UnknownFileTypes) {
         this.successful.push(file)
     }
+
     getSongErrors(): ImportError<UnknownSong>[] {
         return this.errors.filter(error => FileService.getSerializedObjectType(error.file) === FileKind.Song) as ImportError<UnknownSong>[]
     }
+
     getFolderErrors(): ImportError<SerializedFolder>[] {
         return this.errors.filter(error => FileService.getSerializedObjectType(error.file) === FileKind.Folder) as ImportError<SerializedFolder>[]
     }
+
     getThemeErrors(): ImportError<SerializedTheme>[] {
         return this.errors.filter(error => FileService.getSerializedObjectType(error.file) === FileKind.Theme) as ImportError<SerializedTheme>[]
     }
+
     getUnknownErrors(): ImportError<any>[] {
         return this.errors.filter(error => FileService.getSerializedObjectType(error.file) === null) as ImportError<any>[]
     }
+
     appendError(file: UnknownFile | any, error: string) {
         this.errors.push({
             file,
@@ -93,15 +112,15 @@ export class FileService {
             throw e
         })
         logger.hidePill()
-        if (result.hasErrors()){
+        if (result.hasErrors()) {
             logger.error(`${result.errors.length} thing${result.errors.length === 1 ? '' : 's'} failed to import`)
             console.error("failed to import: ", result.errors)
         }
         const songs = result.getSuccessfulSongs()
         const songErrors = result.getSongErrors()
-        if(songs.length > 5){
+        if (songs.length > 5) {
             logger.success(`Imported ${songs.length} songs`)
-        }else{
+        } else {
             songs.forEach(s => logger.success(`Imported ${s.type} song: "${s.name}"`))
         }
         songErrors.forEach(e => logger.error(`Error importing song: "${e.file?.name ?? ''}" | ${e.error}`))
@@ -109,18 +128,18 @@ export class FileService {
         unknown.forEach(e => logger.error(`Error importing unknown file: "${e.file?.name ?? ''}" | ${e.error}`))
 
         const folders = result.getSuccessfulFolders()
-        if(folders.length > 5){
+        if (folders.length > 5) {
             logger.success(`Imported ${folders.length} folders`)
-        }else{
+        } else {
             folders.forEach(f => logger.success(`Imported folder: "${f.name}"`))
         }
         const folderErrors = result.getFolderErrors()
         folderErrors.forEach(e => logger.error(`Error importing folder: "${e.file?.name ?? ''}" | ${e.error}`))
 
         const themes = result.getSuccessfulThemes()
-        if(themes.length > 5){
+        if (themes.length > 5) {
             logger.success(`Imported ${themes.length} themes`)
-        }else{
+        } else {
             themes.forEach(t => logger.success(`Imported theme: "${t?.other?.name ?? ''}"`))
         }
         const themeErrors = result.getThemeErrors()
@@ -129,6 +148,7 @@ export class FileService {
 
         return result
     }
+
     async importUnknownFile(unknownFile: UnknownFile): Promise<UnknownFileResult> {
         const result = new UnknownFileResult()
         const fileArray = Array.isArray(unknownFile) ? unknownFile : [unknownFile]
@@ -191,6 +211,7 @@ export class FileService {
         }
         return result
     }
+
     splitIntoTypes(files: UnknownFileTypes[]): SplitImports {
         const songs = files.filter(file => FileService.getSerializedObjectType(file) === FileKind.Song) as UnknownSong[]
         const folders = files.filter(file => FileService.getSerializedObjectType(file) === FileKind.Folder) as SerializedFolder[]
@@ -203,14 +224,15 @@ export class FileService {
             unknown
         }
     }
+
     static getSerializedObjectType(file: UnknownFileTypes | any): FileKind | null {
         try {
             if (
                 RecordedSong.isSerializedType(file) ||
                 ComposedSong.isSerializedType(file) ||
-                VsrgSong.isSerializedType(file)     ||
+                VsrgSong.isSerializedType(file) ||
                 RecordedSong.isOldFormatSerializedType(file) ||
-                ComposedSong.isOldFormatSerializedType(file) 
+                ComposedSong.isOldFormatSerializedType(file)
             ) return FileKind.Song
             if (Folder.isSerializedType(file)) return FileKind.Folder
             if (Theme.isSerializedType(file)) return FileKind.Theme
@@ -230,6 +252,7 @@ export class FileService {
         })
         this.downloadFiles(filtered, fileName)
     }
+
     async prepareSongDownload(song: SerializedSongKind) {
         const files = [song]
         const vsrgSongs = files.filter(s => s.type === 'vsrg') as SerializedVsrgSong[]
@@ -245,12 +268,15 @@ export class FileService {
         }
         return files
     }
+
     downloadFiles(files: UnknownFileTypes[], fileName: string) {
         FileDownloader.download(JSON.stringify(files), fileName)
     }
+
     downloadObject(file: object, fileName: string) {
         FileDownloader.download(JSON.stringify(file), `${fileName}.json`)
     }
+
     async downloadBlobAsWav(urlBlob: Blob, fileName: string) {
         fileName = fileName.replace(".wav", "")
         const wav = toWav(await blobToAudio(urlBlob))
@@ -259,23 +285,27 @@ export class FileService {
         })
         FileDownloader.download(blob, fileName + ".wav")
     }
+
     downloadBlob(urlBlob: Blob, fileName: string) {
         FileDownloader.download(urlBlob, fileName)
     }
+
     downloadMidi(midi: Midi, fileName?: string) {
         fileName = (fileName || midi.name).replace(".mid", "")
         return FileDownloader.download(
-            new Blob([midi.toArray()], { type: "audio/midi" }),
+            new Blob([midi.toArray()], {type: "audio/midi"}),
             fileName + ".mid"
         )
     }
+
     downloadTheme(theme: SerializedTheme, fileName?: string) {
         fileName = (fileName || `${theme.other.name}.${APP_NAME.toLowerCase()}theme`)
         this.downloadFiles([theme], fileName)
     }
+
     getUnknownFileExtensionAndName(file: UnknownFileTypes) {
         const type = file.type
-        switch (type){
+        switch (type) {
             case "vsrg":
             case "composed":
             case "recorded":
@@ -310,13 +340,16 @@ export function blobToAudio(blob: Blob): Promise<AudioBuffer> {
         // @ts-ignore
         const audioContext = (new (window.AudioContext || window.webkitAudioContext)())
         const fileReader = new FileReader();
+
         function handleLoad() {
             audioContext.decodeAudioData(fileReader.result as ArrayBuffer, (audioBuffer) => {
                 resolve(audioBuffer)
             }, reject)
         }
-        fileReader.addEventListener('loadend', handleLoad, { once: true })
+
+        fileReader.addEventListener('loadend', handleLoad, {once: true})
         fileReader.readAsArrayBuffer(blob);
     })
 }
+
 export const fileService = new FileService()

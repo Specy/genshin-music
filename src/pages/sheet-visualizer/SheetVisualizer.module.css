@@ -1,63 +1,63 @@
 .visualizer-plus-minus {
-	width: 2rem;
-	margin-left: 0.5rem;
-	height: 2rem;
-	padding: 0;
-	font-size: 1.4rem;
-	background-color: var(--primary);
-	color: var(--primary-text);
-	border: none;
-	border-radius: 0.2rem;
-	cursor: pointer;
+    width: 2rem;
+    margin-left: 0.5rem;
+    height: 2rem;
+    padding: 0;
+    font-size: 1.4rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    border-radius: 0.2rem;
+    cursor: pointer;
 }
 
 .visualizer-plus-minus:hover {
-	background-color: var(--secondary-layer-10);
+    background-color: var(--secondary-layer-10);
 }
 
 .visualizer-buttons-wrapper {
-	display: flex;
-	justify-content: space-between;
-	width: 100%;
-	margin-top: 0.5rem;
-	align-items: center;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 0.5rem;
+    align-items: center;
 }
 
 .visualizer-frame-wrapper {
-	width: 100%;
-	margin-top: 1rem;
-	display: grid;
-	justify-items: center;
-	row-gap: 0.2rem;
-	border-top: solid 1px var(--secondary);
-	padding-top: 1rem;
-	grid-template-columns: repeat(5, 1fr);
-	justify-content: center;
-	
+    width: 100%;
+    margin-top: 1rem;
+    display: grid;
+    justify-items: center;
+    row-gap: 0.2rem;
+    border-top: solid 1px var(--secondary);
+    padding-top: 1rem;
+    grid-template-columns: repeat(5, 1fr);
+    justify-content: center;
+
 }
 
 .text-notation-wrapper {
-	background-color: var(--primary);
-	color: var(--primary-text);
-	border-radius: 0.5rem;
-	border: solid 1px var(--secondary);
-	padding: 1rem;
-	width: 100%;
-	white-space: pre-wrap;
-	-webkit-user-select: text;
-	user-select: text;
-	cursor: text;
-	margin-top: 2rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border-radius: 0.5rem;
+    border: solid 1px var(--secondary);
+    padding: 1rem;
+    width: 100%;
+    white-space: pre-wrap;
+    -webkit-user-select: text;
+    user-select: text;
+    cursor: text;
+    margin-top: 2rem;
 }
 
 
-
 @media print {
-	.page-no-print{
-		padding: 1rem;
-	}
-	.text-notation-wrapper{
-		background-color: transparent;
-		color: black;
-	}
+    .page-no-print {
+        padding: 1rem;
+    }
+
+    .text-notation-wrapper {
+        background-color: transparent;
+        color: black;
+    }
 }

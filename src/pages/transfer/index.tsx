@@ -1,14 +1,14 @@
-import { AppButton } from "$cmp/Inputs/AppButton";
-import { Select } from "$cmp/Inputs/Select";
-import { DefaultPage } from "$cmp/Layout/DefaultPage";
-import { APP_NAME } from "$config";
-import { protocol, setupProtocol } from "$lib/Hooks/useWindowProtocol";
-import { logger } from "$stores/LoggerStore";
-import { useState, useEffect, useCallback } from "react";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {Select} from "$cmp/shared/Inputs/Select";
+import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
+import {APP_NAME} from "$config";
+import {protocol, setupProtocol} from "$lib/Hooks/useWindowProtocol";
+import {logger} from "$stores/LoggerStore";
+import {useCallback, useEffect, useState} from "react";
 import s from "./transfer.module.css"
-import { cn } from "$lib/Utilities";
-import { UnknownFileTypes, fileService } from "$lib/Services/FileService";
-import { Title } from "$cmp/Miscellaneous/Title";
+import {cn} from "$lib/Utilities";
+import {fileService, UnknownFileTypes} from "$lib/Services/FileService";
+import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
@@ -61,20 +61,22 @@ export default function TransferData() {
     }, [])
 
     return <DefaultPage>
-        <Title text="Import data" description="A tool to import the data you have in other domains" />
+        <PageMeta text="Import data" description="A tool to import the data you have in other domains"/>
         <div className="column">
             <h1>Import data from other domains</h1>
-            <p style={{ marginLeft: "1rem" }}>
-                Here you can import data from other existing domains of the app, select the domain you want to import from and click import.
-                You will be shown all the data from the other domain, and you can select to import it all at once or only what you need.
+            <p style={{marginLeft: "1rem"}}>
+                Here you can import data from other existing domains of the app, select the domain you want to import
+                from and click import.
+                You will be shown all the data from the other domain, and you can select to import it all at once or
+                only what you need.
             </p>
             <h2>
                 Select a website to import data from
             </h2>
-            <div className="row" style={{ gap: "0.5rem", marginLeft: "1rem" }}>
+            <div className="row" style={{gap: "0.5rem", marginLeft: "1rem"}}>
                 <Select
                     value={selectedDomain}
-                    style={{ minWidth: "12rem" }}
+                    style={{minWidth: "12rem"}}
                     onChange={e => setSelectedDomain(e.target.value)}
                 >
                     {validDomains.map(d => <option value={d} key={d}>{d.replace(/https?:\/\//g, "")}</option>)}
@@ -99,7 +101,7 @@ export default function TransferData() {
                         </>
                         : <>
                             <div className="column">
-                                <div className="row-centered" style={{ gap: "1rem" }}>
+                                <div className="row-centered" style={{gap: "1rem"}}>
                                     <h2>Data </h2>
                                     <AppButton
                                         cssVar="accent"
@@ -111,7 +113,7 @@ export default function TransferData() {
                                         Import all
                                     </AppButton>
                                 </div>
-                                <div className="column" style={{ gap: "0.3rem" }}>
+                                <div className="column" style={{gap: "0.3rem"}}>
                                     {importedData.map((d, i) =>
                                         <ImportedRow
                                             data={d}
@@ -139,7 +141,8 @@ interface ImportedRowProps {
     data: UnknownFileTypes
     onImport: (data: UnknownFileTypes) => void
 }
-function ImportedRow({ data, onImport }: ImportedRowProps) {
+
+function ImportedRow({data, onImport}: ImportedRowProps) {
     let name = ""
     if (data.type === "theme") name = data.other?.name
     else name = data.name
@@ -149,12 +152,12 @@ function ImportedRow({ data, onImport }: ImportedRowProps) {
         <div className={s["import-type"]}>
             {data.type}
         </div>
-        <div className="row" style={{ padding: "0 0.5rem" }}>
+        <div className="row" style={{padding: "0 0.5rem"}}>
             {name}
         </div>
         <AppButton
             cssVar="accent"
-            style={{ marginLeft: "auto" }}
+            style={{marginLeft: "auto"}}
             onClick={() => onImport(data)}
         >
             Import

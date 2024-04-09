@@ -1,5 +1,6 @@
-import type{ INSTRUMENTS } from '$config'
-import type { ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings } from '$lib/BaseSettings'
+import type {INSTRUMENTS} from '$config'
+import type {ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings} from '$lib/BaseSettings'
+
 interface BaseSettingsProp {
     name: string
     songSetting: boolean
@@ -7,7 +8,13 @@ interface BaseSettingsProp {
     tooltip?: string
 }
 
-export type SettingsPropriety = SettingsInstrument | SettingsSelect | SettingsSlider | SettingsNumber | SettingsCheckbox | SettingsText
+export type SettingsPropriety =
+    SettingsInstrument
+    | SettingsSelect
+    | SettingsSlider
+    | SettingsNumber
+    | SettingsCheckbox
+    | SettingsText
 
 export type SettingsInstrument = BaseSettingsProp & {
     type: 'instrument'
@@ -44,13 +51,13 @@ export type SettingsSelect<T = string | number> = BaseSettingsProp & {
     options: T[]
 }
 
-export type SettingUpdateKey = 
-    keyof typeof ComposerSettings.data 
-  | keyof typeof PlayerSettings.data 
-  | keyof typeof VsrgComposerSettings.data
-  | keyof typeof ZenKeyboardSettings.data
+export type SettingUpdateKey =
+    keyof typeof ComposerSettings.data
+    | keyof typeof PlayerSettings.data
+    | keyof typeof VsrgComposerSettings.data
+    | keyof typeof ZenKeyboardSettings.data
 export type SettingUpdate = {
-    key: SettingUpdateKey, 
+    key: SettingUpdateKey,
     data: SettingsPropriety
 }
 export type SettingVolumeUpdate = {

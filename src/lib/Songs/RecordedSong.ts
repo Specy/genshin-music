@@ -1,17 +1,18 @@
-import { IMPORT_NOTE_POSITIONS, APP_NAME, PITCHES, INSTRUMENTS_DATA } from "$config"
-import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote } from "./SongClasses"
-import { ComposedSong, defaultInstrumentMap } from "./ComposedSong"
-import { groupNotesByIndex, mergeLayers, groupByNotes } from "$lib/Utilities";
+import {APP_NAME, IMPORT_NOTE_POSITIONS, INSTRUMENTS_DATA, PITCHES} from "$config"
+import {Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote} from "./SongClasses"
+import {ComposedSong, defaultInstrumentMap} from "./ComposedSong"
+import {groupByNotes, groupNotesByIndex, mergeLayers} from "$lib/Utilities";
 import clonedeep from 'lodash.clonedeep'
-import { NoteLayer } from "../Layer"
-import { Midi } from "@tonejs/midi"
-import { InstrumentName } from "$types/GeneralTypes"
-import { SerializedSong, Song } from "./Song"
-import { OldFormat, OldNote } from "$types/SongTypes"
+import {NoteLayer} from "../Layer"
+import {Midi} from "@tonejs/midi"
+import {InstrumentName} from "$types/GeneralTypes"
+import {SerializedSong, Song} from "./Song"
+import {OldFormat, OldNote} from "$types/SongTypes"
 
 
 export type SerializedRecordedSong = SerializedSong & {
     type: 'recorded'
+    reverb: boolean
     notes: SerializedRecordedNote[]
 }
 export type OldFormatRecorded = SerializedRecordedSong & OldFormat
@@ -22,7 +23,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     instruments: InstrumentData[]
     notes: RecordedNote[]
     timestamp = 0
+    reverb = false
     private lastPlayedNote = -1
+
     constructor(name: string, notes?: RecordedNote[], instruments: InstrumentName[] = []) {
         super(name, 2, 'recorded', {
             isComposed: false,
@@ -33,9 +36,11 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         this.instruments = []
         instruments.forEach(instrument => this.addInstrument(instrument))
     }
+
     get isComposed(): false {
         return false
     }
+
     toOldFormat = () => {
         const song: OldFormatRecorded = {
             ...this.serialize(),
@@ -52,12 +57,13 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         return song
     }
+
     static deserialize(obj: SerializedRecordedSong): RecordedSong {
-        const { notes, name } = obj
+        const {notes, name} = obj
         const version = obj.version || 1
-        const song = Song.deserializeTo(new RecordedSong(name || 'Untitled') , obj)
-        
-        if(song.instruments.length === 0) song.instruments = [new InstrumentData()]
+        const song = Song.deserializeTo(new RecordedSong(name || 'Untitled'), obj)
+        song.reverb = obj.reverb ?? false
+        if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
         if (version === 1) {
             const clonedNotes = Array.isArray(notes) ? clonedeep(notes) : []
             song.notes = clonedNotes.map(note => {
@@ -68,19 +74,22 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         return song
     }
-    static isSerializedType(obj: any){
-        if(typeof obj !== 'object') return false
-        if(obj.type === 'recorded') return true
+
+    static isSerializedType(obj: any) {
+        if (typeof obj !== 'object') return false
+        if (obj.type === 'recorded') return true
         //legacy format
-        if(obj?.data?.isComposedVersion === false) return true 
+        if (obj?.data?.isComposedVersion === false) return true
         return false
     }
-    static isOldFormatSerializedType(obj:any){
-        if(typeof obj !== 'object') return false
-        if(obj.type) return false
-        if(Array.isArray(obj.songNotes) && !obj.composedSong) return true
+
+    static isOldFormatSerializedType(obj: any) {
+        if (typeof obj !== 'object') return false
+        if (obj.type) return false
+        if (Array.isArray(obj.songNotes) && !obj.composedSong) return true
         return false
     }
+
     serialize = (): SerializedRecordedSong => {
         return {
             name: this.name,
@@ -90,22 +99,25 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             version: this.version,
             pitch: this.pitch,
             bpm: this.bpm,
-            data: { ...this.data },
+            reverb: this.reverb,
+            data: {...this.data},
             notes: this.notes.map(note => note.serialize()),
             id: this.id
         }
     }
-    startPlayback(timestamp:number){
+
+    startPlayback(timestamp: number) {
         this.lastPlayedNote = -1
-        for(let i = 0; i < this.notes.length; i++){
-            if(this.notes[i].time >= timestamp) break
+        for (let i = 0; i < this.notes.length; i++) {
+            if (this.notes[i].time >= timestamp) break
             this.lastPlayedNote = i
         }
     }
-    tickPlayback(timestamp: number){
+
+    tickPlayback(timestamp: number) {
         const surpassed = []
-        for(let i = this.lastPlayedNote + 1; i < this.notes.length; i++){
-            if(this.notes[i].time <= timestamp) {
+        for (let i = this.lastPlayedNote + 1; i < this.notes.length; i++) {
+            if (this.notes[i].time <= timestamp) {
                 surpassed.push(this.notes[i])
                 this.lastPlayedNote = i
                 continue
@@ -114,9 +126,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         return surpassed
     }
-    
+
     addInstrument = (name: InstrumentName) => {
-        const newInstrument: InstrumentData = new InstrumentData({ name })
+        const newInstrument: InstrumentData = new InstrumentData({name})
         this.instruments = [...this.instruments, newInstrument]
     }
 
@@ -125,6 +137,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const song = new ComposedSong(this.name, this.instruments.map(ins => ins.name))
         song.bpm = this.bpm
         song.pitch = this.pitch
+        song.reverb = this.reverb
         const notes = this.notes.map(note => note.clone())
         //remove duplicates
         let converted = []
@@ -200,10 +213,10 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 })
                 converted.push(column, ...finalPadding)
             }
-    }
+        }
         song.columns = converted
         const highestLayer = NoteLayer.maxLayer(song.columns.flatMap(column => column.notes.map(note => note.layer)))
-        song.instruments = highestLayer.toString(2).split("").map((_,i) => {
+        song.instruments = highestLayer.toString(2).split("").map((_, i) => {
             const ins = new InstrumentData()
             ins.icon = defaultInstrumentMap[i % 3]
             return ins
@@ -213,7 +226,8 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         })
         return song
     }
-    static mergeNotesIntoChunks(notes: RecordedNote[]){
+
+    static mergeNotesIntoChunks(notes: RecordedNote[]) {
         const chunks = []
         let previousChunkDelay = 0
         for (let i = 0; notes.length > 0; i++) {
@@ -235,9 +249,11 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         return chunks
     }
+
     toRecordedSong = () => {
         return this.clone()
     }
+
     toMidi(): Midi {
         const midi = new Midi()
         midi.header.setTempo(this.bpm / 4)
@@ -265,6 +281,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         if (midi.tracks.length === 1) midi.tracks[0].name = INSTRUMENTS_DATA[this.instruments[0].name]?.midiName
         return midi
     }
+
     static fromOldFormat = (song: any) => {
         try {
             const converted = new RecordedSong(song.name || "Untitled")
@@ -272,9 +289,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             converted.bpm = Number.isFinite(bpm) ? bpm : 220
             converted.pitch = (PITCHES[song.pitchLevel || 0]) || "C"
             const notes: OldNote[] = song.songNotes.filter((note: OldNote, index: number, self: any) =>
-                index === self.findIndex((n: OldNote) => {
-                    return n.key.split('Key')[1] === note.key.split('Key')[1] && n.time === note.time
-                })
+                    index === self.findIndex((n: OldNote) => {
+                        return n.key.split('Key')[1] === note.key.split('Key')[1] && n.time === note.time
+                    })
             )
             notes.forEach((note) => {
                 const data = note.key.split("Key")
@@ -315,7 +332,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         clone.bpm = this.bpm
         clone.pitch = this.pitch
         clone.instruments = this.instruments.map(ins => ins.clone())
-        clone.data = { ...this.data }
+        clone.data = {...this.data}
         clone.notes = this.notes.map(note => note.clone())
         return clone
     }
@@ -325,11 +342,13 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
 export class Chunk {
     notes: RecordedNote[]
     delay: number
+
     constructor(notes: RecordedNote[], delay: number) {
         this.notes = notes
         this.delay = delay
     }
-    clone(){
+
+    clone() {
         return new Chunk(this.notes.map(note => note.clone()), this.delay)
     }
 }

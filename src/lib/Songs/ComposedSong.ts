@@ -1,19 +1,27 @@
-import { Midi } from "@tonejs/midi"
-import { IMPORT_NOTE_POSITIONS, APP_NAME, INSTRUMENTS, PITCHES, INSTRUMENTS_DATA, COMPOSER_NOTE_POSITIONS } from "$config"
-import { TEMPO_CHANGERS } from "$config"
-import { InstrumentName } from "$types/GeneralTypes"
-import { OldFormat, _LegacySongInstruments } from "$types/SongTypes"
-import { NoteLayer } from "../Layer"
-import { RecordedSong } from "./RecordedSong"
-import { Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn } from "./SongClasses"
-import { SerializedSong, Song } from "./Song"
-import { clamp } from "../Utilities";
+import {Midi} from "@tonejs/midi"
+import {
+    APP_NAME,
+    COMPOSER_NOTE_POSITIONS,
+    IMPORT_NOTE_POSITIONS,
+    INSTRUMENTS,
+    INSTRUMENTS_DATA,
+    PITCHES,
+    TEMPO_CHANGERS
+} from "$config"
+import {InstrumentName} from "$types/GeneralTypes"
+import {_LegacySongInstruments, OldFormat} from "$types/SongTypes"
+import {NoteLayer} from "../Layer"
+import {RecordedSong} from "./RecordedSong"
+import {Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn} from "./SongClasses"
+import {SerializedSong, Song} from "./Song"
+import {clamp} from "../Utilities";
 
 interface OldFormatNoteType {
     key: string,
     time: number
     l?: number
 }
+
 export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
 
 
@@ -21,6 +29,7 @@ export type BaseSerializedComposedSong = SerializedSong & {
     type: "composed"
     breakpoints: number[]
     columns: SerializedColumn[]
+    reverb: boolean
 }
 export type SerializedComposedSongV1 = BaseSerializedComposedSong & {
     version: 1
@@ -40,11 +49,14 @@ export type UnknownSerializedComposedSong = SerializedComposedSongV1 | Serialize
 export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
 
 export const defaultInstrumentMap: InstrumentNoteIcon[] = ['border', 'circle', 'line']
-export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
+
+export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> {
     notes: RecordedNote[] = []
     breakpoints: number[]
     columns: Column[]
+    reverb: boolean = false
     selected: number
+
     constructor(name: string, instruments: InstrumentName[] = []) {
         super(name, 3, 'composed', {
             appName: APP_NAME,
@@ -57,11 +69,12 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.columns = new Array(100).fill(0).map(_ => new Column())
         instruments.forEach(this.addInstrument)
     }
+
     static deserialize(song: UnknownSerializedComposedSong): ComposedSong {
         //@ts-ignore
         if (song.version === undefined) song.version = 1
         const parsed = Song.deserializeTo(new ComposedSong(song.name), song)
-
+        parsed.reverb = song.reverb ?? false
         parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
         //parsing columns
         if (song.version === 1) {
@@ -90,7 +103,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         if (song.version === 1 || song.version === 2) {
             const instruments = (Array.isArray(song.instruments) ? song.instruments : []) as _LegacySongInstruments
             instruments.forEach((name, i) => {
-                const ins = new InstrumentData({ name })
+                const ins = new InstrumentData({name})
                 ins.icon = defaultInstrumentMap[i % 3]
                 parsed.instruments[i] = ins
             })
@@ -100,9 +113,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             })
         }
         if (song.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
-        
+
         return parsed
     }
+
     static isSerializedType(obj: any) {
         if (typeof obj !== 'object') return false
         if (obj.type === 'composed') return true
@@ -111,18 +125,22 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
 
         return false
     }
+
     static isOldFormatSerializedType(obj: any) {
         if (typeof obj !== 'object') return false
         if (obj.type) return false
         if (Array.isArray(obj.songNotes) && obj.composedSong) return true
         return false
     }
+
     get isComposed(): true {
         return true
     }
+
     get lastInstrument(): InstrumentData {
         return this.instruments[this.instruments.length - 1]
     }
+
     toRecordedSong = (offset: number = 100) => {
         const recordedSong = new RecordedSong(this.name)
         recordedSong.bpm = this.bpm
@@ -144,12 +162,13 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         return this.clone()
     }
     addInstrument = (name: InstrumentName) => {
-        const newInstrument: InstrumentData = new InstrumentData({ name })
+        const newInstrument: InstrumentData = new InstrumentData({name})
         newInstrument.icon = defaultInstrumentMap[this.instruments.length % 3]
         this.instruments = [...this.instruments, newInstrument]
     }
+
     ensureInstruments() {
-        const { columns, instruments } = this
+        const {columns, instruments} = this
         const highestLayer = NoteLayer.maxLayer(columns.flatMap(column => column.notes.map(note => note.layer)))
         const numberOfInstruments = highestLayer.toString(2).split("").length
         if (numberOfInstruments > instruments.length) {
@@ -158,9 +177,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         }
 
     }
+
     static selection(start: number, end: number) {
         return new Array(end - start).fill(0).map((_, i) => i - start)
     }
+
     removeInstrument = async (index: number) => {
         this.eraseColumns(ComposedSong.selection(0, this.columns.length), index)
 
@@ -187,6 +208,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
                 ...this.data,
                 appName: APP_NAME
             },
+            reverb: this.reverb,
             breakpoints: [...this.breakpoints],
             instruments: this.instruments.map(instrument => instrument.serialize()),
             columns: this.columns.map(col => col.serialize()),
@@ -214,7 +236,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
                 const noteObj: OldFormatNoteType = {
                     key: (layer > 2 ? 2 : layer) + 'Key' + note[0],
                     time: totalTime,
-                    ...layer > 2 ? { l: 3 } : {}
+                    ...layer > 2 ? {l: 3} : {}
                 }
                 convertedNotes.push(noteObj)
             })
@@ -223,9 +245,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         song.songNotes = convertedNotes
         return song
     }
+
     get selectedColumn() {
         return this.columns[this.selected]
     }
+
     addColumns = (amount: number, position: number | 'end') => {
         const columns = new Array(amount).fill(0).map(() => new Column())
         if (position === "end") {
@@ -238,6 +262,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.columns.splice(position, amount)
         this.validateBreakpoints()
     }
+
     switchLayer(amount: number, position: number, from: number, to: number) {
         const columns = this.columns.slice(position, position + amount)
         columns.forEach(column => {
@@ -246,6 +271,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             })
         })
     }
+
     swapLayer(amount: number, position: number, layer1: number, layer2: number) {
         const columns = this.columns.slice(position, position + amount)
         columns.forEach(column => {
@@ -254,6 +280,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             })
         })
     }
+
     toggleBreakpoint = (override?: number) => {
         const index = typeof override === "number" ? override : this.selected
         const breakpointIndex = this.breakpoints.indexOf(index)
@@ -282,6 +309,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         }
         return this
     }
+
     pasteLayer(copiedColumns: Column[], insert: boolean, layer: number) {
         const layerColumns = copiedColumns.map(col => {
             const clone = col.clone()
@@ -295,6 +323,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.ensureInstruments()
         this.pasteColumns(layerColumns, insert)
     }
+
     pasteColumns = async (copiedColumns: Column[], insert: boolean) => {
         const cloned: Column[] = copiedColumns.map(column => column.clone())
         if (!insert) {
@@ -320,6 +349,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         this.ensureInstruments()
         return this
     }
+
     moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all') {
         const layoutMax = APP_NAME === 'Genshin' ? 21 : 15
         const fromNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n, i) => [n, i]))
@@ -361,6 +391,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
             })
         }
     }
+
     copyColumns = (selectedColumns: number[], layer: number | 'all') => {
         let copiedColumns: Column[] = []
         selectedColumns.forEach((index) => {
@@ -425,7 +456,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         clone.id = this.id
         clone.folderId = this.folderId
         clone.bpm = this.bpm
-        clone.data = { ...this.data }
+        clone.data = {...this.data}
         clone.version = this.version
         clone.pitch = this.pitch
         clone.instruments = this.instruments.map(ins => ins.clone())
@@ -435,6 +466,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3>{
         return clone
     }
 }
+
 const LAYERS_MAP: { [key in string]: number } = {
     '0000': 1, //out of range
     '0010': 2,

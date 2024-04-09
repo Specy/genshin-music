@@ -1,7 +1,6 @@
-import { observe } from "mobx";
-import { useEffect, useState } from "react";
-import { KeyboardKey, vsrgPlayerStore } from "$stores/VsrgPlayerStore";
-
+import {observe} from "mobx";
+import {useEffect, useState} from "react";
+import {KeyboardKey, vsrgPlayerStore} from "$stores/VsrgPlayerStore";
 
 
 export function useVsrgKey(index: number, layout: KeyboardKey[]) {
@@ -15,9 +14,9 @@ export function useVsrgKey(index: number, layout: KeyboardKey[]) {
 
 export function subscribeVsrgKey(index: number, callback: (key: KeyboardKey) => void) {
     const dispose = observe(vsrgPlayerStore.keyboard[index], () => {
-        callback({ ...vsrgPlayerStore.keyboard[index] })
-        callback({ ...vsrgPlayerStore.keyboard[index] })
+        callback({...vsrgPlayerStore.keyboard[index]})
+        callback({...vsrgPlayerStore.keyboard[index]})
     })
-    callback({ ...vsrgPlayerStore.keyboard[index] })
+    callback({...vsrgPlayerStore.keyboard[index]})
     return dispose
 }

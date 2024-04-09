@@ -1,55 +1,57 @@
-import { APP_NAME } from "$config"
-import { KeyboardProvider } from "$lib/Providers/KeyboardProvider"
-import type { VsrgSongKeys } from "$lib/Songs/VsrgSong"
+import {APP_NAME} from "$config"
+import {KeyboardProvider} from "$lib/Providers/KeyboardProvider"
+import type {VsrgSongKeys} from "$lib/Songs/VsrgSong"
 import cloneDeep from "lodash.clonedeep"
-import { makeObservable, observable } from "mobx"
+import {makeObservable, observable} from "mobx"
 
 export type Shortcut<T extends string> = {
     name: T
     holdable: boolean
+    description?: string
 }
-function createShortcut<T extends string>(name: T, isHoldable = false): Shortcut<T> {
-    return { name, holdable: isHoldable } as const
+
+function createShortcut<T extends string>(name: T, isHoldable: boolean, description?: string): Shortcut<T> {
+    return {name, holdable: isHoldable, description} as const
 }
 
 const defaultShortcuts = {
     composer: {
-        "Space": createShortcut("toggle_play"),
-        "KeyA": createShortcut("previous_column", true),
-        "KeyD": createShortcut("next_column", true),
-        "KeyQ": createShortcut("remove_column", true),
-        "KeyE": createShortcut("add_column", true),
-        "ArrowUp": createShortcut("previous_layer", true),
-        "ArrowDown": createShortcut("next_layer", true),
-        "ArrowRight": createShortcut("next_breakpoint", true),
-        "ArrowLeft": createShortcut("previous_breakpoint", true),
+        "Space": createShortcut("toggle_play", false, "Toggle play / pause"),
+        "KeyA": createShortcut("previous_column", true, "Select the previous column"),
+        "KeyD": createShortcut("next_column", true, "Select the next column"),
+        "KeyQ": createShortcut("remove_column", true, "Remove the selected column"),
+        "KeyE": createShortcut("add_column", true, "Add a column after the selected column"),
+        "ArrowUp": createShortcut("previous_layer", true, "Select the previous layer"),
+        "ArrowDown": createShortcut("next_layer", true, "Select the next layer"),
+        "ArrowRight": createShortcut("next_breakpoint", true, "Move to the next breakpoint"),
+        "ArrowLeft": createShortcut("previous_breakpoint", true, "Move to the previous breakpoint"),
     },
     player: {
-        "Space": createShortcut("toggle_record"),
-        "ShiftLeft+KeyS": createShortcut("stop"),
-        "ShiftLeft+KeyR": createShortcut("restart"),
-        "ShiftLeft+KeyM": createShortcut("toggle_menu"),
-        "Escape": createShortcut("close_menu"),
+        "Space": createShortcut("toggle_record", false, "Toggle keyboard recording"),
+        "ShiftLeft+KeyS": createShortcut("stop", false, "Stop playing / recording / practicing"),
+        "ShiftLeft+KeyR": createShortcut("restart", false, "Restart the song or practice"),
+        "ShiftLeft+KeyM": createShortcut("toggle_menu", false, "Toggle the menu"),
+        "Escape": createShortcut("close_menu", false, "Close the menu"),
     },
     vsrg_composer: {
-        "ShiftLeft+KeyW": createShortcut("move_up", true),
-        "ShiftLeft+KeyS": createShortcut("move_down", true),
-        "ShiftLeft+KeyA": createShortcut("move_left", true),
-        "ShiftLeft+KeyD": createShortcut("move_right", true),
-        "Escape": createShortcut("deselect"),
-        "Backspace": createShortcut("delete"),
-        "ArrowRight": createShortcut("next_breakpoint", true),
-        "ArrowLeft": createShortcut("previous_breakpoint", true),
-        "ArrowUp": createShortcut("previous_track", true),
-        "ArrowDown": createShortcut("next_track", true),
-        "Space": createShortcut("toggle_play"),
-        "Digit1": createShortcut("set_tap_hand"),
-        "Digit2": createShortcut("set_hold_hand"),
-        "Digit3": createShortcut("set_delete_hand"),
+        "ShiftLeft+KeyW": createShortcut("move_up", true, "Move the selected note up"),
+        "ShiftLeft+KeyS": createShortcut("move_down", true, "Move the selected note down"),
+        "ShiftLeft+KeyA": createShortcut("move_left", true, "Move the selected note left"),
+        "ShiftLeft+KeyD": createShortcut("move_right", true, "Move the selected note right"),
+        "Escape": createShortcut("deselect", false, "Deselect the selected note"),
+        "Backspace": createShortcut("delete", false, "Delete the selected note"),
+        "ArrowRight": createShortcut("next_breakpoint", true, "Move to the next breakpoint"),
+        "ArrowLeft": createShortcut("previous_breakpoint", true, "Move to the previous breakpoint"),
+        "ArrowUp": createShortcut("previous_track", true, "Select the previous track"),
+        "ArrowDown": createShortcut("next_track", true, "Select the next track"),
+        "Space": createShortcut("toggle_play", false, "Toggle play / pause"),
+        "Digit1": createShortcut("set_tap_hand", false, "Set the click to create a tap note"),
+        "Digit2": createShortcut("set_hold_hand", false, "Set the click to create a hold note"),
+        "Digit3": createShortcut("set_delete_hand", false, "Set the click to delete a note"),
     },
     vsrg_player: {
-        "ShiftLeft+KeyR": createShortcut("restart"),
-        "Escape": createShortcut("stop"),
+        "ShiftLeft+KeyR": createShortcut("restart", false, "Restart the song"),
+        "Escape": createShortcut("stop", false, "Stop playing the song"),
     },
     keyboard: Object.fromEntries((APP_NAME === "Genshin"
         ? (
@@ -61,7 +63,7 @@ const defaultShortcuts = {
             "Q W E R T " +
             "A S D F G " +
             "Z X C V B"
-        ).split(" ")).map((key, i) => [`Key${key}`, createShortcut(key)]))
+        ).split(" ")).map((key, i) => [`Key${key}`, createShortcut(key, false)]))
 } satisfies Record<string, Record<string, Shortcut<string>>>
 
 type ValuesOf<T> = T[keyof T]
@@ -98,6 +100,7 @@ interface SerializedKeybinds {
         }
     }
 }
+
 class KeyBinds {
     version: number = 13 //change only if breaking changes are made, creating or removing a key is not a breaking change
     @observable
@@ -118,33 +121,41 @@ class KeyBinds {
     getVsrgKeybinds(keyCount: VsrgSongKeys) {
         return this.vsrg[`k${keyCount}`]
     }
+
     setVsrgKeybind(keyCount: VsrgSongKeys, index: number, keybind: string) {
         this.vsrg[`k${keyCount}`][index] = keybind
         this.save()
     }
+
     setVsrgKeybinds(keyCount: VsrgSongKeys, keybinds: string[]) {
         this.vsrg[`k${keyCount}`].splice(0, keybinds.length, ...keybinds)
         this.save()
     }
+
     getKeyboardKeybinds() {
         return this.shortcuts.keyboard
     }
+
     getShortcutMap<T extends ShortcutPage>(page: T) {
         return this.shortcuts[page]
     }
+
     setKeyboardKeybind(layoutKey: string, keybind: string) {
         const oldEntry = Array.from(this.shortcuts.keyboard.entries()).find(([_, value]) => value.name === layoutKey)
         if (!oldEntry) return
         const possibleExisting = this.setShortcut("keyboard", oldEntry[0], keybind)
         return possibleExisting
     }
+
     getKeyOfShortcut<T extends ShortcutPage>(page: T, value: MapValues<Shortcuts[T]>): string | undefined {
         return Array.from(this.shortcuts[page].entries()).find(([_, val]) => (val as Shortcut<string>).name === (value as Shortcut<string>).name)?.[0]
     }
+
     getShortcut<T extends ShortcutPage>(page: T, key: string | string[]): MapValues<Shortcuts[T]> | undefined {
         if (Array.isArray(key)) key = key.join("+")
         return this.shortcuts[page].get(key) as MapValues<Shortcuts[T]> | undefined
     }
+
     setShortcut<T extends ShortcutPage>(page: T, oldKey: string | string[], newKey: string | string[]): MapValues<Shortcuts[T]> | undefined {
         oldKey = KeyBinds.getShortcutName(oldKey)
         newKey = KeyBinds.getShortcutName(newKey)
@@ -157,11 +168,13 @@ class KeyBinds {
         this.shortcuts[page].set(newKey, oldShortcut as any)
         this.save()
     }
+
     static getShortcutName(key: string | string[]) {
         if (typeof key === "string") return key
         if (key.length === 1) return key[0]
         return key.sort().join("+")
     }
+
     load() {
         const data = localStorage.getItem(`${APP_NAME}_keybinds`)
         if (data) {
@@ -184,9 +197,11 @@ class KeyBinds {
             }
         }
     }
+
     save() {
         localStorage.setItem(`${APP_NAME}_keybinds`, JSON.stringify(this.serialize()))
     }
+
     serialize(): SerializedKeybinds {
         return {
             version: this.version,
@@ -198,6 +213,7 @@ class KeyBinds {
         }
     }
 }
+
 export const keyBinds = new KeyBinds();
 
 type ShortcutPressEvent<T> = {
@@ -215,44 +231,48 @@ export type ShortcutOptions = {
 type MapValues<T extends Map<string, Shortcut<string>>> = T extends Map<infer _, infer V> ? V : never
 
 export type ShortcutListener<T extends ShortcutPage> = (keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>) => void
+
 export function createShortcutListener<T extends KeysOf<Shortcuts>>(page: T, id: string, callback: ShortcutListener<T>): ShortcutDisposer {
-    return createKeyComboComposer(id, ({ code, event, keyCombo }) => {
+    return createKeyComboComposer(id, ({code, event, keyCombo}) => {
         const shortcut = keyBinds.getShortcut(page, keyCombo)
         if (shortcut !== undefined) {
             if (!(shortcut as Shortcut<string>).holdable && event.repeat) return
-            callback({ code, event, shortcut, isRepeat: event.repeat })
+            callback({code, event, shortcut, isRepeat: event.repeat})
         }
     })
 }
 
 export function createKeyboardListener(id: string, callback: ShortcutListener<"keyboard">, options?: ShortcutOptions): ShortcutDisposer {
-    KeyboardProvider.listen(({ code, event }) => {
+    KeyboardProvider.listen(({code, event}) => {
         if (!options?.repeat && event.repeat) return
         const shortcut = keyBinds.getShortcut("keyboard", code)
         if (shortcut !== undefined) {
             if ((shortcut as Shortcut<string>).holdable && event.repeat) return
-            callback({ code, event, shortcut, isRepeat: event.repeat })
+            callback({code, event, shortcut, isRepeat: event.repeat})
         }
 
-    }, { type: "keydown", id: id + "_keyboard_down" })
+    }, {type: "keydown", id: id + "_keyboard_down"})
     return () => {
         KeyboardProvider.unregisterById(id + "_keyboard_down")
     }
 }
 
 type KeyComboListener = (data: { keyCombo: string[], event: KeyboardEvent, code: string }) => void
+
 export function createKeyComboComposer(id: string, callback: KeyComboListener): ShortcutDisposer {
     const currentKeybinds: string[] = []
-    KeyboardProvider.listen(({ code, event }) => {
+    KeyboardProvider.listen(({code, event}) => {
         if (!currentKeybinds.includes(code)) currentKeybinds.push(code)
-        callback({ keyCombo: currentKeybinds, event, code })
-    }, { type: "keydown", id: id + "_down" })
-    KeyboardProvider.listen(({ code }) => {
+        callback({keyCombo: currentKeybinds, event, code})
+    }, {type: "keydown", id: id + "_down"})
+    KeyboardProvider.listen(({code}) => {
         currentKeybinds.splice(currentKeybinds.indexOf(code), 1)
-    }, { type: "keyup", id: id + "_up" })
+    }, {type: "keyup", id: id + "_up"})
+
     function reset() {
         currentKeybinds.splice(0, currentKeybinds.length)
     }
+
     window.addEventListener("blur", reset)
     return () => {
         KeyboardProvider.unregisterById(id + "_down")

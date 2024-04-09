@@ -2,58 +2,58 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="156mm"
-   height="156mm"
-   viewBox="0 0 156 156"
-   version="1.1"
-   id="svg5"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
-   sodipodi:docname="wholeGenshinNote.svg"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview7"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:document-units="mm"
-     showgrid="false"
-     width="209mm"
-     fit-margin-top="0"
-     fit-margin-left="0"
-     fit-margin-right="0"
-     fit-margin-bottom="0"
-     inkscape:zoom="1.0104048"
-     inkscape:cx="273.15785"
-     inkscape:cy="293.44675"
-     inkscape:window-width="1920"
-     inkscape:window-height="991"
-     inkscape:window-x="-9"
-     inkscape:window-y="-9"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
-  <defs
-     id="defs2" />
-  <g
-     inkscape:label="Livello 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-26.246262,-43.74408)">
-    <circle
-       style="fill:#fff8ef;fill-opacity:1;stroke:none;stroke-width:0.1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="path19524"
-       cx="104.24626"
-       cy="121.74408"
-       r="78" />
-    <path
-       id="path1585"
-       style="fill:#f0ebdc;fill-opacity:1;stroke:none;stroke-width:0.379718;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 394.12891,202.08398 C 253.3348,202.08319 139.19843,316.21956 139.19922,457.01367 139.19951,597.80702 253.33556,711.9422 394.12891,711.94141 534.92145,711.94112 649.05635,597.80625 649.05664,457.01367 649.05743,316.22033 534.92221,202.08427 394.12891,202.08398 Z m 0,0.5293 29.25781,41.67383 c 95.19009,12.9722 170.53629,88.31818 183.48437,183.51758 l 41.60743,29.20898 -41.625,29.22266 c -12.96119,95.22703 -88.33899,170.60048 -183.57618,183.52734 l -29.14843,41.51758 -29.14844,-41.51758 C 269.74975,656.83769 194.37505,581.47377 181.40625,486.25586 l -41.65039,-29.24219 41.69726,-29.27539 C 194.434,332.57901 269.71777,257.26054 364.87109,244.28906 Z"
-       transform="scale(0.26458333)" />
-  </g>
+        width="156mm"
+        height="156mm"
+        viewBox="0 0 156 156"
+        version="1.1"
+        id="svg5"
+        inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+        sodipodi:docname="wholeGenshinNote.svg"
+        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+        xmlns="http://www.w3.org/2000/svg"
+>
+    <sodipodi:namedview
+            id="namedview7"
+            pagecolor="#ffffff"
+            bordercolor="#666666"
+            borderopacity="1.0"
+            inkscape:pageshadow="2"
+            inkscape:pageopacity="0.0"
+            inkscape:pagecheckerboard="0"
+            inkscape:document-units="mm"
+            showgrid="false"
+            width="209mm"
+            fit-margin-top="0"
+            fit-margin-left="0"
+            fit-margin-right="0"
+            fit-margin-bottom="0"
+            inkscape:zoom="1.0104048"
+            inkscape:cx="273.15785"
+            inkscape:cy="293.44675"
+            inkscape:window-width="1920"
+            inkscape:window-height="991"
+            inkscape:window-x="-9"
+            inkscape:window-y="-9"
+            inkscape:window-maximized="1"
+            inkscape:current-layer="layer1"/>
+    <defs
+            id="defs2"/>
+    <g
+            inkscape:label="Livello 1"
+            inkscape:groupmode="layer"
+            id="layer1"
+            transform="translate(-26.246262,-43.74408)">
+        <circle
+                style="fill:#fff8ef;fill-opacity:1;stroke:none;stroke-width:0.1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                id="path19524"
+                cx="104.24626"
+                cy="121.74408"
+                r="78"/>
+        <path
+                id="path1585"
+                style="fill:#f0ebdc;fill-opacity:1;stroke:none;stroke-width:0.379718;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                d="M 394.12891,202.08398 C 253.3348,202.08319 139.19843,316.21956 139.19922,457.01367 139.19951,597.80702 253.33556,711.9422 394.12891,711.94141 534.92145,711.94112 649.05635,597.80625 649.05664,457.01367 649.05743,316.22033 534.92221,202.08427 394.12891,202.08398 Z m 0,0.5293 29.25781,41.67383 c 95.19009,12.9722 170.53629,88.31818 183.48437,183.51758 l 41.60743,29.20898 -41.625,29.22266 c -12.96119,95.22703 -88.33899,170.60048 -183.57618,183.52734 l -29.14843,41.51758 -29.14844,-41.51758 C 269.74975,656.83769 194.37505,581.47377 181.40625,486.25586 l -41.65039,-29.24219 41.69726,-29.27539 C 194.434,332.57901 269.71777,257.26054 364.87109,244.28906 Z"
+                transform="scale(0.26458333)"/>
+    </g>
 </svg>

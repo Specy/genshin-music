@@ -1,0 +1,36 @@
+name: Beta Deploy Single Domain
+on:
+  push:
+    branches:
+      - Dev
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Void
+        default: v0
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    name: Deploy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.2.0
+      - name: Build
+        run: npm i && npm run build:all-no-root
+        env:
+          CI: false
+          NEXT_PUBLIC_IS_BETA: true
+      - name: Publish Genshin/Sky Music Nightly Beta as single domain
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CF_PAGES_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages publish ./build/ --project-name=music-apps-beta

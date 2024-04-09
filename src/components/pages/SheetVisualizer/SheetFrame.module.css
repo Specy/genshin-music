@@ -1,0 +1,107 @@
+.visualizer-frame {
+    width: 94%;
+    height: 90%;
+    position: absolute;
+    top: 5%;
+    left: 3%;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    justify-items: center;
+    align-items: center;
+}
+
+.frame-outer-background {
+    width: 100%;
+    height: 100%;
+    padding: 0.25rem;
+}
+
+.frame-outer,
+.frame-outer-smaller {
+    border-radius: 0.4rem;
+    background-color: var(--primary);
+    width: 100%;
+    height: 100%;
+    border: solid var(--primary) 0.18rem;
+    padding-bottom: 60%;
+    position: relative;
+}
+
+.frame-outer-smaller {
+    padding-bottom: 49%;
+}
+
+/*
+@supports(aspect-ratio: 1.5) { //apparently ios has a bug with aspect-ratio...
+	.frame-outer {
+		padding: unset;
+		aspect-ratio: 1.5;
+	}
+
+	.frame-outer-smaller {
+		padding: unset;
+		aspect-ratio: 1.8;
+	}
+}
+*/
+
+
+.frame-note-s {
+    border-radius: 0.2rem;
+    width: 80%;
+    height: 80%;
+    font-size: 0.6rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--accent);
+    color: var(--accent-text);
+}
+
+.frame-note-ns {
+    border-radius: 50%;
+    width: 25%;
+    padding-bottom: 25%;
+    background-color: var(--primary);
+}
+
+.visualizer-ball {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.visualizer-ball div {
+    width: 0.5rem;
+    height: 0.5rem;
+    position: absolute;
+    top: calc(50% - 0.25rem);
+    left: calc(50% - 0.25rem);
+    background-color: #606876;
+    border-radius: 50%;
+    opacity: 0.5;
+}
+
+@media print {
+    .frame-note-s {
+        border-radius: 2px;
+    }
+
+    .frame-outer {
+        background-color: transparent;
+        border: solid 0.2rem var(--primary)
+    }
+
+    .visualizer-ball {
+        border: none !important;
+    }
+
+    .frame-outer-background {
+        background-color: transparent !important;
+        background: transparent !important;
+    }
+}

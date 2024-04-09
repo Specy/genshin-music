@@ -1,16 +1,17 @@
-import { APP_NAME } from "$config"
-import { ObservableNote, NoteDataState } from "$lib/Instrument"
-import { NoteStatus } from "$/types/GeneralTypes"
-import { makeObservable, observable } from "mobx"
+import {APP_NAME} from "$config"
+import {NoteDataState, ObservableNote} from "$lib/Instrument"
+import {NoteStatus} from "$/types/GeneralTypes"
+import {makeObservable, observable} from "mobx"
 
 class ZenKeyboardStore {
     @observable
     keyboard: ObservableNote[] = []
+
     constructor() {
         makeObservable(this)
     }
 
-    setKeyboardLayout = (keyboard: ObservableNote[]) => { 
+    setKeyboardLayout = (keyboard: ObservableNote[]) => {
         this.keyboard.splice(0, this.keyboard.length, ...keyboard)
     }
     animateNote = (index: number, status?: NoteStatus) => {

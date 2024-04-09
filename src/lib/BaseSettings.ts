@@ -1,9 +1,24 @@
-import { isMobile } from "is-mobile"
-import { INSTRUMENTS, APP_NAME, BASE_THEME_CONFIG, PITCHES, Pitch, NOTE_NAME_TYPES, NoteNameType } from "$config"
-import { MIDINote, MIDIShortcut } from "./Utilities"
-import { SettingsCheckbox, SettingsInstrument, SettingsNumber, SettingsSelect, SettingsSlider } from "$types/SettingsPropriety"
-import { VsrgSongKeys } from "./Songs/VsrgSong"
-import { VsrgKeyboardLayout } from "$cmp/VsrgPlayer/VsrgPlayerKeyboard"
+import {isMobile} from "is-mobile"
+import {
+    APP_NAME,
+    BASE_THEME_CONFIG,
+    INSTRUMENTS,
+    MIDIPreset,
+    NOTE_NAME_TYPES,
+    NoteNameType,
+    Pitch,
+    PITCHES
+} from "$config"
+import {MIDIShortcut} from "./Utilities"
+import {
+    SettingsCheckbox,
+    SettingsInstrument,
+    SettingsNumber,
+    SettingsSelect,
+    SettingsSlider
+} from "$types/SettingsPropriety"
+import {VsrgSongKeys} from "./Songs/VsrgSong"
+import {VsrgKeyboardLayout} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard"
 
 export type BaseSettings<T> = {
     data: T,
@@ -17,7 +32,7 @@ export type ComposerSettingsDataType = {
     noteNameType: SettingsSelect<NoteNameType>
     pitch: SettingsSelect<Pitch>
     columnsPerCanvas: SettingsSelect
-    caveMode: SettingsCheckbox
+    reverb: SettingsCheckbox
     autosave: SettingsCheckbox
     syncTabs: SettingsCheckbox
     useKeyboardSideButtons: SettingsCheckbox
@@ -26,16 +41,16 @@ export type ComposerSettingsDataType = {
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 export const ComposerSettings: ComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 65,
+        settingVersion: APP_NAME + 67,
     },
     data: {
         bpm: {
             name: "Bpm",
-            tooltip: "Beats per minute, the speed of the song",
+            tooltip: "Beats per minute, the speed of the song. Usually the BPM inside the app should be 4 times the BPM of the song you are trying to compose",
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 3600],
+            threshold: [0, 10000],
             value: 220,
             category: "Song Settings",
         },
@@ -90,12 +105,12 @@ export const ComposerSettings: ComposerSettingsType = {
                 50
             ]
         },
-        caveMode: {
-            name: "Reverb (cave mode)",
-            tooltip: "Makes it sound like you are in a cave",
-            category: "Composer Settings",
+        reverb: {
+            name: "Base reverb (cave mode)",
+            tooltip: "Makes it sound like you are in a cave, this is the default value applied to every instrument",
+            category: "Song Settings",
             type: "checkbox",
-            songSetting: false,
+            songSetting: true,
             value: false,
         },
         autosave: {
@@ -139,7 +154,7 @@ export const ComposerSettings: ComposerSettingsType = {
 export type PlayerSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
-    caveMode: SettingsCheckbox
+    reverb: SettingsCheckbox
     noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
@@ -154,7 +169,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings: PlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 70 //change when instrument is added
+        settingVersion: APP_NAME + 72 //change when instrument is added
     },
     data: {
         instrument: {
@@ -164,7 +179,7 @@ export const PlayerSettings: PlayerSettingsType = {
             songSetting: true,
             value: INSTRUMENTS[0],
             volume: 100,
-            options: [...INSTRUMENTS], 
+            options: [...INSTRUMENTS],
             category: "Song Settings",
         },
         pitch: {
@@ -182,7 +197,7 @@ export const PlayerSettings: PlayerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 3600],
+            threshold: [0, 10000],
             value: 220,
             category: "Song Settings",
         },
@@ -213,13 +228,13 @@ export const PlayerSettings: PlayerSettingsType = {
             category: "Player Settings",
             threshold: [0, 120]
         },
-        caveMode: {
+        reverb: {
             name: "Reverb (cave mode)",
             tooltip: "Makes it sound like you are in a cave",
             type: "checkbox",
-            songSetting: false,
+            songSetting: true,
             value: false,
-            category: "Player Settings",
+            category: "Song Settings",
         },
         noteNameType: {
             name: "Note name type",
@@ -282,11 +297,12 @@ export const PlayerSettings: PlayerSettingsType = {
     }
 }
 
+
 export const MIDISettings = {
-    settingVersion: APP_NAME + 4,
+    settingVersion: APP_NAME + 6,
     enabled: false,
-    currentSource: '',
-    notes: new Array(APP_NAME === 'Genshin' ? 21 : 15).fill(0).map((e, i) => new MIDINote(i, -1)),
+    selectedPreset: 'default',
+    presets: {} as Record<string, MIDIPreset>,
     shortcuts: [
         new MIDIShortcut('toggle_play', -1),
         new MIDIShortcut('next_column', -1),
@@ -385,7 +401,7 @@ export type VsrgComposerSettingsDataType = {
 export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
 export const VsrgComposerSettings: VsrgComposerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 11
+        settingVersion: APP_NAME + 13
     },
     data: {
         keys: {
@@ -406,7 +422,7 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             type: "number",
             songSetting: true,
             increment: 5,
-            threshold: [0, 3600],
+            threshold: [0, 10000],
             value: 220,
             category: "Song Settings",
         },
@@ -482,7 +498,7 @@ export type VsrgPlayerSettingsDataType = {
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
 export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
     other: {
-        settingVersion: APP_NAME + 3
+        settingVersion: APP_NAME + 5
     },
     data: {
         approachTime: {
@@ -539,7 +555,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: -0,
-            category: "Layout Settings",
+            category: "pagesLayout Settings",
             threshold: [-40, 40]
         },
         horizontalOffset: {
@@ -548,7 +564,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: 0,
-            category: "Layout Settings",
+            category: "pagesLayout Settings",
             threshold: [-40, 40]
         },
     }
@@ -556,7 +572,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
 export type ZenKeyboardSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
-    caveMode: SettingsCheckbox
+    reverb: SettingsCheckbox
     noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
@@ -569,7 +585,7 @@ export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
     other: {
-        settingVersion: APP_NAME + 18 //change when instrument is added
+        settingVersion: APP_NAME + 20 //change when instrument is added
     },
     data: {
         instrument: {
@@ -618,9 +634,9 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             value: 200,
             increment: 5,
             category: "Metronome",
-            threshold: [0, 3600]
+            threshold: [0, 10000]
         },
-        caveMode: {
+        reverb: {
             name: "Reverb (cave mode)",
             tooltip: "Makes it sound like you are in a cave",
             type: "checkbox",
@@ -649,7 +665,7 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             songSetting: false,
             value: 100,
             category: "Keyboard",
-            threshold: [70, 150]
+            threshold: [70, 170]
         },
         keyboardYPosition: {
             name: "Vertical position",

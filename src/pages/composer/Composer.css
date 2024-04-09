@@ -7,11 +7,13 @@
     align-items: center;
     flex-direction: column;
 }
-.canvas-wrapper-in-preview{
+
+.canvas-wrapper-in-preview {
     min-width: unset;
     min-height: unset;
 }
-.canvas-relative{
+
+.canvas-relative {
     position: relative;
     display: flex;
     z-index: 0;
@@ -21,9 +23,11 @@
     border-top-right-radius: 0.4rem;
     overflow: hidden;
 }
-.canvas-relative canvas{
+
+.canvas-relative canvas {
     cursor: pointer !important;
 }
+
 select {
     -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='gray'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
@@ -59,8 +63,7 @@ select {
     gap: 0.2rem;
     grid-template-areas:
         "a b b"
-        "a c c"
-    ;
+        "a c c";
 }
 
 .song-info {
@@ -85,10 +88,12 @@ select {
     left: 0;
     width: 100%;
 }
-.composer-keyboard-wrapper .keyboard{
+
+.composer-keyboard-wrapper .keyboard {
     margin: unset;
     z-index: 1;
 }
+
 .song-info div {
     max-width: 23vw;
     text-shadow: rgb(51 51 51) 0px 1px 5px
@@ -145,13 +150,15 @@ select {
     margin-top: 0;
     align-items: center;
 }
-.timeline-wrapper-bg{
+
+.timeline-wrapper-bg {
     padding: 0.2rem 0;
     border-bottom-left-radius: 0.4rem;
     border-bottom-right-radius: 0.4rem;
     background-color: var(--primary);
     width: 100%;
 }
+
 .timeline-button {
     height: 100%;
     padding: 0;
@@ -166,7 +173,6 @@ select {
     border-radius: 0.3rem;
     cursor: pointer;
 }
-
 
 
 .timeline-scroll {
@@ -197,10 +203,11 @@ select {
 }
 
 
-.tools-icon{
+.tools-icon {
     font-size: 1.2rem;
 }
-.tools-button{
+
+.tools-button {
     background-color: var(--primary);
     color: var(--primary-text);
     border-radius: 0.3rem;
@@ -222,6 +229,7 @@ select {
 .tools-button:hover {
     filter: brightness(1.1);
 }
+
 .tools-button:disabled, .tools-right button:disabled {
     cursor: not-allowed;
     opacity: 0.6;
@@ -255,7 +263,7 @@ select {
     margin-left: auto;
     border-radius: 0.5rem;
     box-shadow: -2px -1px 27px 4px rgba(0, 0, 0, 0.25);
-	background-color: rgba(var(--menu-background-rgb), 0.9);
+    background-color: rgba(var(--menu-background-rgb), 0.9);
     z-index: 10;
     opacity: 0;
     border: solid 2px var(--secondary);
@@ -264,24 +272,27 @@ select {
     padding: 0.6rem;
     color: white;
 }
-.floating-tools-content{
+
+.floating-tools-content {
     display: flex;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
 }
-.tools-right{
+
+.tools-right {
     margin-left: 1rem;
     padding-left: 1rem;
     border-left: solid 2px var(--secondary);
 }
 
-.tools-right .app-button{
+.tools-right .app-button {
     min-width: unset;
     display: flex;
     align-items: center;
     padding: 0.5rem 0.7rem;
 }
+
 .tools-visible {
     bottom: 1.4rem;
     transform: scale(1);
@@ -289,7 +300,6 @@ select {
     --backdrop-amount: 3px;
     animation: delayBackdrop calc(0.4s * 1.2) forwards;
 }
-
 
 
 .tempo-changers-wrapper {
@@ -302,7 +312,8 @@ select {
     gap: 0.2rem;
     display: flex;
 }
-.tempo-changers-wrapper-hidden{
+
+.tempo-changers-wrapper-hidden {
     display: none;
 }
 
@@ -322,15 +333,19 @@ select {
     background-color: var(--composer-main-layer) !important;
     border-color: var(--composer-main-layer-layer-20) !important;
 }
-.layer-1 .note-name-sky{
+
+.layer-1 .note-name-sky {
     color: var(--composer-main-layer-text) !important;
 }
-.layer-2 .svg-b{
+
+.layer-2 .svg-b {
     stroke: var(--composer-secondary-layer) !important;
 }
-.layer-1 .svg-b{
+
+.layer-1 .svg-b {
     stroke: var(--composer-main-layer) !important;
 }
+
 .layer-1 .svg-note {
     fill: var(--composer-main-layer-text) !important;
     stroke: var(--composer-main-layer-text) !important;
@@ -351,7 +366,8 @@ select {
     fill: var(--composer-secondary-layer) !important;
     stroke: var(--composer-secondary-layer) !important;
 }
-.layer-3-ball, .layer-3-ball-bigger{
+
+.layer-3-ball, .layer-3-ball-bigger {
     position: absolute;
     background-color: var(--composer-secondary-layer);
     width: 1.5vw;
@@ -359,7 +375,8 @@ select {
     border-radius: 50%;
     visibility: hidden;
 }
-.layer-4-line{
+
+.layer-4-line {
     height: 25%;
     width: 100%;
     position: absolute;
@@ -367,26 +384,32 @@ select {
     border-radius: 0.2vw;
     visibility: hidden;
 }
+
 .layer-4 .note-name-sky,
-.layer-3 .note-name-sky{
+.layer-3 .note-name-sky {
     color: var(--composer-secondary-layer-text) !important;
 }
+
 .note-composer.layer-3 .svg-note,
-.note-composer.layer-4 .svg-note{
+.note-composer.layer-4 .svg-note {
     fill: var(--composer-main-layer-text) !important;
     stroke: var(--composer-main-layer-text) !important;
 }
-.layer-3 .layer-3-ball,.layer-3 .layer-3-ball-bigger{
+
+.layer-3 .layer-3-ball, .layer-3 .layer-3-ball-bigger {
     visibility: visible;
 }
-.layer-4 .layer-4-line{
+
+.layer-4 .layer-4-line {
     visibility: visible;
 }
-.layer-3-ball-bigger{
+
+.layer-3-ball-bigger {
     width: 2.6vw;
     height: 2.6vw;
 }
-.note-composer .layer-3-ball-bigger{
+
+.note-composer .layer-3-ball-bigger {
     width: 3vw;
     height: 3vw;
 }
@@ -410,7 +433,6 @@ select {
 }
 
 
-
 .tempo-changers-wrapper button:focus {
     filter: brightness(1.3);
 }
@@ -422,15 +444,18 @@ select {
     margin-right: 2vw;
     justify-content: center;
 }
-.composer-left-control{
+
+.composer-left-control {
     grid-area: a;
     width: 6.2rem;
     height: calc(100vh - 5rem);
 }
-.instrument-name-button{
+
+.instrument-name-button {
     padding: 0;
     font-size: 0.8rem;
 }
+
 .instruments-button-wrapper {
     overflow-y: auto;
     overflow-x: hidden;
@@ -439,18 +464,22 @@ select {
     margin-top: 0.2rem;
     z-index: 2;
 }
-.new-instrument-button{
+
+.new-instrument-button {
     padding: 0.4rem;
     background-color: transparent;
     margin-top: auto;
     align-items: center;
 }
-.new-instrument-button:hover{
+
+.new-instrument-button:hover {
     background-color: var(--primary-darken-10);
 }
+
 .instruments-button-wrapper::-webkit-scrollbar-thumb {
-	background: var(--secondary);
+    background: var(--secondary);
 }
+
 .instrument-button {
     height: 3rem;
     min-height: 3rem;
@@ -460,23 +489,27 @@ select {
     border-bottom: solid 2px var(--secondary);
     border-radius: 0;
 }
-.instrument-button-selected{
+
+.instrument-button-selected {
     height: 4.2rem;
     min-height: 4.2rem;
 }
+
 .instrument-settings {
     font-size: 0.8rem;
     display: grid;
     width: 100%;
     grid-template-columns: 1fr 1fr;
 }
-.instrument-settings .app-button{
+
+.instrument-settings .app-button {
     padding: 0.1rem;
     background-color: transparent;
     min-width: unset;
     flex: 1;
 }
-.floating-instrument-settings{
+
+.floating-instrument-settings {
     position: absolute;
     width: 17rem;
     background-color: var(--menu-background);
@@ -491,6 +524,7 @@ select {
     z-index: 10;
     animation: fadeIn 0.2s, delayBackdrop 0.2s forwards;
 }
+
 .instrument-settings-button {
     flex: 1;
     margin: 0.2rem;
@@ -516,11 +550,13 @@ select {
     --backdrop-amount: 4px;
     animation: fadeIn 0.4s, delayBackdrop calc(0.4s * 1.2) forwards;
 }
-.floating-midi-content{
+
+.floating-midi-content {
     padding: 0.8rem;
+    padding-right: 0.5rem;
     width: 100%;
     height: 100%;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .floating-midi * {
@@ -544,7 +580,7 @@ select {
 .midi-btn,
 .midi-btn-small,
 .midi-btn-green {
-    background-color: #576377;
+    background-color: var(--primary);
     color: white;
     border-radius: 0.2rem;
     padding: 0.5rem 1rem;
@@ -616,6 +652,7 @@ select {
 
 .midi-track-center {
     display: flex;
+    gap: 0.2rem;
     align-items: center;
 }
 
@@ -659,11 +696,13 @@ select {
     padding: 0.2rem;
     padding-left: 0.5rem;
 }
-.midi-track-offset::placeholder{
+
+.midi-track-offset::placeholder {
     font-size: 0.7rem;
     color: var(--primary-text);
 }
-.canvas-buttons{
+
+.canvas-buttons {
     height: 100%;
     position: absolute;
     min-width: 2.8rem;
@@ -680,7 +719,8 @@ select {
     opacity: 0;
     transition: opacity 0.1s;
 }
-.keyboard-column-selection-buttons{
+
+.keyboard-column-selection-buttons {
     display: flex;
     background: transparent;
     border: none;
@@ -693,49 +733,61 @@ select {
     cursor: pointer;
     width: 4rem;
 }
+
 @media (hover: none) and (pointer: coarse) {
-    .canvas-buttons{
+    .canvas-buttons {
         display: flex;
     }
-    .canvas-buttons-visible{
+
+    .canvas-buttons-visible {
         display: flex;
         opacity: 1;
     }
 }
+
 @media only screen and (max-width: 920px) {
-    .canvas-buttons{
+    .canvas-buttons {
         display: flex;
     }
-    .canvas-buttons-visible{
+
+    .canvas-buttons-visible {
         display: flex;
         opacity: 1;
     }
-    .floating-instrument-settings{
+
+    .floating-instrument-settings {
         top: 1.2rem;
         padding: 0.5rem;
     }
+
     .buttons-composer-wrapper,
     .buttons-composer-wrapper-right {
         flex: 1;
     }
-    .tools-right{
+
+    .tools-right {
         padding-left: 0.6rem;
         margin-left: 0.6rem;
     }
+
     .floating-tools {
         max-height: 50vh;
         padding: 0.4rem;
     }
-    .tools-visible{
+
+    .tools-visible {
         bottom: 0.4rem;
     }
-    .tools-icon{
+
+    .tools-icon {
         font-size: 1.1rem;
     }
-    .tools-buttons-grid{
+
+    .tools-buttons-grid {
         gap: 0.3rem;
     }
-    .tools-button{
+
+    .tools-button {
         font-size: 0.9rem;
         padding: 0.55rem 0.8rem;
         gap: 0.4rem;
@@ -752,9 +804,12 @@ select {
         max-width: 70vw;
         width: 70vw;
     }
-    .floating-midi-content{
+
+    .floating-midi-content {
         padding: 0.4rem;
+        padding-right: 0.2rem;
     }
+
     .song-info {
         font-size: 0.9rem;
     }
@@ -788,29 +843,36 @@ select {
         grid-gap: 0rem;
 
     }
+
     .composer-grid {
         width: 100%;
     }
-    .composer-left-control{
+
+    .composer-left-control {
         width: 5.4rem;
     }
-    .instrument-button{
+
+    .instrument-button {
         height: 2.6rem;
         min-height: 2.6rem;
     }
-    .instrument-button-selected{
+
+    .instrument-button-selected {
         height: 3.5rem;
         min-height: 3.5rem;
     }
-    .instrument-name-button{
+
+    .instrument-name-button {
         align-items: flex-end;
         padding-bottom: 0.4rem;
     }
-    .new-instrument-button{
+
+    .new-instrument-button {
         padding: 0;
         padding-bottom: 0.3rem;
     }
-    .layer-3-ball{
+
+    .layer-3-ball {
         width: 1.5vw;
         height: 1.5vw;
     }

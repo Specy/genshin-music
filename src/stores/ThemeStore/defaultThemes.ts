@@ -1,11 +1,11 @@
-import { SerializedTheme } from "./ThemeProvider"
+import {SerializedTheme} from "./ThemeProvider"
 import Rainy_Theme from "$img/themes/Rainy_Theme.png"
 import Liyue_Theme from "$img/themes/Liyue_Theme.jpg"
 import Snow_Theme from "$img/themes/Snow_Theme.gif"
 import Legacy_Bg from "$img/themes/Legacy_Bg_Theme.png"
 import Desert_Theme from "$img/themes/Desert_Theme.jpg"
 
-import { BASE_THEME_CONFIG } from "$config"
+import {BASE_THEME_CONFIG} from "$config"
 
 
 const baseThemes: SerializedTheme[] = [

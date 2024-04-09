@@ -1,40 +1,45 @@
-import { BASE_PATH } from "$config";
-import { fetchAudioBuffer } from "./Instrument";
-import { delay } from "./Utilities";
+import {BASE_PATH} from "$config";
+import {fetchAudioBuffer} from "./Instrument";
+import {delay} from "./Utilities";
 
 
-class Metronome{
+class Metronome {
     emptyBuffer: AudioBuffer | null = null
     bpm: number
     beats: number = 4
     volume: number = 50
     currentTick: number = 0
-    running: boolean = false 
+    running: boolean = false
     indicatorBuffer: AudioBuffer | null = null
     crochetBuffer: AudioBuffer | null = null
     volumeNode: GainNode | null = null
     audioContext: AudioContext | null = null
-    constructor(bpm?: number){
+
+    constructor(bpm?: number) {
         this.bpm = bpm ?? 220
 
     }
-    init(audioContext: AudioContext){
+
+    init(audioContext: AudioContext) {
         this.audioContext = audioContext
         this.volumeNode = audioContext.createGain()
         this.loadBuffers()
         this.volumeNode.connect(this.audioContext.destination)
         this.changeVolume(this.volume)
     }
-    destroy(){
+
+    destroy() {
         this.volumeNode?.disconnect()
     }
-    changeVolume(volume: number){
+
+    changeVolume(volume: number) {
         this.volume = volume
-        if(!this.volumeNode) return
+        if (!this.volumeNode) return
         this.volumeNode.gain.value = volume / 100
     }
-    async loadBuffers(){
-        if(!this.audioContext) return
+
+    async loadBuffers() {
+        if (!this.audioContext) return
         this.emptyBuffer = this.audioContext.createBuffer(2, this.audioContext.sampleRate, this.audioContext.sampleRate)
         const promises = [
             fetchAudioBuffer(`${BASE_PATH}/assets/audio/MetronomeSFX/bar.mp3`, this.audioContext).catch(() => this.emptyBuffer),
@@ -44,42 +49,48 @@ class Metronome{
         this.indicatorBuffer = result[0]
         this.crochetBuffer = result[1]
     }
-    async start(){
-        if(this.running) return
+
+    async start() {
+        if (this.running) return
         this.running = true
         this.currentTick = 0
-        while(this.running){
+        while (this.running) {
             this.tick()
             await delay(60000 / this.bpm)
         }
     }
-    stop(){
+
+    stop() {
         this.running = false
     }
-    toggle(){
-        if(this.running){
+
+    toggle() {
+        if (this.running) {
             this.stop()
-        }else{
+        } else {
             this.start()
         }
     }
-    tick(){
-        if(!this.audioContext || !this.indicatorBuffer || !this.crochetBuffer || !this.volumeNode) return
+
+    tick() {
+        if (!this.audioContext || !this.indicatorBuffer || !this.crochetBuffer || !this.volumeNode) return
         const source = this.audioContext.createBufferSource()
-        if(this.currentTick % this.beats === 0){
+        if (this.currentTick % this.beats === 0) {
             source.buffer = this.crochetBuffer
             this.currentTick = 0
-        }else{
+        } else {
             source.buffer = this.indicatorBuffer
         }
         this.currentTick++
         source.connect(this.volumeNode)
         source.start(0)
+
         function handleEnd() {
             source.stop()
             source.disconnect()
         }
-        source.addEventListener('ended', handleEnd, { once: true })
+
+        source.addEventListener('ended', handleEnd, {once: true})
     }
 }
 
