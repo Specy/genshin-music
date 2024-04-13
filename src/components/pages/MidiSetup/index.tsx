@@ -59,6 +59,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         this.mounted = false
         this.state.audioPlayer.destroy()
         MIDIProvider.removeInputsListener(this.midiStateChange)
+        MIDIProvider.removeListener(this.handleMidi)
         AudioProvider.clear()
     }
 

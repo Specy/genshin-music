@@ -12,7 +12,7 @@ import {InstrumentName} from "$types/GeneralTypes"
 import {_LegacySongInstruments, OldFormat} from "$types/SongTypes"
 import {NoteLayer} from "../Layer"
 import {RecordedSong} from "./RecordedSong"
-import {Column, ColumnNote, InstrumentData, RecordedNote, SerializedColumn} from "./SongClasses"
+import {NoteColumn, ColumnNote, InstrumentData, RecordedNote, SerializedColumn} from "./SongClasses"
 import {SerializedSong, Song} from "./Song"
 import {clamp} from "../Utilities";
 
@@ -53,7 +53,7 @@ export const defaultInstrumentMap: InstrumentNoteIcon[] = ['border', 'circle', '
 export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> {
     notes: RecordedNote[] = []
     breakpoints: number[]
-    columns: Column[]
+    columns: NoteColumn[]
     reverb: boolean = false
     selected: number
 
@@ -66,7 +66,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
         this.instruments = []
         this.breakpoints = [0]
         this.selected = 0
-        this.columns = new Array(100).fill(0).map(_ => new Column())
+        this.columns = new Array(100).fill(0).map(_ => new NoteColumn())
         instruments.forEach(this.addInstrument)
     }
 
@@ -79,7 +79,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
         //parsing columns
         if (song.version === 1) {
             parsed.columns = song.columns.map(column => {
-                const parsedColumn = new Column()
+                const parsedColumn = new NoteColumn()
                 parsedColumn.tempoChanger = column[0]
                 column[1].forEach(note => {
                     const layer = note[1].split("").reverse().join("")
@@ -90,7 +90,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
             })
         }
         if (song.version === 2 || song.version === 3) {
-            parsed.columns = song.columns.map(column => Column.deserialize(column))
+            parsed.columns = song.columns.map(column => NoteColumn.deserialize(column))
         }
         const highestLayer = NoteLayer.maxLayer(parsed.columns.flatMap(column => column.notes.map(note => note.layer)))
         //make sure there are enough instruments for all layers
@@ -251,7 +251,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
     }
 
     addColumns = (amount: number, position: number | 'end') => {
-        const columns = new Array(amount).fill(0).map(() => new Column())
+        const columns = new Array(amount).fill(0).map(() => new NoteColumn())
         if (position === "end") {
             this.columns.push(...columns)
         } else {
@@ -310,7 +310,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
         return this
     }
 
-    pasteLayer(copiedColumns: Column[], insert: boolean, layer: number) {
+    pasteLayer(copiedColumns: NoteColumn[], insert: boolean, layer: number) {
         const layerColumns = copiedColumns.map(col => {
             const clone = col.clone()
             clone.notes = clone.notes.map(note => {
@@ -324,8 +324,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
         this.pasteColumns(layerColumns, insert)
     }
 
-    pasteColumns = async (copiedColumns: Column[], insert: boolean) => {
-        const cloned: Column[] = copiedColumns.map(column => column.clone())
+    pasteColumns = async (copiedColumns: NoteColumn[], insert: boolean) => {
+        const cloned: NoteColumn[] = copiedColumns.map(column => column.clone())
         if (!insert) {
             this.columns.splice(this.selected, 0, ...cloned)
         } else {
@@ -393,7 +393,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
     }
 
     copyColumns = (selectedColumns: number[], layer: number | 'all') => {
-        let copiedColumns: Column[] = []
+        let copiedColumns: NoteColumn[] = []
         selectedColumns.forEach((index) => {
             const column = this.columns[index]
             if (column !== undefined) copiedColumns.push(column.clone())
