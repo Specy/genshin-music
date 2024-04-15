@@ -12,6 +12,7 @@ import {globalConfigStore} from "$stores/GlobalConfig";
 import Logger from '$cmp/pages/Index/Logger'
 import {AsyncPromptWrapper} from '$cmp/shared/Utility/AsyncPrompt';
 import {setupProtocol} from "$lib/Hooks/useWindowProtocol";
+import {logger} from "$stores/LoggerStore";
 
 interface GeneralProvidersWrapperProps {
     children: React.ReactNode
@@ -37,6 +38,22 @@ export function GeneralProvidersWrapper({children, onLoaded}: GeneralProvidersWr
             MIDIProvider.destroy()
         }
     }, [])
+
+    useEffect(() => {
+        //TODO should this be here?
+        let sources = MIDIProvider.inputs
+        const cb = (inputs: WebMidi.MIDIInput[]) => {
+            if (sources.length > inputs.length)
+                logger.warn('MIDI device disconnected')
+            else if (inputs.length > 0)
+                logger.warn('MIDI device connected')
+            sources = inputs
+        }
+        MIDIProvider.addInputsListener(cb)
+        return () => {
+            MIDIProvider.removeInputsListener(cb)
+        }
+    }, []);
     return <>
         <Logger/>
         <AsyncPromptWrapper/>
