@@ -1,7 +1,7 @@
 import {APP_NAME, NoteNameType} from "$config"
 import {ComposedSong} from "$lib/Songs/ComposedSong"
 import {RecordedSong} from "$lib/Songs/RecordedSong"
-import {Column, ColumnNote, RecordedNote} from "$lib/Songs/SongClasses"
+import {NoteColumn, ColumnNote, RecordedNote} from "$lib/Songs/SongClasses"
 import {Instrument} from '$lib/Instrument'
 import {Song} from "./Song"
 
@@ -60,7 +60,7 @@ export class VisualSong {
             const columns = song.columns
             const first = columns[0]
             if (!first) return vs
-            const stack: Column[] = []
+            const stack: NoteColumn[] = []
             let lastTempoChanger = first.tempoChanger
             for (const column of columns) {
                 if (lastTempoChanger === 0 && column.tempoChanger === 0) {
@@ -171,8 +171,8 @@ class TempoChunkColumn {
         this.notes = notes
     }
 
-    static from(column: Column | RecordedNote[]) {
-        if (column instanceof Column) {
+    static from(column: NoteColumn | RecordedNote[]) {
+        if (column instanceof NoteColumn) {
             return new TempoChunkColumn(
                 column.notes.map(note => TempoChunkNote.from(note))
             )
@@ -199,7 +199,7 @@ export class TempoChunk {
         this.columns = columns
     }
 
-    static from(columns: Column[], tempoChanger?: number) {
+    static from(columns: NoteColumn[], tempoChanger?: number) {
         tempoChanger = tempoChanger ?? columns[0]?.tempoChanger
         if (tempoChanger === undefined) console.log("tempoChanger is undefined", columns, tempoChanger)
         return new TempoChunk(

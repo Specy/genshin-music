@@ -3,7 +3,7 @@ import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
 import {BlogImage} from "$cmp/pages/blog/BlogImage";
-import {APP_NAME} from "$config";
+import {APP_NAME, BASE_PATH} from "$config";
 import {BlogB, BlogLi, BlogOl, BlogP} from "$cmp/pages/blog/BlogUl";
 import {ShortcutsTable} from "$cmp/pages/Index/HelpTab/ShortcutsHelp";
 import {useConfig} from "$lib/Hooks/useConfig";
@@ -15,7 +15,7 @@ export const _playerTutorialMetadata: BlogMetadata = {
     relativeUrl: "how-to-use-player",
     tags: ["Guide"],
 
-    image: '/assets/blog/help-player.webp',
+    image: BASE_PATH + '/assets/blog/help-player.webp',
     description: "This is a guide to help you learn how to use the player to learn, record and play songs!",
     createdAt: new Date("2024/03/19"),
     author: SpecyAuthor,
@@ -50,7 +50,7 @@ export default function BlogPage() {
         {APP_NAME !== "Genshin" && <BlogP>
             The images below are from the genshin version of the app, but the functionality is the same
         </BlogP>}
-        <BlogImage src={'/assets/blog/help-player.webp'} alt={"Player UI"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-player.webp'} alt={"Player UI"}/>
         <BlogOl>
             <BlogLi>Pressing this button will start an audio recording, everything you play from that moment will be
                 recorded, then downloaded as an audio file </BlogLi>
@@ -73,7 +73,7 @@ export default function BlogPage() {
             <BlogLi>Opens the menu of the app where you can go to all the other pages</BlogLi>
             <BlogLi>Visual sheet of the song</BlogLi>
         </BlogOl>
-        <BlogImage src={'/assets/blog/help-player-2.webp'} alt={"Player menu help"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-player-2.webp'} alt={"Player menu help"}/>
         <BlogP>
             When you open the "song menu", you will be shown this window. Your songs will be split between recorded and
             composed
@@ -123,7 +123,7 @@ export default function BlogPage() {
         <Header margin={'1rem 0'}>
             Player settings
         </Header>
-        <BlogImage src={'/assets/blog/help-player-3.webp'} alt={"Player settings"}/>
+        <BlogImage src={BASE_PATH + '/assets/blog/help-player-3.webp'} alt={"Player settings"}/>
         <BlogOl>
             <BlogLi>
                 <BlogB>Instrument</BlogB>: This is the instrument of the keyboard, you can change the volume

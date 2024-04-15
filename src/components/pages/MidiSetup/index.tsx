@@ -59,6 +59,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         this.mounted = false
         this.state.audioPlayer.destroy()
         MIDIProvider.removeInputsListener(this.midiStateChange)
+        MIDIProvider.removeListener(this.handleMidi)
         AudioProvider.clear()
     }
 
@@ -78,11 +79,6 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
     }
     midiStateChange = (inputs: WebMidi.MIDIInput[]) => {
         if (!this.mounted) return
-        const {sources} = this.state
-        if (sources.length > inputs.length)
-            logger.warn('MIDI device disconnected')
-        else if (inputs.length > 0)
-            logger.warn('MIDI device connected')
         this.setState({sources: inputs})
     }
 

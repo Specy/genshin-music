@@ -3,13 +3,14 @@ import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import {Header} from "$cmp/shared/header/Header";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {BlogP} from "$cmp/pages/blog/BlogUl";
+import {BASE_PATH} from "$config";
 
 
 export const _aiTransposeMetadata: BlogMetadata = {
     title: "🔬 Video/audio to music transposition",
     tags: ["Guide"],
     relativeUrl: "video-audio-transpose",
-    image: '/assets/blog/midi-btn.webp',
+    image: BASE_PATH +  '/assets/blog/midi-btn.webp',
     description: "Use the new feature in the composer to (try to) convert a audio/video into a music sheet. This is an experimental feature",
     createdAt: new Date("2024/03/19"),
     author: SpecyAuthor,

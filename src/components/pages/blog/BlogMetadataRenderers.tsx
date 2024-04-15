@@ -1,5 +1,6 @@
 import {BlogAuthor} from "$cmp/pages/blog/types";
 import {Row} from "$cmp/shared/layout/Row";
+import {BASE_PATH} from "$config";
 
 interface BlogAuthorProps {
     author: BlogAuthor
@@ -13,7 +14,7 @@ export function BlogAuthorRenderer({author, size = '2.5rem', noName = false}: Bl
         align={'center'}
     >
         <img
-            src={author.picture ?? '/assets/images/specy.png'}
+            src={author.picture ?? `${BASE_PATH}/assets/images/specy.png`}
             alt={`${author.name} picture`}
             style={{
                 width: size,

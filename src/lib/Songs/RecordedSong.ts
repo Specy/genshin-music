@@ -1,5 +1,5 @@
 import {APP_NAME, IMPORT_NOTE_POSITIONS, INSTRUMENTS_DATA, PITCHES} from "$config"
-import {Column, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote} from "./SongClasses"
+import {NoteColumn, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote} from "./SongClasses"
 import {ComposedSong, defaultInstrumentMap} from "./ComposedSong"
 import {groupByNotes, groupNotesByIndex, mergeLayers} from "$lib/Utilities";
 import clonedeep from 'lodash.clonedeep'
@@ -154,15 +154,15 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 }
                 groupedNotes.push([...row, ...notes.splice(0, amount)])
             }
-            const columns: Column[] = []
+            const columns: NoteColumn[] = []
             groupedNotes.forEach(notes => {
                 const note = notes[0]
                 if (!note) return
                 const elapsedTime = note.time - previousTime
                 previousTime = note.time
                 const emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
-                if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
-                const noteColumn = new Column()
+                if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new NoteColumn())) // adds empty columns
+                const noteColumn = new NoteColumn()
                 noteColumn.notes = notes.map(note => {
                     return new ColumnNote(note.index, note.layer.clone())
                 })
@@ -180,7 +180,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             const grouped = groupByNotes(notes, bpmToMs / 9)
             const combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
             for (let i = 0; i < grouped.length; i++) {
-                const column = new Column()
+                const column = new NoteColumn()
                 column.notes = grouped[i].map(note => {
                     return new ColumnNote(note.index, note.layer.clone())
                 })
@@ -207,7 +207,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 }
                 column.tempoChanger = paddingColumns.shift() || 0
                 const finalPadding = paddingColumns.map((col, i) => {
-                    const column = new Column()
+                    const column = new NoteColumn()
                     column.tempoChanger = col
                     return column
                 })

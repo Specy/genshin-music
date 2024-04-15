@@ -6,7 +6,7 @@ import {Header} from "$cmp/shared/header/Header";
 import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 import Link from "next/link";
 import {useEffect, useMemo, useState} from "react";
-import {APP_NAME} from "$config";
+import {APP_NAME, BASE_PATH} from "$config";
 import {Row} from "$cmp/shared/layout/Row";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
 
@@ -17,7 +17,7 @@ interface BaseBlogPostProps {
 
 export const SpecyAuthor = {
     name: "Specy",
-    picture: '/assets/images/specy.png'
+    picture: BASE_PATH + '/assets/images/specy.png'
 } satisfies BlogAuthor
 
 

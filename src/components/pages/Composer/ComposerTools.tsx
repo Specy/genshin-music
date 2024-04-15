@@ -1,7 +1,7 @@
 import {AppButton} from "$cmp/shared/Inputs/AppButton"
 import {DecoratedCard} from "$cmp/shared/layout/DecoratedCard"
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip"
-import {Column} from "$lib/Songs/SongClasses"
+import {NoteColumn} from "$lib/Songs/SongClasses"
 import {memo, useState} from "react"
 import {FaAngleDown, FaAngleUp, FaCopy, FaEraser, FaPaste, FaTrash} from "react-icons/fa"
 import {MdPhotoSizeSelectSmall, MdSelectAll} from "react-icons/md"
@@ -13,7 +13,7 @@ interface ComposerToolsProps {
         hasCopiedColumns: boolean
         selectedColumns: number[]
         layer: number
-        undoHistory: Column[][]
+        undoHistory: NoteColumn[][]
     }
     functions: {
         toggleTools: () => void

@@ -14,7 +14,7 @@ import {ComposerSettingsDataType} from "$lib/BaseSettings"
 import {Instrument, ObservableNote} from "$lib/Instrument"
 import {calculateSongLength, delay, formatMs, routeChangeBugFix} from "$lib/Utilities"
 import {ComposedSong, UnknownSerializedComposedSong} from '$lib/Songs/ComposedSong';
-import {Column, InstrumentData} from '$lib/Songs/SongClasses';
+import {NoteColumn, InstrumentData} from '$lib/Songs/SongClasses';
 import AudioRecorder from '$lib/AudioRecorder'
 import Analytics from '$lib/Stats';
 import {homeStore} from '$stores/HomeStore';
@@ -46,8 +46,8 @@ interface ComposerState {
     settings: ComposerSettingsDataType
     layer: number
     selectedColumns: number[]
-    undoHistory: Column[][]
-    copiedColumns: Column[]
+    undoHistory: NoteColumn[][]
+    copiedColumns: NoteColumn[]
     isToolsVisible: boolean
     isMidiVisible: boolean
     isRecordingAudio: boolean
@@ -208,6 +208,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 //@ts-ignore
                 event.target?.blur()
             }
+            event.preventDefault()
             this.togglePlay()
             if (settings.syncTabs.value) {
                 this.broadcastChannel?.postMessage?.(isPlaying ? 'play' : 'stop')
@@ -528,6 +529,9 @@ class Composer extends Component<ComposerProps, ComposerState> {
             settings.reverb = {...settings.reverb, value: parsed.reverb}
             AudioProvider.setReverb(parsed.reverb)
             if (!this.mounted) return
+            if(song.id && this.state.song.id === null){
+                this.setState({isMidiVisible: false})
+            }
             this.changes = 0
             console.log("song loaded")
             this.setState({

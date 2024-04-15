@@ -14,7 +14,7 @@ import {InstrumentNoteIcon} from "./ComposedSong"
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
 
-export class Column {
+export class NoteColumn {
     notes: ColumnNote[]
     tempoChanger: number //TODO put the keys of the tempo changers here
     constructor() {
@@ -23,7 +23,7 @@ export class Column {
     }
 
     clone() {
-        const clone = new Column()
+        const clone = new NoteColumn()
         clone.tempoChanger = this.tempoChanger
         clone.notes = this.notes.map(note => note.clone())
         return clone
@@ -45,8 +45,8 @@ export class Column {
         return [this.tempoChanger, this.notes.map(note => note.serialize())]
     }
 
-    static deserialize(data: SerializedColumn): Column {
-        const column = new Column()
+    static deserialize(data: SerializedColumn): NoteColumn {
+        const column = new NoteColumn()
         column.tempoChanger = data[0]
         column.notes = data[1].map(note => ColumnNote.deserialize(note)).filter(note => !note.layer.isEmpty())
         return column

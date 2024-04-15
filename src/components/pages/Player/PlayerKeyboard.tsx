@@ -166,6 +166,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             })
             notes.push(obj)
         }
+        await delay(2000) //add an initial delay to let the user prepare
         playerControlsStore.setSong(song)
         playerControlsStore.clearPages()
         playerControlsStore.resetScore()

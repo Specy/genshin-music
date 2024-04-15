@@ -1,6 +1,6 @@
 import {BASE_PATH, Pitch, PITCHES, TEMPO_CHANGERS} from "$config"
 import * as workerTimers from 'worker-timers';
-import {Column, ColumnNote, RecordedNote} from "./Songs/SongClasses";
+import {NoteColumn, ColumnNote, RecordedNote} from "./Songs/SongClasses";
 import {NoteLayer} from "./Layer";
 import {Song} from "./Songs/Song";
 import {ComposedSong} from "./Songs/ComposedSong";
@@ -240,7 +240,7 @@ function getPitchChanger(pitch: Pitch) {
     return Number(Math.pow(2, index / 12).toFixed(4))
 }
 
-function calculateSongLength(columns: Column[], bpm: number, end: number) {
+function calculateSongLength(columns: NoteColumn[], bpm: number, end: number) {
     const msPerBeat = Math.floor(60000 / bpm)
     let totalLength = 0
     let currentLength = 0
@@ -267,7 +267,7 @@ function mergeLayers(notes: ColumnNote[]) {
 }
 
 
-function groupNotesByIndex(column: Column) {
+function groupNotesByIndex(column: NoteColumn) {
     const notes: ColumnNote[][] = []
     column.notes.forEach(note => {
         if (notes[note.index]) {

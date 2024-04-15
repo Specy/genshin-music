@@ -617,13 +617,6 @@ select {
     cursor: not-allowed;
 }
 
-.midi-track-data {
-    display: flex;
-    flex-direction: column;
-    margin-top: 0.5rem;
-    padding: 0.4rem;
-    border-top: solid 0.1rem var(--secondary);
-}
 
 .midi-track-data-row {
     display: flex;
@@ -660,12 +653,6 @@ select {
     margin-right: 0.5rem;
 }
 
-.midi-row,
-.midi-column {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
 
 .separator-border {
     margin-bottom: 0.25rem;
@@ -673,9 +660,7 @@ select {
     border-bottom: solid 2px var(--secondary);
 }
 
-.midi-column {
-    flex-direction: column;
-}
+
 
 .midi-input,
 .midi-select {

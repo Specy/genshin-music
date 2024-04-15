@@ -3,13 +3,14 @@ import {BaseBlogPost, SpecyAuthor} from "$cmp/pages/blog/BaseBlogPost";
 import {Header} from "$cmp/shared/header/Header";
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {BlogP} from "$cmp/pages/blog/BlogUl";
+import {BASE_PATH} from "$config";
 
 
 export const _midiDeviceMetadata: BlogMetadata = {
     title: "🎹 Use a MIDI keyboard/device",
     tags: ["Guide"],
     relativeUrl: "connect-midi-device",
-    image: '/assets/blog/zen-keyboard.webp',
+    image: BASE_PATH + '/assets/blog/zen-keyboard.webp',
     description: "How to connect a MIDI keyboard/device to the app, and how to use it in the player and composer.",
     createdAt: new Date("2024/03/19"),
     author: SpecyAuthor,

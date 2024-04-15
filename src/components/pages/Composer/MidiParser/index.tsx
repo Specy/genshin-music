@@ -2,7 +2,7 @@ import {Component} from 'react'
 import {FileElement, FilePicker} from '$cmp/shared/Inputs/FilePicker'
 import {Midi, Track} from '@tonejs/midi'
 import {delay, groupNotesByIndex, isAudioFormat, isVideoFormat, mergeLayers} from '$lib/Utilities'
-import {Column, ColumnNote, InstrumentData, MidiNote} from '$lib/Songs/SongClasses'
+import {NoteColumn, ColumnNote, InstrumentData, MidiNote} from '$lib/Songs/SongClasses'
 import {ComposedSong} from '$lib/Songs/ComposedSong'
 import {BASE_PATH, Pitch, PITCHES} from '$config'
 import {logger} from '$stores/LoggerStore'
@@ -16,6 +16,8 @@ import {DecoratedCard} from '$cmp/shared/layout/DecoratedCard'
 import {TrackInfo} from './TrackInfo'
 import {NumericalInput} from './Numericalinput'
 import {basicPitchLoader} from '$lib/BasicPitchLoader'
+import {Row} from "$cmp/shared/layout/Row";
+import {Column} from "$cmp/shared/layout/Column";
 
 interface MidiImportProps {
     data: {
@@ -249,16 +251,16 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             }
             groupedNotes.push([...row, ...sorted.splice(0, amount)])
         }
-        const columns: Column[] = []
+        const columns: NoteColumn[] = []
         let previousTime = 0
         groupedNotes.forEach(notes => {
             const note = notes[0]
             if (!note) return
             const elapsedTime = note.time - previousTime
             const emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs)
-            const noteColumn = new Column()
+            const noteColumn = new NoteColumn()
             previousTime = note.time
-            if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new Column())) // adds empty columns
+            if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new NoteColumn())) // adds empty columns
             noteColumn.notes = notes.map(note => {
                 const layer = new NoteLayer()
                 layer.set(note.layer, true)
@@ -358,9 +360,9 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             isRelative={false}
             offset="0.1rem"
         >
-            <div className='column floating-midi-content'>
-                <div
-                    className='midi-row separator-border'
+            <Column className='floating-midi-content' gap={'0.3rem'}>
+                <Row
+                    className='separator-border'
                     style={{width: '100%'}}
                 >
                     <FilePicker onPick={handleFile} as='buffer'>
@@ -381,9 +383,9 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     >
                         Close
                     </button>
-                </div>
+                </Row>
 
-                <div className='midi-table-row'>
+                <Row justify={'between'} align={'center'}>
                     <div style={{marginRight: '0.5rem'}}>Bpm:</div>
                     <NumericalInput
                         value={bpm}
@@ -392,8 +394,8 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         style={midiInputsStyle}
                         step={5}
                     />
-                </div>
-                <div className='midi-table-row'>
+                </Row>
+                <Row justify={'between'} align={'center'}>
                     <div className='row flex-centered'>
                         <span style={{marginRight: '0.5rem'}}>Global note offset: </span>
                         <HelpTooltip buttonStyle={{width: '1.2rem', height: '1.2rem'}}>
@@ -409,36 +411,36 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         style={midiInputsStyle}
                         step={1}
                     />
-                </div>
-                <div className='midi-table-row'>
+                </Row>
+                <Row justify={'between'} align={'center'}>
                     <div style={{marginRight: '0.5rem'}}>Pitch:</div>
                     <PitchSelect
                         style={{width: '5rem', ...midiInputsStyle}}
                         selected={pitch}
                         onChange={changePitch}
                     />
-                </div>
-                <div className='midi-table-row'>
-                    <div className='row'>
+                </Row>
+                <Row justify={'between'} align={'center'}>
+                    <Row align={'center'}>
                         <div style={{marginRight: '0.5rem'}}>Include accidentals:</div>
                         <Switch
                             checked={includeAccidentals}
                             onChange={this.toggleAccidentals}
                             styleOuter={midiInputsStyle}
                         />
-                    </div>
-                    <div className='row'>
+                    </Row>
+                    <Row align={'center'}>
                         <div style={{marginRight: '0.5rem'}}>Ignore empty tracks:</div>
                         <Switch
                             checked={ignoreEmptytracks}
                             onChange={(b) => this.setState({ignoreEmptytracks: b})}
                             styleOuter={midiInputsStyle}
                         />
-                    </div>
-                </div>
-                {tracks.length > 0 && <div className='midi-column separator-border' style={{width: '100%'}}>
-                    <div className='midi-column' style={{width: '100%'}}>
-                        <div>Select midi tracks</div>
+                    </Row>
+                </Row>
+                {tracks.length > 0 && <Column className='separator-border' style={{width: '100%'}}>
+                    <Column style={{width: '100%'}}>
+                        <div style={{textAlign: 'center'}}>Select midi tracks</div>
                         {tracks.map((track, i) =>
                             !(ignoreEmptytracks && track.track.notes.length === 0) &&
                             <TrackInfo
@@ -450,8 +452,8 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                                 theme={theme}
                             />
                         )}
-                    </div>
-                </div>
+                    </Column>
+                </Column>
                 }
                 {tracks.length > 0 &&
                     <table>
@@ -474,7 +476,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         </tbody>
                     </table>
                 }
-            </div>
+            </Column>
         </DecoratedCard>
     }
 }
