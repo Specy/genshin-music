@@ -1,5 +1,5 @@
 import Head from "next/head";
-import {MaybeChildren} from "$lib/UtilTypes";
+import {MaybeChildren} from "$lib/utils/UtilTypes";
 
 
 interface PageMetaProps {

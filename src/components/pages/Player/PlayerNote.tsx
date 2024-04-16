@@ -4,11 +4,11 @@ import GenshinNoteBorder from '$cmp/shared/Miscellaneous/GenshinNoteBorder'
 import SvgNote from '$cmp/shared/SvgNotes'
 import {observe} from 'mobx'
 import {ThemeProvider} from '$stores/ThemeStore/ThemeProvider'
-import type {ObservableNote} from '$lib/Instrument'
+import type {ObservableNote} from '$lib/audio/Instrument'
 import type {InstrumentName, NoteStatus} from '$types/GeneralTypes'
 import type {ApproachingNote} from '$lib/Songs/SongClasses'
 import {useObservableObject} from '$lib/Hooks/useObservable'
-import {preventDefault} from "$lib/Utilities";
+import {preventDefault} from "$lib/utils/Utilities";
 
 function getTextColor() {
     const noteBg = ThemeProvider.get('note_background')

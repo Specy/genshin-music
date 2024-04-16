@@ -12,7 +12,7 @@ import {
 } from "$config"
 import {makeObservable, observable} from "mobx"
 import {InstrumentName, NoteStatus} from "$types/GeneralTypes"
-import {getPitchChanger} from "./Utilities"
+import {getPitchChanger} from "../utils/Utilities"
 import {NoteImage} from "$cmp/shared/SvgNotes"
 
 type Layouts = {

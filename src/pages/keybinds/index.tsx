@@ -8,7 +8,7 @@ import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
 import {VsrgSongKeys} from "$lib/Songs/VsrgSong";
 import {Fragment, useEffect, useState} from "react";
 import {keyBinds} from "$stores/KeybindsStore";
-import {Instrument} from '$lib/Instrument'
+import {Instrument} from '$lib/audio/Instrument'
 import {logger} from "$/stores/LoggerStore";
 import {ShortcutEditor} from "$cmp/pages/Keybinds/ShortcutEditor";
 import {useConfig} from "$/lib/Hooks/useConfig";

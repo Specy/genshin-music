@@ -2,7 +2,7 @@ import {APP_NAME, NoteNameType} from "$config"
 import {TempoChunk} from "$lib/Songs/VisualSong"
 import {memo, useEffect, useState} from "react"
 import {Theme} from "$stores/ThemeStore/ThemeProvider"
-import {Instrument} from '$lib/Instrument'
+import {Instrument} from '$lib/audio/Instrument'
 import s from "./SheetFrame.module.css"
 
 

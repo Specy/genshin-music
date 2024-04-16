@@ -16,7 +16,7 @@ import {ComposerCache} from "$cmp/pages/Composer/ComposerCache"
 import {APP_NAME} from "$config"
 import Memoized from '$cmp/shared/Utility/Memoized';
 import {ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
-import {clamp, colorToRGB, nearestEven} from '$lib/Utilities';
+import {clamp, colorToRGB, nearestEven} from '$lib/utils/Utilities';
 import type {NoteColumn} from '$lib/Songs/SongClasses';
 import type {ComposerSettingsDataType} from '$lib/BaseSettings';
 import {isColumnVisible, RenderColumn} from '$cmp/pages/Composer/RenderColumn';

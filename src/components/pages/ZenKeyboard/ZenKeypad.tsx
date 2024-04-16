@@ -1,5 +1,5 @@
 import {useObservableArray} from "$lib/Hooks/useObservable";
-import {Instrument, ObservableNote} from "$lib/Instrument"
+import {Instrument, ObservableNote} from "$lib/audio/Instrument"
 import {zenKeyboardStore} from "$stores/ZenKeyboardStore";
 import {ZenNote} from "./ZenNote";
 import {useEffect} from 'react'

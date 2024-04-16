@@ -106,7 +106,7 @@ async function run() {
                         .replace("{zip-name}", buildZip),
                     signature: buildSignature
                 }
-                //saves the results to both the folder of the build data and updates the repository one
+                //saves the results to both the folder of the build data and changelog the repository one
                 await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
                 //copies all the built files to the final release folder
                 await fs.mkdir(folders.windowsRelease, { recursive: true })
@@ -148,7 +148,7 @@ async function run() {
                         .replace("{zip-name}", buildZip),
                     signature: buildSignature
                 }
-                //saves the results to both the folder of the build data and updates the repository one
+                //saves the results to both the folder of the build data and changelog the repository one
                 await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
                 //copies all the update files 
                 await fs.mkdir(folders.macosRelease, { recursive: true })
@@ -201,7 +201,7 @@ async function run() {
                         .replace("{zip-name}", buildZip),
                     signature: buildSignature
                 }
-                //saves the results to both the folder of the build data and updates the repository one
+                //saves the results to both the folder of the build data and changelog the repository one
                 await fs.writeFile(`./src-tauri/tauri-${app}.update.json`, JSON.stringify(appUpdate, null, 2))
                 //copies all the update files 
                 await fs.mkdir(folders.linuxRelease, { recursive: true })

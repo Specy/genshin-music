@@ -2,7 +2,7 @@ import Color from "color"
 import {LINE_SCALE_MODE, settings, SmoothGraphics as Graphics} from '@pixi/graphics-smooth';
 import {Application, Rectangle, SCALE_MODES, Texture,} from 'pixi.js'
 import {VsrgCanvasColors, VsrgCanvasSizes} from "./VsrgComposerCanvas";
-import {clamp} from "$lib/Utilities";
+import {clamp} from "$lib/utils/Utilities";
 import isMobile from "is-mobile";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL

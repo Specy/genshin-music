@@ -4,11 +4,11 @@ import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
 import {useEffect} from "react"
 import {songsStore} from "$stores/SongsStore";
 import {folderStore} from "$stores/FoldersStore";
-import {metronome} from "$lib/Metronome";
+import {metronome} from "$lib/audio/Metronome";
 import {keyBinds} from "$stores/KeybindsStore";
 import {themeStore} from "$stores/ThemeStore/ThemeStore";
 import {ThemeProvider} from "$stores/ThemeStore/ThemeProvider";
-import {globalConfigStore} from "$stores/GlobalConfig";
+import {globalConfigStore} from "$stores/GlobalConfigStore";
 import Logger from '$cmp/pages/Index/Logger'
 import {AsyncPromptWrapper} from '$cmp/shared/Utility/AsyncPrompt';
 import {setupProtocol} from "$lib/Hooks/useWindowProtocol";

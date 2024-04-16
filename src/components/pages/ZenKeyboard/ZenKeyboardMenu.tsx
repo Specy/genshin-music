@@ -1,8 +1,8 @@
 import useClickOutside from "$lib/Hooks/useClickOutside"
 import {homeStore} from "$stores/HomeStore"
 import {FaBars, FaCog, FaHome, FaTimes} from "react-icons/fa"
-import MenuPanel from "$cmp/shared/pagesLayout/MenuPanel"
-import {MenuItem} from "$cmp/shared/Miscellaneous/MenuItem"
+import {MenuPanel, MenuPanelWrapper} from "$cmp/shared/Menu/MenuPanel"
+import {MenuButton, MenuItem} from "$cmp/shared/Menu/MenuItem"
 import {useState} from 'react'
 import {ZenKeyboardSettingsDataType} from "$lib/BaseSettings"
 import {SettingUpdate, SettingVolumeUpdate} from "$types/SettingsPropriety"
@@ -15,6 +15,7 @@ import {MdPiano} from "react-icons/md";
 import {IoMdMusicalNote} from "react-icons/io";
 import {GiMetronome} from "react-icons/gi";
 import {IconType} from "react-icons";
+import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 
 interface ZenKeyboardMenuProps {
     settings: ZenKeyboardSettingsDataType
@@ -38,7 +39,6 @@ export function ZenKeyboardMenu({
     const menuRef = useClickOutside<HTMLDivElement>(() => {
         setIsVisible(false)
     }, {ignoreFocusable: true, active: selectedPage !== ""})
-    const sideClass = (isOpen && isVisible) ? "side-menu menu-open" : "side-menu"
 
     function toggleMenu() {
         setIsOpen(!isOpen)
@@ -102,9 +102,14 @@ export function ZenKeyboardMenu({
                 })}
             />
         </div>
-
-        <div className="menu-wrapper" ref={menuRef}>
-
+        <MenuContextProvider
+            open={isOpen}
+            setOpen={setIsOpen}
+            current={selectedPage}
+            setCurrent={setSelectedPage}
+            ref={menuRef}
+            visible={isVisible}
+        >
             <div
                 className="hamburger-top"
                 onClick={() => setIsVisible(!isVisible)}
@@ -113,39 +118,35 @@ export function ZenKeyboardMenu({
                     <FaBars/>
                 </Memoized>
             </div>
-            <div className={`menu ${isVisible ? "menu-visible" : ""}`} style={{justifyContent: 'flex-end'}}>
-                <MenuItem
+            <MenuSidebar style={{justifyContent: 'flex-end'}}>
+                <MenuButton
                     ariaLabel='Close menu'
                     style={{marginBottom: 'auto'}}
                     onClick={() => setIsVisible(!isVisible)}
                 >
                     <FaTimes className="icon"/>
-                </MenuItem>
+                </MenuButton>
                 <MenuItem
-                    onClick={() => {
-                        setSelectedPage("Settings")
-                        toggleMenu()
-                    }}
-                    isActive={selectedPage === "Settings" && isOpen}
+                    id={"Settings"}
                     ariaLabel='Open settings'
                 >
                     <FaCog className="icon"/>
                 </MenuItem>
-                <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
-                          style={{border: "solid 0.1rem var(--secondary)"}}>
+                <MenuButton onClick={homeStore.open} ariaLabel='Open home menu'
+                            style={{border: "solid 0.1rem var(--secondary)"}}>
                     <FaHome className="icon"/>
-                </MenuItem>
-            </div>
-            <div className={sideClass}>
-                <MenuPanel title="Settings" current={selectedPage} id="Settings">
+                </MenuButton>
+            </MenuSidebar>
+            <MenuPanelWrapper>
+                <MenuPanel title="Settings" id="Settings">
                     <SettingsPane
                         settings={settings}
                         onUpdate={handleSettingChange}
                         changeVolume={onVolumeChange}
                     />
                 </MenuPanel>
-            </div>
-        </div>
+            </MenuPanelWrapper>
+        </MenuContextProvider>
     </>
 
 }

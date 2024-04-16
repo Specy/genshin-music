@@ -6,7 +6,7 @@ import {protocol, setupProtocol} from "$lib/Hooks/useWindowProtocol";
 import {logger} from "$stores/LoggerStore";
 import {useCallback, useEffect, useState} from "react";
 import s from "./transfer.module.css"
-import {cn} from "$lib/Utilities";
+import {cn} from "$lib/utils/Utilities";
 import {fileService, UnknownFileTypes} from "$lib/Services/FileService";
 import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
 
@@ -41,7 +41,7 @@ export default function TransferData() {
             const data = await protocol.ask("getAppData", undefined)
             setImportedData(Array.isArray(data) ? data : [data])
         } catch (e) {
-            logger.error("Error connecting, please visit the domain, there might be updates. ")
+            logger.error("Error connecting, please visit the domain, there might be changelog. ")
             setError(`Error fetching: ${e}`)
         }
         logger.hidePill()

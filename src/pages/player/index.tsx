@@ -6,10 +6,10 @@ import {RecordedSong} from '$lib/Songs/RecordedSong';
 import {ComposedSong} from '$lib/Songs/ComposedSong';
 import {InstrumentData, Recording} from '$lib/Songs/SongClasses';
 import {PlayerSettingsDataType} from "$lib/BaseSettings"
-import {Instrument} from '$lib/Instrument'
-import AudioRecorder from '$lib/AudioRecorder';
+import {Instrument} from '$lib/audio/Instrument'
+import AudioRecorder from '$lib/audio/AudioRecorder';
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"
-import Analytics from '$lib/Stats';
+import Analytics from '$lib/Analytics';
 import {logger} from '$stores/LoggerStore';
 import {SettingUpdate, SettingVolumeUpdate} from '$types/SettingsPropriety';
 import {InstrumentName} from '$types/GeneralTypes';
@@ -18,9 +18,9 @@ import {AudioProvider} from '$lib/Providers/AudioProvider';
 import {settingsService} from '$lib/Services/SettingsService';
 import {songsStore} from '$stores/SongsStore';
 import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta';
-import {metronome} from '$lib/Metronome';
+import {metronome} from '$lib/audio/Metronome';
 import {Lambda} from 'mobx';
-import {NoteLayer} from '$lib/Layer';
+import {NoteLayer} from '$lib/Songs/Layer';
 import {subscribeObeservableObject} from '$lib/Hooks/useObservable';
 import {INSTRUMENTS, SPEED_CHANGERS} from '$config';
 import {playerControlsStore} from '$stores/PlayerControlsStore';

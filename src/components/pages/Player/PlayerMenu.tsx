@@ -21,12 +21,12 @@ import {RiPlayListFill} from 'react-icons/ri'
 import {APP_NAME} from "$config"
 import {playerStore} from '$stores/PlayerStore'
 import {ComposerShortcuts, HelpTab, PlayerShortcuts} from '$cmp/pages/Index/HelpTab'
-import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
-import MenuPanel from '$cmp/shared/pagesLayout/MenuPanel'
+import {MenuButton, MenuItem} from '$cmp/shared/Menu/MenuItem'
+import {MenuPanel, MenuPanelWrapper} from '$cmp/shared/Menu/MenuPanel'
 import DonateButton from '$cmp/shared/Miscellaneous/DonateButton'
 import LibrarySearchedSong from '$cmp/shared/Miscellaneous/LibrarySearchedSong'
 import {SongActionButton} from '$cmp/shared/Inputs/SongActionButton'
-import Analytics from '$lib/Stats';
+import Analytics from '$lib/Analytics';
 import {homeStore} from '$stores/HomeStore';
 import {logger} from '$stores/LoggerStore';
 import {AppButton} from '$cmp/shared/Inputs/AppButton';
@@ -61,8 +61,9 @@ import {settingsService} from '$lib/Services/SettingsService';
 import {useConfig} from '$lib/Hooks/useConfig';
 import {createShortcutListener} from '$stores/KeybindsStore';
 import sh from '$cmp/pages/Index/HelpTab/HelpTab.module.css'
-import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/Utilities';
+import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
 import {useRouter} from 'next/router';
+import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 
 interface MenuProps {
     functions: {
@@ -227,44 +228,51 @@ function Menu({functions, data, inPreview}: MenuProps) {
         }
     }
 
-    const sideClass = isOpen ? "side-menu menu-open" : "side-menu"
     const layer1Color = theme.layer('menu_background', 0.35).lighten(0.2)
     const layer2Color = theme.layer('menu_background', 0.32).desaturate(0.4)
     const layer1ColorText = theme.getTextColorFromBackground(layer1Color)
     const layer2ColorText = theme.getTextColorFromBackground(layer2Color)
-    return <div className={`menu-wrapper ${inPreview ? "menu-wrapper-absolute" : ""}`} ref={menuRef}>
-        <div className="menu menu-visible menu-main-page">
+
+    return  <MenuContextProvider
+        style={inPreview ? {position: "absolute"} : {}}
+        current={selectedMenu}
+        setCurrent={setSelectedMenu}
+        open={isOpen}
+        setOpen={setOpen}
+        visible={true}
+        ref={menuRef}
+    >
+        <MenuSidebar>
             {isOpen &&
-                <MenuItem onClick={toggleMenu} className='close-menu' ariaLabel='Close menu'>
+                <MenuButton onClick={toggleMenu} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon"/>
-                </MenuItem>
+                </MenuButton>
             }
-            <MenuItem onClick={() => selectSideMenu("Help")} className="margin-top-auto"
-                      isActive={selectedMenu === "Help" && isOpen} ariaLabel='Open info menu'>
+            <MenuItem id={'Help'} style={{marginTop: 'auto'}} ariaLabel='Open info menu'>
                 <FaQuestion className="icon"/>
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Library")} isActive={selectedMenu === "Library" && isOpen}
-                      ariaLabel='Open library menu'>
+            <MenuItem id={'Library'} ariaLabel='Open library menu'>
                 <RiPlayListFill className='icon'/>
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Songs")} isActive={selectedMenu === "Songs" && isOpen}
-                      ariaLabel='Open songs menu'>
+            <MenuItem id={'Songs'} ariaLabel='Open songs menu'>
                 <FaMusic className="icon"/>
             </MenuItem>
-            <MenuItem onClick={() => selectSideMenu("Settings")} isActive={selectedMenu === "Settings" && isOpen}
-                      ariaLabel='Open settings'>
+            <MenuItem id={'Settings'} ariaLabel='Open settings'>
                 <FaCog className="icon"/>
             </MenuItem>
-            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
-                      style={{border: "solid 0.1rem var(--secondary)"}}>
+            <MenuButton
+                onClick={homeStore.open}
+                ariaLabel='Open home menu'
+                style={{border: "solid 0.1rem var(--secondary)"}}
+            >
                 <FaHome className="icon"/>
-            </MenuItem>
-        </div>
-        <div className={sideClass}>
-            <MenuPanel title="No selection" current={selectedMenu} id='No selection'>
+            </MenuButton>
+        </MenuSidebar>
+        <MenuPanelWrapper>
+            <MenuPanel title="No selection" id='No selection'>
                 Select a menu
             </MenuPanel>
-            <MenuPanel current={selectedMenu} id='Songs'>
+            <MenuPanel id='Songs'>
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>
                         <ul>
@@ -328,7 +336,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 </div>
             </MenuPanel>
 
-            <MenuPanel current={selectedMenu} id='Settings'>
+            <MenuPanel id='Settings'>
                 <SettingsPane
                     settings={data.settings}
                     changeVolume={functions.changeVolume}
@@ -369,7 +377,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 <DonateButton/>
             </MenuPanel>
 
-            <MenuPanel title="Library" current={selectedMenu} id='Library'>
+            <MenuPanel title="Library" id='Library'>
                 <div>
                     Here you can find songs to learn, they are provided by the sky-music library.
                 </div>
@@ -431,7 +439,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 <DonateButton style={{marginTop: "auto"}}/>
 
             </MenuPanel>
-            <MenuPanel title="Help" current={selectedMenu} id='Help'>
+            <MenuPanel title="Help" id='Help'>
                 <div className={sh['help-icon-wrapper']}>
                     <a href='https://discord.gg/Arsf65YYHq' target={"_blank"}>
                         <FaDiscord className={sh['help-icon']}/>
@@ -445,8 +453,8 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 <ComposerShortcuts/>
                 <DonateButton style={{marginTop: "0.5rem"}}/>
             </MenuPanel>
-        </div>
-    </div>
+        </MenuPanelWrapper>
+    </MenuContextProvider>
 }
 
 

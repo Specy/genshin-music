@@ -23,7 +23,7 @@ export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
-    ? '/updates.json'
+    ? '/changelog.json'
     : 'https://raw.githubusercontent.com/Specy/genshin-music/main/public/updates.json'
 
 

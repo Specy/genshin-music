@@ -1,6 +1,6 @@
 import {ComposedSong, OldFormatComposed, UnknownSerializedComposedSong} from "$lib/Songs/ComposedSong"
 import {OldFormatRecorded, RecordedSong, UnknownSerializedRecordedSong} from "$lib/Songs/RecordedSong"
-import {FileDownloader} from "$lib/Utilities"
+import {FileDownloader} from "$lib/utils/Utilities"
 import {songsStore} from "$stores/SongsStore"
 import toWav from 'audiobuffer-to-wav'
 import {SerializedSong, Song} from "$lib/Songs/Song"

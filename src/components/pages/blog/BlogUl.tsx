@@ -1,4 +1,4 @@
-import {MaybeChildren, Stylable} from "$lib/UtilTypes";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 import s from './blog.module.scss'
 
 export function BlogUl({children, ...rest}: MaybeChildren<Stylable>) {

@@ -1,6 +1,6 @@
 import {settingsService} from "$lib/Services/SettingsService"
 import {MIDISettings} from "../BaseSettings"
-import {createDebouncer, debounce, MIDINote, MIDINoteStatus} from "$lib/Utilities";
+import {createDebouncer, debounce, MIDINote, MIDINoteStatus} from "$lib/utils/Utilities";
 import {MIDI_PRESETS, MIDIPreset} from "$config";
 
 export enum PresetMidi {

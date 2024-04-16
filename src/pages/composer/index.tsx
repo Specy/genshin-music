@@ -11,12 +11,12 @@ import Menu from "$cmp/pages/Composer/ComposerMenu"
 import Memoized, {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"
 import {ComposerSettingsDataType} from "$lib/BaseSettings"
-import {Instrument, ObservableNote} from "$lib/Instrument"
-import {calculateSongLength, delay, formatMs, routeChangeBugFix} from "$lib/Utilities"
+import {Instrument, ObservableNote} from "$lib/audio/Instrument"
+import {calculateSongLength, delay, formatMs, routeChangeBugFix} from "$lib/utils/Utilities"
 import {ComposedSong, UnknownSerializedComposedSong} from '$lib/Songs/ComposedSong';
 import {NoteColumn, InstrumentData} from '$lib/Songs/SongClasses';
-import AudioRecorder from '$lib/AudioRecorder'
-import Analytics from '$lib/Stats';
+import AudioRecorder from '$lib/audio/AudioRecorder'
+import Analytics from '$lib/Analytics';
 import {homeStore} from '$stores/HomeStore';
 import {logger} from '$stores/LoggerStore';
 import {RecordedSong, SerializedRecordedSong} from '$lib/Songs/RecordedSong';
@@ -37,8 +37,8 @@ import {songService} from '$lib/Services/SongService';
 import {NextRouter, useRouter} from 'next/router';
 import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
 import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$/stores/KeybindsStore';
-import {NoteLayer} from "$lib/Layer";
-import {globalConfigStore} from '$stores/GlobalConfig';
+import {NoteLayer} from "$lib/Songs/Layer";
+import {globalConfigStore} from '$stores/GlobalConfigStore';
 
 interface ComposerState {
     layers: Instrument[]

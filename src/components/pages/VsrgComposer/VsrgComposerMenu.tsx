@@ -1,16 +1,14 @@
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {SongActionButton} from "$cmp/shared/Inputs/SongActionButton";
-import MenuPanel from "$cmp/shared/pagesLayout/MenuPanel";
+import {MenuPanel, MenuPanelWrapper} from "$cmp/shared/Menu/MenuPanel";
 import {SongMenu} from "$cmp/shared/pagesLayout/SongMenu";
-import {MenuItem} from "$cmp/shared/Miscellaneous/MenuItem";
+import {MenuButton, MenuItem} from "$cmp/shared/Menu/MenuItem";
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown";
 import {HelpTooltip} from "$cmp/shared/Utility/HelpTooltip";
 import Memoized from "$cmp/shared/Utility/Memoized";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
-import isMobile from "is-mobile";
-import Analytics from "$lib/Stats";
 import {VsrgComposerSettingsDataType} from "$lib/BaseSettings";
 import {Folder} from "$lib/Folder";
 import useClickOutside from "$lib/Hooks/useClickOutside";
@@ -22,7 +20,7 @@ import {songService} from "$lib/Services/SongService";
 import {RecordedSong} from "$lib/Songs/RecordedSong";
 import {SerializedSong, SongStorable} from "$lib/Songs/Song";
 import {VsrgSong, VsrgTrackModifier} from "$lib/Songs/VsrgSong";
-import {memo, useCallback, useEffect, useState} from "react";
+import {memo, useEffect, useState} from "react";
 import {
     FaBars,
     FaCog,
@@ -46,6 +44,7 @@ import {VsrgComposerHelp} from "./VsrgComposerHelp";
 import {logger} from "$stores/LoggerStore";
 import ss from "$cmp/shared/Settings/Settings.module.css"
 import {APP_NAME} from "$config";
+import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 
@@ -82,46 +81,39 @@ function VsrgMenu({
     const [songs] = useSongs()
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
-        setOpen(false)
-        if (isMobile()) setVisible(false)
+        setVisible(false)
     }, {active: (isOpen && isVisible), ignoreFocusable: true})
-    const toggleMenu = useCallback((override?: boolean) => {
-        if (typeof override !== "boolean") override = undefined
-        setVisible((old) => override !== undefined ? override : !old)
-    }, [])
 
-    const selectSideMenu = useCallback((selection?: MenuTabs) => {
-        if (selection === selectedMenu && isOpen) {
-            return setOpen(false)
-        }
-        setOpen(true)
-        if (selection) {
-            setSelectedMenu(selection)
-            Analytics.UIEvent('menu', {tab: selection})
-        }
-    }, [isOpen, selectedMenu])
-    const menuClass = isVisible ? "menu menu-visible" : "menu"
-    const sideClass = (isOpen && isVisible) ? "side-menu menu-open" : "side-menu"
     return <>
-        <div className="hamburger vsrg-hamburger" onClick={() => setVisible(!isVisible)}>
-            <Memoized>
-                <FaBars/>
-            </Memoized>
-        </div>
-        <div className="menu-wrapper" ref={menuRef}>
-            <div className={menuClass}>
-                <MenuItem onClick={() => toggleMenu(false)} className='close-menu' ariaLabel='Close menu'>
+        <MenuContextProvider
+            ref={menuRef}
+            current={selectedMenu}
+            setCurrent={setSelectedMenu}
+            open={isOpen}
+            setOpen={setOpen}
+            visible={isVisible}
+        >
+            <div className="hamburger vsrg-hamburger" onClick={() => setVisible(!isVisible)}>
+                <Memoized>
+                    <FaBars/>
+                </Memoized>
+            </div>
+            <MenuSidebar>
+                <MenuButton onClick={() => setVisible(!isVisible)} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon"/>
-                </MenuItem>
-                <MenuItem onClick={onSave} className={`margin-top-auto ${hasChanges ? "not-saved" : ""}`}
-                          ariaLabel='Save'>
+                </MenuButton>
+                <MenuButton
+                    onClick={onSave}
+                    style={{marginTop: 'auto'}}
+                    className={hasChanges ? "not-saved" : ""}
+                    ariaLabel='Save'
+                >
                     <Memoized>
                         <FaSave className="icon"/>
                     </Memoized>
-                </MenuItem>
+                </MenuButton>
                 <MenuItem
-                    onClick={() => selectSideMenu("Help")}
-                    isActive={isOpen && selectedMenu === "Help"}
+                    id={'Help'}
                     ariaLabel='Help'
                 >
                     <Memoized>
@@ -129,33 +121,33 @@ function VsrgMenu({
                     </Memoized>
                 </MenuItem>
                 <MenuItem
-                    onClick={() => selectSideMenu("Songs")}
-                    isActive={isOpen && selectedMenu === "Songs"}
+                    id={'Songs'}
                     ariaLabel='Song menu'
                 >
                     <Memoized>
                         <FaMusic className="icon"/>
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"}
-                          ariaLabel='Settings menu'>
+                <MenuItem
+                    id={'Settings'}
+                    ariaLabel='Settings menu'
+                >
                     <Memoized>
                         <FaCog className="icon"/>
                     </Memoized>
                 </MenuItem>
-                <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
-                          style={{border: "solid 0.1rem var(--secondary)"}}>
+                <MenuButton onClick={homeStore.open} ariaLabel='Open home menu'
+                            style={{border: "solid 0.1rem var(--secondary)"}}>
                     <Memoized>
                         <FaHome className="icon"/>
                     </Memoized>
-                </MenuItem>
-
-            </div>
-            <div className={sideClass}>
-                <MenuPanel current={selectedMenu} id="Help">
+                </MenuButton>
+            </MenuSidebar>
+            <MenuPanelWrapper>
+                <MenuPanel id="Help">
                     <VsrgComposerHelp/>
                 </MenuPanel>
-                <MenuPanel current={selectedMenu} id="Songs">
+                <MenuPanel id="Songs">
                     <div className="row">
                         <AppButton onClick={onCreateSong}>
                             Create song
@@ -171,12 +163,12 @@ function VsrgMenu({
                             folders,
                             functions: {
                                 onClick: onSongOpen,
-                                toggleMenu
+                                toggleMenu: setVisible
                             }
                         }}
                     />
                 </MenuPanel>
-                <MenuPanel current={selectedMenu} id="Settings">
+                <MenuPanel id="Settings">
                     <SettingsPane
                         settings={settings}
                         onUpdate={handleSettingChange}
@@ -257,8 +249,9 @@ function VsrgMenu({
                     </div>
 
                 </MenuPanel>
-            </div>
-        </div>
+            </MenuPanelWrapper>
+        </MenuContextProvider>
+
     </>
 }
 
@@ -300,7 +293,7 @@ interface SongRowProps {
     folders: Folder[]
     functions: {
         onClick: (song: VsrgSong) => void
-        toggleMenu: (override?: boolean) => void
+        toggleMenu: (override: boolean) => void
     }
 }
 

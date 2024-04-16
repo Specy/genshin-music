@@ -1,4 +1,4 @@
-import {capitalize, cn} from "$lib/Utilities";
+import {capitalize, cn} from "$lib/utils/Utilities";
 import {useEffect, useState} from "react";
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {createKeyComboComposer, Shortcut} from "$stores/KeybindsStore";

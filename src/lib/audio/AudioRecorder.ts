@@ -1,5 +1,5 @@
 import {createAudioRecorderPolyfill} from "./MediaRecorderPolyfill";
-import {fileService} from "./Services/FileService";
+import {fileService} from "../Services/FileService";
 
 export default class AudioRecorder {
     node: MediaStreamAudioDestinationNode | null

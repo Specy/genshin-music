@@ -1,5 +1,5 @@
 import type {CSSProperties} from "react";
-import {MaybeChildren} from "$lib/UtilTypes";
+import {MaybeChildren} from "$lib/utils/UtilTypes";
 
 export const HEADER_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6"] as const
 type HeaderType = typeof HEADER_TYPES[number]

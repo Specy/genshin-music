@@ -7,7 +7,7 @@ import {Select} from '$cmp/shared/Inputs/Select'
 import {Theme} from '$stores/ThemeStore/ThemeProvider'
 import {hasTooltip, Tooltip} from '$cmp/shared/Utility/Tooltip'
 import {NumericalInput} from './Numericalinput'
-import {prettyPrintInstrumentName} from '$lib/Utilities'
+import {prettyPrintInstrumentName} from '$lib/utils/Utilities'
 import {Column} from "$cmp/shared/layout/Column";
 import {Row} from "$cmp/shared/layout/Row";
 

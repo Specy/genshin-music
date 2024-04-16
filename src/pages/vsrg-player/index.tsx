@@ -3,7 +3,7 @@ import VsrgPlayerMenu from "$cmp/pages/VsrgPlayer/VsrgPlayerMenu";
 import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
 import {settingsService} from "$lib/Services/SettingsService";
 import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
-import {AudioPlayer} from "$lib/AudioPlayer";
+import {AudioPlayer} from "$lib/audio/AudioPlayer";
 import {VsrgPlayerKeyboard} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard";
 import {vsrgPlayerStore} from "$stores/VsrgPlayerStore";
 import {defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes} from "$cmp/pages/VsrgPlayer/VsrgPlayerCanvas";

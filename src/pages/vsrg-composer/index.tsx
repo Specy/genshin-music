@@ -10,14 +10,14 @@ import {VsrgComposerSettingsDataType} from "$lib/BaseSettings";
 import {settingsService} from "$lib/Services/SettingsService";
 import {SettingUpdate} from "$types/SettingsPropriety";
 import {vsrgComposerStore} from "$stores/VsrgComposerStore";
-import {AudioPlayer} from "$lib/AudioPlayer";
+import {AudioPlayer} from "$lib/audio/AudioPlayer";
 import {KeyboardEventData, KeyboardProvider} from "$lib/Providers/KeyboardProvider";
 import {songsStore} from "$stores/SongsStore";
 import {RecordedSong} from "$lib/Songs/RecordedSong";
 import {SerializedSong} from "$lib/Songs/Song";
 import {songService} from "$lib/Services/SongService";
 import {ComposedSong} from "$lib/Songs/ComposedSong";
-import {clamp, isFocusable, routeChangeBugFix} from "$lib/Utilities";
+import {clamp, isFocusable, routeChangeBugFix} from "$lib/utils/Utilities";
 import {DEFAULT_VSRG_KEYS_MAP} from "$config";
 import {ClickType} from "$types/GeneralTypes"
 import {RecordedNote} from "$lib/Songs/SongClasses";

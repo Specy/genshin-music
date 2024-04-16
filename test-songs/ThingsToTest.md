@@ -1,4 +1,4 @@
-## Things to test before updates
+## Things to test before changelog
 - Download of a song in composer and player
 - Import of a song in player, with old and new format, in sky and genshin
 - Import of a MIDI song 

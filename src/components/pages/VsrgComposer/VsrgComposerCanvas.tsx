@@ -15,8 +15,8 @@ import {VsrgCanvasCache} from "./VsrgComposerCache"
 import {VsrgKeysRenderer} from "./VsrgKeysRenderer"
 import {VsrgScrollableTrackRenderer} from "./VsrgScrollableTrackRenderer"
 import {VsrgTimelineRenderer} from "./VsrgTimelineRenderer"
-import {getNearestTo} from "$lib/Utilities"
-import {globalConfigStore} from "$stores/GlobalConfig"
+import {getNearestTo} from "$lib/utils/Utilities"
+import {globalConfigStore} from "$stores/GlobalConfigStore"
 
 
 export type VsrgCanvasSizes = {

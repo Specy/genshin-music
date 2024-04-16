@@ -9,7 +9,7 @@ import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts"
 import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown"
 import {SerializedSongKind} from "$types/SongTypes"
 import {APP_NAME, FOLDER_FILTER_TYPES} from "$config"
-import {capitalize} from "$lib/Utilities"
+import {capitalize} from "$lib/utils/Utilities"
 import {songService} from "$lib/Services/SongService"
 
 

@@ -1,5 +1,5 @@
 import {APP_NAME} from "$config";
-import {NoteDataState, ObservableNote} from "$lib/Instrument";
+import {NoteDataState, ObservableNote} from "$lib/audio/Instrument";
 import {ComposedSong} from "$lib/Songs/ComposedSong";
 import {RecordedSong} from "$lib/Songs/RecordedSong";
 import {action, makeObservable, observable} from "mobx";

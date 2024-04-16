@@ -1,6 +1,6 @@
 import {BlogAuthor, BlogMetadata} from "$cmp/pages/blog/types";
 import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
-import {MaybeChildren} from "$lib/UtilTypes";
+import {MaybeChildren} from "$lib/utils/UtilTypes";
 import s from './blog.module.scss'
 import {Header} from "$cmp/shared/header/Header";
 import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";

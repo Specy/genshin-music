@@ -1,7 +1,7 @@
 import {Theme, ThemeProvider} from "$stores/ThemeStore/ThemeProvider";
 import {useEffect, useState} from "react";
 import {observe} from "mobx";
-import {createDebouncer} from "$lib/Utilities";
+import {createDebouncer} from "$lib/utils/Utilities";
 
 
 type UseTheme = [Theme, (theme: Theme) => void]

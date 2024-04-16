@@ -15,7 +15,7 @@ import {fileService, UnknownFileTypes} from "$lib/Services/FileService";
 import {Folder, SerializedFolder} from "$lib/Folder";
 import {APP_NAME} from "$config";
 import {FileElement, FilePicker} from "$cmp/shared/Inputs/FilePicker";
-import {delay} from "$lib/Utilities";
+import {delay} from "$lib/utils/Utilities";
 import {useSongs} from "$lib/Hooks/useSongs";
 import {useObservableArray} from "$lib/Hooks/useObservable";
 import {themeStore} from "$stores/ThemeStore/ThemeStore";

@@ -1,6 +1,6 @@
 import {BASE_PATH} from "$config";
 import {fetchAudioBuffer} from "./Instrument";
-import {delay} from "./Utilities";
+import {delay} from "../utils/Utilities";
 
 
 class Metronome {

@@ -1,13 +1,13 @@
 import {APP_NAME, BASE_THEME_CONFIG, INSTRUMENTS_DATA, NOTES_CSS_CLASSES} from "$config"
 import {subscribeObeservableObject} from "$lib/Hooks/useObservable"
-import {ObservableNote} from "$lib/Instrument"
+import {ObservableNote} from "$lib/audio/Instrument"
 import SvgNote, {NoteImage} from "$cmp/shared/SvgNotes"
 import {useCallback, useEffect, useRef, useState} from "react"
 import {ThemeProvider} from "$stores/ThemeStore/ThemeProvider"
 import GenshinNoteBorder from '$cmp/shared/Miscellaneous/GenshinNoteBorder'
 import {InstrumentName, NoteStatus} from "$types/GeneralTypes"
 import s from "./ZenKeyboard.module.css"
-import {preventDefault} from "$lib/Utilities";
+import {preventDefault} from "$lib/utils/Utilities";
 
 interface ZenKeyboardProps {
     note: ObservableNote

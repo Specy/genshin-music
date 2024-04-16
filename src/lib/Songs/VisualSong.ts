@@ -2,7 +2,7 @@ import {APP_NAME, NoteNameType} from "$config"
 import {ComposedSong} from "$lib/Songs/ComposedSong"
 import {RecordedSong} from "$lib/Songs/RecordedSong"
 import {NoteColumn, ColumnNote, RecordedNote} from "$lib/Songs/SongClasses"
-import {Instrument} from '$lib/Instrument'
+import {Instrument} from '$lib/audio/Instrument'
 import {Song} from "./Song"
 
 const THRESHOLDS = {

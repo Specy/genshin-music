@@ -1,4 +1,4 @@
-import {MaybeChildren, Stylable} from "$lib/UtilTypes";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 import {Justify, justifyMap} from "$cmp/shared/layout/layoutConstants";
 
 

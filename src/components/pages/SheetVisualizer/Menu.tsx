@@ -1,16 +1,17 @@
 import {useState} from 'react'
 import {SongMenu} from '$cmp/shared/pagesLayout/SongMenu'
 import {useSongs} from '$lib/Hooks/useSongs'
-import {historyTracker} from '$stores/History'
-import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
+import {browserHistory} from '$stores/BrowserHistory'
+import {MenuButton, MenuItem} from '$cmp/shared/Menu/MenuItem'
 import {FaArrowLeft, FaHome, FaMusic, FaTimes} from 'react-icons/fa'
 import {homeStore} from '$stores/HomeStore'
-import MenuPanel from '$cmp/shared/pagesLayout/MenuPanel'
+import {MenuPanel, MenuPanelWrapper} from '$cmp/shared/Menu/MenuPanel'
 import {SerializedSong, SongStorable} from '$lib/Songs/Song'
 import useClickOutside from '$lib/Hooks/useClickOutside'
 import {songService} from '$lib/Services/SongService'
 import {logger} from '$stores/LoggerStore'
 import {useRouter} from 'next/router'
+import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 
 interface SheetVisualiserMenuProps {
     currentSong: SerializedSong | null,
@@ -21,14 +22,20 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiser
     const [songs] = useSongs()
     const history = useRouter()
     const [selectedPage, setSelectedPage] = useState("")
-    const sideClass = selectedPage === 'Songs' ? "side-menu menu-open" : "side-menu"
+    const [open, setOpen] = useState(false)
     const menuRef = useClickOutside<HTMLDivElement>(() => {
-        setSelectedPage("")
+        setOpen(false)
     }, {ignoreFocusable: true, active: selectedPage !== ""})
-    return <div className="menu-wrapper noprint" ref={menuRef}>
-        <div className="menu menu-visible" style={{justifyContent: 'flex-end'}}>
-            {(historyTracker.hasNavigated && selectedPage === "") &&
-                <MenuItem
+    return <MenuContextProvider
+        ref={menuRef}
+        open={open}
+        setOpen={setOpen}
+        current={selectedPage}
+        setCurrent={setSelectedPage}
+    >
+        <MenuSidebar style={{justifyContent: 'flex-end'}}>
+            {(browserHistory.hasNavigated && selectedPage === "") &&
+                <MenuButton
                     ariaLabel='Go back'
                     style={{marginBottom: 'auto'}}
                     onClick={() => {
@@ -36,31 +43,27 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiser
                     }}
                 >
                     <FaArrowLeft className='icon'/>
-                </MenuItem>
+                </MenuButton>
             }
             {selectedPage !== "" &&
-                <MenuItem
+                <MenuButton
                     ariaLabel='Close menu'
                     style={{marginBottom: 'auto'}}
-                    onClick={() => setSelectedPage("")}
+                    onClick={() => setOpen(false)}
                 >
                     <FaTimes className="icon"/>
-                </MenuItem>
+                </MenuButton>
             }
-            <MenuItem onClick={() => {
-                setSelectedPage(selectedPage === "Songs" ? "" : "Songs")
-            }} ariaLabel='Open songs menu'>
+            <MenuItem id={'Songs'} ariaLabel='Open songs menu'>
                 <FaMusic className="icon"/>
             </MenuItem>
-
-
-            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
-                      style={{border: "solid 0.1rem var(--secondary)"}}>
+            <MenuButton onClick={homeStore.open} ariaLabel='Open home menu'
+                        style={{border: "solid 0.1rem var(--secondary)"}}>
                 <FaHome className="icon"/>
-            </MenuItem>
-        </div>
-        <div className={sideClass}>
-            <MenuPanel>
+            </MenuButton>
+        </MenuSidebar>
+        <MenuPanelWrapper>
+            <MenuPanel id={'Songs'}>
                 <SongMenu<SongRowProps>
                     songs={songs}
                     className='noprint'
@@ -72,8 +75,9 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiser
                     }}
                 />
             </MenuPanel>
-        </div>
-    </div>
+        </MenuPanelWrapper>
+    </MenuContextProvider>
+
 }
 
 interface SongRowProps {

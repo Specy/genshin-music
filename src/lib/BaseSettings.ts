@@ -9,7 +9,7 @@ import {
     Pitch,
     PITCHES
 } from "$config"
-import {MIDIShortcut} from "./Utilities"
+import {MIDIShortcut} from "./utils/Utilities"
 import {
     SettingsCheckbox,
     SettingsInstrument,

@@ -1,7 +1,7 @@
 import {DEFAULT_DOM_RECT} from "$config"
 import Memoized from "$cmp/shared/Utility/Memoized"
 import {useObservableObject} from "$lib/Hooks/useObservable"
-import {clamp} from "$lib/Utilities"
+import {clamp} from "$lib/utils/Utilities"
 import {memo, useEffect, useRef, useState} from "react"
 import {BsTriangleFill} from "react-icons/bs"
 import {playerControlsStore} from "$stores/PlayerControlsStore"

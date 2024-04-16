@@ -1,5 +1,5 @@
 import {BASE_LAYER_LIMIT, HAS_BIGINT} from "$config"
-import {InstrumentData} from "./Songs/SongClasses"
+import {InstrumentData} from "./SongClasses"
 
 //map of the possible combinations of instruments, in binary, 
 export type LayerStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16

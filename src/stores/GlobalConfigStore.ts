@@ -1,9 +1,9 @@
 import {APP_NAME, BASE_LAYER_LIMIT} from "$config";
-import {NoteLayer} from "$lib/Layer";
+import {NoteLayer} from "$lib/Songs/Layer";
 import isMobile from "is-mobile";
 import {makeObservable, observable} from "mobx";
 
-type GlobalConfig = {
+type GlobalConfigStoreState = {
     PLAY_BAR_OFFSET: number,
     IS_MOBILE: boolean,
     IS_MIDI_AVAILABLE: boolean,
@@ -13,7 +13,7 @@ type GlobalConfig = {
 
 class GlobalConfigStore {
     @observable
-    state: GlobalConfig = {
+    state: GlobalConfigStoreState = {
         PLAY_BAR_OFFSET: 200,
         IS_MOBILE: false,
         IS_MIDI_AVAILABLE: true,
@@ -24,7 +24,7 @@ class GlobalConfigStore {
         makeObservable(this)
     }
 
-    setState = (state: Partial<GlobalConfig>) => {
+    setState = (state: Partial<GlobalConfigStoreState>) => {
         Object.assign(this.state, state)
     }
     setUmaMode = (isOn: boolean) => {

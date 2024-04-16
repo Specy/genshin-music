@@ -3,7 +3,7 @@ import {PIXI_VERTICAL_ALIGN} from "$config";
 import {RecordedSong} from "$lib/Songs/RecordedSong";
 import {RecordedNote} from "$lib/Songs/SongClasses";
 import {VsrgSong} from "$lib/Songs/VsrgSong";
-import {clamp} from "$lib/Utilities";
+import {clamp} from "$lib/utils/Utilities";
 import {type FederatedPointerEvent, Rectangle} from "pixi.js";
 import {useCallback, useEffect, useState} from "react";
 import {VsrgCanvasColors, VsrgCanvasSizes} from "./VsrgComposerCanvas";

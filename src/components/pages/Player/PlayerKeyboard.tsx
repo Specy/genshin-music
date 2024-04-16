@@ -2,15 +2,15 @@ import {Component} from 'react'
 import {APP_NAME, NoteNameType, Pitch, SPEED_CHANGERS} from "$config"
 import Note from '$cmp/pages/Player/PlayerNote'
 import {playerStore} from '$stores/PlayerStore'
-import {Array2d, clamp, delay, groupArrayEvery} from "$lib/Utilities"
-import Analytics from '$lib/Stats';
+import {Array2d, clamp, delay, groupArrayEvery} from "$lib/utils/Utilities"
+import Analytics from '$lib/Analytics';
 import {playerControlsStore} from '$stores/PlayerControlsStore'
 import {ApproachingNote, RecordedNote} from '$lib/Songs/SongClasses'
-import {Instrument, ObservableNote} from '$lib/Instrument'
+import {Instrument, ObservableNote} from '$lib/audio/Instrument'
 import type {Timer} from '$types/GeneralTypes'
 import {Chunk, RecordedSong} from '$lib/Songs/RecordedSong'
 import {MIDIEvent, MIDIProvider} from '$lib/Providers/MIDIProvider'
-import {NoteLayer} from '$lib/Layer'
+import {NoteLayer} from '$lib/Songs/Layer'
 import {subscribeObeservableObject, subscribeObservableArray} from '$lib/Hooks/useObservable'
 import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$stores/KeybindsStore'
 

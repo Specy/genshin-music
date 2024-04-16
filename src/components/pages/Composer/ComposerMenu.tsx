@@ -15,11 +15,11 @@ import {
     FaTrash
 } from 'react-icons/fa';
 import {APP_NAME} from '$config'
-import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
-import MenuPanel from '$cmp/shared/pagesLayout/MenuPanel'
+import {MenuButton, MenuItem} from '$cmp/shared/Menu/MenuItem'
+import {MenuPanel, MenuPanelWrapper} from '$cmp/shared/Menu/MenuPanel'
 import DonateButton from '$cmp/shared/Miscellaneous/DonateButton'
 import Memoized from '$cmp/shared/Utility/Memoized';
-import Analytics from '$lib/Stats';
+import Analytics from '$lib/Analytics';
 import {logger} from '$stores/LoggerStore';
 import {AppButton} from '$cmp/shared/Inputs/AppButton';
 import {SongMenu} from '$cmp/shared/pagesLayout/SongMenu';
@@ -50,7 +50,8 @@ import {FileElement, FilePicker} from '$cmp/shared/Inputs/FilePicker';
 import isMobile from 'is-mobile';
 import Link from 'next/link';
 import {useConfig} from '$lib/Hooks/useConfig';
-import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/Utilities';
+import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
+import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 
 interface MenuProps {
     data: {
@@ -126,16 +127,6 @@ function Menu({data, functions, inPreview}: MenuProps) {
         folderStore.createFolder(name)
     }, [])
 
-    const selectSideMenu = useCallback((selection?: MenuTabs) => {
-        if (selection === selectedMenu && isOpen) {
-            return setOpen(false)
-        }
-        setOpen(true)
-        if (selection) {
-            setSelectedMenu(selection)
-            Analytics.UIEvent('menu', {tab: selection})
-        }
-    }, [isOpen, selectedMenu])
     const importFile = useCallback(async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
         for (const file of files) {
             try {
@@ -178,7 +169,6 @@ function Menu({data, functions, inPreview}: MenuProps) {
             logger.error('Error downloading song')
         }
     }, [])
-    const sideClass = (isOpen && isVisible) ? "side-menu menu-open" : "side-menu"
     const songFunctions = {
         loadSong,
         removeSong,
@@ -186,166 +176,177 @@ function Menu({data, functions, inPreview}: MenuProps) {
         downloadSong,
         renameSong
     }
-    const hasUnsaved = data.hasChanges ? "margin-top-auto not-saved" : "margin-top-auto"
-    const menuClass = isVisible ? "menu menu-visible" : "menu"
-    return <>
-        <div className="hamburger ignore_click_outside" onClick={() => setVisible(!isVisible)}>
+    return <MenuContextProvider
+        style={inPreview ? {position: "absolute"} : {}}
+        ref={menuRef}
+        open={isOpen}
+        setOpen={setOpen}
+        current={selectedMenu}
+        setCurrent={setSelectedMenu}
+        visible={isVisible}
+    >
+        <div className="hamburger" onClick={() => setVisible(!isVisible)}>
             <Memoized>
                 <FaBars/>
             </Memoized>
         </div>
-        <div className={`menu-wrapper ${inPreview ? "menu-wrapper-absolute" : ""}`} ref={menuRef}>
-            <div className={menuClass}>
-                <MenuItem onClick={() => toggleMenu()} className='close-menu' ariaLabel='Close menu'>
-                    <FaTimes className="icon"/>
-                </MenuItem>
-                <MenuItem onClick={updateThisSong} className={hasUnsaved} ariaLabel='Save'>
-                    <Memoized>
-                        <FaSave className="icon"/>
-                    </Memoized>
-                </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Songs")} isActive={isOpen && selectedMenu === "Songs"}
-                          ariaLabel='Song menu'>
-                    <Memoized>
-                        <FaMusic className="icon"/>
-                    </Memoized>
-                </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"}
-                          ariaLabel='Settings menu'>
-                    <Memoized>
-                        <FaCog className="icon"/>
-                    </Memoized>
-                </MenuItem>
-                <MenuItem onClick={() => changePage('Home')} ariaLabel='Open home menu'
-                          style={{border: "solid 0.1rem var(--secondary)"}}>
-                    <Memoized>
-                        <FaHome className="icon"/>
-                    </Memoized>
-                </MenuItem>
-            </div>
-            <div className={sideClass}>
-                <MenuPanel current={selectedMenu} id="Songs">
-                    <div className="songs-buttons-wrapper">
-                        <HelpTooltip>
-                            <ul>
-                                <li>Click the song name to load it</li>
-                                <li>You can use different instruments and pitch for each layer</li>
-                                <li>Tempo changers help you make faster parts of a song without having very high bpm
-                                </li>
-                                <li>You can quickly create a song by importing a MIDI file and editing it, not all songs
-                                    are convertable directly, you might need to edit it a bit.
-                                </li>
-                                <li>You can also quickly create a song from audio / video, this is an experimental
-                                    feature and not very accurate
-                                </li>
-                                <li>
-                                    You can add breakpoints to the timeline (the bar below the composer) to quickly jump
-                                    between parts of a song
-                                </li>
-                            </ul>
-                        </HelpTooltip>
-                        <AppButton
-                            onClick={() => {
-                                changeMidiVisibility(true);
-                                toggleMenu()
-                            }}
-                            style={{marginLeft: 'auto'}}
-                        >
-                            Create from MIDI/Audio
-                        </AppButton>
-                        <AppButton onClick={createNewSong}>
-                            Create new song
-                        </AppButton>
-                    </div>
-                    <SongMenu<SongRowProps>
-                        songs={songs}
-                        exclude={excludedSongs}
-                        SongComponent={SongRow}
-                        style={{marginTop: '0.6rem'}}
-                        onCreateFolder={createFolder}
-                        componentProps={{
-                            theme,
-                            folders,
-                            functions: songFunctions
+        <MenuSidebar>
+            <MenuButton onClick={() => toggleMenu()} className='close-menu' ariaLabel='Close menu'>
+                <FaTimes className="icon"/>
+            </MenuButton>
+            <MenuButton
+                onClick={updateThisSong}
+                className={data.hasChanges ? "not-saved" : ""}
+                ariaLabel='Save'
+                style={{marginTop: 'auto'}}
+            >
+                <Memoized>
+                    <FaSave className="icon"/>
+                </Memoized>
+            </MenuButton>
+            <MenuItem id={"Songs"} ariaLabel='Song menu'>
+                <Memoized>
+                    <FaMusic className="icon"/>
+                </Memoized>
+            </MenuItem>
+            <MenuItem id={"Settings"} ariaLabel='Settings menu'>
+                <Memoized>
+                    <FaCog className="icon"/>
+                </Memoized>
+            </MenuItem>
+            <MenuButton
+                onClick={() => changePage('Home')}
+                ariaLabel='Open home menu'
+                style={{border: "solid 0.1rem var(--secondary)"}}
+            >
+                <Memoized>
+                    <FaHome className="icon"/>
+                </Memoized>
+            </MenuButton>
+        </MenuSidebar>
+        <MenuPanelWrapper>
+            <MenuPanel id="Songs">
+                <div className="songs-buttons-wrapper">
+                    <HelpTooltip>
+                        <ul>
+                            <li>Click the song name to load it</li>
+                            <li>You can use different instruments and pitch for each layer</li>
+                            <li>Tempo changers help you make faster parts of a song without having very high bpm
+                            </li>
+                            <li>You can quickly create a song by importing a MIDI file and editing it, not all songs
+                                are convertable directly, you might need to edit it a bit.
+                            </li>
+                            <li>You can also quickly create a song from audio / video, this is an experimental
+                                feature and not very accurate
+                            </li>
+                            <li>
+                                You can add breakpoints to the timeline (the bar below the composer) to quickly jump
+                                between parts of a song
+                            </li>
+                        </ul>
+                    </HelpTooltip>
+                    <AppButton
+                        onClick={() => {
+                            changeMidiVisibility(true);
+                            toggleMenu()
                         }}
-                    />
-                    <div className='row' style={{justifyContent: "flex-end", gap: '0.2rem'}}>
-                        <FilePicker<SerializedSong | SerializedSong[]>
-                            onPick={importFile}
-                            onError={(e, files) => {
-                                if (e) console.error(e)
-                                if (files?.length > 0) {
-                                    const file = files![0]
-                                    const name = file.name
-                                    if (isMidiFormat(name)) logger.warn(`Opening the midi importer to import a MIDI file, please reselect the file`, 6000)
-                                    else if (isVideoFormat(name)) logger.warn(`Opening the midi importer to import a video file, please reselect the file. Video conversion is not very accurate`, 6000)
-                                    else if (isAudioFormat(name)) logger.warn(`Opening the midi importer to import an audio file, please reselect the file. Audio conversion is not very accurate`, 6000)
-                                    else return logger.error(`Error importing file, invalid format`, 8000)
-                                    changeMidiVisibility(true)
-                                    toggleMenu()
-                                } else {
-                                    logger.error(
-                                        `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
-                                        8000
-                                    )
-                                }
-                            }}
-                            as='json'
-                            multiple={true}
-                        >
-                            <AppButton>
-                                Import song sheet
-                            </AppButton>
-                        </FilePicker>
-                    </div>
-                    <div className="songs-buttons-wrapper" style={{marginTop: 'auto'}}>
-                        <AppButton
-                            style={{marginTop: '0.5rem'}}
-                            className={`record-btn`}
-                            onClick={() => {
-                                setOpen(false)
-                                setTimeout(() => {
-                                    functions.startRecordingAudio(!data.isRecordingAudio)
-                                }, 300)
-                            }}
-                            toggled={data.isRecordingAudio}
-                        >
-                            {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
+                        style={{marginLeft: 'auto'}}
+                    >
+                        Create from MIDI/Audio
+                    </AppButton>
+                    <AppButton onClick={createNewSong}>
+                        Create new song
+                    </AppButton>
+                </div>
+                <SongMenu<SongRowProps>
+                    songs={songs}
+                    exclude={excludedSongs}
+                    SongComponent={SongRow}
+                    style={{marginTop: '0.6rem'}}
+                    onCreateFolder={createFolder}
+                    componentProps={{
+                        theme,
+                        folders,
+                        functions: songFunctions
+                    }}
+                />
+                <div className='row' style={{justifyContent: "flex-end", gap: '0.2rem'}}>
+                    <FilePicker<SerializedSong | SerializedSong[]>
+                        onPick={importFile}
+                        onError={(e, files) => {
+                            if (e) console.error(e)
+                            if (files?.length > 0) {
+                                const file = files![0]
+                                const name = file.name
+                                if (isMidiFormat(name)) logger.warn(`Opening the midi importer to import a MIDI file, please reselect the file`, 6000)
+                                else if (isVideoFormat(name)) logger.warn(`Opening the midi importer to import a video file, please reselect the file. Video conversion is not very accurate`, 6000)
+                                else if (isAudioFormat(name)) logger.warn(`Opening the midi importer to import an audio file, please reselect the file. Audio conversion is not very accurate`, 6000)
+                                else return logger.error(`Error importing file, invalid format`, 8000)
+                                changeMidiVisibility(true)
+                                toggleMenu()
+                            } else {
+                                logger.error(
+                                    `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
+                                    8000
+                                )
+                            }
+                        }}
+                        as='json'
+                        multiple={true}
+                    >
+                        <AppButton>
+                            Import song sheet
                         </AppButton>
-                    </div>
-                </MenuPanel>
-                <MenuPanel current={selectedMenu} id="Settings">
-                    <SettingsPane
-                        settings={data.settings}
-                        onUpdate={handleSettingChange}
-                        changeVolume={changeVolume}
-                    />
-                    <div className='settings-row-wrap'>
-                        {IS_MIDI_AVAILABLE &&
-                            <Link href="/keybinds">
-                                <AppButton
-                                    style={{width: 'fit-content'}}
-                                >
-                                    Connect MIDI keyboard
-                                </AppButton>
-                            </Link>
-
-                        }
-                        <Link href="/theme" onClick={(e) => e.preventDefault()}>
+                    </FilePicker>
+                </div>
+                <div className="songs-buttons-wrapper" style={{marginTop: 'auto'}}>
+                    <AppButton
+                        style={{marginTop: '0.5rem'}}
+                        className={`record-btn`}
+                        onClick={() => {
+                            setOpen(false)
+                            setTimeout(() => {
+                                functions.startRecordingAudio(!data.isRecordingAudio)
+                            }, 300)
+                        }}
+                        toggled={data.isRecordingAudio}
+                    >
+                        {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
+                    </AppButton>
+                </div>
+            </MenuPanel>
+            <MenuPanel id="Settings">
+                <SettingsPane
+                    settings={data.settings}
+                    onUpdate={handleSettingChange}
+                    changeVolume={changeVolume}
+                />
+                <div className='settings-row-wrap'>
+                    {IS_MIDI_AVAILABLE &&
+                        <Link href="/keybinds">
                             <AppButton
-                                onClick={() => changePage('theme')}
                                 style={{width: 'fit-content'}}
                             >
-                                Change app theme
+                                Connect MIDI keyboard
                             </AppButton>
                         </Link>
 
-                    </div>
-                    <DonateButton/>
-                </MenuPanel>
-            </div>
-        </div>
-    </>
+                    }
+                    <Link href="/theme" onClick={(e) => e.preventDefault()}>
+                        <AppButton
+                            onClick={() => changePage('theme')}
+                            style={{width: 'fit-content'}}
+                        >
+                            Change app theme
+                        </AppButton>
+                    </Link>
+
+                </div>
+                <DonateButton/>
+            </MenuPanel>
+        </MenuPanelWrapper>
+    </MenuContextProvider>
+
 }
 
 

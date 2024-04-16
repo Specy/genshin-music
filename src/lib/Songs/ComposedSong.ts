@@ -10,11 +10,11 @@ import {
 } from "$config"
 import {InstrumentName} from "$types/GeneralTypes"
 import {_LegacySongInstruments, OldFormat} from "$types/SongTypes"
-import {NoteLayer} from "../Layer"
+import {NoteLayer} from "./Layer"
 import {RecordedSong} from "./RecordedSong"
 import {NoteColumn, ColumnNote, InstrumentData, RecordedNote, SerializedColumn} from "./SongClasses"
 import {SerializedSong, Song} from "./Song"
-import {clamp} from "../Utilities";
+import {clamp} from "../utils/Utilities";
 
 interface OldFormatNoteType {
     key: string,

@@ -2,7 +2,7 @@ import {Stage} from "@pixi/react";
 import {subscribeTheme} from "$lib/Hooks/useTheme";
 import {VsrgAccuracyBounds, VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
 import {ThrottledEventLoop} from "$lib/ThrottledEventLoop";
-import {isNumberCloseTo} from "$lib/Utilities";
+import {isNumberCloseTo} from "$lib/utils/Utilities";
 import {Application} from "pixi.js";
 import {Component, createRef} from "react";
 import {keyBinds} from "$stores/KeybindsStore";

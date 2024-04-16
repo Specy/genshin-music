@@ -1,5 +1,5 @@
 import Link, {LinkProps} from "next/link";
-import {MaybeChildren, Stylable} from "$lib/UtilTypes";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 
 
 interface AppLinkProps extends LinkProps {

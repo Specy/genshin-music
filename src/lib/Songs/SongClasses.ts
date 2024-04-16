@@ -9,7 +9,7 @@ import {
     TempoChanger
 } from "$config"
 import {InstrumentName} from "$types/GeneralTypes"
-import {NoteLayer} from "../Layer"
+import {NoteLayer} from "./Layer"
 import {InstrumentNoteIcon} from "./ComposedSong"
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
