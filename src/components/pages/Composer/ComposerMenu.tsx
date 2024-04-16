@@ -201,7 +201,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 <MemoizedIcon icon={FaSave} className={'icon'}/>
             </MenuButton>
             <MenuItem id={"Songs"} ariaLabel='Song menu'>
-                <MemoizedIcon icon={FaSave} className={'icon'}/>
+                <MemoizedIcon icon={FaMusic} className={'icon'}/>
             </MenuItem>
             <MenuItem id={"Settings"} ariaLabel='Settings menu'>
                 <MemoizedIcon icon={FaCog} className={'icon'}/>

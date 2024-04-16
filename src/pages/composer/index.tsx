@@ -889,7 +889,8 @@ class Composer extends Component<ComposerProps, ComposerState> {
             />
             <ComposerTools
                 data={{
-                    isToolsVisible, layer,
+                    isToolsVisible,
+                    layer,
                     hasCopiedColumns: copiedColumns.length > 0,
                     selectedColumns,
                     undoHistory
