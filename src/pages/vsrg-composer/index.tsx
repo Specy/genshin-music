@@ -21,7 +21,7 @@ import {clamp, isFocusable, routeChangeBugFix} from "$lib/utils/Utilities";
 import {DEFAULT_VSRG_KEYS_MAP} from "$config";
 import {ClickType} from "$types/GeneralTypes"
 import {RecordedNote} from "$lib/Songs/SongClasses";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {homeStore} from "$stores/HomeStore";
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import {NextRouter, useRouter} from "next/router";
@@ -625,8 +625,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             tempoChanger
         } = this.state
         return <>
-            <PageMeta text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`}
-                      description="Create new VSRG songs using existing background songs and create your own beatmap for it."/>
+            <PageMetadata text={`Vsrg Composer - ${vsrg.name ?? "Unnamed"}`}
+                          description="Create new VSRG songs using existing background songs and create your own beatmap for it."/>
             <VsrgMenu
                 trackModifiers={vsrg.trackModifiers}
                 hasChanges={this.changes > 0}

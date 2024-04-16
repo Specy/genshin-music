@@ -4,6 +4,7 @@ import {memo, useEffect, useState} from "react"
 import {Theme} from "$stores/ThemeStore/ThemeProvider"
 import {Instrument} from '$lib/audio/Instrument'
 import s from "./SheetFrame.module.css"
+import {cn, cs} from "$lib/utils/Utilities";
 
 
 interface SheetFrameProps {
@@ -28,13 +29,11 @@ export function _SheetFrame({chunk, rows, hasText, selected, theme, keyboardLayo
         notes[note.index] = true
     })
     return <div
-        className={`${s['frame-outer-smaller']} ${chunk.notes.length === 0 ? s['visualizer-ball'] : ''}`}
-        style={selected
-            ? {
-                borderColor: 'var(--accent)',
-            }
-            : {}
-        }
+        className={cn(
+            s['frame-outer-smaller'],
+            [chunk.notes.length === 0, s['visualizer-ball']]
+        )}
+        style={cs([selected, {borderColor: 'var(--accent)'}])}
     >
         {chunk.notes.length === 0
             ? <div></div>

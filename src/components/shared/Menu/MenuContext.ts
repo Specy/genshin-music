@@ -13,9 +13,11 @@ export type MenuContextState<T> = {
 
 export const MenuContext = createContext<MenuContextState<string>>({
     current: "",
-    setCurrent: () => {},
+    setCurrent: () => {
+    },
     open: false,
-    setOpen: () => {},
+    setOpen: () => {
+    },
     visible: true
 } satisfies MenuContextState<string>)
 

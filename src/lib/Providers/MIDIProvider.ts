@@ -1,6 +1,6 @@
 import {settingsService} from "$lib/Services/SettingsService"
 import {MIDISettings} from "../BaseSettings"
-import {createDebouncer, debounce, MIDINote, MIDINoteStatus} from "$lib/utils/Utilities";
+import {debounce, MIDINote, MIDINoteStatus} from "$lib/utils/Utilities";
 import {MIDI_PRESETS, MIDIPreset} from "$config";
 
 export enum PresetMidi {
@@ -21,6 +21,7 @@ export class MIDIListener {
     settings: typeof MIDISettings
     notes: MIDINote[] = []
     inputs: WebMidi.MIDIInput[] = []
+
     constructor() {
         this.settings = settingsService.getDefaultMIDISettings()
     }

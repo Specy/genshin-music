@@ -233,7 +233,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
     const layer1ColorText = theme.getTextColorFromBackground(layer1Color)
     const layer2ColorText = theme.getTextColorFromBackground(layer2Color)
 
-    return  <MenuContextProvider
+    return <MenuContextProvider
         style={inPreview ? {position: "absolute"} : {}}
         current={selectedMenu}
         setCurrent={setSelectedMenu}

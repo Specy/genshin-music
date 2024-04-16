@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {SongMenu} from '$cmp/shared/pagesLayout/SongMenu'
 import {useSongs} from '$lib/Hooks/useSongs'
-import {browserHistory} from '$stores/BrowserHistory'
+import {browserHistoryStore} from '$stores/BrowserHistoryStore'
 import {MenuButton, MenuItem} from '$cmp/shared/Menu/MenuItem'
 import {FaArrowLeft, FaHome, FaMusic, FaTimes} from 'react-icons/fa'
 import {homeStore} from '$stores/HomeStore'
@@ -34,7 +34,7 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiser
         setCurrent={setSelectedPage}
     >
         <MenuSidebar style={{justifyContent: 'flex-end'}}>
-            {(browserHistory.hasNavigated && selectedPage === "") &&
+            {(browserHistoryStore.hasNavigated && selectedPage === "") &&
                 <MenuButton
                     ariaLabel='Go back'
                     style={{marginBottom: 'auto'}}

@@ -17,7 +17,7 @@ import {AppButton} from '$cmp/shared/Inputs/AppButton';
 import {AudioProvider} from '$lib/Providers/AudioProvider';
 import {settingsService} from '$lib/Services/SettingsService';
 import {songsStore} from '$stores/SongsStore';
-import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta';
+import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata';
 import {metronome} from '$lib/audio/Metronome';
 import {Lambda} from 'mobx';
 import {NoteLayer} from '$lib/Songs/Layer';
@@ -362,8 +362,8 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             speedChanger
         } = state
         return <>
-            <PageMeta text="Player"
-                      description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
+            <PageMetadata text="Player"
+                          description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
             <Menu
                 functions={{addSong, removeSong, handleSettingChange, changeVolume, renameSong}}
                 data={{settings}}

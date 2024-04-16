@@ -45,6 +45,7 @@ import {logger} from "$stores/LoggerStore";
 import ss from "$cmp/shared/Settings/Settings.module.css"
 import {APP_NAME} from "$config";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
+import {Row} from "$cmp/shared/layout/Row";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 
@@ -204,22 +205,22 @@ function VsrgMenu({
                                         <FaTimes/>
                                     </SongActionButton>
                                 </div>
-                                <div className="row-centered space-between">
+                                <Row justify={'between'} align={'center'}>
                                     <span>
                                         Pitch
                                     </span>
                                     <span>
                                         {audioSong.pitch}
                                     </span>
-                                </div>
-                                <div className="row-centered space-between">
+                                </Row>
+                                <Row justify={'between'} align={'center'}>
                                     <span>
                                         BPM
                                     </span>
                                     <span>
                                         {audioSong.bpm}
                                     </span>
-                                </div>
+                                </Row>
                                 <span style={{marginTop: '0.4rem'}}>
                                     Instrument modifiers
                                 </span>

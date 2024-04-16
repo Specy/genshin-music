@@ -1,7 +1,7 @@
 import {FaArrowLeft, FaDiscord, FaHome} from 'react-icons/fa';
 
 import {MenuButton} from '$cmp/shared/Menu/MenuItem'
-import {browserHistory} from '$stores/BrowserHistory';
+import {browserHistoryStore} from '$stores/BrowserHistoryStore';
 import {homeStore} from '$stores/HomeStore';
 import {useRouter} from 'next/router';
 import Link from 'next/link';
@@ -13,7 +13,7 @@ export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>
     const history = useRouter()
     return <MenuContextProvider className={className} style={style}>
         <MenuSidebar style={{justifyContent: 'flex-end'}}>
-            {browserHistory.hasNavigated &&
+            {browserHistoryStore.hasNavigated &&
                 <MenuButton
                     style={{marginBottom: 'auto'}}
                     onClick={() => {

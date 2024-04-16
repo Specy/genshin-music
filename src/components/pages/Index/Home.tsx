@@ -18,6 +18,7 @@ import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts'
 import {MdOutlinePiano} from "react-icons/md";
 import {usePathname} from "next/navigation";
 import {logger} from "$stores/LoggerStore";
+import {Row} from "$cmp/shared/layout/Row";
 
 
 interface HomeProps {
@@ -255,7 +256,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
         </div>
 
         <div className='home-bottom'>
-            <div className='home-app-scaling row-centered'>
+            <Row align={'center'} className='home-app-scaling'>
                 <span>
                     App scale
                 </span>
@@ -283,7 +284,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     <FaPlus/>
                 </AppButton>
                 {appScale}%
-            </div>
+            </Row>
             <span style={{padding: '0 1rem', textAlign: 'center'}}>
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </span>

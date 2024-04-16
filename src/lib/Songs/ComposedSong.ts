@@ -12,7 +12,7 @@ import {InstrumentName} from "$types/GeneralTypes"
 import {_LegacySongInstruments, OldFormat} from "$types/SongTypes"
 import {NoteLayer} from "./Layer"
 import {RecordedSong} from "./RecordedSong"
-import {NoteColumn, ColumnNote, InstrumentData, RecordedNote, SerializedColumn} from "./SongClasses"
+import {ColumnNote, InstrumentData, NoteColumn, RecordedNote, SerializedColumn} from "./SongClasses"
 import {SerializedSong, Song} from "./Song"
 import {clamp} from "../utils/Utilities";
 

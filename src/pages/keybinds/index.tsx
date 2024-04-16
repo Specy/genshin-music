@@ -1,7 +1,7 @@
 import {APP_NAME} from "$config";
 import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
 import BaseNote from "$cmp/shared/Miscellaneous/BaseNote";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import useClickOutside from "$lib/Hooks/useClickOutside";
 import {useObservableArray, useObservableMap} from "$lib/Hooks/useObservable";
 import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
@@ -53,7 +53,7 @@ export default function Keybinds() {
     const k4 = useObservableArray(keyBinds.getVsrgKeybinds(4))
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
     return <DefaultPage>
-        <PageMeta text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys"/>
+        <PageMetadata text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys"/>
         <h1>
             MIDI keybinds
         </h1>

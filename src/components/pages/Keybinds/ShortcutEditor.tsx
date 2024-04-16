@@ -6,6 +6,7 @@ import {FaCheck} from "react-icons/fa";
 import s from './ShortcutEditor.module.css'
 import {IconButton} from "$cmp/shared/Inputs/IconButton";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
+import {Row} from "$cmp/shared/layout/Row";
 
 interface ShortcutEditorProps<K, V> {
     map: Map<K, V>;
@@ -68,7 +69,7 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({
             hasTooltip(value.description)
         )}
     >
-        <div className="row-centered" style={{gap: "0.4rem"}}>
+        <Row align={'center'} gap={'0.4rem'}>
             {capitalize((value.name as string).toString?.().replaceAll("_", " ") ?? value as any)}
             {value.holdable &&
                 <div style={{fontSize: '0.8rem'}}>
@@ -76,8 +77,8 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({
                 </div>
             }
 
-        </div>
-        <div className="row" style={{gap: "0.4rem"}}>
+        </Row>
+        <Row gap={'0.4rem'}>
             {selected &&
                 <IconButton
                     cssVar="accent"
@@ -93,7 +94,7 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({
             >
                 {newKey}
             </AppButton>
-        </div>
+        </Row>
         {value.description &&
             <Tooltip>
                 {value.description}

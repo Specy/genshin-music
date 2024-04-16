@@ -56,7 +56,6 @@ function _PlayerSongControls({
             </div>
             <div className={`column ${s['slider-wrapper']}`} style={!hasSong ? {display: 'none'} : {}}>
                 <div className="row" style={{width: '100%'}}>
-
                     <div className={`${hasTooltip(true)} row`} style={{marginRight: '0.4rem', flex: 1}}>
                         <select
                             className={s['slider-select']}

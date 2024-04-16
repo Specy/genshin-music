@@ -1,4 +1,4 @@
-import {FC, memo} from 'react'
+import {memo} from 'react'
 import {IconType} from "react-icons";
 
 interface MemoizedProps {
@@ -16,15 +16,16 @@ export default memo(function Memoized({children}: MemoizedProps) {
 })
 
 
-interface MemoizedIconProps{
+interface MemoizedIconProps {
     icon: IconType
     size?: number | string
 
 }
+
 export const MemoizedIcon = memo(function MemoizedIcon({icon: Icon, size}: MemoizedIconProps) {
     return <Icon
         size={size}
     />
-} , (prev, next) => {
+}, (prev, next) => {
     return prev.icon === next.icon && prev.size === next.size
 })

@@ -9,6 +9,7 @@ import {FaCog, FaMinus, FaPlus, FaStepBackward, FaStepForward} from "react-icons
 import {Theme} from "$stores/ThemeStore/ThemeProvider"
 import {VsrgComposerKeyboard} from "./VsrgComposerKeyboard"
 import {VsrgTrackSettings} from "./VsrgTrackSettings"
+import {Row} from "$cmp/shared/layout/Row";
 
 interface VsrgTopProps {
     vsrg: VsrgSong
@@ -60,7 +61,7 @@ export function VsrgTop({
                     onChange={(track) => onTrackChange(track, selectedTrack)}
                 />
             }
-            <div className="row-centered vsrg-breakpoints-buttons" style={{marginBottom: '0.4rem'}}>
+            <Row align={'center'} className="vsrg-breakpoints-buttons" style={{marginBottom: '0.4rem'}}>
                 <AppButton style={{marginLeft: 0}} onClick={() => onBreakpointSelect(-1)}>
                     <Memoized>
                         <FaStepBackward/>
@@ -82,7 +83,7 @@ export function VsrgTop({
 
                     </Memoized>
                 </AppButton>
-            </div>
+            </Row>
             <div className="vsrg-track-wrapper column">
 
                 {vsrg.tracks.map((track, index) =>

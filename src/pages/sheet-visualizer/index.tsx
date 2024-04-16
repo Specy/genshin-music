@@ -7,7 +7,7 @@ import {AppButton} from '$cmp/shared/Inputs/AppButton'
 import {logger} from '$stores/LoggerStore'
 import {SerializedSong} from '$lib/Songs/Song'
 import {SheetVisualiserMenu} from '$cmp/pages/SheetVisualizer/Menu'
-import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
+import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata'
 import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
 import {songService} from '$lib/Services/SongService'
 import {useTheme} from '$lib/Hooks/useTheme'
@@ -82,8 +82,8 @@ export default function SheetVisualizer() {
             />
         }
     >
-        <PageMeta text="Sheet Visualizer"
-                  description='Learn a sheet in a visual way, convert the song into text format or print it as pdf'/>
+        <PageMetadata text="Sheet Visualizer"
+                      description='Learn a sheet in a visual way, convert the song into text format or print it as pdf'/>
         <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
             <div className={`${s['visualizer-buttons-wrapper']} noprint`}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>

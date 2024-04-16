@@ -15,4 +15,4 @@ class HistoryTracker {
 }
 
 
-export const browserHistory = new HistoryTracker();
+export const browserHistoryStore = new HistoryTracker();

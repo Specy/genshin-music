@@ -29,7 +29,7 @@ interface ToastProps {
 
 
 function Toast({toast}: ToastProps) {
-    const {text, type, id, timeout, visible}  = useObservableObject(toast)
+    const {text, type, id, timeout, visible} = useObservableObject(toast)
     const isBig = text.length > 150
     return <DecoratedCard
         key={id}

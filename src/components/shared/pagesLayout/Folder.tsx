@@ -11,6 +11,7 @@ import {SerializedSongKind} from "$types/SongTypes"
 import {APP_NAME, FOLDER_FILTER_TYPES} from "$config"
 import {capitalize} from "$lib/utils/Utilities"
 import {songService} from "$lib/Services/SongService"
+import {Column} from "$cmp/shared/layout/Column";
 
 
 interface FolderProps {
@@ -52,9 +53,15 @@ export function SongFolder({
     const [folderName, setFolderName] = useState(data.name)
     const ref = useRef<HTMLDivElement>(null)
     const [height, setHeight] = useState(0)
+
     useEffect(() => {
         setFolderName(data.name)
     }, [data.name])
+
+    useEffect(() => {
+        setExpanded(defaultOpen)
+    }, [defaultOpen])
+
     useEffect(() => {
         const current = ref.current
         if (!current) return
@@ -69,9 +76,8 @@ export function SongFolder({
         }, 200)
         return () => clearTimeout(timeout)
     }, [data.songs, expanded, children])
-    useEffect(() => {
-        setExpanded(defaultOpen)
-    }, [defaultOpen])
+
+
     const style = {backgroundColor, color}
 
     async function deleteFolder() {
@@ -166,10 +172,10 @@ export function SongFolder({
             }
         </div>
 
-        <div className="column folder-overflow" style={{maxHeight: expanded ? `${height}px` : 0}}>
+        <Column className="folder-overflow" style={{maxHeight: expanded ? `${height}px` : 0}}>
             <div className="column folder-overflow-expandible" ref={ref}>
                 {children}
             </div>
-        </div>
+        </Column>
     </div>
 }

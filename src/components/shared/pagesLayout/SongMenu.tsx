@@ -9,6 +9,7 @@ import FuzzySearch from "fuzzy-search";
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {FaSearch, FaTimes} from "react-icons/fa";
 import {IconButton} from "$cmp/shared/Inputs/IconButton";
+import {Row} from "$cmp/shared/layout/Row";
 
 
 interface SongMenuProps<T extends { data: SongStorable }> {
@@ -22,6 +23,9 @@ interface SongMenuProps<T extends { data: SongStorable }> {
     onCreateFolder?: () => void
 }
 
+function isInFolder(folders: Folder[], song: SongStorable) {
+    return folders.some(f => f.id === song.folderId)
+}
 
 export function SongMenu<T extends { data: SongStorable }>({
                                                                songs,
@@ -39,26 +43,25 @@ export function SongMenu<T extends { data: SongStorable }>({
     const [filteredSongs, setFilteredSongs] = useState<SongStorable[]>([])
     const [searchValue, setSearchValue] = useState<string>('')
     const [folders] = useFolders(filteredSongs)
+    const [theme] = useTheme()
+
     useEffect(() => {
         const excluded = songs.filter(s => !exclude?.includes(s.type) ?? true)
         const searcher = new FuzzySearch(excluded, ['name'], {caseSensitive: false, sort: true})
         if (searchValue === '') return setFilteredSongs(excluded)
         setFilteredSongs(searcher.search(searchValue))
     }, [songs, exclude, searchValue])
-    useEffect(() => {
-        function isInFolder(song: SongStorable) {
-            return folders.some(f => f.id === song.folderId)
-        }
 
-        setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'recorded')))
-        setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'composed')))
-        setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !isInFolder(song) && song.type === 'vsrg')))
+    useEffect(() => {
+        setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'recorded')))
+        setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'composed')))
+        setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'vsrg')))
     }, [filteredSongs, folders])
-    const [theme] = useTheme()
+
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
     const unselectedColorText = theme.getTextColorFromBackground(unselectedColor).toString()
     return <div className={className} style={style}>
-        <div className="row" style={{justifyContent: "space-between", gap: "0.5rem"}}>
+        <Row justify={'between'} gap='0.5rem'>
             <div className={s['search']}
                  style={{
                      backgroundColor: unselectedColor.toString(),
@@ -94,7 +97,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                     Create folder
                 </AppButton>
             }
-        </div>
+        </Row>
         {((!exclude?.includes('composed') ?? true) && noFolderComposed) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}

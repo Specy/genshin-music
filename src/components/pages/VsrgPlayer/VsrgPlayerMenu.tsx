@@ -36,7 +36,6 @@ import {songsStore} from "$stores/SongsStore";
 import {Theme} from "$stores/ThemeStore/ThemeProvider";
 import {SettingUpdate} from "$types/SettingsPropriety";
 import {logger} from "$stores/LoggerStore";
-import isMobile from "is-mobile";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {APP_NAME} from "$config";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";

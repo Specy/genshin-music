@@ -1,5 +1,5 @@
 import {APP_NAME, IMPORT_NOTE_POSITIONS, INSTRUMENTS_DATA, PITCHES} from "$config"
-import {NoteColumn, ColumnNote, InstrumentData, RecordedNote, SerializedRecordedNote} from "./SongClasses"
+import {ColumnNote, InstrumentData, NoteColumn, RecordedNote, SerializedRecordedNote} from "./SongClasses"
 import {ComposedSong, defaultInstrumentMap} from "./ComposedSong"
 import {groupByNotes, groupNotesByIndex, mergeLayers} from "$lib/utils/Utilities";
 import clonedeep from 'lodash.clonedeep'

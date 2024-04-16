@@ -3,7 +3,7 @@ import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
 import {MaybeChildren} from "$lib/utils/UtilTypes";
 import s from './blog.module.scss'
 import {Header} from "$cmp/shared/header/Header";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import Link from "next/link";
 import {useEffect, useMemo, useState} from "react";
 import {APP_NAME, BASE_PATH} from "$config";
@@ -36,7 +36,7 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
             paddingLeft: 'var(--menu-size)', gap: '1rem', lineHeight: '1.5'
         }}
     >
-        <PageMeta
+        <PageMetadata
             text={metadata.title}
             description={metadata.description}
             image={metadata.image}
@@ -44,7 +44,7 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
             <meta name={'author'} content={metadata.author?.name ?? "Specy"}/>
             <meta name={'date'} content={metadata.createdAt.toISOString()}/>
             <meta name={'keywords'} content={metadata.tags.join(', ')}/>
-        </PageMeta>
+        </PageMetadata>
         <Row justify={'between'} className={`${s['blog-nav']}`}>
             <Link href={'/blog'}>
                 Posts

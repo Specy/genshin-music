@@ -35,7 +35,8 @@ export function HelpTab() {
             Learn how to use the Player
         </Header>
         <p>
-            To learn how to use the Player, visit the <AppLink href={'/blog/posts/how-to-use-player'}>Player guide</AppLink>,
+            To learn how to use the Player, visit the <AppLink href={'/blog/posts/how-to-use-player'}>Player
+            guide</AppLink>,
             it will
             tell you about every feature in the player, and what every setting does.
         </p>

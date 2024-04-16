@@ -4,7 +4,7 @@ import {FaGithub} from 'react-icons/fa'
 import {ChangelogRow} from '$cmp/pages/Changelog/ChangelogRow'
 import {CHANGELOG} from '$/changelog'
 import {APP_VERSION, BASE_PATH} from '$config'
-import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
+import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata'
 import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
 import {AppButton} from '$cmp/shared/Inputs/AppButton'
 import Link from 'next/link'
@@ -42,8 +42,8 @@ export default function ChangelogPage() {
             </SimpleMenu>
         }
     >
-        <PageMeta text={`Changelog V${APP_VERSION}`}
-                  description={`Changelog V${APP_VERSION}\n${CHANGELOG[0]?.changes.join(";")}`}/>
+        <PageMetadata text={`Changelog V${APP_VERSION}`}
+                      description={`Changelog V${APP_VERSION}\n${CHANGELOG[0]?.changes.join(";")}`}/>
         <div className={s['changelog-page-title']}>
             Changelog
             <span style={{fontSize: '1.2rem', marginLeft: '1rem'}}>

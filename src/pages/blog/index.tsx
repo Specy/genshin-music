@@ -12,7 +12,7 @@ import {_aiTransposeMetadata} from "$pages/blog/posts/video-audio-transpose";
 import {_midiTransposeMetadata} from "$pages/blog/posts/midi-transpose";
 import {_playerTutorialMetadata} from "$pages/blog/posts/how-to-use-player";
 import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {Row} from "$cmp/shared/layout/Row";
 import {useMemo, useState} from "react";
 import {useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
@@ -39,7 +39,7 @@ export default function Blog() {
         return posts.filter(p => selectedTags.some(t => t.selected && p.tags.includes(t.item)))
     }, [selectedTags])
     return <DefaultPage>
-        <PageMeta
+        <PageMetadata
             text={`${APP_NAME} Music Nightly Blog`}
             description={`Welcome to ${APP_NAME} Music Nightly blog! Here there will be written guides, news and info about the app!`}
         />

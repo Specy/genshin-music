@@ -1,5 +1,5 @@
 import ComposerNote from "$cmp/pages/Composer/ComposerNote"
-import {NoteColumn, InstrumentData} from "$lib/Songs/SongClasses"
+import {InstrumentData, NoteColumn} from "$lib/Songs/SongClasses"
 import {NoteNameType, Pitch, TEMPO_CHANGERS} from "$config"
 import {Instrument, ObservableNote} from "$lib/audio/Instrument"
 import {ComposerSettingsDataType} from "$lib/BaseSettings"

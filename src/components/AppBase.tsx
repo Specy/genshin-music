@@ -6,7 +6,7 @@ import {logger} from '$stores/LoggerStore';
 import {delay} from "$lib/utils/Utilities"
 import {APP_NAME, APP_VERSION, UPDATE_MESSAGE} from "$config"
 import rotateImg from "$/assets/icons/rotate.svg"
-import {browserHistory} from '$stores/BrowserHistory';
+import {browserHistoryStore} from '$stores/BrowserHistoryStore';
 import {FaExpandAlt} from 'react-icons/fa';
 import {checkIfneedsUpdate} from '$lib/needsUpdate';
 import {settingsService} from '$lib/Services/SettingsService';
@@ -138,7 +138,7 @@ function AppBase() {
             Analytics.pageView({
                 page_title: path.pathName as string
             })
-            browserHistory.addPage(path.pathName)
+            browserHistoryStore.addPage(path.pathName)
         })
     }, [router])
     return <>

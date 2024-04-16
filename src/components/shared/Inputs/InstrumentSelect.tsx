@@ -1,23 +1,31 @@
 import {INSTRUMENTS} from "$config"
 import {InstrumentName} from "$types/GeneralTypes"
 import s from '$cmp/shared/Settings/Settings.module.css'
+import {capitalize} from "$lib/utils/Utilities"
+import {Stylable} from "$lib/utils/UtilTypes";
 
-interface InstrumentSelectProps {
+interface InstrumentSelectProps extends Stylable {
     selected: InstrumentName
     onChange: (instrument: InstrumentName) => void
-    style?: React.CSSProperties
 }
 
-const instruments: InstrumentName[] = []
-const SFXInstruments: InstrumentName[] = []
-for (const instrument of INSTRUMENTS) {
-    if (instrument.startsWith("SFX")) SFXInstruments.push(instrument)
-    else instruments.push(instrument)
-}
 
-export function InstrumentSelect({selected, onChange, style}: InstrumentSelectProps) {
+const prefixes = new Set<string>(
+    INSTRUMENTS
+        .filter(ins => ins.includes("_"))
+        .map(ins => ins.split("_")[0])
+)
+const instruments = {
+    instruments: INSTRUMENTS.filter(ins => !ins.includes("_")),
+} as Record<string, InstrumentName[]>
+for (const prefix of prefixes) {
+    instruments[prefix] = INSTRUMENTS.filter(ins => ins.startsWith(prefix))
+}
+const entries = Object.entries(instruments)
+
+export function InstrumentSelect({selected, onChange, style, className}: InstrumentSelectProps) {
     return <select
-        className={s.select}
+        className={`${s.select} ${className}`}
         style={{width: '100%', padding: '0.3rem', ...style}}
         onChange={(e) => {
             onChange(e.target.value as InstrumentName)
@@ -25,9 +33,9 @@ export function InstrumentSelect({selected, onChange, style}: InstrumentSelectPr
         }}
         value={selected}
     >
-        {SFXInstruments.length === 0
+        {entries.length === 1
             ? <>
-                {instruments.map(ins =>
+                {instruments.instruments.map(ins =>
                     <option
                         key={ins}
                         value={ins}
@@ -37,26 +45,24 @@ export function InstrumentSelect({selected, onChange, style}: InstrumentSelectPr
                 )}
             </>
             : <>
-                <optgroup label="Instruments">
-                    {instruments.map(ins =>
-                        <option
-                            key={ins}
-                            value={ins}
-                        >
-                            {ins.replace("-", " ")}
-                        </option>
-                    )}
-                </optgroup>
-                <optgroup label="SFX">
-                    {SFXInstruments.map(ins =>
-                        <option
-                            key={ins}
-                            value={ins}
-                        >
-                            {ins.replace("-", " ").replace("SFX_", "")}
-                        </option>
-                    )}
-                </optgroup>
+                {entries.map(([prefix, ins]) =>
+                    <optgroup
+                        label={capitalize(prefix)}
+                        key={prefix}
+                    >
+                        {ins.map(ins =>
+                            <option
+                                key={ins}
+                                value={ins}
+                            >
+                                {ins
+                                    .replace("-", " ")
+                                    .replace(`${prefix}_`, "")
+                                }
+                            </option>
+                        )}
+                    </optgroup>
+                )}
             </>
         }
     </select>
