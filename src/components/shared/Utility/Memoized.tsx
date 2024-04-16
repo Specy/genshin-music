@@ -19,13 +19,14 @@ export default memo(function Memoized({children}: MemoizedProps) {
 interface MemoizedIconProps {
     icon: IconType
     size?: number | string
-
+    className?: string
 }
 
-export const MemoizedIcon = memo(function MemoizedIcon({icon: Icon, size}: MemoizedIconProps) {
+export const MemoizedIcon = memo(function MemoizedIcon({icon: Icon, size, className}: MemoizedIconProps) {
     return <Icon
         size={size}
+        className={className}
     />
 }, (prev, next) => {
-    return prev.icon === next.icon && prev.size === next.size
+    return prev.icon === next.icon && prev.size === next.size && prev.className === next.className
 })

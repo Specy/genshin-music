@@ -7,7 +7,7 @@ import {SettingsPane} from "$cmp/shared/Settings/SettingsPane";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown";
 import {HelpTooltip} from "$cmp/shared/Utility/HelpTooltip";
-import Memoized from "$cmp/shared/Utility/Memoized";
+import {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
 import {VsrgComposerSettingsDataType} from "$lib/BaseSettings";
 import {Folder} from "$lib/Folder";
@@ -95,13 +95,11 @@ function VsrgMenu({
             visible={isVisible}
         >
             <div className="hamburger vsrg-hamburger" onClick={() => setVisible(!isVisible)}>
-                <Memoized>
-                    <FaBars/>
-                </Memoized>
+                <MemoizedIcon icon={FaBars}/>
             </div>
             <MenuSidebar>
                 <MenuButton onClick={() => setVisible(!isVisible)} className='close-menu' ariaLabel='Close menu'>
-                    <FaTimes className="icon"/>
+                    <MemoizedIcon icon={FaTimes} className={'icon'}/>
                 </MenuButton>
                 <MenuButton
                     onClick={onSave}
@@ -109,39 +107,34 @@ function VsrgMenu({
                     className={hasChanges ? "not-saved" : ""}
                     ariaLabel='Save'
                 >
-                    <Memoized>
-                        <FaSave className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaSave} className={'icon'}/>
                 </MenuButton>
                 <MenuItem
                     id={'Help'}
                     ariaLabel='Help'
                 >
-                    <Memoized>
-                        <FaQuestion className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaQuestion} className={'icon'}/>
                 </MenuItem>
                 <MenuItem
                     id={'Songs'}
                     ariaLabel='Song menu'
                 >
-                    <Memoized>
-                        <FaMusic className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaMusic} className={'icon'}/>
                 </MenuItem>
                 <MenuItem
                     id={'Settings'}
                     ariaLabel='Settings menu'
                 >
-                    <Memoized>
-                        <FaCog className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaCog} className={'icon'}/>
+
                 </MenuItem>
-                <MenuButton onClick={homeStore.open} ariaLabel='Open home menu'
-                            style={{border: "solid 0.1rem var(--secondary)"}}>
-                    <Memoized>
-                        <FaHome className="icon"/>
-                    </Memoized>
+                <MenuButton
+                    onClick={homeStore.open}
+                    ariaLabel='Open home menu'
+                    style={{border: "solid 0.1rem var(--secondary)"}}
+                >
+                    <MemoizedIcon icon={FaHome} className={'icon'}/>
+
                 </MenuButton>
             </MenuSidebar>
             <MenuPanelWrapper>

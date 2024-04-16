@@ -7,7 +7,7 @@ import {useState} from 'react'
 import {ZenKeyboardSettingsDataType} from "$lib/BaseSettings"
 import {SettingUpdate, SettingVolumeUpdate} from "$types/SettingsPropriety"
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane"
-import Memoized from "$cmp/shared/Utility/Memoized"
+import {MemoizedIcon} from "$cmp/shared/Utility/Memoized"
 import {IconButton} from "$cmp/shared/Inputs/IconButton";
 import {INSTRUMENTS, PITCHES} from "$config";
 import s from './ZenKeyboard.module.css'
@@ -39,10 +39,6 @@ export function ZenKeyboardMenu({
     const menuRef = useClickOutside<HTMLDivElement>(() => {
         setIsVisible(false)
     }, {ignoreFocusable: true, active: selectedPage !== ""})
-
-    function toggleMenu() {
-        setIsOpen(!isOpen)
-    }
 
     return <>
 
@@ -86,7 +82,6 @@ export function ZenKeyboardMenu({
                 position: 'absolute',
                 top: '0.5rem',
                 right: '0.5rem',
-
             }}
         >
             <FloatingSelection
@@ -114,9 +109,7 @@ export function ZenKeyboardMenu({
                 className="hamburger-top"
                 onClick={() => setIsVisible(!isVisible)}
             >
-                <Memoized>
-                    <FaBars/>
-                </Memoized>
+                <MemoizedIcon icon={FaBars}/>
             </div>
             <MenuSidebar style={{justifyContent: 'flex-end'}}>
                 <MenuButton
@@ -124,17 +117,20 @@ export function ZenKeyboardMenu({
                     style={{marginBottom: 'auto'}}
                     onClick={() => setIsVisible(!isVisible)}
                 >
-                    <FaTimes className="icon"/>
+                    <MemoizedIcon icon={FaTimes} className={'icon'}/>
                 </MenuButton>
                 <MenuItem
                     id={"Settings"}
                     ariaLabel='Open settings'
                 >
-                    <FaCog className="icon"/>
+                    <MemoizedIcon icon={FaCog} className={'icon'}/>
                 </MenuItem>
-                <MenuButton onClick={homeStore.open} ariaLabel='Open home menu'
-                            style={{border: "solid 0.1rem var(--secondary)"}}>
-                    <FaHome className="icon"/>
+                <MenuButton
+                    onClick={homeStore.open}
+                    ariaLabel='Open home menu'
+                    style={{border: "solid 0.1rem var(--secondary)"}}
+                >
+                    <MemoizedIcon icon={FaHome} className={'icon'}/>
                 </MenuButton>
             </MenuSidebar>
             <MenuPanelWrapper>

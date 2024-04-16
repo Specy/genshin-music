@@ -5,7 +5,7 @@ import {MenuButton, MenuItem} from "$cmp/shared/Menu/MenuItem";
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown";
-import Memoized from "$cmp/shared/Utility/Memoized";
+import Memoized, {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
 import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
 import {Folder} from "$lib/Folder";
@@ -74,9 +74,7 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                 className="hamburger-top"
                 onClick={() => setIsVisible(true)}
             >
-                <Memoized>
-                    <FaBars/>
-                </Memoized>
+                <MemoizedIcon icon={FaBars}/>
             </div>
             <MenuSidebar>
                 <MenuButton
@@ -85,31 +83,25 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                     }}
                     ariaLabel="Close MenuContext"
                 >
-                    <FaTimes className='icon'/>
+                    <MemoizedIcon icon={FaTimes} className={'icon'}/>
                 </MenuButton>
                 <MenuItem
                     style={{marginTop: 'auto'}}
                     id={'Songs'}
                     ariaLabel='Song menu'
                 >
-                    <Memoized>
-                        <FaMusic className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaMusic} className={'icon'}/>
                 </MenuItem>
 
                 <MenuItem id={'Settings'} ariaLabel='Settings menu'>
-                    <Memoized>
-                        <FaCog className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaCog} className={'icon'}/>
                 </MenuItem>
                 <MenuButton
                     onClick={homeStore.open}
                     ariaLabel='Open home menu'
                     style={{border: "solid 0.1rem var(--secondary)"}}
                 >
-                    <Memoized>
-                        <FaHome className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaHome} className={'icon'}/>
                 </MenuButton>
             </MenuSidebar>
             <MenuPanelWrapper>

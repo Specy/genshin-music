@@ -144,15 +144,6 @@ function Menu({functions, data, inPreview}: MenuProps) {
         const newState = override !== null ? override : !isOpen
         setOpen(newState)
     }
-    const selectSideMenu = (selection?: MenuTabs) => {
-        if (selection === selectedMenu && isOpen) {
-            return setOpen(false)
-        }
-        clearSearch()
-        if (selection) setSelectedMenu(selection)
-        setOpen(true)
-        Analytics.UIEvent('menu', {tab: selection})
-    }
     const importSong = async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
         for (const file of files) {
             try {
@@ -241,8 +232,9 @@ function Menu({functions, data, inPreview}: MenuProps) {
         setOpen={setOpen}
         visible={true}
         ref={menuRef}
+
     >
-        <MenuSidebar>
+        <MenuSidebar opacity={'0.9'}>
             {isOpen &&
                 <MenuButton onClick={toggleMenu} className='close-menu' ariaLabel='Close menu'>
                     <FaTimes className="icon"/>
@@ -268,7 +260,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 <FaHome className="icon"/>
             </MenuButton>
         </MenuSidebar>
-        <MenuPanelWrapper>
+        <MenuPanelWrapper style={inPreview ? {position: 'absolute'} : {}}>
             <MenuPanel title="No selection" id='No selection'>
                 Select a menu
             </MenuPanel>

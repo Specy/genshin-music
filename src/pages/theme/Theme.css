@@ -69,9 +69,6 @@
     height: 70vh;
 }
 
-.theme-app-preview .side-menu {
-    position: absolute;
-}
 
 .theme-app-preview .keyboard {
     transform: scale(0.8) !important;

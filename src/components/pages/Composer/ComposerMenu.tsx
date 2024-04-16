@@ -18,7 +18,7 @@ import {APP_NAME} from '$config'
 import {MenuButton, MenuItem} from '$cmp/shared/Menu/MenuItem'
 import {MenuPanel, MenuPanelWrapper} from '$cmp/shared/Menu/MenuPanel'
 import DonateButton from '$cmp/shared/Miscellaneous/DonateButton'
-import Memoized from '$cmp/shared/Utility/Memoized';
+import Memoized, {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
 import Analytics from '$lib/Analytics';
 import {logger} from '$stores/LoggerStore';
 import {AppButton} from '$cmp/shared/Inputs/AppButton';
@@ -186,13 +186,11 @@ function Menu({data, functions, inPreview}: MenuProps) {
         visible={isVisible}
     >
         <div className="hamburger" onClick={() => setVisible(!isVisible)}>
-            <Memoized>
-                <FaBars/>
-            </Memoized>
+            <MemoizedIcon icon={FaBars}/>
         </div>
         <MenuSidebar>
             <MenuButton onClick={() => toggleMenu()} className='close-menu' ariaLabel='Close menu'>
-                <FaTimes className="icon"/>
+                <MemoizedIcon icon={FaTimes} className={'icon'}/>
             </MenuButton>
             <MenuButton
                 onClick={updateThisSong}
@@ -200,31 +198,23 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 ariaLabel='Save'
                 style={{marginTop: 'auto'}}
             >
-                <Memoized>
-                    <FaSave className="icon"/>
-                </Memoized>
+                <MemoizedIcon icon={FaSave} className={'icon'}/>
             </MenuButton>
             <MenuItem id={"Songs"} ariaLabel='Song menu'>
-                <Memoized>
-                    <FaMusic className="icon"/>
-                </Memoized>
+                <MemoizedIcon icon={FaSave} className={'icon'}/>
             </MenuItem>
             <MenuItem id={"Settings"} ariaLabel='Settings menu'>
-                <Memoized>
-                    <FaCog className="icon"/>
-                </Memoized>
+                <MemoizedIcon icon={FaCog} className={'icon'}/>
             </MenuItem>
             <MenuButton
                 onClick={() => changePage('Home')}
                 ariaLabel='Open home menu'
                 style={{border: "solid 0.1rem var(--secondary)"}}
             >
-                <Memoized>
-                    <FaHome className="icon"/>
-                </Memoized>
+                <MemoizedIcon icon={FaHome} className={'icon'}/>
             </MenuButton>
         </MenuSidebar>
-        <MenuPanelWrapper>
+        <MenuPanelWrapper style={inPreview ? {position: 'absolute'}: {}}>
             <MenuPanel id="Songs">
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>

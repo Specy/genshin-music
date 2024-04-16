@@ -1,7 +1,7 @@
 import {APP_NAME} from "$config"
 import Color from "color"
 import {AppButton} from "$cmp/shared/Inputs/AppButton"
-import Memoized from "$cmp/shared/Utility/Memoized"
+import Memoized, {MemoizedIcon} from "$cmp/shared/Utility/Memoized"
 import {useTheme} from "$lib/Hooks/useTheme"
 import {VsrgHitObject, VsrgSong, VsrgTrack} from "$lib/Songs/VsrgSong"
 import {useEffect, useState} from "react"
@@ -63,25 +63,16 @@ export function VsrgTop({
             }
             <Row align={'center'} className="vsrg-breakpoints-buttons" style={{marginBottom: '0.4rem'}}>
                 <AppButton style={{marginLeft: 0}} onClick={() => onBreakpointSelect(-1)}>
-                    <Memoized>
-                        <FaStepBackward/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaStepBackward}/>
                 </AppButton>
                 <AppButton onClick={() => onBreakpointChange(true)}>
-                    <Memoized>
-                        <FaMinus/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaMinus}/>
                 </AppButton>
                 <AppButton onClick={() => onBreakpointChange(false)}>
-                    <Memoized>
-                        <FaPlus/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaPlus}/>
                 </AppButton>
                 <AppButton onClick={() => onBreakpointSelect(1)}>
-                    <Memoized>
-                        <FaStepForward/>
-
-                    </Memoized>
+                    <MemoizedIcon icon={FaStepForward}/>
                 </AppButton>
             </Row>
             <div className="vsrg-track-wrapper column">

@@ -14,7 +14,7 @@ import {
 import isMobile from "is-mobile"
 import {ComposerCache} from "$cmp/pages/Composer/ComposerCache"
 import {APP_NAME} from "$config"
-import Memoized from '$cmp/shared/Utility/Memoized';
+import {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
 import {ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
 import {clamp, colorToRGB, nearestEven} from '$lib/utils/Utilities';
 import type {NoteColumn} from '$lib/Songs/SongClasses';
@@ -501,9 +501,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         }}
                         ariaLabel='Previous Breakpoint'
                     >
-                        <Memoized>
-                            <FaStepBackward size={16}/>
-                        </Memoized>
+                        <MemoizedIcon icon={FaStepBackward} size={16}/>
                     </TimelineButton>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(1)}
@@ -514,9 +512,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         }}
                         ariaLabel='Next Breakpoint'
                     >
-                        <Memoized>
-                            <FaStepForward size={16}/>
-                        </Memoized>
+                        <MemoizedIcon icon={FaStepForward} size={16}/>
                     </TimelineButton>
 
                     <div className='timeline-scroll' style={{backgroundColor: theme.timeline.hex}}>
@@ -591,12 +587,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         tooltip={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
                         ariaLabel={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
                     >
-                        <Memoized>
-                            {isBreakpointSelected
-                                ? <FaMinusCircle key='minus' size={16}/>
-                                : <FaPlusCircle key='plus' size={16}/>
-                            }
-                        </Memoized>
+                        <MemoizedIcon icon={isBreakpointSelected ? FaMinusCircle : FaPlusCircle} size={16}/>
                     </TimelineButton>
                 </div>
             </div>

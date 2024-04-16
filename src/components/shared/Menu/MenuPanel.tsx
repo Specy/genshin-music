@@ -1,17 +1,18 @@
 import s from './menu.module.scss'
 import {cn} from "$lib/utils/Utilities";
-import {MaybeChildren} from "$lib/utils/UtilTypes";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 import {useMenuContext} from "$cmp/shared/Menu/MenuContext";
 
 
-export function MenuPanelWrapper({children}: MaybeChildren) {
+export function MenuPanelWrapper({children, className, style}: MaybeChildren<Stylable>) {
     const {open, visible} = useMenuContext()
 
     return <div
         className={cn(
-            s['side-menu'],
+            `${s['side-menu']} ${className}`,
             [open && visible, s['side-menu-open']]
         )}
+        style={style}
     >
         {children}
     </div>

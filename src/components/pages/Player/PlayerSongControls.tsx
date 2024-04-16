@@ -1,5 +1,5 @@
 import {SPEED_CHANGERS} from "$config"
-import Memoized from "$cmp/shared/Utility/Memoized";
+import Memoized, {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {FaStop, FaSyncAlt} from "react-icons/fa";
 import {ChangeEvent, memo} from "react";
 import {playerStore} from "$stores/PlayerStore";
@@ -84,17 +84,13 @@ function _PlayerSongControls({
                         tooltip='Stop'
                         ariaLabel="Stop song"
                     >
-                        <Memoized>
-                            <FaStop/>
-                        </Memoized>
+                        <MemoizedIcon icon={FaStop}/>
                     </IconButton>
                 </div>
                 <PlayerSlider/>
 
                 <IconButton onClick={onRestart} tooltip='Restart' ariaLabel="Restart song">
-                    <Memoized>
-                        <FaSyncAlt/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaSyncAlt}/>
                 </IconButton>
             </div>
 

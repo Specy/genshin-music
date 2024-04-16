@@ -5,7 +5,7 @@ import {cn} from "$lib/utils/Utilities";
 import {ForwardedRef, forwardRef, ReactNode} from "react";
 
 export interface MenuProps extends Stylable {
-    opacity?: number
+    opacity?: string
 }
 
 export function MenuSidebar({

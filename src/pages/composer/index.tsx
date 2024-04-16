@@ -837,17 +837,19 @@ class Composer extends Component<ComposerProps, ComposerState> {
                             }}
                         />
                         <div className="buttons-composer-wrapper-right">
-                            <CanvasTool onClick={() => this.addColumns(1, song.selected)} tooltip='Add column'
-                                        ariaLabel='Add column'>
-                                <Memoized>
-                                    <AddColumn className="tool-icon"/>
-                                </Memoized>
+                            <CanvasTool
+                                onClick={() => this.addColumns(1, song.selected)}
+                                tooltip='Add column'
+                                ariaLabel='Add column'
+                            >
+                                <MemoizedIcon icon={AddColumn} className={'tool-icon'}/>
                             </CanvasTool>
-                            <CanvasTool onClick={() => this.removeColumns(1, song.selected)} tooltip='Remove column'
-                                        ariaLabel='Remove column'>
-                                <Memoized>
-                                    <RemoveColumn className='tool-icon'/>
-                                </Memoized>
+                            <CanvasTool
+                                onClick={() => this.removeColumns(1, song.selected)}
+                                tooltip='Remove column'
+                                ariaLabel='Remove column'
+                            >
+                                <MemoizedIcon icon={RemoveColumn} className={'tool-icon'}/>
                             </CanvasTool>
                             <CanvasTool
                                 onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}
