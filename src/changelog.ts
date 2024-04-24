@@ -5,7 +5,7 @@ type Update = {
     changes: string[]
 }
 
-export const updates: Update[] = [
+export const CHANGELOG: Update[] = [
     {
         version: '3.3.0',
         title: "Audio/Video transcription, reverb",

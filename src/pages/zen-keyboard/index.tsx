@@ -1,8 +1,8 @@
 import {ZenKeypad} from "$cmp/pages/ZenKeyboard/ZenKeypad"
 import {ZenKeyboardMenu} from "$cmp/pages/ZenKeyboard/ZenKeyboardMenu"
 import {ZenKeyboardSettings, ZenKeyboardSettingsDataType} from "$lib/BaseSettings"
-import {Instrument, ObservableNote} from "$lib/Instrument"
-import {metronome} from "$lib/Metronome"
+import {Instrument, ObservableNote} from "$lib/audio/Instrument"
+import {metronome} from "$lib/audio/Metronome"
 import {AudioProvider} from "$lib/Providers/AudioProvider"
 import {settingsService} from "$lib/Services/SettingsService"
 import {logger} from "$stores/LoggerStore"
@@ -10,7 +10,7 @@ import {zenKeyboardStore} from "$stores/ZenKeyboardStore"
 import {InstrumentName} from "$/types/GeneralTypes"
 import {SettingUpdate, SettingVolumeUpdate} from "$/types/SettingsPropriety"
 import {ReactElement, useCallback, useEffect, useState} from "react"
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta"
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata"
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground"
 import {MIDIProvider} from "$lib/Providers/MIDIProvider";
 
@@ -77,8 +77,8 @@ export default function ZenKeyboard() {
         instrument.changeVolume(data.value)
     }, [instrument])
     return <>
-        <PageMeta text="Zen Keyboard"
-                  description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"/>
+        <PageMetadata text="Zen Keyboard"
+                      description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"/>
         <ZenKeyboardMenu
             settings={settings}
             isMetronomePlaying={isMetronomePlaying}

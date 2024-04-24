@@ -1,5 +1,5 @@
 import {IconButton} from "$cmp/shared/Inputs/IconButton";
-import Memoized from "$cmp/shared/Utility/Memoized";
+import {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {VsrgSong} from "$lib/Songs/VsrgSong";
 import {FaStop, FaSyncAlt} from "react-icons/fa";
 import {VsrgPlayerScore} from "./VsrgPlayerScore";
@@ -18,14 +18,10 @@ export function VsrgPlayerRight({song, onStopSong, onRetrySong}: VsrgPlayerRight
         <div className={s['vsrg-player-right']}>
             <div className="row space-between" style={{gap: '0.2rem'}}>
                 <IconButton onClick={onStopSong}>
-                    <Memoized>
-                        <FaStop/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaStop}/>
                 </IconButton>
                 <IconButton onClick={onRetrySong}>
-                    <Memoized>
-                        <FaSyncAlt/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaSyncAlt}/>
                 </IconButton>
             </div>
         </div>

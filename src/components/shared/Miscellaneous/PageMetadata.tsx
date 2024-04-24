@@ -1,14 +1,14 @@
 import Head from "next/head";
-import {MaybeChildren} from "$lib/UtilTypes";
+import {MaybeChildren} from "$lib/utils/UtilTypes";
 
 
-interface PageMetaProps {
+interface PageMetadataProps {
     text: string
     description?: string
     image?: string
 }
 
-export function PageMeta({text, description, image, children}: MaybeChildren<PageMetaProps>) {
+export function PageMetadata({text, description, image, children}: MaybeChildren<PageMetadataProps>) {
     return <Head>
         <title>{text}</title>
         {description && <>
@@ -18,7 +18,6 @@ export function PageMeta({text, description, image, children}: MaybeChildren<Pag
         {image && <>
             <meta name="image" content={image}/>
             <meta property="og:image" content={image}/>
-
         </>}
         {children}
     </Head>

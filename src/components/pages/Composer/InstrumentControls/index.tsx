@@ -7,7 +7,7 @@ import {BiSquareRounded} from "react-icons/bi";
 
 import {Theme} from "$stores/ThemeStore/ThemeProvider";
 import {InstrumentSettingsPopup} from "./InstrumentSettingsPopup";
-import {prettyPrintInstrumentName} from "$lib/Utilities";
+import {prettyPrintInstrumentName} from "$lib/utils/Utilities";
 
 
 interface InstrumentControlsProps {

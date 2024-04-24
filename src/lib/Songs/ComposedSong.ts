@@ -10,11 +10,11 @@ import {
 } from "$config"
 import {InstrumentName} from "$types/GeneralTypes"
 import {_LegacySongInstruments, OldFormat} from "$types/SongTypes"
-import {NoteLayer} from "../Layer"
+import {NoteLayer} from "./Layer"
 import {RecordedSong} from "./RecordedSong"
-import {NoteColumn, ColumnNote, InstrumentData, RecordedNote, SerializedColumn} from "./SongClasses"
+import {ColumnNote, InstrumentData, NoteColumn, RecordedNote, SerializedColumn} from "./SongClasses"
 import {SerializedSong, Song} from "./Song"
-import {clamp} from "../Utilities";
+import {clamp} from "../utils/Utilities";
 
 interface OldFormatNoteType {
     key: string,
@@ -112,7 +112,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
                 parsed.instruments[i] = InstrumentData.deserialize(ins)
             })
         }
-        if (song.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
+        if (parsed.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
 
         return parsed
     }

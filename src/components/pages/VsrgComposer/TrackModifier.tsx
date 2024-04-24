@@ -2,6 +2,7 @@ import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {VsrgTrackModifier} from "$lib/Songs/VsrgSong";
 import {FaEye, FaEyeSlash, FaVolumeMute, FaVolumeUp} from "react-icons/fa";
 import {Theme} from "$stores/ThemeStore/ThemeProvider";
+import {Row} from "$cmp/shared/layout/Row";
 
 
 interface TrackModifierProps {
@@ -15,11 +16,12 @@ interface TrackModifierProps {
 export function TrackModifier({data, onChange, onVisibilityChange, theme, style}: TrackModifierProps) {
     const color = theme.layer('menu_background', 0.2).desaturate(0.5)
     return <>
-        <div className="row-centered space-between track-modifier" style={{backgroundColor: color.hex(), ...style}}>
+        <Row align={'center'} justify={'between'} className="track-modifier"
+             style={{backgroundColor: color.hex(), ...style}}>
             <span className="text-ellipsis">
                 {data.alias}
             </span>
-            <div className="row-centered" style={{justifyContent: 'flex-end'}}>
+            <Row align={'center'} justify={'end'}>
                 <AppButton
                     className="flex-centered vsrg-track-modifier-button"
                     onClick={() => onVisibilityChange(!data.hidden)}
@@ -39,7 +41,7 @@ export function TrackModifier({data, onChange, onVisibilityChange, theme, style}
                         : <FaVolumeUp/>
                     }
                 </AppButton>
-            </div>
-        </div>
+            </Row>
+        </Row>
     </>
 }

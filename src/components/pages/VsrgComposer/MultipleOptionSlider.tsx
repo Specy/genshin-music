@@ -1,4 +1,4 @@
-import {capitalize} from "$lib/Utilities"
+import {capitalize} from "$lib/utils/Utilities"
 import React, {useEffect, useRef, useState} from "react"
 
 export type Option<T> = {

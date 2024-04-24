@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {ThemeKeys, ThemeProvider} from "$stores/ThemeStore/ThemeProvider";
-import {capitalize} from "$lib/Utilities";
+import {capitalize} from "$lib/utils/Utilities";
 import Color from "color";
 import {HexAlphaColorPicker, HexColorInput} from "react-colorful";
 import {BASE_THEME_CONFIG} from "$config";
@@ -85,7 +85,6 @@ export function ThemePropriety({
                             className="color-picker-check"
                             onClick={() => {
                                 setColor(Color(value))
-                                onChange(name, value)
                                 setSelectedProp('')
                             }}
                             style={{

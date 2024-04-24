@@ -6,10 +6,10 @@ import {RecordedSong} from '$lib/Songs/RecordedSong';
 import {ComposedSong} from '$lib/Songs/ComposedSong';
 import {InstrumentData, Recording} from '$lib/Songs/SongClasses';
 import {PlayerSettingsDataType} from "$lib/BaseSettings"
-import {Instrument} from '$lib/Instrument'
-import AudioRecorder from '$lib/AudioRecorder';
+import {Instrument} from '$lib/audio/Instrument'
+import AudioRecorder from '$lib/audio/AudioRecorder';
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"
-import Analytics from '$lib/Stats';
+import Analytics from '$lib/Analytics';
 import {logger} from '$stores/LoggerStore';
 import {SettingUpdate, SettingVolumeUpdate} from '$types/SettingsPropriety';
 import {InstrumentName} from '$types/GeneralTypes';
@@ -17,10 +17,10 @@ import {AppButton} from '$cmp/shared/Inputs/AppButton';
 import {AudioProvider} from '$lib/Providers/AudioProvider';
 import {settingsService} from '$lib/Services/SettingsService';
 import {songsStore} from '$stores/SongsStore';
-import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta';
-import {metronome} from '$lib/Metronome';
+import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata';
+import {metronome} from '$lib/audio/Metronome';
 import {Lambda} from 'mobx';
-import {NoteLayer} from '$lib/Layer';
+import {NoteLayer} from '$lib/Songs/Layer';
 import {subscribeObeservableObject} from '$lib/Hooks/useObservable';
 import {INSTRUMENTS, SPEED_CHANGERS} from '$config';
 import {playerControlsStore} from '$stores/PlayerControlsStore';
@@ -362,8 +362,8 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             speedChanger
         } = state
         return <>
-            <PageMeta text="Player"
-                      description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
+            <PageMetadata text="Player"
+                          description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
             <Menu
                 functions={{addSong, removeSong, handleSettingChange, changeVolume, renameSong}}
                 data={{settings}}

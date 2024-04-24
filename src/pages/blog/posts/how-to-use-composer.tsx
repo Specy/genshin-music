@@ -9,7 +9,7 @@ import {ShortcutsTable} from "$cmp/pages/Index/HelpTab/ShortcutsHelp";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {useObservableMap} from "$lib/Hooks/useObservable";
 import {keyBinds} from "$stores/KeybindsStore";
-import {NoteLayer} from "$lib/Layer";
+import {NoteLayer} from "$lib/Songs/Layer";
 
 export const _composerTutorialMetadata: BlogMetadata = {
     title: "📀 How to use the composer",

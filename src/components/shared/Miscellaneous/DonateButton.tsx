@@ -1,4 +1,4 @@
-import {isTWA} from '$lib/Utilities'
+import {isTWA} from '$lib/utils/Utilities'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
 

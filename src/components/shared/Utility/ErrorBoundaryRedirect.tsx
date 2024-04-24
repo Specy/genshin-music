@@ -1,4 +1,4 @@
-import {routeChangeBugFix} from "$lib/Utilities";
+import {routeChangeBugFix} from "$lib/utils/Utilities";
 import {NextRouter, useRouter} from "next/router";
 import {Component, ReactElement} from "react";
 

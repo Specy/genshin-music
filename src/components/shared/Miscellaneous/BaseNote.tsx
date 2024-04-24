@@ -4,7 +4,7 @@ import {observe} from "mobx"
 import {useEffect, useState} from "react"
 import {ThemeProvider} from "$stores/ThemeStore/ThemeProvider"
 import SvgNotes, {NoteImage} from "$cmp/shared/SvgNotes"
-import {preventDefault} from "$lib/Utilities";
+import {preventDefault} from "$lib/utils/Utilities";
 
 
 type BaseNoteData = {

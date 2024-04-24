@@ -1,8 +1,8 @@
 import {CSSProperties, ReactNode, useState} from "react";
 import useClickOutside from "$lib/Hooks/useClickOutside";
 import s from './combobox.module.scss'
-import {MaybeChildren, Stylable} from "$lib/UtilTypes";
-import {cn} from "$lib/Utilities";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
+import {cn} from "$lib/utils/Utilities";
 
 interface ComboBoxItemData<T> {
     item: T

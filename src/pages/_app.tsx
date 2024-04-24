@@ -16,7 +16,7 @@ import '$pages/vsrg-composer/VsrgComposer.css';
 import type {AppProps} from "next/app";
 import AppBase from "$cmp/AppBase";
 import {NextComponentType, NextPageContext} from "next";
-import {delay, setIfInTWA} from "$lib/Utilities";
+import {delay, setIfInTWA} from "$lib/utils/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"
 import {BASE_PATH, IS_TAURI} from "$config";
 import ErrorBoundaryRedirect from "$cmp/shared/Utility/ErrorBoundaryRedirect";
@@ -98,7 +98,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
             }
         }
 
-        console.log("Checking for updates...")
+        console.log("Checking for changelog...")
         registerSw()
     }, [])
     // @ts-ignore

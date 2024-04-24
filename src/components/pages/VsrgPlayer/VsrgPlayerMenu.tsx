@@ -1,13 +1,12 @@
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
-import MenuPanel from "$cmp/shared/pagesLayout/MenuPanel";
+import {MenuPanel, MenuPanelWrapper} from "$cmp/shared/Menu/MenuPanel";
 import {SongMenu} from "$cmp/shared/pagesLayout/SongMenu";
-import {MenuItem} from "$cmp/shared/Miscellaneous/MenuItem";
+import {MenuButton, MenuItem} from "$cmp/shared/Menu/MenuItem";
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown";
-import Memoized from "$cmp/shared/Utility/Memoized";
+import Memoized, {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
-import Analytics from "$lib/Stats";
 import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
 import {Folder} from "$lib/Folder";
 import useClickOutside from "$lib/Hooks/useClickOutside";
@@ -19,7 +18,7 @@ import {songService} from "$lib/Services/SongService";
 import {SongStorable} from "$lib/Songs/Song";
 import {VsrgSong} from "$lib/Songs/VsrgSong";
 import {VsrgSongSelectType} from "$pages/vsrg-player";
-import {memo, useCallback, useEffect, useState} from "react";
+import {memo, useEffect, useState} from "react";
 import {
     FaBars,
     FaCog,
@@ -33,14 +32,14 @@ import {
     FaTrash
 } from "react-icons/fa";
 import Link from "next/link";
-import {homeStore} from "$stores/HomeStore";
 import {songsStore} from "$stores/SongsStore";
 import {Theme} from "$stores/ThemeStore/ThemeProvider";
 import {SettingUpdate} from "$types/SettingsPropriety";
 import {logger} from "$stores/LoggerStore";
-import isMobile from "is-mobile";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {APP_NAME} from "$config";
+import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
+import {homeStore} from "$stores/HomeStore";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -60,66 +59,53 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
     const [theme] = useTheme()
     const {IS_MOBILE} = useConfig()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
-        if (isMobile()) return setIsVisible(false)
-        setOpen(false)
+        setIsVisible(false)
     }, {active: isOpen && isVisible, ignoreFocusable: true})
-    const selectSideMenu = useCallback((selection?: MenuTabs) => {
-        if (selection === selectedMenu && isOpen) {
-            return setOpen(false)
-        }
-        setOpen(true)
-        if (selection) {
-            setSelectedMenu(selection)
-            Analytics.UIEvent('menu', {tab: selection})
-        }
-    }, [isOpen, selectedMenu])
-
-    const sideClass = (isOpen && isVisible) ? "side-menu menu-open" : "side-menu"
     return <>
-        <div className="menu-wrapper" ref={menuRef}>
+        <MenuContextProvider
+            ref={menuRef}
+            current={selectedMenu}
+            setCurrent={setSelectedMenu}
+            open={isOpen}
+            setOpen={setOpen}
+            visible={isVisible}
+        >
             <div
                 className="hamburger-top"
-                onClick={() => setIsVisible(!isVisible)}
+                onClick={() => setIsVisible(true)}
             >
-                <Memoized>
-                    <FaBars/>
-                </Memoized>
+                <MemoizedIcon icon={FaBars}/>
             </div>
-            <div className={`menu ${isVisible ? "menu-visible" : ""}`}>
-                <MenuItem
+            <MenuSidebar>
+                <MenuButton
                     onClick={() => {
                         setIsVisible(false)
                     }}
-                    ariaLabel="Close Menu"
+                    ariaLabel="Close MenuContext"
                 >
-                    <FaTimes className='icon'/>
-                </MenuItem>
+                    <MemoizedIcon icon={FaTimes} className={'icon'}/>
+                </MenuButton>
                 <MenuItem
                     style={{marginTop: 'auto'}}
-                    onClick={() => selectSideMenu("Songs")}
-                    isActive={isOpen && selectedMenu === "Songs"}
+                    id={'Songs'}
                     ariaLabel='Song menu'
                 >
-                    <Memoized>
-                        <FaMusic className="icon"/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaMusic} className={'icon'}/>
                 </MenuItem>
-                <MenuItem onClick={() => selectSideMenu("Settings")} isActive={isOpen && selectedMenu === "Settings"}
-                          ariaLabel='Settings menu'>
-                    <Memoized>
-                        <FaCog className="icon"/>
-                    </Memoized>
-                </MenuItem>
-                <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
-                          style={{border: "solid 0.1rem var(--secondary)"}}>
-                    <Memoized>
-                        <FaHome className="icon"/>
-                    </Memoized>
-                </MenuItem>
-            </div>
-            <div className={sideClass}>
 
-                <MenuPanel current={selectedMenu} id="Songs">
+                <MenuItem id={'Settings'} ariaLabel='Settings menu'>
+                    <MemoizedIcon icon={FaCog} className={'icon'}/>
+                </MenuItem>
+                <MenuButton
+                    onClick={homeStore.open}
+                    ariaLabel='Open home menu'
+                    style={{border: "solid 0.1rem var(--secondary)"}}
+                >
+                    <MemoizedIcon icon={FaHome} className={'icon'}/>
+                </MenuButton>
+            </MenuSidebar>
+            <MenuPanelWrapper>
+                <MenuPanel id="Songs">
                     <div className="row">
                         <Link href='/vsrg-composer'>
                             <AppButton>
@@ -143,7 +129,7 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                         }}
                     />
                 </MenuPanel>
-                <MenuPanel current={selectedMenu} id="Settings">
+                <MenuPanel id="Settings">
                     <SettingsPane
                         settings={settings}
                         onUpdate={onSettingsUpdate}
@@ -160,10 +146,9 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                             </Link>
                         }
                     </div>
-
                 </MenuPanel>
-            </div>
-        </div>
+            </MenuPanelWrapper>
+        </MenuContextProvider>
     </>
 }
 

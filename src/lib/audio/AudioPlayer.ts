@@ -1,7 +1,7 @@
 import {Pitch} from "$config";
-import {Instrument} from '$lib/Instrument'
-import {AudioProvider} from "./Providers/AudioProvider";
-import {InstrumentData} from "./Songs/SongClasses";
+import {Instrument} from '$lib/audio/Instrument'
+import {AudioProvider} from "../Providers/AudioProvider";
+import {InstrumentData} from "../Songs/SongClasses";
 
 
 export class AudioPlayer {

@@ -3,13 +3,13 @@ import BaseNote from "$cmp/shared/Miscellaneous/BaseNote"
 import {Component} from 'react'
 import MidiShortcut from "$cmp/pages/MidiSetup/MidiShortcut"
 import {logger} from "$stores/LoggerStore";
-import {MIDINote, MIDIShortcut} from "$lib/Utilities"
+import {MIDINote, MIDIShortcut} from "$lib/utils/Utilities"
 import {InstrumentName} from "$types/GeneralTypes"
 import {MIDIEvent, MIDIProvider} from "$lib/Providers/MIDIProvider"
 import {AudioProvider} from "$lib/Providers/AudioProvider"
-import {AudioPlayer} from '$lib/AudioPlayer'
+import {AudioPlayer} from '$lib/audio/AudioPlayer'
 import {InstrumentData} from '$lib/Songs/SongClasses'
-import {Instrument} from '$lib/Instrument'
+import {Instrument} from '$lib/audio/Instrument'
 import s from './MidiSetup.module.css'
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {FaPlus, FaTrash} from "react-icons/fa";

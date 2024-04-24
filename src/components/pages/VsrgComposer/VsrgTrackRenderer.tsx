@@ -1,7 +1,7 @@
 import {Container, Sprite} from "@pixi/react";
 import {PIXI_CENTER_X_END_Y} from "$config";
 import {VsrgHitObject, VsrgTrack} from "$lib/Songs/VsrgSong";
-import {parseMouseClick} from "$lib/Utilities";
+import {parseMouseClick} from "$lib/utils/Utilities";
 import {ClickType} from "$types/GeneralTypes"
 
 import {Fragment} from "react";

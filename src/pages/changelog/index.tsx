@@ -1,15 +1,15 @@
 import {SimpleMenu} from '$cmp/shared/pagesLayout/SimpleMenu'
-import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
+import {MenuButton} from '$cmp/shared/Menu/MenuItem'
 import {FaGithub} from 'react-icons/fa'
 import {ChangelogRow} from '$cmp/pages/Changelog/ChangelogRow'
-import {updates} from '$lib/updates'
+import {CHANGELOG} from '$/changelog'
 import {APP_VERSION, BASE_PATH} from '$config'
-import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta'
+import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata'
 import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
 import {AppButton} from '$cmp/shared/Inputs/AppButton'
 import Link from 'next/link'
 import s from './Changelog.module.css'
-import {clearClientCache} from "$lib/Utilities";
+import {clearClientCache} from "$lib/utils/Utilities";
 import {logger} from "$stores/LoggerStore";
 
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
@@ -35,15 +35,15 @@ export default function ChangelogPage() {
             <SimpleMenu>
                 <Link href='https://github.com/Specy/genshin-music' target="_blank" rel='noreferrer'
                       title='Go to github'>
-                    <MenuItem ariaLabel='Go to github'>
+                    <MenuButton ariaLabel='Go to github'>
                         <FaGithub className='icon'/>
-                    </MenuItem>
+                    </MenuButton>
                 </Link>
             </SimpleMenu>
         }
     >
-        <PageMeta text={`Changelog V${APP_VERSION}`}
-                  description={`Changelog V${APP_VERSION}\n${updates[0]?.changes.join(";")}`}/>
+        <PageMetadata text={`Changelog V${APP_VERSION}`}
+                      description={`Changelog V${APP_VERSION}\n${CHANGELOG[0]?.changes.join(";")}`}/>
         <div className={s['changelog-page-title']}>
             Changelog
             <span style={{fontSize: '1.2rem', marginLeft: '1rem'}}>
@@ -63,7 +63,7 @@ export default function ChangelogPage() {
         </div>
         <div style={{marginTop: '2rem'}}/>
 
-        {updates.map(data => <ChangelogRow
+        {CHANGELOG.map(data => <ChangelogRow
             {...data}
             key={data.version}
         />)}

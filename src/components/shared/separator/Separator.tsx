@@ -1,6 +1,6 @@
 import type {CSSProperties} from "react";
 import s from './separator.module.scss'
-import {MaybeChildren} from "$lib/UtilTypes";
+import {MaybeChildren} from "$lib/utils/UtilTypes";
 
 interface SeparatorProps {
     background?: string

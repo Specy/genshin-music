@@ -1,7 +1,8 @@
+import type {ReactNode} from "react"
 import {useCallback, useRef} from "react"
 
 type FilePickerProps<T> = {
-    children: React.ReactNode,
+    children: ReactNode,
     onError?: (error: any, files: File[]) => void,
     style?: object,
     multiple?: boolean

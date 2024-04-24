@@ -1,4 +1,4 @@
-import {globalConfigStore} from "$stores/GlobalConfig";
+import {globalConfigStore} from "$stores/GlobalConfigStore";
 import {useObservableObject} from "./useObservable";
 
 export function useConfig() {

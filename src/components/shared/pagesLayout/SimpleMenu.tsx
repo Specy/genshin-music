@@ -1,23 +1,20 @@
 import {FaArrowLeft, FaDiscord, FaHome} from 'react-icons/fa';
 
-import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
-import {historyTracker} from '$stores/History';
+import {MenuButton} from '$cmp/shared/Menu/MenuItem'
+import {browserHistoryStore} from '$stores/BrowserHistoryStore';
 import {homeStore} from '$stores/HomeStore';
 import {useRouter} from 'next/router';
 import Link from 'next/link';
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
+import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 
-interface SimpleMenuProps {
-    children?: React.ReactNode,
-    className?: string
-}
-
-export function SimpleMenu({children = undefined, className = ''}: SimpleMenuProps) {
+export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>) {
     const history = useRouter()
-    return <div className={"menu-wrapper " + (className)}>
-        <div className="menu menu-visible" style={{justifyContent: 'flex-end'}}>
-            {historyTracker.hasNavigated &&
-                <MenuItem
+    return <MenuContextProvider className={className} style={style}>
+        <MenuSidebar style={{justifyContent: 'flex-end'}}>
+            {browserHistoryStore.hasNavigated &&
+                <MenuButton
                     style={{marginBottom: 'auto'}}
                     onClick={() => {
                         history.back()
@@ -25,7 +22,7 @@ export function SimpleMenu({children = undefined, className = ''}: SimpleMenuPro
                     ariaLabel='Go back'
                 >
                     <FaArrowLeft className='icon'/>
-                </MenuItem>
+                </MenuButton>
             }
             {children}
             <Link
@@ -40,15 +37,18 @@ export function SimpleMenu({children = undefined, className = ''}: SimpleMenuPro
                     window.open('https://discord.gg/Arsf65YYHq', '_blank')
                 }}
             >
-                <MenuItem ariaLabel='Go to discord'>
+                <MenuButton ariaLabel='Go to discord'>
                     <FaDiscord className="icon"/>
-                </MenuItem>
+                </MenuButton>
             </Link>
 
-            <MenuItem onClick={homeStore.open} ariaLabel='Open home menu'
-                      style={{border: "solid 0.1rem var(--secondary)"}}>
+            <MenuButton
+                onClick={homeStore.open}
+                ariaLabel='Open home menu'
+                style={{border: "solid 0.1rem var(--secondary)"}}
+            >
                 <FaHome className="icon"/>
-            </MenuItem>
-        </div>
-    </div>
+            </MenuButton>
+        </MenuSidebar>
+    </MenuContextProvider>
 }

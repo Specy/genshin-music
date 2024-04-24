@@ -1,5 +1,5 @@
 import {SPEED_CHANGERS} from "$config"
-import Memoized from "$cmp/shared/Utility/Memoized";
+import Memoized, {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {FaStop, FaSyncAlt} from "react-icons/fa";
 import {ChangeEvent, memo} from "react";
 import {playerStore} from "$stores/PlayerStore";
@@ -56,7 +56,6 @@ function _PlayerSongControls({
             </div>
             <div className={`column ${s['slider-wrapper']}`} style={!hasSong ? {display: 'none'} : {}}>
                 <div className="row" style={{width: '100%'}}>
-
                     <div className={`${hasTooltip(true)} row`} style={{marginRight: '0.4rem', flex: 1}}>
                         <select
                             className={s['slider-select']}
@@ -85,17 +84,13 @@ function _PlayerSongControls({
                         tooltip='Stop'
                         ariaLabel="Stop song"
                     >
-                        <Memoized>
-                            <FaStop/>
-                        </Memoized>
+                        <MemoizedIcon icon={FaStop}/>
                     </IconButton>
                 </div>
                 <PlayerSlider/>
 
                 <IconButton onClick={onRestart} tooltip='Restart' ariaLabel="Restart song">
-                    <Memoized>
-                        <FaSyncAlt/>
-                    </Memoized>
+                    <MemoizedIcon icon={FaSyncAlt}/>
                 </IconButton>
             </div>
 

@@ -2,7 +2,7 @@ import {CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS} from "$config"
 import Color from "color"
 import {LINE_SCALE_MODE, settings, SmoothGraphics as Graphics} from '@pixi/graphics-smooth';
 import {Application, Rectangle, SCALE_MODES, Texture} from 'pixi.js'
-import {NoteLayer} from "$lib/Layer";
+import {NoteLayer} from "$lib/Songs/Layer";
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 const {horizontalLineBreak, standards, layersCombination, breakpoints} = CACHE_DATA

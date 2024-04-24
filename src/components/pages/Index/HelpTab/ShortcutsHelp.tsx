@@ -1,6 +1,6 @@
 import {Shortcut} from '$stores/KeybindsStore'
 import sh from '$cmp/pages/Index/HelpTab/HelpTab.module.css'
-import {Stylable} from "$lib/UtilTypes";
+import {Stylable} from "$lib/utils/UtilTypes";
 
 interface KeyProps {
     children: React.ReactNode

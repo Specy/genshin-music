@@ -1,6 +1,6 @@
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {FaFileDownload, FaFileImport, FaTrash} from "react-icons/fa";
 import {useEffect, useState} from "react";
 import {songService} from "$lib/Services/SongService";
@@ -15,7 +15,7 @@ import {fileService, UnknownFileTypes} from "$lib/Services/FileService";
 import {Folder, SerializedFolder} from "$lib/Folder";
 import {APP_NAME} from "$config";
 import {FileElement, FilePicker} from "$cmp/shared/Inputs/FilePicker";
-import {delay} from "$lib/Utilities";
+import {delay} from "$lib/utils/Utilities";
 import {useSongs} from "$lib/Hooks/useSongs";
 import {useObservableArray} from "$lib/Hooks/useObservable";
 import {themeStore} from "$stores/ThemeStore/ThemeStore";
@@ -25,6 +25,8 @@ import Link from "next/link";
 import {strToU8, zip} from "fflate";
 import {MultipleOptionSlider} from "$cmp/pages/VsrgComposer/MultipleOptionSlider";
 import {useTheme} from "$lib/Hooks/useTheme";
+import {Row} from "$cmp/shared/layout/Row";
+import {Column} from "$cmp/shared/layout/Column";
 
 type BackupFormat = 'json' | 'zip'
 export default function Backup() {
@@ -165,12 +167,12 @@ export default function Backup() {
     }
 
     return <DefaultPage>
-        <PageMeta text="Backup"
-                  description="Manage the backups in the app, download or import songs, themes, or all of them"/>
+        <PageMetadata text="Backup"
+                      description="Manage the backups in the app, download or import songs, themes, or all of them"/>
         <h1 style={{fontSize: "1.8rem"}}>
             Transfer from other domain
         </h1>
-        <div style={{gap: "1rem", paddingLeft: '1.5rem'}} className={"row row-centered"}>
+        <Row align={'center'} gap={'1rem'} style={{paddingLeft: '1.5rem'}}>
             <div>
                 If you want to transfer your data from another domain of the app, click here
             </div>
@@ -179,9 +181,9 @@ export default function Backup() {
                     Transfer
                 </AppButton>
             </Link>
-        </div>
+        </Row>
 
-        <div className={"row row-centered"} style={{margin: "1rem 0", gap: "1rem", marginTop: "2rem"}}>
+        <Row align={'center'} gap={'1rem'} style={{margin: "1rem 0", marginTop: "2rem"}}>
             <div style={{fontSize: "1.8rem"}}>
                 Backup as
             </div>
@@ -193,12 +195,12 @@ export default function Backup() {
                 selected={downloadFormat}
                 onChange={setDownloadFormat}
             />
-        </div>
+        </Row>
         <div style={{paddingLeft: '1.5rem'}}>
             Make sure you create a backup every now and then. Especially if you just finished a new song.
             The browser shouldn't delete your data, especially if you installed the app, but there is always a chance.
         </div>
-        <div className="row" style={{marginTop: '1rem', gap: "0.5rem", paddingLeft: '1.5rem'}}>
+        <Row gap={'0.5rem'} style={{marginTop: '1rem', paddingLeft: '1.5rem'}}>
             <AppButton
                 tooltip="Download all the data of the app, aka themes, songs, folders"
                 className="flex-centered"
@@ -266,7 +268,7 @@ export default function Backup() {
                 <FaFileDownload style={iconStyle}/>
                 Download themes backup
             </AppButton>
-        </div>
+        </Row>
         <h1 style={{fontSize: "1.8rem"}}>
             Import a backup
         </h1>
@@ -275,7 +277,7 @@ export default function Backup() {
             the same song,
             a duplicate will be created).
         </div>
-        <div className="flex-centered">
+        <Row align={'center'}>
             <FilePicker
                 onPick={onFilePick}
                 as="json"
@@ -296,17 +298,15 @@ export default function Backup() {
                 </AppButton>
             </FilePicker>
 
-        </div>
-        <div
-            className='column'
+        </Row>
+        <Column
+            justify={'center'}
+            padding={'1rem'}
             style={{
                 flex: '1',
-                justifyContent: 'center',
-                padding: '1rem'
             }}
         >
-            <div
-                className="column"
+            <Column
                 style={{width: 'fit-content'}}
             >
                 <span>
@@ -316,8 +316,8 @@ export default function Backup() {
                 <span>
                     {userThemes.length} {userThemes.length === 1 ? 'theme' : 'themes'}
                 </span>
-            </div>
-        </div>
+            </Column>
+        </Column>
         <h1 style={{fontSize: "1.8rem"}}>
             Delete data
         </h1>
@@ -325,7 +325,7 @@ export default function Backup() {
             If you want, you can also delete all your data here, once deleted it can't be recovered.
             Don't worry you will be asked to confirm before anything is deleted.
         </div>
-        <div className="row" style={{marginTop: '1rem', gap: "0.5rem", paddingLeft: '1.5rem'}}>
+        <Row gap={'0.5rem'} style={{marginTop: '1rem', paddingLeft: '1.5rem'}}>
             <AppButton
                 className="flex-centered"
                 tooltip="Here you can delete all your songs and folders"
@@ -352,7 +352,7 @@ export default function Backup() {
                 <FaTrash style={iconStyle}/>
                 Delete themes
             </AppButton>
-        </div>
+        </Row>
 
     </DefaultPage>
 }

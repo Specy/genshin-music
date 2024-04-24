@@ -1,7 +1,7 @@
 import {logger, LoggerStatus, ToastState} from "$stores/LoggerStore"
 import {FaCheckCircle, FaExclamationTriangle, FaTimesCircle} from "react-icons/fa"
 import {useObservableArray, useObservableObject} from "$lib/Hooks/useObservable"
-import {DecoratedCard} from "../../shared/layout/DecoratedCard"
+import {DecoratedCard} from "$cmp/shared/layout/DecoratedCard";
 
 export default function FloatingMessage() {
     const toasts = useObservableArray(logger.toasts)
@@ -29,8 +29,7 @@ interface ToastProps {
 
 
 function Toast({toast}: ToastProps) {
-    const observableToast = useObservableObject(toast)
-    const {text, type, id, timeout, visible} = observableToast
+    const {text, type, id, timeout, visible} = useObservableObject(toast)
     const isBig = text.length > 150
     return <DecoratedCard
         key={id}

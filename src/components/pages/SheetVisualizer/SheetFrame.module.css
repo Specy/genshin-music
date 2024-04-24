@@ -16,6 +16,16 @@
     height: 100%;
     padding: 0.25rem;
 }
+.frame-empty-counter{
+    position: absolute;
+    top: -0.5rem;
+    right: 0;
+    transform: translateX(50%) rotate(45deg);
+    font-size: 0.8rem;
+    opacity: 0.5;
+}
+.frame-empty-counter svg{
+}
 
 .frame-outer,
 .frame-outer-smaller {

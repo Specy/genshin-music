@@ -9,6 +9,8 @@ import {useState} from "react"
 import Color from "color"
 import {vsrgComposerStore} from "$stores/VsrgComposerStore"
 import {Pitch} from "$config"
+import {Row} from "$cmp/shared/layout/Row";
+import {Column} from "$cmp/shared/layout/Column";
 
 interface TrackSelectorProps {
     track: VsrgTrack
@@ -22,7 +24,7 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
     if (!track) return null
     return <>
         <div className="vsrg-floating-settings box-shadow">
-            <div className="row-centered space-between">
+            <Row justify={'between'} align={'center'}>
                 Track name
                 <input
                     type="text"
@@ -36,8 +38,8 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                     }}
                     placeholder={track.instrument.name}
                 />
-            </div>
-            <div className="row-centered space-between" style={{marginTop: '0.4rem'}}>
+            </Row>
+            <Row justify={'between'} align={'center'} style={{marginTop: '0.4rem'}}>
                 Instrument
                 <InstrumentSelect
                     style={{width: '8rem'}}
@@ -47,8 +49,8 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                         onChange(track)
                     }}
                 />
-            </div>
-            <div className="row-centered space-between" style={{marginTop: '0.4rem'}}>
+            </Row>
+            <Row justify={'between'} align={'center'} style={{marginTop: '0.4rem'}}>
                 Pitch
                 <PitchSelect
                     style={{width: '8rem'}}
@@ -62,8 +64,8 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                         Use song pitch
                     </option>
                 </PitchSelect>
-            </div>
-            <div className="row-centered" style={{marginTop: '1rem', alignItems: "center"}}>
+            </Row>
+            <Row align={'center'} style={{marginTop: '1rem'}}>
                 Volume
                 <span style={{
                     marginLeft: "0.4rem",
@@ -80,8 +82,8 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                 >
                     If you hear distortion, reduce the volume
                 </HelpTooltip>
-            </div>
-            <div className="row-centered">
+            </Row>
+            <Row align={'center'}>
                 <input
                     type="range"
                     style={{flex: '1'}}
@@ -93,9 +95,9 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                         onChange(track)
                     }}
                 />
-            </div>
-            <div className="column">
-                <div className="row-centered space-between">
+            </Row>
+            <Column>
+                <Row justify={'between'} align={'center'}>
                     Color
                     <AppButton
                         onClick={() => setIsColorPickerOpen(true)}
@@ -107,9 +109,9 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                     >
                         Change
                     </AppButton>
-                </div>
-            </div>
-            <div className='row space-between' style={{marginTop: '0.4rem'}}>
+                </Row>
+            </Column>
+            <Row justify={'between'} style={{marginTop: '0.4rem'}}>
                 <AppButton
                     className="row-centered"
                     style={{padding: '0.4rem', width: 'fit-content'}}
@@ -124,7 +126,7 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                 >
                     Ok
                 </AppButton>
-            </div>
+            </Row>
         </div>
         {isColorPickerOpen &&
             <ColorPicker

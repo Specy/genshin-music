@@ -1,5 +1,5 @@
 import {BASE_PATH} from "$config"
-import AudioRecorder from "$lib/AudioRecorder"
+import AudioRecorder from "$lib/audio/AudioRecorder"
 
 
 export type AppAudioNode = {

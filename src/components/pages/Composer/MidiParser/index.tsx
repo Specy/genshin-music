@@ -1,21 +1,21 @@
 import {Component} from 'react'
 import {FileElement, FilePicker} from '$cmp/shared/Inputs/FilePicker'
 import {Midi, Track} from '@tonejs/midi'
-import {delay, groupNotesByIndex, isAudioFormat, isVideoFormat, mergeLayers} from '$lib/Utilities'
-import {NoteColumn, ColumnNote, InstrumentData, MidiNote} from '$lib/Songs/SongClasses'
+import {delay, groupNotesByIndex, isAudioFormat, isVideoFormat, mergeLayers} from '$lib/utils/Utilities'
+import {ColumnNote, InstrumentData, MidiNote, NoteColumn} from '$lib/Songs/SongClasses'
 import {ComposedSong} from '$lib/Songs/ComposedSong'
 import {BASE_PATH, Pitch, PITCHES} from '$config'
 import {logger} from '$stores/LoggerStore'
 import {Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider'
 import {observe} from 'mobx'
 import Switch from '$cmp/shared/Inputs/Switch'
-import {NoteLayer} from '$lib/Layer'
+import {NoteLayer} from '$lib/Songs/Layer'
 import {HelpTooltip} from '$cmp/shared/Utility/HelpTooltip'
 import {PitchSelect} from '$cmp/shared/Inputs/PitchSelect'
 import {DecoratedCard} from '$cmp/shared/layout/DecoratedCard'
 import {TrackInfo} from './TrackInfo'
 import {NumericalInput} from './Numericalinput'
-import {basicPitchLoader} from '$lib/BasicPitchLoader'
+import {basicPitchLoader} from '$lib/audio/BasicPitchLoader'
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
 
@@ -363,6 +363,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             <Column className='floating-midi-content' gap={'0.3rem'}>
                 <Row
                     className='separator-border'
+                    align={'center'}
                     style={{width: '100%'}}
                 >
                     <FilePicker onPick={handleFile} as='buffer'>

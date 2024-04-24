@@ -1,16 +1,16 @@
 import {useCallback, useEffect, useState} from 'react';
-import Analytics from '$lib/Stats';
+import Analytics from '$lib/Analytics';
 import Home from '$cmp/pages/Index/Home';
 import {homeStore} from '$stores/HomeStore';
 import {logger} from '$stores/LoggerStore';
-import {delay} from "$lib/Utilities"
+import {delay} from "$lib/utils/Utilities"
 import {APP_NAME, APP_VERSION, UPDATE_MESSAGE} from "$config"
 import rotateImg from "$/assets/icons/rotate.svg"
-import {historyTracker} from '$stores/History';
+import {browserHistoryStore} from '$stores/BrowserHistoryStore';
 import {FaExpandAlt} from 'react-icons/fa';
 import {checkIfneedsUpdate} from '$lib/needsUpdate';
 import {settingsService} from '$lib/Services/SettingsService';
-import {linkServices} from '$stores/globalLink';
+import {linkServices} from '$lib/Services/globalServices';
 import {useRouter} from 'next/router';
 import Image from 'next/image';
 import isMobile from 'is-mobile';
@@ -51,7 +51,7 @@ function AppBase() {
         setHasVisited(hasVisited === 'true')
         checkIfneedsUpdate()
         linkServices()
-        const shouldShowBakcupWarning = settingsService.shouldShowBackupWarning(1000 * 60 * 60 * 24 * 14)
+        const shouldShowBakcupWarning = settingsService.shouldShowBackupWarning(1000 * 60 * 60 * 24 * 7 * 3) //3 weeks
         if (shouldShowBakcupWarning) {
             logger.warn("You haven't backed up your songs in a while, remember to download the backup sometimes!", 8000)
             settingsService.setLastBackupWarningTime(Date.now())
@@ -138,7 +138,7 @@ function AppBase() {
             Analytics.pageView({
                 page_title: path.pathName as string
             })
-            historyTracker.addPage(path.pathName)
+            browserHistoryStore.addPage(path.pathName)
         })
     }, [router])
     return <>

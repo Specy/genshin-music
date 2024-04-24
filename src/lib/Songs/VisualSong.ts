@@ -1,8 +1,8 @@
 import {APP_NAME, NoteNameType} from "$config"
 import {ComposedSong} from "$lib/Songs/ComposedSong"
 import {RecordedSong} from "$lib/Songs/RecordedSong"
-import {NoteColumn, ColumnNote, RecordedNote} from "$lib/Songs/SongClasses"
-import {Instrument} from '$lib/Instrument'
+import {ColumnNote, NoteColumn, RecordedNote} from "$lib/Songs/SongClasses"
+import {Instrument} from '$lib/audio/Instrument'
 import {Song} from "./Song"
 
 const THRESHOLDS = {
@@ -26,7 +26,7 @@ export class VisualSong {
         this.bpm = bpm
     }
 
-    static from(song: Song | ComposedSong) {
+    static from(song: Song | ComposedSong, flattenEmptyChunks: boolean) {
         song = song.clone()
         const vs = new VisualSong(song.bpm)
         if (song instanceof RecordedSong) {
@@ -100,6 +100,23 @@ export class VisualSong {
 
         } else {
             console.error("Song type not supported")
+        }
+        if (flattenEmptyChunks) {
+            let counter = 0
+            let finalChunks = [] as TempoChunk[]
+            for (const chunk of vs.chunks) {
+                if (chunk.columns.every(c => c.notes.length === 0)) {
+                    counter++
+                } else {
+                    const lastChunk = finalChunks[finalChunks.length - 1]
+                    if (lastChunk) {
+                        lastChunk.emptyAhead = counter
+                        counter = 0
+                    }
+                    finalChunks.push(chunk)
+                }
+            }
+            vs.chunks = finalChunks
         }
         return vs
     }
@@ -192,6 +209,7 @@ export class TempoChunk {
     tempoChanger: number
     columns: TempoChunkColumn[]
     endingTempoChanger: number
+    emptyAhead: undefined | number
 
     constructor(tempoChanger: number, columns: TempoChunkColumn[]) {
         this.tempoChanger = tempoChanger

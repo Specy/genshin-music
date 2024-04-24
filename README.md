@@ -22,7 +22,7 @@ You can use the scripts `npm run build:genshin` and `npm run build:sky` which wi
 
 # How to build desktop app
 
-The app uses tauri for the desktop bundle which is a sandboxed webview. You can build it by using `npm run build-tauri:genshin`, `npm run build-tauri:sky`, `npm run build-tauri:all`. The config is premade to allow for updates, if you dont have a signing key, the build will fail. If you want to build without updates, go to `src-tauri/tauri.conf.json` and set `updater` to false
+The app uses tauri for the desktop bundle which is a sandboxed webview. You can build it by using `npm run build-tauri:genshin`, `npm run build-tauri:sky`, `npm run build-tauri:all`. The config is premade to allow for changelog, if you dont have a signing key, the build will fail. If you want to build without changelog, go to `src-tauri/tauri.conf.json` and set `updater` to false
 
 
 # Documentation

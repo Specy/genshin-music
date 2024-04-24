@@ -11,12 +11,12 @@ import Menu from "$cmp/pages/Composer/ComposerMenu"
 import Memoized, {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"
 import {ComposerSettingsDataType} from "$lib/BaseSettings"
-import {Instrument, ObservableNote} from "$lib/Instrument"
-import {calculateSongLength, delay, formatMs, routeChangeBugFix} from "$lib/Utilities"
+import {Instrument, ObservableNote} from "$lib/audio/Instrument"
+import {calculateSongLength, delay, formatMs, routeChangeBugFix} from "$lib/utils/Utilities"
 import {ComposedSong, UnknownSerializedComposedSong} from '$lib/Songs/ComposedSong';
-import {NoteColumn, InstrumentData} from '$lib/Songs/SongClasses';
-import AudioRecorder from '$lib/AudioRecorder'
-import Analytics from '$lib/Stats';
+import {InstrumentData, NoteColumn} from '$lib/Songs/SongClasses';
+import AudioRecorder from '$lib/audio/AudioRecorder'
+import Analytics from '$lib/Analytics';
 import {homeStore} from '$stores/HomeStore';
 import {logger} from '$stores/LoggerStore';
 import {RecordedSong, SerializedRecordedSong} from '$lib/Songs/RecordedSong';
@@ -32,13 +32,13 @@ import {songsStore} from '$stores/SongsStore';
 import {InstrumentControls} from '$cmp/pages/Composer/InstrumentControls';
 import {AppButton} from '$cmp/shared/Inputs/AppButton';
 import {Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
-import {PageMeta} from '$cmp/shared/Miscellaneous/PageMeta';
+import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata';
 import {songService} from '$lib/Services/SongService';
 import {NextRouter, useRouter} from 'next/router';
 import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
 import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$/stores/KeybindsStore';
-import {NoteLayer} from "$lib/Layer";
-import {globalConfigStore} from '$stores/GlobalConfig';
+import {NoteLayer} from "$lib/Songs/Layer";
+import {globalConfigStore} from '$stores/GlobalConfigStore';
 
 interface ComposerState {
     layers: Instrument[]
@@ -529,7 +529,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
             settings.reverb = {...settings.reverb, value: parsed.reverb}
             AudioProvider.setReverb(parsed.reverb)
             if (!this.mounted) return
-            if(song.id && this.state.song.id === null){
+            if (song.id && this.state.song.id === null) {
                 this.setState({isMidiVisible: false})
             }
             this.changes = 0
@@ -771,7 +771,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
         } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
         return <>
-            <PageMeta
+            <PageMetadata
                 text={`Composer - ${song.name}`}
                 description='Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet.'
             />
@@ -837,17 +837,19 @@ class Composer extends Component<ComposerProps, ComposerState> {
                             }}
                         />
                         <div className="buttons-composer-wrapper-right">
-                            <CanvasTool onClick={() => this.addColumns(1, song.selected)} tooltip='Add column'
-                                        ariaLabel='Add column'>
-                                <Memoized>
-                                    <AddColumn className="tool-icon"/>
-                                </Memoized>
+                            <CanvasTool
+                                onClick={() => this.addColumns(1, song.selected)}
+                                tooltip='Add column'
+                                ariaLabel='Add column'
+                            >
+                                <MemoizedIcon icon={AddColumn} className={'tool-icon'}/>
                             </CanvasTool>
-                            <CanvasTool onClick={() => this.removeColumns(1, song.selected)} tooltip='Remove column'
-                                        ariaLabel='Remove column'>
-                                <Memoized>
-                                    <RemoveColumn className='tool-icon'/>
-                                </Memoized>
+                            <CanvasTool
+                                onClick={() => this.removeColumns(1, song.selected)}
+                                tooltip='Remove column'
+                                ariaLabel='Remove column'
+                            >
+                                <MemoizedIcon icon={RemoveColumn} className={'tool-icon'}/>
                             </CanvasTool>
                             <CanvasTool
                                 onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}
@@ -887,7 +889,8 @@ class Composer extends Component<ComposerProps, ComposerState> {
             />
             <ComposerTools
                 data={{
-                    isToolsVisible, layer,
+                    isToolsVisible,
+                    layer,
                     hasCopiedColumns: copiedColumns.length > 0,
                     selectedColumns,
                     undoHistory

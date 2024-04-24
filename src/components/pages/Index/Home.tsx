@@ -4,7 +4,7 @@ import {APP_NAME, BASE_PATH, IS_BETA} from "$config"
 import {useEffect, useState} from 'react'
 import Link from 'next/link'
 import {useTheme} from '$lib/Hooks/useTheme'
-import {MenuItem} from '$cmp/shared/Miscellaneous/MenuItem'
+import {MenuButton} from '$cmp/shared/Menu/MenuItem'
 import {KeyboardProvider} from '$lib/Providers/KeyboardProvider'
 import {AppButton} from '$cmp/shared/Inputs/AppButton'
 import {VsrgIcon} from '$cmp/shared/icons/VsrgIcon'
@@ -12,12 +12,13 @@ import {VsrgComposerIcon} from '$cmp/shared/icons/VsrgComposerIcon'
 import {useObservableObject} from '$lib/Hooks/useObservable'
 import {homeStore} from '$stores/HomeStore'
 import {useRouter} from 'next/router'
-import {clearClientCache, isTWA} from '$lib/Utilities'
+import {clearClientCache, isTWA} from '$lib/utils/Utilities'
 import {useConfig} from '$lib/Hooks/useConfig'
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts'
 import {MdOutlinePiano} from "react-icons/md";
 import {usePathname} from "next/navigation";
 import {logger} from "$stores/LoggerStore";
+import {Row} from "$cmp/shared/layout/Row";
 
 
 interface HomeProps {
@@ -39,7 +40,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const [theme] = useTheme()
 
     async function clearCache() {
-        if(!await asyncConfirm("Are you sure you want to clear the cache? The page will reload")) return
+        if (!await asyncConfirm("Are you sure you want to clear the cache? The page will reload")) return
         clearClientCache()
             .then(() => {
                 logger.success("Cache Cleared")
@@ -91,13 +92,13 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             overflowX: 'hidden'
         }}
     >
-        <MenuItem
+        <MenuButton
             className='close-home'
             onClick={homeStore.close}
             ariaLabel='Close home menu'
         >
             <FaTimes size={25}/>
-        </MenuItem>
+        </MenuButton>
         <div className='home-padded column'>
 
             {(breakpoint || !hasVisited) && <div className='home-top'>
@@ -224,7 +225,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     Blog & Guides
                 </PageRedirect>
                 <PageRedirect href='/keybinds' current={currentPage === '/keybinds'}>
-                    Keybinds
+                    Keybinds/MIDI
                 </PageRedirect>
 
                 <PageRedirect href='/partners' current={currentPage === '/partners'}>
@@ -249,13 +250,16 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <AppButton onClick={clearCache}>
                     Clear cache
                 </AppButton>
+                <PageRedirect href='/blog/posts/easyplay-1s' current={currentPage === '/blog/posts/easyplay-1s'}>
+                    EASYPLAY 1s
+                </PageRedirect>
 
             </div>
 
         </div>
 
         <div className='home-bottom'>
-            <div className='home-app-scaling row-centered'>
+            <Row align={'center'} className='home-app-scaling'>
                 <span>
                     App scale
                 </span>
@@ -283,7 +287,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     <FaPlus/>
                 </AppButton>
                 {appScale}%
-            </div>
+            </Row>
             <span style={{padding: '0 1rem', textAlign: 'center'}}>
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </span>

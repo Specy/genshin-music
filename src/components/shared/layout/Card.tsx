@@ -1,4 +1,4 @@
-import {MaybeChildren, Stylable} from "$lib/UtilTypes";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 
 
 export interface CardProps extends Stylable {

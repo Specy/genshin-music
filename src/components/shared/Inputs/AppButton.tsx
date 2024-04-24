@@ -1,10 +1,11 @@
 import {hasTooltip, Tooltip, TooltipPosition} from "$cmp/shared/Utility/Tooltip"
+import type {CSSProperties, MouseEvent, ReactNode} from 'react'
 
 export interface AppButtonProps {
-    style?: React.CSSProperties,
+    style?: CSSProperties,
     className?: string,
-    onClick?: (e: React.MouseEvent) => void,
-    children?: React.ReactNode,
+    onClick?: (e: MouseEvent) => void,
+    children?: ReactNode,
     toggled?: boolean,
     disabled?: boolean,
     visible?: boolean,
@@ -37,7 +38,7 @@ export function AppButton({
                 : {})
         }}
         aria-label={ariaLabel}
-        onClick={(e) => onClick?.(e)}
+        onClick={onClick}
         disabled={disabled}
     >
         {children}

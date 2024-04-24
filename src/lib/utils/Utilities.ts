@@ -1,12 +1,13 @@
 import {BASE_PATH, Pitch, PITCHES, TEMPO_CHANGERS} from "$config"
 import * as workerTimers from 'worker-timers';
-import {NoteColumn, ColumnNote, RecordedNote} from "./Songs/SongClasses";
-import {NoteLayer} from "./Layer";
-import {Song} from "./Songs/Song";
-import {ComposedSong} from "./Songs/ComposedSong";
-import {RecordedSong} from "./Songs/RecordedSong";
+import {ColumnNote, NoteColumn, RecordedNote} from "../Songs/SongClasses";
+import {NoteLayer} from "../Songs/Layer";
+import {Song} from "../Songs/Song";
+import {ComposedSong} from "../Songs/ComposedSong";
+import {RecordedSong} from "../Songs/RecordedSong";
 import {ClickType, Timer} from "$types/GeneralTypes"
 import Color from "color";
+import {CSSProperties} from "react";
 
 
 export function preventDefault(e: React.MouseEvent) {
@@ -210,15 +211,28 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
     return "none"
 }
 
-type ConditionalClass = [condition: boolean, trueClass: string, falseClass?: string] | string
+type Booleany = boolean | string | number | null | undefined
 
-export function cn(...args: ConditionalClass[]) {
-    const result = args.map(a => {
-        if (typeof a === 'string') return a
-        return a[0] ? a[1] : (a[2] ?? '')
-    }).join(' ')
-    return result
+type ConditionalElement<T> = [condition: Booleany, trueClass: T, falseClass?: T] | T
+
+export function cn(...args: ConditionalElement<string | undefined>[]) {
+    return args.map(a => {
+        if (Array.isArray(a)) return a[0] ? a[1] : (a[2] ?? "");
+        if (!a) return "";
+        return a;
+
+    }).join(" ");
 }
+
+export function cs(...args: ConditionalElement<CSSProperties | undefined>[]) {
+    const parsed = args.map(a => {
+        if (typeof a === "object" && !Array.isArray(a)) return a;
+        if (!a) return {};
+        return a[0] ? a[1] : (a[2] ?? {});
+    });
+    return Object.assign({}, ...parsed);
+}
+
 
 function groupByNotes(notes: RecordedNote[], threshold: number) {
     const result = []

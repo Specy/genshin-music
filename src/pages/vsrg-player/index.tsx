@@ -3,7 +3,7 @@ import VsrgPlayerMenu from "$cmp/pages/VsrgPlayer/VsrgPlayerMenu";
 import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
 import {settingsService} from "$lib/Services/SettingsService";
 import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
-import {AudioPlayer} from "$lib/AudioPlayer";
+import {AudioPlayer} from "$lib/audio/AudioPlayer";
 import {VsrgPlayerKeyboard} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard";
 import {vsrgPlayerStore} from "$stores/VsrgPlayerStore";
 import {defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes} from "$cmp/pages/VsrgPlayer/VsrgPlayerCanvas";
@@ -16,7 +16,7 @@ import {VsrgPlayerLatestScore} from "$cmp/pages/VsrgPlayer/VsrgLatestScore";
 import {SettingUpdate} from "$types/SettingsPropriety";
 import {createShortcutListener, keyBinds} from "$stores/KeybindsStore";
 import {logger} from "$stores/LoggerStore";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import s from "$pages/vsrg-player/VsrgPlayer.module.css";
 
@@ -166,7 +166,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     render() {
         const {canvasSizes, settings} = this.state
         return <>
-            <PageMeta text="Vsrg Player" description="Play or practice VSRG songs"/>
+            <PageMetadata text="Vsrg Player" description="Play or practice VSRG songs"/>
             <VsrgPlayerMenu
                 settings={settings}
                 onSettingsUpdate={this.handleSettingChange}

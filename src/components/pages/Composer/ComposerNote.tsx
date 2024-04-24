@@ -3,10 +3,10 @@ import {APP_NAME, INSTRUMENTS_DATA, NOTES_CSS_CLASSES} from "$config"
 import GenshinNoteBorder from '$cmp/shared/Miscellaneous/GenshinNoteBorder'
 import SvgNote, {NoteImage} from '$cmp/shared/SvgNotes'
 import {Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider'
-import {ObservableNote} from '$lib/Instrument'
+import {ObservableNote} from '$lib/audio/Instrument'
 import {InstrumentName} from '$types/GeneralTypes'
-import {LayerStatus} from '$lib/Layer'
-import {preventDefault} from "$lib/Utilities";
+import {LayerStatus} from '$lib/Songs/Layer'
+import {preventDefault} from "$lib/utils/Utilities";
 
 export type ComposedNoteStatus = 0 | 1 | 2 | 3
 

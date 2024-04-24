@@ -1,5 +1,5 @@
 import {useEffect} from "react";
-import {clearClientCache} from "$lib/Utilities";
+import {clearClientCache} from "$lib/utils/Utilities";
 import {logger} from "$stores/LoggerStore";
 import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
 import {Header} from "$cmp/shared/header/Header";

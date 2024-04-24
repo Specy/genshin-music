@@ -1,10 +1,10 @@
 import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
 import {APP_NAME} from "$config";
 import {useConfig} from "$lib/Hooks/useConfig";
-import {cn} from "$lib/Utilities";
-import {globalConfigStore} from "$stores/GlobalConfig";
+import {cn} from "$lib/utils/Utilities";
+import {globalConfigStore} from "$stores/GlobalConfigStore";
 import {logger} from "$stores/LoggerStore";
 import s from "./UmaMode.module.scss";
 import {CSSProperties, useEffect, useRef, useState} from "react";
@@ -103,8 +103,8 @@ export default function UmaMode() {
     }
 
     return <DefaultPage cropped>
-        <PageMeta text={IS_UMA_MODE ? umaModeText : "Ȕ̶̲͇̦͇̖̈́̐̒m̶͖̰̜̎ā̴̩̅͐͘͠ ̶̯̘͊̑̃m̵̟͕̌̀o̸̮͌d̸̖̯̤̒̈̚̕ë̴̪̟́̉͂̓"}
-                  description="Thou whom enter this space shall  not be protected by the almighty destroyer of sheets, who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution"/>
+        <PageMetadata text={IS_UMA_MODE ? umaModeText : "Ȕ̶̲͇̦͇̖̈́̐̒m̶͖̰̜̎ā̴̩̅͐͘͠ ̶̯̘͊̑̃m̵̟͕̌̀o̸̮͌d̸̖̯̤̒̈̚̕ë̴̪̟́̉͂̓"}
+                      description="Thou whom enter this space shall  not be protected by the almighty destroyer of sheets, who dares enter this hell accepts the fate  they might succumb to.  Proceed with caution"/>
         <div className="column" style={{gap: "1rem"}}>
             <h1>Uma Mode</h1>
             <div>

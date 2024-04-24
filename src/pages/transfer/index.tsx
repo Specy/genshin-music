@@ -6,9 +6,10 @@ import {protocol, setupProtocol} from "$lib/Hooks/useWindowProtocol";
 import {logger} from "$stores/LoggerStore";
 import {useCallback, useEffect, useState} from "react";
 import s from "./transfer.module.css"
-import {cn} from "$lib/Utilities";
 import {fileService, UnknownFileTypes} from "$lib/Services/FileService";
-import {PageMeta} from "$cmp/shared/Miscellaneous/PageMeta";
+import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
+import {Row} from "$cmp/shared/layout/Row";
+import {Column} from "$cmp/shared/layout/Column";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
@@ -41,7 +42,7 @@ export default function TransferData() {
             const data = await protocol.ask("getAppData", undefined)
             setImportedData(Array.isArray(data) ? data : [data])
         } catch (e) {
-            logger.error("Error connecting, please visit the domain, there might be updates. ")
+            logger.error("Error connecting, please visit the domain, there might be changelog. ")
             setError(`Error fetching: ${e}`)
         }
         logger.hidePill()
@@ -61,7 +62,7 @@ export default function TransferData() {
     }, [])
 
     return <DefaultPage>
-        <PageMeta text="Import data" description="A tool to import the data you have in other domains"/>
+        <PageMetadata text="Import data" description="A tool to import the data you have in other domains"/>
         <div className="column">
             <h1>Import data from other domains</h1>
             <p style={{marginLeft: "1rem"}}>
@@ -100,8 +101,8 @@ export default function TransferData() {
                             <p>{error}</p>
                         </>
                         : <>
-                            <div className="column">
-                                <div className="row-centered" style={{gap: "1rem"}}>
+                            <Column>
+                                <Row align={'center'} style={{gap: "1rem"}}>
                                     <h2>Data </h2>
                                     <AppButton
                                         cssVar="accent"
@@ -112,8 +113,8 @@ export default function TransferData() {
                                     >
                                         Import all
                                     </AppButton>
-                                </div>
-                                <div className="column" style={{gap: "0.3rem"}}>
+                                </Row>
+                                <Column style={{gap: "0.3rem"}}>
                                     {importedData.map((d, i) =>
                                         <ImportedRow
                                             data={d}
@@ -124,15 +125,13 @@ export default function TransferData() {
                                             }}
                                         />
                                     )}
-                                </div>
-                            </div>
+                                </Column>
+                            </Column>
                         </>
                     }
                 </>}
             </>
             }
-
-
         </div>
     </DefaultPage>
 }
@@ -148,13 +147,13 @@ function ImportedRow({data, onImport}: ImportedRowProps) {
     else name = data.name
 
 
-    return <div className={cn("row-centered", s["import-row"])}>
+    return <Row align={'center'} className={s["import-row"]}>
         <div className={s["import-type"]}>
             {data.type}
         </div>
-        <div className="row" style={{padding: "0 0.5rem"}}>
+        <Row padding={'0 0.5rem'}>
             {name}
-        </div>
+        </Row>
         <AppButton
             cssVar="accent"
             style={{marginLeft: "auto"}}
@@ -162,5 +161,5 @@ function ImportedRow({data, onImport}: ImportedRowProps) {
         >
             Import
         </AppButton>
-    </div>
+    </Row>
 }

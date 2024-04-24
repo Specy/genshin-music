@@ -1,6 +1,6 @@
 import {Container, Sprite, Text,} from "@pixi/react";
 import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
-import {parseMouseClick} from "$lib/Utilities";
+import {parseMouseClick} from "$lib/utils/Utilities";
 import {ClickType} from "$types/GeneralTypes"
 import {FederatedPointerEvent, type Sprite as SpriteType, TextStyle} from "pixi.js";
 

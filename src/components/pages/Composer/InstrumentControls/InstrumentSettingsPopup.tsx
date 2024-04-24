@@ -5,7 +5,7 @@ import {HelpTooltip} from "$cmp/shared/Utility/HelpTooltip"
 import useClickOutside from "$lib/Hooks/useClickOutside"
 import {InstrumentNoteIcon} from "$lib/Songs/ComposedSong"
 import {InstrumentData} from "$lib/Songs/SongClasses"
-import {capitalize, prettyPrintInstrumentName} from "$lib/Utilities"
+import {capitalize, prettyPrintInstrumentName} from "$lib/utils/Utilities"
 import {FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp} from "react-icons/fa"
 import {InstrumentSelect} from "$cmp/shared/Inputs/InstrumentSelect"
 import s from '$cmp/shared/Settings/Settings.module.css'
