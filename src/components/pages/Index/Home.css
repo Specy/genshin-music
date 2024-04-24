@@ -480,4 +480,8 @@
     .home-bottom {
         font-size: 0.6rem;
     }
+
+    .page-redirect-wrapper a, .page-redirect-wrapper button {
+        padding: 0.4rem 0.7rem;
+    }
 }

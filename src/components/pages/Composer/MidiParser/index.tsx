@@ -363,6 +363,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             <Column className='floating-midi-content' gap={'0.3rem'}>
                 <Row
                     className='separator-border'
+                    align={'center'}
                     style={{width: '100%'}}
                 >
                     <FilePicker onPick={handleFile} as='buffer'>

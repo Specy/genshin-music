@@ -4,12 +4,31 @@ import partner from 'assets/images/partners/windsong-db.jpg'
 import skyMusicianNetwork from 'assets/images/partners/sky-musician-network.jpg'
 import Image, {StaticImageData} from 'next/image'
 import s from './Partners.module.css'
+import Link from "next/link";
+import {BASE_PATH} from "$config";
 
 export default function Partners() {
     return <DefaultPage className={s['partners-page']}>
         <PageMetadata text="Partners"
                       description='Learn about our partners who helped the development and to make the app more famous'/>
         <div className={s['partner-wrapper']}>
+            <Partner
+                name='EASYPLAY 1s'
+                description='The perfect keyboard for Sky Music Nightly'
+            >
+                <Link
+                    href={'https://summertones-1.kckb.me/18287a61'}
+                    style={{width: '18.8rem', height: '10.5rem', overflow: 'hidden', borderRadius: '0.3rem'}}
+                    target='_blank'
+                    rel='noreferrer'
+                >
+                    <img
+                        src={BASE_PATH + '/assets/blog/easyplay.webp'}
+                        style={{width: '100%', objectFit: 'cover', height: 'auto'}}
+
+                    />
+                </Link>
+            </Partner>
             <Partner
                 name='Specy'
                 description='The youtube channel that collects videos created by users of this app'

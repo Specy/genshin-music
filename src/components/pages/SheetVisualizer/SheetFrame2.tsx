@@ -4,6 +4,7 @@ import {memo, useEffect, useState} from "react"
 import {Theme} from "$stores/ThemeStore/ThemeProvider"
 import {Instrument} from '$lib/audio/Instrument'
 import s from "./SheetFrame.module.css"
+import {FaHourglass} from "react-icons/fa6";
 
 
 interface SheetFrameProps {
@@ -62,6 +63,16 @@ export function _SheetFrame2({chunk, rows, hasText, theme, keyboardLayout}: Shee
                 <div
                     className={`${s['frame-outer']} ${column.notes.length === 0 ? s['visualizer-ball'] : ''}`}
                 >
+                    {/*
+                    {(chunk.emptyAhead && i === chunk.columns.length - 1) &&
+                        <div className={`${s['frame-empty-counter']}`}>
+                            <span style={{fontSize: '0.6rem'}}>
+                                <FaHourglass />
+                            </span>
+                             {chunk.emptyAhead}
+                        </div>
+                    }
+                    */}
                     {column.notes.length === 0
                         ? <div></div>
                         : <div className={s['visualizer-frame']}

@@ -19,8 +19,10 @@ import {useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
 import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/shared/Inputs/ComboBox/ComboBox";
 import {_howUseVsrgComposer} from "$pages/blog/posts/how-to-use-vsrg-composer";
+import {_easyplay1sMetadata} from "$pages/blog/posts/easyplay-1s";
 
 const posts = ([
+    _easyplay1sMetadata,
     _composerTutorialMetadata,
     _playerTutorialMetadata,
     _midiTransposeMetadata,

@@ -11,7 +11,17 @@
   box-shadow: 0 0.5rem 0.7rem 0.5rem rgba(0, 0, 0, 0.2)
 }
 
-
+.blog-iframe {
+  height: min(20rem, 70vh);
+  margin: 2rem 0;
+  border: unset;
+  box-shadow: 0 0 0.5rem 0.5rem rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+}
+.blog-link{
+  color: var(--accent);
+  text-decoration: underline;
+}
 .blog-nav a {
   color: var(--primary-text);
   font-size: 1.2rem;

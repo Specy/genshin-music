@@ -112,7 +112,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
                 parsed.instruments[i] = InstrumentData.deserialize(ins)
             })
         }
-        if (song.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
+        if (parsed.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
 
         return parsed
     }

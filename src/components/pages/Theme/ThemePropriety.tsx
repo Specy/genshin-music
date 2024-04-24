@@ -85,7 +85,6 @@ export function ThemePropriety({
                             className="color-picker-check"
                             onClick={() => {
                                 setColor(Color(value))
-                                onChange(name, value)
                                 setSelectedProp('')
                             }}
                             style={{

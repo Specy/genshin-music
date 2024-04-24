@@ -17,6 +17,8 @@ import {SheetFrame2} from '$cmp/pages/SheetVisualizer/SheetFrame2'
 import {VisualSong} from '$lib/Songs/VisualSong'
 import {ComposedSong} from '$lib/Songs/ComposedSong'
 import {RecordedSong} from '$lib/Songs/RecordedSong'
+import {Row} from "$cmp/shared/layout/Row";
+import {Column} from "$cmp/shared/layout/Column";
 
 
 export default function SheetVisualizer() {
@@ -26,6 +28,7 @@ export default function SheetVisualizer() {
     const [currentSong, setCurrentSong] = useState<SerializedSong | null>(null)
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
+    const [flattenSpaces, setFlattenSpaces] = useState(false)
     const [keyboardLayout, setKeyboardLayout] = useState<NoteNameType>(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC')
     const ref = useRef<HTMLDivElement>(null)
 
@@ -45,14 +48,14 @@ export default function SheetVisualizer() {
             const isValid = isComposedOrRecorded(temp)
             if (!isValid) return logger.error('Invalid song, it is not composed or recorded')
             try {
-                const vs = VisualSong.from(temp)
+                const vs = VisualSong.from(temp, flattenSpaces)
                 setSheet(vs)
                 setSongAstext(vs.toText(layout))
             } catch (e) {
                 console.error(e)
                 logger.error("Error converting song to visual song, trying to convert to recorded song first...")
                 try {
-                    const vs = VisualSong.from((temp as RecordedSong | ComposedSong).toRecordedSong())
+                    const vs = VisualSong.from((temp as RecordedSong | ComposedSong).toRecordedSong(), flattenSpaces)
                     setSheet(vs)
                     setSongAstext(vs.toText(layout))
                 } catch (e) {
@@ -68,10 +71,10 @@ export default function SheetVisualizer() {
             logger.error('Error visualizing song')
         }
         Analytics.songEvent({type: 'visualize'})
-    }, [])
+    }, [flattenSpaces])
     useEffect(() => {
         if (currentSong) loadSong(currentSong, keyboardLayout)
-    }, [currentSong, hasText, keyboardLayout, loadSong])
+    }, [currentSong, hasText, keyboardLayout, loadSong, flattenSpaces])
     return <DefaultPage
         excludeMenu={true}
         className={s['page-no-print']}
@@ -86,18 +89,25 @@ export default function SheetVisualizer() {
                       description='Learn a sheet in a visual way, convert the song into text format or print it as pdf'/>
         <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
             <div className={`${s['visualizer-buttons-wrapper']} noprint`}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                    <div>Note names</div>
-                    <Switch checked={hasText} onChange={setHasText}/>
-                    {hasText &&
-                        <Select
-                            value={keyboardLayout}
-                            onChange={e => setKeyboardLayout(e.target.value as NoteNameType)}
-                        >
-                            {NOTE_NAME_TYPES.map(t => <option value={t} key={t}>{t}</option>)}
-                        </Select>
-                    }
-                </div>
+                <Column gap={'0.5rem'}>
+
+                    <Row align={'center'} gap={'0.5rem'}>
+                        <div>Note names</div>
+                        <Switch checked={hasText} onChange={setHasText}/>
+                        {hasText &&
+                            <Select
+                                value={keyboardLayout}
+                                onChange={e => setKeyboardLayout(e.target.value as NoteNameType)}
+                            >
+                                {NOTE_NAME_TYPES.map(t => <option value={t} key={t}>{t}</option>)}
+                            </Select>
+                        }
+                    </Row>
+                    <Row align={'center'} gap={'0.5rem'}>
+                        <div>Merge empty spaces</div>
+                        <Switch checked={flattenSpaces} onChange={setFlattenSpaces}/>
+                    </Row>
+                </Column>
 
                 <div style={{display: 'flex', alignItems: 'center'}}>
                     Per row: {framesPerRow}

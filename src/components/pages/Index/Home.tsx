@@ -225,7 +225,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     Blog & Guides
                 </PageRedirect>
                 <PageRedirect href='/keybinds' current={currentPage === '/keybinds'}>
-                    Keybinds
+                    Keybinds/MIDI
                 </PageRedirect>
 
                 <PageRedirect href='/partners' current={currentPage === '/partners'}>
@@ -250,6 +250,9 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <AppButton onClick={clearCache}>
                     Clear cache
                 </AppButton>
+                <PageRedirect href='/blog/posts/easyplay-1s' current={currentPage === '/blog/posts/easyplay-1s'}>
+                    EASYPLAY 1s
+                </PageRedirect>
 
             </div>
 
