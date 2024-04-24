@@ -34,7 +34,7 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiser
         setCurrent={setSelectedPage}
     >
         <MenuSidebar style={{justifyContent: 'flex-end'}}>
-            {(browserHistoryStore.hasNavigated && selectedPage === "") &&
+            {(browserHistoryStore.hasNavigated && !open) &&
                 <MenuButton
                     ariaLabel='Go back'
                     style={{marginBottom: 'auto'}}
@@ -45,7 +45,7 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiser
                     <FaArrowLeft className='icon'/>
                 </MenuButton>
             }
-            {selectedPage !== "" &&
+            {open &&
                 <MenuButton
                     ariaLabel='Close menu'
                     style={{marginBottom: 'auto'}}
