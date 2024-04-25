@@ -114,7 +114,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             {!hasVisited && <div className='home-welcome'>
                 <div>
                     {!isTwa && <div className='home-spacing'>
-                        To have the webapp fullscreen and better view, please add the website to the home screen
+                        To have the webapp in fullscreen, please add the website to the home screen
                     </div>}
                     <div className='home-spacing'>
                         <div className="red-text">WARNING</div>
@@ -139,6 +139,12 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                         >
                             here
                         </Link>
+                    </div>
+                    <div>
+                        {APP_NAME === "Sky"
+                            ? "This app is not affiliated with thatgamecompany, it is a fan made app."
+                            : "This app is not affiliated with HoYoverse, it is a fan made app."
+                        }
                     </div>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'flex-end'}}>
