@@ -55,7 +55,9 @@
     .page-no-print {
         padding: 1rem;
     }
-
+    .no-print{
+        display: none;
+    }
     .text-notation-wrapper {
         background-color: transparent;
         color: black;
