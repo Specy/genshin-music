@@ -80,6 +80,7 @@ export default function SheetVisualizer() {
         className={s['page-no-print']}
         menu={
             <SheetVisualiserMenu
+                className={s['no-print']}
                 onSongLoaded={setCurrentSong}
                 currentSong={currentSong}
             />

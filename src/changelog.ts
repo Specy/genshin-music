@@ -17,6 +17,7 @@ export const CHANGELOG: Update[] = [
             "Added customisable presets in MIDI settings",
             "Improved MIDI connection",
             "Zen keyboard now emits MIDI notes events when pressed",
+            "Changed Sky Music Nightly icon",
             //"Added personal custom layout in the visual song",
             "Added app's blog",
             "Other bug fixes and improvements"

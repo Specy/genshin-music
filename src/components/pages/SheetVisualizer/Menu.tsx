@@ -12,13 +12,13 @@ import {songService} from '$lib/Services/SongService'
 import {logger} from '$stores/LoggerStore'
 import {useRouter} from 'next/router'
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
-
-interface SheetVisualiserMenuProps {
+import {Stylable} from "$lib/utils/UtilTypes";
+interface SheetVisualiserMenuProps extends Stylable{
     currentSong: SerializedSong | null,
     onSongLoaded: (song: SerializedSong) => void,
 }
 
-export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiserMenuProps) {
+export function SheetVisualiserMenu({currentSong, onSongLoaded, className, style}: SheetVisualiserMenuProps) {
     const [songs] = useSongs()
     const history = useRouter()
     const [selectedPage, setSelectedPage] = useState("")
@@ -30,6 +30,8 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded}: SheetVisualiser
         ref={menuRef}
         open={open}
         setOpen={setOpen}
+        className={className}
+        style={style}
         current={selectedPage}
         setCurrent={setSelectedPage}
     >
