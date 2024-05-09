@@ -19,6 +19,8 @@ import {MdOutlinePiano} from "react-icons/md";
 import {usePathname} from "next/navigation";
 import {logger} from "$stores/LoggerStore";
 import {Row} from "$cmp/shared/layout/Row";
+import {useTranslation} from "react-i18next";
+import {LanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
 
 
 interface HomeProps {
@@ -29,9 +31,9 @@ interface HomeProps {
 }
 
 export default function Home({askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen}: HomeProps) {
+    const {t, i18n} = useTranslation('home')
     const data = useObservableObject(homeStore.state)
     const [appScale, setAppScale] = useState(100)
-    const {IS_MOBILE} = useConfig()
     const currentPage = usePathname()
     const [breakpoint, setBreakpoint] = useState(false)
     const [isTwa, setIsTwa] = useState(false)
@@ -83,7 +85,6 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             KeyboardProvider.unregisterById("home")
         }
     }, [history])
-
     return <div
         className={`${homeClass} ignore_click_outside column`}
         style={{
@@ -106,10 +107,11 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     {APP_NAME} Music Nightly
                 </div>
                 <div className='home-top-text'>
-                    An app where you can create, practice and play songs for {APP_NAME}
+                    {t('app_description', {APP_NAME})}
                 </div>
             </div>
             }
+
 
             {!hasVisited && <div className='home-welcome'>
                 <div>
@@ -267,7 +269,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
         <div className='home-bottom'>
             <Row align={'center'} className='home-app-scaling'>
                 <span>
-                    App scale
+                    Scale
                 </span>
                 <AppButton
                     ariaLabel='Decrease app scale'
@@ -297,12 +299,20 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             <span style={{padding: '0 1rem', textAlign: 'center'}}>
                 © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
             </span>
-            <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>
-                <input type='checkbox' checked={!data.canShow} readOnly id='hide-on-open-checkbox'/>
-                <label htmlFor='hide-on-open-checkbox'>
-                    Hide on open
-                </label>
-            </div>
+            <Row gap={'0.5rem'}>
+
+                <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>
+                    <input type='checkbox' checked={!data.canShow} readOnly id='hide-on-open-checkbox'/>
+                    <label htmlFor='hide-on-open-checkbox'>
+                        Hide on open
+                    </label>
+                </div>
+                <LanguageSelector
+                    languages={i18n.languages}
+                    currentLanguage={i18n.language}
+                    onChange={i18n.changeLanguage}
+                />
+            </Row>
         </div>
         {IS_BETA &&
             <div className={'top-right-home-label'}>

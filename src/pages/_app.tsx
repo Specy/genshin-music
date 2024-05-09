@@ -26,6 +26,8 @@ import {GoogleAnalyticsScript} from "$cmp/GoogleAnalyticsScript";
 import Head from "next/head";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 
+import "$i18n/i18n"
+
 interface CustomPageProps {
 
 }

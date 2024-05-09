@@ -16,9 +16,11 @@ import Image from 'next/image';
 import isMobile from 'is-mobile';
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
 import {fileService} from '$lib/Services/FileService';
+import {useTranslation} from "react-i18next";
 
 
 function AppBase() {
+    const {i18n} = useTranslation()
     const [hasVisited, setHasVisited] = useState(false)
     const [checkedUpdate, setCheckedUpdate] = useState(false)
     const [isOnMobile, setIsOnMobile] = useState(false)
@@ -105,6 +107,21 @@ function AppBase() {
         localStorage.setItem(APP_NAME + "_Visited", JSON.stringify(true))
         setHasVisited(true)
     }
+
+    useEffect(() => {
+        try {
+            const lang = localStorage.getItem(APP_NAME + "_Lang") ?? navigator.language ?? "en"
+            const rootLang = (Array.isArray(lang) ? lang[0] : lang).split("-")[0]
+            i18n.changeLanguage(rootLang)
+        } catch (e) {
+            console.error(e)
+        }
+    }, []);
+    useEffect(() => {
+        const lang = i18n.language
+        localStorage.setItem(APP_NAME + "_Lang", lang)
+    }, [i18n.language])
+
     useEffect(() => {
         async function checkUpdate() {
             await delay(1000)

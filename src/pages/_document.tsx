@@ -1,6 +1,10 @@
 import {Head, Html, Main, NextScript} from 'next/document';
 import {IS_BETA} from "$config";
 
+
+
+
+
 export default function Document() {
     return (
         <Html lang='en'>
