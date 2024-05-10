@@ -58,8 +58,9 @@ body {
     min-width: 2rem;
     text-align: center;
     margin-bottom: 0.1rem;
-    background-color: var(--primary);
-    color: var(--primary-text);
+    border: solid 0.1rem var(--primary);
+    background: var(--secondary);
+    color: var(--secondary-text);
     width: 10rem;
     display: inline-block;
 }

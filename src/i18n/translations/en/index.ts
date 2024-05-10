@@ -48,6 +48,8 @@ export const i18n_en = {
         on: "On",
         off: "Off",
         help: "Help",
+        color: "Color",
+        change: "Change",
         reverb: "Reverb",
         undo: "Undo",
         confirm: "Confirm",
@@ -79,7 +81,6 @@ export const i18n_en = {
         line: "Line",
         circle: "Circle"
     },
-    translation: {},
     home: {
         app_description: "An app where you can create, practice and play songs for {{APP_NAME}}",
         add_to_home_screen: "To have the webapp in fullscreen, please add the website to the home screen",
@@ -103,6 +104,7 @@ export const i18n_en = {
         themes_name: "Themes",
         blog_and_guides_name: "Blog & Guides",
         keybinds_or_midi_name: "Keybinds / MIDI",
+        keybinds_name: "Keybinds",
         partners_name: "Partners",
         backup_name: "Backup",
         changelog_name: "Changelog",
@@ -288,7 +290,8 @@ export const i18n_en = {
         instrument_modifiers: 'Instrument modifiers',
         tap: 'Tap',
         hold: 'Hold',
-        delete: 'Delete'
+        delete: 'Delete',
+        track_name: 'Track name'
     },
     transfer: {
         connecting_please_wait: "Connecting please wait...",
@@ -351,7 +354,7 @@ export const i18n_en = {
         midi_or_audio_import_redirect_warning: "You cannot directly import this file format. MIDI, Video and Audio files need to be converted in the composer, do you want to open it?",
     },
     keybinds: {
-        already_used_keybind: `This keybind is already used by the note  "{{note_name}}"`,
+        already_used_keybind: `This keybind is already used by the note "{{note_name}}"`,
         midi_keybinds: "MIDI keybinds",
         keyboard_keybinds: "Keyboard keybinds",
         keyboard_keybinds_description: `You can remap the keyboard keys to whatever key on your keyboard, press the note you want to remap
@@ -439,7 +442,7 @@ export const i18n_en = {
         transfer_data_notice: "If you want to transfer your data from another domain of the app, click here",
         transfer: "Transfer",
         backup_as: "Backup as",
-        backup_advice: `            Make sure you create a backup every now and then. Especially if you just finished a new song.
+        backup_advice: `Make sure you create a backup every now and then. Especially if you just finished a new song.
             The browser shouldn't delete your data, especially if you installed the app, but there is always a chance.`,
         backup_download_tooltip: "Download all the data of the app, aka themes, songs, folders",
         backup_downloaded: "Downloaded backup",
@@ -547,5 +550,100 @@ export const i18n_en = {
         volume_high_warning: "If you hear distortion, reduce the volume",
         move_down: "Move down",
         move_up: "Move up",
+    },
+
+    tutorials: {
+        composer: {
+            li_1: "Click the song name to load it",
+            li_2: "You can use different instruments and pitch for each layer",
+            li_3: "Tempo changers help you make faster parts of a song without having very high bpm",
+            li_4: "You can quickly create a song by importing a MIDI file and editing it, not all songs are convertable directly, you might need to edit it a bit.",
+            li_5: "You can also quickly create a song from audio / video, this is an experimental feature and not very accurate",
+            li_6: "You can add breakpoints to the timeline (the bar below the composer) to quickly jump between parts of a song"
+        },
+        player: {
+            li_1: "Click the song name to play it",
+            li_2: "You can import songs made by other users (does not accept audio files). Or you can download yours to share",
+            li_3: "To create your song, you can record the notes you play or create one in the composer",
+            li_4: "Start the practice mode",
+            li_5: "Start the approaching notes mode",
+            li_6: "You can connect a MIDI keyboard to play",
+        },
+        help: {
+            question_mark_description: `Hover over the buttons to see a tooltip.
+            When clicking this button (?),  it will show you more info.`,
+            example_help: "Example help",
+            learn_how_to_use_player: "Learn how to use the Player",
+            learn_how_to_use_composer: "Learn how to use the composer",
+            learn_how_to_use_vsrg_composer: "Learn how to use the Vsrg composer",
+            click_to_visit_blog: "Click here to visit the tutorial",
+            change_keybinds: "Change keybinds",
+            composer_shortcuts: "Composer shortcuts",
+            vsrg_composer_shortcuts: "Vsrg composer shortcuts",
+            player_shortcuts: "Player shortcuts",
+        }
+    },
+
+    shortcuts: {
+        holdable: "Holdable",
+        props: {
+            //names
+            toggle_play: "Toggle play",
+            previous_column: "Previous column",
+            next_column: "Next column",
+            remove_column: "Remove column",
+            add_column: "Add column",
+            previous_layer: "Previous layer",
+            next_layer: "Next layer",
+            next_breakpoint: "Next breakpoint",
+            previous_breakpoint: "Previous breakpoint",
+            toggle_record: "Toggle record",
+            stop: "Stop",
+            restart: "Restart",
+            toggle_menu: "Toggle menu",
+            close_menu: "Close menu",
+            move_up: "Move up",
+            move_down: "Move down",
+            move_left: "Move left",
+            move_right: "Move right",
+            deselect: "Deselect",
+            delete: "Delete",
+            next_track: "Next track",
+            previous_track: "Previous track",
+            set_tap_hand: "Set tap hand",
+            set_hold_hand: "Set hold hand",
+            set_delete_hand: "Set delete hand",
+
+            //descriptions
+            toggle_play_description: "Toggle play / pause",
+            previous_column_description: "Select the previous column",
+            next_column_description: "Select the next column",
+            remove_column_description: "Remove the selected column",
+            add_column_description: "Add a column after the selected column",
+            previous_layer_description: "Select the previous layer",
+            next_layer_description: "Select the next layer",
+            next_breakpoint_description: "Move to the next breakpoint",
+            previous_breakpoint_description: "Move to the previous breakpoint",
+            toggle_record_description: "Toggle keyboard recording",
+            stop_description: "Stop playing / recording / practicing",
+            restart_description: "Restart the song or practice",
+            toggle_menu_description: "Toggle the menu",
+            close_menu_description: "Close the menu",
+            move_up_description: "Move the selected note up",
+            move_down_description: "Move the selected note down",
+            move_left_description: "Move the selected note left",
+            move_right_description: "Move the selected note right",
+            deselect_description: "Deselect the selected note",
+            delete_description: "Delete the selected note",
+            next_track_description: "Select the next track",
+            previous_track_description: "Select the previous track",
+            set_tap_hand_description: "Set the click to create a tap note",
+            set_hold_hand_description: "Set the click to create a hold note",
+            set_delete_hand_description: "Set the click to delete a note",
+            vsrg_add_hit_object: 'Add hit object (syncs to the registered keybinds)',
+        }
     }
+
 } as const
+
+//repeated keys are:

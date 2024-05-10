@@ -84,7 +84,7 @@ export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
 
 function Menu({functions, data, inPreview}: MenuProps) {
-    const {t} = useTranslation(['player', 'question', 'confirm', 'settings', 'menu', 'common', 'logs'])
+    const {t} = useTranslation(['player', 'question', 'confirm', 'settings', 'menu', 'common', 'logs', 'tutorials'])
     const router = useRouter()
     const [songs] = useSongs()
     const [isOpen, setOpen] = useState(false)
@@ -267,17 +267,13 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>
                         <ul>
-                            <li>Click the song name to play it</li>
-                            <li>
-                                You can import songs made by other users (does not accept audio files).
-                                Or you can download yours to share
-                            </li>
-                            <li>To create your song, you can record the notes you play or create one in the composer
-                            </li>
-                            <li><FaCrosshairs style={{marginRight: '0.2rem'}}/>: Start the practice mode</li>
-                            <li><FaRegCircle style={{marginRight: '0.2rem'}}/>: Start the approaching notes mode</li>
+                            <li>{t('tutorials:player.li_1')}</li>
+                            <li>{t('tutorials:player.li_2')}</li>
+                            <li>{t('tutorials:player.li_3')}</li>
+                            <li><FaCrosshairs style={{marginRight: '0.2rem'}}/>: {t('tutorials:player.li_4')}</li>
+                            <li><FaRegCircle style={{marginRight: '0.2rem'}}/>: {t('tutorials:player.li_5')}</li>
                             {IS_MIDI_AVAILABLE &&
-                                <li>You can connect a MIDI keyboard to play</li>
+                                <li>{t('tutorials:player.li_6')}</li>
                             }
                         </ul>
                     </HelpTooltip>

@@ -78,7 +78,7 @@ export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
 
 function Menu({data, functions, inPreview}: MenuProps) {
-    const {t} = useTranslation(['composer', 'common', 'menu', 'logs', 'settings', 'confirm', 'question'])
+    const {t} = useTranslation(['composer', 'common', 'menu', 'logs', 'settings', 'confirm', 'question', 'tutorials'])
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const {IS_MIDI_AVAILABLE} = useConfig()
@@ -216,20 +216,13 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>
                         <ul>
-                            <li>Click the song name to load it</li>
-                            <li>You can use different instruments and pitch for each layer</li>
-                            <li>Tempo changers help you make faster parts of a song without having very high bpm
-                            </li>
-                            <li>You can quickly create a song by importing a MIDI file and editing it, not all songs
-                                are convertable directly, you might need to edit it a bit.
-                            </li>
-                            <li>You can also quickly create a song from audio / video, this is an experimental
-                                feature and not very accurate
-                            </li>
-                            <li>
-                                You can add breakpoints to the timeline (the bar below the composer) to quickly jump
-                                between parts of a song
-                            </li>
+                            {/*TODO should do this better?*/}
+                            <li>{t('tutorials:composer.li_1')} </li>
+                            <li>{t('tutorials:composer.li_2')} </li>
+                            <li>{t('tutorials:composer.li_3')} </li>
+                            <li>{t('tutorials:composer.li_4')} </li>
+                            <li>{t('tutorials:composer.li_5')} </li>
+                            <li>{t('tutorials:composer.li_6')} </li>
                         </ul>
                     </HelpTooltip>
                     <AppButton
