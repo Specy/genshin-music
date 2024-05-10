@@ -133,7 +133,7 @@ export default function SheetVisualizer() {
             <div style={{width: '100%'}} className='noprint'>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <h2 className='text-ellipsis'>
-                        {currentSong ? currentSong.name : 'No song selected'}
+                        {currentSong ? currentSong.name : t('no_song_selected')}
                     </h2>
                     {currentSong &&
                         <AppButton onClick={() => window.print()}

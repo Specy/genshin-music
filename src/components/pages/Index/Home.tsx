@@ -1,6 +1,6 @@
 import {FaCompactDisc, FaMinus, FaPlus, FaTimes} from 'react-icons/fa'
 import {BsMusicPlayerFill} from 'react-icons/bs'
-import {APP_NAME, BASE_PATH, IS_BETA} from "$config"
+import {APP_NAME, BASE_PATH, IS_BETA, LANG_PREFERENCE_KEY_NAME} from "$config"
 import {CSSProperties, FC, ReactNode, useEffect, useState} from 'react'
 import Link from 'next/link'
 import {useTheme} from '$lib/Hooks/useTheme'
@@ -305,7 +305,10 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <LanguageSelector
                     languages={i18n.languages}
                     currentLanguage={i18n.language}
-                    onChange={i18n.changeLanguage}
+                    onChange={(lang) => {
+                        localStorage.setItem(LANG_PREFERENCE_KEY_NAME, lang)
+                        i18n.changeLanguage(lang)
+                    }}
                 />
             </Row>
         </div>

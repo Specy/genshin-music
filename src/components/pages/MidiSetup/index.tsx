@@ -16,6 +16,8 @@ import {FaPlus, FaTrash} from "react-icons/fa";
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
+import {withTranslation} from "react-i18next";
+import {WithTranslation} from "react-i18next/index";
 
 interface MidiSetupState {
     audioPlayer: AudioPlayer
@@ -31,11 +33,11 @@ interface MidiSetupState {
 
 const baseInstrument = new Instrument()
 //TODO refactor this component
-export default class MidiSetup extends Component<{}, MidiSetupState> {
+class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
     state: MidiSetupState
     mounted: boolean
 
-    constructor(props: {}) {
+    constructor(props: WithTranslation<'keybinds'>) {
         super(props)
         this.state = {
             audioPlayer: new AudioPlayer("C"),
@@ -113,15 +115,15 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         const {selectedNote, currentPreset, notes, selectedShortcut, shortcuts} = this.state
         if (MIDIProvider.isDown(eventType) && velocity !== 0) {
             if (selectedNote) {
-                if (this.checkIfMidiIsUsed(note, 'shortcuts')) return logger.warn('Key already used')
+                if (this.checkIfMidiIsUsed(note, 'shortcuts')) return logger.warn(this.props.t('key_already_used'))
                 this.deselectNotes()
-                if (MIDIProvider.isPresetBuiltin(currentPreset)) return logger.warn('Cannot edit built-in preset, create a new one to edit it')
+                if (MIDIProvider.isPresetBuiltin(currentPreset)) return logger.warn(this.props.t('cannot_edit_builtin_preset'))
                 MIDIProvider.updateNoteOfCurrentPreset(selectedNote.index, note, "right")
                 this.setState({selectedNote: null, notes: MIDIProvider.notes})
             }
             if (selectedShortcut) {
                 const shortcut = shortcuts.find(e => e.type === selectedShortcut)
-                if (this.checkIfMidiIsUsed(note, 'all')) return logger.warn('Key already used')
+                if (this.checkIfMidiIsUsed(note, 'all')) return logger.warn(this.props.t('key_already_used'))
                 if (shortcut) {
                     MIDIProvider.updateShortcut(shortcut.type, note, note < 0 ? 'wrong' : 'right')
                     this.setState({shortcuts: MIDIProvider.settings.shortcuts})
@@ -174,10 +176,10 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
     createPreset = async () => {
         const {presets, notes} = this.state
         while (true) {
-            const name = await asyncPrompt("Write the name of the preset")
+            const name = await asyncPrompt(this.props.t('ask_preset_name'))
             if (!name) return
             if (MIDIProvider.isPresetBuiltin(name) || presets.some(p => p.name === name)) {
-                logger.warn('Preset with this name already exists')
+                logger.warn(this.props.t("already_existing_preset"))
                 continue
             }
             MIDIProvider.createPreset({
@@ -190,8 +192,8 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         }
     }
     deletePreset = async (name: string) => {
-        if (MIDIProvider.isPresetBuiltin(name)) return logger.warn('Cannot delete built-in preset')
-        if (!await asyncConfirm(`Are you sure you want to delete the preset "${name}"?`)) return
+        if (MIDIProvider.isPresetBuiltin(name)) return logger.warn(this.props.t('cannot_delete_builtin_preset'))
+        if (!await asyncConfirm(this.props.t('confirm_delete_preset', {preset_name: name}))) return
         MIDIProvider.deletePreset(name)
         MIDIProvider.loadPreset('default')
         this.setState({
@@ -203,10 +205,11 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
 
     render() {
         const {notes, currentPreset, presets, shortcuts, sources, selectedShortcut, selectedSource} = this.state
+        const {t} = this.props
         return <>
             <Column gap={'1rem'}>
                 <Row gap={'1rem'} align={'center'} justify={'between'}>
-                    Connected MIDI devices:
+                    {t('connected_midi_devices')}:
                     <Row gap={'0.5rem'} style={{flexWrap: 'wrap'}}>
 
                         {sources.length > 0
@@ -222,13 +225,13 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                                     {s.name} - {s.id}
                                 </div>
                             )
-                            : 'No connected devices'
+                            : t('no_connected_devices')
                         }
                     </Row>
 
                 </Row>
                 <Row justify={'between'} gap={'0.5rem'}>
-                    MIDI layout preset:
+                    {t('midi_layout_preset')}:
                     <Row gap={'0.5rem'}>
                         <select
                             className="midi-select"
@@ -252,17 +255,16 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                         <AppButton onClick={() => this.deletePreset(currentPreset)} className={'flex items-center'}
                                    style={{gap: "0.5rem"}}>
                             <FaTrash/>
-                            Delete preset
+                            {t('delete_midi_preset')}
                         </AppButton>
                         <AppButton onClick={this.createPreset} className={'flex items-center'} style={{gap: "0.5rem"}}>
                             <FaPlus/>
-                            Create new preset
+                            {t('create_midi_preset')}
                         </AppButton>
                     </Row>
                 </Row>
                 <div style={{margin: '0.5rem 0'}}>
-                    Click on the note to select it, then press your MIDI keyboard to assign that note to the key. You
-                    can click it again to change it.
+                    {t('midi_note_selection_description')}
                 </div>
             </Column>
 
@@ -283,7 +285,7 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
                 </div>
                 <div className={s['midi-shortcuts-wrapper']}>
                     <h1>
-                        MIDI Shortcuts
+                        {t('midi_shortcuts')}
                     </h1>
                     <div className={s['midi-shortcuts']}>
                         {shortcuts.map(shortcut =>
@@ -302,3 +304,5 @@ export default class MidiSetup extends Component<{}, MidiSetupState> {
         </>
     }
 }
+const MidiSetupWithTranslation = withTranslation('keybinds')(MidiSetup)
+export default MidiSetupWithTranslation

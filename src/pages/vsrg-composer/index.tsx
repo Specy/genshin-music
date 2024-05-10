@@ -26,10 +26,12 @@ import {homeStore} from "$stores/HomeStore";
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import {NextRouter, useRouter} from "next/router";
 import {createShortcutListener, ShortcutListener} from "$stores/KeybindsStore";
-import {i18n} from "$i18n/i18n";
+import {useTranslation} from "react-i18next";
+import {WithTranslation} from "react-i18next/index";
 
 type VsrgComposerProps = {
     router: NextRouter
+    t: WithTranslation<['vsrg_composer', "question", "home"]>['t']
 }
 
 interface VsrgComposerState {
@@ -388,7 +390,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         }
     }
     askForSongUpdate = async () => {
-        return await asyncConfirm(i18n.t('question:unsaved_song_save', {song_name: this.state.vsrg.name}), false)
+        return await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: this.state.vsrg.name}), false)
     }
     createNewSong = async () => {
         if (this.state.vsrg.name !== "Untitled" && this.changes > 0) {
@@ -398,7 +400,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                 await this.saveSong()
             }
         }
-        const name = await asyncPrompt(i18n.t('question:enter_song_name'))
+        const name = await asyncPrompt(this.props.t('question:enter_song_name'))
         if (name) {
             const vsrg = new VsrgSong(name)
             vsrg.set({
@@ -502,8 +504,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     deleteTrack = async (index: number) => {
         const {vsrg} = this.state
-        if (vsrg.tracks.length === 1) return logger.error(i18n.t("vsrg_composer:cannot_delete_last_track"))
-        const confirm = await asyncConfirm(i18n.t("vsrg_composer:delete_track_question"))
+        if (vsrg.tracks.length === 1) return logger.error(this.props.t("vsrg_composer:cannot_delete_last_track"))
+        const confirm = await asyncConfirm(this.props.t("vsrg_composer:delete_track_question"))
         if (!confirm || !this.mounted) return
         this.changes++
         vsrg.deleteTrack(index)
@@ -517,7 +519,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (this.changes !== 0) {
             let confirm = settings.autosave.value && vsrg.name !== "Untitled"
             if (!confirm) {
-                const promptResult = await asyncConfirm(i18n.t('question:unsaved_song_save', {song_name: vsrg.name}), false)
+                const promptResult = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: vsrg.name}), false)
                 if (promptResult === null) return
                 confirm = promptResult
             }
@@ -563,7 +565,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     saveSong = async () => {
         const {vsrg} = this.state
-        const name = vsrg.id !== null ? vsrg.name : await asyncPrompt('Enter song name')
+        const name = vsrg.id !== null ? vsrg.name : await asyncPrompt(this.props.t('question:enter_song_name'))
         if (name === null) return null
         vsrg.set({name})
         if (vsrg.id === null) {
@@ -626,7 +628,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             tempoChanger
         } = this.state
         return <>
-            <PageMetadata text={`${i18n.t('home:vsrg_composer_name')} - ${vsrg.name ?? "Unnamed"}`}
+            <PageMetadata text={`${this.props.t('home:vsrg_composer_name')} - ${vsrg.name ?? "Unnamed"}`}
                           description="Create new VSRG songs using existing background songs and create your own beatmap for it."/>
             <VsrgMenu
                 trackModifiers={vsrg.trackModifiers}
@@ -700,7 +702,8 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
 
 export default function VsrgcomposerPage() {
     const router = useRouter()
-    return <VsrgComposer router={router}/>
+    const {t} = useTranslation(['vsrg_composer', 'home', 'question'])
+    return <VsrgComposer router={router} t={t}/>
 }
 VsrgcomposerPage.getLayout = function getLayout(page: ReactElement) {
     return <AppBackground page="Composer">{page}</AppBackground>

@@ -555,7 +555,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: -0,
-            category: "pagesLayout Settings",
+            category: "Layout Settings",
             threshold: [-40, 40]
         },
         horizontalOffset: {
@@ -564,7 +564,7 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             type: "slider",
             songSetting: false,
             value: 0,
-            category: "pagesLayout Settings",
+            category: "Layout Settings",
             threshold: [-40, 40]
         },
     }

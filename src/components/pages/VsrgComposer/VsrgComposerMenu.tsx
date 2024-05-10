@@ -146,7 +146,7 @@ function VsrgMenu({
                 <MenuPanel id="Songs">
                     <div className="row">
                         <AppButton onClick={onCreateSong}>
-                            Create song
+                            {t('common:create_song')}
                         </AppButton>
                     </div>
                     <SongMenu<SongRowProps>

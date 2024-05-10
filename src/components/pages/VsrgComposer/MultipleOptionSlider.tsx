@@ -3,6 +3,7 @@ import React, {useEffect, useRef, useState} from "react"
 
 export type Option<T> = {
     value: T
+    text: string
     color: string
 }
 
@@ -37,7 +38,7 @@ export function MultipleOptionSlider<T extends string>({options, selected, onCha
                 onClick={() => onChange(option.value)}
                 className={option === selectedOption ? 'multiple-options-selected' : ''}
             >
-                {capitalize(option.value)}
+                {capitalize(option.text)}
             </button>
         )}
         <div className="multiple-option-slider-overlay"

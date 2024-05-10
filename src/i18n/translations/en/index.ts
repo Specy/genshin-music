@@ -9,11 +9,10 @@ export const i18n_en = {
         error_downloading_audio: "There was an error downloading the audio, maybe the song is too long?",
         song_downloaded: "Song downloaded",
         error_downloading_song: "Error downloading song",
-        error_importing_file: ""
     },
     question: {
         unsaved_song_save: `You have unsaved changes to the song: "{{song_name}}" do you want to save now? UNSAVED CHANGES WILL BE LOST`,
-        enter_song_name: "Enter song name",
+        enter_song_name: "Write the song's name",
         ask_song_name_cancellable: "Write the song name, press cancel to ignore",
     },
     confirm: {
@@ -121,6 +120,9 @@ export const i18n_en = {
         background_song_info: "You can select one of your songs to be played on the background",
         no_background_song_selected: "No background song selected",
         instrument_modifiers: 'Instrument modifiers',
+        tap: 'Tap',
+        hold: 'Hold',
+        delete: 'Delete'
     },
     transfer: {
         connecting_please_wait: "Connecting please wait...",
@@ -156,6 +158,7 @@ export const i18n_en = {
     sheet_visualizer: {
         note_names: "Note names",
         merge_empty_spaces: "Merge empty spaces",
+        no_song_selected: "No song selected",
         print_as_pdf: "Print as PDF",
         sheet_visualizer_instructions: `Select a song from the menu on the left.
                     Remember that you can learn a song with the interactive
@@ -184,7 +187,21 @@ export const i18n_en = {
         player_shortcuts: "Player shortcuts",
         vsrg_composer_shortcuts: "Vsrg composer shortcuts",
         vsrg_player_shortcuts: "Vsrg player shortcuts",
-        vsrg_keybinds: "Vsrg keybinds"
+        vsrg_keybinds: "Vsrg keybinds",
+        connected_midi_devices:"Connected MIDI devices",
+        no_connected_devices: "No connected devices",
+        midi_layout_preset: "MIDI layout preset",
+        delete_midi_preset: "Delete preset",
+        create_midi_preset: "Create new preset",
+        midi_note_selection_description: `Click on the note to select it, then press your MIDI keyboard to assign that note to the key. You
+                    can click it again to change it.`,
+        midi_shortcuts: "MIDI Shortcuts",
+        confirm_delete_preset: `Are you sure you want to delete the preset "{{preset_name}}"?`,
+        cannot_delete_builtin_preset: "Cannot delete built-in preset",
+        already_existing_preset: "Preset with this name already exists",
+        ask_preset_name: "Write the name of the preset",
+        key_already_used: "Key already used",
+        cannot_edit_builtin_preset: 'Cannot edit built-in preset, create a new one to edit it',
     },
     error: {
         confirm_delete_all_songs: "Are you sure you want to delete ALL SONGS?",
@@ -287,6 +304,7 @@ export const i18n_en = {
         add_new_page: "Add new page",
         remove_column: "Remove column",
         add_column: "Add column",
+        open_tools: "Open tools",
         cant_remove_all_layers: "You can't remove all layers!",
         confirm_layer_remove: `Are you sure you want to remove "{{layer_name}}"? ALL NOTES OF THIS LAYER WILL BE DELETED`,
         cant_add_more_than_n_layers: `You can't add more than {{max_layers}} layers!`,

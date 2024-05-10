@@ -6,6 +6,8 @@ import {VsrgSong} from "$lib/Songs/VsrgSong"
 import {FaPause, FaPlay} from "react-icons/fa"
 import {MultipleOptionSlider, Option} from "./MultipleOptionSlider"
 import {useTranslation} from "react-i18next";
+import {useMemo} from "react";
+import {i18n} from "$i18n/i18n";
 
 interface VsrgBottomProps {
     selectedSnapPoint: SnapPoint
@@ -22,18 +24,7 @@ interface VsrgBottomProps {
 }
 
 export type VsrgHitObjectType = 'hold' | 'tap' | 'delete'
-const options: Option<VsrgHitObjectType>[] = [
-    {
-        value: 'tap',
-        color: 'var(--accent)',
-    }, {
-        value: 'hold',
-        color: '#8569a9',
-    }, {
-        value: 'delete',
-        color: 'var(--red)',
-    }
-]
+
 const snapPoints: SnapPoint[] = [1, 2, 4, 8, 16]
 export type SnapPoint = 1 | 2 | 4 | 8 | 16
 
@@ -50,7 +41,26 @@ export function VsrgBottom({
                                tempoChanger,
                                onTempoChangerChange
                            }: VsrgBottomProps) {
-    const {t } = useTranslation('vsrg_composer')
+    const {t} = useTranslation('vsrg_composer')
+    const options = useMemo(() => {
+        return [
+            {
+                value: 'tap',
+                text: t('tap'),
+                color: 'var(--accent)',
+            }, {
+                value: 'hold',
+                text: t('hold'),
+                color: '#8569a9',
+            }, {
+                value: 'delete',
+                text: t('delete'),
+                color: 'var(--red)',
+            }
+        ] satisfies Option<VsrgHitObjectType>[]
+
+    }, [t, i18n.language])
+
     return <>
         <div className="vsrg-bottom">
             <MultipleOptionSlider

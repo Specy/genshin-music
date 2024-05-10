@@ -117,10 +117,7 @@ function AppBase() {
             console.error(e)
         }
     }, []);
-    useEffect(() => {
-        const lang = i18n.language
-        localStorage.setItem(APP_NAME + "_Lang", lang)
-    }, [i18n.language])
+
 
     useEffect(() => {
         async function checkUpdate() {

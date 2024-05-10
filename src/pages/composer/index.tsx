@@ -39,7 +39,8 @@ import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
 import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$/stores/KeybindsStore';
 import {NoteLayer} from "$lib/Songs/Layer";
 import {globalConfigStore} from '$stores/GlobalConfigStore';
-import {i18n} from "$i18n/i18n";
+import {useTranslation} from "react-i18next";
+import {WithTranslation} from "react-i18next/index";
 
 interface ComposerState {
     layers: Instrument[]
@@ -63,6 +64,7 @@ type PageProps = {
 type ComposerProps = PageProps & {
     inPreview?: boolean
     router: NextRouter
+    t: WithTranslation<['composer', 'home','logs', 'question', 'common']>['t']
 }
 
 class Composer extends Component<ComposerProps, ComposerState> {
@@ -290,15 +292,15 @@ class Composer extends Component<ComposerProps, ComposerState> {
     addInstrument = () => {
         const {song} = this.state
         const isUmaMode = globalConfigStore.get().IS_UMA_MODE
-        if (song.instruments.length >= NoteLayer.MAX_LAYERS && !isUmaMode) return logger.error(i18n.t('composer:cant_add_more_than_n_layers', {max_layers: NoteLayer.MAX_LAYERS}))
+        if (song.instruments.length >= NoteLayer.MAX_LAYERS && !isUmaMode) return logger.error(this.props.t('composer:cant_add_more_than_n_layers', {max_layers: NoteLayer.MAX_LAYERS}))
         song.addInstrument(INSTRUMENTS[0])
         this.setState({song})
         this.syncInstruments(song)
     }
     removeInstrument = async (index: number) => {
         const {song, layers} = this.state
-        if (layers.length <= 1) return logger.warn(i18n.t('composer:cant_remove_all_layers'))
-        const confirm = await asyncConfirm(i18n.t('composer:confirm_layer_remove', {layer_name: layers[index].name}))
+        if (layers.length <= 1) return logger.warn(this.props.t('composer:cant_remove_all_layers'))
+        const confirm = await asyncConfirm(this.props.t('composer:confirm_layer_remove', {layer_name: layers[index].name}))
         if (confirm) {
             song.removeInstrument(index)
             this.syncInstruments(song)
@@ -327,7 +329,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 const instrument = new Instrument(ins.name)
                 layers[i] = instrument
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
-                if (!loaded) logger.error(i18n.t('logs:error_loading_instrument'))
+                if (!loaded) logger.error(this.props.t('logs:error_loading_instrument'))
                 if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
@@ -346,7 +348,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 const instrument = new Instrument(ins.name)
                 layers[i] = instrument
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
-                if (!loaded) logger.error(i18n.t('logs:error_loading_instrument'))
+                if (!loaded) logger.error(this.props.t('logs:error_loading_instrument'))
                 if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
@@ -379,12 +381,12 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.setState({isRecordingAudio: false})
         const recording = await AudioProvider.stopRecording()
         if (!recording) return
-        const fileName = await asyncPrompt(i18n.t('question:ask_song_name_cancellable'))
+        const fileName = await asyncPrompt(this.props.t('question:ask_song_name_cancellable'))
         try {
             if (fileName) await AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
         } catch (e) {
             console.error(e)
-            logger.error(i18n.t('logs:error_downloading_audio'))
+            logger.error(this.props.t('logs:error_downloading_audio'))
         }
     }
     playSound = (layer: number, index: number, delay?: number) => {
@@ -435,7 +437,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
     updateSong = async (song: ComposedSong): Promise<boolean> => {
         //if it is the default song, ask for name and add it
         if (song.name === "Untitled") {
-            const name = await asyncPrompt(i18n.t('question:ask_song_name_cancellable'))
+            const name = await asyncPrompt(this.props.t('question:ask_song_name_cancellable'))
             if (name === null || !this.mounted) return false
             song.name = name
             this.changes = 0
@@ -455,7 +457,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
             } else {
                 //if it doesn't exist, add it
                 if (song.name.includes("- Composed")) {
-                    const name = await asyncPrompt(i18n.t("composer:ask_song_name_for_composed_song_version"))
+                    const name = await asyncPrompt(this.props.t("composer:ask_song_name_for_composed_song_version"))
                     if (name === null) return resolve(false)
                     song.name = name
                     this.addSong(song)
@@ -472,7 +474,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.updateSong(this.state.song)
     }
     askForSongUpdate = async () => {
-        return await asyncConfirm(i18n.t('question:unsaved_song_save', {song_name: this.state.song.name}), false)
+        return await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: this.state.song.name}), false)
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.changes > 0) {
@@ -482,7 +484,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 await this.updateSong(this.state.song)
             }
         }
-        const name = await asyncPrompt(i18n.t("question:ask_song_name_cancellable"))
+        const name = await asyncPrompt(this.props.t("question:ask_song_name_cancellable"))
         if (name === null) return
         const song = new ComposedSong(name, [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]])
         this.changes = 0
@@ -625,7 +627,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
             if (settings.autosave.value) {
                 await this.updateSong(song)
             } else {
-                const confirm = await asyncConfirm(i18n.t('question:unsaved_song_save', {song_name: song.name}), false)
+                const confirm = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: song.name}), false)
                 if (confirm) {
                     if (!await this.updateSong(song)) return console.log("Blocking redirect")
                 }
@@ -771,9 +773,10 @@ class Composer extends Component<ComposerProps, ComposerState> {
             undoHistory
         } = this.state
         const songLength = calculateSongLength(song.columns, settings.bpm.value, song.selected)
+        const {t} = this.props
         return <>
             <PageMetadata
-                text={`${i18n.t('home:composer_name')} - ${song.name}`}
+                text={`${t('home:composer_name')} - ${song.name}`}
                 description='Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet.'
             />
             {isMidiVisible &&
@@ -801,7 +804,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                                 this.broadcastChannel?.postMessage?.(isPlaying ? 'stop' : 'play')
                             }
                         }}
-                        ariaLabel={isPlaying ? i18n.t('common:pause') : i18n.t('common:play')}
+                        ariaLabel={isPlaying ? t('common:pause') : t('common:play')}
                     >
                         <Memoized>
                             {isPlaying
@@ -840,27 +843,31 @@ class Composer extends Component<ComposerProps, ComposerState> {
                         <div className="buttons-composer-wrapper-right">
                             <CanvasTool
                                 onClick={() => this.addColumns(1, song.selected)}
-                                tooltip={i18n.t('composer:add_column')}
-                                ariaLabel={i18n.t('composer:add_column')}
+                                tooltip={t('composer:add_column')}
+                                ariaLabel={t('composer:add_column')}
                             >
                                 <MemoizedIcon icon={AddColumn} className={'tool-icon'}/>
                             </CanvasTool>
                             <CanvasTool
                                 onClick={() => this.removeColumns(1, song.selected)}
-                                tooltip={i18n.t('composer:remove_column')}
-                                ariaLabel={i18n.t('composer:remove_column')}
+                                tooltip={t('composer:remove_column')}
+                                ariaLabel={t('composer:remove_column')}
                             >
                                 <MemoizedIcon icon={RemoveColumn} className={'tool-icon'}/>
                             </CanvasTool>
                             <CanvasTool
                                 onClick={() => this.addColumns(Number(settings.beatMarks.value) * 4, "end")}
-                                tooltip={i18n.t('composer:add_new_page')}
-                                ariaLabel={i18n.t('composer:add_new_page')}
+                                tooltip={t('composer:add_new_page')}
+                                ariaLabel={t('composer:add_new_page')}
                             >
 
                                 <MemoizedIcon icon={FaPlus} size={16}/>
                             </CanvasTool>
-                            <CanvasTool onClick={this.toggleTools} tooltip='Open tools' ariaLabel='Open tools'>
+                            <CanvasTool
+                                onClick={this.toggleTools}
+                                tooltip={t('composer:open_tools')}
+                                ariaLabel={t('composer:open_tools')}
+                            >
                                 <MemoizedIcon icon={FaTools} size={16}/>
                             </CanvasTool>
                         </div>
@@ -920,9 +927,11 @@ interface ComposerPageProps {
 
 export default function ComposerPage({inPreview, songId}: ComposerPageProps) {
     const router = useRouter()
+    const {t} = useTranslation(['composer', 'home', 'logs', 'question', 'common'])
     const {songId: querySongId, showMidi} = router.query
     return <Composer
         router={router}
+        t={t}
         songId={(querySongId as string) ?? songId ?? null}
         showMidi={!!showMidi}
         inPreview={inPreview ?? false}

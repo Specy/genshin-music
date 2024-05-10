@@ -43,7 +43,7 @@ export default function ChangelogPage() {
             </SimpleMenu>
         }
     >
-        <PageMetadata text={`${t('changelog_name')} V${APP_VERSION}`}
+        <PageMetadata text={`${t('home:changelog_name')} V${APP_VERSION}`}
                       description={`Changelog V${APP_VERSION}\n${CHANGELOG[0]?.changes.join(";")}`}/>
         <div className={s['changelog-page-title']}>
             {t('home:changelog_name')}

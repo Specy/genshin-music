@@ -64,6 +64,7 @@ import sh from '$cmp/pages/Index/HelpTab/HelpTab.module.css'
 import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
 import {useRouter} from 'next/router';
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
+import {useTranslation} from "react-i18next";
 
 interface MenuProps {
     functions: {
@@ -83,6 +84,7 @@ export type MenuTabs = 'Help' | 'Library' | 'Songs' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
 
 function Menu({functions, data, inPreview}: MenuProps) {
+    const {t} = useTranslation(['player', 'question', 'confirm', 'settings'])
     const router = useRouter()
     const [songs] = useSongs()
     const [isOpen, setOpen] = useState(false)

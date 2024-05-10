@@ -34,7 +34,7 @@ export function ZenKeyboardMenu({
                                     isMetronomePlaying,
                                     setIsMetronomePlaying
                                 }: ZenKeyboardMenuProps) {
-    const {t} = useTranslation(['settings'])
+    const {t} = useTranslation(['menu', 'settings'])
     const [selectedPage, setSelectedPage] = useState("Settings")
     const [isOpen, setIsOpen] = useState(true)
     const [isVisible, setIsVisible] = useState(false)
@@ -55,7 +55,7 @@ export function ZenKeyboardMenu({
                 borderRadius: '1rem',
                 border: 'solid 0.1rem var(--secondary)'
             }}
-            ariaLabel={t('toggle_metronome')}
+            ariaLabel={t('settings:toggle_metronome')}
         >
             <GiMetronome size={18}/>
         </IconButton>
