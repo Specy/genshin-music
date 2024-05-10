@@ -1,4 +1,4 @@
-export const i18n_en = {
+export const i18n_zh = {
     logs: {
         update_available: "There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app",
         error_with_the_app: "There was an error with the app!",
@@ -643,6 +643,4 @@ export const i18n_en = {
             vsrg_add_hit_object: 'Add hit object (syncs to the registered keybinds)',
         }
     }
-
 } as const
-

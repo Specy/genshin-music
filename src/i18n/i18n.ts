@@ -4,6 +4,7 @@ import {i18n_en} from '$i18n/locales/en'
 import {i18n_it} from "$i18n/locales/it";
 import {i18n_test} from "$i18n/locales/test/locale-test";
 import {IS_DEV} from "$config";
+import {i18n_zh} from "$i18n/locales/zh";
 
 export type EngI18n = typeof i18n_en
 
@@ -26,11 +27,12 @@ i18next
     .init({
         debug: IS_DEV,
         pluralSeparator: '+',
-        fallbackLng: ['en', 'it'], //TODO not sure exactly how this needs to be set up to load all languages
+        fallbackLng: ['en', 'it', 'zh'], //TODO not sure exactly how this needs to be set up to load all languages
         defaultNS,
         resources: {
             en: i18n_en,
             it: i18n_it,
+            zh: i18n_zh,
         }
     });
 export const i18n = i18next;
