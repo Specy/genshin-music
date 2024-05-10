@@ -282,6 +282,15 @@ export const i18n_en = {
         delete_songs_and_folders_tooltip: "Here you can delete all your themes",
         delete_themes_tooltip: "Here you can delete all your themes",
         delete_themes: "Delete themes",
+    },
+    composer: {
+        add_new_page: "Add new page",
+        remove_column: "Remove column",
+        add_column: "Add column",
+        cant_remove_all_layers: "You can't remove all layers!",
+        confirm_layer_remove: `Are you sure you want to remove "{{layer_name}}"? ALL NOTES OF THIS LAYER WILL BE DELETED`,
+        cant_add_more_than_n_layers: `You can't add more than {{max_layers}} layers!`,
+        ask_song_name_for_composed_song_version:"Write the song name for the composed version, press cancel to ignore"
     }
 } as const
 
