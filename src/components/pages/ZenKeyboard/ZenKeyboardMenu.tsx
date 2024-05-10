@@ -16,6 +16,7 @@ import {IoMdMusicalNote} from "react-icons/io";
 import {GiMetronome} from "react-icons/gi";
 import {IconType} from "react-icons";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
+import {useTranslation} from "react-i18next";
 
 interface ZenKeyboardMenuProps {
     settings: ZenKeyboardSettingsDataType
@@ -33,6 +34,7 @@ export function ZenKeyboardMenu({
                                     isMetronomePlaying,
                                     setIsMetronomePlaying
                                 }: ZenKeyboardMenuProps) {
+    const {t} = useTranslation(['settings'])
     const [selectedPage, setSelectedPage] = useState("Settings")
     const [isOpen, setIsOpen] = useState(true)
     const [isVisible, setIsVisible] = useState(false)
@@ -53,7 +55,7 @@ export function ZenKeyboardMenu({
                 borderRadius: '1rem',
                 border: 'solid 0.1rem var(--secondary)'
             }}
-            ariaLabel='Toggle metronome'
+            ariaLabel={t('toggle_metronome')}
         >
             <GiMetronome size={18}/>
         </IconButton>
@@ -113,7 +115,7 @@ export function ZenKeyboardMenu({
             </div>
             <MenuSidebar style={{justifyContent: 'flex-end'}}>
                 <MenuButton
-                    ariaLabel='Close menu'
+                    ariaLabel={t('toggle_menu')}
                     style={{marginBottom: 'auto'}}
                     onClick={() => setIsVisible(!isVisible)}
                 >
@@ -121,20 +123,20 @@ export function ZenKeyboardMenu({
                 </MenuButton>
                 <MenuItem
                     id={"Settings"}
-                    ariaLabel='Open settings'
+                    ariaLabel={t('open_settings')}
                 >
                     <MemoizedIcon icon={FaCog} className={'icon'}/>
                 </MenuItem>
                 <MenuButton
                     onClick={homeStore.open}
-                    ariaLabel='Open home menu'
+                    ariaLabel={t('open_home_menu')}
                     style={{border: "solid 0.1rem var(--secondary)"}}
                 >
                     <MemoizedIcon icon={FaHome} className={'icon'}/>
                 </MenuButton>
             </MenuSidebar>
             <MenuPanelWrapper>
-                <MenuPanel title="Settings" id="Settings">
+                <MenuPanel title={t('settings')} id="Settings">
                     <SettingsPane
                         settings={settings}
                         onUpdate={handleSettingChange}

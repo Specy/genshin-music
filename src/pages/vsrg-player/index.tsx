@@ -19,6 +19,7 @@ import {logger} from "$stores/LoggerStore";
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import s from "$pages/vsrg-player/VsrgPlayer.module.css";
+import {i18n} from "$i18n/i18n";
 
 type VsrgPlayerProps = {}
 
@@ -76,7 +77,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
         const {songAudioPlayer, keyboardAudioPlayer} = this.state
         const serializedAudioSong = await songsStore.getSongById(song.audioSongId)
-        logger.showPill("Loading instruments...")
+        logger.showPill(i18n.t("logs:loading_instruments"))
         if (serializedAudioSong) {
             const parsed = songService.parseSong(serializedAudioSong)
             songAudioPlayer.basePitch = parsed.pitch
@@ -166,7 +167,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     render() {
         const {canvasSizes, settings} = this.state
         return <>
-            <PageMetadata text="Vsrg Player" description="Play or practice VSRG songs"/>
+            <PageMetadata text={i18n.t('home:vsrg_player_name')} description="Play or practice VSRG songs"/>
             <VsrgPlayerMenu
                 settings={settings}
                 onSettingsUpdate={this.handleSettingChange}

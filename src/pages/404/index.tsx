@@ -1,8 +1,10 @@
 import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import Link from 'next/link'
+import {useTranslation} from "react-i18next";
 
 export default function Error404() {
+    const {t} = useTranslation('page404')
     return <DefaultPage>
         <PageMetadata text="404" description="oh no!"/>
         <Link href='/' className='link' style={{textAlign: 'center'}}>
@@ -10,7 +12,7 @@ export default function Error404() {
                 404
             </div>
             <div>
-                The page was not found, click here to go back to the home page
+                {t('page_not_found')}
             </div>
         </Link>
     </DefaultPage>

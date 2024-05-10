@@ -13,12 +13,14 @@ import {logger} from '$stores/LoggerStore'
 import {useRouter} from 'next/router'
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {Stylable} from "$lib/utils/UtilTypes";
+import {useTranslation} from "react-i18next";
 interface SheetVisualiserMenuProps extends Stylable{
     currentSong: SerializedSong | null,
     onSongLoaded: (song: SerializedSong) => void,
 }
 
 export function SheetVisualiserMenu({currentSong, onSongLoaded, className, style}: SheetVisualiserMenuProps) {
+    const { t} = useTranslation('menu')
     const [songs] = useSongs()
     const history = useRouter()
     const [selectedPage, setSelectedPage] = useState("")
@@ -38,7 +40,7 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded, className, style
         <MenuSidebar style={{justifyContent: 'flex-end'}}>
             {(browserHistoryStore.hasNavigated && !open) &&
                 <MenuButton
-                    ariaLabel='Go back'
+                    ariaLabel={t('go_back')}
                     style={{marginBottom: 'auto'}}
                     onClick={() => {
                         history.back()
@@ -49,17 +51,17 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded, className, style
             }
             {open &&
                 <MenuButton
-                    ariaLabel='Close menu'
+                    ariaLabel={t('close_menu')}
                     style={{marginBottom: 'auto'}}
                     onClick={() => setOpen(false)}
                 >
                     <FaTimes className="icon"/>
                 </MenuButton>
             }
-            <MenuItem id={'Songs'} ariaLabel='Open songs menu'>
+            <MenuItem id={'Songs'} ariaLabel={t('song_menu')}>
                 <FaMusic className="icon"/>
             </MenuItem>
-            <MenuButton onClick={homeStore.open} ariaLabel='Open home menu'
+            <MenuButton onClick={homeStore.open} ariaLabel={t('open_home_menu')}
                         style={{border: "solid 0.1rem var(--secondary)"}}>
                 <FaHome className="icon"/>
             </MenuButton>

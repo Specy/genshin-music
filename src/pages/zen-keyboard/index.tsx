@@ -13,8 +13,11 @@ import {ReactElement, useCallback, useEffect, useState} from "react"
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata"
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground"
 import {MIDIProvider} from "$lib/Providers/MIDIProvider";
+import {i18n} from "$i18n/i18n";
+import {useTranslation} from "react-i18next";
 
 export default function ZenKeyboard() {
+    const {t} = useTranslation(['home'])
     const [settings, setSettings] = useState(ZenKeyboardSettings.data)
     const [instrument, setInstrument] = useState(new Instrument())
     const [isMetronomePlaying, setIsMetronomePlaying] = useState(false)
@@ -51,7 +54,7 @@ export default function ZenKeyboard() {
     }
     useEffect(() => {
         async function load() {
-            logger.showPill(`Loading instrument: ${instrument.name}...`)
+            logger.showPill(i18n.t('zen_keyboard:loading_instrument'))
             await instrument.load(AudioProvider.getAudioContext())
             logger.hidePill()
             AudioProvider.connect(instrument.endNode, null)
@@ -77,7 +80,7 @@ export default function ZenKeyboard() {
         instrument.changeVolume(data.value)
     }, [instrument])
     return <>
-        <PageMetadata text="Zen Keyboard"
+        <PageMetadata text={t('zen_keyboard_name')}
                       description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"/>
         <ZenKeyboardMenu
             settings={settings}

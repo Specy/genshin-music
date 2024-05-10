@@ -23,6 +23,7 @@ i18next
     .use(initReactI18next)
     .init({
         debug: process.env.NODE_ENV === 'development',
+        pluralSeparator: '+',
         fallbackLng: ['en', 'it'], //TODO not sure exactly how this needs to be set up to load all languages
         defaultNS,
         resources: {

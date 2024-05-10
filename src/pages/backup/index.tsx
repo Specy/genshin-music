@@ -27,9 +27,11 @@ import {MultipleOptionSlider} from "$cmp/pages/VsrgComposer/MultipleOptionSlider
 import {useTheme} from "$lib/Hooks/useTheme";
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
+import {useTranslation} from "react-i18next";
 
 type BackupFormat = 'json' | 'zip'
 export default function Backup() {
+    const {t} = useTranslation(['backup', 'home'])
     const [theme] = useTheme()
     const iconStyle = {marginRight: '0.3rem', marginLeft: '-0.4rem'}
     const [songs] = useSongs()
@@ -40,7 +42,7 @@ export default function Backup() {
     }, [])
 
     async function validateSongs(): Promise<SerializedSong[] | null> {
-        logger.showPill("Validating songs...")
+        logger.showPill(`${t('validating_songs')}...`)
         const songs = await songService.getSongs()
         const errors: SerializedSong[] = []
         for (const song of songs) {
@@ -49,11 +51,11 @@ export default function Backup() {
             } catch (e) {
                 console.error(e)
                 errors.push(song)
-                logger.error(`Error validating song "${song?.name}"`)
+                logger.error(t('error_validating_song', {song_name: song?.name}))
             }
         }
         if (errors.length > 0) {
-            const keepDownloading = await asyncPrompt("There were errors validating some songs. Do you want to continue downloading?")
+            const keepDownloading = await asyncPrompt(t('confirm_after_songs_validation_error'))
             if (!keepDownloading) return null
         }
         logger.hidePill()
@@ -61,7 +63,7 @@ export default function Backup() {
     }
 
     async function validateFolders(): Promise<SerializedFolder[] | null> {
-        logger.showPill("Validating folders...")
+        logger.showPill(`${t('validating_folders')}...`)
         const folderErrors: SerializedFolder[] = []
         const folders = await _folderService.getFolders()
         for (const folder of folders) {
@@ -70,11 +72,11 @@ export default function Backup() {
             } catch (e) {
                 console.error(e)
                 folderErrors.push(folder)
-                logger.error(`Error validating folder "${folder?.name}"`)
+                logger.error(t('error_validating_folder', {folder_name: folder?.name}))
             }
         }
         if (folderErrors.length > 0) {
-            const keepDownloading = await asyncPrompt("There were errors validating some folders. Do you want to continue downloading?")
+            const keepDownloading = await asyncPrompt(t('confirm_after_folders_validation_error'))
             if (!keepDownloading) return null
         }
         logger.hidePill()
@@ -82,7 +84,7 @@ export default function Backup() {
     }
 
     async function validateThemes(): Promise<SerializedTheme[] | null> {
-        logger.showPill("Validating themes...")
+        logger.showPill(`${t('validating_themes')}...`)
         const themes = await _themeService.getThemes()
         const errors: SerializedTheme[] = []
         for (const theme of themes) {
@@ -90,11 +92,11 @@ export default function Backup() {
             } catch (e) {
                 console.error(e)
                 errors.push(theme)
-                logger.error(`Error validating theme "${theme?.other?.name}"`)
+                logger.error(t('error_validating_theme', {theme_name: theme?.other?.name}))
             }
         }
         if (errors.length > 0) {
-            const keepDownloading = await asyncPrompt("There were errors validating some themes. Do you want to continue downloading?")
+            const keepDownloading = await asyncPrompt(t('confirm_after_themes_validation_error'))
             if (!keepDownloading) return null
         }
         logger.hidePill()
@@ -108,30 +110,30 @@ export default function Backup() {
                 await fileService.importAndLog(fileArray)
             } catch (e) {
                 console.error(e)
-                logger.error(`Error importing file "${file.file?.name}"`)
+                logger.error(t('error_importing_file', {file_name: file?.file?.name}))
             }
         }
     }
 
     async function deleteAllSongsAndFolders() {
-        const confirm = await asyncPrompt("Write 'delete' if you want to delete all songs, press cancel to ignore")
-        if (confirm !== 'delete') return logger.warn('Action cancelled')
+        const confirm = await asyncPrompt(t('confirm_delete_songs_step_1'))
+        if (confirm !== 'delete') return logger.warn(t('action_cancelled'))
         await delay(200)
-        const confirmAgain = await asyncConfirm("Are you REALLY sure you want to delete all songs?")
-        if (!confirmAgain) return logger.warn('Action cancelled')
+        const confirmAgain = await asyncConfirm(t('confirm_delete_songs_step_2'))
+        if (!confirmAgain) return logger.warn(t('action_cancelled'))
         await songsStore._DANGEROUS_CLEAR_ALL_SONGS()
         await folderStore._DANGEROUS_CLEAR_ALL_FOLDERS()
-        logger.success("Deleted all songs")
+        logger.success(t('deleted_all_songs_notice'))
     }
 
     async function deleteAllThemes() {
-        const confirm = await asyncPrompt("Write 'delete' if you want to delete all themes")
-        if (confirm !== 'delete') return logger.warn('Action cancelled')
+        const confirm = await asyncPrompt(t('confirm_delete_themes_step_1'))
+        if (confirm !== 'delete') return logger.warn(t('action_cancelled'))
         await delay(200)
-        const confirmAgain = await asyncConfirm("Are you REALLY sure you want to delete all themes?")
-        if (!confirmAgain) return logger.warn('Action cancelled')
+        const confirmAgain = await asyncConfirm(t('confirm_delete_themes_step_2'))
+        if (!confirmAgain) return logger.warn(t('action_cancelled'))
         await themeStore._DANGEROUS_CLEAR_ALL_THEMES()
-        logger.success("Deleted all themes")
+        logger.success(t('deleted_all_themes_notice'))
     }
 
     async function downloadFiles(files: UnknownFileTypes[], fileName: string) {
@@ -139,7 +141,7 @@ export default function Backup() {
             fileService.downloadFiles(files, fileName)
         } else {
             try {
-                logger.showPill("Zipping files...")
+                logger.showPill(`${t('zipping_files')}...`)
                 const result = await new Promise<any>((resolve, reject) => {
                     const fileEntries = files.map(file => {
                         const nameAndFormat = fileService.getUnknownFileExtensionAndName(file)
@@ -167,25 +169,25 @@ export default function Backup() {
     }
 
     return <DefaultPage>
-        <PageMetadata text="Backup"
+        <PageMetadata text={t('home:backup_name')}
                       description="Manage the backups in the app, download or import songs, themes, or all of them"/>
         <h1 style={{fontSize: "1.8rem"}}>
-            Transfer from other domain
+            {t('transfer_from_other_domain')}
         </h1>
         <Row align={'center'} gap={'1rem'} style={{paddingLeft: '1.5rem'}}>
             <div>
-                If you want to transfer your data from another domain of the app, click here
+                 {t('transfer_data_notice')}
             </div>
             <Link href={"/transfer"} style={{marginLeft: "1rem"}}>
                 <AppButton cssVar="accent" style={{gap: "0.2rem"}}>
-                    Transfer
+                 {t('transfer')}
                 </AppButton>
             </Link>
         </Row>
 
         <Row align={'center'} gap={'1rem'} style={{margin: "1rem 0", marginTop: "2rem"}}>
             <div style={{fontSize: "1.8rem"}}>
-                Backup as
+                 {t('backup_as')}
             </div>
             <MultipleOptionSlider
                 options={[
@@ -197,12 +199,11 @@ export default function Backup() {
             />
         </Row>
         <div style={{paddingLeft: '1.5rem'}}>
-            Make sure you create a backup every now and then. Especially if you just finished a new song.
-            The browser shouldn't delete your data, especially if you installed the app, but there is always a chance.
+            {t('backup_advice')}
         </div>
         <Row gap={'0.5rem'} style={{marginTop: '1rem', paddingLeft: '1.5rem'}}>
             <AppButton
-                tooltip="Download all the data of the app, aka themes, songs, folders"
+                tooltip={t("download_all_backup_tooltip")}
                 className="flex-centered"
                 onClick={async () => {
                     const songs = await validateSongs()
@@ -212,22 +213,21 @@ export default function Backup() {
                     const themes = await validateThemes()
                     if (!themes) return
                     const files = [...songs, ...folders, ...themes]
-                    if (files.length === 0) return logger.warn("There is nothing to backup")
+                    if (files.length === 0) return logger.warn(t("no_items_to_backup"))
                     try {
                         await downloadFiles(files, `${getDateString()}-all.${APP_NAME.toLowerCase()}backup`)
-                        logger.success("Downloaded backup")
+                        logger.success(t("backup_downloaded"))
                         settingsService.setLastBackupWarningTime(Date.now())
                     } catch (e) {
-                        logger.error("Error downloading backup")
+                        logger.error(t("backup_download_error"))
                     }
                 }}
             >
                 <FaFileDownload style={iconStyle}/>
-
-                Download all backup
+                {t("download_all_backup")}
             </AppButton>
             <AppButton
-                tooltip="Downloads a backup containing all songs and folders"
+                tooltip={t("download_songs_tooltip")}
                 className="flex-centered"
                 onClick={async () => {
                     const songs = await validateSongs()
@@ -235,57 +235,55 @@ export default function Backup() {
                     const folders = await validateFolders()
                     if (!folders) return
                     const files = [...songs, ...folders]
-                    if (files.length === 0) return logger.warn("There are no songs to backup")
+                    if (files.length === 0) return logger.warn(t("no_songs_to_backup"))
                     try {
                         await downloadFiles(files, `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup`)
-                        logger.success("Downloaded songs backup")
+                        logger.success(t("downloaded_songs_notice"))
                         settingsService.setLastBackupWarningTime(Date.now())
                     } catch (e) {
-                        logger.error("Error downloading backup")
+                        logger.error(t("backup_download_error"))
                         console.error(e)
                     }
                 }}
             >
                 <FaFileDownload style={iconStyle}/>
-                Download song backup
+                {t("download_songs_backup")}
             </AppButton>
             <AppButton
-                tooltip="Downloads a backup of all the custom themes"
+                tooltip={t("download_themes_tooltip")}
                 className="flex-centered"
                 onClick={async () => {
                     const themes = await validateThemes()
                     if (!themes) return
-                    if (themes.length === 0) return logger.warn("There are no themes to backup")
+                    if (themes.length === 0) return logger.warn(t("no_themes_to_backup"))
                     try {
                         await downloadFiles(themes, `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup`)
-                        logger.success("Downloaded themes backup")
+                        logger.success(t("downloaded_themes_notice"))
                     } catch (e) {
-                        logger.error("Error downloading backup")
+                        logger.error(t("backup_download_error"))
                         console.error(e)
                     }
                 }}
             >
                 <FaFileDownload style={iconStyle}/>
-                Download themes backup
+                {t("download_themes_backup")}
             </AppButton>
         </Row>
         <h1 style={{fontSize: "1.8rem"}}>
-            Import a backup
+            {t("import_backup")}
         </h1>
         <div style={{paddingLeft: '1.5rem'}}>
-            If you have a backup, you can import it here, they will be added to your existing data. (if you already have
-            the same song,
-            a duplicate will be created).
+            {t("import_backup_description")}
         </div>
         <Row align={'center'}>
             <FilePicker
                 onPick={onFilePick}
                 as="json"
-                onError={() => logger.error("There was an error reading the file")}
+                onError={() => logger.error(t("error_reading_file"))}
             >
                 <AppButton
                     className="flex-centered"
-                    tooltip="Here you can import any backup you have"
+                    tooltip={t("import_backup_tooltip")}
                     style={{
                         marginTop: '1rem',
                         backgroundColor: "var(--accent)",
@@ -295,6 +293,7 @@ export default function Backup() {
                 >
                     <FaFileImport style={{...iconStyle, fontSize: '1rem', marginRight: '0.5rem'}}/>
                     Import backup
+                    {t("import_backup")}
                 </AppButton>
             </FilePicker>
 
@@ -310,25 +309,24 @@ export default function Backup() {
                 style={{width: 'fit-content'}}
             >
                 <span>
-                    {songs.length} {songs.length === 1 ? 'song' : 'songs'}
+                    {songs.length} {t("songs")}
                 </span>
 
                 <span>
-                    {userThemes.length} {userThemes.length === 1 ? 'theme' : 'themes'}
+                    {userThemes.length} {t("themes")}
                 </span>
             </Column>
         </Column>
         <h1 style={{fontSize: "1.8rem"}}>
-            Delete data
+            {t("delete_data")}
         </h1>
         <div style={{paddingLeft: '1.5rem'}}>
-            If you want, you can also delete all your data here, once deleted it can't be recovered.
-            Don't worry you will be asked to confirm before anything is deleted.
+            {t("delete_data_description")}
         </div>
         <Row gap={'0.5rem'} style={{marginTop: '1rem', paddingLeft: '1.5rem'}}>
             <AppButton
                 className="flex-centered"
-                tooltip="Here you can delete all your songs and folders"
+                tooltip={t("delete_songs_and_folders_tooltip")}
                 tooltipPosition="top"
                 style={{
                     backgroundColor: "var(--red-bg)",
@@ -338,10 +336,11 @@ export default function Backup() {
             >
                 <FaTrash style={iconStyle}/>
                 Delete songs and folders
+                {t("delete_songs_and_folders")}
             </AppButton>
             <AppButton
                 className="flex-centered"
-                tooltip="Here you can delete all your themes"
+                tooltip={t("delete_themes_tooltip")}
                 tooltipPosition="top"
                 style={{
                     backgroundColor: "var(--red-bg)",
@@ -350,7 +349,7 @@ export default function Backup() {
                 onClick={deleteAllThemes}
             >
                 <FaTrash style={iconStyle}/>
-                Delete themes
+                {t("delete_themes")}
             </AppButton>
         </Row>
 

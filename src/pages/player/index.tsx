@@ -27,6 +27,7 @@ import {playerControlsStore} from '$stores/PlayerControlsStore';
 import {PlayerSongControls} from '$cmp/pages/Player/PlayerSongControls';
 import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
 import {createShortcutListener} from '$/stores/KeybindsStore';
+import {i18n} from "$i18n/i18n";
 
 interface PlayerState {
     settings: PlayerSettingsDataType
@@ -139,7 +140,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
         instrument.changeVolume(volume)
         this.setState({isLoadingInstrument: true})
         const loaded = await instrument.load(AudioProvider.getAudioContext())
-        if (!loaded) logger.error("There was an error loading the instrument")
+        if (!loaded) logger.error(i18n.t('logs:error_loading_instrument'))
         AudioProvider.connect(instrument.endNode, null)
         if (!this.mounted) return
         playerStore.setKeyboardLayout(instrument.notes)
@@ -178,7 +179,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
                 const instrument = new Instrument(ins.name)
                 instruments[i] = instrument
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
-                if (!loaded) logger.error("There was an error loading the instrument")
+                if (!loaded) logger.error(i18n.t('logs:error_loading_instrument'))
                 if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
@@ -196,7 +197,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
                 const instrument = new Instrument(ins.name)
                 instruments[i] = instrument
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
-                if (!loaded) logger.error("There was an error loading the instrument")
+                if (!loaded) logger.error(i18n.t('logs:error_loading_instrument'))
                 if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
@@ -266,12 +267,12 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             logger.success(`Song added to the ${type} tab!`, 4000)
         } catch (e) {
             console.error(e)
-            return logger.error('There was an error importing the song')
+            return logger.error(i18n.t("logs:error_importing_song"))
         }
     }
 
     removeSong = async (name: string, id: string) => {
-        const result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
+        const result = await asyncConfirm(i18n.t("confirm:delete_song", {song_name: name}))
         if (!this.mounted) return
         if (result) {
             await songsStore.removeSong(id)
@@ -303,7 +304,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
         const newState = override !== null ? override : !this.state.isRecording
         if (!newState && this.recording.notes.length > 0) { //if there was a song recording
             const {instruments, settings} = this.state
-            const songName = await asyncPrompt("Write song name, press cancel to ignore")
+            const songName = await asyncPrompt(i18n.t("question:ask_song_name_cancellable"))
             if (!this.mounted) return
             if (songName !== null) {
                 const song = new RecordedSong(songName, this.recording.notes, [instruments[0].name])
@@ -328,13 +329,13 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             AudioProvider.startRecording()
         } else {
             const recording = await AudioProvider.stopRecording()
-            const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
+            const fileName = await asyncPrompt(i18n.t("question:ask_song_name_cancellable"))
             if (!this.mounted || !recording) return
             try {
                 if (fileName) await AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
             } catch (e) {
                 console.error(e)
-                logger.error("There was an error downloading the audio, maybe it's too big?")
+                logger.error(i18n.t("logs:error_downloading_audio"))
             }
         }
     }
@@ -362,7 +363,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             speedChanger
         } = state
         return <>
-            <PageMetadata text="Player"
+            <PageMetadata text={i18n.t("home:player_name")}
                           description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
             <Menu
                 functions={{addSong, removeSong, handleSettingChange, changeVolume, renameSong}}
@@ -377,7 +378,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
                             onClick={() => this.toggleRecord()}
                             style={{marginTop: "0.8rem"}}
                         >
-                            {isRecording ? "Stop" : "Record"}
+                            {isRecording ? i18n.t('common:stop'): i18n.t("common:record")}
                         </AppButton>
                     }
                 </div>

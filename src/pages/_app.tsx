@@ -26,7 +26,7 @@ import {GoogleAnalyticsScript} from "$cmp/GoogleAnalyticsScript";
 import Head from "next/head";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 
-import "$i18n/i18n"
+import {i18n} from "$i18n/i18n"
 
 interface CustomPageProps {
 
@@ -86,7 +86,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     console.log("Registering service worker")
                     serviceWorker.register({
                         onUpdate: async (registration) => {
-                            const confirm = await asyncConfirm("There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app", false)
+                            const confirm = await asyncConfirm(i18n.t('logs:update_available'), false)
                             if (confirm) {
                                 registration.waiting?.postMessage({type: "SKIP_WAITING"})
                                 await delay(1000)
@@ -133,7 +133,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     <GeneralProvidersWrapper>
                         <ErrorBoundaryRedirect
                             onErrorGoTo="/error"
-                            onError={() => logger.error("There was an error with the app!")}
+                            onError={() => logger.error(i18n.t("logs:error_with_the_app"))}
                         >
                             <>
                                 <AppBase/>

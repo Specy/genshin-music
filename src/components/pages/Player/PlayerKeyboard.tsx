@@ -13,6 +13,7 @@ import {MIDIEvent, MIDIProvider} from '$lib/Providers/MIDIProvider'
 import {NoteLayer} from '$lib/Songs/Layer'
 import {subscribeObeservableObject, subscribeObservableArray} from '$lib/Hooks/useObservable'
 import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$stores/KeybindsStore'
+import {i18n} from "$i18n/i18n";
 
 interface KeyboardPlayerProps {
     data: {
@@ -414,7 +415,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                 }}
             >
                 {data.isLoading
-                    ? <div className="loading">Loading...</div>
+                    ? <div className="loading">{i18n.t("common:loading")}...</div>
 
                     : keyboard.map(note => {
                         return <Note

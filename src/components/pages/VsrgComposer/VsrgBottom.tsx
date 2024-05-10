@@ -5,6 +5,7 @@ import {VsrgSong} from "$lib/Songs/VsrgSong"
 
 import {FaPause, FaPlay} from "react-icons/fa"
 import {MultipleOptionSlider, Option} from "./MultipleOptionSlider"
+import {useTranslation} from "react-i18next";
 
 interface VsrgBottomProps {
     selectedSnapPoint: SnapPoint
@@ -49,7 +50,7 @@ export function VsrgBottom({
                                tempoChanger,
                                onTempoChangerChange
                            }: VsrgBottomProps) {
-
+    const {t } = useTranslation('vsrg_composer')
     return <>
         <div className="vsrg-bottom">
             <MultipleOptionSlider
@@ -101,7 +102,7 @@ export function VsrgBottom({
                 >
                     {snapPoints.map(snapPoint =>
                         <option key={snapPoint} value={snapPoint}>
-                            Snap: 1/{snapPoint}
+                            {t('snap')}: 1/{snapPoint}
                         </option>
                     )}
                 </Select>

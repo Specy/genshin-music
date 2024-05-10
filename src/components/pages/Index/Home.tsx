@@ -1,7 +1,7 @@
 import {FaCompactDisc, FaMinus, FaPlus, FaTimes} from 'react-icons/fa'
 import {BsMusicPlayerFill} from 'react-icons/bs'
 import {APP_NAME, BASE_PATH, IS_BETA} from "$config"
-import {useEffect, useState} from 'react'
+import {CSSProperties, FC, ReactNode, useEffect, useState} from 'react'
 import Link from 'next/link'
 import {useTheme} from '$lib/Hooks/useTheme'
 import {MenuButton} from '$cmp/shared/Menu/MenuItem'
@@ -13,7 +13,6 @@ import {useObservableObject} from '$lib/Hooks/useObservable'
 import {homeStore} from '$stores/HomeStore'
 import {useRouter} from 'next/router'
 import {clearClientCache, isTWA} from '$lib/utils/Utilities'
-import {useConfig} from '$lib/Hooks/useConfig'
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts'
 import {MdOutlinePiano} from "react-icons/md";
 import {usePathname} from "next/navigation";
@@ -31,7 +30,7 @@ interface HomeProps {
 }
 
 export default function Home({askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen}: HomeProps) {
-    const {t, i18n} = useTranslation('home')
+    const {t, i18n} = useTranslation(['home', 'common'])
     const data = useObservableObject(homeStore.state)
     const [appScale, setAppScale] = useState(100)
     const currentPage = usePathname()
@@ -42,17 +41,17 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const [theme] = useTheme()
 
     async function clearCache() {
-        if (!await asyncConfirm("Are you sure you want to clear the cache? The page will reload")) return
+        if (!await asyncConfirm(t('cache_reload_warning'))) return
         clearClientCache()
             .then(() => {
-                logger.success("Cache Cleared")
+                logger.success(t('cache_cleared'))
                 setTimeout(() => {
                     window.location.href = BASE_PATH || "/"
                 }, 1000)
             })
             .catch((e) => {
                 console.error(e)
-                logger.error("Error clearing cache")
+                logger.error(t('error_clearing_cache'))
             })
     }
 
@@ -96,7 +95,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
         <MenuButton
             className='close-home'
             onClick={homeStore.close}
-            ariaLabel='Close home menu'
+            ariaLabel={t('close_home_menu')}
         >
             <FaTimes size={25}/>
         </MenuButton>
@@ -116,37 +115,34 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             {!hasVisited && <div className='home-welcome'>
                 <div>
                     {!isTwa && <div className='home-spacing'>
-                        To have the webapp in fullscreen, please add the website to the home screen
+                        {t("add_to_home_screen")}
                     </div>}
                     <div className='home-spacing'>
-                        <div className="red-text">WARNING</div>
+                        <div className="red-text">{t('common:warning')}</div>
                         :
-                        Clearing your browser cache / storage might delete your songs, make sure you make backups
+                        {t("clear_cache_warning")}
                     </div>
 
                     {data.hasPersistentStorage &&
                         <div>
-                            <div className="red-text">WARNING</div>
-                            : {"Click the button below to make sure that your browser won't delete your songs if you lack storage"}
+                            <div className="red-text">{t('common:warning')}</div>
+                            : {t('home:persistent_storage_button')}
                         </div>
                     }
                     <div>
                         <span style={{marginRight: '0.2rem'}}>
-                            We use cookies for analytics, by continuing to use this app, you agree to our use of cookies, learn more
+                            {t("privacy_policy")}
                         </span>
                         <Link
                             href='/privacy'
                             style={{color: 'var(--primary-text)', textDecoration: "underline"}}
                             onClick={homeStore.close}
                         >
-                            here
+                            {t('common:privacy')}
                         </Link>
                     </div>
                     <div>
-                        {APP_NAME === "Sky"
-                            ? "This app is not affiliated with thatgamecompany, it is a fan made app."
-                            : "This app is not affiliated with HoYoverse, it is a fan made app."
-                        }
+                        {t('home:no_affiliation', {company_name: APP_NAME === "Sky" ? "thatgamecompany" : "HoYoverse"})}
                     </div>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'flex-end'}}>
@@ -156,7 +152,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                                 askForStorage()
                             }}
                     >
-                        Confirm
+                        {t('common:confirm')}
                     </button>
                 </div>
 
@@ -164,24 +160,23 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             <div className='home-content'>
                 <MainContentElement
                     icon={<FaCompactDisc/>}
-                    title='Composer'
+                    title={t('composer_name')}
                     style={{backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString()}}
                     background={`${BASE_PATH}/manifestData/composer.webp`}
                     href='/composer'
                     isCurrent={currentPage === '/composer'}
                 >
-                    Create or edit songs with a fully fledged music composer. Also with MIDI.
+                    {t('composer_description')}
                 </MainContentElement>
                 <MainContentElement
                     icon={<BsMusicPlayerFill/>}
-                    title='Player'
+                    title={t('player_name')}
                     style={{backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString()}}
                     background={`${BASE_PATH}/manifestData/player.webp`}
                     href='/'
                     isCurrent={currentPage === '/' || currentPage === '/player'}
                 >
-                    Play, download, record and import songs. Learn a song with approaching circle
-                    mode and practice mode.
+                    {t('player_description')}
                 </MainContentElement>
             </div>
             <div className='row space-around middle-size-pages-wrapper'>
@@ -191,7 +186,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     href='/vsrg-composer'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
-                        Vsrg Composer
+                        {t('vsrg_composer_name')}
                     </span>
 
                 </MiddleSizePage>
@@ -202,7 +197,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     href='/vsrg-player'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
-                        Vsrg Player
+                        {t('vsrg_player_name')}
                     </span>
                 </MiddleSizePage>
                 <MiddleSizePage
@@ -211,7 +206,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     href='/zen-keyboard'
                 >
                     <span style={{fontSize: '1rem'}} className='row-centered'>
-                        Zen Keyboard
+                        {t('zen_keyboard_name')}
                     </span>
                 </MiddleSizePage>
             </div>
@@ -219,32 +214,32 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             <div className='page-redirect-wrapper'>
                 {!isTwa &&
                     <PageRedirect href='/donate' current={currentPage === '/donate'}>
-                        Donate
+                        {t('common:donate')}
                     </PageRedirect>
                 }
 
                 <PageRedirect href='/sheet-visualizer' current={currentPage === '/sheet-visualizer'}>
-                    Sheet Visualizer
+                    {t('sheet_visualizer_name')}
                 </PageRedirect>
                 <PageRedirect href='/theme' current={currentPage === '/theme'}>
-                    Themes
+                    {t('themes_name')}
                 </PageRedirect>
                 <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")}>
-                    Blog & Guides
+                    {t('blog_and_guides_name')}
                 </PageRedirect>
                 <PageRedirect href='/keybinds' current={currentPage === '/keybinds'}>
-                    Keybinds/MIDI
+                    {t('keybinds_or_midi_name')}
                 </PageRedirect>
 
                 <PageRedirect href='/partners' current={currentPage === '/partners'}>
-                    Partners
+                    {t('partners_name')}
                 </PageRedirect>
 
                 <PageRedirect href='/backup' current={currentPage === '/backup'}>
-                    Backup
+                    {t('backup_name')}
                 </PageRedirect>
                 <PageRedirect href='/changelog' current={currentPage === '/changelog'}>
-                    Changelog
+                    {t('changelog_name')}
                 </PageRedirect>
 
                 <Link onClick={async (e) => {
@@ -253,10 +248,10 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     if (!confirm) return
                     window.open('https://specy.app', '_blank')
                 }} href={'https://specy.app'} target='_blank'>
-                    Other Apps
+                    {t('other_apps_name')}
                 </Link>
                 <AppButton onClick={clearCache}>
-                    Clear cache
+                    {t('clear_cache_name')}
                 </AppButton>
                 <PageRedirect href='/blog/posts/easyplay-1s' current={currentPage === '/blog/posts/easyplay-1s'}>
                     EASYPLAY 1s
@@ -269,7 +264,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
         <div className='home-bottom'>
             <Row align={'center'} className='home-app-scaling'>
                 <span>
-                    Scale
+                    {t('scale')}
                 </span>
                 <AppButton
                     ariaLabel='Decrease app scale'
@@ -297,14 +292,14 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 {appScale}%
             </Row>
             <span style={{padding: '0 1rem', textAlign: 'center'}}>
-                © All rights reserved by {APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'}. Other properties belong to their respective owners.
+                {t('rights', {company_name: APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'})}
             </span>
             <Row gap={'0.5rem'}>
 
                 <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>
                     <input type='checkbox' checked={!data.canShow} readOnly id='hide-on-open-checkbox'/>
                     <label htmlFor='hide-on-open-checkbox'>
-                        Hide on open
+                        {t('hide_on_open')}
                     </label>
                 </div>
                 <LanguageSelector
@@ -316,17 +311,17 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
         </div>
         {IS_BETA &&
             <div className={'top-right-home-label'}>
-                Beta
+                {t('beta')}
             </div>
         }
     </div>
 }
 
 interface MiddleSizePageProps {
-    children: React.ReactNode,
+    children: ReactNode,
     href: string
     current: boolean
-    Icon: React.FC<{ className?: string }>
+    Icon: FC<{ className?: string }>
 }
 
 function MiddleSizePage({href, children, Icon, current}: MiddleSizePageProps) {
@@ -342,7 +337,7 @@ function MiddleSizePage({href, children, Icon, current}: MiddleSizePageProps) {
 
 
 interface PageRedirectProps {
-    children: React.ReactNode,
+    children: ReactNode,
     current: boolean,
     href: string
 }
@@ -355,16 +350,17 @@ function PageRedirect({children, current, href}: PageRedirectProps) {
 
 interface MainContentElementProps {
     title: string,
-    icon: React.ReactNode,
-    children: React.ReactNode,
+    icon: ReactNode,
+    children: ReactNode,
     background: string,
     isCurrent: boolean,
     href: string,
-    style?: React.CSSProperties
+    style?: CSSProperties
 
 }
 
 function MainContentElement({title, icon, children, background, isCurrent, href, style = {}}: MainContentElementProps) {
+    const {t} = useTranslation('common')
     return <Link
         className={`home-content-element ${isCurrent ? 'current-page' : ''}`}
         href={href}
@@ -381,7 +377,7 @@ function MainContentElement({title, icon, children, background, isCurrent, href,
             </div>
             <div className='home-content-open'>
                 <button>
-                    OPEN
+                    {t('open').toUpperCase()}
                 </button>
             </div>
         </div>
@@ -389,7 +385,7 @@ function MainContentElement({title, icon, children, background, isCurrent, href,
 }
 
 interface SeparatorProps {
-    children?: React.ReactNode
+    children?: ReactNode
 }
 
 function Separator({children}: SeparatorProps) {

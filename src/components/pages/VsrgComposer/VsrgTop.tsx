@@ -10,6 +10,7 @@ import {Theme} from "$stores/ThemeStore/ThemeProvider"
 import {VsrgComposerKeyboard} from "./VsrgComposerKeyboard"
 import {VsrgTrackSettings} from "./VsrgTrackSettings"
 import {Row} from "$cmp/shared/layout/Row";
+import {useTranslation} from "react-i18next";
 
 interface VsrgTopProps {
     vsrg: VsrgSong
@@ -41,6 +42,7 @@ export function VsrgTop({
                             lastCreatedHitObject,
                             selectedHitObject,
                         }: VsrgTopProps) {
+    const { t} = useTranslation('vsrg_composer')
     const [theme] = useTheme()
     const [keyboardElements, setKeyboardElements] = useState<number[]>([])
     const [isTrackSettingsOpen, setIsTrackSettingsOpen] = useState(false)
@@ -99,7 +101,7 @@ export function VsrgTop({
                             e.target?.scrollIntoView()
                         }, 50)
                     }}
-                    ariaLabel='Add new instrument'
+                    ariaLabel={t('add_new_instrument')}
                     className="flex-centered"
                     style={{marginTop: 'auto', padding: '0.3rem'}}
                 >

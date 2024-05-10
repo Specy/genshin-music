@@ -6,21 +6,23 @@ import {Header} from "$cmp/shared/header/Header";
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {Column} from "$cmp/shared/layout/Column";
 import {BASE_PATH} from "$config";
+import {useTranslation} from "react-i18next";
 
 
 export default function ResetCachePage() {
+    const {t} = useTranslation(['cache', 'home'])
     useEffect(() => {
         async function run() {
             try {
                 if (await clearClientCache()) {
-                    logger.success("Cache Cleared")
+                    logger.success(t('home:cache_cleared'))
                     setTimeout(() => {
                         window.location.href = BASE_PATH || "/" //important, "" causes a reload loop
                     }, 1000)
                 }
             } catch (e) {
                 console.error(e)
-                logger.error("Error clearing cache")
+                logger.error(t('home:error_clearing_cache'))
             }
         }
 
@@ -30,31 +32,27 @@ export default function ResetCachePage() {
     function clearCache() {
         clearClientCache()
             .then(() => {
-                logger.success("Cache Cleared")
+                logger.success('home:cache_cleared')
                 setTimeout(() => {
                     window.location.href = BASE_PATH || "/"
                 }, 1000)
             })
             .catch((e) => {
                 console.error(e)
-                logger.error("Error clearing cache")
+                logger.error('home:error_clearing_cache')
             })
     }
 
     return <DefaultPage>
         <Column gap={'1rem'}>
             <Header>
-                Reset cache
+                {t('reset_cache')}
             </Header>
             <div>
-                This page will clear the cache of the application. This will remove all cached data and reload the page.
-                It will not
-                delete your songs or data, only the cached assets. As soon as you visit this page, it will clear the
-                cache automatically.
-                You can also click the button below to clear the cache manually.
+                {t('reset_cache_message')}
             </div>
             <AppButton onClick={clearCache}>
-                Clear Cache
+                {t('clear_cache')}
             </AppButton>
         </Column>
     </DefaultPage>
