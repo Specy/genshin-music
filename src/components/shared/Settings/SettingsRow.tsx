@@ -8,6 +8,7 @@ import {useTheme} from '$lib/Hooks/useTheme'
 import {SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate} from '$types/SettingsPropriety'
 import {hasTooltip, Tooltip} from '$cmp/shared/Utility/Tooltip'
 import s from './Settings.module.css'
+import {useTranslation} from "react-i18next";
 
 interface SettingsRowProps {
     data: SettingsPropriety,
@@ -17,6 +18,7 @@ interface SettingsRowProps {
 }
 
 function SettingsRow({data, update, objKey, changeVolume}: SettingsRowProps) {
+    const {t} = useTranslation(['settings'])
     const [currentValue, setValue] = useState(data.value)
     const [volume, setVolume] = useState(data.type === 'instrument' ? data.volume : 0)
     const [theme] = useTheme()
@@ -40,10 +42,10 @@ function SettingsRow({data, update, objKey, changeVolume}: SettingsRowProps) {
     >
 
         <div className={hasTooltip(data.tooltip)} style={{flex: '1'}}>
-            {data.name}
+             {t(`props.${data.name}`)}
             {data.tooltip &&
                 <Tooltip style={{width: '12rem'}}>
-                    {data.tooltip}
+                    {t(`props.${data.tooltip}`)}
                 </Tooltip>
             }
         </div>

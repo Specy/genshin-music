@@ -1,11 +1,25 @@
 import type {INSTRUMENTS} from '$config'
 import type {ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings} from '$lib/BaseSettings'
+import {AppI18N} from "$i18n/i18n";
+
+
+export type SettingsCategory =
+    'keyboard'
+    | 'metronome'
+    | 'layout_settings'
+    | "player_settings"
+    | "song_settings"
+    | "composer_settings"
+    | "editor_settings"
+
+export type NameOrDescriptionKey = keyof AppI18N['settings']['props']
+
 
 interface BaseSettingsProp {
-    name: string
+    name: NameOrDescriptionKey
     songSetting: boolean
-    category: string
-    tooltip?: string
+    category: SettingsCategory
+    tooltip?: NameOrDescriptionKey
 }
 
 export type SettingsPropriety =
