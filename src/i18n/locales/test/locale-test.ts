@@ -1,4 +1,4 @@
-import {i18n_en} from "$i18n/translations/en";
+import {i18n_en} from "$i18n/locales/en";
 import {AppI18N} from "$i18n/i18n";
 
 function prefixKeysWithChar(obj: Record<string, any>, replace: string): Record<string, any> {

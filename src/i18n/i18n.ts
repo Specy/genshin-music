@@ -1,8 +1,8 @@
 import i18next from 'i18next';
 import {initReactI18next} from 'react-i18next';
-import {i18n_en} from './translations/en'
-import {i18n_it} from "$i18n/translations/it";
-import {i18n_test} from "$i18n/translations/test/locale-test";
+import {i18n_en} from '$i18n/locales/en'
+import {i18n_it} from "$i18n/locales/it";
+import {i18n_test} from "$i18n/locales/test/locale-test";
 import {IS_DEV} from "$config";
 
 export type EngI18n = typeof i18n_en
