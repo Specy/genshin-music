@@ -3,16 +3,28 @@ export const i18n_en = {
         update_available: "There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app",
         error_with_the_app: "There was an error with the app!",
         loading_instruments: "Loading instruments...",
+        loading_song: "Loading song...",
         could_not_find_song: "Could not find song",
         error_loading_instrument: "There was an error loading the instrument",
+        error_opening_file: 'There was an error opening this file',
         error_importing_song: 'There was an error importing the song',
         error_downloading_audio: "There was an error downloading the audio, maybe the song is too long?",
         song_downloaded: "Song downloaded",
         error_downloading_song: "Error downloading song",
+        error_downloading_songs: "Error downloading songs",
+        error_importing_file: `Error importing file "{{file_name}}}"`,
+        error_importing_file_generic: "Error importing file",
+        error_importing_invalid_format: `Error importing file, invalid format`,
+        song_backup_downloaded: "Song backup downloaded",
+        no_songs_to_backup: "There are no songs to backup",
+        no_empty_name: "Please write a non empty name",
+        cloned_song: `Cloned song: "{{song_name}}"`,
+        converting_recorded_to_composed_warning: 'Converting recorded song to composed, audio might not be accurate',
     },
     question: {
         unsaved_song_save: `You have unsaved changes to the song: "{{song_name}}" do you want to save now? UNSAVED CHANGES WILL BE LOST`,
         enter_song_name: "Write the song's name",
+        enter_folder_name: "Write the folder's name",
         ask_song_name_cancellable: "Write the song name, press cancel to ignore",
     },
     confirm: {
@@ -33,6 +45,11 @@ export const i18n_en = {
         yes: "Yes",
         no: "No",
         ok: "Ok",
+        on: "On",
+        off: "Off",
+        help: "Help",
+        reverb: "Reverb",
+        undo: "Undo",
         confirm: "Confirm",
         loading: "Loading",
         privacy: "Privacy",
@@ -41,17 +58,26 @@ export const i18n_en = {
         play: "Play",
         record: "Record", //start recording
         stop: "Stop",
+        erase: "Erase",
+        copy: "Copy",
+        paste: "Paste",
         pause: "Pause",
         settings: "Settings",
         search: "Search",
         rename: "Rename",
         create_song: "Create song",
+        edit_song: "Edit song",
         none: "None",
+        instrument: "instrument",
         download: "Download",
+        download_midi: "Download MIDI",
         pitch: "Pitch", //audio pitch
         bpm: 'bpm',
         connect: "Connect",
         import: "Import",
+        border: "Border",
+        line: "Line",
+        circle: "Circle"
     },
     translation: {},
     home: {
@@ -90,8 +116,11 @@ export const i18n_en = {
     menu: {
         close_menu: "Close menu",
         toggle_menu: "Toggle menu",
-        open_settings: "Open settings",
+        open_settings_menu: "Open settings menu",
         open_home_menu: "Open home menu",
+        open_songs_menu: "Open songs menu",
+        open_library_menu: "Open library menu",
+        open_info_menu: "Open info menu",
         settings: "Settings",
         song_menu: "Song menu",
         help: "Help",
@@ -101,12 +130,39 @@ export const i18n_en = {
         play_song: "Play song",
         invalid_song: "Invalid song",
         download_song: "Download song {{song_name}}",
-        delete_song: "Delete song {{song_name}}"
+        delete_song: "Delete song {{song_name}}",
+        change_app_theme: "Change app theme",
+        download_all_songs_backup: "Download all songs (backup)",
+        connect_midi_keyboard: "Connect MIDI keyboard",
+        import_song_sheet: "Import song sheet",
+        compose_song: "Compose song",
+        select_menu: "Select a menu",
+        create_folder: "Create folder",
+        hint_no_composed_songs: "No songs here, compose one!",
+        hint_no_recorded_songs: "No songs here, record one!",
+        hint_no_songs_in_folder: "No songs here, add one!",
+        folder_empty: 'The folder is empty',
+        midi_download_warning: "If you use MIDI, the song will loose some accuracy, if you want to share the song with others, use the other format (button above). Do you still want to download?",
+        confirm_delete_folder: `Are you sure you want to delete the folder "{{folder_name}}"?  
+            The songs won't be deleted`,
+        filter_alphabetical: "Alphabetical",
+        "filter_date-created": "Date created",
+        open_in_composer: "Open in composer"
     },
     settings: {
         toggle_metronome: "Toggle metronome",
         change_keybinds: "Change keybinds",
-        more_options: 'More options'
+        more_options: 'More options',
+        memory_persisted: "Storage is persisted",
+        memory_not_persisted: "Storage is not persisted",
+        memory_persisted_description: ` Your data is persisted in the browser, the browser should not automatically clear it.
+                            Always make sure to download a backup sometimes, especially when you will not use the app
+                            for a long time`,
+        memory_not_persisted_description: `The browser didn't allow to store data persistently, it might happen that you will loose
+                            data
+                            when cache is automatically cleared. To get persistent storage, add the app to the home
+                            screen.
+                            If that still doesn't work, make sure you do a backup often`
     },
     zen_keyboard: {
         loading_instrument: "Loading instrument: {{instrument}}..."
@@ -176,6 +232,13 @@ export const i18n_en = {
         accuracy: "Accuracy",
         score: "Score",
         combo: "Combo",
+        practice_mode: "Practice", //song practice
+        practice_mode_description: `Practice song "{{song_name}}"`,
+        approach_mode: "Approach mode", //TODO find new name for this, it's the mode where circles "come towards" notes
+        approach_mode_description: `Play in Approach mode the song "{{song_name}}"`,
+        song_search_no_results: "No results",
+        song_search_description: "Here you can find songs to learn, they are provided by the sky-music library.",
+        midi_or_audio_import_redirect_warning: "You cannot directly import this file format. MIDI, Video and Audio files need to be converted in the composer, do you want to open it?",
     },
     keybinds: {
         already_used_keybind: `This keybind is already used by the note  "{{note_name}}"`,
@@ -188,7 +251,7 @@ export const i18n_en = {
         vsrg_composer_shortcuts: "Vsrg composer shortcuts",
         vsrg_player_shortcuts: "Vsrg player shortcuts",
         vsrg_keybinds: "Vsrg keybinds",
-        connected_midi_devices:"Connected MIDI devices",
+        connected_midi_devices: "Connected MIDI devices",
         no_connected_devices: "No connected devices",
         midi_layout_preset: "MIDI layout preset",
         delete_midi_preset: "Delete preset",
@@ -257,11 +320,9 @@ export const i18n_en = {
         error_validating_song: `Error validating song "{{song_name}}"`,
         error_validating_folder: `Error validating folder "{{folder_name}}`,
         error_validating_theme: `Error validating_theme "{{theme_name}}"`,
-        error_importing_file: `Error importing file "{{file_name}}}"`,
         validating_songs: "Validating songs",
         validating_folders: "Validating folders",
         validating_themes: "Validating themes",
-        write_delete_to_delete: "",
         action_cancelled: 'Action cancelled',
         zipping_files: "Zipping files",
         transfer_from_other_domain: "Transfer from other domain",
@@ -276,7 +337,6 @@ export const i18n_en = {
         download_all_backup: "Download all backup",
         download_all_backup_tooltip: "Downloads a backup containing all songs and folders",
         no_items_to_backup: "There is nothing to backup",
-        no_songs_to_backup: "There are no songs to backup",
         download_songs_tooltip: "Downloads a backup containing all songs and folders",
         downloaded_songs_notice: "Downloaded songs backup",
         download_songs_backup: "Download songs backup",
@@ -305,10 +365,78 @@ export const i18n_en = {
         remove_column: "Remove column",
         add_column: "Add column",
         open_tools: "Open tools",
+        clone_song: "Clone song",
+        remove_breakpoint: "Remove breakpoint",
+        add_breakpoint: "Add breakpoint",
         cant_remove_all_layers: "You can't remove all layers!",
         confirm_layer_remove: `Are you sure you want to remove "{{layer_name}}"? ALL NOTES OF THIS LAYER WILL BE DELETED`,
         cant_add_more_than_n_layers: `You can't add more than {{max_layers}} layers!`,
-        ask_song_name_for_composed_song_version:"Write the song name for the composed version, press cancel to ignore"
+        ask_song_name_for_composed_song_version: "Write the song name for the composed version, press cancel to ignore",
+        start_recording_audio: "Start recording audio",
+        stop_recording_audio: "Stop recording audio",
+        create_new_song: "Create new song",
+        create_from_midi_or_audio: "Create from MIDI/Audio",
+        previous_breakpoint: "Previous Breakpoint", //breakpoint is a sort of point to "jump", a sort of bookmark
+        next_breakpoint: "Next Breakpoint",
+        tempo: "Tempo", //this is musical tempo
+        error_with_this_layer: "There was an error with this layer",
+        recording_audio: "Recording Audio",
+        tools: {
+            move_notes_up: "Move notes up",
+            move_notes_up_description: "Push notes up by 1 position",
+            move_notes_down: "Move notes down",
+            move_notes_down_description: "Push notes down by 1 position",
+            only_layer: "Only layer", //this will be used as Only layer 1... etc
+            clear_selection: "Clear selection",
+            all_layers: "All layers",
+            all_layers_description: "Select all the layers in the highlighted columns",
+            paste_in_layer_n: "Paste in layer {{layer_number}}",
+            insert_in_layer_n: "Insert in layer {{layer_number}}",
+            paste_all_layers: "Paste all",
+            insert_all_layers: "Insert all",
+            select_layer_description: "Select all the notes in the highlighted columns or only the ones of the current layer",
+            delete_selected_columns: "Delete selected columns",
+            erase_all_selected_notes: "Erase all selected notes",
+            insert_copied_notes: "Insert copied notes",
+            paste_copied_notes: "Paste copied notes",
+            copy_notes: "Copy all notes"
+        },
+        midi_parser: {
+            out_of_range: "Out of range",
+            accidentals: "Accidentals",
+            total_notes: "Total notes",
+            select_midi_tracks: "Select MIDI tracks",
+            ignore_empty_tracks: "Ignore empty tracks",
+            include_accidentals: "Include accidentals",
+            global_note_offset: "Global note offset",
+            global_note_offset_description: `The index of each note will be pushed up/down by this amount, you can use it to make
+                            the song fit into the app range. You can also change the offset of each layer.`,
+            local_note_offset: "Local track notes offset",
+            local_note_offset_description: " Changes the index of each note by this amount.",
+            max_octave_scaling: "Max notes octave scaling",
+            max_octave_scaling_description: " Scale down/up the notes which are out of scale by theose octaves.",
+            number_of_notes: "Number of notes",
+
+            open_midi_audio_file: "Open MIDI/Audio/Video file",
+            there_are_no_notes: "There are no notes",
+            error_is_file_midi: "There was an error importing this file, is it a .mid file?",
+            converting_audio_to_midi: "Converting audio to midi (might take a while)..",
+            detecting_notes: "Detecting notes",
+            loading_converter: 'Loading converter',
+            audio_conversion_warning: `🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing.`
+        }
+
+    },
+    instrument_settings: {
+        no_instrument_selected: "No instrument selected",
+        layer_name: "Layer name",
+        use_song_pitch: "Use song pitch",
+        use_song_reverb: "Use song reverb",
+        note_icon: "Note icon",
+        volume: "Volume",
+        volume_high_warning: "If you hear distortion, reduce the volume",
+        move_down: "Move down",
+        move_up: "Move up",
     }
 } as const
 

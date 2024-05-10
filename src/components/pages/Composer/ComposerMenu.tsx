@@ -18,7 +18,7 @@ import {APP_NAME} from '$config'
 import {MenuButton, MenuItem} from '$cmp/shared/Menu/MenuItem'
 import {MenuPanel, MenuPanelWrapper} from '$cmp/shared/Menu/MenuPanel'
 import DonateButton from '$cmp/shared/Miscellaneous/DonateButton'
-import Memoized, {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
+import {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
 import Analytics from '$lib/Analytics';
 import {logger} from '$stores/LoggerStore';
 import {AppButton} from '$cmp/shared/Inputs/AppButton';
@@ -52,6 +52,7 @@ import Link from 'next/link';
 import {useConfig} from '$lib/Hooks/useConfig';
 import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
+import {useTranslation} from "react-i18next";
 
 interface MenuProps {
     data: {
@@ -77,6 +78,7 @@ export type MenuTabs = 'Songs' | 'Help' | 'Settings' | 'Home'
 const excludedSongs: SongType[] = ['vsrg']
 
 function Menu({data, functions, inPreview}: MenuProps) {
+    const {t} = useTranslation(['composer', 'common', 'menu', 'logs', 'settings', 'confirm', 'question'])
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const {IS_MIDI_AVAILABLE} = useConfig()
@@ -115,14 +117,14 @@ function Menu({data, functions, inPreview}: MenuProps) {
     }, [])
 
     const removeSong = useCallback(async (name: string, id: string) => {
-        const confirm = await asyncConfirm(`Are you sure you want to delete the song: "${name}"?`)
+        const confirm = await asyncConfirm(t('confirm:delete_song', {song_name: name}))
         if (confirm) {
             await songsStore.removeSong(id)
             Analytics.userSongs('delete', {page: 'composer'})
         }
     }, [])
     const createFolder = useCallback(async () => {
-        const name = await asyncPrompt("Write the folder name")
+        const name = await asyncPrompt(t('question:enter_folder_name'))
         if (!name) return
         folderStore.createFolder(name)
     }, [])
@@ -134,12 +136,9 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 await fileService.importAndLog(songs)
             } catch (e) {
                 console.error(e)
-                if (file.file.name.includes?.(".mid")) {
-                    return logger.error("Midi files should be imported in the composer")
-                }
                 if (e) console.error(e)
                 logger.error(
-                    `Error importing file, invalid format`,
+                    t('logs:error_importing_invalid_format'),
                     8000
                 )
             }
@@ -148,9 +147,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
     const downloadSong = useCallback(async (song: SerializedSong | Midi) => {
         try {
             if (song instanceof Midi) {
-                const agrees = await asyncConfirm(
-                    `If you use MIDI, the song will loose some information, if you want to share the song with others, use the other format (button above). Do you still want to download?`
-                )
+                const agrees = await asyncConfirm(t('menu:midi_download_warning'))
                 if (!agrees) return
                 return fileService.downloadMidi(song)
             }
@@ -162,13 +159,13 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 : parsed.serialize()
             ]
             fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
-            logger.success("Song downloaded")
+            logger.success(t('logs:song_downloaded'))
             Analytics.userSongs('download', {page: 'composer'})
         } catch (e) {
             console.log(e)
-            logger.error('Error downloading song')
+            logger.error(t('logs:error_downloading_song'))
         }
-    }, [])
+    }, [t])
     const songFunctions = {
         loadSong,
         removeSong,
@@ -189,7 +186,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
             <MemoizedIcon icon={FaBars}/>
         </div>
         <MenuSidebar>
-            <MenuButton onClick={() => toggleMenu()} className='close-menu' ariaLabel='Close menu'>
+            <MenuButton onClick={() => toggleMenu()} className='close-menu' ariaLabel={t('menu:close_menu')}>
                 <MemoizedIcon icon={FaTimes} className={'icon'}/>
             </MenuButton>
             <MenuButton
@@ -200,10 +197,10 @@ function Menu({data, functions, inPreview}: MenuProps) {
             >
                 <MemoizedIcon icon={FaSave} className={'icon'}/>
             </MenuButton>
-            <MenuItem id={"Songs"} ariaLabel='Song menu'>
+            <MenuItem id={"Songs"} ariaLabel={t('menu:open_songs_menu')}>
                 <MemoizedIcon icon={FaMusic} className={'icon'}/>
             </MenuItem>
-            <MenuItem id={"Settings"} ariaLabel='Settings menu'>
+            <MenuItem id={"Settings"} ariaLabel={t('menu:open_settings_menu')}>
                 <MemoizedIcon icon={FaCog} className={'icon'}/>
             </MenuItem>
             <MenuButton
@@ -214,7 +211,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 <MemoizedIcon icon={FaHome} className={'icon'}/>
             </MenuButton>
         </MenuSidebar>
-        <MenuPanelWrapper style={inPreview ? {position: 'absolute'}: {}}>
+        <MenuPanelWrapper style={inPreview ? {position: 'absolute'} : {}}>
             <MenuPanel id="Songs">
                 <div className="songs-buttons-wrapper">
                     <HelpTooltip>
@@ -242,10 +239,10 @@ function Menu({data, functions, inPreview}: MenuProps) {
                         }}
                         style={{marginLeft: 'auto'}}
                     >
-                        Create from MIDI/Audio
+                        {t('create_from_midi_or_audio')}
                     </AppButton>
                     <AppButton onClick={createNewSong}>
-                        Create new song
+                        {t('create_new_song')}
                     </AppButton>
                 </div>
                 <SongMenu<SongRowProps>
@@ -285,7 +282,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                         multiple={true}
                     >
                         <AppButton>
-                            Import song sheet
+                            {t('menu:import_song_sheet')}
                         </AppButton>
                     </FilePicker>
                 </div>
@@ -301,7 +298,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                         }}
                         toggled={data.isRecordingAudio}
                     >
-                        {data.isRecordingAudio ? "Stop recording audio" : "Start recording audio"}
+                        {data.isRecordingAudio ? t('stop_recording_audio') : t('start_recording_audio')}
                     </AppButton>
                 </div>
             </MenuPanel>
@@ -317,7 +314,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                             <AppButton
                                 style={{width: 'fit-content'}}
                             >
-                                Connect MIDI keyboard
+                                {t('menu:connect_midi_keyboard')}
                             </AppButton>
                         </Link>
 
@@ -327,7 +324,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                             onClick={() => changePage('theme')}
                             style={{width: 'fit-content'}}
                         >
-                            Change app theme
+                            {t('menu:change_app_theme')}
                         </AppButton>
                     </Link>
 
@@ -354,6 +351,7 @@ interface SongRowProps {
 }
 
 function SongRow({data, functions, theme, folders}: SongRowProps) {
+    const {t} = useTranslation((['composer', 'common', 'menu', 'logs', 'settings']))
     const {removeSong, toggleMenu, renameSong, loadSong, downloadSong} = functions
     const buttonStyle = {backgroundColor: theme.layer('primary', 0.15).toString()}
     const [isRenaming, setIsRenaming] = useState(false)
@@ -362,15 +360,15 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
         setSongName(data.name)
     }, [data.name])
     if (data.type === 'vsrg') return <div className='row'>
-        Invalid song
+        {t('menu:invalid_song')}
     </div>
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
-            logger.showPill("Loading song...")
+            logger.showPill(t('logs:loading_song'))
             const song = await songService.getOneSerializedFromStorable(data)
             logger.hidePill()
-            if (!song) return logger.error("Could not find song")
+            if (!song) return logger.error(t('logs:could_not_find_song'))
             loadSong(song)
             toggleMenu(false)
         }}>
@@ -387,7 +385,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 </div>
             }
             <Tooltip>
-                {isRenaming ? "Song name" : "Open in composer"}
+                {isRenaming ? t('menu:song_name') : t('menu:open_in_composer')}
             </Tooltip>
         </div>
         <div className="song-buttons-wrapper">
@@ -396,7 +394,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 ignoreClickOutside={isRenaming}
 
                 style={buttonStyle}
-                tooltip="More options"
+                tooltip={t('settings:more_options')}
                 onClose={() => setIsRenaming(false)}
             >
                 <AppButton
@@ -411,7 +409,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                     }}
                 >
                     <FaPen style={{marginRight: "0.4rem"}}/>
-                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
+                    <FloatingDropdownText text={isRenaming ? t('common:save') : t('common:rename')}/>
                 </AppButton>
                 <FloatingDropdownRow style={{padding: '0 0.4rem'}}>
                     <FaFolder style={{marginRight: "0.4rem"}}/>
@@ -420,12 +418,12 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                             onChange={async (e) => {
                                 const id = e.target.value
                                 const song = await songService.getOneSerializedFromStorable(data)
-                                if (!song) return logger.error("Could not find song")
+                                if (!song) return logger.error(t('logs:could_not_find_song'))
                                 songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                             }}
                     >
                         <option value={"_None"}>
-                            None
+                            {t('common:none')}
                         </option>
                         {folders.map(folder =>
                             <option key={folder.id} value={folder.id!}>{folder.name}</option>
@@ -435,23 +433,23 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 <FloatingDropdownRow
                     style={{width: '100%'}}
                     onClick={async () => {
-                        if (data?.type === 'recorded') logger.warn('Converting recorded song to composed, audio might not be accurate')
+                        if (data?.type === 'recorded') logger.warn(t('logs:converting_recorded_to_composed_warning'))
                         const song = await songService.getOneSerializedFromStorable(data)
-                        if (!song) return logger.error("Could not find song")
+                        if (!song) return logger.error(t('logs:could_not_find_song'))
                         loadSong(song)
                         toggleMenu(false)
                     }}
                 >
                     <FaEdit style={{marginRight: "0.4rem"}} size={14}/>
-                    <FloatingDropdownText text='Edit song'/>
+                    <FloatingDropdownText text={t('common:edit_song')}/>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.getOneSerializedFromStorable(data)
-                    if (!song) return logger.error("Could not find song")
+                    if (!song) return logger.error(t('logs:could_not_find_song'))
                     downloadSong(song)
                 }}>
                     <FaDownload style={{marginRight: "0.4rem"}}/>
-                    <FloatingDropdownText text='Download'/>
+                    <FloatingDropdownText text={t('common:download')}/>
                 </FloatingDropdownRow>
                 {(data.type === 'recorded' || data.type === "composed") &&
                     <FloatingDropdownRow onClick={async () => {
@@ -459,7 +457,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                         downloadSong(song.toMidi())
                     }}>
                         <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
-                        <FloatingDropdownText text='Download MIDI'/>
+                        <FloatingDropdownText text={t('common:download_midi')}/>
                     </FloatingDropdownRow>
                 }
 
@@ -469,15 +467,15 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                         const clone = parsed.clone()
                         clone.name = `${parsed.name} - (clone)`
                         await songsStore.addSong(clone)
-                        logger.log(`Cloned song: ${data.name}`)
+                        logger.log(t('logs:cloned_song', {song_name: data.name}))
                     }}
                 >
                     <FaClone style={{marginRight: "0.4rem"}}/>
-                    <FloatingDropdownText text='Clone song'/>
+                    <FloatingDropdownText text={t('composer:clone_song')}/>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={() => removeSong(data.name, data.id!)}>
                     <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}}/>
-                    <FloatingDropdownText text='Delete'/>
+                    <FloatingDropdownText text={t('common:delete')}/>
                 </FloatingDropdownRow>
             </FloatingDropdown>
         </div>

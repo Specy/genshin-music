@@ -27,10 +27,12 @@ import {subscribeTheme} from '$lib/Hooks/useTheme';
 import {createShortcutListener} from '$stores/KeybindsStore';
 import {FederatedPointerEvent} from 'pixi.js';
 import {ComposerBreakpointsRenderer} from "$cmp/pages/Composer/ComposerBreakpointsRenderer";
+import {WithTranslation} from "react-i18next/index";
 
 type ClickEventType = 'up' | 'down-slider' | 'down-stage'
 
 interface ComposerCanvasProps {
+    t: WithTranslation<['composer', 'home','logs', 'question', 'common']>['t']
     data: {
         columns: NoteColumn[],
         isPlaying: boolean,
@@ -407,7 +409,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         const isBreakpointSelected = data.breakpoints.includes(data.selected)
         const sideColor = theme.sideButtons.rgb
-
+        const {t} = this.props
         return <div
             className={"canvas-wrapper " + (data.inPreview ? "canvas-wrapper-in-preview" : "")}
             style={{
@@ -495,22 +497,22 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 <div className="timeline-wrapper" style={{height: this.state.timelineHeight}}>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(-1)}
-                        tooltip='Previous Breakpoint'
+                        tooltip={t('previous_breakpoint')}
                         style={{
                             backgroundColor: theme.timeline.hex
                         }}
-                        ariaLabel='Previous Breakpoint'
+                        ariaLabel={t('previous_breakpoint')}
                     >
                         <MemoizedIcon icon={FaStepBackward} size={16}/>
                     </TimelineButton>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(1)}
-                        tooltip='Next breakpoint'
+                        tooltip={t('next_breakpoint')}
                         style={{
                             marginLeft: 0,
                             backgroundColor: theme.timeline.hex
                         }}
-                        ariaLabel='Next Breakpoint'
+                        ariaLabel={t('next_breakpoint')}
                     >
                         <MemoizedIcon icon={FaStepForward} size={16}/>
                     </TimelineButton>
@@ -584,8 +586,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         style={{
                             backgroundColor: theme.timeline.hex
                         }}
-                        tooltip={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
-                        ariaLabel={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
+                        tooltip={isBreakpointSelected ? t('remove_breakpoint') : t('add_breakpoint')}
+                        ariaLabel={isBreakpointSelected ? t('remove_breakpoint') : t('add_breakpoint')}
                     >
                         <MemoizedIcon icon={isBreakpointSelected ? FaMinusCircle : FaPlusCircle} size={16}/>
                     </TimelineButton>

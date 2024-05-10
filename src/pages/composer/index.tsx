@@ -781,6 +781,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
             />
             {isMidiVisible &&
                 <MidiParser
+                    t={t}
                     functions={this}
                     data={{
                         instruments: song.instruments,
@@ -828,6 +829,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                         <ComposerCanvas
                             key={settings.columnsPerCanvas.value}
                             functions={this}
+                            t={this.props.t}
                             data={{
                                 inPreview: this.props.inPreview,
                                 isRecordingAudio,

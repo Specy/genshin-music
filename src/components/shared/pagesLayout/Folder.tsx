@@ -12,6 +12,7 @@ import {APP_NAME, FOLDER_FILTER_TYPES} from "$config"
 import {capitalize} from "$lib/utils/Utilities"
 import {songService} from "$lib/Services/SongService"
 import {Column} from "$cmp/shared/layout/Column";
+import {useTranslation} from "react-i18next";
 
 
 interface FolderProps {
@@ -48,6 +49,7 @@ export function SongFolder({
                                isDefault,
                                defaultOpen = false
                            }: FolderProps) {
+    const {t} = useTranslation(['common', 'logs', 'question', 'menu'])
     const [expanded, setExpanded] = useState(false)
     const [isRenaming, setIsRenaming] = useState(false)
     const [folderName, setFolderName] = useState(data.name)
@@ -81,10 +83,7 @@ export function SongFolder({
     const style = {backgroundColor, color}
 
     async function deleteFolder() {
-        const confirm = await asyncConfirm(
-            `Are you sure you want to delete the folder "${data.name}"?  
-            The songs won't be deleted`
-        )
+        const confirm = await asyncConfirm(t('menu:confirm_delete_folder', {folder_name: data.name}))
         if (!confirm) return
         folderStore.removeFolder(data)
     }
@@ -132,7 +131,7 @@ export function SongFolder({
                         }}
                     >
                         <FaPen style={{marginRight: "0.4rem"}} size={14}/>
-                        <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
+                        <FloatingDropdownText text={isRenaming ? t('common:save') : t('common:rename')}/>
                     </FloatingDropdownRow>
                     <FloatingDropdownRow style={{padding: '0 0.4rem'}}>
                         <FaFilter style={{marginRight: "0.4rem"}}/>
@@ -144,8 +143,13 @@ export function SongFolder({
                                     folderStore.updateFolder(data)
                                 }}
                         >
-                            {FOLDER_FILTER_TYPES.map(folder =>
-                                <option key={folder} value={folder}>{capitalize(folder.replaceAll("-", " "))}</option>
+                            {FOLDER_FILTER_TYPES.map(folderType =>
+                                <option
+                                    key={folderType}
+                                    value={folderType}
+                                >
+                                    {t(`menu:filter_${folderType}`)}
+                                </option>
                             )}
                         </select>
                     </FloatingDropdownRow>
@@ -162,11 +166,11 @@ export function SongFolder({
                         }}
                     >
                         <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
-                        <FloatingDropdownText text='Download'/>
+                        <FloatingDropdownText text={t('common:download')}/>
                     </FloatingDropdownRow>
                     <FloatingDropdownRow onClick={deleteFolder}>
                         <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}} size={14}/>
-                        <FloatingDropdownText text='Delete'/>
+                        <FloatingDropdownText text={t('common:delete')}/>
                     </FloatingDropdownRow>
                 </FloatingDropdown>
             }

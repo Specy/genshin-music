@@ -123,7 +123,7 @@ export function ZenKeyboardMenu({
                 </MenuButton>
                 <MenuItem
                     id={"Settings"}
-                    ariaLabel={t('open_settings')}
+                    ariaLabel={t('open_settings_menu')}
                 >
                     <MemoizedIcon icon={FaCog} className={'icon'}/>
                 </MenuItem>

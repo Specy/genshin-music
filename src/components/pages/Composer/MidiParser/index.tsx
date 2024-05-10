@@ -18,8 +18,10 @@ import {NumericalInput} from './Numericalinput'
 import {basicPitchLoader} from '$lib/audio/BasicPitchLoader'
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
+import {WithTranslation} from "react-i18next/index";
 
 interface MidiImportProps {
+    t: WithTranslation<['composer', 'home','logs', 'question', 'common']>['t']
     data: {
         instruments: InstrumentData[]
         selectedColumn: number
@@ -111,7 +113,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         } catch (e) {
             console.error(e)
             logger.hidePill()
-            logger.error('There was an error loading this file')
+            logger.error(this.props.t('logs:error_opening_file'))
         }
     }
     extractAudio = async (audio: FileElement<ArrayBuffer>): Promise<AudioBuffer> => {
@@ -125,12 +127,12 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         return buffer
     }
     parseAudioToMidi = async (audio: AudioBuffer, name: string) => {
-        if (!this.warnedOfExperimental) logger.warn("🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing.", 18000)
+        if (!this.warnedOfExperimental) logger.warn(this.props.t('midi_parser.audio_conversion_warning'))
         this.warnedOfExperimental = true
         const frames: number[][] = []
         const onsets: number[][] = []
         const model = `${BASE_PATH}/assets/audio-midi-model.json`
-        logger.showPill('Loading converter...')
+        logger.showPill(`${this.props.t('midi_parser.detecting_notes')}...`)
         const {BasicPitch, noteFramesToTime, outputToNotesPoly} = await basicPitchLoader()
         const basicPitch = new BasicPitch(model)
         const mono = audio.getChannelData(0)
@@ -141,10 +143,10 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 onsets.push(...o);
             },
             (progress) => {
-                logger.showPill(`Detecting notes: ${Math.floor(progress * 100)}%...`)
+                logger.showPill(`${this.props.t('midi_parser.detecting_notes')}: ${Math.floor(progress * 100)}%...`)
             }
         )
-        logger.showPill(`Converting audio to midi (might take a while)...`)
+        logger.showPill(this.props.t('midi_parser.converting_audio_to_midi'))
         await delay(300)
         const notes = noteFramesToTime(
             outputToNotesPoly(
@@ -203,7 +205,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             })
         } catch (e) {
             console.error(e)
-            logger.error('There was an error importing this file, is it a .mid file?')
+            logger.error(this.props.t('midi_parser.error_is_file_midi'))
         }
     }
     convertMidi = () => {
@@ -284,7 +286,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
         const lastColumn = this.props.data.selectedColumn
         song.selected = lastColumn < song.columns.length ? lastColumn : 0
         if (song.columns.length === 0) {
-            return logger.warn("There are no notes")
+            return logger.warn(this.props.t('midi_parser.there_are_no_notes'))
         }
         this.props.functions.loadSong(song)
         this.setState({accidentals, totalNotes, outOfRange})
@@ -346,7 +348,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             theme,
             ignoreEmptytracks
         } = state
-        const {functions, data} = this.props
+        const {functions, data, t} = this.props
         const {changeMidiVisibility} = functions
         const midiInputsStyle = {
             backgroundColor: theme.layer('primary', 0.2).toString(),
@@ -368,7 +370,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 >
                     <FilePicker onPick={handleFile} as='buffer'>
                         <button className="midi-btn" style={{...midiInputsStyle, whiteSpace: 'nowrap'}}>
-                            Open MIDI/Audio/Video file
+                            {t('midi_parser.open_midi_audio_file')}
                         </button>
                     </FilePicker>
                     <div
@@ -382,12 +384,12 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         style={{marginLeft: 'auto', ...midiInputsStyle}}
                         onClick={() => changeMidiVisibility(false)}
                     >
-                        Close
+                        {t('common:close')}
                     </button>
                 </Row>
 
                 <Row justify={'between'} align={'center'}>
-                    <div style={{marginRight: '0.5rem'}}>Bpm:</div>
+                    <div style={{marginRight: '0.5rem'}}>{t('common:bpm')}:</div>
                     <NumericalInput
                         value={bpm}
                         onChange={changeBpm}
@@ -398,10 +400,9 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 </Row>
                 <Row justify={'between'} align={'center'}>
                     <div className='row flex-centered'>
-                        <span style={{marginRight: '0.5rem'}}>Global note offset: </span>
+                        <span style={{marginRight: '0.5rem'}}>{t('midi_parser.global_note_offset')}: </span>
                         <HelpTooltip buttonStyle={{width: '1.2rem', height: '1.2rem'}}>
-                            The index of each note will be pushed up/down by this amount, you can use it to make
-                            the song fit into the app range. You can also change the offset of each layer.
+                            {t('midi_parser.global_note_offset_description')}
                         </HelpTooltip>
                     </div>
 
@@ -414,7 +415,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     />
                 </Row>
                 <Row justify={'between'} align={'center'}>
-                    <div style={{marginRight: '0.5rem'}}>Pitch:</div>
+                    <div style={{marginRight: '0.5rem'}}>{t('common:pitch')}:</div>
                     <PitchSelect
                         style={{width: '5rem', ...midiInputsStyle}}
                         selected={pitch}
@@ -423,7 +424,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 </Row>
                 <Row justify={'between'} align={'center'}>
                     <Row align={'center'}>
-                        <div style={{marginRight: '0.5rem'}}>Include accidentals:</div>
+                        <div style={{marginRight: '0.5rem'}}>{t("midi_parser.include_accidentals")}:</div>
                         <Switch
                             checked={includeAccidentals}
                             onChange={this.toggleAccidentals}
@@ -431,7 +432,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                         />
                     </Row>
                     <Row align={'center'}>
-                        <div style={{marginRight: '0.5rem'}}>Ignore empty tracks:</div>
+                        <div style={{marginRight: '0.5rem'}}>{t("midi_parser.ignore_empty_tracks")}:</div>
                         <Switch
                             checked={ignoreEmptytracks}
                             onChange={(b) => this.setState({ignoreEmptytracks: b})}
@@ -441,7 +442,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                 </Row>
                 {tracks.length > 0 && <Column className='separator-border' style={{width: '100%'}}>
                     <Column style={{width: '100%'}}>
-                        <div style={{textAlign: 'center'}}>Select midi tracks</div>
+                        <div style={{textAlign: 'center'}}>{t("midi_parser.select_midi_tracks")}</div>
                         {tracks.map((track, i) =>
                             !(ignoreEmptytracks && track.track.notes.length === 0) &&
                             <TrackInfo
@@ -460,17 +461,17 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
                     <table>
                         <tbody>
                         <tr>
-                            <td>Total notes:</td>
+                            <td>{t("midi_parser.total_notes")}:</td>
                             <td/>
                             <td>{totalNotes}</td>
                         </tr>
                         <tr>
-                            <td>Accidentals:</td>
+                            <td>{t("midi_parser.accidentals")}:</td>
                             <td/>
                             <td>{accidentals}</td>
                         </tr>
                         <tr>
-                            <td>Out of range:</td>
+                            <td>{t("midi_parser.out_of_range")}:</td>
                             <td/>
                             <td>{outOfRange}</td>
                         </tr>

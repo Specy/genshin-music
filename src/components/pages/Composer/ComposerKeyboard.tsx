@@ -7,6 +7,7 @@ import {FaChevronLeft, FaChevronRight} from "react-icons/fa"
 import {useTheme} from "$lib/Hooks/useTheme"
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {Header} from "$cmp/shared/header/Header";
+import {useTranslation} from "react-i18next";
 
 interface ComposerKeyboardProps {
     data: {
@@ -29,12 +30,13 @@ interface ComposerKeyboardProps {
 }
 
 export default function ComposerKeyboard({data, functions}: ComposerKeyboardProps) {
+    const {t} = useTranslation('composer')
     const {keyboard, isPlaying, noteNameType, currentColumn, pitch, currentLayer, isRecordingAudio} = data
     const {handleClick, handleTempoChanger} = functions
     const [theme] = useTheme()
     if (keyboard === undefined) {
         return <div className="composer-keyboard-wrapper" style={{marginBottom: '4rem'}}>
-            <h1>There was an error with this layer</h1>
+            <h1>{t('error_with_this_layer')}</h1>
         </div>
     }
     if (isRecordingAudio) {
@@ -43,10 +45,10 @@ export default function ComposerKeyboard({data, functions}: ComposerKeyboardProp
             style={{marginBottom: '4rem', flexDirection: 'column', alignItems: 'center'}}
         >
             <Header>
-                Recording Audio...
+                {t('recording_audio')}...
             </Header>
             <AppButton onClick={() => functions.startRecordingAudio(false)} toggled>
-                Stop Recording
+                {t('stop_recording_audio')}
             </AppButton>
         </div>
     }
@@ -113,7 +115,7 @@ export default function ComposerKeyboard({data, functions}: ComposerKeyboardProp
         </div>
         <div className={`tempo-changers-wrapper ${isPlaying ? "tempo-changers-wrapper-hidden" : ""}`}>
             <div className="bottom-right-text">
-                Tempo
+                {t('tempo')}
             </div>
             {TEMPO_CHANGERS.map((tempoChanger) => {
                 return <button

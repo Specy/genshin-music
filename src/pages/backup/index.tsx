@@ -31,7 +31,7 @@ import {useTranslation} from "react-i18next";
 
 type BackupFormat = 'json' | 'zip'
 export default function Backup() {
-    const {t} = useTranslation(['backup', 'home'])
+    const {t} = useTranslation(['backup', 'home', 'logs'])
     const [theme] = useTheme()
     const iconStyle = {marginRight: '0.3rem', marginLeft: '-0.4rem'}
     const [songs] = useSongs()
@@ -110,7 +110,7 @@ export default function Backup() {
                 await fileService.importAndLog(fileArray)
             } catch (e) {
                 console.error(e)
-                logger.error(t('error_importing_file', {file_name: file?.file?.name}))
+                logger.error(t('logs:error_importing_file', {file_name: file?.file?.name}))
             }
         }
     }
@@ -191,8 +191,16 @@ export default function Backup() {
             </div>
             <MultipleOptionSlider
                 options={[
-                    {value: "zip", color: theme.getValue("accent").toString()},
-                    {value: "json", color: theme.getValue("accent").toString()},
+                    {
+                        value: "zip",
+                        color: theme.getValue("accent").toString(),
+                        text: "zip",
+                    },
+                    {
+                        value: "json",
+                        color: theme.getValue("accent").toString(),
+                        text: 'json'
+                    },
                 ]}
                 selected={downloadFormat}
                 onChange={setDownloadFormat}
@@ -235,7 +243,7 @@ export default function Backup() {
                     const folders = await validateFolders()
                     if (!folders) return
                     const files = [...songs, ...folders]
-                    if (files.length === 0) return logger.warn(t("no_songs_to_backup"))
+                    if (files.length === 0) return logger.warn(t("logs:no_songs_to_backup"))
                     try {
                         await downloadFiles(files, `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup`)
                         logger.success(t("downloaded_songs_notice"))
