@@ -1,3 +1,5 @@
+import {AppI18N} from "$i18n/i18n";
+
 export const i18n_zh = {
     logs: {
         update_available: "发现新版本应用，是否刷新界面进行更新？请关闭/刷新其他打开应用的选项卡",
@@ -86,7 +88,7 @@ export const i18n_zh = {
         add_to_home_screen: "要使网络应用程序全屏显示，请将网站添加到主屏幕",
         clear_cache_warning: "清除浏览器缓存/存储可能会删除你的歌曲，请确保进行备份",
         persistent_storage_button: "点击下面的按钮，确保您的浏览器不会在存储空间不足时删除您的歌曲",
-        privacy_policy: "我们使用cookie进行分析，如果继续使用此应用程序，则表示您同意我们使用cookie，了解更多信息：",
+        privacy_policy: "我们使用cookie进行分析，如果继续使用此应用程序，则表示您同意我们使用cookie，了解更多信息: ",
         no_affiliation: "此应用不隶属于{{company_name}}，它是一个由粉丝制作的程序。",
         composer_description: "使用功能完善的作曲软件创建或编辑歌曲。也可以使用 MIDI。",
         player_description: "播放、下载、录制和导入歌曲。通过缩圈模式和练习模式来学习歌曲。",
@@ -101,19 +103,19 @@ export const i18n_zh = {
         vsrg_player_name: "VSRG演奏器",
         zen_keyboard_name: "Zen 键盘",
         sheet_visualizer_name: "曲谱可视化工具",
-        theme_name: "主题",
+        themes_name: "主题",
         blog_and_guides_name: "博客和指南",
         keybinds_or_midi_name: "按键绑定/MIDI",
         keybinds_name: "按键绑定",
-        Partners_name："合作伙伴",
+        partners_name: "合作伙伴",
         backup_name: "备份",
-        变更日志名称："变更日志",
+        changelog_name: "变更日志",
         other_apps_name: "其他应用程序",
         clear_cache_name: "清除缓存",
         scale: "大小",
-        right: "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
+        rights: "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
         hide_on_open: "启动时隐藏",
-        beta：“公测版”，
+        beta: "公测版",
     },
     menu: {
         close_menu: "关闭菜单",
@@ -123,11 +125,11 @@ export const i18n_zh = {
         open_songs_menu: "打开歌曲菜单",
         open_library_menu: "打开库菜单",
         open_info_menu: "打开信息菜单",
-        settings："设置",
-        Song_menu: "歌曲菜单",
-        help：“帮助”,
+        settings: "设置",
+        song_menu: "歌曲菜单",
+        help: "帮助",
         settings_menu: "设置菜单",
-        Song_name: "歌曲名称",
+        song_name: "歌曲名称",
         go_back: "返回",
         play_song: "播放歌曲",
         invalid_song: "无效歌曲",
@@ -145,10 +147,10 @@ export const i18n_zh = {
         hint_no_songs_in_folder: "这里没有歌曲，添加一首！",
         folder_empty: '文件夹为空',
         midi_download_warning: "如果您使用MIDI，歌曲会失去一些准确性，如果您想与其他人分享歌曲，请使用其他格式（上面的按钮）。您仍然想下载吗？",
-        inform_delete_folder: `您确定要删除文件夹“{{folder_name}}”吗？
+        confirm_delete_folder: `您确定要删除文件夹“{{folder_name}}”吗？
             歌曲不会被删除`,
         filter_alphabetical: "按字母顺序",
-        filter_date-created: "创建日期",
+        "filter_date-created": "创建日期",
         open_in_composer: "在编曲器中打开"
     },
     settings: {
@@ -160,14 +162,14 @@ export const i18n_zh = {
         memory_persisted_description: "您的数据保留在浏览器中，浏览器不应自动清除它。始终确保时常下载备份，尤其是当您长时间不使用该应用程序的情况下。",
         memory_not_persisted_description: "浏览器不允许持久存储数据，当缓存自动清除时，可能会丢失数据。要获得持久存储，请将应用程序添加到主屏幕。如果仍然不起作用，请确保经常进行备份",
         props: {
-            composer_bpm："节拍",
-            composer_bpm_description："每分钟节拍数，歌曲的速度。通常应用程序内的 BPM 应该是您尝试创作的歌曲的 BPM 的 4 倍",
+            composer_bpm: "节拍",
+            composer_bpm_description: "每分钟节拍数，歌曲的速度。通常应用程序内的 BPM 应该是您尝试创作的歌曲的 BPM 的 4 倍",
             composer_base_pitch: "基本音高",
             composer_base_pitch_description: "歌曲的主音",
             composer_beat_marks: "节拍标记",
             composer_beat_marks_description: "每小节的节拍数，3/4 是每小节 3 拍，4/4 是每小节 4 拍",
             composer_note_name_type: "音符名称类型",
-            composer_note_name_type_description:  "在音符上标注文本的类型",
+            composer_note_name_type_description: "在音符上标注文本的类型",
             composer_columns_per_canvas: "可见列数",
             composer_columns_per_canvas_description: "一次可见多少列，更多列可能会导致延迟",
             composer_reverb: "基础混响（洞穴模式）",
@@ -179,14 +181,14 @@ export const i18n_zh = {
             composer_sync_tabs: "在所有选项卡中自动播放（仅限 PC）",
             composer_sync_tabs_description: "高级功能，它同步其他浏览器选项卡以同时播放",
             composer_lookahead_time: "前窥时长",
-            composer_lookahead_time_description："编曲器将提前多少毫秒寻找要播放的音符，较高的值可以提高播放准确性，但感觉响应速度较差",
+            composer_lookahead_time_description: "编曲器将提前多少毫秒寻找要播放的音符，较高的值可以提高播放准确性，但感觉响应速度较差",
 
             player_instrument: "乐器",
             player_instrument_description: "播放器的主要（第一个）乐器，也将保存在您录制的歌曲中",
             player_pitch: "音高",
             player_pitch_description: "播放器的音高，也将保存在您录制的歌曲中",
             player_bpm: "节拍数",
-            player_bpm_description："每分钟节拍数，由节拍器使用，并在和编曲器转换歌曲时使用",
+            player_bpm_description: "每分钟节拍数，由节拍器使用，并在和编曲器转换歌曲时使用",
             player_sync_song_data: "自动同步歌曲的乐器和音高",
             player_sync_song_data_description: "每当您加载歌曲时，该歌曲的乐器和音高也会被加载",
             player_metronome_beats: "节拍器节拍",
@@ -196,7 +198,7 @@ export const i18n_zh = {
             player_reverb: "混响（洞穴模式）",
             player_reverb_description: "让您听起来像是在一个山洞里",
             player_note_name_type: "音符名称类型",
-            player_note_name_type_description:  "在音符上标注文本的类型",
+            player_note_name_type_description: "在音符上标注文本的类型",
             player_keyboard_size: "键盘大小",
             player_keyboard_size_description: "缩放键盘尺寸",
             player_keyboard_y_position: "键盘垂直位置",
@@ -223,7 +225,7 @@ export const i18n_zh = {
             vsrg_composer_autosave: "自动保存更改",
             vsrg_composer_autosave_description: "每 5 次编辑以及当您更改页面/更改歌曲时自动保存对歌曲的更改",
             vsrg_composer_difficulty: "难度",
-            vsrg_composer_difficulty_description："值越高意味着需要更准确地按下音符",
+            vsrg_composer_difficulty_description: "值越高意味着需要更准确地按下音符",
 
             vsrg_player_approach_time: "应对时间",
             vsrg_player_approach_time_description: "音符出现与结束之间的时间（以毫秒为单位）",
@@ -235,8 +237,8 @@ export const i18n_zh = {
             vsrg_player_offset_description: "在音频播放太早/太晚时，对音频的偏移量（以毫秒为单位）",
             vsrg_player_vertical_offset: "垂直位置",
             vsrg_player_vertical_offset_description: "横行布局的垂直偏移",
-            vsrg_player_horizo​​ntal_offset: "水平位置",
-            vsrg_player_horizo​​ntal_offset_description: "横行布局的水平偏移",
+            vsrg_player_horizontal_offset: "水平位置",
+            vsrg_player_horizontal_offset_description: "横行布局的水平偏移",
 
             zen_instrument: "乐器",
             zen_instrument_description: "键盘的主要乐器",
@@ -281,9 +283,9 @@ export const i18n_zh = {
         background_song: "背景歌曲",
         background_song_info: "您可以选择一首歌曲在后台播放",
         no_background_song_selected: "未选择背景歌曲",
-        Instrument_modifiers: '乐器修饰符',
-        tap："点击",
-        hold："长按",
+        instrument_modifiers: '乐器修饰符',
+        tap: "点击",
+        hold: "长按",
         delete: "删除",
         track_name: '音轨名称'
     },
@@ -299,19 +301,19 @@ export const i18n_zh = {
     },
     theme: {
         error_importing_theme: '导入此主题时出错，它是正确的文件吗？',
-        select_theme_name: '你想如何命名主题？',
+        choose_theme_name: '你想如何命名主题？',
         confirm_delete_theme: `您确定要删除主题“{{theme_name}}”吗？`,
         import_theme: "导入主题",
         theme_prop: {
             background_image: '背景图片（URL）',
-            Composer_background_image: "编曲界面背景图片 (URL)",
+            composer_background_image: "编曲界面背景图片 (URL)",
             theme_name: "主题名称",
         },
         opaque_performance_warning: 'GIF 背景和不透明（透明）颜色可能会降低性能',
         your_themes: "你的主题",
         new_theme: "新主题",
         default_themes: "默认主题",
-        preview："预览",
+        preview: "预览",
         view_player: "查看演奏器", //shows the player preview
         view_composer: "查看编曲器"
     },
@@ -635,4 +637,4 @@ export const i18n_zh = {
             vsrg_add_hit_object: 'Add hit object (syncs to the registered keybinds)',
         }
     }
-} as const
+} as const satisfies AppI18N
