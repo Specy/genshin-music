@@ -105,12 +105,12 @@ export const i18n_zh = {
         blog_and_guides_name: "博客和指南",
         keybinds_or_midi_name: "按键绑定/MIDI",
         keybinds_name: "按键绑定",
-        Partners_name：“合作伙伴”，
+        Partners_name："合作伙伴",
         backup_name: "备份",
-        变更日志名称：“变更日志”，
+        变更日志名称："变更日志",
         other_apps_name: "其他应用程序",
         clear_cache_name: "清除缓存",
-        scale：“大小”，
+        scale: "大小",
         right: "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
         hide_on_open: "启动时隐藏",
         beta：“公测版”，
@@ -123,9 +123,9 @@ export const i18n_zh = {
         open_songs_menu: "打开歌曲菜单",
         open_library_menu: "打开库菜单",
         open_info_menu: "打开信息菜单",
-        settings：“设置”，
+        settings："设置",
         Song_menu: "歌曲菜单",
-        help：“帮助”，
+        help：“帮助”,
         settings_menu: "设置菜单",
         Song_name: "歌曲名称",
         go_back: "返回",
@@ -154,14 +154,14 @@ export const i18n_zh = {
     settings: {
         toggle_metronome: "切换节拍器",
         change_keybinds: "更改按键绑定",
-        more_options: '更多选项',
+        more_options: "更多选项",
         memory_persisted: "存储被持久化",
         memory_not_persisted: "存储未持久化",
-        memory_persisted_description: ` 您的数据保留在浏览器中，浏览器不应自动清除它。始终确保时常下载备份，尤其是当您长时间不使用该应用程序的情况下。`,
-        memory_not_persisted_description: `浏览器不允许持久存储数据，当缓存自动清除时，可能会丢失数据。要获得持久存储，请将应用程序添加到主屏幕。如果仍然不起作用，请确保经常进行备份`，
+        memory_persisted_description: "您的数据保留在浏览器中，浏览器不应自动清除它。始终确保时常下载备份，尤其是当您长时间不使用该应用程序的情况下。",
+        memory_not_persisted_description: "浏览器不允许持久存储数据，当缓存自动清除时，可能会丢失数据。要获得持久存储，请将应用程序添加到主屏幕。如果仍然不起作用，请确保经常进行备份",
         props: {
-            composer_bpm：“节拍”，
-            composer_bpm_description：“每分钟节拍数，歌曲的速度。通常应用程序内的 BPM 应该是您尝试创作的歌曲的 BPM 的 4 倍”，
+            composer_bpm："节拍",
+            composer_bpm_description："每分钟节拍数，歌曲的速度。通常应用程序内的 BPM 应该是您尝试创作的歌曲的 BPM 的 4 倍",
             composer_base_pitch: "基本音高",
             composer_base_pitch_description: "歌曲的主音",
             composer_beat_marks: "节拍标记",
@@ -186,7 +186,7 @@ export const i18n_zh = {
             player_pitch: "音高",
             player_pitch_description: "播放器的音高，也将保存在您录制的歌曲中",
             player_bpm: "节拍数",
-            player_bpm_description：“每分钟节拍数，由节拍器使用，并在和编曲器转换歌曲时使用”，
+            player_bpm_description："每分钟节拍数，由节拍器使用，并在和编曲器转换歌曲时使用",
             player_sync_song_data: "自动同步歌曲的乐器和音高",
             player_sync_song_data_description: "每当您加载歌曲时，该歌曲的乐器和音高也会被加载",
             player_metronome_beats: "节拍器节拍",
@@ -223,7 +223,7 @@ export const i18n_zh = {
             vsrg_composer_autosave: "自动保存更改",
             vsrg_composer_autosave_description: "每 5 次编辑以及当您更改页面/更改歌曲时自动保存对歌曲的更改",
             vsrg_composer_difficulty: "难度",
-            vsrg_composer_difficulty_description：“值越高意味着需要更准确地按下音符”，
+            vsrg_composer_difficulty_description："值越高意味着需要更准确地按下音符",
 
             vsrg_player_approach_time: "应对时间",
             vsrg_player_approach_time_description: "音符出现与结束之间的时间（以毫秒为单位）",
@@ -311,7 +311,7 @@ export const i18n_zh = {
         your_themes: "你的主题",
         new_theme: "新主题",
         default_themes: "默认主题",
-        preview：“预览”，
+        preview："预览",
         view_player: "查看演奏器", //shows the player preview
         view_composer: "查看编曲器"
     },
