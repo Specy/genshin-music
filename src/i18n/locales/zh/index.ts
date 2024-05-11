@@ -317,153 +317,129 @@ export const i18n_zh = {
     },
 
     sheet_visualizer: {
-        note_names: "Note names",
-        merge_empty_spaces: "Merge empty spaces",
-        no_song_selected: "No song selected",
-        print_as_pdf: "Print as PDF",
-        sheet_visualizer_instructions: `Select a song from the menu on the left.
-                    Remember that you can learn a song with the interactive
-                    practice tool in the Player`,
-        per_row: 'Per row', //elements per row
-        invalid_song_to_visualize: 'Invalid song, it is not composed or recorded',
-        error_converting_to_visual_song_try_convert_in_recorded: 'Error converting song to visual song, trying to convert to recorded song first...',
-        error_converting_to_visual_song: "Error converting song to visual song"
+        note_names: "音符名称",
+        merge_empty_spaces: "合并空格",
+        no_song_selected: "未选择歌曲",
+        print_as_pdf: "打印为 PDF",
+        sheet_visualizer_instructions："从左侧菜单中选择一首歌曲，您可以使用演奏器中的交互式练习工具来学习歌曲",
+        per_row: '每行', //每行元素
+        invalid_song_to_visualize: '无效歌曲，未创作或录制',
+        error_converting_to_visual_song_try_convert_in_recorded: '将歌曲转换为视觉歌曲时出错，尝试先转换为录制的歌曲...',
+        error_converting_to_visual_song:"将歌曲转换为视觉歌曲时出错"
     },
     player: {
-        finish_recording: "Finish recording",
-        record_audio: "Record audio",
-        change_speed: "Change speed",
-        stop_song: "Stop song",
-        accuracy: "Accuracy",
-        score: "Score",
-        combo: "Combo",
-        practice_mode: "Practice", //song practice
-        practice_mode_description: `Practice song "{{song_name}}"`,
-        approach_mode: "Approach mode", //TODO find new name for this, it's the mode where circles "come towards" notes
-        approach_mode_description: `Play in Approach mode the song "{{song_name}}"`,
-        song_search_no_results: "No results",
-        song_search_description: "Here you can find songs to learn, they are provided by the sky-music library.",
-        midi_or_audio_import_redirect_warning: "You cannot directly import this file format. MIDI, Video and Audio files need to be converted in the composer, do you want to open it?",
+        finish_recording: "结束录制",
+        record_audio: "录制音频",
+        change_speed: "改变速度",
+        stop_song: "停止歌曲",
+        accuracy: "准确度",
+        score: "分数",
+        combo: "组合",
+        Practice_mode: "练习", //song practice
+        Practice_mode_description: "练习歌曲“{{song_name}}”",
+        approach_mode: "缩圈模式",//TODO find new name for this, it's the mode where circles "come towards" notes
+        //How about ring_closing_mode, indicating that being outside of the shrinking ring = losing point.
+        approach_mode_description："在缩圈模式下演奏歌曲“{{song_name}}”",
+        Song_search_no_results: "没有结果",
+        Song_search_description: "在这里你可以找到要学习的歌曲，这些歌曲由天空音乐库提供。",
+        midi_or_audio_import_redirect_warning: "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？",
     },
     keybinds: {
-        already_used_keybind: `This keybind is already used by the note "{{note_name}}"`,
-        midi_keybinds: "MIDI keybinds",
-        keyboard_keybinds: "Keyboard keybinds",
-        keyboard_keybinds_description: `You can remap the keyboard keys to whatever key on your keyboard, press the note you want to remap
-                    then press the key you want to assign to it.`,
-        composer_shortcuts: "Composer shortcuts",
-        player_shortcuts: "Player shortcuts",
-        vsrg_composer_shortcuts: "Vsrg composer shortcuts",
-        vsrg_player_shortcuts: "Vsrg player shortcuts",
-        vsrg_keybinds: "Vsrg keybinds",
-        connected_midi_devices: "Connected MIDI devices",
-        no_connected_devices: "No connected devices",
-        midi_layout_preset: "MIDI layout preset",
-        delete_midi_preset: "Delete preset",
-        create_midi_preset: "Create new preset",
-        midi_note_selection_description: `Click on the note to select it, then press your MIDI keyboard to assign that note to the key. You
-                    can click it again to change it.`,
-        midi_shortcuts: "MIDI Shortcuts",
-        confirm_delete_preset: `Are you sure you want to delete the preset "{{preset_name}}"?`,
-        cannot_delete_builtin_preset: "Cannot delete built-in preset",
-        already_existing_preset: "Preset with this name already exists",
-        ask_preset_name: "Write the name of the preset",
-        key_already_used: "Key already used",
-        cannot_edit_builtin_preset: 'Cannot edit built-in preset, create a new one to edit it',
+        already_used_keybind:"这个按键绑定已经被音符“{{note_name}}”使用",
+        midi_keybinds: "MIDI 按键绑定",
+        Keyboard_keybinds: "键盘按键绑定",
+        Keyboard_keybinds_description: "您可以将键盘按键重新映射到键盘上的任何键，按下要重新映射的音符，然后按下要分配给它的键。",
+        composer_shortcuts: "作曲器快捷方式",
+        player_shortcuts: "演奏器快捷方式",
+        vsrg_composer_shortcuts: "Vsrg 作曲器快捷键",
+        vsrg_player_shortcuts: "Vsrg 演奏器快捷方式",
+        vsrg_keybinds: "Vsrg 按键绑定",
+        connected_midi_devices: "连接的 MIDI 设备",
+        no_connected_devices: "没有连接的设备",
+        midi_layout_preset: "MIDI 布局预设",
+        delete_midi_preset: "删除预设",
+        create_midi_preset: "创建新预设",
+        midi_note_selection_description: "单击音符将其选中，然后按 MIDI 键盘将该音符分配给该琴键。您可以再次单击它来更改它。",
+        midi_shortcuts: "MIDI 快捷键",
+        inform_delete_preset: "您确定要删除预设“{{preset_name}}”吗？",
+        cannot_delete_builtin_preset: "无法删除内置预设",
+        has_existing_preset: "此名称的预设已存在",
+        Ask_preset_name: "写下预设的名称",
+        key_already_used: "按键已被使用",
+        cannot_edit_builtin_preset: "无法编辑内置预设，请创建一个新预设进行编辑",
     },
     error: {
-        confirm_delete_all_songs: "Are you sure you want to delete ALL SONGS?",
-        settings_reset_notice: "Settings have been reset",
-        error_page_description: `If you unexpectedly see this page it means an error has occoured.
-            Here you can download or delete your songs, if one caused an error, delete it.
-            If you need help, join our discord server and send the log file below.`,
-        reset_settings: "Reset settings",
-        delete_all_songs: "Delete all songs",
-        error_logs: "Error logs",
-        download_logs: "Download logs",
+        inform_delete_all_songs: "您确定要删除所有歌曲吗？",
+        settings_reset_notice: "设置已重置",
+        error_page_description："如果您意外地看到此页面，则意味着发生了错误。您可以在此处下载或删除您的歌曲——如果某首歌导致错误，请删除它。如果您需要帮助，请加入我们的discord服务器并发送下面的日志文件。",
+        reset_settings: "重置设置",
+        delete_all_songs: "删除所有歌曲",
+        error_logs: "错误日志",
+        download_logs: "下载日志",
     },
     donate: {
-        donate_message: `Each App I make takes months of learning and development. Added to that
-            are also the costs of hosting. With a higher budget I can afford to not
-            worry so much about how much I spend on the server, giving you the best
-            possible experience.
-            
-            I care about giving users all features without
-            having to pay for it, neither having intrusive ads which can be annoying.
-            For this same reason, there is no source of income except donations.
-
-
-            I would be really thankful if you could consider donating in order to fund
-            development and costs.`
+        donate_message: "我制作的每个应用程序都需要数月的学习和开发时间，此外还有托管成本。有了更高的预算，我就可以不必太担心在服务器上花费了多少钱，从而为您提供最佳的体验。  我关心的是让使用者享受所有功能而免于付费或是烦人的侵入性广告。出于同样的原因，除了捐赠之外，项目没有任何收入来源。如果您可以考虑捐赠以支持开发和成本，我将非常感激。"
     },
     cache: {
-        cache: 'Cache',
-        reset_cache: "Reset cache",
-        reset_cache_message: `This page will clear the cache of the application. This will remove all cached data and reload the page.
-                It will not
-                delete your songs or data, only the cached assets. As soon as you visit this page, it will clear the
-                cache automatically.
-                You can also click the button below to clear the cache manually.`,
-        clear_cache: 'Clear Cache'
+        cache: "缓存",
+        reset_cache: "重置缓存",
+        reset_cache_message："此页面将清除应用程序的缓存。这将删除所有缓存的数据并重新加载页面，它不会删除您的歌曲或数据，只会删除缓存的资源。当您访问此页面时，程序自动清除缓存。您也可以单击下面的按钮手动清除缓存。",
+        clear_cache: '清除缓存'
     },
     changelog: {
-        view_error_logs: "View Error logs",
+        view_error_logs: "查看错误日志",
     },
     page404: {
-        page_not_found: "The page was not found, click here to go back to the home page"
+        page_not_found: "该页面未找到，点击此处返回首页。"
     },
     backup: {
-        confirm_after_songs_validation_error: "There were errors validating some songs. Do you want to continue downloading?",
-        confirm_after_folders_validation_error: "There were errors validating some folders. Do you want to continue downloading?",
-        confirm_after_themes_validation_error: "There were errors validating some themes. Do you want to continue downloading?",
-        confirm_delete_songs_step_1: "Write 'delete' if you want to delete all songs, press cancel to ignore", //do not translate 'delete'
-        confirm_delete_songs_step_2: "Are you REALLY sure you want to delete all songs?",
-        confirm_delete_themes_step_1: "Write 'delete' if you want to delete all themes, press cancel to ignore", //do not translate 'delete'
-        confirm_delete_themes_step_2: "Are you REALLY sure you want to delete all themes?",
-        deleted_all_songs_notice: "Deleted all songs",
-        deleted_all_themes_notice: "Deleted all themes",
-        error_validating_song: `Error validating song "{{song_name}}"`,
-        error_validating_folder: `Error validating folder "{{folder_name}}`,
-        error_validating_theme: `Error validating_theme "{{theme_name}}"`,
-        validating_songs: "Validating songs",
-        validating_folders: "Validating folders",
-        validating_themes: "Validating themes",
-        action_cancelled: 'Action cancelled',
-        zipping_files: "Zipping files",
-        transfer_from_other_domain: "Transfer from other domain",
-        transfer_data_notice: "If you want to transfer your data from another domain of the app, click here",
-        transfer: "Transfer",
-        backup_as: "Backup as",
-        backup_advice: `Make sure you create a backup every now and then. Especially if you just finished a new song.
-            The browser shouldn't delete your data, especially if you installed the app, but there is always a chance.`,
-        backup_download_tooltip: "Download all the data of the app, aka themes, songs, folders",
-        backup_downloaded: "Downloaded backup",
-        backup_download_error: "Error downloading backup",
-        download_all_backup: "Download all backup",
-        download_all_backup_tooltip: "Downloads a backup containing all songs and folders",
-        no_items_to_backup: "There is nothing to backup",
-        download_songs_tooltip: "Downloads a backup containing all songs and folders",
-        downloaded_songs_notice: "Downloaded songs backup",
-        download_songs_backup: "Download songs backup",
-        download_themes_tooltip: "Downloads a backup of all the custom themes",
-        no_themes_to_backup: "There are no themes to backup",
-        downloaded_themes_notice: "Downloaded themes backup",
-        download_themes_backup: "Download themes backup",
-        import_backup: "Import backup",
-        import_backup_description: `If you have a backup, you can import it here, they will be added to your existing data. (if you already have
-            the same song,
-            a duplicate will be created).`,
-        error_reading_file: "There was an error reading the file",
-        import_backup_tooltip: "Here you can import any backup you have",
-        songs: "songs",
-        themes: "themes",
-        delete_data: "Delete data",
-        delete_data_description: `If you want, you can also delete all your data here, once deleted it can't be recovered.
-            Don't worry you will be asked to confirm before anything is deleted.`,
-        delete_songs_and_folders: "Delete songs and folders",
-        delete_songs_and_folders_tooltip: "Here you can delete all your themes",
-        delete_themes_tooltip: "Here you can delete all your themes",
-        delete_themes: "Delete themes",
+        confirm_after_songs_validation_error: "验证某些歌曲时出错。您想继续下载吗？",
+        inform_after_folders_validation_error: "验证某些文件夹时出错。是否要继续下载？",
+        inform_after_themes_validation_error: "验证某些主题时出错。您想继续下载吗？",
+        inform_delete_songs_step_1: "如果要删除所有歌曲，请输入'delete'这个单词，按取消忽略", //do not translate 'delete'
+        confirm_delete_songs_step_2: "您真的确定要删除所有歌曲吗？",
+        inform_delete_themes_step_1: "如果要删除所有主题，请输入'delete'这个单词，按取消忽略", //do not translate 'delete'
+        confirm_delete_themes_step_2: "您真的确定要删除所有主题吗？",
+        deleted_all_songs_notice: "删除所有歌曲",
+        deleted_all_themes_notice: "删除所有主题",
+        error_validating_song: `验证歌曲“{{song_name}}”时出错`,
+        error_validating_folder："验证文件夹“{{folder_name}}时出错”",
+        error_validating_theme:`验证主题“{{theme_name}}”时出错`,
+        validating_songs: "正在验证歌曲",
+        validating_folders: "正在验证文件夹",
+        validating_themes: "验证主题",
+        action_cancelled: '操作已取消',
+        zipping_files: "压缩文件",
+        Transfer_from_other_domain: "从其他域转移",
+        Transfer_data_notice: "如果您想从应用程序的另一个域传输数据，请单击此处",
+        transfer: "转移",
+        backup_as: "备份为",
+        backup_advice:"确保时不时地创建备份，尤其是当您刚刚完成一首新歌曲时。 浏览器不应该删除您的数据，特别是如果您安装了该应用程序，但也不是万无一失。",
+        backup_download_tooltip: "下载应用程序的所有数据，又名主题、歌曲、文件夹",
+        backup_downloaded: "已下载备份",
+        backup_download_error: "下载备份时出错",
+        download_all_backup: "下载所有备份",
+        download_all_backup_tooltip: "下载包含所有歌曲和文件夹的备份",
+        no_items_to_backup: "没有什么可备份的",
+        download_songs_tooltip: "下载包含所有歌曲和文件夹的备份",
+        download_songs_notice: "下载的歌曲备份",
+        download_songs_backup: "下载歌曲备份",
+        download_themes_tooltip: "下载所有自定义主题的备份",
+        no_themes_to_backup: "没有要备份的主题",
+        download_themes_notice: "下载的主题备份",
+        download_themes_backup: "下载主题备份",
+        import_backup: "导入备份",
+        import_backup_description: `如果您有备份，可以在此处导入，备份将添加到您现有的数据中（对于已经存在的歌，会创建一个副本）。`,
+        error_reading_file: "读取文件时出错",
+        import_backup_tooltip: "在这里您可以导入您拥有的任何备份",
+        song: "歌曲",
+        theme: "主题",
+        delete_data: "删除数据",
+        delete_data_description: "如果您愿意，您也可以在这里删除所有数据，一旦删除就无法恢复。不用担心，在删除任何内容之前，会要求您确认。",
+        delete_songs_and_folders: "删除歌曲和文件夹",
+        delete_songs_and_folders_tooltip: "在这里您可以删除所有主题",
+        delete_themes_tooltip: "在这里您可以删除所有主题",
+        delete_themes: "删除主题",
     },
     composer: {
         add_new_page: "Add new page",
