@@ -276,7 +276,7 @@ export const i18n_zh = {
             "editor_settings": "编辑器设置",
         },
 
-        change_language: "Change language",
+        select_language: "Select language",
     },
 
     zen_keyboard: {

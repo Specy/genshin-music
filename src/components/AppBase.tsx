@@ -112,6 +112,7 @@ function AppBase() {
         try {
             const lang = localStorage.getItem(APP_NAME + "_Lang") ?? navigator.language ?? "en"
             const rootLang = (Array.isArray(lang) ? lang[0] : lang).split("-")[0]
+            window.document.documentElement.lang = rootLang
             i18n.changeLanguage(rootLang)
         } catch (e) {
             console.error(e)

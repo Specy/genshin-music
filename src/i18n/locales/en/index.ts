@@ -279,7 +279,7 @@ export const i18n_en = {
             "composer_settings": "Composer settings",
             "editor_settings": "Editor settings",
         },
-        change_language: "Change language",
+        select_language: "Select language",
     },
 
     zen_keyboard: {

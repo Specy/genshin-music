@@ -304,7 +304,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 />
                 <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
                 <div className='settings-row-wrap'>
-                    {t('settings:change_language')} <DefaultLanguageSelector />
+                    {t('settings:select_language')} <DefaultLanguageSelector />
                 </div>
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
