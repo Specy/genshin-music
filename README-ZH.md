@@ -1,23 +1,21 @@
 [![wakatime](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f.svg)](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f)
-# 欢迎收看原神音乐和光遇音乐之夜
+# 欢迎来到原神音乐和光遇音乐之夜
 
 此项目保存原神和光遇两个音乐应用程序的代码, 您可以在上查看已发布的应用程序 [specy.app](https://specy.app)
 ![Composer](docs/assets/composer.webp)
 ![Player](docs/assets/player.webp)
 
 # 如何在开发模式下运行
-You need node.js installed on your computer, you can get it [here](https://nodejs.org/en/).
-Then clone the repo to a folder and install the dependencies with `npm i`, once installed, run the development server with `npm run start`
+你需要在你的计算机上安装node.js，你可以在 [这里](https://nodejs.org/en/)下载.
+然后将repo克隆到一个文件夹中，并使用“npm i”安装依赖项，安装后，使用“npm-run start”运行开发服务器`
+还有4个脚本可能很有用，可以作为特定的应用程序运行，也可以作为特定应用程序构建。
+您可以运行“npm run dev:sky cotl”或“npm run dev:genshin”，这将运行特定游戏的网络应用程序并交换资源文件。
 
-There are 4 more scripts which might be useful, run as a specific app and build as a specific app.
+# 如何在开发模式下运行桌面应用程序
+您需要首先启动开发服务器, 教程看 [here](#how-to-run-in-dev-mode) .
+然后你可以运行 `npm run start-tauri`
 
-You can run `npm run dev:光遇` or `npm run dev:genshin`, this will run the webapps for the specific game and swap the assets. 
-
-# How to run desktop app in dev mode
-You need to first start the development server, look [here](#how-to-run-in-dev-mode) for how to do that.
-Then you can run `npm run start-tauri`
-# How to build
-
+# 如何构建
 You can use the scripts `npm run build:genshin` and `npm run build:光遇` which will build the correct app, or `npm run build:all` to build both
 
 # How to build desktop app
