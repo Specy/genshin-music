@@ -3,6 +3,7 @@ import {InstrumentName} from "$types/GeneralTypes"
 import s from '$cmp/shared/Settings/Settings.module.css'
 import {capitalize} from "$lib/utils/Utilities"
 import {Stylable} from "$lib/utils/UtilTypes";
+import {useTranslation} from "react-i18next";
 
 interface InstrumentSelectProps extends Stylable {
     selected: InstrumentName
@@ -24,6 +25,7 @@ for (const prefix of prefixes) {
 const entries = Object.entries(instruments)
 
 export function InstrumentSelect({selected, onChange, style, className}: InstrumentSelectProps) {
+    const {t} = useTranslation("instruments")
     return <select
         className={`${s.select} ${className}`}
         style={{width: '100%', padding: '0.3rem', ...style}}
@@ -55,10 +57,7 @@ export function InstrumentSelect({selected, onChange, style, className}: Instrum
                                 key={ins}
                                 value={ins}
                             >
-                                {ins
-                                    .replace("-", " ")
-                                    .replace(`${prefix}_`, "")
-                                }
+                                {t(ins)}
                             </option>
                         )}
                     </optgroup>

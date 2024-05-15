@@ -42,7 +42,7 @@ export function VsrgTop({
                             lastCreatedHitObject,
                             selectedHitObject,
                         }: VsrgTopProps) {
-    const { t} = useTranslation('vsrg_composer')
+    const { t} = useTranslation(['vsrg_composer', 'common'])
     const [theme] = useTheme()
     const [keyboardElements, setKeyboardElements] = useState<number[]>([])
     const [isTrackSettingsOpen, setIsTrackSettingsOpen] = useState(false)
@@ -101,7 +101,7 @@ export function VsrgTop({
                             e.target?.scrollIntoView()
                         }, 50)
                     }}
-                    ariaLabel={t('add_new_instrument')}
+                    ariaLabel={t('common:add_new_instrument')}
                     className="flex-centered"
                     style={{marginTop: 'auto', padding: '0.3rem'}}
                 >

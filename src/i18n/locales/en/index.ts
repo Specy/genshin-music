@@ -1,3 +1,5 @@
+import {InstrumentName} from "$types/GeneralTypes";
+
 export const i18n_en = {
     logs: {
         update_available: "There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app",
@@ -81,6 +83,7 @@ export const i18n_en = {
         line: "Line",
         circle: "Circle",
         reset: "Reset",
+        add_new_instrument: "Add new instrument",
     },
     home: {
         app_description: "An app where you can create, practice and play songs for {{APP_NAME}}",
@@ -286,7 +289,6 @@ export const i18n_en = {
         delete_track_question: "Are you sure you want to remove this track? All notes will be deleted.",
         cannot_delete_last_track: "Cannot delete last track",
         snap: 'Snap', //this means snapping to a point, like anchoring to it
-        add_new_instrument: "Add new instrument",
         background_song: "Background Song",
         background_song_info: "You can select one of your songs to be played on the background",
         no_background_song_selected: "No background song selected",
@@ -661,7 +663,45 @@ export const i18n_en = {
             set_delete_hand_description: "Set the click to delete a note",
             vsrg_add_hit_object: 'Add hit object (syncs to the registered keybinds)',
         }
-    }
-
+    },
+    instruments: {
+        "Lyre": "Lyre",
+        "Vintage-Lyre": "Vintage Lyre",
+        "Zither": "Zither",
+        "Old-Zither": "Old Zither",
+        "DunDun": "DunDun",
+        "Piano": "Piano",
+        "Contrabass": "Contrabass",
+        "Guitar": "Guitar",
+        "LightGuitar": "Light Guitar",
+        "Harp": "Harp",
+        "Horn": "Horn",
+        "Trumpet": "Trumpet",
+        "Pipa": "Pipa",
+        "WinterPiano": "Winter Piano",
+        "Xylophone": "Xylophone",
+        "Flute": "Flute",
+        "Panflute": "Panflute",
+        "Ocarina": "Ocarina",
+        "MantaOcarina": "Manta Ocarina",
+        "Aurora": "Aurora", //leave as is
+        "Kalimba": "Kalimba",
+        "ToyUkulele": "Toy Ukulele",
+        "Drum": "Drum",
+        "Bells": "Bells",
+        "HandPan": "HandPan",
+        "SFX_SineSynth": "Sine Synth",
+        "SFX_BassSynth": "Bass Synth",
+        "SFX_ChimeSynth": "Chime Synth",
+        "SFX_TR-909": "TR-909", //leave as is
+        "SFX_Dance": "Dance",
+        "SFX_BirdCall": "Bird Call",// call is like "sound of a bird" or "sing"
+        "SFX_CrabCall": "Crab Call",
+        "SFX_FishCall": "Fish Call",
+        "SFX_SpiritMantaCall": "Spirit Manta Call",
+        "SFX_JellyCall": "Jelly Call",
+        "SFX_MantaCall": "Manta Call",
+        "SFX_MothCall": "Moth Call",
+    } satisfies Record<InstrumentName, string>
 } as const
 
