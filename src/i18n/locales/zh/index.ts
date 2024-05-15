@@ -185,6 +185,12 @@ export const i18n_zh = {
 
             player_instrument: "乐器",
             player_instrument_description: "播放器的主要（第一个）乐器，也将保存在您录制的歌曲中",
+            //player_instrument_Lyre: "风物之诗之琴",
+            //player_instrument_Vintage Lyree: "老旧的诗琴",
+            //player_instrument_Zither: "镜花之琴",
+            //player_instrument_Old Zither: "老旧的镜花琴",
+            //player_instrument_DunDun: "绮筵之鼓",
+            //player_instrument_French Horn: "晚风圆号",
             player_pitch: "音高",
             player_pitch_description: "播放器的音高，也将保存在您录制的歌曲中",
             player_bpm: "节拍数",
