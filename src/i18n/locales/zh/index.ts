@@ -82,6 +82,8 @@ export const i18n_zh = {
         border: "边界",
         line: "线路",
         circle: "圆形",
+        add_new_instrument: "添加新仪器",
+
         reset: "Reset",
     },
     home: {
@@ -117,6 +119,7 @@ export const i18n_zh = {
         rights: "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
         hide_on_open: "启动时隐藏",
         beta: "公测版",
+
         about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
     },
     menu: {
@@ -272,6 +275,7 @@ export const i18n_zh = {
             "composer_settings": "编曲器设置",
             "editor_settings": "编辑器设置",
         },
+
         change_language: "Change language",
     },
 
@@ -282,7 +286,6 @@ export const i18n_zh = {
         delete_track_question: "您确定要删除此曲目吗？所有音符都将被删除。",
         cannot_delete_last_track: "无法删除最后一首曲目",
         snap: '捕捉', //this means snapping to a point, like anchoring to it
-        add_new_instrument: "添加新仪器",
         background_song: "背景歌曲",
         background_song_info: "您可以选择一首歌曲在后台播放",
         no_background_song_selected: "未选择背景歌曲",
@@ -522,11 +525,12 @@ export const i18n_zh = {
             loading_converter: '正在加载转换器',
             audio_conversion_warning: `🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。`
         },
+
+
         warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
         warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
         error_importing_file_invalid_format: `Error importing file, invalid format`,
         error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
-
     },
     instrument_settings: {
         no_instrument_selected: "未选择乐器",
