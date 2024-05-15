@@ -19,7 +19,7 @@ import {usePathname} from "next/navigation";
 import {logger} from "$stores/LoggerStore";
 import {Row} from "$cmp/shared/layout/Row";
 import {useTranslation} from "react-i18next";
-import {LanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
+import {DefaultLanguageSelector, LanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
 
 
 interface HomeProps {
@@ -244,7 +244,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
 
                 <Link onClick={async (e) => {
                     e.preventDefault()
-                    const confirm = await asyncConfirm("You are about to leave the app to go to specy.app, do you want to continue?")
+                    const confirm = await asyncConfirm(t('about_to_leave_warning', {to: 'specy.app'}))
                     if (!confirm) return
                     window.open('https://specy.app', '_blank')
                 }} href={'https://specy.app'} target='_blank'>
@@ -295,21 +295,13 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 {t('rights', {company_name: APP_NAME === 'Genshin' ? 'HoYoverse' : 'TGC'})}
             </span>
             <Row gap={'0.5rem'}>
-
                 <div className='home-dont-show-again row-centered' onClick={() => setDontShowHome(!data.canShow)}>
                     <input type='checkbox' checked={!data.canShow} readOnly id='hide-on-open-checkbox'/>
                     <label htmlFor='hide-on-open-checkbox'>
                         {t('hide_on_open')}
                     </label>
                 </div>
-                <LanguageSelector
-                    languages={i18n.languages}
-                    currentLanguage={i18n.language}
-                    onChange={(lang) => {
-                        localStorage.setItem(LANG_PREFERENCE_KEY_NAME, lang)
-                        i18n.changeLanguage(lang)
-                    }}
-                />
+                <DefaultLanguageSelector />
             </Row>
         </div>
         {IS_BETA &&

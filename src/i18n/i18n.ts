@@ -13,7 +13,10 @@ type ToStringObject<T extends Record<string, any> | string> = {
 }
 
 export type AppI18N = ToStringObject<EngI18n>
-
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]
+}
+export type ValidAppI18N = DeepPartial<AppI18N>
 export const defaultNS = 'translation';
 declare module 'i18next' {
     interface CustomTypeOptions {
@@ -22,17 +25,19 @@ declare module 'i18next' {
     }
 }
 
+const availableLanguages = ['en', 'it', 'zh'] as const;
+export type AppLanguages = typeof availableLanguages[number];
 i18next
     .use(initReactI18next)
     .init({
         debug: IS_DEV,
         pluralSeparator: '+',
-        fallbackLng: ['en', 'it', 'zh'], //TODO not sure exactly how this needs to be set up to load all languages
+        fallbackLng: availableLanguages, //TODO not sure exactly how this needs to be set up to load all languages
         defaultNS,
         resources: {
             en: i18n_en,
             it: i18n_it,
             zh: i18n_zh,
-        }
+        } satisfies Record<AppLanguages, ValidAppI18N>,
     });
 export const i18n = i18next;

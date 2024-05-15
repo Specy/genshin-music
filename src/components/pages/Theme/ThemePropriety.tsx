@@ -6,6 +6,7 @@ import {HexAlphaColorPicker, HexColorInput} from "react-colorful";
 import {BASE_THEME_CONFIG} from "$config";
 import {FaCheck, FaTimes} from 'react-icons/fa'
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
+import {useTranslation} from "react-i18next";
 
 export interface ThemeProprietyProps {
     name: ThemeKeys,
@@ -28,6 +29,7 @@ export function ThemePropriety({
                                    handlePropReset,
                                    canReset
                                }: ThemeProprietyProps) {
+    const {t} = useTranslation(['theme', 'common'])
     const [color, setColor] = useState(Color(value))
     useEffect(() => {
         setColor(Color(value))
@@ -51,12 +53,12 @@ export function ThemePropriety({
         } : {}}
     >
         <div>
-            {capitalize(name.split('_').join(' '))}
+            {t(`colors.${name}`)}
         </div>
         <div className="color-input-wrapper">
             {(canReset && isModified) &&
                 <AppButton onClick={() => handlePropReset(name)} toggled={isModified} className='theme-reset'>
-                    RESET
+                    {t('common:reset').toUpperCase()}
                 </AppButton>
             }
             {isSelected

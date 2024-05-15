@@ -53,6 +53,8 @@ import {useConfig} from '$lib/Hooks/useConfig';
 import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {useTranslation} from "react-i18next";
+import {DefaultLanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
+import {Separator} from "$cmp/shared/separator/Separator";
 
 interface MenuProps {
     data: {
@@ -122,12 +124,12 @@ function Menu({data, functions, inPreview}: MenuProps) {
             await songsStore.removeSong(id)
             Analytics.userSongs('delete', {page: 'composer'})
         }
-    }, [])
+    }, [t])
     const createFolder = useCallback(async () => {
         const name = await asyncPrompt(t('question:enter_folder_name'))
         if (!name) return
         folderStore.createFolder(name)
-    }, [])
+    }, [t])
 
     const importFile = useCallback(async (files: FileElement<SerializedSong[] | SerializedSong>[]) => {
         for (const file of files) {
@@ -258,15 +260,14 @@ function Menu({data, functions, inPreview}: MenuProps) {
                             if (files?.length > 0) {
                                 const file = files![0]
                                 const name = file.name
-                                if (isMidiFormat(name)) logger.warn(`Opening the midi importer to import a MIDI file, please reselect the file`, 6000)
-                                else if (isVideoFormat(name)) logger.warn(`Opening the midi importer to import a video file, please reselect the file. Video conversion is not very accurate`, 6000)
-                                else if (isAudioFormat(name)) logger.warn(`Opening the midi importer to import an audio file, please reselect the file. Audio conversion is not very accurate`, 6000)
-                                else return logger.error(`Error importing file, invalid format`, 8000)
+                                if (isMidiFormat(name)) logger.warn(t('warning_opening_midi_importer'), 6000)
+                                else if (isVideoFormat(name) || isAudioFormat(name)) logger.warn(t('warning_opening_audio_importer'), 6000)
+                                else return logger.error(t('error_importing_file_invalid_format'), 8000)
                                 changeMidiVisibility(true)
                                 toggleMenu()
                             } else {
                                 logger.error(
-                                    `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
+                                    t('error_importing_file_invalid_format_audio_video'),
                                     8000
                                 )
                             }
@@ -301,6 +302,10 @@ function Menu({data, functions, inPreview}: MenuProps) {
                     onUpdate={handleSettingChange}
                     changeVolume={changeVolume}
                 />
+                <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
+                <div className='settings-row-wrap'>
+                    {t('settings:change_language')} <DefaultLanguageSelector />
+                </div>
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
                         <Link href="/keybinds">
@@ -310,7 +315,6 @@ function Menu({data, functions, inPreview}: MenuProps) {
                                 {t('menu:connect_midi_keyboard')}
                             </AppButton>
                         </Link>
-
                     }
                     <Link href="/theme" onClick={(e) => e.preventDefault()}>
                         <AppButton

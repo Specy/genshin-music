@@ -81,7 +81,8 @@ export const i18n_zh = {
         import: "导入",
         border: "边界",
         line: "线路",
-        circle: "圆形"
+        circle: "圆形",
+        reset: "Reset",
     },
     home: {
         app_description: "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
@@ -116,6 +117,7 @@ export const i18n_zh = {
         rights: "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
         hide_on_open: "启动时隐藏",
         beta: "公测版",
+        about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
     },
     menu: {
         close_menu: "关闭菜单",
@@ -269,7 +271,8 @@ export const i18n_zh = {
             "song_settings": "歌曲设置",
             "composer_settings": "编曲器设置",
             "editor_settings": "编辑器设置",
-        }
+        },
+        change_language: "Change language",
     },
 
     zen_keyboard: {
@@ -315,7 +318,19 @@ export const i18n_zh = {
         default_themes: "默认主题",
         preview: "预览",
         view_player: "查看演奏器", //shows the player preview
-        view_composer: "查看编曲器"
+        view_composer: "查看编曲器",
+        colors: {
+            background: "Background",
+            primary: "Primary",
+            secondary: "Secondary",
+            accent: "Accent",
+            composer_accent: "Composer accent",
+            composer_main_layer: "Composer main layer",
+            composer_secondary_layer: "Composer secondary layer",
+            icon_color: "Icon color",
+            menu_background: "Menu background",
+            note_background: "Note background",
+        }
     },
 
     sheet_visualizer: {
@@ -323,11 +338,11 @@ export const i18n_zh = {
         merge_empty_spaces: "合并空格",
         no_song_selected: "未选择歌曲",
         print_as_pdf: "打印为 PDF",
-        sheet_visualizer_instructions:"从左侧菜单中选择一首歌曲，您可以使用演奏器中的交互式练习工具来学习歌曲",
+        sheet_visualizer_instructions: "从左侧菜单中选择一首歌曲，您可以使用演奏器中的交互式练习工具来学习歌曲",
         per_row: '每行', //elements per row
         invalid_song_to_visualize: '无效歌曲，未创作或录制',
         error_converting_to_visual_song_try_convert_in_recorded: '将歌曲转换为视觉歌曲时出错，尝试先转换为录制的歌曲...',
-        error_converting_to_visual_song:"将歌曲转换为视觉歌曲时出错"
+        error_converting_to_visual_song: "将歌曲转换为视觉歌曲时出错"
     },
     player: {
         finish_recording: "结束录制",
@@ -341,13 +356,13 @@ export const i18n_zh = {
         practice_mode_description: "练习歌曲“{{song_name}}”",
         approach_mode: "缩圈模式",//TODO find new name for this, it's the mode where circles "come towards" notes
         //How about ring_closing_mode, indicating that being outside of the shrinking ring = losing point.
-        approach_mode_description:"在缩圈模式下演奏歌曲“{{song_name}}”",
+        approach_mode_description: "在缩圈模式下演奏歌曲“{{song_name}}”",
         song_search_no_results: "没有结果",
         song_search_description: "在这里你可以找到要学习的歌曲，这些歌曲由天空音乐库提供。",
         midi_or_audio_import_redirect_warning: "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？",
     },
     keybinds: {
-        already_used_keybind:"这个按键绑定已经被音符“{{note_name}}”使用",
+        already_used_keybind: "这个按键绑定已经被音符“{{note_name}}”使用",
         midi_keybinds: "MIDI 按键绑定",
         keyboard_keybinds: "键盘按键绑定",
         keyboard_keybinds_description: "您可以将键盘按键重新映射到键盘上的任何键，按下要重新映射的音符，然后按下要分配给它的键。",
@@ -373,7 +388,7 @@ export const i18n_zh = {
     error: {
         confirm_delete_all_songs: "您确定要删除所有歌曲吗？",
         settings_reset_notice: "设置已重置",
-        error_page_description:"如果您意外地看到此页面，则意味着发生了错误。您可以在此处下载或删除您的歌曲——如果某首歌导致错误，请删除它。如果您需要帮助，请加入我们的discord服务器并发送下面的日志文件。",
+        error_page_description: "如果您意外地看到此页面，则意味着发生了错误。您可以在此处下载或删除您的歌曲——如果某首歌导致错误，请删除它。如果您需要帮助，请加入我们的discord服务器并发送下面的日志文件。",
         reset_settings: "重置设置",
         delete_all_songs: "删除所有歌曲",
         error_logs: "错误日志",
@@ -385,7 +400,7 @@ export const i18n_zh = {
     cache: {
         cache: "缓存",
         reset_cache: "重置缓存",
-        reset_cache_message:"此页面将清除应用程序的缓存。这将删除所有缓存的数据并重新加载页面，它不会删除您的歌曲或数据，只会删除缓存的资源。当您访问此页面时，程序自动清除缓存。您也可以单击下面的按钮手动清除缓存。",
+        reset_cache_message: "此页面将清除应用程序的缓存。这将删除所有缓存的数据并重新加载页面，它不会删除您的歌曲或数据，只会删除缓存的资源。当您访问此页面时，程序自动清除缓存。您也可以单击下面的按钮手动清除缓存。",
         clear_cache: '清除缓存'
     },
     changelog: {
@@ -405,8 +420,8 @@ export const i18n_zh = {
         deleted_all_songs_notice: "删除所有歌曲",
         deleted_all_themes_notice: "删除所有主题",
         error_validating_song: `验证歌曲“{{song_name}}”时出错`,
-        error_validating_folder:"验证文件夹“{{folder_name}}时出错”",
-        error_validating_theme:`验证主题“{{theme_name}}”时出错`,
+        error_validating_folder: "验证文件夹“{{folder_name}}时出错”",
+        error_validating_theme: `验证主题“{{theme_name}}”时出错`,
         validating_songs: "正在验证歌曲",
         validating_folders: "正在验证文件夹",
         validating_themes: "验证主题",
@@ -416,7 +431,7 @@ export const i18n_zh = {
         transfer_data_notice: "如果您想从应用程序的另一个域传输数据，请单击此处",
         transfer: "转移",
         backup_as: "备份为",
-        backup_advice:"确保时不时地创建备份，尤其是当您刚刚完成一首新歌曲时。 浏览器不应该删除您的数据，特别是如果您安装了该应用程序，但也不是万无一失。",
+        backup_advice: "确保时不时地创建备份，尤其是当您刚刚完成一首新歌曲时。 浏览器不应该删除您的数据，特别是如果您安装了该应用程序，但也不是万无一失。",
         backup_download_tooltip: "下载应用程序的所有数据，又名主题、歌曲、文件夹",
         backup_downloaded: "已下载备份",
         backup_download_error: "下载备份时出错",
@@ -461,7 +476,7 @@ export const i18n_zh = {
         create_from_midi_or_audio: "从 MIDI/音频创建",
         previous_breakpoint: "上一个断点", //breakpoint is a sort of point to "jump", a sort of bookmark
         next_breakpoint: "下一个断点",
-        tempo: "Tempo", //this is musical tempo
+        tempo: "Tempo", //this is musical tempo 1/2, 1/4, 1/8 etc
         error_with_this_layer: "该层出现错误",
         recording_audio: "录制音频",
         tools: {
@@ -469,7 +484,7 @@ export const i18n_zh = {
             move_notes_up_description: "将音符向上推 1 个位置",
             move_notes_down: "向下移动音符",
             move_notes_down_description: "将音符向下推 1 个位置",
-            only_layer:"音层限定", //this will be used as Only layer 1... etc
+            only_layer: "音层限定", //this will be used as Only layer 1... etc
             clear_selection: "清除选择",
             all_layers: "所有音层",
             all_layers_description: "选择突出显示列中的所有音层",
@@ -486,7 +501,7 @@ export const i18n_zh = {
         },
         midi_parser: {
             out_of_range: "超出范围",
-            accidentals:"临时记号",
+            accidentals: "临时记号",
             total_notes: "总音符",
             select_midi_tracks: "选择 MIDI 轨道",
             ignore_empty_tracks: "忽略空轨道",
@@ -506,7 +521,11 @@ export const i18n_zh = {
             detecting_notes: "检测音符",
             loading_converter: '正在加载转换器',
             audio_conversion_warning: `🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。`
-        }
+        },
+        warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
+        warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
+        error_importing_file_invalid_format: `Error importing file, invalid format`,
+        error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
 
     },
     instrument_settings: {

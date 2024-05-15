@@ -65,6 +65,8 @@ import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
 import {useRouter} from 'next/router';
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {useTranslation} from "react-i18next";
+import {Separator} from "$cmp/shared/separator/Separator";
+import {DefaultLanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
 
 interface MenuProps {
     functions: {
@@ -194,7 +196,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
             logger.error(t('logs:error_importing_invalid_format'), 8000)
         }
 
-    }, [askForComposerImport,t])
+    }, [askForComposerImport, t])
 
     async function downloadAllSongs() {
         try {
@@ -329,6 +331,10 @@ function Menu({functions, data, inPreview}: MenuProps) {
                     changeVolume={functions.changeVolume}
                     onUpdate={handleSettingChange}
                 />
+                <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
+                <div className='settings-row-wrap'>
+                    {t('settings:change_language')} <DefaultLanguageSelector/>
+                </div>
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
                         <Link href='/keybinds'>

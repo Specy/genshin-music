@@ -7,6 +7,7 @@ import {cn} from "$lib/utils/Utilities"
 import {KeyboardProvider} from "$lib/Providers/KeyboardProvider"
 import {IGNORE_CLICK_CLASS} from "$lib/Hooks/useClickOutside"
 import isMobile from "is-mobile"
+import {useTranslation} from "react-i18next";
 
 export function AsyncPromptWrapper() {
     const confirmState = useObservableObject(asyncPromptStore.confirmState)
@@ -24,6 +25,7 @@ export function AsyncPromptWrapper() {
 
 //TODO this components here look kinda ugly and break the point of react, but it's the best and fastest way to do it for now
 function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
+    const {t} = useTranslation('common')
     const isHidden = !deferred
     const [isMounted, setIsMounted] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
@@ -80,7 +82,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
                     }}
                     onClick={() => asyncPromptStore.answerConfirm(false)}
                 >
-                    No
+                    {t('no')}
                 </button>
                 <button
                     className="prompt-button"
@@ -90,7 +92,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
                     }}
                     onClick={() => asyncPromptStore.answerConfirm(true)}
                 >
-                    Yes
+                    {t('yes')}
                 </button>
             </div>
         </DecoratedCard>

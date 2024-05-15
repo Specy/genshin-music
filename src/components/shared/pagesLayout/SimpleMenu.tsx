@@ -8,8 +8,10 @@ import Link from 'next/link';
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
+import {useTranslation} from "react-i18next";
 
 export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>) {
+    const {t} = useTranslation(['menu', 'home'])
     const history = useRouter()
     return <MenuContextProvider className={className} style={style}>
         <MenuSidebar style={{justifyContent: 'flex-end'}}>
@@ -19,7 +21,7 @@ export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>
                     onClick={() => {
                         history.back()
                     }}
-                    ariaLabel='Go back'
+                    ariaLabel={t('go_back')}
                 >
                     <FaArrowLeft className='icon'/>
                 </MenuButton>
@@ -29,22 +31,22 @@ export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>
                 href='https://discord.gg/Arsf65YYHq'
                 target='_blank'
                 rel='noreferrer'
-                title='Go to discord'
+                title="Discord"
                 onClick={async (e) => {
                     e.preventDefault()
-                    const confirm = await asyncConfirm('You are leaving the app to go to discord, do you want to continue?')
+                    const confirm = await asyncConfirm(t('home:about_to_leave_warning', {to: "discord"}))
                     if (!confirm) return
                     window.open('https://discord.gg/Arsf65YYHq', '_blank')
                 }}
             >
-                <MenuButton ariaLabel='Go to discord'>
+                <MenuButton ariaLabel='Discord'>
                     <FaDiscord className="icon"/>
                 </MenuButton>
             </Link>
 
             <MenuButton
                 onClick={homeStore.open}
-                ariaLabel='Open home menu'
+                ariaLabel={t('open_home_menu')}
                 style={{border: "solid 0.1rem var(--secondary)"}}
             >
                 <FaHome className="icon"/>
