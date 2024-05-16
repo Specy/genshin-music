@@ -8,6 +8,7 @@ import {BiSquareRounded} from "react-icons/bi";
 import {Theme} from "$stores/ThemeStore/ThemeProvider";
 import {InstrumentSettingsPopup} from "./InstrumentSettingsPopup";
 import {prettyPrintInstrumentName} from "$lib/utils/Utilities";
+import {useTranslation} from "react-i18next";
 
 
 interface InstrumentControlsProps {
@@ -29,6 +30,7 @@ function _InstrumentControls({
                                  onLayerSelect,
                                  onChangePosition
                              }: InstrumentControlsProps) {
+    const {t} = useTranslation()
     const [theme] = useTheme()
     const [isEditing, setIsEditing] = useState(false)
     const setNotEditing = useCallback(() => {
@@ -70,7 +72,7 @@ function _InstrumentControls({
                         e.target?.scrollIntoView()
                     }, 50)
                 }}
-                ariaLabel='Add new instrument'
+                ariaLabel={t('common:add_new_instrument')}
                 className="new-instrument-button flex-centered"
             >
                 <FaPlus size={16} color='var(--icon-color)'/>
@@ -102,6 +104,7 @@ function InstrumentButton({
                               onEditClick,
                               onVisibleToggle
                           }: InstrumentButtonProps) {
+    const {t} = useTranslation('instruments')
     const ref = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (!isSelected || !ref.current) return
@@ -173,7 +176,7 @@ function InstrumentButton({
             className='flex-grow flex-centered instrument-name-button'
         >
             <span className="text-ellipsis" style={{width: '6rem'}}>
-                {instrument.alias || prettyPrintInstrumentName(instrument.name)}
+                {instrument.alias || t(instrument.name)}
             </span>
         </AppButton>
 

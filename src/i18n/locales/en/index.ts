@@ -1,3 +1,5 @@
+import {InstrumentName} from "$types/GeneralTypes";
+
 export const i18n_en = {
     logs: {
         update_available: "There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app",
@@ -79,7 +81,9 @@ export const i18n_en = {
         import: "Import",
         border: "Border",
         line: "Line",
-        circle: "Circle"
+        circle: "Circle",
+        reset: "Reset",
+        add_new_instrument: "Add new instrument",
     },
     home: {
         app_description: "An app where you can create, practice and play songs for {{APP_NAME}}",
@@ -114,6 +118,7 @@ export const i18n_en = {
         rights: "© All rights reserved by {{company_name}}. Other properties belong to their respective owners.",
         hide_on_open: "Hide on open",
         beta: "Beta",
+        about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
     },
     menu: {
         close_menu: "Close menu",
@@ -273,7 +278,8 @@ export const i18n_en = {
             "song_settings": "Song settings",
             "composer_settings": "Composer settings",
             "editor_settings": "Editor settings",
-        }
+        },
+        select_language: "Select language",
     },
 
     zen_keyboard: {
@@ -283,7 +289,6 @@ export const i18n_en = {
         delete_track_question: "Are you sure you want to remove this track? All notes will be deleted.",
         cannot_delete_last_track: "Cannot delete last track",
         snap: 'Snap', //this means snapping to a point, like anchoring to it
-        add_new_instrument: "Add new instrument",
         background_song: "Background Song",
         background_song_info: "You can select one of your songs to be played on the background",
         no_background_song_selected: "No background song selected",
@@ -322,7 +327,19 @@ export const i18n_en = {
         default_themes: "Default Themes",
         preview: "Preview",
         view_player: "View player", //shows the player preview
-        view_composer: "View composer"
+        view_composer: "View composer",
+        colors: {
+            background: "Background",
+            primary: "Primary",
+            secondary: "Secondary",
+            accent: "Accent",
+            composer_accent: "Composer accent",
+            composer_main_layer: "Composer main layer",
+            composer_secondary_layer: "Composer secondary layer",
+            icon_color: "Icon color",
+            menu_background: "Menu background",
+            note_background: "Note background",
+        }
     },
     sheet_visualizer: {
         note_names: "Note names",
@@ -537,8 +554,12 @@ export const i18n_en = {
             detecting_notes: "Detecting notes",
             loading_converter: 'Loading converter',
             audio_conversion_warning: `🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing.`
-        }
+        },
 
+        warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
+        warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
+        error_importing_file_invalid_format: `Error importing file, invalid format`,
+        error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
     },
     instrument_settings: {
         no_instrument_selected: "No instrument selected",
@@ -642,7 +663,45 @@ export const i18n_en = {
             set_delete_hand_description: "Set the click to delete a note",
             vsrg_add_hit_object: 'Add hit object (syncs to the registered keybinds)',
         }
-    }
-
+    },
+    instruments: {
+        "Lyre": "Lyre",
+        "Vintage-Lyre": "Vintage Lyre",
+        "Zither": "Zither",
+        "Old-Zither": "Old Zither",
+        "DunDun": "DunDun",
+        "Piano": "Piano",
+        "Contrabass": "Contrabass",
+        "Guitar": "Guitar",
+        "LightGuitar": "Light Guitar",
+        "Harp": "Harp",
+        "Horn": "Horn",
+        "Trumpet": "Trumpet",
+        "Pipa": "Pipa",
+        "WinterPiano": "Winter Piano",
+        "Xylophone": "Xylophone",
+        "Flute": "Flute",
+        "Panflute": "Panflute",
+        "Ocarina": "Ocarina",
+        "MantaOcarina": "Manta Ocarina",
+        "Aurora": "Aurora", //leave as is
+        "Kalimba": "Kalimba",
+        "ToyUkulele": "Toy Ukulele",
+        "Drum": "Drum",
+        "Bells": "Bells",
+        "HandPan": "HandPan",
+        "SFX_SineSynth": "Sine Synth",
+        "SFX_BassSynth": "Bass Synth",
+        "SFX_ChimeSynth": "Chime Synth",
+        "SFX_TR-909": "TR-909", //leave as is
+        "SFX_Dance": "Dance",
+        "SFX_BirdCall": "Bird Call",// call is like "sound of a bird" or "sing"
+        "SFX_CrabCall": "Crab Call",
+        "SFX_FishCall": "Fish Call",
+        "SFX_SpiritMantaCall": "Spirit Manta Call",
+        "SFX_JellyCall": "Jelly Call",
+        "SFX_MantaCall": "Manta Call",
+        "SFX_MothCall": "Moth Call",
+    } satisfies Record<InstrumentName, string>
 } as const
 

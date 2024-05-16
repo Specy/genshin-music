@@ -81,7 +81,10 @@ export const i18n_zh = {
         import: "导入",
         border: "边界",
         line: "线路",
-        circle: "圆形"
+        circle: "圆形",
+        add_new_instrument: "添加新仪器",
+
+        reset: "Reset",
     },
     home: {
         app_description: "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
@@ -116,6 +119,8 @@ export const i18n_zh = {
         rights: "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
         hide_on_open: "启动时隐藏",
         beta: "公测版",
+
+        about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
     },
     menu: {
         close_menu: "关闭菜单",
@@ -269,7 +274,9 @@ export const i18n_zh = {
             "song_settings": "歌曲设置",
             "composer_settings": "编曲器设置",
             "editor_settings": "编辑器设置",
-        }
+        },
+
+        select_language: "Select language",
     },
 
     zen_keyboard: {
@@ -279,7 +286,6 @@ export const i18n_zh = {
         delete_track_question: "您确定要删除此曲目吗？所有音符都将被删除。",
         cannot_delete_last_track: "无法删除最后一首曲目",
         snap: '捕捉', //this means snapping to a point, like anchoring to it
-        add_new_instrument: "添加新仪器",
         background_song: "背景歌曲",
         background_song_info: "您可以选择一首歌曲在后台播放",
         no_background_song_selected: "未选择背景歌曲",
@@ -315,7 +321,19 @@ export const i18n_zh = {
         default_themes: "默认主题",
         preview: "预览",
         view_player: "查看演奏器", //shows the player preview
-        view_composer: "查看编曲器"
+        view_composer: "查看编曲器",
+        colors: {
+            background: "Background",
+            primary: "Primary",
+            secondary: "Secondary",
+            accent: "Accent",
+            composer_accent: "Composer accent",
+            composer_main_layer: "Composer main layer",
+            composer_secondary_layer: "Composer secondary layer",
+            icon_color: "Icon color",
+            menu_background: "Menu background",
+            note_background: "Note background",
+        }
     },
 
     sheet_visualizer: {
@@ -323,11 +341,11 @@ export const i18n_zh = {
         merge_empty_spaces: "合并空格",
         no_song_selected: "未选择歌曲",
         print_as_pdf: "打印为 PDF",
-        sheet_visualizer_instructions："从左侧菜单中选择一首歌曲，您可以使用演奏器中的交互式练习工具来学习歌曲",
+        sheet_visualizer_instructions: "从左侧菜单中选择一首歌曲，您可以使用演奏器中的交互式练习工具来学习歌曲",
         per_row: '每行', //elements per row
         invalid_song_to_visualize: '无效歌曲，未创作或录制',
         error_converting_to_visual_song_try_convert_in_recorded: '将歌曲转换为视觉歌曲时出错，尝试先转换为录制的歌曲...',
-        error_converting_to_visual_song:"将歌曲转换为视觉歌曲时出错"
+        error_converting_to_visual_song: "将歌曲转换为视觉歌曲时出错"
     },
     player: {
         finish_recording: "结束录制",
@@ -337,20 +355,20 @@ export const i18n_zh = {
         accuracy: "准确度",
         score: "分数",
         combo: "组合",
-        Practice_mode: "练习", //song practice
-        Practice_mode_description: "练习歌曲“{{song_name}}”",
+        practice_mode: "练习", //song practice
+        practice_mode_description: "练习歌曲“{{song_name}}”",
         approach_mode: "缩圈模式",//TODO find new name for this, it's the mode where circles "come towards" notes
         //How about ring_closing_mode, indicating that being outside of the shrinking ring = losing point.
-        approach_mode_description："在缩圈模式下演奏歌曲“{{song_name}}”",
-        Song_search_no_results: "没有结果",
-        Song_search_description: "在这里你可以找到要学习的歌曲，这些歌曲由天空音乐库提供。",
+        approach_mode_description: "在缩圈模式下演奏歌曲“{{song_name}}”",
+        song_search_no_results: "没有结果",
+        song_search_description: "在这里你可以找到要学习的歌曲，这些歌曲由天空音乐库提供。",
         midi_or_audio_import_redirect_warning: "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？",
     },
     keybinds: {
-        already_used_keybind:"这个按键绑定已经被音符“{{note_name}}”使用",
+        already_used_keybind: "这个按键绑定已经被音符“{{note_name}}”使用",
         midi_keybinds: "MIDI 按键绑定",
-        Keyboard_keybinds: "键盘按键绑定",
-        Keyboard_keybinds_description: "您可以将键盘按键重新映射到键盘上的任何键，按下要重新映射的音符，然后按下要分配给它的键。",
+        keyboard_keybinds: "键盘按键绑定",
+        keyboard_keybinds_description: "您可以将键盘按键重新映射到键盘上的任何键，按下要重新映射的音符，然后按下要分配给它的键。",
         composer_shortcuts: "作曲器快捷键",
         player_shortcuts: "演奏器快捷键",
         vsrg_composer_shortcuts: "Vsrg 作曲器快捷键",
@@ -363,17 +381,17 @@ export const i18n_zh = {
         create_midi_preset: "创建新预设",
         midi_note_selection_description: "单击音符将其选中，然后按 MIDI 键盘将该音符分配给该琴键。您可以再次单击它来更改它。",
         midi_shortcuts: "MIDI 快捷键",
-        inform_delete_preset: "您确定要删除预设“{{preset_name}}”吗？",
+        confirm_delete_preset: "您确定要删除预设“{{preset_name}}”吗？",
         cannot_delete_builtin_preset: "无法删除内置预设",
-        has_existing_preset: "此名称的预设已存在",
-        Ask_preset_name: "写下预设的名称",
+        already_existing_preset: "此名称的预设已存在",
+        ask_preset_name: "写下预设的名称",
         key_already_used: "按键已被使用",
         cannot_edit_builtin_preset: "无法编辑内置预设，请创建一个新预设进行编辑",
     },
     error: {
-        inform_delete_all_songs: "您确定要删除所有歌曲吗？",
+        confirm_delete_all_songs: "您确定要删除所有歌曲吗？",
         settings_reset_notice: "设置已重置",
-        error_page_description："如果您意外地看到此页面，则意味着发生了错误。您可以在此处下载或删除您的歌曲——如果某首歌导致错误，请删除它。如果您需要帮助，请加入我们的discord服务器并发送下面的日志文件。",
+        error_page_description: "如果您意外地看到此页面，则意味着发生了错误。您可以在此处下载或删除您的歌曲——如果某首歌导致错误，请删除它。如果您需要帮助，请加入我们的discord服务器并发送下面的日志文件。",
         reset_settings: "重置设置",
         delete_all_songs: "删除所有歌曲",
         error_logs: "错误日志",
@@ -385,7 +403,7 @@ export const i18n_zh = {
     cache: {
         cache: "缓存",
         reset_cache: "重置缓存",
-        reset_cache_message："此页面将清除应用程序的缓存。这将删除所有缓存的数据并重新加载页面，它不会删除您的歌曲或数据，只会删除缓存的资源。当您访问此页面时，程序自动清除缓存。您也可以单击下面的按钮手动清除缓存。",
+        reset_cache_message: "此页面将清除应用程序的缓存。这将删除所有缓存的数据并重新加载页面，它不会删除您的歌曲或数据，只会删除缓存的资源。当您访问此页面时，程序自动清除缓存。您也可以单击下面的按钮手动清除缓存。",
         clear_cache: '清除缓存'
     },
     changelog: {
@@ -396,27 +414,27 @@ export const i18n_zh = {
     },
     backup: {
         confirm_after_songs_validation_error: "验证某些歌曲时出错。您想继续下载吗？",
-        inform_after_folders_validation_error: "验证某些文件夹时出错。是否要继续下载？",
-        inform_after_themes_validation_error: "验证某些主题时出错。您想继续下载吗？",
-        inform_delete_songs_step_1: "如果要删除所有歌曲，请输入'delete'这个单词，按取消忽略", //do not translate 'delete'
+        confirm_after_folders_validation_error: "验证某些文件夹时出错。是否要继续下载？",
+        confirm_after_themes_validation_error: "验证某些主题时出错。您想继续下载吗？",
+        confirm_delete_songs_step_1: "如果要删除所有歌曲，请输入'delete'这个单词，按取消忽略", //do not translate 'delete'
         confirm_delete_songs_step_2: "您真的确定要删除所有歌曲吗？",
-        inform_delete_themes_step_1: "如果要删除所有主题，请输入'delete'这个单词，按取消忽略", //do not translate 'delete'
+        confirm_delete_themes_step_1: "如果要删除所有主题，请输入'delete'这个单词，按取消忽略", //do not translate 'delete'
         confirm_delete_themes_step_2: "您真的确定要删除所有主题吗？",
         deleted_all_songs_notice: "删除所有歌曲",
         deleted_all_themes_notice: "删除所有主题",
         error_validating_song: `验证歌曲“{{song_name}}”时出错`,
-        error_validating_folder："验证文件夹“{{folder_name}}时出错”",
-        error_validating_theme:`验证主题“{{theme_name}}”时出错`,
+        error_validating_folder: "验证文件夹“{{folder_name}}时出错”",
+        error_validating_theme: `验证主题“{{theme_name}}”时出错`,
         validating_songs: "正在验证歌曲",
         validating_folders: "正在验证文件夹",
         validating_themes: "验证主题",
         action_cancelled: '操作已取消',
         zipping_files: "压缩文件",
-        Transfer_from_other_domain: "从其他域转移",
-        Transfer_data_notice: "如果您想从应用程序的另一个域传输数据，请单击此处",
+        transfer_from_other_domain: "从其他域转移",
+        transfer_data_notice: "如果您想从应用程序的另一个域传输数据，请单击此处",
         transfer: "转移",
         backup_as: "备份为",
-        backup_advice:"确保时不时地创建备份，尤其是当您刚刚完成一首新歌曲时。 浏览器不应该删除您的数据，特别是如果您安装了该应用程序，但也不是万无一失。",
+        backup_advice: "确保时不时地创建备份，尤其是当您刚刚完成一首新歌曲时。 浏览器不应该删除您的数据，特别是如果您安装了该应用程序，但也不是万无一失。",
         backup_download_tooltip: "下载应用程序的所有数据，又名主题、歌曲、文件夹",
         backup_downloaded: "已下载备份",
         backup_download_error: "下载备份时出错",
@@ -424,18 +442,18 @@ export const i18n_zh = {
         download_all_backup_tooltip: "下载包含所有歌曲和文件夹的备份",
         no_items_to_backup: "没有什么可备份的",
         download_songs_tooltip: "下载包含所有歌曲和文件夹的备份",
-        download_songs_notice: "下载的歌曲备份",
+        downloaded_songs_notice: "下载的歌曲备份",
         download_songs_backup: "下载歌曲备份",
         download_themes_tooltip: "下载所有自定义主题的备份",
         no_themes_to_backup: "没有要备份的主题",
-        download_themes_notice: "下载的主题备份",
+        downloaded_themes_notice: "下载的主题备份",
         download_themes_backup: "下载主题备份",
         import_backup: "导入备份",
         import_backup_description: `如果您有备份，可以在此处导入，备份将添加到您现有的数据中（对于已经存在的歌，会创建一个副本）。`,
         error_reading_file: "读取文件时出错",
         import_backup_tooltip: "在这里您可以导入您拥有的任何备份",
-        song: "歌曲",
-        theme: "主题",
+        songs: "歌曲",
+        themes: "主题",
         delete_data: "删除数据",
         delete_data_description: "如果您愿意，您也可以在这里删除所有数据，一旦删除就无法恢复。不用担心，在删除任何内容之前，会要求您确认。",
         delete_songs_and_folders: "删除歌曲和文件夹",
@@ -454,40 +472,40 @@ export const i18n_zh = {
         cant_remove_all_layers: "你不能删除所有音层！",
         confirm_layer_remove: `您确定要删除“{{layer_name}}”吗？该层的所有音符都将被删除`,
         cant_add_more_than_n_layers: `您不能添加超过 {{max_layers}} 层！`,
-        Ask_song_name_for_composed_song_version: "填写创作版本的歌曲名称，按取消忽略",
+        ask_song_name_for_composed_song_version: "填写创作版本的歌曲名称，按取消忽略",
         start_recording_audio: "开始录制音频",
         stop_recording_audio: "停止录制音频",
         create_new_song: "创作新歌",
         create_from_midi_or_audio: "从 MIDI/音频创建",
         previous_breakpoint: "上一个断点", //breakpoint is a sort of point to "jump", a sort of bookmark
         next_breakpoint: "下一个断点",
-        tempo: "Tempo", //this is musical tempo
+        tempo: "Tempo", //this is musical tempo 1/2, 1/4, 1/8 etc
         error_with_this_layer: "该层出现错误",
-        Recording_audio: "录制音频",
+        recording_audio: "录制音频",
         tools: {
             move_notes_up: "向上移动音符",
             move_notes_up_description: "将音符向上推 1 个位置",
             move_notes_down: "向下移动音符",
             move_notes_down_description: "将音符向下推 1 个位置",
-            only_layer："音层限定", //this will be used as Only layer 1... etc
+            only_layer: "音层限定", //this will be used as Only layer 1... etc
             clear_selection: "清除选择",
             all_layers: "所有音层",
             all_layers_description: "选择突出显示列中的所有音层",
-            Paste_in_layer_n: "粘贴到第 {{layer_number}} 层",
+            paste_in_layer_n: "粘贴到第 {{layer_number}} 层",
             insert_in_layer_n: "插入层 {{layer_number}}",
-            Paste_all_layers: "粘贴全部",
+            paste_all_layers: "粘贴全部",
             insert_all_layers: "插入全部",
             select_layer_description: "选择突出显示列中的所有音符或仅选择当前层的音符",
             delete_selected_columns: "删除选定的列",
-            Erase_all_selected_notes: "删除所有选定的音符",
+            erase_all_selected_notes: "删除所有选定的音符",
             insert_copied_notes: "插入复制的音符",
-            Paste_copied_notes: "粘贴复制的音符",
+            paste_copied_notes: "粘贴复制的音符",
             copy_notes: "复制所有音符"
         },
         midi_parser: {
             out_of_range: "超出范围",
-            accidentals："临时记号",
-            Total_notes: "总音符",
+            accidentals: "临时记号",
+            total_notes: "总音符",
             select_midi_tracks: "选择 MIDI 轨道",
             ignore_empty_tracks: "忽略空轨道",
             include_accidentals: "包括临时记号",
@@ -502,12 +520,17 @@ export const i18n_zh = {
             open_midi_audio_file: "打开 MIDI/音频/视频文件",
             there_are_no_notes: "没有音符",
             error_is_file_midi: "导入此文件时出错，它是 .mid 文件吗？",
-            Converting_audio_to_midi: "正在将音频转换为 midi（可能需要一段时间）..",
-            detector_notes: "检测音符",
-            load_converter: '正在加载转换器',
+            converting_audio_to_midi: "正在将音频转换为 midi（可能需要一段时间）..",
+            detecting_notes: "检测音符",
+            loading_converter: '正在加载转换器',
             audio_conversion_warning: `🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。`
-        }
+        },
 
+
+        warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
+        warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
+        error_importing_file_invalid_format: `Error importing file, invalid format`,
+        error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
     },
     instrument_settings: {
         no_instrument_selected: "未选择乐器",
@@ -516,7 +539,7 @@ export const i18n_zh = {
         use_song_reverb: "使用歌曲混响",
         note_icon: "音符图标",
         volume: "音量",
-        Volume_high_warning: "如果听到失真，请降低音量",
+        volume_high_warning: "如果听到失真，请降低音量",
         move_down: "向下移动",
         move_up: "向上移动",
     },
@@ -539,7 +562,7 @@ export const i18n_zh = {
             li_6: "可以连接MIDI键盘来演奏",
         },
         help: {
-            Question_mark_description: "将鼠标悬停在按钮上可查看工具提示。单击此按钮 (?) 时，它将显示更多信息。",
+            question_mark_description: "将鼠标悬停在按钮上可查看工具提示。单击此按钮 (?) 时，它将显示更多信息。",
             example_help: "帮助示例",
             learn_how_to_use_player: "学习如何使用演奏器",
             learn_how_to_use_composer: "学习如何使用作曲器",
@@ -610,5 +633,44 @@ export const i18n_zh = {
             set_delete_hand_description: "设置点击功能为删除音符",
             vsrg_add_hit_object: "添加打击乐对象（同步到注册的按键绑定）",
         }
+    },
+    instruments: {
+        "Lyre": "Lyre",
+        "Vintage-Lyre": "Vintage Lyre",
+        "Zither": "Zither",
+        "Old-Zither": "Old Zither",
+        "DunDun": "DunDun",
+        "Piano": "Piano",
+        "Contrabass": "Contrabass",
+        "Guitar": "Guitar",
+        "LightGuitar": "Light Guitar",
+        "Harp": "Harp",
+        "Horn": "Horn",
+        "Trumpet": "Trumpet",
+        "Pipa": "Pipa",
+        "WinterPiano": "Winter Piano",
+        "Xylophone": "Xylophone",
+        "Flute": "Flute",
+        "Panflute": "Panflute",
+        "Ocarina": "Ocarina",
+        "MantaOcarina": "Manta Ocarina",
+        "Aurora": "Aurora", //leave as is
+        "Kalimba": "Kalimba",
+        "ToyUkulele": "Toy Ukulele",
+        "Drum": "Drum",
+        "Bells": "Bells",
+        "HandPan": "HandPan",
+        "SFX_SineSynth": "Sine Synth",
+        "SFX_BassSynth": "Bass Synth",
+        "SFX_ChimeSynth": "Chime Synth",
+        "SFX_TR-909": "TR-909", //leave as is
+        "SFX_Dance": "Dance",
+        "SFX_BirdCall": "Bird Call",// call is like "sound of a bird" or "sing"
+        "SFX_CrabCall": "Crab Call",
+        "SFX_FishCall": "Fish Call",
+        "SFX_SpiritMantaCall": "Spirit Manta Call",
+        "SFX_JellyCall": "Jelly Call",
+        "SFX_MantaCall": "Manta Call",
+        "SFX_MothCall": "Moth Call",
     }
 } as const satisfies AppI18N
