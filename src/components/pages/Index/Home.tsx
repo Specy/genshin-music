@@ -1,6 +1,6 @@
-import {FaCompactDisc, FaMinus, FaPlus, FaTimes} from 'react-icons/fa'
+import {FaCompactDisc, FaDownload, FaMinus, FaPlus, FaTimes} from 'react-icons/fa'
 import {BsMusicPlayerFill} from 'react-icons/bs'
-import {APP_NAME, BASE_PATH, IS_BETA, LANG_PREFERENCE_KEY_NAME} from "$config"
+import {APP_NAME, BASE_PATH, IS_BETA} from "$config"
 import {CSSProperties, FC, ReactNode, useEffect, useState} from 'react'
 import Link from 'next/link'
 import {useTheme} from '$lib/Hooks/useTheme'
@@ -21,6 +21,7 @@ import {Row} from "$cmp/shared/layout/Row";
 import {useTranslation} from "react-i18next";
 import {DefaultLanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
 import {PromotionCard} from "$cmp/pages/Promotion/PromotionCard";
+import {pwaStore} from "$stores/PwaStore";
 
 
 interface HomeProps {
@@ -40,6 +41,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const homeClass = data.isInPosition ? "home" : "home home-visible"
     const history = useRouter()
     const [theme] = useTheme()
+    const {installEvent} = useObservableObject(pwaStore.state)
 
     async function clearCache() {
         if (!await asyncConfirm(t('cache_reload_warning'))) return
@@ -258,10 +260,11 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                 <AppButton onClick={clearCache}>
                     {t('clear_cache_name')}
                 </AppButton>
-                <PageRedirect href='/blog/posts/easyplay-1s' current={currentPage === '/blog/posts/easyplay-1s'}>
-                    EASYPLAY 1s
-                </PageRedirect>
-
+                {installEvent &&
+                <AppButton onClick={pwaStore.install} cssVar={'accent'} >
+                    <FaDownload /> {t('install_app')}
+                </AppButton>
+                }
             </div>
 
         </div>
@@ -306,7 +309,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                         {t('hide_on_open')}
                     </label>
                 </div>
-                <DefaultLanguageSelector />
+                <DefaultLanguageSelector/>
             </Row>
         </div>
         {IS_BETA &&

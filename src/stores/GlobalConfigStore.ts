@@ -7,7 +7,7 @@ type GlobalConfigStoreState = {
     PLAY_BAR_OFFSET: number,
     IS_MOBILE: boolean,
     IS_MIDI_AVAILABLE: boolean,
-    IS_UMA_MODE: boolean
+    IS_UMA_MODE: boolean,
 }
 
 

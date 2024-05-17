@@ -121,6 +121,8 @@ export const i18n_en = {
         about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
         find_out_more: "Find out more",
         close_promotion: "Close promotion",
+
+        install_app: "Install App",
     },
     menu: {
         close_menu: "Close menu",
