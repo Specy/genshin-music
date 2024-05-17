@@ -19,7 +19,8 @@ import {usePathname} from "next/navigation";
 import {logger} from "$stores/LoggerStore";
 import {Row} from "$cmp/shared/layout/Row";
 import {useTranslation} from "react-i18next";
-import {DefaultLanguageSelector, LanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
+import {DefaultLanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
+import {PromotionCard} from "$cmp/pages/Promotion/PromotionCard";
 
 
 interface HomeProps {
@@ -155,8 +156,12 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                         {t('common:confirm')}
                     </button>
                 </div>
-
             </div>}
+            {hasVisited &&
+                <PromotionCard
+                    onClick={() => homeStore.close()}
+                />
+            }
             <div className='home-content'>
                 <MainContentElement
                     icon={<FaCompactDisc/>}

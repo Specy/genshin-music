@@ -31,8 +31,11 @@ export class MIDIListener {
         this.loadPreset(this.settings.selectedPreset)
         if (!this.settings.enabled) return null
         if (this.MIDIAccess) return this.MIDIAccess
+        return this.requestAccess()
+    }
+    requestAccess = async () : Promise<WebMidi.MIDIAccess | null>  => {
         try {
-            if (navigator.requestMIDIAccess) {
+            if ("requestMIDIAccess" in navigator) {
                 const access = await navigator.requestMIDIAccess()
                 this.handleMIDIState(access)
                 return access
@@ -46,9 +49,11 @@ export class MIDIListener {
         }
     }
     enable = () => {
+        const res = this.requestAccess()
+        if (!res) return null
         this.settings.enabled = true
         this.saveSettings()
-        return this.init()
+        return res
     }
     destroy = () => {
         this.listeners = []

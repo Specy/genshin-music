@@ -60,11 +60,12 @@ interface MenuProps {
     data: {
         settings: ComposerSettingsDataType,
         hasChanges: boolean,
-        isRecordingAudio: boolean
+        isRecordingAudio: boolean,
     }
     functions: {
         loadSong: (song: SerializedSong) => void
         renameSong: (newName: string, id: string) => void
+        downloadSong: (song: SerializedSong, as: 'song' | 'midi') => void
         createNewSong: () => void
         changePage: (page: string | 'Home') => void
         updateThisSong: () => void
@@ -95,7 +96,8 @@ function Menu({data, functions, inPreview}: MenuProps) {
         changeVolume,
         createNewSong,
         changeMidiVisibility,
-        updateThisSong
+        updateThisSong,
+        downloadSong
     } = functions
     const [theme] = useTheme()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
@@ -145,35 +147,13 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 )
             }
         }
-    }, [])
-    const downloadSong = useCallback(async (song: SerializedSong | Midi) => {
-        try {
-            if (song instanceof Midi) {
-                const agrees = await asyncConfirm(t('menu:midi_download_warning'))
-                if (!agrees) return
-                return fileService.downloadMidi(song)
-            }
-            song.data.appName = APP_NAME
-            const songName = song.name
-            const parsed = songService.parseSong(song)
-            const converted = [APP_NAME === 'Sky' && (parsed instanceof ComposedSong || parsed instanceof RecordedSong)
-                ? parsed.toOldFormat()
-                : parsed.serialize()
-            ]
-            fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
-            logger.success(t('logs:song_downloaded'))
-            Analytics.userSongs('download', {page: 'composer'})
-        } catch (e) {
-            console.log(e)
-            logger.error(t('logs:error_downloading_song'))
-        }
     }, [t])
     const songFunctions = {
         loadSong,
         removeSong,
         toggleMenu,
         downloadSong,
-        renameSong
+        renameSong,
     }
     return <MenuContextProvider
         style={inPreview ? {position: "absolute"} : {}}
@@ -304,7 +284,7 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 />
                 <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
                 <div className='settings-row-wrap'>
-                    {t('settings:select_language')} <DefaultLanguageSelector />
+                    {t('settings:select_language')} <DefaultLanguageSelector/>
                 </div>
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
@@ -343,7 +323,7 @@ interface SongRowProps {
         renameSong: (newName: string, id: string) => void
         toggleMenu: (override: boolean) => void
         loadSong: (song: SerializedSong) => void
-        downloadSong: (song: SerializedSong | Midi) => void
+        downloadSong: (song: SerializedSong, as: 'midi' | 'song') => void
     }
 }
 
@@ -443,7 +423,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.getOneSerializedFromStorable(data)
                     if (!song) return logger.error(t('logs:could_not_find_song'))
-                    downloadSong(song)
+                    downloadSong(song, 'song')
                 }}>
                     <FaDownload style={{marginRight: "0.4rem"}}/>
                     <FloatingDropdownText text={t('common:download')}/>
@@ -451,7 +431,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 {(data.type === 'recorded' || data.type === "composed") &&
                     <FloatingDropdownRow onClick={async () => {
                         const song = await songService.fromStorableSong(data) as RecordedOrComposed
-                        downloadSong(song.toMidi())
+                        downloadSong(song, 'midi')
                     }}>
                         <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
                         <FloatingDropdownText text={t('common:download_midi')}/>
@@ -481,5 +461,6 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
 
 export default memo(Menu, (p, n) => {
     return p.data.settings === n.data.settings &&
-        p.data.hasChanges === n.data.hasChanges && p.data.isRecordingAudio === n.data.isRecordingAudio
+        p.data.hasChanges === n.data.hasChanges &&
+        p.data.isRecordingAudio === n.data.isRecordingAudio
 })

@@ -18,6 +18,19 @@ import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
 import {withTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
+import {Separator} from "$cmp/shared/separator/Separator";
+
+
+type MidiAccessStatus = {
+    status: "granted"
+    midiAccess: WebMidi.MIDIAccess
+} | {
+    status: "denied"
+} | {
+    status: "unsupported"
+} | {
+    status: "pending"
+}
 
 interface MidiSetupState {
     audioPlayer: AudioPlayer
@@ -26,12 +39,14 @@ interface MidiSetupState {
     notes: MIDINote[]
     currentPreset: string
     selectedNote: MIDINote | null
+    midiAccess: MidiAccessStatus
     selectedShortcut: string | null
     sources: WebMidi.MIDIInput[]
     selectedSource: WebMidi.MIDIInput | null
 }
 
 const baseInstrument = new Instrument()
+
 //TODO refactor this component
 class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
     state: MidiSetupState
@@ -43,6 +58,7 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
             audioPlayer: new AudioPlayer("C"),
             notes: MIDIProvider.notes,
             currentPreset: "default",
+            midiAccess: {status: "pending"},
             shortcuts: MIDIProvider.settings.shortcuts,
             presets: MIDIProvider.getPresets(),
             selectedNote: null,
@@ -54,7 +70,9 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
     }
 
     componentDidMount() {
+
         this.init()
+
     }
 
     componentWillUnmount() {
@@ -67,10 +85,18 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
 
     init = async () => {
         await this.loadInstrument(INSTRUMENTS[0])
-        await MIDIProvider.enable()
+        if (!("requestMIDIAccess" in navigator)) {
+            this.setState({midiAccess: {status: "unsupported"}})
+        } else {
+            const res = await MIDIProvider.init()
+            if (res) {
+                this.setState({midiAccess: {status: "granted", midiAccess: res}})
+            } else {
+                this.setState({midiAccess: {status: "denied"}})
+            }
+        }
         MIDIProvider.addInputsListener(this.midiStateChange)
         MIDIProvider.addListener(this.handleMidi)
-
         this.setState({
             sources: MIDIProvider.inputs,
             notes: MIDIProvider.notes,
@@ -78,6 +104,7 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
             shortcuts: MIDIProvider.settings.shortcuts,
             presets: MIDIProvider.getPresets(),
         })
+
     }
     midiStateChange = (inputs: WebMidi.MIDIInput[]) => {
         if (!this.mounted) return
@@ -204,14 +231,26 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
     }
 
     render() {
-        const {notes, currentPreset, presets, shortcuts, sources, selectedShortcut, selectedSource} = this.state
+        const {
+            notes,
+            currentPreset,
+            presets,
+            shortcuts,
+            midiAccess,
+            sources,
+            selectedShortcut,
+            selectedSource
+        } = this.state
         const {t} = this.props
         return <>
             <Column gap={'1rem'}>
+                <Row justify={'between'}>
+                    <div>{t('midi_status')}:</div>
+                    <div>{t(`midi_access_${midiAccess.status}`)}</div>
+                </Row>
                 <Row gap={'1rem'} align={'center'} justify={'between'}>
                     {t('connected_midi_devices')}:
                     <Row gap={'0.5rem'} style={{flexWrap: 'wrap'}}>
-
                         {sources.length > 0
                             ? sources.map(s =>
                                 <div
@@ -227,9 +266,10 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
                             )
                             : t('no_connected_devices')
                         }
-                    </Row>
 
+                    </Row>
                 </Row>
+                <Separator  height={'0.1rem'} background={'var(--secondary)'}/>
                 <Row justify={'between'} gap={'0.5rem'}>
                     {t('midi_layout_preset')}:
                     <Row gap={'0.5rem'}>
@@ -304,5 +344,6 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
         </>
     }
 }
+
 const MidiSetupWithTranslation = withTranslation('keybinds')(MidiSetup)
 export default MidiSetupWithTranslation

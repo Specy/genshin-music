@@ -119,6 +119,8 @@ export const i18n_en = {
         hide_on_open: "Hide on open",
         beta: "Beta",
         about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
+        find_out_more: "Find out more",
+        close_promotion: "Close promotion",
     },
     menu: {
         close_menu: "Close menu",
@@ -395,6 +397,12 @@ export const i18n_en = {
         ask_preset_name: "Write the name of the preset",
         key_already_used: "Key already used",
         cannot_edit_builtin_preset: 'Cannot edit built-in preset, create a new one to edit it',
+
+        midi_status: "MIDI status",
+        midi_access_denied: "MIDI access was denied, please allow it in the browser settings and reload the page",
+        midi_access_unsupported: "MIDI is not supported in this browser",
+        midi_access_pending: "Waiting for MIDI access...",
+        midi_access_granted: "MIDI available!",
     },
     error: {
         confirm_delete_all_songs: "Are you sure you want to delete ALL SONGS?",
@@ -560,6 +568,7 @@ export const i18n_en = {
         warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
         error_importing_file_invalid_format: `Error importing file, invalid format`,
         error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
+        ask_download_of_current_song: `You are currently editing this song ("{{song_name}}"), do you want to save it before downloading?`,
     },
     instrument_settings: {
         no_instrument_selected: "No instrument selected",

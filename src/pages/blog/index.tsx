@@ -20,6 +20,7 @@ import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadata
 import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/shared/Inputs/ComboBox/ComboBox";
 import {_howUseVsrgComposer} from "$pages/blog/posts/how-to-use-vsrg-composer";
 import {_easyplay1sMetadata} from "$pages/blog/posts/easyplay-1s";
+import {PromotionCard} from "$cmp/pages/Promotion/PromotionCard";
 
 const posts = ([
     _easyplay1sMetadata,
@@ -49,7 +50,7 @@ export default function Blog() {
             <Header style={{fontSize: '2.5rem', textAlign: 'center'}}>
                 Welcome to {APP_NAME} Music Nightly blog!
             </Header>
-
+            <PromotionCard alwaysVisible />
             <Column gap={'1rem'}>
                 <Row justify={'between'} align={'center'}>
                     <Header>
@@ -70,7 +71,9 @@ export default function Blog() {
                 </Row>
 
                 <Grid columns={'repeat(2, 1fr)'} gap={'1rem'}>
-                    {filteredPosts.map((metadata) => <BlogPost key={metadata.relativeUrl} metadata={metadata}/>)}
+                    {filteredPosts.map((metadata) =>
+                        <BlogPost key={metadata.relativeUrl} metadata={metadata}/>
+                    )}
                 </Grid>
             </Column>
         </Column>

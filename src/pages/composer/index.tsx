@@ -41,6 +41,8 @@ import {NoteLayer} from "$lib/Songs/Layer";
 import {globalConfigStore} from '$stores/GlobalConfigStore';
 import {useTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
+import {fileService} from "$lib/Services/FileService";
+import {VsrgSong} from "$lib/Songs/VsrgSong";
 
 interface ComposerState {
     layers: Instrument[]
@@ -64,7 +66,7 @@ type PageProps = {
 type ComposerProps = PageProps & {
     inPreview?: boolean
     router: NextRouter
-    t: WithTranslation<['composer', 'home','logs', 'question', 'common']>['t']
+    t: WithTranslation<['composer', 'home', 'logs', 'question', 'common', 'menu']>['t']
 }
 
 class Composer extends Component<ComposerProps, ComposerState> {
@@ -758,6 +760,46 @@ class Composer extends Component<ComposerProps, ComposerState> {
         if (visible) Analytics.songEvent({type: 'create_MIDI'})
     }
 
+    downloadSong = async (song: SerializedSong, as: 'song' | 'midi') => {
+        try {
+            if(song.id === this.state.song.id){
+                if(this.state.settings.autosave.value){
+                    await this.updateSong(this.state.song)
+                    song = this.state.song.serialize()
+                }else{
+                    if(await asyncConfirm(this.props.t("ask_download_of_current_song", {song_name: song.name}))){
+                        await this.updateSong(this.state.song)
+                        song = this.state.song.serialize()
+                    }
+                }
+            }
+            if (as === 'song') {
+                const parsed = songService.parseSong(song)
+                song.data.appName = APP_NAME
+                const songName = song.name
+                const converted = [APP_NAME === 'Sky' && (parsed instanceof ComposedSong || parsed instanceof RecordedSong)
+                    ? parsed.toOldFormat()
+                    : parsed.serialize()
+                ]
+                fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
+                logger.success(this.props.t('logs:song_downloaded'))
+                Analytics.userSongs('download', {page: 'composer'})
+            } else if (as === 'midi') {
+                const agrees = await asyncConfirm(this.props.t('menu:midi_download_warning'))
+                const parsed = songService.parseSong(song)
+                if (parsed instanceof VsrgSong) throw new Error("Can't convert Vsrg to MIDI")
+                const midi = parsed.toMidi()
+                if (!agrees) return
+                fileService.downloadMidi(midi)
+                logger.success(this.props.t('logs:song_downloaded'))
+            }
+
+        } catch (e) {
+            console.log(e)
+            logger.error(this.props.t('logs:error_downloading_song'))
+        }
+    }
+
     render() {
         const {
             isMidiVisible,
@@ -929,7 +971,7 @@ interface ComposerPageProps {
 
 export default function ComposerPage({inPreview, songId}: ComposerPageProps) {
     const router = useRouter()
-    const {t} = useTranslation(['composer', 'home', 'logs', 'question', 'common'])
+    const {t} = useTranslation(['composer', 'home', 'logs', 'question', 'common', 'menu'])
     const {songId: querySongId, showMidi} = router.query
     return <Composer
         router={router}

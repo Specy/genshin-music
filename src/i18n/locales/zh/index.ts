@@ -121,6 +121,8 @@ export const i18n_zh = {
         beta: "公测版",
 
         about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
+        find_out_more: "Find out more",
+        close_promotion: "Close promotion",
     },
     menu: {
         close_menu: "关闭菜单",
@@ -387,6 +389,12 @@ export const i18n_zh = {
         ask_preset_name: "写下预设的名称",
         key_already_used: "按键已被使用",
         cannot_edit_builtin_preset: "无法编辑内置预设，请创建一个新预设进行编辑",
+
+        midi_status: "MIDI status",
+        midi_access_denied: "MIDI access was denied, please allow it in the browser settings and reload the page",
+        midi_access_unsupported: "MIDI is not supported in this browser",
+        midi_access_pending: "Waiting for MIDI access...",
+        midi_access_granted: "MIDI available!",
     },
     error: {
         confirm_delete_all_songs: "您确定要删除所有歌曲吗？",
@@ -526,11 +534,11 @@ export const i18n_zh = {
             audio_conversion_warning: `🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。`
         },
 
-
         warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
         warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
         error_importing_file_invalid_format: `Error importing file, invalid format`,
         error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
+        ask_download_of_current_song: `You are currently editing this song ("{{song_name}}"), do you want to save it before downloading?`,
     },
     instrument_settings: {
         no_instrument_selected: "未选择乐器",
@@ -669,7 +677,7 @@ export const i18n_zh = {
         "SFX_CrabCall": "Crab Call",
         "SFX_FishCall": "Fish Call",
         "SFX_SpiritMantaCall": "Spirit Manta Call",
-        "SFX_JellyCall": "Jelly Call",
+        "SFX_JellyCall": "Jelly Call", //jellyfish
         "SFX_MantaCall": "Manta Call",
         "SFX_MothCall": "Moth Call",
     }
