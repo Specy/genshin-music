@@ -120,7 +120,7 @@ export const i18n_zh = {
         hide_on_open: "启动时隐藏",
         beta: "公测版",
 
-        about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
+        about_to_leave_warning: `你即将离开应用前往 "{{to}}", 是否继续？`,
     },
     menu: {
         close_menu: "关闭菜单",
@@ -479,7 +479,7 @@ export const i18n_zh = {
         create_from_midi_or_audio: "从 MIDI/音频创建",
         previous_breakpoint: "上一个断点", //breakpoint is a sort of point to "jump", a sort of bookmark
         next_breakpoint: "下一个断点",
-        tempo: "Tempo", //this is musical tempo 1/2, 1/4, 1/8 etc
+        tempo: "拍子", //this is musical tempo 1/2, 1/4, 1/8 etc
         error_with_this_layer: "该层出现错误",
         recording_audio: "录制音频",
         tools: {
@@ -527,10 +527,10 @@ export const i18n_zh = {
         },
 
 
-        warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
-        warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
-        error_importing_file_invalid_format: `Error importing file, invalid format`,
-        error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
+        warning_opening_midi_importer: `打开midi导入器以导入midi文件，请重新选择文件`,
+        warning_opening_audio_importer: `正在打开midi导入程序以导入视频/音频文件。。。请重新选择文件。视频/音频转换不是很准确`,
+        error_importing_file_invalid_format: `导入文件时出错，格式无效`,
+        error_importing_file_invalid_format_audio_video: `导入文件时出错，格式无效，如果是MIDI、视频或音频文件，请使用“从MIDI创建”按钮`,
     },
     instrument_settings: {
         no_instrument_selected: "未选择乐器",
@@ -669,8 +669,8 @@ export const i18n_zh = {
         "SFX_CrabCall": "音效螃蟹",
         "SFX_FishCall": "音效鱼",
         "SFX_SpiritMantaCall": "音效灵魂魔鬼鱼",
-        "SFX_JellyCall": "音效蚊子",// I asked a player, she told me.But the icon looks like a jellyfish.
+        "SFX_JellyCall": "音效蚊子",// I asked a player, she told me this name.But the icon looks like a jellyfish.
         "SFX_MantaCall": "音效魔鬼鱼",
-        "SFX_MothCall": "音效夜鸟",
+        "SFX_MothCall": "音效夜鸟",// I asked a player, she told me this name.
     }
 } as const satisfies AppI18N
