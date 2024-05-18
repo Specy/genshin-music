@@ -1,6 +1,7 @@
 import type {INSTRUMENTS} from '$config'
 import type {ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings} from '$lib/BaseSettings'
 import {AppI18N} from "$i18n/i18n";
+import {InstrumentName} from "$types/GeneralTypes";
 
 
 export type SettingsCategory =
@@ -33,8 +34,8 @@ export type SettingsPropriety =
 export type SettingsInstrument = BaseSettingsProp & {
     type: 'instrument'
     volume: number
-    value: typeof INSTRUMENTS[number]
-    options: typeof INSTRUMENTS[number][]
+    value: InstrumentName
+    options: InstrumentName[]
 }
 export type SettingsCheckbox = BaseSettingsProp & {
     type: 'checkbox'

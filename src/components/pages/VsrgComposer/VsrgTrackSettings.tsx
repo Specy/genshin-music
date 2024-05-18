@@ -21,7 +21,7 @@ interface TrackSelectorProps {
 }
 
 export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSelectorProps) {
-    const { t} = useTranslation(['vsrg_composer', 'common', 'instrument_settings'])
+    const { t} = useTranslation(['vsrg_composer', 'common', 'instrument_settings', 'instruments'])
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
     if (!track) return null
     return <>
@@ -38,7 +38,7 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                         track.instrument.set({alias: e.target.value})
                         onChange(track)
                     }}
-                    placeholder={track.instrument.name}
+                    placeholder={t(`instruments:${track.instrument.name}`)}
                 />
             </Row>
             <Row justify={'between'} align={'center'} style={{marginTop: '0.4rem'}}>

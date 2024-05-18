@@ -4,6 +4,8 @@ import s from '$cmp/shared/Settings/Settings.module.css'
 import {capitalize} from "$lib/utils/Utilities"
 import {Stylable} from "$lib/utils/UtilTypes";
 import {useTranslation} from "react-i18next";
+import {useTheme} from "$lib/Hooks/useTheme";
+import {useMemo} from "react";
 
 interface InstrumentSelectProps extends Stylable {
     selected: InstrumentName
@@ -26,9 +28,18 @@ const entries = Object.entries(instruments)
 
 export function InstrumentSelect({selected, onChange, style, className}: InstrumentSelectProps) {
     const {t} = useTranslation("instruments")
+    const [theme] = useTheme()
+    const bg = useMemo(() => {
+        return `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
+    }, [theme])
     return <select
         className={`${s.select} ${className}`}
-        style={{width: '100%', padding: '0.3rem', ...style}}
+        style={{
+            width: '100%',
+            padding: '0.3rem',
+            backgroundImage: bg,
+            ...style
+        }}
         onChange={(e) => {
             onChange(e.target.value as InstrumentName)
             e.target.blur()
@@ -42,7 +53,7 @@ export function InstrumentSelect({selected, onChange, style, className}: Instrum
                         key={ins}
                         value={ins}
                     >
-                        {ins.replace("-", " ")}
+                        {t(ins)}
                     </option>
                 )}
             </>

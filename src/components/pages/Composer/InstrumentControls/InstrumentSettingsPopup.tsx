@@ -43,7 +43,7 @@ export function InstrumentSettingsPopup({
                                             currentLayer,
                                             instruments
                                         }: InstrumentSettingsPopupProps) {
-    const {t} = useTranslation(['instrument_settings', 'common'])
+    const {t} = useTranslation(['instrument_settings', 'common', 'instruments'])
     const ref = useClickOutside<HTMLDivElement>(onClose, {active: true, ignoreFocusable: true})
     if (!instrument) return <div className="floating-instrument-settings  box-shadow">
         {t('no_instrument_selected')}
@@ -58,7 +58,7 @@ export function InstrumentSettingsPopup({
                 style={{width: '7.4rem'}}
                 value={instrument.alias}
                 onChange={e => onChange(instrument.set({alias: e.target.value}))}
-                placeholder={prettyPrintInstrumentName(instrument.name)}
+                placeholder={t(`instruments:${instrument.name}`)}
             />
         </div>
 
