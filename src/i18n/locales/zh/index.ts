@@ -83,8 +83,8 @@ export const i18n_zh = {
         line: "横线",
         circle: "圆形",
         add_new_instrument: "添加新乐器",
-
         reset: "重置",
+        new: "New",
     },
     home: {
         app_description: "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
@@ -119,7 +119,6 @@ export const i18n_zh = {
         rights: "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
         hide_on_open: "启动时隐藏",
         beta: "公测版",
-
         about_to_leave_warning: "您即将离开应用程序前往“{{to}}”，是否继续？",
         find_out_more: "了解更多",
         close_promotion: "关闭推广",
@@ -168,6 +167,7 @@ export const i18n_zh = {
         memory_not_persisted: "存储未持久化",
         memory_persisted_description: "您的数据保留在浏览器中，浏览器不应自动清除它。始终确保时常下载备份，尤其是当您长时间不使用该应用程序的情况下。",
         memory_not_persisted_description: "浏览器不允许持久存储数据，当缓存自动清除时，可能会丢失数据。要获得持久存储，请将应用程序添加到主屏幕。如果仍然不起作用，请确保经常进行备份",
+        select_language: "语言选择",
         props: {
             composer_bpm: "节拍",
             composer_bpm_description: "每分钟节拍数，歌曲的速度。通常应用程序内的 BPM 应该是您尝试创作的歌曲的 BPM 的 4 倍",
@@ -278,7 +278,6 @@ export const i18n_zh = {
             "editor_settings": "编辑器设置",
         },
 
-        select_language: "语言选择",
     },
 
     zen_keyboard: {
@@ -524,7 +523,6 @@ export const i18n_zh = {
             max_octave_scaling: "最大音符八度缩放",
             max_octave_scaling_description: " 缩小/放大超出这些八度音阶的音符。",
             number_of_notes: "音符数量",
-
             open_midi_audio_file: "打开 MIDI/音频/视频文件",
             there_are_no_notes: "没有音符",
             error_is_file_midi: "导入此文件时出错，它是 .mid 文件吗？",
@@ -533,7 +531,6 @@ export const i18n_zh = {
             loading_converter: "正在加载转换器",
             audio_conversion_warning: "`🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。"
         },
-
         warning_opening_midi_importer: "打开MIDI导入器导入MIDI文件，请重新选择文件",
         warning_opening_audio_importer: "正在打开 midi 导入器以导入视频/音频文件...请重新选择文件。视频/音频转换不是很准确",
         error_importing_file_invalid_format: "导入文件时出错，格式错误",
