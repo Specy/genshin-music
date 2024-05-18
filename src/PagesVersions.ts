@@ -3,10 +3,10 @@ function makePageVersion<T extends string>(id: T, version: number, changes: stri
 }
 
 export const PAGES_VERSIONS = {
-    backup: makePageVersion('backup', 1, ['Added Backup Page']),
+    backup: makePageVersion('backup', 0),
     blog: makePageVersion('blog', 0),
     changelog: makePageVersion('changelog', 0),
-    composer: makePageVersion('composer', 1, ['test']),
+    composer: makePageVersion('composer', 0),
     deleteCache: makePageVersion('deleteCache', 0),
     donate: makePageVersion('donate', 0),
     error: makePageVersion('error', 0),
