@@ -84,7 +84,7 @@ export const i18n_zh = {
         circle: "圆形",
         add_new_instrument: "添加新乐器",
         reset: "重置",
-        new: "新建",
+        new: "新!",
     },
     home: {
         app_description: "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
