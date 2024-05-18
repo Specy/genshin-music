@@ -661,7 +661,7 @@ export const i18n_zh = {
         "Flute": "长笛",
         "Panflute": "排箫",
         "Ocarina": "陶笛",
-        "MantaOcarina": "蝠翼陶笛",
+        "MantaOcarina": "鲲笛",
         "Aurora": "Aurora", //leave as is
         "Kalimba": "非洲拇指琴",
         "ToyUkulele": "玩具尤克里里",
@@ -673,12 +673,12 @@ export const i18n_zh = {
         "SFX_ChimeSynth": "合成铃音",
         "SFX_TR-909": "TR-909", //leave as is
         "SFX_Dance": "舞步",
-        "SFX_BirdCall": "鸟鸣",// call is like "sound of a bird" or "sing"
-        "SFX_CrabCall": "蟹啸",
-        "SFX_FishCall": "鱼歌",
-        "SFX_SpiritMantaCall": "蝠叽",
-        "SFX_JellyCall": "鲊哼", //jellyfish
-        "SFX_MantaCall": "蝠哗",
-        "SFX_MothCall": "蛾吟",
+        "SFX_BirdCall": "白鸟之声",// call is like "sound of a bird" or "sing"
+        "SFX_CrabCall": "小蟹之声",
+        "SFX_FishCall": "大鱼之声",
+        "SFX_SpiritMantaCall": "光鲲之声",
+        "SFX_JellyCall": "水母之声", //jellyfish
+        "SFX_MantaCall": "遥鲲之声",
+        "SFX_MothCall": "幼童之声",
     }
 } as const satisfies AppI18N
