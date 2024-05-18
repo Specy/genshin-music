@@ -23,7 +23,7 @@ export const i18n_zh = {
         cloned_song: `复制歌曲: "{{song_name}}"`,
         converting_recorded_to_composed_warning: '将录制的歌曲转换为创作的歌曲，音频可能不准确',
 
-        suggest_backup: "您已经有一段时间没有备份歌曲了，记得偶尔下载备份！",
+        suggest_backup: "您已经有一段时间没有备份歌曲了，记得偶尔下载一下备份哦！",
         storage_persisted: "已允许持久存储，浏览器将不会删除您的数据", //persisted means that the browser won't delete the data
         storage_persisted_error: "设置持久存储时出错",
     },
