@@ -84,7 +84,7 @@ export const i18n_zh = {
         circle: "圆形",
         add_new_instrument: "添加新乐器",
         reset: "重置",
-        new: "New",
+        new: "新建",
     },
     home: {
         app_description: "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
@@ -387,13 +387,13 @@ export const i18n_zh = {
         already_existing_preset: "此名称的预设已存在",
         ask_preset_name: "写下预设的名称",
         key_already_used: "按键已被使用",
-        cannot_edit_builtin_preset: "无法编辑内置预设，请创建一个新预设进行编辑",
+        cannot_edit_builtin_preset: "无法编辑内置预设，请创建一个新预设进行编辑。",
 
-        midi_status: "MIDI status",
-        midi_access_denied: "MIDI access was denied, please allow it in the browser settings and reload the page",
-        midi_access_unsupported: "MIDI is not supported in this browser",
-        midi_access_pending: "Waiting for MIDI access...",
-        midi_access_granted: "MIDI available!",
+        midi_status: "MIDI状态",
+        midi_access_denied: "MIDI 访问被拒绝，请在浏览器设置中允许并重新加载页面。",
+        midi_access_unsupported: "该浏览器不支持 MIDI。",
+        midi_access_pending: "等待 MIDI 访问中...",
+        midi_access_granted: "MIDI可用！",
     },
     error: {
         confirm_delete_all_songs: "您确定要删除所有歌曲吗？",
