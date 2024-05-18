@@ -12,9 +12,11 @@ import s from './Changelog.module.css'
 import {clearClientCache} from "$lib/utils/Utilities";
 import {logger} from "$stores/LoggerStore";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
 export default function ChangelogPage() {
+    useSetPageVisited('changelog')
     const { t} = useTranslation(['changelog', 'cache', 'home'])
     function clearCache() {
         clearClientCache()

@@ -1,0 +1,16 @@
+.non-visited{
+  position: relative;
+}
+.non-visited::after {
+  content: var(--new-text);
+  position: absolute;
+  top: 0;
+  transform: rotate(45deg) translate(20%, -80%);
+  right: 0;
+  background-color: var(--accent);
+  color: var(--accent-text);
+  font-size: 0.7rem;
+  z-index: 4;
+  border-radius: 0.2rem;
+  padding: 0.1rem 0.3rem;
+}

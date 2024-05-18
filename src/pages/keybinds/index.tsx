@@ -15,10 +15,12 @@ import {useConfig} from "$/lib/Hooks/useConfig";
 import svs from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard.module.css"
 import MidiSetup from "components/pages/MidiSetup";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 
 const baseInstrument = new Instrument()
 export default function Keybinds() {
+    useSetPageVisited('keybinds')
     const {t} = useTranslation(["keybinds", "home"])
     const [keyboard] = useObservableMap(keyBinds.getShortcutMap("keyboard"))
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))

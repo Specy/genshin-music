@@ -15,8 +15,10 @@ import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground"
 import {MIDIProvider} from "$lib/Providers/MIDIProvider";
 import {i18n} from "$i18n/i18n";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 export default function ZenKeyboard() {
+    useSetPageVisited('zenKeyboard')
     const {t} = useTranslation(['home'])
     const [settings, setSettings] = useState(ZenKeyboardSettings.data)
     const [instrument, setInstrument] = useState(new Instrument())

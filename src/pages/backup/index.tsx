@@ -28,6 +28,7 @@ import {useTheme} from "$lib/Hooks/useTheme";
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 type BackupFormat = 'json' | 'zip'
 export default function Backup() {
@@ -36,6 +37,7 @@ export default function Backup() {
     const iconStyle = {marginRight: '0.3rem', marginLeft: '-0.4rem'}
     const [songs] = useSongs()
     const userThemes = useObservableArray<SerializedTheme>(themeStore.themes)
+    useSetPageVisited('backup')
     const [downloadFormat, setDownloadFormat] = useState<BackupFormat>('json')
     useEffect(() => {
         return () => logger.hidePill()
@@ -300,7 +302,6 @@ export default function Backup() {
                     }}
                 >
                     <FaFileImport style={{...iconStyle, fontSize: '1rem', marginRight: '0.5rem'}}/>
-                    Import backup
                     {t("import_backup")}
                 </AppButton>
             </FilePicker>
@@ -343,7 +344,6 @@ export default function Backup() {
                 onClick={deleteAllSongsAndFolders}
             >
                 <FaTrash style={iconStyle}/>
-                Delete songs and folders
                 {t("delete_songs_and_folders")}
             </AppButton>
             <AppButton

@@ -22,6 +22,8 @@ import {useTranslation} from "react-i18next";
 import {DefaultLanguageSelector} from "$cmp/shared/i18n/LanguageSelector";
 import {PromotionCard} from "$cmp/pages/Promotion/PromotionCard";
 import {pwaStore} from "$stores/PwaStore";
+import {usePageVisit} from "$cmp/shared/PageVisit/pageVisit";
+import {PagesVersionsKeys} from "$/PagesVersions";
 
 
 interface HomeProps {
@@ -166,6 +168,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             }
             <div className='home-content'>
                 <MainContentElement
+                    pageKey={'composer'}
                     icon={<FaCompactDisc/>}
                     title={t('composer_name')}
                     style={{backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString()}}
@@ -176,6 +179,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     {t('composer_description')}
                 </MainContentElement>
                 <MainContentElement
+                    pageKey={'player'}
                     icon={<BsMusicPlayerFill/>}
                     title={t('player_name')}
                     style={{backgroundColor: theme.layer('primary', 0.15, 0.2).fade(0.15).toString()}}
@@ -220,32 +224,33 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             <Separator/>
             <div className='page-redirect-wrapper'>
                 {!isTwa &&
-                    <PageRedirect href='/donate' current={currentPage === '/donate'}>
+                    <PageRedirect href='/donate' current={currentPage === '/donate'} pageKey={'donate'}>
                         {t('common:donate')}
                     </PageRedirect>
                 }
 
-                <PageRedirect href='/sheet-visualizer' current={currentPage === '/sheet-visualizer'}>
+                <PageRedirect href='/sheet-visualizer' current={currentPage === '/sheet-visualizer'}
+                              pageKey={'sheetVisualizer'}>
                     {t('sheet_visualizer_name')}
                 </PageRedirect>
-                <PageRedirect href='/theme' current={currentPage === '/theme'}>
+                <PageRedirect href='/theme' current={currentPage === '/theme'} pageKey={'theme'}>
                     {t('themes_name')}
                 </PageRedirect>
-                <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")}>
+                <PageRedirect href={'/blog'} current={currentPage.startsWith("/blog")} pageKey={'blog'}>
                     {t('blog_and_guides_name')}
                 </PageRedirect>
-                <PageRedirect href='/keybinds' current={currentPage === '/keybinds'}>
+                <PageRedirect href='/keybinds' current={currentPage === '/keybinds'} pageKey={'keybinds'}>
                     {t('keybinds_or_midi_name')}
                 </PageRedirect>
 
-                <PageRedirect href='/partners' current={currentPage === '/partners'}>
+                <PageRedirect href='/partners' current={currentPage === '/partners'} pageKey={'partners'}>
                     {t('partners_name')}
                 </PageRedirect>
 
-                <PageRedirect href='/backup' current={currentPage === '/backup'}>
+                <PageRedirect href='/backup' current={currentPage === '/backup'} pageKey={'backup'}>
                     {t('backup_name')}
                 </PageRedirect>
-                <PageRedirect href='/changelog' current={currentPage === '/changelog'}>
+                <PageRedirect href='/changelog' current={currentPage === '/changelog'} pageKey={'changelog'}>
                     {t('changelog_name')}
                 </PageRedirect>
 
@@ -261,9 +266,9 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     {t('clear_cache_name')}
                 </AppButton>
                 {installEvent &&
-                <AppButton onClick={pwaStore.install} cssVar={'accent'} >
-                    <FaDownload /> {t('install_app')}
-                </AppButton>
+                    <AppButton onClick={pwaStore.install} cssVar={'accent'}>
+                        <FaDownload/> {t('install_app')}
+                    </AppButton>
                 }
             </div>
 
@@ -340,18 +345,26 @@ function MiddleSizePage({href, children, Icon, current}: MiddleSizePageProps) {
 
 
 interface PageRedirectProps {
+    pageKey: PagesVersionsKeys
     children: ReactNode,
     current: boolean,
     href: string
 }
 
-function PageRedirect({children, current, href}: PageRedirectProps) {
-    return <Link onClick={homeStore.close} href={href} className={current ? 'current-page' : ''}>
+function PageRedirect({children, current, href, pageKey}: PageRedirectProps) {
+    const visited = usePageVisit(pageKey)
+    return <Link
+        onClick={homeStore.close}
+        href={href}
+        className={`${visited.className} ${current ? 'current-page' : ''}`}
+        style={visited.style}
+    >
         {children}
     </Link>
 }
 
 interface MainContentElementProps {
+    pageKey: PagesVersionsKeys
     title: string,
     icon: ReactNode,
     children: ReactNode,
@@ -362,11 +375,22 @@ interface MainContentElementProps {
 
 }
 
-function MainContentElement({title, icon, children, background, isCurrent, href, style = {}}: MainContentElementProps) {
+function MainContentElement({
+                                title,
+                                icon,
+                                children,
+                                background,
+                                isCurrent,
+                                href,
+                                style = {},
+                                pageKey
+                            }: MainContentElementProps) {
     const {t} = useTranslation('common')
+    const visited = usePageVisit(pageKey)
     return <Link
-        className={`home-content-element ${isCurrent ? 'current-page' : ''}`}
+        className={`${visited.className} home-content-element ${isCurrent ? 'current-page' : ''}`}
         href={href}
+        style={visited.style}
         onClick={homeStore.close}
     >
         <div className='home-content-background' style={{backgroundImage: `url(${background})`}}>

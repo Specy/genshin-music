@@ -6,6 +6,15 @@ type Update = {
 }
 
 export const CHANGELOG: Update[] = [
+        {
+        version: '3.4.0',
+        title: "Translations",
+        date: new Date('2024-05-22'),
+        changes: [
+            "Added translations for the app, we are looking for translators!",
+
+        ]
+    },
     {
         version: '3.3.0',
         title: "Audio/Video transcription, reverb",

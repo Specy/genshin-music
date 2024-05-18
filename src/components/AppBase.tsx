@@ -20,7 +20,7 @@ import {useTranslation} from "react-i18next";
 
 
 function AppBase() {
-    const {i18n} = useTranslation()
+    const {i18n, t} = useTranslation(['home', 'logs'])
     const [hasVisited, setHasVisited] = useState(false)
     const [checkedUpdate, setCheckedUpdate] = useState(false)
     const [isOnMobile, setIsOnMobile] = useState(false)
@@ -55,7 +55,7 @@ function AppBase() {
         linkServices()
         const shouldShowBakcupWarning = settingsService.shouldShowBackupWarning(1000 * 60 * 60 * 24 * 7 * 3) //3 weeks
         if (shouldShowBakcupWarning) {
-            logger.warn("You haven't backed up your songs in a while, remember to download the backup sometimes!", 8000)
+            logger.warn(i18n.t('logs:suggest_backup'), 8000)
             settingsService.setLastBackupWarningTime(Date.now())
         }
     }, [])
@@ -64,7 +64,8 @@ function AppBase() {
         if ("launchQueue" in window) {
             async function consumer(launchParams: any) {
                 if (launchParams.files && launchParams.files.length) {
-                    const confirm = await asyncConfirm("You opened a file, do you want to import it?", false)
+                    const name = launchParams.files.join(", ")
+                    const confirm = await asyncConfirm(i18n.t('confirm:confirm_import_opened_file', {files_names: name}), false)
                     if (!confirm) return
                     for (const file of launchParams.files) {
                         const blob = await file.getFile()
@@ -83,6 +84,7 @@ function AppBase() {
             return () => window.launchQueue.setConsumer(() => {
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const setDontShowHome = useCallback((override = false) => {
@@ -94,12 +96,12 @@ function AppBase() {
         try {
             if (navigator.storage && navigator.storage.persist) {
                 if (await navigator.storage.persist()) {
-                    logger.success("Storage permission allowed")
+                    logger.success(t('logs:storage_persisted'), 5000)
                 }
             }
         } catch (e) {
             console.log(e)
-            logger.error("There was an error with setting up persistent storage")
+            logger.error(t('logs:storage_persisted_error'), 5000)
         }
         closeWelcomeScreen()
     }
@@ -170,13 +172,13 @@ function AppBase() {
                     alt="icon for the rotating screen"
                 />
                 <p>
-                    For a better experience, add the website to the home screen, and rotate your device
+                    {t('rotate_screen')}
                 </p>
             </>}
             {!isOnMobile && <>
                 <FaExpandAlt/>
                 <p>
-                    Please increase your window size
+                    {t('expand_screen')}
                 </p>
             </>}
         </div>

@@ -22,6 +22,10 @@ export const i18n_zh = {
         no_empty_name: "请填写一个非空白的名称",
         cloned_song: `复制歌曲: "{{song_name}}"`,
         converting_recorded_to_composed_warning: '将录制的歌曲转换为创作的歌曲，音频可能不准确',
+
+        suggest_backup: "You haven't backed up your songs in a while, remember to download the backup sometimes!",
+        storage_persisted: "Persistent storage permission allowed", //persisted means that the browser won't delete the data
+        storage_persisted_error: "There was an error with setting up persistent storage",
     },
     question: {
         unsaved_song_save: "您对歌曲“{{song_name}}”有未保存的更改，您现在要保存吗？未保存的更改将会丢失",
@@ -30,7 +34,9 @@ export const i18n_zh = {
         ask_song_name_cancellable: "请填写歌曲名称，点击取消可忽略",
     },
     confirm: {
-        delete_song: `你是否确定删除歌曲 "{{song_name}}"?`
+        delete_song: `你是否确定删除歌曲 "{{song_name}}"?`,
+
+        confirm_import_opened_file: `You opened the files "{{files_names}}", do you want to import it?`
     },
     common: {
         warning: "警告",
@@ -84,7 +90,7 @@ export const i18n_zh = {
         circle: "圆形",
         add_new_instrument: "添加新乐器",
         reset: "重置",
-        new: "新!",
+        new: "新",
     },
     home: {
         app_description: "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
@@ -123,6 +129,11 @@ export const i18n_zh = {
         find_out_more: "了解更多",
         close_promotion: "关闭推广",
         install_app: "安装应用程序",
+
+        rotate_screen: 'For a better experience, add the website to the home screen, and rotate your device',
+        expand_screen: 'Please increase your window size',
+        drop_files_here: 'Drop files here',
+        new_changes_to_page: "There are new changes to this page!"
     },
     menu: {
         close_menu: "关闭菜单",
@@ -157,7 +168,9 @@ export const i18n_zh = {
         confirm_delete_folder: "您确定要删除文件夹“{{folder_name}}”吗？歌曲不会被删除。",
         filter_alphabetical: "按字母顺序",
         "filter_date-created": "创建日期",
-        open_in_composer: "在编曲器中打开"
+        open_in_composer: "在编曲器中打开",
+        recorded: "Recorded", //recorded songs
+        composed: "Composed" //composed songs
     },
     settings: {
         toggle_metronome: "切换节拍器",

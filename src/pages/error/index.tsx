@@ -17,8 +17,10 @@ import {useObservableArray} from '$lib/Hooks/useObservable';
 import {logsStore} from '$stores/LogsStore';
 import s from './ErrorPage.module.scss'
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 export function ErrorPage() {
+    useSetPageVisited('error')
     const {t} = useTranslation(['error','logs', 'confirm', 'common'])
     const [songs] = useSongs()
     const errors = useObservableArray(logsStore.logs)

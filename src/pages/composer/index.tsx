@@ -43,6 +43,7 @@ import {useTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
 import {fileService} from "$lib/Services/FileService";
 import {VsrgSong} from "$lib/Songs/VsrgSong";
+import {usePageVisit, useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 interface ComposerState {
     layers: Instrument[]
@@ -973,6 +974,7 @@ export default function ComposerPage({inPreview, songId}: ComposerPageProps) {
     const router = useRouter()
     const {t} = useTranslation(['composer', 'home', 'logs', 'question', 'common', 'menu'])
     const {songId: querySongId, showMidi} = router.query
+    useSetPageVisited('composer')
     return <Composer
         router={router}
         t={t}

@@ -29,6 +29,7 @@ import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
 import {createShortcutListener} from '$/stores/KeybindsStore';
 import {useTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 interface PlayerState {
     settings: PlayerSettingsDataType
@@ -423,6 +424,7 @@ class Player extends Component<PlayerProps, PlayerState> {
 
 export default function PlayerPage({inPreview}: { inPreview?: boolean }) {
     const {t} = useTranslation(['player', 'common', 'home', 'question', 'confirm', 'logs'])
+    useSetPageVisited('player')
     return <Player inPreview={inPreview} t={t}/>
 }
 

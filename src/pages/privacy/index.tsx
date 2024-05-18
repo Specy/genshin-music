@@ -1,7 +1,9 @@
 import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
 import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata'
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 export default function Privacy() {
+    useSetPageVisited('privacy')
     return <DefaultPage>
         <PageMetadata text="Privacy" description='Privacy policy for the app'/>
         <span>

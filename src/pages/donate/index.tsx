@@ -6,8 +6,10 @@ import Image from 'next/image'
 import s from './Donate.module.css'
 import {APP_NAME} from '$config'
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 export default function Donate() {
+    useSetPageVisited('donate')
     const { t} = useTranslation(['donate', 'home'])
     return <DefaultPage>
         <PageMetadata text={t('home:donate_name')} description={`Help the development of ${APP_NAME.toLowerCase()} with a donation.`}/>

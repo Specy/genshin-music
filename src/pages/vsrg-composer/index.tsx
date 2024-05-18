@@ -28,6 +28,7 @@ import {NextRouter, useRouter} from "next/router";
 import {createShortcutListener, ShortcutListener} from "$stores/KeybindsStore";
 import {useTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 type VsrgComposerProps = {
     router: NextRouter
@@ -703,6 +704,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
 export default function VsrgcomposerPage() {
     const router = useRouter()
     const {t} = useTranslation(['vsrg_composer', 'home', 'question'])
+    useSetPageVisited('vsrgComposer')
     return <VsrgComposer router={router} t={t}/>
 }
 VsrgcomposerPage.getLayout = function getLayout(page: ReactElement) {

@@ -19,9 +19,11 @@ import {useObservableArray} from "$lib/Hooks/useObservable";
 import {themeStore} from "$stores/ThemeStore/ThemeStore";
 import {fileService} from "$lib/Services/FileService";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 
 function ThemePage() {
+    useSetPageVisited('theme')
     const {t} = useTranslation(["theme", "home", "common"])
     const [theme] = useTheme()
     const userThemes = useObservableArray<SerializedTheme>(themeStore.themes)

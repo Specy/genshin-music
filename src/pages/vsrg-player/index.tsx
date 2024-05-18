@@ -20,6 +20,7 @@ import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import s from "$pages/vsrg-player/VsrgPlayer.module.css";
 import {i18n} from "$i18n/i18n";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 type VsrgPlayerProps = {}
 
@@ -207,6 +208,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
 }
 
 export default function VsrgPlayerPage() {
+    useSetPageVisited('vsrgPlayer')
     return <VsrgPlayer/>
 }
 

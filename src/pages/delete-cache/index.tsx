@@ -7,9 +7,11 @@ import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {Column} from "$cmp/shared/layout/Column";
 import {BASE_PATH} from "$config";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 
 export default function ResetCachePage() {
+    useSetPageVisited('deleteCache')
     const {t} = useTranslation(['cache', 'home'])
     useEffect(() => {
         async function run() {

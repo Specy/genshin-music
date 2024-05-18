@@ -22,6 +22,10 @@ export const i18n_en = {
         no_empty_name: "Please write a non empty name",
         cloned_song: `Cloned song: "{{song_name}}"`,
         converting_recorded_to_composed_warning: 'Converting recorded song to composed, audio might not be accurate',
+
+        suggest_backup: "You haven't backed up your songs in a while, remember to download the backup sometimes!",
+        storage_persisted: "Persistent storage permission allowed", //persisted means that the browser won't delete the data
+        storage_persisted_error: "There was an error with setting up persistent storage",
     },
     question: {
         unsaved_song_save: `You have unsaved changes to the song: "{{song_name}}" do you want to save now? UNSAVED CHANGES WILL BE LOST`,
@@ -30,7 +34,9 @@ export const i18n_en = {
         ask_song_name_cancellable: "Write the song name, press cancel to ignore",
     },
     confirm: {
-        delete_song: `Are you sure you want to delete the song "{{song_name}}"?`
+        delete_song: `Are you sure you want to delete the song "{{song_name}}"?`,
+
+        confirm_import_opened_file: `You opened the files "{{files_names}}", do you want to import it?`
     },
     common: {
         warning: "Warning",
@@ -122,8 +128,12 @@ export const i18n_en = {
         about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
         find_out_more: "Find out more",
         close_promotion: "Close promotion",
-
         install_app: "Install App",
+
+        rotate_screen: 'For a better experience, add the website to the home screen, and rotate your device',
+        expand_screen: 'Please increase your window size',
+        drop_files_here: 'Drop files here',
+        new_changes_to_page: "There are new changes to this page!"
     },
     menu: {
         close_menu: "Close menu",
@@ -159,7 +169,9 @@ export const i18n_en = {
             The songs won't be deleted`,
         filter_alphabetical: "Alphabetical",
         "filter_date-created": "Date created",
-        open_in_composer: "Open in composer"
+        open_in_composer: "Open in composer",
+        recorded: "Recorded", //recorded songs
+        composed: "Composed" //composed songs
     },
     settings: {
         toggle_metronome: "Toggle metronome",

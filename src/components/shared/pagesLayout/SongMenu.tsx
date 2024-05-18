@@ -55,10 +55,10 @@ export function SongMenu<T extends { data: SongStorable }>({
     }, [songs, exclude, searchValue])
 
     useEffect(() => {
-        setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'recorded')))
-        setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'composed')))
+        setNoFolderRecorded(new Folder(t('menu:recorded'), null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'recorded')))
+        setNoFolderComposed(new Folder(t('menu:composed'), null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'composed')))
         setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'vsrg')))
-    }, [filteredSongs, folders])
+    }, [filteredSongs, folders, t])
 
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
     const unselectedColorText = theme.getTextColorFromBackground(unselectedColor).toString()

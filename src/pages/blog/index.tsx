@@ -21,6 +21,7 @@ import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/shared/Inputs/ComboBox
 import {_howUseVsrgComposer} from "$pages/blog/posts/how-to-use-vsrg-composer";
 import {_easyplay1sMetadata} from "$pages/blog/posts/easyplay-1s";
 import {PromotionCard} from "$cmp/pages/Promotion/PromotionCard";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 const posts = ([
     _easyplay1sMetadata,
@@ -36,6 +37,7 @@ const tags = Array.from(new Set(posts.flatMap(p => p.tags)).values())
 
 
 export default function Blog() {
+    useSetPageVisited('blog')
     const [selectedTags, setSelectedTags] = useState(() => tags.map(i => ({item: i, selected: false})))
     const filteredPosts = useMemo(() => {
         if (selectedTags.every(t => !t.selected)) return posts

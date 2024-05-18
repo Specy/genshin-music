@@ -198,7 +198,6 @@
     color: var(--primary-text);
     border-radius: 0.5rem;
     position: relative;
-    overflow: hidden;
     transition: all 0.15s ease-out;
     max-width: 20rem;
     cursor: pointer;
@@ -234,6 +233,7 @@
     position: absolute;
     flex-direction: column;
     align-items: center;
+    border-radius: 0.5rem;
     background-color: var(--primary);
     color: var(--primary-text);
     width: 100%;
@@ -253,6 +253,7 @@
 .home-content-background {
     position: absolute;
     height: 100%;
+    border-radius: 0.5rem;
     width: 100%;
     background-size: cover;
     overflow: hidden;

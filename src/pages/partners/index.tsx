@@ -7,8 +7,10 @@ import s from './Partners.module.css'
 import Link from "next/link";
 import {BASE_PATH} from "$config";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 export default function Partners() {
+    useSetPageVisited('partners')
     const {t } = useTranslation("home")
     return <DefaultPage className={s['partners-page']}>
         <PageMetadata text={t('partners_name')}

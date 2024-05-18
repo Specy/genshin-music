@@ -11,6 +11,7 @@ import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
 import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
@@ -20,6 +21,7 @@ const domains = [
 ]
 
 export default function TransferData() {
+    useSetPageVisited('transfer')
     const {t} = useTranslation(['transfer', 'common'])
     const [selectedDomain, setSelectedDomain] = useState<string>(domains[0])
     const [validDomains, setValidDomains] = useState<string[]>([])
