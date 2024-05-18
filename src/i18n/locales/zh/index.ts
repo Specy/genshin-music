@@ -79,12 +79,12 @@ export const i18n_zh = {
         bpm: "每分钟节拍数",
         connect: "联网",
         import: "导入",
-        border: "边界",
-        line: "线路",
+        border: "边框",
+        line: "横线",
         circle: "圆形",
-        add_new_instrument: "添加新仪器",
+        add_new_instrument: "添加新乐器",
 
-        reset: "Reset",
+        reset: "重置",
     },
     home: {
         app_description: "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
@@ -120,10 +120,10 @@ export const i18n_zh = {
         hide_on_open: "启动时隐藏",
         beta: "公测版",
 
-        about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
-        find_out_more: "Find out more",
-        close_promotion: "Close promotion",
-        install_app: "Install App",
+        about_to_leave_warning: "您即将离开应用程序前往“{{to}}”，是否继续？",
+        find_out_more: "了解更多",
+        close_promotion: "关闭推广",
+        install_app: "安装应用程序",
     },
     menu: {
         close_menu: "关闭菜单",
@@ -155,8 +155,7 @@ export const i18n_zh = {
         hint_no_songs_in_folder: "这里没有歌曲，添加一首！",
         folder_empty: '文件夹为空',
         midi_download_warning: "如果您使用MIDI，歌曲会失去一些准确性，如果您想与其他人分享歌曲，请使用其他格式（上面的按钮）。您仍然想下载吗？",
-        confirm_delete_folder: `您确定要删除文件夹“{{folder_name}}”吗？
-            歌曲不会被删除`,
+        confirm_delete_folder: "您确定要删除文件夹“{{folder_name}}”吗？歌曲不会被删除。",
         filter_alphabetical: "按字母顺序",
         "filter_date-created": "创建日期",
         open_in_composer: "在编曲器中打开"
@@ -279,7 +278,7 @@ export const i18n_zh = {
             "editor_settings": "编辑器设置",
         },
 
-        select_language: "Select language",
+        select_language: "语言选择",
     },
 
     zen_keyboard: {
@@ -326,16 +325,16 @@ export const i18n_zh = {
         view_player: "查看演奏器", //shows the player preview
         view_composer: "查看编曲器",
         colors: {
-            background: "Background",
-            primary: "Primary",
-            secondary: "Secondary",
-            accent: "Accent",
-            composer_accent: "Composer accent",
-            composer_main_layer: "Composer main layer",
-            composer_secondary_layer: "Composer secondary layer",
-            icon_color: "Icon color",
-            menu_background: "Menu background",
-            note_background: "Note background",
+            background: "窗口背景",
+            primary: "音轨色块",
+            secondary: "音轨边线",
+            accent: "乐器块及音符颜色-初始",
+            composer_accent: "音轨背景-选中",
+            composer_main_layer: "乐器块及音符色块-选中",
+            composer_secondary_layer: "音符边线-选中",
+            icon_color: "图标颜色",
+            menu_background: "菜单背景",
+            note_background: "音符按键背景",
         }
     },
 
@@ -488,7 +487,7 @@ export const i18n_zh = {
         create_from_midi_or_audio: "从 MIDI/音频创建",
         previous_breakpoint: "上一个断点", //breakpoint is a sort of point to "jump", a sort of bookmark
         next_breakpoint: "下一个断点",
-        tempo: "Tempo", //this is musical tempo 1/2, 1/4, 1/8 etc
+        tempo: "时值", //this is musical tempo 1/2, 1/4, 1/8 etc
         error_with_this_layer: "该层出现错误",
         recording_audio: "录制音频",
         tools: {
@@ -496,7 +495,7 @@ export const i18n_zh = {
             move_notes_up_description: "将音符向上推 1 个位置",
             move_notes_down: "向下移动音符",
             move_notes_down_description: "将音符向下推 1 个位置",
-            only_layer: "音层限定", //this will be used as Only layer 1... etc
+            only_layer: "仅应用于音层", //this will be used as Only layer 1... etc
             clear_selection: "清除选择",
             all_layers: "所有音层",
             all_layers_description: "选择突出显示列中的所有音层",
@@ -531,15 +530,15 @@ export const i18n_zh = {
             error_is_file_midi: "导入此文件时出错，它是 .mid 文件吗？",
             converting_audio_to_midi: "正在将音频转换为 midi（可能需要一段时间）..",
             detecting_notes: "检测音符",
-            loading_converter: '正在加载转换器',
-            audio_conversion_warning: `🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。`
+            loading_converter: "正在加载转换器",
+            audio_conversion_warning: "`🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。"
         },
 
-        warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
-        warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
-        error_importing_file_invalid_format: `Error importing file, invalid format`,
-        error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
-        ask_download_of_current_song: `You are currently editing this song ("{{song_name}}"), do you want to save it before downloading?`,
+        warning_opening_midi_importer: "打开MIDI导入器导入MIDI文件，请重新选择文件",
+        warning_opening_audio_importer: "正在打开 midi 导入器以导入视频/音频文件...请重新选择文件。视频/音频转换不是很准确",
+        error_importing_file_invalid_format: "导入文件时出错，格式错误",
+        error_importing_file_invalid_format_audio_video: "导入文件时出错，格式错误，如果是 MIDI、视频或音频文件，请使用“从 MIDI 创建”按钮",
+        ask_download_of_current_song: "您当前正在编辑这首歌曲（“{{song_name}}”），是否要在下载前保存它？",
     },
     instrument_settings: {
         no_instrument_selected: "未选择乐器",
@@ -644,42 +643,42 @@ export const i18n_zh = {
         }
     },
     instruments: {
-        "Lyre": "Lyre",
-        "Vintage-Lyre": "Vintage Lyre",
-        "Zither": "Zither",
-        "Old-Zither": "Old Zither",
-        "DunDun": "DunDun",
-        "Piano": "Piano",
-        "Contrabass": "Contrabass",
-        "Guitar": "Guitar",
-        "LightGuitar": "Light Guitar",
-        "Harp": "Harp",
-        "Horn": "Horn",
-        "Trumpet": "Trumpet",
-        "Pipa": "Pipa",
-        "WinterPiano": "Winter Piano",
-        "Xylophone": "Xylophone",
-        "Flute": "Flute",
-        "Panflute": "Panflute",
-        "Ocarina": "Ocarina",
-        "MantaOcarina": "Manta Ocarina",
+        "Lyre": "风物之诗琴",
+        "Vintage-Lyre": "老旧的诗琴",
+        "Zither": "镜花之琴",
+        "Old-Zither": "镜花之琴（旧版）",
+        "DunDun": "豪鼓",
+        "Piano": "钢琴",
+        "Contrabass": "低音提琴",
+        "Guitar": "吉他",
+        "LightGuitar": "弱音吉他",
+        "Harp": "竖琴",
+        "Horn": "圆号",
+        "Trumpet": "小号",
+        "Pipa": "琵琶",
+        "WinterPiano": "高音钢琴",
+        "Xylophone": "钢片琴",
+        "Flute": "长笛",
+        "Panflute": "排箫",
+        "Ocarina": "陶笛",
+        "MantaOcarina": "蝠翼陶笛",
         "Aurora": "Aurora", //leave as is
-        "Kalimba": "Kalimba",
-        "ToyUkulele": "Toy Ukulele",
-        "Drum": "Drum",
-        "Bells": "Bells",
-        "HandPan": "HandPan",
-        "SFX_SineSynth": "Sine Synth",
-        "SFX_BassSynth": "Bass Synth",
-        "SFX_ChimeSynth": "Chime Synth",
+        "Kalimba": "非洲拇指琴",
+        "ToyUkulele": "玩具尤克里里",
+        "Drum": "鼓组",
+        "Bells": "铃铛",
+        "HandPan": "手碟",
+        "SFX_SineSynth": "合成正弦波",
+        "SFX_BassSynth": "合成贝斯",
+        "SFX_ChimeSynth": "合成铃音",
         "SFX_TR-909": "TR-909", //leave as is
-        "SFX_Dance": "Dance",
-        "SFX_BirdCall": "Bird Call",// call is like "sound of a bird" or "sing"
-        "SFX_CrabCall": "Crab Call",
-        "SFX_FishCall": "Fish Call",
-        "SFX_SpiritMantaCall": "Spirit Manta Call",
-        "SFX_JellyCall": "Jelly Call", //jellyfish
-        "SFX_MantaCall": "Manta Call",
-        "SFX_MothCall": "Moth Call",
+        "SFX_Dance": "舞步",
+        "SFX_BirdCall": "鸟鸣",// call is like "sound of a bird" or "sing"
+        "SFX_CrabCall": "蟹啸",
+        "SFX_FishCall": "鱼歌",
+        "SFX_SpiritMantaCall": "蝠叽",
+        "SFX_JellyCall": "鲊哼", //jellyfish
+        "SFX_MantaCall": "蝠哗",
+        "SFX_MothCall": "蛾吟",
     }
 } as const satisfies AppI18N
