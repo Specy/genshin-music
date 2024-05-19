@@ -32,7 +32,7 @@ import {WithTranslation} from "react-i18next/index";
 type ClickEventType = 'up' | 'down-slider' | 'down-stage'
 
 interface ComposerCanvasProps {
-    t: WithTranslation<['composer', 'home','logs', 'question', 'common']>['t']
+    t: WithTranslation<['composer', 'home', 'logs', 'question', 'common']>['t']
     data: {
         columns: NoteColumn[],
         isPlaying: boolean,
@@ -43,7 +43,7 @@ interface ComposerCanvasProps {
         inPreview?: boolean,
         settings: ComposerSettingsDataType,
         breakpoints: number[],
-        selectedColumns: number[]
+        selectedColumns: number[],
     }
     functions: {
         selectColumn: (index: number, ignoreAudio?: boolean) => void,
@@ -61,6 +61,11 @@ interface ComposerCanvasState {
         width: number
         height: number
     }
+    stageOptions: {
+        backgroundColor: number,
+        autoDensity: boolean,
+        resolution: number,
+    },
     timelineHeight: number
     currentBreakpoint: number
     theme: {
@@ -109,6 +114,11 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             height: Math.floor(height),
             pixelRatio: 1.4,
             numberOfColumnsPerCanvas,
+            stageOptions: {
+                backgroundColor: ThemeProvider.get('primary').rgbNumber(),
+                autoDensity: true,
+                resolution: window.devicePixelRatio ?? 1.4
+            },
             column: {
                 width: nearestEven(width / numberOfColumnsPerCanvas),
                 height: height
@@ -201,6 +211,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     handleThemeChange = () => {
         this.setState({
+            stageOptions: {
+                ...this.state.stageOptions,
+                backgroundColor: ThemeProvider.get('primary').rgbNumber()
+            },
             theme: {
                 timeline: {
                     hex: ThemeProvider.layer('primary', 0.1).hex(),
@@ -266,7 +280,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
         if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return null
-        const newCache = new ComposerCache({
+        return new ComposerCache({
             width: columnWidth,
             height,
             margin,
@@ -290,7 +304,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 ]
             }
         })
-        return newCache
     }
 
     handleWheel = (e: WheelEvent) => {
@@ -397,7 +410,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
 
     render() {
-        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, pixelRatio} = this.state
+        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, pixelRatio, stageOptions} = this.state
         const {data, functions} = this.props
         const cache = this.state.cache?.cache
         const sizes = this.state.column
@@ -425,11 +438,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     onMount={this.recalculateCacheAndSizes}
                     style={{opacity: theme.main.backgroundOpacity}}
                     renderOnComponentChange={true}
-                    options={{
-                        backgroundColor: theme.main.background,
-                        autoDensity: true,
-                        resolution: pixelRatio,
-                    }}
+                    options={stageOptions}
                     ref={this.notesStageRef}
                 >
                     {(cache && !data.isRecordingAudio) && <Container
