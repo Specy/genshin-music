@@ -55,7 +55,6 @@ interface ComposerCanvasProps {
 interface ComposerCanvasState {
     width: number
     height: number
-    pixelRatio: number
     numberOfColumnsPerCanvas: number
     column: {
         width: number
@@ -66,6 +65,7 @@ interface ComposerCanvasState {
         autoDensity: boolean,
         resolution: number,
     },
+    timelineOptions: {}
     timelineHeight: number
     currentBreakpoint: number
     theme: {
@@ -112,10 +112,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.state = {
             width: Math.floor(width),
             height: Math.floor(height),
-            pixelRatio: 1.4,
             numberOfColumnsPerCanvas,
             stageOptions: {
                 backgroundColor: ThemeProvider.get('primary').rgbNumber(),
+                autoDensity: true,
+                resolution: 1.4
+            },
+            timelineOptions: {
+                backgroundAlpha: 0,
                 autoDensity: true,
                 resolution: 1.4
             },
@@ -168,7 +172,16 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.setState({
             width: Math.floor(width),
             height: Math.floor(height),
-            pixelRatio: window.devicePixelRatio ?? 1.4,
+            stageOptions: {
+                backgroundColor: ThemeProvider.get('primary').rgbNumber(),
+                autoDensity: true,
+                resolution: window.devicePixelRatio ?? 1.4
+            },
+            timelineOptions: {
+                backgroundAlpha: 0,
+                autoDensity: true,
+                resolution: window.devicePixelRatio ?? 1.4
+            },
             numberOfColumnsPerCanvas,
             column: {
                 width: nearestEven(width / numberOfColumnsPerCanvas),
@@ -410,7 +423,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
 
     render() {
-        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, pixelRatio, stageOptions} = this.state
+        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, stageOptions} = this.state
         const {data, functions} = this.props
         const cache = this.state.cache?.cache
         const sizes = this.state.column
@@ -530,11 +543,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         <Stage
                             width={width}
                             height={timelineHeight}
-                            options={{
-                                backgroundAlpha: 0,
-                                autoDensity: true,
-                                resolution: pixelRatio
-                            }}
+                            options={this.state.timelineOptions}
                             raf={false}
                             ref={this.breakpointsStageRef}
                             renderOnComponentChange={true}

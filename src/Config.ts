@@ -2,24 +2,16 @@ import type {Tauri} from "$types/TauriTypes"
 import type {NoteImage} from "$cmp/shared/SvgNotes"
 
 export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-export const APP_VERSION = '3.3' as const
+export const APP_VERSION = '3.4' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-        - In the composer you can now set reverb individually for each layer
-        - Added quick selections in the Zen keyboard
-        - Zen keyboard is now also a MIDI keyboard
-        - Created a blog for the app
-        - Added tool in the composer to convert audio/video to a sheet (experimental)
-        - Bug fixes and improvements
+        - Added translations for the app, we are looking for translators!
+        - Added button to install app to home screen
     `
     : `
-        - In the composer you can now set reverb individually for each layer
-        - Added quick selections in the Zen keyboard
-        - Zen keyboard is now also a MIDI keyboard
-        - Created a blog for the app
-        - Added tool in the composer to convert audio/video to a sheet (experimental)
-        - Bug fixes and improvements
+        - Added translations for the app, we are looking for translators!
+        - Added button to install app to home screen
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'

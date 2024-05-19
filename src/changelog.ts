@@ -12,7 +12,8 @@ export const CHANGELOG: Update[] = [
         date: new Date('2024-05-22'),
         changes: [
             "Added translations for the app, we are looking for translators!",
-
+            "Added button to install app to home screen",
+            "Bug fixes and improvements",
         ]
     },
     {
