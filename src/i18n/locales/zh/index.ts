@@ -23,9 +23,9 @@ export const i18n_zh = {
         cloned_song: `复制歌曲: "{{song_name}}"`,
         converting_recorded_to_composed_warning: '将录制的歌曲转换为创作的歌曲，音频可能不准确',
 
-        suggest_backup: "You haven't backed up your songs in a while, remember to download the backup sometimes!",
-        storage_persisted: "Persistent storage permission allowed", //persisted means that the browser won't delete the data
-        storage_persisted_error: "There was an error with setting up persistent storage",
+        suggest_backup: "您有一段时间没有备份你的歌曲了，记得下载备份！",
+        storage_persisted: "允许持久性存储权限", //persisted means that the browser won't delete the data
+        storage_persisted_error: "设置持久性存储时出错",
     },
     question: {
         unsaved_song_save: "您对歌曲“{{song_name}}”有未保存的更改，您现在要保存吗？未保存的更改将会丢失",
@@ -36,7 +36,7 @@ export const i18n_zh = {
     confirm: {
         delete_song: `你是否确定删除歌曲 "{{song_name}}"?`,
 
-        confirm_import_opened_file: `You opened the files "{{files_names}}", do you want to import it?`
+        confirm_import_opened_file: `你打开了文件 "{{files_names}}", 要导入它吗?`
     },
     common: {
         warning: "警告",
@@ -130,10 +130,10 @@ export const i18n_zh = {
         close_promotion: "关闭推广",
         install_app: "安装应用程序",
 
-        rotate_screen: 'For a better experience, add the website to the home screen, and rotate your device',
-        expand_screen: 'Please increase your window size',
-        drop_files_here: 'Drop files here',
-        new_changes_to_page: "There are new changes to this page!"
+        rotate_screen: '为了获得更好的体验，请将网站添加到桌面，并旋转您的设备',
+        expand_screen: '请增加您的窗口大小',
+        drop_files_here: '将文件放在这里',
+        new_changes_to_page: "这个页面有新的变化!"
     },
     menu: {
         close_menu: "关闭菜单",
@@ -169,8 +169,8 @@ export const i18n_zh = {
         filter_alphabetical: "按字母顺序",
         "filter_date-created": "创建日期",
         open_in_composer: "在编曲器中打开",
-        recorded: "Recorded", //recorded songs
-        composed: "Composed" //composed songs
+        recorded: "录制的歌曲", //recorded songs
+        composed: "创作的歌曲" //composed songs
     },
     settings: {
         toggle_metronome: "切换节拍器",
