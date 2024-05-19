@@ -117,7 +117,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             stageOptions: {
                 backgroundColor: ThemeProvider.get('primary').rgbNumber(),
                 autoDensity: true,
-                resolution: window.devicePixelRatio ?? 1.4
+                resolution: 1.4
             },
             column: {
                 width: nearestEven(width / numberOfColumnsPerCanvas),
