@@ -163,6 +163,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             </div>}
             {hasVisited &&
                 <PromotionCard
+                    style={{marginBottom: '0.5rem'}}
                     onClick={() => homeStore.close()}
                 />
             }

@@ -42,6 +42,8 @@ import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {homeStore} from "$stores/HomeStore";
 import {useTranslation} from "react-i18next";
 import {i18n} from "$i18n/i18n";
+import {AppLink} from "$cmp/shared/link/AppLink";
+import {Separator} from "$cmp/shared/separator/Separator";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -137,18 +139,15 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                         settings={settings}
                         onUpdate={onSettingsUpdate}
                     />
-                    <div className="row" style={{
-                        marginTop: '0.6rem',
-                        justifyContent: 'flex-end'
-                    }}>
-                        {!IS_MOBILE &&
-                            <Link href='/keybinds'>
-                                <AppButton>
-                                    {t('settings:change_keybinds')}
-                                </AppButton>
-                            </Link>
-                        }
-                    </div>
+                    {!IS_MOBILE && <>
+                        <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
+                        <AppLink href={'/keybinds'} style={{marginLeft: 'auto'}}>
+                            <AppButton>
+                                {t('settings:change_keybinds')}
+                            </AppButton>
+                        </AppLink>
+                    </>
+                    }
                 </MenuPanel>
             </MenuPanelWrapper>
         </MenuContextProvider>
@@ -171,7 +170,7 @@ interface SongRowProps {
 }
 
 function SongRow({data, functions, theme, folders}: SongRowProps) {
-    const { t} = useTranslation(['common', 'logs', 'settings', 'menu', 'confirm'])
+    const {t} = useTranslation(['common', 'logs', 'settings', 'menu', 'confirm'])
     const {setMenuVisible, onSongSelect} = functions
     const buttonStyle = {backgroundColor: theme.layer('primary', 0.15).toString()}
     const [isRenaming, setIsRenaming] = useState(false)

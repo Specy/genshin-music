@@ -21,7 +21,7 @@ import {Column} from "$cmp/shared/layout/Column";
 import {WithTranslation} from "react-i18next/index";
 
 interface MidiImportProps {
-    t: WithTranslation<['composer', 'home','logs', 'question', 'common']>['t']
+    t: WithTranslation<['composer', 'home', 'logs', 'question', 'common']>['t']
     data: {
         instruments: InstrumentData[]
         selectedColumn: number
@@ -355,9 +355,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             color: theme.getText('primary').toString()
         }
         return <DecoratedCard
-            boxProps={{
-                className: 'floating-midi'
-            }}
+            className='floating-midi'
             size='1.2rem'
             isRelative={false}
             offset="0.1rem"

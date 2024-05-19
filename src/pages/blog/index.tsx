@@ -49,7 +49,7 @@ export default function Blog() {
             description={`Welcome to ${APP_NAME} Music Nightly blog! Here there will be written guides, news and info about the app!`}
         />
         <Column gap={'2rem'}>
-            <Header style={{fontSize: '2.5rem', textAlign: 'center'}}>
+            <Header style={{fontSize: '2.2rem', textAlign: 'center'}}>
                 Welcome to {APP_NAME} Music Nightly blog!
             </Header>
             <PromotionCard alwaysVisible />

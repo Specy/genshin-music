@@ -477,7 +477,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.updateSong(this.state.song)
     }
     askForSongUpdate = async () => {
-        return await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: this.state.song.name}), false)
+        return await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: this.state.song.name}), true)
     }
     createNewSong = async () => {
         if (this.state.song.name !== "Untitled" && this.changes > 0) {
@@ -519,14 +519,14 @@ class Composer extends Component<ComposerProps, ComposerState> {
             if (this.changes !== 0) {
                 let confirm = state.settings.autosave.value && state.song.name !== "Untitled"
                 if (!confirm && state.song.columns.length > 0) {
-                    const promptResult = await asyncConfirm(`You have unsaved changes to the song: "${state.song.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+
+                    //TODO is there a reason why this was not cancellable before?
+                    const promptResult = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: state.song.name}), true)
                     if (promptResult === null) return
                     confirm = promptResult
                 }
                 if (confirm) {
                     await this.updateSong(state.song)
-                    //TODO once i change to ID i need to remove this
-                    if (state.song.name === parsed.name) return
                 }
             }
             const settings = this.state.settings
@@ -548,7 +548,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
             }, () => this.syncInstruments())
         } catch (e) {
             console.error(e)
-            logger.error("There was an error loading this song")
+            logger.error(this.props.t('logs:error_loading_song'))
         }
 
     }
@@ -630,7 +630,8 @@ class Composer extends Component<ComposerProps, ComposerState> {
             if (settings.autosave.value) {
                 await this.updateSong(song)
             } else {
-                const confirm = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: song.name}), false)
+                const confirm = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: song.name}), true)
+                if(confirm === null) return
                 if (confirm) {
                     if (!await this.updateSong(song)) return console.log("Blocking redirect")
                 }

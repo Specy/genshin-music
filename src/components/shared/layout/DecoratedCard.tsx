@@ -1,4 +1,5 @@
 import {forwardRef} from 'react';
+import {Stylable} from "$lib/utils/UtilTypes";
 
 interface RawDecoratedBoxProps {
     decorationColor?: string
@@ -50,8 +51,7 @@ export function RawDecoratedBox({decorationColor, size, offset = "0"}: RawDecora
     </>
 }
 
-interface DecoratedCardProps {
-    boxProps?: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+interface DecoratedCardProps extends Stylable{
     children: React.ReactNode;
     size?: string;
     decorationColor?: string;
@@ -62,13 +62,14 @@ interface DecoratedCardProps {
 
 export const DecoratedCard = forwardRef<HTMLDivElement, DecoratedCardProps>(function DecorationBorderedBox(props: DecoratedCardProps, ref) {
     const isRelative = props.isRelative ?? true;
+    const position = isRelative ? 'relative' : undefined;
     return <div
-        {...props.boxProps}
         ref={ref}
         style={{
-            ...(isRelative ? {position: 'relative'} : {}),
-            ...(props.boxProps?.style ?? {})
+            position,
+            ...props.style
         }}
+        className={props.className}
         onClick={props.onClick}
     >
         {props.children}

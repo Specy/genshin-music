@@ -1,4 +1,5 @@
 import {InstrumentName} from "$types/GeneralTypes";
+import {MIDIShortcutName} from "$lib/BaseSettings";
 
 export const i18n_en = {
     logs: {
@@ -8,8 +9,9 @@ export const i18n_en = {
         loading_song: "Loading song...",
         could_not_find_song: "Could not find song",
         error_loading_instrument: "There was an error loading the instrument",
+        error_loading_song: "There was an error loading the song",
+        error_loading_theme: "There was an error loading the theme",
         error_opening_file: 'There was an error opening this file',
-        error_importing_song: 'There was an error importing the song',
         error_downloading_audio: "There was an error downloading the audio, maybe the song is too long?",
         song_downloaded: "Song downloaded",
         error_downloading_song: "Error downloading song",
@@ -22,10 +24,25 @@ export const i18n_en = {
         no_empty_name: "Please write a non empty name",
         cloned_song: `Cloned song: "{{song_name}}"`,
         converting_recorded_to_composed_warning: 'Converting recorded song to composed, audio might not be accurate',
-
         suggest_backup: "You haven't backed up your songs in a while, remember to download the backup sometimes!",
         storage_persisted: "Persistent storage permission allowed", //persisted means that the browser won't delete the data
         storage_persisted_error: "There was an error with setting up persistent storage",
+        importing_files: "Importing files...",
+        could_not_load_song: "Could not load song",
+
+        song_added_to_folder: `Song "{{song_name}}" added to the {{folder_name}} folder`,
+        error_importing_files: "Error importing files",
+        n_things_failed_to_import: "{{n}} things failed to import",
+        imported_n_songs: `Imported {{n}} songs`,
+        imported_n_folders: `Imported {{n}} folders`,
+        imported_n_themes: `Imported {{n}} themes`,
+        error_importing_song: `Error importing song "{{song_name}}"`,
+        error_importing_folder: `Error importing folder "{{folder_name}}"`,
+        error_importing_theme: `Error importing theme "{{theme_name}}"`,
+        error_importing_unknown_file: "Error importing unknown file {{file_name}}",
+        imported_theme: `Imported theme "{{theme_name}}"`,
+        imported_folder: `Imported folder "{{folder_name}}"`,
+        imported_song: `Imported {{song_type}} song "{{song_name}}"`,
     },
     question: {
         unsaved_song_save: `You have unsaved changes to the song: "{{song_name}}" do you want to save now? UNSAVED CHANGES WILL BE LOST`,
@@ -171,7 +188,9 @@ export const i18n_en = {
         "filter_date-created": "Date created",
         open_in_composer: "Open in composer",
         recorded: "Recorded", //recorded songs
-        composed: "Composed" //composed songs
+        composed: "Composed", //composed songs
+        vsrg: "VSRG", //vsrg songs, leave as is
+        midi: "MIDI", //midi songs, leave as is
     },
     settings: {
         toggle_metronome: "Toggle metronome",
@@ -313,7 +332,18 @@ export const i18n_en = {
         tap: 'Tap',
         hold: 'Hold',
         delete: 'Delete',
-        track_name: 'Track name'
+        track_name: 'Track name',
+
+        remove_background_song: "Remove background song"
+    },
+    vsrg_player: {
+        amazing: "Amazing",
+        perfect: "Perfect",
+        great: "Great",
+        good: "Good",
+        bad: "Bad",
+        miss: "Miss",
+        combo: "Combo", //combo counter, how do rythm games call it? is it kept as "combo"?
     },
     transfer: {
         connecting_please_wait: "Connecting please wait...",
@@ -418,6 +448,14 @@ export const i18n_en = {
         midi_access_unsupported: "MIDI is not supported in this browser",
         midi_access_pending: "Waiting for MIDI access...",
         midi_access_granted: "MIDI available!",
+        shortcuts: {
+            toggle_play: "Toggle play",
+            next_column: "Next column",
+            previous_column: "Previous column",
+            add_column: "Add column",
+            remove_column: "Remove column",
+            change_layer: "Change layer",
+        } satisfies Record<MIDIShortcutName, string>
     },
     error: {
         confirm_delete_all_songs: "Are you sure you want to delete ALL SONGS?",
@@ -576,7 +614,7 @@ export const i18n_en = {
             converting_audio_to_midi: "Converting audio to midi (might take a while)..",
             detecting_notes: "Detecting notes",
             loading_converter: 'Loading converter',
-            audio_conversion_warning: `🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing.`
+            audio_conversion_warning: `🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing.`,
         },
 
         warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,

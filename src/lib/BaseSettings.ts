@@ -19,6 +19,7 @@ import {
 } from "$types/SettingsPropriety"
 import {VsrgSongKeys} from "./Songs/VsrgSong"
 import {VsrgKeyboardLayout} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard"
+import {DeepWriteable} from "$lib/utils/UtilTypes";
 
 export type BaseSettings<T> = {
     data: T,
@@ -301,6 +302,7 @@ export const PlayerSettings = {
     }
 } as const satisfies PlayerSettingsType
 
+export type MIDIShortcutName = 'toggle_play' | 'next_column' | 'previous_column' | 'add_column' | 'remove_column' | 'change_layer'
 
 export const MIDISettings = {
     settingVersion: APP_NAME + 6,
@@ -316,6 +318,7 @@ export const MIDISettings = {
         new MIDIShortcut('change_layer', -1)
     ]
 }
+export type MidiSettingsType = typeof MIDISettings
 
 
 export const ThemeSettings = {

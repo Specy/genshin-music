@@ -46,9 +46,7 @@ function ComposerTools({data, functions}: ComposerToolsProps) {
     const {isToolsVisible, hasCopiedColumns, layer, selectedColumns, undoHistory} = data
     const selectedTarget = selectionType === 'all' ? 'all' : layer
     return <DecoratedCard
-        boxProps={{
-            className: `floating-tools ${isToolsVisible ? "floating-tools tools-visible" : ""}`
-        }}
+        className={`floating-tools ${isToolsVisible ? "floating-tools tools-visible" : ""}`}
         size='1.2rem'
         isRelative={false}
         offset="0.1rem"

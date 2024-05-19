@@ -41,7 +41,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
         document.activeElement?.blur()
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
-            asyncPromptStore.answerConfirm(false)
+            asyncPromptStore.answerConfirm(null)
         }, {id: 'AsyncConfirm'})
         KeyboardProvider.register("Enter", () => {
             asyncPromptStore.answerConfirm(true)
@@ -53,7 +53,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
 
     function onOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
         if (e.nativeEvent.composedPath()[0] !== ref.current || !cancellable) return
-        asyncPromptStore.answerConfirm(false)
+        asyncPromptStore.answerConfirm(null)
     }
 
     return <div
@@ -64,9 +64,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
     >
 
         <DecoratedCard
-            boxProps={{
-                className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
-            }}
+            className={cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])}
             isRelative={false}
             size={'1.1rem'}
         >
@@ -156,9 +154,7 @@ function AsyncPrompt({question, deferred, cancellable}: AsyncPromptState) {
         className={cn(`prompt-overlay ${IGNORE_CLICK_CLASS}`, [isHidden, 'prompt-overlay-hidden'])}
     >
         <DecoratedCard
-            boxProps={{
-                className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
-            }}
+            className={cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])}
             isRelative={false}
             size={'1.1rem'}
         >

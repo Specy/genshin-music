@@ -54,16 +54,19 @@
     {
       "src": "manifestData/player.webp",
       "type": "image/png",
+      "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {
       "src": "manifestData/composer.webp",
       "type": "image/png",
+      "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {
       "src": "manifestData/zenkeyboard.webp",
       "type": "image/png",
+      "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {

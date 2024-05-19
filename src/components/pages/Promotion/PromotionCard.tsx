@@ -10,6 +10,7 @@ import Link from "next/link";
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {FaTimes} from "react-icons/fa";
 import {useTranslation} from "react-i18next";
+import {Stylable} from "$lib/utils/UtilTypes";
 
 const promotion = {
     id: '0',
@@ -19,12 +20,12 @@ const promotion = {
     url: `/blog/posts/${_easyplay1sMetadata.relativeUrl}`
 }
 
-interface PromotionCardProps {
+interface PromotionCardProps extends Stylable{
     onClick?: (e: MouseEvent<HTMLAnchorElement>) => void
     alwaysVisible?: boolean
 }
 
-export function PromotionCard({onClick, alwaysVisible}: PromotionCardProps) {
+export function PromotionCard({onClick, alwaysVisible, style, className}: PromotionCardProps) {
     const {t} = useTranslation('home')
     const [visible, setVisible] = useState(false)
     useEffect(() => {
@@ -44,7 +45,8 @@ export function PromotionCard({onClick, alwaysVisible}: PromotionCardProps) {
     if (!visible && !alwaysVisible) return null
     return <Card
         radius={'0.4rem'}
-        className={`${s['promotion-card']}`}
+        style={style}
+        className={`${className} ${s['promotion-card']}`}
     >
         <img
             src={promotion.image}

@@ -91,14 +91,15 @@ interface SongRowProps {
 }
 
 function SongRow({data, current, onClick}: SongRowProps) {
+    const {t} = useTranslation('logs')
     const selectedStyle = current?.id === data.id ? {backgroundColor: 'rgb(124, 116, 106)'} : {}
     return <div
         className="song-row"
         style={{...selectedStyle, padding: '0.5rem 0.8rem'}}
         onClick={async () => {
-            logger.showPill('Loading song...')
+            logger.showPill(t('loading_song'))
             const song = await songService.getOneSerializedFromStorable(data)
-            if (!song) return logger.error("Could not load song")
+            if (!song) return logger.error(t('could_not_load_song'))
             onClick(song)
             setTimeout(() => logger.hidePill(), 300)
         }}>

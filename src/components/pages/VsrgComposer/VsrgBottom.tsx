@@ -58,7 +58,6 @@ export function VsrgBottom({
                 color: 'var(--red)',
             }
         ] satisfies Option<VsrgHitObjectType>[]
-
     }, [t, i18n.language])
 
     return <>

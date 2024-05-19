@@ -9,7 +9,6 @@ export const i18n_zh = {
         could_not_find_song: "未能找到歌曲",
         error_loading_instrument: "乐器加载失败",
         error_opening_file: '文件打开失败',
-        error_importing_song: '歌曲加载失败',
         error_downloading_audio: "音频下载失败, 可能歌曲太长了",
         song_downloaded: "歌曲已经下载",
         error_downloading_song: "歌曲下载失败",
@@ -22,10 +21,27 @@ export const i18n_zh = {
         no_empty_name: "请填写一个非空白的名称",
         cloned_song: `复制歌曲: "{{song_name}}"`,
         converting_recorded_to_composed_warning: '将录制的歌曲转换为创作的歌曲，音频可能不准确',
-
         suggest_backup: "您已经有一段时间没有备份歌曲了，记得偶尔下载一下备份哦！",
         storage_persisted: "已允许持久存储，浏览器将不会删除您的数据", //persisted means that the browser won't delete the data
         storage_persisted_error: "设置持久存储时出错",
+
+        importing_files: "Importing files...",
+        could_not_load_song: "Could not load song",
+        song_added_to_folder: `Song "{{song_name}}" added to the {{folder_name}} folder`,
+        error_importing_files: "Error importing files",
+        n_things_failed_to_import: "{{n}} things failed to import",
+        imported_n_songs: `Imported {{n}} songs`,
+        imported_n_folders: `Imported {{n}} folders`,
+        imported_n_themes: `Imported {{n}} themes`,
+        error_importing_song: `Error importing song "{{song_name}}"`,
+        error_importing_folder: `Error importing folder "{{folder_name}}"`,
+        error_importing_theme: `Error importing theme "{{theme_name}}"`,
+        error_importing_unknown_file: "Error importing unknown file {{file_name}}",
+        imported_theme: `Imported theme "{{theme_name}}"`,
+        imported_folder: `Imported folder "{{folder_name}}"`,
+        imported_song: `Imported {{song_type}} song "{{song_name}}"`,
+        error_loading_song: "There was an error loading the song",
+        error_loading_theme: "There was an error loading the theme",
     },
     question: {
         unsaved_song_save: "您对歌曲“{{song_name}}”有未保存的更改，您现在要保存吗？未保存的更改将会丢失",
@@ -169,7 +185,9 @@ export const i18n_zh = {
         "filter_date-created": "创建日期",
         open_in_composer: "在编曲器中打开",
         recorded: "录制的", //recorded songs
-        composed: "创作的" //composed songs
+        composed: "创作的", //composed songs
+        vsrg: "VSRG", //vsrg songs, leave as is
+        midi: "MIDI", //midi songs, leave as is
     },
     settings: {
         toggle_metronome: "切换节拍器",
@@ -306,7 +324,19 @@ export const i18n_zh = {
         tap: "点击",
         hold: "长按",
         delete: "删除",
-        track_name: '音轨名称'
+        track_name: '音轨名称',
+
+        remove_background_song: "Remove background song"
+    },
+
+    vsrg_player: {
+        amazing: "Amazing",
+        perfect: "Perfect",
+        great: "Great",
+        good: "Good",
+        bad: "Bad",
+        miss: "Miss",
+        combo: "Combo", //combo counter, how do rythm games call it? is it kept as "combo"?
     },
     transfer: {
         connecting_please_wait: "正在连接，请稍候...",
@@ -406,6 +436,15 @@ export const i18n_zh = {
         midi_access_unsupported: "该浏览器不支持 MIDI。",
         midi_access_pending: "等待 MIDI 访问中...",
         midi_access_granted: "MIDI可用！",
+
+        shortcuts: {
+            toggle_play: "Toggle play",
+            next_column: "Next column",
+            previous_column: "Previous column",
+            add_column: "Add column",
+            remove_column: "Remove column",
+            change_layer: "Change layer",
+        }
     },
     error: {
         confirm_delete_all_songs: "您确定要删除所有歌曲吗？",

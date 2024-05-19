@@ -27,11 +27,18 @@ export function MultipleOptionSlider<T extends string>({options, selected, onCha
         const bounds = elements[index].getBoundingClientRect()
         const parentBounds = ref.current!.getBoundingClientRect()
         setOverlayState({
-            width: bounds.width,
-            left: bounds.left - parentBounds.left,
+            width: bounds.width - 3,
+            //TODO for some reason first item is off by 2px
+            left: bounds.left - (parentBounds.left),
         })
     }, [ref, options, selected])
-    return <div className="multiple-option-slider" ref={ref}>
+    return <div
+        className="multiple-option-slider"
+        ref={ref}
+        style={{
+            border: `solid 0.1rem ${selectedOption?.color ?? "var(--accent)"}`,
+        }}
+    >
         {options.map((option) =>
             <button
                 key={option.value}

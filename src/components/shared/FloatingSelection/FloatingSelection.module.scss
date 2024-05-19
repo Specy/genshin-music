@@ -1,0 +1,48 @@
+
+.floating-selection-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--primary);
+    color: var(--primary-text);
+    border: 0.1rem solid var(--secondary);
+    border-radius: 0.4rem;
+    animation: fadeIn 0.2s;
+    overflow-y: auto;
+}
+
+.floating-selection-card::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+}
+
+.floating-selection-card::-webkit-scrollbar {
+    width: 0.2rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-0.3rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.floating-selection-card-item {
+    padding: 0.4rem;
+    background: var(--primary);
+    cursor: pointer;
+    color: var(--primary-text);
+    border: none;
+    border-bottom: 0.1rem solid var(--secondary);
+}
+
+.floating-selection-card-item:hover {
+    background: var(--primary-5);
+}
+
+.floating-selection-card-item:last-child {
+    border-bottom: none;
+}

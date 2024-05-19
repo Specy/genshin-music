@@ -189,7 +189,6 @@
     gap: 1rem;
     justify-items: center;
     width: 100%;
-    margin-top: 1rem;
 }
 
 .home-content-element {
@@ -213,6 +212,7 @@
     background-color: var(--primary-darken-10);
     padding: 0.5rem;
     border-radius: 0.5rem;
+    margin: 0.8rem;
     outline: 2px dashed var(--secondary);
     outline-offset: 2px;
 }
@@ -465,11 +465,6 @@
     .home-content {
         gap: 0.8rem;
     }
-
-    .home-content {
-        margin-top: 0.8rem;
-    }
-
     .close-home {
         left: 0.4rem;
     }

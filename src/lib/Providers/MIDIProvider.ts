@@ -1,5 +1,5 @@
 import {settingsService} from "$lib/Services/SettingsService"
-import {MIDISettings} from "../BaseSettings"
+import {MIDISettings, MidiSettingsType} from "../BaseSettings"
 import {debounce, MIDINote, MIDINoteStatus} from "$lib/utils/Utilities";
 import {MIDI_PRESETS, MIDIPreset} from "$config";
 
@@ -18,7 +18,7 @@ export class MIDIListener {
     private inputsListeners: InputsCallback[] = []
     MIDIAccess: WebMidi.MIDIAccess | null = null
     connectedMidiSources: WebMidi.MIDIInput[] = []
-    settings: typeof MIDISettings
+    settings: MidiSettingsType
     notes: MIDINote[] = []
     inputs: WebMidi.MIDIInput[] = []
 
@@ -148,7 +148,7 @@ export class MIDIListener {
         this.saveSettings()
         return savedNote
     }
-    setSettings = (settings: typeof MIDISettings) => {
+    setSettings = (settings: MidiSettingsType) => {
         this.settings = settings
         this.saveSettings()
     }

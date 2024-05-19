@@ -47,6 +47,9 @@ import {APP_NAME} from "$config";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {Row} from "$cmp/shared/layout/Row";
 import {useTranslation} from "react-i18next";
+import {Separator} from "$cmp/shared/separator/Separator";
+import {AppLink} from "$cmp/shared/link/AppLink";
+import {useConfig} from "$lib/Hooks/useConfig";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 
@@ -76,13 +79,14 @@ function VsrgMenu({
                       trackModifiers,
                       onTrackModifierChange
                   }: VsrgMenuProps) {
-    const {t} = useTranslation(["menu", "common", "vsrg_composer"])
+    const {t} = useTranslation(["menu", "common", "vsrg_composer", 'settings'])
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const [folders] = useFolders()
     const [songs] = useSongs()
     const [theme] = useTheme()
+    const {IS_MOBILE} = useConfig()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setVisible(false)
     }, {active: (isOpen && isVisible), ignoreFocusable: true})
@@ -170,12 +174,17 @@ function VsrgMenu({
                         onUpdate={handleSettingChange}
                     />
                     <div className="column vsrg-select-song-wrapper">
-                        <h1 className={`${ss['settings-group-title']} row-centered`}>
-                            {t('vsrg_composer:background_song')}
-                            <HelpTooltip buttonStyle={{width: '1.2rem', height: '1.2rem', marginLeft: '0.5rem'}}>
+                        <Row align={'center'}>
+                            <h1 className={`${ss['settings-group-title']} row-centered`}>
+                                {t('vsrg_composer:background_song')}
+                            </h1>
+
+                            <HelpTooltip buttonStyle={{width: '1.2rem', height: '1.2rem', marginLeft: '0.5rem'}}
+                                         position={'middle'}>
                                 {t('vsrg_composer:background_song_info')}
                             </HelpTooltip>
-                        </h1>
+                        </Row>
+
                         {audioSong === null
                             ? <span>
                                 {t("vsrg_composer:no_background_song_selected")}
@@ -193,8 +202,8 @@ function VsrgMenu({
                                     </span>
                                     <SongActionButton
                                         onClick={() => setAudioSong(null)}
-                                        ariaLabel="Remove background song"
-                                        tooltip="Remove background song"
+                                        ariaLabel={t('vsrg_composer:remove_background_song')}
+                                        tooltip={t('vsrg_composer:remove_background_song')}
                                         style={{backgroundColor: 'var(--red-bg)', margin: 0}}
                                     >
                                         <FaTimes/>
@@ -243,7 +252,15 @@ function VsrgMenu({
                             }}
                         />
                     </div>
-
+                    {!IS_MOBILE && <>
+                        <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
+                        <AppLink href={'/keybinds'} style={{marginLeft: 'auto'}}>
+                            <AppButton>
+                                {t('settings:change_keybinds')}
+                            </AppButton>
+                        </AppLink>
+                    </>
+                    }
                 </MenuPanel>
             </MenuPanelWrapper>
         </MenuContextProvider>

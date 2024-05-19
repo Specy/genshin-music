@@ -127,6 +127,7 @@ interface TrackSelectorProps {
 }
 
 function TrackSelector({track, selected, theme, onSettingsClick, onTrackClick}: TrackSelectorProps) {
+    const { t} = useTranslation(['instruments'])
     const [selectedColor, setSelectedColor] = useState({
         background: 'var(--primary)',
         text: 'var(--primary-text)'
@@ -166,7 +167,7 @@ function TrackSelector({track, selected, theme, onSettingsClick, onTrackClick}: 
                     flex: 1
                 }}
             >
-                {track.instrument.alias || track.instrument.name}
+                {track.instrument.alias || t(`instruments:${track.instrument.name}`)}
             </span>
             <AppButton
                 onClick={() => selected && onSettingsClick()}

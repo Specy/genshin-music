@@ -45,7 +45,7 @@ interface PlayerState {
 
 type PlayerProps = {
     inPreview?: boolean,
-    t: WithTranslation<['player', 'common', 'home', 'question', 'confirm', 'logs']>['t']
+    t: WithTranslation<['player', 'common', 'home', 'question', 'confirm', 'logs', 'menu']>['t']
 }
 class Player extends Component<PlayerProps, PlayerState> {
     state: PlayerState
@@ -178,7 +178,7 @@ class Player extends Component<PlayerProps, PlayerState> {
             AudioProvider.disconnect(ins.endNode)
             ins.dispose()
         })
-        logger.showPill("Loading instruments...")
+        logger.showPill(this.props.t('logs:loading_instruments'))
         const promises = toLoad.map(async (ins, i) => {
             if (instruments[i] === undefined) {
                 //If it doesn't have a layer, create one
@@ -270,10 +270,13 @@ class Player extends Component<PlayerProps, PlayerState> {
             const id = await songsStore.addSong(song)
             song.id = id
             const type = song.type ?? (song.data.isComposedVersion ? "composed" : "recorded")
-            logger.success(`Song added to the ${type} tab!`, 4000)
+            logger.success(this.props.t('logs:song_added_to_folder', {
+                song_name: song.name,
+                folder_name: this.props.t(`menu:${type}`)
+            }), 4000)
         } catch (e) {
             console.error(e)
-            return logger.error(this.props.t("logs:error_importing_song"))
+            return logger.error(this.props.t("logs:error_importing_song", {song_name: song.name}))
         }
     }
 
@@ -423,7 +426,7 @@ class Player extends Component<PlayerProps, PlayerState> {
 }
 
 export default function PlayerPage({inPreview}: { inPreview?: boolean }) {
-    const {t} = useTranslation(['player', 'common', 'home', 'question', 'confirm', 'logs'])
+    const {t} = useTranslation(['player', 'common', 'home', 'question', 'confirm', 'logs', 'menu'])
     useSetPageVisited('player')
     return <Player inPreview={inPreview} t={t}/>
 }

@@ -29,6 +29,7 @@ import {createShortcutListener, ShortcutListener} from "$stores/KeybindsStore";
 import {useTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
 import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
+import {DecoratedCard} from "$cmp/shared/layout/DecoratedCard";
 
 type VsrgComposerProps = {
     router: NextRouter
@@ -287,7 +288,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
             if (settings.autosave.value) {
                 await this.saveSong()
             } else {
-                const confirm = await asyncConfirm(`You have unsaved changes to the song: "${vsrg.name}" do you want to save? UNSAVED CHANGES WILL BE LOST`, false)
+                const confirm = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: vsrg.name}), true)
                 if (confirm === null) return
                 if (confirm) {
                     if (await this.saveSong() === null) return
@@ -391,7 +392,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         }
     }
     askForSongUpdate = async () => {
-        return await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: this.state.vsrg.name}), false)
+        return await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: this.state.vsrg.name}), true)
     }
     createNewSong = async () => {
         if (this.state.vsrg.name !== "Untitled" && this.changes > 0) {
@@ -520,7 +521,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
         if (this.changes !== 0) {
             let confirm = settings.autosave.value && vsrg.name !== "Untitled"
             if (!confirm) {
-                const promptResult = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: vsrg.name}), false)
+                const promptResult = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: vsrg.name}), true)
                 if (promptResult === null) return
                 confirm = promptResult
             }
@@ -658,30 +659,31 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
                     onTrackSelect={this.selectTrack}
                     onNoteSelect={this.onNoteSelect}
                 >
-                    <VsrgComposerCanvas
-                        vsrg={vsrg}
-                        renderableNotes={renderableNotes}
-                        onTimestampChange={this.onTimestampChange}
-                        selectedHitObject={selectedHitObject}
-                        isHorizontal={!settings.isVertical.value}
-                        tempoChanger={tempoChanger}
-                        scrollSnap={settings.scrollSnap.value}
-                        maxFps={settings.maxFps.value}
-                        scaling={scaling}
-                        audioSong={audioSong}
-                        snapPoint={snapPoint}
-                        snapPoints={snapPoints}
-                        isPlaying={isPlaying}
-                        onRemoveTime={this.removeTime}
-                        onAddTime={this.addTime}
-                        onKeyDown={this.startHitObjectTap}
-                        onKeyUp={this.endHitObjectTap}
-                        dragHitObject={this.dragHitObject}
-                        releaseHitObject={this.releaseHitObject}
-                        selectHitObject={this.selectHitObject}
-                        onSnapPointSelect={this.onSnapPointSelect}
-                    />
-
+                    <DecoratedCard className={'decorated-vsrg-canvas'} size={'1.2rem'}>
+                        <VsrgComposerCanvas
+                            vsrg={vsrg}
+                            renderableNotes={renderableNotes}
+                            onTimestampChange={this.onTimestampChange}
+                            selectedHitObject={selectedHitObject}
+                            isHorizontal={!settings.isVertical.value}
+                            tempoChanger={tempoChanger}
+                            scrollSnap={settings.scrollSnap.value}
+                            maxFps={settings.maxFps.value}
+                            scaling={scaling}
+                            audioSong={audioSong}
+                            snapPoint={snapPoint}
+                            snapPoints={snapPoints}
+                            isPlaying={isPlaying}
+                            onRemoveTime={this.removeTime}
+                            onAddTime={this.addTime}
+                            onKeyDown={this.startHitObjectTap}
+                            onKeyUp={this.endHitObjectTap}
+                            dragHitObject={this.dragHitObject}
+                            releaseHitObject={this.releaseHitObject}
+                            selectHitObject={this.selectHitObject}
+                            onSnapPointSelect={this.onSnapPointSelect}
+                        />
+                    </DecoratedCard>
                 </VsrgTop>
                 <VsrgBottom
                     vsrg={vsrg}

@@ -68,7 +68,7 @@ class AsyncPromptStore {
         })
     }
 
-    answerConfirm(answer: boolean) {
+    answerConfirm(answer: boolean | null) {
         if (this.confirmState.deferred) {
             this.confirmState.deferred(answer)
         } else {

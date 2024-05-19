@@ -57,6 +57,11 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
         return obj?.type === 'vsrg'
     }
 
+    getHighestNoteTime() {
+        return this.tracks.reduce((max, track) => {
+            return track.hitObjects.reduce((max, note) => Math.max(max, note.timestamp), max)
+        }, 0)
+    }
     setAudioSong(song: Song | null) {
         if (song === null) {
             this.audioSongId = null
