@@ -144,11 +144,12 @@ export const i18n_zh = {
         find_out_more: "了解更多",
         close_promotion: "关闭推广",
         install_app: "安装应用程序",
-
         rotate_screen: "添加网站到主屏幕并旋转设备以改进体验",
         expand_screen: "请扩大您的窗口尺寸",
         drop_files_here: "拖放文件到此处",
-        new_changes_to_page: "页面更新!"
+        new_changes_to_page: "页面更新!",
+
+        how_to_install: "How to add to home screen", //how to install the app using the browser
     },
     menu: {
         close_menu: "关闭菜单",
