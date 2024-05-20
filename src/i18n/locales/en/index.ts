@@ -146,11 +146,11 @@ export const i18n_en = {
         find_out_more: "Find out more",
         close_promotion: "Close promotion",
         install_app: "Install App",
-
         rotate_screen: 'For a better experience, add the website to the home screen, and rotate your device',
         expand_screen: 'Please increase your window size',
         drop_files_here: 'Drop files here',
-        new_changes_to_page: "There are new changes to this page!"
+        new_changes_to_page: "There are new changes to this page!",
+        how_to_install: "How to add to home screen", //how to install the app using the browser
     },
     menu: {
         close_menu: "Close menu",

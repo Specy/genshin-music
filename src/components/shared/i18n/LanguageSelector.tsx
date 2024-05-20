@@ -3,20 +3,22 @@ import s from './i18n.module.scss'
 import {capitalize} from "$lib/utils/Utilities";
 import {LANG_PREFERENCE_KEY_NAME} from "$config";
 import {useTranslation} from "react-i18next";
-import {AppLanguages} from '$i18n/i18n'
+import {AppLanguage} from '$i18n/i18n'
 import {useMemo} from "react";
 
 interface LanguageSelector extends Stylable {
-    languages: readonly AppLanguages[]
+    languages: readonly AppLanguage[]
     currentLanguage: string
     onChange: (language: string) => void
 }
 
+
+
 const flagsMap = {
     'en': '🇬🇧',
-    'it': '🇮🇹',
+    //'it': '🇮🇹',
     'zh': '🇨🇳',
-} satisfies Record<AppLanguages, string>
+} satisfies Record<AppLanguage, string>
 
 
 export function LanguageSelector({languages, currentLanguage, onChange, style, className}: LanguageSelector) {
@@ -45,7 +47,7 @@ export function LanguageSelector({languages, currentLanguage, onChange, style, c
 export function DefaultLanguageSelector() {
     const {i18n} = useTranslation()
     const langs = useMemo(() => {
-        return [...i18n.languages].sort() as AppLanguages[]
+        return [...i18n.languages].sort() as AppLanguage[]
     }, [i18n.languages])
     return <LanguageSelector
         languages={langs}

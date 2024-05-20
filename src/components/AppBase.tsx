@@ -17,6 +17,8 @@ import isMobile from 'is-mobile';
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
 import {fileService} from '$lib/Services/FileService';
 import {useTranslation} from "react-i18next";
+import {AppLanguage, AVAILABLE_LANGUAGES} from "$i18n/i18n";
+import {usePathname} from "next/navigation";
 
 
 function AppBase() {
@@ -25,7 +27,7 @@ function AppBase() {
     const [checkedUpdate, setCheckedUpdate] = useState(false)
     const [isOnMobile, setIsOnMobile] = useState(false)
     const router = useRouter()
-
+    const path = usePathname()
     useEffect(() => {
         function handleBlur() {
             const active = document.activeElement
@@ -112,10 +114,11 @@ function AppBase() {
 
     useEffect(() => {
         try {
-            const lang = localStorage.getItem(APP_NAME + "_Lang") ?? navigator.language ?? "en"
-            const rootLang = (Array.isArray(lang) ? lang[0] : lang).split("-")[0]
-            window.document.documentElement.lang = rootLang
-            i18n.changeLanguage(rootLang)
+            const lang = (localStorage.getItem(APP_NAME + "_Lang") ?? navigator.language ?? "en") as string | string[]
+            const rootLang = ((Array.isArray(lang) ? lang[0] : lang).split("-")[0]).toLowerCase()
+            const langToUse = AVAILABLE_LANGUAGES.includes(rootLang as AppLanguage) ? rootLang : 'en'
+            window.document.documentElement.lang = langToUse
+            i18n.changeLanguage(langToUse)
         } catch (e) {
             console.error(e)
         }
@@ -158,6 +161,9 @@ function AppBase() {
             browserHistoryStore.addPage(path.pathName)
         })
     }, [router])
+
+    //disable the screen rotate for the blog
+    const inBlog = path.startsWith("/blog")
     return <>
         <Home
             hasVisited={hasVisited}
@@ -165,23 +171,25 @@ function AppBase() {
             setDontShowHome={setDontShowHome}
             askForStorage={askForStorage}
         />
-        <div className="rotate-screen">
-            {isOnMobile && <>
-                <Image
-                    src={rotateImg}
-                    alt="icon for the rotating screen"
-                />
-                <p>
-                    {t('rotate_screen')}
-                </p>
-            </>}
-            {!isOnMobile && <>
-                <FaExpandAlt/>
-                <p>
-                    {t('expand_screen')}
-                </p>
-            </>}
-        </div>
+        {!inBlog &&
+            <div className="rotate-screen">
+                {isOnMobile && <>
+                    <Image
+                        src={rotateImg}
+                        alt="icon for the rotating screen"
+                    />
+                    <p>
+                        {t('rotate_screen')}
+                    </p>
+                </>}
+                {!isOnMobile && <>
+                    <FaExpandAlt/>
+                    <p>
+                        {t('expand_screen')}
+                    </p>
+                </>}
+            </div>
+        }
     </>
 }
 

@@ -12,6 +12,7 @@ export function BlogAuthorRenderer({author, size = '2.5rem', noName = false}: Bl
     return <Row
         gap={'0.5rem'}
         align={'center'}
+        style={{flexWrap: "wrap"}}
     >
         <img
             src={author.picture ?? `${BASE_PATH}/assets/images/specy.png`}

@@ -25,19 +25,19 @@ declare module 'i18next' {
     }
 }
 
-const availableLanguages = ['en', 'it', 'zh'] as const;
-export type AppLanguages = typeof availableLanguages[number];
+export const AVAILABLE_LANGUAGES = ['en', 'zh'] as const;
+export type AppLanguage = typeof AVAILABLE_LANGUAGES[number];
 i18next
     .use(initReactI18next)
     .init({
         debug: IS_DEV,
         pluralSeparator: '+',
-        fallbackLng: availableLanguages, //TODO not sure exactly how this needs to be set up to load all languages
+        fallbackLng: AVAILABLE_LANGUAGES, //TODO not sure exactly how this needs to be set up to load all languages
         defaultNS,
         resources: {
             en: i18n_en,
-            it: i18n_it,
+            //it: i18n_it,
             zh: i18n_zh,
-        } satisfies Record<AppLanguages, ValidAppI18N>,
+        } satisfies Record<AppLanguage, ValidAppI18N>,
     });
 export const i18n = i18next;

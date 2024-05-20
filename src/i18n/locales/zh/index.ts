@@ -27,9 +27,9 @@ export const i18n_zh = {
 
         importing_files: "导入文件中...",
         could_not_load_song: "无法加载歌曲",
-        song_added_to_folder: "歌曲 "{{song_name}}" 已添加至 {{folder_name}} 文件夹",
+        song_added_to_folder: `歌曲 "{{song_name}}" 已添加至 {{folder_name}} 文件夹`,
         error_importing_files: "导入文件出错",
-        n_things_failed_to_import: "{{n}}个对象导入失败",
+        n_things_failed_to_import: "{{n}} 个对象导入失败",
         imported_n_songs: "已导入 {{n}} 首歌曲",
         imported_n_folders: "已导入 {{n}} 个文件夹",
         imported_n_themes: "已导入 {{n}} 个主题",

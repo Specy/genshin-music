@@ -120,7 +120,16 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             {!hasVisited && <div className='home-welcome'>
                 <div>
                     {!isTwa && <div className='home-spacing'>
-                        {t("add_to_home_screen")}
+                        {t("add_to_home_screen")}. <Link
+                            href={'/blog/posts/add-to-home-screen'}
+                            onClick={homeStore.close}
+                            style={{
+                                textDecoration: "underline",
+                                color: 'var(--accent)'
+                            }}
+                        >
+                            {t('how_to_install')}
+                        </Link>
                     </div>}
                     <div className='home-spacing'>
                         <div className="red-text">{t('common:warning')}</div>

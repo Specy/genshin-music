@@ -1,0 +1,27 @@
+.expandable-container {
+  box-shadow: 0 0.2rem 0.4rem rgba(0, 0, 0, 0.1);
+}
+
+.expandable-container-header {
+  background: transparent;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  flex: 1;
+  padding: 0.6rem 1rem;
+}
+
+.expandable-container-content {
+  padding: 0.8rem;
+  border-bottom-right-radius: 0.4rem;
+  border-bottom-left-radius: 0.4rem;
+}
+
+.expandable-container-arrow {
+  font-size: 1.3rem;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center
+}
