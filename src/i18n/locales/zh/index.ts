@@ -15,33 +15,33 @@ export const i18n_zh = {
         error_downloading_songs: "歌曲下载失败",
         error_importing_file: "导入文件“{{file_name}}}”时出错",
         error_importing_file_generic: "文件导入失败",
-        error_importing_invalid_format: `文件导入失败, 文件格式错误`,
+        error_importing_invalid_format: "文件导入失败, 文件格式错误",
         song_backup_downloaded: "已下载歌曲备份",
         no_songs_to_backup: "没有要备份的歌曲",
         no_empty_name: "请填写一个非空白的名称",
-        cloned_song: `复制歌曲: "{{song_name}}"`,
+        cloned_song: "复制歌曲：“{{song_name}}”",
         converting_recorded_to_composed_warning: '将录制的歌曲转换为创作的歌曲，音频可能不准确',
         suggest_backup: "您已经有一段时间没有备份歌曲了，记得偶尔下载一下备份哦！",
         storage_persisted: "已允许持久存储，浏览器将不会删除您的数据", //persisted means that the browser won't delete the data
         storage_persisted_error: "设置持久存储时出错",
 
-        importing_files: "Importing files...",
-        could_not_load_song: "Could not load song",
-        song_added_to_folder: `Song "{{song_name}}" added to the {{folder_name}} folder`,
-        error_importing_files: "Error importing files",
-        n_things_failed_to_import: "{{n}} things failed to import",
-        imported_n_songs: `Imported {{n}} songs`,
-        imported_n_folders: `Imported {{n}} folders`,
-        imported_n_themes: `Imported {{n}} themes`,
-        error_importing_song: `Error importing song "{{song_name}}"`,
-        error_importing_folder: `Error importing folder "{{folder_name}}"`,
-        error_importing_theme: `Error importing theme "{{theme_name}}"`,
-        error_importing_unknown_file: "Error importing unknown file {{file_name}}",
-        imported_theme: `Imported theme "{{theme_name}}"`,
-        imported_folder: `Imported folder "{{folder_name}}"`,
-        imported_song: `Imported {{song_type}} song "{{song_name}}"`,
-        error_loading_song: "There was an error loading the song",
-        error_loading_theme: "There was an error loading the theme",
+        importing_files: "导入文件中...",
+        could_not_load_song: "无法加载歌曲",
+        song_added_to_folder: "歌曲 "{{song_name}}" 已添加至 {{folder_name}} 文件夹",
+        error_importing_files: "导入文件出错",
+        n_things_failed_to_import: "{{n}}个对象导入失败",
+        imported_n_songs: "已导入 {{n}} 首歌曲",
+        imported_n_folders: "已导入 {{n}} 个文件夹",
+        imported_n_themes: "已导入 {{n}} 个主题",
+        error_importing_song: "导入歌曲“{{song_name}}”时出错",
+        error_importing_folder: "导入文件夹“{{folder_name}}”时出错",
+        error_importing_theme: "导入主题“{{theme_name}}”时出错",
+        error_importing_unknown_file: "导入未知文件{{file_name}}时出错",
+        imported_theme: "已导入主题“{{theme_name}}”",
+        imported_folder: "已导入文件夹“{{folder_name}}”",
+        imported_song: "已导入{{song_type}}歌曲“{{song_name}}”",
+        error_loading_song: "加载此歌曲时出错",
+        error_loading_theme: "加载此主题时出错",
     },
     question: {
         unsaved_song_save: "您对歌曲“{{song_name}}”有未保存的更改，您现在要保存吗？未保存的更改将会丢失",
@@ -326,7 +326,7 @@ export const i18n_zh = {
         delete: "删除",
         track_name: '音轨名称',
 
-        remove_background_song: "Remove background song"
+        remove_background_song: "移除背景音乐"
     },
 
     vsrg_player: {
@@ -337,6 +337,8 @@ export const i18n_zh = {
         bad: "Bad",
         miss: "Miss",
         combo: "Combo", //combo counter, how do rythm games call it? is it kept as "combo"?
+        //Combo could be “连击数” in Chinese. 
+        //These terms are commonly denoted by the corresponding English words. Waiting for the feedback from the others.
     },
     transfer: {
         connecting_please_wait: "正在连接，请稍候...",
@@ -438,12 +440,12 @@ export const i18n_zh = {
         midi_access_granted: "MIDI可用！",
 
         shortcuts: {
-            toggle_play: "Toggle play",
-            next_column: "Next column",
-            previous_column: "Previous column",
-            add_column: "Add column",
-            remove_column: "Remove column",
-            change_layer: "Change layer",
+            toggle_play: "切换播放/停止",
+            next_column: "下一列",
+            previous_column: "上一列",
+            add_column: "添加列",
+            remove_column: "移除列",
+            change_layer: "更改音层",
         }
     },
     error: {
