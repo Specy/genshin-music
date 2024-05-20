@@ -18,6 +18,7 @@ export function DefaultPage({excludeMenu = false, children, className = "", styl
         className={"default-page " + className}
         style={{
             '--left-mobile-padding': hasMenu ? '5rem' : '1rem',
+            '--right-mobile-padding': hasMenu ? '1.4rem' : '1rem',
             ...pageStyle
         } as CSSProperties}
     >

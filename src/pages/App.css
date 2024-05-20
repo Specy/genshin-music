@@ -738,6 +738,6 @@ a {
     }
 
     .default-page {
-        padding: 1rem 1.4rem 1rem var(--left-mobile-padding, 5rem);
+        padding: 1rem var(--right-mobile-padding, 1.4rem) 1rem var(--left-mobile-padding, 5rem);
     }
 }

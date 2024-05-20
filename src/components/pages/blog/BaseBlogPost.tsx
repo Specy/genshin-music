@@ -94,7 +94,8 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
                 gap={'2rem'}
                 style={{
                     fontSize: '1.2rem',
-                    marginBottom: '1rem'
+                    marginBottom: '1rem',
+                    flexWrap: 'wrap'
                 }}
             >
                 {metadata.author &&

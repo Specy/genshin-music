@@ -7,10 +7,11 @@ import {FederatedPointerEvent, type Sprite as SpriteType, TextStyle} from "pixi.
 import {VsrgCanvasColors, VsrgCanvasSizes} from "./VsrgComposerCanvas";
 import {VsrgCanvasCache} from "./VsrgComposerCache";
 import {VsrgTrackRenderer} from "./VsrgTrackRenderer";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {defaultVsrgTextStyle} from "./VsrgKeysRenderer";
 import {useConfig} from "$lib/Hooks/useConfig";
 import {useFontFaceObserver} from "$lib/Hooks/useFontFaceObserver";
+import {useTranslation} from "react-i18next";
 
 interface VsrgScrollableTrackRendererProps {
     vsrg: VsrgSong
@@ -49,6 +50,7 @@ export function VsrgScrollableTrackRenderer({
                                                 onAddTime,
                                                 onRemoveTime
                                             }: VsrgScrollableTrackRendererProps) {
+    const {t, i18n} = useTranslation('vsrg_composer')
     const scale = sizes.scaling
     const {PLAY_BAR_OFFSET} = useConfig()
 
@@ -65,6 +67,12 @@ export function VsrgScrollableTrackRenderer({
         }))
     }, [isFontLoaded, colors.lineColor])
 
+    const text = useMemo(() => {
+        return {
+            addTime: t('click_to_add_time'),
+            removeTime: t('click_to_remove_time')
+        }
+    }, [t, i18n.language])
     function handleSnapPointClick(event: FederatedPointerEvent) {
         if (preventClick) return
         const target = event.target as SpriteType
@@ -138,7 +146,7 @@ export function VsrgScrollableTrackRenderer({
                         x={cache.textures.buttons.width / 2}
                         anchor={0.5}
                         y={cache.textures.buttons.height / 2}
-                        text="Click to add time"
+                        text={text.addTime}
                         style={textStyle}
                     />
                 </Container>
@@ -156,7 +164,8 @@ export function VsrgScrollableTrackRenderer({
                         x={cache.textures.buttons.width / 2}
                         anchor={0.5}
                         y={cache.textures.buttons.height / 2}
-                        text="Click to remove time"
+                        text={text.removeTime}
+
                         style={textStyle}
                     />
                 </Container>

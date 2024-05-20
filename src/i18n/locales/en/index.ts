@@ -333,8 +333,9 @@ export const i18n_en = {
         hold: 'Hold',
         delete: 'Delete',
         track_name: 'Track name',
-
-        remove_background_song: "Remove background song"
+        remove_background_song: "Remove background song",
+        click_to_add_time: "Click to add time",
+        click_to_remove_time: "Click to remove time",
     },
     vsrg_player: {
         amazing: "Amazing",

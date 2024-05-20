@@ -327,7 +327,9 @@ export const i18n_zh = {
         delete: "删除",
         track_name: '音轨名称',
 
-        remove_background_song: "移除背景音乐"
+        remove_background_song: "移除背景音乐",
+        click_to_add_time: "Click to add time",
+        click_to_remove_time: "Click to remove time",
     },
 
     vsrg_player: {
