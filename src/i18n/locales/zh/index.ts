@@ -149,7 +149,7 @@ export const i18n_zh = {
         drop_files_here: "拖放文件到此处",
         new_changes_to_page: "页面更新!",
 
-        how_to_install: "How to add to home screen", //how to install the app using the browser
+        how_to_install: "如何使用浏览器添加应用到主屏幕", //how to install the app using the browser
     },
     menu: {
         close_menu: "关闭菜单",
@@ -328,8 +328,8 @@ export const i18n_zh = {
         track_name: '音轨名称',
 
         remove_background_song: "移除背景音乐",
-        click_to_add_time: "Click to add time",
-        click_to_remove_time: "Click to remove time",
+        click_to_add_time: "点击以添加时间",
+        click_to_remove_time: "点击以移除时间",
     },
 
     vsrg_player: {
