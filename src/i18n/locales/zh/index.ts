@@ -61,7 +61,7 @@ export const i18n_zh = {
         close: "关闭",
         save: "保存",
         delete: "删除",
-        edit: "退出",
+        edit: "编辑", //退出
         create: "创作",
         add: "添加",
         remove: "清除",
@@ -98,7 +98,7 @@ export const i18n_zh = {
         download_midi: "下载 MIDI",
         pitch: "音高", //audio pitch
         bpm: "每分钟节拍数",
-        connect: "联网",
+        connect: "连接", //联网
         import: "导入",
         border: "边框",
         line: "横线",
@@ -172,7 +172,7 @@ export const i18n_zh = {
         change_app_theme: "更改应用主题",
         download_all_songs_backup: "下载所有歌曲（备份）",
         connect_midi_keyboard: "连接 MIDI 键盘",
-        import_song_sheet: "导入歌单",
+        import_song_sheet: "导入歌曲", //导入歌单
         compose_song: "创作歌曲",
         select_menu: "选择菜单",
         create_folder: "创建文件夹",
@@ -185,8 +185,8 @@ export const i18n_zh = {
         filter_alphabetical: "按字母顺序",
         "filter_date-created": "创建日期",
         open_in_composer: "在编曲器中打开",
-        recorded: "录制的", //recorded songs
-        composed: "创作的", //composed songs
+        recorded: "录制的歌曲", //recorded songs  录制的
+        composed: "创作的歌曲", //composed songs 创作的
         vsrg: "VSRG", //vsrg songs, leave as is
         midi: "MIDI", //midi songs, leave as is
     },
@@ -248,7 +248,7 @@ export const i18n_zh = {
             player_show_visual_sheet: "显示键位表",
             player_show_visual_sheet_description: "在键盘上方显示键位表（可能会降低性能）",
 
-            vsrg_composer_keys: "物量",
+            vsrg_composer_keys: "按键数", //物量
             vsrg_composer_keys_description: "歌曲包含的音符数",
             vsrg_composer_bpm: "节拍数",
             vsrg_composer_bpm_description: "每分钟节拍数，歌曲的速度",
@@ -409,7 +409,7 @@ export const i18n_zh = {
         //How about ring_closing_mode, indicating that being outside of the shrinking ring = losing point.
         approach_mode_description: "在缩圈模式下演奏歌曲“{{song_name}}”",
         song_search_no_results: "没有结果",
-        song_search_description: "在这里你可以找到要学习的歌曲，这些歌曲由天空音乐库提供。",
+        song_search_description: "在这里你可以找到要学习的歌曲，这些歌曲由sky-music library提供。", //在这里你可以找到要学习的歌曲，这些歌曲由天空音乐库提供。
         midi_or_audio_import_redirect_warning: "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？",
     },
     keybinds: {
@@ -567,7 +567,7 @@ export const i18n_zh = {
         },
         midi_parser: {
             out_of_range: "超出范围",
-            accidentals: "临时记号",
+            accidentals: "变音记号", //临时记号
             total_notes: "总音符",
             select_midi_tracks: "选择 MIDI 轨道",
             ignore_empty_tracks: "忽略空轨道",
@@ -702,9 +702,9 @@ export const i18n_zh = {
         "Old-Zither": "镜花之琴（旧版）",
         "DunDun": "豪鼓",
         "Piano": "钢琴",
-        "Contrabass": "低音提琴",
+        "Contrabass": "屁琴", //低音提琴
         "Guitar": "吉他",
-        "LightGuitar": "弱音吉他",
+        "LightGuitar": "电吉他", //弱音吉他
         "Harp": "竖琴",
         "Horn": "圆号",
         "Trumpet": "小号",
@@ -716,7 +716,7 @@ export const i18n_zh = {
         "Ocarina": "陶笛",
         "MantaOcarina": "鲲笛",
         "Aurora": "Aurora", //leave as is
-        "Kalimba": "非洲拇指琴",
+        "Kalimba": "拇指琴", //非洲拇指琴
         "ToyUkulele": "玩具尤克里里",
         "Drum": "鼓组",
         "Bells": "铃铛",
