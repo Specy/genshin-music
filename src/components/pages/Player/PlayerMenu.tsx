@@ -184,6 +184,8 @@ function Menu({functions, data, inPreview}: MenuProps) {
             if (confirm) {
                 router.push('/composer?showMidi=true')
             }
+        }else{
+            logger.error(t('logs:error_importing_invalid_format'), 8000)
         }
     }, [router, t])
     const JSONImportError = useCallback(async (error?: any, files?: File[]) => {

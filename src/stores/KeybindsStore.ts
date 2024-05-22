@@ -111,11 +111,24 @@ class KeyBinds {
 
     @observable
     private shortcuts: Shortcuts = Object.fromEntries(
-        Object.entries(defaultShortcuts).map(([key, value]) => [key, new Map(Object.entries(value))])
+        Object.entries(defaultShortcuts)
+            .map(([key, value]) => [key, new Map(Object.entries(value))])
     ) as Shortcuts
 
+    private reverseShortcuts: Record<string, Map<string, string>>
+
     constructor() {
+        this.reverseShortcuts = this.getReverseShortcuts(this.shortcuts)
         makeObservable(this)
+    }
+
+
+    private getReverseShortcuts(of: Shortcuts) {
+        const entries = Object.entries(of)
+            .map(([key, value]) => {
+                return [key, new Map([...value.entries()].map(([k, v]) => [v.name, k]))]
+            })
+        return Object.fromEntries(entries)
     }
 
     getVsrgKeybinds(keyCount: VsrgSongKeys) {
@@ -147,8 +160,8 @@ class KeyBinds {
         return possibleExisting
     }
 
-    getKeyOfShortcut<T extends ShortcutPage>(page: T, value: MapValues<Shortcuts[T]>): string | undefined {
-        return Array.from(this.shortcuts[page].entries()).find(([_, val]) => (val as Shortcut<string>).name === (value as Shortcut<string>).name)?.[0]
+    getKeyOfShortcut<T extends ShortcutPage>(page: T, value: string): string | undefined {
+        return this.reverseShortcuts[page].get(value)
     }
 
     getShortcut<T extends ShortcutPage>(page: T, key: string | string[]): MapValues<Shortcuts[T]> | undefined {
@@ -161,11 +174,13 @@ class KeyBinds {
         newKey = KeyBinds.getShortcutName(newKey)
         const oldShortcut = this.shortcuts[page].get(oldKey)
         const newKeyExists = this.shortcuts[page].get(newKey)
-        if (!oldShortcut === undefined) return undefined
+        //TODO this was !oldShortcut === undefined ???
+        if (oldShortcut === undefined || oldShortcut === null) return undefined
         if (newKeyExists !== undefined) return newKeyExists as MapValues<Shortcuts[T]> | undefined
         this.shortcuts[page].delete(oldKey)
-        // @ts-ignore 
-        this.shortcuts[page].set(newKey, oldShortcut as any)
+        this.shortcuts[page].set(newKey, oldShortcut)
+        //@ts-ignore
+        this.reverseShortcuts[page].set(oldShortcut?.name, newKey)
         this.save()
     }
 
@@ -176,26 +191,30 @@ class KeyBinds {
     }
 
     load() {
-        const data = localStorage.getItem(`${APP_NAME}_keybinds`)
-        if (data) {
-            const parsed = JSON.parse(data) as SerializedKeybinds
-            if (parsed.version !== this.version) return
-            this.vsrg = parsed.vsrg
-            //.map(([key, value]) => [key, new Map(Object.entries(value))])
-            for (const outer of Object.entries(parsed.shortcuts)) {
-                const [pageKey, pageValue] = outer as [ShortcutPage, SerializedKeybinds['shortcuts'][ShortcutPage]]
-                for (const inner of Object.entries(pageValue)) {
-                    const [shortcutKey, shortcutValue] = inner
-                    // @ts-ignore
-                    const key = this.getKeyOfShortcut(pageKey, shortcutValue)
-                    if (!key) {
-                        console.log("Skipping keybind", pageKey, shortcutKey, shortcutValue)
-                        continue
+        try {
+            const data = localStorage.getItem(`${APP_NAME}_keybinds`)
+            if (data) {
+                const parsed = JSON.parse(data) as SerializedKeybinds
+                if (parsed.version !== this.version) return
+                this.vsrg = parsed.vsrg
+                //.map(([key, value]) => [key, new Map(Object.entries(value))])
+                for (const outer of Object.entries(parsed.shortcuts)) {
+                    const [pageKey, pageValue] = outer as [ShortcutPage, SerializedKeybinds['shortcuts'][ShortcutPage]]
+                    for (const inner of Object.entries(pageValue)) {
+                        const [shortcutKey, shortcutValue] = inner
+                        const key = this.getKeyOfShortcut(pageKey, shortcutValue.name)
+                        if (!key) {
+                            console.log("Skipping keybind", pageKey, shortcutKey, shortcutValue)
+                            continue
+                        }
+                        this.setShortcut(pageKey, key, shortcutKey)
                     }
-                    this.setShortcut(pageKey, key, shortcutKey)
                 }
             }
+        } catch (e) {
+            console.error(e)
         }
+
     }
 
     save() {

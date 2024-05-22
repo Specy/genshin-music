@@ -12,8 +12,11 @@ import {
 } from "$config"
 import {makeObservable, observable} from "mobx"
 import {InstrumentName, NoteStatus} from "$types/GeneralTypes"
-import {getPitchChanger} from "../utils/Utilities"
+import {capitalize, getPitchChanger} from "../utils/Utilities"
 import {NoteImage} from "$cmp/shared/SvgNotes"
+import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
+import {KeyboardCode} from "$lib/Providers/KeyboardProvider/KeyboardTypes";
+import {keyBinds} from "$stores/KeybindsStore";
 
 type Layouts = {
     keyboard: string[]
@@ -95,7 +98,11 @@ export class Instrument {
                 const baseNote = this.notes[index].baseNote
                 return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
             }
-            if (type === "Keyboard layout") return layout.keyboard[index]
+            if (type === "Keyboard layout") {
+                const key = keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[index]) ?? layout.keyboard[index]
+                const res = KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key
+                return capitalize(res)
+            }
             if (type === "Do Re Mi") {
                 const baseNote = this.notes[index].baseNote
                 return DO_RE_MI_NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]

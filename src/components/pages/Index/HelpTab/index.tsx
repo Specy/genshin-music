@@ -59,7 +59,6 @@ export function ComposerShortcuts() {
         <ShortcutsTable shortcuts={composerShortcuts} style={{marginTop: '1rem'}}/>
     </>
 }
-
 export function PlayerShortcuts() {
     const {t} = useTranslation(['tutorials', 'home'])
     const {IS_MOBILE} = useConfig()
