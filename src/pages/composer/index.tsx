@@ -43,7 +43,7 @@ import {useTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
 import {fileService} from "$lib/Services/FileService";
 import {VsrgSong} from "$lib/Songs/VsrgSong";
-import {usePageVisit, useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 interface ComposerState {
     layers: Instrument[]
@@ -380,6 +380,8 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.setState({isRecordingAudio: true})
         await delay(300)
         await this.togglePlay(true) //wait till song finishes
+        const delayTime = (this.state.settings.lookaheadTime.value / 1000) + 0.3
+        await delay(Math.max(500, delayTime))
         if (!this.mounted) return
         this.setState({isRecordingAudio: false})
         const recording = await AudioProvider.stopRecording()
@@ -631,7 +633,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 await this.updateSong(song)
             } else {
                 const confirm = await asyncConfirm(this.props.t('question:unsaved_song_save', {song_name: song.name}), true)
-                if(confirm === null) return
+                if (confirm === null) return
                 if (confirm) {
                     if (!await this.updateSong(song)) return console.log("Blocking redirect")
                 }
@@ -641,7 +643,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.props.router.push(routeChangeBugFix(page))
     }
     selectColumn = (index: number, ignoreAudio?: boolean, delay?: number) => {
-        const {song, isToolsVisible, layers, copiedColumns} = this.state
+        const {song, isToolsVisible, layers, copiedColumns, isRecordingAudio} = this.state
         let selectedColumns = this.state.selectedColumns
         if (index < 0 || index > song.columns.length - 1) return
         song.selected = index
@@ -652,6 +654,10 @@ class Composer extends Component<ComposerProps, ComposerState> {
             selectedColumns = new Array(max - min + 1).fill(0).map((e, i) => min + i)
         }
         this.setState({song, selectedColumns})
+        //add a bit of delay if recording audio to imrove the recording quality
+        delay = delay
+            ? delay + (isRecordingAudio ? 250 : 0)
+            : 0
         if (ignoreAudio) return
         song.selectedColumn.notes.forEach(note => {
             layers.forEach((_, i) => {
@@ -764,12 +770,12 @@ class Composer extends Component<ComposerProps, ComposerState> {
 
     downloadSong = async (song: SerializedSong, as: 'song' | 'midi') => {
         try {
-            if(song.id === this.state.song.id){
-                if(this.state.settings.autosave.value){
+            if (song.id === this.state.song.id) {
+                if (this.state.settings.autosave.value) {
                     await this.updateSong(this.state.song)
                     song = this.state.song.serialize()
-                }else{
-                    if(await asyncConfirm(this.props.t("ask_download_of_current_song", {song_name: song.name}))){
+                } else {
+                    if (await asyncConfirm(this.props.t("ask_download_of_current_song", {song_name: song.name}))) {
                         await this.updateSong(this.state.song)
                         song = this.state.song.serialize()
                     }
