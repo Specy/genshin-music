@@ -259,12 +259,13 @@ export const LAYOUT_ICONS_KINDS = {
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
     genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
-export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
+export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Your Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
 
 export const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     ? [
         "Note name",
         "Keyboard layout",
+         "Your Keyboard layout",
         "Do Re Mi",
         "ABC",
         "No Text"
@@ -272,6 +273,7 @@ export const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     : [
         "Note name",
         "Keyboard layout",
+        "Your Keyboard layout",
         "Do Re Mi",
         "ABC",
         "No Text",

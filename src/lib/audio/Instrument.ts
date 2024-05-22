@@ -17,6 +17,7 @@ import {NoteImage} from "$cmp/shared/SvgNotes"
 import {KeyboardProvider} from "$lib/Providers/KeyboardProvider";
 import {KeyboardCode} from "$lib/Providers/KeyboardProvider/KeyboardTypes";
 import {keyBinds} from "$stores/KeybindsStore";
+import {DEFAULT_ENG_KEYBOARD_MAP} from "$i18n/i18n";
 
 type Layouts = {
     keyboard: string[]
@@ -98,9 +99,14 @@ export class Instrument {
                 const baseNote = this.notes[index].baseNote
                 return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0]
             }
-            if (type === "Keyboard layout") {
+            if (type === "Your Keyboard layout") {
                 const key = keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[index]) ?? layout.keyboard[index]
                 const res = KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key
+                return capitalize(res)
+            }
+            if(type === "Keyboard layout"){
+                const key = keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[index]) ?? layout.keyboard[index]
+                const res = DEFAULT_ENG_KEYBOARD_MAP[key] ?? key
                 return capitalize(res)
             }
             if (type === "Do Re Mi") {
