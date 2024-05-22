@@ -48,6 +48,7 @@ export class KeyboardProviderClass {
                 // @ts-ignore
                 navigator.keyboard.getLayoutMap().then(layoutMap => {
                     const entries = [...layoutMap.entries()] as [string, string][]
+                    if(entries.length === 0) return
                     this.layoutMap = new Map<string, string>(entries)
                 })
             }

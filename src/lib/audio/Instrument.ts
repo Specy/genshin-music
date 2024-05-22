@@ -101,12 +101,12 @@ export class Instrument {
             }
             if (type === "Your Keyboard layout") {
                 const key = keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[index]) ?? layout.keyboard[index]
-                const res = KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key
+                const res = KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key.replace('Key', '')
                 return capitalize(res)
             }
             if(type === "Keyboard layout"){
                 const key = keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[index]) ?? layout.keyboard[index]
-                const res = DEFAULT_ENG_KEYBOARD_MAP[key] ?? key
+                const res = DEFAULT_ENG_KEYBOARD_MAP[key] ?? key.replace('Key', '')
                 return capitalize(res)
             }
             if (type === "Do Re Mi") {
