@@ -18,7 +18,7 @@ import AppBase from "$cmp/AppBase";
 import {NextComponentType, NextPageContext} from "next";
 import {delay, setIfInTWA} from "$lib/utils/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"
-import {BASE_PATH, IS_TAURI} from "$config";
+import {APP_NAME, BASE_PATH, IS_TAURI} from "$config";
 import ErrorBoundaryRedirect from "$cmp/shared/Utility/ErrorBoundaryRedirect";
 import {logger} from "$stores/LoggerStore";
 import {logsStore} from "$stores/LogsStore";
@@ -89,6 +89,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                             const confirm = await asyncConfirm(i18n.t('logs:update_available'), false)
                             if (confirm) {
                                 registration.waiting?.postMessage({type: "SKIP_WAITING"})
+                                localStorage.setItem(APP_NAME + "_repeat_update_notice", "true")
                                 await delay(1000)
                                 window.location.reload()
                             }

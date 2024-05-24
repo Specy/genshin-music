@@ -131,11 +131,13 @@ function AppBase() {
             const visited = localStorage.getItem(APP_NAME + "_Visited")
             if (checkedUpdate) return
             const storedVersion = localStorage.getItem(APP_NAME + "_Version")
+            const repeatNotice = localStorage.getItem(APP_NAME + "_repeat_update_notice") === "true"
             if (!visited) {
                 return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
             }
-            if (APP_VERSION !== storedVersion) {
+            if (APP_VERSION !== storedVersion || repeatNotice) {
                 logger.log("Update V" + APP_VERSION + "\n" + UPDATE_MESSAGE, 6000)
+                localStorage.setItem(APP_NAME + "_repeat_update_notice", "false")
                 localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
             }
             setCheckedUpdate(true)

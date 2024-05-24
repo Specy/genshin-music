@@ -8,10 +8,12 @@ export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
         - Added translations for the app, we are looking for translators!
         - Added button to install app to home screen
+        - Added custom keyboard layout as a note name type  
     `
     : `
         - Added translations for the app, we are looking for translators!
         - Added button to install app to home screen
+        - Added custom keyboard layout as a note name type  
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'

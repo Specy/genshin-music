@@ -13,6 +13,8 @@ export const CHANGELOG: Update[] = [
         changes: [
             "Added translations for the app, we are looking for translators!",
             "Added button to install app to home screen",
+            "Added custom keyboard layout as a note name type",
+            "Added \"your keyboard layout\" note name type, which uses your device's keyboard layout",
             "Bug fixes and improvements",
         ]
     },
