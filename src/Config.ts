@@ -2,24 +2,18 @@ import type {Tauri} from "$types/TauriTypes"
 import type {NoteImage} from "$cmp/shared/SvgNotes"
 
 export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-export const APP_VERSION = '3.3' as const
+export const APP_VERSION = '3.4' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-        - In the composer you can now set reverb individually for each layer
-        - Added quick selections in the Zen keyboard
-        - Zen keyboard is now also a MIDI keyboard
-        - Created a blog for the app
-        - Added tool in the composer to convert audio/video to a sheet (experimental)
-        - Bug fixes and improvements
+        - Added translations for the app, we are looking for translators!
+        - Added button to install app to home screen
+        - Added custom keyboard layout as a note name type  
     `
     : `
-        - In the composer you can now set reverb individually for each layer
-        - Added quick selections in the Zen keyboard
-        - Zen keyboard is now also a MIDI keyboard
-        - Created a blog for the app
-        - Added tool in the composer to convert audio/video to a sheet (experimental)
-        - Bug fixes and improvements
+        - Added translations for the app, we are looking for translators!
+        - Added button to install app to home screen
+        - Added custom keyboard layout as a note name type  
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
@@ -267,12 +261,13 @@ export const LAYOUT_ICONS_KINDS = {
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
     genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
-export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
+export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Your Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
 
 export const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     ? [
         "Note name",
         "Keyboard layout",
+         "Your Keyboard layout",
         "Do Re Mi",
         "ABC",
         "No Text"
@@ -280,6 +275,7 @@ export const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     : [
         "Note name",
         "Keyboard layout",
+        "Your Keyboard layout",
         "Do Re Mi",
         "ABC",
         "No Text",
@@ -804,3 +800,5 @@ export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
 export const HAS_BIGINT = typeof BigInt !== 'undefined'
 export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
 export const IS_BETA = process.env.NEXT_PUBLIC_IS_BETA === "true"
+export const IS_DEV = process.env.NODE_ENV === "development"
+export const LANG_PREFERENCE_KEY_NAME = APP_NAME + "_Lang"

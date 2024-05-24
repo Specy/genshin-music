@@ -13,6 +13,7 @@ import Logger from '$cmp/pages/Index/Logger'
 import {AsyncPromptWrapper} from '$cmp/shared/Utility/AsyncPrompt';
 import {setupProtocol} from "$lib/Hooks/useWindowProtocol";
 import {logger} from "$stores/LoggerStore";
+import {pwaStore} from "$stores/PwaStore";
 
 interface GeneralProvidersWrapperProps {
     children: React.ReactNode
@@ -30,6 +31,7 @@ export function GeneralProvidersWrapper({children, onLoaded}: GeneralProvidersWr
         folderStore.sync().catch(console.error)
         themeStore.sync().catch(console.error)
         keyBinds.load()
+        pwaStore.load()
         ThemeProvider.load().catch(console.error)
         setupProtocol().catch(console.error)
         return () => {

@@ -8,6 +8,7 @@ import {globalConfigStore} from "$stores/GlobalConfigStore";
 import {logger} from "$stores/LoggerStore";
 import s from "./UmaMode.module.scss";
 import {CSSProperties, useEffect, useRef, useState} from "react";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 
 const nonUmaModeEmojis = ["👻", "👾", "👺", "👹", "👿", "🔥"]
@@ -41,6 +42,7 @@ const wrongMessage = [
     "Thou must explore the world to find the passphrase as it is not this one",
 ]
 export default function UmaMode() {
+    useSetPageVisited('umaMode')
     const {IS_UMA_MODE} = useConfig()
     const [particles, setParticles] = useState<Particle[]>([])
     const ref = useRef<HTMLButtonElement>(null)

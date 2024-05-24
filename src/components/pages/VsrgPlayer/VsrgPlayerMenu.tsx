@@ -5,7 +5,7 @@ import {MenuButton, MenuItem} from "$cmp/shared/Menu/MenuItem";
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
 import {FloatingDropdown, FloatingDropdownRow, FloatingDropdownText} from "$cmp/shared/Utility/FloatingDropdown";
-import Memoized, {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
+import {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
 import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
 import {Folder} from "$lib/Folder";
@@ -40,6 +40,10 @@ import {useConfig} from "$lib/Hooks/useConfig";
 import {APP_NAME} from "$config";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {homeStore} from "$stores/HomeStore";
+import {useTranslation} from "react-i18next";
+import {i18n} from "$i18n/i18n";
+import {AppLink} from "$cmp/shared/link/AppLink";
+import {Separator} from "$cmp/shared/separator/Separator";
 
 type MenuTabs = 'Songs' | 'Settings'
 
@@ -51,6 +55,7 @@ interface VsrgMenuProps {
 
 
 function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
+    const {t} = useTranslation(['menu', 'common', 'settings'])
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
@@ -81,24 +86,24 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                     onClick={() => {
                         setIsVisible(false)
                     }}
-                    ariaLabel="Close MenuContext"
+                    ariaLabel={t('close_menu')}
                 >
                     <MemoizedIcon icon={FaTimes} className={'icon'}/>
                 </MenuButton>
                 <MenuItem
                     style={{marginTop: 'auto'}}
                     id={'Songs'}
-                    ariaLabel='Song menu'
+                    ariaLabel={t('song_menu')}
                 >
                     <MemoizedIcon icon={FaMusic} className={'icon'}/>
                 </MenuItem>
 
-                <MenuItem id={'Settings'} ariaLabel='Settings menu'>
+                <MenuItem id={'Settings'} ariaLabel={t('settings_menu')}>
                     <MemoizedIcon icon={FaCog} className={'icon'}/>
                 </MenuItem>
                 <MenuButton
                     onClick={homeStore.open}
-                    ariaLabel='Open home menu'
+                    ariaLabel={t('open_home_menu')}
                     style={{border: "solid 0.1rem var(--secondary)"}}
                 >
                     <MemoizedIcon icon={FaHome} className={'icon'}/>
@@ -109,7 +114,7 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                     <div className="row">
                         <Link href='/vsrg-composer'>
                             <AppButton>
-                                Create song
+                                {t('common:create_song')}
                             </AppButton>
                         </Link>
 
@@ -134,18 +139,15 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
                         settings={settings}
                         onUpdate={onSettingsUpdate}
                     />
-                    <div className="row" style={{
-                        marginTop: '0.6rem',
-                        justifyContent: 'flex-end'
-                    }}>
-                        {!IS_MOBILE &&
-                            <Link href='/keybinds'>
-                                <AppButton>
-                                    Change keybinds
-                                </AppButton>
-                            </Link>
-                        }
-                    </div>
+                    {!IS_MOBILE && <>
+                        <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
+                        <AppLink href={'/keybinds'} style={{marginLeft: 'auto'}}>
+                            <AppButton>
+                                {t('settings:change_keybinds')}
+                            </AppButton>
+                        </AppLink>
+                    </>
+                    }
                 </MenuPanel>
             </MenuPanelWrapper>
         </MenuContextProvider>
@@ -168,6 +170,7 @@ interface SongRowProps {
 }
 
 function SongRow({data, functions, theme, folders}: SongRowProps) {
+    const {t} = useTranslation(['common', 'logs', 'settings', 'menu', 'confirm'])
     const {setMenuVisible, onSongSelect} = functions
     const buttonStyle = {backgroundColor: theme.layer('primary', 0.15).toString()}
     const [isRenaming, setIsRenaming] = useState(false)
@@ -176,13 +179,13 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
         setSongName(data.name)
     }, [data.name])
     if (data.type !== 'vsrg') return <div className="row">
-        Invalid song
+        {t('menu:invalid_song')}
     </div>
     return <div className="song-row">
         <div className={`song-name ${hasTooltip(true)}`} onClick={async () => {
             if (isRenaming) return
             const song = await songService.fromStorableSong(data)
-            if (!song) return logger.error("Could not find song")
+            if (!song) return logger.error(i18n.t('logs:could_not_find_song'))
             onSongSelect(song as VsrgSong, 'play')
             setMenuVisible(false)
         }}>
@@ -199,7 +202,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 </div>
             }
             <Tooltip>
-                {isRenaming ? "Song name" : "Play song"}
+                {isRenaming ? t('menu:song_name') : t('menu:play_song')}
             </Tooltip>
         </div>
         <div className="song-buttons-wrapper">
@@ -207,7 +210,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 Icon={FaEllipsisH}
                 style={buttonStyle}
                 ignoreClickOutside={isRenaming}
-                tooltip="More options"
+                tooltip={t('settings:more_options')}
                 onClose={() => setIsRenaming(false)}
             >
                 <FloatingDropdownRow
@@ -220,7 +223,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                     }}
                 >
                     <FaPen style={{marginRight: "0.4rem"}} size={14}/>
-                    <FloatingDropdownText text={isRenaming ? "Save" : "Rename"}/>
+                    <FloatingDropdownText text={isRenaming ? t("common:save") : t('common:rename')}/>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow style={{padding: '0 0.4rem'}}>
                     <FaFolder style={{marginRight: "0.4rem"}}/>
@@ -229,12 +232,12 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                             onChange={async (e) => {
                                 const id = e.target.value
                                 const song = await songService.getOneSerializedFromStorable(data)
-                                if (!song) return logger.error("Could not find song")
+                                if (!song) return logger.error(t('logs:could_not_find_song'))
                                 songsStore.addSongToFolder(song, id !== "_None" ? id : null)
                             }}
                     >
                         <option value={"_None"}>
-                            None
+                            {i18n.t("common:none")}
                         </option>
                         {folders.map(folder =>
                             <option key={folder.id} value={folder.id!}>{folder.name}</option>
@@ -243,19 +246,19 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.getOneSerializedFromStorable(data)
-                    if (!song) return logger.error("Could not find song")
+                    if (!song) return logger.error(t('logs:could_not_find_song'))
                     fileService.downloadSong(song, `${data.name}.${APP_NAME.toLowerCase()}sheet`)
                 }}>
                     <FaDownload style={{marginRight: "0.4rem"}} size={14}/>
-                    <FloatingDropdownText text='Download'/>
+                    <FloatingDropdownText text={t("common:download")}/>
                 </FloatingDropdownRow>
                 <FloatingDropdownRow onClick={async () => {
-                    const confirm = await asyncConfirm("Are you sure you want to delete this song?")
+                    const confirm = await asyncConfirm(t('confirm:delete_song', {song_name: data.name}))
                     if (!confirm) return
                     songsStore.removeSong(data.id!)
                 }}>
                     <FaTrash color="#ed4557" style={{marginRight: "0.4rem"}} size={14}/>
-                    <FloatingDropdownText text='Delete'/>
+                    <FloatingDropdownText text={t('common:delete')}/>
                 </FloatingDropdownRow>
             </FloatingDropdown>
         </div>

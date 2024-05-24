@@ -27,10 +27,12 @@ import {subscribeTheme} from '$lib/Hooks/useTheme';
 import {createShortcutListener} from '$stores/KeybindsStore';
 import {FederatedPointerEvent} from 'pixi.js';
 import {ComposerBreakpointsRenderer} from "$cmp/pages/Composer/ComposerBreakpointsRenderer";
+import {WithTranslation} from "react-i18next/index";
 
 type ClickEventType = 'up' | 'down-slider' | 'down-stage'
 
 interface ComposerCanvasProps {
+    t: WithTranslation<['composer', 'home', 'logs', 'question', 'common']>['t']
     data: {
         columns: NoteColumn[],
         isPlaying: boolean,
@@ -41,7 +43,7 @@ interface ComposerCanvasProps {
         inPreview?: boolean,
         settings: ComposerSettingsDataType,
         breakpoints: number[],
-        selectedColumns: number[]
+        selectedColumns: number[],
     }
     functions: {
         selectColumn: (index: number, ignoreAudio?: boolean) => void,
@@ -53,12 +55,17 @@ interface ComposerCanvasProps {
 interface ComposerCanvasState {
     width: number
     height: number
-    pixelRatio: number
     numberOfColumnsPerCanvas: number
     column: {
         width: number
         height: number
     }
+    stageOptions: {
+        backgroundColor: number,
+        autoDensity: boolean,
+        resolution: number,
+    },
+    timelineOptions: {}
     timelineHeight: number
     currentBreakpoint: number
     theme: {
@@ -105,8 +112,17 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.state = {
             width: Math.floor(width),
             height: Math.floor(height),
-            pixelRatio: 1.4,
             numberOfColumnsPerCanvas,
+            stageOptions: {
+                backgroundColor: ThemeProvider.get('primary').rgbNumber(),
+                autoDensity: true,
+                resolution: 1.4
+            },
+            timelineOptions: {
+                backgroundAlpha: 0,
+                autoDensity: true,
+                resolution: 1.4
+            },
             column: {
                 width: nearestEven(width / numberOfColumnsPerCanvas),
                 height: height
@@ -156,7 +172,16 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.setState({
             width: Math.floor(width),
             height: Math.floor(height),
-            pixelRatio: window.devicePixelRatio ?? 1.4,
+            stageOptions: {
+                backgroundColor: ThemeProvider.get('primary').rgbNumber(),
+                autoDensity: true,
+                resolution: window.devicePixelRatio ?? 1.4
+            },
+            timelineOptions: {
+                backgroundAlpha: 0,
+                autoDensity: true,
+                resolution: window.devicePixelRatio ?? 1.4
+            },
             numberOfColumnsPerCanvas,
             column: {
                 width: nearestEven(width / numberOfColumnsPerCanvas),
@@ -199,6 +224,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     handleThemeChange = () => {
         this.setState({
+            stageOptions: {
+                ...this.state.stageOptions,
+                backgroundColor: ThemeProvider.get('primary').rgbNumber()
+            },
             theme: {
                 timeline: {
                     hex: ThemeProvider.layer('primary', 0.1).hex(),
@@ -264,7 +293,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
         if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return null
-        const newCache = new ComposerCache({
+        return new ComposerCache({
             width: columnWidth,
             height,
             margin,
@@ -288,7 +317,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 ]
             }
         })
-        return newCache
     }
 
     handleWheel = (e: WheelEvent) => {
@@ -395,7 +423,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
 
     render() {
-        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, pixelRatio} = this.state
+        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, stageOptions} = this.state
         const {data, functions} = this.props
         const cache = this.state.cache?.cache
         const sizes = this.state.column
@@ -407,7 +435,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         const isBreakpointSelected = data.breakpoints.includes(data.selected)
         const sideColor = theme.sideButtons.rgb
-
+        const {t} = this.props
         return <div
             className={"canvas-wrapper " + (data.inPreview ? "canvas-wrapper-in-preview" : "")}
             style={{
@@ -423,11 +451,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     onMount={this.recalculateCacheAndSizes}
                     style={{opacity: theme.main.backgroundOpacity}}
                     renderOnComponentChange={true}
-                    options={{
-                        backgroundColor: theme.main.background,
-                        autoDensity: true,
-                        resolution: pixelRatio,
-                    }}
+                    options={stageOptions}
                     ref={this.notesStageRef}
                 >
                     {(cache && !data.isRecordingAudio) && <Container
@@ -495,22 +519,22 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 <div className="timeline-wrapper" style={{height: this.state.timelineHeight}}>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(-1)}
-                        tooltip='Previous Breakpoint'
+                        tooltip={t('previous_breakpoint')}
                         style={{
                             backgroundColor: theme.timeline.hex
                         }}
-                        ariaLabel='Previous Breakpoint'
+                        ariaLabel={t('previous_breakpoint')}
                     >
                         <MemoizedIcon icon={FaStepBackward} size={16}/>
                     </TimelineButton>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(1)}
-                        tooltip='Next breakpoint'
+                        tooltip={t('next_breakpoint')}
                         style={{
                             marginLeft: 0,
                             backgroundColor: theme.timeline.hex
                         }}
-                        ariaLabel='Next Breakpoint'
+                        ariaLabel={t('next_breakpoint')}
                     >
                         <MemoizedIcon icon={FaStepForward} size={16}/>
                     </TimelineButton>
@@ -519,11 +543,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         <Stage
                             width={width}
                             height={timelineHeight}
-                            options={{
-                                backgroundAlpha: 0,
-                                autoDensity: true,
-                                resolution: pixelRatio
-                            }}
+                            options={this.state.timelineOptions}
                             raf={false}
                             ref={this.breakpointsStageRef}
                             renderOnComponentChange={true}
@@ -584,8 +604,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         style={{
                             backgroundColor: theme.timeline.hex
                         }}
-                        tooltip={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
-                        ariaLabel={isBreakpointSelected ? 'Remove breakpoint' : 'Add breakpoint'}
+                        tooltip={isBreakpointSelected ? t('remove_breakpoint') : t('add_breakpoint')}
+                        ariaLabel={isBreakpointSelected ? t('remove_breakpoint') : t('add_breakpoint')}
                     >
                         <MemoizedIcon icon={isBreakpointSelected ? FaMinusCircle : FaPlusCircle} size={16}/>
                     </TimelineButton>

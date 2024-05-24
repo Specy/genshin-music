@@ -7,9 +7,9 @@ fn main() {
   let context = tauri::generate_context!();
   tauri::Builder::default()
     .menu(if cfg!(target_os = "macos") {
-      tauri::MenuContext::os_default(&context.package_info().name)
+      tauri::Menu::os_default(&context.package_info().name)
     } else {
-      tauri::MenuContext::default()
+      tauri::Menu::default()
     })
     .run(context)
     .expect("error while running tauri application");

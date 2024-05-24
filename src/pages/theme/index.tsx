@@ -18,9 +18,13 @@ import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
 import {useObservableArray} from "$lib/Hooks/useObservable";
 import {themeStore} from "$stores/ThemeStore/ThemeStore";
 import {fileService} from "$lib/Services/FileService";
+import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 
 function ThemePage() {
+    useSetPageVisited('theme')
+    const {t} = useTranslation(["theme", "home", "common"])
     const [theme] = useTheme()
     const userThemes = useObservableArray<SerializedTheme>(themeStore.themes)
     const [selectedProp, setSelectedProp] = useState('')
@@ -55,8 +59,8 @@ function ThemePage() {
 
     const logImportError = useCallback((error?: any) => {
         if (error) console.error(error)
-        logger.error('There was an error importing this theme, is it the correct file?', 4000)
-    }, [])
+        logger.error(t('error_importing_theme'), 4000)
+    }, [t])
 
     async function cloneTheme(name: string) {
         const theme = new BaseTheme(name)
@@ -67,7 +71,7 @@ function ThemePage() {
     }
 
     async function handleNewThemeClick() {
-        const name = await asyncPrompt('How do you want to name the theme?')
+        const name = await asyncPrompt(t('choose_theme_name'))
         if (name !== null && name !== undefined) {
             const theme = new BaseTheme(name)
             await addNewTheme(theme)
@@ -84,7 +88,7 @@ function ThemePage() {
     }
 
     async function handleThemeDelete(theme: SerializedTheme) {
-        if (await asyncConfirm(`Are you sure you want to delete the theme ${theme.other.name}?`)) {
+        if (await asyncConfirm(t('confirm_delete_theme',{theme_name: theme.other.name}))) {
             if (ThemeProvider.getId() === theme.id) {
                 ThemeProvider.wipe()
             }
@@ -93,12 +97,12 @@ function ThemePage() {
     }
 
     return <DefaultPage>
-        <PageMetadata text="Themes"
+        <PageMetadata text={t('home:themes_name')}
                       description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes"/>
         <div style={{display: 'flex', alignItems: 'center'}}>
             <FilePicker onPick={handleImport} as='json' onError={logImportError}>
                 <AppButton style={{margin: '0.25rem'}}>
-                    Import Theme
+                    {t('import_theme')}
                 </AppButton>
             </FilePicker>
             <div style={{marginLeft: '1rem'}}>
@@ -120,19 +124,19 @@ function ThemePage() {
             />
         )}
         <ThemeInput
-            name="Background image (URL)"
+            name={t('theme_prop.background_image')}
             value={theme.getOther('backgroundImageMain')}
             disabled={!ThemeProvider.isEditable()}
             onChange={(e) => ThemeProvider.setBackground(e, 'Main')}
         />
         <ThemeInput
-            name="Composer Background image (URL)"
+            name={t('theme_prop.composer_background_image')}
             value={theme.getOther('backgroundImageComposer')}
             disabled={!ThemeProvider.isEditable()}
             onChange={(e) => ThemeProvider.setBackground(e, 'Composer')}
         />
         <ThemeInput
-            name="Theme name"
+            name={t('theme_prop.theme_name')}
             value={theme.getOther('name')}
             disabled={!ThemeProvider.isEditable()}
             onChange={(e) => ThemeProvider.setOther('name', e)}
@@ -140,11 +144,11 @@ function ThemePage() {
         />
         <div style={{textAlign: 'center', marginTop: '1rem'}}>
             <span style={{color: 'var(--red)'}}>
-                Warning
-            </span>: GIF backgrounds and opaque (transparent) colors could reduce performance
+                {t('common:warning')}
+            </span>: {t('opaque_performance_warning')}
         </div>
         <div style={{fontSize: '1.5rem', marginTop: '2rem'}}>
-            Your Themes
+            {t('your_themes')}
         </div>
         <div className="theme-preview-wrapper">
             {userThemes.map(theme =>
@@ -162,11 +166,11 @@ function ThemePage() {
             )}
             <button className="new-theme" onClick={handleNewThemeClick}>
                 <FaPlus size={30}/>
-                New theme
+                {t('new_theme')}
             </button>
         </div>
         <div style={{fontSize: '1.5rem', marginTop: '2rem'}}>
-            Default Themes
+            {t('default_themes')}
         </div>
         <div className="theme-preview-wrapper">
             {defaultThemes.map(theme =>
@@ -182,7 +186,7 @@ function ThemePage() {
             )}
         </div>
         <div style={{fontSize: '1.5rem', marginTop: '2rem'}}>
-            Preview
+            {t('preview')}
         </div>
         <div className="theme-app-preview">
             <AppButton
@@ -191,7 +195,7 @@ function ThemePage() {
                 style={{position: 'absolute', right: 0, top: 0, zIndex: 90}}
                 onClick={() => setSelectedPagePreview(selectedPagePreview === 'composer' ? 'player' : 'composer')}
             >
-                {selectedPagePreview === 'composer' ? 'View player' : 'View composer'}
+                {selectedPagePreview === 'composer' ? t('view_player') : t('view_composer')}
             </AppButton>
             {selectedPagePreview === "player" &&
                 <AppBackground page="Main">
@@ -205,7 +209,7 @@ function ThemePage() {
             }
         </div>
         {/*Keep this at the bottom because it gets overwritten by the preview apps above */}
-        <PageMetadata text="Themes"
+        <PageMetadata text={t('home:themes_name')}
                       description="Change the app theme, set the different colors, backgrounds, opacity and customisations"/>
     </DefaultPage>
 }

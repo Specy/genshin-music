@@ -1,0 +1,41 @@
+.promotion-card {
+  position: relative;
+  border: solid 0.1rem var(--secondary);
+  overflow: hidden;
+}
+
+.promotion-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  filter: blur(0.1rem);
+  mask: linear-gradient(to left, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.05) 60%);
+}
+
+.promotion-close {
+  position: absolute;
+  padding: 0.4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  font-size: 1rem;
+  color: var(--secondary-text);
+  border-bottom-left-radius: 0.4rem;
+  width: 3rem;
+  cursor: pointer;
+  z-index: 3;
+  background-color: var(--secondary);
+  top: 0;
+  right: 0;
+  transition: background-color 0.2s;
+}
+.promotion-close:hover {
+  background-color: var(--secondary-layer-10);
+}
+.promotion-right-side{
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.05));
+}

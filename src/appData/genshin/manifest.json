@@ -54,16 +54,37 @@
     {
       "src": "manifestData/player.webp",
       "type": "image/png",
+      "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {
       "src": "manifestData/composer.webp",
       "type": "image/png",
+      "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {
       "src": "manifestData/zenkeyboard.webp",
       "type": "image/png",
+      "form_factor": "narrow",
+      "sizes": "1280x720"
+    },
+    {
+      "src": "manifestData/player.webp",
+      "form_factor": "wide",
+      "type": "image/png",
+      "sizes": "1280x720"
+    },
+    {
+      "src": "manifestData/composer.webp",
+      "type": "image/png",
+      "form_factor": "wide",
+      "sizes": "1280x720"
+    },
+    {
+      "src": "manifestData/zenkeyboard.webp",
+      "type": "image/png",
+      "form_factor": "wide",
       "sizes": "1280x720"
     }
   ],

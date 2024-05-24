@@ -19,11 +19,14 @@ import {logger} from "$stores/LoggerStore";
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import s from "$pages/vsrg-player/VsrgPlayer.module.css";
+import {i18n} from "$i18n/i18n";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 type VsrgPlayerProps = {}
 
 interface VsrgPlayerState {
     song: VsrgSong | null
+    songDuration: number
     audioSong: RecordedSong | null
     settings: VsrgPlayerSettingsDataType
     canvasSizes: VsrgPlayerCanvasSizes
@@ -43,6 +46,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         super(props)
         this.state = {
             song: null,
+            songDuration: 0,
             audioSong: null,
             settings: settingsService.getDefaultVsrgPlayerSettings(),
             canvasSizes: defaultVsrgPlayerSizes,
@@ -76,7 +80,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     onSongSelect = async (song: VsrgSong, type: VsrgSongSelectType) => {
         const {songAudioPlayer, keyboardAudioPlayer} = this.state
         const serializedAudioSong = await songsStore.getSongById(song.audioSongId)
-        logger.showPill("Loading instruments...")
+        logger.showPill(i18n.t("logs:loading_instruments"))
         if (serializedAudioSong) {
             const parsed = songService.parseSong(serializedAudioSong)
             songAudioPlayer.basePitch = parsed.pitch
@@ -96,6 +100,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         logger.hidePill()
         this.setState({
             song,
+            songDuration: song.getHighestNoteTime(),
             isPlaying: true
         }, () => {
             if (type === 'play') {
@@ -135,10 +140,10 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
         this.onSongSelect(song, 'play')
     }
     handleTick = (timestamp: number) => {
-        const {audioSong, songAudioPlayer, song, settings} = this.state
+        const {audioSong, songAudioPlayer, songDuration, song, settings} = this.state
         this.lastTimestamp = timestamp
         if (!song) return
-        if (this.lastTimestamp >= song.duration + 2000) {
+        if (this.lastTimestamp >= songDuration + 2000) {
             this.setState({isPlaying: false})
             vsrgPlayerStore.showScore()
         }
@@ -166,7 +171,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
     render() {
         const {canvasSizes, settings} = this.state
         return <>
-            <PageMetadata text="Vsrg Player" description="Play or practice VSRG songs"/>
+            <PageMetadata text={i18n.t('home:vsrg_player_name')} description="Play or practice VSRG songs"/>
             <VsrgPlayerMenu
                 settings={settings}
                 onSettingsUpdate={this.handleSettingChange}
@@ -206,6 +211,7 @@ class VsrgPlayer extends Component<VsrgPlayerProps, VsrgPlayerState> {
 }
 
 export default function VsrgPlayerPage() {
+    useSetPageVisited('vsrgPlayer')
     return <VsrgPlayer/>
 }
 

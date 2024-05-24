@@ -3,19 +3,19 @@ import {homeStore} from "$stores/HomeStore"
 import {FaBars, FaCog, FaHome, FaTimes} from "react-icons/fa"
 import {MenuPanel, MenuPanelWrapper} from "$cmp/shared/Menu/MenuPanel"
 import {MenuButton, MenuItem} from "$cmp/shared/Menu/MenuItem"
-import {useState} from 'react'
+import {useMemo, useState} from 'react'
 import {ZenKeyboardSettingsDataType} from "$lib/BaseSettings"
 import {SettingUpdate, SettingVolumeUpdate} from "$types/SettingsPropriety"
 import {SettingsPane} from "$cmp/shared/Settings/SettingsPane"
 import {MemoizedIcon} from "$cmp/shared/Utility/Memoized"
 import {IconButton} from "$cmp/shared/Inputs/IconButton";
 import {INSTRUMENTS, PITCHES} from "$config";
-import s from './ZenKeyboard.module.css'
 import {MdPiano} from "react-icons/md";
 import {IoMdMusicalNote} from "react-icons/io";
 import {GiMetronome} from "react-icons/gi";
-import {IconType} from "react-icons";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
+import {useTranslation} from "react-i18next";
+import {FloatingSelection} from "$cmp/shared/FloatingSelection/FloatingSelection";
 
 interface ZenKeyboardMenuProps {
     settings: ZenKeyboardSettingsDataType
@@ -25,6 +25,9 @@ interface ZenKeyboardMenuProps {
     setIsMetronomePlaying: (val: boolean) => void
 }
 
+const pitchesLabels = PITCHES.map(p => ({value: p, label: p}))
+
+
 
 export function ZenKeyboardMenu({
                                     settings,
@@ -33,13 +36,14 @@ export function ZenKeyboardMenu({
                                     isMetronomePlaying,
                                     setIsMetronomePlaying
                                 }: ZenKeyboardMenuProps) {
+    const {t} = useTranslation(['menu', 'settings', 'instruments'])
     const [selectedPage, setSelectedPage] = useState("Settings")
     const [isOpen, setIsOpen] = useState(true)
     const [isVisible, setIsVisible] = useState(false)
     const menuRef = useClickOutside<HTMLDivElement>(() => {
         setIsVisible(false)
     }, {ignoreFocusable: true, active: selectedPage !== ""})
-
+    const instrumentLabels = useMemo(() => INSTRUMENTS.map(i => ({value: i, label: t(`instruments:${i}`)})), [t])
     return <>
 
         <IconButton
@@ -53,7 +57,7 @@ export function ZenKeyboardMenu({
                 borderRadius: '1rem',
                 border: 'solid 0.1rem var(--secondary)'
             }}
-            ariaLabel='Toggle metronome'
+            ariaLabel={t('settings:toggle_metronome')}
         >
             <GiMetronome size={18}/>
         </IconButton>
@@ -66,7 +70,7 @@ export function ZenKeyboardMenu({
         >
             <FloatingSelection
                 value={settings.pitch.value}
-                items={PITCHES}
+                items={pitchesLabels}
                 Icon={IoMdMusicalNote}
                 onChange={(pitch) => handleSettingChange({
                     key: "pitch",
@@ -86,7 +90,7 @@ export function ZenKeyboardMenu({
         >
             <FloatingSelection
                 value={settings.instrument.value}
-                items={INSTRUMENTS}
+                items={instrumentLabels}
                 Icon={MdPiano}
                 onChange={(instrument) => handleSettingChange({
                     key: "instrument",
@@ -113,7 +117,7 @@ export function ZenKeyboardMenu({
             </div>
             <MenuSidebar style={{justifyContent: 'flex-end'}}>
                 <MenuButton
-                    ariaLabel='Close menu'
+                    ariaLabel={t('toggle_menu')}
                     style={{marginBottom: 'auto'}}
                     onClick={() => setIsVisible(!isVisible)}
                 >
@@ -121,20 +125,20 @@ export function ZenKeyboardMenu({
                 </MenuButton>
                 <MenuItem
                     id={"Settings"}
-                    ariaLabel='Open settings'
+                    ariaLabel={t('open_settings_menu')}
                 >
                     <MemoizedIcon icon={FaCog} className={'icon'}/>
                 </MenuItem>
                 <MenuButton
                     onClick={homeStore.open}
-                    ariaLabel='Open home menu'
+                    ariaLabel={t('open_home_menu')}
                     style={{border: "solid 0.1rem var(--secondary)"}}
                 >
                     <MemoizedIcon icon={FaHome} className={'icon'}/>
                 </MenuButton>
             </MenuSidebar>
             <MenuPanelWrapper>
-                <MenuPanel title="Settings" id="Settings">
+                <MenuPanel title={t('settings')} id="Settings">
                     <SettingsPane
                         settings={settings}
                         onUpdate={handleSettingChange}
@@ -145,62 +149,4 @@ export function ZenKeyboardMenu({
         </MenuContextProvider>
     </>
 
-}
-
-interface FloatingSelectionProps<T extends string | number> {
-    items: readonly T[]
-    value: T
-    Icon: IconType
-    onChange: (val: T) => void
-}
-
-function FloatingSelection<T extends string | number>({items, onChange, value, Icon}: FloatingSelectionProps<T>) {
-
-    const [open, setOpen] = useState(false)
-    const ref = useClickOutside<HTMLDivElement>(() => setOpen(false), {active: open})
-
-    function selectItem(item: T) {
-        onChange(item)
-        setOpen(false)
-    }
-
-    return <div
-        className={'column'}
-        ref={ref}
-        style={{
-            alignItems: 'flex-end',
-            gap: '0.5rem'
-        }}
-    >
-        <IconButton
-            onClick={() => setOpen(!open)}
-            style={{
-                zIndex: 2,
-                borderRadius: '1rem',
-                border: "solid 0.1rem var(--secondary)"
-            }}
-            toggled={open}
-        >
-            <Icon size={18}/>
-        </IconButton>
-        {open &&
-            <div
-                className={s['floating-selection-card']}
-                style={{
-                    maxHeight: '75vh'
-                }}
-            >
-                {items.map(ins =>
-                    <button
-                        className={`${s['floating-selection-card-item']}`}
-                        style={value === ins ? {backgroundColor: 'var(--accent)', color: "var(--accent-text)"} : {}}
-                        key={ins}
-                        onClick={() => selectItem(ins)}
-                    >
-                        {ins}
-                    </button>
-                )}
-            </div>
-        }
-    </div>
 }

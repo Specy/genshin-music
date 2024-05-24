@@ -46,6 +46,10 @@ import ss from "$cmp/shared/Settings/Settings.module.css"
 import {APP_NAME} from "$config";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {Row} from "$cmp/shared/layout/Row";
+import {useTranslation} from "react-i18next";
+import {Separator} from "$cmp/shared/separator/Separator";
+import {AppLink} from "$cmp/shared/link/AppLink";
+import {useConfig} from "$lib/Hooks/useConfig";
 
 type MenuTabs = 'Songs' | 'Settings' | 'Help'
 
@@ -75,12 +79,14 @@ function VsrgMenu({
                       trackModifiers,
                       onTrackModifierChange
                   }: VsrgMenuProps) {
+    const {t} = useTranslation(["menu", "common", "vsrg_composer", 'settings'])
     const [isOpen, setOpen] = useState(false)
     const [isVisible, setVisible] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Settings')
     const [folders] = useFolders()
     const [songs] = useSongs()
     const [theme] = useTheme()
+    const {IS_MOBILE} = useConfig()
     const menuRef = useClickOutside<HTMLDivElement>((e) => {
         setVisible(false)
     }, {active: (isOpen && isVisible), ignoreFocusable: true})
@@ -105,32 +111,32 @@ function VsrgMenu({
                     onClick={onSave}
                     style={{marginTop: 'auto'}}
                     className={hasChanges ? "not-saved" : ""}
-                    ariaLabel='Save'
+                    ariaLabel={t('common:save')}
                 >
                     <MemoizedIcon icon={FaSave} className={'icon'}/>
                 </MenuButton>
                 <MenuItem
                     id={'Help'}
-                    ariaLabel='Help'
+                    ariaLabel={t('help')}
                 >
                     <MemoizedIcon icon={FaQuestion} className={'icon'}/>
                 </MenuItem>
                 <MenuItem
                     id={'Songs'}
-                    ariaLabel='Song menu'
+                    ariaLabel={t('song_menu')}
                 >
                     <MemoizedIcon icon={FaMusic} className={'icon'}/>
                 </MenuItem>
                 <MenuItem
                     id={'Settings'}
-                    ariaLabel='Settings menu'
+                    ariaLabel={t('settings_menu')}
                 >
                     <MemoizedIcon icon={FaCog} className={'icon'}/>
 
                 </MenuItem>
                 <MenuButton
                     onClick={homeStore.open}
-                    ariaLabel='Open home menu'
+                    ariaLabel={t('open_home_menu')}
                     style={{border: "solid 0.1rem var(--secondary)"}}
                 >
                     <MemoizedIcon icon={FaHome} className={'icon'}/>
@@ -144,7 +150,7 @@ function VsrgMenu({
                 <MenuPanel id="Songs">
                     <div className="row">
                         <AppButton onClick={onCreateSong}>
-                            Create song
+                            {t('common:create_song')}
                         </AppButton>
                     </div>
                     <SongMenu<SongRowProps>
@@ -168,15 +174,20 @@ function VsrgMenu({
                         onUpdate={handleSettingChange}
                     />
                     <div className="column vsrg-select-song-wrapper">
-                        <h1 className={`${ss['settings-group-title']} row-centered`}>
-                            Background Song
-                            <HelpTooltip buttonStyle={{width: '1.2rem', height: '1.2rem', marginLeft: '0.5rem'}}>
-                                You can select one of your songs to be played on the background
+                        <Row align={'center'}>
+                            <h1 className={`${ss['settings-group-title']} row-centered`}>
+                                {t('vsrg_composer:background_song')}
+                            </h1>
+
+                            <HelpTooltip buttonStyle={{width: '1.2rem', height: '1.2rem', marginLeft: '0.5rem'}}
+                                         position={'middle'}>
+                                {t('vsrg_composer:background_song_info')}
                             </HelpTooltip>
-                        </h1>
+                        </Row>
+
                         {audioSong === null
                             ? <span>
-                                No background song selected
+                                {t("vsrg_composer:no_background_song_selected")}
                             </span>
                             : <div className="column vsrg-composer-selected-song">
                                 <div className="row"
@@ -191,8 +202,8 @@ function VsrgMenu({
                                     </span>
                                     <SongActionButton
                                         onClick={() => setAudioSong(null)}
-                                        ariaLabel="Remove background song"
-                                        tooltip="Remove background song"
+                                        ariaLabel={t('vsrg_composer:remove_background_song')}
+                                        tooltip={t('vsrg_composer:remove_background_song')}
                                         style={{backgroundColor: 'var(--red-bg)', margin: 0}}
                                     >
                                         <FaTimes/>
@@ -200,7 +211,7 @@ function VsrgMenu({
                                 </div>
                                 <Row justify={'between'} align={'center'}>
                                     <span>
-                                        Pitch
+                                        {t('common:pitch')}
                                     </span>
                                     <span>
                                         {audioSong.pitch}
@@ -208,14 +219,14 @@ function VsrgMenu({
                                 </Row>
                                 <Row justify={'between'} align={'center'}>
                                     <span>
-                                        BPM
+                                        {t('common:bpm')}
                                     </span>
                                     <span>
                                         {audioSong.bpm}
                                     </span>
                                 </Row>
                                 <span style={{marginTop: '0.4rem'}}>
-                                    Instrument modifiers
+                                    {t('vsrg_composer:instrument_modifiers')}
                                 </span>
                                 {trackModifiers.map((trackModifier, i) =>
                                     <TrackModifier
@@ -241,7 +252,15 @@ function VsrgMenu({
                             }}
                         />
                     </div>
-
+                    {!IS_MOBILE && <>
+                        <Separator background={'var(--secondary)'} height={'0.1rem'} verticalMargin={'0.5rem'}/>
+                        <AppLink href={'/keybinds'} style={{marginLeft: 'auto'}}>
+                            <AppButton>
+                                {t('settings:change_keybinds')}
+                            </AppButton>
+                        </AppLink>
+                    </>
+                    }
                 </MenuPanel>
             </MenuPanelWrapper>
         </MenuContextProvider>

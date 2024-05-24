@@ -6,6 +6,7 @@ import {memo, useState} from "react"
 import {FaAngleDown, FaAngleUp, FaCopy, FaEraser, FaPaste, FaTrash} from "react-icons/fa"
 import {MdPhotoSizeSelectSmall, MdSelectAll} from "react-icons/md"
 import {TbArrowBarToRight} from "react-icons/tb"
+import {useTranslation} from "react-i18next";
 
 interface ComposerToolsProps {
     data: {
@@ -30,6 +31,7 @@ interface ComposerToolsProps {
 type SelectionType = 'layer' | 'all'
 
 function ComposerTools({data, functions}: ComposerToolsProps) {
+    const {t} = useTranslation(['composer', 'common'])
     const [selectionType, setSelectionType] = useState<SelectionType>('all')
     const {
         toggleTools,
@@ -44,9 +46,7 @@ function ComposerTools({data, functions}: ComposerToolsProps) {
     const {isToolsVisible, hasCopiedColumns, layer, selectedColumns, undoHistory} = data
     const selectedTarget = selectionType === 'all' ? 'all' : layer
     return <DecoratedCard
-        boxProps={{
-            className: `floating-tools ${isToolsVisible ? "floating-tools tools-visible" : ""}`
-        }}
+        className={`floating-tools ${isToolsVisible ? "floating-tools tools-visible" : ""}`}
         size='1.2rem'
         isRelative={false}
         offset="0.1rem"
@@ -59,68 +59,71 @@ function ComposerTools({data, functions}: ComposerToolsProps) {
                     disabled={hasCopiedColumns}
                     onClick={() => copyColumns(selectedTarget)}
                     active={hasCopiedColumns}
-                    tooltip='Copy all notes'
+                    tooltip={t('tools.copy_notes')}
                     style={{flexDirection: 'column', justifyContent: 'center'}}
                     tooltipPosition='bottom'
                 >
                     <FaCopy className='tools-icon' size={24}/>
-                    Copy
+                    {t('common:copy')}
                 </ToolButton>
                 <ToolButton
                     disabled={!hasCopiedColumns}
                     onClick={() => pasteColumns(false, selectedTarget)}
-                    tooltip='Paste copied notes'
+                    tooltip={t('tools.paste_copied_notes')}
                     area="b"
                     tooltipPosition="bottom"
                 >
                     <FaPaste className='tools-icon'/>
-                    Paste {selectionType === 'all' ? '' : `in layer ${layer + 1}`}
+                    {selectionType === 'all' ? t('tools.paste_all_layers') : t('tools.paste_in_layer_n', {layer_number: layer + 1})}
+
                 </ToolButton>
                 <ToolButton
                     disabled={!hasCopiedColumns}
                     onClick={() => pasteColumns(true, selectedTarget)}
-                    tooltip='Insert copied notes'
+                    tooltip={t('tools.insert_copied_notes')}
                     area="c"
                 >
                     <TbArrowBarToRight className='tools-icon' style={{strokeWidth: '3px'}}/>
-                    Insert {selectionType === 'all' ? '' : `in layer ${layer + 1}`}
+                    {selectionType === 'all' ? t('tools.insert_all_layers') : t('tools.insert_in_layer_n', {layer_number: layer + 1})}
                 </ToolButton>
                 <ToolButton
                     disabled={hasCopiedColumns}
                     onClick={() => eraseColumns(selectedTarget)}
-                    tooltip='Erase all selected notes'
+                    tooltip={t('tools.erase_all_selected_notes')}
                     area="d"
                 >
                     <FaEraser className='tools-icon'/>
-                    Erase
+                    {t('common:erase')}
                 </ToolButton>
 
                 <ToolButton
                     disabled={hasCopiedColumns || selectedTarget !== 'all'}
                     onClick={deleteColumns}
-                    tooltip='Delete selected columns'
+                    tooltip={t('tools.delete_selected_columns')}
                     area="f"
                 >
                     <FaTrash className='tools-icon' color="var(--red)"/>
-                    Delete
+                    {t('common:delete')}
                 </ToolButton>
                 <ToolButton
                     disabled={hasCopiedColumns}
-                    tooltip="Push notes up by 1 position"
+                    tooltip={t('tools.move_notes_up_description')}
                     area="e"
                     onClick={() => moveNotesBy(1, selectedTarget)}
                 >
                     <FaAngleUp className='tools-icon'/>
-                    Move notes up
+                    {t('tools.move_notes_up')}
+
                 </ToolButton>
                 <ToolButton
                     disabled={hasCopiedColumns}
-                    tooltip="Push notes down by 1 position"
+                    tooltip={t('tools.move_notes_down_description')}
                     onClick={() => moveNotesBy(-1, selectedTarget)}
                     area="g"
                 >
                     <FaAngleDown className='tools-icon'/>
-                    Move notes down
+                    {t('tools.move_notes_down')}
+
                 </ToolButton>
             </div>
             <div className="tools-right column">
@@ -131,9 +134,10 @@ function ComposerTools({data, functions}: ComposerToolsProps) {
                     onClick={() => setSelectionType('all')}
                 >
                     <MdSelectAll style={{marginRight: '0.2rem'}} size={16}/>
-                    All layers
+                    {t('tools.all_layers')}
+
                     <Tooltip style={{left: 0}}>
-                        Select all the layers in the highlighted columns
+                        {t('tools.all_layers_description')}
                     </Tooltip>
                 </AppButton>
                 <AppButton
@@ -143,12 +147,12 @@ function ComposerTools({data, functions}: ComposerToolsProps) {
                     onClick={() => setSelectionType('layer')}
                 >
                     <MdPhotoSizeSelectSmall style={{marginRight: '0.2rem'}} size={16}/>
-                    Only Layer
+                    {t('tools.only_layer')}
                     <span style={{minWidth: '0.6rem', marginLeft: '0.2rem'}}>
                         {layer + 1}
                     </span>
                     <Tooltip style={{left: 0}}>
-                        Select all the notes in the highlighted columns of the current layer
+                        {t('tools.select_layer_description')}
                     </Tooltip>
                 </AppButton>
                 <AppButton
@@ -157,7 +161,7 @@ function ComposerTools({data, functions}: ComposerToolsProps) {
                     disabled={selectedColumns.length <= 1 && !hasCopiedColumns}
                     toggled={hasCopiedColumns}
                 >
-                    Clear selection
+                    {t('tools.clear_selection')}
                 </AppButton>
                 <div className="row" style={{flex: '1', alignItems: 'flex-end'}}>
                     <AppButton
@@ -165,11 +169,11 @@ function ComposerTools({data, functions}: ComposerToolsProps) {
                         disabled={undoHistory.length === 0}
                         onClick={undo}
                     >
-                        Undo
+                        {t('common:undo')}
                     </AppButton>
                     <AppButton onClick={toggleTools}
                                style={{marginLeft: '0.2rem', flex: '1', justifyContent: 'center'}}>
-                        Ok
+                        {t('common:ok')}
                     </AppButton>
                 </div>
             </div>

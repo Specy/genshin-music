@@ -3,12 +3,13 @@ import {Theme} from "$stores/ThemeStore/ThemeProvider"
 import {InstrumentName} from "$types/GeneralTypes"
 import {SettingsInstrument, SettingUpdateKey} from "$types/SettingsPropriety"
 import s from './Settings.module.css'
+import {InstrumentSelect} from "$cmp/shared/Inputs/InstrumentSelect";
 
 interface InstrumentInputProps {
     data: SettingsInstrument,
     theme: Theme,
     volume: number,
-    instrument: string,
+    instrument: InstrumentName,
     objectKey: SettingUpdateKey,
     onVolumeChange: (value: number) => void,
     onVolumeComplete: (data: {
@@ -31,12 +32,6 @@ export function InstrumentInput({
                                     instrument,
                                     theme
                                 }: InstrumentInputProps) {
-    const instruments: InstrumentName[] = []
-    const SFXInstruments: InstrumentName[] = []
-    for (const instrument of data.options) {
-        if (instrument.startsWith("SFX")) SFXInstruments.push(instrument)
-        else instruments.push(instrument)
-    }
 
     function handleVolumeChange(e: ChangeEvent<HTMLInputElement>) {
         onVolumeChange(Number(e.target.value))
@@ -49,58 +44,23 @@ export function InstrumentInput({
         })
     }
 
-    function handleInstrument(e: ChangeEvent<HTMLSelectElement>) {
+    function handleInstrument(ins: InstrumentName) {
         onInstrumentPick({
             key: objectKey,
-            data: {...data, value: e.target.value as InstrumentName}
+            data: {...data, value: ins}
         })
     }
 
     return <div className={s['instrument-picker']}>
-        <select value={instrument}
-                style={{
-                    textAlign: 'left',
-                    paddingLeft: '0.4rem',
-                    backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
-                }}
-                className={s.select}
-                onChange={handleInstrument}
-        >
-            {SFXInstruments.length === 0
-                ? <>
-                    {instruments.map(ins =>
-                        <option
-                            key={ins}
-                            value={ins}
-                        >
-                            {ins.replace("-", " ")}
-                        </option>
-                    )}
-                </>
-                : <>
-                    <optgroup label="Instruments">
-                        {instruments.map(ins =>
-                            <option
-                                key={ins}
-                                value={ins}
-                            >
-                                {ins.replace("-", " ")}
-                            </option>
-                        )}
-                    </optgroup>
-                    <optgroup label="SFX">
-                        {SFXInstruments.map(ins =>
-                            <option
-                                key={ins}
-                                value={ins}
-                            >
-                                {ins.replace("-", " ").replace("SFX_", "")}
-                            </option>
-                        )}
-                    </optgroup>
-                </>
-            }
-        </select>
+        <InstrumentSelect
+            selected={instrument}
+            onChange={handleInstrument}
+            className={s.select}
+            style={{
+                textAlign: 'left',
+                paddingLeft: '0.4rem',
+            }}
+        />
         <input
             type="range"
             min={1}

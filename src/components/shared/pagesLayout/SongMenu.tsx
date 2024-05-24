@@ -10,6 +10,7 @@ import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {FaSearch, FaTimes} from "react-icons/fa";
 import {IconButton} from "$cmp/shared/Inputs/IconButton";
 import {Row} from "$cmp/shared/layout/Row";
+import {useTranslation} from "react-i18next";
 
 
 interface SongMenuProps<T extends { data: SongStorable }> {
@@ -37,6 +38,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                                                                exclude,
                                                                onCreateFolder,
                                                            }: SongMenuProps<T>) {
+    const {t} = useTranslation(['common', 'menu'])
     const [noFolderRecorded, setNoFolderRecorded] = useState<Folder>()
     const [noFolderComposed, setNoFolderComposed] = useState<Folder>()
     const [noFolderVsrg, setNoFolderVsrg] = useState<Folder>()
@@ -53,10 +55,10 @@ export function SongMenu<T extends { data: SongStorable }>({
     }, [songs, exclude, searchValue])
 
     useEffect(() => {
-        setNoFolderRecorded(new Folder("Recorded", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'recorded')))
-        setNoFolderComposed(new Folder("Composed", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'composed')))
+        setNoFolderRecorded(new Folder(t('menu:recorded'), null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'recorded')))
+        setNoFolderComposed(new Folder(t('menu:composed'), null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'composed')))
         setNoFolderVsrg(new Folder("Vsrg", null, filteredSongs.filter(song => !isInFolder(folders,song) && song.type === 'vsrg')))
-    }, [filteredSongs, folders])
+    }, [filteredSongs, folders, t])
 
     const unselectedColor = theme.layer('menu_background', 0.35).lighten(0.2)
     const unselectedColorText = theme.getTextColorFromBackground(unselectedColor).toString()
@@ -73,7 +75,7 @@ export function SongMenu<T extends { data: SongStorable }>({
             >
                 <input
                     type="text"
-                    placeholder="Search"
+                    placeholder={t('common:search')}
                     value={searchValue}
                     onChange={e => setSearchValue(e.target.value)}
                     style={{
@@ -94,7 +96,7 @@ export function SongMenu<T extends { data: SongStorable }>({
             </div>
             {onCreateFolder &&
                 <AppButton onClick={onCreateFolder}>
-                    Create folder
+                    {t('menu:create_folder')}
                 </AppButton>
             }
         </Row>
@@ -117,7 +119,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                     )}
                     {noFolderComposed.songs.length === 0 &&
                         <div style={{padding: '0.2rem', fontSize: '0.9rem'}}>
-                            No songs here, compose one!
+                            {t('menu:hint_no_recorded_songs')}
                         </div>
                     }
                 </SongFolderContent>
@@ -142,7 +144,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                     )}
                     {noFolderRecorded.songs.length === 0 &&
                         <div style={{padding: '0.2rem', fontSize: '0.9rem'}}>
-                            No songs here, record one!
+                            {t('menu:hint_no_recorded_songs')}
                         </div>
                     }
                 </SongFolderContent>
@@ -167,7 +169,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                     )}
                     {noFolderVsrg.songs.length === 0 &&
                         <div style={{padding: '0.2rem', fontSize: '0.9rem'}}>
-                            No songs here, create one!
+                            {t('menu:hint_no_songs_in_folder')}
                         </div>
                     }
                 </SongFolderContent>
@@ -219,7 +221,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                 }
                 {(composed.length === 0 && recorded.length === 0 && vsrg.length === 0) &&
                     <div style={{padding: '0.7rem', paddingTop: "0", fontSize: '0.9rem'}}>
-                        The folder is empty
+                        {t('menu:folder_empty')}
                     </div>
                 }
             </SongFolder>

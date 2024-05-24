@@ -19,6 +19,7 @@ import {
 } from "$types/SettingsPropriety"
 import {VsrgSongKeys} from "./Songs/VsrgSong"
 import {VsrgKeyboardLayout} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard"
+import {DeepWriteable} from "$lib/utils/UtilTypes";
 
 export type BaseSettings<T> = {
     data: T,
@@ -39,48 +40,52 @@ export type ComposerSettingsDataType = {
     lookaheadTime: SettingsNumber
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
-export const ComposerSettings: ComposerSettingsType = {
+
+
+
+
+export const ComposerSettings = {
     other: {
-        settingVersion: APP_NAME + 67,
+        settingVersion: APP_NAME + 69,
     },
     data: {
         bpm: {
-            name: "Bpm",
-            tooltip: "Beats per minute, the speed of the song. Usually the BPM inside the app should be 4 times the BPM of the song you are trying to compose",
+            name: "composer_bpm",
+            tooltip: "composer_bpm_description",
             type: "number",
             songSetting: true,
             increment: 5,
             threshold: [0, 10000],
             value: 220,
-            category: "Song Settings",
+            category: "song_settings",
         },
         pitch: {
-            name: "Base pitch",
-            tooltip: "The main pitch of the song",
+            name: "composer_base_pitch",
+            tooltip: "composer_base_pitch_description",
             type: "select",
             songSetting: true,
             value: "C",
-            category: "Song Settings",
+            category: "song_settings",
             options: [...PITCHES]
         },
         beatMarks: {
-            name: "Beat marks",
-            tooltip: "The number of beats per measure, 3/4 is 3 beats per measure, 4/4 is 4 beats per measure",
+            name: "composer_beat_marks",
+            tooltip: "composer_beat_marks_description",
             type: "select",
             songSetting: false,
             value: 3,
-            category: "Composer Settings",
+            category: "composer_settings",
             options: [
                 3,
                 4
             ]
         },
         noteNameType: {
-            name: "Note name type",
-            tooltip: "The type of text which will be written on the note",
+            name: "composer_note_name_type",
+            tooltip: "composer_note_name_type_description",
             type: "select",
             songSetting: false,
-            category: "Composer Settings",
+            category: "composer_settings",
             value: APP_NAME === "Genshin"
                 ? isMobile()
                     ? "Do Re Mi"
@@ -89,11 +94,11 @@ export const ComposerSettings: ComposerSettingsType = {
             options: NOTE_NAME_TYPES
         },
         columnsPerCanvas: {
-            name: "Number of visible columns",
-            tooltip: "How many columns are visible at a time, more columns might cause lag",
+            name: "composer_columns_per_canvas",
+            tooltip: "composer_columns_per_canvas_description",
             type: "select",
             songSetting: false,
-            category: "Composer Settings",
+            category: "composer_settings",
             value: 35,
             options: [
                 20,
@@ -106,42 +111,42 @@ export const ComposerSettings: ComposerSettingsType = {
             ]
         },
         reverb: {
-            name: "Base reverb (cave mode)",
-            tooltip: "Makes it sound like you are in a cave, this is the default value applied to every instrument",
-            category: "Song Settings",
+            name: "composer_reverb",
+            tooltip: "composer_reverb_description",
+            category: "song_settings",
             type: "checkbox",
             songSetting: true,
             value: false,
         },
         autosave: {
-            name: "Autosave changes",
-            tooltip: "Autosaves the changes to a song every 5 edits, and when you change page/change song",
+            name: "composer_autosave",
+            tooltip: "composer_autosave_description",
             type: "checkbox",
-            category: "Composer Settings",
+            category: "composer_settings",
             songSetting: false,
             value: false,
         },
         useKeyboardSideButtons: {
-            name: "Put next/previous column buttons around keyboard",
-            tooltip: "Puts the buttons to select the next/previous column on the left/right of the keyboard",
+            name: "composer_use_keyboard_side_buttons",
+            tooltip: "composer_use_keyboard_side_buttons_description",
             type: "checkbox",
-            category: "Composer Settings",
+            category: "composer_settings",
             songSetting: false,
             value: false
         },
         syncTabs: {
-            name: "Autoplay in all tabs (pc only)",
-            tooltip: "Advanced feature, it syncs other browser tabs to all play at the same time",
+            name: "composer_sync_tabs",
+            tooltip: "composer_sync_tabs_description",
             type: "checkbox",
-            category: "Composer Settings",
+            category: "composer_settings",
             songSetting: false,
             value: false
         },
         lookaheadTime: {
-            name: "Lookahead time",
-            tooltip: "How many milliseconds ahead the composer will look for notes to play, a higher value improves playback accuracy but feels less responsive",
+            name: "composer_lookahead_time",
+            tooltip: "composer_lookahead_time_description",
             type: "number",
-            category: "Composer Settings",
+            category: "composer_settings",
             songSetting: false,
             value: 250,
             increment: 50,
@@ -149,7 +154,7 @@ export const ComposerSettings: ComposerSettingsType = {
         }
     }
 
-}
+} as const satisfies ComposerSettingsType
 
 export type PlayerSettingsDataType = {
     instrument: SettingsInstrument
@@ -167,81 +172,81 @@ export type PlayerSettingsDataType = {
     showVisualSheet: SettingsCheckbox
 }
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
-export const PlayerSettings: PlayerSettingsType = {
+export const PlayerSettings = {
     other: {
-        settingVersion: APP_NAME + 72 //change when instrument is added
+        settingVersion: APP_NAME + 74 //change when instrument is added
     },
     data: {
         instrument: {
-            name: "Instrument",
-            tooltip: "The main (first) instrument of the player, will also be saved in the song you record",
+            name: "player_instrument",
+            tooltip: "player_instrument_description",
             type: "instrument",
             songSetting: true,
             value: INSTRUMENTS[0],
             volume: 100,
             options: [...INSTRUMENTS],
-            category: "Song Settings",
+            category: "song_settings",
         },
         pitch: {
-            name: "Pitch",
-            tooltip: "The pitch of the player, will also be saved in the song you record",
+            name: "player_pitch",
+            tooltip: "player_pitch_description",
             type: "select",
             songSetting: true,
             value: "C",
-            category: "Song Settings",
+            category: "song_settings",
             options: [...PITCHES]
         },
         bpm: {
-            name: "Bpm",
-            tooltip: "Beats per minute, used by the metronome and will be used when converting the song with the compsoer",
+            name: "player_bpm",
+            tooltip: "player_bpm_description",
             type: "number",
             songSetting: true,
             increment: 5,
             threshold: [0, 10000],
             value: 220,
-            category: "Song Settings",
+            category: "song_settings",
         },
         syncSongData: {
-            name: "Auto sync the song's instruments and pitch",
-            tooltip: "Whenever you load a song, the instruments and pitch of that song will be loaded too",
+            name: "player_sync_song_data",
+            tooltip: "player_sync_song_data_description",
             type: "checkbox",
             songSetting: false,
             value: true,
-            category: "Player Settings",
+            category: "player_settings",
         },
         metronomeBeats: {
-            name: "Metronome beats",
-            tooltip: "After how many times a stronger beat is played",
+            name: "player_metronome_beats",
+            tooltip: "player_metronome_beats_description",
             type: "number",
             songSetting: false,
             increment: 1,
             value: 4,
             threshold: [0, 16],
-            category: "Player Settings",
+            category: "player_settings",
         },
         metronomeVolume: {
-            name: "Metronome volume",
-            tooltip: "The volume of the metronome",
+            name: "player_metronome_volume",
+            tooltip: "player_metronome_volume_description",
             type: "slider",
             songSetting: false,
             value: 50,
-            category: "Player Settings",
+            category: "player_settings",
             threshold: [0, 120]
         },
         reverb: {
-            name: "Reverb (cave mode)",
-            tooltip: "Makes it sound like you are in a cave",
+            name: "player_reverb",
+            tooltip: "player_reverb_description",
             type: "checkbox",
             songSetting: true,
             value: false,
-            category: "Song Settings",
+            category: "song_settings",
         },
         noteNameType: {
-            name: "Note name type",
-            tooltip: "The type of text which will be written on the note",
+            name: "player_note_name_type",
+            tooltip: "player_note_name_type_description",
             type: "select",
             songSetting: false,
-            category: "Player Settings",
+            category: "player_settings",
             value: APP_NAME === "Genshin"
                 ? isMobile()
                     ? "Do Re Mi"
@@ -251,52 +256,53 @@ export const PlayerSettings: PlayerSettingsType = {
             options: NOTE_NAME_TYPES
         },
         keyboardSize: {
-            name: "Keyboard size",
-            tooltip: "Scales the keyboard size",
+            name: "player_keyboard_size",
+            tooltip: "player_keyboard_size_description",
             type: "slider",
             songSetting: false,
             value: 100,
-            category: "Player Settings",
+            category: "player_settings",
             threshold: [80, 150]
         },
         keyboardYPosition: {
-            name: "Keyboard vertical position",
-            tooltip: "The vertical position of the keyboard",
+            name: "player_keyboard_y_position",
+            tooltip: "player_keyboard_y_position_description",
             type: "slider",
             songSetting: false,
             value: -20,
-            category: "Player Settings",
+            category: "player_settings",
             threshold: [-60, 180]
         },
         approachSpeed: {
-            name: "Approach Rate (AR)",
-            tooltip: "The time between when the notes appear and when they reach the end (in ms)",
+            name: "player_approach_speed",
+            tooltip: "player_approach_speed_description",
             type: "number",
             increment: 50,
             songSetting: false,
             value: 1500,
-            category: "Player Settings",
+            category: "player_settings",
             threshold: [0, 5000]
         },
         noteAnimation: {
-            name: "Note animation",
-            tooltip: "Toggle the animation of the notes (will reduce performance)",
+            name: "player_note_animation",
+            tooltip: "player_note_animation_description",
             type: "checkbox",
-            category: "Player Settings",
+            category: "player_settings",
             songSetting: false,
             value: false
         },
         showVisualSheet: {
-            name: "Show visual sheet",
-            tooltip: "Show the sheet above the keyboard (might reduce performance)",
+            name: "player_show_visual_sheet",
+            tooltip: "player_show_visual_sheet_description",
             type: "checkbox",
             songSetting: false,
             value: true,
-            category: "Player Settings",
+            category: "player_settings",
         },
     }
-}
+} as const satisfies PlayerSettingsType
 
+export type MIDIShortcutName = 'toggle_play' | 'next_column' | 'previous_column' | 'add_column' | 'remove_column' | 'change_layer'
 
 export const MIDISettings = {
     settingVersion: APP_NAME + 6,
@@ -312,6 +318,7 @@ export const MIDISettings = {
         new MIDIShortcut('change_layer', -1)
     ]
 }
+export type MidiSettingsType = typeof MIDISettings
 
 
 export const ThemeSettings = {
@@ -399,57 +406,57 @@ export type VsrgComposerSettingsDataType = {
     scrollSnap: SettingsCheckbox
 }
 export type VsrgComposerSettingsType = BaseSettings<VsrgComposerSettingsDataType>
-export const VsrgComposerSettings: VsrgComposerSettingsType = {
+export const VsrgComposerSettings = {
     other: {
-        settingVersion: APP_NAME + 13
+        settingVersion: APP_NAME + 14
     },
     data: {
         keys: {
-            name: "Keys",
-            tooltip: "How many keys the song has",
+            name: "vsrg_composer_keys",
+            tooltip: "vsrg_composer_keys_description",
             type: "select",
             songSetting: true,
             value: 6,
-            category: "Song Settings",
+            category: "song_settings",
             options: [
                 4,
                 6,
             ]
         },
         bpm: {
-            name: "Bpm",
-            tooltip: "Beats per minute, the speed of the song",
+            name: "vsrg_composer_bpm",
+            tooltip: "vsrg_composer_bpm_description",
             type: "number",
             songSetting: true,
             increment: 5,
             threshold: [0, 10000],
             value: 220,
-            category: "Song Settings",
+            category: "song_settings",
         },
         pitch: {
-            name: "Base pitch",
-            tooltip: "The main pitch of the song",
+            name: "vsrg_composer_pitch",
+            tooltip: "vsrg_composer_pitch_description",
             type: "select",
             songSetting: true,
             value: "C",
-            category: "Song Settings",
+            category: "song_settings",
             options: [...PITCHES]
         },
         isVertical: {
-            name: "Vertical editor",
-            tooltip: "If the editor is set horizontally or vertically",
+            name: "vsrg_composer_is_vertical",
+            tooltip: "vsrg_composer_is_vertical_description",
             type: "checkbox",
             songSetting: false,
             value: false,
-            category: "Editor Settings",
+            category: "editor_settings",
         },
         maxFps: {
-            name: "Max FPS (high values could lag)",
-            tooltip: "The FPS limiter of the editor, higher values could more lag",
+            name: "vsrg_composer_max_fps",
+            tooltip: "vsrg_composer_max_fps_description",
             type: "select",
             songSetting: false,
             value: 48,
-            category: "Editor Settings",
+            category: "editor_settings",
             options: [
                 24,
                 30,
@@ -460,32 +467,32 @@ export const VsrgComposerSettings: VsrgComposerSettingsType = {
             ]
         },
         scrollSnap: {
-            name: "Snap scroll to snap point",
-            tooltip: "When scrolling, snap the timestamp to the closest snap point",
+            name: "vsrg_scroll_snap",
+            tooltip: "vsrg_scroll_snap_description",
             type: "checkbox",
-            category: "Editor Settings",
+            category: "editor_settings",
             songSetting: false,
             value: false,
         },
         autosave: {
-            name: "Autosave changes",
-            tooltip: "Autosaves the changes to a song every 5 edits, and when you change page/change song",
+            name: "vsrg_composer_autosave",
+            tooltip: "vsrg_composer_autosave_description",
             type: "checkbox",
-            category: "Editor Settings",
+            category: "editor_settings",
             songSetting: false,
             value: false,
         },
         difficulty: {
-            name: "Difficulty",
-            tooltip: "Higher values means the notes need to be pressed more accurately",
+            name: "vsrg_composer_difficulty",
+            tooltip: "vsrg_composer_difficulty_description",
             type: "select",
             songSetting: true,
             value: 5,
-            category: "Song Settings",
+            category: "song_settings",
             options: new Array(10).fill(0).map((_, i) => i + 1)
         },
     }
-}
+} as const satisfies VsrgComposerSettingsType
 
 export type VsrgPlayerSettingsDataType = {
     approachTime: SettingsNumber
@@ -496,28 +503,28 @@ export type VsrgPlayerSettingsDataType = {
     verticalOffset: SettingsSlider
 }
 export type VsrgPlayerSettingsType = BaseSettings<VsrgPlayerSettingsDataType>
-export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
+export const VsrgPlayerSettings = {
     other: {
-        settingVersion: APP_NAME + 5
+        settingVersion: APP_NAME + 6
     },
     data: {
         approachTime: {
-            name: "Approaching time",
-            tooltip: "The time between when the notes appear and when they reach the end (in ms)",
+            name: "vsrg_player_approach_time",
+            tooltip: "vsrg_player_approach_time_description",
             type: "number",
             songSetting: true,
             increment: 100,
             threshold: [1, 5000],
             value: 2000,
-            category: "Player Settings",
+            category: "player_settings",
         },
         maxFps: {
-            name: "Max FPS",
-            tooltip: "The FPS limiter of the player, too high values could cause lag or stutters",
+            name: "vsrg_player_max_fps",
+            tooltip: "vsrg_player_max_fps_description",
             type: "select",
             songSetting: false,
             value: 48,
-            category: "Player Settings",
+            category: "player_settings",
             options: [
                 24,
                 30,
@@ -528,47 +535,47 @@ export const VsrgPlayerSettings: VsrgPlayerSettingsType = {
             ]
         },
         keyboardLayout: {
-            name: "Keyboard layout",
-            tooltip: "The keyboard layout of the player",
+            name: "vsrg_player_keyboard_layout",
+            tooltip: "vsrg_player_keyboard_layout_description",
             type: "select",
             songSetting: true,
             value: 'line',
-            category: "Player Settings",
+            category: "player_settings",
             options: [
                 'circles',
                 'line'
             ]
         },
         offset: {
-            name: "Audio Offset",
-            tooltip: "An offset to the audio if it plays too early/late (in ms)",
+            name: "vsrg_player_offset",
+            tooltip: "vsrg_player_offset_description",
             type: "number",
             songSetting: true,
             increment: 2,
             threshold: [-1000, 1000],
             value: 0,
-            category: "Player Settings",
+            category: "player_settings",
         },
         verticalOffset: {
-            name: "Vertical position",
-            tooltip: "The Vertical offset for the line layout",
+            name: "vsrg_player_vertical_offset",
+            tooltip: "vsrg_player_vertical_offset_description",
             type: "slider",
             songSetting: false,
             value: -0,
-            category: "pagesLayout Settings",
+            category: "layout_settings",
             threshold: [-40, 40]
         },
         horizontalOffset: {
-            name: "Horizontal position",
-            tooltip: "The Horizontal offset for the line layout",
+            name: "vsrg_player_horizontal_offset",
+            tooltip: "vsrg_player_horizontal_offset_description",
             type: "slider",
             songSetting: false,
             value: 0,
-            category: "pagesLayout Settings",
+            category: "layout_settings",
             threshold: [-40, 40]
         },
     }
-}
+} as const satisfies VsrgPlayerSettingsType
 export type ZenKeyboardSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
@@ -583,73 +590,73 @@ export type ZenKeyboardSettingsDataType = {
 }
 export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
-export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
+export const ZenKeyboardSettings = {
     other: {
-        settingVersion: APP_NAME + 20 //change when instrument is added
+        settingVersion: APP_NAME + 22 //change when instrument is added
     },
     data: {
         instrument: {
-            name: "Instrument",
-            tooltip: "The main instrument of the keyboard",
+            name: "zen_instrument",
+            tooltip: "zen_instrument_description",
             type: "instrument",
             songSetting: false,
             value: INSTRUMENTS[0],
             volume: 100,
             options: [...INSTRUMENTS],
-            category: "Keyboard",
+            category: "keyboard",
         },
         pitch: {
-            name: "Pitch",
-            tooltip: "The pitch of the keyboard",
+            name: "zen_pitch",
+            tooltip: "zen_pitch_description",
             type: "select",
             songSetting: false,
             value: "C",
-            category: "Keyboard",
+            category: "keyboard",
             options: [...PITCHES]
         },
         metronomeBeats: {
-            name: "Metronome beats",
-            tooltip: "After how many times a stronger beat is played",
+            name: "zen_metronome_beats",
+            tooltip: "zen_metronome_beats_description",
             type: "number",
             songSetting: false,
             increment: 1,
             value: 4,
             threshold: [0, 16],
-            category: "Metronome",
+            category: "metronome",
         },
         metronomeVolume: {
-            name: "Metronome volume",
-            tooltip: "The volume of the metronome",
+            name: "zen_metronome_volume",
+            tooltip: "zen_metronome_volume_description",
             type: "slider",
             songSetting: false,
             value: 50,
-            category: "Metronome",
+            category: "metronome",
             threshold: [0, 120]
         },
         metronomeBpm: {
-            name: "Metronome bpm",
-            tooltip: "The bpm of the metronome",
+            name: "zen_metronome_bpm",
+            tooltip: "zen_metronome_bpm_description",
             type: "number",
             songSetting: false,
             value: 200,
             increment: 5,
-            category: "Metronome",
+            category: "metronome",
             threshold: [0, 10000]
         },
         reverb: {
-            name: "Reverb (cave mode)",
-            tooltip: "Makes it sound like you are in a cave",
+            name: "zen_reverb",
+            tooltip: "zen_reverb_description",
             type: "checkbox",
             songSetting: false,
             value: false,
-            category: "Keyboard",
+            category: "keyboard",
         },
         noteNameType: {
-            name: "Note name type",
-            tooltip: "The type of text which will be written on the note",
+            name: "zen_note_name_type",
+            tooltip: "zen_note_name_type_description",
             type: "select",
             songSetting: false,
-            category: "Keyboard",
+            category: "keyboard",
             value: APP_NAME === "Genshin"
                 ? isMobile()
                     ? "Do Re Mi"
@@ -659,33 +666,35 @@ export const ZenKeyboardSettings: ZenKeyboardSettingsType = {
             options: NOTE_NAME_TYPES
         },
         keyboardSize: {
-            name: "Keyboard size",
-            tooltip: "Scales the keyboard size",
+            name: "zen_keyboard_size",
+            tooltip: "zen_keyboard_size_description",
             type: "slider",
             songSetting: false,
             value: 100,
-            category: "Keyboard",
+            category: "keyboard",
             threshold: [70, 170]
         },
         keyboardYPosition: {
-            name: "Vertical position",
-            tooltip: "The vertical position of the keyboard",
+            name: "zen_keyboard_y_position",
+            tooltip: "zen_keyboard_y_position_description",
             type: "slider",
             songSetting: false,
             value: 0,
-            category: "Keyboard",
+            category: "keyboard",
             threshold: [-100, 100]
         },
         keyboardSpacing: {
-            name: "Keyboard spacing",
-            tooltip: "The spacing between the notes",
+            name: "zen_keyboard_spacing",
+            tooltip: "zen_keyboard_spacing_description",
             type: "slider",
             songSetting: false,
             value: 0.35,
             step: 0.01,
-            category: "Keyboard",
+            category: "keyboard",
             threshold: [0.15, 1]
         }
     }
-}
+} as const satisfies ZenKeyboardSettingsType
+
+
 

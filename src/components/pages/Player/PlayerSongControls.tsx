@@ -1,5 +1,5 @@
 import {SPEED_CHANGERS} from "$config"
-import Memoized, {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
+import {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {FaStop, FaSyncAlt} from "react-icons/fa";
 import {ChangeEvent, memo} from "react";
 import {playerStore} from "$stores/PlayerStore";
@@ -13,6 +13,7 @@ import {PlayerSlider} from "./PlayerSlider";
 import {PlayerVisualSheetRenderer} from "./PlayerPagesRenderer";
 import s from './Slider.module.css'
 import svs from './VisualSheet.module.css'
+import {useTranslation} from "react-i18next";
 
 interface PlayerSongControlsProps {
     onRestart: () => void
@@ -38,6 +39,7 @@ function _PlayerSongControls({
                                  isVisualSheetVisible
                              }: PlayerSongControlsProps) {
     const songData = useObservableObject(playerStore.state)
+    const {t} = useTranslation(["player", 'common', "settings"])
     return <>
         {songData.eventType === 'approaching' &&
             <Score/>
@@ -50,7 +52,7 @@ function _PlayerSongControls({
                         toggled={isRecordingAudio}
                         onClick={() => onToggleRecordAudio(!isRecordingAudio)}
                     >
-                        {isRecordingAudio ? "Finish recording" : "Record audio"}
+                        {isRecordingAudio ? t('finish_recording') : t("record_audio")}
                     </AppButton>
                 }
             </div>
@@ -71,7 +73,7 @@ function _PlayerSongControls({
                             })}
                         </select>
                         <Tooltip position="left">
-                            Change speed
+                            {t('change_speed')}
                         </Tooltip>
                     </div>
                     <IconButton
@@ -81,8 +83,8 @@ function _PlayerSongControls({
                             playerControlsStore.resetScore()
                         }}
                         style={{flex: 1}}
-                        tooltip='Stop'
-                        ariaLabel="Stop song"
+                        tooltip={t('common:stop')}
+                        ariaLabel={t("stop_song")}
                     >
                         <MemoizedIcon icon={FaStop}/>
                     </IconButton>
@@ -98,7 +100,7 @@ function _PlayerSongControls({
                 toggled={isMetronomePlaying}
                 onClick={onToggleMetronome}
                 className='metronome-button'
-                ariaLabel='Toggle metronome'
+                ariaLabel={t('settings:toggle_metronome')}
             >
                 <GiMetronome size={22}/>
             </IconButton>
@@ -116,20 +118,21 @@ export const PlayerSongControls = memo(_PlayerSongControls, (prev, next) => {
 
 
 function _Score() {
+    const {t } = useTranslation("player")
     const {combo, score, correct, wrong} = useObservableObject(playerControlsStore.score)
     return <div className='approaching-accuracy'>
         <table>
             <tbody>
             <tr>
-                <td className='sc-2'>Accuracy</td>
+                <td className='sc-2'>{t("accuracy")}</td>
                 <td className='sc-1'>{(correct / (correct + wrong - 1) * 100).toFixed(1)}%</td>
             </tr>
             <tr>
-                <td className='sc-2'>Score</td>
+                <td className='sc-2'>{t("score")}</td>
                 <td className='sc-1'>{score}</td>
             </tr>
             <tr>
-                <td className='sc-2'>Combo</td>
+                <td className='sc-2'>{t("combo")}</td>
                 <td className='sc-1'>{combo}</td>
             </tr>
             </tbody>

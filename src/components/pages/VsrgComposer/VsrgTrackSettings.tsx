@@ -5,12 +5,13 @@ import {FaTrash} from "react-icons/fa"
 import {PitchSelect} from "$cmp/shared/Inputs/PitchSelect"
 import {HelpTooltip} from "$cmp/shared/Utility/HelpTooltip"
 import {ColorPicker} from "$cmp/shared/Inputs/ColorPicker"
-import {useState} from "react"
+import {useState, useTransition} from "react"
 import Color from "color"
 import {vsrgComposerStore} from "$stores/VsrgComposerStore"
 import {Pitch} from "$config"
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
+import {useTranslation} from "react-i18next";
 
 interface TrackSelectorProps {
     track: VsrgTrack
@@ -20,12 +21,13 @@ interface TrackSelectorProps {
 }
 
 export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSelectorProps) {
+    const { t} = useTranslation(['vsrg_composer', 'common', 'instrument_settings', 'instruments'])
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
     if (!track) return null
     return <>
         <div className="vsrg-floating-settings box-shadow">
             <Row justify={'between'} align={'center'}>
-                Track name
+                {t('track_name')}
                 <input
                     type="text"
                     maxLength={50}
@@ -36,11 +38,11 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                         track.instrument.set({alias: e.target.value})
                         onChange(track)
                     }}
-                    placeholder={track.instrument.name}
+                    placeholder={t(`instruments:${track.instrument.name}`)}
                 />
             </Row>
             <Row justify={'between'} align={'center'} style={{marginTop: '0.4rem'}}>
-                Instrument
+                {t('common:instrument')}
                 <InstrumentSelect
                     style={{width: '8rem'}}
                     selected={track.instrument.name}
@@ -51,7 +53,7 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                 />
             </Row>
             <Row justify={'between'} align={'center'} style={{marginTop: '0.4rem'}}>
-                Pitch
+                {t('common:pitch')}
                 <PitchSelect
                     style={{width: '8rem'}}
                     selected={track.instrument.pitch as Pitch}
@@ -61,12 +63,12 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                     }}
                 >
                     <option value="">
-                        Use song pitch
+                        {t('instrument_settings:use_song_pitch')}
                     </option>
                 </PitchSelect>
             </Row>
             <Row align={'center'} style={{marginTop: '1rem'}}>
-                Volume
+                {t('instrument_settings:volume')}
                 <span style={{
                     marginLeft: "0.4rem",
                     width: '3rem',
@@ -80,7 +82,7 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                     buttonStyle={{width: '1.2rem', height: '1.2rem'}}
                     width={10}
                 >
-                    If you hear distortion, reduce the volume
+                    {t('instrument_settings:volume_high_warning')}
                 </HelpTooltip>
             </Row>
             <Row align={'center'}>
@@ -98,7 +100,7 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
             </Row>
             <Column>
                 <Row justify={'between'} align={'center'}>
-                    Color
+                    {t('common:color')}
                     <AppButton
                         onClick={() => setIsColorPickerOpen(true)}
                         ariaLabel='Change color'
@@ -107,7 +109,7 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                             color: Color(track.color).isDark() ? '#fff' : '#000',
                         }}
                     >
-                        Change
+                        {t('common:change')}
                     </AppButton>
                 </Row>
             </Column>
@@ -118,13 +120,13 @@ export function VsrgTrackSettings({track, onSave, onDelete, onChange}: TrackSele
                     onClick={onDelete}
                 >
                     <FaTrash color="var(--red)" style={{marginRight: '0.3rem'}}/>
-                    Delete
+                    {t('common:delete')}
                 </AppButton>
                 <AppButton
                     onClick={onSave}
                     style={{padding: '0.4rem', width: 'fit-content'}}
                 >
-                    Ok
+                    {t('common:ok')}
                 </AppButton>
             </Row>
         </div>

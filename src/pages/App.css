@@ -58,8 +58,9 @@ body {
     min-width: 2rem;
     text-align: center;
     margin-bottom: 0.1rem;
-    background-color: var(--primary);
-    color: var(--primary-text);
+    border: solid 0.1rem var(--primary);
+    background: var(--secondary);
+    color: var(--secondary-text);
     width: 10rem;
     display: inline-block;
 }
@@ -737,6 +738,6 @@ a {
     }
 
     .default-page {
-        padding: 1rem 1.4rem 1rem 5rem;
+        padding: 1rem var(--right-mobile-padding, 1.4rem) 1rem var(--left-mobile-padding, 5rem);
     }
 }

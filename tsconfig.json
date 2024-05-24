@@ -40,6 +40,9 @@
       "$types/*": [
         "types/*"
       ],
+      "$i18n/*": [
+        "i18n/*"
+      ],
       "$img/*": [
         "assets/images/*"
       ],

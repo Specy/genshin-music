@@ -10,6 +10,7 @@ import {Theme} from "$stores/ThemeStore/ThemeProvider"
 import {VsrgComposerKeyboard} from "./VsrgComposerKeyboard"
 import {VsrgTrackSettings} from "./VsrgTrackSettings"
 import {Row} from "$cmp/shared/layout/Row";
+import {useTranslation} from "react-i18next";
 
 interface VsrgTopProps {
     vsrg: VsrgSong
@@ -41,6 +42,7 @@ export function VsrgTop({
                             lastCreatedHitObject,
                             selectedHitObject,
                         }: VsrgTopProps) {
+    const { t} = useTranslation(['vsrg_composer', 'common'])
     const [theme] = useTheme()
     const [keyboardElements, setKeyboardElements] = useState<number[]>([])
     const [isTrackSettingsOpen, setIsTrackSettingsOpen] = useState(false)
@@ -99,7 +101,7 @@ export function VsrgTop({
                             e.target?.scrollIntoView()
                         }, 50)
                     }}
-                    ariaLabel='Add new instrument'
+                    ariaLabel={t('common:add_new_instrument')}
                     className="flex-centered"
                     style={{marginTop: 'auto', padding: '0.3rem'}}
                 >
@@ -125,6 +127,7 @@ interface TrackSelectorProps {
 }
 
 function TrackSelector({track, selected, theme, onSettingsClick, onTrackClick}: TrackSelectorProps) {
+    const { t} = useTranslation(['instruments'])
     const [selectedColor, setSelectedColor] = useState({
         background: 'var(--primary)',
         text: 'var(--primary-text)'
@@ -164,7 +167,7 @@ function TrackSelector({track, selected, theme, onSettingsClick, onTrackClick}: 
                     flex: 1
                 }}
             >
-                {track.instrument.alias || track.instrument.name}
+                {track.instrument.alias || t(`instruments:${track.instrument.name}`)}
             </span>
             <AppButton
                 onClick={() => selected && onSettingsClick()}

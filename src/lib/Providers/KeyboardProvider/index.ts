@@ -1,4 +1,5 @@
 import {KeyboardCode, KeyboardLetter, KeyboardNumber, KeyboardNumberCode} from "./KeyboardTypes";
+import {DEFAULT_ENG_KEYBOARD_MAP} from "$i18n/i18n";
 
 export type KeyboardListenerOptions = {
     shift?: boolean
@@ -16,9 +17,11 @@ export type KeyboardHandler = {
     options: KeyboardListenerOptions
 }
 
+
 export class KeyboardProviderClass {
     private handlers: Map<string, KeyboardHandler[]>
     private listeners: KeyboardHandler[] = []
+    private layoutMap: Map<string, string> | undefined
 
     constructor() {
         this.handlers = new Map<string, KeyboardHandler[]>()
@@ -40,6 +43,19 @@ export class KeyboardProviderClass {
         window.addEventListener('keydown', this.handleEvent)
         window.addEventListener('keyup', this.handleEvent)
         window.addEventListener('keypress', this.handleEvent)
+        try {
+            if ('keyboard' in navigator) {
+                // @ts-ignore
+                navigator.keyboard.getLayoutMap().then(layoutMap => {
+                    const entries = [...layoutMap.entries()] as [string, string][]
+                    if(entries.length === 0) return
+                    this.layoutMap = new Map<string, string>(entries)
+                })
+            }
+        } catch (e) {
+            console.error(e)
+        }
+
     }
     destroy = () => {
         this.clear()
@@ -119,8 +135,15 @@ export class KeyboardProviderClass {
                 if (handler.options.type === 'keyup' && isKeyUp) handler.callback(data)
             }
         })
+    }
 
-
+    getTextOfCode = (code: KeyboardCode): string | undefined => {
+        if (this.layoutMap) {
+            return this.layoutMap.get(code)
+        } else {
+            return DEFAULT_ENG_KEYBOARD_MAP[code]
+        }
+        return undefined
     }
 }
 

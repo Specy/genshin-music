@@ -8,3 +8,5 @@ export interface Stylable {
     className?: string
     style?: CSSProperties
 }
+
+export type DeepWriteable<T> = { -readonly [P in keyof T]: DeepWriteable<T[P]> };

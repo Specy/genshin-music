@@ -1,7 +1,14 @@
 import {Fragment} from "react"
-import {SettingsPropriety, SettingUpdate, SettingUpdateKey, SettingVolumeUpdate} from "$types/SettingsPropriety"
+import {
+    SettingsCategory,
+    SettingsPropriety,
+    SettingUpdate,
+    SettingUpdateKey,
+    SettingVolumeUpdate
+} from "$types/SettingsPropriety"
 import SettingsRow from "./SettingsRow"
 import s from './Settings.module.css'
+import {useTranslation} from "react-i18next";
 
 interface SettingsPaneProps {
     settings: {
@@ -12,14 +19,14 @@ interface SettingsPaneProps {
 }
 
 interface Group {
-    category: string,
+    category: SettingsCategory,
     settings: {
         [key: string]: SettingsPropriety
     }
 }
 
 export function SettingsPane({settings, changeVolume, onUpdate}: SettingsPaneProps) {
-
+    const {t} = useTranslation(['settings'])
     //group the settings by the category propriety
     const map = new Map<String, Group>();
     Object.entries(settings).forEach(([key, setting]) => {
@@ -37,7 +44,7 @@ export function SettingsPane({settings, changeVolume, onUpdate}: SettingsPanePro
             <Fragment key={group.category}>
                 <div className="column">
                     <h1 className={s['settings-group-title']}>
-                        {group.category}
+                        {t(`category.${group.category}`)}
                     </h1>
                     {Object.entries(group.settings).map(([key, setting]) =>
                         <SettingsRow

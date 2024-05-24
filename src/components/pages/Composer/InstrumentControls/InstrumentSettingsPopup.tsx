@@ -10,6 +10,7 @@ import {FaArrowDown, FaArrowUp, FaTrash, FaVolumeMute, FaVolumeUp} from "react-i
 import {InstrumentSelect} from "$cmp/shared/Inputs/InstrumentSelect"
 import s from '$cmp/shared/Settings/Settings.module.css'
 import {Select} from "$cmp/shared/Inputs/Select";
+import {useTranslation} from "react-i18next";
 
 interface InstrumentSettingsPopupProps {
     currentLayer: number
@@ -42,13 +43,14 @@ export function InstrumentSettingsPopup({
                                             currentLayer,
                                             instruments
                                         }: InstrumentSettingsPopupProps) {
+    const {t} = useTranslation(['instrument_settings', 'common', 'instruments'])
     const ref = useClickOutside<HTMLDivElement>(onClose, {active: true, ignoreFocusable: true})
     if (!instrument) return <div className="floating-instrument-settings  box-shadow">
-        No instrument selected
+        {t('no_instrument_selected')}
     </div>
     return <div className="floating-instrument-settings box-shadow" ref={ref}>
         <div className="row space-between">
-            Layer name
+            {t('layer_name')}
             <input
                 type="text"
                 maxLength={50}
@@ -56,12 +58,12 @@ export function InstrumentSettingsPopup({
                 style={{width: '7.4rem'}}
                 value={instrument.alias}
                 onChange={e => onChange(instrument.set({alias: e.target.value}))}
-                placeholder={prettyPrintInstrumentName(instrument.name)}
+                placeholder={t(`instruments:${instrument.name}`)}
             />
         </div>
 
         <div className="row space-between" style={{marginTop: '0.4rem'}}>
-            Instrument
+            {t('common:instrument')}
             <InstrumentSelect
                 style={{width: '8rem'}}
                 selected={instrument.name}
@@ -69,19 +71,19 @@ export function InstrumentSettingsPopup({
             />
         </div>
         <div className="row space-between" style={{marginTop: '0.4rem'}}>
-            Pitch
+            {t('common:pitch')}
             <PitchSelect
                 style={{padding: '0.3rem', width: '8rem'}}
                 selected={instrument.pitch as Pitch}
                 onChange={pitch => onChange(instrument.set({pitch}))}
             >
                 <option value="">
-                    Use song pitch
+                    {t('use_song_pitch')}
                 </option>
             </PitchSelect>
         </div>
         <div className="row space-between" style={{marginTop: '0.4rem'}}>
-            Reverb
+            {t('common:reverb')}
             <Select
                 style={{padding: '0.3rem', width: '8rem'}}
                 onChange={(e) => {
@@ -90,20 +92,20 @@ export function InstrumentSettingsPopup({
                 value={getReverbValue(instrument.reverbOverride)}
             >
                 <option value={'On'}>
-                    On
+                    {t('common:on')}
                 </option>
                 <option value={'Off'}>
-                    Off
+                    {t('common:off')}
                 </option>
                 <option value={'Unset'}>
-                    Use song reverb
+                    {t('use_song_reverb')}
                 </option>
 
             </Select>
         </div>
 
         <div className="row space-between" style={{marginTop: '0.4rem'}}>
-            Note icon
+            {t('note_icon')}
             <select
                 className={s.select}
                 style={{padding: '0.3rem', width: '8rem'}}
@@ -113,16 +115,16 @@ export function InstrumentSettingsPopup({
                     e.target.blur()
                 }}
             >
-                {noteIcons.map(icon =>
-                    <option key={icon} value={icon}>
-                        {capitalize(icon)}
+                {noteIcons.map(iconKind =>
+                    <option key={iconKind} value={iconKind}>
+                        {t(`common:${iconKind}`)}
                     </option>
                 )}
             </select>
         </div>
 
         <div className="row" style={{marginTop: '1rem', alignItems: "center"}}>
-            Volume
+            {t('volume')}
             <span style={{
                 marginLeft: "0.4rem",
                 width: '3rem',
@@ -136,7 +138,7 @@ export function InstrumentSettingsPopup({
                 buttonStyle={{width: '1.2rem', height: '1.2rem'}}
                 width={10}
             >
-                If you hear distortion, reduce the volume
+                {t('volume_high_warning')}
             </HelpTooltip>
         </div>
         <div className="row">
@@ -167,7 +169,7 @@ export function InstrumentSettingsPopup({
                 className='flex-centered'
                 style={{padding: '0.5rem', flex: '1', marginRight: '0.4rem'}}
             >
-                <FaArrowUp style={{marginRight: '0.2rem'}}/> Move up
+                <FaArrowUp style={{marginRight: '0.2rem'}}/> {t('move_up')}
             </AppButton>
             <AppButton
                 onClick={() => onChangePosition(1)}
@@ -175,7 +177,7 @@ export function InstrumentSettingsPopup({
                 className='flex-centered'
                 style={{padding: '0.5rem', flex: '1'}}
             >
-                <FaArrowDown style={{marginRight: '0.2rem'}}/> Move down
+                <FaArrowDown style={{marginRight: '0.2rem'}}/> {t('move_down')}
             </AppButton>
         </div>
         <div className='row space-between' style={{marginTop: '0.4rem'}}>
@@ -185,13 +187,13 @@ export function InstrumentSettingsPopup({
                 onClick={onDelete}
             >
                 <FaTrash color="var(--red)" style={{marginRight: '0.3rem'}}/>
-                Delete
+                {t('common:delete')}
             </AppButton>
             <AppButton
                 onClick={onClose}
                 style={{padding: '0.4rem', width: 'fit-content'}}
             >
-                Ok
+                {t('common:ok')}
             </AppButton>
         </div>
     </div>

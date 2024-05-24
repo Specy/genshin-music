@@ -10,6 +10,7 @@ import {NumericalInput} from './Numericalinput'
 import {prettyPrintInstrumentName} from '$lib/utils/Utilities'
 import {Column} from "$cmp/shared/layout/Column";
 import {Row} from "$cmp/shared/layout/Row";
+import {useTranslation} from "react-i18next";
 
 interface TrackProps {
     data: CustomTrack
@@ -20,6 +21,7 @@ interface TrackProps {
 }
 
 export function TrackInfo({data, index, onChange, theme, instruments}: TrackProps) {
+    const {t} = useTranslation(['composer', 'common'])
     const [dataShown, setDataShown] = useState(false)
     const background = {backgroundColor: theme.layer('menu_background', 0.15).toString()}
     const [offset, setOffset] = useState(`${data.localOffset ?? ""}`)
@@ -68,7 +70,7 @@ export function TrackInfo({data, index, onChange, theme, instruments}: TrackProp
                 </Select>
                 <FaCog
                     size={22}
-                    color={'var(--primary)'}
+                    color={dataShown ? 'var(--secondary)': 'var(--primary)'}
                     onClick={() => setDataShown(!dataShown)}
                     cursor='pointer'
                 />
@@ -85,9 +87,9 @@ export function TrackInfo({data, index, onChange, theme, instruments}: TrackProp
             <Row align={'center'} justify={'between'}>
                 <div className={hasTooltip(true)}>
                     <Tooltip>
-                        Changes the index of each note by this amount.
+                        {t('midi_parser.local_note_offset_description')}
                     </Tooltip>
-                    Local track notes offset
+                    {t('midi_parser.local_note_offset')}
                 </div>
                 <Row gap={'0.3rem'}>
                     <button
@@ -113,9 +115,9 @@ export function TrackInfo({data, index, onChange, theme, instruments}: TrackProp
             <Row align={'center'} justify={'between'}>
                 <div className={hasTooltip(true)}>
                     <Tooltip>
-                        Scale down/up the notes which are out of scale by theose octaves.
+                        {t('midi_parser.max_octave_scaling_description')}
                     </Tooltip>
-                    Max notes octave scaling
+                    {t('midi_parser.max_octave_scaling')}
                 </div>
                 <NumericalInput
                     value={data.maxScaling}
@@ -124,19 +126,19 @@ export function TrackInfo({data, index, onChange, theme, instruments}: TrackProp
                 />
             </Row>
             <Row align={'center'} justify={'between'}>
-                <div>Instrument</div>
+                <div>{t('common:instrument')}</div>
                 <div>{data.track.instrument.name}</div>
             </Row>
             <Row align={'center'} justify={'between'}>
-                <div>Number of notes</div>
+                <div>{t('midi_parser.number_of_notes')}</div>
                 <div>{data.track.notes.length}</div>
             </Row>
             <Row align={'center'} justify={'between'}>
-                <div>Accidentals</div>
+                <div>{t('midi_parser.accidentals')}</div>
                 <div>{data.numberOfAccidentals}</div>
             </Row>
             <Row align={'center'} justify={'between'}>
-                <div>Out of range ({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
+                <div>{t('midi_parser.out_of_range')}({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
                 <Row style={{width: 'fit-content'}}>
                     <Row style={{marginRight: '0.4rem'}}>
                         <FaArrowUp style={{marginRight: '0.2rem'}}/>

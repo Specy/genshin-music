@@ -10,6 +10,8 @@ import {fileService, UnknownFileTypes} from "$lib/Services/FileService";
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
+import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 const domains = [
     `https://${APP_NAME.toLowerCase()}-music.specy.app`,
@@ -19,6 +21,8 @@ const domains = [
 ]
 
 export default function TransferData() {
+    useSetPageVisited('transfer')
+    const {t} = useTranslation(['transfer', 'common'])
     const [selectedDomain, setSelectedDomain] = useState<string>(domains[0])
     const [validDomains, setValidDomains] = useState<string[]>([])
     const [error, setError] = useState<string>()
@@ -29,7 +33,7 @@ export default function TransferData() {
         frame.src = selectedDomain
         frame.style.display = "none"
         document.body.appendChild(frame)
-        logger.showPill("Conneting please wait...")
+        logger.showPill(t('connecting_please_wait'))
         try {
             await new Promise((res, rej) => {
                 frame.onload = res
@@ -42,7 +46,7 @@ export default function TransferData() {
             const data = await protocol.ask("getAppData", undefined)
             setImportedData(Array.isArray(data) ? data : [data])
         } catch (e) {
-            logger.error("Error connecting, please visit the domain, there might be changelog. ")
+            logger.error(t('error_connecting'))
             setError(`Error fetching: ${e}`)
         }
         logger.hidePill()
@@ -51,7 +55,7 @@ export default function TransferData() {
             logger.hidePill()
             frame.remove()
         }
-    }, [selectedDomain])
+    }, [selectedDomain, t])
 
 
     useEffect(() => {
@@ -64,15 +68,12 @@ export default function TransferData() {
     return <DefaultPage>
         <PageMetadata text="Import data" description="A tool to import the data you have in other domains"/>
         <div className="column">
-            <h1>Import data from other domains</h1>
+            <h1>{t('import_data_from_other_domains_title')}</h1>
             <p style={{marginLeft: "1rem"}}>
-                Here you can import data from other existing domains of the app, select the domain you want to import
-                from and click import.
-                You will be shown all the data from the other domain, and you can select to import it all at once or
-                only what you need.
+                {t('import_data_from_other_domains_description')}
             </p>
             <h2>
-                Select a website to import data from
+                {t('select_a_website_to_import_data')}
             </h2>
             <div className="row" style={{gap: "0.5rem", marginLeft: "1rem"}}>
                 <Select
@@ -86,24 +87,24 @@ export default function TransferData() {
                     cssVar="accent"
                     onClick={fetchData}
                 >
-                    Connect
+                    {t('common:connect')}
                 </AppButton>
             </div>
 
             {importedData && <>
                 {importedData.length === 0 &&
-                    <h2>No data to import</h2>
+                    <h2>{t('no_data_to_import')}</h2>
                 }
                 {importedData.length > 0 && <>
                     {error
                         ? <>
-                            <h2>Error:</h2>
+                            <h2>{t('common:error')}:</h2>
                             <p>{error}</p>
                         </>
                         : <>
                             <Column>
                                 <Row align={'center'} style={{gap: "1rem"}}>
-                                    <h2>Data </h2>
+                                    <h2>{t('data')}</h2>
                                     <AppButton
                                         cssVar="accent"
                                         onClick={async () => {
@@ -111,7 +112,7 @@ export default function TransferData() {
                                             setImportedData([])
                                         }}
                                     >
-                                        Import all
+                                        {t('import_all')}
                                     </AppButton>
                                 </Row>
                                 <Column style={{gap: "0.3rem"}}>
@@ -142,6 +143,7 @@ interface ImportedRowProps {
 }
 
 function ImportedRow({data, onImport}: ImportedRowProps) {
+    const { t} = useTranslation("common")
     let name = ""
     if (data.type === "theme") name = data.other?.name
     else name = data.name
@@ -159,7 +161,7 @@ function ImportedRow({data, onImport}: ImportedRowProps) {
             style={{marginLeft: "auto"}}
             onClick={() => onImport(data)}
         >
-            Import
+            {t('import')}
         </AppButton>
     </Row>
 }

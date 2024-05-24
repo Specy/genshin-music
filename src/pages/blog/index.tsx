@@ -15,13 +15,19 @@ import {_composerTutorialMetadata} from "$pages/blog/posts/how-to-use-composer";
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
 import {Row} from "$cmp/shared/layout/Row";
 import {useMemo, useState} from "react";
-import {useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
+import {BlogNavbar, useHasVisitedBlogPost} from "$cmp/pages/blog/BaseBlogPost";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
 import {ComboBox, ComboBoxItem, ComboBoxTitle} from "$cmp/shared/Inputs/ComboBox/ComboBox";
 import {_howUseVsrgComposer} from "$pages/blog/posts/how-to-use-vsrg-composer";
 import {_easyplay1sMetadata} from "$pages/blog/posts/easyplay-1s";
+import {PromotionCard} from "$cmp/pages/Promotion/PromotionCard";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
+import {_add_to_home_screen} from "$pages/blog/posts/add-to-home-screen";
+import {useMediaQuery} from "$lib/Hooks/useMediaQuery";
+import {useConfig} from "$lib/Hooks/useConfig";
 
 const posts = ([
+    _add_to_home_screen,
     _easyplay1sMetadata,
     _composerTutorialMetadata,
     _playerTutorialMetadata,
@@ -35,21 +41,38 @@ const tags = Array.from(new Set(posts.flatMap(p => p.tags)).values())
 
 
 export default function Blog() {
+    useSetPageVisited('blog')
+    const {IS_MOBILE} = useConfig()
     const [selectedTags, setSelectedTags] = useState(() => tags.map(i => ({item: i, selected: false})))
     const filteredPosts = useMemo(() => {
         if (selectedTags.every(t => !t.selected)) return posts
         return posts.filter(p => selectedTags.some(t => t.selected && p.tags.includes(t.item)))
     }, [selectedTags])
-    return <DefaultPage>
+    const closeMenu = useMediaQuery("(orientation: portrait)") && IS_MOBILE
+    return <DefaultPage excludeMenu={closeMenu} contentStyle={{gap: '1rem'}}>
         <PageMetadata
             text={`${APP_NAME} Music Nightly Blog`}
             description={`Welcome to ${APP_NAME} Music Nightly blog! Here there will be written guides, news and info about the app!`}
         />
+        {closeMenu && <BlogNavbar
+            style={{borderRadius: "0.5rem", padding: '1rem 1.5rem'}}
+        >
+            <Link href={'/'}>
+                Home
+            </Link>
+            <Link href={'/'}>
+                Player
+            </Link>
+            <Link href={'/composer'}>
+                Composer
+            </Link>
+        </BlogNavbar>
+        }
         <Column gap={'2rem'}>
-            <Header style={{fontSize: '2.5rem', textAlign: 'center'}}>
+            <Header style={{fontSize: '2.2rem', textAlign: 'center'}}>
                 Welcome to {APP_NAME} Music Nightly blog!
             </Header>
-
+            <PromotionCard alwaysVisible/>
             <Column gap={'1rem'}>
                 <Row justify={'between'} align={'center'}>
                     <Header>
@@ -69,8 +92,13 @@ export default function Blog() {
                     </ComboBox>
                 </Row>
 
-                <Grid columns={'repeat(2, 1fr)'} gap={'1rem'}>
-                    {filteredPosts.map((metadata) => <BlogPost key={metadata.relativeUrl} metadata={metadata}/>)}
+                <Grid
+                    columns={closeMenu ? '1fr' : 'repeat(2, 1fr)'}
+                    gap={'1rem'}
+                >
+                    {filteredPosts.map((metadata) =>
+                        <BlogPost key={metadata.relativeUrl} metadata={metadata}/>
+                    )}
                 </Grid>
             </Column>
         </Column>

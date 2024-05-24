@@ -22,7 +22,6 @@
 }
 
 .vsrg-top-canvas-wrapper {
-    grid-area: a;
     display: flex;
     flex: 1;
     justify-content: center;
@@ -32,8 +31,8 @@
 
 .vsrg-top-canvas-wrapper canvas {
     position: absolute;
-    opacity: 0.96;
-    border-radius: 0.6rem;
+    opacity: 0.90;
+   /* border-radius: 0.6rem; */
 }
 
 .vsrg-top-right {
@@ -150,10 +149,10 @@
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
     height: 100%;
-    padding: 0.2rem;
     width: fit-content;
     border-radius: 3rem;
     position: relative;
+    transition: border 0.2s;
     background-color: var(--primary);
 }
 
@@ -165,7 +164,15 @@
     z-index: 2;
     cursor: pointer;
     background-color: transparent;
+    border-radius: 0.4rem;
     border: none;
+}
+
+.decorated-vsrg-canvas{
+    grid-area: a;
+    display: flex;
+    border-radius: 0.4rem;
+    border: solid 0.15rem var(--secondary);
 }
 
 .multiple-options-selected {
@@ -175,8 +182,8 @@
 .multiple-option-slider-overlay {
     transition: all 0.15s ease-out;
     position: absolute;
-    height: calc(100% - 0.4rem);
-    top: 0.2rem;
+    height: calc(100% - 0.2rem);
+    top: 0.1rem;
     border-radius: 3rem;
     background-color: var(--accent);
 }

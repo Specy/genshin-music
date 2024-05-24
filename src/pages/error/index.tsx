@@ -16,24 +16,28 @@ import {RecordedSong} from '$lib/Songs/RecordedSong';
 import {useObservableArray} from '$lib/Hooks/useObservable';
 import {logsStore} from '$stores/LogsStore';
 import s from './ErrorPage.module.scss'
+import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 export function ErrorPage() {
+    useSetPageVisited('error')
+    const {t} = useTranslation(['error','logs', 'confirm', 'common'])
     const [songs] = useSongs()
     const errors = useObservableArray(logsStore.logs)
     const deleteSong = async (name: string, id: string) => {
-        if (await asyncConfirm("Are you sure you want to delete the song: " + name)) {
+        if (await asyncConfirm(t('confirm:delete_song', {song_name: name}))) {
             await songsStore.removeSong(id)
         }
     }
     const deleteAllSongs = async () => {
-        if (await asyncConfirm("Are you sure you want to delete ALL SONGS?")) {
+        if (await asyncConfirm(t('confirm_delete_all_songs'))) {
             await songsStore._DANGEROUS_CLEAR_ALL_SONGS()
         }
     }
     const resetSettings = () => {
         localStorage.removeItem(APP_NAME + "_Composer_Settings")
         localStorage.removeItem(APP_NAME + "_Main_Settings")
-        logger.success("Settings have been reset")
+        logger.success(t('settings_reset_notice'))
     }
     const downloadSong = (song: SerializedSong) => {
         try {
@@ -44,20 +48,18 @@ export function ErrorPage() {
                 : parsed.serialize()
             ]
             fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`)
-            logger.success("Song downloaded")
+            logger.success(t('logs:song_downloaded'))
         } catch (e) {
             console.error(e)
-            logger.error('Error downloading song')
+            logger.error(t('logs:error_downloading_song'))
         }
 
     }
     return <DefaultPage className={s['error-page']}>
-        <PageMetadata text="Error"
+        <PageMetadata text={t('common:error')}
                       description='View the errors that happened in the app to send bug reports and to try to recover your songs'/>
         <div style={{textAlign: 'center'}}>
-            If you unexpectedly see this page it means an error has occoured.
-            Here you can download or delete your songs, if one caused an error, delete it.
-            If you need help, join our
+            {t('error_page_description')}
             <a
                 href='https://discord.gg/Arsf65YYHq'
                 target='_blank'
@@ -69,14 +71,13 @@ export function ErrorPage() {
             >
                 Discord
             </a>
-            and send the log file below.
         </div>
         <div className={s["error-buttons-wrapper"]}>
             <AppButton onClick={resetSettings}>
-                Reset settings
+                {t('reset_settings')}
             </AppButton>
             <AppButton onClick={deleteAllSongs}>
-                Delete all songs
+                {t('delete_all_songs')}
             </AppButton>
         </div>
         <div className={s["error-songs-wrapper"]}>
@@ -91,7 +92,7 @@ export function ErrorPage() {
         </div>
         <div className='row space-between' style={{margin: '1rem 0'}}>
             <div style={{fontSize: '2rem'}}>
-                Error logs
+                {t('error_logs')}
             </div>
             <AppButton
                 onClick={() => {
@@ -99,7 +100,7 @@ export function ErrorPage() {
                     fileService.downloadObject(logs, `${APP_NAME}_logs`)
                 }}
             >
-                Download logs
+                {t('download_logs')}
             </AppButton>
         </div>
         <div className={s['error-logs']}>
@@ -122,6 +123,7 @@ interface SongRowProps {
 }
 
 function SongRow({data, deleteSong, download}: SongRowProps) {
+    const {t } = useTranslation(['menu', 'logs'])
     return <div className="song-row">
         <div className="song-name">
             {data.name}
@@ -129,13 +131,13 @@ function SongRow({data, deleteSong, download}: SongRowProps) {
         <div className="song-buttons-wrapper">
             <button className="song-button" onClick={async () => {
                 const song = await songService.getOneSerializedFromStorable(data)
-                if (!song) return logger.error("Could not find song")
+                if (!song) return logger.error(t('logs:could_not_find_song'))
                 download(song)
-            }} aria-label={`Download song ${data.name}`}>
+            }} aria-label={t('download_song', {song_name: data.name})}>
                 <FaDownload/>
             </button>
             <button className="song-button" onClick={() => deleteSong(data.name, data.id as string)}
-                    aria-label={`Delete song ${data.name}`}>
+                    aria-label={t('delete_song', {song_name: data.name})}>
                 <FaTrash color="#ed4557"/>
             </button>
         </div>

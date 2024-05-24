@@ -11,21 +11,24 @@ import Link from 'next/link'
 import s from './Changelog.module.css'
 import {clearClientCache} from "$lib/utils/Utilities";
 import {logger} from "$stores/LoggerStore";
+import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 const cacheVersion = process.env.NEXT_PUBLIC_SW_VERSION
 export default function ChangelogPage() {
-
+    useSetPageVisited('changelog')
+    const { t} = useTranslation(['changelog', 'cache', 'home'])
     function clearCache() {
         clearClientCache()
             .then(() => {
-                logger.success("Cache Cleared")
+                logger.success(t('cache:clear_cache'))
                 setTimeout(() => {
                     window.location.href = BASE_PATH || "/"
                 }, 1000)
             })
             .catch((e) => {
                 console.error(e)
-                logger.error("Error clearing cache")
+                logger.error("cache:error_clearing_cache")
             })
     }
 
@@ -42,22 +45,22 @@ export default function ChangelogPage() {
             </SimpleMenu>
         }
     >
-        <PageMetadata text={`Changelog V${APP_VERSION}`}
+        <PageMetadata text={`${t('home:changelog_name')} V${APP_VERSION}`}
                       description={`Changelog V${APP_VERSION}\n${CHANGELOG[0]?.changes.join(";")}`}/>
         <div className={s['changelog-page-title']}>
-            Changelog
+            {t('home:changelog_name')}
             <span style={{fontSize: '1.2rem', marginLeft: '1rem'}}>
                 v{APP_VERSION}
             </span>
         </div>
         <div className='row' style={{fontSize: '0.8rem', justifyContent: 'space-between', alignItems: 'center'}}>
-            Cache: {cacheVersion || 'DEV'}
+            {t('cache:cache')}: {cacheVersion || 'DEV'}
             <AppButton onClick={clearCache}>
-                Clear Cache
+                {t('cache:clear_cache')}
             </AppButton>
             <Link href='/error'>
                 <AppButton>
-                    View Error logs
+                    {t('view_error_logs')}
                 </AppButton>
             </Link>
         </div>

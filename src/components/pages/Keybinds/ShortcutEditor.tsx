@@ -1,4 +1,4 @@
-import {capitalize, cn} from "$lib/utils/Utilities";
+import {cn} from "$lib/utils/Utilities";
 import {useEffect, useState} from "react";
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {createKeyComboComposer, Shortcut} from "$stores/KeybindsStore";
@@ -7,6 +7,7 @@ import s from './ShortcutEditor.module.css'
 import {IconButton} from "$cmp/shared/Inputs/IconButton";
 import {hasTooltip, Tooltip} from "$cmp/shared/Utility/Tooltip";
 import {Row} from "$cmp/shared/layout/Row";
+import {useTranslation} from "react-i18next";
 
 interface ShortcutEditorProps<K, V> {
     map: Map<K, V>;
@@ -52,6 +53,7 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({
                                                                            setSelected,
                                                                            onChangeShortcut
                                                                        }: ShortcutElementProps<K, V>) {
+    const {t} = useTranslation('shortcuts')
     const [newKey, setNewKey] = useState<K>(mapKey)
     useEffect(() => {
         if (!selected) return
@@ -70,10 +72,12 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({
         )}
     >
         <Row align={'center'} gap={'0.4rem'}>
-            {capitalize((value.name as string).toString?.().replaceAll("_", " ") ?? value as any)}
+            {//@ts-ignore TODO type this
+                t(`props.${value.name}`)
+            }
             {value.holdable &&
                 <div style={{fontSize: '0.8rem'}}>
-                    (Holdable)
+                    ({t('holdable')})
                 </div>
             }
 
@@ -97,7 +101,9 @@ function ShortcutElement<K extends string, V extends Shortcut<string>>({
         </Row>
         {value.description &&
             <Tooltip>
-                {value.description}
+                {//@ts-ignore TODO type this
+                    t(`props.${value.description}`)
+                }
             </Tooltip>
         }
     </div>

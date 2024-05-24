@@ -27,6 +27,9 @@ import {playerControlsStore} from '$stores/PlayerControlsStore';
 import {PlayerSongControls} from '$cmp/pages/Player/PlayerSongControls';
 import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
 import {createShortcutListener} from '$/stores/KeybindsStore';
+import {useTranslation} from "react-i18next";
+import {WithTranslation} from "react-i18next/index";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
 interface PlayerState {
     settings: PlayerSettingsDataType
@@ -40,13 +43,17 @@ interface PlayerState {
     speedChanger: typeof SPEED_CHANGERS[number]
 }
 
-class Player extends Component<{ inPreview?: boolean }, PlayerState> {
+type PlayerProps = {
+    inPreview?: boolean,
+    t: WithTranslation<['player', 'common', 'home', 'question', 'confirm', 'logs', 'menu']>['t']
+}
+class Player extends Component<PlayerProps, PlayerState> {
     state: PlayerState
     recording: Recording
     mounted: boolean
     cleanup: (Function | Lambda)[] = []
 
-    constructor(props: {}) {
+    constructor(props: PlayerProps) {
         super(props)
         this.recording = new Recording()
         this.state = {
@@ -139,7 +146,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
         instrument.changeVolume(volume)
         this.setState({isLoadingInstrument: true})
         const loaded = await instrument.load(AudioProvider.getAudioContext())
-        if (!loaded) logger.error("There was an error loading the instrument")
+        if (!loaded) logger.error(this.props.t('logs:error_loading_instrument'))
         AudioProvider.connect(instrument.endNode, null)
         if (!this.mounted) return
         playerStore.setKeyboardLayout(instrument.notes)
@@ -171,14 +178,14 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             AudioProvider.disconnect(ins.endNode)
             ins.dispose()
         })
-        logger.showPill("Loading instruments...")
+        logger.showPill(this.props.t('logs:loading_instruments'))
         const promises = toLoad.map(async (ins, i) => {
             if (instruments[i] === undefined) {
                 //If it doesn't have a layer, create one
                 const instrument = new Instrument(ins.name)
                 instruments[i] = instrument
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
-                if (!loaded) logger.error("There was an error loading the instrument")
+                if (!loaded) logger.error(this.props.t('logs:error_loading_instrument'))
                 if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
@@ -196,7 +203,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
                 const instrument = new Instrument(ins.name)
                 instruments[i] = instrument
                 const loaded = await instrument.load(AudioProvider.getAudioContext())
-                if (!loaded) logger.error("There was an error loading the instrument")
+                if (!loaded) logger.error(this.props.t('logs:error_loading_instrument'))
                 if (!this.mounted) return instrument.dispose()
                 AudioProvider.connect(instrument.endNode, ins.reverbOverride)
                 instrument.changeVolume(ins.volume)
@@ -263,15 +270,18 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             const id = await songsStore.addSong(song)
             song.id = id
             const type = song.type ?? (song.data.isComposedVersion ? "composed" : "recorded")
-            logger.success(`Song added to the ${type} tab!`, 4000)
+            logger.success(this.props.t('logs:song_added_to_folder', {
+                song_name: song.name,
+                folder_name: this.props.t(`menu:${type}`)
+            }), 4000)
         } catch (e) {
             console.error(e)
-            return logger.error('There was an error importing the song')
+            return logger.error(this.props.t("logs:error_importing_song", {song_name: song.name}))
         }
     }
 
     removeSong = async (name: string, id: string) => {
-        const result = await asyncConfirm(`Are you sure you want to delete the song: "${name}" ?`)
+        const result = await asyncConfirm(this.props.t("confirm:delete_song", {song_name: name}))
         if (!this.mounted) return
         if (result) {
             await songsStore.removeSong(id)
@@ -303,7 +313,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
         const newState = override !== null ? override : !this.state.isRecording
         if (!newState && this.recording.notes.length > 0) { //if there was a song recording
             const {instruments, settings} = this.state
-            const songName = await asyncPrompt("Write song name, press cancel to ignore")
+            const songName = await asyncPrompt(this.props.t("question:ask_song_name_cancellable"))
             if (!this.mounted) return
             if (songName !== null) {
                 const song = new RecordedSong(songName, this.recording.notes, [instruments[0].name])
@@ -328,13 +338,13 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             AudioProvider.startRecording()
         } else {
             const recording = await AudioProvider.stopRecording()
-            const fileName = await asyncPrompt("Write the song name, press cancel to ignore")
+            const fileName = await asyncPrompt(this.props.t("question:ask_song_name_cancellable"))
             if (!this.mounted || !recording) return
             try {
                 if (fileName) await AudioRecorder.downloadBlob(recording.data, fileName + '.wav')
             } catch (e) {
                 console.error(e)
-                logger.error("There was an error downloading the audio, maybe it's too big?")
+                logger.error(this.props.t("logs:error_downloading_audio"))
             }
         }
     }
@@ -361,8 +371,9 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
             isMetronomePlaying,
             speedChanger
         } = state
+        const {t} = this.props
         return <>
-            <PageMetadata text="Player"
+            <PageMetadata text={t("home:player_name")}
                           description='Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones.'/>
             <Menu
                 functions={{addSong, removeSong, handleSettingChange, changeVolume, renameSong}}
@@ -377,7 +388,7 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
                             onClick={() => this.toggleRecord()}
                             style={{marginTop: "0.8rem"}}
                         >
-                            {isRecording ? "Stop" : "Record"}
+                            {isRecording ? t('common:stop'): t("common:record")}
                         </AppButton>
                     }
                 </div>
@@ -415,7 +426,9 @@ class Player extends Component<{ inPreview?: boolean }, PlayerState> {
 }
 
 export default function PlayerPage({inPreview}: { inPreview?: boolean }) {
-    return <Player inPreview={inPreview}/>
+    const {t} = useTranslation(['player', 'common', 'home', 'question', 'confirm', 'logs', 'menu'])
+    useSetPageVisited('player')
+    return <Player inPreview={inPreview} t={t}/>
 }
 
 PlayerPage.getLayout = function getLayout(page: ReactNode) {

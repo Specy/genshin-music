@@ -14,11 +14,15 @@ import {ShortcutEditor} from "$cmp/pages/Keybinds/ShortcutEditor";
 import {useConfig} from "$/lib/Hooks/useConfig";
 import svs from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard.module.css"
 import MidiSetup from "components/pages/MidiSetup";
+import {useTranslation} from "react-i18next";
+import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
+import {KeyboardCode} from "$lib/Providers/KeyboardProvider/KeyboardTypes";
 
 
 const baseInstrument = new Instrument()
 export default function Keybinds() {
-
+    useSetPageVisited('keybinds')
+    const {t} = useTranslation(["keybinds", "home"])
     const [keyboard] = useObservableMap(keyBinds.getShortcutMap("keyboard"))
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
     const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
@@ -39,7 +43,7 @@ export default function Keybinds() {
             const note = baseInstrument.getNoteFromIndex(index)
             if (type === 'keyboard' && index !== -1) {
                 const existing = keyBinds.setKeyboardKeybind(note.noteNames.keyboard, code)
-                if (existing !== undefined) logger.warn(`This keybind is already used by the ${existing.name} note`)
+                if (existing !== undefined) logger.warn(t('already_used_keybind', {note_name: existing.name}))
                 setSelected({type: '', index: -1})
             }
             if (['k4', 'k6', 'k8'].includes(type) && index !== -1) {
@@ -53,19 +57,19 @@ export default function Keybinds() {
     const k4 = useObservableArray(keyBinds.getVsrgKeybinds(4))
     const k6 = useObservableArray(keyBinds.getVsrgKeybinds(6))
     return <DefaultPage>
-        <PageMetadata text="Keybinds" description="Change the app keyboard keybinds and MIDI input keys"/>
+        <PageMetadata text={t("home:keybinds_or_midi_name")}
+                      description="Change the app keyboard keybinds and MIDI input keys"/>
         <h1>
-            MIDI keybinds
+            {t('midi_keybinds')}
         </h1>
         <MidiSetup/>
         {!IS_MOBILE
             && <>
                 <h1>
-                    Keyboard keybinds
+                    {t('keyboard_keybinds')}
                 </h1>
                 <div>
-                    You can remap the keyboard keys to whatever key on your keyboard, press the note you want to remap
-                    then press the key you want to assign to it.
+                    {t('keyboard_keybinds_description')}
                 </div>
                 <div className="flex-centered">
                     <div
@@ -74,33 +78,31 @@ export default function Keybinds() {
                             margin: '1rem 0'
                         }}
                     >
-                        {baseInstrument.notes.map((note, i) =>
-                            <BaseNote
-                                key={i}
-                                data={{
-                                    status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
-                                }}
-                                noteImage={baseInstrument.notes[i].noteImage}
-                                noteText={(
-                                    keyBinds.getKeyOfShortcut(
-                                        "keyboard",
-                                        {name: note.noteNames.keyboard, holdable: false}
-                                    ) ?? "???")
-                                    .replace("Key", "")
-                                }
-                                handleClick={() => {
-                                    setSelected({
-                                        type: 'keyboard',
-                                        index: selected.index === i ? -1 : i
-                                    })
-                                }}
-                            />
+                        {baseInstrument.notes.map((note, i) => {
+                                //current keybind key
+                                const key = keyBinds.getKeyOfShortcut("keyboard", note.noteNames.keyboard)
+                                return <BaseNote
+                                    key={i}
+                                    data={{
+                                        status: (selected.type === 'keyboard' && i === selected.index) ? 'clicked' : ''
+                                    }}
+                                    noteImage={baseInstrument.notes[i].noteImage}
+                                    //pretty the key to the user's keyboard layout
+                                    noteText={key ? KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key : "???"}
+                                    handleClick={() => {
+                                        setSelected({
+                                            type: 'keyboard',
+                                            index: selected.index === i ? -1 : i
+                                        })
+                                    }}
+                                />
+                            }
                         )}
                     </div>
                 </div>
 
                 <h1>
-                    Composer shortcuts
+                    {t('composer_shortcuts')}
                 </h1>
                 <div className="column">
                     <ShortcutEditor
@@ -113,7 +115,7 @@ export default function Keybinds() {
                     />
                 </div>
                 <h1>
-                    Player shortcuts
+                    {t('player_shortcuts')}
                 </h1>
                 <div className="column">
                     <ShortcutEditor
@@ -126,7 +128,7 @@ export default function Keybinds() {
                     />
                 </div>
                 <h1>
-                    Vsrg composer shortcuts
+                    {t('vsrg_composer_shortcuts')}
                 </h1>
                 <div className="column">
                     <ShortcutEditor
@@ -139,7 +141,7 @@ export default function Keybinds() {
                     />
                 </div>
                 <h1>
-                    Vsrg player shortcuts
+                    {t('vsrg_player_shortcuts')}
                 </h1>
                 <div className="column">
                     <ShortcutEditor
@@ -152,7 +154,7 @@ export default function Keybinds() {
                     />
                 </div>
                 <h1>
-                    Vsrg keybinds
+                    {t('vsrg_keybinds')}
                 </h1>
                 <div className="column" style={{marginLeft: '1rem'}}>
                     {[k4, k6].map((keys, j) =>

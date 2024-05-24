@@ -16,14 +16,18 @@ import Image from 'next/image';
 import isMobile from 'is-mobile';
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
 import {fileService} from '$lib/Services/FileService';
+import {useTranslation} from "react-i18next";
+import {AppLanguage, AVAILABLE_LANGUAGES} from "$i18n/i18n";
+import {usePathname} from "next/navigation";
 
 
 function AppBase() {
+    const {i18n, t} = useTranslation(['home', 'logs'])
     const [hasVisited, setHasVisited] = useState(false)
     const [checkedUpdate, setCheckedUpdate] = useState(false)
     const [isOnMobile, setIsOnMobile] = useState(false)
     const router = useRouter()
-
+    const path = usePathname()
     useEffect(() => {
         function handleBlur() {
             const active = document.activeElement
@@ -53,7 +57,7 @@ function AppBase() {
         linkServices()
         const shouldShowBakcupWarning = settingsService.shouldShowBackupWarning(1000 * 60 * 60 * 24 * 7 * 3) //3 weeks
         if (shouldShowBakcupWarning) {
-            logger.warn("You haven't backed up your songs in a while, remember to download the backup sometimes!", 8000)
+            logger.warn(i18n.t('logs:suggest_backup'), 8000)
             settingsService.setLastBackupWarningTime(Date.now())
         }
     }, [])
@@ -62,7 +66,8 @@ function AppBase() {
         if ("launchQueue" in window) {
             async function consumer(launchParams: any) {
                 if (launchParams.files && launchParams.files.length) {
-                    const confirm = await asyncConfirm("You opened a file, do you want to import it?", false)
+                    const name = launchParams.files.join(", ")
+                    const confirm = await asyncConfirm(i18n.t('confirm:confirm_import_opened_file', {files_names: name}), false)
                     if (!confirm) return
                     for (const file of launchParams.files) {
                         const blob = await file.getFile()
@@ -81,6 +86,7 @@ function AppBase() {
             return () => window.launchQueue.setConsumer(() => {
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const setDontShowHome = useCallback((override = false) => {
@@ -92,12 +98,12 @@ function AppBase() {
         try {
             if (navigator.storage && navigator.storage.persist) {
                 if (await navigator.storage.persist()) {
-                    logger.success("Storage permission allowed")
+                    logger.success(t('logs:storage_persisted'), 5000)
                 }
             }
         } catch (e) {
             console.log(e)
-            logger.error("There was an error with setting up persistent storage")
+            logger.error(t('logs:storage_persisted_error'), 5000)
         }
         closeWelcomeScreen()
     }
@@ -105,17 +111,33 @@ function AppBase() {
         localStorage.setItem(APP_NAME + "_Visited", JSON.stringify(true))
         setHasVisited(true)
     }
+
+    useEffect(() => {
+        try {
+            const lang = (localStorage.getItem(APP_NAME + "_Lang") ?? navigator.language ?? "en") as string | string[]
+            const rootLang = ((Array.isArray(lang) ? lang[0] : lang).split("-")[0]).toLowerCase()
+            const langToUse = AVAILABLE_LANGUAGES.includes(rootLang as AppLanguage) ? rootLang : 'en'
+            window.document.documentElement.lang = langToUse
+            i18n.changeLanguage(langToUse)
+        } catch (e) {
+            console.error(e)
+        }
+    }, []);
+
+
     useEffect(() => {
         async function checkUpdate() {
             await delay(1000)
             const visited = localStorage.getItem(APP_NAME + "_Visited")
             if (checkedUpdate) return
             const storedVersion = localStorage.getItem(APP_NAME + "_Version")
+            const repeatNotice = localStorage.getItem(APP_NAME + "_repeat_update_notice") === "true"
             if (!visited) {
                 return localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
             }
-            if (APP_VERSION !== storedVersion) {
+            if (APP_VERSION !== storedVersion || repeatNotice) {
                 logger.log("Update V" + APP_VERSION + "\n" + UPDATE_MESSAGE, 6000)
+                localStorage.setItem(APP_NAME + "_repeat_update_notice", "false")
                 localStorage.setItem(APP_NAME + "_Version", APP_VERSION)
             }
             setCheckedUpdate(true)
@@ -141,6 +163,9 @@ function AppBase() {
             browserHistoryStore.addPage(path.pathName)
         })
     }, [router])
+
+    //disable the screen rotate for the blog
+    const inBlog = path.startsWith("/blog")
     return <>
         <Home
             hasVisited={hasVisited}
@@ -148,23 +173,25 @@ function AppBase() {
             setDontShowHome={setDontShowHome}
             askForStorage={askForStorage}
         />
-        <div className="rotate-screen">
-            {isOnMobile && <>
-                <Image
-                    src={rotateImg}
-                    alt="icon for the rotating screen"
-                />
-                <p>
-                    For a better experience, add the website to the home screen, and rotate your device
-                </p>
-            </>}
-            {!isOnMobile && <>
-                <FaExpandAlt/>
-                <p>
-                    Please increase your window size
-                </p>
-            </>}
-        </div>
+        {!inBlog &&
+            <div className="rotate-screen">
+                {isOnMobile && <>
+                    <Image
+                        src={rotateImg}
+                        alt="icon for the rotating screen"
+                    />
+                    <p>
+                        {t('rotate_screen')}
+                    </p>
+                </>}
+                {!isOnMobile && <>
+                    <FaExpandAlt/>
+                    <p>
+                        {t('expand_screen')}
+                    </p>
+                </>}
+            </div>
+        }
     </>
 }
 

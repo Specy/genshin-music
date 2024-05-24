@@ -1,6 +1,6 @@
 import {BlogAuthor, BlogMetadata} from "$cmp/pages/blog/types";
 import {DefaultPage} from "$cmp/shared/pagesLayout/DefaultPage";
-import {MaybeChildren} from "$lib/utils/UtilTypes";
+import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 import s from './blog.module.scss'
 import {Header} from "$cmp/shared/header/Header";
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
@@ -9,6 +9,8 @@ import {useEffect, useMemo, useState} from "react";
 import {APP_NAME, BASE_PATH} from "$config";
 import {Row} from "$cmp/shared/layout/Row";
 import {BlogAuthorRenderer, BlogTagsRenderer} from "$cmp/pages/blog/BlogMetadataRenderers";
+import {useMediaQuery} from "$lib/Hooks/useMediaQuery";
+import {useConfig} from "$lib/Hooks/useConfig";
 
 interface BaseBlogPostProps {
     metadata: BlogMetadata
@@ -22,6 +24,7 @@ export const SpecyAuthor = {
 
 
 export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren<BaseBlogPostProps>) {
+    const {IS_MOBILE} = useConfig()
     useEffect(() => {
         const visited = JSON.parse(localStorage.getItem(APP_NAME + '_visited_blog_posts') ?? '{}')
         visited[metadata.relativeUrl] = true
@@ -30,8 +33,11 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
     const date = useMemo(() => {
         return new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(metadata.createdAt)
     }, [metadata.createdAt])
+    const closeMenu = useMediaQuery("(orientation: portrait)") && IS_MOBILE
+
     return <DefaultPage
         cropped={false}
+        excludeMenu={closeMenu}
         style={{
             paddingLeft: 'var(--menu-size)', gap: '1rem', lineHeight: '1.5'
         }}
@@ -45,7 +51,7 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
             <meta name={'date'} content={metadata.createdAt.toISOString()}/>
             <meta name={'keywords'} content={metadata.tags.join(', ')}/>
         </PageMetadata>
-        <Row justify={'between'} className={`${s['blog-nav']}`}>
+        <BlogNavbar style={closeMenu ? {padding: '1rem 1.5rem'} : undefined}>
             <Link href={'/blog'}>
                 Posts
             </Link>
@@ -55,9 +61,8 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
             <Link href={'/composer'}>
                 Composer
             </Link>
-        </Row>
+        </BlogNavbar>
         <div className={`${s["blog-header"]}`}>
-
             <img
                 src={metadata.image ?? ""}
                 alt={`${metadata.title} image`}
@@ -81,7 +86,7 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
                 maxWidth: '60rem',
                 margin: '0 auto',
                 padding: '2rem',
-                paddingLeft: 'calc(var(--menu-size) + 2rem)'
+                paddingLeft: closeMenu ? '2rem' : 'calc(var(--menu-size) + 2rem)'
             } : {padding: '2rem'}}
         >
             <Row
@@ -89,7 +94,8 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
                 gap={'2rem'}
                 style={{
                     fontSize: '1.2rem',
-                    marginBottom: '1rem'
+                    marginBottom: '1rem',
+                    flexWrap: 'wrap'
                 }}
             >
                 {metadata.author &&
@@ -114,5 +120,13 @@ export function useHasVisitedBlogPost(name: string) {
     }, []);
     return visited
 }
+
+export function BlogNavbar({children, className, style}: MaybeChildren<Stylable>) {
+    return <Row justify={'between'} style={style} className={`${className} ${s['blog-nav']}`}>
+        {children}
+    </Row>
+}
+
+
 
 

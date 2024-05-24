@@ -18,13 +18,15 @@ import AppBase from "$cmp/AppBase";
 import {NextComponentType, NextPageContext} from "next";
 import {delay, setIfInTWA} from "$lib/utils/Utilities";
 import * as serviceWorker from "$/serviceWorkerRegistration"
-import {BASE_PATH, IS_TAURI} from "$config";
+import {APP_NAME, BASE_PATH, IS_TAURI} from "$config";
 import ErrorBoundaryRedirect from "$cmp/shared/Utility/ErrorBoundaryRedirect";
 import {logger} from "$stores/LoggerStore";
 import {logsStore} from "$stores/LogsStore";
 import {GoogleAnalyticsScript} from "$cmp/GoogleAnalyticsScript";
 import Head from "next/head";
 import {asyncConfirm} from "$cmp/shared/Utility/AsyncPrompts";
+
+import {i18n} from "$i18n/i18n"
 
 interface CustomPageProps {
 
@@ -84,9 +86,10 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     console.log("Registering service worker")
                     serviceWorker.register({
                         onUpdate: async (registration) => {
-                            const confirm = await asyncConfirm("There is a new version of the app available, do you want to reload to update? Make sure you close/refresh other tabs of the app", false)
+                            const confirm = await asyncConfirm(i18n.t('logs:update_available'), false)
                             if (confirm) {
                                 registration.waiting?.postMessage({type: "SKIP_WAITING"})
+                                localStorage.setItem(APP_NAME + "_repeat_update_notice", "true")
                                 await delay(1000)
                                 window.location.reload()
                             }
@@ -131,7 +134,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     <GeneralProvidersWrapper>
                         <ErrorBoundaryRedirect
                             onErrorGoTo="/error"
-                            onError={() => logger.error("There was an error with the app!")}
+                            onError={() => logger.error(i18n.t("logs:error_with_the_app"))}
                         >
                             <>
                                 <AppBase/>

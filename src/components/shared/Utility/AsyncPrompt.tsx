@@ -7,6 +7,7 @@ import {cn} from "$lib/utils/Utilities"
 import {KeyboardProvider} from "$lib/Providers/KeyboardProvider"
 import {IGNORE_CLICK_CLASS} from "$lib/Hooks/useClickOutside"
 import isMobile from "is-mobile"
+import {useTranslation} from "react-i18next";
 
 export function AsyncPromptWrapper() {
     const confirmState = useObservableObject(asyncPromptStore.confirmState)
@@ -24,6 +25,7 @@ export function AsyncPromptWrapper() {
 
 //TODO this components here look kinda ugly and break the point of react, but it's the best and fastest way to do it for now
 function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
+    const {t} = useTranslation('common')
     const isHidden = !deferred
     const [isMounted, setIsMounted] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
@@ -39,7 +41,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
         document.activeElement?.blur()
         KeyboardProvider.register("Escape", () => {
             if (!cancellable) return
-            asyncPromptStore.answerConfirm(false)
+            asyncPromptStore.answerConfirm(null)
         }, {id: 'AsyncConfirm'})
         KeyboardProvider.register("Enter", () => {
             asyncPromptStore.answerConfirm(true)
@@ -51,7 +53,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
 
     function onOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
         if (e.nativeEvent.composedPath()[0] !== ref.current || !cancellable) return
-        asyncPromptStore.answerConfirm(false)
+        asyncPromptStore.answerConfirm(null)
     }
 
     return <div
@@ -62,9 +64,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
     >
 
         <DecoratedCard
-            boxProps={{
-                className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
-            }}
+            className={cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])}
             isRelative={false}
             size={'1.1rem'}
         >
@@ -80,7 +80,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
                     }}
                     onClick={() => asyncPromptStore.answerConfirm(false)}
                 >
-                    No
+                    {t('no')}
                 </button>
                 <button
                     className="prompt-button"
@@ -90,7 +90,7 @@ function AsyncConfirm({question, deferred, cancellable}: AsyncConfirmState) {
                     }}
                     onClick={() => asyncPromptStore.answerConfirm(true)}
                 >
-                    Yes
+                    {t('yes')}
                 </button>
             </div>
         </DecoratedCard>
@@ -154,9 +154,7 @@ function AsyncPrompt({question, deferred, cancellable}: AsyncPromptState) {
         className={cn(`prompt-overlay ${IGNORE_CLICK_CLASS}`, [isHidden, 'prompt-overlay-hidden'])}
     >
         <DecoratedCard
-            boxProps={{
-                className: cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])
-            }}
+            className={cn(`floating-prompt ${IGNORE_CLICK_CLASS}`, [!deferred, 'floating-prompt-hidden'])}
             isRelative={false}
             size={'1.1rem'}
         >

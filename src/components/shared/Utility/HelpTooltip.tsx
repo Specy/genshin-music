@@ -5,13 +5,23 @@ interface HelpTooltipProps {
     children: React.ReactNode;
     maxWidth?: number
     width?: number
+    position?: 'left' | 'right' | 'middle'
     buttonStyle?: React.CSSProperties
     parentStyle?: React.CSSProperties
 }
 
-export function HelpTooltip({children, maxWidth = 20, buttonStyle, parentStyle, width}: HelpTooltipProps) {
+const positionMap = {
+    left: '-100%',
+    right: '0',
+    middle: '-50%'
+}
+
+export function HelpTooltip({children, maxWidth = 18, buttonStyle, parentStyle, width, position = 'right'}: HelpTooltipProps) {
     const ref = useRef<HTMLButtonElement>(null)
-    return <div className="help-tooltip" style={parentStyle}>
+    return <div className="help-tooltip" style={{
+        position: 'relative',
+        ...parentStyle
+    }}>
         <button
             ref={ref}
             className='help-tooltip-button'
@@ -27,8 +37,9 @@ export function HelpTooltip({children, maxWidth = 20, buttonStyle, parentStyle, 
         </button>
         <div className="help-tooltip-content"
              style={{
+                 translate: positionMap[position],
                  maxWidth: `${maxWidth}rem`,
-                 width: width !== undefined ? `${width}rem` : 'unset',
+                 width: width !== undefined ? `${width}rem` : 'max-content',
              }}
         >
             {children}

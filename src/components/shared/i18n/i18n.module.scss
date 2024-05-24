@@ -1,0 +1,15 @@
+.i18n-selector {
+  padding: 0.5rem;
+  gap: 0.2rem;
+  display: flex;
+  max-width: 8rem;
+  padding-right: 1.2rem;
+  border-radius: 0.4rem;
+  min-width: unset;
+  background-color: var(--primary);
+  align-items: center;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  color: var(--primary-text);
+}

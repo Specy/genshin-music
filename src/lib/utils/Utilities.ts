@@ -8,6 +8,7 @@ import {RecordedSong} from "../Songs/RecordedSong";
 import {ClickType, Timer} from "$types/GeneralTypes"
 import Color from "color";
 import {CSSProperties} from "react";
+import {MIDIShortcutName} from "$lib/BaseSettings";
 
 
 export function preventDefault(e: React.MouseEvent) {
@@ -78,12 +79,12 @@ class MIDINote {
     }
 }
 
-class MIDIShortcut {
-    type: string
+class MIDIShortcut<T extends MIDIShortcutName = MIDIShortcutName> {
+    type: T
     midi: number
     status: 'wrong' | 'right' | 'clicked'
 
-    constructor(type: string, midi: number) {
+    constructor(type: T, midi: number) {
         this.type = type
         this.midi = midi
         this.status = midi < 0 ? 'wrong' : 'right'

@@ -3,7 +3,7 @@ import {
     BaseSettings,
     ComposerSettings,
     ComposerSettingsDataType,
-    MIDISettings,
+    MIDISettings, MidiSettingsType,
     PlayerSettings,
     PlayerSettingsDataType,
     VsrgComposerSettings,
@@ -150,7 +150,7 @@ class SettingsService {
     }
 
     getDefaultMIDISettings() {
-        return MIDISettings
+        return {...MIDISettings} as MidiSettingsType
     }
 
     updateVsrgComposerSettings(settings: VsrgComposerSettingsDataType) {
@@ -193,7 +193,7 @@ class SettingsService {
         localStorage.setItem(APP_NAME + "_VsrgPlayer_Settings", JSON.stringify(state))
     }
 
-    updateMIDISettings(settings: typeof MIDISettings) {
+    updateMIDISettings(settings: MidiSettingsType) {
         localStorage.setItem(`${APP_NAME}_MIDI_Settings`, JSON.stringify(settings))
     }
 }

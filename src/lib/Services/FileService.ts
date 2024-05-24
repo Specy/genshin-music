@@ -15,6 +15,7 @@ import {AppError} from "../Errors"
 import {SerializedSongKind} from "$/types/SongTypes"
 import {logger} from "$stores/LoggerStore"
 import {APP_NAME} from "$config"
+import {i18n} from "$i18n/i18n";
 
 export type UnknownSong =
     UnknownSerializedComposedSong
@@ -101,51 +102,51 @@ class UnknownFileResult {
         })
     }
 }
-
 export class FileService {
     async importAndLog(files: UnknownFile) {
-        logger.showPill("Importing files...")
+        logger.showPill(i18n.t("logs:importing_files"))
         const result = await fileService.importUnknownFile(files).catch(e => {
             logger.hidePill()
-            logger.error("Error importing files")
+            logger.error(i18n.t("logs:error_importing_files"))
             console.error(e)
             throw e
         })
         logger.hidePill()
         if (result.hasErrors()) {
-            logger.error(`${result.errors.length} thing${result.errors.length === 1 ? '' : 's'} failed to import`)
+            logger.error(i18n.t("logs:n_things_failed_to_import", {n: result.errors.length}))
             console.error("failed to import: ", result.errors)
         }
         const songs = result.getSuccessfulSongs()
         const songErrors = result.getSongErrors()
         if (songs.length > 5) {
-            logger.success(`Imported ${songs.length} songs`)
+            logger.success(i18n.t("logs:imported_n_songs", {n: songs.length}))
         } else {
-            songs.forEach(s => logger.success(`Imported ${s.type} song: "${s.name}"`))
+            songs.forEach(s => logger.success(i18n.t("logs:imported_song", {
+                song_name: s.name,
+                song_type: i18n.t(`menu:${s.type}`)
+            })))
         }
-        songErrors.forEach(e => logger.error(`Error importing song: "${e.file?.name ?? ''}" | ${e.error}`))
+        songErrors.forEach(e => logger.error(`${i18n.t('logs:error_importing_song', {song_name: e.file?.name ?? ''})} | ${e.error}`))
         const unknown = result.getUnknownErrors()
-        unknown.forEach(e => logger.error(`Error importing unknown file: "${e.file?.name ?? ''}" | ${e.error}`))
+        unknown.forEach(e => logger.error(`${i18n.t('logs:error_importing_unknown_file', {file_name: e.file?.name ?? ''})} | ${e.error}`))
 
         const folders = result.getSuccessfulFolders()
         if (folders.length > 5) {
-            logger.success(`Imported ${folders.length} folders`)
+            logger.success(i18n.t("logs:imported_n_folders", {n: folders.length}))
         } else {
-            folders.forEach(f => logger.success(`Imported folder: "${f.name}"`))
+            folders.forEach(f => logger.success(i18n.t("logs:imported_folder", {folder_name: f?.name ?? ''})))
         }
         const folderErrors = result.getFolderErrors()
-        folderErrors.forEach(e => logger.error(`Error importing folder: "${e.file?.name ?? ''}" | ${e.error}`))
+        folderErrors.forEach(e => logger.error(`${i18n.t('logs:error_importing_folder', {folder_name: e.file?.name ?? ''})} | ${e.error}`))
 
         const themes = result.getSuccessfulThemes()
         if (themes.length > 5) {
-            logger.success(`Imported ${themes.length} themes`)
+            logger.success(i18n.t("logs:imported_n_themes", {n: themes.length}))
         } else {
-            themes.forEach(t => logger.success(`Imported theme: "${t?.other?.name ?? ''}"`))
+            themes.forEach(t => logger.success(i18n.t("logs:imported_theme", {theme_name: t?.other?.name ?? ''})))
         }
         const themeErrors = result.getThemeErrors()
-        themeErrors.forEach(e => logger.error(`Error importing theme: "${e.file?.other?.name ?? ''}" | ${e.error}`))
-
-
+        themeErrors.forEach(e => logger.error(`${i18n.t('logs:error_importing_theme', {theme_name: e.file?.other?.name ?? ''})} | ${e.error}`))
         return result
     }
 

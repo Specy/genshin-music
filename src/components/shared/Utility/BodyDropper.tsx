@@ -1,5 +1,6 @@
 import {memo, useCallback, useEffect, useState} from "react"
 import useDebounce from "$lib/Hooks/useDebounce";
+import {useTranslation} from "react-i18next";
 
 export interface DroppedFile<T = Buffer | object | string> {
     data: T
@@ -28,6 +29,7 @@ function BodyDropperComponent<T>({
                                      showDropArea = false,
                                      dropAreaStyle = {}
                                  }: BodyDropperProps<T>) {
+    const {t} = useTranslation('home')
     const [_isHovering, setIsHovering] = useState(false)
     const debouncedIsHovering = useDebounce(_isHovering, 50)
     const resetDrag = useCallback((e?: any) => {
@@ -105,7 +107,7 @@ function BodyDropperComponent<T>({
     }, [resetDrag, handleDrag, handleDragOver])
     return <>
         {showDropArea && <DropHoverHinter isHovering={debouncedIsHovering} style={dropAreaStyle}>
-            Drop files here
+            {t('drop_files_here')}
         </DropHoverHinter>
         }
     </>

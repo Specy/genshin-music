@@ -5,18 +5,14 @@ import {keyBinds} from '$stores/KeybindsStore'
 import {ShortcutsTable} from './ShortcutsHelp'
 import {AppLink} from "$cmp/shared/link/AppLink";
 import {Header} from "$cmp/shared/header/Header";
+import {useTranslation} from "react-i18next";
+import {AppButton} from "$cmp/shared/Inputs/AppButton";
 
 export function HelpTab() {
-    const {IS_MOBILE} = useConfig()
-
+    const {t} = useTranslation('tutorials')
     return <>
-        <div>
-            {IS_MOBILE
-                ? 'Long press the buttons to see a tooltip. '
-                : 'Hover over the buttons to see a tooltip. '
-            }
-
-            When clicking
+        <div style={{margin: '0.5rem 0'}}>
+            {t('help.question_mark_description')}
             <HelpTooltip
                 parentStyle={{
                     display: 'inline-flex'
@@ -27,61 +23,56 @@ export function HelpTab() {
                     margin: '0 0.4rem'
                 }}
             >
-                Example help
+                {t('help.example_help')}
             </HelpTooltip>
-            it will show you more info.
         </div>
         <Header type={'h2'}>
-            Learn how to use the Player
+            {t('help.learn_how_to_use_player')}
         </Header>
         <p>
-            To learn how to use the Player, visit the <AppLink href={'/blog/posts/how-to-use-player'}>Player
-            guide</AppLink>,
-            it will
-            tell you about every feature in the player, and what every setting does.
+            <AppLink href={'/blog/posts/how-to-use-player'}>{t('help.click_to_visit_blog')}</AppLink>
         </p>
         <Header type={'h2'}>
-            Learn how to use the composer
+            {t('help.learn_how_to_use_composer')}
         </Header>
         <p>
-            To learn how to use the composer, visit the <AppLink href={'/blog/posts/how-to-use-composer'}>Composer
-            guide</AppLink>,
-            it will tell you about every feature in the composer, what every setting does, and other tutorials on how to
-            work with
-            sheets, midi, and audio files
+            <AppLink href={'/blog/posts/how-to-use-composer'}>{t('help.click_to_visit_blog')}</AppLink>
         </p>
     </>
 }
 
 
 export function ComposerShortcuts() {
+    const {t} = useTranslation(['tutorials', 'home'])
     const {IS_MOBILE} = useConfig()
     const [composerShortcuts] = useObservableMap(keyBinds.getShortcutMap("composer"))
     if (IS_MOBILE) return
     return <>
         <Header type={'h2'}>
-            Composer shortcuts
+            {t('help.composer_shortcuts')}
         </Header>
-        <p>
-            The composer has some shortcuts you can use, if you want to change them, go to the <AppLink
-            href={'/keybinds'}>keybinds page</AppLink>
-        </p>
+        <AppLink href={'/keybinds'} style={{marginTop: "1rem"}}>
+            <AppButton>
+                {t('help.change_keybinds')}
+            </AppButton>
+        </AppLink>
         <ShortcutsTable shortcuts={composerShortcuts} style={{marginTop: '1rem'}}/>
     </>
 }
-
 export function PlayerShortcuts() {
+    const {t} = useTranslation(['tutorials', 'home'])
     const {IS_MOBILE} = useConfig()
     const [playerShortcuts] = useObservableMap(keyBinds.getShortcutMap("player"))
     if (IS_MOBILE) return
     return <>
         <Header type={'h2'}>
-            Player shortcuts
+            {t('help.player_shortcuts')}
         </Header>
-        <p>
-            The player has some shortcuts you can use, if you want to change them, go to the <AppLink
-            href={'/keybinds'}>keybinds page</AppLink>
-        </p>
+        <AppLink href={'/keybinds'} style={{marginTop: "1rem"}}>
+            <AppButton>
+                {t('help.change_keybinds')}
+            </AppButton>
+        </AppLink>
         <ShortcutsTable shortcuts={playerShortcuts} style={{marginTop: '1rem'}}/>
     </>
 }
