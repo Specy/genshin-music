@@ -56,7 +56,9 @@ export default function ZenKeyboard() {
     }
     useEffect(() => {
         async function load() {
-            logger.showPill(i18n.t('zen_keyboard:loading_instrument'))
+            logger.showPill(i18n.t('zen_keyboard:loading_instrument', {
+                instrument: i18n.t('instruments.' + settings.instrument.value)
+            }))
             await instrument.load(AudioProvider.getAudioContext())
             logger.hidePill()
             AudioProvider.connect(instrument.endNode, null)
