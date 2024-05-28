@@ -13,6 +13,12 @@ export default function DonateButton({style}: { style?: React.CSSProperties }) {
 
 
     return !isTwa ? <Link className={s['donate-button']} href='/donate' style={style}>
-        <DonateIcon /> {t('donate')}
+         <DonateIcon
+            style={{
+                fontSize: "1.5rem",
+                marginLeft: '-1.5rem'
+            }}
+         />
+       {t('donate')}
     </Link> : <></>
 }

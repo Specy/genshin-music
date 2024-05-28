@@ -10,7 +10,7 @@ export const PAGES_VERSIONS = {
     deleteCache: makePageVersion('deleteCache', 0),
     donate: makePageVersion('donate', 0),
     error: makePageVersion('error', 0),
-    keybinds: makePageVersion('keybinds', 0),
+    keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
     partners: makePageVersion('partners', 0),
     player: makePageVersion('player', 0),
     privacy: makePageVersion('privacy', 0),
