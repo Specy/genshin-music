@@ -1,5 +1,5 @@
-import {InstrumentName} from "$types/GeneralTypes";
 import {MIDIShortcutName} from "$lib/BaseSettings";
+import {AppI18N} from "$i18n/i18n";
 
 export const i18n_id = {
     logs: {
@@ -440,18 +440,18 @@ export const i18n_id = {
         key_already_used: "Kunci yang sudah digunakan",
         cannot_edit_builtin_preset: 'Tidak dapat mengedit preset bawaan, buat preset baru untuk mengeditnya',
 
-         midi_status: "Status MIDI",
+        midi_status: "Status MIDI",
         midi_access_denied: "Akses MIDI ditolak, silakan izinkan di pengaturan browser dan muat ulang halaman",
         midi_access_unsupported: "MIDI tidak didukung di browser ini",
         midi_access_pending: "Menunggu akses MIDI...",
         midi_access_granted: "MIDI tersedia!",
         shortcuts: {
-        toggle_play: "Alihkan putar",
-        next_column: "Kolom berikutnya",
-        previous_column: "Kolom sebelumnya",
-        add_column: "Tambah kolom",
-        remove_column: "Hapus kolom",
-        change_layer: "Ubah lapisan",
+            toggle_play: "Alihkan putar",
+            next_column: "Kolom berikutnya",
+            previous_column: "Kolom sebelumnya",
+            add_column: "Tambah kolom",
+            remove_column: "Hapus kolom",
+            change_layer: "Ubah lapisan",
         } satisfies Record<MIDIShortcutName, string>
     },
     error: {
@@ -480,59 +480,59 @@ export const i18n_id = {
     page404: {
         page_not_found: "Halaman tidak ditemukan, klik di sini untuk kembali ke halaman beranda"
     },
-   backup: {
-    confirm_after_songs_validation_error: "Ada kesalahan dalam memvalidasi beberapa lagu. Apakah Anda ingin melanjutkan pengunduhan?",
-    confirm_after_folders_validation_error: "Ada kesalahan dalam memvalidasi beberapa folder. Apakah Anda ingin melanjutkan pengunduhan?",
-    confirm_after_themes_validation_error: "Ada kesalahan dalam memvalidasi beberapa tema. Apakah Anda ingin melanjutkan pengunduhan?",
-    confirm_delete_songs_step_1: "Tulis 'delete' jika Anda ingin menghapus semua lagu, tekan batal untuk mengabaikan", //jangan terjemahkan 'delete'
-    confirm_delete_songs_step_2: "Apakah Anda BENAR-BENAR yakin ingin menghapus semua lagu?",
-    confirm_delete_themes_step_1: "Tulis 'delete' jika Anda ingin menghapus semua tema, tekan batal untuk mengabaikan", //jangan terjemahkan 'delete'
-    confirm_delete_themes_step_2: "Apakah Anda BENAR-BENAR yakin ingin menghapus semua tema?",
-    deleted_all_songs_notice: "Menghapus semua lagu",
-    deleted_all_themes_notice: "Menghapus semua tema",
-    error_validating_song: `Kesalahan dalam memvalidasi lagu "{{song_name}}"`,
-    error_validating_folder: `Kesalahan dalam memvalidasi folder "{{folder_name}}"`,
-    error_validating_theme: `Kesalahan dalam memvalidasi tema "{{theme_name}}"`,
-    validating_songs: "Memvalidasi lagu",
-    validating_folders: "Memvalidasi folder",
-    validating_themes: "Memvalidasi tema",
-    action_cancelled: 'Aksi dibatalkan',
-    zipping_files: "Mengompres file",
-    transfer_from_other_domain: "Transfer dari domain lain",
-    transfer_data_notice: "Jika Anda ingin mentransfer data Anda dari domain lain aplikasi, klik di sini",
-    transfer: "Transfer",
-    backup_as: "Cadangkan sebagai",
-    backup_advice: `Pastikan Anda membuat cadangan setiap saat. Terutama jika Anda baru saja menyelesaikan lagu baru.
+    backup: {
+        confirm_after_songs_validation_error: "Ada kesalahan dalam memvalidasi beberapa lagu. Apakah Anda ingin melanjutkan pengunduhan?",
+        confirm_after_folders_validation_error: "Ada kesalahan dalam memvalidasi beberapa folder. Apakah Anda ingin melanjutkan pengunduhan?",
+        confirm_after_themes_validation_error: "Ada kesalahan dalam memvalidasi beberapa tema. Apakah Anda ingin melanjutkan pengunduhan?",
+        confirm_delete_songs_step_1: "Tulis 'delete' jika Anda ingin menghapus semua lagu, tekan batal untuk mengabaikan", //jangan terjemahkan 'delete'
+        confirm_delete_songs_step_2: "Apakah Anda BENAR-BENAR yakin ingin menghapus semua lagu?",
+        confirm_delete_themes_step_1: "Tulis 'delete' jika Anda ingin menghapus semua tema, tekan batal untuk mengabaikan", //jangan terjemahkan 'delete'
+        confirm_delete_themes_step_2: "Apakah Anda BENAR-BENAR yakin ingin menghapus semua tema?",
+        deleted_all_songs_notice: "Menghapus semua lagu",
+        deleted_all_themes_notice: "Menghapus semua tema",
+        error_validating_song: `Kesalahan dalam memvalidasi lagu "{{song_name}}"`,
+        error_validating_folder: `Kesalahan dalam memvalidasi folder "{{folder_name}}"`,
+        error_validating_theme: `Kesalahan dalam memvalidasi tema "{{theme_name}}"`,
+        validating_songs: "Memvalidasi lagu",
+        validating_folders: "Memvalidasi folder",
+        validating_themes: "Memvalidasi tema",
+        action_cancelled: 'Aksi dibatalkan',
+        zipping_files: "Mengompres file",
+        transfer_from_other_domain: "Transfer dari domain lain",
+        transfer_data_notice: "Jika Anda ingin mentransfer data Anda dari domain lain aplikasi, klik di sini",
+        transfer: "Transfer",
+        backup_as: "Cadangkan sebagai",
+        backup_advice: `Pastikan Anda membuat cadangan setiap saat. Terutama jika Anda baru saja menyelesaikan lagu baru.
         Browser seharusnya tidak menghapus data Anda, terutama jika Anda telah menginstal aplikasi, tetapi selalu ada kemungkinan.`,
-    backup_download_tooltip: "Unduh semua data aplikasi, alias tema, lagu, folder",
-    backup_downloaded: "Cadangan diunduh",
-    backup_download_error: "Kesalahan mengunduh cadangan",
-    download_all_backup: "Unduh semua cadangan",
-    download_all_backup_tooltip: "Mengunduh cadangan yang berisi semua lagu dan folder",
-    no_items_to_backup: "Tidak ada yang perlu dicadangkan",
-    download_songs_tooltip: "Mengunduh cadangan yang berisi semua lagu dan folder",
-    downloaded_songs_notice: "Cadangan lagu diunduh",
-    download_songs_backup: "Unduh cadangan lagu",
-    download_themes_tooltip: "Mengunduh cadangan semua tema kustom",
-    no_themes_to_backup: "Tidak ada tema untuk dicadangkan",
-    downloaded_themes_notice: "Cadangan tema diunduh",
-    download_themes_backup: "Unduh cadangan tema",
-    import_backup: "Impor cadangan",
-    import_backup_description: `Jika Anda memiliki cadangan, Anda dapat mengimpornya di sini, mereka akan ditambahkan ke data Anda yang ada. (jika Anda sudah memiliki
+        backup_download_tooltip: "Unduh semua data aplikasi, alias tema, lagu, folder",
+        backup_downloaded: "Cadangan diunduh",
+        backup_download_error: "Kesalahan mengunduh cadangan",
+        download_all_backup: "Unduh semua cadangan",
+        download_all_backup_tooltip: "Mengunduh cadangan yang berisi semua lagu dan folder",
+        no_items_to_backup: "Tidak ada yang perlu dicadangkan",
+        download_songs_tooltip: "Mengunduh cadangan yang berisi semua lagu dan folder",
+        downloaded_songs_notice: "Cadangan lagu diunduh",
+        download_songs_backup: "Unduh cadangan lagu",
+        download_themes_tooltip: "Mengunduh cadangan semua tema kustom",
+        no_themes_to_backup: "Tidak ada tema untuk dicadangkan",
+        downloaded_themes_notice: "Cadangan tema diunduh",
+        download_themes_backup: "Unduh cadangan tema",
+        import_backup: "Impor cadangan",
+        import_backup_description: `Jika Anda memiliki cadangan, Anda dapat mengimpornya di sini, mereka akan ditambahkan ke data Anda yang ada. (jika Anda sudah memiliki
         lagu yang sama,
         duplikat akan dibuat).`,
-    error_reading_file: "Ada kesalahan dalam membaca file",
-    import_backup_tooltip: "Di sini Anda dapat mengimpor cadangan apa pun yang Anda miliki",
-    songs: "lagu",
-    themes: "tema",
-    delete_data: "Hapus data",
-    delete_data_description: `Jika Anda mau, Anda juga bisa menghapus semua data Anda di sini, setelah dihapus tidak bisa dipulihkan.
+        error_reading_file: "Ada kesalahan dalam membaca file",
+        import_backup_tooltip: "Di sini Anda dapat mengimpor cadangan apa pun yang Anda miliki",
+        songs: "lagu",
+        themes: "tema",
+        delete_data: "Hapus data",
+        delete_data_description: `Jika Anda mau, Anda juga bisa menghapus semua data Anda di sini, setelah dihapus tidak bisa dipulihkan.
         Jangan khawatir Anda akan diminta untuk mengkonfirmasi sebelum apa pun dihapus.`,
-    delete_songs_and_folders: "Hapus lagu dan folder",
-    delete_songs_and_folders_tooltip: "Di sini Anda dapat menghapus semua tema Anda",
-    delete_themes_tooltip: "Di sini Anda dapat menghapus semua tema Anda",
-    delete_themes: "Hapus tema",
-},
+        delete_songs_and_folders: "Hapus lagu dan folder",
+        delete_songs_and_folders_tooltip: "Di sini Anda dapat menghapus semua tema Anda",
+        delete_themes_tooltip: "Di sini Anda dapat menghapus semua tema Anda",
+        delete_themes: "Hapus tema",
+    },
     composer: {
         add_new_page: "Tambahkan halaman baru",
         remove_column: "Hapus kolom",
@@ -555,56 +555,55 @@ export const i18n_id = {
         error_with_this_layer: "Ada kesalahan dengan lapisan ini",
         recording_audio: "Merekam Audio",
         tools: {
-        move_notes_up: "Pindahkan note ke atas",
-        move_notes_up_description: "Dorong note ke atas 1 posisi",
-        move_notes_down: "Pindahkan note ke bawah",
-        move_notes_down_description: "Dorong note ke bawah 1 posisi",
-        only_layer: "Hanya lapisan", //ini akan digunakan sebagai Hanya lapisan 1... dll
-        clear_selection: "Hapus seleksi",
-        all_layers: "Semua lapisan",
-        all_layers_description: "Pilih semua lapisan di kolom yang disorot",
-        paste_in_layer_n: "Tempel di lapisan {{layer_number}}",
-        insert_in_layer_n: "Sisipkan di lapisan {{layer_number}}",
-        paste_all_layers: "Tempel semua",
-        insert_all_layers: "Sisipkan semua",
-        select_layer_description: "Pilih semua note di kolom yang disorot atau hanya yang ada di lapisan saat ini",
-        delete_selected_columns: "Hapus kolom yang dipilih",
-        erase_all_selected_notes: "Hapus semua nada yang dipilih",
-        insert_copied_notes: "Sisipkan note yang disalin",
-        paste_copied_notes: "Tempel note yang disalin",
-        copy_notes: "Salin semua note"
-    },
-    midi_parser: {
-        out_of_range: "Di luar jangkauan",
-        accidentals: "Kecelakaan",
-        total_notes: "Total nada",
-        select_midi_tracks: "Pilih trek MIDI",
-        ignore_empty_tracks: "Abaikan trek kosong",
-        include_accidentals: "Sertakan kecelakaan",
-        global_note_offset: "Offset note global",
-        global_note_offset_description: `Indeks setiap nada akan didorong ke atas/bawah sejumlah ini, Anda bisa menggunakannya untuk membuat
+            move_notes_up: "Pindahkan note ke atas",
+            move_notes_up_description: "Dorong note ke atas 1 posisi",
+            move_notes_down: "Pindahkan note ke bawah",
+            move_notes_down_description: "Dorong note ke bawah 1 posisi",
+            only_layer: "Hanya lapisan", //ini akan digunakan sebagai Hanya lapisan 1... dll
+            clear_selection: "Hapus seleksi",
+            all_layers: "Semua lapisan",
+            all_layers_description: "Pilih semua lapisan di kolom yang disorot",
+            paste_in_layer_n: "Tempel di lapisan {{layer_number}}",
+            insert_in_layer_n: "Sisipkan di lapisan {{layer_number}}",
+            paste_all_layers: "Tempel semua",
+            insert_all_layers: "Sisipkan semua",
+            select_layer_description: "Pilih semua note di kolom yang disorot atau hanya yang ada di lapisan saat ini",
+            delete_selected_columns: "Hapus kolom yang dipilih",
+            erase_all_selected_notes: "Hapus semua nada yang dipilih",
+            insert_copied_notes: "Sisipkan note yang disalin",
+            paste_copied_notes: "Tempel note yang disalin",
+            copy_notes: "Salin semua note",
+
+        },
+        midi_parser: {
+            out_of_range: "Di luar jangkauan",
+            accidentals: "Kecelakaan",
+            total_notes: "Total nada",
+            select_midi_tracks: "Pilih trek MIDI",
+            ignore_empty_tracks: "Abaikan trek kosong",
+            include_accidentals: "Sertakan kecelakaan",
+            global_note_offset: "Offset note global",
+            global_note_offset_description: `Indeks setiap nada akan didorong ke atas/bawah sejumlah ini, Anda bisa menggunakannya untuk membuat
                         lagu cocok dengan jangkauan aplikasi. Anda juga bisa mengubah offset setiap lapisan.`,
-        local_note_offset: "Offset note trek lokal",
-        local_note_offset_description: " Mengubah indeks setiap nada sejumlah ini.",
-        max_octave_scaling: "Penskalaan oktaf note maksimal",
-        max_octave_scaling_description: " Turunkan/naikkan nada yang berada di luar skala dengan oktaf ini.",
-        number_of_notes: "Jumlah note",
-    
-        open_midi_audio_file: "Buka file MIDI/Audio/Video",
-        there_are_no_notes: "Tidak ada note",
-        error_is_file_midi: "Ada kesalahan dalam mengimpor file ini, apakah ini file .mid?",
-        converting_audio_to_midi: "Mengonversi audio ke midi (mungkin membutuhkan waktu)..",
-        detecting_notes: "Mendeteksi note",
-        loading_converter: 'Memuat konverter',
-        audio_conversion_warning: `🔬 Fitur ini eksperimental, mungkin tidak berfungsi atau stuck. \nKonversi audio dan video kurang akurat daripada MIDI, jika bisa, lebih baik gunakan MIDI atau komposisi secara manual. \nGunakan audio dan video yang hanya memiliki satu instrumen yang dimainkan.`,
-    },
-    
-    warning_opening_midi_importer: `Membuka pengimpor midi untuk mengimpor file MIDI, silakan pilih ulang file`,
-    warning_opening_audio_importer: `Membuka pengimpor midi untuk mengimpor file video/audio... Silakan pilih ulang file. konversi video/audio tidak sangat akurat`,
-    error_importing_file_invalid_format: `Kesalahan mengimpor file, format tidak valid`,
-    error_importing_file_invalid_format_audio_video: `Kesalahan mengimpor file, format tidak valid, jika ini file MIDI,Video atau audio, gunakan tombol "Buat dari MIDI"`,
-    ask_download_of_current_song: `Anda sedang mengedit lagu ini ("{{song_name}}"), apakah Anda ingin menyimpannya sebelum mengunduh?`,
-    }
+            local_note_offset: "Offset note trek lokal",
+            local_note_offset_description: " Mengubah indeks setiap nada sejumlah ini.",
+            max_octave_scaling: "Penskalaan oktaf note maksimal",
+            max_octave_scaling_description: " Turunkan/naikkan nada yang berada di luar skala dengan oktaf ini.",
+            number_of_notes: "Jumlah note",
+
+            open_midi_audio_file: "Buka file MIDI/Audio/Video",
+            there_are_no_notes: "Tidak ada note",
+            error_is_file_midi: "Ada kesalahan dalam mengimpor file ini, apakah ini file .mid?",
+            converting_audio_to_midi: "Mengonversi audio ke midi (mungkin membutuhkan waktu)..",
+            detecting_notes: "Mendeteksi note",
+            loading_converter: 'Memuat konverter',
+            audio_conversion_warning: `🔬 Fitur ini eksperimental, mungkin tidak berfungsi atau stuck. \nKonversi audio dan video kurang akurat daripada MIDI, jika bisa, lebih baik gunakan MIDI atau komposisi secara manual. \nGunakan audio dan video yang hanya memiliki satu instrumen yang dimainkan.`,
+        },
+        warning_opening_midi_importer: `Membuka pengimpor midi untuk mengimpor file MIDI, silakan pilih ulang file`,
+        warning_opening_audio_importer: `Membuka pengimpor midi untuk mengimpor file video/audio... Silakan pilih ulang file. konversi video/audio tidak sangat akurat`,
+        error_importing_file_invalid_format: `Kesalahan mengimpor file, format tidak valid`,
+        error_importing_file_invalid_format_audio_video: `Kesalahan mengimpor file, format tidak valid, jika ini file MIDI,Video atau audio, gunakan tombol "Buat dari MIDI"`,
+        ask_download_of_current_song: `Anda sedang mengedit lagu ini ("{{song_name}}"), apakah Anda ingin menyimpannya sebelum mengunduh?`,
     },
     instrument_settings: {
         no_instrument_selected: "Tidak ada instrumen yang dipilih",
@@ -649,7 +648,7 @@ export const i18n_id = {
             player_shortcuts: "Pintasan pemain",
         }
     },
-        shortcuts: {
+    shortcuts: {
         holdable: "Dapat ditahan",
         props: {
             //names
@@ -678,7 +677,7 @@ export const i18n_id = {
             set_tap_hand: "Atur tangan ketuk",
             set_hold_hand: "Atur tangan tahan",
             set_delete_hand: "Atur tangan hapus",
-    
+
             //descriptions
             toggle_play_description: "Alihkan putar / jeda",
             previous_column_description: "Pilih kolom sebelumnya",
@@ -749,6 +748,6 @@ export const i18n_id = {
         "SFX_JellyCall": "Jelly Call",
         "SFX_MantaCall": "Manta Call",
         "SFX_MothCall": "Moth Call",
-    } satisfies Record<InstrumentName, string>
-} as const
+    }
+} as const  satisfies AppI18N
 
