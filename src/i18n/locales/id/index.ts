@@ -1,7 +1,7 @@
 import {InstrumentName} from "$types/GeneralTypes";
 import {MIDIShortcutName} from "$lib/BaseSettings";
 
-export const i18n_en = {
+export const i18n_id = {
     logs: {
         update_available: "Ada versi baru yang tersedia, apakah Anda ingin memuat ulang untuk memperbarui aplikasi ini? Pastikan Anda menutup/memuat ulang tab lain yang terbuka",
         error_with_the_app: "Terjadi kesalahan pada aplikasi!",
