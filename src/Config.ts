@@ -148,13 +148,13 @@ Object.freeze(NOTE_SCALE)
 Object.freeze(INSTRUMENT_NOTE_LAYOUT_KINDS)
 export const INSTRUMENT_MIDI_LAYOUT_KINDS = {
     defaultSky: [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
-    defaultGenshin: [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83],
+    defaultGenshin: [72, 74, 76, 77, 79, 81, 83, 60, 62, 64, 65, 67, 69, 71, 48, 50, 52, 53, 55, 57, 59,],
     skyBell: [60, 62, 67, 69, 72, 74, 79, 81],
     skyHandpan: [62, 69, 72, 74, 77, 79, 81, 84],
     defaultDrums: [60, 62, 64, 65, 67, 69, 71, 72],
     skySFX6: [60, 62, 64, 65, 67, 69],
     skySFX14: [61, 64, 67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100],
-    genshinVintageLyre: [60, 61, 63, 65, 67, 68, 70, 72, 74, 75, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 95, 96],
+    //genshinVintageLyre: [, 72, 74, 75, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 95, 96],
 }
 
 export const MIDI_PRESETS = [
@@ -337,7 +337,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinVintageLyre,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.genshinVintageLyre,
-        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.genshinVintageLyre,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin //genshinVintageLyre,
     },
     "Old-Zither": {
         notes: 21,
