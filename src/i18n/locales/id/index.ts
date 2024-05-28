@@ -384,7 +384,7 @@ export const i18n_id = {
             composer_secondary_layer: "Lapisan sekunder komposer",
             icon_color: "Warna ikon",
             menu_background: "Latar belakang menu",
-            note_background: "Catatan latar belakang",
+            note_background: "Latar belakang note",
         }
     },
     sheet_visualizer: {
