@@ -110,7 +110,7 @@ export const i18n_id = {
         new: "Baru",
     },
     home: {
-        app_description: "Aplikasi tempat Anda dapat membuat, berlatih, dan memutar lagu dengan {{APP_NAME}}",
+        app_description: "Aplikasi tempat Anda dapat membuat, berlatih, dan memutar lagu untuk {{APP_NAME}}",
         add_to_home_screen: "Untuk membuat aplikasi web dalam layar penuh, tambahkan situs web ke layar beranda",
         clear_cache_warning: "Menghapus cache/penyimpanan browser Anda dapat menghapus lagu-lagu Anda, pastikan Anda membuat cadangan",
         persistent_storage_button: "Klik tombol di bawah ini untuk memastikan bahwa browser Anda tidak akan menghapus lagu Anda jika Anda kekurangan penyimpanan",
@@ -188,7 +188,7 @@ export const i18n_id = {
         "filter_date-created": "Tanggal dibuat",
         open_in_composer: "Buka di komposer",
         recorded: "Teremkam", //lagu yang direkam
-        composed: "Terbuat", //lagu-lagu yang dikomposisikan
+        composed: "Tersusun", //lagu-lagu yang dikomposisikan
         vsrg: "VSRG", //lagu vsrg, biarkan apa adanya
         midi: "MIDI", //lagu midi, biarkan apa adanya
     },
@@ -750,4 +750,3 @@ export const i18n_id = {
         "SFX_MothCall": "Moth Call",
     }
 } as const  satisfies AppI18N
-
