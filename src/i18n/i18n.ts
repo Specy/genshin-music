@@ -1,10 +1,9 @@
 import i18next from 'i18next';
 import {initReactI18next} from 'react-i18next';
 import {i18n_en} from '$i18n/locales/en'
-import {i18n_it} from "$i18n/locales/it";
-import {i18n_test} from "$i18n/locales/test/locale-test";
 import {IS_DEV} from "$config";
 import {i18n_zh} from "$i18n/locales/zh";
+import {i18n_id} from "$i18n/locales/id";
 
 export type EngI18n = typeof i18n_en
 
@@ -25,7 +24,7 @@ declare module 'i18next' {
     }
 }
 
-export const AVAILABLE_LANGUAGES = ['en', 'zh'] as const;
+export const AVAILABLE_LANGUAGES = ['en', 'zh', 'id'] as const;
 export type AppLanguage = typeof AVAILABLE_LANGUAGES[number];
 i18next
     .use(initReactI18next)
@@ -38,6 +37,7 @@ i18next
             en: i18n_en,
             //it: i18n_it,
             zh: i18n_zh,
+            id: i18n_id,
         } satisfies Record<AppLanguage, ValidAppI18N>,
     });
 export const i18n = i18next;

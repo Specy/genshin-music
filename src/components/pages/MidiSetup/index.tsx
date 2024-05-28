@@ -92,7 +92,13 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
             if (res) {
                 this.setState({midiAccess: {status: "granted", midiAccess: res}})
             } else {
-                this.setState({midiAccess: {status: "denied"}})
+                //means it was not previously requested, try again now:
+                const access = await MIDIProvider.requestAccess()
+                if (access) {
+                    this.setState({midiAccess: {status: "granted", midiAccess: access}})
+                } else {
+                    this.setState({midiAccess: {status: "denied"}})
+                }
             }
         }
         MIDIProvider.addInputsListener(this.midiStateChange)
@@ -269,7 +275,7 @@ class MidiSetup extends Component<WithTranslation<'keybinds'>, MidiSetupState> {
 
                     </Row>
                 </Row>
-                <Separator  height={'0.1rem'} background={'var(--secondary)'}/>
+                <Separator height={'0.1rem'} background={'var(--secondary)'}/>
                 <Row justify={'between'} gap={'0.5rem'}>
                     {t('midi_layout_preset')}:
                     <Row gap={'0.5rem'}>

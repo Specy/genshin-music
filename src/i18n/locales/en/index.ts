@@ -95,7 +95,7 @@ export const i18n_en = {
         create_song: "Create song",
         edit_song: "Edit song",
         none: "None",
-        instrument: "instrument",
+        instrument: "Instrument",
         download: "Download",
         download_midi: "Download MIDI",
         pitch: "Pitch", //audio pitch

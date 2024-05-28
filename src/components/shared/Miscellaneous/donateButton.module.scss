@@ -1,0 +1,22 @@
+
+.donate-button {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: var(--accent);
+  padding: 0.6rem;
+  color: var(--accent-text);
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  text-decoration: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.3s, filter 0.3s;
+}
+.donate-button:hover{
+  filter: brightness(1.05);
+  transform: translateY(-0.2rem);
+}

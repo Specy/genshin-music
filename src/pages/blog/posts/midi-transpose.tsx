@@ -38,7 +38,7 @@ export default function BlogPage() {
         Now click the "Create from MIDI/Audio", it will open the MIDI transposition tool, and select your file after
         pressing the
         "Open MIDI/Audio/Video file" button. If you want to import a video or audio file instead, visit the <AppLink
-        href={'/blog/posts/video-audio-transpose'}> Ai transpose guide </AppLink>.
+        href={'/blog/posts/video-audio-transpose'}> Audio transpose guide </AppLink>.
         <BlogImage src={BASE_PATH + '/assets/blog/midi-btn.webp'} alt={"MIDI button"}/>
         <Header margin={'1rem 0'}>
             Transpose a MIDI file

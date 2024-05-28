@@ -2,18 +2,20 @@ import type {Tauri} from "$types/TauriTypes"
 import type {NoteImage} from "$cmp/shared/SvgNotes"
 
 export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-export const APP_VERSION = '3.4' as const
+export const APP_VERSION = '3.4.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-        - Added translations for the app, we are looking for translators!
+        - Added chinese, indonesian translations for the app, we are looking for translators!
         - Added button to install app to home screen
         - Added custom keyboard layout as a note name type  
+        - MIDI bug fixes
     `
     : `
-        - Added translations for the app, we are looking for translators!
+        - Added chinese, indonesian translations for the app, we are looking for translators!
         - Added button to install app to home screen
         - Added custom keyboard layout as a note name type  
+        - MIDI bug fixes
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
@@ -148,13 +150,13 @@ Object.freeze(NOTE_SCALE)
 Object.freeze(INSTRUMENT_NOTE_LAYOUT_KINDS)
 export const INSTRUMENT_MIDI_LAYOUT_KINDS = {
     defaultSky: [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
-    defaultGenshin: [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83],
+    defaultGenshin: [72, 74, 76, 77, 79, 81, 83, 60, 62, 64, 65, 67, 69, 71, 48, 50, 52, 53, 55, 57, 59,],
     skyBell: [60, 62, 67, 69, 72, 74, 79, 81],
     skyHandpan: [62, 69, 72, 74, 77, 79, 81, 84],
     defaultDrums: [60, 62, 64, 65, 67, 69, 71, 72],
     skySFX6: [60, 62, 64, 65, 67, 69],
     skySFX14: [61, 64, 67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100],
-    genshinVintageLyre: [60, 61, 63, 65, 67, 68, 70, 72, 74, 75, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 95, 96],
+    //genshinVintageLyre: [, 72, 74, 75, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 95, 96],
 }
 
 export const MIDI_PRESETS = [
@@ -337,7 +339,7 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinVintageLyre,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.genshinVintageLyre,
-        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.genshinVintageLyre,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin //genshinVintageLyre,
     },
     "Old-Zither": {
         notes: 21,

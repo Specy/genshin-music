@@ -328,18 +328,6 @@ a {
     display: inline-block;
 }
 
-.donate-button {
-    margin-top: auto;
-    width: 100%;
-    background-color: var(--accent);
-    padding: 0.8rem;
-    color: var(--accent-text);
-    border-radius: 0.5rem;
-    text-align: center;
-    text-decoration: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-}
 
 .drag-n-drop {
     background-color: rgba(var(--accent-rgb), 0.7);

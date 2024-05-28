@@ -44,6 +44,7 @@ import {WithTranslation} from "react-i18next/index";
 import {fileService} from "$lib/Services/FileService";
 import {VsrgSong} from "$lib/Songs/VsrgSong";
 import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
+import {i18n} from "$i18n/i18n";
 
 interface ComposerState {
     layers: Instrument[]
@@ -303,7 +304,9 @@ class Composer extends Component<ComposerProps, ComposerState> {
     removeInstrument = async (index: number) => {
         const {song, layers} = this.state
         if (layers.length <= 1) return logger.warn(this.props.t('composer:cant_remove_all_layers'))
-        const confirm = await asyncConfirm(this.props.t('composer:confirm_layer_remove', {layer_name: layers[index].name}))
+        const confirm = await asyncConfirm(this.props.t('composer:confirm_layer_remove', {
+            layer_name: song.instruments[index].alias ?? i18n.t('instruments.' + song.instruments[index].name)
+        }))
         if (confirm) {
             song.removeInstrument(index)
             this.syncInstruments(song)
