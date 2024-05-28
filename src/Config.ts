@@ -2,18 +2,20 @@ import type {Tauri} from "$types/TauriTypes"
 import type {NoteImage} from "$cmp/shared/SvgNotes"
 
 export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-export const APP_VERSION = '3.4' as const
+export const APP_VERSION = '3.4.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-        - Added translations for the app, we are looking for translators!
+        - Added chinese, indonesian translations for the app, we are looking for translators!
         - Added button to install app to home screen
         - Added custom keyboard layout as a note name type  
+        - MIDI bug fixes
     `
     : `
-        - Added translations for the app, we are looking for translators!
+        - Added chinese, indonesian translations for the app, we are looking for translators!
         - Added button to install app to home screen
         - Added custom keyboard layout as a note name type  
+        - MIDI bug fixes
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'

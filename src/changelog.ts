@@ -6,12 +6,21 @@ type Update = {
 }
 
 export const CHANGELOG: Update[] = [
-        {
+    {
+        version: '3.4.1',
+        title: "Indonesian",
+        date: new Date('2024-05-28'),
+        changes: [
+            "Added Indonesian translation",
+            "Bug fixes to MIDI connection",
+        ]
+    },
+    {
         version: '3.4.0',
         title: "Translations",
-        date: new Date('2024-05-22'),
+        date: new Date('2024-05-24'),
         changes: [
-            "Added translations for the app (chinese and indonesian for now), we are looking for translators!",
+            "Added chinese translation, we are looking for translators!",
             "Added button to install app to home screen",
             "Added custom keyboard layout as a note name type",
             "Added \"your keyboard layout\" note name type, which uses your device's keyboard layout",
