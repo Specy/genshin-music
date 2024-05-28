@@ -11,7 +11,7 @@ export const CHANGELOG: Update[] = [
         title: "Translations",
         date: new Date('2024-05-22'),
         changes: [
-            "Added translations for the app, we are looking for translators!",
+            "Added translations for the app (chinese and indonesian for now), we are looking for translators!",
             "Added button to install app to home screen",
             "Added custom keyboard layout as a note name type",
             "Added \"your keyboard layout\" note name type, which uses your device's keyboard layout",
