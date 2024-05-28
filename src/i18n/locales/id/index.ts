@@ -25,7 +25,7 @@ export const i18n_en = {
         cloned_song: `Lagu terkloning: "{{song_name}}"`,
         converting_recorded_to_composed_warning: 'Konversi lagu yang direkam menjadi lagu yang dikomposisikan, audio mungkin tidak akurat',
         suggest_backup: "Anda belum mencadangkan lagu Anda dalam sementara waktu, ingatlah untuk mengunduh cadangan sesekali!",
-        storage_persisted: "Izin penyimpanan persisten diizinkan", //persisted means that the browser won't delete the data
+        storage_persisted: "Izin penyimpanan persisten diizinkan", //persisted berarti browser tidak akan menghapus data
         storage_persisted_error: "Terjadi kesalahan saat menyiapkan penyimpanan persisten",
         importing_files: "Mengimpor file...",
         could_not_load_song: "Tidak dapat memuat lagu",
@@ -83,7 +83,7 @@ export const i18n_en = {
         donate: "Donasi",
         open: "Buka",
         play: "Main",
-        record: "Rekam", //start recording
+        record: "Rekam", //mulai merekam
         stop: "Berhenti",
         erase: "Hapus",
         copy: "Salin",
@@ -98,7 +98,7 @@ export const i18n_en = {
         instrument: "instrumen",
         download: "Unduh",
         download_midi: "Unduh MIDI",
-        pitch: "Pitch", //audio pitch
+        pitch: "Pitch", //pitch audio
         bpm: 'bpm',
         connect: "Hubungkan",
         import: "Impor",
@@ -150,7 +150,7 @@ export const i18n_en = {
         expand_screen: 'Harap perbesar ukuran jendela Anda',
         drop_files_here: 'Letakkan file di sini',
         new_changes_to_page: "Ada perubahan baru pada halaman ini!",
-        how_to_install: "Cara menambahkan ke layar beranda", //how to install the app using the browser
+        how_to_install: "Cara menambahkan ke layar beranda", //cara memasang aplikasi menggunakan browser
     },
     menu: {
         close_menu: "Tutup menu",
@@ -187,10 +187,10 @@ export const i18n_en = {
         filter_alphabetical: "Abjad",
         "filter_date-created": "Tanggal dibuat",
         open_in_composer: "Buka di komposer",
-        recorded: "Teremkam", //recorded songs
-        composed: "Terbuat", //composed songs
-        vsrg: "VSRG", //vsrg songs, leave as is
-        midi: "MIDI", //midi songs, leave as is
+        recorded: "Teremkam", //lagu yang direkam
+        composed: "Terbuat", //lagu-lagu yang dikomposisikan
+        vsrg: "VSRG", //lagu vsrg, biarkan apa adanya
+        midi: "MIDI", //lagu midi, biarkan apa adanya
     },
     settings: {
         toggle_metronome: "Beralih metronom",
@@ -324,7 +324,7 @@ export const i18n_en = {
     vsrg_composer: {
         delete_track_question: "Apakah Anda yakin ingin menghapus trek ini? Semua note akan dihapus.",
         cannot_delete_last_track: "Tidak dapat menghapus trek terakhir",
-        snap: 'Geser', //this means snapping to a point, like anchoring to it
+        snap: 'Geser', //ini berarti menitik nggeserkan ke suatu titik, seperti menjangkarnya
         background_song: "Lagu Latar Belakang",
         background_song_info: "Anda dapat memilih salah satu lagu untuk diputar di latar belakang",
         no_background_song_selected: "Tidak ada lagu latar belakang yang dipilih",
@@ -344,7 +344,7 @@ export const i18n_en = {
         good: "Bagus",
         bad: "Buruk",
         miss: "Miss",
-        combo: "Kombo", //combo counter, how do rythm games call it? is it kept as "combo"?
+        combo: "Kombo", //penghitung kombo, bagaimana game rythm menyebutnya? apa disimpan sebagai "kombo"?
     },
     transfer: {
         connecting_please_wait: "Menghubungkan harap tunggu...",
@@ -353,7 +353,7 @@ export const i18n_en = {
         import_data_from_other_domains_description: `Di sini Anda dapat mengimpor data dari domain lain yang ada di aplikasi, pilih domain yang ingin Anda impor dan klik impor.
                 Anda akan diperlihatkan semua data dari domain lain, dan Anda bisa pilih untuk mengimpor semuanya sekaligus atau hanya yang Anda perlukan.`,
         select_a_website_to_import_data: "Pilih situs web untuk mengimpor data dari",
-        data: "Data", //data to import
+        data: "Data", //data yang akan diimpor
         import_all: "Impor semua",
         no_data_to_import: "Tidak ada data untuk diimpor"
     },
@@ -372,7 +372,7 @@ export const i18n_en = {
         new_theme: "Tema Baru",
         default_themes: "Tema Default",
         preview: "Pratinjau",
-        view_player: "Lihat player", //shows the player preview
+        view_player: "Lihat player", //menampilkan pratinjau pemutar
         view_composer: "Lihat komposer",
         colors: {
             background: "Latar Belakang",
@@ -395,7 +395,7 @@ export const i18n_en = {
         sheet_visualizer_instructions: `Pilih lagu dari menu di sebelah kiri.
                     Ingatlah bahwa Anda dapat mempelajari lagu dengan
                     alat latihan interaktif di Player`,
-        per_row: 'Per baris', //elements per row
+        per_row: 'Per baris', //elemen per baris
         invalid_song_to_visualize: 'Lagu tidak valid, tidak disusun atau direkam',
         error_converting_to_visual_song_try_convert_in_recorded: 'Terjadi kesalahan saat mengonversi lagu ke lagu visual, mencoba mengonversi ke lagu yang direkam terlebih dahulu...',
         error_converting_to_visual_song: "Terjadi kesalahan saat mengonversi lagu menjadi lagu visual"
@@ -408,9 +408,9 @@ export const i18n_en = {
         accuracy: "Akurasi",
         score: "Skor",
         combo: "Kombo",
-        practice_mode: "Latihan", //song practice
+        practice_mode: "Latihan", //latihan lagu
         practice_mode_description: `Latihan lagu "{{song_name}}"`,
-        approach_mode: "Mode pendekatan", //TODO find new name for this, it's the mode where circles "come towards" notes
+        approach_mode: "Mode pendekatan", //TODO cari nama baru untuk ini, ini adalah mode di mana lingkaran "datang ke arah" note
         approach_mode_description: `Putar lagu dalam mode Pendekatan "{{song_name}}"`,
         song_search_no_results: "Tidak ada hasils",
         song_search_description: "Di sini Anda dapat menemukan lagu-lagu untuk dipelajari, lagu-lagu tersebut disediakan oleh library sky-music.",
@@ -465,9 +465,7 @@ export const i18n_en = {
     },
     donate: {
         donate_message: `Setiap Aplikasi yang saya buat membutuhkan waktu berbulan-bulan untuk belajar dan mengembangkannya. Ditambah lagi dengan biaya hosting. Dengan anggaran yang lebih tinggi, saya tidak perlu terlalu khawatir tentang berapa banyak yang saya habiskan untuk server, sehingga bisa memberikan Anda pengalaman terbaik.
-            
             Saya peduli untuk memberikan semua fitur kepada pengguna tanpa harus membayarnya, juga tidak ada iklan yang mengganggu yang dapat mengganggu. Untuk alasan yang sama, tidak ada sumber pendapatan kecuali donasi.
-
             Saya akan sangat berterima kasih jika Anda dapat mempertimbangkan untuk menyumbang guna mendanai pengembangan dan biaya.`
     },
     cache: {
@@ -551,9 +549,9 @@ export const i18n_en = {
         stop_recording_audio: "Berhenti merekam audio",
         create_new_song: "Buat lagu baru",
         create_from_midi_or_audio: "Buat dari MIDI/Audio",
-        previous_breakpoint: "Breakpoint Sebelumnnya", //breakpoint is a sort of point to "jump", a sort of bookmark
+        previous_breakpoint: "Breakpoint Sebelumnnya", //breakpoint adalah semacam titik untuk "melompat", semacam penanda
         next_breakpoint: "Breakpoint Selanjutnya",
-        tempo: "Tempo", //this is musical tempo
+        tempo: "Tempo", //ini adalah tempo musik
         error_with_this_layer: "Ada kesalahan dengan lapisan ini",
         recording_audio: "Merekam Audio",
         tools: {
@@ -709,7 +707,10 @@ export const i18n_en = {
             set_delete_hand_description: "Atur klik untuk menghapus nada",
             vsrg_add_hit_object: 'Tambahkan objek hit (sinkron dengan keybinds yang terdaftar)',
         }
-    }
+    },
+
+    //biarkan dan sebisa mungkin jangan diubah untuk menjaga konsistensi dengan nama alat musik dalam game (biarkan apa adanya)
+    //leave it and don't change it as much as possible to maintain consistency with the name of the musical instrument in the game
     instruments: {
         "Lyre": "Lyre",
         "Vintage-Lyre": "Vintage Lyre",
@@ -730,7 +731,7 @@ export const i18n_en = {
         "Panflute": "Panflute",
         "Ocarina": "Ocarina",
         "MantaOcarina": "Manta Ocarina",
-        "Aurora": "Aurora", //leave as is
+        "Aurora": "Aurora", //biarkan apa adanya
         "Kalimba": "Kalimba",
         "ToyUkulele": "Toy Ukulele",
         "Drum": "Drum",
@@ -739,9 +740,9 @@ export const i18n_en = {
         "SFX_SineSynth": "Sine Synth",
         "SFX_BassSynth": "Bass Synth",
         "SFX_ChimeSynth": "Chime Synth",
-        "SFX_TR-909": "TR-909", //leave as is
+        "SFX_TR-909": "TR-909", //biarkan apa adanya
         "SFX_Dance": "Dance",
-        "SFX_BirdCall": "Bird Call",// call is like "sound of a bird" or "sing"
+        "SFX_BirdCall": "Bird Call",// panggilan seperti "suara burung" atau "bernyanyi"
         "SFX_CrabCall": "Crab Call",
         "SFX_FishCall": "Fish Call",
         "SFX_SpiritMantaCall": "Spirit Manta Call",
