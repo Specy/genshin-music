@@ -3,7 +3,7 @@ import s from './i18n.module.scss'
 import {capitalize} from "$lib/utils/Utilities";
 import {LANG_PREFERENCE_KEY_NAME} from "$config";
 import {useTranslation} from "react-i18next";
-import {AppLanguage} from '$i18n/i18n'
+import {AppLanguage, AVAILABLE_LANGUAGES} from '$i18n/i18n'
 import {useMemo} from "react";
 
 interface LanguageSelector extends Stylable {
@@ -47,11 +47,8 @@ export function LanguageSelector({languages, currentLanguage, onChange, style, c
 
 export function DefaultLanguageSelector() {
     const {i18n} = useTranslation()
-    const langs = useMemo(() => {
-        return [...i18n.languages].sort() as AppLanguage[]
-    }, [i18n.languages])
     return <LanguageSelector
-        languages={langs}
+        languages={AVAILABLE_LANGUAGES}
         currentLanguage={i18n.language}
         onChange={(lang) => {
             localStorage.setItem(LANG_PREFERENCE_KEY_NAME, lang)
