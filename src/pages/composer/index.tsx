@@ -659,7 +659,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.setState({song, selectedColumns})
         //add a bit of delay if recording audio to imrove the recording quality
         delay = delay
-            ? delay + (isRecordingAudio ? 250 : 0)
+            ? delay + (isRecordingAudio ? 0.25  : 0)
             : 0
         if (ignoreAudio) return
         song.selectedColumn.notes.forEach(note => {
