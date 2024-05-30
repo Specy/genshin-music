@@ -2,8 +2,8 @@ import i18next from 'i18next';
 import {initReactI18next} from 'react-i18next';
 import {i18n_en} from '$i18n/locales/en'
 import {IS_DEV} from "$config";
-import {i18n_zh} from "$i18n/locales/zh";
-import {i18n_id} from "$i18n/locales/id";
+import {I18nCacheInstance} from "$i18n/i18nCache";
+
 
 export type EngI18n = typeof i18n_en
 
@@ -13,7 +13,7 @@ type ToStringObject<T extends Record<string, any> | string> = {
 
 export type AppI18N = ToStringObject<EngI18n>
 type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]
+    [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]
 }
 export type ValidAppI18N = DeepPartial<AppI18N>
 export const defaultNS = 'translation';
@@ -24,21 +24,23 @@ declare module 'i18next' {
     }
 }
 
-export const AVAILABLE_LANGUAGES = ['en', 'zh', 'id'] as const;
+export const AVAILABLE_LANGUAGES = [
+    'en',
+    'zh',
+    'id'
+] as const;
 export type AppLanguage = typeof AVAILABLE_LANGUAGES[number];
 i18next
     .use(initReactI18next)
     .init({
         debug: IS_DEV,
         pluralSeparator: '+',
-        fallbackLng: AVAILABLE_LANGUAGES, //TODO not sure exactly how this needs to be set up to load all languages
+        supportedLngs: AVAILABLE_LANGUAGES,
+        fallbackLng: 'en',
         defaultNS,
         resources: {
-            en: i18n_en,
-            //it: i18n_it,
-            zh: i18n_zh,
-            id: i18n_id,
-        } satisfies Record<AppLanguage, ValidAppI18N>,
+            en: i18n_en
+        }
     });
 export const i18n = i18next;
 
@@ -93,3 +95,24 @@ export const DEFAULT_ENG_KEYBOARD_MAP = {
     "KeyC": "C",
     "Comma": ","
 } as Record<string, string>
+
+
+export function isLanguageLoaded(lang: AppLanguage) {
+    return i18next.getDataByLanguage(lang) !== undefined
+}
+
+export async function setI18nLanguage(i18nInstance: typeof i18n, lang: AppLanguage) {
+    if (isLanguageLoaded(lang)) {
+        i18nInstance.changeLanguage(lang)
+        return true
+    } else {
+        const locale = await I18nCacheInstance.getLocale(lang)
+        if (!locale) return false
+        for (const key in locale) {
+            i18next.addResourceBundle(lang, key, locale[key as keyof AppI18N])
+        }
+        i18nInstance.changeLanguage(lang)
+        return true
+    }
+}
+

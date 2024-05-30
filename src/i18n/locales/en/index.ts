@@ -1,5 +1,7 @@
 import {InstrumentName} from "$types/GeneralTypes";
 import {MIDIShortcutName} from "$lib/BaseSettings";
+//TODO please look at the /public/locales folder to see the available languages
+
 
 export const i18n_en = {
     logs: {
@@ -43,6 +45,9 @@ export const i18n_en = {
         imported_theme: `Imported theme "{{theme_name}}"`,
         imported_folder: `Imported folder "{{folder_name}}"`,
         imported_song: `Imported {{song_type}} song "{{song_name}}"`,
+
+        changing_language: "Changing language...",
+        error_changing_language: "Error changing language",
     },
     question: {
         unsaved_song_save: `You have unsaved changes to the song: "{{song_name}}" do you want to save now? UNSAVED CHANGES WILL BE LOST`,

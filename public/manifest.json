@@ -4,24 +4,24 @@
   "description": "A program to record, practice and share music. \nBy downloading the app, you get fullscreen and better overall experience",
   "icons": [
     {
-      "src": "/skyMusic/favicon.ico",
+      "src": "favicon.ico",
       "sizes": "48x48",
       "type": "image/x-icon"
     },
     {
-      "src": "/skyMusic/logo192.png",
+      "src": "logo192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/skyMusic/logo512.png",
+      "src": "logo512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
   "file_handlers": [
     {
-      "action": "/skyMusic",
+      "action": "/",
       "name": "Import file in sky music",
       "accept": {
         "application/json": [
@@ -33,17 +33,17 @@
       },
       "icons": [
         {
-          "src": "/skyMusic/favicon.ico",
+          "src": "/favicon.ico",
           "sizes": "48x48",
           "type": "image/x-icon"
         },
         {
-          "src": "/skyMusic/logo192.png",
+          "src": "/logo192.png",
           "type": "image/png",
           "sizes": "192x192"
         },
         {
-          "src": "/skyMusic/logo512.png",
+          "src": "/logo512.png",
           "type": "image/png",
           "sizes": "512x512"
         }
@@ -52,43 +52,43 @@
   ],
   "screenshots": [
     {
-      "src": "/skyMusic/manifestData/player.webp",
+      "src": "manifestData/player.webp",
       "type": "image/png",
       "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {
-      "src": "/skyMusic/manifestData/composer.webp",
+      "src": "manifestData/composer.webp",
       "type": "image/png",
       "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {
-      "src": "/skyMusic/manifestData/zenkeyboard.webp",
+      "src": "manifestData/zenkeyboard.webp",
       "type": "image/png",
       "form_factor": "narrow",
       "sizes": "1280x720"
     },
     {
-      "src": "/skyMusic/manifestData/player.webp",
+      "src": "manifestData/player.webp",
       "form_factor": "wide",
       "type": "image/png",
       "sizes": "1280x720"
     },
     {
-      "src": "/skyMusic/manifestData/composer.webp",
+      "src": "manifestData/composer.webp",
       "type": "image/png",
       "form_factor": "wide",
       "sizes": "1280x720"
     },
     {
-      "src": "/skyMusic/manifestData/zenkeyboard.webp",
+      "src": "manifestData/zenkeyboard.webp",
       "type": "image/png",
       "form_factor": "wide",
       "sizes": "1280x720"
     }
   ],
-  "start_url": "/skyMusic",
+  "start_url": ".",
   "display": "fullscreen",
   "orientation": "landscape",
   "theme_color": "#63aea7",
