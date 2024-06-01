@@ -20,7 +20,7 @@ const flagsMap = {
     //'it': '🇮🇹',
     'zh': '🇨🇳',
     "id": '🇮🇩',
-    'pt': '🇵🇹',
+    'pt': '🇧🇷',
 } satisfies Record<AppLanguage, string>
 
 
