@@ -446,7 +446,7 @@
     "download_logs": "Baixar logs"
   },
   "donate": {
-    "donate_message": "Cada aplicativo que faço leva meses de aprendizado e desenvolvimento. Além disso,\n            também existem os custos de hospedagem do site. Com um orçamento maior, posso não me\n            preocupar tanto com quanto gasto no servidor, oferecendo a você a melhor\n            experiência possível.\n            \n            Me importo em oferecer recursos para os usuários sem\n            ter que pagar por isso, nem ter anúncios intrusivos que podem ser irritantes.\n            Por esse mesmo motivo, não há fonte de renda além das doações.\n\n\n            Eu ficaria muito agradecido se você considerasse doar para financiar\n            desenvolvimento e custos."
+    "donate_message": "Cada aplicativo que faço leva meses de aprendizado e desenvolvimento. Além disso,\n            também existem os custos de hospedagem do site. Com sua ajuda, posso não me\n            preocupar tanto com os gastos do servidor, e oferecer a você a melhor\n            experiência possível.\n            \n            Me importo em oferecer recursos completos para todos os usuários gratuitamente, \n            e não incluo anúncios intrusivos, pois sei que podem ser irritantes.\n            Por esses motivos, não há fonte de renda além das doações.\n\n\n            Eu ficaria verdadeiramente agradecido se você considerasse doar para me ajudar com o\n            desenvolvimento e custos do site."
   },
   "cache": {
     "cache": "Cache",
