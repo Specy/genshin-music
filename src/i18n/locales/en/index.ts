@@ -196,6 +196,7 @@ export const i18n_en = {
         composed: "Composed", //composed songs
         vsrg: "VSRG", //vsrg songs, leave as is
         midi: "MIDI", //midi songs, leave as is
+        song_library: "Library",
     },
     settings: {
         toggle_metronome: "Toggle metronome",

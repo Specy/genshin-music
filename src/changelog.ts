@@ -8,10 +8,10 @@ type Update = {
 export const CHANGELOG: Update[] = [
     {
         version: '3.4.1',
-        title: "Indonesian",
+        title: "Indonesian/Portuguese",
         date: new Date('2024-05-28'),
         changes: [
-            "Added Indonesian translation",
+            "Added Indonesian and Portuguese translation",
             "Bug fixes to MIDI connection",
         ]
     },

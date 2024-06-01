@@ -184,7 +184,8 @@
         "recorded": "Teremkam",
         "composed": "Terbuat",
         "vsrg": "VSRG",
-        "midi": "MIDI"
+        "midi": "MIDI",
+        "song_library": "Library lagu"
     },
     "settings": {
         "toggle_metronome": "Beralih metronom",

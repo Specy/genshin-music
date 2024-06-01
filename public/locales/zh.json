@@ -184,7 +184,8 @@
         "recorded": "录制的歌曲",
         "composed": "创作的歌曲",
         "vsrg": "VSRG",
-        "midi": "MIDI"
+        "midi": "MIDI",
+        "song_library": "歌曲库"
     },
     "settings": {
         "toggle_metronome": "切换节拍器",

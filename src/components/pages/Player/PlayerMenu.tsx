@@ -367,7 +367,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 <DonateButton/>
             </MenuPanel>
 
-            <MenuPanel title="Library" id='Library'>
+            <MenuPanel title={t('menu:song_library')} id='Library'>
                 <div>
                     {t('song_search_description')}
                 </div>
@@ -375,7 +375,7 @@ function Menu({functions, data, inPreview}: MenuProps) {
                     <input
                         className='library-search-input'
                         style={{backgroundColor: layer1Color.toString(), color: layer1ColorText.toString()}}
-                        placeholder='Song name'
+                        placeholder={t('menu:song_name')}
                         onKeyDown={(e) => {
                             //TODO make this a form
                             if (e.code === "Enter") searchSongs()
