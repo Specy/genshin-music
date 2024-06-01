@@ -27,7 +27,8 @@ declare module 'i18next' {
 export const AVAILABLE_LANGUAGES = [
     'en',
     'zh',
-    'id'
+    'id',
+    'pt',
 ] as const;
 export type AppLanguage = typeof AVAILABLE_LANGUAGES[number];
 i18next

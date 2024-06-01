@@ -55,7 +55,6 @@ class I18nCache {
 
     }
 
-
     async fetchLocale(id: AppLanguage): Promise<AppI18N | null> {
         return fetch(BASE_PATH + `/locales/${id}.json`)
             .then(res => res.json())
