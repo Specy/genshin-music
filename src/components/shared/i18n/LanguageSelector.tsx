@@ -4,7 +4,6 @@ import {capitalize} from "$lib/utils/Utilities";
 import {LANG_PREFERENCE_KEY_NAME} from "$config";
 import {useTranslation} from "react-i18next";
 import {AppLanguage, AVAILABLE_LANGUAGES, setI18nLanguage} from '$i18n/i18n'
-import {useMemo} from "react";
 import {logger} from "$stores/LoggerStore";
 
 interface LanguageSelector extends Stylable {
@@ -14,7 +13,6 @@ interface LanguageSelector extends Stylable {
 }
 
 
-
 const flagsMap = {
     'en': '🇬🇧',
     //'it': '🇮🇹',
@@ -22,7 +20,24 @@ const flagsMap = {
     "id": '🇮🇩',
     'pt': '🇧🇷',
 } satisfies Record<AppLanguage, string>
+const namesMap = {
+    'en': 'English',
+    //'it': 'Italian',
+    'zh': '中文',
+    "id": 'Indonesia',
+    'pt': 'Brasileiro',
+} satisfies Record<AppLanguage, string>
 
+function getNameOfLocale(locale: AppLanguage) {
+    // some browsers don't support Intl.DisplayNames
+    try {
+        if (Intl?.DisplayNames) {
+            const nameGenerator = new Intl.DisplayNames(locale, {type: 'language'});
+            return nameGenerator.of(locale) ?? namesMap[locale]
+        }
+    } catch (e) {}
+    return namesMap[locale]
+}
 
 export function LanguageSelector({languages, currentLanguage, onChange, style, className}: LanguageSelector) {
     return <>
@@ -32,8 +47,7 @@ export function LanguageSelector({languages, currentLanguage, onChange, style, c
             className={`${s['i18n-selector']}`}
         >
             {languages.map(language => {
-                    const nameGenerator = new Intl.DisplayNames(language, {type: 'language'});
-                    const displayName = nameGenerator.of(language) ?? language
+                    const displayName = getNameOfLocale(language)
                     return <option
                         key={language}
                         value={language}
