@@ -383,8 +383,8 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.setState({isRecordingAudio: true})
         await delay(300)
         await this.togglePlay(true) //wait till song finishes
-        const delayTime = (this.state.settings.lookaheadTime.value / 1000) + 0.3
-        await delay(Math.max(500, delayTime))
+        //wait untill audio has finished playing
+        await delay(this.state.settings.lookaheadTime.value + 1000)
         if (!this.mounted) return
         this.setState({isRecordingAudio: false})
         const recording = await AudioProvider.stopRecording()
@@ -659,7 +659,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
         this.setState({song, selectedColumns})
         //add a bit of delay if recording audio to imrove the recording quality
         delay = delay
-            ? delay + (isRecordingAudio ? 250 : 0)
+            ? delay + (isRecordingAudio ? 0.5  : 0)
             : 0
         if (ignoreAudio) return
         song.selectedColumn.notes.forEach(note => {

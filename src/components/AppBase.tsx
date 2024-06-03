@@ -17,7 +17,7 @@ import isMobile from 'is-mobile';
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
 import {fileService} from '$lib/Services/FileService';
 import {useTranslation} from "react-i18next";
-import {AppLanguage, AVAILABLE_LANGUAGES} from "$i18n/i18n";
+import {AppLanguage, AVAILABLE_LANGUAGES, setI18nLanguage} from "$i18n/i18n";
 import {usePathname} from "next/navigation";
 
 
@@ -116,9 +116,9 @@ function AppBase() {
         try {
             const lang = (localStorage.getItem(LANG_PREFERENCE_KEY_NAME) ?? navigator.language ?? "en") as string | string[]
             const rootLang = ((Array.isArray(lang) ? lang[0] : lang).split("-")[0]).toLowerCase()
-            const langToUse = AVAILABLE_LANGUAGES.includes(rootLang as AppLanguage) ? rootLang : 'en'
+            const langToUse = (AVAILABLE_LANGUAGES.includes(rootLang as AppLanguage) ? rootLang : 'en') as AppLanguage
             window.document.documentElement.lang = langToUse
-            i18n.changeLanguage(langToUse)
+            setI18nLanguage(i18n, langToUse)
         } catch (e) {
             console.error(e)
         }

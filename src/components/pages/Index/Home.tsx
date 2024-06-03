@@ -133,8 +133,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     </div>}
                     <div className='home-spacing'>
                         <div className="red-text">{t('common:warning')}</div>
-                        :
-                        {t("clear_cache_warning")}
+                        : {t("clear_cache_warning")}
                     </div>
 
                     {data.hasPersistentStorage &&

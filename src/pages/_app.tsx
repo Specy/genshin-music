@@ -86,6 +86,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     console.log("Registering service worker")
                     serviceWorker.register({
                         onUpdate: async (registration) => {
+                            await delay(3000)
                             const confirm = await asyncConfirm(i18n.t('logs:update_available'), false)
                             if (confirm) {
                                 registration.waiting?.postMessage({type: "SKIP_WAITING"})

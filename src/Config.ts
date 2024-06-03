@@ -6,13 +6,13 @@ export const APP_VERSION = '3.4.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-        - Added chinese, indonesian translations for the app, we are looking for translators!
+        - Added chinese, indonesian, portuguese translations for the app, we are looking for translators!
         - Added button to install app to home screen
         - Added custom keyboard layout as a note name type  
         - MIDI bug fixes
     `
     : `
-        - Added chinese, indonesian translations for the app, we are looking for translators!
+        - Added chinese, indonesian, portuguese translations for the app, we are looking for translators!
         - Added button to install app to home screen
         - Added custom keyboard layout as a note name type  
         - MIDI bug fixes
