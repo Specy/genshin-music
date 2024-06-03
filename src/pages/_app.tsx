@@ -86,11 +86,12 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     console.log("Registering service worker")
                     serviceWorker.register({
                         onUpdate: async (registration) => {
+                            await delay(3000)
                             const confirm = await asyncConfirm(i18n.t('logs:update_available'), false)
                             if (confirm) {
                                 registration.waiting?.postMessage({type: "SKIP_WAITING"})
                                 localStorage.setItem(APP_NAME + "_repeat_update_notice", "true")
-                                await delay(3000)
+                                await delay(1000)
                                 window.location.reload()
                             }
                         }
