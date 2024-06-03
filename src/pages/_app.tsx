@@ -90,7 +90,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                             if (confirm) {
                                 registration.waiting?.postMessage({type: "SKIP_WAITING"})
                                 localStorage.setItem(APP_NAME + "_repeat_update_notice", "true")
-                                await delay(1000)
+                                await delay(3000)
                                 window.location.reload()
                             }
                         }
