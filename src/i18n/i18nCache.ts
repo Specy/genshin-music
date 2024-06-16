@@ -14,6 +14,7 @@ export const I18N_VERSIONS = {
     'zh': 1,
     'id': 1,
     'pt': 1,
+    'ru': 1,
 } satisfies Record<AppLanguage, number>
 
 
