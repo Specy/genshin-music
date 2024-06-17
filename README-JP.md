@@ -25,9 +25,8 @@ node.jsコンピュータにインストールする必要があり、 [こち�
 # デスクトップアプリケーションを構築する方法
 このアプリケーションは、サンドボックス化されたネットワーク ビューである`tauri`をデスクトップ バンドルとして使用します。
 `npm run build-tauri:genshin` , `npm run build-tauri:sky`, `npm run build-tauri:all`を使用してビルドできます。 
-配置是预先设置的，以允许更改日志，如果您没有签名密钥，则构建将失败。
-如果您想在没有变更日志的情况下进行构建, 去 `src-tauri/tauri.conf.json` 文件下将 `updater` 设置为 false
-
+構成は変更ログを許可するように事前に設定されており、署名キーがない場合、ビルドは失敗します。
+変更ログなしでビルドしたい場合は、`src-tauri/tauri.conf.json`ファイルに移動し、`updater`を`false`に設定します。
 # 资料
 你可以在[这里](https://github.com/Specy/genshin-music/wiki)找到应用程序的资料
 它不是很详细，但可能有助于理解这种格式是如何工作的。
