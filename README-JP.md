@@ -17,11 +17,12 @@ node.jsコンピュータにインストールする必要があり、 [こち�
 最初に開発サーバーを起動する必要があります、チュートリアルについてはここを[参照](#how-to-run-in-dev-mode) してください 。
 その後、実行できます `npm run start-tauri`
 
-# 如何构建
-你可以使用脚本 `npm run build:genshin` 和 `npm run build:sky` 它将构建正确的应用程序, 或者使用 `npm run build:all` 构建两个程序。
+# ビルド方法
+スクリプトを使用できます `npm run build:genshin` と `npm run build:sky` 正しいアプリケーションが構築されます, または使用します `npm run build:all` 2 つのプログラムを構築する。
 
-# 如何构建桌面应用程序
-该应用程序使用tauri作为桌面捆绑包，这是一个沙盒网络视图。您可以使用 `npm run build-tauri:genshin` , `npm run build-tauri:sky`, `npm run build-tauri:all`来构建它. 
+# デスクトップアプリケーションを構築する方法
+このアプリケーションは、サンドボックス化されたネットワーク ビューである「tauri」をデスクトップ バンドルとして使用します。
+`npm run build-tauri:genshin` , `npm run build-tauri:sky`, `npm run build-tauri:all`を使用してビルドできます。 
 配置是预先设置的，以允许更改日志，如果您没有签名密钥，则构建将失败。
 如果您想在没有变更日志的情况下进行构建, 去 `src-tauri/tauri.conf.json` 文件下将 `updater` 设置为 false
 
