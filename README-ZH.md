@@ -12,7 +12,7 @@
 
 # 寻找翻译人员
 我正在寻找有人帮助我将我的应用程序翻译成其他语言，
-如果您感兴趣，请参照翻译[讨论](https://github.com/Specy/genshin-music/discussions/ 52)
+如果您感兴趣，请参照翻译[讨论](https://github.com/Specy/genshin-music/discussions/52)
 
 # 如何在开发模式下运行桌面应用程序
 您需要首先启动开发服务器, 教程看 [这](#how-to-run-in-dev-mode) .
