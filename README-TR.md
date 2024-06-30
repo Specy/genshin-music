@@ -19,7 +19,7 @@ Sonrasında bu Repository’i bilgisayarınıza indirin,
 ve bağımlılıkları `npm i` komutu ile yükleyin. Bağımlılıklar yüklendikten sonra, geliştirme sunucusunu `npm run start` komutu ile çalıştırın.
 
 
-Sizin için kullanışlı olabilecek 4 tane betik bulunmakta, belirli bir uygulama olarak çalıştır ve belirli bir uygulama olarak derle.
+Sizin için kullanışlı olabilecek 4 tane komut bulunmakta, belirli bir uygulama olarak çalıştır ve belirli bir uygulama olarak derle.
 
 `npm run dev:sky` veya `npm run dev:genshin` komutları GenshinMusic veya SkyMusic için web uygulamalarını çalıştırır veya geçiş yapar
 
