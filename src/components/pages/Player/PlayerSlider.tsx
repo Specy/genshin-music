@@ -112,7 +112,7 @@ export function _PlayerSlider() {
                         onClick={enableInputs}
                         readOnly={!inputsEnabled}
                         onBlur={disableInputs}
-                        onChange={e => handleSelectChange(+e.target.value, 'start')}
+                        onChange={e => handleSelectChange(+e.target.value, 'end')}
                     />
                     <Memoized>
                         <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>

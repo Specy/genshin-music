@@ -51,7 +51,7 @@ function _PlayerSongControls({
                                  setHidePracticeNotes,
                              }: PlayerSongControlsProps) {
     const songData = useObservableObject(playerStore.state)
-    const {t} = useTranslation(["player", 'common', "settings"])
+    const {t} = useTranslation(["player", 'common', "settings", "shortcuts"])
     return <>
         {songData.eventType === 'approaching' &&
             <Score/>
@@ -69,7 +69,7 @@ function _PlayerSongControls({
                 }
             </div>
             <div className={`column ${s['slider-wrapper']}`} style={!hasSong ? {display: 'none'} : {}}>
-                <div className={'row'} style={{width: '100%', gap:'0.4rem'}}>
+                <div className={'row'} style={{width: '100%', gap: '0.4rem'}}>
                     {hidePracticeNotes !== undefined &&
                         <IconButton
                             style={{width: '2.4rem'}}
@@ -125,9 +125,14 @@ function _PlayerSongControls({
                         <MemoizedIcon icon={FaStop}/>
                     </IconButton>
                 </div>
+
                 <PlayerSlider/>
 
-                <IconButton onClick={onRestart} tooltip='Restart' ariaLabel="Restart song">
+                <IconButton
+                    onClick={onRestart}
+                    tooltip={t('shortcuts:props.restart')}
+                    ariaLabel={t("shortcuts:props.restart_description")}
+                >
                     <MemoizedIcon icon={VscDebugRestart}/>
                 </IconButton>
             </div>
