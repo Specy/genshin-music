@@ -1,9 +1,8 @@
 import {MouseEvent, useEffect, useState} from "react";
-import {APP_NAME} from "$config";
+import {APP_NAME, BASE_PATH} from "$config";
 import {Card} from "$cmp/shared/layout/Card";
 import s from './promotionCard.module.scss'
 import {Column} from "$cmp/shared/layout/Column";
-import {_easyplay1sMetadata} from "$pages/blog/posts/easyplay-1s";
 import {Row} from "$cmp/shared/layout/Row";
 import {Header} from "$cmp/shared/header/Header";
 import Link from "next/link";
@@ -13,11 +12,11 @@ import {useTranslation} from "react-i18next";
 import {Stylable} from "$lib/utils/UtilTypes";
 
 const promotion = {
-    id: '0',
-    title: 'EASYPLAY 1s',
-    description: 'The perfect MIDI keyboard for Sky Music Nightly.',
-    image: _easyplay1sMetadata.image,
-    url: `/blog/posts/${_easyplay1sMetadata.relativeUrl}`
+    id: '1',
+    title: `Help fund ${APP_NAME} Music Nightly!`,
+    description: `Donate to help us with the development of ${APP_NAME} Music Nightly!`,
+    image: BASE_PATH + '/manifestData/main.webp',
+    url: `/donate`
 }
 
 interface PromotionCardProps extends Stylable{
