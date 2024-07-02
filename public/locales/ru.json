@@ -468,7 +468,7 @@
         "deleted_all_songs_notice": "Deleted all songs",
         "deleted_all_themes_notice": "Deleted all themes",
         "error_validating_song": "Error validating song \"{{song_name}}\"",
-        "error_validating_folder": "Error validating folder \"{{folder_name}}",
+        "error_validating_folder": "Error validating folder \"{{folder_name}}\"",
         "error_validating_theme": "Error validating_theme \"{{theme_name}}\"",
         "validating_songs": "Validating songs",
         "validating_folders": "Validating folders",

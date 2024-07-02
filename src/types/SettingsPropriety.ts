@@ -12,6 +12,7 @@ export type SettingsCategory =
     | "song_settings"
     | "composer_settings"
     | "editor_settings"
+    | "player_practice_settings"
 
 export type NameOrDescriptionKey = keyof AppI18N['settings']['props']
 

@@ -31,11 +31,12 @@ interface NoteProps {
     }
     approachingNotes: ApproachingNote[]
     noteText: string
+    hideNote: boolean
     handleClick: (note: ObservableNote) => void
 }
 
 //TODO use css vars for the colors
-function Note({note, approachingNotes, handleClick, noteText, data}: NoteProps) {
+function Note({note, approachingNotes, handleClick, noteText, data, hideNote}: NoteProps) {
     const [textColor, setTextColor] = useState(getTextColor())
     useEffect(() => {
         const dispose = observe(ThemeProvider.state.data, () => {
@@ -75,7 +76,7 @@ function Note({note, approachingNotes, handleClick, noteText, data}: NoteProps) 
             />
         }
         <div
-            className={`${NOTES_CSS_CLASSES.note} ${parseClass(note.status)}`}
+            className={`${NOTES_CSS_CLASSES.note} ${parseClass(note.status, hideNote)}`}
             style={{
                 ...animation,
                 ...(clickColor && state.status === 'clicked' && ThemeProvider.isDefault('accent')
@@ -85,7 +86,7 @@ function Note({note, approachingNotes, handleClick, noteText, data}: NoteProps) 
         >
             {APP_NAME === 'Genshin' && <GenshinNoteBorder
                 className='genshin-border'
-                fill={parseBorderFill(state.status)}
+                fill={parseBorderFill(state.status, hideNote)}
             />}
             <SvgNote
                 name={note.noteImage}
@@ -105,6 +106,7 @@ function Note({note, approachingNotes, handleClick, noteText, data}: NoteProps) 
 export default memo(Note, (p, n) => {
     return p.note === n.note && p.data.approachRate === n.data.approachRate && p.data.instrument === n.data.instrument
         && p.handleClick === n.handleClick && p.noteText === n.noteText && p.approachingNotes === n.approachingNotes
+        && p.hideNote === n.hideNote
 }) as typeof Note
 
 function getApproachCircleColor(index: number) {
@@ -134,13 +136,23 @@ const ApproachCircle = memo(function ApproachCircle({approachRate, index}: Appro
     return prev.approachRate === next.approachRate && prev.index === next.index
 })
 
-function parseBorderFill(status: NoteStatus) {
+function parseBorderFill(status: NoteStatus, disabled: boolean) {
+    if (disabled) return 'var(--note-border-fill)'
     if (status === "clicked") return "transparent"
     else if (status === 'toClickNext' || status === 'toClickAndNext') return '#63aea7'
     return 'var(--note-border-fill)'
 }
 
-function parseClass(status: NoteStatus) {
+function parseClass(status: NoteStatus, disabled: boolean) {
+    //TODO there is a bug where if two notes to be clicked are the same, the first click will not be shown, as the transition is the same
+    if (disabled) {
+        switch (status) {
+            case 'clicked':
+                return "click-event"
+            default:
+                return ''
+        }
+    }
     switch (status) {
         case 'clicked':
             return "click-event"

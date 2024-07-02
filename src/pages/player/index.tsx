@@ -30,6 +30,7 @@ import {createShortcutListener} from '$/stores/KeybindsStore';
 import {useTranslation} from "react-i18next";
 import {WithTranslation} from "react-i18next/index";
 import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
+import {delay} from "$lib/utils/Utilities";
 
 interface PlayerState {
     settings: PlayerSettingsDataType
@@ -72,6 +73,8 @@ class Player extends Component<PlayerProps, PlayerState> {
 
     async componentDidMount() {
         const settings = settingsService.getPlayerSettings()
+        //for now reset this to prevent users from being confused
+        settings.hidePracticeMode.value = false
         this.setState({settings})
         this.mounted = true
         const instrument = this.state.instruments[0]
@@ -168,6 +171,14 @@ class Player extends Component<PlayerProps, PlayerState> {
     restartSong = async (override?: number) => {
         if (!this.mounted) return
         playerStore.restartSong((typeof override === 'number') ? override : playerControlsStore.position, playerControlsStore.end)
+    }
+
+    onSongFinished = async () => {
+        const {settings} = this.state
+        if (settings.loopPractice.value) {
+            await delay(1000)
+            this.restartSong()
+        }
     }
 
     loadInstruments = async (toLoad: InstrumentData[]) => {
@@ -329,6 +340,16 @@ class Player extends Component<PlayerProps, PlayerState> {
         this.setState({isRecording: newState})
     }
 
+    enableLoop = (enabled: boolean) => {
+        const {settings} = this.state
+        settings.loopPractice.value = enabled
+        this.setState({settings}, this.updateSettings)
+    }
+    setHidePracticeNotes = (hide: boolean) => {
+        const {settings} = this.state
+        settings.hidePracticeMode.value = hide
+        this.setState({settings}, this.updateSettings)
+    }
     toggleRecordAudio = async (override?: boolean | null) => {
         if (!this.mounted) return
         if (typeof override !== "boolean") override = null
@@ -359,7 +380,8 @@ class Player extends Component<PlayerProps, PlayerState> {
             handleSettingChange,
             changeVolume,
             addSong,
-            toggleMetronome
+            toggleMetronome,
+            onSongFinished
         } = this
         const {
             settings,
@@ -405,21 +427,33 @@ class Player extends Component<PlayerProps, PlayerState> {
                             approachRate: settings.approachSpeed.value,
                             keyboardYPosition: settings.keyboardYPosition.value,
                             speedChanger,
+                            hideNotesInPracticeMode: settings.hidePracticeMode.value,
+                            visualSheetSize: settings.numberOfVisualColumns.value * settings.numberOfVisualRows.value
                         }}
-                        functions={{playSound, setHasSong}}
+                        functions={{
+                            playSound,
+                            setHasSong,
+                            onSongFinished
+                    }}
                     />
                 </div>
             </div>
             <PlayerSongControls
+                hidePracticeNotes={settings.hidePracticeMode.value}
                 isRecordingAudio={isRecordingAudio}
                 isVisualSheetVisible={settings.showVisualSheet.value}
-                onToggleRecordAudio={this.toggleRecordAudio}
-                onRestart={this.restartSong}
+                visualSheetColumns={settings.numberOfVisualColumns.value}
+                loopEnabled={settings.loopPractice.value}
                 isMetronomePlaying={isMetronomePlaying}
-                onToggleMetronome={toggleMetronome}
-                onRawSpeedChange={this.handleSpeedChanger}
                 hasSong={hasSong}
                 speedChanger={speedChanger}
+                setLoopEnabled={this.enableLoop}
+                setHidePracticeNotes={this.setHidePracticeNotes}
+                onToggleRecordAudio={this.toggleRecordAudio}
+                onRestart={this.restartSong}
+                onToggleMetronome={toggleMetronome}
+                onRawSpeedChange={this.handleSpeedChanger}
+
             />
         </>
     }

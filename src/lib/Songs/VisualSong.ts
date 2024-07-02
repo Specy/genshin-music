@@ -219,7 +219,7 @@ export class TempoChunk {
 
     static from(columns: NoteColumn[], tempoChanger?: number) {
         tempoChanger = tempoChanger ?? columns[0]?.tempoChanger
-        if (tempoChanger === undefined) console.log("tempoChanger is undefined", columns, tempoChanger)
+        if (tempoChanger === undefined) console.warn("tempoChanger is undefined", columns, tempoChanger)
         return new TempoChunk(
             tempoChanger ?? 0,
             columns.map(column => TempoChunkColumn.from(column))

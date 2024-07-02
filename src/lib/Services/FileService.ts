@@ -238,7 +238,7 @@ export class FileService {
             if (Folder.isSerializedType(file)) return FileKind.Folder
             if (Theme.isSerializedType(file)) return FileKind.Theme
         } catch (e) {
-            console.log(e)
+            console.error(e)
         }
         return null
     }

@@ -1,6 +1,6 @@
 import {SPEED_CHANGERS} from "$config"
 import {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
-import {FaStop, FaSyncAlt} from "react-icons/fa";
+import {FaEye, FaEyeSlash, FaStop} from "react-icons/fa";
 import {ChangeEvent, memo} from "react";
 import {playerStore} from "$stores/PlayerStore";
 import {playerControlsStore} from "$stores/PlayerControlsStore";
@@ -14,6 +14,7 @@ import {PlayerVisualSheetRenderer} from "./PlayerPagesRenderer";
 import s from './Slider.module.css'
 import svs from './VisualSheet.module.css'
 import {useTranslation} from "react-i18next";
+import {VscDebugRestart} from "react-icons/vsc";
 
 interface PlayerSongControlsProps {
     onRestart: () => void
@@ -21,7 +22,13 @@ interface PlayerSongControlsProps {
     onToggleRecordAudio: (override: boolean) => void
     onToggleMetronome: () => void
     speedChanger: typeof SPEED_CHANGERS[number]
+    loopEnabled: boolean
+
+    hidePracticeNotes: boolean | undefined
+    setHidePracticeNotes: (hide: boolean) => void
+    setLoopEnabled: (enabled: boolean) => void
     isVisualSheetVisible: boolean
+    visualSheetColumns: number
     hasSong: boolean
     isMetronomePlaying: boolean
     isRecordingAudio: boolean
@@ -36,7 +43,12 @@ function _PlayerSongControls({
                                  onToggleMetronome,
                                  isRecordingAudio,
                                  onToggleRecordAudio,
-                                 isVisualSheetVisible
+                                 isVisualSheetVisible,
+                                 visualSheetColumns,
+                                 loopEnabled,
+                                 setLoopEnabled,
+                                 hidePracticeNotes,
+                                 setHidePracticeNotes,
                              }: PlayerSongControlsProps) {
     const songData = useObservableObject(playerStore.state)
     const {t} = useTranslation(["player", 'common', "settings"])
@@ -57,8 +69,32 @@ function _PlayerSongControls({
                 }
             </div>
             <div className={`column ${s['slider-wrapper']}`} style={!hasSong ? {display: 'none'} : {}}>
-                <div className="row" style={{width: '100%'}}>
-                    <div className={`${hasTooltip(true)} row`} style={{marginRight: '0.4rem', flex: 1}}>
+                <div className={'row'} style={{width: '100%', gap:'0.4rem'}}>
+                    {hidePracticeNotes !== undefined &&
+                        <IconButton
+                            style={{width: '2.4rem'}}
+                            onClick={() => setHidePracticeNotes(!hidePracticeNotes)}
+                            tooltip={t('hide_practice_notes')}
+                            toggled={hidePracticeNotes}
+                            ariaLabel={t("hide_practice_notes")}
+                        >
+                            {hidePracticeNotes
+                                ? <MemoizedIcon icon={FaEyeSlash}/>
+                                : <MemoizedIcon icon={FaEye}/>
+                            }
+                        </IconButton>
+                    }
+                    <AppButton
+                        style={{flex: 1, minWidth: '4rem'}}
+                        tooltip={t('loop_tooltip')}
+                        toggled={loopEnabled}
+                        onClick={() => setLoopEnabled(!loopEnabled)}
+                    >
+                        {t('loop')}
+                    </AppButton>
+                </div>
+                <div className="row" style={{width: '100%', gap: '0.4rem'}}>
+                    <div className={`${hasTooltip(true)} row`}>
                         <select
                             className={s['slider-select']}
                             onChange={onRawSpeedChange}
@@ -92,7 +128,7 @@ function _PlayerSongControls({
                 <PlayerSlider/>
 
                 <IconButton onClick={onRestart} tooltip='Restart' ariaLabel="Restart song">
-                    <MemoizedIcon icon={FaSyncAlt}/>
+                    <MemoizedIcon icon={VscDebugRestart}/>
                 </IconButton>
             </div>
 
@@ -106,19 +142,22 @@ function _PlayerSongControls({
             </IconButton>
         </div>
         {isVisualSheetVisible &&
-            <PlayerVisualSheetRenderer/>
+            <PlayerVisualSheetRenderer
+                columns={visualSheetColumns}
+            />
         }
     </>
 }
 
 export const PlayerSongControls = memo(_PlayerSongControls, (prev, next) => {
     return prev.speedChanger === next.speedChanger && prev.hasSong === next.hasSong && prev.isMetronomePlaying === next.isMetronomePlaying
-        && prev.isRecordingAudio === next.isRecordingAudio && prev.isVisualSheetVisible === next.isVisualSheetVisible
+        && prev.isRecordingAudio === next.isRecordingAudio && prev.isVisualSheetVisible === next.isVisualSheetVisible && prev.visualSheetColumns === next.visualSheetColumns
+        && prev.loopEnabled === next.loopEnabled && prev.hidePracticeNotes === next.hidePracticeNotes
 })
 
 
 function _Score() {
-    const {t } = useTranslation("player")
+    const {t} = useTranslation("player")
     const {combo, score, correct, wrong} = useObservableObject(playerControlsStore.score)
     return <div className='approaching-accuracy'>
         <table>

@@ -42,7 +42,7 @@ export default function TransferData() {
             setError("")
             setImportedData(null)
             await protocol.connect(frame.contentWindow!)
-            console.log("connected")
+            console.warn("connected")
             const data = await protocol.ask("getAppData", undefined)
             setImportedData(Array.isArray(data) ? data : [data])
         } catch (e) {

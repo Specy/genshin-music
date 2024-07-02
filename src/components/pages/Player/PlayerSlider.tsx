@@ -2,10 +2,11 @@ import {DEFAULT_DOM_RECT} from "$config"
 import Memoized from "$cmp/shared/Utility/Memoized"
 import {useObservableObject} from "$lib/Hooks/useObservable"
 import {clamp} from "$lib/utils/Utilities"
-import {memo, useEffect, useRef, useState} from "react"
+import {memo, MouseEvent, useCallback, useEffect, useRef, useState} from "react"
 import {BsTriangleFill} from "react-icons/bs"
 import {playerControlsStore} from "$stores/PlayerControlsStore"
 import sl from "./Slider.module.css"
+import {setTimeout} from "worker-timers";
 
 
 export function _PlayerSlider() {
@@ -15,7 +16,7 @@ export function _PlayerSlider() {
     const thumb1 = useRef<HTMLDivElement>(null)
     const thumb2 = useRef<HTMLDivElement>(null)
     const slider = useRef<HTMLDivElement>(null)
-
+    const [inputsEnabled, setInputsEnabled] = useState(true)
     useEffect(() => {
         //TODO remove the dependency and instead use the callback for the set state
         if (selectedThumb === null) return
@@ -31,6 +32,14 @@ export function _PlayerSlider() {
             window.removeEventListener('blur', resetSelection)
         }
     }, [selectedThumb])
+
+    function handleSelectChange(val: number, type: 'start' | "end") {
+        if (type === 'start') {
+            playerControlsStore.setPosition(Math.max(0, Math.min(val, sliderState.end)))
+        } else {
+            playerControlsStore.setState({end: Math.min(sliderState.size, Math.max(val, sliderState.position))})
+        }
+    }
 
     const handleSliderClick = (event: React.PointerEvent<HTMLDivElement>) => {
         if (slider.current && thumb1.current && thumb2.current) {
@@ -50,6 +59,17 @@ export function _PlayerSlider() {
     function handleSliderLeave() {
         setSelectedThumb(null)
     }
+
+    const enableInputs = useCallback((e: MouseEvent) => {
+        setInputsEnabled(true)
+        setTimeout(() => {
+            // @ts-ignore
+            e.currentTarget?.focus()
+        }, 50)
+    }, [])
+    const disableInputs = useCallback(() => {
+        setInputsEnabled(false)
+    }, [])
 
     const handleSliderMove = (event: React.PointerEvent<HTMLDivElement>, override?: 'start' | 'end') => {
         if (selectedThumb === null && !override) return
@@ -84,18 +104,32 @@ export function _PlayerSlider() {
             <div className={sl["two-way-slider"]}>
 
                 <div className={sl["two-way-slider-thumb"]} style={{bottom: `calc(${end}% - 18px)`}} ref={thumb2}>
-                    <div style={{fontSize: '0.8rem'}}>
-                        {sliderState.end}
-                    </div>
+                    <input
+                        type={'number'}
+                        className={sl["slider-input"]}
+                        style={{fontSize: '0.8rem'}}
+                        value={sliderState.end}
+                        onClick={enableInputs}
+                        readOnly={!inputsEnabled}
+                        onBlur={disableInputs}
+                        onChange={e => handleSelectChange(+e.target.value, 'start')}
+                    />
                     <Memoized>
                         <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
                     </Memoized>
 
                 </div>
                 <div className={sl["two-way-slider-thumb"]} style={{bottom: `calc(${start}% - 14px)`}} ref={thumb1}>
-                    <div style={{fontSize: '0.8rem'}}>
-                        {sliderState.position}
-                    </div>
+                    <input
+                        type={'number'}
+                        className={sl["slider-input"]}
+                        style={{fontSize: '0.8rem'}}
+                        value={sliderState.position}
+                        onClick={enableInputs}
+                        readOnly={!inputsEnabled}
+                        onBlur={disableInputs}
+                        onChange={e => handleSelectChange(+e.target.value, 'start')}
+                    />
                     <Memoized>
                         <BsTriangleFill width={16} style={{filter: 'drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)'}}/>
                     </Memoized>

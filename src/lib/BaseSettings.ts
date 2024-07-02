@@ -19,7 +19,6 @@ import {
 } from "$types/SettingsPropriety"
 import {VsrgSongKeys} from "./Songs/VsrgSong"
 import {VsrgKeyboardLayout} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard"
-import {DeepWriteable} from "$lib/utils/UtilTypes";
 
 export type BaseSettings<T> = {
     data: T,
@@ -40,8 +39,6 @@ export type ComposerSettingsDataType = {
     lookaheadTime: SettingsNumber
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
-
-
 
 
 export const ComposerSettings = {
@@ -163,18 +160,22 @@ export type PlayerSettingsDataType = {
     noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
-    approachSpeed: SettingsNumber
     noteAnimation: SettingsCheckbox
     metronomeBeats: SettingsNumber
     bpm: SettingsNumber
     metronomeVolume: SettingsSlider
     syncSongData: SettingsCheckbox
     showVisualSheet: SettingsCheckbox
+    numberOfVisualRows: SettingsSelect<number>
+    numberOfVisualColumns: SettingsSelect<number>
+    loopPractice: SettingsCheckbox
+    hidePracticeMode: SettingsCheckbox
+    approachSpeed: SettingsNumber
 }
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings = {
     other: {
-        settingVersion: APP_NAME + 74 //change when instrument is added
+        settingVersion: APP_NAME + 77 //change when instrument is added
     },
     data: {
         instrument: {
@@ -273,16 +274,6 @@ export const PlayerSettings = {
             category: "player_settings",
             threshold: [-60, 180]
         },
-        approachSpeed: {
-            name: "player_approach_speed",
-            tooltip: "player_approach_speed_description",
-            type: "number",
-            increment: 50,
-            songSetting: false,
-            value: 1500,
-            category: "player_settings",
-            threshold: [0, 5000]
-        },
         noteAnimation: {
             name: "player_note_animation",
             tooltip: "player_note_animation_description",
@@ -297,12 +288,76 @@ export const PlayerSettings = {
             type: "checkbox",
             songSetting: false,
             value: true,
-            category: "player_settings",
+            category: "player_practice_settings",
         },
+        approachSpeed: {
+            name: "player_approach_speed",
+            tooltip: "player_approach_speed_description",
+            type: "number",
+            increment: 50,
+            songSetting: false,
+            value: 1500,
+            category: "player_practice_settings",
+            threshold: [0, 5000]
+        },
+        numberOfVisualRows: {
+            name: "player_number_of_visual_rows",
+            tooltip: "player_number_of_visual_rows_description",
+            type: "select",
+            songSetting: false,
+            value: 2,
+            category: "player_practice_settings",
+            options: [
+                1,
+                2,
+                3,
+                4,
+                5
+            ]
+        },
+
+        numberOfVisualColumns: {
+            name: "player_number_of_visual_columns",
+            tooltip: "player_number_of_visual_columns_description",
+            type: "select",
+            songSetting: false,
+            value: 5,
+            category: "player_practice_settings",
+            options: [
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+            ]
+        },
+        loopPractice: {
+            name: "player_loop_practice",
+            tooltip: "player_loop_practice_description",
+            type: "checkbox",
+            songSetting: false,
+            value: false,
+            category: "player_practice_settings",
+        },
+        hidePracticeMode: {
+            name: "player_hide_practice_notes",
+            tooltip: "player_hide_practice_notes_description",
+            type: "checkbox",
+            songSetting: false,
+            value: false,
+            category: "player_practice_settings",
+        }
     }
 } as const satisfies PlayerSettingsType
 
-export type MIDIShortcutName = 'toggle_play' | 'next_column' | 'previous_column' | 'add_column' | 'remove_column' | 'change_layer'
+export type MIDIShortcutName =
+    'toggle_play'
+    | 'next_column'
+    | 'previous_column'
+    | 'add_column'
+    | 'remove_column'
+    | 'change_layer'
 
 export const MIDISettings = {
     settingVersion: APP_NAME + 6,

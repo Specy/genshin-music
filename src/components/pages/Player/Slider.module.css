@@ -35,6 +35,25 @@
     overflow: hidden;
 }
 
+.slider-input{
+    user-select: none;
+    font-family: 'Bonobo';
+    font-weight: bold;
+    width: 4ch;
+    text-align: end;
+    background: transparent;
+    color: var(--accent);
+    border: none;
+}
+
+.slider-input::-webkit-outer-spin-button,
+.slider-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.slider-input {
+  -moz-appearance: textfield;
+}
 .slider-current {
     height: 100%;
     width: 100%;

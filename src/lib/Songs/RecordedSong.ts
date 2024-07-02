@@ -307,7 +307,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             }
             return converted
         } catch (e) {
-            console.log(e)
+            console.error(e)
             return null
         }
     }

@@ -1,5 +1,6 @@
 import {InstrumentName} from "$types/GeneralTypes";
 import {MIDIShortcutName} from "$lib/BaseSettings";
+import {SettingsCategory} from "$types/SettingsPropriety";
 //TODO please look at the /public/locales folder to see the available languages
 
 
@@ -41,7 +42,7 @@ export const i18n_en = {
         error_importing_song: `Error importing song "{{song_name}}"`,
         error_importing_folder: `Error importing folder "{{folder_name}}"`,
         error_importing_theme: `Error importing theme "{{theme_name}}"`,
-        error_importing_unknown_file: "Error importing unknown file {{file_name}}",
+        error_importing_unknown_file: `"Error importing unknown file "{{file_name}}"`,
         imported_theme: `Imported theme "{{theme_name}}"`,
         imported_folder: `Imported folder "{{folder_name}}"`,
         imported_song: `Imported {{song_type}} song "{{song_name}}"`,
@@ -208,11 +209,10 @@ export const i18n_en = {
                             Always make sure to download a backup sometimes, especially when you will not use the app
                             for a long time`,
         memory_not_persisted_description: `The browser didn't allow to store data persistently, it might happen that you will loose
-                            data
-                            when cache is automatically cleared. To get persistent storage, add the app to the home
-                            screen.
-                            If that still doesn't work, make sure you do a backup often`,
+                            data when cache is automatically cleared. To get persistent storage, add the app to the home
+                            screen. If that still doesn't work, make sure you do a backup often`,
         props: {
+
             composer_bpm: "Bpm",
             composer_bpm_description: "Beats per minute, the speed of the song. Usually the BPM inside the app should be 4 times the BPM of the song you are trying to compose",
             composer_base_pitch: "Base pitch",
@@ -247,6 +247,16 @@ export const i18n_en = {
             player_metronome_volume: "Metronome volume",
             player_metronome_volume_description: "The volume of the metronome",
             player_reverb: "Reverb (cave mode)",
+
+            player_number_of_visual_rows: "Number of rows in visual sheet",
+            player_number_of_visual_columns: "Number of columns in visual sheet",
+            player_loop_practice: "Loop song selection in practice mode",
+            player_hide_practice_notes: "Hide notes in practice mode",
+            player_loop_practice_description: "When you reach the end of the selected notes in the song in practice mode, it will loop back to the start",
+            player_number_of_visual_columns_description: "The number of columns in the visual sheet, more columns might cause lag",
+            player_number_of_visual_rows_description: "The number of rows in the visual sheet, more rows might cause lag",
+            player_hide_practice_notes_description: "During the practice mode, hide the notes so you can test your memory, the visual sheet will still be visible",
+
             player_reverb_description: "Makes it sound like you are in a cave",
             player_note_name_type: "Note name type",
             player_note_name_type_description: "The type of text which will be written on the note",
@@ -320,7 +330,8 @@ export const i18n_en = {
             "song_settings": "Song settings",
             "composer_settings": "Composer settings",
             "editor_settings": "Editor settings",
-        },
+            "player_practice_settings": "Practice settings"
+        } satisfies Record<SettingsCategory, string>,
         select_language: "Select language",
     },
 
@@ -423,6 +434,10 @@ export const i18n_en = {
         song_search_no_results: "No results",
         song_search_description: "Here you can find songs to learn, they are provided by the sky-music library.",
         midi_or_audio_import_redirect_warning: "You cannot directly import this file format. MIDI, Video and Audio files need to be converted in the composer, do you want to open it?",
+
+        loop: "Loop",
+        loop_tooltip: "Loop the song",
+        hide_practice_notes: "Hide notes in practice mode",
     },
     keybinds: {
         already_used_keybind: `This keybind is already used by the note "{{note_name}}"`,
@@ -493,8 +508,7 @@ export const i18n_en = {
         cache: 'Cache',
         reset_cache: "Reset cache",
         reset_cache_message: `This page will clear the cache of the application. This will remove all cached data and reload the page.
-                It will not
-                delete your songs or data, only the cached assets. As soon as you visit this page, it will clear the
+                It will not delete your songs or data, only the cached assets. As soon as you visit this page, it will clear the
                 cache automatically.
                 You can also click the button below to clear the cache manually.`,
         clear_cache: 'Clear Cache'
@@ -516,7 +530,7 @@ export const i18n_en = {
         deleted_all_songs_notice: "Deleted all songs",
         deleted_all_themes_notice: "Deleted all themes",
         error_validating_song: `Error validating song "{{song_name}}"`,
-        error_validating_folder: `Error validating folder "{{folder_name}}`,
+        error_validating_folder: `Error validating folder "{{folder_name}}"`,
         error_validating_theme: `Error validating_theme "{{theme_name}}"`,
         validating_songs: "Validating songs",
         validating_folders: "Validating folders",

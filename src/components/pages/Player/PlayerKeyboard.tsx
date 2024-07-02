@@ -27,10 +27,13 @@ interface KeyboardPlayerProps {
         approachRate: number
         keyboardYPosition: number
         speedChanger: typeof SPEED_CHANGERS[number]
+        visualSheetSize: number
+        hideNotesInPracticeMode: boolean
     }
     functions: {
         playSound: (index: number, layer?: NoteLayer) => void
         setHasSong: (override: boolean) => void
+        onSongFinished: () => void
     }
 }
 
@@ -53,7 +56,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     cleanup: (() => void)[] = []
     timeouts: Timer[] = []
     debouncedStateUpdate: Timer = 0
-
+    mode: 'play' | 'practice' | 'approaching' | undefined = 'play'
     constructor(props: KeyboardPlayerProps) {
         super(props)
         this.state = {
@@ -66,7 +69,6 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     }
 
     componentDidMount() {
-        this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
         const disposeShortcuts = createShortcutListener("player", "player_keyboard", ({shortcut}) => {
             const {name} = shortcut
             if (name === "restart") {
@@ -127,6 +129,14 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         }))
     }
 
+    setTicker = (enabled: boolean) => {
+        if (enabled) {
+            clearInterval(this.tickInterval)
+            this.tickInterval = setInterval(this.tick, this.tickTime) as unknown as number
+        } else {
+            clearInterval(this.tickInterval)
+        }
+    }
     componentWillUnmount() {
         this.cleanup.forEach(d => d())
         this.songTimestamp = 0
@@ -153,6 +163,8 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         }
     }
     approachingSong = async (song: RecordedSong, start = 0, end?: number) => {
+        this.mode = 'approaching'
+        this.setTicker(true)
         end = end ? end : song.notes.length
         const {speedChanger} = this.props.data
         const notes = []
@@ -178,7 +190,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     }
 
     tick = () => {
-        if (!this.props.data.hasSong) return
+        if (!this.props.data.hasSong || this.mode !== "approaching") return
         const {approachingNotes} = this.state
         const {speedChanger} = this.props.data
         const stateNotes = approachingNotes
@@ -187,7 +199,6 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             note.time -= this.tickTime
         })
         let hasChanges = false
-        let removed = 0
         for (let i = 0; i < notes.length; i++) {
             if (notes[i].time < this.approachRate) {
                 const newNote = new ApproachingNote({
@@ -203,6 +214,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                 break
             }
         }
+        let removed = 0
         stateNotes.forEach(approachingNotes => {
             for (let i = 0; i < approachingNotes.length; i++) {
                 const note = approachingNotes[i]
@@ -227,6 +239,10 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             }
         })
         if (!hasChanges) return
+        if(playerControlsStore.current + removed === playerControlsStore.size) {
+            this.setTicker(false)
+            this.props.functions.onSongFinished()
+        }
         playerControlsStore.setCurrent(playerControlsStore.current + removed)
         this.setState({
             approachingNotes: stateNotes.map(arr => arr.slice()), //removes ref
@@ -234,12 +250,14 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     }
 
     playSong = async (song: RecordedSong, start = 0, end?: number) => {
+        this.mode = 'play'
         end = end ? end : song.notes.length
         this.songTimestamp = song.timestamp
         const {keyboard} = this.state
+        const { visualSheetSize} = this.props.data
         const notes = this.applySpeedChange(song.notes).slice(start, end)
         const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map(n => n.clone()))
-        playerControlsStore.setPages(groupArrayEvery(mergedNotes, 10))
+        playerControlsStore.setPages(groupArrayEvery(mergedNotes, visualSheetSize))
         await delay(200) //add small start offset
         const startOffset = notes[0].time
         let previous = startOffset
@@ -261,6 +279,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             }
             delayOffset = startTime + previous - startOffset - Date.now()
         }
+        this.props.functions.onSongFinished()
     }
     applySpeedChange = (notes: RecordedNote[]) => {
         const {speedChanger} = this.props.data
@@ -271,9 +290,11 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
     }
 
     practiceSong = (song: RecordedSong, start = 0, end?: number) => {
+        this.mode = 'practice'
         //TODO move this to the song class
         end = end ? end : song.notes.length
         const {keyboard} = this.state
+        const {visualSheetSize} = this.props.data
         const notes = this.applySpeedChange(song.notes).slice(start, end)
         const chunks = RecordedSong.mergeNotesIntoChunks(notes.map(n => n.clone()))
         if (chunks.length === 0) return
@@ -292,7 +313,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             keyboardNote.setStatus('toClickNext')
         })
         this.props.functions.setHasSong(true)
-        playerControlsStore.setPages(groupArrayEvery(chunks, 10))
+        playerControlsStore.setPages(groupArrayEvery(chunks, visualSheetSize))
         this.setState({
             songToPractice: chunks
         })
@@ -330,6 +351,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         }
         return "approach-wrong"
     }
+
     handlePracticeClick = (note: ObservableNote) => {
         const {keyboard, songToPractice} = this.state
         if (songToPractice.length > 0) {
@@ -339,6 +361,9 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                 if (songToPractice[0].notes.length === 0) {
                     songToPractice.shift()
                     playerControlsStore.incrementChunkPositionAndSetCurrent()
+                }
+                if(songToPractice.length === 0) {
+                    this.props.functions.onSongFinished()
                 }
                 if (songToPractice.length > 0) {
                     const nextChunk = songToPractice[0]
@@ -404,6 +429,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         if (keyboard.length === 14) keyboardClass += " keyboard-5"
         if (keyboard.length === 8) keyboardClass += " keyboard-4"
         if (keyboard.length === 6) keyboardClass += " keyboard-3"
+        const hideNotes = data.hideNotesInPracticeMode && this.mode === 'practice'
         const style = size !== 1 ? {transform: `scale(${size})`} : {}
         return <>
             <div
@@ -425,6 +451,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
                                 approachRate: this.approachRate,
                                 instrument: instrument.name,
                             }}
+                            hideNote={hideNotes}
                             approachingNotes={state.approachingNotes[note.index]}
                             handleClick={this.handleClick}
                             noteText={instrument.getNoteText(note.index, noteNameType, pitch)}

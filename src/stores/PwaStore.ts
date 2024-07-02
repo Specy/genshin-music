@@ -47,12 +47,12 @@ class PwaStore {
             event.prompt();
             event.userChoice.then((choice) => {
                 if (choice.outcome === 'accepted') {
-                    console.log('User accepted the A2HS prompt');
+                    console.warn('User accepted the A2HS prompt');
                     this.setState({installEvent: null})
                     res(true)
                 } else {
                     rej('User dismissed the A2HS prompt')
-                    console.log('User dismissed the A2HS prompt');
+                    console.warn('User dismissed the A2HS prompt');
                 }
             });
         })
