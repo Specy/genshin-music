@@ -9,7 +9,11 @@ import sl from "./Slider.module.css"
 import {setTimeout} from "worker-timers";
 
 
-export function _PlayerSlider() {
+interface PlayerSliderProps{
+    onChange?: (start: number, end: number) => void
+}
+
+export function _PlayerSlider({onChange}: PlayerSliderProps) {
     const sliderState = useObservableObject(playerControlsStore.state)
     const [selectedThumb, setSelectedThumb] = useState<'start' | 'end' | null>(null)
     const [inputDimension, setInputDimension] = useState(DEFAULT_DOM_RECT)
@@ -39,6 +43,7 @@ export function _PlayerSlider() {
         } else {
             playerControlsStore.setState({end: Math.min(sliderState.size, Math.max(val, sliderState.position))})
         }
+        onChange?.(playerControlsStore.current, playerControlsStore.end)
     }
 
     const handleSliderClick = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -84,6 +89,8 @@ export function _PlayerSlider() {
         } else {
             if (value - sliderState.position > 1) playerControlsStore.setState({end: value})
         }
+        onChange?.(playerControlsStore.current, playerControlsStore.end)
+
     }
     const start = sliderState.size !== 0 ? sliderState.position / sliderState.size * 100 : 0
     const end = sliderState.size !== 0 ? sliderState.end / sliderState.size * 100 : 100
@@ -139,4 +146,6 @@ export function _PlayerSlider() {
     </>
 }
 
-export const PlayerSlider = memo(_PlayerSlider, () => true)
+export const PlayerSlider = memo(_PlayerSlider, (p,v) => {
+    return p.onChange === v.onChange
+})

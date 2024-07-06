@@ -180,7 +180,8 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
             notes.push(obj)
         }
         await delay(2000) //add an initial delay to let the user prepare
-        playerControlsStore.setSong(song)
+        //not sure why i even save the song, i dont use it anywhere
+        //playerControlsStore.setSong(song)
         playerControlsStore.clearPages()
         playerControlsStore.resetScore()
         this.setState({

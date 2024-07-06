@@ -1,7 +1,7 @@
 import {SPEED_CHANGERS} from "$config"
 import {MemoizedIcon} from "$cmp/shared/Utility/Memoized";
 import {FaEye, FaEyeSlash, FaStop} from "react-icons/fa";
-import {ChangeEvent, memo} from "react";
+import {ChangeEvent, memo, useCallback, useEffect, useState} from "react";
 import {playerStore} from "$stores/PlayerStore";
 import {playerControlsStore} from "$stores/PlayerControlsStore";
 import {hasTooltip, Tooltip} from '$cmp/shared/Utility/Tooltip'
@@ -50,8 +50,17 @@ function _PlayerSongControls({
                                  hidePracticeNotes,
                                  setHidePracticeNotes,
                              }: PlayerSongControlsProps) {
+    const [needsRefresh, setNeedsRefresh] = useState(false)
     const songData = useObservableObject(playerStore.state)
     const {t} = useTranslation(["player", 'common', "settings", "shortcuts"])
+
+    const toggleNeedsRefresh = useCallback(() => {
+        setNeedsRefresh(true)
+    }, [])
+
+    useEffect(() => {
+        setNeedsRefresh(false)
+    }, [songData.key]);
     return <>
         {songData.eventType === 'approaching' &&
             <Score/>
@@ -126,9 +135,11 @@ function _PlayerSongControls({
                     </IconButton>
                 </div>
 
-                <PlayerSlider/>
-
+                <PlayerSlider
+                    onChange={toggleNeedsRefresh}
+                />
                 <IconButton
+                    toggled={needsRefresh}
                     onClick={onRestart}
                     tooltip={t('shortcuts:props.restart')}
                     ariaLabel={t("shortcuts:props.restart_description")}
