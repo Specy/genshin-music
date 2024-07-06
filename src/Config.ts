@@ -37,9 +37,9 @@ export const NOTES_CSS_CLASSES = {
 
 export const BASE_THEME_CONFIG = {
     text: {
-        light: '#edeae5',
+        light: '#eae8e6',
         dark: '#151414',
-        note: APP_NAME === 'Genshin' ? '#aaaa82' : '#edeae5'
+        note: APP_NAME === 'Genshin' ? '#aaaa82' : '#eae8e6'
     }
 }
 export const INSTRUMENTS = APP_NAME === "Genshin"

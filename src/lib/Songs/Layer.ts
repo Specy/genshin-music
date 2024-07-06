@@ -107,6 +107,15 @@ export class NoteLayer {
         return this.serializeBin().split('').map(x => parseInt(x)).reverse()
     }
 
+    merge(layer: NoteLayer) {
+        if (HAS_BIGINT) {
+            //@ts-ignore
+            this.data |= layer.data
+        } else {
+            //@ts-ignore
+            this.data |= layer.data
+        }
+    }
     isEmpty() {
         return this.data === 0n
     }
