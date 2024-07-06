@@ -35,7 +35,7 @@
     overflow: hidden;
 }
 
-.slider-input{
+.slider-input {
     user-select: none;
     font-family: 'Bonobo';
     font-weight: bold;
@@ -48,12 +48,14 @@
 
 .slider-input::-webkit-outer-spin-button,
 .slider-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
+
 .slider-input {
-  -moz-appearance: textfield;
+    -moz-appearance: textfield;
 }
+
 .slider-current {
     height: 100%;
     width: 100%;
@@ -85,10 +87,19 @@
     align-self: center;
     width: 100%;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.4rem;
     max-height: 25rem;
 }
 
 .slider-wrapper button {
     margin: 0;
+}
+
+
+@media screen and (max-width: 920px) {
+    .sidebar-metronome-button {
+        position: absolute;
+        right: 0.8rem;
+        bottom: 0.8rem;
+    }
 }

@@ -138,9 +138,10 @@ function _PlayerSongControls({
             </div>
 
             <IconButton
+
                 toggled={isMetronomePlaying}
                 onClick={onToggleMetronome}
-                className='metronome-button'
+                className={`${s['sidebar-metronome-button']} metronome-button`}
                 ariaLabel={t('settings:toggle_metronome')}
             >
                 <GiMetronome size={22}/>
