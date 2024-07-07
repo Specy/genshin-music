@@ -50,7 +50,7 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                     }).join(' ')
                 })
             } catch (e) {
-                console.log("Error logging error", e)
+                console.error("Error logging error", e)
             }
         }
         return () => {
@@ -77,9 +77,9 @@ export default function App({Component, pageProps}: AppProps<CustomPageProps>) {
                 if ('virtualKeyboard' in navigator) {
                     //@ts-ignore
                     navigator.virtualKeyboard.overlaysContent = true;
-                    console.log("virtual keyboard supported")
+                    console.warn("virtual keyboard supported")
                 } else {
-                    console.log("virtual keyboard not supported")
+                    console.warn("virtual keyboard not supported")
                 }
                 if (!IS_TAURI) {
                     setIfInTWA()

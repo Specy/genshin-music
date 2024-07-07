@@ -14,7 +14,7 @@ export function useVsrgKey(index: number, layout: KeyboardKey[]) {
 
 export function subscribeVsrgKey(index: number, callback: (key: KeyboardKey) => void) {
     if(!vsrgPlayerStore.keyboard[index]){
-        console.log('No key found', index, vsrgPlayerStore.keyboard)
+        console.warn('No key found', index, vsrgPlayerStore.keyboard)
         return () => {}
     }
     const dispose = observe(vsrgPlayerStore.keyboard[index], () => {

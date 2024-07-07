@@ -7,6 +7,18 @@ type Update = {
 
 export const CHANGELOG: Update[] = [
     {
+        version: '3.5.0',
+        title: "Loop, Visual sheets settings, Turkish translation",
+        date: new Date('2024-07-02'),
+        changes: [
+            'Added looping of section for practice/playing/approaching mode',
+            'The notes of the section to repeat can now be also be written as a number',
+            'Added ability to hide notes in practice mode, to help you test your memory of the song',
+            'You can now select how many chunks to show in the visual sheet',
+            'Added Turkish translation',
+        ]
+    },
+    {
         version: '3.4.1',
         title: "Indonesian, Portuguese translations",
         date: new Date('2024-06-01'),

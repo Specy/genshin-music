@@ -46,7 +46,7 @@ export class MIDIListener {
                 this.saveSettings()
                 return access
             } else {
-                console.log("Midi not available")
+                console.warn("Midi not available")
                 return null
             }
         } catch (e) {

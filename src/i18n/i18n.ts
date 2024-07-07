@@ -29,6 +29,8 @@ export const AVAILABLE_LANGUAGES = [
     'zh',
     'id',
     'pt',
+    'ru',
+    'tr'
 ] as const;
 export type AppLanguage = typeof AVAILABLE_LANGUAGES[number];
 i18next

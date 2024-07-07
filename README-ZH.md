@@ -10,6 +10,10 @@
 还有4个脚本可能很有用，可以作为特定的应用程序运行，也可以作为特定应用程序构建。
 您可以运行 `npm run dev:sky` 或  `npm run dev:genshin` ，这将运行特定游戏的网络应用程序并交换资源文件。
 
+# 寻找翻译人员
+我正在寻找有人帮助我将我的应用程序翻译成其他语言，
+如果您感兴趣，请参照翻译[讨论](https://github.com/Specy/genshin-music/discussions/52)
+
 # 如何在开发模式下运行桌面应用程序
 您需要首先启动开发服务器, 教程看 [这](#how-to-run-in-dev-mode) .
 然后你可以运行 `npm run start-tauri`
@@ -29,5 +33,5 @@
 # 如何参与项目
 添加一个新的问题，说明你想做什么，然后等待我分配问题。通过这种方式，我们还可以沟通修复/添加问题是否有效。
 
-# README.md
-<a href="./README-ZH.md">简体中文</a>|<a href="./README.md">English</a>|
+# README.MD
+<a href="./README.md">English</a> | <a href="./README-ZH.md">简体中文</a> | <a href="./README-JP.md">日本語</a> 

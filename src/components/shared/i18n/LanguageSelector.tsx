@@ -19,6 +19,8 @@ const flagsMap = {
     'zh': '🇨🇳',
     "id": '🇮🇩',
     'pt': '🇧🇷',
+    'ru': '🇷🇺',
+    'tr': '🇹🇷'
 } satisfies Record<AppLanguage, string>
 const namesMap = {
     'en': 'English',
@@ -26,6 +28,8 @@ const namesMap = {
     'zh': '中文',
     "id": 'Indonesia',
     'pt': 'Brasileiro',
+    'ru': 'русский',
+    'tr': 'Türkçe'
 } satisfies Record<AppLanguage, string>
 
 function getNameOfLocale(locale: AppLanguage) {

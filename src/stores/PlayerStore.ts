@@ -8,6 +8,7 @@ type eventType = "play" | "practice" | "approaching" | "stop"
 type SongTypes = RecordedSong | ComposedSong | null
 type SongTypesNonNull = RecordedSong | ComposedSong
 type PlayerStoreState = {
+    key: number
     song: SongTypes,
     playId: number,
     eventType: eventType,
@@ -18,6 +19,7 @@ type PlayerStoreState = {
 class PlayerStore {
     @observable
     state: PlayerStoreState = {
+        key: 0,
         song: null,
         playId: 0,
         eventType: 'stop',
@@ -72,6 +74,7 @@ class PlayerStore {
             start,
             eventType: 'play',
             end,
+            key: this.state.key + 1,
             playId: this.state.playId + 1
         })
     }
@@ -81,6 +84,7 @@ class PlayerStore {
             start,
             eventType: 'practice',
             end,
+            key: this.state.key + 1,
             playId: this.state.playId + 1
         })
     }
@@ -90,6 +94,7 @@ class PlayerStore {
             start,
             eventType: 'approaching',
             end,
+            key: this.state.key + 1,
             playId: this.state.playId + 1
         })
     }
@@ -99,6 +104,7 @@ class PlayerStore {
             eventType: 'stop',
             start: 0,
             end: 0,
+            key: this.state.key + 1,
             playId: 0
         })
     }
@@ -106,6 +112,7 @@ class PlayerStore {
         this.setState({
             start,
             end,
+            key: this.state.key + 1,
             playId: this.state.playId + 1
         })
     }

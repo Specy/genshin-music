@@ -14,10 +14,10 @@ export const PAGES_VERSIONS = {
     error: makePageVersion('error', 0),
     keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
     partners: makePageVersion('partners', 0),
-    player: makePageVersion('player', 2,
+    player: makePageVersion('player', 3,
         APP_NAME === "Genshin"
-            ? ["Added indonesian and portuguese translations", "⚠️ I know of the Nightwind Horn, it needs a lot of work to implement sustained notes"]
-            : ["Added indonesian and portuguese translations"]
+            ? ["Added sheet looping, note hiding in practice mode, custom visual sheet size, turkish translation", "Work on the Nightwind Horn, needs more time"]
+            : ["Added sheet looping, note hiding in practice mode, custom visual sheet size, turkish translation"]
     ),
     privacy: makePageVersion('privacy', 0),
     sheetVisualizer: makePageVersion('sheetVisualizer', 0),

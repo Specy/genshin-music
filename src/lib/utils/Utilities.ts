@@ -206,7 +206,7 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
             }
         }
     } catch (e) {
-        console.log(e)
+        console.error(e)
         return "none"
     }
     return "none"

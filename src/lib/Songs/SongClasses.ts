@@ -198,6 +198,7 @@ export class ColumnNote {
         return this.layer.test(layerIndex)
     }
 
+
     clone() {
         return new ColumnNote(this.index, this.layer.clone())
     }

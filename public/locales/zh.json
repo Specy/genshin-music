@@ -469,7 +469,7 @@
         "deleted_all_songs_notice": "删除所有歌曲",
         "deleted_all_themes_notice": "删除所有主题",
         "error_validating_song": "验证歌曲“{{song_name}}”时出错",
-        "error_validating_folder": "验证文件夹“{{folder_name}}时出错”",
+        "error_validating_folder": "验证文件夹“{{folder_name}}”时出错”",
         "error_validating_theme": "验证主题“{{theme_name}}”时出错",
         "validating_songs": "正在验证歌曲",
         "validating_folders": "正在验证文件夹",

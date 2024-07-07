@@ -153,7 +153,7 @@ export class AudioProviderClass {
         const dest = node.to ?? this.defaultDestination
         if (dest === "reverb") {
             if (!this.reverbNode) {
-                console.log("Couldn't connect to reverb")
+                console.warn("Couldn't connect to reverb")
                 if (this.audioContext) node.node.connect(this.audioContext.destination)
             } else {
                 node.node.connect(this.reverbNode)

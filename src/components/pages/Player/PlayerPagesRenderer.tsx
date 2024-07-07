@@ -8,12 +8,19 @@ import s from './VisualSheet.module.css'
 
 const layoutType = APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'
 
-function _PlayerVisualSheetRenderer() {
+
+interface PlayerVisualSheetRendererProps {
+    columns: number
+}
+function _PlayerVisualSheetRenderer({columns}: PlayerVisualSheetRendererProps) {
     const pagesState = useObservableObject(playerControlsStore.pagesState)
     const [theme] = useTheme()
     return <>
         {pagesState.pages.length > 0 &&
-            <div className={s['player-chunks-page']}>
+            <div
+                className={s['player-chunks-page']}
+                style={{gridTemplateColumns: `repeat(${columns}, 1fr)`}}
+            >
                 {pagesState.currentPage?.map((e, i) =>
                     <SheetFrame
                         key={i}
@@ -30,4 +37,7 @@ function _PlayerVisualSheetRenderer() {
     </>
 }
 
-export const PlayerVisualSheetRenderer = memo(_PlayerVisualSheetRenderer, () => true)
+export const PlayerVisualSheetRenderer = memo(
+    _PlayerVisualSheetRenderer,
+    (prev, next) => prev.columns === next.columns
+)

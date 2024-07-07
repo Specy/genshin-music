@@ -178,7 +178,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
             if (!song) return
             this.loadSong(song)
         } catch (e) {
-            console.log("Error loading song")
+            console.error("Error loading song")
             console.error(e)
         }
     }
@@ -471,7 +471,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
                     this.addSong(song)
                     return resolve(true)
                 }
-                console.log("song doesn't exist")
+                console.warn("song doesn't exist")
                 song.name = "Untitled"
                 this.updateSong(song)
             }
@@ -806,7 +806,7 @@ class Composer extends Component<ComposerProps, ComposerState> {
             }
 
         } catch (e) {
-            console.log(e)
+            console.error(e)
             logger.error(this.props.t('logs:error_downloading_song'))
         }
     }

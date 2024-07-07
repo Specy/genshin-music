@@ -204,7 +204,7 @@ class KeyBinds {
                         const [shortcutKey, shortcutValue] = inner
                         const key = this.getKeyOfShortcut(pageKey, shortcutValue.name)
                         if (!key) {
-                            console.log("Skipping keybind", pageKey, shortcutKey, shortcutValue)
+                            console.warn("Skipping keybind", pageKey, shortcutKey, shortcutValue)
                             continue
                         }
                         this.setShortcut(pageKey, key, shortcutKey)

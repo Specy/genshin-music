@@ -11,13 +11,13 @@
             "name": "background",
             "css": "background",
             "value": "#394248",
-            "text": "#edeae5"
+            "text": "#eae8e6"
         },
         "primary": {
             "name": "primary",
             "css": "primary",
             "value": "#495466",
-            "text": "#edeae5"
+            "text": "#eae8e6"
         },
         "secondary": {
             "name": "secondary",

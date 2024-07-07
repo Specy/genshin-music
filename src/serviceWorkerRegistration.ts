@@ -62,7 +62,7 @@ export async function register(config?: Config) {
             return registerValidSW(swUrl, config);
         }
     } else {
-        console.log("Canceling service worker registration")
+        console.warn("Canceling service worker registration")
     }
 }
 
@@ -134,7 +134,7 @@ function checkValidServiceWorker(swUrl: string, config: any) {
             }
         })
         .catch(() => {
-            console.log('No internet connection found. App is running in offline mode.');
+            console.warn('No internet connection found. App is running in offline mode.');
         });
 }
 

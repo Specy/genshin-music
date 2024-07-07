@@ -471,7 +471,7 @@
     "deleted_all_songs_notice": "Todas as músicas foram excluídas",
     "deleted_all_themes_notice": "Todos os temas foram excluídos",
     "error_validating_song": "Erro ao validar a música \"{{song_name}}\"",
-    "error_validating_folder": "Erro ao validar a pasta \"{{folder_name}}",
+    "error_validating_folder": "Erro ao validar a pasta \"{{folder_name}}\"",
     "error_validating_theme": "Erro ao validar o tema \"{{theme_name}}\"",
     "validating_songs": "Validando músicas",
     "validating_folders": "Validando pastas",

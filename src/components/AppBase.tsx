@@ -102,7 +102,7 @@ function AppBase() {
                 }
             }
         } catch (e) {
-            console.log(e)
+            console.error(e)
             logger.error(t('logs:storage_persisted_error'), 5000)
         }
         closeWelcomeScreen()

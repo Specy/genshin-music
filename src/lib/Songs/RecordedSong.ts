@@ -215,6 +215,19 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             }
         }
         song.columns = converted
+        //merge duplicates notes
+        for (const col of song.columns) {
+            const grouped = {} as { [key: number]: ColumnNote }
+            for (const notes of col.notes) {
+                if (grouped[notes.index]) {
+                    grouped[notes.index].layer.merge(notes.layer)
+                } else {
+                    grouped[notes.index] = notes
+                }
+            }
+            col.notes = Object.values(grouped)
+        }
+
         const highestLayer = NoteLayer.maxLayer(song.columns.flatMap(column => column.notes.map(note => note.layer)))
         song.instruments = highestLayer.toString(2).split("").map((_, i) => {
             const ins = new InstrumentData()
@@ -307,7 +320,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             }
             return converted
         } catch (e) {
-            console.log(e)
+            console.error(e)
             return null
         }
     }
