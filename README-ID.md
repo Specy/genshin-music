@@ -5,8 +5,8 @@ Repositori ini menyimpan kode dari dua aplikasi musik untuk Genshin dan Sky Cotl
 ![Composer](docs/assets/composer.webp)
 ![Player](docs/assets/player.webp)
 
-# Mencari bantuan untuk penerjemahan
-Saya mencari orang yang dapat membantu saya menerjemahkan aplikasi ini ke bahasa lain, jika Anda tertarik, [lihat diskusi penerjemahan di sini](https://github.com/Specy/genshin-music/discussions/52)
+# Mencari bantuan dalam penerjemahan
+Saya sedang mencari orang yang dapat membantu saya menerjemahkan aplikasi ini ke bahasa lain, jika Anda tertarik, [silakan lihat diskusi terjemahan di sini](https://github.com/Specy/genshin-music/discussions/52)
 
 # Cara menjalankan dalam mode dev
 Anda memerlukan node.js terinstal di komputer Anda, Anda bisa mendapatkannya [disini](https://nodejs.org/en/).
@@ -32,8 +32,8 @@ Aplikasi ini menggunakan tauri untuk bundel desktop yang merupakan tampilan web 
 Anda dapat menemukan dokumentasi aplikasi ini [disini](https://github.com/Specy/genshin-music/wiki)
 Ini mungkin tidak terlalu rinci, tetapi dapat membantu untuk memahami cara kerja formatnya.
 
-# How to contribute
-Make a new issue saying what you want to work on and wait for me to assign the issue. This way we can also communicate whether or it would be a valid issue to fix/add
+# Cara berkontribusi
+Buatlah isu baru dengan menyebutkan apa yang ingin Anda kerjakan dan tunggu saya untuk menugaskan isu tersebut. Dengan cara ini kita juga dapat mengomunikasikan apakah isu tersebut valid untuk diperbaiki/ditambahkan
 
 # README.MD
-<a href="./README.md">English</a> | <a href="./README-ZH.md">简体中文</a> | <a href="./README-JP.md">日本語</a> | <a href="./README-TR.md">Türkçe</a>
+<a href="./README.md">English</a> | <a href="./README-ZH.md">简体中文</a> | <a href="./README-JP.md">日本語</a> | <a href="./README-TR.md">Türkçe</a> | <a href="./README-ID.md">Indonesian</a>
