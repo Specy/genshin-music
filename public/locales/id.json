@@ -300,13 +300,14 @@
             "zen_keyboard_spacing_description": "Jarak antara note"
         },
         "category": {
-            "keyboard": "Keyboard",
-            "metronome": "Metronome",
+            "keyboard": "papan ketik",
+            "metronome": "metronom",
             "layout_settings": "Pengaturan tata letak",
             "player_settings": "Pengaturan pemutar",
             "song_settings": "Pengaturan lagu",
             "composer_settings": "Pengaturan komposer",
             "editor_settings": "Pengaturan editor"
+            "player_practice_settings": "Pengaturan Latihan"
         },
         "select_language": "Pilih bahasa"
     },
