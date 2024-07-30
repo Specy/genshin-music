@@ -305,7 +305,7 @@
             "metronome": "节拍器",
             "layout_settings": "布局设置",
             "player_settings": "演奏器设置",
-            "song_settings": "练习设置",
+            "player_practice_settings": "练习设置",
             "song_settings": "歌曲设置",
             "composer_settings": "编曲器设置",
             "editor_settings": "编辑器设置"
