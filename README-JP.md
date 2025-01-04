@@ -36,5 +36,4 @@ node.jsコンピュータにインストールする必要があり、 [こち�
 やりたいことを記載した新しい質問を追加し、私が質問を割り当てるまで待ちます。このようにして、問題の修正/追加が効果的かどうかを伝えることもできます。
 
 # README.MD
-<a href="./README.md">English</a> | <a href="./README-ZH.md">简体中文</a> | <a href="./README-JP.md">日本語</a> 
-
+<a href="./README.md">English</a> | <a href="./README-ZH.md">简体中文</a> | <a href="./README-JP.md">日本語</a> | <a href="./README-TR.md">Türkçe</a> | <a href="./README-ID.md">Indonesian</a>

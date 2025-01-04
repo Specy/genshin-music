@@ -300,7 +300,8 @@
       "player_settings": "Configurações do reprodutor",
       "song_settings": "Configurações da música",
       "composer_settings": "Configurações do compositor",
-      "editor_settings": "Configurações do editor"
+      "editor_settings": "Configurações do editor",
+      "player_practice_settings": "Configurações de prática"
     },
     "select_language": "Selecionar idioma"
   },
