@@ -65,7 +65,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--accent);
+    background-color: var(--selected-note-background);
     color: var(--accent-text);
 }
 

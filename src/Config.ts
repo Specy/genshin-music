@@ -48,7 +48,9 @@ export const INSTRUMENTS = APP_NAME === "Genshin"
         "Vintage-Lyre",
         "Zither",
         "Old-Zither",
-        "DunDun"
+        "Ukulele",
+        "DunDun",
+        "DjemDjemDrum"
     ] as const
     : [
         "Piano",
@@ -144,6 +146,7 @@ export const INSTRUMENT_NOTE_LAYOUT_KINDS = {
     skySFX6: ["", "", "", "", "", ""],
     skySFX14: ["C#", "E", "G", "A#", "C#", "E", "G", "A#", "C#", "E", "G", "A#", "C#", "E"],
     genshinVintageLyre: ["C", "Db", "Eb", "F", "G", "Ab", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
+    genshinUkulele: ["C", "Db", "Eb", "F", "G", "Ab", "G", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"]
 
 } as const
 Object.freeze(NOTE_SCALE)
@@ -263,13 +266,21 @@ export const LAYOUT_ICONS_KINDS = {
     defaultGenshin: "do re mi fa so la ti do re mi fa so la ti do re mi fa so la ti".split(" ") as NoteImage[],
     genshinVintageLyre: "do reb mib fa so lab tib do re mib fa so la tib do re mib fa so la tib".split(" ") as NoteImage[],
 }
-export type NoteNameType = 'Note name' | 'Keyboard layout' | 'Your Keyboard layout' | 'Do Re Mi' | 'ABC' | 'No Text' | 'Playstation' | 'Switch'
+export type NoteNameType =
+    'Note name'
+    | 'Keyboard layout'
+    | 'Your Keyboard layout'
+    | 'Do Re Mi'
+    | 'ABC'
+    | 'No Text'
+    | 'Playstation'
+    | 'Switch'
 
 export const NOTE_NAME_TYPES: NoteNameType[] = APP_NAME === "Genshin"
     ? [
         "Note name",
         "Keyboard layout",
-         "Your Keyboard layout",
+        "Your Keyboard layout",
         "Do Re Mi",
         "ABC",
         "No Text"
@@ -308,7 +319,7 @@ const skySfx14 = {
     midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
 }
 
-export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
+export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = APP_NAME === "Genshin" ? {
     Lyre: {
         notes: 21,
         family: "strings",
@@ -352,21 +363,38 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
         midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin,
     },
+    "Ukulele": {
+        notes: 21,
+        fill: '#4d719a',
+        family: "strings",
+        midiName: "pizzicato strings",
+        clickColor: '#6586d9',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinUkulele,
+        layout: LAYOUT_KINDS.defaultGenshin,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin
+    },
     DunDun: {
         notes: 8,
         family: "percussive",
         midiName: "synth drum",
-        ...(APP_NAME === "Genshin" ? {
-            fill: '#F99C55',
-            clickColor: '#f5a262'
-        } : {}),
+        fill: '#F99C55',
+        clickColor: '#f5a262',
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
         layout: LAYOUT_KINDS.defaultDrums,
-        icons: APP_NAME === 'Genshin'
-            ? LAYOUT_ICONS_KINDS.defaultGenshinDrums
-            : LAYOUT_ICONS_KINDS.defaultSkyDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshinDrums,
         midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
     },
+    DjemDjemDrum: {
+        notes: 8,
+        family: "percussive",
+        midiName: "synth drum",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshinDrums,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
+    },
+} : {
     "SFX_Dance": {
         notes: 6,
         family: "percussive",
@@ -609,9 +637,17 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = {
         layout: LAYOUT_KINDS.defaultSky,
         icons: LAYOUT_ICONS_KINDS.defaultSky,
         midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
-    }
+    },
+    DunDun: {
+        notes: 8,
+        family: "percussive",
+        midiName: "synth drum",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultDrums,
+        layout: LAYOUT_KINDS.defaultDrums,
+        icons: LAYOUT_ICONS_KINDS.defaultSkyDrums,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultDrums,
+    },
 }
-
 type InstrumentsDataKeys = keyof typeof BaseinstrumentsData
 type InstrumentsDataProps = {
     [key in InstrumentsDataKeys]: InstrumentDataType

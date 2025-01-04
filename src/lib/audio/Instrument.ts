@@ -74,7 +74,7 @@ export class Instrument {
                 keyboard: noteName,
                 mobile: this.layouts.mobile[i]
             }
-            const url = `${BASE_PATH}/assets/audio/${this.name}/${i}.mp3`
+            const url = `${BASE_PATH}/assets/audio/${APP_NAME.toLowerCase()}/${this.name}/${i}.mp3`
             const note = new ObservableNote(i, noteNames, url, this.instrumentData.baseNotes[i], this.instrumentData.midiNotes[i] ?? 0)
             note.instrument = this.name
             note.noteImage = this.instrumentData.icons[i]

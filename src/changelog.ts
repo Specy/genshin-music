@@ -1,3 +1,5 @@
+import {APP_NAME} from "$config";
+
 type Update = {
     version: string
     title: string
@@ -6,6 +8,15 @@ type Update = {
 }
 
 export const CHANGELOG: Update[] = [
+    {
+        version: '3.6.0',
+        title: "Multi color rows" + APP_NAME === 'Genshin' ? ' and new instruments' : '',
+        date: new Date('2025-01-04'),
+        changes: [
+            "In the sheet visualizer you can now select the rows to have different background colors",
+            ...(APP_NAME === 'Genshin' ? ["Added Ukulele and Djen Djen Drum"] : []),
+        ]
+    },
     {
         version: '3.5.0',
         title: "Loop, Visual sheets settings, Turkish translation",

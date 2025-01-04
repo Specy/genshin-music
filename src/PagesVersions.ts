@@ -14,13 +14,13 @@ export const PAGES_VERSIONS = {
     error: makePageVersion('error', 0),
     keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
     partners: makePageVersion('partners', 0),
-    player: makePageVersion('player', 3,
+    player: makePageVersion('player', 4,
         APP_NAME === "Genshin"
-            ? ["Added sheet looping, note hiding in practice mode, custom visual sheet size, turkish translation", "Work on the Nightwind Horn, needs more time"]
-            : ["Added sheet looping, note hiding in practice mode, custom visual sheet size, turkish translation"]
+            ? ["Added Ukulele and Djen Djen Drum"]
+            : undefined
     ),
     privacy: makePageVersion('privacy', 0),
-    sheetVisualizer: makePageVersion('sheetVisualizer', 0),
+    sheetVisualizer: makePageVersion('sheetVisualizer', 1, ["you can now select the rows to have different background colors"]),
     theme: makePageVersion('theme', 0),
     transfer: makePageVersion('transfer', 0),
     umaMode: makePageVersion('umaMode', 0),
