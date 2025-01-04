@@ -637,9 +637,11 @@ export const i18n_zh = {
     instruments: {
         "Lyre": "风物之诗琴",
         "Vintage-Lyre": "老旧的诗琴",
-        "Zither": "之琴",
+        "Zither": "镜花琴",
         "Old-Zither": "老旧的镜花",
+        "Ukulele": "尤克里里"
         "DunDun": "绮筵之鼓",
+        "DjemDjem-Drum": "聚聚鼓"
         "Piano": "钢琴",
         "Contrabass": "低音大提琴",
         "Guitar": "吉他",
