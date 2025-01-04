@@ -16,7 +16,7 @@ export const PAGES_VERSIONS = {
     partners: makePageVersion('partners', 0),
     player: makePageVersion('player', 4,
         APP_NAME === "Genshin"
-            ? ["Added Ukulele and Djen Djen Drum"]
+            ? ["Added Ukulele and Djem Djem Drum"]
             : undefined
     ),
     privacy: makePageVersion('privacy', 0),

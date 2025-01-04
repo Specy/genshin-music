@@ -14,7 +14,7 @@ export const CHANGELOG: Update[] = [
         date: new Date('2025-01-04'),
         changes: [
             "In the sheet visualizer you can now select the rows to have different background colors",
-            ...(APP_NAME === 'Genshin' ? ["Added Ukulele and Djen Djen Drum"] : []),
+            ...(APP_NAME === 'Genshin' ? ["Added Ukulele and Djem Djem Drum"] : []),
         ]
     },
     {

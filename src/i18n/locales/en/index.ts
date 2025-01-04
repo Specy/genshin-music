@@ -753,6 +753,7 @@ export const i18n_en = {
         "Vintage-Lyre": "Vintage Lyre",
         "Zither": "Zither",
         "Old-Zither": "Old Zither",
+        "DjemDjemDrum": "DjemDjem Drum",
         "DunDun": "DunDun",
         "Piano": "Piano",
         "Contrabass": "Contrabass",
