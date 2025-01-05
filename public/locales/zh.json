@@ -389,7 +389,7 @@
         "invalid_song_to_visualize": "无效歌曲，未创作或录制",
         "error_converting_to_visual_song_try_convert_in_recorded": "将歌曲转换为视觉歌曲时出错，尝试先转换为录制的歌曲...",
         "error_converting_to_visual_song": "将歌曲转换为视觉歌曲时出错",
-        "Different color rows": "用颜色区分各音轨"
+        "Different color rows": "各行使用不同颜色"
     },
     "player": {
         "finish_recording": "结束录制",
