@@ -33,6 +33,7 @@ export default function SheetVisualizer() {
     const [hasText, setHasText] = useState(false)
     const [songAsText, setSongAstext] = useState('')
     const [flattenSpaces, setFlattenSpaces] = useState(false)
+    const [multiColor, setMultiColor] = useState(false)
     const [keyboardLayout, setKeyboardLayout] = useState<NoteNameType>(APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC')
     const ref = useRef<HTMLDivElement>(null)
 
@@ -93,9 +94,8 @@ export default function SheetVisualizer() {
         <PageMetadata text={`${t('home:sheet_visualizer_name')}${currentSong ? ` - ${currentSong.name}` : ""}`}
                       description='Learn a sheet in a visual way, convert the song into text format or print it as pdf'/>
         <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
-            <div className={`${s['visualizer-buttons-wrapper']} noprint`}>
+            <div className={`${s['visualizer-buttons-wrapper']} noprint`} style={{borderBottom: 'solid 1px var(--secondary)', paddingBottom: '1rem'}}>
                 <Column gap={'0.5rem'}>
-
                     <Row align={'center'} gap={'0.5rem'}>
                         <div>{t('note_names')}</div>
                         <Switch checked={hasText} onChange={setHasText}/>
@@ -111,6 +111,10 @@ export default function SheetVisualizer() {
                     <Row align={'center'} gap={'0.5rem'}>
                         <div>{t('merge_empty_spaces')}</div>
                         <Switch checked={flattenSpaces} onChange={setFlattenSpaces}/>
+                    </Row>
+                    <Row align={'center'} gap={'0.5rem'}>
+                        <div>{t('different_color_rows')}</div>
+                        <Switch checked={multiColor} onChange={setMultiColor}/>
                     </Row>
                 </Column>
 
@@ -134,7 +138,7 @@ export default function SheetVisualizer() {
             </h1>
             <div style={{width: '100%'}} className='noprint'>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <h2 className='text-ellipsis'>
+                    <h2 className='text-ellipsis' style={{marginTop: '0.8rem'}}>
                         {currentSong ? currentSong.name : t('no_song_selected')}
                     </h2>
                     {currentSong &&
@@ -160,6 +164,7 @@ export default function SheetVisualizer() {
                         chunk={chunk}
                         rows={3}
                         theme={theme}
+                        multiColorRows={multiColor}
                         hasText={hasText}
                         keyboardLayout={keyboardLayout}
                     />

@@ -414,6 +414,7 @@ export const i18n_en = {
         sheet_visualizer_instructions: `Select a song from the menu on the left.
                     Remember that you can learn a song with the interactive
                     practice tool in the Player`,
+        different_color_rows: "Different color rows",
         per_row: 'Per row', //elements per row
         invalid_song_to_visualize: 'Invalid song, it is not composed or recorded',
         error_converting_to_visual_song_try_convert_in_recorded: 'Error converting song to visual song, trying to convert to recorded song first...',
@@ -752,9 +753,11 @@ export const i18n_en = {
         "Vintage-Lyre": "Vintage Lyre",
         "Zither": "Zither",
         "Old-Zither": "Old Zither",
+        "DjemDjemDrum": "DjemDjem Drum",
         "DunDun": "DunDun",
         "Piano": "Piano",
         "Contrabass": "Contrabass",
+        "Ukulele": "Ukulele",
         "Guitar": "Guitar",
         "LightGuitar": "Light Guitar",
         "Harp": "Harp",

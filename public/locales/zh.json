@@ -243,6 +243,14 @@
             "player_note_animation_description": "切换音符动画（会降低性能）",
             "player_show_visual_sheet": "显示键位表",
             "player_show_visual_sheet_description": "在键盘上方显示键位表（可能会降低性能）",
+            "player_number_of_visual_rows": "虚拟键位表的行数",
+            "player_number_of_visual_rows_description": "显示更多的虚拟键位表的行数（可能会导致延迟）",
+            "player_number_of_visual_columns": "虚拟键位表的列数",
+            "player_number_of_visual_columns_description": "显示更多的虚拟键位表的列数（可能会导致延迟）",
+            "player_loop_practice": "在练习模式下选择歌曲循环",
+            "player_loop_practice_description": "当你在练习模式下到歌曲的结尾时，它将循环回到开始",
+            "player_hide_practice_notes": "在练习模式下隐藏文字",
+            "player_hide_practice_notes_description": "在练习模式下，隐藏文字以便测试你的记忆力，虚拟键位表仍然可见",
             "vsrg_composer_keys": "按键数",
             "vsrg_composer_keys_description": "歌曲包含的音符数",
             "vsrg_composer_bpm": "节拍数",
@@ -297,6 +305,7 @@
             "metronome": "节拍器",
             "layout_settings": "布局设置",
             "player_settings": "演奏器设置",
+            "player_practice_settings": "练习设置",
             "song_settings": "歌曲设置",
             "composer_settings": "编曲器设置",
             "editor_settings": "编辑器设置"
@@ -379,7 +388,8 @@
         "per_row": "每行",
         "invalid_song_to_visualize": "无效歌曲，未创作或录制",
         "error_converting_to_visual_song_try_convert_in_recorded": "将歌曲转换为视觉歌曲时出错，尝试先转换为录制的歌曲...",
-        "error_converting_to_visual_song": "将歌曲转换为视觉歌曲时出错"
+        "error_converting_to_visual_song": "将歌曲转换为视觉歌曲时出错",
+        "different_color_rows": "各行使用不同颜色"
     },
     "player": {
         "finish_recording": "结束录制",
@@ -679,6 +689,8 @@
         "Zither": "镜花之琴",
         "Old-Zither": "镜花之琴（旧版）",
         "DunDun": "豪鼓",
+        "Ukulele": "悠可琴",
+        "DjemDjemDrum": "聚聚鼓",
         "Piano": "钢琴",
         "Contrabass": "屁琴",
         "Guitar": "吉他",
