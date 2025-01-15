@@ -5,15 +5,14 @@
         "loading_instruments": "Memuat instrumen...",
         "loading_song": "Memuat lagu...",
         "could_not_find_song": "Tidak dapat menemukan lagu",
+        "error_loading_theme": "Terjadi kesalahan saat memuat tema",
         "error_loading_instrument": "Terjadi kesalahan saat memuat instrumen",
-        "error_loading_song": "Terjadi kesalahan saat memuat lagu",
-        "error_loading_theme": "Terjadi kesalahan saat memuat tema kesalahan saat memuat tema",
         "error_opening_file": "Terjadi kesalahan saat membuka file ini",
         "error_downloading_audio": "Terjadi kesalahan saat mengunduh audio, mungkin lagunya terlalu panjang?",
         "song_downloaded": "Lagu terunduh",
         "error_downloading_song": "Terjadi kesalahan saat mengunduh lagu",
         "error_downloading_songs": "Terjadi kesalahan saat mengunduh lagu",
-        "error_importing_file": "Terjadi kesalahan saat mengimpor file \"{{file_name}}}\"",
+        "error_importing_file": "Terjadi kesalahan saat mengimpor file \"{{file_name}}\"",
         "error_importing_file_generic": "Terjadi kesalahan saat mengimpor file",
         "error_importing_invalid_format": "Terjadi kesalahan mengimpor file, format tidak valid",
         "song_backup_downloaded": "Cadangan lagu terunduh",
@@ -38,7 +37,10 @@
         "error_importing_unknown_file": "Terjadi kesalahan saat mengimpor file yang tak diketahui {{file_name}}",
         "imported_theme": "Tema \"{{theme_name}}\" diimpor",
         "imported_folder": "Folder \"{{folder_name}}\" diimpor",
-        "imported_song": "Lagu {{song_type}} diimpor dengan nama lagu \"{{song_name}}\""
+        "imported_song": "Lagu {{song_type}} diimpor dengan nama lagu \"{{song_name}}\"",
+        "error_loading_song": "Terjadi kesalahan saat memuat lagu",
+        "changing_language": "Mengubah bahasa...",
+        "error_changing_language": "Terjadi kesalahan saat mengubah bahasa"
     },
     "question": {
         "unsaved_song_save": "Anda memiliki perubahan yang belum disimpan pada lagu: \"{{song_name}}\" ingin menyimpan sekarang? PERUBAHAN YANG BELUM DISIMPAN AKAN HILANG",
@@ -100,8 +102,8 @@
         "border": "Batas",
         "line": "Garis",
         "circle": "Lingkaran",
-        "reset": "Atur ulang",
         "add_new_instrument": "Tambahkan instrumen baru",
+        "reset": "Atur ulang",
         "new": "Baru"
     },
     "home": {
@@ -150,7 +152,7 @@
     "menu": {
         "close_menu": "Tutup menu",
         "toggle_menu": "Beralih menu",
-        "open_settings_menu": "Beralih menu",
+        "open_settings_menu": "Buka menu pengaturan",
         "open_home_menu": "Buka menu beranda",
         "open_songs_menu": "Buka menu lagu",
         "open_library_menu": "Buka menu library",
@@ -195,6 +197,7 @@
         "memory_not_persisted": "Penyimpanan tidak dipertahankan",
         "memory_persisted_description": " Data Anda akan tersimpan di browser, browser tidak akan secara otomatis menghapusnya.\n                            Selalu pastikan untuk mengunduh cadangan sesekali, terutama ketika Anda tidak akan menggunakan aplikasi\n                            untuk waktu yang lama",
         "memory_not_persisted_description": "Browser tidak memungkinkan untuk menyimpan data secara persisten, mungkin saja Anda akan kehilangan\n                            data\n                            ketika cache dihapus secara otomatis. Untuk mendapatkan penyimpanan yang persisten, tambahkan aplikasi ke halaman\n                            beranda.\n                            Jika masih tidak berhasil, pastikan Anda melakukan pencadangan sesering mungkin",
+        "select_language": "Pilih Bahasa",
         "props": {
             "composer_bpm": "Bpm",
             "composer_bpm_description": "Ketukan per menit, kecepatan lagu. Biasanya BPM di dalam aplikasi harus 4 kali BPM lagu yang Anda coba buat",
@@ -229,14 +232,6 @@
             "player_metronome_volume": "Volume metronom",
             "player_metronome_volume_description": "Volume dari sebuah metronom",
             "player_reverb": "Gema (mode gua)",
-            "player_number_of_visual_rows": "Jumlah baris dalam lembar visual",
-            "player_number_of_visual_columns": "Jumlah kolom dalam lembar visual",
-            "player_loop_practice": "Pemilihan lagu loop dalam mode latihan",
-            "player_hide_practice_notes": "Sembunyikan note dalam mode latihan",
-            "player_loop_practice_description": "Ketika Anda mencapai akhir nada yang dipilih dalam lagu dalam mode latihan, lagu akan mengulang kembali ke awal",
-            "player_number_of_visual_columns_description": "Jumlah kolom dalam lembar visual, lebih banyak kolom dapat menyebabkan lag",
-            "player_number_of_visual_rows_description": "Jumlah baris dalam lembar visual, lebih banyak baris dapat menyebabkan lag",
-            "player_hide_practice_notes_description": "Selama mode latihan, sembunyikan note agar Anda dapat menguji ingatan Anda, lembar visual akan tetap terlihat",
             "player_reverb_description": "Membuat Anda terdengar seperti berada di dalam gua",
             "player_note_name_type": "Jenis nama note",
             "player_note_name_type_description": "Jenis teks yang akan ditulis pada note",
@@ -250,6 +245,14 @@
             "player_note_animation_description": "mengatur animasi note (akan mengurangi kinerja)",
             "player_show_visual_sheet": "Tampilkan lembar visual",
             "player_show_visual_sheet_description": "Tampilkan lembar visual di atas keyboard (dapat mengurangi kinerja)",
+            "player_number_of_visual_rows": "Jumlah baris dalam lembar visual",
+            "player_number_of_visual_rows_description": "Jumlah baris dalam lembar visual, lebih banyak baris dapat menyebabkan lag",
+            "player_number_of_visual_columns": "Jumlah kolom dalam lembar visual",
+            "player_number_of_visual_columns_description": "Jumlah kolom dalam lembar visual, lebih banyak kolom dapat menyebabkan lag",
+            "player_loop_practice": "Pemilihan lagu loop dalam mode latihan",
+            "player_loop_practice_description": "Ketika Anda mencapai akhir nada yang dipilih dalam lagu dalam mode latihan, lagu akan mengulang kembali ke awal",
+            "player_hide_practice_notes": "Sembunyikan note dalam mode latihan",
+            "player_hide_practice_notes_description": "Selama mode latihan, sembunyikan note agar Anda dapat menguji ingatan Anda, lembar visual akan tetap terlihat",
             "vsrg_composer_keys": "Kunci",
             "vsrg_composer_keys_description": "Berapa banyak note yang dimiliki lagu tersebut, mengurangi nilai ini akan menghapus nada pada note tambahan",
             "vsrg_composer_bpm": "Bpm",
@@ -304,12 +307,11 @@
             "metronome": "metronom",
             "layout_settings": "Pengaturan tata letak",
             "player_settings": "Pengaturan pemutar",
+            "player_practice_settings": "Pengaturan Latihan",
             "song_settings": "Pengaturan lagu",
             "composer_settings": "Pengaturan komposer",
             "editor_settings": "Pengaturan editor"
-            "player_practice_settings": "Pengaturan Latihan"
-        },
-        "select_language": "Pilih bahasa"
+        }
     },
     "zen_keyboard": {
         "loading_instrument": "Memuat instrumen: {{instrument}}..."
@@ -388,7 +390,8 @@
         "per_row": "Per baris",
         "invalid_song_to_visualize": "Lagu tidak valid, tidak disusun atau direkam",
         "error_converting_to_visual_song_try_convert_in_recorded": "Terjadi kesalahan saat mengonversi lagu ke lagu visual, mencoba mengonversi ke lagu yang direkam terlebih dahulu...",
-        "error_converting_to_visual_song": "Terjadi kesalahan saat mengonversi lagu menjadi lagu visual"
+        "error_converting_to_visual_song": "Terjadi kesalahan saat mengonversi lagu menjadi lagu visual",
+        "different_color_rows": "Baris warna berbeda"
     },
     "player": {
         "finish_recording": "Selesai merekam",
@@ -404,7 +407,10 @@
         "approach_mode_description": "Putar lagu dalam mode Pendekatan \"{{song_name}}\"",
         "song_search_no_results": "Tidak ada hasils",
         "song_search_description": "Di sini Anda dapat menemukan lagu-lagu untuk dipelajari, lagu-lagu tersebut disediakan oleh library sky-music.",
-        "midi_or_audio_import_redirect_warning": "Anda tidak dapat langsung mengimpor format file ini. File MIDI, Video dan Audio perlu dikonversi di komposer, apakah Anda ingin membukanya?"
+        "midi_or_audio_import_redirect_warning": "Anda tidak dapat langsung mengimpor format file ini. File MIDI, Video dan Audio perlu dikonversi di komposer, apakah Anda ingin membukanya?",
+        "loop": "Putar ulang",
+        "loop_tooltip": "Putar ulang lagu",
+        "hide_practice_notes": "Sembunyikan note dalam mode latihan"
     },
     "keybinds": {
         "already_used_keybind": "Tata keyboard ini sudah digunakan oleh note \"{{note_name}}\"",
@@ -688,6 +694,8 @@
         "Zither": "Zither",
         "Old-Zither": "Old Zither",
         "DunDun": "DunDun",
+        "Ukulele": "Ukulele",
+        "DjemDjemDrum": "DjemDjem Drum",
         "Piano": "Piano",
         "Contrabass": "Contrabass",
         "Guitar": "Guitar",
