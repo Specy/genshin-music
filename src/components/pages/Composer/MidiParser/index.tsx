@@ -243,7 +243,7 @@ class MidiImport extends Component<MidiImportProps, MidiImportState> {
             })
         })
         const sorted = notes.sort((a, b) => a.time - b.time)
-        const bpmToMs = Math.floor(60000 / bpm)
+        const bpmToMs = 60000 / bpm
         const groupedNotes: MidiNote[][] = []
         while (sorted.length > 0) {
             const row = [sorted.shift() as MidiNote]

@@ -256,7 +256,7 @@ function getPitchChanger(pitch: Pitch) {
 }
 
 function calculateSongLength(columns: NoteColumn[], bpm: number, end: number) {
-    const msPerBeat = Math.floor(60000 / bpm)
+    const msPerBeat = 60000 / bpm
     let totalLength = 0
     let currentLength = 0
     let increment = 0

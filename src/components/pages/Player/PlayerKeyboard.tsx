@@ -14,6 +14,7 @@ import {NoteLayer} from '$lib/Songs/Layer'
 import {subscribeObeservableObject, subscribeObservableArray} from '$lib/Hooks/useObservable'
 import {createKeyboardListener, createShortcutListener, ShortcutListener} from '$stores/KeybindsStore'
 import {i18n} from "$i18n/i18n";
+import {Song} from "$lib/Songs/Song";
 
 interface KeyboardPlayerProps {
     data: {
@@ -174,7 +175,7 @@ export default class KeyboardPlayer extends Component<KeyboardPlayerProps, Keybo
         for (let i = start; i < end && i < song.notes.length; i++) {
             const note = song.notes[i]
             const obj = new ApproachingNote({
-                time: Math.floor((note.time - startOffset) / speedChanger.value + startDelay),
+                time: Song.roundTime((note.time - startOffset) / speedChanger.value + startDelay),
                 index: note.index
             })
             notes.push(obj)
