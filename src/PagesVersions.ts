@@ -13,7 +13,7 @@ export const PAGES_VERSIONS = {
     donate: makePageVersion('donate', 0),
     error: makePageVersion('error', 0),
     keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
-    partners: makePageVersion('partners', 0),
+    partners: makePageVersion('partners', 1, ['Added new partner!']),
     player: makePageVersion('player', 5,
         APP_NAME === "Genshin"
             ? ["Added Ukulele and Djem Djem Drum", 'Improved timing']

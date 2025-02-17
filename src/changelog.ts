@@ -9,6 +9,14 @@ type Update = {
 
 export const CHANGELOG: Update[] = [
     {
+        version: '3.6.1',
+        title: "Improved timing",
+        date: new Date('2025-02-17'),
+        changes: [
+            "Improved timing in the whole app, songs might play slightly faster now as they are more accurately following the BPM. You might need to decrese the BPM, especially for songs that have it very high."
+        ]
+    },
+    {
         version: '3.6.0',
         title: "Multi color rows" + APP_NAME === 'Genshin' ? ' and new instruments' : '',
         date: new Date('2025-01-04'),
