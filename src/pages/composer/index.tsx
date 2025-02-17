@@ -27,7 +27,7 @@ import type {KeyboardNumber} from '$lib/Providers/KeyboardProvider/KeyboardTypes
 import {AudioProvider} from '$lib/Providers/AudioProvider';
 import {CanvasTool} from '$cmp/pages/Composer/CanvasTool';
 import {settingsService} from '$lib/Services/SettingsService';
-import {SerializedSong} from '$lib/Songs/Song';
+import {SerializedSong, Song} from '$lib/Songs/Song';
 import {songsStore} from '$stores/SongsStore';
 import {InstrumentControls} from '$cmp/pages/Composer/InstrumentControls';
 import {AppButton} from '$cmp/shared/Inputs/AppButton';
@@ -589,9 +589,9 @@ class Composer extends Component<ComposerProps, ComposerState> {
                 while (this.state.isPlaying) {
                     const {song, settings} = this.state
                     const tempoChanger = song.selectedColumn.getTempoChanger().changer
-                    const msPerBeat = Math.floor((60000 / settings.bpm.value * tempoChanger) + delayOffset)
+                    const msPerBeat = (60000 / settings.bpm.value * tempoChanger) + delayOffset
                     previousTime = Date.now()
-                    await delay(msPerBeat)
+                    await delay(Song.roundTime(msPerBeat))
                     if (!this.state.isPlaying || !this.mounted) break
                     delayOffset = previousTime + msPerBeat - Date.now()
                     const lookaheadTime = settings.lookaheadTime.value / 1000

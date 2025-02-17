@@ -78,6 +78,11 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
         return to
     }
 
+
+    static roundTime(time: number){
+        return Math.round(time)
+    }
+
     abstract serialize(): T2
 
     abstract clone(): T

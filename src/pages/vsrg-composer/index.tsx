@@ -423,7 +423,7 @@ class VsrgComposer extends Component<VsrgComposerProps, VsrgComposerState> {
     }
     calculateSnapPoints = () => {
         const {vsrg, snapPoint} = this.state
-        const amount = vsrg.duration / Math.floor(60000 / vsrg.bpm) * snapPoint
+        const amount = vsrg.duration / (60000 / vsrg.bpm) * snapPoint
         const snapPointDuration = vsrg.duration / amount
         const snapPoints = new Array(Math.floor(amount)).fill(0).map((_, i) => i * snapPointDuration)
         this.setState({snapPoints, snapPointDuration})

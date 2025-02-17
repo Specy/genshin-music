@@ -2,6 +2,7 @@ import {PageMetadata} from '$cmp/shared/Miscellaneous/PageMetadata'
 import {DefaultPage} from '$cmp/shared/pagesLayout/DefaultPage'
 import partner from 'assets/images/partners/windsong-db.jpg'
 import skyMusicianNetwork from 'assets/images/partners/sky-musician-network.jpg'
+import skyMemories from 'assets/images/partners/theskymemories.jpg'
 import Image, {StaticImageData} from 'next/image'
 import s from './Partners.module.css'
 import Link from "next/link";
@@ -16,23 +17,6 @@ export default function Partners() {
         <PageMetadata text={t('partners_name')}
                       description='Learn about our partners who helped the development and to make the app more famous'/>
         <div className={s['partner-wrapper']}>
-            <Partner
-                name='EASYPLAY 1s'
-                description='The perfect keyboard for Sky Music Nightly'
-            >
-                <Link
-                    href={'https://summertones-1.kckb.me/18287a61'}
-                    style={{width: '18.8rem', height: '10.5rem', overflow: 'hidden', borderRadius: '0.3rem'}}
-                    target='_blank'
-                    rel='noreferrer'
-                >
-                    <img
-                        src={BASE_PATH + '/assets/blog/easyplay.webp'}
-                        style={{width: '100%', objectFit: 'cover', height: 'auto'}}
-
-                    />
-                </Link>
-            </Partner>
             <Partner
                 name='Specy'
                 description='The youtube channel that collects videos created by users of this app'
@@ -73,12 +57,13 @@ export default function Partners() {
 
             </Partner>
             <Partner
-                name='ChaconneScott_ACG'
-                description='YouTube pianist and arranger, features Genshin Impact OST'
+                name={'The Sky Memories'}
+                description={'An unofficial sanctuary to preserve all your sky memories'}
             >
-                <Iframe
-                    src='https://www.youtube.com/embed/ltE8zfGfUVo'
-                    title="ChaconneScott_ACG"
+                <PartnerImg
+                    to={'https://theskymemories.com/'}
+                    img={skyMemories}
+                    alt={'The Sky Memories'}
                 />
             </Partner>
         </div>

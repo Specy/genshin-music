@@ -145,13 +145,13 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
         const recordedSong = new RecordedSong(this.name)
         recordedSong.bpm = this.bpm
         recordedSong.pitch = this.pitch
-        const msPerBeat = Math.floor(60000 / this.bpm)
+        const msPerBeat = 60000 / this.bpm
         let totalTime = offset
         this.columns.forEach(column => {
             column.notes.forEach(note => {
                 recordedSong.notes.push(new RecordedNote(note.index, totalTime, note.layer.clone()))
             })
-            totalTime += Math.floor(msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer)
+            totalTime += Song.roundTime(msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer)
         })
         recordedSong.instruments = this.instruments.map(ins => ins.clone())
 
@@ -225,7 +225,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
             songNotes: []
         }
         const convertedNotes: OldFormatNoteType[] = []
-        const msPerBeat = Math.floor(60000 / song.bpm)
+        const msPerBeat = 60000 / song.bpm
         let totalTime = 100
         song.columns.forEach(column => {
             column[1].forEach(note => {
@@ -240,6 +240,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
                 }
                 convertedNotes.push(noteObj)
             })
+            //old format uses floor instead of rounding
             totalTime += Math.floor(msPerBeat * TEMPO_CHANGERS[column[0]].changer)
         })
         song.songNotes = convertedNotes

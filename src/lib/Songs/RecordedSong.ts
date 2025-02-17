@@ -133,7 +133,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
 
     toComposedSong = (precision = 4) => {
-        const bpmToMs = Math.floor(60000 / this.bpm)
+        const bpmToMs = 60000 / this.bpm
         const song = new ComposedSong(this.name, this.instruments.map(ins => ins.name))
         song.bpm = this.bpm
         song.pitch = this.pitch
@@ -178,14 +178,20 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             converted = columns
         } else {
             const grouped = groupByNotes(notes, bpmToMs / 9)
-            const combinations = [bpmToMs, Math.floor(bpmToMs / 2), Math.floor(bpmToMs / 4), Math.floor(bpmToMs / 8)]
+            const combinations = [
+                //uses lax flooring instead of rounding to merge columns together, as the original format is not precise and uses flooring
+                Math.floor(bpmToMs),
+                Math.floor(bpmToMs / 2),
+                Math.floor(bpmToMs / 4),
+                Math.floor(bpmToMs / 8)
+            ]
             for (let i = 0; i < grouped.length; i++) {
                 const column = new NoteColumn()
                 column.notes = grouped[i].map(note => {
                     return new ColumnNote(note.index, note.layer.clone())
                 })
                 const next = grouped[i + 1] || [[0, 0, 0]]
-                const paddingColumns = []
+                const paddingColumns = [] as number[]
                 let difference = next[0].time - grouped[i][0].time
                 while (difference >= combinations[3]) {
                     if (difference / combinations[0] >= 1) {
