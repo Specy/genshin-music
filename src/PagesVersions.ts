@@ -8,7 +8,7 @@ export const PAGES_VERSIONS = {
     backup: makePageVersion('backup', 0),
     blog: makePageVersion('blog', 0),
     changelog: makePageVersion('changelog', 0),
-    composer: makePageVersion('composer', 2, ["Improved timin"]),
+    composer: makePageVersion('composer', 2, ["Improved timing"]),
     deleteCache: makePageVersion('deleteCache', 0),
     donate: makePageVersion('donate', 0),
     error: makePageVersion('error', 0),
