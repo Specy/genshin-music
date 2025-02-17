@@ -240,7 +240,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
                 }
                 convertedNotes.push(noteObj)
             })
-            totalTime += Song.roundTime(msPerBeat * TEMPO_CHANGERS[column[0]].changer)
+            //old format uses floor instead of rounding
+            totalTime += Math.floor(msPerBeat * TEMPO_CHANGERS[column[0]].changer)
         })
         song.songNotes = convertedNotes
         return song

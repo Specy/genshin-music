@@ -178,7 +178,13 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             converted = columns
         } else {
             const grouped = groupByNotes(notes, bpmToMs / 9)
-            const combinations = [bpmToMs, bpmToMs / 2, bpmToMs / 4, bpmToMs / 8]
+            const combinations = [
+                //uses lax flooring instead of rounding to merge columns together, as the original format is not precise and uses flooring
+                Math.floor(bpmToMs),
+                Math.floor(bpmToMs / 2),
+                Math.floor(bpmToMs / 4),
+                Math.floor(bpmToMs / 8)
+            ]
             for (let i = 0; i < grouped.length; i++) {
                 const column = new NoteColumn()
                 column.notes = grouped[i].map(note => {

@@ -2,15 +2,17 @@ import type {Tauri} from "$types/TauriTypes"
 import type {NoteImage} from "$cmp/shared/SvgNotes"
 
 export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-export const APP_VERSION = '3.6.0' as const
+export const APP_VERSION = '3.6.1' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
           - Added different color rows in sheet visualizer
           - Added Ukulele and Djem Djem Drum
+          - Improved music timing
     `
     : `
-          - Added different color rows in sheet visualizer          
+          - Added different color rows in sheet visualizer      
+          - Improved music timing    
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
