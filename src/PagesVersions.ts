@@ -14,10 +14,10 @@ export const PAGES_VERSIONS = {
     error: makePageVersion('error', 0),
     keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
     partners: makePageVersion('partners', 1, ['Added new partner!']),
-    player: makePageVersion('player', 5,
+    player: makePageVersion('player', 6,
         APP_NAME === "Genshin"
-            ? ["Added Ukulele and Djem Djem Drum", 'Improved timing']
-            : ['Improved timing']
+            ? ["Added Ukulele and Djem Djem Drum", 'Improved timing', 'Bug fixes in the visualizer']
+            : ['Improved timing', 'Bug fixes in the visualizer'],
     ),
     privacy: makePageVersion('privacy', 0),
     sheetVisualizer: makePageVersion('sheetVisualizer', 1, ["you can now select the rows to have different background colors"]),

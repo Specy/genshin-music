@@ -1,6 +1,6 @@
 import {APP_NAME, NoteNameType} from "$config"
 import {Chunk} from "$lib/Songs/VisualSong"
-import {memo, useEffect, useState} from "react"
+import {CSSProperties, memo, useMemo} from "react"
 import {Theme} from "$stores/ThemeStore/ThemeProvider"
 import {Instrument} from '$lib/audio/Instrument'
 import s from "./SheetFrame.module.css"
@@ -20,9 +20,8 @@ const baseInstrument = new Instrument()
 
 export function _SheetFrame({chunk, rows, hasText, selected, theme, keyboardLayout}: SheetFrameProps) {
     const columnsPerRow = APP_NAME === 'Genshin' ? 7 : 5
-    const [color, setColor] = useState('var(--primary)')
-    useEffect(() => {
-        setColor(theme.layer('primary', 0.2).toString())
+    const color = useMemo(() => {
+        return theme.layer('primary', 0.2).toString()
     }, [theme])
     const notes = new Array(columnsPerRow * rows).fill(false)
     chunk.notes.forEach(note => {
@@ -37,7 +36,12 @@ export function _SheetFrame({chunk, rows, hasText, selected, theme, keyboardLayo
     >
         {chunk.notes.length === 0
             ? <div></div>
-            : <div className={s['visualizer-frame']} style={{gridTemplateColumns: `repeat(${columnsPerRow},1fr)`}}>
+            : <div
+                className={s['visualizer-frame']}
+                style={{
+                    gridTemplateColumns: `repeat(${columnsPerRow},1fr)`,
+                    '--selected-note-background': 'var(--accent)'
+                } as CSSProperties}>
                 {notes.map((exists, i) => {
                     return <div
                         className={exists ? s['frame-note-s'] : s['frame-note-ns']}
