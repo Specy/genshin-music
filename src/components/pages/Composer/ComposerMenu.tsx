@@ -430,7 +430,8 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                 </FloatingDropdownRow>
                 {(data.type === 'recorded' || data.type === "composed") &&
                     <FloatingDropdownRow onClick={async () => {
-                        const song = await songService.fromStorableSong(data) as RecordedOrComposed
+                        const song = await songService.getOneSerializedFromStorable(data)
+                        if (!song) return logger.error(t('logs:could_not_find_song'))
                         downloadSong(song, 'midi')
                     }}>
                         <FaDownload style={{marginRight: "0.4rem"}} size={14}/>

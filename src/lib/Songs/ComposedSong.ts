@@ -444,10 +444,13 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 3> 
     toMidi = (): Midi => {
         const song = this.toRecordedSong()
         const midi = song.toMidi()
+        const midiNames = [...new Set(this.instruments.map(i => INSTRUMENTS_DATA[i.name].midiName))]
         this.instruments.forEach((ins, i) => {
             const instrument = INSTRUMENTS_DATA[ins.name]
             if (!instrument || !midi.tracks[i]) return
             midi.tracks[i].instrument.name = instrument.midiName
+            //this avoids duplicates if there are more than 16 instruments, which is the max for midi
+            midi.tracks[i].channel = this.instruments.length < 16 ? i : midiNames.indexOf(instrument.midiName)
             midi.tracks[i].name = `${ins.pitch} | ${ins.alias ?? ins.name}`
         })
         return midi

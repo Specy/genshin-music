@@ -8,7 +8,7 @@ export const PAGES_VERSIONS = {
     backup: makePageVersion('backup', 0),
     blog: makePageVersion('blog', 0),
     changelog: makePageVersion('changelog', 0),
-    composer: makePageVersion('composer', 2, ["Improved timing"]),
+    composer: makePageVersion('composer', 3, ["Improved timing", "Fixed MIDI Channel export"]),
     deleteCache: makePageVersion('deleteCache', 0),
     donate: makePageVersion('donate', 0),
     error: makePageVersion('error', 0),
