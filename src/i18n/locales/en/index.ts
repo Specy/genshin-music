@@ -411,9 +411,11 @@ export const i18n_en = {
         merge_empty_spaces: "Merge empty spaces",
         no_song_selected: "No song selected",
         print_as_pdf: "Print as PDF",
-        sheet_visualizer_instructions: `Select a song from the menu on the left.
-                    Remember that you can learn a song with the interactive
-                    practice tool in the Player`,
+        sheet_visualizer_instructions: `Select a song
+                                        from the menu on the left.
+                    Remember that you can learn a song
+                                        with the interactive
+                                            practice tool in the Player`,
         different_color_rows: "Different color rows",
         per_row: 'Per row', //elements per row
         invalid_song_to_visualize: 'Invalid song, it is not composed or recorded',
@@ -791,256 +793,254 @@ export const i18n_en = {
         "GrandPiano": "Grand Piano",
     } satisfies Record<InstrumentName, string>,
     versions: {
-        "versions": {
-            "3-6-2": {
-                "title": "Translations and GrandPiano (Sky)",
-                "change-1": "Added translations for changelog",
-                "change-2": "Added GrandPiano (Sky)",
-            },
-            "3-6-1": {
-                "title": "Improved timing",
-                "change-1": "Improved timing in the whole app, songs might play slightly faster now as they are more accurately following the BPM. You might need to decrese the BPM, especially for songs that have it very high."
-            },
-            "3-6-0": {
-                "title": "Multi color rows and new instruments",
-                "change-1": "In the sheet visualizer you can now select the rows to have different background colors",
-                "change-2": "Added Ukulele and Djem Djem Drum"
-            },
-            "3-5-0": {
-                "title": "Loop, Visual sheets settings, Turkish translation",
-                "change-1": "Added looping of section for practice/playing/approaching mode",
-                "change-2": "The notes of the section to repeat can now be also be written as a number",
-                "change-3": "Added ability to hide notes in practice mode, to help you test your memory of the song",
-                "change-4": "You can now select how many chunks to show in the visual sheet",
-                "change-5": "Added Turkish translation"
-            },
-            "3-4-1": {
-                "title": "Indonesian, Portuguese translations",
-                "change-1": "Added Indonesian and Portuguese translation",
-                "change-2": "Bug fixes to MIDI connection",
-                "change-3": "Bug fixes on old iOS devices"
-            },
-            "3-4-0": {
-                "title": "Translations",
-                "change-1": "Added chinese translation, we are looking for translators!",
-                "change-2": "Added button to install app to home screen",
-                "change-3": "Added custom keyboard layout as a note name type",
-                "change-4": "Added \"your keyboard layout\" note name type, which uses your device's keyboard layout",
-                "change-5": "Bug fixes and improvements"
-            },
-            "3-3-0": {
-                "title": "Audio/Video transcription, reverb",
-                "change-1": "Added tool in the composer to convert audio/video to a sheet",
-                "change-2": "Reverb now can be set for each instrument",
-                "change-3": "Added quick settings in the zen keyboard",
-                "change-4": "Added customisable presets in MIDI settings",
-                "change-5": "Improved MIDI connection",
-                "change-6": "Zen keyboard now emits MIDI notes events when pressed",
-                "change-7": "Changed Sky Music Nightly icon",
-                "change-8": "Added app's blog",
-                "change-9": "Other bug fixes and improvements"
-            },
-            "3-2-0": {
-                "title": "Shortcuts, Do Re Mi, performance, Layers",
-                "change-1": "All shortcuts and keyboard layout are now customizable",
-                "change-2": "Added Do Re Mi layout with note shifting",
-                "change-3": "Rewrote app in next.js, improving performance and navigation",
-                "change-4": "Improved theming in the composer",
-                "change-5": "Added opacity to the composer and custom layers colors",
-                "change-6": "Added new visual sheet format with more info",
-                "change-7": "Added song search",
-                "change-8": "Increased composer layers limit to 52",
-                "change-9": "Improved composer sliding controls",
-                "change-10": "(Sky) Added new instruments: TR-909, BassSynth, SineSynth and ChimesSynth",
-                "change-11": "Changed the file formats so they can be double clicked to open",
-                "change-12": "Added export as zip file",
-                "change-13": "Added two new default themes",
-                "change-14": "Added lookahead settings to the composer to improve audio accuracy",
-                "change-15": "Other bug fixes and improvements"
-            },
-            "3-1-0": {
-                "title": "Aurora, transparency and layouts",
-                "change-1": "Added aurora (Sky)",
-                "change-2": "Added switch/playstation layouts (Sky)",
-                "change-3": "Added backup warnings",
-                "change-4": "Added tranparency to themes",
-                "change-5": "Other bug fixes and improvements"
-            },
-            "3-0-1": {
-                "title": "Performance and bug fixes",
-                "change-1": "Fixed an IOS bug preventing audio from playing",
-                "change-2": "Improved performance for users that have many songs",
-                "change-3": "Added tempo changer quick selection in the composer tools",
-                "change-4": "Other bug fixes and improvements"
-            },
-            "3-0": {
-                "title": "VSRG mode, Zen keyboard, Calls and more!",
-                "change-1": "Added VSRG mode to compose and play vsrg songs",
-                "change-2": "Added Zen keyboard, where you can simply focus on playing by hand",
-                "change-3": "Added Visual sheet to the player",
-                "change-4": "Added app scaling",
-                "change-5": "Added alphabetical folder ordering",
-                "change-6": "Added backup page",
-                "change-7": "(Genshin) added vintage lyre",
-                "change-8": "(Sky) Added SFX of the calls and dance emote",
-                "change-9": "Changed metronome sounds",
-                "change-10": "Improved player performance",
-                "change-11": "Multi type export, you can now export/import songs, folders, themes etc",
-                "change-12": "Fixed bug that would remove a song from the folder when saved",
-                "change-13": "Fixed bug that would not play audio",
-                "change-14": "Fixed issues when opening/saving songs in the composer",
-                "change-15": "Fixed bug in pasting notes in the composer",
-                "change-16": "Exporting a song would not work in sky music and sky studio",
-                "change-17": "Other bug fixes and improvements"
-            },
-            "2-8": {
-                "title": "More Composer layers and UI rework",
-                "change-1": "Increased instrument limit in the composer to 30",
-                "change-2": "Redesigned the tools in the composer",
-                "change-3": "Added UNDO to the composer tools",
-                "change-4": "Added paste/insert to certain layer",
-                "change-5": "Added tool to move notes up/down",
-                "change-6": "Added metronome in player",
-                "change-7": "Added multiple instruments in player",
-                "change-8": "Added more tooltips, also for mobile",
-                "change-9": "Bug fixes and improvements"
-            },
-            "2-7": {
-                "title": "Song rename, MIDI export, folders",
-                "change-1": "Added option to rename songs",
-                "change-2": "Song names are not unique anymore",
-                "change-3": "Added folders and new song menu UI",
-                "change-4": "Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)",
-                "change-5": "Improved song playback in the player",
-                "change-6": "Fixed some bugs"
-            },
-            "2-6": {
-                "title": "Light guitar & Tooltips",
-                "change-1": "Added tooltips",
-                "change-2": "Added help buttons",
-                "change-3": "Added Light guitar (Sky, notes can't be held)",
-                "change-4": "Bug fixes for main page loading songs",
-                "change-5": "Added drag and drop in the composer",
-                "change-6": "Composer on pc now resizes with the page",
-                "change-7": "Fixed some bugs"
-            },
-            "2-5": {
-                "title": "Composer improvements",
-                "change-1": "Improved the rendering of the composer to be sherper and easier to see on mobile",
-                "change-2": "Improved performance in the composer",
-                "change-3": "Added 4th layer in the composer",
-                "change-4": "Added theming of more parts of the composer",
-                "change-5": "App rewrite in TypeScript",
-                "change-6": "Bug fixes"
-            },
-            "2-4": {
-                "title": "Multi Slider and Themes",
-                "change-1": "Added app themes, fully customise the look of the app",
-                "change-2": "Added start and end slider for selecting which part of the song to play/practice",
-                "change-3": "Bug fixes"
-            },
-            "2-3": {
-                "title": "MIDI Keyboard and Performance",
-                "change-1": "Added MIDI Keyboard support on all pages with custom layouts and shortcuts",
-                "change-2": "Big performance improvements of main page",
-                "change-3": "Added note names to sheet visualizer and empty cells",
-                "change-4": "Added ABC format",
-                "change-5": "Added Panflute (Sky)",
-                "change-6": "UI improvements and bug fixes"
-            },
-            "2-2": {
-                "title": "Sheet visualizer",
-                "change-1": "Added sheet visualizer",
-                "change-2": "Changed timeline behaviour when dragging the scroll bar",
-                "change-3": "Improved performance by 2 times in some places",
-                "change-4": "UI improvements and bug fixes"
-            },
-            "2-1-1": {
-                "title": "Zither and icons",
-                "change-1": "Changed note icon and animation (Genshin)",
-                "change-2": "Added Help page",
-                "change-3": "Changed zither audio (Genshin)",
-                "change-4": "UI improvements"
-            },
-            "2-1": {
-                "title": "Home menu and pages",
-                "change-1": "Restructured code",
-                "change-2": "Added opacity to some elements",
-                "change-3": "Changed margins and padding of some elements",
-                "change-4": "Added home page",
-                "change-5": "Added Partners page",
-                "change-6": "Added shortcuts for main page",
-                "change-7": "Fixed loading bug in composer and main page",
-                "change-8": "Added Donate page"
-            },
-            "2-0": {
-                "title": "Approaching circles",
-                "change-1": "Added Approaching cirlces mode, a new way to learn a song, or a way to challange yourself. You can find it in the main page, next to the practice button",
-                "change-2": "Rewrite of the main page to increase overall performance",
-                "change-3": "Added changelog page",
-                "change-4": "Added audio recording feature in main page and composer",
-                "change-5": "Added tabs autoplay (composer) on pc as a setting",
-                "change-6": "Added note animations when pressing the note",
-                "change-7": "Added possibility to change background image from URL",
-                "change-8": "Updated info page",
-                "change-9": "In the composer you can now press shift + note name to add a note",
-                "change-10": "In the composer you can press up/down keys to change layer",
-                "change-11": "While in the composer on PC, you can now add new notes by simply pressing the PC keyboard while in \"playing\" mode"
-            },
-            "1-7": {
-                "title": "Zither",
-                "change-1": "(For genshin) Added Zither",
-                "change-2": "Added back \"do re mi\" format"
-            },
-            "1-6": {
-                "title": "Performance tweaks",
-                "change-1": "Performance of composer improved by 2x",
-                "change-2": "Added note names for genshin (made it a setting)",
-                "change-3": "Fixed instrument volume bug",
-                "change-4": "Fixed keyboard layout issues",
-                "change-5": "Fixed other small bugs"
-            },
-            "1-5": {
-                "title": "MIDI import",
-                "change-1": "Added to both Sky and Genshin music nightly the MIDI import feature",
-                "change-2": "Music track selection (select or deselect which tracks to include)",
-                "change-3": "Instrument track selection (select what instrument to give to each track)",
-                "change-4": "Track info (get info on how successful your parsing was, accidentals and notes out of range)",
-                "change-5": "Change note offset (in case that the song is outside of the octaves available)"
-            },
-            "1-4": {
-                "title": "Song library",
-                "change-1": "Added song library integration, directly import songs from the app (700+ songs)",
-                "change-2": "Bug fixes"
-            },
-            "1-3": {
-                "title": "New audio files",
-                "change-1": "Changed audio files",
-                "change-2": "Added ocarina",
-                "change-3": "Removed support button in TWA",
-                "change-4": "Bug fixes"
-            },
-            "1-2": {
-                "title": "Bug fixes and PWA",
-                "change-1": "(For sky) Fixed bug where sheets couldn't be imported in sky studio",
-                "change-2": "Changed app install to more modern approach with description and images"
-            },
-            "1-1": {
-                "title": "Sheets compatibility",
-                "change-1": "(For sky) Added backwards compatibility for sheets, now sheets made in sky music nightly can be imported into sky music and sky studio (with some losses)",
-                "change-2": "Bug fixes",
-                "change-3": "General improvement in performance"
-            },
-            "1-0": {
-                "title": "Release",
-                "change-1": "3 Instruments composition",
-                "change-2": "Better performance than previous version",
-                "change-3": "Better practice tool",
-                "change-4": "Better interface",
-                "change-5": "Breakpoints for the composer",
-                "change-6": "New features for both composer and main page",
-                "change-7": "Feature rich customisability to make learning and composition easier"
-            }
+        "3-6-2": {
+            "title": "Translations and GrandPiano (Sky)",
+            "change-1": "Added translations for changelog",
+            "change-2": "Added GrandPiano (Sky)",
+        },
+        "3-6-1": {
+            "title": "Improved timing",
+            "change-1": "Improved timing in the whole app, songs might play slightly faster now as they are more accurately following the BPM. You might need to decrese the BPM, especially for songs that have it very high."
+        },
+        "3-6-0": {
+            "title": "Multi color rows and new instruments",
+            "change-1": "In the sheet visualizer you can now select the rows to have different background colors",
+            "change-2": "Added Ukulele and Djem Djem Drum"
+        },
+        "3-5-0": {
+            "title": "Loop, Visual sheets settings, Turkish translation",
+            "change-1": "Added looping of section for practice/playing/approaching mode",
+            "change-2": "The notes of the section to repeat can now be also be written as a number",
+            "change-3": "Added ability to hide notes in practice mode, to help you test your memory of the song",
+            "change-4": "You can now select how many chunks to show in the visual sheet",
+            "change-5": "Added Turkish translation"
+        },
+        "3-4-1": {
+            "title": "Indonesian, Portuguese translations",
+            "change-1": "Added Indonesian and Portuguese translation",
+            "change-2": "Bug fixes to MIDI connection",
+            "change-3": "Bug fixes on old iOS devices"
+        },
+        "3-4-0": {
+            "title": "Translations",
+            "change-1": "Added chinese translation, we are looking for translators!",
+            "change-2": "Added button to install app to home screen",
+            "change-3": "Added custom keyboard layout as a note name type",
+            "change-4": "Added \"your keyboard layout\" note name type, which uses your device's keyboard layout",
+            "change-5": "Bug fixes and improvements"
+        },
+        "3-3-0": {
+            "title": "Audio/Video transcription, reverb",
+            "change-1": "Added tool in the composer to convert audio/video to a sheet",
+            "change-2": "Reverb now can be set for each instrument",
+            "change-3": "Added quick settings in the zen keyboard",
+            "change-4": "Added customisable presets in MIDI settings",
+            "change-5": "Improved MIDI connection",
+            "change-6": "Zen keyboard now emits MIDI notes events when pressed",
+            "change-7": "Changed Sky Music Nightly icon",
+            "change-8": "Added app's blog",
+            "change-9": "Other bug fixes and improvements"
+        },
+        "3-2-0": {
+            "title": "Shortcuts, Do Re Mi, performance, Layers",
+            "change-1": "All shortcuts and keyboard layout are now customizable",
+            "change-2": "Added Do Re Mi layout with note shifting",
+            "change-3": "Rewrote app in next.js, improving performance and navigation",
+            "change-4": "Improved theming in the composer",
+            "change-5": "Added opacity to the composer and custom layers colors",
+            "change-6": "Added new visual sheet format with more info",
+            "change-7": "Added song search",
+            "change-8": "Increased composer layers limit to 52",
+            "change-9": "Improved composer sliding controls",
+            "change-10": "(Sky) Added new instruments: TR-909, BassSynth, SineSynth and ChimesSynth",
+            "change-11": "Changed the file formats so they can be double clicked to open",
+            "change-12": "Added export as zip file",
+            "change-13": "Added two new default themes",
+            "change-14": "Added lookahead settings to the composer to improve audio accuracy",
+            "change-15": "Other bug fixes and improvements"
+        },
+        "3-1-0": {
+            "title": "Aurora, transparency and layouts",
+            "change-1": "Added aurora (Sky)",
+            "change-2": "Added switch/playstation layouts (Sky)",
+            "change-3": "Added backup warnings",
+            "change-4": "Added tranparency to themes",
+            "change-5": "Other bug fixes and improvements"
+        },
+        "3-0-1": {
+            "title": "Performance and bug fixes",
+            "change-1": "Fixed an IOS bug preventing audio from playing",
+            "change-2": "Improved performance for users that have many songs",
+            "change-3": "Added tempo changer quick selection in the composer tools",
+            "change-4": "Other bug fixes and improvements"
+        },
+        "3-0": {
+            "title": "VSRG mode, Zen keyboard, Calls and more!",
+            "change-1": "Added VSRG mode to compose and play vsrg songs",
+            "change-2": "Added Zen keyboard, where you can simply focus on playing by hand",
+            "change-3": "Added Visual sheet to the player",
+            "change-4": "Added app scaling",
+            "change-5": "Added alphabetical folder ordering",
+            "change-6": "Added backup page",
+            "change-7": "(Genshin) added vintage lyre",
+            "change-8": "(Sky) Added SFX of the calls and dance emote",
+            "change-9": "Changed metronome sounds",
+            "change-10": "Improved player performance",
+            "change-11": "Multi type export, you can now export/import songs, folders, themes etc",
+            "change-12": "Fixed bug that would remove a song from the folder when saved",
+            "change-13": "Fixed bug that would not play audio",
+            "change-14": "Fixed issues when opening/saving songs in the composer",
+            "change-15": "Fixed bug in pasting notes in the composer",
+            "change-16": "Exporting a song would not work in sky music and sky studio",
+            "change-17": "Other bug fixes and improvements"
+        },
+        "2-8": {
+            "title": "More Composer layers and UI rework",
+            "change-1": "Increased instrument limit in the composer to 30",
+            "change-2": "Redesigned the tools in the composer",
+            "change-3": "Added UNDO to the composer tools",
+            "change-4": "Added paste/insert to certain layer",
+            "change-5": "Added tool to move notes up/down",
+            "change-6": "Added metronome in player",
+            "change-7": "Added multiple instruments in player",
+            "change-8": "Added more tooltips, also for mobile",
+            "change-9": "Bug fixes and improvements"
+        },
+        "2-7": {
+            "title": "Song rename, MIDI export, folders",
+            "change-1": "Added option to rename songs",
+            "change-2": "Song names are not unique anymore",
+            "change-3": "Added folders and new song menu UI",
+            "change-4": "Added MIDI export of a song (DO NOT USE INSTEAD OF NORMAL FORMAT)",
+            "change-5": "Improved song playback in the player",
+            "change-6": "Fixed some bugs"
+        },
+        "2-6": {
+            "title": "Light guitar & Tooltips",
+            "change-1": "Added tooltips",
+            "change-2": "Added help buttons",
+            "change-3": "Added Light guitar (Sky, notes can't be held)",
+            "change-4": "Bug fixes for main page loading songs",
+            "change-5": "Added drag and drop in the composer",
+            "change-6": "Composer on pc now resizes with the page",
+            "change-7": "Fixed some bugs"
+        },
+        "2-5": {
+            "title": "Composer improvements",
+            "change-1": "Improved the rendering of the composer to be sherper and easier to see on mobile",
+            "change-2": "Improved performance in the composer",
+            "change-3": "Added 4th layer in the composer",
+            "change-4": "Added theming of more parts of the composer",
+            "change-5": "App rewrite in TypeScript",
+            "change-6": "Bug fixes"
+        },
+        "2-4": {
+            "title": "Multi Slider and Themes",
+            "change-1": "Added app themes, fully customise the look of the app",
+            "change-2": "Added start and end slider for selecting which part of the song to play/practice",
+            "change-3": "Bug fixes"
+        },
+        "2-3": {
+            "title": "MIDI Keyboard and Performance",
+            "change-1": "Added MIDI Keyboard support on all pages with custom layouts and shortcuts",
+            "change-2": "Big performance improvements of main page",
+            "change-3": "Added note names to sheet visualizer and empty cells",
+            "change-4": "Added ABC format",
+            "change-5": "Added Panflute (Sky)",
+            "change-6": "UI improvements and bug fixes"
+        },
+        "2-2": {
+            "title": "Sheet visualizer",
+            "change-1": "Added sheet visualizer",
+            "change-2": "Changed timeline behaviour when dragging the scroll bar",
+            "change-3": "Improved performance by 2 times in some places",
+            "change-4": "UI improvements and bug fixes"
+        },
+        "2-1-1": {
+            "title": "Zither and icons",
+            "change-1": "Changed note icon and animation (Genshin)",
+            "change-2": "Added Help page",
+            "change-3": "Changed zither audio (Genshin)",
+            "change-4": "UI improvements"
+        },
+        "2-1": {
+            "title": "Home menu and pages",
+            "change-1": "Restructured code",
+            "change-2": "Added opacity to some elements",
+            "change-3": "Changed margins and padding of some elements",
+            "change-4": "Added home page",
+            "change-5": "Added Partners page",
+            "change-6": "Added shortcuts for main page",
+            "change-7": "Fixed loading bug in composer and main page",
+            "change-8": "Added Donate page"
+        },
+        "2-0": {
+            "title": "Approaching circles",
+            "change-1": "Added Approaching cirlces mode, a new way to learn a song, or a way to challange yourself. You can find it in the main page, next to the practice button",
+            "change-2": "Rewrite of the main page to increase overall performance",
+            "change-3": "Added changelog page",
+            "change-4": "Added audio recording feature in main page and composer",
+            "change-5": "Added tabs autoplay (composer) on pc as a setting",
+            "change-6": "Added note animations when pressing the note",
+            "change-7": "Added possibility to change background image from URL",
+            "change-8": "Updated info page",
+            "change-9": "In the composer you can now press shift + note name to add a note",
+            "change-10": "In the composer you can press up/down keys to change layer",
+            "change-11": "While in the composer on PC, you can now add new notes by simply pressing the PC keyboard while in \"playing\" mode"
+        },
+        "1-7": {
+            "title": "Zither",
+            "change-1": "(For genshin) Added Zither",
+            "change-2": "Added back \"do re mi\" format"
+        },
+        "1-6": {
+            "title": "Performance tweaks",
+            "change-1": "Performance of composer improved by 2x",
+            "change-2": "Added note names for genshin (made it a setting)",
+            "change-3": "Fixed instrument volume bug",
+            "change-4": "Fixed keyboard layout issues",
+            "change-5": "Fixed other small bugs"
+        },
+        "1-5": {
+            "title": "MIDI import",
+            "change-1": "Added to both Sky and Genshin music nightly the MIDI import feature",
+            "change-2": "Music track selection (select or deselect which tracks to include)",
+            "change-3": "Instrument track selection (select what instrument to give to each track)",
+            "change-4": "Track info (get info on how successful your parsing was, accidentals and notes out of range)",
+            "change-5": "Change note offset (in case that the song is outside of the octaves available)"
+        },
+        "1-4": {
+            "title": "Song library",
+            "change-1": "Added song library integration, directly import songs from the app (700+ songs)",
+            "change-2": "Bug fixes"
+        },
+        "1-3": {
+            "title": "New audio files",
+            "change-1": "Changed audio files",
+            "change-2": "Added ocarina",
+            "change-3": "Removed support button in TWA",
+            "change-4": "Bug fixes"
+        },
+        "1-2": {
+            "title": "Bug fixes and PWA",
+            "change-1": "(For sky) Fixed bug where sheets couldn't be imported in sky studio",
+            "change-2": "Changed app install to more modern approach with description and images"
+        },
+        "1-1": {
+            "title": "Sheets compatibility",
+            "change-1": "(For sky) Added backwards compatibility for sheets, now sheets made in sky music nightly can be imported into sky music and sky studio (with some losses)",
+            "change-2": "Bug fixes",
+            "change-3": "General improvement in performance"
+        },
+        "1-0": {
+            "title": "Release",
+            "change-1": "3 Instruments composition",
+            "change-2": "Better performance than previous version",
+            "change-3": "Better practice tool",
+            "change-4": "Better interface",
+            "change-5": "Breakpoints for the composer",
+            "change-6": "New features for both composer and main page",
+            "change-7": "Feature rich customisability to make learning and composition easier"
         }
     }
 } as const

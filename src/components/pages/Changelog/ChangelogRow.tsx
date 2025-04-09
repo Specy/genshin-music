@@ -12,11 +12,11 @@ export function ChangelogRow({version, date, changes: _changes}: ChangelogRowPro
     const {t} = useTranslation('versions')
     const v = `${version}`.replaceAll('.', '-')
     //@ts-ignore
-    const title = t(`versions.${v}.title`) as string
+    const title = t(`${v}.title`) as string
 
     const changes = _changes.map((_, i) => {
         //@ts-ignore
-        return t(`versions.${v}.change-${i + 1}`) as string
+        return t(`${v}.change-${i + 1}`) as string
     })
 
     const localDate = useMemo(() => {
