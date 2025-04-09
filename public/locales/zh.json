@@ -1,255 +1,254 @@
 {
     "versions": {
-        {
-    "3-6-2": {
-        "title": "翻译和GrandPiano (光遇)",
-        "change-1": "新增了变更日志的翻译",
-        "change-2": "新增了GrandPiano (光遇)"
-    },
-    "3-6-1": {
-        "title": "改进计时",
-        "change-1": "优化了歌曲播放的时间同步，现在播放速度会更准确，可能需要调整BPM设置"
-    },
-    "3-6-0": {
-        "title": "多色行和新乐器",
-        "change-1": "在乐谱可视化器中可以选择不同颜色来区分不同的行",
-        "change-2": "新增了悠可琴和聚聚鼓"
-    },
-    "3-5-0": {
-        "title": "循环、可视化乐谱设置、土耳其语翻译",
-        "change-1": "新增了练习/演奏模式下的节段循环功能",
-        "change-2": "可以用数字表示要重复的节段音符",
-        "change-3": "新增了练习模式下隐藏音符的功能，帮助记忆歌曲",
-        "change-4": "可以选择在可视化乐谱上显示多少个块",
-        "change-5": "新增了土耳其语翻译"
-    },
-    "3-4-1": {
-        "title": "印尼语、葡萄牙语翻译",
-        "change-1": "新增了印尼语和葡萄牙语翻译",
-        "change-2": "修复了MIDI连接的问题",
-        "change-3": "修复了旧iOS设备上的问题"
-    },
-    "3-4-0": {
-        "title": "翻译",
-        "change-1": "新增了中文翻译，我们正在招募新的翻译人员！",
-        "change-2": "新增了将应用安装到主屏幕的按钮",
-        "change-3": "新增了自定义键盘布局作为音符名称类型",
-        "change-4": "新增了\"您的键盘布局\"音符名称类型，使用设备的键盘布局",
-        "change-5": "修复了一些bug并进行了改进"
-    },
-    "3-3-0": {
-        "title": "音频/视频转录、混响",
-        "change-1": "在作曲家工具中新增了将音频/视频转换为乐谱的功能",
-        "change-2": "可以为每个乐器单独设置混响效果",
-        "change-3": "新增了Zen键盘中的快速设置",
-        "change-4": "新增了MIDI设置中的可定制预设",
-        "change-5": "提升了MIDI连接性能",
-        "change-6": "Zen键盘现在在按下时发出MIDI音符事件",
-        "change-7": "更改了光遇 Music Nightly图标",
-        "change-8": "新增了应用博客",
-        "change-9": "其他bug修复和改进"
-    },
-    "3-2-0": {
-        "title": "快捷键、Do Re Mi、性能、层",
-        "change-1": "所有快捷键和键盘布局现在均可自定义",
-        "change-2": "新增带有音调偏移的Do Re Mi布局",
-        "change-3": "将应用重写为TypeScript",
-        "change-4": "提升了作曲家主题设计",
-        "change-5": "新增了作曲家透明度和自定义层颜色",
-        "change-6": "新增了包含更多信息的新可视化乐谱格式",
-        "change-7": "新增了歌曲搜索功能",
-        "change-8": "将作曲家图层数量限制增加至52",
-        "change-9": "提升了作曲家滑动控件性能",
-        "change-10": "(光遇) 新增了新乐器：TR-909、贝斯合成器、正弦波合成器和钟声合成器",
-        "change-11": "更改了文件格式以便双击打开",
-        "change-12": "新增了导出为zip文件的功能",
-        "change-13": "新增了两个默认主题",
-        "change-14": "新增了作曲家的前瞻设置以提高音频准确性",
-        "change-15": "其他bug修复和改进"
-    },
-    "3-1-0": {
-        "title": "Aurora、透明度和布局",
-        "change-1": "新增了Aurora（光遇）",
-        "change-2": "新增了Switch/PlayStation布局（光遇）",
-        "change-3": "新增了备份警告",
-        "change-4": "新增了主题透明度",
-        "change-5": "其他bug修复和改进"
-    },
-    "3-0-1": {
-        "title": "性能和bug修复",
-        "change-1": "修复了一个阻止iOS上音频播放的bug",
-        "change-2": "提升了拥有大量歌曲用户的性能",
-        "change-3": "新增了作曲家工具中的节奏变化快速选择",
-        "change-4": "其他bug修复和改进"
-    },
-    "3-0": {
-        "title": "VSRG模式、Zen键盘、Calls和其他更多！",
-        "change-1": "新增了VSRG模式用于创作和演奏vsrg歌曲",
-        "change-2": "新增了Zen键盘，让您只需专注于用手演奏",
-        "change-3": "新增了播放器中的可视化乐谱",
-        "change-4": "新增了应用缩放功能",
-        "change-5": "新增了按字母顺序排列的文件夹",
-        "change-6": "新增了备份页面",
-        "change-7": "(原神) 新增老旧诗琴",
-        "change-8": "(光遇) 新增呼唤和舞蹈表情的SFX",
-        "change-9": "更换了节拍器声音",
-        "change-10": "提升了播放器性能",
-        "change-11": "多类型导入导出，现在可以导出/导入歌曲、文件夹、主题等",
-        "change-12": "修复保存歌曲时从文件夹中移除歌曲的问题",
-        "change-13": "修复无法播放音频的问题",
-        "change-14": "修复在作曲家中打开/保存歌曲时的问题",
-        "change-15": "修复在作曲家中粘贴音符时的问题",
-        "change-16": "在Sky Music和Sky Studio中导出歌曲无效",
-        "change-17": "其他bug修复和改进"
-    },
-    "2-8": {
-        "title": "更多的作曲家层和UI重构",
-        "change-1": "将作曲家中的乐器数量限制增加至30",
-        "change-2": "重新设计了作曲家中的工具",
-        "change-3": "新增了作曲家工具中的撤销功能",
-        "change-4": "新增了将音符粘贴/插入到特定层的功能",
-        "change-5": "新增了移动音符上下移动的工具",
-        "change-6": "新增了播放器中的节拍器",
-        "change-7": "新增了播放器中的多个乐器支持",
-        "change-8": "新增了更多提示，包括移动设备上的提示",
-        "change-9": "修复bug并进行改进"
-    },
-    "2-7": {
-        "title": "歌曲重命名、MIDI导出、文件夹",
-        "change-1": "新增了重命名歌曲的选项",
-        "change-2": "歌曲名称不再唯一",
-        "change-3": "新增了文件夹和新建歌曲菜单UI",
-        "change-4": "新增了歌曲的MIDI导出（请勿代替正常格式使用）",
-        "change-5": "改善了播放器中的歌曲播放",
-        "change-6": "修复了一些bug"
-    },
-    "2-6": {
-        "title": "轻型吉他 & 提示",
-        "change-1": "新增了提示",
-        "change-2": "新增了帮助按钮",
-        "change-3": "新增了轻型吉他（光遇，音符不能持续）",
-        "change-4": "修复了主页面加载歌曲的bug",
-        "change-5": "新增了作曲家中的拖放功能",
-        "change-6": "PC上的作曲家随页面调整大小",
-        "change-7": "修复了一些bug"
-    },
-    "2-5": {
-        "title": "作曲家改进",
-        "change-1": "改进了作曲家的渲染效果，在手机上更加清晰易读",
-        "change-2": "提高了作曲家的性能",
-        "change-3": "新增了作曲家中的第四个层",
-        "change-4": "增加了作曲家更多部分的主题设计",
-        "change-5": "将应用程序的编程语言改为TypeScript",
-        "change-6": "修复bug"
-    },
-    "2-4": {
-        "title": "多重滑块和主题",
-        "change-1": "新增了应用主题，完全自定义应用外观",
-        "change-2": "新增了开始和结束滑块，用于选择播放/练习哪一部分歌曲",
-        "change-3": "修复了bug"
-    },
-    "2-3": {
-        "title": "MIDI键盘和性能",
-        "change-1": "新增了所有页面上的MIDI键盘支持，带自定义布局和快捷键",
-        "change-2": "主页面的大性能改进",
-        "change-3": "新增了音符名称到乐谱可视化器和空单元格",
-        "change-4": "新增了ABC格式",
-        "change-5": "新增了排箫（光遇）",
-        "change-6": "UI改进和bug修复"
-    },
-    "2-2": {
-        "title": "乐谱可视化器",
-        "change-1": "新增了乐谱可视化器",
-        "change-2": "更改了滚动条拖动时的时间轴行为",
-        "change-3": "某些地方性能提升两倍",
-        "change-4": "UI改进和bug修复"
-    },
-    "2-1-1": {
-        "title": "镜花之琴和图标",
-        "change-1": "更改了音符图标和动画（原神）",
-        "change-2": "新增了帮助页面",
-        "change-3": "更改了镜花之琴的声音（原神）",
-        "change-4": "UI改进"
-    },
-    "2-1": {
-        "title": "主页菜单和页面",
-        "change-1": "重组了代码",
-        "change-2": "新增了一些元素的透明度",
-        "change-3": "更改了一些元素的边距和填充",
-        "change-4": "新增了主页",
-        "change-5": "新增了合作伙伴页面",
-        "change-6": "新增了主页快捷键",
-        "change-7": "修复了作曲家和主页的加载bug",
-        "change-8": "新增了捐赠页面"
-    },
-    "2-0": {
-        "title": "节奏判定圈",
-        "change-1": "新增了节奏判定圈模式，这是一种学习歌曲或挑战自己的新方式。您可以在主页的练习按钮旁边找到它",
-        "change-2": "重写了主页以提高整体性能",
-        "change-3": "新增了变更日志页面",
-        "change-4": "新增了主页和作曲家中的录音功能",
-        "change-5": "新增了PC版作曲家中的选项卡自动播放设置",
-        "change-6": "新增了按下音符时的音符动画",
-        "change-7": "新增了可以从URL更改背景图片的可能性",
-        "change-8": "更新了信息页面",
-        "change-9": "在作曲家中可以按Shift + 音符名称添加音符",
-        "change-10": "在作曲家中可以按上下箭头键更改层"
-    }，
+        "3-6-2": {
+            "title": "翻译和三角钢琴 (光遇)",
+            "change-1": "新增了变更日志的翻译",
+            "change-2": "新增了三角钢琴 (光遇)"
+        },
+        "3-6-1": {
+            "title": "改进计时",
+            "change-1": "优化了歌曲播放的时间同步，现在播放速度会更准确，可能需要调整BPM设置"
+        },
+        "3-6-0": {
+            "title": "多色行和新乐器",
+            "change-1": "在乐谱可视化器中可以选择不同颜色来区分不同的行",
+            "change-2": "新增了尤克里里和杜姆杜姆鼓"
+        },
+        "3-5-0": {
+            "title": "循环、可视化乐谱设置、土耳其语翻译",
+            "change-1": "新增了练习/演奏模式下的节段循环功能",
+            "change-2": "可以用数字表示要重复的节段音符",
+            "change-3": "新增了练习模式下隐藏音符的功能，帮助记忆歌曲",
+            "change-4": "可以选择在可视化乐谱上显示多少个块",
+            "change-5": "新增了土耳其语翻译"
+        },
+        "3-4-1": {
+            "title": "印尼语、葡萄牙语翻译",
+            "change-1": "新增了印尼语和葡萄牙语翻译",
+            "change-2": "修复了MIDI连接的问题",
+            "change-3": "修复了旧iOS设备上的问题"
+        },
+        "3-4-0": {
+            "title": "翻译",
+            "change-1": "新增了中文翻译，我们正在招募新的翻译人员！",
+            "change-2": "新增了将应用安装到主屏幕的按钮",
+            "change-3": "新增了自定义键盘布局作为音符名称类型",
+            "change-4": "新增了\"您的键盘布局\"音符名称类型，使用设备的键盘布局",
+            "change-5": "修复了一些bug并进行了改进"
+        },
+        "3-3-0": {
+            "title": "音频/视频转录、混响",
+            "change-1": "在作曲家工具中新增了将音频/视频转换为乐谱的功能",
+            "change-2": "可以为每个乐器单独设置混响效果",
+            "change-3": "新增了Zen键盘中的快速设置",
+            "change-4": "新增了MIDI设置中的可定制预设",
+            "change-5": "提升了MIDI连接性能",
+            "change-6": "Zen键盘现在在按下时发出MIDI音符事件",
+            "change-7": "更改了光遇 Music Nightly图标",
+            "change-8": "新增了应用博客",
+            "change-9": "其他bug修复和改进"
+        },
+        "3-2-0": {
+            "title": "快捷键、Do Re Mi、性能、层",
+            "change-1": "所有快捷键和键盘布局现在均可自定义",
+            "change-2": "新增带有音调偏移的Do Re Mi布局",
+            "change-3": "将应用程序的编程语言改为TypeScript",
+            "change-4": "提升了作曲家主题设计",
+            "change-5": "新增了作曲家透明度和自定义层颜色",
+            "change-6": "新增了包含更多信息的新可视化乐谱格式",
+            "change-7": "新增了歌曲搜索功能",
+            "change-8": "将作曲家图层数量限制增加至52",
+            "change-9": "提升了作曲家滑动控件性能",
+            "change-10": "(光遇) 新增了新乐器：TR-909、贝斯合成器、正弦波合成器和钟声合成器",
+            "change-11": "更改了文件格式以便双击打开",
+            "change-12": "新增了导出为zip文件的功能",
+            "change-13": "新增了两个默认主题",
+            "change-14": "新增了作曲家的前瞻设置以提高音频准确性",
+            "change-15": "其他bug修复和改进"
+        },
+        "3-1-0": {
+            "title": "Aurora、透明度和布局",
+            "change-1": "新增了Aurora（光遇）",
+            "change-2": "新增了Switch/PlayStation布局（光遇）",
+            "change-3": "新增了备份警告",
+            "change-4": "新增了主题透明度",
+            "change-5": "其他bug修复和改进"
+        },
+        "3-0-1": {
+            "title": "性能和bug修复",
+            "change-1": "修复了一个阻止iOS上音频播放的bug",
+            "change-2": "提升了拥有大量歌曲用户的性能",
+            "change-3": "新增了作曲家工具中的节奏变化快速选择",
+            "change-4": "其他bug修复和改进"
+        },
+        "3-0": {
+            "title": "VSRG模式、Zen键盘、Calls和其他更多！",
+            "change-1": "新增了VSRG模式用于创作和演奏vsrg歌曲",
+            "change-2": "新增了Zen键盘，让您只需专注于用手演奏",
+            "change-3": "新增了播放器中的可视化乐谱",
+            "change-4": "新增了应用缩放功能",
+            "change-5": "新增了按字母顺序排列的文件夹",
+            "change-6": "新增了备份页面",
+            "change-7": "(原神) 新增老旧诗琴",
+            "change-8": "(光遇) 新增呼唤和舞蹈表情的SFX",
+            "change-9": "更换了节拍器声音",
+            "change-10": "提升了播放器性能",
+            "change-11": "多类型导入导出，现在可以导出/导入歌曲、文件夹、主题等",
+            "change-12": "修复保存歌曲时从文件夹中移除歌曲的问题",
+            "change-13": "修复无法播放音频的问题",
+            "change-14": "修复在作曲家中打开/保存歌曲时的问题",
+            "change-15": "修复在作曲家中粘贴音符时的问题",
+            "change-16": "在Sky Music和Sky Studio中导出歌曲无效",
+            "change-17": "其他bug修复和改进"
+        },
+        "2-8": {
+            "title": "更多的作曲家层和UI重构",
+            "change-1": "将作曲家中的乐器数量限制增加至30",
+            "change-2": "重新设计了作曲家中的工具",
+            "change-3": "新增了作曲家工具中的撤销功能",
+            "change-4": "新增了将音符粘贴/插入到特定层的功能",
+            "change-5": "新增了移动音符上下移动的工具",
+            "change-6": "新增了播放器中的节拍器",
+            "change-7": "新增了播放器中的多个乐器支持",
+            "change-8": "新增了更多提示，包括移动设备上的提示",
+            "change-9": "修复bug并进行改进"
+        },
+        "2-7": {
+            "title": "歌曲重命名、MIDI导出、文件夹",
+            "change-1": "新增了重命名歌曲的选项",
+            "change-2": "歌曲名称不再唯一",
+            "change-3": "新增了文件夹和新建歌曲菜单UI",
+            "change-4": "新增了歌曲的MIDI导出（请勿代替正常格式使用）",
+            "change-5": "改善了播放器中的歌曲播放",
+            "change-6": "修复了一些bug"
+        },
+        "2-6": {
+            "title": "玩具尤克里里 & 提示",
+            "change-1": "新增了提示",
+            "change-2": "新增了帮助按钮",
+            "change-3": "新增了玩具尤克里里（光遇，音符不能持续）",
+            "change-4": "修复了主页面加载歌曲的bug",
+            "change-5": "新增了作曲家中的拖放功能",
+            "change-6": "PC上的作曲家随页面调整大小",
+            "change-7": "修复了一些bug"
+        },
+        "2-5": {
+            "title": "作曲家改进",
+            "change-1": "改进了作曲家的渲染效果，在手机上更加清晰易读",
+            "change-2": "提高了作曲家的性能",
+            "change-3": "新增了作曲家中的第四个层",
+            "change-4": "增加了作曲家更多部分的主题设计",
+            "change-5": "将应用程序的编程语言改为TypeScript",
+            "change-6": "修复bug"
+        },
+        "2-4": {
+            "title": "多重滑块和主题",
+            "change-1": "新增了应用主题，完全自定义应用外观",
+            "change-2": "新增了开始和结束滑块，用于选择播放/练习哪一部分歌曲",
+            "change-3": "修复了bug"
+        },
+        "2-3": {
+            "title": "MIDI键盘和性能",
+            "change-1": "新增了所有页面上的MIDI键盘支持，带自定义布局和快捷键",
+            "change-2": "主页面的大性能改进",
+            "change-3": "新增了音符名称到乐谱可视化器和空单元格",
+            "change-4": "新增了ABC格式",
+            "change-5": "新增了Panflute（光遇）",
+            "change-6": "UI改进和bug修复"
+        },
+        "2-2": {
+            "title": "乐谱可视化器",
+            "change-1": "新增了乐谱可视化器",
+            "change-2": "更改了滚动条拖动时的时间轴行为",
+            "change-3": "某些地方性能提升两倍",
+            "change-4": "UI改进和bug修复"
+        },
+        "2-1-1": {
+            "title": "镜花之琴和图标",
+            "change-1": "更改了音符图标和动画（原神）",
+            "change-2": "新增了帮助页面",
+            "change-3": "更改了镜花之琴的声音（原神）",
+            "change-4": "UI改进"
+        },
+        "2-1": {
+            "title": "主页菜单和页面",
+            "change-1": "重组了代码",
+            "change-2": "新增了一些元素的透明度",
+            "change-3": "更改了一些元素的边距和填充",
+            "change-4": "新增了主页",
+            "change-5": "新增了合作伙伴页面",
+            "change-6": "新增了主页快捷键",
+            "change-7": "修复了作曲家和主页的加载bug",
+            "change-8": "新增了捐赠页面"
+        },
+        "2-0": {
+            "title": "节奏判定圈",
+            "change-1": "新增了节奏判定圈模式，这是一种学习歌曲或挑战自己的新方式。您可以在主页的练习按钮旁边找到它",
+            "change-2": "重写了主页以提高整体性能",
+            "change-3": "新增了变更日志页面",
+            "change-4": "新增了主页和作曲家中的录音功能",
+            "change-5": "新增了PC版作曲家中的选项卡自动播放设置",
+            "change-6": "新增了按下音符时的音符动画",
+            "change-7": "新增了可以从URL更改背景图片的可能性",
+            "change-8": "更新了信息页面",
+            "change-9": "在作曲家中可以按Shift + 音符名称添加音符",
+            "change-10": "在作曲家中可以按上下箭头键更改层"
+        },
         "1-7": {
-            "title": "Zither"，
-            "change-1": "(For genshin) Added Zither"，
-            "change-2": "Added back \"do re mi\" format"
-        }，
+            "title": "诗琴",
+            "change-1": "(对于原神) 新增了诗琴",
+            "change-2": "恢复了 \"do re mi\" 格式"
+        },
         "1-6": {
-            "title": "Performance tweaks"，
-            "change-1": "Performance of composer improved by 2x"，
-            "change-2": "Added note names for genshin (made it a setting)"，
-            "change-3": "Fixed instrument volume bug"，
-            "change-4": "Fixed keyboard layout issues"，
-            "change-5": "Fixed other small bugs"
-        }，
+            "title": "性能优化",
+            "change-1": "提升了作曲家的性能，速度提高了两倍",
+            "change-2": "新增了原神中的音符名称设置",
+            "change-3": "修复了乐器音量问题",
+            "change-4": "修复了键盘布局问题",
+            "change-5": "修复了其他小问题"
+        },
         "1-5": {
-            "title": "MIDI import"，
-            "change-1": "Added to both Sky and Genshin music nightly the MIDI import feature"，
-            "change-2": "Music track selection (select or deselect which tracks to include)"，
-            "change-3": "Instrument track selection (select what instrument to give to each track)"，
-            "change-4": "Track info (get info on how successful your parsing was, accidentals and notes out of range)"，
-            "change-5": "Change note offset (in case that the song is outside of the octaves available)"
-        }，
+            "title": "MIDI 导入",
+            "change-1": "在 Sky 和 原神音乐夜空中新增了 MIDI 导入功能",
+            "change-2": "可以选择要包含的音乐轨道",
+            "change-3": "可以选择每条轨道使用的乐器",
+            "change-4": "提供了轨道信息，显示解析的成功程度、变音记号和超出范围的音符",
+            "change-5": "可以调整音符偏移量，以防歌曲超出可用八度范围"
+        },
         "1-4": {
-            "title": "Song library"，
-            "change-1": "Added song library integration, directly import songs from the app (700+ songs)"，
-            "change-2": "Bug fixes"
-        }，
+            "title": "歌曲库",
+            "change-1": "新增了歌曲库集成，可以直接从应用中导入歌曲（超过700首）",
+            "change-2": "修复了bug"
+        },
         "1-3": {
-            "title": "New audio files"，
-            "change-1": "Changed audio files"，
-            "change-2": "Added ocarina"，
-            "change-3": "Removed support button in TWA"，
-            "change-4": "Bug fixes"
-        }，
+            "title": "新的音频文件",
+            "change-1": "更换了音频文件",
+            "change-2": "新增了口笛",
+            "change-3": "移除了 TWA 中的支持按钮",
+            "change-4": "修复了bug"
+        },
         "1-2": {
-            "title": "Bug fixes and PWA"，
-            "change-1": "(For sky) Fixed bug where sheets couldn't be imported in sky studio"，
-            "change-2": "Changed app install to more modern approach with description and images"
-        }，
+            "title": "bug 修复和 PWA",
+            "change-1": "(对于天空) 修复了在天空工作室中无法导入乐谱的bug",
+            "change-2": "更改了应用安装方式，采用了现代方法，包含描述和图片"
+        },
         "1-1": {
-            "title": "Sheets compatibility"，
-            "change-1": "(For sky) Added backwards compatibility for sheets, now sheets made in sky music nightly can be imported into sky music and sky studio (with some losses)"，
-            "change-2": "Bug fixes"，
-            "change-3": "General improvement in performance"
-        }，
+            "title": "乐谱兼容性",
+            "change-1": "(对于天空) 新增了对旧版乐谱的向后兼容性，现在可以在天空音乐和天空工作室中导入天空音乐夜空中制作的乐谱（可能会丢失一些信息）",
+            "change-2": "修复了bug",
+            "change-3": "提升了整体性能"
+        },
         "1-0": {
-            "title": "Release"，
-            "change-1": "3 Instruments composition"，
-            "change-2": "Better performance than previous version"，
-            "change-3": "Better practice tool"，
-            "change-4": "Better interface"，
-            "change-5": "Breakpoints for the composer"，
-            "change-6": "New features for both composer and main page"，
-            "change-7": "Feature rich customisability to make learning and composition easier"
+            "title": "发布",
+            "change-1": "支持三种乐器的编曲",
+            "change-2": "比前一版本性能更好",
+            "change-3": "更好的练习工具",
+            "change-4": "更好的界面",
+            "change-5": "为作曲家新增了断点功能",
+            "change-6": "为主页和作曲家新增了许多新功能",
+            "change-7": "丰富的自定义功能，使学习和编曲更容易"
         }
-}
+    },
     "logs": {
         "update_available": "发现新版本应用，是否刷新界面进行更新？请关闭/刷新其他打开应用的选项卡。"，
         "error_with_the_app": "程序出错！"，
@@ -582,13 +581,13 @@
         "click_to_remove_time": "点击以移除时间"
     },
     "vsrg_player": {
-        "amazing": "Amazing",
-        "perfect": "Perfect",
-        "great": "Great",
-        "good": "Good",
-        "bad": "Bad",
-        "miss": "Miss",
-        "combo": "Combo"
+        "amazing": "极佳",
+        "perfect": "完美",
+        "great": "优秀",
+        "good": "良好",
+        "bad": "差",
+        "miss": "失误",
+        "combo": "连击"
     },
     "transfer": {
         "connecting_please_wait": "正在连接，请稍候...",
@@ -943,6 +942,7 @@
         "Ukulele": "悠可琴",
         "DjemDjemDrum": "聚聚鼓",
         "Piano": "钢琴",
+        "GrandPiano": "三角钢琴"
         "Contrabass": "屁琴",
         "Guitar": "吉他",
         "LightGuitar": "电吉他",
