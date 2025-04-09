@@ -2,17 +2,15 @@ import type {Tauri} from "$types/TauriTypes"
 import type {NoteImage} from "$cmp/shared/SvgNotes"
 
 export const APP_NAME: AppName = process.env.NEXT_PUBLIC_APP_NAME as AppName || ["Sky", "Genshin"][1]
-export const APP_VERSION = '3.6.1' as const
+export const APP_VERSION = '3.6.2' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-          - Added different color rows in sheet visualizer
-          - Added Ukulele and Djem Djem Drum
-          - Improved music timing
+- Added translations to version page
     `
     : `
-          - Added different color rows in sheet visualizer      
-          - Improved music timing    
+- Added translations to version page
+- Added GrandPiano instrument
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
@@ -51,6 +49,7 @@ export const INSTRUMENTS = APP_NAME === "Genshin"
     ] as const
     : [
         "Piano",
+        "GrandPiano",
         "Contrabass",
         "Guitar",
         "LightGuitar",
@@ -573,6 +572,15 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = APP_
         midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
     },
     Piano: {
+        notes: 15,
+        family: "piano",
+        midiName: "acoustic grand piano",
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultSky,
+        layout: LAYOUT_KINDS.defaultSky,
+        icons: LAYOUT_ICONS_KINDS.defaultSky,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultSky,
+    },
+    GrandPiano: {
         notes: 15,
         family: "piano",
         midiName: "acoustic grand piano",

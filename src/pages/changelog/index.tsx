@@ -67,7 +67,9 @@ export default function ChangelogPage() {
         <div style={{marginTop: '2rem'}}/>
 
         {CHANGELOG.map(data => <ChangelogRow
-            {...data}
+            version={data.version}
+            date={data.date}
+            changes={data.changes}
             key={data.version}
         />)}
         <div className={s['changelog-ending']}/>

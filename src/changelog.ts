@@ -1,5 +1,3 @@
-import {APP_NAME} from "$config";
-
 type Update = {
     version: string
     title: string
@@ -8,6 +6,15 @@ type Update = {
 }
 
 export const CHANGELOG: Update[] = [
+    {
+        version: '3.6.2',
+        title: "Translations and GrandPiano (Sky)",
+        date: new Date('2025-02-17'),
+        changes: [
+            'Added translations for changelog',
+            'Added GrandPiano (Sky)',
+        ]
+    },
     {
         version: '3.6.1',
         title: "Improved timing",
@@ -18,11 +25,11 @@ export const CHANGELOG: Update[] = [
     },
     {
         version: '3.6.0',
-        title: "Multi color rows" + (APP_NAME === 'Genshin' ? ' and new instruments' : ''),
+        title: "Multi color rows and new instruments",
         date: new Date('2025-01-04'),
         changes: [
             "In the sheet visualizer you can now select the rows to have different background colors",
-            ...(APP_NAME === 'Genshin' ? ["Added Ukulele and Djem Djem Drum"] : []),
+            "Added Ukulele and Djem Djem Drum (Genshin)"
         ]
     },
     {

@@ -1,14 +1,24 @@
 import s from "$pages/changelog/Changelog.module.css"
 import {useMemo} from "react";
+import {useTranslation} from "react-i18next";
 
 interface ChangelogRowProps {
     version: string | number,
-    title: string,
-    changes: string[],
+    changes: string[]
     date: Date
 }
 
-export function ChangelogRow({version, title, changes, date}: ChangelogRowProps) {
+export function ChangelogRow({version, date, changes: _changes}: ChangelogRowProps) {
+    const {t} = useTranslation('versions')
+    const v = `${version}`.replaceAll('.', '-')
+    //@ts-ignore
+    const title = t(`versions.${v}.title`) as string
+
+    const changes = _changes.map((_, i) => {
+        //@ts-ignore
+        return t(`versions.${v}.change-${i + 1}`) as string
+    })
+
     const localDate = useMemo(() => {
         return new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(date)
     }, [date])
