@@ -1,66 +1,66 @@
 {
     "versions": {
         "3-6-2": {
-            "title": "翻译和三角钢琴 (光遇)"，
-            "change-1": "新增了变更日志的翻译"，
+            "title": "翻译和三角钢琴 (光遇)",
+            "change-1": "新增了变更日志的翻译",
             "change-2": "新增了三角钢琴 (光遇)"
-        }，
+        },
         "3-6-1": {
-            "title": "改进计时"，
-            "change-1": "优化了歌曲播放的时间同步，现在播放速度会更准确，可能需要调整BPM设置"
-        }，
+            "title": "改进计时",
+            "change-1": "优化了歌曲播放的时间同步,现在播放速度会更准确,可能需要调整BPM设置"
+        },
         "3-6-0": {
-            "title": "多色行和新乐器"，
-            "change-1": "在乐谱可视化器中可以选择不同颜色来区分不同的行"，
+            "title": "多色行和新乐器",
+            "change-1": "在乐谱可视化器中可以选择不同颜色来区分不同的行",
             "change-2": "新增了悠可琴和聚聚鼓"
-        }，
+        },
         "3-5-0": {
-            "title": "循环、可视化乐谱设置、土耳其语翻译"，
-            "change-1": "新增了练习/演奏模式下的节段循环功能"，
-            "change-2": "可以用数字表示要重复的节段音符"，
-            "change-3": "新增了练习模式下隐藏音符的功能，帮助记忆歌曲"，
-            "change-4": "可以选择在可视化乐谱上显示多少个块"，
+            "title": "循环、可视化乐谱设置、土耳其语翻译",
+            "change-1": "新增了练习/演奏模式下的节段循环功能",
+            "change-2": "可以用数字表示要重复的节段音符",
+            "change-3": "新增了练习模式下隐藏音符的功能,帮助记忆歌曲",
+            "change-4": "可以选择在可视化乐谱上显示多少个块",
             "change-5": "新增了土耳其语翻译"
-        }，
+        },
         "3-4-1": {
-            "title": "印尼语、葡萄牙语翻译"，
-            "change-1": "新增了印尼语和葡萄牙语翻译"，
-            "change-2": "修复了MIDI连接的问题"，
+            "title": "印尼语、葡萄牙语翻译",
+            "change-1": "新增了印尼语和葡萄牙语翻译",
+            "change-2": "修复了MIDI连接的问题",
             "change-3": "修复了旧iOS设备上的问题"
-        }，
+        },
         "3-4-0": {
-            "title": "翻译"，
-            "change-1": "新增了中文翻译，我们正在招募新的翻译人员！"，
-            "change-2": "新增了将应用安装到主屏幕的按钮"，
-            "change-3": "新增了自定义键盘布局作为音符名称类型"，
-            "change-4": "新增了\"您的键盘布局\"音符名称类型，使用设备的键盘布局"，
+            "title": "翻译",
+            "change-1": "新增了中文翻译,我们正在招募新的翻译人员！",
+            "change-2": "新增了将应用安装到主屏幕的按钮",
+            "change-3": "新增了自定义键盘布局作为音符名称类型",
+            "change-4": "新增了\"您的键盘布局\"音符名称类型,使用设备的键盘布局",
             "change-5": "修复了一些bug并进行了改进"
-        }，
+        },
         "3-3-0": {
-            "title": "音频/视频转录、混响"，
-            "change-1": "在作曲家工具中新增了将音频/视频转换为乐谱的功能"，
-            "change-2": "可以为每个乐器单独设置混响效果"，
-            "change-3": "新增了Zen键盘中的快速设置"，
-            "change-4": "新增了MIDI设置中的可定制预设"，
-            "change-5": "提升了MIDI连接性能"，
-            "change-6": "Zen键盘现在在按下时发出MIDI音符事件"，
-            "change-7": "更改了光遇 Music Nightly图标"，
-            "change-8": "新增了应用博客"，
+            "title": "音频/视频转录、混响",
+            "change-1": "在作曲家工具中新增了将音频/视频转换为乐谱的功能",
+            "change-2": "可以为每个乐器单独设置混响效果",
+            "change-3": "新增了Zen键盘中的快速设置",
+            "change-4": "新增了MIDI设置中的可定制预设",
+            "change-5": "提升了MIDI连接性能",
+            "change-6": "Zen键盘现在在按下时发出MIDI音符事件",
+            "change-7": "更改了光遇 Music Nightly图标",
+            "change-8": "新增了应用博客",
             "change-9": "其他bug修复和改进"
-        }，
+        },
         "3-2-0": {
-            "title": "快捷键、Do Re Mi、性能、层"，
-            "change-1": "所有快捷键和键盘布局现在均可自定义"，
-            "change-2": "新增带有音调偏移的Do Re Mi布局"，
-            "change-3": "将应用程序的编程语言改为TypeScript"，
-            "change-4": "提升了作曲家主题设计"，
-            "change-5": "新增了作曲家透明度和自定义层颜色"，
-            "change-6": "新增了包含更多信息的新可视化乐谱格式"，
-            "change-7": "新增了歌曲搜索功能"，
-            "change-8": "将作曲家图层数量限制增加至52"，
-            "change-9": "提升了作曲家滑动控件性能"，
-            "change-10": "(光遇) 新增了新乐器：TR-909、贝斯合成器、正弦波合成器和钟声合成器"，
-            "change-11": "更改了文件格式以便双击打开"，
+            "title": "快捷键、Do Re Mi、性能、层",
+            "change-1": "所有快捷键和键盘布局现在均可自定义",
+            "change-2": "新增带有音调偏移的Do Re Mi布局",
+            "change-3": "将应用程序的编程语言改为TypeScript",
+            "change-4": "提升了作曲家主题设计",
+            "change-5": "新增了作曲家透明度和自定义层颜色",
+            "change-6": "新增了包含更多信息的新可视化乐谱格式",
+            "change-7": "新增了歌曲搜索功能",
+            "change-8": "将作曲家图层数量限制增加至52",
+            "change-9": "提升了作曲家滑动控件性能",
+            "change-10": "(光遇) 新增了新乐器：TR-909、贝斯合成器、正弦波合成器和钟声合成器",
+            "change-11": "更改了文件格式以便双击打开",
             "change-12": "新增了导出为zip文件的功能",
             "change-13": "新增了两个默认主题",
             "change-14": "新增了作曲家的前瞻设置以提高音频准确性",
@@ -803,176 +803,176 @@
             "insert_all_layers": "插入全部",
             "select_layer_description": "选择突出显示列中的所有音符或仅选择当前层的音符",
             "delete_selected_columns": "删除选定的列",
-            "erase_all_selected_notes": "删除所有选定的音符",
-            "insert_copied_notes": "插入复制的音符",
-            "paste_copied_notes": "粘贴复制的音符",
+            "erase_all_selected_notes": "删除所有选定的音符"，
+            "insert_copied_notes": "插入复制的音符"，
+            "paste_copied_notes": "粘贴复制的音符"，
             "copy_notes": "复制所有音符"
-        },
+        }，
         "midi_parser": {
-            "out_of_range": "超出范围",
-            "accidentals": "变音记号",
-            "total_notes": "总音符",
-            "select_midi_tracks": "选择 MIDI 轨道",
-            "ignore_empty_tracks": "忽略空轨道",
-            "include_accidentals": "包括临时记号",
-            "global_note_offset": "全局音符偏移量",
-            "global_note_offset_description": "每个音符的索引将被上推/下推这个量,您可以使用它来使歌曲适合应用的音域。您还可以更改每个图层的偏移量。",
-            "local_note_offset": "局部轨道音符偏移量",
-            "local_note_offset_description": "按此数量更改每个音符的索引。",
-            "max_octave_scaling": "最大音符八度缩放",
-            "max_octave_scaling_description": " 缩小/放大超出这些八度音阶的音符。",
-            "number_of_notes": "音符数量",
-            "open_midi_audio_file": "打开 MIDI/音频/视频文件",
-            "there_are_no_notes": "没有音符",
-            "error_is_file_midi": "导入此文件时出错,它是 .mid 文件吗？",
-            "converting_audio_to_midi": "正在将音频转换为 midi（可能需要一段时间）...",
-            "detecting_notes": "检测音符",
-            "loading_converter": "正在加载转换器",
+            "out_of_range": "超出范围"，
+            "accidentals": "变音记号"，
+            "total_notes": "总音符"，
+            "select_midi_tracks": "选择 MIDI 轨道"，
+            "ignore_empty_tracks": "忽略空轨道"，
+            "include_accidentals": "包括临时记号"，
+            "global_note_offset": "全局音符偏移量"，
+            "global_note_offset_description": "每个音符的索引将被上推/下推这个量,您可以使用它来使歌曲适合应用的音域。您还可以更改每个图层的偏移量。"，
+            "local_note_offset": "局部轨道音符偏移量"，
+            "local_note_offset_description": "按此数量更改每个音符的索引。"，
+            "max_octave_scaling": "最大音符八度缩放"，
+            "max_octave_scaling_description": " 缩小/放大超出这些八度音阶的音符。"，
+            "number_of_notes": "音符数量"，
+            "open_midi_audio_file": "打开 MIDI/音频/视频文件"，
+            "there_are_no_notes": "没有音符"，
+            "error_is_file_midi": "导入此文件时出错,它是 .mid 文件吗？"，
+            "converting_audio_to_midi": "正在将音频转换为 midi（可能需要一段时间）..."，
+            "detecting_notes": "检测音符"，
+            "loading_converter": "正在加载转换器"，
             "audio_conversion_warning": "`🔬 此功能是实验性的,它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确,如果可以,最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。"
-        },
-        "warning_opening_midi_importer": "打开MIDI导入器导入MIDI文件,请重新选择文件",
-        "warning_opening_audio_importer": "正在打开 midi 导入器以导入视频/音频文件...请重新选择文件。视频/音频转换不是很准确。",
-        "error_importing_file_invalid_format": "导入文件时出错,格式错误",
-        "error_importing_file_invalid_format_audio_video": "导入文件时出错,格式错误。如果是 MIDI、视频或音频文件,请使用“从 MIDI 创建”按钮。",
+        }，
+        "warning_opening_midi_importer": "打开MIDI导入器导入MIDI文件,请重新选择文件"，
+        "warning_opening_audio_importer": "正在打开 midi 导入器以导入视频/音频文件...请重新选择文件。视频/音频转换不是很准确。"，
+        "error_importing_file_invalid_format": "导入文件时出错,格式错误"，
+        "error_importing_file_invalid_format_audio_video": "导入文件时出错,格式错误。如果是 MIDI、视频或音频文件,请使用“从 MIDI 创建”按钮。"，
         "ask_download_of_current_song": "您当前正在编辑这首歌曲（“{{song_name}}”）,是否要在下载前保存它？"
-    },
+    }，
     "instrument_settings": {
-        "no_instrument_selected": "未选择乐器",
-        "layer_name": "音层名称",
-        "use_song_pitch": "使用歌曲曲调",
-        "use_song_reverb": "使用歌曲混响",
-        "note_icon": "音符图标",
-        "volume": "音量",
-        "volume_high_warning": "如果听到失真,请降低音量",
-        "move_down": "向下移动",
+        "no_instrument_selected": "未选择乐器"，
+        "layer_name": "音层名称"，
+        "use_song_pitch": "使用歌曲曲调"，
+        "use_song_reverb": "使用歌曲混响"，
+        "note_icon": "音符图标"，
+        "volume": "音量"，
+        "volume_high_warning": "如果听到失真,请降低音量"，
+        "move_down": "向下移动"，
         "move_up": "向上移动"
-    },
+    }，
     "tutorials": {
         "composer": {
-            "li_1": "点击歌曲名即可加载。",
-            "li_2": "您可以为每一层使用不同的乐器和音调。",
-            "li_3": "节奏变换器可以帮助您制作歌曲的更快部分,而无需非常高的每分钟节拍数。",
-            "li_4": "您可以通过导入 MIDI 文件并编辑来快速创建歌曲,并非所有歌曲都可以直接转换,您可能需要稍微编辑一下。",
-            "li_5": "您还可以从音频/视频快速创建歌曲,这是一个实验性功能,不太准确。",
+            "li_1": "点击歌曲名即可加载。"，
+            "li_2": "您可以为每一层使用不同的乐器和音调。"，
+            "li_3": "节奏变换器可以帮助您制作歌曲的更快部分,而无需非常高的每分钟节拍数。"，
+            "li_4": "您可以通过导入 MIDI 文件并编辑来快速创建歌曲,并非所有歌曲都可以直接转换,您可能需要稍微编辑一下。"，
+            "li_5": "您还可以从音频/视频快速创建歌曲,这是一个实验性功能,不太准确。"，
             "li_6": "您可以在时间线（编曲器下方的栏）中添加断点,以在歌曲的各个部分之间快速跳转。"
-        },
+        }，
         "player": {
-            "li_1": "点击歌曲名即可播放。",
-            "li_2": "您可以导入其他用户制作的歌曲（不接受音频文件）。您也可以下载自己的歌曲进行分享。",
-            "li_3": "要创作你的歌曲,你可以录制你演奏的音符或在编曲器中创建一首。",
-            "li_4": "启动练习模式",
-            "li_5": "启动缩圈模式",
+            "li_1": "点击歌曲名即可播放。"，
+            "li_2": "您可以导入其他用户制作的歌曲（不接受音频文件）。您也可以下载自己的歌曲进行分享。"，
+            "li_3": "要创作你的歌曲,你可以录制你演奏的音符或在编曲器中创建一首。"，
+            "li_4": "启动练习模式"，
+            "li_5": "启动缩圈模式"，
             "li_6": "可以连接MIDI键盘来演奏"
-        },
+        }，
         "help": {
-            "question_mark_description": "将鼠标悬停在按钮上可查看工具提示。单击此按钮 (?) 时,它将显示更多信息。",
-            "example_help": "帮助示例",
-            "learn_how_to_use_player": "学习如何使用演奏器",
-            "learn_how_to_use_composer": "学习如何使用作曲器",
-            "learn_how_to_use_vsrg_composer": "学习如何使用下落式音乐游戏作曲器",
-            "click_to_visit_blog": "点击此处访问教程",
-            "change_keybinds": "更改按键绑定",
-            "composer_shortcuts": "作曲器快捷键",
-            "vsrg_composer_shortcuts": "下落式音乐游戏作曲器快捷键",
+            "question_mark_description": "将鼠标悬停在按钮上可查看工具提示。单击此按钮 (?) 时,它将显示更多信息。"，
+            "example_help": "帮助示例"，
+            "learn_how_to_use_player": "学习如何使用演奏器"，
+            "learn_how_to_use_composer": "学习如何使用作曲器"，
+            "learn_how_to_use_vsrg_composer": "学习如何使用下落式音乐游戏作曲器"，
+            "click_to_visit_blog": "点击此处访问教程"，
+            "change_keybinds": "更改按键绑定"，
+            "composer_shortcuts": "作曲器快捷键"，
+            "vsrg_composer_shortcuts": "下落式音乐游戏作曲器快捷键"，
             "player_shortcuts": "播放器快捷键"
         }
-    },
+    }，
     "shortcuts": {
-        "holdable": "可长按",
+        "holdable": "可长按"，
         "props": {
-            "toggle_play": "切换播放",
-            "previous_column": "上一列",
-            "next_column": "下一列",
-            "remove_column": "删除列",
-            "add_column": "添加列",
-            "previous_layer": "上一层",
-            "next_layer": "下一层",
-            "next_breakpoint": "下一个断点",
-            "previous_breakpoint": "上一个断点",
-            "toggle_record": "切换记录",
-            "stop": "停止",
-            "restart": "重新启动",
-            "toggle_menu": "切换菜单",
-            "close_menu": "关闭菜单",
-            "move_up": "向上移动",
-            "move_down": "向下移动",
-            "move_left": "向左移动",
-            "move_right": "向右移动",
-            "deselect": "取消选择",
-            "delete": "删除",
-            "next_track": "下一音轨",
-            "previous_track": "上一音轨",
-            "set_tap_hand": "点击-短音",
-            "set_hold_hand": "点击-长音",
-            "set_delete_hand": "点击-删除",
-            "toggle_play_description": "切换播放/暂停",
-            "previous_column_description": "选择上一列",
-            "next_column_description": "选择下一列",
-            "remove_column_description": "删除选定的列",
-            "add_column_description": "在选定列后添加一列",
-            "previous_layer_description": "选择上一音层",
-            "next_layer_description": "选择下一音层",
-            "next_breakpoint_description": "移动到下一个断点",
-            "previous_breakpoint_description": "移动到上一个断点",
-            "toggle_record_description": "切换键盘录音",
-            "stop_description": "停止播放/录音/练习",
-            "restart_description": "重新开始歌曲或练习",
-            "toggle_menu_description": "切换菜单",
-            "close_menu_description": "关闭菜单",
-            "move_up_description": "将选定的音符向上移动",
-            "move_down_description": "将选定的音符向下移动",
-            "move_left_description": "向左移动选定的音符",
-            "move_right_description": "向右移动所选音符",
-            "deselect_description": "取消选择选定的音符",
-            "delete_description": "删除选定的音符",
-            "next_track_description": "选择下一音轨",
-            "previous_track_description": "选择上一音轨",
-            "set_tap_hand_description": "设置点击功能为创建短音",
-            "set_hold_hand_description": "设置点击功能为创建长音",
-            "set_delete_hand_description": "设置点击功能为删除音符",
+            "toggle_play": "切换播放"，
+            "previous_column": "上一列"，
+            "next_column": "下一列"，
+            "remove_column": "删除列"，
+            "add_column": "添加列"，
+            "previous_layer": "上一层"，
+            "next_layer": "下一层"，
+            "next_breakpoint": "下一个断点"，
+            "previous_breakpoint": "上一个断点"，
+            "toggle_record": "切换记录"，
+            "stop": "停止"，
+            "restart": "重新启动"，
+            "toggle_menu": "切换菜单"，
+            "close_menu": "关闭菜单"，
+            "move_up": "向上移动"，
+            "move_down": "向下移动"，
+            "move_left": "向左移动"，
+            "move_right": "向右移动"，
+            "deselect": "取消选择"，
+            "delete": "删除"，
+            "next_track": "下一音轨"，
+            "previous_track": "上一音轨"，
+            "set_tap_hand": "点击-短音"，
+            "set_hold_hand": "点击-长音"，
+            "set_delete_hand": "点击-删除"，
+            "toggle_play_description": "切换播放/暂停"，
+            "previous_column_description": "选择上一列"，
+            "next_column_description": "选择下一列"，
+            "remove_column_description": "删除选定的列"，
+            "add_column_description": "在选定列后添加一列"，
+            "previous_layer_description": "选择上一音层"，
+            "next_layer_description": "选择下一音层"，
+            "next_breakpoint_description": "移动到下一个断点"，
+            "previous_breakpoint_description": "移动到上一个断点"，
+            "toggle_record_description": "切换键盘录音"，
+            "stop_description": "停止播放/录音/练习"，
+            "restart_description": "重新开始歌曲或练习"，
+            "toggle_menu_description": "切换菜单"，
+            "close_menu_description": "关闭菜单"，
+            "move_up_description": "将选定的音符向上移动"，
+            "move_down_description": "将选定的音符向下移动"，
+            "move_left_description": "向左移动选定的音符"，
+            "move_right_description": "向右移动所选音符"，
+            "deselect_description": "取消选择选定的音符"，
+            "delete_description": "删除选定的音符"，
+            "next_track_description": "选择下一音轨"，
+            "previous_track_description": "选择上一音轨"，
+            "set_tap_hand_description": "设置点击功能为创建短音"，
+            "set_hold_hand_description": "设置点击功能为创建长音"，
+            "set_delete_hand_description": "设置点击功能为删除音符"，
             "vsrg_add_hit_object": "添加打击乐对象（同步到注册的按键绑定）"
         }
-    },
+    }，
     "instruments": {
-        "Lyre": "风物之诗琴",
-        "Vintage-Lyre": "老旧的诗琴",
-        "Zither": "镜花之琴",
-        "Old-Zither": "镜花之琴（旧版）",
-        "DunDun": "豪鼓",
-        "Ukulele": "悠可琴",
-        "DjemDjemDrum": "聚聚鼓",
-        "Piano": "钢琴",
+        "Lyre": "风物之诗琴"，
+        "Vintage-Lyre": "老旧的诗琴"，
+        "Zither": "镜花之琴"，
+        "Old-Zither": "镜花之琴（旧版）"，
+        "DunDun": "豪鼓"，
+        "Ukulele": "悠可琴"，
+        "DjemDjemDrum": "聚聚鼓"，
+        "Piano": "钢琴"，
         "GrandPiano": "三角钢琴"
-        "Contrabass": "屁琴",
-        "Guitar": "吉他",
-        "LightGuitar": "电吉他",
-        "Harp": "竖琴",
-        "Horn": "圆号",
-        "Trumpet": "小号",
-        "Pipa": "琵琶",
-        "WinterPiano": "高音钢琴",
-        "Xylophone": "钢片琴",
-        "Flute": "长笛",
-        "Panflute": "排箫",
-        "Ocarina": "陶笛",
-        "MantaOcarina": "鲲笛",
-        "Aurora": "Aurora",
-        "Kalimba": "拇指琴",
-        "ToyUkulele": "玩具尤克里里",
-        "Drum": "鼓组",
-        "Bells": "铃铛",
-        "HandPan": "手碟",
-        "SFX_SineSynth": "合成正弦波",
-        "SFX_BassSynth": "合成贝斯",
-        "SFX_ChimeSynth": "合成铃音",
-        "SFX_TR-909": "TR-909",
-        "SFX_Dance": "舞步",
-        "SFX_BirdCall": "白鸟之声",
-        "SFX_CrabCall": "小蟹之声",
-        "SFX_FishCall": "大鱼之声",
-        "SFX_SpiritMantaCall": "光鲲之声",
-        "SFX_JellyCall": "水母之声",
-        "SFX_MantaCall": "遥鲲之声",
+        "Contrabass": "屁琴"，
+        "Guitar": "吉他"，
+        "LightGuitar": "电吉他"，
+        "Harp": "竖琴"，
+        "Horn": "圆号"，
+        "Trumpet": "小号"，
+        "Pipa": "琵琶"，
+        "WinterPiano": "高音钢琴"，
+        "Xylophone": "钢片琴"，
+        "Flute": "长笛"，
+        "Panflute": "排箫"，
+        "Ocarina": "陶笛"，
+        "MantaOcarina": "鲲笛"，
+        "Aurora": "Aurora"，
+        "Kalimba": "拇指琴"，
+        "ToyUkulele": "玩具尤克里里"，
+        "Drum": "鼓组"，
+        "Bells": "铃铛"，
+        "HandPan": "手碟"，
+        "SFX_SineSynth": "合成正弦波"，
+        "SFX_BassSynth": "合成贝斯"，
+        "SFX_ChimeSynth": "合成铃音"，
+        "SFX_TR-909": "TR-909"，
+        "SFX_Dance": "舞步"，
+        "SFX_BirdCall": "白鸟之声"，
+        "SFX_CrabCall": "小蟹之声"，
+        "SFX_FishCall": "大鱼之声"，
+        "SFX_SpiritMantaCall": "光鲲之声"，
+        "SFX_JellyCall": "水母之声"，
+        "SFX_MantaCall": "遥鲲之声"，
         "SFX_MothCall": "幼童之声"
     }
 }
