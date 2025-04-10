@@ -1,71 +1,71 @@
 {
     "versions": {
         "3-6-2": {
-            "title": "翻译和三角钢琴 (光遇)",
-            "change-1": "新增了变更日志的翻译",
+            "title": "翻译和三角钢琴 (光遇)"，
+            "change-1": "新增了变更日志的翻译"，
             "change-2": "新增了三角钢琴 (光遇)"
         }，
         "3-6-1": {
-            "title": "改进计时",
+            "title": "改进计时"，
             "change-1": "优化了歌曲播放的时间同步，现在播放速度会更准确，可能需要调整BPM设置"
         }，
         "3-6-0": {
-            "title": "多色行和新乐器",
-            "change-1": "在乐谱可视化器中可以选择不同颜色来区分不同的行",
+            "title": "多色行和新乐器"，
+            "change-1": "在乐谱可视化器中可以选择不同颜色来区分不同的行"，
             "change-2": "新增了悠可琴和聚聚鼓"
         }，
         "3-5-0": {
-            "title": "循环、可视化乐谱设置、土耳其语翻译",
-            "change-1": "新增了练习/演奏模式下的节段循环功能",
-            "change-2": "可以用数字表示要重复的节段音符",
-            "change-3": "新增了练习模式下隐藏音符的功能，帮助记忆歌曲",
-            "change-4": "可以选择在可视化乐谱上显示多少个块",
+            "title": "循环、可视化乐谱设置、土耳其语翻译"，
+            "change-1": "新增了练习/演奏模式下的节段循环功能"，
+            "change-2": "可以用数字表示要重复的节段音符"，
+            "change-3": "新增了练习模式下隐藏音符的功能，帮助记忆歌曲"，
+            "change-4": "可以选择在可视化乐谱上显示多少个块"，
             "change-5": "新增了土耳其语翻译"
         }，
         "3-4-1": {
-            "title": "印尼语、葡萄牙语翻译",
-            "change-1": "新增了印尼语和葡萄牙语翻译",
-            "change-2": "修复了MIDI连接的问题",
+            "title": "印尼语、葡萄牙语翻译"，
+            "change-1": "新增了印尼语和葡萄牙语翻译"，
+            "change-2": "修复了MIDI连接的问题"，
             "change-3": "修复了旧iOS设备上的问题"
         }，
         "3-4-0": {
-            "title": "翻译",
-            "change-1": "新增了中文翻译，我们正在招募新的翻译人员！",
-            "change-2": "新增了将应用安装到主屏幕的按钮",
-            "change-3": "新增了自定义键盘布局作为音符名称类型",
-            "change-4": "新增了\"您的键盘布局\"音符名称类型，使用设备的键盘布局",
+            "title": "翻译"，
+            "change-1": "新增了中文翻译，我们正在招募新的翻译人员！"，
+            "change-2": "新增了将应用安装到主屏幕的按钮"，
+            "change-3": "新增了自定义键盘布局作为音符名称类型"，
+            "change-4": "新增了\"您的键盘布局\"音符名称类型，使用设备的键盘布局"，
             "change-5": "修复了一些bug并进行了改进"
         }，
         "3-3-0": {
-            "title": "音频/视频转录、混响",
-            "change-1": "在作曲家工具中新增了将音频/视频转换为乐谱的功能",
-            "change-2": "可以为每个乐器单独设置混响效果",
-            "change-3": "新增了Zen键盘中的快速设置",
-            "change-4": "新增了MIDI设置中的可定制预设",
-            "change-5": "提升了MIDI连接性能",
-            "change-6": "Zen键盘现在在按下时发出MIDI音符事件",
-            "change-7": "更改了光遇 Music Nightly图标",
-            "change-8": "新增了应用博客",
+            "title": "音频/视频转录、混响"，
+            "change-1": "在作曲家工具中新增了将音频/视频转换为乐谱的功能"，
+            "change-2": "可以为每个乐器单独设置混响效果"，
+            "change-3": "新增了Zen键盘中的快速设置"，
+            "change-4": "新增了MIDI设置中的可定制预设"，
+            "change-5": "提升了MIDI连接性能"，
+            "change-6": "Zen键盘现在在按下时发出MIDI音符事件"，
+            "change-7": "更改了光遇 Music Nightly图标"，
+            "change-8": "新增了应用博客"，
             "change-9": "其他bug修复和改进"
         }，
         "3-2-0": {
-            "title": "快捷键、Do Re Mi、性能、层",
-            "change-1": "所有快捷键和键盘布局现在均可自定义",
-            "change-2": "新增带有音调偏移的Do Re Mi布局",
-            "change-3": "将应用程序的编程语言改为TypeScript",
-            "change-4": "提升了作曲家主题设计",
-            "change-5": "新增了作曲家透明度和自定义层颜色",
-            "change-6": "新增了包含更多信息的新可视化乐谱格式",
-            "change-7": "新增了歌曲搜索功能",
-            "change-8": "将作曲家图层数量限制增加至52",
-            "change-9": "提升了作曲家滑动控件性能",
-            "change-10": "(光遇) 新增了新乐器：TR-909、贝斯合成器、正弦波合成器和钟声合成器",
-            "change-11": "更改了文件格式以便双击打开",
+            "title": "快捷键、Do Re Mi、性能、层"，
+            "change-1": "所有快捷键和键盘布局现在均可自定义"，
+            "change-2": "新增带有音调偏移的Do Re Mi布局"，
+            "change-3": "将应用程序的编程语言改为TypeScript"，
+            "change-4": "提升了作曲家主题设计"，
+            "change-5": "新增了作曲家透明度和自定义层颜色"，
+            "change-6": "新增了包含更多信息的新可视化乐谱格式"，
+            "change-7": "新增了歌曲搜索功能"，
+            "change-8": "将作曲家图层数量限制增加至52"，
+            "change-9": "提升了作曲家滑动控件性能"，
+            "change-10": "(光遇) 新增了新乐器：TR-909、贝斯合成器、正弦波合成器和钟声合成器"，
+            "change-11": "更改了文件格式以便双击打开"，
             "change-12": "新增了导出为zip文件的功能",
             "change-13": "新增了两个默认主题",
             "change-14": "新增了作曲家的前瞻设置以提高音频准确性",
             "change-15": "其他bug修复和改进"
-        }，
+        },
         "3-1-0": {
             "title": "Aurora、透明度和布局",
             "change-1": "新增了Aurora（光遇）",
@@ -73,18 +73,18 @@
             "change-3": "新增了备份警告",
             "change-4": "新增了主题透明度",
             "change-5": "其他bug修复和改进"
-        }，
+        },
         "3-0-1": {
             "title": "性能和bug修复",
             "change-1": "修复了一个阻止iOS上音频播放的bug",
             "change-2": "提升了拥有大量歌曲用户的性能",
             "change-3": "新增了作曲家工具中的节奏变化快速选择",
             "change-4": "其他bug修复和改进"
-        }，
+        },
         "3-0": {
             "title": "VSRG模式、Zen键盘、Calls和其他更多！",
             "change-1": "新增了VSRG模式用于创作和演奏vsrg歌曲",
-            "change-2": "新增了Zen键盘，让您只需专注于用手演奏",
+            "change-2": "新增了Zen键盘,让您只需专注于用手演奏",
             "change-3": "新增了播放器中的可视化乐谱",
             "change-4": "新增了应用缩放功能",
             "change-5": "新增了按字母顺序排列的文件夹",
@@ -93,14 +93,14 @@
             "change-8": "(光遇) 新增呼唤和舞蹈表情的SFX",
             "change-9": "更换了节拍器声音",
             "change-10": "提升了播放器性能",
-            "change-11": "多类型导入导出，现在可以导出/导入歌曲、文件夹、主题等",
+            "change-11": "多类型导入导出,现在可以导出/导入歌曲、文件夹、主题等",
             "change-12": "修复保存歌曲时从文件夹中移除歌曲的问题",
             "change-13": "修复无法播放音频的问题",
             "change-14": "修复在作曲家中打开/保存歌曲时的问题",
             "change-15": "修复在作曲家中粘贴音符时的问题",
             "change-16": "在Sky Music和Sky Studio中导出歌曲无效",
             "change-17": "其他bug修复和改进"
-        }，
+        },
         "2-8": {
             "title": "更多的作曲家层和UI重构",
             "change-1": "将作曲家中的乐器数量限制增加至30",
@@ -110,7 +110,7 @@
             "change-5": "新增了移动音符上下移动的工具",
             "change-6": "新增了播放器中的节拍器",
             "change-7": "新增了播放器中的多个乐器支持",
-            "change-8": "新增了更多提示，包括移动设备上的提示",
+            "change-8": "新增了更多提示,包括移动设备上的提示",
             "change-9": "修复bug并进行改进"
         },
         "2-7": {
@@ -126,7 +126,7 @@
             "title": "玩具尤克里里 & 提示",
             "change-1": "新增了提示",
             "change-2": "新增了帮助按钮",
-            "change-3": "新增了玩具尤克里里（光遇，音符不能持续）",
+            "change-3": "新增了玩具尤克里里（光遇,音符不能持续）",
             "change-4": "修复了主页面加载歌曲的bug",
             "change-5": "新增了作曲家中的拖放功能",
             "change-6": "PC上的作曲家随页面调整大小",
@@ -134,7 +134,7 @@
         },
         "2-5": {
             "title": "作曲家改进",
-            "change-1": "改进了作曲家的渲染效果，在手机上更加清晰易读",
+            "change-1": "改进了作曲家的渲染效果,在手机上更加清晰易读",
             "change-2": "提高了作曲家的性能",
             "change-3": "新增了作曲家中的第四个层",
             "change-4": "增加了作曲家更多部分的主题设计",
@@ -143,13 +143,13 @@
         },
         "2-4": {
             "title": "多重滑块和主题",
-            "change-1": "新增了应用主题，完全自定义应用外观",
-            "change-2": "新增了开始和结束滑块，用于选择播放/练习哪一部分歌曲",
+            "change-1": "新增了应用主题,完全自定义应用外观",
+            "change-2": "新增了开始和结束滑块,用于选择播放/练习哪一部分歌曲",
             "change-3": "修复了bug"
         },
         "2-3": {
             "title": "MIDI键盘和性能",
-            "change-1": "新增了所有页面上的MIDI键盘支持，带自定义布局和快捷键",
+            "change-1": "新增了所有页面上的MIDI键盘支持,带自定义布局和快捷键",
             "change-2": "主页面的大性能改进",
             "change-3": "新增了音符名称到乐谱可视化器和空单元格",
             "change-4": "新增了ABC格式",
@@ -169,7 +169,7 @@
             "change-2": "新增了帮助页面",
             "change-3": "更改了镜花之琴的声音（原神）",
             "change-4": "UI改进"
-        }，
+        },
         "2-1": {
             "title": "主页菜单和页面",
             "change-1": "重组了代码",
@@ -180,10 +180,10 @@
             "change-6": "新增了主页快捷键",
             "change-7": "修复了作曲家和主页的加载bug",
             "change-8": "新增了捐赠页面"
-        }，
+        },
         "2-0": {
             "title": "节奏判定圈",
-            "change-1": "新增了节奏判定圈模式，这是一种学习歌曲或挑战自己的新方式。您可以在主页的练习按钮旁边找到它",
+            "change-1": "新增了节奏判定圈模式,这是一种学习歌曲或挑战自己的新方式。您可以在主页的练习按钮旁边找到它",
             "change-2": "重写了主页以提高整体性能",
             "change-3": "新增了变更日志页面",
             "change-4": "新增了主页和作曲家中的录音功能",
@@ -193,51 +193,51 @@
             "change-8": "更新了信息页面",
             "change-9": "在作曲家中可以按Shift + 音符名称添加音符",
             "change-10": "在作曲家中可以按上下箭头键更改层"
-        }，
+        },
         "1-7": {
             "title": "诗琴",
             "change-1": "(对于原神) 新增了诗琴",
             "change-2": "恢复了 \"do re mi\" 格式"
-        }，
+        },
         "1-6": {
             "title": "性能优化",
-            "change-1": "提升了作曲家的性能，速度提高了两倍",
+            "change-1": "提升了作曲家的性能,速度提高了两倍",
             "change-2": "新增了原神中的音符名称设置",
             "change-3": "修复了乐器音量问题",
             "change-4": "修复了键盘布局问题",
             "change-5": "修复了其他小问题"
-        }，
+        },
         "1-5": {
             "title": "MIDI 导入",
             "change-1": "在 Sky 和 原神音乐夜空中新增了 MIDI 导入功能",
             "change-2": "可以选择要包含的音乐轨道",
             "change-3": "可以选择每条轨道使用的乐器",
-            "change-4": "提供了轨道信息，显示解析的成功程度、变音记号和超出范围的音符",
-            "change-5": "可以调整音符偏移量，以防歌曲超出可用八度范围"
-        }，
+            "change-4": "提供了轨道信息,显示解析的成功程度、变音记号和超出范围的音符",
+            "change-5": "可以调整音符偏移量,以防歌曲超出可用八度范围"
+        },
         "1-4": {
             "title": "歌曲库",
-            "change-1": "新增了歌曲库集成，可以直接从应用中导入歌曲（超过700首）",
+            "change-1": "新增了歌曲库集成,可以直接从应用中导入歌曲（超过700首）",
             "change-2": "修复了bug"
-        }，
+        },
         "1-3": {
             "title": "新的音频文件",
             "change-1": "更换了音频文件",
             "change-2": "新增了口笛",
             "change-3": "移除了 TWA 中的支持按钮",
             "change-4": "修复了bug"
-        }，
+        },
         "1-2": {
             "title": "bug 修复和 PWA",
             "change-1": "(对于天空) 修复了在天空工作室中无法导入乐谱的bug",
-            "change-2": "更改了应用安装方式，采用了现代方法，包含描述和图片"
-        }，
+            "change-2": "更改了应用安装方式,采用了现代方法,包含描述和图片"
+        },
         "1-1": {
             "title": "乐谱兼容性",
-            "change-1": "(对于天空) 新增了对旧版乐谱的向后兼容性，现在可以在天空音乐和天空工作室中导入天空音乐夜空中制作的乐谱（可能会丢失一些信息）",
+            "change-1": "(对于天空) 新增了对旧版乐谱的向后兼容性,现在可以在天空音乐和天空工作室中导入天空音乐夜空中制作的乐谱（可能会丢失一些信息）",
             "change-2": "修复了bug",
             "change-3": "提升了整体性能"
-        }，
+        },
         "1-0": {
             "title": "发布",
             "change-1": "支持三种乐器的编曲",
@@ -246,11 +246,11 @@
             "change-4": "更好的界面",
             "change-5": "为作曲家新增了断点功能",
             "change-6": "为主页和作曲家新增了许多新功能",
-            "change-7": "丰富的自定义功能，使学习和编曲更容易"
+            "change-7": "丰富的自定义功能,使学习和编曲更容易"
         }
-    }，
+    },
     "logs": {
-        "update_available": "发现新版本应用，是否刷新界面进行更新？请关闭/刷新其他打开应用的选项卡。",
+        "update_available": "发现新版本应用,是否刷新界面进行更新？请关闭/刷新其他打开应用的选项卡。",
         "error_with_the_app": "程序出错！",
         "loading_instruments": "加载乐器中...",
         "loading_song": "加载歌曲中...",
@@ -269,8 +269,8 @@
         "no_empty_name": "请填写一个非空白的名称",
         "cloned_song": "复制歌曲：“{{song_name}}”",
         "converting_recorded_to_composed_warning": "将录制的歌曲转换为创作的歌曲。音频可能不准确。",
-        "suggest_backup": "您已经有一段时间没有备份歌曲了，记得偶尔下载一下备份哦！",
-        "storage_persisted": "已允许持久存储，浏览器将不会删除您的数据。",
+        "suggest_backup": "您已经有一段时间没有备份歌曲了,记得偶尔下载一下备份哦！",
+        "storage_persisted": "已允许持久存储,浏览器将不会删除您的数据。",
         "storage_persisted_error": "设置持久存储时出错",
         "importing_files": "导入文件中...",
         "could_not_load_song": "无法加载歌曲",
@@ -289,17 +289,17 @@
         "imported_song": "已导入{{song_type}}歌曲“{{song_name}}”",
         "error_loading_song": "加载此歌曲时出错",
         "error_loading_theme": "加载此主题时出错"
-    }，
+    },
     "question": {
-        "unsaved_song_save": "您对歌曲“{{song_name}}”有未保存的更改，您现在要保存吗？未保存的更改将会丢失。",
+        "unsaved_song_save": "您对歌曲“{{song_name}}”有未保存的更改,您现在要保存吗？未保存的更改将会丢失。",
         "enter_song_name": "填写歌曲名称",
         "enter_folder_name": "填写文件夹名称",
-        "ask_song_name_cancellable": "请填写歌曲名称，点击取消可忽略。"
-    }，
+        "ask_song_name_cancellable": "请填写歌曲名称,点击取消可忽略。"
+    },
     "confirm": {
         "delete_song": "你是否确定删除歌曲“{{song_name}}”?",
-        "confirm_import_opened_file": "您打开了文件“{{files_names}}”，是否要导入它？"
-    }，
+        "confirm_import_opened_file": "您打开了文件“{{files_names}}”,是否要导入它？"
+    },
     "common": {
         "warning": "警告",
         "error": "错误",
@@ -353,14 +353,14 @@
         "add_new_instrument": "添加新乐器",
         "reset": "重置",
         "new": "新"
-    }，
+    },
     "home": {
         "app_description": "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
-        "add_to_home_screen": "要使网络应用程序全屏显示，请将网站添加到主屏幕。",
-        "clear_cache_warning": "清除浏览器缓存/存储可能会删除你的歌曲，请确保进行备份。",
-        "persistent_storage_button": "点击下面的按钮，确保您的浏览器不会在存储空间不足时删除您的歌曲。",
-        "privacy_policy": "我们使用cookie进行分析，如果继续使用此应用程序，则表示您同意我们使用cookie，了解更多信息: ",
-        "no_affiliation": "此应用不隶属于{{company_name}}，它是一个由粉丝制作的程序。",
+        "add_to_home_screen": "要使网络应用程序全屏显示,请将网站添加到主屏幕。",
+        "clear_cache_warning": "清除浏览器缓存/存储可能会删除你的歌曲,请确保进行备份。",
+        "persistent_storage_button": "点击下面的按钮,确保您的浏览器不会在存储空间不足时删除您的歌曲。",
+        "privacy_policy": "我们使用cookie进行分析,如果继续使用此应用程序,则表示您同意我们使用cookie,了解更多信息: ",
+        "no_affiliation": "此应用不隶属于{{company_name}},它是一个由粉丝制作的程序。",
         "composer_description": "使用功能完善的作曲软件创建或编辑歌曲。也可以使用 MIDI。",
         "player_description": "播放、下载、录制和导入歌曲。通过缩圈模式和练习模式来学习歌曲。",
         "cache_reload_warning": "您确定要清除缓存吗？页面将重新加载。",
@@ -387,132 +387,132 @@
         "rights": "© {{company_name}} 保留所有权利。其他财产属于其各自所有者。",
         "hide_on_open": "启动时隐藏",
         "beta": "公测版",
-        "about_to_leave_warning": "您即将离开应用程序前往“{{to}}”，是否继续？",
+        "about_to_leave_warning": "您即将离开应用程序前往“{{to}}”,是否继续？",
         "find_out_more": "了解更多",
-        "close_promotion": "关闭推广"，
-        "install_app": "安装应用程序"，
-        "rotate_screen": "添加网站到主屏幕并旋转设备以改进体验"，
-        "expand_screen": "请扩大您的窗口尺寸"，
-        "drop_files_here": "拖放文件到此处"，
-        "new_changes_to_page": "页面更新!"，
+        "close_promotion": "关闭推广",
+        "install_app": "安装应用程序",
+        "rotate_screen": "添加网站到主屏幕并旋转设备以改进体验",
+        "expand_screen": "请扩大您的窗口尺寸",
+        "drop_files_here": "拖放文件到此处",
+        "new_changes_to_page": "页面更新!",
         "how_to_install": "如何使用浏览器添加应用到主屏幕"
-    }，
+    },
     "menu": {
-        "close_menu": "关闭菜单"，
-        "toggle_menu": "切换菜单"，
-        "open_settings_menu": "打开设置菜单"，
-        "open_home_menu": "打开主菜单"，
-        "open_songs_menu": "打开歌曲菜单"，
-        "open_library_menu": "打开库菜单"，
-        "open_info_menu": "打开信息菜单"，
-        "settings": "设置"，
-        "song_menu": "歌曲菜单"，
-        "help": "帮助"，
-        "settings_menu": "设置菜单"，
-        "song_name": "歌曲名称"，
-        "go_back": "返回"，
-        "play_song": "播放歌曲"，
-        "invalid_song": "无效歌曲"，
-        "download_song": "下载歌曲 {{song_name}}"，
-        "delete_song": "删除歌曲 {{song_name}}"，
-        "change_app_theme": "更改应用主题"，
-        "download_all_songs_backup": "下载所有歌曲（备份）"，
-        "connect_midi_keyboard": "连接 MIDI 键盘"，
-        "import_song_sheet": "导入歌曲"，
-        "compose_song": "创作歌曲"，
-        "select_menu": "选择菜单"，
-        "create_folder": "创建文件夹"，
-        "hint_no_composed_songs": "这里没有歌曲，创作一首！"，
-        "hint_no_recorded_songs": "这里没有歌曲，录制一首！"，
-        "hint_no_songs_in_folder": "这里没有歌曲，添加一首！"，
-        "folder_empty": "文件夹为空"，
-        "midi_download_warning": "如果您使用MIDI，歌曲会失去一些准确性，如果您想与其他人分享歌曲，请使用其他格式（上面的按钮）。您仍然想下载吗？"，
-        "confirm_delete_folder": "您确定要删除文件夹“{{folder_name}}”吗？歌曲不会被删除。"，
-        "filter_alphabetical": "按字母顺序"，
-        "filter_date-created": "创建日期"，
-        "open_in_composer": "在编曲器中打开"，
-        "recorded": "录制的歌曲"，
-        "composed": "创作的歌曲"，
-        "vsrg": "下落式音乐游戏"，
-        "midi": "MIDI"，
+        "close_menu": "关闭菜单",
+        "toggle_menu": "切换菜单",
+        "open_settings_menu": "打开设置菜单",
+        "open_home_menu": "打开主菜单",
+        "open_songs_menu": "打开歌曲菜单",
+        "open_library_menu": "打开库菜单",
+        "open_info_menu": "打开信息菜单",
+        "settings": "设置",
+        "song_menu": "歌曲菜单",
+        "help": "帮助",
+        "settings_menu": "设置菜单",
+        "song_name": "歌曲名称",
+        "go_back": "返回",
+        "play_song": "播放歌曲",
+        "invalid_song": "无效歌曲",
+        "download_song": "下载歌曲 {{song_name}}",
+        "delete_song": "删除歌曲 {{song_name}}",
+        "change_app_theme": "更改应用主题",
+        "download_all_songs_backup": "下载所有歌曲（备份）",
+        "connect_midi_keyboard": "连接 MIDI 键盘",
+        "import_song_sheet": "导入歌曲",
+        "compose_song": "创作歌曲",
+        "select_menu": "选择菜单",
+        "create_folder": "创建文件夹",
+        "hint_no_composed_songs": "这里没有歌曲,创作一首！",
+        "hint_no_recorded_songs": "这里没有歌曲,录制一首！",
+        "hint_no_songs_in_folder": "这里没有歌曲,添加一首！",
+        "folder_empty": "文件夹为空",
+        "midi_download_warning": "如果您使用MIDI,歌曲会失去一些准确性,如果您想与其他人分享歌曲,请使用其他格式（上面的按钮）。您仍然想下载吗？",
+        "confirm_delete_folder": "您确定要删除文件夹“{{folder_name}}”吗？歌曲不会被删除。",
+        "filter_alphabetical": "按字母顺序",
+        "filter_date-created": "创建日期",
+        "open_in_composer": "在编曲器中打开",
+        "recorded": "录制的歌曲",
+        "composed": "创作的歌曲",
+        "vsrg": "下落式音乐游戏",
+        "midi": "MIDI",
         "song_library": "歌曲库"
-    }，
+    },
     "settings": {
-        "toggle_metronome": "切换节拍器"，
-        "change_keybinds": "更改按键绑定"，
-        "more_options": "更多选项"，
-        "memory_persisted": "存储被持久化"，
-        "memory_not_persisted": "存储未持久化"，
-        "memory_persisted_description": "您的数据保留在浏览器中，浏览器不应自动清除它。始终确保时常下载备份，尤其是当您长时间不使用该应用程序的情况下。"，
-        "memory_not_persisted_description": "浏览器不允许持久存储数据，当缓存自动清除时，可能会丢失数据。要获得持久存储，请将应用程序添加到主屏幕。如果仍然不起作用，请确保经常进行备份。"，
-        "select_language": "语言选择"，
+        "toggle_metronome": "切换节拍器",
+        "change_keybinds": "更改按键绑定",
+        "more_options": "更多选项",
+        "memory_persisted": "存储被持久化",
+        "memory_not_persisted": "存储未持久化",
+        "memory_persisted_description": "您的数据保留在浏览器中,浏览器不应自动清除它。始终确保时常下载备份,尤其是当您长时间不使用该应用程序的情况下。",
+        "memory_not_persisted_description": "浏览器不允许持久存储数据,当缓存自动清除时,可能会丢失数据。要获得持久存储,请将应用程序添加到主屏幕。如果仍然不起作用,请确保经常进行备份。",
+        "select_language": "语言选择",
         "props": {
-            "composer_bpm": "BPM"，
-            "composer_bpm_description": "每分钟节拍数，歌曲的速度。通常应用程序内的 BPM 应该是您尝试创作的歌曲的 BPM 的 4 倍。"，
-            "composer_base_pitch": "基本曲调"，
-            "composer_base_pitch_description": "歌曲的主音"，
-            "composer_beat_marks": "节拍标记"，
-            "composer_beat_marks_description": "每小节的节拍数，3/4 是每小节 3 拍，4/4 是每小节 4 拍。"，
-            "composer_note_name_type": "音符名称类型"，
-            "composer_note_name_type_description": "在音符上标注文本的类型"，
-            "composer_columns_per_canvas": "可见列数"，
-            "composer_columns_per_canvas_description": "一次可见多少列，更多列可能会导致延迟。"，
-            "composer_reverb": "基础混响（洞穴模式）"，
-            "composer_reverb_description": "让你听起来像是在一个洞穴里，这是应用于每种乐器的默认值。"，
-            "composer_autosave": "自动保存更改"，
-            "composer_autosave_description": "每 5 次编辑以及当您更改页面/更改歌曲时自动保存对歌曲的更改。"，
-            "composer_use_keyboard_side_buttons": "在键盘周围放置下一列/上一列按钮"，
-            "composer_use_keyboard_side_buttons_description": "将切换下一列/上一列的按钮添加在键盘右侧/左侧。"，
-            "composer_sync_tabs": "在所有选项卡中自动播放（仅限 PC）"，
-            "composer_sync_tabs_description": "高级功能，它同步其他浏览器选项卡以同时播放。"，
-            "composer_lookahead_time": "前窥时长"，
-            "composer_lookahead_time_description": "编曲器将提前多少毫秒寻找要播放的音符，较高的值可以提高播放准确性，但感觉响应速度较差。"，
-            "player_instrument": "乐器"，
-            "player_instrument_description": "播放器的主要（第一个）乐器，也将保存在您录制的歌曲中。"，
-            "player_pitch": "曲调"，
-            "player_pitch_description": "播放器的曲调，也将保存在您录制的歌曲中。"，
-            "player_bpm": "BPM"，
-            "player_bpm_description": "每分钟节拍数，由节拍器使用，并在和编曲器转换歌曲时使用。"，
-            "player_sync_song_data": "自动同步歌曲的乐器和音高"，
-            "player_sync_song_data_description": "每当您加载歌曲时，该歌曲的乐器和音高也会被加载。"，
-            "player_metronome_beats": "节拍器节拍"，
-            "player_metronome_beats_description": "经过多少拍数后播放更强的节拍"，
-            "player_metronome_volume": "节拍器音量"，
-            "player_metronome_volume_description": "节拍器的音量"，
-            "player_reverb": "混响（洞穴模式）"，
-            "player_reverb_description": "让您听起来像是在一个山洞里"，
-            "player_note_name_type": "音符名称类型"，
-            "player_note_name_type_description": "在音符上标注文本的类型"，
-            "player_keyboard_size": "键盘大小"，
-            "player_keyboard_size_description": "缩放键盘尺寸"，
-            "player_keyboard_y_position": "键盘垂直位置"，
-            "player_keyboard_y_position_description": "键盘的垂直位置"，
+            "composer_bpm": "BPM",
+            "composer_bpm_description": "每分钟节拍数,歌曲的速度。通常应用程序内的 BPM 应该是您尝试创作的歌曲的 BPM 的 4 倍。",
+            "composer_base_pitch": "基本曲调",
+            "composer_base_pitch_description": "歌曲的主音",
+            "composer_beat_marks": "节拍标记",
+            "composer_beat_marks_description": "每小节的节拍数,3/4 是每小节 3 拍,4/4 是每小节 4 拍。",
+            "composer_note_name_type": "音符名称类型",
+            "composer_note_name_type_description": "在音符上标注文本的类型",
+            "composer_columns_per_canvas": "可见列数",
+            "composer_columns_per_canvas_description": "一次可见多少列,更多列可能会导致延迟。",
+            "composer_reverb": "基础混响（洞穴模式）",
+            "composer_reverb_description": "让你听起来像是在一个洞穴里,这是应用于每种乐器的默认值。",
+            "composer_autosave": "自动保存更改",
+            "composer_autosave_description": "每 5 次编辑以及当您更改页面/更改歌曲时自动保存对歌曲的更改。",
+            "composer_use_keyboard_side_buttons": "在键盘周围放置下一列/上一列按钮",
+            "composer_use_keyboard_side_buttons_description": "将切换下一列/上一列的按钮添加在键盘右侧/左侧。",
+            "composer_sync_tabs": "在所有选项卡中自动播放（仅限 PC）",
+            "composer_sync_tabs_description": "高级功能,它同步其他浏览器选项卡以同时播放。",
+            "composer_lookahead_time": "前窥时长",
+            "composer_lookahead_time_description": "编曲器将提前多少毫秒寻找要播放的音符,较高的值可以提高播放准确性,但感觉响应速度较差。",
+            "player_instrument": "乐器",
+            "player_instrument_description": "播放器的主要（第一个）乐器,也将保存在您录制的歌曲中。",
+            "player_pitch": "曲调",
+            "player_pitch_description": "播放器的曲调,也将保存在您录制的歌曲中。",
+            "player_bpm": "BPM",
+            "player_bpm_description": "每分钟节拍数,由节拍器使用,并在和编曲器转换歌曲时使用。",
+            "player_sync_song_data": "自动同步歌曲的乐器和音高",
+            "player_sync_song_data_description": "每当您加载歌曲时,该歌曲的乐器和音高也会被加载。",
+            "player_metronome_beats": "节拍器节拍",
+            "player_metronome_beats_description": "经过多少拍数后播放更强的节拍",
+            "player_metronome_volume": "节拍器音量",
+            "player_metronome_volume_description": "节拍器的音量",
+            "player_reverb": "混响（洞穴模式）",
+            "player_reverb_description": "让您听起来像是在一个山洞里",
+            "player_note_name_type": "音符名称类型",
+            "player_note_name_type_description": "在音符上标注文本的类型",
+            "player_keyboard_size": "键盘大小",
+            "player_keyboard_size_description": "缩放键盘尺寸",
+            "player_keyboard_y_position": "键盘垂直位置",
+            "player_keyboard_y_position_description": "键盘的垂直位置",
             "player_approach_speed": "接近速率 (AR)",
-            "player_approach_speed_description": "音符出现和到达结束之间的时间（以毫秒为单位）"，
-            "player_note_animation": "音符动画"，
-            "player_note_animation_description": "切换音符动画（会降低性能）"，
-            "player_show_visual_sheet": "显示键位表"，
-            "player_show_visual_sheet_description": "在键盘上方显示键位表（可能会降低性能）"，
-            "player_number_of_visual_rows": "虚拟键位表的行数"，
-            "player_number_of_visual_rows_description": "显示更多的虚拟键位表的行数（可能会导致延迟）"，
-            "player_number_of_visual_columns": "虚拟键位表的列数"，
-            "player_number_of_visual_columns_description": "显示更多的虚拟键位表的列数（可能会导致延迟）"，
-            "player_loop_practice": "在练习模式下选择歌曲循环"，
-            "player_loop_practice_description": "当你在练习模式下到歌曲的结尾时，它将循环回到开始"，
-            "player_hide_practice_notes": "在练习模式下隐藏文字"，
-            "player_hide_practice_notes_description": "在练习模式下，隐藏文字以便测试你的记忆力，虚拟键位表仍然可见"，
-            "vsrg_composer_keys": "按键数"，
-            "vsrg_composer_keys_description": "歌曲包含的音符数"，
-            "vsrg_composer_bpm": "BPM"，
-            "vsrg_composer_bpm_description": "每分钟节拍数，歌曲的速度"，
-            "vsrg_composer_pitch": "曲调"，
-            "vsrg_composer_pitch_description": "歌曲的主音"，
-            "vsrg_composer_is_vertical": "垂直编辑器"，
-            "vsrg_composer_is_vertical_description": "编辑器设置为水平或垂直"，
+            "player_approach_speed_description": "音符出现和到达结束之间的时间（以毫秒为单位）",
+            "player_note_animation": "音符动画",
+            "player_note_animation_description": "切换音符动画（会降低性能）",
+            "player_show_visual_sheet": "显示键位表",
+            "player_show_visual_sheet_description": "在键盘上方显示键位表（可能会降低性能）",
+            "player_number_of_visual_rows": "虚拟键位表的行数",
+            "player_number_of_visual_rows_description": "显示更多的虚拟键位表的行数（可能会导致延迟）",
+            "player_number_of_visual_columns": "虚拟键位表的列数",
+            "player_number_of_visual_columns_description": "显示更多的虚拟键位表的列数（可能会导致延迟）",
+            "player_loop_practice": "在练习模式下选择歌曲循环",
+            "player_loop_practice_description": "当你在练习模式下到歌曲的结尾时,它将循环回到开始",
+            "player_hide_practice_notes": "在练习模式下隐藏文字",
+            "player_hide_practice_notes_description": "在练习模式下,隐藏文字以便测试你的记忆力,虚拟键位表仍然可见",
+            "vsrg_composer_keys": "按键数",
+            "vsrg_composer_keys_description": "歌曲包含的音符数",
+            "vsrg_composer_bpm": "BPM",
+            "vsrg_composer_bpm_description": "每分钟节拍数,歌曲的速度",
+            "vsrg_composer_pitch": "曲调",
+            "vsrg_composer_pitch_description": "歌曲的主音",
+            "vsrg_composer_is_vertical": "垂直编辑器",
+            "vsrg_composer_is_vertical_description": "编辑器设置为水平或垂直",
             "vsrg_composer_max_fps": "最大 FPS（数值高可能会带来延迟）",
-            "vsrg_composer_max_fps_description": "编辑器的FPS限制器，值越高可能会更大延迟。",
+            "vsrg_composer_max_fps_description": "编辑器的FPS限制器,值越高可能会更大延迟。",
             "vsrg_scroll_snap": "锚定滚动条到锚点",
-            "vsrg_scroll_snap_description": "滚动时，将时间戳锚定到最近的锚点",
+            "vsrg_scroll_snap_description": "滚动时,将时间戳锚定到最近的锚点",
             "vsrg_composer_autosave": "自动保存更改",
             "vsrg_composer_autosave_description": "每 5 次编辑以及当您更改页面/更改歌曲时自动保存对歌曲的更改",
             "vsrg_composer_difficulty": "难度",
@@ -520,11 +520,11 @@
             "vsrg_player_approach_time": "应对时间",
             "vsrg_player_approach_time_description": "音符出现与结束之间的时间（以毫秒为单位）",
             "vsrg_player_max_fps": "最大 FPS",
-            "vsrg_player_max_fps_description": "播放器的FPS限制器，过高的值可能会导致延迟或卡顿。",
+            "vsrg_player_max_fps_description": "播放器的FPS限制器,过高的值可能会导致延迟或卡顿。",
             "vsrg_player_keyboard_layout": "键盘布局",
             "vsrg_player_keyboard_layout_description": "演奏器的键盘布局",
             "vsrg_player_offset": "音频偏移",
-            "vsrg_player_offset_description": "在音频播放太早/太晚时，对音频的偏移量（以毫秒为单位）",
+            "vsrg_player_offset_description": "在音频播放太早/太晚时,对音频的偏移量（以毫秒为单位）",
             "vsrg_player_vertical_offset": "垂直位置",
             "vsrg_player_vertical_offset_description": "横行布局的垂直偏移",
             "vsrg_player_horizontal_offset": "水平位置",
@@ -549,7 +549,7 @@
             "zen_keyboard_y_position_description": "键盘的垂直位置",
             "zen_keyboard_spacing": "键盘间距",
             "zen_keyboard_spacing_description": "音符之间的间距"
-        }，
+        },
         "category": {
             "keyboard": "键盘",
             "metronome": "节拍器",
@@ -560,10 +560,10 @@
             "composer_settings": "编曲器设置",
             "editor_settings": "编辑器设置"
         }
-    }，
+    },
     "zen_keyboard": {
         "loading_instrument": "加载乐器: {{instrument}}..."
-    }，
+    },
     "vsrg_composer": {
         "delete_track_question": "您确定要删除此曲目吗？所有音符都将被删除。",
         "cannot_delete_last_track": "无法删除最后一首曲目",
@@ -590,17 +590,17 @@
         "combo": "连击"
     },
     "transfer": {
-        "connecting_please_wait": "正在连接，请稍候...",
-        "error_connecting": "连接时出错，请访问域名，可能有变更日志。",
+        "connecting_please_wait": "正在连接,请稍候...",
+        "error_connecting": "连接时出错,请访问域名,可能有变更日志。",
         "import_data_from_other_domains_title": "从其他域导入数据",
-        "import_data_from_other_domains_description": "在这里您可以从应用程序的其他现有域导入数据，选择要导入的域并单击导入，您将看到来自其他域的所有数据，您可以选择一次全部导入。或者只导入您需要的内容。",
+        "import_data_from_other_domains_description": "在这里您可以从应用程序的其他现有域导入数据,选择要导入的域并单击导入,您将看到来自其他域的所有数据,您可以选择一次全部导入。或者只导入您需要的内容。",
         "select_a_website_to_import_data": "选择要从中导入数据的网站",
         "data": "数据",
         "import_all": "全部导入",
         "no_data_to_import": "没有要导入的数据"
     },
     "theme": {
-        "error_importing_theme": "导入此主题时出错，它是正确的文件吗？",
+        "error_importing_theme": "导入此主题时出错,它是正确的文件吗？",
         "choose_theme_name": "你想如何命名主题？",
         "confirm_delete_theme": "您确定要删除主题“{{theme_name}}”吗？",
         "import_theme": "导入主题",
@@ -628,19 +628,19 @@
             "menu_background": "菜单背景",
             "note_background": "音符按键背景"
         }
-    }，
+    },
     "sheet_visualizer": {
         "note_names": "音符名称",
         "merge_empty_spaces": "合并空格",
         "no_song_selected": "未选择歌曲",
         "print_as_pdf": "打印为 PDF",
-        "sheet_visualizer_instructions": "从左侧菜单中选择一首歌曲，您可以使用演奏器中的交互式练习工具来学习歌曲。",
+        "sheet_visualizer_instructions": "从左侧菜单中选择一首歌曲,您可以使用演奏器中的交互式练习工具来学习歌曲。",
         "per_row": "每行",
-        "invalid_song_to_visualize": "无效歌曲，未创作或录制",
-        "error_converting_to_visual_song_try_convert_in_recorded": "将歌曲转换为视觉歌曲时出错，尝试先转换为录制的歌曲...",
+        "invalid_song_to_visualize": "无效歌曲,未创作或录制",
+        "error_converting_to_visual_song_try_convert_in_recorded": "将歌曲转换为视觉歌曲时出错,尝试先转换为录制的歌曲...",
         "error_converting_to_visual_song": "将歌曲转换为视觉歌曲时出错",
         "different_color_rows": "各行使用不同颜色"
-    }，
+    },
     "player": {
         "finish_recording": "结束录制",
         "record_audio": "录制音频",
@@ -654,14 +654,14 @@
         "approach_mode": "缩圈模式",
         "approach_mode_description": "在缩圈模式下演奏歌曲“{{song_name}}”",
         "song_search_no_results": "没有结果",
-        "song_search_description": "在这里你可以找到要学习的歌曲，这些歌曲由sky-music library提供。",
-        "midi_or_audio_import_redirect_warning": "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？"
-    }，
+        "song_search_description": "在这里你可以找到要学习的歌曲,这些歌曲由sky-music library提供。",
+        "midi_or_audio_import_redirect_warning": "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换,是否要打开它？"
+    },
     "keybinds": {
         "already_used_keybind": "这个按键绑定已经被音符“{{note_name}}”使用。",
         "midi_keybinds": "MIDI 按键绑定",
         "keyboard_keybinds": "键盘按键绑定",
-        "keyboard_keybinds_description": "您可以将键盘按键重新映射到键盘上的任何键，按下要重新映射的音符，然后按下要分配给它的键。",
+        "keyboard_keybinds_description": "您可以将键盘按键重新映射到键盘上的任何键,按下要重新映射的音符,然后按下要分配给它的键。",
         "composer_shortcuts": "作曲器快捷键",
         "player_shortcuts": "演奏器快捷键",
         "vsrg_composer_shortcuts": "作曲器快捷键",
@@ -672,16 +672,16 @@
         "midi_layout_preset": "MIDI 布局预设",
         "delete_midi_preset": "删除预设",
         "create_midi_preset": "创建新预设",
-        "midi_note_selection_description": "单击音符将其选中，然后按 MIDI 键盘将该音符分配给该琴键。您可以再次单击它来更改它。",
+        "midi_note_selection_description": "单击音符将其选中,然后按 MIDI 键盘将该音符分配给该琴键。您可以再次单击它来更改它。",
         "midi_shortcuts": "MIDI 快捷键",
         "confirm_delete_preset": "您确定要删除预设“{{preset_name}}”吗？",
         "cannot_delete_builtin_preset": "无法删除内置预设",
         "already_existing_preset": "此名称的预设已存在",
         "ask_preset_name": "写下预设的名称",
         "key_already_used": "按键已被使用",
-        "cannot_edit_builtin_preset": "无法编辑内置预设，请创建一个新预设进行编辑。",
+        "cannot_edit_builtin_preset": "无法编辑内置预设,请创建一个新预设进行编辑。",
         "midi_status": "MIDI状态",
-        "midi_access_denied": "MIDI 访问被拒绝，请在浏览器设置中允许并重新加载页面。",
+        "midi_access_denied": "MIDI 访问被拒绝,请在浏览器设置中允许并重新加载页面。",
         "midi_access_unsupported": "该浏览器不支持 MIDI。",
         "midi_access_pending": "等待 MIDI 访问中...",
         "midi_access_granted": "MIDI可用！",
@@ -697,34 +697,34 @@
     "error": {
         "confirm_delete_all_songs": "您确定要删除所有歌曲吗？",
         "settings_reset_notice": "设置已重置",
-        "error_page_description": "如果您意外地看到此页面，则意味着发生了错误。您可以在此处下载或删除您的歌曲——如果某首歌导致错误，请删除它。如果您需要帮助，请加入我们的discord服务器并发送下面的日志文件。",
+        "error_page_description": "如果您意外地看到此页面,则意味着发生了错误。您可以在此处下载或删除您的歌曲——如果某首歌导致错误,请删除它。如果您需要帮助,请加入我们的discord服务器并发送下面的日志文件。",
         "reset_settings": "重置设置",
         "delete_all_songs": "删除所有歌曲",
         "error_logs": "错误日志",
         "download_logs": "下载日志"
-    }，
+    },
     "donate": {
-        "donate_message": "我制作的每个应用程序都需要数月的学习和开发时间，此外还有托管成本。有了更高的预算，我就可以不必太担心在服务器上花费了多少钱，从而为您提供最佳的体验。\n我关心的是让使用者享受所有功能而免于付费或是烦人的侵入性广告。因此除了捐赠之外，项目没有任何收入来源。\n如果您可以考虑捐赠以支持开发和成本，我将非常感激。"
-    }，
+        "donate_message": "我制作的每个应用程序都需要数月的学习和开发时间,此外还有托管成本。有了更高的预算,我就可以不必太担心在服务器上花费了多少钱,从而为您提供最佳的体验。\n我关心的是让使用者享受所有功能而免于付费或是烦人的侵入性广告。因此除了捐赠之外,项目没有任何收入来源。\n如果您可以考虑捐赠以支持开发和成本,我将非常感激。"
+    },
     "cache": {
         "cache": "缓存",
         "reset_cache": "重置缓存",
-        "reset_cache_message": "此页面将清除应用程序的缓存。这将删除所有缓存的数据并重新加载页面，它不会删除您的歌曲或数据，只会删除缓存的资源。当您访问此页面时，程序自动清除缓存。您也可以单击下面的按钮手动清除缓存。",
+        "reset_cache_message": "此页面将清除应用程序的缓存。这将删除所有缓存的数据并重新加载页面,它不会删除您的歌曲或数据,只会删除缓存的资源。当您访问此页面时,程序自动清除缓存。您也可以单击下面的按钮手动清除缓存。",
         "clear_cache": "清除缓存"
-    }，
+    },
     "changelog": {
         "view_error_logs": "查看错误日志"
-    }，
+    },
     "page404": {
-        "page_not_found": "该页面未找到，点击此处返回首页。"
-    }，
+        "page_not_found": "该页面未找到,点击此处返回首页。"
+    },
     "backup": {
         "confirm_after_songs_validation_error": "验证某些歌曲时出错。您想继续下载吗？",
         "confirm_after_folders_validation_error": "验证某些文件夹时出错。是否要继续下载？",
         "confirm_after_themes_validation_error": "验证某些主题时出错。您想继续下载吗？",
-        "confirm_delete_songs_step_1": "如果要删除所有歌曲，请输入'delete'这个单词，按取消忽略。",
+        "confirm_delete_songs_step_1": "如果要删除所有歌曲,请输入'delete'这个单词,按取消忽略。",
         "confirm_delete_songs_step_2": "您真的确定要删除所有歌曲吗？",
-        "confirm_delete_themes_step_1": "如果要删除所有主题，请输入'delete'这个单词，按取消忽略",
+        "confirm_delete_themes_step_1": "如果要删除所有主题,请输入'delete'这个单词,按取消忽略",
         "confirm_delete_themes_step_2": "您真的确定要删除所有主题吗？",
         "deleted_all_songs_notice": "删除所有歌曲",
         "deleted_all_themes_notice": "删除所有主题",
@@ -737,11 +737,11 @@
         "action_cancelled": "操作已取消",
         "zipping_files": "压缩文件",
         "transfer_from_other_domain": "从其他域转移",
-        "transfer_data_notice": "如果您想从应用程序的另一个域传输数据，请单击此处。",
+        "transfer_data_notice": "如果您想从应用程序的另一个域传输数据,请单击此处。",
         "transfer": "转移",
         "backup_as": "备份为",
-        "backup_advice": "确保时不时地创建备份，尤其是当您刚刚完成一首新歌曲时。 浏览器不应该删除您的数据，特别是如果您安装了该应用程序，但也不是万无一失。",
-        "backup_download_tooltip": "下载应用程序的所有数据，即主题、歌曲、文件夹",
+        "backup_advice": "确保时不时地创建备份,尤其是当您刚刚完成一首新歌曲时。 浏览器不应该删除您的数据,特别是如果您安装了该应用程序,但也不是万无一失。",
+        "backup_download_tooltip": "下载应用程序的所有数据,即主题、歌曲、文件夹",
         "backup_downloaded": "已下载备份",
         "backup_download_error": "下载备份时出错",
         "download_all_backup": "下载所有备份",
@@ -755,18 +755,18 @@
         "downloaded_themes_notice": "下载的主题备份",
         "download_themes_backup": "下载主题备份",
         "import_backup": "导入备份",
-        "import_backup_description": "如果您有备份，可以在此处导入，备份将添加到您现有的数据中（对于已经存在的歌，会创建一个副本）。",
+        "import_backup_description": "如果您有备份,可以在此处导入,备份将添加到您现有的数据中（对于已经存在的歌,会创建一个副本）。",
         "error_reading_file": "读取文件时出错",
         "import_backup_tooltip": "在这里您可以导入您拥有的任何备份",
         "songs": "歌曲",
         "themes": "主题",
         "delete_data": "删除数据",
-        "delete_data_description": "如果您愿意，您也可以在这里删除所有数据，一旦删除就无法恢复。不用担心，在删除任何内容之前，会要求您确认。",
+        "delete_data_description": "如果您愿意,您也可以在这里删除所有数据,一旦删除就无法恢复。不用担心,在删除任何内容之前,会要求您确认。",
         "delete_songs_and_folders": "删除歌曲和文件夹",
         "delete_songs_and_folders_tooltip": "在这里您可以删除所有歌曲和文件夹",
         "delete_themes_tooltip": "在这里您可以删除所有主题",
         "delete_themes": "删除主题"
-    }，
+    },
     "composer": {
         "add_new_page": "添加新页面",
         "remove_column": "删除列",
@@ -778,7 +778,7 @@
         "cant_remove_all_layers": "你不能删除所有音层！",
         "confirm_layer_remove": "您确定要删除“{{layer_name}}”吗？该层的所有音符都将被删除。",
         "cant_add_more_than_n_layers": "您不能添加超过 {{max_layers}} 层！",
-        "ask_song_name_for_composed_song_version": "填写创作版本的歌曲名称，按取消忽略",
+        "ask_song_name_for_composed_song_version": "填写创作版本的歌曲名称,按取消忽略",
         "start_recording_audio": "开始录制音频",
         "stop_recording_audio": "停止录制音频",
         "create_new_song": "创作新歌",
@@ -807,7 +807,7 @@
             "insert_copied_notes": "插入复制的音符",
             "paste_copied_notes": "粘贴复制的音符",
             "copy_notes": "复制所有音符"
-        }，
+        },
         "midi_parser": {
             "out_of_range": "超出范围",
             "accidentals": "变音记号",
@@ -816,7 +816,7 @@
             "ignore_empty_tracks": "忽略空轨道",
             "include_accidentals": "包括临时记号",
             "global_note_offset": "全局音符偏移量",
-            "global_note_offset_description": "每个音符的索引将被上推/下推这个量，您可以使用它来使歌曲适合应用的音域。您还可以更改每个图层的偏移量。",
+            "global_note_offset_description": "每个音符的索引将被上推/下推这个量,您可以使用它来使歌曲适合应用的音域。您还可以更改每个图层的偏移量。",
             "local_note_offset": "局部轨道音符偏移量",
             "local_note_offset_description": "按此数量更改每个音符的索引。",
             "max_octave_scaling": "最大音符八度缩放",
@@ -824,18 +824,18 @@
             "number_of_notes": "音符数量",
             "open_midi_audio_file": "打开 MIDI/音频/视频文件",
             "there_are_no_notes": "没有音符",
-            "error_is_file_midi": "导入此文件时出错，它是 .mid 文件吗？",
+            "error_is_file_midi": "导入此文件时出错,它是 .mid 文件吗？",
             "converting_audio_to_midi": "正在将音频转换为 midi（可能需要一段时间）...",
             "detecting_notes": "检测音符",
             "loading_converter": "正在加载转换器",
-            "audio_conversion_warning": "`🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。"
-        }，
-        "warning_opening_midi_importer": "打开MIDI导入器导入MIDI文件，请重新选择文件",
+            "audio_conversion_warning": "`🔬 此功能是实验性的,它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确,如果可以,最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。"
+        },
+        "warning_opening_midi_importer": "打开MIDI导入器导入MIDI文件,请重新选择文件",
         "warning_opening_audio_importer": "正在打开 midi 导入器以导入视频/音频文件...请重新选择文件。视频/音频转换不是很准确。",
-        "error_importing_file_invalid_format": "导入文件时出错，格式错误",
-        "error_importing_file_invalid_format_audio_video": "导入文件时出错，格式错误。如果是 MIDI、视频或音频文件，请使用“从 MIDI 创建”按钮。",
-        "ask_download_of_current_song": "您当前正在编辑这首歌曲（“{{song_name}}”），是否要在下载前保存它？"
-    }，
+        "error_importing_file_invalid_format": "导入文件时出错,格式错误",
+        "error_importing_file_invalid_format_audio_video": "导入文件时出错,格式错误。如果是 MIDI、视频或音频文件,请使用“从 MIDI 创建”按钮。",
+        "ask_download_of_current_song": "您当前正在编辑这首歌曲（“{{song_name}}”）,是否要在下载前保存它？"
+    },
     "instrument_settings": {
         "no_instrument_selected": "未选择乐器",
         "layer_name": "音层名称",
@@ -843,29 +843,29 @@
         "use_song_reverb": "使用歌曲混响",
         "note_icon": "音符图标",
         "volume": "音量",
-        "volume_high_warning": "如果听到失真，请降低音量",
+        "volume_high_warning": "如果听到失真,请降低音量",
         "move_down": "向下移动",
         "move_up": "向上移动"
-    }，
+    },
     "tutorials": {
         "composer": {
             "li_1": "点击歌曲名即可加载。",
             "li_2": "您可以为每一层使用不同的乐器和音调。",
-            "li_3": "节奏变换器可以帮助您制作歌曲的更快部分，而无需非常高的每分钟节拍数。",
-            "li_4": "您可以通过导入 MIDI 文件并编辑来快速创建歌曲，并非所有歌曲都可以直接转换，您可能需要稍微编辑一下。",
-            "li_5": "您还可以从音频/视频快速创建歌曲，这是一个实验性功能，不太准确。",
-            "li_6": "您可以在时间线（编曲器下方的栏）中添加断点，以在歌曲的各个部分之间快速跳转。"
+            "li_3": "节奏变换器可以帮助您制作歌曲的更快部分,而无需非常高的每分钟节拍数。",
+            "li_4": "您可以通过导入 MIDI 文件并编辑来快速创建歌曲,并非所有歌曲都可以直接转换,您可能需要稍微编辑一下。",
+            "li_5": "您还可以从音频/视频快速创建歌曲,这是一个实验性功能,不太准确。",
+            "li_6": "您可以在时间线（编曲器下方的栏）中添加断点,以在歌曲的各个部分之间快速跳转。"
         },
         "player": {
             "li_1": "点击歌曲名即可播放。",
             "li_2": "您可以导入其他用户制作的歌曲（不接受音频文件）。您也可以下载自己的歌曲进行分享。",
-            "li_3": "要创作你的歌曲，你可以录制你演奏的音符或在编曲器中创建一首。",
+            "li_3": "要创作你的歌曲,你可以录制你演奏的音符或在编曲器中创建一首。",
             "li_4": "启动练习模式",
             "li_5": "启动缩圈模式",
             "li_6": "可以连接MIDI键盘来演奏"
         },
         "help": {
-            "question_mark_description": "将鼠标悬停在按钮上可查看工具提示。单击此按钮 (?) 时，它将显示更多信息。",
+            "question_mark_description": "将鼠标悬停在按钮上可查看工具提示。单击此按钮 (?) 时,它将显示更多信息。",
             "example_help": "帮助示例",
             "learn_how_to_use_player": "学习如何使用演奏器",
             "learn_how_to_use_composer": "学习如何使用作曲器",
