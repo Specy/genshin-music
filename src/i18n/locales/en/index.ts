@@ -791,6 +791,7 @@ export const i18n_en = {
         "SFX_MantaCall": "Manta Call",
         "SFX_MothCall": "Moth Call",
         "GrandPiano": "Grand Piano",
+        "LingeringEuphonia": "Lingering Euphonia",
     } satisfies Record<InstrumentName, string>,
     versions: {
         "3-6-2": {
