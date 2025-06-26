@@ -791,12 +791,14 @@ export const i18n_en = {
         "SFX_MantaCall": "Manta Call",
         "SFX_MothCall": "Moth Call",
         "GrandPiano": "Grand Piano",
+        "LingeringEuphonia": "Lingering Euphonia",
     } satisfies Record<InstrumentName, string>,
     versions: {
         "3-6-2": {
-            "title": "Translations and GrandPiano (Sky)",
+            "title": "Translations and new instruments",
             "change-1": "Added translations for changelog",
             "change-2": "Added GrandPiano (Sky)",
+            "change-3": "Added Lingering Euphonia (Genshin)",
         },
         "3-6-1": {
             "title": "Improved timing",

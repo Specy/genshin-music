@@ -29,13 +29,13 @@ jobs:
           CI: false
           NEXT_PUBLIC_IS_BETA: true
       - name: Publish Genshin Music Nightly Beta
-        uses: cloudflare/wrangler-action@2.0.0
+        uses: cloudflare/wrangler-action@3.0.0
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: pages publish ./build/genshinMusic --project-name=beta-genshin-music-nightly
       - name: Publish Sky Music Nightly Beta
-        uses: cloudflare/wrangler-action@2.0.0
+        uses: cloudflare/wrangler-action@3.0.0
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}

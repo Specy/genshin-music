@@ -7,6 +7,7 @@ console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
 - Added translations to version page
+- Added Lingering Euphonia instrument
     `
     : `
 - Added translations to version page
@@ -44,6 +45,7 @@ export const INSTRUMENTS = APP_NAME === "Genshin"
         "Zither",
         "Old-Zither",
         "Ukulele",
+        "LingeringEuphonia",
         "DunDun",
         "DjemDjemDrum"
     ] as const
@@ -365,6 +367,17 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = APP_
         family: "strings",
         midiName: "pizzicato strings",
         clickColor: '#6586d9',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinUkulele,
+        layout: LAYOUT_KINDS.defaultGenshin,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin
+    },
+    "LingeringEuphonia": {
+        notes: 21,
+        fill: '#9288d3',
+        family: "strings",
+        midiName: "pizzicato strings",
+        clickColor: '#9591df',
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinUkulele,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
