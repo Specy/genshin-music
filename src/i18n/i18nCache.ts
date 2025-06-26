@@ -10,8 +10,8 @@ export type SerializedLocale = {
 }
 
 export const I18N_VERSIONS = {
-    'en': 2,
-    'zh': 2,
+    'en': 3,
+    'zh': 3,
     'id': 2,
     'pt': 1,
     'ru': 1,

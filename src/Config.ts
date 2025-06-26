@@ -7,6 +7,7 @@ console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
 - Added translations to version page
+- Added Lingering Euphonia instrument
     `
     : `
 - Added translations to version page

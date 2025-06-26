@@ -8,7 +8,7 @@ type Update = {
 export const CHANGELOG: Update[] = [
     {
         version: '3.6.2',
-        title: "Translations, GrandPiano (Sky), Lingering Euphonia (Genshin)",
+        title: "Translations and new instruments",
         date: new Date('2025-02-17'),
         changes: [
             'Added translations for changelog',
