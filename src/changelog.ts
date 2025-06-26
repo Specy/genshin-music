@@ -9,7 +9,7 @@ export const CHANGELOG: Update[] = [
     {
         version: '3.6.2',
         title: "Translations and new instruments",
-        date: new Date('2025-02-17'),
+        date: new Date('2025-06-26'),
         changes: [
             'Added translations for changelog',
             'Added GrandPiano (Sky)',
