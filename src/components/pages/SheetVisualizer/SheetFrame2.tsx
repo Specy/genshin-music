@@ -76,8 +76,8 @@ export function _SheetFrame2({chunk, rows, hasText, theme, keyboardLayout, multi
                     background: ((chunk.columns.length - 1) === i) && (chunk.endingTempoChanger !== chunk.tempoChanger)
                         ? `linear-gradient(to right, ${getBackgroundColor(chunk.tempoChanger)} 50%, ${getBackgroundColor(chunk.endingTempoChanger)} 50%)`
                         : getBackgroundColor(chunk.tempoChanger),
-                    ...getBorderStyle(i, chunk.columns.length)
-                }}
+                    ...getBorderStyle(i, chunk.columns.length),
+                } as CSSProperties}
             >
                 <div
                     className={`${s['frame-outer']} ${column.notes.length === 0 ? s['visualizer-ball'] : ''}`}

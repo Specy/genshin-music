@@ -20,7 +20,7 @@ export const PAGES_VERSIONS = {
             : ['Improved timing', 'Bug fixes in the visualizer'],
     ),
     privacy: makePageVersion('privacy', 0),
-    sheetVisualizer: makePageVersion('sheetVisualizer', 1, ["you can now select the rows to have different background colors"]),
+    sheetVisualizer: makePageVersion('sheetVisualizer', 2, ["When downloading as PDF, it will now have a white background so it's easier to print"]),
     theme: makePageVersion('theme', 0),
     transfer: makePageVersion('transfer', 0),
     umaMode: makePageVersion('umaMode', 0),

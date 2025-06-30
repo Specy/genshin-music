@@ -22,7 +22,6 @@ import {Column} from "$cmp/shared/layout/Column";
 import {useTranslation} from "react-i18next";
 import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 
-
 export default function SheetVisualizer() {
     useSetPageVisited('sheetVisualizer')
     const {t} = useTranslation(['sheet_visualizer', "home"])

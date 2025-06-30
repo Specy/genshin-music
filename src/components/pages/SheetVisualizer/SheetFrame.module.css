@@ -101,17 +101,20 @@
         border-radius: 2px;
     }
 
-    .frame-outer {
-        background-color: transparent;
-        border: solid 0.2rem var(--primary)
+    .frame-note-ns{
+        background-color: black !important;
     }
+
+    .frame-outer {
+        background-color: white !important;
+        border: solid 0.1rem black;
+    }
+
 
     .visualizer-ball {
         border: none !important;
     }
 
     .frame-outer-background {
-        background-color: transparent !important;
-        background: transparent !important;
     }
 }
