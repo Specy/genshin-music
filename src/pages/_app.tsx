@@ -12,6 +12,8 @@ import "$cmp/pages/Player/menu.css"
 import "$pages/composer/Composer.css"
 import '$pages/theme/Theme.css'
 import '$pages/vsrg-composer/VsrgComposer.css';
+import '$pages/sheet-visualizer/SheetVisualizer.css'
+
 
 import type {AppProps} from "next/app";
 import AppBase from "$cmp/AppBase";
