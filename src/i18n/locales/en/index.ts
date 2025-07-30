@@ -762,6 +762,7 @@ export const i18n_en = {
         "Ukulele": "Ukulele",
         "Guitar": "Guitar",
         "LightGuitar": "Light Guitar",
+        "LeapingSiritPiano": "LeapingSiritPiano",
         "Harp": "Harp",
         "Horn": "Horn",
         "Trumpet": "Trumpet",
