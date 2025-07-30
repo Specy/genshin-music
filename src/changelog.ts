@@ -7,6 +7,14 @@ type Update = {
 
 export const CHANGELOG: Update[] = [
     {
+        version: '3.6.3',
+        title: "New instruments",
+        date: new Date('2025-07-05'),
+        changes: [
+            'Added Leaping Sirit Piano (Genshin)'
+        ]
+    },
+    {
         version: '3.6.2',
         title: "Translations and new instruments",
         date: new Date('2025-06-26'),
