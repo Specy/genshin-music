@@ -1,7 +1,7 @@
-import {APP_NAME} from "$config";
+import { APP_NAME } from "$config";
 
 function makePageVersion<T extends string>(id: T, version: number, changes: string[] = []) {
-    return {id, version, changes} as const
+    return { id, version, changes } as const
 }
 
 export const PAGES_VERSIONS = {
@@ -14,10 +14,10 @@ export const PAGES_VERSIONS = {
     error: makePageVersion('error', 0),
     keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
     partners: makePageVersion('partners', 1, ['Added new partner!']),
-    player: makePageVersion('player', 6,
+    player: makePageVersion('player', 7,
         APP_NAME === "Genshin"
-            ? ["Added Ukulele and Djem Djem Drum", 'Improved timing', 'Bug fixes in the visualizer']
-            : ['Improved timing', 'Bug fixes in the visualizer'],
+            ? ["Added Leaping Spirit Piano instrument"]
+            : [],
     ),
     privacy: makePageVersion('privacy', 0),
     sheetVisualizer: makePageVersion('sheetVisualizer', 2, ["When downloading as PDF, it will now have a white background so it's easier to print"]),

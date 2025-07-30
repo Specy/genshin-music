@@ -7,12 +7,9 @@ console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
 - added Leaping Spirit Piano instrument
-- Added translations to version page
-- Added Lingering Euphonia instrument
     `
     : `
-- Added translations to version page
-- Added GrandPiano instrument
+- fixes
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
