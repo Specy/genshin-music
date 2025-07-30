@@ -762,7 +762,6 @@ export const i18n_en = {
         "Ukulele": "Ukulele",
         "Guitar": "Guitar",
         "LightGuitar": "Light Guitar",
-        "LeapingSiritPiano": "LeapingSiritPiano",
         "Harp": "Harp",
         "Horn": "Horn",
         "Trumpet": "Trumpet",
@@ -793,6 +792,7 @@ export const i18n_en = {
         "SFX_MothCall": "Moth Call",
         "GrandPiano": "Grand Piano",
         "LingeringEuphonia": "Lingering Euphonia",
+        "LeapingSpiritPiano": "Leaping Spirit Piano",
     } satisfies Record<InstrumentName, string>,
     versions: {
         "3-6-2": {

@@ -11,7 +11,7 @@ export const CHANGELOG: Update[] = [
         title: "New instruments",
         date: new Date('2025-07-05'),
         changes: [
-            'Added Leaping Sirit Piano (Genshin)'
+            'Added Leaping Spirit Piano (Genshin)'
         ]
     },
     {
