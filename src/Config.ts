@@ -385,10 +385,10 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = APP_
     "LeapingSpiritPiano": {
         notes: 21,
         fill: '#4b959f',
-        family: "strings",
-        midiName: "pizzicato strings",
+        family: "piano",
+        midiName: "acoustic grand",
         clickColor: '#4b959f',
-        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinUkulele,
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
         midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin
