@@ -10,11 +10,11 @@ export type SerializedLocale = {
 }
 
 export const I18N_VERSIONS = {
-    'en': 3,
-    'zh': 3,
+    'en': 4,
+    'zh': 4,
     'id': 2,
     'pt': 1,
-    'ru': 1,
+    'ru': 2,
     'tr': 1
 } satisfies Record<AppLanguage, number>
 

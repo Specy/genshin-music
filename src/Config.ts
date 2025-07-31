@@ -6,12 +6,10 @@ export const APP_VERSION = '3.6.2' as const
 console.log(`${APP_NAME}-V${APP_VERSION}`)
 export const UPDATE_MESSAGE = (APP_NAME === 'Genshin'
     ? `
-- Added translations to version page
-- Added Lingering Euphonia instrument
+- added Leaping Spirit Piano instrument
     `
     : `
-- Added translations to version page
-- Added GrandPiano instrument
+- fixes
     `).trim()
 
 export const UPDATE_URL = process.env.NODE_ENV === 'development'
@@ -46,6 +44,7 @@ export const INSTRUMENTS = APP_NAME === "Genshin"
         "Old-Zither",
         "Ukulele",
         "LingeringEuphonia",
+        "LeapingSpiritPiano",
         "DunDun",
         "DjemDjemDrum"
     ] as const
@@ -379,6 +378,17 @@ export const BaseinstrumentsData: { [key in string]: InstrumentDataType } = APP_
         midiName: "pizzicato strings",
         clickColor: '#9591df',
         baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.genshinUkulele,
+        layout: LAYOUT_KINDS.defaultGenshin,
+        icons: LAYOUT_ICONS_KINDS.defaultGenshin,
+        midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin
+    },
+    "LeapingSpiritPiano": {
+        notes: 21,
+        fill: '#5cadbd',
+        family: "piano",
+        midiName: "acoustic grand",
+        clickColor: '#5cadbd',
+        baseNotes: INSTRUMENT_NOTE_LAYOUT_KINDS.defaultGenshin,
         layout: LAYOUT_KINDS.defaultGenshin,
         icons: LAYOUT_ICONS_KINDS.defaultGenshin,
         midiNotes: INSTRUMENT_MIDI_LAYOUT_KINDS.defaultGenshin

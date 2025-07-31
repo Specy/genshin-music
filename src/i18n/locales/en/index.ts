@@ -792,8 +792,13 @@ export const i18n_en = {
         "SFX_MothCall": "Moth Call",
         "GrandPiano": "Grand Piano",
         "LingeringEuphonia": "Lingering Euphonia",
+        "LeapingSpiritPiano": "Leaping Spirit Piano",
     } satisfies Record<InstrumentName, string>,
     versions: {
+        "3-6-3": {
+            "title": "New instruments (Genshin)",
+            "change-1": "Added Leaping Spirit Piano (Genshin)",
+        },
         "3-6-2": {
             "title": "Translations and new instruments",
             "change-1": "Added translations for changelog",
