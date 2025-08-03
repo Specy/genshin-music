@@ -48,7 +48,7 @@ export function SongMenu<T extends { data: SongStorable }>({
     const [theme] = useTheme()
 
     useEffect(() => {
-        const excluded = songs.filter(s => !exclude?.includes(s.type) ?? true)
+        const excluded = songs.filter(s => !(exclude?.includes(s.type)))
         const searcher = new FuzzySearch(excluded, ['name'], {caseSensitive: false, sort: true})
         if (searchValue === '') return setFilteredSongs(excluded)
         setFilteredSongs(searcher.search(searchValue))
@@ -100,7 +100,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                 </AppButton>
             }
         </Row>
-        {((!exclude?.includes('composed') ?? true) && noFolderComposed) &&
+        {(!exclude?.includes('composed') && noFolderComposed) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
                 headerColor={unselectedColorText}
@@ -125,7 +125,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                 </SongFolderContent>
             </SongFolder>
         }
-        {((!exclude?.includes('recorded') ?? true) && noFolderRecorded) &&
+        {(!exclude?.includes('recorded') && noFolderRecorded) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
                 headerColor={unselectedColorText}
@@ -150,7 +150,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                 </SongFolderContent>
             </SongFolder>
         }
-        {((!exclude?.includes('vsrg') ?? true) && noFolderVsrg) &&
+        {(!exclude?.includes('vsrg') && noFolderVsrg) &&
             <SongFolder
                 backgroundColor={unselectedColor.toString()}
                 headerColor={unselectedColorText}
@@ -186,7 +186,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                 color={theme.getText('menu_background').toString()}
                 data={folder}
             >
-                {((!exclude?.includes('composed') ?? true) && composed.length > 0) &&
+                {(!exclude?.includes('composed') && composed.length > 0) &&
                     <SongFolderContent title="Composed">
                         {composed.map(song =>
                             <SongComponent
@@ -197,7 +197,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                         )}
                     </SongFolderContent>
                 }
-                {((!exclude?.includes('recorded') ?? true) && recorded.length > 0) &&
+                {(!exclude?.includes('recorded') && recorded.length > 0) &&
                     <SongFolderContent title="Recorded">
                         {recorded.map(song =>
                             <SongComponent
@@ -208,7 +208,7 @@ export function SongMenu<T extends { data: SongStorable }>({
                         )}
                     </SongFolderContent>
                 }
-                {((!exclude?.includes('vsrg') ?? true) && vsrg.length > 0) &&
+                {(!exclude?.includes('vsrg') && vsrg.length > 0) &&
                     <SongFolderContent title="Vsrg">
                         {vsrg.map(song =>
                             <SongComponent
@@ -228,3 +228,4 @@ export function SongMenu<T extends { data: SongStorable }>({
         })}
     </div>
 }
+
