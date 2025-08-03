@@ -294,7 +294,7 @@ export class FileService {
     downloadMidi(midi: Midi, fileName?: string) {
         fileName = (fileName || midi.name).replace(".mid", "")
         return FileDownloader.download(
-            new Blob([midi.toArray()], {type: "audio/midi"}),
+            new Blob([new Uint8Array(midi.toArray())], {type: "audio/midi"}),
             fileName + ".mid"
         )
     }
