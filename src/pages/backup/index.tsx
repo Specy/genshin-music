@@ -157,7 +157,7 @@ export default function Backup() {
                         individualFiles: Object.fromEntries(fileEntries)
                     }, (err, data) => {
                         if (err) return reject(err)
-                        fileService.downloadBlob(new Blob([data]), `${fileName}.zip`)
+                        fileService.downloadBlob(new Blob([new Uint8Array(data)]), `${fileName}.zip`)
                         resolve(data)
                     })
                 })
