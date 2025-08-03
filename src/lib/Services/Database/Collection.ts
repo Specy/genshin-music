@@ -94,7 +94,7 @@ export class TauriCollection<T extends BaseObject> implements Collection<T> {
             if (file.children) continue
             promises.push(this.fs.readTextFile(`${this.table}/${file.name}`, this.baseSettings))
         }
-        return (await Promise.all(promises)).map(text => JSON.parse(text)) as T[]
+        return (await Promise.all(promises)).map((text: string) => JSON.parse(text)) as T[]
     }
 
     async remove(query: Query<T>): Promise<void> {
@@ -156,12 +156,7 @@ export class TauriCollection<T extends BaseObject> implements Collection<T> {
     }
 }
 
-//this black magic type excludes all keys from an object which aren't strings, numbers or null
-
+// this black magic type excludes all keys from an object which aren't strings, numbers or null
 export type Query<T> = Partial<T> & Partial<Record<keyof T, QueryableTypes>>
 type QueryableTypes = string | number | null
-
-
-
-
 
