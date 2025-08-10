@@ -16,6 +16,7 @@
 你可以使用 `npm run build:genshin`  或  `npm run build:sky` 构建生产服务器, 或者使用 `npm run build:all` 构建两个程序
 
 使用 `npm run preview:genshin`  或  `npm run preview:sky` 来启动已经构建好的服务器 (使用这种方法可以大幅减少资源占用)
+windows构建windows运行，linux构建linux运行
 
 
 # 寻找翻译人员
