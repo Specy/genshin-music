@@ -6,25 +6,31 @@
 
 # 如何在开发模式下运行
 你需要在你的计算机上安装node.js，你可以在 [这里](https://nodejs.org/en/)下载.
-然后将repo克隆到一个文件夹中，并使用 `npm i` 安装依赖项，安装后，使用 `npm-run start` 运行开发服务器
-还有4个脚本可能很有用，可以作为特定的应用程序运行，也可以作为特定应用程序构建。
-您可以运行 `npm run dev:sky` 或  `npm run dev:genshin` ，这将运行特定游戏的网络应用程序并交换资源文件。
+
+然后将仓库克隆到一个文件夹中，并使用 `npm install` 安装依赖项，如果失败，可以使用`npm install --force` 强制安装。
+
+不要使用 npm run start 来启动开发服务器，会提示没有这个文件
+
+使用 `npm run dev:sky`  或   `npm run dev:genshin` 来启动原神或光遇的开发服务器
+
+你可以使用 `npm run build:genshin`  或  `npm run build:sky` 构建生产服务器, 或者使用 `npm run build:all` 构建两个程序
+
+使用 `npm run preview:genshin`  或  `npm run preview:sky` 来启动已经构建好的服务器 (使用这种方法可以大幅减少资源占用)
+
 
 # 寻找翻译人员
 我正在寻找有人帮助我将我的应用程序翻译成其他语言，
 如果您感兴趣，请参照翻译[讨论](https://github.com/Specy/genshin-music/discussions/52)
 
-# 如何在开发模式下运行桌面应用程序
-您需要首先启动开发服务器, 教程看 [这](#how-to-run-in-dev-mode) .
-然后你可以运行 `npm run start-tauri`
+~~# 如何在开发模式下运行桌面应用程序~~
+~~您需要首先启动开发服务器, 教程看 [这](#how-to-run-in-dev-mode) .~~
+~~然后你可以运行 `npm run start-tauri`~~
 
-# 如何构建
-你可以使用脚本 `npm run build:genshin` 和 `npm run build:sky` 它将构建正确的应用程序, 或者使用 `npm run build:all` 构建两个程序。
 
-# 如何构建桌面应用程序
-该应用程序使用tauri作为桌面捆绑包，这是一个沙盒网络视图。您可以使用 `npm run build-tauri:genshin` , `npm run build-tauri:sky`, `npm run build-tauri:all`来构建它. 
-配置是预先设置的，以允许更改日志，如果您没有签名密钥，则构建将失败。
-如果您想在没有变更日志的情况下进行构建, 去 `src-tauri/tauri.conf.json` 文件下将 `updater` 设置为 false
+# ~~如何构建桌面应用程序~~
+~~该应用程序使用tauri作为桌面捆绑包，这是一个沙盒网络视图。您可以使用 `npm run build-tauri:genshin` , `npm run build-tauri:sky`, `npm run build-tauri:all`来构建它.~~
+~~配置是预先设置的，以允许更改日志，如果您没有签名密钥，则构建将失败。~~
+~~如果您想在没有变更日志的情况下进行构建, 去 `src-tauri/tauri.conf.json` 文件下将 `updater` 设置为 false~~
 
 # 资料
 你可以在[这里](https://github.com/Specy/genshin-music/wiki)找到应用程序的资料
