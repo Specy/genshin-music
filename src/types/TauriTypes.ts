@@ -1,4 +1,4 @@
-import type TauriApi from '@tauri-apps/api';
+import type * as TauriApi from '@tauri-apps/api';
 
 export type Tauri = typeof TauriApi
 
