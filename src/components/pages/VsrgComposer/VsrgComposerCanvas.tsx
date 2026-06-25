@@ -332,7 +332,6 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         >
             {this.wrapperRef.current &&
                 <Application
-                    autoStart={false}
                     width={sizes.rawWidth}
                     height={sizes.rawHeight}
                     background={canvasColors.background_plain[1]}
