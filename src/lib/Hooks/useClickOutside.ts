@@ -9,7 +9,7 @@ interface Options {
 }
 
 export default function useClickOutside<T extends HTMLElement>(callback: Callback, options?: Partial<Options>) {
-    const callbackRef = useRef<Function>();
+    const callbackRef = useRef<Function | undefined>(undefined);
     const innerRef = useRef<T>(null);
 
     //i have no idea why this is here, but i'm too scared to remove it
