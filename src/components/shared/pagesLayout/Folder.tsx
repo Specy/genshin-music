@@ -67,7 +67,7 @@ export function SongFolder({
     useEffect(() => {
         const current = ref.current
         if (!current) return
-        const bounds = ref.current.getBoundingClientRect()
+        const bounds = current.getBoundingClientRect()
         setHeight(bounds.height + 100)
         //TODO this looks pretty hacky, might have to consider improving it
         const timeout = setTimeout(() => {
