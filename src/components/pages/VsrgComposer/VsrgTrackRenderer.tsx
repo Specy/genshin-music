@@ -52,7 +52,7 @@ export function VsrgTrackRenderer({
             return hitObject.isHeld
                 ? <pixiContainer
                     eventMode="static"
-                    pointerdown={(e: FederatedPointerEvent) => {
+                    onPointerDown={(e: FederatedPointerEvent) => {
                         selectHitObject(hitObject, trackIndex, parseMouseClick(e.button))
                     }}
                     key={hitObject.renderId}
@@ -60,7 +60,7 @@ export function VsrgTrackRenderer({
                     {isHorizontal
                         ? <pixiSprite
                             texture={cache.getHeldTrailCache(track.color)}
-                            anchor={[0, 0.5]}
+                            anchor={{x: 0, y: 0.5}}
                             height={cache.textures.sizes.trail}
                             width={hitObject.holdDuration * scale}
                             x={x}
@@ -109,7 +109,7 @@ export function VsrgTrackRenderer({
                     <pixiSprite
                         texture={cache.getHitObjectCache(track.color)}
                         eventMode="static"
-                        pointerdown={(e: FederatedPointerEvent) => {
+                        onPointerDown={(e: FederatedPointerEvent) => {
                             selectHitObject(hitObject, trackIndex, parseMouseClick(e.button))
                         }}
                         anchor={0.5}

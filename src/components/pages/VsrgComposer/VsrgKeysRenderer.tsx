@@ -99,9 +99,9 @@ function _VsrgKeysRenderer({keys, sizes, colors, isHorizontal, onKeyDown, onKeyU
                 key={key}
                 hitArea={hitArea}
                 eventMode="static"
-                pointerdown={() => onKeyDown(index)}
-                pointerup={() => onKeyUp(index)}
-                pointerupoutside={() => onKeyUp(index)}
+                onPointerDown={() => onKeyDown(index)}
+                onPointerUp={() => onKeyUp(index)}
+                onPointerUpOutside={() => onKeyUp(index)}
             >
                 <pixiText
                     x={isHorizontal ? 30 : keyWidth * index + keyWidth / 2}

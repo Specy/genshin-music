@@ -71,10 +71,10 @@ export function VsrgTimelineRenderer({
             x={0}
             y={0}
             eventMode="static"
-            pointermove={handleEvent}
-            pointerdown={setClicking}
-            pointerup={setNotClicking}
-            pointerupoutside={setNotClicking}
+            onPointerMove={handleEvent}
+            onPointerDown={setClicking}
+            onPointerUp={setNotClicking}
+            onPointerUpOutside={setNotClicking}
             hitArea={hitbox}
         >
             <pixiSprite
