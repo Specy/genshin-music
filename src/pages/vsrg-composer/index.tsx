@@ -28,7 +28,7 @@ import {AppBackground} from "$cmp/shared/pagesLayout/AppBackground";
 import {NextRouter, useRouter} from "next/router";
 import {createShortcutListener, ShortcutListener} from "$stores/KeybindsStore";
 import {useTranslation} from "react-i18next";
-import {WithTranslation} from "react-i18next/index";
+import {WithTranslation} from "react-i18next";
 import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 import {DecoratedCard} from "$cmp/shared/layout/DecoratedCard";
 

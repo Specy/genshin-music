@@ -27,7 +27,7 @@ import {subscribeTheme} from '$lib/Hooks/useTheme';
 import {createShortcutListener} from '$stores/KeybindsStore';
 import {FederatedPointerEvent} from 'pixi.js';
 import {ComposerBreakpointsRenderer} from "$cmp/pages/Composer/ComposerBreakpointsRenderer";
-import {WithTranslation} from "react-i18next/index";
+import {WithTranslation} from "react-i18next";
 
 type ClickEventType = 'up' | 'down-slider' | 'down-stage'
 

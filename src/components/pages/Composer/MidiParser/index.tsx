@@ -18,7 +18,7 @@ import {NumericalInput} from './Numericalinput'
 import {basicPitchLoader} from '$lib/audio/BasicPitchLoader'
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
-import {WithTranslation} from "react-i18next/index";
+import {WithTranslation} from "react-i18next";
 
 interface MidiImportProps {
     t: WithTranslation<['composer', 'home', 'logs', 'question', 'common']>['t']
