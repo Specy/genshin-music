@@ -862,9 +862,9 @@ export const MIDI_BOUNDS = APP_NAME === "Genshin"
         upper: 84,
         lower: 60
     }
-export const PIXI_VERTICAL_ALIGN = [0.5, 0] as [number, number]
-export const PIXI_HORIZONTAL_ALIGN = [0, 0.5] as [number, number]
-export const PIXI_CENTER_X_END_Y = [0.5, 1] as [number, number]
+export const PIXI_VERTICAL_ALIGN = {x: 0.5, y: 0}
+export const PIXI_HORIZONTAL_ALIGN = {x: 0, y: 0.5}
+export const PIXI_CENTER_X_END_Y = {x: 0.5, y: 1}
 export const PIXI_CENTER_ALIGN = 0.5
 //get only non accidentals
 const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)

@@ -19,7 +19,7 @@ export const ComposerBreakpointsRenderer = memo(function ComposerBreakpointsRend
             texture={texture}
             key={breakpoint}
             interactive={false}
-            anchor={[0.5, 0]}
+            anchor={{x: 0.5, y: 0}}
             x={(width / (columns - 1)) * breakpoint}
         >
         </pixiSprite>

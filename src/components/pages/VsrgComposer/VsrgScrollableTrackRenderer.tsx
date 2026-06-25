@@ -97,7 +97,7 @@ export function VsrgScrollableTrackRenderer({
             return <pixiSprite
                 key={sp}
                 eventMode="static"
-                pointertap={handleSnapPointClick}
+                onPointerTap={handleSnapPointClick}
                 x={isHorizontal ? sp * scale : 0}
                 y={isHorizontal ? 0 : -(sp * scale - sizes.height + snapPointSize)}
                 texture={i % snapPoint
@@ -131,11 +131,10 @@ export function VsrgScrollableTrackRenderer({
         {timestamp >= vsrg.duration - (isHorizontal ? sizes.width : sizes.height) / scale &&
             <>
                 <pixiContainer
-                    pointertap={onAddTime}
+                    onPointerTap={onAddTime}
                     eventMode="static"
 
                     x={isHorizontal ? vsrg.duration * scale : 0}
-                    anchor={0.5}
                     y={isHorizontal ? 0 : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height)}
                 >
                     <pixiSprite
@@ -150,10 +149,9 @@ export function VsrgScrollableTrackRenderer({
                     />
                 </pixiContainer>
                 <pixiContainer
-                    pointertap={onRemoveTime}
+                    onPointerTap={onRemoveTime}
                     eventMode="static"
                     x={isHorizontal ? vsrg.duration * scale : sizes.width / 2}
-                    anchor={0.5}
                     y={isHorizontal ? sizes.height / 2 : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height)}
                 >
                     <pixiSprite
