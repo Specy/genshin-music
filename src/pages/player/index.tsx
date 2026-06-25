@@ -28,7 +28,7 @@ import {PlayerSongControls} from '$cmp/pages/Player/PlayerSongControls';
 import {AppBackground} from '$cmp/shared/pagesLayout/AppBackground';
 import {createShortcutListener} from '$/stores/KeybindsStore';
 import {useTranslation} from "react-i18next";
-import {WithTranslation} from "react-i18next/index";
+import {WithTranslation} from "react-i18next";
 import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
 import {delay} from "$lib/utils/Utilities";
 
