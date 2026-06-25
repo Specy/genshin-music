@@ -1,23 +1,23 @@
-import {Application} from "@pixi/react"
+import { Application } from "@pixi/react"
 import "$lib/utils/pixiExtend"
-import {DEFAULT_DOM_RECT, DEFAULT_VSRG_KEYS_MAP} from "$config"
+import { DEFAULT_DOM_RECT, DEFAULT_VSRG_KEYS_MAP } from "$config"
 import isMobile from "is-mobile"
-import {subscribeTheme} from "$lib/Hooks/useTheme"
-import {RecordedSong} from "$lib/Songs/RecordedSong"
-import {RecordedNote} from "$lib/Songs/SongClasses"
-import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong"
-import {ThrottledEventLoop} from "$lib/ThrottledEventLoop"
-import {Application as PixiApplication} from "pixi.js"
-import React, {Component, createRef} from "react"
-import {Theme, ThemeProvider} from "$stores/ThemeStore/ThemeProvider"
-import {VsrgComposerEvents, vsrgComposerStore} from "$stores/VsrgComposerStore"
-import {ClickType} from "$types/GeneralTypes"
-import {VsrgCanvasCache} from "./VsrgComposerCache"
-import {VsrgKeysRenderer} from "./VsrgKeysRenderer"
-import {VsrgScrollableTrackRenderer} from "./VsrgScrollableTrackRenderer"
-import {VsrgTimelineRenderer} from "./VsrgTimelineRenderer"
-import {getNearestTo} from "$lib/utils/Utilities"
-import {globalConfigStore} from "$stores/GlobalConfigStore"
+import { subscribeTheme } from "$lib/Hooks/useTheme"
+import { RecordedSong } from "$lib/Songs/RecordedSong"
+import { RecordedNote } from "$lib/Songs/SongClasses"
+import { VsrgHitObject, VsrgSong } from "$lib/Songs/VsrgSong"
+import { ThrottledEventLoop } from "$lib/ThrottledEventLoop"
+import { Application as PixiApplication } from "pixi.js"
+import React, { Component, createRef } from "react"
+import { Theme, ThemeProvider } from "$stores/ThemeStore/ThemeProvider"
+import { VsrgComposerEvents, vsrgComposerStore } from "$stores/VsrgComposerStore"
+import { ClickType } from "$types/GeneralTypes"
+import { VsrgCanvasCache } from "./VsrgComposerCache"
+import { VsrgKeysRenderer } from "./VsrgKeysRenderer"
+import { VsrgScrollableTrackRenderer } from "./VsrgScrollableTrackRenderer"
+import { VsrgTimelineRenderer } from "./VsrgTimelineRenderer"
+import { getNearestTo } from "$lib/utils/Utilities"
+import { globalConfigStore } from "$stores/GlobalConfigStore"
 
 
 export type VsrgCanvasSizes = {
@@ -100,7 +100,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             },
             timestamp: 0,
             sizes: {
-                el: {...DEFAULT_DOM_RECT},
+                el: { ...DEFAULT_DOM_RECT },
                 rawWidth: 0,
                 rawHeight: 0,
                 width: 0,
@@ -129,7 +129,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             callback: this.handleEvent,
             id: "vsrg-canvas-color-change"
         })
-        this.toDispose.push(() => vsrgComposerStore.removeEventListener("ALL", {id: "vsrg-canvas-color-change"}))
+        this.toDispose.push(() => vsrgComposerStore.removeEventListener("ALL", { id: "vsrg-canvas-color-change" }))
         this.calculateSizes()
         this.throttledEventLoop.setCallback(this.handleTick)
         this.throttledEventLoop.changeMaxFps(this.props.maxFps)
@@ -164,13 +164,13 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         }
     }
     handleBlur = () => {
-        this.setState({isPressing: false})
+        this.setState({ isPressing: false })
     }
     calculateSizes = () => {
-        const {wrapperRef} = this
+        const { wrapperRef } = this
         if (!wrapperRef.current) return console.warn("no wrapper")
         const wrapperSizes = wrapperRef.current.getBoundingClientRect()
-        const {scaling} = this.props
+        const { scaling } = this.props
         const timelineSize = isMobile() ? 20 : 40
         const height = wrapperSizes.height - timelineSize
         const sizes: VsrgCanvasSizes = {
@@ -193,13 +193,13 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             canvas.style.width = `${sizes.width}px`
             canvas.style.height = `${sizes.height + timelineSize}px`
         }
-        this.setState({sizes}, this.generateCache)
+        this.setState({ sizes }, this.generateCache)
     }
     handleWheel = (e: React.WheelEvent<HTMLElement>) => {
         if (this.props.scrollSnap) {
             this.cumulativeScroll += e.deltaY
             if (Math.abs(this.cumulativeScroll) < 100) return
-            const {snapPoints} = this.props
+            const { snapPoints } = this.props
             const nearestSnapPoint = snapPoints.findIndex(s => s > this.state.timestamp)
             const index = (nearestSnapPoint < 0 ? snapPoints.length : nearestSnapPoint) - 1 + (this.cumulativeScroll < 0 ? -1 : 1)
             this.cumulativeScroll = 0
@@ -212,14 +212,14 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         this.setState({
             timestamp: min
         }, () => {
-            const {draggedHitObject, timestamp} = this.state
+            const { draggedHitObject, timestamp } = this.state
             this.props.onTimestampChange(this.state.timestamp)
             if (!draggedHitObject || timestamp <= 0) return
             this.props.dragHitObject(draggedHitObject.timestamp + e.deltaY / 1.2)
         })
     }
     setIsDragging = (e: React.PointerEvent<HTMLElement>) => {
-        const {sizes} = this.state
+        const { sizes } = this.state
         if ((e.clientY - sizes.el.top) > sizes.timelineSize) {
             this.setState({
                 isPressing: true,
@@ -230,12 +230,12 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
     setIsNotDragging = (e: React.PointerEvent<HTMLElement>) => {
         if (!this.state.isPressing) return
         const draggedHitObject = this.state.draggedHitObject
-        this.setState({isPressing: false, totalMovement: 0, draggedHitObject: null}, () => {
+        this.setState({ isPressing: false, totalMovement: 0, draggedHitObject: null }, () => {
             //dumbass idk how to make otherwise
             if (draggedHitObject) this.props.releaseHitObject()
-            setTimeout(() => this.setState({preventClick: false}), 200)
+            setTimeout(() => this.setState({ preventClick: false }), 200)
             if (this.props.scrollSnap) {
-                const {snapPoints} = this.props
+                const { snapPoints } = this.props
                 const index = snapPoints.findIndex(s => s > this.state.timestamp)
                 if (!index || index < 0) return
                 const next = snapPoints[index]
@@ -248,8 +248,8 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
     }
     handleDrag = (e: React.PointerEvent<HTMLElement>) => {
         if (!this.state.isPressing) return
-        const {previousPosition, draggedHitObject, sizes, timestamp} = this.state
-        const {isHorizontal, vsrg} = this.props
+        const { previousPosition, draggedHitObject, sizes, timestamp } = this.state
+        const { isHorizontal, vsrg } = this.props
         const deltaOrientation = isHorizontal ? e.clientX : -e.clientY
         const keyPosition = isHorizontal ? e.clientY - sizes.el.top - sizes.timelineSize : e.clientX - sizes.el.left
         const hoveredPosition = Math.floor(keyPosition / (isHorizontal ? sizes.keyHeight : sizes.keyWidth))
@@ -257,7 +257,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         const newTotalMovement = this.state.totalMovement + Math.abs(delta)
         if (draggedHitObject !== null) {
             const position = draggedHitObject.timestamp - delta
-            return this.setState({previousPosition: deltaOrientation},
+            return this.setState({ previousPosition: deltaOrientation },
                 () => this.props.dragHitObject(Math.max(0, position), hoveredPosition)
             )
         }
@@ -271,7 +271,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         }, () => this.props.onTimestampChange(this.state.timestamp))
     }
     generateCache = () => {
-        const {sizes, canvasColors, cache} = this.state
+        const { sizes, canvasColors, cache } = this.state
         const trackColors = this.props.vsrg.tracks.map(t => t.color)
         if (!this.app) return
         this.app.renderer.background.color = canvasColors.background[0]
@@ -284,7 +284,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             playbarOffset: globalConfigStore.get().PLAY_BAR_OFFSET
         })
         const oldCache = this.state.cache
-        this.setState({cache: newCache}, () => {
+        this.setState({ cache: newCache }, () => {
             //TODO not sure why pixi is still using old textures
             setTimeout(() => {
                 oldCache?.destroy()
@@ -292,11 +292,11 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         })
     }
     selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: number) => {
-        if (clickType !== 2) this.setState({draggedHitObject: hitObject})
+        if (clickType !== 2) this.setState({ draggedHitObject: hitObject })
         this.props.selectHitObject(hitObject, trackIndex, clickType)
     }
     setTimestamp = (timestamp: number) => {
-        this.setState({timestamp})
+        this.setState({ timestamp })
         this.props.onTimestampChange(timestamp)
     }
     handleThemeChange = (theme: Theme) => {
@@ -309,20 +309,20 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         const accent = theme.get('accent')
         this.setState({
             canvasColors: {
-                background_plain: [bg_plain.hex(), bg_plain.rgbNumber()],
-                background: [bg.hex(), bg.rgbNumber()],
-                background_10: [bg_10.hex(), bg_10.rgbNumber()],
-                secondary: [secondary.hex(), secondary.rgbNumber()],
-                lineColor: [bg_line.hex(), bg_line.rgbNumber()],
-                lineColor_10: [bg_line_10.hex(), bg_line_10.rgbNumber()],
-                accent: [accent.hex(), accent.rgbNumber()],
+                background_plain: [bg_plain.hex(), bg_plain.rgb().rgbNumber()],
+                background: [bg.hex(), bg.rgb().rgbNumber()],
+                background_10: [bg_10.hex(), bg_10.rgb().rgbNumber()],
+                secondary: [secondary.hex(), secondary.rgb().rgbNumber()],
+                lineColor: [bg_line.hex(), bg_line.rgb().rgbNumber()],
+                lineColor_10: [bg_line_10.hex(), bg_line_10.rgb().rgbNumber()],
+                accent: [accent.hex(), accent.rgb().rgbNumber()],
             }
         }, this.generateCache)
     }
 
     render() {
-        const {canvasColors, sizes, cache, timestamp, preventClick} = this.state
-        const {vsrg, isHorizontal, audioSong, snapPoint, snapPoints, selectedHitObject} = this.props
+        const { canvasColors, sizes, cache, timestamp, preventClick } = this.state
+        const { vsrg, isHorizontal, audioSong, snapPoint, snapPoints, selectedHitObject } = this.props
         return <div
             className="vsrg-top-canvas-wrapper"
             ref={this.wrapperRef}

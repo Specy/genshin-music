@@ -64,6 +64,7 @@ export class ZangoCollection<T extends BaseObject> implements Collection<T> {
 }
 
 export class TauriCollection<T extends BaseObject> implements Collection<T> {
+    //@ts-ignore
     private fs = TAURI?.fs
     readonly table: string
     private baseSettings: any
