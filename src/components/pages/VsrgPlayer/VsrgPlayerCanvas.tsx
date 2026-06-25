@@ -224,6 +224,9 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
             scaling: (el.clientHeight) / this.props.scrollSpeed,
             verticalOffset: 15
         }
+        //@pixi/react v8 only applies width/height at <Application> init; resize the renderer
+        //explicitly so the drawing buffer matches the container instead of being CSS-stretched
+        this.app?.renderer.resize(sizes.width, sizes.height)
         const canvas = el.querySelector('canvas')
         if (canvas) {
             canvas.style.width = `${sizes.width}px`
