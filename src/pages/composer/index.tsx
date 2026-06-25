@@ -6,7 +6,8 @@ import RemoveColumn from "$cmp/shared/icons/RemoveColumn"
 import MidiParser from "$cmp/pages/Composer/MidiParser"
 import ComposerTools from "$cmp/pages/Composer/ComposerTools"
 import ComposerKeyboard from "$cmp/pages/Composer/ComposerKeyboard"
-import ComposerCanvas from "$cmp/pages/Composer/ComposerCanvas"
+import dynamic from "next/dynamic"
+const ComposerCanvas = dynamic(() => import("$cmp/pages/Composer/ComposerCanvas"), {ssr: false})
 import Menu from "$cmp/pages/Composer/ComposerMenu"
 import Memoized, {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
 import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts"

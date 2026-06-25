@@ -6,7 +6,23 @@ import {VsrgPlayerSettingsDataType} from "$lib/BaseSettings";
 import {AudioPlayer} from "$lib/audio/AudioPlayer";
 import {VsrgPlayerKeyboard} from "$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard";
 import {vsrgPlayerStore} from "$stores/VsrgPlayerStore";
-import {defaultVsrgPlayerSizes, VsrgPlayerCanvas, VsrgPlayerCanvasSizes} from "$cmp/pages/VsrgPlayer/VsrgPlayerCanvas";
+import dynamic from "next/dynamic";
+import {DEFAULT_DOM_RECT} from "$config";
+import type {VsrgPlayerCanvasSizes} from "$cmp/pages/VsrgPlayer/VsrgPlayerCanvas";
+// Canvas is loaded client-only to avoid evaluating @pixi/react during static export prerender.
+const VsrgPlayerCanvas = dynamic(() => import("$cmp/pages/VsrgPlayer/VsrgPlayerCanvas").then(m => m.VsrgPlayerCanvas), {ssr: false});
+// Defined locally (mirrors VsrgPlayerCanvas' export) so the page does not statically import the pixi module.
+const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
+    el: {...DEFAULT_DOM_RECT},
+    rawWidth: 0,
+    rawHeight: 0,
+    width: 0,
+    height: 0,
+    keyWidth: 0,
+    hitObjectSize: 0,
+    scaling: 0,
+    verticalOffset: 0,
+};
 import {RecordedSong} from "$lib/Songs/RecordedSong";
 import {songService} from "$lib/Services/SongService";
 import {songsStore} from "$stores/SongsStore";
