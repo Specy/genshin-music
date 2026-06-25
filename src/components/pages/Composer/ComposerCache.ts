@@ -1,9 +1,9 @@
-import {CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS} from "$config"
-import Color from "color"
-import {Application, Graphics, Rectangle, Texture} from 'pixi.js'
-import {NoteLayer} from "$lib/Songs/Layer";
+import { CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS } from "$config"
+import Color, { ColorInstance } from "color"
+import { Application, Graphics, Rectangle, Texture } from 'pixi.js'
+import { NoteLayer } from "$lib/Songs/Layer";
 
-const {horizontalLineBreak, standards, layersCombination, breakpoints} = CACHE_DATA
+const { horizontalLineBreak, standards, layersCombination, breakpoints } = CACHE_DATA
 
 interface ComposerCacheProps {
     width: number
@@ -13,9 +13,9 @@ interface ComposerCacheProps {
     app: Application
     breakpointsApp: Application
     colors: {
-        accent: Color,
-        mainLayer: Color,
-        secondLayer: Color,
+        accent: ColorInstance,
+        mainLayer: ColorInstance,
+        secondLayer: ColorInstance,
         bars: typeof standards
     }
 }
@@ -42,21 +42,21 @@ export class ComposerCache {
     app: Application | null
     breakpointsApp: Application | null
     colors: {
-        accent: Color,
-        mainLayer: Color,
-        secondLayer: Color,
+        accent: ColorInstance,
+        mainLayer: ColorInstance,
+        secondLayer: ColorInstance,
         bars: { color: number }[]
     }
 
     constructor({
-                    width,
-                    height,
-                    margin = 4,
-                    timelineHeight = 30,
-                    app,
-                    breakpointsApp,
-                    colors
-                }: ComposerCacheProps) {
+        width,
+        height,
+        margin = 4,
+        timelineHeight = 30,
+        app,
+        breakpointsApp,
+        colors
+    }: ComposerCacheProps) {
 
         this.cache = {
             columns: [],
@@ -114,8 +114,8 @@ export class ComposerCache {
                     Math.ceil(noteWidth - this.margin),
                     Math.ceil(noteHeight - this.margin),
                     radius
-                ).fill(new Color(this.colors.mainLayer).rgbNumber())
-                    .stroke({ width: 1, color: new Color(this.colors.mainLayer).rgbNumber() })
+                ).fill(new Color(this.colors.mainLayer).rgb().rgbNumber())
+                    .stroke({ width: 1, color: new Color(this.colors.mainLayer).rgb().rgbNumber() })
             }
             if (layer.test(1)) { //layer 2
                 g.roundRect(
@@ -124,22 +124,22 @@ export class ComposerCache {
                     Math.ceil(noteWidth - this.margin),
                     Math.ceil(noteHeight - this.margin),
                     radius
-                ).stroke({ width: this.margin === 4 ? 3 : 2, color: new Color(this.colors.secondLayer).rgbNumber() })
+                ).stroke({ width: this.margin === 4 ? 3 : 2, color: new Color(this.colors.secondLayer).rgb().rgbNumber() })
             }
             if (layer.test(2)) { //layer 3
                 g.circle(
                     noteWidth / 2 - 0.25,
                     noteHeight / 2,
                     noteHeight / 3 - 0.5
-                ).fill(new Color(this.colors.secondLayer).rgbNumber())
-                    .stroke({ width: 1, color: new Color(this.colors.secondLayer).rgbNumber() })
+                ).fill(new Color(this.colors.secondLayer).rgb().rgbNumber())
+                    .stroke({ width: 1, color: new Color(this.colors.secondLayer).rgb().rgbNumber() })
             }
 
             if (layer.test(3)) { //layer 4
                 const lineWidth = this.margin === 4 ? 3 : 2
                 g.moveTo(this.margin / 2 + 0.5, noteHeight / 2)
                     .lineTo(noteWidth - this.margin + 0.5, noteHeight / 2)
-                    .stroke({ width: lineWidth, color: new Color(this.colors.secondLayer).darken(0.15).rgbNumber() })
+                    .stroke({ width: lineWidth, color: new Color(this.colors.secondLayer).darken(0.15).rgb().rgbNumber() })
             }
             if (!this.app) return
             const texture = this.app.renderer.generateTexture({
@@ -163,7 +163,7 @@ export class ComposerCache {
                     size,
                     this.timelineHeight / 2,
                     size
-                ).fill(this.colors.accent.rgbNumber())
+                ).fill(this.colors.accent.rgb().rgbNumber())
                 if (!this.breakpointsApp) return
                 const texture = this.breakpointsApp.renderer.generateTexture({
                     target: g,
@@ -177,19 +177,19 @@ export class ComposerCache {
                 g.moveTo(0, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(0, this.height - this.noteHeight)
-                    .fill(this.colors.accent.rgbNumber())
+                    .fill(this.colors.accent.rgb().rgbNumber())
                 g.moveTo(this.width, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(this.width, this.height - this.noteHeight)
-                    .fill(this.colors.accent.rgbNumber())
+                    .fill(this.colors.accent.rgb().rgbNumber())
                 g.moveTo(0, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(0, this.noteHeight)
-                    .fill(this.colors.accent.rgbNumber())
+                    .fill(this.colors.accent.rgb().rgbNumber())
                 g.moveTo(this.width, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(this.width, this.noteHeight)
-                    .fill(this.colors.accent.rgbNumber())
+                    .fill(this.colors.accent.rgb().rgbNumber())
                 if (!this.app) return
                 const texture = this.app.renderer.generateTexture({
                     target: g,

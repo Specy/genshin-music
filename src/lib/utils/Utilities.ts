@@ -6,7 +6,7 @@ import {Song} from "../Songs/Song";
 import {ComposedSong} from "../Songs/ComposedSong";
 import {RecordedSong} from "../Songs/RecordedSong";
 import {ClickType, Timer} from "$types/GeneralTypes"
-import Color from "color";
+import Color, { ColorInstance } from "color";
 import {CSSProperties} from "react";
 import {MIDIShortcutName} from "$lib/BaseSettings";
 
@@ -44,7 +44,7 @@ export function isTWA() {
 }
 
 
-export function colorToRGB(color: Color) {
+export function colorToRGB(color: ColorInstance) {
     return [color.red(), color.green(), color.blue()]
 }
 

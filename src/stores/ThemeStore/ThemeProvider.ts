@@ -2,7 +2,7 @@ import {observable} from "mobx";
 import {ThemeSettings} from '$lib/BaseSettings'
 import {BASE_THEME_CONFIG} from '$config'
 import cloneDeep from 'lodash.clonedeep'
-import Color from 'color'
+import Color, { ColorInstance } from 'color'
 import {logger} from '$stores/LoggerStore'
 import {baseThemes} from "./defaultThemes";
 import {_themeService} from "$lib/Services/ThemeService";
@@ -137,7 +137,7 @@ export class Theme {
         }
     }
 
-    getTextColorFromBackground = (color: Color) => {
+    getTextColorFromBackground = (color: ColorInstance) => {
         return color.isDark() ? defaultTextColors.light : defaultTextColors.dark
     }
     serialize = (): SerializedTheme => {
