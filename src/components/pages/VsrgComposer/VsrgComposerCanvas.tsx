@@ -185,6 +185,9 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             scaling: scaling / 100,
             timelineSize
         }
+        //@pixi/react v8 only applies width/height at <Application> init; resize the renderer
+        //explicitly so the drawing buffer tracks the container (e.g. on window resize)
+        this.app?.renderer.resize(sizes.rawWidth, sizes.rawHeight)
         const canvas = wrapperRef.current.querySelector('canvas')
         if (canvas) {
             canvas.style.width = `${sizes.width}px`
