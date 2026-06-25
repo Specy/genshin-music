@@ -1,4 +1,5 @@
-import {Stage} from "@pixi/react"
+import {Application} from "@pixi/react"
+import "$lib/utils/pixiExtend"
 import {DEFAULT_DOM_RECT, DEFAULT_VSRG_KEYS_MAP} from "$config"
 import isMobile from "is-mobile"
 import {subscribeTheme} from "$lib/Hooks/useTheme"
@@ -6,7 +7,7 @@ import {RecordedSong} from "$lib/Songs/RecordedSong"
 import {RecordedNote} from "$lib/Songs/SongClasses"
 import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong"
 import {ThrottledEventLoop} from "$lib/ThrottledEventLoop"
-import {Application} from "pixi.js"
+import {Application as PixiApplication} from "pixi.js"
 import React, {Component, createRef} from "react"
 import {Theme, ThemeProvider} from "$stores/ThemeStore/ThemeProvider"
 import {VsrgComposerEvents, vsrgComposerStore} from "$stores/VsrgComposerStore"
@@ -78,8 +79,8 @@ interface VsrgCanvasState {
 }
 
 export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasState> {
-    wrapperRef = createRef<HTMLDivElement>()
-    stageRef = createRef<any>()
+    wrapperRef: React.RefObject<HTMLDivElement | null>
+    app: PixiApplication | null = null
     toDispose: (() => void)[] = []
     throttledEventLoop: ThrottledEventLoop = new ThrottledEventLoop(() => {
     }, 48)
@@ -118,7 +119,6 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             cache: null
         }
         this.wrapperRef = createRef()
-        this.stageRef = createRef()
     }
 
     componentDidMount() {
@@ -192,7 +192,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         }
         this.setState({sizes}, this.generateCache)
     }
-    handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    handleWheel = (e: React.WheelEvent<HTMLElement>) => {
         if (this.props.scrollSnap) {
             this.cumulativeScroll += e.deltaY
             if (Math.abs(this.cumulativeScroll) < 100) return
@@ -215,7 +215,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             this.props.dragHitObject(draggedHitObject.timestamp + e.deltaY / 1.2)
         })
     }
-    setIsDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    setIsDragging = (e: React.PointerEvent<HTMLElement>) => {
         const {sizes} = this.state
         if ((e.clientY - sizes.el.top) > sizes.timelineSize) {
             this.setState({
@@ -224,7 +224,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             })
         }
     }
-    setIsNotDragging = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    setIsNotDragging = (e: React.PointerEvent<HTMLElement>) => {
         if (!this.state.isPressing) return
         const draggedHitObject = this.state.draggedHitObject
         this.setState({isPressing: false, totalMovement: 0, draggedHitObject: null}, () => {
@@ -243,7 +243,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
             }
         })
     }
-    handleDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    handleDrag = (e: React.PointerEvent<HTMLElement>) => {
         if (!this.state.isPressing) return
         const {previousPosition, draggedHitObject, sizes, timestamp} = this.state
         const {isHorizontal, vsrg} = this.props
@@ -270,10 +270,10 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
     generateCache = () => {
         const {sizes, canvasColors, cache} = this.state
         const trackColors = this.props.vsrg.tracks.map(t => t.color)
-        if (!this.stageRef.current) return
-        this.stageRef.current.app.renderer.background.color = canvasColors.background[0]
+        if (!this.app) return
+        this.app.renderer.background.color = canvasColors.background[0]
         const newCache = new VsrgCanvasCache({
-            app: this.stageRef.current.app as Application,
+            app: this.app,
             sizes,
             colors: canvasColors,
             trackColors,
@@ -323,24 +323,25 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
         return <div
             className="vsrg-top-canvas-wrapper"
             ref={this.wrapperRef}
+            onWheel={this.handleWheel}
+            onPointerDown={this.setIsDragging}
+            onPointerUp={this.setIsNotDragging}
+            onPointerLeave={this.setIsNotDragging}
+            onPointerMove={this.handleDrag}
+            onContextMenu={(e) => e.preventDefault()}
         >
             {this.wrapperRef.current &&
-                <Stage
-                    onMount={this.calculateSizes}
-                    ref={this.stageRef}
-                    raf={false}
+                <Application
+                    autoStart={false}
                     width={sizes.rawWidth}
                     height={sizes.rawHeight}
-                    onWheel={this.handleWheel}
-                    onPointerDown={this.setIsDragging}
-                    onPointerUp={this.setIsNotDragging}
-                    onPointerLeave={this.setIsNotDragging}
-                    onPointerMove={this.handleDrag}
-                    onContextMenu={(e) => e.preventDefault()}
-                    options={{
-                        backgroundColor: canvasColors.background_plain[1],
-                        autoDensity: false,
-                        resolution: window?.devicePixelRatio || 1,
+                    background={canvasColors.background_plain[1]}
+                    autoDensity={false}
+                    antialias
+                    resolution={window?.devicePixelRatio || 1}
+                    onInit={(app) => {
+                        this.app = app
+                        this.calculateSizes()
                     }}
                 >
                     {cache &&
@@ -384,7 +385,7 @@ export class VsrgComposerCanvas extends Component<VsrgCanvasProps, VsrgCanvasSta
                             colors={canvasColors}
                         />
                     }
-                </Stage>
+                </Application>
             }
         </div>
     }
