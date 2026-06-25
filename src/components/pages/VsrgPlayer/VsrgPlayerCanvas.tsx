@@ -354,7 +354,6 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                     />
                 }
                 <Application
-                    autoStart={false}
                     width={sizes.width}
                     height={sizes.height}
                     backgroundAlpha={0}
