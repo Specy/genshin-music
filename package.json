@@ -40,7 +40,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "preview": "npx serve@latest build",
     "preview:sky": "npx serve@latest build/skyMusic",
     "preview:genshin": "npx serve@latest build/genshinMusic",
