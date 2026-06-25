@@ -10,6 +10,7 @@
   "dependencies": {
     "@insertish/zangodb": "^1.0.12-nomemo",
     "@pixi/react": "^8.0.5",
+    "@serwist/turbopack": "^9.5.11",
     "@spotify/basic-pitch": "^1.0.1",
     "@tauri-apps/api": "^1.5.3",
     "@tonejs/midi": "^2.0.28",
