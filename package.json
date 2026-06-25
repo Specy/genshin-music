@@ -32,10 +32,6 @@
     "react-i18next": "^15.7.4",
     "react-icons": "^5.1.0",
     "semver": "^7.6.0",
-    "workbox-core": "^7.0.0",
-    "workbox-precaching": "^7.0.0",
-    "workbox-routing": "^7.0.0",
-    "workbox-strategies": "^7.0.0",
     "worker-timers": "^7.1.7"
   },
   "scripts": {
