@@ -1,9 +1,10 @@
-import {Stage} from "@pixi/react";
+import {Application} from "@pixi/react";
+import "$lib/utils/pixiExtend";
 import {subscribeTheme} from "$lib/Hooks/useTheme";
 import {VsrgAccuracyBounds, VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
 import {ThrottledEventLoop} from "$lib/ThrottledEventLoop";
 import {isNumberCloseTo} from "$lib/utils/Utilities";
-import {Application} from "pixi.js";
+import {Application as PixiApplication} from "pixi.js";
 import {Component, createRef} from "react";
 import {keyBinds} from "$stores/KeybindsStore";
 import {Theme} from "$stores/ThemeStore/ThemeProvider";
@@ -104,8 +105,8 @@ export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
 
 export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlayerCanvasState> {
     throttledEventLoop: ThrottledEventLoop
-    wrapperRef: React.RefObject<HTMLDivElement>
-    stageRef: React.RefObject<any>
+    wrapperRef: React.RefObject<HTMLDivElement | null>
+    app: PixiApplication | null = null
     toDispose: (() => void)[] = []
 
     constructor(props: VsrgPlayerCanvasProps) {
@@ -133,7 +134,6 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
         this.throttledEventLoop = new ThrottledEventLoop(() => {
         }, this.props.maxFps)
         this.wrapperRef = createRef()
-        this.stageRef = createRef()
     }
 
     componentDidMount() {
@@ -234,7 +234,8 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
     }
     generateCache = () => {
         const {colors, sizes, cache} = this.state
-        const app = this.stageRef.current.app as Application
+        const app = this.app
+        if (!app) return
         const newCache = new VsrgPlayerCache({
             app,
             colors,
@@ -352,17 +353,18 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
                         time={Math.abs(Math.ceil((timestamp + scrollSpeed) / 1000 * 2)) + 1}
                     />
                 }
-                <Stage
-                    ref={this.stageRef}
-                    raf={false}
+                <Application
+                    autoStart={false}
                     width={sizes.width}
                     height={sizes.height}
-                    options={{
-                        backgroundAlpha: 0,
-                        autoDensity: false,
-                        resolution: devicePixelRatio,
+                    backgroundAlpha={0}
+                    autoDensity={false}
+                    antialias
+                    resolution={devicePixelRatio}
+                    onInit={(app) => {
+                        this.app = app
+                        this.calculateSizes()
                     }}
-                    onMount={this.calculateSizes}
                 >
                     {cache && <>
                         <VsrgHitObjectsRenderer
@@ -375,7 +377,7 @@ export class VsrgPlayerCanvas extends Component<VsrgPlayerCanvasProps, VsrgPlaye
 
                     </>
                     }
-                </Stage>
+                </Application>
             </div>
         </>
     }
