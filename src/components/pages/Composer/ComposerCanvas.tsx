@@ -457,7 +457,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 <Application
                     width={width}
                     height={height}
-                    autoStart={false}
                     background={stageOptions.backgroundColor}
                     autoDensity={stageOptions.autoDensity}
                     antialias
@@ -561,7 +560,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         <Application
                             width={width}
                             height={timelineHeight}
-                            autoStart={false}
                             backgroundAlpha={0}
                             autoDensity={this.state.timelineOptions.autoDensity}
                             antialias
