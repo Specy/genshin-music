@@ -19,6 +19,7 @@
 - **Keep all `NEXT_PUBLIC_*` env vars working:** `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_BASE_PATH`, `NEXT_PUBLIC_SW_VERSION`, `NEXT_PUBLIC_IS_TAURI`, `NEXT_PUBLIC_IS_BETA`.
 - **Build commands** (Windows PowerShell / Git Bash): `node ./scripts/buildApp.js Sky` and `node ./scripts/buildApp.js Genshin`. Dev: `node ./scripts/startApp.js Genshin`.
 - **Service worker filename/URL stays `service-worker.js`** so the existing `src/serviceWorkerRegistration.ts` (manual registration, `register:false`) keeps working unchanged.
+- **Use `--legacy-peer-deps` for ALL `npm install`/`npm uninstall` during Phase 1.** `@pixi/react@7` peer-deps React ≤18 and stays installed until Phase 2, so React 19 installs/uninstalls will otherwise fail npm's `ERESOLVE` peer check. This flag is dropped in Phase 2 once `@pixi/react@8` lands. Keep `@pixi/react`/`pixi.js` **installed** through Phase 1 (removing them would turn tolerable type errors into hard module-resolution build failures).
 
 ---
 
@@ -61,20 +62,22 @@ In `package.json`, change:
 
 - [ ] **Step 2: Upgrade React + Next + types + i18n**
 
-Run:
+Run (note `--legacy-peer-deps` — see Global Constraints; pixi-react v7 still requires React ≤18):
 ```bash
-npm install next@^16 react@^19 react-dom@^19
-npm install -D @types/react@^19 @types/react-dom@^19 eslint-config-next@^16 @next/bundle-analyzer@^16
-npm install react-i18next@^15
+npm install --legacy-peer-deps next@^16 react@^19 react-dom@^19
+npm install --legacy-peer-deps -D @types/react@^19 @types/react-dom@^19 eslint-config-next@^16 @next/bundle-analyzer@^16
+npm install --legacy-peer-deps react-i18next@^15
 ```
 
 - [ ] **Step 3: Install Serwist, remove next-pwa + dead esbuild polyfills**
 
 Run:
 ```bash
-npm install -D @serwist/next@latest serwist@latest
-npm uninstall next-pwa @types/next-pwa @esbuild-plugins/node-globals-polyfill @esbuild-plugins/node-modules-polyfill
+npm install --legacy-peer-deps -D @serwist/next@latest serwist@latest
+npm uninstall --legacy-peer-deps next-pwa @types/next-pwa @esbuild-plugins/node-globals-polyfill @esbuild-plugins/node-modules-polyfill
 ```
+
+If npm still aborts with `ERESOLVE` despite `--legacy-peer-deps`, retry the same command with `--force` and note it in the report.
 
 - [ ] **Step 4: Verify resolved versions**
 
@@ -406,7 +409,7 @@ Expected: no matches (the only importer was the old `src/service-worker.ts`, now
 
 Run (only the ones Step 1 confirmed unused):
 ```bash
-npm uninstall workbox-core workbox-precaching workbox-routing workbox-strategies
+npm uninstall --legacy-peer-deps workbox-core workbox-precaching workbox-routing workbox-strategies
 ```
 
 - [ ] **Step 3: Re-run one build to confirm nothing depended on them**
