@@ -1,4 +1,3 @@
-import {Container, Sprite} from "@pixi/react";
 import {PIXI_VERTICAL_ALIGN} from "$config";
 import {RecordedSong} from "$lib/Songs/RecordedSong";
 import {RecordedNote} from "$lib/Songs/SongClasses";
@@ -68,7 +67,7 @@ export function VsrgTimelineRenderer({
     if (hidden) return null
     const relativeTimestampPosition = timestamp / song.duration
     return <>
-        <Container
+        <pixiContainer
             x={0}
             y={0}
             eventMode="static"
@@ -78,42 +77,42 @@ export function VsrgTimelineRenderer({
             pointerupoutside={setNotClicking}
             hitArea={hitbox}
         >
-            <Sprite
+            <pixiSprite
                 x={0}
                 y={0}
                 texture={cache.textures.timeline.square!}
             />
-            <Container
+            <pixiContainer
                 x={-timestamp * sizes.scaling + PLAY_BAR_OFFSET}
                 y={0}
             >
                 {notes.map((note, i) => {
                     if (note.time < lowerBound || note.time > upperBound) return null
-                    return <Sprite
+                    return <pixiSprite
                         key={i}
                         x={note.time * sizes.scaling}
                         anchor={PIXI_VERTICAL_ALIGN}
                         texture={cache.textures.timeline.note!}
                     />
                 })}
-            </Container>
+            </pixiContainer>
             <VsrgTimelineBreakpointsRenderer
                 breakpoints={song.breakpoints}
                 cache={cache}
                 sizes={sizes}
                 duration={song.duration}
             />
-            <Sprite
+            <pixiSprite
                 x={PLAY_BAR_OFFSET - 2}
                 y={0}
                 texture={cache.textures.timeline.currentTime!}
             />
-            <Sprite
+            <pixiSprite
                 y={0}
                 x={relativeTimestampPosition * sizes.width}
                 texture={cache.textures.timeline.thumb!}
             />
 
-        </Container>
+        </pixiContainer>
     </>
 }
