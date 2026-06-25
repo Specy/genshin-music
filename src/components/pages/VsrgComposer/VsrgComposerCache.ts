@@ -1,7 +1,7 @@
 import Color from "color"
-import {Application, Graphics, Rectangle, Texture,} from 'pixi.js'
-import {VsrgCanvasColors, VsrgCanvasSizes} from "./VsrgComposerCanvas";
-import {clamp} from "$lib/utils/Utilities";
+import { Application, Graphics, Rectangle, Texture, } from 'pixi.js'
+import { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerCanvas";
+import { clamp } from "$lib/utils/Utilities";
 import isMobile from "is-mobile";
 
 interface VsrgCacheProps {
@@ -61,13 +61,13 @@ export class VsrgCanvasCache {
     isHorizontal: boolean
 
     constructor({
-                    app,
-                    colors,
-                    sizes,
-                    trackColors,
-                    isHorizontal,
-                    playbarOffset
-                }: VsrgCacheProps) {
+        app,
+        colors,
+        sizes,
+        trackColors,
+        isHorizontal,
+        playbarOffset
+    }: VsrgCacheProps) {
 
         this.textures = {
             hitObjects: {},
@@ -120,7 +120,7 @@ export class VsrgCanvasCache {
     }
 
     generate() {
-        const {app} = this
+        const { app } = this
         if (!app) return
         this.isMobile = isMobile()
         this.generateSnapPoints(app)
@@ -147,19 +147,19 @@ export class VsrgCanvasCache {
     }
 
     generateOthers(app: Application) {
-        const {sizes, colors, isHorizontal} = this
+        const { sizes, colors, isHorizontal } = this
         //timeline
         const square = new Graphics()
         square.rect(0, 0, this.sizes.width, this.sizes.timelineSize)
-            .fill({color: this.colors.background_plain[1]})
+            .fill({ color: this.colors.background_plain[1] })
         square.moveTo(0, sizes.timelineSize)
             .lineTo(this.sizes.width, sizes.timelineSize)
-            .stroke({width: 3, color: this.colors.secondary[1], alpha: 1})
+            .stroke({ width: 3, color: this.colors.secondary[1], alpha: 1 })
         const squareTexture = app.renderer.generateTexture({
             target: square,
             resolution: 1,
             frame: new Rectangle(0, 0, this.sizes.width, this.sizes.timelineSize),
-            textureSourceOptions: {scaleMode: 'linear'}
+            textureSourceOptions: { scaleMode: 'linear' }
         })
 
         this.textures.timeline.square = squareTexture
@@ -177,12 +177,12 @@ export class VsrgCanvasCache {
             .lineTo(thumbSize, 0)
             .lineTo(thumbSize / 2, -thumbSize)
             .lineTo(0, 0)
-        thumb.fill({color: colors.accent[1]})
+        thumb.fill({ color: colors.accent[1] })
 
         // Vertical line through thumb
         thumb.moveTo(thumbSize / 2, 0)
             .lineTo(thumbSize / 2, sizes.timelineSize)
-            .stroke({width: 3, color: colors.accent[1], alpha: 1})
+            .stroke({ width: 3, color: colors.accent[1], alpha: 1 })
 
         // Bottom triangle group: two degenerate/collapsed triangles + two real triangles
         thumb.moveTo(0, sizes.timelineSize)
@@ -193,37 +193,37 @@ export class VsrgCanvasCache {
             .lineTo(thumbSize, sizes.timelineSize)
             .lineTo(thumbSize / 2, sizes.timelineSize - thumbSize)
             .lineTo(0, sizes.timelineSize)
-        thumb.fill({color: colors.accent[1]})
+        thumb.fill({ color: colors.accent[1] })
 
         const noteSize = sizes.timelineSize / 2
         const note = new Graphics()
 
         note.circle(sizes.timelineSize / 2 + 1, sizes.timelineSize / 2, noteSize / 2)
-            .stroke({width: this.isMobile ? 2 : 3, color: colors.secondary[1], alpha: 1})
+            .stroke({ width: this.isMobile ? 2 : 3, color: colors.secondary[1], alpha: 1 })
         const noteTexture = app.renderer.generateTexture({
             target: note,
             resolution: 1,
             frame: new Rectangle(0, 0, sizes.timelineSize, sizes.timelineSize),
-            textureSourceOptions: {scaleMode: 'linear'}
+            textureSourceOptions: { scaleMode: 'linear' }
         })
         this.textures.timeline.note = noteTexture
         const currentTime = new Graphics()
 
         currentTime.moveTo(0, 0)
             .lineTo(0, sizes.timelineSize)
-            .stroke({width: 12, color: colors.accent[1], alpha: 1})
+            .stroke({ width: 12, color: colors.accent[1], alpha: 1 })
         const currentTimeTexture = app.renderer.generateTexture({
             target: currentTime,
             resolution: 1,
             frame: new Rectangle(0, 0, 12, sizes.timelineSize),
-            textureSourceOptions: {scaleMode: 'linear'}
+            textureSourceOptions: { scaleMode: 'linear' }
         })
         this.textures.timeline.currentTime = currentTimeTexture
         const thumbTexture = app.renderer.generateTexture({
             target: thumb,
             resolution: 2,
             frame: new Rectangle(0, 0, thumbSize, sizes.timelineSize),
-            textureSourceOptions: {scaleMode: 'linear'}
+            textureSourceOptions: { scaleMode: 'linear' }
         })
 
         this.textures.timeline.thumb = thumbTexture
@@ -237,13 +237,13 @@ export class VsrgCanvasCache {
             .lineTo(thumbSize, 0)
             .lineTo(thumbSize / 2, -thumbSize)
             .lineTo(0, 0)
-        breakpoint.fill({color: colors.accent[1]})
+        breakpoint.fill({ color: colors.accent[1] })
 
         const breakpointTexture = app.renderer.generateTexture({
             target: breakpoint,
             resolution: 1,
             frame: new Rectangle(0, 0, thumbSize, thumbSize),
-            textureSourceOptions: {scaleMode: 'linear'}
+            textureSourceOptions: { scaleMode: 'linear' }
         })
         this.textures.timeline.breakpoint = breakpointTexture
         //buttons
@@ -251,24 +251,24 @@ export class VsrgCanvasCache {
 
         if (isHorizontal) {
             time.roundRect(margin / 2, margin / 2, sizes.width / 2 - margin, sizes.height / 2 - margin, 16)
-                .fill({color: colors.background_10[1]})
+                .fill({ color: colors.background_10[1] })
             const timeTexture = app.renderer.generateTexture({
                 target: time,
                 resolution: 1,
                 frame: new Rectangle(0, 0, sizes.width / 2, sizes.height / 2),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             })
             this.textures.buttons.width = sizes.width / 2
             this.textures.buttons.height = sizes.height / 2
             this.textures.buttons.time = timeTexture
         } else {
             time.roundRect(margin / 2, margin / 2, sizes.width / 2 - margin, sizes.height / 3 - margin, 8)
-                .fill({color: colors.background_10[1]})
+                .fill({ color: colors.background_10[1] })
             const timeTexture = app.renderer.generateTexture({
                 target: time,
                 resolution: 1,
                 frame: new Rectangle(0, 0, sizes.width / 2, sizes.height / 3),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             })
             this.textures.buttons.width = sizes.width / 2
             this.textures.buttons.height = sizes.height / 3
@@ -284,7 +284,7 @@ export class VsrgCanvasCache {
 
 
     generateTrails(app: Application) {
-        const {sizes, trackColors} = this
+        const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = clamp(sizes.keyHeight / 2 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 3 : 4), 100)
         const margin = hitObjectHeight / 2
@@ -292,16 +292,16 @@ export class VsrgCanvasCache {
             const trail = new Graphics()
             if (this.isHorizontal) {
                 trail.rect(0, margin / 2, hitObjectHeight, hitObjectHeight - margin)
-                    .fill({color: Color(color).rgbNumber()})
+                    .fill({ color: Color(color).rgb().rgbNumber() })
             } else {
                 trail.rect(margin / 2, 0, hitObjectHeight - margin, hitObjectHeight)
-                    .fill({color: Color(color).rgbNumber()})
+                    .fill({ color: Color(color).rgb().rgbNumber() })
             }
             const trailTexture = app.renderer.generateTexture({
                 target: trail,
                 resolution: 1,
                 frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.trails[color] = trailTexture
         })
@@ -309,18 +309,18 @@ export class VsrgCanvasCache {
     }
 
     generateSelectionRings(app: Application) {
-        const {sizes, trackColors} = this
+        const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = clamp(sizes.keyHeight / 1.5 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 1.2 : 2), 150)
         withError.forEach(color => {
             const ring = new Graphics()
             ring.circle(hitObjectHeight / 2, hitObjectHeight / 2, hitObjectHeight / 2 - 3)
-                .stroke({width: 3, color: Color(color).rgbNumber()})
+                .stroke({ width: 3, color: Color(color).rgb().rgbNumber() })
             const ringTexture = app.renderer.generateTexture({
                 target: ring,
                 resolution: 1,
                 frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.selectionRings[color] = ringTexture
             ring.destroy(true)
@@ -328,20 +328,20 @@ export class VsrgCanvasCache {
     }
 
     generateTrackCache(app: Application) {
-        const {colors, sizes, trackColors} = this
+        const { colors, sizes, trackColors } = this
         const hitObjectHeight = clamp(sizes.keyHeight / 1.8 * sizes.scaling, sizes.keyHeight / (this.isMobile ? 2 : 3.5), 100)
         const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {
             const hitObject = new Graphics()
             const circleSize = hitObjectHeight / 2
             hitObject.circle(circleSize, circleSize, circleSize - 5)
-                .fill({color: colors.background_10[1]})
-                .stroke({width: 5, color: Color(color).rgbNumber()})
+                .fill({ color: colors.background_10[1] })
+                .stroke({ width: 5, color: Color(color).rgb().rgbNumber() })
             const texture = app.renderer.generateTexture({
                 target: hitObject,
                 resolution: 2,
                 frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.hitObjects[color] = texture
             hitObject.destroy(true)
@@ -352,13 +352,13 @@ export class VsrgCanvasCache {
             heldHitObject.width = diamondSize
             heldHitObject.height = diamondSize
             heldHitObject.roundRect(margin, margin, diamondSize, diamondSize, 6)
-                .fill({color: colors.background_10[1]})
-                .stroke({width: 5, color: Color(color).rgbNumber()})
+                .fill({ color: colors.background_10[1] })
+                .stroke({ width: 5, color: Color(color).rgb().rgbNumber() })
             const heldTexture = app.renderer.generateTexture({
                 target: heldHitObject,
                 resolution: 2,
                 frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.heldHitObjects[color] = heldTexture
             heldHitObject.destroy(true)
@@ -368,28 +368,28 @@ export class VsrgCanvasCache {
     }
 
     generateSnapPoints(app: Application) {
-        const {colors, sizes, isHorizontal, playbarOffset} = this
+        const { colors, sizes, isHorizontal, playbarOffset } = this
         const small = new Graphics()
         const large = new Graphics()
         const empty = new Graphics()
         if (isHorizontal) {
             small.moveTo(0, 0)
                 .lineTo(0, sizes.height)
-                .stroke({width: 2, color: colors.lineColor[1]})
+                .stroke({ width: 2, color: colors.lineColor[1] })
             const smallTexture = app.renderer.generateTexture({
                 target: small,
                 resolution: 1,
                 frame: new Rectangle(0, 0, sizes.snapPointWidth, sizes.height),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             large.moveTo(0, 0)
                 .lineTo(0, sizes.height)
-                .stroke({width: 4, color: colors.secondary[1]})
+                .stroke({ width: 4, color: colors.secondary[1] })
             const largeTexture = app.renderer.generateTexture({
                 target: large,
                 resolution: 1,
                 frame: new Rectangle(0, 0, sizes.snapPointWidth, sizes.height),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             const lines = 10
             const lineSize = sizes.height / lines
@@ -399,12 +399,12 @@ export class VsrgCanvasCache {
                 empty.moveTo(playbarOffset, y1)
                 empty.lineTo(0, y1 + lineSize)
             }
-            empty.stroke({width: 2, color: colors.secondary[1]})
+            empty.stroke({ width: 2, color: colors.secondary[1] })
             const emptyTexture = app.renderer.generateTexture({
                 target: empty,
                 resolution: 1,
                 frame: new Rectangle(0, 0, playbarOffset, sizes.height),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.snapPoints.size = sizes.snapPointWidth
             this.textures.snapPoints.small = smallTexture
@@ -413,22 +413,22 @@ export class VsrgCanvasCache {
         } else {
             small.moveTo(0, sizes.snapPointWidth)
                 .lineTo(sizes.width, sizes.snapPointWidth)
-                .stroke({width: 2, color: colors.lineColor[1]})
+                .stroke({ width: 2, color: colors.lineColor[1] })
             const smallTexture = app.renderer.generateTexture({
                 target: small,
                 resolution: 1,
                 frame: new Rectangle(0, 0, sizes.width, sizes.snapPointWidth),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
 
             large.moveTo(0, sizes.snapPointWidth)
                 .lineTo(sizes.width, sizes.snapPointWidth)
-                .stroke({width: 4, color: colors.secondary[1]})
+                .stroke({ width: 4, color: colors.secondary[1] })
             const largeTexture = app.renderer.generateTexture({
                 target: large,
                 resolution: 1,
                 frame: new Rectangle(0, 0, sizes.width, sizes.snapPointWidth),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             const lines = 20
             const lineSize = sizes.width / lines
@@ -438,12 +438,12 @@ export class VsrgCanvasCache {
                 empty.moveTo(y1, playbarOffset)
                 empty.lineTo(y1 + lineSize, 0)
             }
-            empty.stroke({width: 2, color: colors.secondary[1]})
+            empty.stroke({ width: 2, color: colors.secondary[1] })
             const emptyTexture = app.renderer.generateTexture({
                 target: empty,
                 resolution: 1,
                 frame: new Rectangle(0, 0, sizes.width, playbarOffset),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.snapPoints.size = sizes.snapPointWidth
             this.textures.snapPoints.large = largeTexture

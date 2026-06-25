@@ -1,6 +1,6 @@
 import Color from "color"
-import {Application, Graphics, Rectangle, Texture} from 'pixi.js'
-import {VsrgPlayerCanvasColors, VsrgPlayerCanvasSizes} from "./VsrgPlayerCanvas";
+import { Application, Graphics, Rectangle, Texture } from 'pixi.js'
+import { VsrgPlayerCanvasColors, VsrgPlayerCanvasSizes } from "./VsrgPlayerCanvas";
 
 interface VsrgCacheProps {
     app: Application
@@ -36,11 +36,11 @@ export class VsrgPlayerCache {
     trackColors: string[]
 
     constructor({
-                    app,
-                    colors,
-                    sizes,
-                    trackColors,
-                }: VsrgCacheProps) {
+        app,
+        colors,
+        sizes,
+        trackColors,
+    }: VsrgCacheProps) {
 
         this.textures = {
             hitObjects: {},
@@ -69,7 +69,7 @@ export class VsrgPlayerCache {
     }
 
     generate() {
-        const {app} = this
+        const { app } = this
         if (!app) return
         this.generateTrackCache(app)
         this.generateTrailsCache(app)
@@ -93,19 +93,19 @@ export class VsrgPlayerCache {
     }
 
     generateTrailsCache(app: Application) {
-        const {sizes, trackColors} = this
+        const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
         const hitObjectHeight = sizes.hitObjectSize
         const margin = hitObjectHeight / 3
         withError.forEach(color => {
             const trail = new Graphics()
             trail.rect(margin / 2, 0, hitObjectHeight - margin, hitObjectHeight)
-                .fill({color: Color(color).rgbNumber()})
+                .fill({ color: Color(color).rgb().rgbNumber() })
             const trailTexture = app.renderer.generateTexture({
                 target: trail,
                 resolution: 1,
                 frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.trails[color] = trailTexture
             trail.destroy(true)
@@ -114,19 +114,19 @@ export class VsrgPlayerCache {
     }
 
     generateLinesCache(app: Application) {
-        const {sizes, trackColors} = this
+        const { sizes, trackColors } = this
         const withError = [...trackColors, '#FF0000']
         const lineHeight = 5
         withError.forEach(color => {
             const line = new Graphics()
             line.moveTo(0, 0)
                 .lineTo(sizes.width, 0)
-                .stroke({width: lineHeight, color: Color(color).rgbNumber()})
+                .stroke({ width: lineHeight, color: Color(color).rgb().rgbNumber() })
             const lineTexture = app.renderer.generateTexture({
                 target: line,
                 resolution: 2,
                 frame: new Rectangle(0, 0, sizes.width, lineHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.lines[color] = lineTexture
             line.destroy(true)
@@ -134,20 +134,20 @@ export class VsrgPlayerCache {
     }
 
     generateTrackCache(app: Application) {
-        const {colors, sizes, trackColors} = this
+        const { colors, sizes, trackColors } = this
         const hitObjectHeight = sizes.hitObjectSize
         const withError = [...trackColors, '#FF0000']
         withError.forEach(color => {
             const hitObject = new Graphics()
             const circleSize = hitObjectHeight / 2
             hitObject.circle(circleSize, circleSize, circleSize - 5)
-                .fill({color: colors.background_10[1]})
-                .stroke({width: 5, color: Color(color).rgbNumber()})
+                .fill({ color: colors.background_10[1] })
+                .stroke({ width: 5, color: Color(color).rgb().rgbNumber() })
             const texture = app.renderer.generateTexture({
                 target: hitObject,
                 resolution: 2,
                 frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.hitObjects[color] = texture
             hitObject.destroy(true)
@@ -156,13 +156,13 @@ export class VsrgPlayerCache {
             const diamondSize = hitObjectHeight * 0.7
             const margin = (hitObjectHeight - diamondSize) / 2
             heldHitObject.roundRect(margin, margin, diamondSize, diamondSize, 6)
-                .fill({color: colors.background_10[1]})
-                .stroke({width: 5, color: Color(color).rgbNumber()})
+                .fill({ color: colors.background_10[1] })
+                .stroke({ width: 5, color: Color(color).rgb().rgbNumber() })
             const heldTexture = app.renderer.generateTexture({
                 target: heldHitObject,
                 resolution: 2,
                 frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
-                textureSourceOptions: {scaleMode: 'linear'}
+                textureSourceOptions: { scaleMode: 'linear' }
             });
             this.textures.heldHitObjects[color] = heldTexture
             heldHitObject.destroy(true)

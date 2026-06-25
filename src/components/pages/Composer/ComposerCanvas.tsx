@@ -1,8 +1,8 @@
 //TODO i hate this component with all my heart, the code needs to be improved, but this is the only way to make
 //it half performant, maybe i should get rid of react pixi and do it manually, that might improve garbage collection
 //since sprites are always removed and added to the stage everytime it scrolls
-import {Component} from 'react'
-import {Application} from '@pixi/react';
+import { Component } from 'react'
+import { Application } from '@pixi/react';
 import '$lib/utils/pixiExtend';
 import {
     FaChevronLeft,
@@ -13,22 +13,22 @@ import {
     FaStepForward
 } from 'react-icons/fa';
 import isMobile from "is-mobile"
-import {ComposerCache} from "$cmp/pages/Composer/ComposerCache"
-import {APP_NAME} from "$config"
-import {MemoizedIcon} from '$cmp/shared/Utility/Memoized';
-import {ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
-import {clamp, colorToRGB, nearestEven} from '$lib/utils/Utilities';
-import type {NoteColumn} from '$lib/Songs/SongClasses';
-import type {ComposerSettingsDataType} from '$lib/BaseSettings';
-import {isColumnVisible, RenderColumn} from '$cmp/pages/Composer/RenderColumn';
-import {TimelineButton} from './TimelineButton';
-import {Timer} from '$types/GeneralTypes';
-import {ComposedSong} from '$lib/Songs/ComposedSong';
-import {subscribeTheme} from '$lib/Hooks/useTheme';
-import {createShortcutListener} from '$stores/KeybindsStore';
-import {Application as PixiApplication, FederatedPointerEvent} from 'pixi.js';
-import {ComposerBreakpointsRenderer} from "$cmp/pages/Composer/ComposerBreakpointsRenderer";
-import {WithTranslation} from "react-i18next";
+import { ComposerCache } from "$cmp/pages/Composer/ComposerCache"
+import { APP_NAME } from "$config"
+import { MemoizedIcon } from '$cmp/shared/Utility/Memoized';
+import { ThemeProvider } from '$stores/ThemeStore/ThemeProvider';
+import { clamp, colorToRGB, nearestEven } from '$lib/utils/Utilities';
+import type { NoteColumn } from '$lib/Songs/SongClasses';
+import type { ComposerSettingsDataType } from '$lib/BaseSettings';
+import { isColumnVisible, RenderColumn } from '$cmp/pages/Composer/RenderColumn';
+import { TimelineButton } from './TimelineButton';
+import { Timer } from '$types/GeneralTypes';
+import { ComposedSong } from '$lib/Songs/ComposedSong';
+import { subscribeTheme } from '$lib/Hooks/useTheme';
+import { createShortcutListener } from '$stores/KeybindsStore';
+import { Application as PixiApplication, FederatedPointerEvent } from 'pixi.js';
+import { ComposerBreakpointsRenderer } from "$cmp/pages/Composer/ComposerBreakpointsRenderer";
+import { WithTranslation } from "react-i18next";
 
 type ClickEventType = 'up' | 'down-slider' | 'down-stage'
 
@@ -120,7 +120,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             height: Math.floor(height),
             numberOfColumnsPerCanvas,
             stageOptions: {
-                backgroundColor: ThemeProvider.get('primary').rgbNumber(),
+                backgroundColor: ThemeProvider.get('primary').rgb().rgbNumber(),
                 autoDensity: true,
                 resolution: 1.4
             },
@@ -138,16 +138,16 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             theme: {
                 timeline: {
                     hex: ThemeProvider.layer('primary', 0.1).toString(),
-                    hexNumber: ThemeProvider.layer('primary', 0.1).rgbNumber(),
-                    selected: ThemeProvider.get('composer_accent').negate().rgbNumber(),
-                    border: ThemeProvider.get('composer_accent').rgbNumber()
+                    hexNumber: ThemeProvider.layer('primary', 0.1).rgb().rgbNumber(),
+                    selected: ThemeProvider.get('composer_accent').negate().rgb().rgbNumber(),
+                    border: ThemeProvider.get('composer_accent').rgb().rgbNumber()
                 },
                 sideButtons: {
                     hex: ThemeProvider.get('primary').darken(0.08).toString(),
                     rgb: colorToRGB(ThemeProvider.get('primary').darken(0.08)).join(',')
                 },
                 main: {
-                    background: ThemeProvider.get('primary').rgbNumber(),
+                    background: ThemeProvider.get('primary').rgb().rgbNumber(),
                     backgroundHex: ThemeProvider.get('primary').toString(),
                     backgroundOpacity: ThemeProvider.get('primary').alpha()
                 },
@@ -168,7 +168,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
 
     componentDidMount() {
-        const {numberOfColumnsPerCanvas} = this.state
+        const { numberOfColumnsPerCanvas } = this.state
         const sizes = document.body.getBoundingClientRect()
         let width = nearestEven(sizes.width * 0.85 - 45)
         let height = nearestEven(sizes.height * 0.45)
@@ -177,7 +177,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             width: Math.floor(width),
             height: Math.floor(height),
             stageOptions: {
-                backgroundColor: ThemeProvider.get('primary').rgbNumber(),
+                backgroundColor: ThemeProvider.get('primary').rgb().rgbNumber(),
                 autoDensity: true,
                 resolution: window.devicePixelRatio ?? 1.4
             },
@@ -199,8 +199,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
 
         window.addEventListener("pointerup", this.resetPointerDown)
         window.addEventListener("blur", this.resetPointerDown)
-        const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({shortcut}) => {
-            const {name} = shortcut
+        const shortcutDisposer = createShortcutListener("composer", "composer_canvas", ({ shortcut }) => {
+            const { name } = shortcut
             if (name === "next_breakpoint") this.handleBreakpoints(1)
             if (name === "previous_breakpoint") this.handleBreakpoints(-1)
         })
@@ -232,21 +232,21 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.setState({
             stageOptions: {
                 ...this.state.stageOptions,
-                backgroundColor: ThemeProvider.get('primary').rgbNumber()
+                backgroundColor: ThemeProvider.get('primary').rgb().rgbNumber()
             },
             theme: {
                 timeline: {
                     hex: ThemeProvider.layer('primary', 0.1).hex(),
-                    hexNumber: ThemeProvider.layer('primary', 0.1).rgbNumber(),
-                    selected: ThemeProvider.get('composer_accent').negate().rgbNumber(),
-                    border: ThemeProvider.get('composer_accent').rgbNumber()
+                    hexNumber: ThemeProvider.layer('primary', 0.1).rgb().rgbNumber(),
+                    selected: ThemeProvider.get('composer_accent').negate().rgb().rgbNumber(),
+                    border: ThemeProvider.get('composer_accent').rgb().rgbNumber()
                 },
                 sideButtons: {
                     hex: ThemeProvider.get('primary').darken(0.08).hex(),
                     rgb: colorToRGB(ThemeProvider.get('primary').darken(0.08)).join(",")
                 },
                 main: {
-                    background: ThemeProvider.get('primary').rgbNumber(),
+                    background: ThemeProvider.get('primary').rgb().rgbNumber(),
                     backgroundHex: ThemeProvider.get('primary').hexa(),
                     backgroundOpacity: Math.max(ThemeProvider.get('primary').alpha(), 0.8)
                 }
@@ -264,8 +264,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.cacheRecalculateDebounce = setTimeout(() => {
             if (!this.notesApp || !this.timelineApp) return
             const sizes = document.body.getBoundingClientRect()
-            const {numberOfColumnsPerCanvas} = this.state
-            const {inPreview} = this.props.data
+            const { numberOfColumnsPerCanvas } = this.state
+            const { inPreview } = this.props.data
             let width = nearestEven(sizes.width * 0.85 - 45)
             let height = nearestEven(sizes.height * 0.45)
             if (APP_NAME === "Sky") height = nearestEven(height * 0.95)
@@ -317,13 +317,13 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 secondLayer: ThemeProvider.get('composer_secondary_layer'),
                 bars: [
                     {
-                        color: colors.l.rgbNumber() //lighter
+                        color: colors.l.rgb().rgbNumber() //lighter
                     }, {
-                        color: colors.d.rgbNumber() //darker
+                        color: colors.d.rgb().rgbNumber() //darker
                     }, {
-                        color: ThemeProvider.get('composer_accent').rgbNumber() //current
+                        color: ThemeProvider.get('composer_accent').rgb().rgbNumber() //current
                     }, {
-                        color: ThemeProvider.get('composer_accent').negate().rgbNumber()
+                        color: ThemeProvider.get('composer_accent').negate().rgb().rgbNumber()
                     }
                 ]
             }
@@ -338,8 +338,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
     handleClick = (e: FederatedPointerEvent, type: ClickEventType) => {
         const x = e.globalX
-        const {width, numberOfColumnsPerCanvas} = this.state
-        const {data} = this.props
+        const { width, numberOfColumnsPerCanvas } = this.state
+        const { data } = this.props
         this.stageXMovement = 0
         this.stageMovementAmount = 0
         if (type === "up") {
@@ -369,7 +369,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             const middle = (this.state.numberOfColumnsPerCanvas / 2) * this.state.column.width
             const clickedOffset = Math.floor((e.globalX - middle) / this.state.column.width + 1)
             if (clickedOffset === 0) return
-            const {data, functions} = this.props
+            const { data, functions } = this.props
             const newPosition = data.selected + Math.round(clickedOffset)
             functions.selectColumn(clamp(newPosition, 0, data.columns.length - 1))
         }
@@ -387,7 +387,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         this.stagePreviousPositon = x
         if (this.stageSelected) {
             const threshold = this.state.column.width
-            const {data, functions} = this.props
+            const { data, functions } = this.props
             this.stageXMovement += amount
             const amountToMove = (this.stageXMovement - this.stageMovementAmount * threshold) / threshold
             if (Math.abs(amountToMove) < 1) return
@@ -397,7 +397,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         }
     }
     handleBreakpoints = (direction: 1 | -1) => {
-        const {selected, columns, breakpoints} = this.props.data
+        const { selected, columns, breakpoints } = this.props.data
         const breakpoint = direction === 1 //1 = right, -1 = left
             ? breakpoints.filter((v) => v > selected).sort((a, b) => a - b)
             : breakpoints.filter((v) => v < selected).sort((a, b) => b - a)
@@ -410,8 +410,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const globalX = e.globalX
         if (this.sliderSelected) {
             if (this.throttleScroll++ < 4) return
-            const {width, column} = this.state
-            const {data} = this.props
+            const { width, column } = this.state
+            const { data } = this.props
             this.hasSlided = true
             this.throttleScroll = 0
             const totalWidth = column.width * data.columns.length
@@ -437,8 +437,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
     }
 
     render() {
-        const {width, timelineHeight, height, theme, numberOfColumnsPerCanvas, stageOptions} = this.state
-        const {data, functions} = this.props
+        const { width, timelineHeight, height, theme, numberOfColumnsPerCanvas, stageOptions } = this.state
+        const { data, functions } = this.props
         const cache = this.state.cache?.cache
         const sizes = this.state.column
         const xPosition = (data.selected - numberOfColumnsPerCanvas / 2 + 1) * -sizes.width
@@ -449,7 +449,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         const timelinePosition = relativeColumnWidth * data.selected - relativeColumnWidth * (numberOfColumnsPerCanvas / 2)
         const isBreakpointSelected = data.breakpoints.includes(data.selected)
         const sideColor = theme.sideButtons.rgb
-        const {t} = this.props
+        const { t } = this.props
         return <div
             className={"canvas-wrapper " + (data.inPreview ? "canvas-wrapper-in-preview" : "")}
             style={{
@@ -519,7 +519,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                             background: `linear-gradient(90deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
                         }}
                     >
-                        <FaChevronLeft/>
+                        <FaChevronLeft />
                     </button>
                     <button
                         onPointerDown={() => functions.selectColumn(data.selected + 1)}
@@ -531,13 +531,13 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                             background: `linear-gradient(270deg, rgba(${sideColor},0.80) 30%, rgba(${sideColor},0.30) 80%, rgba(${sideColor},0) 100%)`
                         }}
                     >
-                        <FaChevronRight/>
+                        <FaChevronRight />
                     </button>
                 </>}
             </div>
             <div className="timeline-wrapper-bg row">
 
-                <div className="timeline-wrapper" style={{height: this.state.timelineHeight}}>
+                <div className="timeline-wrapper" style={{ height: this.state.timelineHeight }}>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(-1)}
                         tooltip={t('previous_breakpoint')}
@@ -546,7 +546,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         }}
                         ariaLabel={t('previous_breakpoint')}
                     >
-                        <MemoizedIcon icon={FaStepBackward} size={16}/>
+                        <MemoizedIcon icon={FaStepBackward} size={16} />
                     </TimelineButton>
                     <TimelineButton
                         onClick={() => this.handleBreakpoints(1)}
@@ -557,10 +557,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         }}
                         ariaLabel={t('next_breakpoint')}
                     >
-                        <MemoizedIcon icon={FaStepForward} size={16}/>
+                        <MemoizedIcon icon={FaStepForward} size={16} />
                     </TimelineButton>
 
-                    <div className='timeline-scroll' style={{backgroundColor: theme.timeline.hex}}>
+                    <div className='timeline-scroll' style={{ backgroundColor: theme.timeline.hex }}>
                         <Application
                             width={width}
                             height={timelineHeight}
@@ -587,7 +587,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                     draw={(g) => {
                                         g.clear()
                                         g.rect(0, 0, width, timelineHeight)
-                                        g.fill({color: theme.timeline.hexNumber})
+                                        g.fill({ color: theme.timeline.hexNumber })
                                     }}
                                 />
                                 {data.selectedColumns.length
@@ -600,7 +600,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                             const width = xEnd - x
                                             g.clear()
                                             g.rect(x, 0, width, timelineHeight)
-                                            g.fill({color: theme.timeline.selected, alpha: 0.6})
+                                            g.fill({ color: theme.timeline.selected, alpha: 0.6 })
                                         }}
                                     />
                                     : null
@@ -617,7 +617,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                 draw={(g) => {
                                     g.clear()
                                     g.roundRect(0, 0, timelineWidth, timelineHeight - 3, 6)
-                                    g.stroke({width: 3, color: theme.timeline.border, alpha: 0.8})
+                                    g.stroke({ width: 3, color: theme.timeline.border, alpha: 0.8 })
                                 }}
                                 x={timelinePosition}
                                 y={1.5}
@@ -632,7 +632,7 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                         tooltip={isBreakpointSelected ? t('remove_breakpoint') : t('add_breakpoint')}
                         ariaLabel={isBreakpointSelected ? t('remove_breakpoint') : t('add_breakpoint')}
                     >
-                        <MemoizedIcon icon={isBreakpointSelected ? FaMinusCircle : FaPlusCircle} size={16}/>
+                        <MemoizedIcon icon={isBreakpointSelected ? FaMinusCircle : FaPlusCircle} size={16} />
                     </TimelineButton>
                 </div>
             </div>
