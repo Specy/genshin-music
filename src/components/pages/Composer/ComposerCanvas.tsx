@@ -274,6 +274,10 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                 height = nearestEven(height * (sizes.width < 900 ? 0.8 : 0.6))
             }
             let columnWidth = nearestEven(width / numberOfColumnsPerCanvas)
+            //@pixi/react v8 only applies width/height at <Application> init; resize the
+            //renderers explicitly when the dimensions change (autoDensity also fixes the canvas CSS)
+            this.notesApp.renderer.resize(Math.floor(width), Math.floor(height))
+            this.timelineApp.renderer.resize(Math.floor(width), this.state.timelineHeight)
             const oldCache = this.state.cache
             this.setState({
                 width: Math.floor(width),
