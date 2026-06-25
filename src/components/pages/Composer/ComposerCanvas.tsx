@@ -1,8 +1,9 @@
 //TODO i hate this component with all my heart, the code needs to be improved, but this is the only way to make
 //it half performant, maybe i should get rid of react pixi and do it manually, that might improve garbage collection
 //since sprites are always removed and added to the stage everytime it scrolls
-import {Component, createRef} from 'react'
-import {Container, Graphics, Stage} from '@pixi/react';
+import {Component} from 'react'
+import {Application} from '@pixi/react';
+import '$lib/utils/pixiExtend';
 import {
     FaChevronLeft,
     FaChevronRight,
@@ -25,7 +26,7 @@ import {Timer} from '$types/GeneralTypes';
 import {ComposedSong} from '$lib/Songs/ComposedSong';
 import {subscribeTheme} from '$lib/Hooks/useTheme';
 import {createShortcutListener} from '$stores/KeybindsStore';
-import {FederatedPointerEvent} from 'pixi.js';
+import {Application as PixiApplication, FederatedPointerEvent} from 'pixi.js';
 import {ComposerBreakpointsRenderer} from "$cmp/pages/Composer/ComposerBreakpointsRenderer";
 import {WithTranslation} from "react-i18next";
 
@@ -65,7 +66,11 @@ interface ComposerCanvasState {
         autoDensity: boolean,
         resolution: number,
     },
-    timelineOptions: {}
+    timelineOptions: {
+        backgroundAlpha: number,
+        autoDensity: boolean,
+        resolution: number,
+    }
     timelineHeight: number
     currentBreakpoint: number
     theme: {
@@ -90,8 +95,9 @@ interface ComposerCanvasState {
 
 export default class ComposerCanvas extends Component<ComposerCanvasProps, ComposerCanvasState> {
     state: ComposerCanvasState
-    notesStageRef: any
-    breakpointsStageRef: any
+    notesApp: PixiApplication | null = null
+    timelineApp: PixiApplication | null = null
+    wheelCanvas: HTMLCanvasElement | null = null
     stageSelected: boolean
     sliderSelected: boolean
     hasSlided: boolean
@@ -148,8 +154,6 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             },
             cache: null,
         }
-        this.notesStageRef = createRef()
-        this.breakpointsStageRef = createRef()
         this.stageSelected = false
         this.sliderSelected = false
         this.hasSlided = false
@@ -200,7 +204,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             if (name === "next_breakpoint") this.handleBreakpoints(1)
             if (name === "previous_breakpoint") this.handleBreakpoints(-1)
         })
-        this.notesStageRef?.current?._canvas?.addEventListener("wheel", this.handleWheel)
+        // The native wheel listener is attached in the notes <Application> onInit,
+        // because the canvas only exists after async init (this.notesApp is null here).
         const themeDispose = subscribeTheme(this.handleThemeChange)
         this.cleanup.push(themeDispose, shortcutDisposer)
     }
@@ -210,11 +215,12 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         window.removeEventListener("blur", this.resetPointerDown)
         window.removeEventListener("resize", this.recalculateCacheAndSizes)
         if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
-        this.notesStageRef?.current?._canvas?.removeEventListener("wheel", this.handleWheel)
+        this.wheelCanvas?.removeEventListener("wheel", this.handleWheel)
         this.cleanup.forEach(fn => fn())
         this.state.cache?.destroy()
-        this.notesStageRef = null
-        this.breakpointsStageRef = null
+        this.notesApp = null
+        this.timelineApp = null
+        this.wheelCanvas = null
     }
 
     resetPointerDown = () => {
@@ -247,15 +253,16 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             }
         }, () => {
             this.recalculateCacheAndSizes()
-            if (this.notesStageRef?.current) {
-                this.notesStageRef.current.app.renderer.background.color = this.state.theme.main.background
+            if (this.notesApp) {
+                this.notesApp.renderer.background.color = this.state.theme.main.background
             }
+            this.applyNotesCanvasOpacity()
         })
     }
     recalculateCacheAndSizes = () => {
         if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce)
         this.cacheRecalculateDebounce = setTimeout(() => {
-            if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return
+            if (!this.notesApp || !this.timelineApp) return
             const sizes = document.body.getBoundingClientRect()
             const {numberOfColumnsPerCanvas} = this.state
             const {inPreview} = this.props.data
@@ -292,14 +299,14 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         }
         colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1)
         colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03)
-        if (!this.notesStageRef?.current || !this.breakpointsStageRef?.current) return null
+        if (!this.notesApp || !this.timelineApp) return null
         return new ComposerCache({
             width: columnWidth,
             height,
             margin,
             timelineHeight,
-            app: this.notesStageRef.current.app,
-            breakpointsApp: this.breakpointsStageRef.current.app,
+            app: this.notesApp,
+            breakpointsApp: this.timelineApp,
             colors: {
                 accent: ThemeProvider.get('composer_accent').rotate(20).darken(0.5),
                 mainLayer: ThemeProvider.get('composer_main_layer'),
@@ -319,6 +326,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
         })
     }
 
+    applyNotesCanvasOpacity = () => {
+        if (this.wheelCanvas) this.wheelCanvas.style.opacity = String(this.state.theme.main.backgroundOpacity)
+    }
     handleWheel = (e: WheelEvent) => {
         this.props.functions.selectColumn(this.props.data.selected + Math.sign(e.deltaY), true)
     }
@@ -444,22 +454,30 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
             }}
         >
             <div className='canvas-relative'>
-                <Stage
+                <Application
                     width={width}
                     height={height}
-                    raf={false}
-                    onMount={this.recalculateCacheAndSizes}
-                    style={{opacity: theme.main.backgroundOpacity}}
-                    renderOnComponentChange={true}
-                    options={stageOptions}
-                    ref={this.notesStageRef}
+                    autoStart={false}
+                    background={stageOptions.backgroundColor}
+                    autoDensity={stageOptions.autoDensity}
+                    antialias
+                    resolution={stageOptions.resolution}
+                    onInit={(app) => {
+                        this.notesApp = app
+                        const canvas = app.canvas
+                        this.wheelCanvas = canvas
+                        canvas.addEventListener("wheel", this.handleWheel)
+                        this.applyNotesCanvasOpacity()
+                        app.renderer.background.color = this.state.theme.main.background
+                        this.recalculateCacheAndSizes()
+                    }}
                 >
-                    {(cache && !data.isRecordingAudio) && <Container
+                    {(cache && !data.isRecordingAudio) && <pixiContainer
                         x={xPosition}
                         eventMode='static'
-                        pointerdown={this.handleClickStage}
-                        pointerup={this.handleClickStageUp}
-                        pointermove={this.handleStageSlide}
+                        onPointerDown={this.handleClickStage}
+                        onPointerUp={this.handleClickStageUp}
+                        onPointerMove={this.handleStageSlide}
                         interactiveChildren={false}
                         hitArea={this.testStageHitarea}
                     >
@@ -484,9 +502,9 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                 isBreakpoint={data.breakpoints.includes(i)}
                             />
                         })}
-                    </Container>
+                    </pixiContainer>
                     }
-                </Stage>
+                </Application>
                 {!data.settings.useKeyboardSideButtons.value && <>
                     <button
                         onPointerDown={() => functions.selectColumn(data.selected - 1)}
@@ -540,33 +558,38 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                     </TimelineButton>
 
                     <div className='timeline-scroll' style={{backgroundColor: theme.timeline.hex}}>
-                        <Stage
+                        <Application
                             width={width}
                             height={timelineHeight}
-                            options={this.state.timelineOptions}
-                            raf={false}
-                            ref={this.breakpointsStageRef}
-                            renderOnComponentChange={true}
+                            autoStart={false}
+                            backgroundAlpha={0}
+                            autoDensity={this.state.timelineOptions.autoDensity}
+                            antialias
+                            resolution={this.state.timelineOptions.resolution}
+                            onInit={(app) => {
+                                this.timelineApp = app
+                                this.recalculateCacheAndSizes()
+                            }}
                         >
-                            {cache && <Container
+                            {cache && <pixiContainer
                                 width={width}
                                 height={timelineHeight}
                                 eventMode='static'
-                                pointerdown={this.handleClickDown}
-                                pointerup={this.handleClickUp}
-                                pointermove={this.handleSliderSlide}
+                                onPointerDown={this.handleClickDown}
+                                onPointerUp={this.handleClickUp}
+                                onPointerMove={this.handleSliderSlide}
                                 interactiveChildren={false}
                                 hitArea={this.testTimelineHitarea}
                             >
-                                <Graphics //to fill the space
+                                <pixiGraphics //to fill the space
                                     draw={(g) => {
                                         g.clear()
-                                        g.beginFill(theme.timeline.hexNumber)
-                                        g.drawRect(0, 0, width, timelineHeight)
+                                        g.rect(0, 0, width, timelineHeight)
+                                        g.fill({color: theme.timeline.hexNumber})
                                     }}
                                 />
                                 {data.selectedColumns.length
-                                    ? <Graphics
+                                    ? <pixiGraphics
                                         draw={(g) => {
                                             const first = data.selectedColumns[0] || 0
                                             const last = data.selectedColumns[data.selectedColumns.length - 1]
@@ -574,8 +597,8 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                             const xEnd = last * relativeColumnWidth
                                             const width = xEnd - x
                                             g.clear()
-                                            g.beginFill(theme.timeline.selected, 0.6)
-                                            g.drawRect(x, 0, width, timelineHeight)
+                                            g.rect(x, 0, width, timelineHeight)
+                                            g.fill({color: theme.timeline.selected, alpha: 0.6})
                                         }}
                                     />
                                     : null
@@ -586,18 +609,18 @@ export default class ComposerCanvas extends Component<ComposerCanvasProps, Compo
                                     width={width}
                                     columns={data.columns.length}
                                 />
-                            </Container>
+                            </pixiContainer>
                             }
-                            <Graphics //current visible columns
+                            <pixiGraphics //current visible columns
                                 draw={(g) => {
                                     g.clear()
-                                    g.lineStyle(3, theme.timeline.border, 0.8)
-                                    g.drawRoundedRect(0, 0, timelineWidth, timelineHeight - 3, 6)
+                                    g.roundRect(0, 0, timelineWidth, timelineHeight - 3, 6)
+                                    g.stroke({width: 3, color: theme.timeline.border, alpha: 0.8})
                                 }}
                                 x={timelinePosition}
                                 y={1.5}
                             />
-                        </Stage>
+                        </Application>
                     </div>
                     <TimelineButton
                         onClick={functions.toggleBreakpoint}
