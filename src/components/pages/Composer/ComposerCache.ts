@@ -1,10 +1,8 @@
 import {CACHE_DATA, NOTES_PER_COLUMN, TEMPO_CHANGERS} from "$config"
 import Color from "color"
-import {LINE_SCALE_MODE, settings, SmoothGraphics as Graphics} from '@pixi/graphics-smooth';
-import {Application, Rectangle, SCALE_MODES, Texture} from 'pixi.js'
+import {Application, Graphics, Rectangle, Texture} from 'pixi.js'
 import {NoteLayer} from "$lib/Songs/Layer";
 
-settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 const {horizontalLineBreak, standards, layersCombination, breakpoints} = CACHE_DATA
 
 interface ComposerCacheProps {
@@ -110,48 +108,45 @@ export class ComposerCache {
             const layer = new NoteLayer(note)
             const g = new Graphics()
             if (layer.test(0)) { //layer 1
-                g.beginFill(new Color(this.colors.mainLayer).rgbNumber())
-                    .lineStyle(1, new Color(this.colors.mainLayer).rgbNumber())
-                    .drawRoundedRect(
-                        this.margin / 2 - 0.25,
-                        this.margin / 2,
-                        Math.ceil(noteWidth - this.margin),
-                        Math.ceil(noteHeight - this.margin),
-                        radius
-                    ).endFill()
+                g.roundRect(
+                    this.margin / 2 - 0.25,
+                    this.margin / 2,
+                    Math.ceil(noteWidth - this.margin),
+                    Math.ceil(noteHeight - this.margin),
+                    radius
+                ).fill(new Color(this.colors.mainLayer).rgbNumber())
+                    .stroke({ width: 1, color: new Color(this.colors.mainLayer).rgbNumber() })
             }
             if (layer.test(1)) { //layer 2
-                g.lineStyle(this.margin === 4 ? 3 : 2, new Color(this.colors.secondLayer).rgbNumber())
-                    .drawRoundedRect(
-                        this.margin / 2 - 0.25,
-                        this.margin / 2,
-                        Math.ceil(noteWidth - this.margin),
-                        Math.ceil(noteHeight - this.margin),
-                        radius
-                    ).endFill()
+                g.roundRect(
+                    this.margin / 2 - 0.25,
+                    this.margin / 2,
+                    Math.ceil(noteWidth - this.margin),
+                    Math.ceil(noteHeight - this.margin),
+                    radius
+                ).stroke({ width: this.margin === 4 ? 3 : 2, color: new Color(this.colors.secondLayer).rgbNumber() })
             }
             if (layer.test(2)) { //layer 3
-                g.beginFill(new Color(this.colors.secondLayer).rgbNumber())
-                    .lineStyle(1, new Color(this.colors.secondLayer).rgbNumber())
-                    .drawCircle(
-                        noteWidth / 2 - 0.25,
-                        noteHeight / 2,
-                        noteHeight / 3 - 0.5
-                    ).endFill()
+                g.circle(
+                    noteWidth / 2 - 0.25,
+                    noteHeight / 2,
+                    noteHeight / 3 - 0.5
+                ).fill(new Color(this.colors.secondLayer).rgbNumber())
+                    .stroke({ width: 1, color: new Color(this.colors.secondLayer).rgbNumber() })
             }
 
             if (layer.test(3)) { //layer 4
                 const lineWidth = this.margin === 4 ? 3 : 2
-                g.lineStyle(lineWidth, new Color(this.colors.secondLayer).darken(0.15).rgbNumber())
-                    .moveTo(this.margin / 2 + 0.5, noteHeight / 2)
+                g.moveTo(this.margin / 2 + 0.5, noteHeight / 2)
                     .lineTo(noteWidth - this.margin + 0.5, noteHeight / 2)
-                    .endFill()
+                    .stroke({ width: lineWidth, color: new Color(this.colors.secondLayer).darken(0.15).rgbNumber() })
             }
             if (!this.app) return
-            const texture = this.app.renderer.generateTexture(g, {
+            const texture = this.app.renderer.generateTexture({
+                target: g,
                 resolution: 2,
-                scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, this.noteWidth, this.noteHeight)
+                frame: new Rectangle(0, 0, this.noteWidth, this.noteHeight),
+                textureSourceOptions: { scaleMode: 'linear' },
             });
             this.cache.notes[note] = texture
             g.destroy(true)
@@ -164,45 +159,42 @@ export class ComposerCache {
             const g = new Graphics()
             const size = this.timelineHeight / 6
             if (breakpoint.type === "short") {
-                g.beginFill(this.colors.accent.rgbNumber())
-                g.drawCircle(
+                g.circle(
                     size,
                     this.timelineHeight / 2,
                     size
-                ).endFill()
+                ).fill(this.colors.accent.rgbNumber())
                 if (!this.breakpointsApp) return
-                const texture = this.breakpointsApp.renderer.generateTexture(g, {
-                    scaleMode: SCALE_MODES.LINEAR,
+                const texture = this.breakpointsApp.renderer.generateTexture({
+                    target: g,
                     resolution: 2,
-                    region: new Rectangle(0, 0, size * 2, this.timelineHeight)
+                    frame: new Rectangle(0, 0, size * 2, this.timelineHeight),
+                    textureSourceOptions: { scaleMode: 'linear' },
                 });
                 this.cache.breakpoints.push(texture)
                 g.destroy(true)
             } else {
-                g.beginFill(this.colors.accent.rgbNumber())
-                    .moveTo(0, this.height)
+                g.moveTo(0, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(0, this.height - this.noteHeight)
-                    .endFill();
-                g.beginFill(this.colors.accent.rgbNumber())
-                    .moveTo(this.width, this.height)
+                    .fill(this.colors.accent.rgbNumber())
+                g.moveTo(this.width, this.height)
                     .lineTo(this.noteWidth / 2, this.height)
                     .lineTo(this.width, this.height - this.noteHeight)
-                    .endFill();
-                g.beginFill(this.colors.accent.rgbNumber())
-                    .moveTo(0, 0)
+                    .fill(this.colors.accent.rgbNumber())
+                g.moveTo(0, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(0, this.noteHeight)
-                    .endFill();
-                g.beginFill(this.colors.accent.rgbNumber())
-                    .moveTo(this.width, 0)
+                    .fill(this.colors.accent.rgbNumber())
+                g.moveTo(this.width, 0)
                     .lineTo(this.noteWidth / 2, 0)
                     .lineTo(this.width, this.noteHeight)
-                    .endFill();
+                    .fill(this.colors.accent.rgbNumber())
                 if (!this.app) return
-                const texture = this.app.renderer.generateTexture(g, {
-                    scaleMode: SCALE_MODES.LINEAR,
-                    resolution: 2
+                const texture = this.app.renderer.generateTexture({
+                    target: g,
+                    resolution: 2,
+                    textureSourceOptions: { scaleMode: 'linear' },
                 });
                 this.cache.breakpoints.push(texture)
                 g.destroy(true)
@@ -211,22 +203,25 @@ export class ComposerCache {
     }
     drawColumn = (data: { color: number }, borderWidth: number) => {
         const g = new Graphics()
-        g.beginFill(data.color)
-        g.drawRect(0, 0, this.width, this.height)
-        g.lineStyle(borderWidth, borderWidth === 2 ? 0x333333 : 0x333333)
-            .moveTo(this.width, 0)
+        g.rect(0, 0, this.width, this.height).fill(data.color)
+        g.moveTo(this.width, 0)
             .lineTo(this.width, this.height)
-        g.lineStyle(1, 0x333333)
+            .stroke({ width: borderWidth, color: 0x333333 })
+        const linesMid: Array<[number, number, number, number]> = []
         for (let i = 1; i < 3; i++) {
             const y = this.noteHeight * horizontalLineBreak * i
-            g.moveTo(0, y)
-            g.lineTo(this.width, y)
+            linesMid.push([0, y, this.width, y])
         }
+        for (const [x1, y1, x2, y2] of linesMid) {
+            g.moveTo(x1, y1).lineTo(x2, y2)
+        }
+        g.stroke({ width: 1, color: 0x333333 })
         if (!this.app) return
-        const texture = this.app.renderer.generateTexture(g, {
-            scaleMode: SCALE_MODES.LINEAR,
+        const texture = this.app.renderer.generateTexture({
+            target: g,
             resolution: window?.devicePixelRatio || 1,
-            region: new Rectangle(0, 0, this.width, this.height)
+            frame: new Rectangle(0, 0, this.width, this.height),
+            textureSourceOptions: { scaleMode: 'linear' },
         })
         g.destroy(true)
         return texture
