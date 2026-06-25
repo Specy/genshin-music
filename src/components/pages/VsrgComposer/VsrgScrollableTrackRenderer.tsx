@@ -1,4 +1,3 @@
-import {Container, Sprite, Text,} from "@pixi/react";
 import {VsrgHitObject, VsrgSong} from "$lib/Songs/VsrgSong";
 import {parseMouseClick} from "$lib/utils/Utilities";
 import {ClickType} from "$types/GeneralTypes"
@@ -87,7 +86,7 @@ export function VsrgScrollableTrackRenderer({
         }
     }
 
-    return <Container
+    return <pixiContainer
         x={isHorizontal ? (-timestamp * scale + PLAY_BAR_OFFSET) : 0}
         y={isHorizontal ? sizes.timelineSize : (timestamp * scale - PLAY_BAR_OFFSET)}
         eventMode="static"
@@ -95,7 +94,7 @@ export function VsrgScrollableTrackRenderer({
     >
         {snapPoints.map((sp, i) => {
             if (lowerBound > sp || sp > upperBound) return null
-            return <Sprite
+            return <pixiSprite
                 key={sp}
                 eventMode="static"
                 pointertap={handleSnapPointClick}
@@ -108,7 +107,7 @@ export function VsrgScrollableTrackRenderer({
             />
         })}
         {(lowerBound < 0) &&
-            <Sprite
+            <pixiSprite
                 x={isHorizontal ? -PLAY_BAR_OFFSET : 0}
                 y={isHorizontal ? 0 : sizes.height}
                 texture={cache.textures.snapPoints.empty!}
@@ -131,7 +130,7 @@ export function VsrgScrollableTrackRenderer({
         )}
         {timestamp >= vsrg.duration - (isHorizontal ? sizes.width : sizes.height) / scale &&
             <>
-                <Container
+                <pixiContainer
                     pointertap={onAddTime}
                     eventMode="static"
 
@@ -139,28 +138,28 @@ export function VsrgScrollableTrackRenderer({
                     anchor={0.5}
                     y={isHorizontal ? 0 : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height)}
                 >
-                    <Sprite
+                    <pixiSprite
                         texture={cache.textures.buttons.time!}
                     />
-                    <Text
+                    <pixiText
                         x={cache.textures.buttons.width / 2}
                         anchor={0.5}
                         y={cache.textures.buttons.height / 2}
                         text={text.addTime}
                         style={textStyle}
                     />
-                </Container>
-                <Container
+                </pixiContainer>
+                <pixiContainer
                     pointertap={onRemoveTime}
                     eventMode="static"
                     x={isHorizontal ? vsrg.duration * scale : sizes.width / 2}
                     anchor={0.5}
                     y={isHorizontal ? sizes.height / 2 : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height)}
                 >
-                    <Sprite
+                    <pixiSprite
                         texture={cache.textures.buttons.time!}
                     />
-                    <Text
+                    <pixiText
                         x={cache.textures.buttons.width / 2}
                         anchor={0.5}
                         y={cache.textures.buttons.height / 2}
@@ -168,10 +167,10 @@ export function VsrgScrollableTrackRenderer({
 
                         style={textStyle}
                     />
-                </Container>
+                </pixiContainer>
             </>
         }
-    </Container>
+    </pixiContainer>
 }
 
 

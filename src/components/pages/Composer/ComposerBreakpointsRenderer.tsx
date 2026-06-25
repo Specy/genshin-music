@@ -1,5 +1,4 @@
 import {memo} from "react";
-import {Sprite} from "@pixi/react";
 import {Texture} from "pixi.js";
 
 interface ComposerBreakpointsRendererProps {
@@ -16,14 +15,14 @@ export const ComposerBreakpointsRenderer = memo(function ComposerBreakpointsRend
                                                                                          width
                                                                                      }: ComposerBreakpointsRendererProps) {
     return breakpoints.map(breakpoint =>
-        <Sprite
+        <pixiSprite
             texture={texture}
             key={breakpoint}
             interactive={false}
             anchor={[0.5, 0]}
             x={(width / (columns - 1)) * breakpoint}
         >
-        </Sprite>
+        </pixiSprite>
     )
 }, (p, n) => {
     return p.breakpoints === n.breakpoints && p.texture === n.texture && p.width === n.width && p.columns === n.columns

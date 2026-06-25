@@ -1,4 +1,3 @@
-import {Container, Sprite} from "@pixi/react";
 import {memo} from "react";
 import {VsrgCanvasSizes} from "./VsrgComposerCanvas";
 import {VsrgCanvasCache} from "./VsrgComposerCache";
@@ -15,15 +14,15 @@ interface VsrgTimelineBreakpointsRendererProps {
 function _VsrgTimelineBreakpointsRenderer({cache, breakpoints, sizes, duration}: VsrgTimelineBreakpointsRendererProps) {
 
     return <>
-        <Container>
+        <pixiContainer>
             {breakpoints.map(breakpoint =>
-                <Sprite
+                <pixiSprite
                     key={breakpoint}
                     texture={cache.textures.timeline.breakpoint!}
                     x={breakpoint / duration * sizes.width}
                 />
             )}
-        </Container>
+        </pixiContainer>
     </>
 }
 

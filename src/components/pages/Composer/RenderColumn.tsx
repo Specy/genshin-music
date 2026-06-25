@@ -1,7 +1,6 @@
 import {COMPOSER_NOTE_POSITIONS, NOTES_PER_COLUMN} from "$config"
 import type {ColumnNote, InstrumentData} from '$lib/Songs/SongClasses';
 import type {Texture} from 'pixi.js';
-import {Container, Sprite} from '@pixi/react';
 import {ComposerCacheData} from "./ComposerCache";
 
 interface RenderColumnProps {
@@ -34,40 +33,40 @@ export function RenderColumn({
                              }: RenderColumnProps) {
 
 
-    return <Container
+    return <pixiContainer
         eventMode="static"
         x={sizes.width * index}
     >
-        <Sprite
+        <pixiSprite
             texture={backgroundCache}
         >
             {(isSelected || isToolsSelected) &&
-                <Sprite
+                <pixiSprite
                     texture={isToolsSelected && !isSelected ? cache.standard[3] : cache.standard[2]}
                     alpha={isToolsSelected && !isSelected ? 0.4 : 0.8}
                     zIndex={1}
                 />
             }
             {isBreakpoint &&
-                <Sprite
+                <pixiSprite
                     texture={cache.breakpoints[1]}
                 />
             }
-        </Sprite>
+        </pixiSprite>
 
         {notes.map((note) => {
             const layerStatus = note.layer.toLayerStatus(currentLayer, instruments)
             if (layerStatus === 0) return null
-            return <Sprite
+            return <pixiSprite
                 key={note.index}
                 texture={
                     cache.notes[layerStatus]
                 }
                 y={COMPOSER_NOTE_POSITIONS[note.index] * sizes.height / NOTES_PER_COLUMN}
             >
-            </Sprite>
+            </pixiSprite>
         })}
-    </Container>
+    </pixiContainer>
 }
 
 export function isColumnVisible(pos: number, currentPos: number, numberOfColumnsPerCanvas: number) {
