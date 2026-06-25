@@ -17,7 +17,7 @@ import {asyncConfirm, asyncPrompt} from "$cmp/shared/Utility/AsyncPrompts";
 import {Row} from "$cmp/shared/layout/Row";
 import {Column} from "$cmp/shared/layout/Column";
 import {withTranslation} from "react-i18next";
-import {WithTranslation} from "react-i18next/index";
+import {WithTranslation} from "react-i18next";
 import {Separator} from "$cmp/shared/separator/Separator";
 
 

@@ -41,7 +41,7 @@ import {createKeyboardListener, createShortcutListener, ShortcutListener} from '
 import {NoteLayer} from "$lib/Songs/Layer";
 import {globalConfigStore} from '$stores/GlobalConfigStore';
 import {useTranslation} from "react-i18next";
-import {WithTranslation} from "react-i18next/index";
+import {WithTranslation} from "react-i18next";
 import {fileService} from "$lib/Services/FileService";
 import {VsrgSong} from "$lib/Songs/VsrgSong";
 import {useSetPageVisited} from "$cmp/shared/PageVisit/pageVisit";
