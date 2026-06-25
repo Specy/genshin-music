@@ -25,11 +25,6 @@ const config = {
   images: {
     unoptimized: true,
   },
-  // TEMPORARY (Phase 1 only): @pixi/react v7 does not typecheck under React 19.
-  // Remove this once the pixi.js v8 migration (Phase 2) is complete.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
 }
 
 export default withBundleAnalyzer(withSerwist(config))
