@@ -9,8 +9,7 @@
   "homepage": "./",
   "dependencies": {
     "@insertish/zangodb": "^1.0.12-nomemo",
-    "@pixi/graphics-smooth": "^1.1.0",
-    "@pixi/react": "^7.1.2",
+    "@pixi/react": "^8.0.5",
     "@spotify/basic-pitch": "^1.0.1",
     "@tauri-apps/api": "^1.5.3",
     "@tonejs/midi": "^2.0.28",
@@ -25,7 +24,7 @@
     "mobx": "^6.12.3",
     "next": "^16.2.9",
     "pepjs": "^0.5.3",
-    "pixi.js": "^7.2.4",
+    "pixi.js": "^8.19.0",
     "react": "^19.2.7",
     "react-colorful": "^5.6.1",
     "react-dom": "^19.2.7",
