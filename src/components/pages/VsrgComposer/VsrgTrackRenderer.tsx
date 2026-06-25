@@ -1,4 +1,3 @@
-import {Container, Sprite} from "@pixi/react";
 import {PIXI_CENTER_X_END_Y} from "$config";
 import {VsrgHitObject, VsrgTrack} from "$lib/Songs/VsrgSong";
 import {parseMouseClick} from "$lib/utils/Utilities";
@@ -51,7 +50,7 @@ export function VsrgTrackRenderer({
                 ? positionSizeHorizontal * hitObject.index + positionSizeHorizontal / 2
                 : -(hitObject.timestamp * scale - sizes.height)
             return hitObject.isHeld
-                ? <Container
+                ? <pixiContainer
                     eventMode="static"
                     pointerdown={(e: FederatedPointerEvent) => {
                         selectHitObject(hitObject, trackIndex, parseMouseClick(e.button))
@@ -59,7 +58,7 @@ export function VsrgTrackRenderer({
                     key={hitObject.renderId}
                 >
                     {isHorizontal
-                        ? <Sprite
+                        ? <pixiSprite
                             texture={cache.getHeldTrailCache(track.color)}
                             anchor={[0, 0.5]}
                             height={cache.textures.sizes.trail}
@@ -67,7 +66,7 @@ export function VsrgTrackRenderer({
                             x={x}
                             y={y}
                         />
-                        : <Sprite
+                        : <pixiSprite
                             texture={cache.getHeldTrailCache(track.color)}
                             anchor={PIXI_CENTER_X_END_Y}
                             width={cache.textures.sizes.trail}
@@ -76,38 +75,38 @@ export function VsrgTrackRenderer({
                             y={y}
                         />
                     }
-                    <Sprite
+                    <pixiSprite
                         texture={cache.getHeldHitObjectCache(track.color)}
                         anchor={0.5}
                         x={x}
                         angle={45}
                         y={y}
                     />
-                    <Sprite
+                    <pixiSprite
                         texture={cache.getHeldHitObjectCache(track.color)}
                         anchor={0.5}
                         x={isHorizontal ? (hitObject.timestamp + hitObject.holdDuration) * scale : x}
                         y={isHorizontal ? y : (y - hitObject.holdDuration * scale)}
                     />
                     {hitObject === selectedHitObject &&
-                        <Sprite
+                        <pixiSprite
                             texture={cache.getSelectionRingsCache(track.color)}
                             anchor={0.5}
                             x={x}
                             y={y}
                         />
                     }
-                </Container>
+                </pixiContainer>
                 : <Fragment key={hitObject.renderId}>
                     {hitObject === selectedHitObject &&
-                        <Sprite
+                        <pixiSprite
                             texture={cache.getSelectionRingsCache(track.color)}
                             anchor={0.5}
                             x={x}
                             y={y}
                         />
                     }
-                    <Sprite
+                    <pixiSprite
                         texture={cache.getHitObjectCache(track.color)}
                         eventMode="static"
                         pointerdown={(e: FederatedPointerEvent) => {

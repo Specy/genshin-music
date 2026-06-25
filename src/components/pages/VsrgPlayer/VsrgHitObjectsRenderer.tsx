@@ -1,4 +1,3 @@
-import {Container, Sprite} from "@pixi/react";
 import {PIXI_CENTER_X_END_Y} from "$config";
 import {Fragment} from "react";
 import {VsrgPlayerCache} from "./VsgPlayerCache";
@@ -28,7 +27,7 @@ export function VsrgHitObjectsRenderer({
     const debugRenderable = new RenderableHitObject(debugHitObject)
     */
     return <>
-        <Container
+        <pixiContainer
             x={0}
             y={timestamp * scale + sizes.height - offset}
             sortableChildren={true}
@@ -56,7 +55,7 @@ export function VsrgHitObjectsRenderer({
                 }
                 return <Fragment key={hitObject.renderId}>
                     {(min !== max) &&
-                        <Sprite
+                        <pixiSprite
                             texture={cache.getLinesCache(renderableHitObject.color)}
                             x={min * sizes.keyWidth + sizes.keyWidth / 2}
                             width={(max - min) * sizes.keyWidth}
@@ -66,7 +65,7 @@ export function VsrgHitObjectsRenderer({
                     }
                     {hitObject.isHeld
                         ? <>
-                            <Sprite
+                            <pixiSprite
                                 texture={cache.getHeldTrailCache(renderableHitObject.color)}
                                 anchor={PIXI_CENTER_X_END_Y}
                                 width={cache.textures.sizes.trail}
@@ -74,21 +73,21 @@ export function VsrgHitObjectsRenderer({
                                 x={x}
                                 y={y - halfWidth}
                             />
-                            <Sprite
+                            <pixiSprite
                                 texture={cache.getHeldHitObjectCache(renderableHitObject.color)}
                                 anchor={0.5}
                                 angle={45}
                                 x={x}
                                 y={y - halfWidth}
                             />
-                            <Sprite
+                            <pixiSprite
                                 texture={cache.getHeldHitObjectCache(renderableHitObject.color)}
                                 anchor={PIXI_CENTER_X_END_Y}
                                 x={x}
                                 y={y - hitObject.holdDuration * scale}
                             />
                         </>
-                        : <Sprite
+                        : <pixiSprite
                             texture={cache.getHitObjectCache(renderableHitObject.color)}
                             key={renderableHitObject.hitObject.renderId}
                             y={y}
@@ -98,6 +97,6 @@ export function VsrgHitObjectsRenderer({
                     }
                 </Fragment>
             })}
-        </Container>
+        </pixiContainer>
     </>
 }
