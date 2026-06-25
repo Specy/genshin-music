@@ -1,9 +1,6 @@
 import Color from "color"
-import {LINE_SCALE_MODE, settings, SmoothGraphics as Graphics} from '@pixi/graphics-smooth';
-import {Application, Rectangle, SCALE_MODES, Texture} from 'pixi.js'
+import {Application, Graphics, Rectangle, Texture} from 'pixi.js'
 import {VsrgPlayerCanvasColors, VsrgPlayerCanvasSizes} from "./VsrgPlayerCanvas";
-
-settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NORMAL
 
 interface VsrgCacheProps {
     app: Application
@@ -102,12 +99,13 @@ export class VsrgPlayerCache {
         const margin = hitObjectHeight / 3
         withError.forEach(color => {
             const trail = new Graphics()
-            trail.beginFill(Color(color).rgbNumber())
-                .drawRect(margin / 2, 0, hitObjectHeight - margin, hitObjectHeight)
-            const trailTexture = app.renderer.generateTexture(trail, {
+            trail.rect(margin / 2, 0, hitObjectHeight - margin, hitObjectHeight)
+                .fill({color: Color(color).rgbNumber()})
+            const trailTexture = app.renderer.generateTexture({
+                target: trail,
                 resolution: 1,
-                scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight)
+                frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
+                textureSourceOptions: {scaleMode: 'linear'}
             });
             this.textures.trails[color] = trailTexture
             trail.destroy(true)
@@ -121,13 +119,14 @@ export class VsrgPlayerCache {
         const lineHeight = 5
         withError.forEach(color => {
             const line = new Graphics()
-            line.lineStyle(lineHeight, Color(color).rgbNumber())
-                .moveTo(0, 0)
+            line.moveTo(0, 0)
                 .lineTo(sizes.width, 0)
-            const lineTexture = app.renderer.generateTexture(line, {
+                .stroke({width: lineHeight, color: Color(color).rgbNumber()})
+            const lineTexture = app.renderer.generateTexture({
+                target: line,
                 resolution: 2,
-                scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, sizes.width, lineHeight)
+                frame: new Rectangle(0, 0, sizes.width, lineHeight),
+                textureSourceOptions: {scaleMode: 'linear'}
             });
             this.textures.lines[color] = lineTexture
             line.destroy(true)
@@ -141,13 +140,14 @@ export class VsrgPlayerCache {
         withError.forEach(color => {
             const hitObject = new Graphics()
             const circleSize = hitObjectHeight / 2
-            hitObject.lineStyle(5, Color(color).rgbNumber())
-                .beginFill(colors.background_10[1])
-                .drawCircle(circleSize, circleSize, circleSize - 5)
-            const texture = app.renderer.generateTexture(hitObject, {
+            hitObject.circle(circleSize, circleSize, circleSize - 5)
+                .fill({color: colors.background_10[1]})
+                .stroke({width: 5, color: Color(color).rgbNumber()})
+            const texture = app.renderer.generateTexture({
+                target: hitObject,
                 resolution: 2,
-                scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight)
+                frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
+                textureSourceOptions: {scaleMode: 'linear'}
             });
             this.textures.hitObjects[color] = texture
             hitObject.destroy(true)
@@ -155,13 +155,14 @@ export class VsrgPlayerCache {
             const heldHitObject = new Graphics()
             const diamondSize = hitObjectHeight * 0.7
             const margin = (hitObjectHeight - diamondSize) / 2
-            heldHitObject.lineStyle(5, Color(color).rgbNumber())
-                .beginFill(colors.background_10[1])
-                .drawRoundedRect(margin, margin, diamondSize, diamondSize, 6)
-            const heldTexture = app.renderer.generateTexture(heldHitObject, {
+            heldHitObject.roundRect(margin, margin, diamondSize, diamondSize, 6)
+                .fill({color: colors.background_10[1]})
+                .stroke({width: 5, color: Color(color).rgbNumber()})
+            const heldTexture = app.renderer.generateTexture({
+                target: heldHitObject,
                 resolution: 2,
-                scaleMode: SCALE_MODES.LINEAR,
-                region: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight)
+                frame: new Rectangle(0, 0, hitObjectHeight, hitObjectHeight),
+                textureSourceOptions: {scaleMode: 'linear'}
             });
             this.textures.heldHitObjects[color] = heldTexture
             heldHitObject.destroy(true)
