@@ -20,6 +20,10 @@ const config = {
         paths: {
             // '' for production build:all; '/skyMusic' | '/genshinMusic' for *-no-root builds
             base: process.env.PUBLIC_BASE_PATH ?? '',
+            // absolute asset URLs, mirroring the old app's output; relative refs
+            // would break bare /genshinMusic (no trailing slash) on the
+            // single-domain deploy
+            relative: false,
         },
         alias: {
             $game: `./src/lib/games/${gameId}`,
