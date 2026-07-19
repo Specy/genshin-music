@@ -1,0 +1,257 @@
+[
+  {
+    "hex": "0",
+    "bin": "0",
+    "array": [
+      0
+    ],
+    "isEmpty": true,
+    "roundTripHex": "0",
+    "roundTripBin": "0",
+    "roundTripDec": "0",
+    "statusNoInstruments": [
+      2,
+      2,
+      2
+    ],
+    "statusWithInstruments": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "hex": "1",
+    "bin": "1",
+    "array": [
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "1",
+    "roundTripBin": "1",
+    "roundTripDec": "1",
+    "statusNoInstruments": [
+      1,
+      2,
+      2
+    ],
+    "statusWithInstruments": [
+      1,
+      2,
+      2
+    ]
+  },
+  {
+    "hex": "2",
+    "bin": "10",
+    "array": [
+      0,
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "2",
+    "roundTripBin": "2",
+    "roundTripDec": "2",
+    "statusNoInstruments": [
+      2,
+      1,
+      2
+    ],
+    "statusWithInstruments": [
+      4,
+      1,
+      4
+    ]
+  },
+  {
+    "hex": "3",
+    "bin": "11",
+    "array": [
+      1,
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "3",
+    "roundTripBin": "3",
+    "roundTripDec": "3",
+    "statusNoInstruments": [
+      3,
+      3,
+      2
+    ],
+    "statusWithInstruments": [
+      5,
+      3,
+      6
+    ]
+  },
+  {
+    "hex": "8",
+    "bin": "1000",
+    "array": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "8",
+    "roundTripBin": "8",
+    "roundTripDec": "8",
+    "statusNoInstruments": [
+      2,
+      2,
+      2
+    ],
+    "statusWithInstruments": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "hex": "89",
+    "bin": "10001001",
+    "array": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "89",
+    "roundTripBin": "89",
+    "roundTripDec": "89",
+    "statusNoInstruments": [
+      3,
+      2,
+      2
+    ],
+    "statusWithInstruments": [
+      1,
+      2,
+      2
+    ]
+  },
+  {
+    "hex": "8000",
+    "bin": "1000000000000000",
+    "array": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "8000",
+    "roundTripBin": "8000",
+    "roundTripDec": "8000",
+    "statusNoInstruments": [
+      2,
+      2,
+      2
+    ],
+    "statusWithInstruments": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "hex": "20000000",
+    "bin": "100000000000000000000000000000",
+    "array": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "20000000",
+    "roundTripBin": "20000000",
+    "roundTripDec": "20000000",
+    "statusNoInstruments": [
+      2,
+      2,
+      2
+    ],
+    "statusWithInstruments": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "hex": "7ff",
+    "bin": "11111111111",
+    "array": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "isEmpty": false,
+    "roundTripHex": "7ff",
+    "roundTripBin": "7ff",
+    "roundTripDec": "7ff",
+    "statusNoInstruments": [
+      3,
+      3,
+      3
+    ],
+    "statusWithInstruments": [
+      13,
+      11,
+      7
+    ]
+  }
+]
