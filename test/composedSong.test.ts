@@ -1,5 +1,5 @@
 import {describe, it} from 'vitest'
-import {ComposedSong, INSTRUMENTS, NoteLayer} from './imports'
+import {ComposedSong, INSTRUMENTS} from './imports'
 import {buildComposedSong} from './builders'
 import {expectGolden} from './golden'
 

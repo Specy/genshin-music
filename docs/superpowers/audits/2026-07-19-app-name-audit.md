@@ -216,14 +216,16 @@ same value both games, so no row above but a Step-3 home): `PITCHES`→`notes.pi
 | Track 481 | `layoutMax` (21/15) | data | `notes.perColumn` |
 | SongClasses 92 | default `volume` (90/100) | data | `instruments.defaultVolume` |
 
-`toGenshin()`/`toSky()` themselves stay in the domain core (§6.3, golden-tested); the only
-per-game inputs they touch are `storageId` (the written `appName`) and note geometry (`notes.*`).
+`toGenshin()` (§6.3, golden-tested) stays in the domain core; the only per-game inputs it
+touches are `storageId` (the written `appName`) and note geometry (`notes.*`). Sky-direction
+conversion (a `toSky()`) does not exist by design — the Sky build rejects foreign songs
+instead of converting them (see the `SongService.ts` row below).
 
 ### src/lib/Services/SongService.ts
 | Line | What it selects | Category | GameDefinition field |
 |---|---|---|---|
 | 1 | import | — | |
-| 126 | `APP_NAME === 'Sky' && song.appName !== 'Sky'` → `toSky()` | storage | `storageId` (import normalize) |
+| 126 | `APP_NAME === 'Sky' && song.appName !== 'Sky'` → rejects (throws; no `toSky()` exists — Sky-direction conversion does not exist by design) | storage | `storageId` (import normalize) |
 | 129 | `APP_NAME === 'Genshin' && song.appName === 'Sky'` → `toGenshin()` | storage | `storageId` (import normalize) |
 
 Both compare the build's `storageId` against a serialized song's `storageId`; the normalize
@@ -692,7 +694,8 @@ Identical file set per game (contents differ):
    because they describe one visual identity ("the framed note skin"). A third game picks one flag.
 
 3. **Song `appName` reads/writes/conversions → `storage`, not a conversion flag.** The
-   `toGenshin()`/`toSky()` methods and the SongService import-normalize branch all reduce to
+   `toGenshin()` method (Sky-direction conversion does not exist by design — the Sky build
+   rejects foreign songs instead) and the SongService import-normalize branch all reduce to
    `song.appName (storageId)` comparisons; the conversion action is a kept, golden-tested domain
    method keyed on note geometry, not a `GameDefinition` field. So these rows carry `storageId`,
    and no `features.convertsImports` flag was minted — a third game normalizes generically via
