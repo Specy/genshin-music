@@ -23,7 +23,9 @@ export default function RootLayout({children}: RootLayoutProps) {
     return <html lang="en">
         <body>
             <GoogleAnalyticsScript/>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'center', minHeight: '100%'}}>
             <Providers>{children}</Providers>
+            </div>
         </body>
     </html>;
 }
