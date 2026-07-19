@@ -3,8 +3,7 @@ import {FaArrowLeft, FaDiscord, FaHome} from 'react-icons/fa';
 import {MenuButton} from '$cmp/shared/Menu/MenuItem'
 import {browserHistoryStore} from '$stores/BrowserHistoryStore';
 import {homeStore} from '$stores/HomeStore';
-import {useRouter} from 'next/router';
-import Link from 'next/link';
+import {useAppNavigation} from "$/app/_navigation/NavigationProvider";
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
@@ -12,14 +11,14 @@ import {useTranslation} from "react-i18next";
 
 export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>) {
     const {t} = useTranslation(['menu', 'home'])
-    const history = useRouter()
+    const navigation = useAppNavigation()
     return <MenuContextProvider className={className} style={style}>
         <MenuSidebar style={{justifyContent: 'flex-end'}}>
             {browserHistoryStore.hasNavigated &&
                 <MenuButton
                     style={{marginBottom: 'auto'}}
                     onClick={() => {
-                        history.back()
+                        void navigation.back()
                     }}
                     ariaLabel={t('go_back')}
                 >
@@ -27,7 +26,7 @@ export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>
                 </MenuButton>
             }
             {children}
-            <Link
+            <a
                 href='https://discord.gg/Arsf65YYHq'
                 target='_blank'
                 rel='noreferrer'
@@ -42,7 +41,7 @@ export function SimpleMenu({children, className, style}: MaybeChildren<Stylable>
                 <MenuButton ariaLabel='Discord'>
                     <FaDiscord className="icon"/>
                 </MenuButton>
-            </Link>
+            </a>
 
             <MenuButton
                 onClick={homeStore.open}

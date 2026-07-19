@@ -2,7 +2,7 @@ import {FaCompactDisc, FaDownload, FaMinus, FaPlus, FaTimes} from 'react-icons/f
 import {BsMusicPlayerFill} from 'react-icons/bs'
 import {APP_NAME, BASE_PATH, IS_BETA} from "$config"
 import {CSSProperties, FC, ReactNode, useEffect, useState} from 'react'
-import Link from 'next/link'
+import {AppLink} from '$/app/_navigation/AppLink'
 import {useTheme} from '$lib/Hooks/useTheme'
 import {MenuButton} from '$cmp/shared/Menu/MenuItem'
 import {KeyboardProvider} from '$lib/Providers/KeyboardProvider'
@@ -11,7 +11,6 @@ import {VsrgIcon} from '$cmp/shared/icons/VsrgIcon'
 import {VsrgComposerIcon} from '$cmp/shared/icons/VsrgComposerIcon'
 import {useObservableObject} from '$lib/Hooks/useObservable'
 import {homeStore} from '$stores/HomeStore'
-import {useRouter} from 'next/router'
 import {clearClientCache, isTWA} from '$lib/utils/Utilities'
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts'
 import {MdOutlinePiano} from "react-icons/md";
@@ -41,7 +40,6 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
     const [breakpoint, setBreakpoint] = useState(false)
     const [isTwa, setIsTwa] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
-    const history = useRouter()
     const [theme] = useTheme()
     const {installEvent} = useObservableObject(pwaStore.state)
 
@@ -88,7 +86,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
         return () => {
             KeyboardProvider.unregisterById("home")
         }
-    }, [history])
+    }, [])
     return <div
         className={`${homeClass} ignore_click_outside column`}
         style={{
@@ -120,7 +118,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
             {!hasVisited && <div className='home-welcome'>
                 <div>
                     {!isTwa && <div className='home-spacing'>
-                        {t("add_to_home_screen")}. <Link
+                        {t("add_to_home_screen")}. <AppLink
                             href={'/blog/posts/add-to-home-screen'}
                             onClick={homeStore.close}
                             style={{
@@ -129,7 +127,7 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                             }}
                         >
                             {t('how_to_install')}
-                        </Link>
+                        </AppLink>
                     </div>}
                     <div className='home-spacing'>
                         <div className="red-text">{t('common:warning')}</div>
@@ -146,13 +144,13 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                         <span style={{marginRight: '0.2rem'}}>
                             {t("privacy_policy")}
                         </span>
-                        <Link
+                        <AppLink
                             href='/privacy'
                             style={{color: 'var(--primary-text)', textDecoration: "underline"}}
                             onClick={homeStore.close}
                         >
                             {t('common:privacy')}
-                        </Link>
+                        </AppLink>
                     </div>
                     <div>
                         {t('home:no_affiliation', {company_name: APP_NAME === "Sky" ? "thatgamecompany" : "HoYoverse"})}
@@ -263,14 +261,14 @@ export default function Home({askForStorage, hasVisited, setDontShowHome, closeW
                     {t('changelog_name')}
                 </PageRedirect>
 
-                <Link onClick={async (e) => {
+                <a onClick={async (e) => {
                     e.preventDefault()
                     const confirm = await asyncConfirm(t('about_to_leave_warning', {to: 'specy.app'}))
                     if (!confirm) return
                     window.open('https://specy.app', '_blank')
                 }} href={'https://specy.app'} target='_blank'>
                     {t('other_apps_name')}
-                </Link>
+                </a>
                 <AppButton onClick={clearCache}>
                     {t('clear_cache_name')}
                 </AppButton>
@@ -342,14 +340,14 @@ interface MiddleSizePageProps {
 }
 
 function MiddleSizePage({href, children, Icon, current}: MiddleSizePageProps) {
-    return <Link
+    return <AppLink
         href={href}
         onClick={homeStore.close}
         className={`middle-size-page row ${current ? 'current-page' : ''}`}
     >
         <Icon className='middle-size-page-icon'/>
         {children}
-    </Link>
+    </AppLink>
 }
 
 
@@ -362,14 +360,14 @@ interface PageRedirectProps {
 
 function PageRedirect({children, current, href, pageKey}: PageRedirectProps) {
     const visited = usePageVisit(pageKey)
-    return <Link
+    return <AppLink
         onClick={homeStore.close}
         href={href}
         className={`${visited.className} ${current ? 'current-page' : ''}`}
         style={visited.style}
     >
         {children}
-    </Link>
+    </AppLink>
 }
 
 interface MainContentElementProps {
@@ -396,7 +394,7 @@ function MainContentElement({
                             }: MainContentElementProps) {
     const {t} = useTranslation('common')
     const visited = usePageVisit(pageKey)
-    return <Link
+    return <AppLink
         className={`${visited.className} home-content-element ${isCurrent ? 'current-page' : ''}`}
         href={href}
         style={visited.style}
@@ -417,7 +415,7 @@ function MainContentElement({
                 </button>
             </div>
         </div>
-    </Link>
+    </AppLink>
 }
 
 interface SeparatorProps {

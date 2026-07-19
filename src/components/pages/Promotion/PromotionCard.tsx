@@ -5,7 +5,7 @@ import s from './promotionCard.module.scss'
 import {Column} from "$cmp/shared/layout/Column";
 import {Row} from "$cmp/shared/layout/Row";
 import {Header} from "$cmp/shared/header/Header";
-import Link from "next/link";
+import {AppLink} from "$/app/_navigation/AppLink";
 import {AppButton} from "$cmp/shared/Inputs/AppButton";
 import {FaTimes} from "react-icons/fa";
 import {useTranslation} from "react-i18next";
@@ -68,7 +68,7 @@ export function PromotionCard({onClick, alwaysVisible, style, className}: Promot
                 >
                     <FaTimes/>
                 </button>}
-                <Link
+                <AppLink
                     href={promotion.url}
                     onClick={(e) => {
                         onClick?.(e)
@@ -79,7 +79,7 @@ export function PromotionCard({onClick, alwaysVisible, style, className}: Promot
                     >
                         {t('find_out_more')}
                     </AppButton>
-                </Link>
+                </AppLink>
             </Column>
         </Row>
     </Card>

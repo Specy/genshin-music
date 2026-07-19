@@ -31,7 +31,6 @@ import {
     FaTimes,
     FaTrash
 } from "react-icons/fa";
-import Link from "next/link";
 import {songsStore} from "$stores/SongsStore";
 import {Theme} from "$stores/ThemeStore/ThemeProvider";
 import {SettingUpdate} from "$types/SettingsPropriety";
@@ -112,11 +111,11 @@ function VsrgMenu({onSongSelect, settings, onSettingsUpdate}: VsrgMenuProps) {
             <MenuPanelWrapper>
                 <MenuPanel id="Songs">
                     <div className="row">
-                        <Link href='/vsrg-composer'>
+                        <AppLink href='/vsrg-composer'>
                             <AppButton>
                                 {t('common:create_song')}
                             </AppButton>
-                        </Link>
+                        </AppLink>
 
                     </div>
                     <SongMenu<SongRowProps>
