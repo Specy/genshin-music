@@ -128,7 +128,7 @@ Selection = the `$game` alias (env-resolved, tree-shaken). Definitions are self-
 
 ### 6.1 State (MobX → runes)
 
-Each of the 15 stores becomes a plain class with `$state` fields in `src/lib/stores/<name>.svelte.ts`, exported as a singleton with the same names, public methods, and shapes. Components read properties directly (runes auto-track), so the custom hook layer (`useObservable*`, `useTheme`, `useConfig`, `useSongs`, …) is deleted, not ported. Non-component consumers (pixi renderers, audio provider) that used `subscribeObservable*` get an explicit `subscribe(cb)` helper built on `$effect.root`, added per store where needed. `ObservableNote` becomes a `$state` object on the note.
+Each of the 15 stores ports as a singleton class in `src/lib/stores/<name>.svelte.ts` with the same names, public methods, and shapes; observable fields become `$state` fields (the one store with no observable state, `BrowserHistoryStore`, stays a plain class). Components read properties directly (runes auto-track), so the custom hook layer (`useObservable*`, `useTheme`, `useConfig`, `useSongs`, …) is deleted, not ported. Non-component consumers (pixi renderers, audio provider) that used `subscribeObservable*` get an explicit `subscribe(cb)` helper built on `$effect.root`, added per store where needed. `ObservableNote` becomes a `$state` object on the note.
 
 ### 6.2 Pixi (`@pixi/react` → raw pixi.js)
 
@@ -156,7 +156,7 @@ React's `ErrorBoundaryRedirect` becomes Svelte 5's native `<svelte:boundary oner
 
 ## 7. Build pipeline
 
-`scripts/buildApp.js` gets a direct equivalent: for each target, copy `games/<id>/static/` → `static/`, rewrite manifest paths for the base path, set `PUBLIC_GAME` + `BASE_PATH` + `PUBLIC_SW_VERSION`, run `vite build` into `build/{skyMusic|genshinMusic}`, restore. npm script names are preserved (`dev:sky`, `dev:genshin`, `build:sky`, `build:genshin`, `build:all`, `build:*-no-root`, `preview:*`) so muscle memory and CI keep working. GitHub workflows update to the new build; `BuildTauri.yml` is deleted.
+`scripts/buildApp.js` gets a direct equivalent: for each target, copy `games/<id>/static/` → `static/`, rewrite manifest paths for the base path, set `PUBLIC_GAME` + `BASE_PATH` + `PUBLIC_SW_VERSION`, run `vite build` into `build/{skyMusic|genshinMusic}` (consecutive targets overwrite `static/`, as today). npm script names are preserved (`dev:sky`, `dev:genshin`, `build:sky`, `build:genshin`, `build:all`, `build:*-no-root`, `preview:*`) so muscle memory and CI keep working. GitHub workflows update to the new build; `BuildTauri.yml` is deleted.
 
 ## 8. Tauri removal
 
