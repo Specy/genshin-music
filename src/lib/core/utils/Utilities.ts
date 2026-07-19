@@ -39,6 +39,15 @@ export function colorToRGB(color: ColorInstance) {
 
 export type MIDINoteStatus = 'wrong' | 'right' | 'clicked'
 
+// relocated verbatim from old BaseSettings.ts — Task 6 re-imports it from here (reconcile like InstrumentNoteIcon)
+export type MIDIShortcutName =
+    'toggle_play'
+    | 'next_column'
+    | 'previous_column'
+    | 'add_column'
+    | 'remove_column'
+    | 'change_layer'
+
 class MIDINote {
     index: number
     midi: number
@@ -66,6 +75,19 @@ class MIDINote {
     static deserialize(data: any) {
         return new MIDINote(data.index, data.midi)
     }
+}
+
+class MIDIShortcut<T extends MIDIShortcutName = MIDIShortcutName> {
+    type: T
+    midi: number
+    status: 'wrong' | 'right' | 'clicked'
+
+    constructor(type: T, midi: number) {
+        this.type = type
+        this.midi = midi
+        this.status = midi < 0 ? 'wrong' : 'right'
+    }
+
 }
 
 function groupArrayEvery<T>(array: T[], n: number) {
@@ -302,6 +324,7 @@ export {
     groupNotesByIndex,
     Array2d,
     MIDINote,
+    MIDIShortcut,
     capitalize,
     clamp,
     nearestEven,
