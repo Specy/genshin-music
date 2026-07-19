@@ -125,9 +125,8 @@ static `import` in `main.ts`.
 
 **Relevance to the current (webpack) build**: the main repo's `node_modules`
 has no `events` package (checked `package-lock.json`); under Vite, this
-triggered the browser-external stub failure. Whether webpack already works or
-needs the fix remains an **open question** — the webpack mechanism was not
-investigated (no webpack build run for comparison; webpack 5 may differ or the
+triggered the browser-external stub failure. Why webpack's current build works without an explicit `events` dependency remains an **open question** — the mechanism was not
+investigated (no webpack comparison run; webpack 5 may resolve it differently or the
 code path may not execute at module-init). Phase 1's scaffold must add
 `"events": "^3.3.0"` as an explicit dependency.
 
