@@ -24,6 +24,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "baseUrl": "src",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "$cmp/*": [
         "components/*"
@@ -72,6 +73,7 @@
   "exclude": [
     "node_modules",
     "build",
-    "src-tauri"
+    "src-tauri",
+    "**/*.test.ts"
   ]
 }
