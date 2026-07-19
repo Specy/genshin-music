@@ -28,13 +28,20 @@
     "test:update-fixtures": "cross-env UPDATE_FIXTURES=true npm run test"
   },
   "dependencies": {
-    "events": "^3.3.0"
+    "@insertish/zangodb": "^1.0.12-nomemo",
+    "@tonejs/midi": "^2.0.28",
+    "color": "^5.0.3",
+    "events": "^3.3.0",
+    "is-mobile": "^5.0.0",
+    "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.70.1",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@types/color": "^4.2.1",
+    "@types/lodash.clonedeep": "^4.5.9",
     "cli-color": "^2.0.4",
     "cross-env": "^10.1.0",
     "eslint": "^10.7.0",
