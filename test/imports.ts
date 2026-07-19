@@ -23,7 +23,7 @@ export {ColumnNote, NoteColumn, InstrumentData, RecordedNote} from '$lib/Songs/S
 export {Song, extractStorable} from '$lib/Songs/Song'
 export {ComposedSong, defaultInstrumentMap} from '$lib/Songs/ComposedSong'
 export {RecordedSong} from '$lib/Songs/RecordedSong'
-export {VsrgSong, VsrgTrack, VsrgTrackModifier} from '$lib/Songs/VsrgSong'
+export {VsrgHitObject, VsrgSong, VsrgTrack, VsrgTrackModifier} from '$lib/Songs/VsrgSong'
 export {Folder} from '$lib/Folder'
 // Theme
 export {BaseTheme, Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider'
