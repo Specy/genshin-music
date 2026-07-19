@@ -18,12 +18,48 @@ const SKY_COMPOSED_PAYLOAD = {
     columns: [[0, [[0, '1'], [7, '1']]], [1, [[14, '1']]]],
 }
 
+// A serialized Sky vsrg song, crafted to match SerializedVsrgSong / VsrgSong.deserialize
+// (src/lib/Songs/VsrgSong.ts). Two hitObjects ([index, timestamp, holdDuration, notes])
+// carry notes arrays with values that VsrgSong.toGenshin() (VsrgSong.ts:85-94) remaps
+// through IMPORT_NOTE_POSITIONS; toGenshin also forces every track's instrument to "DunDun".
+const SKY_VSRG_PAYLOAD = {
+    id: null, folderId: null, name: 'Sky vsrg import', type: 'vsrg', version: 1,
+    bpm: 140, pitch: 'C',
+    data: {isComposed: false, isComposedVersion: false, appName: 'Sky'},
+    instruments: [],
+    keys: 4,
+    duration: 5000,
+    audioSongId: null,
+    breakpoints: [],
+    difficulty: 5,
+    snapPoint: 1,
+    trackModifiers: [],
+    tracks: [
+        {
+            instrument: {
+                name: 'Piano', volume: 100, pitch: '', visible: true,
+                icon: 'border', alias: '', muted: false, reverbOverride: null,
+            },
+            color: '#FFFFFF',
+            hitObjects: [
+                [0, 500, 0, [0, 5]],
+                [2, 1200, 300, [10]],
+            ],
+        },
+    ],
+}
+
 describe('cross-game import conversion (Genshin build only)', () => {
     it.runIf(APP_NAME === 'Genshin')('Sky composed song converts via parseSong', () => {
         const parsed = songService.parseSong(JSON.parse(JSON.stringify(SKY_COMPOSED_PAYLOAD)))
         expectGolden('conversion', {
             skyComposedToGenshin: parsed.serialize(),
         })
+    })
+
+    it.runIf(APP_NAME === 'Genshin')('Sky vsrg song converts via parseSong', () => {
+        const parsed = songService.parseSong(JSON.parse(JSON.stringify(SKY_VSRG_PAYLOAD)))
+        expectGolden('vsrg-conversion', parsed.serialize())
     })
 
     it.runIf(APP_NAME === 'Sky')('Genshin song is rejected by the Sky build', () => {
