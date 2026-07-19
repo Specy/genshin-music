@@ -22,7 +22,7 @@ async function execute() {
             const {id, outDir} = GAMES[app]
             // Historical quirk, preserved: NO third argv → base '' (production
             // build:all); ANY third argv (scripts pass "false") → subpath base.
-            const basePath = Boolean(process.argv[3]) ? `/${outDir}` : ''
+            const basePath = process.argv[3] ? `/${outDir}` : ''
             console.log(clc.bold.yellow(`Building ${app}...`))
             await prepareGameStatic(id, basePath)
             execSync('npm run build', {
