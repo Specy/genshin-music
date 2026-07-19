@@ -28,7 +28,7 @@ function AppBase() {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const path = pathname ?? '/'
-    const query = searchParams.toString()
+    const query = searchParams?.toString() ?? ''
     const pagePath = query.length > 0 ? path + '?' + query : path
     const hasTrackedInitialPage = useRef(false)
     useEffect(() => {
@@ -204,4 +204,3 @@ function AppBase() {
 
 
 export default AppBase
-

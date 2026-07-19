@@ -1,7 +1,7 @@
 'use client';
 
 import type {ReactNode} from 'react';
-import {useEffect} from 'react';
+import {Suspense, useEffect} from 'react';
 import {DropZoneProviderWrapper} from '$cmp/shared/ProviderWrappers/DropZoneProviderWrapper';
 import {GeneralProvidersWrapper} from '$cmp/shared/ProviderWrappers/GeneralProvidersWrapper';
 import {ThemeProviderWrapper} from '$cmp/shared/ProviderWrappers/ThemeProviderWrapper';
@@ -108,10 +108,10 @@ export default function Providers({children}: ProvidersProps) {
                         onErrorGoTo="/error"
                         onError={() => logger.error(i18n.t('logs:error_with_the_app'))}
                     >
-                        <>
+                        <Suspense fallback={null}>
                             <AppBase/>
                             {children}
-                        </>
+                        </Suspense>
                     </ErrorBoundaryRedirect>
                 </NavigationProvider>
             </GeneralProvidersWrapper>
