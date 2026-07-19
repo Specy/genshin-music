@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-    <title>{title} - {game.displayName}</title>
+    <title>{title} - {game.meta.title}</title>
 </svelte:head>
 
 <main>
