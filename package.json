@@ -1,7 +1,7 @@
 {
   "name": "genshin-music",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=20.19.0"
   },
   "type": "module",
   "version": "0.1.0",

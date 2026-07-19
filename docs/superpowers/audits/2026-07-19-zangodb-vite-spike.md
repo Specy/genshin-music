@@ -103,8 +103,9 @@ which is why the page was blank with no visible console error rather than
 showing `ZANGO_FAIL`.
 
 **Fix**: `npm install events` (the standard userland browser-compatible
-`EventEmitter` shim, ~3.3.0, no relation to Node's built-in — just a same-named
-real package). No `vite.config.ts` edit was needed: once the package exists in
+`EventEmitter` shim, ~3.3.0 — the canonical userland mirror of Node's `events`
+API; that API compatibility is exactly why substituting it works). No
+`vite.config.ts` edit was needed: once the package exists in
 `node_modules`, Vite/esbuild's normal bare-specifier resolution finds the real
 package before falling back to the browser-external built-in stub. This is
 the standard, documented Vite behavior
