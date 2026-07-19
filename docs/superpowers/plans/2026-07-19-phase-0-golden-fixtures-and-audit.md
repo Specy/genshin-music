@@ -385,23 +385,22 @@ git commit -m "test: golden fixtures for InstrumentData, columns, Folder"
 ### Task 4: RecordedSong fixtures (current, v1-legacy, old-format, oldFormat-export)
 
 **Files:**
+- Create: `test/builders.ts`
 - Create: `test/recordedSong.test.ts`
 - Create (generated): `test/fixtures/{Genshin,Sky}/recorded-song.json`
 
 **Interfaces:**
 - Consumes: `expectGolden`, barrel.
-- Produces: fixture files; establishes the `buildRecordedSong()` construction pattern reused in Task 7 (copy it there — do not import between test files).
+- Produces: fixture files; `buildRecordedSong(): RecordedSong` exported from `test/builders.ts` (which imports only from `./imports`), reused by Task 7. Task 5 adds `buildComposedSong` to the same file.
 
-- [ ] **Step 1: Write the test**
+- [ ] **Step 1: Write the builder and the test**
 
-`test/recordedSong.test.ts`:
+`test/builders.ts`:
 
 ```ts
-import {describe, it} from 'vitest'
 import {INSTRUMENTS, NoteLayer, RecordedNote, RecordedSong} from './imports'
-import {expectGolden} from './golden'
 
-function buildRecordedSong(): RecordedSong {
+export function buildRecordedSong(): RecordedSong {
     const song = new RecordedSong('Golden recorded', [], [INSTRUMENTS[0], INSTRUMENTS[1]])
     song.bpm = 180
     song.pitch = 'D'
@@ -414,6 +413,15 @@ function buildRecordedSong(): RecordedSong {
     ]
     return song
 }
+```
+
+`test/recordedSong.test.ts`:
+
+```ts
+import {describe, it} from 'vitest'
+import {RecordedSong} from './imports'
+import {buildRecordedSong} from './builders'
+import {expectGolden} from './golden'
 
 describe('RecordedSong formats', () => {
     it('serialize / deserialize / legacy v1 / old-format export are stable', () => {
@@ -456,22 +464,19 @@ git commit -m "test: golden fixtures for RecordedSong formats"
 
 **Files:**
 - Create: `test/composedSong.test.ts`
+- Modify: `test/builders.ts` (add `buildComposedSong`)
 - Create (generated): `test/fixtures/{Genshin,Sky}/composed-song.json`
 
 **Interfaces:**
-- Consumes: `expectGolden`, barrel.
-- Produces: fixture files; establishes `buildComposedSong()` reused (copied) in Task 7.
+- Consumes: `expectGolden`, barrel, `test/builders.ts` (Task 4).
+- Produces: fixture files; `buildComposedSong(): ComposedSong` exported from `test/builders.ts`, reused by Task 7.
 
-- [ ] **Step 1: Write the test**
+- [ ] **Step 1: Write the builder and the test**
 
-`test/composedSong.test.ts`:
+Append to `test/builders.ts` (extend the existing import line with `ComposedSong`):
 
 ```ts
-import {describe, it} from 'vitest'
-import {ComposedSong, INSTRUMENTS, NoteLayer} from './imports'
-import {expectGolden} from './golden'
-
-function buildComposedSong(): ComposedSong {
+export function buildComposedSong(): ComposedSong {
     const song = new ComposedSong('Golden composed', [INSTRUMENTS[0], INSTRUMENTS[1]])
     song.bpm = 160
     song.pitch = 'E'
@@ -486,6 +491,15 @@ function buildComposedSong(): ComposedSong {
     song.breakpoints = [0, 3]
     return song
 }
+```
+
+`test/composedSong.test.ts`:
+
+```ts
+import {describe, it} from 'vitest'
+import {ComposedSong, INSTRUMENTS, NoteLayer} from './imports'
+import {buildComposedSong} from './builders'
+import {expectGolden} from './golden'
 
 describe('ComposedSong formats', () => {
     it('serialize v3 / roundtrip / legacy v1+v2 / old-format export are stable', () => {
@@ -624,7 +638,7 @@ git commit -m "test: golden fixtures for VsrgSong format"
 - Create (generated): `test/fixtures/Genshin/conversion.json`, `test/fixtures/{Genshin,Sky}/midi-export.json`
 
 **Interfaces:**
-- Consumes: `expectGolden`, barrel (`songService.parseSong`), `buildComposedSong`/`buildRecordedSong` patterns (copied locally from Tasks 4-5).
+- Consumes: `expectGolden`, barrel (`songService.parseSong`), `buildRecordedSong` + `buildComposedSong` from `test/builders.ts` (Tasks 4-5).
 - Produces: fixture files locking the Sky→Genshin import conversion and `.mid` binary output.
 
 - [ ] **Step 1: Write the test**
@@ -634,39 +648,9 @@ git commit -m "test: golden fixtures for VsrgSong format"
 ```ts
 import {Buffer} from 'node:buffer'
 import {describe, it} from 'vitest'
-import {
-    APP_NAME, ComposedSong, INSTRUMENTS, NoteLayer, RecordedNote, RecordedSong, songService,
-} from './imports'
+import {APP_NAME, songService} from './imports'
+import {buildComposedSong, buildRecordedSong} from './builders'
 import {expectGolden} from './golden'
-
-function buildRecordedSong(): RecordedSong {
-    const song = new RecordedSong('Golden recorded', [], [INSTRUMENTS[0], INSTRUMENTS[1]])
-    song.bpm = 180
-    song.pitch = 'D'
-    song.reverb = true
-    song.notes = [
-        new RecordedNote(0, 100, NoteLayer.deserializeBin('1')),
-        new RecordedNote(3, 350, NoteLayer.deserializeBin('10')),
-        new RecordedNote(7, 350, NoteLayer.deserializeBin('11')),
-        new RecordedNote(14, 900, NoteLayer.deserializeBin('1')),
-    ]
-    return song
-}
-
-function buildComposedSong(): ComposedSong {
-    const song = new ComposedSong('Golden composed', [INSTRUMENTS[0], INSTRUMENTS[1]])
-    song.bpm = 160
-    song.pitch = 'E'
-    song.reverb = true
-    song.columns[0].addNote(0, NoteLayer.deserializeBin('1'))
-    song.columns[0].addNote(4, NoteLayer.deserializeBin('11'))
-    song.columns[1].tempoChanger = 1
-    song.columns[1].addNote(2, NoteLayer.deserializeBin('10'))
-    song.columns[3].tempoChanger = 3
-    song.columns[3].addNote(10, NoteLayer.deserializeBin('1'))
-    song.breakpoints = [0, 3]
-    return song
-}
 
 // A serialized Sky composed song, crafted as the SKY build would emit it.
 // Kept inline (not built via classes) so the Genshin run has a Sky payload to import.
