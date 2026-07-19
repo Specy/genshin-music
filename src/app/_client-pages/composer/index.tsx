@@ -977,8 +977,8 @@ export default function ComposerPage({inPreview, songId}: ComposerPageProps) {
     const navigation = useAppNavigation()
     const searchParams = useSearchParams()
     const {t} = useTranslation(['composer', 'home', 'logs', 'question', 'common', 'menu'])
-    const querySongId = searchParams.get('songId')
-    const showMidi = searchParams.get('showMidi')
+    const querySongId = searchParams?.get('songId')
+    const showMidi = searchParams?.get('showMidi')
     useSetPageVisited('composer')
     return <Composer
         navigation={navigation}

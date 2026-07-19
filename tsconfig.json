@@ -67,7 +67,9 @@
     "**/*.js",
     "**/*.jsx",
     "src",
-    "build/dev/types/**/*.ts"
+    "build/dev/types/**/*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
