@@ -1,4 +1,4 @@
 # All Svelte sources are new-world files; keep them LF everywhere.
-# Broader EOL policy deliberately deferred (legacy JS/MD files are mixed) --
-# revisit with the formatter decision in Phase 1 Task 5 / later.
+# Broader EOL policy deliberately deferred (legacy JS/MD files are mixed) —
+# revisit with the Phase 5 formatter/EOL decision.
 *.svelte text eol=lf

@@ -1,5 +1,9 @@
 {
   "extends": "./.svelte-kit/tsconfig.json",
+  // NOTE: this REPLACES the generated config's exclude (which covers
+  // src/service-worker.*) — re-add service-worker globs here when Phase 5
+  // introduces src/service-worker.ts, or svelte-check will pull it into
+  // the DOM-lib project.
   "exclude": ["test"],
   "compilerOptions": {
     "strict": true,
