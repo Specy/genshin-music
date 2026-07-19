@@ -1,0 +1,815 @@
+{
+  "composer": {
+    "other": {
+      "settingVersion": "Genshin71"
+    },
+    "data": {
+      "bpm": {
+        "name": "composer_bpm",
+        "tooltip": "composer_bpm_description",
+        "type": "number",
+        "songSetting": true,
+        "increment": 5,
+        "threshold": [
+          0,
+          10000
+        ],
+        "value": 220,
+        "category": "song_settings"
+      },
+      "pitch": {
+        "name": "composer_base_pitch",
+        "tooltip": "composer_base_pitch_description",
+        "type": "select",
+        "songSetting": true,
+        "value": "C",
+        "category": "song_settings",
+        "options": [
+          "C",
+          "Db",
+          "D",
+          "Eb",
+          "E",
+          "F",
+          "Gb",
+          "G",
+          "Ab",
+          "A",
+          "Bb",
+          "B"
+        ]
+      },
+      "beatMarks": {
+        "name": "composer_beat_marks",
+        "tooltip": "composer_beat_marks_description",
+        "type": "select",
+        "songSetting": false,
+        "value": 3,
+        "category": "composer_settings",
+        "options": [
+          3,
+          4
+        ]
+      },
+      "noteNameType": {
+        "name": "composer_note_name_type",
+        "tooltip": "composer_note_name_type_description",
+        "type": "select",
+        "songSetting": false,
+        "category": "composer_settings",
+        "value": "Keyboard layout",
+        "options": [
+          "Note name",
+          "Keyboard layout",
+          "Your Keyboard layout",
+          "Do Re Mi",
+          "ABC",
+          "No Text",
+          "1 2 3"
+        ]
+      },
+      "columnsPerCanvas": {
+        "name": "composer_columns_per_canvas",
+        "tooltip": "composer_columns_per_canvas_description",
+        "type": "select",
+        "songSetting": false,
+        "category": "composer_settings",
+        "value": 35,
+        "options": [
+          20,
+          25,
+          30,
+          35,
+          40,
+          45,
+          50
+        ]
+      },
+      "reverb": {
+        "name": "composer_reverb",
+        "tooltip": "composer_reverb_description",
+        "category": "song_settings",
+        "type": "checkbox",
+        "songSetting": true,
+        "value": false
+      },
+      "autosave": {
+        "name": "composer_autosave",
+        "tooltip": "composer_autosave_description",
+        "type": "checkbox",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": false
+      },
+      "useKeyboardSideButtons": {
+        "name": "composer_use_keyboard_side_buttons",
+        "tooltip": "composer_use_keyboard_side_buttons_description",
+        "type": "checkbox",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": false
+      },
+      "syncTabs": {
+        "name": "composer_sync_tabs",
+        "tooltip": "composer_sync_tabs_description",
+        "type": "checkbox",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": false
+      },
+      "lookaheadTime": {
+        "name": "composer_lookahead_time",
+        "tooltip": "composer_lookahead_time_description",
+        "type": "number",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": 250,
+        "increment": 50,
+        "threshold": [
+          0,
+          500
+        ]
+      }
+    }
+  },
+  "player": {
+    "other": {
+      "settingVersion": "Genshin81"
+    },
+    "data": {
+      "instrument": {
+        "name": "player_instrument",
+        "tooltip": "player_instrument_description",
+        "type": "instrument",
+        "songSetting": true,
+        "value": "Lyre",
+        "volume": 100,
+        "options": [
+          "Lyre",
+          "Vintage-Lyre",
+          "Zither",
+          "Old-Zither",
+          "Ukulele",
+          "LingeringEuphonia",
+          "LeapingSpiritPiano",
+          "HarmonicKey",
+          "DunDun",
+          "DjemDjemDrum"
+        ],
+        "category": "song_settings"
+      },
+      "pitch": {
+        "name": "player_pitch",
+        "tooltip": "player_pitch_description",
+        "type": "select",
+        "songSetting": true,
+        "value": "C",
+        "category": "song_settings",
+        "options": [
+          "C",
+          "Db",
+          "D",
+          "Eb",
+          "E",
+          "F",
+          "Gb",
+          "G",
+          "Ab",
+          "A",
+          "Bb",
+          "B"
+        ]
+      },
+      "bpm": {
+        "name": "player_bpm",
+        "tooltip": "player_bpm_description",
+        "type": "number",
+        "songSetting": true,
+        "increment": 5,
+        "threshold": [
+          0,
+          10000
+        ],
+        "value": 220,
+        "category": "song_settings"
+      },
+      "syncSongData": {
+        "name": "player_sync_song_data",
+        "tooltip": "player_sync_song_data_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "value": true,
+        "category": "player_settings"
+      },
+      "metronomeBeats": {
+        "name": "player_metronome_beats",
+        "tooltip": "player_metronome_beats_description",
+        "type": "number",
+        "songSetting": false,
+        "increment": 1,
+        "value": 4,
+        "threshold": [
+          0,
+          16
+        ],
+        "category": "player_settings"
+      },
+      "metronomeVolume": {
+        "name": "player_metronome_volume",
+        "tooltip": "player_metronome_volume_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 50,
+        "category": "player_settings",
+        "threshold": [
+          0,
+          120
+        ]
+      },
+      "reverb": {
+        "name": "player_reverb",
+        "tooltip": "player_reverb_description",
+        "type": "checkbox",
+        "songSetting": true,
+        "value": false,
+        "category": "song_settings"
+      },
+      "noteNameType": {
+        "name": "player_note_name_type",
+        "tooltip": "player_note_name_type_description",
+        "type": "select",
+        "songSetting": false,
+        "category": "player_settings",
+        "value": "Keyboard layout",
+        "options": [
+          "Note name",
+          "Keyboard layout",
+          "Your Keyboard layout",
+          "Do Re Mi",
+          "ABC",
+          "No Text",
+          "1 2 3"
+        ]
+      },
+      "keyboardSize": {
+        "name": "player_keyboard_size",
+        "tooltip": "player_keyboard_size_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 100,
+        "category": "player_settings",
+        "threshold": [
+          80,
+          150
+        ]
+      },
+      "keyboardYPosition": {
+        "name": "player_keyboard_y_position",
+        "tooltip": "player_keyboard_y_position_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": -20,
+        "category": "player_settings",
+        "threshold": [
+          -60,
+          180
+        ]
+      },
+      "noteAnimation": {
+        "name": "player_note_animation",
+        "tooltip": "player_note_animation_description",
+        "type": "checkbox",
+        "category": "player_settings",
+        "songSetting": false,
+        "value": false
+      },
+      "showVisualSheet": {
+        "name": "player_show_visual_sheet",
+        "tooltip": "player_show_visual_sheet_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "value": true,
+        "category": "player_practice_settings"
+      },
+      "approachSpeed": {
+        "name": "player_approach_speed",
+        "tooltip": "player_approach_speed_description",
+        "type": "number",
+        "increment": 50,
+        "songSetting": false,
+        "value": 1500,
+        "category": "player_practice_settings",
+        "threshold": [
+          0,
+          5000
+        ]
+      },
+      "numberOfVisualRows": {
+        "name": "player_number_of_visual_rows",
+        "tooltip": "player_number_of_visual_rows_description",
+        "type": "select",
+        "songSetting": false,
+        "value": 2,
+        "category": "player_practice_settings",
+        "options": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "numberOfVisualColumns": {
+        "name": "player_number_of_visual_columns",
+        "tooltip": "player_number_of_visual_columns_description",
+        "type": "select",
+        "songSetting": false,
+        "value": 5,
+        "category": "player_practice_settings",
+        "options": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "loopPractice": {
+        "name": "player_loop_practice",
+        "tooltip": "player_loop_practice_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "value": false,
+        "category": "player_practice_settings"
+      },
+      "hidePracticeMode": {
+        "name": "player_hide_practice_notes",
+        "tooltip": "player_hide_practice_notes_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "value": false,
+        "category": "player_practice_settings"
+      }
+    }
+  },
+  "midi": {
+    "settingVersion": "Genshin7",
+    "enabled": false,
+    "selectedPreset": "default",
+    "presets": {},
+    "shortcuts": [
+      {
+        "type": "toggle_play",
+        "midi": -1,
+        "status": "wrong"
+      },
+      {
+        "type": "next_column",
+        "midi": -1,
+        "status": "wrong"
+      },
+      {
+        "type": "previous_column",
+        "midi": -1,
+        "status": "wrong"
+      },
+      {
+        "type": "add_column",
+        "midi": -1,
+        "status": "wrong"
+      },
+      {
+        "type": "remove_column",
+        "midi": -1,
+        "status": "wrong"
+      },
+      {
+        "type": "change_layer",
+        "midi": -1,
+        "status": "wrong"
+      }
+    ]
+  },
+  "theme": {
+    "editable": false,
+    "id": null,
+    "type": "theme",
+    "other": {
+      "backgroundImageMain": "",
+      "backgroundImageComposer": "",
+      "name": "Default"
+    },
+    "data": {
+      "background": {
+        "name": "background",
+        "css": "background",
+        "value": "#394248",
+        "text": "#eae8e6"
+      },
+      "primary": {
+        "name": "primary",
+        "css": "primary",
+        "value": "#495466",
+        "text": "#eae8e6"
+      },
+      "secondary": {
+        "name": "secondary",
+        "css": "secondary",
+        "value": "#8c7063",
+        "text": "#eae8e6"
+      },
+      "accent": {
+        "name": "accent",
+        "css": "accent",
+        "value": "#63aea7",
+        "text": "#151414"
+      },
+      "composer_accent": {
+        "name": "composer_accent",
+        "css": "composer-accent",
+        "value": "#2A8C84",
+        "text": "#151414"
+      },
+      "icon_color": {
+        "name": "icon_color",
+        "css": "icon-color",
+        "value": "#d3bd8e",
+        "text": "#151414"
+      },
+      "menu_background": {
+        "name": "menu_background",
+        "css": "menu-background",
+        "value": "rgba(237, 229, 216, 0.95)",
+        "text": "#151414"
+      },
+      "note_background": {
+        "name": "note_background",
+        "css": "note-background",
+        "value": "#fff9ef",
+        "text": "#aaaa82"
+      },
+      "composer_main_layer": {
+        "name": "composer_main_layer",
+        "css": "composer-main-layer",
+        "value": "#d3bd8e",
+        "text": "#151414"
+      },
+      "composer_secondary_layer": {
+        "name": "composer_secondary_layer",
+        "css": "composer-secondary-layer",
+        "value": "#de6b45",
+        "text": "#151414"
+      }
+    }
+  },
+  "vsrgComposer": {
+    "other": {
+      "settingVersion": "Genshin16"
+    },
+    "data": {
+      "keys": {
+        "name": "vsrg_composer_keys",
+        "tooltip": "vsrg_composer_keys_description",
+        "type": "select",
+        "songSetting": true,
+        "value": 6,
+        "category": "song_settings",
+        "options": [
+          4,
+          6
+        ]
+      },
+      "bpm": {
+        "name": "vsrg_composer_bpm",
+        "tooltip": "vsrg_composer_bpm_description",
+        "type": "number",
+        "songSetting": true,
+        "increment": 5,
+        "threshold": [
+          0,
+          10000
+        ],
+        "value": 220,
+        "category": "song_settings"
+      },
+      "pitch": {
+        "name": "vsrg_composer_pitch",
+        "tooltip": "vsrg_composer_pitch_description",
+        "type": "select",
+        "songSetting": true,
+        "value": "C",
+        "category": "song_settings",
+        "options": [
+          "C",
+          "Db",
+          "D",
+          "Eb",
+          "E",
+          "F",
+          "Gb",
+          "G",
+          "Ab",
+          "A",
+          "Bb",
+          "B"
+        ]
+      },
+      "isVertical": {
+        "name": "vsrg_composer_is_vertical",
+        "tooltip": "vsrg_composer_is_vertical_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "value": false,
+        "category": "editor_settings"
+      },
+      "maxFps": {
+        "name": "vsrg_composer_max_fps",
+        "tooltip": "vsrg_composer_max_fps_description",
+        "type": "select",
+        "songSetting": false,
+        "value": 48,
+        "category": "editor_settings",
+        "options": [
+          24,
+          30,
+          48,
+          60,
+          90,
+          120
+        ]
+      },
+      "scrollSnap": {
+        "name": "vsrg_scroll_snap",
+        "tooltip": "vsrg_scroll_snap_description",
+        "type": "checkbox",
+        "category": "editor_settings",
+        "songSetting": false,
+        "value": false
+      },
+      "autosave": {
+        "name": "vsrg_composer_autosave",
+        "tooltip": "vsrg_composer_autosave_description",
+        "type": "checkbox",
+        "category": "editor_settings",
+        "songSetting": false,
+        "value": false
+      },
+      "difficulty": {
+        "name": "vsrg_composer_difficulty",
+        "tooltip": "vsrg_composer_difficulty_description",
+        "type": "select",
+        "songSetting": true,
+        "value": 5,
+        "category": "song_settings",
+        "options": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      }
+    }
+  },
+  "vsrgPlayer": {
+    "other": {
+      "settingVersion": "Genshin8"
+    },
+    "data": {
+      "approachTime": {
+        "name": "vsrg_player_approach_time",
+        "tooltip": "vsrg_player_approach_time_description",
+        "type": "number",
+        "songSetting": true,
+        "increment": 100,
+        "threshold": [
+          1,
+          5000
+        ],
+        "value": 2000,
+        "category": "player_settings"
+      },
+      "maxFps": {
+        "name": "vsrg_player_max_fps",
+        "tooltip": "vsrg_player_max_fps_description",
+        "type": "select",
+        "songSetting": false,
+        "value": 48,
+        "category": "player_settings",
+        "options": [
+          24,
+          30,
+          48,
+          60,
+          90,
+          120
+        ]
+      },
+      "keyboardLayout": {
+        "name": "vsrg_player_keyboard_layout",
+        "tooltip": "vsrg_player_keyboard_layout_description",
+        "type": "select",
+        "songSetting": true,
+        "value": "line",
+        "category": "player_settings",
+        "options": [
+          "circles",
+          "line"
+        ]
+      },
+      "offset": {
+        "name": "vsrg_player_offset",
+        "tooltip": "vsrg_player_offset_description",
+        "type": "number",
+        "songSetting": true,
+        "increment": 2,
+        "threshold": [
+          -1000,
+          1000
+        ],
+        "value": 0,
+        "category": "player_settings"
+      },
+      "verticalOffset": {
+        "name": "vsrg_player_vertical_offset",
+        "tooltip": "vsrg_player_vertical_offset_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 0,
+        "category": "layout_settings",
+        "threshold": [
+          -40,
+          40
+        ]
+      },
+      "horizontalOffset": {
+        "name": "vsrg_player_horizontal_offset",
+        "tooltip": "vsrg_player_horizontal_offset_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 0,
+        "category": "layout_settings",
+        "threshold": [
+          -40,
+          40
+        ]
+      }
+    }
+  },
+  "zenKeyboard": {
+    "other": {
+      "settingVersion": "Genshin26"
+    },
+    "data": {
+      "instrument": {
+        "name": "zen_instrument",
+        "tooltip": "zen_instrument_description",
+        "type": "instrument",
+        "songSetting": false,
+        "value": "Lyre",
+        "volume": 100,
+        "options": [
+          "Lyre",
+          "Vintage-Lyre",
+          "Zither",
+          "Old-Zither",
+          "Ukulele",
+          "LingeringEuphonia",
+          "LeapingSpiritPiano",
+          "HarmonicKey",
+          "DunDun",
+          "DjemDjemDrum"
+        ],
+        "category": "keyboard"
+      },
+      "pitch": {
+        "name": "zen_pitch",
+        "tooltip": "zen_pitch_description",
+        "type": "select",
+        "songSetting": false,
+        "value": "C",
+        "category": "keyboard",
+        "options": [
+          "C",
+          "Db",
+          "D",
+          "Eb",
+          "E",
+          "F",
+          "Gb",
+          "G",
+          "Ab",
+          "A",
+          "Bb",
+          "B"
+        ]
+      },
+      "metronomeBeats": {
+        "name": "zen_metronome_beats",
+        "tooltip": "zen_metronome_beats_description",
+        "type": "number",
+        "songSetting": false,
+        "increment": 1,
+        "value": 4,
+        "threshold": [
+          0,
+          16
+        ],
+        "category": "metronome"
+      },
+      "metronomeVolume": {
+        "name": "zen_metronome_volume",
+        "tooltip": "zen_metronome_volume_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 50,
+        "category": "metronome",
+        "threshold": [
+          0,
+          120
+        ]
+      },
+      "metronomeBpm": {
+        "name": "zen_metronome_bpm",
+        "tooltip": "zen_metronome_bpm_description",
+        "type": "number",
+        "songSetting": false,
+        "value": 200,
+        "increment": 5,
+        "category": "metronome",
+        "threshold": [
+          0,
+          10000
+        ]
+      },
+      "reverb": {
+        "name": "zen_reverb",
+        "tooltip": "zen_reverb_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "value": false,
+        "category": "keyboard"
+      },
+      "noteNameType": {
+        "name": "zen_note_name_type",
+        "tooltip": "zen_note_name_type_description",
+        "type": "select",
+        "songSetting": false,
+        "category": "keyboard",
+        "value": "Keyboard layout",
+        "options": [
+          "Note name",
+          "Keyboard layout",
+          "Your Keyboard layout",
+          "Do Re Mi",
+          "ABC",
+          "No Text",
+          "1 2 3"
+        ]
+      },
+      "keyboardSize": {
+        "name": "zen_keyboard_size",
+        "tooltip": "zen_keyboard_size_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 100,
+        "category": "keyboard",
+        "threshold": [
+          70,
+          170
+        ]
+      },
+      "keyboardYPosition": {
+        "name": "zen_keyboard_y_position",
+        "tooltip": "zen_keyboard_y_position_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 0,
+        "category": "keyboard",
+        "threshold": [
+          -100,
+          100
+        ]
+      },
+      "keyboardSpacing": {
+        "name": "zen_keyboard_spacing",
+        "tooltip": "zen_keyboard_spacing_description",
+        "type": "slider",
+        "songSetting": false,
+        "value": 0.35,
+        "step": 0.01,
+        "category": "keyboard",
+        "threshold": [
+          0.15,
+          1
+        ]
+      }
+    }
+  }
+}
