@@ -59,7 +59,11 @@
     "dev-tauri:sky": "npm run tauri dev --config ./src-tauri/tauri-sky.conf.json",
     "dev-tauri:genshin": "npm run tauri dev --config ./src-tauri/tauri-genshin.conf.json",
     "dev:sky": "node ./scripts/startApp.js Sky",
-    "dev:genshin": "node ./scripts/startApp.js Genshin"
+    "dev:genshin": "node ./scripts/startApp.js Genshin",
+    "test": "npm run test:genshin && npm run test:sky",
+    "test:genshin": "cross-env NEXT_PUBLIC_APP_NAME=Genshin vitest run",
+    "test:sky": "cross-env NEXT_PUBLIC_APP_NAME=Sky vitest run",
+    "test:update-fixtures": "cross-env UPDATE_FIXTURES=true npm run test"
   },
   "browserslist": {
     "production": [
@@ -103,10 +107,14 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "fake-indexeddb": "^6.2.5",
     "fs-extra": "^11.3.5",
+    "jsdom": "^29.1.1",
     "sass": "^1.101.0",
     "serwist": "^9.5.11",
     "typescript": "^6.0.3",
-    "url-join": "^5.0.0"
+    "url-join": "^5.0.0",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.10"
   }
 }
