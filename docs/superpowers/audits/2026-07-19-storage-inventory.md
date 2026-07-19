@@ -237,7 +237,7 @@ locks one of them):
 |---|---|---|
 | `${BASE_PATH}/assets/audio/${APP_NAME.toLowerCase()}/${instrument}/${n}.mp3` | `src/lib/audio/Instrument.ts:76` | **Explicitly locked by spec §5.3**: "Audio sample URLs already namespace by game and stay unchanged — existing service-worker audio caches remain valid." |
 | `https://${APP_NAME.toLowerCase()}-music.specy.app`, `https://beta.${APP_NAME.toLowerCase()}-music.specy.app`, `https://specy.github.io/${APP_NAME.toLowerCase()}Music` | `src/app/_client-pages/transfer/index.tsx:19-21` | Cross-domain "import from another instance of this site" targets for the `/transfer` page (`WindowProtocol`, kept per spec §6.7) — external site URLs, not app routes |
-| `https://raw.githubusercontent.com/Specy/genshin-music/main/src-tauri/tauri-${APP_NAME.toLowerCase()}.update.json` | `src/lib/needsUpdate.ts:45` | Tauri auto-update manifest URL — out of scope per migration memory (Tauri unused) |
+| `https://raw.githubusercontent.com/Specy/genshin-music/main/src-tauri/tauri-${APP_NAME.toLowerCase()}.update.json` | `src/lib/needsUpdate.ts:45` | Tauri auto-update manifest URL — commented-out dead code (inside a block comment spanning `needsUpdate.ts:43-51`), removed entirely with Tauri per spec §8 |
 
 ## File extensions (import/export)
 
