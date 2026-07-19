@@ -1,5 +1,5 @@
 <script lang="ts">
-	import PageStub from '$cmp/PageStub.svelte'
+    import PageStub from '$cmp/PageStub.svelte'
 </script>
 
 <PageStub title="Midi Transpose" />
