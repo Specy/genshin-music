@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - All work lands on new branch `migration/sveltekit`, forked from `migration/next16-react19` AFTER this plan is committed there. Nothing merges to `main`.
-- `test/` is ground truth: fixtures are NEVER modified or regenerated in this phase. The only permitted `test/` edits are the two named in Task 5 (README paragraph, nothing else). The suite is EXPECTED RED until Phase 2 repoints `test/imports.ts`.
+- `test/` is ground truth: fixtures are NEVER modified or regenerated in this phase. The only permitted `test/` edit is the one named in Task 5 (a README paragraph, nothing else). The suite is EXPECTED RED until Phase 2 repoints `test/imports.ts`.
 - npm script names are preserved verbatim: `dev:sky`, `dev:genshin`, `build:sky`, `build:genshin`, `build:sky-no-root`, `build:genshin-no-root`, `build:all`, `build:all-no-root`, `preview`, `preview:sky`, `preview:genshin`, `test`, `test:genshin`, `test:sky`, `test:update-fixtures`.
 - Build output dirs are byte-named `build/skyMusic` and `build/genshinMusic`; root builds go to `build/`.
 - **Base-path contract (quirky, preserve exactly):** `buildApp.js <Game>` with NO third arg → base path `''` (this is what production `build:all` uses); any third arg (the scripts pass the string `"false"`) → base path `/skyMusic` | `/genshinMusic`. I.e. the `-no-root` script variants are the ones WITH a subpath prefix. Do not "fix" this.
