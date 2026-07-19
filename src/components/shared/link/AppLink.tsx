@@ -1,13 +1,10 @@
-import Link, {LinkProps} from "next/link";
-import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
+import {AppLink as NavigationAppLink, type AppLinkProps as NavigationAppLinkProps} from "$/app/_navigation/AppLink";
+import {Stylable} from "$lib/utils/UtilTypes";
 
+type AppLinkProps = Omit<NavigationAppLinkProps, 'style'> & Stylable;
 
-interface AppLinkProps extends LinkProps {
-
-}
-
-export function AppLink({href, children, style, ...props}: MaybeChildren<LinkProps & Stylable>) {
-    return <Link
+export function AppLink({href, children, style, ...props}: AppLinkProps) {
+    return <NavigationAppLink
         href={href}
         style={{
             display: "inline-block",
@@ -18,5 +15,5 @@ export function AppLink({href, children, style, ...props}: MaybeChildren<LinkPro
         {...props}
     >
         {children}
-    </Link>
+    </NavigationAppLink>
 }
