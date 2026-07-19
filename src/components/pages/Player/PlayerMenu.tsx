@@ -31,7 +31,7 @@ import {homeStore} from '$stores/HomeStore';
 import {logger} from '$stores/LoggerStore';
 import {AppButton} from '$cmp/shared/Inputs/AppButton';
 import {SongMenu} from '$cmp/shared/pagesLayout/SongMenu';
-import Link from 'next/link'
+import {AppLink} from '$/app/_navigation/AppLink'
 import {RecordedSong, SerializedRecordedSong} from '$lib/Songs/RecordedSong';
 import {ComposedSong, UnknownSerializedComposedSong} from '$lib/Songs/ComposedSong';
 import {SettingUpdate, SettingVolumeUpdate} from '$types/SettingsPropriety';
@@ -62,7 +62,7 @@ import {useConfig} from '$lib/Hooks/useConfig';
 import {createShortcutListener} from '$stores/KeybindsStore';
 import sh from '$cmp/pages/Index/HelpTab/HelpTab.module.css'
 import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
-import {useRouter} from 'next/router';
+import {useAppNavigation} from "$/app/_navigation/NavigationProvider";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {useTranslation} from "react-i18next";
 import {Separator} from "$cmp/shared/separator/Separator";
@@ -87,7 +87,7 @@ const excludedSongs: SongType[] = ['vsrg']
 
 function Menu({functions, data, inPreview}: MenuProps) {
     const {t} = useTranslation(['player', 'question', 'confirm', 'settings', 'menu', 'common', 'logs', 'tutorials'])
-    const router = useRouter()
+    const navigation = useAppNavigation()
     const [songs] = useSongs()
     const [isOpen, setOpen] = useState(false)
     const [selectedMenu, setSelectedMenu] = useState<MenuTabs>('Songs')
@@ -182,12 +182,12 @@ function Menu({functions, data, inPreview}: MenuProps) {
         if (isAudioFormat(fileName) || isVideoFormat(fileName) || isMidiFormat(fileName)) {
             const confirm = await asyncConfirm(t('midi_or_audio_import_redirect_warning'))
             if (confirm) {
-                router.push('/composer?showMidi=true')
+                void navigation.push('/composer?showMidi=true')
             }
         }else{
             logger.error(t('logs:error_importing_invalid_format'), 8000)
         }
-    }, [router, t])
+    }, [navigation, t])
     const JSONImportError = useCallback(async (error?: any, files?: File[]) => {
         if (error) console.error(error)
         if (files) {
@@ -281,11 +281,11 @@ function Menu({functions, data, inPreview}: MenuProps) {
                             }
                         </ul>
                     </HelpTooltip>
-                    <Link href='/composer' style={{marginLeft: 'auto'}}>
+                    <AppLink href='/composer' style={{marginLeft: 'auto'}}>
                         <AppButton>
                             {t('menu:compose_song')}
                         </AppButton>
-                    </Link>
+                    </AppLink>
                     <FilePicker<SerializedSong | SerializedSong[]>
                         onPick={importSong}
                         onError={JSONImportError}
@@ -339,17 +339,17 @@ function Menu({functions, data, inPreview}: MenuProps) {
                 </div>
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <Link href='/keybinds'>
+                        <AppLink href='/keybinds'>
                             <AppButton style={{width: 'fit-content'}}>
                                 {t('menu:connect_midi_keyboard')}
                             </AppButton>
-                        </Link>
+                        </AppLink>
                     }
-                    <Link href='/theme'>
+                    <AppLink href='/theme'>
                         <AppButton style={{width: 'fit-content'}}>
                             {t('menu:change_app_theme')}
                         </AppButton>
-                    </Link>
+                    </AppLink>
                 </div>
                 <div style={{marginTop: '0.4rem', marginBottom: '0.6rem'}} className={hasTooltip(true)}>
                     {isPersistentStorage ? t('settings:memory_persisted') : t('settings:memory_not_persisted')}
@@ -559,13 +559,8 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                         )}
                     </select>
                 </FloatingDropdownRow>
-                <Link
-                    href={{
-                        pathname: "/composer",
-                        query: {
-                            songId: data.id,
-                        }
-                    }}
+                <AppLink
+                    href={'/composer?songId=' + encodeURIComponent(data.id ?? '')}
                     style={{width: '100%'}}
                 >
                     <FloatingDropdownRow
@@ -577,7 +572,7 @@ function SongRow({data, functions, theme, folders}: SongRowProps) {
                         <FaEdit style={{marginRight: "0.4rem"}} size={14}/>
                         <FloatingDropdownText text={t('common:edit_song')}/>
                     </FloatingDropdownRow>
-                </Link>
+                </AppLink>
                 <FloatingDropdownRow onClick={async () => {
                     const song = await songService.fromStorableSong(data) as RecordedOrComposed
                     downloadSong(song)

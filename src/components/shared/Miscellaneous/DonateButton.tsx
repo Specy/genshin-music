@@ -1,5 +1,5 @@
 import {isTWA} from '$lib/utils/Utilities'
-import Link from 'next/link'
+import {AppLink} from '$/app/_navigation/AppLink'
 import {useEffect, useState} from 'react'
 import {useTranslation} from "react-i18next";
 import s from './donateButton.module.scss'
@@ -12,7 +12,7 @@ export default function DonateButton({style}: { style?: React.CSSProperties }) {
     }, [])
 
 
-    return !isTwa ? <Link className={s['donate-button']} href='/donate' style={style}>
+    return !isTwa ? <AppLink className={s['donate-button']} href='/donate' style={style}>
          <DonateIcon
             style={{
                 fontSize: "1.5rem",
@@ -20,5 +20,5 @@ export default function DonateButton({style}: { style?: React.CSSProperties }) {
             }}
          />
        {t('donate')}
-    </Link> : <></>
+    </AppLink> : <></>
 }

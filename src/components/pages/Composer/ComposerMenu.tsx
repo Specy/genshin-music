@@ -48,7 +48,7 @@ import {RecordedSong} from '$lib/Songs/RecordedSong';
 import {RecordedOrComposed} from '$types/SongTypes';
 import {FileElement, FilePicker} from '$cmp/shared/Inputs/FilePicker';
 import isMobile from 'is-mobile';
-import Link from 'next/link';
+import {AppLink} from '$/app/_navigation/AppLink';
 import {useConfig} from '$lib/Hooks/useConfig';
 import {isAudioFormat, isMidiFormat, isVideoFormat} from '$lib/utils/Utilities';
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
@@ -288,22 +288,22 @@ function Menu({data, functions, inPreview}: MenuProps) {
                 </div>
                 <div className='settings-row-wrap'>
                     {IS_MIDI_AVAILABLE &&
-                        <Link href="/keybinds">
+                        <AppLink href="/keybinds">
                             <AppButton
                                 style={{width: 'fit-content'}}
                             >
                                 {t('menu:connect_midi_keyboard')}
                             </AppButton>
-                        </Link>
+                        </AppLink>
                     }
-                    <Link href="/theme" onClick={(e) => e.preventDefault()}>
+                    <AppLink href="/theme" onClick={(e) => e.preventDefault()}>
                         <AppButton
                             onClick={() => changePage('theme')}
                             style={{width: 'fit-content'}}
                         >
                             {t('menu:change_app_theme')}
                         </AppButton>
-                    </Link>
+                    </AppLink>
 
                 </div>
                 <DonateButton/>

@@ -10,7 +10,7 @@ import {SerializedSong, SongStorable} from '$lib/Songs/Song'
 import useClickOutside from '$lib/Hooks/useClickOutside'
 import {songService} from '$lib/Services/SongService'
 import {logger} from '$stores/LoggerStore'
-import {useRouter} from 'next/router'
+import {useAppNavigation} from "$/app/_navigation/NavigationProvider";
 import {MenuContextProvider, MenuSidebar} from "$cmp/shared/Menu/MenuContent";
 import {Stylable} from "$lib/utils/UtilTypes";
 import {useTranslation} from "react-i18next";
@@ -22,7 +22,7 @@ interface SheetVisualiserMenuProps extends Stylable{
 export function SheetVisualiserMenu({currentSong, onSongLoaded, className, style}: SheetVisualiserMenuProps) {
     const { t} = useTranslation('menu')
     const [songs] = useSongs()
-    const history = useRouter()
+    const navigation = useAppNavigation()
     const [selectedPage, setSelectedPage] = useState("")
     const [open, setOpen] = useState(false)
     const menuRef = useClickOutside<HTMLDivElement>(() => {
@@ -43,7 +43,7 @@ export function SheetVisualiserMenu({currentSong, onSongLoaded, className, style
                     ariaLabel={t('go_back')}
                     style={{marginBottom: 'auto'}}
                     onClick={() => {
-                        history.back()
+                        void navigation.back()
                     }}
                 >
                     <FaArrowLeft className='icon'/>

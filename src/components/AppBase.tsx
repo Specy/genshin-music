@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import Analytics from '$lib/Analytics';
 import Home from '$cmp/pages/Index/Home';
 import {homeStore} from '$stores/HomeStore';
@@ -11,14 +11,13 @@ import {FaExpandAlt} from 'react-icons/fa';
 import {checkIfneedsUpdate} from '$lib/needsUpdate';
 import {settingsService} from '$lib/Services/SettingsService';
 import {linkServices} from '$lib/Services/globalServices';
-import {useRouter} from 'next/router';
 import Image from 'next/image';
 import isMobile from 'is-mobile';
 import {asyncConfirm} from '$cmp/shared/Utility/AsyncPrompts';
 import {fileService} from '$lib/Services/FileService';
 import {useTranslation} from "react-i18next";
 import {AppLanguage, AVAILABLE_LANGUAGES, setI18nLanguage} from "$i18n/i18n";
-import {usePathname} from "next/navigation";
+import {usePathname, useSearchParams} from "next/navigation";
 
 
 function AppBase() {
@@ -26,8 +25,12 @@ function AppBase() {
     const [hasVisited, setHasVisited] = useState(false)
     const [checkedUpdate, setCheckedUpdate] = useState(false)
     const [isOnMobile, setIsOnMobile] = useState(false)
-    const router = useRouter()
-    const path = usePathname()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const path = pathname ?? '/'
+    const query = searchParams.toString()
+    const pagePath = query.length > 0 ? path + '?' + query : path
+    const hasTrackedInitialPage = useRef(false)
     useEffect(() => {
         function handleBlur() {
             const active = document.activeElement
@@ -158,16 +161,15 @@ function AppBase() {
     }, [checkedUpdate])
     useEffect(() => {
         Analytics.UIEvent('version', {version: APP_VERSION})
+    }, [])
+
+    useEffect(() => {
         Analytics.pageView({
-            page_title: router.pathname
+            page_title: pagePath
         })
-        return router.events.on("beforeHistoryChange", (path: any) => {
-            Analytics.pageView({
-                page_title: path.pathName as string
-            })
-            browserHistoryStore.addPage(path.pathName)
-        })
-    }, [router])
+        if (hasTrackedInitialPage.current) browserHistoryStore.addPage(pagePath)
+        hasTrackedInitialPage.current = true
+    }, [pagePath])
 
     //disable the screen rotate for the blog
     const inBlog = path.startsWith("/blog")

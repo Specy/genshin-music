@@ -1,6 +1,6 @@
-import {routeChangeBugFix} from "$lib/utils/Utilities";
-import {NextRouter, useRouter} from "next/router";
-import {Component, ReactElement} from "react";
+import {useAppNavigation} from "$/app/_navigation/NavigationProvider";
+import type {AppNavigation} from "$/app/_navigation/types";
+import {Component, type ErrorInfo, type ReactElement} from "react";
 
 
 type ErrorBoundaryRedirectProps = {
@@ -8,27 +8,28 @@ type ErrorBoundaryRedirectProps = {
     onError: () => void
     children: ReactElement
 }
-type ErrorBoundaryRedirectPropsWithRouter = ErrorBoundaryRedirectProps & {
-    router: NextRouter
+type ErrorBoundaryRedirectPropsWithNavigation = ErrorBoundaryRedirectProps & {
+    pushWithoutGuard: AppNavigation['pushWithoutGuard']
 }
 type ErrorBoundaryRedirectState = {
     hasError: boolean
 }
 
-class ErrorBoundaryRedirect extends Component<ErrorBoundaryRedirectPropsWithRouter, ErrorBoundaryRedirectState> {
+class ErrorBoundaryRedirect extends Component<ErrorBoundaryRedirectPropsWithNavigation, ErrorBoundaryRedirectState> {
 
-    constructor(props: ErrorBoundaryRedirectPropsWithRouter) {
-        super(props);
+    constructor(props: ErrorBoundaryRedirectPropsWithNavigation) {
+        super(props)
         this.state = {hasError: false};
     }
 
-    componentDidCatch(error: any, info: any) {
+    componentDidCatch(error: Error, info: ErrorInfo) {
         console.error(error, info);
+        this.props.onError()
         if (window.location.hostname === "localhost") return console.error("Prevent localhost redirect")
-        this.props.router.push(routeChangeBugFix(this.props.onErrorGoTo));
+        this.props.pushWithoutGuard(this.props.onErrorGoTo)
     }
 
-    static getDerivedStateFromError(error: any) {
+    static getDerivedStateFromError(): ErrorBoundaryRedirectState {
         return {hasError: true};
     }
 
@@ -37,8 +38,8 @@ class ErrorBoundaryRedirect extends Component<ErrorBoundaryRedirectPropsWithRout
     }
 }
 
-export default function ErrorBoundaryRedirectWithRouter(props: ErrorBoundaryRedirectProps) {
-    const router = useRouter()
-    return <ErrorBoundaryRedirect {...props} router={router}/>
+export default function ErrorBoundaryRedirectWithNavigation(props: ErrorBoundaryRedirectProps) {
+    const {pushWithoutGuard} = useAppNavigation()
+    return <ErrorBoundaryRedirect {...props} pushWithoutGuard={pushWithoutGuard}/>
 }
 

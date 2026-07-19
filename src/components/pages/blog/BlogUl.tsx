@@ -1,6 +1,6 @@
 import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 import s from './blog.module.scss'
-import Link from "next/link";
+import {AppLink} from "$/app/_navigation/AppLink";
 
 export function BlogUl({children, ...rest}: MaybeChildren<Stylable>) {
     return <ul {...rest}>
@@ -50,12 +50,12 @@ export function BlogIframe({src, ...rest}: { src: string } & Stylable) {
 }
 
 export function BlogLink({href, children, external,  ...rest}: { href: string, external?: boolean } & MaybeChildren<Stylable>) {
-    return <Link
+    return <AppLink
         {...rest}
         href={href}
         target={external ? "_blank" : undefined}
         className={s['blog-link']}
     >
         {children}
-    </Link>
+    </AppLink>
 }

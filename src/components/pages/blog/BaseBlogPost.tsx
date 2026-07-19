@@ -4,7 +4,7 @@ import {MaybeChildren, Stylable} from "$lib/utils/UtilTypes";
 import s from './blog.module.scss'
 import {Header} from "$cmp/shared/header/Header";
 import {PageMetadata} from "$cmp/shared/Miscellaneous/PageMetadata";
-import Link from "next/link";
+import {AppLink} from "$/app/_navigation/AppLink";
 import {useEffect, useMemo, useState} from "react";
 import {APP_NAME, BASE_PATH} from "$config";
 import {Row} from "$cmp/shared/layout/Row";
@@ -52,15 +52,15 @@ export function BaseBlogPost({metadata, children, cropped = true}: MaybeChildren
             <meta name={'keywords'} content={metadata.tags.join(', ')}/>
         </PageMetadata>
         <BlogNavbar style={closeMenu ? {padding: '1rem 1.5rem'} : undefined}>
-            <Link href={'/blog'}>
+            <AppLink href={'/blog'}>
                 Posts
-            </Link>
-            <Link href={'/'}>
+            </AppLink>
+            <AppLink href={'/'}>
                 Player
-            </Link>
-            <Link href={'/composer'}>
+            </AppLink>
+            <AppLink href={'/composer'}>
                 Composer
-            </Link>
+            </AppLink>
         </BlogNavbar>
         <div className={`${s["blog-header"]}`}>
             <img
