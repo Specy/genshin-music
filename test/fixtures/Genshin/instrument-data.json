@@ -1,0 +1,46 @@
+{
+  "defaults": {
+    "name": "Lyre",
+    "volume": 90,
+    "pitch": "",
+    "visible": true,
+    "icon": "circle",
+    "alias": "",
+    "muted": false,
+    "reverbOverride": null
+  },
+  "custom": {
+    "name": "Lyre",
+    "volume": 55,
+    "pitch": "F",
+    "visible": false,
+    "icon": "line",
+    "alias": "my alias",
+    "muted": true,
+    "reverbOverride": true
+  },
+  "roundtrip": {
+    "name": "Lyre",
+    "volume": 55,
+    "pitch": "F",
+    "visible": false,
+    "icon": "line",
+    "alias": "my alias",
+    "muted": true,
+    "reverbOverride": true
+  },
+  "fromEmpty": {
+    "name": "Lyre",
+    "volume": 100,
+    "pitch": "C",
+    "visible": true,
+    "icon": "circle",
+    "alias": "",
+    "muted": false,
+    "reverbOverride": null
+  },
+  "noteIcons": [
+    2,
+    3
+  ]
+}
