@@ -124,12 +124,12 @@ externalization warning string. No `optimizeDeps.include` entry was needed for
 static `import` in `main.ts`.
 
 **Relevance to the current (webpack) build**: the main repo's `node_modules`
-today has **no** `events` package anywhere in the tree (checked
-`package-lock.json`, zero matches), so this isn't a case of an existing
-transitive dependency masking the issue on Vite's side only. This is a genuine
-default-behavior difference between bundlers for Node-builtin bare specifiers
-that Phase 1 must carry forward as an explicit dependency — this spike is what
-catches it before Phase 1's scaffold assumes zangodb "just works."
+has no `events` package (checked `package-lock.json`); under Vite, this
+triggered the browser-external stub failure. Whether webpack already works or
+needs the fix remains an **open question** — the webpack mechanism was not
+investigated (no webpack build run for comparison; webpack 5 may differ or the
+code path may not execute at module-init). Phase 1's scaffold must add
+`"events": "^3.3.0"` as an explicit dependency.
 
 ## Finding 2 (build-only, non-blocking, workaround already exists in the repo): loose `Object` typing
 
