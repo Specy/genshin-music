@@ -39,3 +39,15 @@ export type OldNote = {
 // None of the three old core files this task actually checked (ComposedSong.ts, RecordedSong.ts,
 // BaseSettings.ts) import SerializedSongKind itself - port it in Task 7 once those song-model
 // files (and their Serialized* types) exist.
+
+// ---- hoisted for BaseSettings.ts (Task 6) ----
+
+// old $lib/Songs/VsrgSong.ts: `export type VsrgSongKeys = 4 | 6`. VsrgSong.ts itself isn't ported
+// until Task 7, but BaseSettings.ts (Task 6) needs the type now - hoisted here as the single
+// source; Task 7's VsrgSong.ts re-imports it from here instead of redefining it.
+export type VsrgSongKeys = 4 | 6
+
+// old src/components/pages/VsrgPlayer/VsrgPlayerKeyboard.tsx: `export type VsrgKeyboardLayout =
+// 'line' | 'circles'`. That component isn't ported until the UI phase; BaseSettings.ts (Task 6)
+// needs the type now for VsrgPlayerSettingsDataType - hoisted here, verbatim value union.
+export type VsrgKeyboardLayout = 'line' | 'circles'
