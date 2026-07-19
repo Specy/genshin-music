@@ -1,0 +1,38 @@
+[
+  {
+    "composed": true,
+    "recorded": false,
+    "vsrg": false,
+    "folder": false,
+    "theme": false,
+    "oldComposed": false,
+    "oldRecorded": false
+  },
+  {
+    "composed": false,
+    "recorded": false,
+    "vsrg": false,
+    "folder": true,
+    "theme": false,
+    "oldComposed": false,
+    "oldRecorded": false
+  },
+  {
+    "composed": false,
+    "recorded": false,
+    "vsrg": false,
+    "folder": false,
+    "theme": true,
+    "oldComposed": false,
+    "oldRecorded": false
+  },
+  {
+    "composed": false,
+    "recorded": false,
+    "vsrg": false,
+    "folder": false,
+    "theme": false,
+    "oldComposed": false,
+    "oldRecorded": true
+  }
+]
