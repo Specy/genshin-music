@@ -1,11 +1,11 @@
-import { execSync } from 'child_process'
-import fse from 'fs-extra'
-import clc from "cli-color";
-import urlJoin from 'url-join'
+import clc from 'cli-color'
+import {execSync} from 'child_process'
+import {prepareGameStatic} from './gameStatic.js'
 
-const publicPath = './public'
-const skyPath = './src/appData/sky'
-const genshinPath = './src/appData/genshin'
+const GAMES = {
+    Sky: {id: 'sky'},
+    Genshin: {id: 'genshin'},
+}
 const chosenApp = process.argv[2]
 
 if (!['Genshin', 'Sky'].includes(chosenApp)) {
@@ -13,37 +13,14 @@ if (!['Genshin', 'Sky'].includes(chosenApp)) {
     process.exit(1)
 }
 
-
 async function execute() {
-    await fse.copy(chosenApp === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
-    updateManifest("")
-    if (process.platform === 'win32') {
-        console.log(clc.yellow.bold("Starting on windows"))
-        execSync(`set NEXT_PUBLIC_APP_NAME=${chosenApp}&& npm run dev`, { stdio: 'inherit' })
-    } else {
-        console.log(clc.yellow.bold("Starting on linux"))
-        execSync(`NEXT_PUBLIC_APP_NAME=${chosenApp} npm run dev`, { stdio: 'inherit' })
-    }
+    const {id} = GAMES[chosenApp]
+    await prepareGameStatic(id, '')
+    console.log(clc.yellow.bold(`Starting ${chosenApp} dev server`))
+    execSync('npm run dev', {
+        stdio: 'inherit',
+        env: {...process.env, PUBLIC_GAME: id},
+    })
 }
 
-async function updateManifest(basePath) {
-    try {
-        const manifest = await fse.readJson('./public/manifest.json')
-        if (manifest.icons) manifest.icons = manifest.icons.map(icon => ({ ...icon, src: urlJoin(basePath, icon.src) }))
-        if (manifest.start_url) manifest.start_url = basePath
-        if (manifest.screenshots) manifest.screenshots = manifest.screenshots.map(screenshot => ({ ...screenshot, src: urlJoin(basePath, screenshot.src) }))
-        if (manifest.file_handlers) {
-            manifest.file_handlers = manifest.file_handlers.map(handler => {
-                const icons = handler.icons.map(icon => ({ ...icon, src: urlJoin(basePath, icon.src) }))
-                const action = basePath || "."
-                return { ...handler, icons, action }
-            })
-        }
-        await fse.writeFile('./public/manifest.json', JSON.stringify(manifest, null, 2))
-    } catch (e) {
-        console.log(clc.red("[Error]: There was an error updating the manifest"))
-        console.error(e)
-        process.exit(1)
-    }
-}
 execute()
