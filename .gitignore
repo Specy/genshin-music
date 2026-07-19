@@ -28,3 +28,7 @@
 npm-debug.log*
 .idea
 build-stats.html
+
+# local leftovers of deleted trees (still on disk, never re-track)
+/src-tauri/
+/.claude/
