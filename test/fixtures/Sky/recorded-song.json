@@ -1,0 +1,240 @@
+{
+  "serialized": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "instruments": [
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      {
+        "name": "GrandPiano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "version": 2,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "notes": [
+      [
+        0,
+        100,
+        "1"
+      ],
+      [
+        3,
+        350,
+        "2"
+      ],
+      [
+        7,
+        350,
+        "3"
+      ],
+      [
+        14,
+        900,
+        "1"
+      ]
+    ],
+    "id": null
+  },
+  "roundtrip": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "instruments": [
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      {
+        "name": "GrandPiano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "version": 2,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "notes": [
+      [
+        0,
+        100,
+        "1"
+      ],
+      [
+        3,
+        350,
+        "2"
+      ],
+      [
+        7,
+        350,
+        "3"
+      ],
+      [
+        14,
+        900,
+        "1"
+      ]
+    ],
+    "id": null
+  },
+  "deserializedV1": {
+    "name": "Legacy v1",
+    "type": "recorded",
+    "folderId": null,
+    "instruments": [
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "version": 2,
+    "pitch": "C",
+    "bpm": 220,
+    "reverb": false,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "notes": [
+      [
+        0,
+        100,
+        "1"
+      ],
+      [
+        5,
+        400,
+        "1"
+      ]
+    ],
+    "id": null
+  },
+  "oldFormatExport": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "instruments": [
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      {
+        "name": "GrandPiano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "version": 2,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "notes": [
+      [
+        0,
+        100,
+        "1"
+      ],
+      [
+        3,
+        350,
+        "2"
+      ],
+      [
+        7,
+        350,
+        "3"
+      ],
+      [
+        14,
+        900,
+        "1"
+      ]
+    ],
+    "id": null,
+    "isComposed": false,
+    "pitchLevel": 2,
+    "bitsPerPage": 16,
+    "isEncrypted": false,
+    "songNotes": [
+      {
+        "time": 100,
+        "key": "1Key0"
+      },
+      {
+        "time": 350,
+        "key": "1Key3"
+      },
+      {
+        "time": 350,
+        "key": "1Key7"
+      },
+      {
+        "time": 900,
+        "key": "1Key14"
+      }
+    ]
+  }
+}
