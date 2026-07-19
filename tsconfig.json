@@ -33,7 +33,7 @@
         "lib/*"
       ],
       "$pages/*": [
-        "pages/*"
+        "app/_client-pages/*"
       ],
       "$stores/*": [
         "stores/*"
@@ -67,8 +67,7 @@
     "**/*.js",
     "**/*.jsx",
     "src",
-    "build/types/**/*.ts",
-    ".next/types/**/*.ts"
+    "build/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

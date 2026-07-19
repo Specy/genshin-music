@@ -1,4 +1,3 @@
-import Head from "next/head";
 import {MaybeChildren} from "$lib/utils/UtilTypes";
 
 
@@ -9,7 +8,7 @@ interface PageMetadataProps {
 }
 
 export function PageMetadata({text, description, image, children}: MaybeChildren<PageMetadataProps>) {
-    return <Head>
+    return <>
         <title>{text}</title>
         {description && <>
             <meta name="description" content={description}/>
@@ -20,5 +19,5 @@ export function PageMetadata({text, description, image, children}: MaybeChildren
             <meta property="og:image" content={image}/>
         </>}
         {children}
-    </Head>
+    </>
 }

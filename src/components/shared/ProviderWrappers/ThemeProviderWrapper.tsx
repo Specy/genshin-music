@@ -2,7 +2,6 @@ import {useTheme} from '$lib/Hooks/useTheme'
 import {useEffect, useMemo, useState} from 'react';
 import {ThemeProvider} from '$stores/ThemeStore/ThemeProvider';
 import {colorToRGB} from '$lib/utils/Utilities';
-import Head from 'next/head';
 import {TEMPO_CHANGERS} from '$config';
 import Color from 'color';
 
@@ -47,9 +46,7 @@ export function ThemeProviderWrapper({children}: Props) {
 
 
     return <>
-        <Head>
-            <meta name="theme-color" content={theme.get(mounted ? "primary" : "accent").toString()}/>
-        </Head>
+        <meta name="theme-color" content={theme.get(mounted ? "primary" : "accent").toString()}/>
         <style>
             {`
                 :root{
