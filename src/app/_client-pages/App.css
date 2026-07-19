@@ -12,13 +12,13 @@
 
 @font-face {
     font-family: Bonobo;
-    src: url("../assets/font/BonoboBold.ttf");
+    src: url("../../assets/font/BonoboBold.ttf");
     font-display: swap;
 }
 
 @font-face {
     font-family: RobotoSerif;
-    src: url("../assets/font/RobotoSerif-Medium.ttf");
+    src: url("../../assets/font/RobotoSerif-Medium.ttf");
     font-display: swap;
 }
 

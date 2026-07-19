@@ -32,11 +32,12 @@ interface HomeProps {
     hasVisited: boolean,
 }
 
+
 export default function Home({askForStorage, hasVisited, setDontShowHome, closeWelcomeScreen}: HomeProps) {
     const {t, i18n} = useTranslation(['home', 'common'])
     const data = useObservableObject(homeStore.state)
     const [appScale, setAppScale] = useState(100)
-    const currentPage = usePathname()
+    const currentPage = usePathname() ?? '/'
     const [breakpoint, setBreakpoint] = useState(false)
     const [isTwa, setIsTwa] = useState(false)
     const homeClass = data.isInPosition ? "home" : "home home-visible"
@@ -427,4 +428,3 @@ function Separator({children}: SeparatorProps) {
         {children}
     </div>
 }
-
