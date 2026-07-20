@@ -53,9 +53,44 @@
 </div>
 
 <style>
+    /* P3 Task 5 re-check (was flagged lower-confidence in P3 Task 4, before the
+       global CSS existed to check it against): the old app had TWO nested
+       wrapper divs here - a body-level flex column (`display:flex;
+       flex-direction:column; width:100%; justify-content:center;
+       min-height:100%`, src/app/layout.tsx) around ThemeProviderWrapper's own
+       div (`display:flex; width:100%; flex:1`, i.e. an implicit flex ROW,
+       src/components/shared/ProviderWrappers/ThemeProviderWrapper.tsx). This
+       component is now the outermost wrapper in the new tree (app.html's body
+       only contains a transparent `display:contents` slot - no separate
+       body-level div exists or is planned), so it has to reproduce BOTH divs'
+       combined computed effect on its own:
+         - Height: the old outer div's `flex:1` made ThemeProviderWrapper's div
+           grow to fill the body-level flex column's `min-height:100%`. Here
+           there is no flex parent for `flex:1` to grow within (body is not a
+           flex container - see App.css, also ported this task), so a literal
+           `flex:1` would be inert and this div would collapse to content
+           height instead of filling the viewport. `width:100%; height:100%`
+           is the correct translation instead - it resolves against `html,
+           body { height:100%; min-height:100vh }` (App.css), giving the same
+           full-viewport sizing the old two-div chain produced.
+         - flex-direction: the old INNER div (this one) was an implicit ROW
+           (flex-direction was never set). That matters because App.css's
+           `.default-content { flex:1 }` and `.app, .app-content
+           { width:100%; ...no height... }` (AppBackground.svelte's root class,
+           already ported in Task 4) both rely on being cross-axis-stretched to
+           full height by a ROW-direction ancestor with a real height - exactly
+           what ThemeProviderWrapper's row div provided. Switching this wrapper
+           to `column` would break that stretch for whatever Task 7/8 eventually
+           nest here (DefaultPage's whole flex chain assumes it). Kept as `row`
+           (the old div's own default) so descendants keep getting that stretch
+           for free, same as under the old two-div chain.
+         - justify-content: kept from the old OUTER div for parity, though it
+           was (and remains) inert in practice - the single child fills the
+           main axis via width:100%/flex:1 either way. */
     .theme-vars-root {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: center;
         width: 100%;
         height: 100%;
     }
