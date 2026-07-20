@@ -13,13 +13,13 @@ export default ts.config(
         },
     },
     {
-        files: ['**/*.svelte'],
+        files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
         languageOptions: {
             parserOptions: {parser: ts.parser},
         },
     },
     {
-        // Parked until Phase 2 repoints the barrel; fixtures are data.
+        // test/ linting deferred; suite is live since Phase 2 (revisit with formatter/EOL decision in Phase 5)
         // .claude/ is a local-only leftover of deleted worktrees (see
         // .gitignore) — never tracked, not part of this repo's source.
         ignores: ['build/', '.svelte-kit/', 'static/', 'test/', 'node_modules/', '.claude/'],
