@@ -1,7 +1,7 @@
 // Ported subset of old src/types/GeneralTypes.ts + src/types/SongTypes.ts.
-// Only the types the old core files ported by this phase (ComposedSong.ts, RecordedSong.ts,
-// BaseSettings.ts) actually import are included here (YAGNI) - see task-4-report.md for the
-// grep evidence. Everything ported is verbatim from the old file except InstrumentName (see
+// Only the types the old core files ported so far (ComposedSong.ts, RecordedSong.ts, VsrgSong.ts,
+// BaseSettings.ts) actually import are included here (YAGNI) - see task-4-report.md/task-7-report.md
+// for the grep evidence. Everything ported is verbatim from the old file except InstrumentName (see
 // its own comment below for the one permitted widening).
 
 // ---- GeneralTypes.ts ----
@@ -33,12 +33,13 @@ export type OldNote = {
 }
 
 // SerializedSongKind (old SongTypes.ts: `UnknownSerializedComposedSong | SerializedRecordedSong |
-// SerializedVsrgSong`) intentionally NOT ported yet. All three members are defined INSIDE the
-// not-yet-ported ComposedSong.ts / RecordedSong.ts / VsrgSong.ts (Task 7), so it cannot be
-// reproduced verbatim without fabricating stand-ins for files that don't exist in this tree yet.
-// None of the three old core files this task actually checked (ComposedSong.ts, RecordedSong.ts,
-// BaseSettings.ts) import SerializedSongKind itself - port it in Task 7 once those song-model
-// files (and their Serialized* types) exist.
+// SerializedVsrgSong`) still intentionally NOT ported. ComposedSong.ts/RecordedSong.ts/VsrgSong.ts
+// now all exist (Task 7) and were checked directly - none of the three reference
+// SerializedSongKind. Its only appearance anywhere in Phase-2 scope is a `//TODO instead of using
+// SerializedSong, switch to SerializedSongKind` comment in the old SongService.ts (Task 8) - not
+// a real import, so still no genuine consumer. (Its actual consumers, FileService.ts and
+// components/shared/pagesLayout/Folder.tsx, are outside Phase-2 scope entirely.) Defer again
+// until a real consumer needs it.
 
 // ---- hoisted for BaseSettings.ts (Task 6) ----
 
@@ -51,3 +52,11 @@ export type VsrgSongKeys = 4 | 6
 // 'line' | 'circles'`. That component isn't ported until the UI phase; BaseSettings.ts (Task 6)
 // needs the type now for VsrgPlayerSettingsDataType - hoisted here, verbatim value union.
 export type VsrgKeyboardLayout = 'line' | 'circles'
+
+// ---- hoisted for VsrgSong.ts (Task 7) ----
+
+// old src/components/pages/VsrgComposer/VsrgBottom.tsx: `export type SnapPoint = 1 | 2 | 4 | 8 |
+// 16`. That component isn't ported until the UI phase; VsrgSong.ts (Task 7) needs the type now
+// for SerializedVsrgSong.snapPoint/VsrgSong.snapPoint - hoisted here, verbatim value union (same
+// pattern as VsrgKeyboardLayout above).
+export type SnapPoint = 1 | 2 | 4 | 8 | 16
