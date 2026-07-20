@@ -23,12 +23,12 @@ class PwaStore {
     }
     load = () => {
         if (typeof window === 'undefined') return
-        // @ts-ignore
+        // @ts-expect-error beforeinstallprompt not in Window type definitions
         window.addEventListener('beforeinstallprompt', this.onInstallPrompt)
     }
     dispose = () => {
         if (typeof window === 'undefined') return
-        // @ts-ignore
+        // @ts-expect-error beforeinstallprompt not in Window type definitions
         window.removeEventListener('beforeinstallprompt', this.onInstallPrompt)
     }
     install = async (): Promise<boolean> => {
