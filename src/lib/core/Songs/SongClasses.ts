@@ -10,10 +10,11 @@ import {
 } from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
 import {NoteLayer} from "./Layer"
-// InstrumentNoteIcon normally lives in Songs/ComposedSong.ts (not yet ported - Task 7).
-// Relocated here verbatim (same literal union) since InstrumentData/SerializedInstrumentData
-// below need it now; Task 7 should re-home or re-export this once ComposedSong.ts exists
-// (don't duplicate the declaration once that's possible).
+// InstrumentNoteIcon used to live in Songs/ComposedSong.ts (old SongClasses.ts imported it FROM
+// there). Task 5 relocated the canonical definition here instead (needed for
+// InstrumentData/SerializedInstrumentData before ComposedSong.ts was ported). Task 7's
+// ComposedSong.ts now imports it from here, reversing the old direction for good - this is the
+// single source; do not duplicate the declaration.
 export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
 
 export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
