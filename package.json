@@ -13,6 +13,7 @@
     "preview:sky": "npx serve@latest build/skyMusic",
     "preview:genshin": "npx serve@latest build/genshinMusic",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:sky": "cross-env PUBLIC_GAME=sky npm run check",
     "lint": "eslint .",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",
