@@ -7,6 +7,12 @@
 
     let {children} = $props()
 
+    // eslint-disable-next-line svelte/prefer-writable-derived
+    let mounted = $state(false)
+    $effect(() => {
+        mounted = true
+    })
+
     const vars = $derived.by(() => {
         const map = new SvelteMap<string, string>()
         const clickColor = theme.get('accent').isDark()
@@ -39,7 +45,7 @@
 
 <svelte:head>
     <svelte:element this={'style'}>{rootBlock}</svelte:element>
-    <meta name="theme-color" content={theme.get('primary').toString()} />
+    <meta name="theme-color" content={theme.get(mounted ? 'primary' : 'accent').toString()} />
 </svelte:head>
 
 <div style={styleString} class="theme-vars-root">
