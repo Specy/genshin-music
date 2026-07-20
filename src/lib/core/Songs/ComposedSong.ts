@@ -1,4 +1,8 @@
-import {Midi} from "@tonejs/midi"
+// type-only (P3 Task 7 fix): see the matching comment in $core/Services/FileService.ts - a value
+// import of `Midi` breaks under Node's native ESM loader once this file is reachable from the root
+// layout's SSR graph; this file only uses `Midi` as toMidi()'s return-type annotation, never
+// constructs one, so `import type` (fully erased) sidesteps the problem entirely.
+import type {Midi} from "@tonejs/midi"
 import {
     APP_NAME,
     COMPOSER_NOTE_POSITIONS,

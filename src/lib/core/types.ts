@@ -3,6 +3,17 @@
 // BaseSettings.ts) actually import are included here (YAGNI) - see task-4-report.md/task-7-report.md
 // for the grep evidence. Everything ported is verbatim from the old file except InstrumentName (see
 // its own comment below for the one permitted widening).
+//
+// The three imports below (SerializedSongKind's members) make this file and ComposedSong.ts/
+// RecordedSong.ts/VsrgSong.ts mutually import each other (those three already import
+// InstrumentName/OldFormat/etc. from here). This is a type-only cycle - `import type` is fully
+// erased at compile time (no runtime module-init cycle exists), and TypeScript/svelte-check
+// resolve mutually-recursive type aliases like this routinely (verified: `npm run check`/
+// `check:sky` clean). No eslint import/no-cycle rule is configured in this repo's eslint.config.js
+// either.
+import type {UnknownSerializedComposedSong} from "./Songs/ComposedSong"
+import type {SerializedRecordedSong} from "./Songs/RecordedSong"
+import type {SerializedVsrgSong} from "./Songs/VsrgSong"
 
 // ---- GeneralTypes.ts ----
 
@@ -32,14 +43,11 @@ export type OldNote = {
     l?: number
 }
 
-// SerializedSongKind (old SongTypes.ts: `UnknownSerializedComposedSong | SerializedRecordedSong |
-// SerializedVsrgSong`) still intentionally NOT ported. ComposedSong.ts/RecordedSong.ts/VsrgSong.ts
-// now all exist (Task 7) and were checked directly - none of the three reference
-// SerializedSongKind. Its only appearance anywhere in Phase-2 scope is a `//TODO instead of using
-// SerializedSong, switch to SerializedSongKind` comment in the old SongService.ts (Task 8) - not
-// a real import, so still no genuine consumer. (Its actual consumers, FileService.ts and
-// components/shared/pagesLayout/Folder.tsx, are outside Phase-2 scope entirely.) Defer again
-// until a real consumer needs it.
+// old SongTypes.ts: `export type SerializedSongKind = UnknownSerializedComposedSong |
+// SerializedRecordedSong | SerializedVsrgSong`. Deferred through Phase 2 (P2 Task 7: "no
+// Phase-2 consumer") - now constructible since ComposedSong.ts/RecordedSong.ts/VsrgSong.ts all
+// exist, and needed by FileService.ts (P3 Task 7), its first real consumer.
+export type SerializedSongKind = UnknownSerializedComposedSong | SerializedRecordedSong | SerializedVsrgSong
 
 // ---- hoisted for BaseSettings.ts (Task 6) ----
 
