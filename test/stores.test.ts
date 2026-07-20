@@ -48,3 +48,14 @@ describe('LogsStore', () => {
         expect(logsStore.logs.length).toBe(1)
     })
 })
+
+describe('async prompts', () => {
+    it('asyncConfirm resolves via answer and cancels prior prompt', async () => {
+        const {asyncConfirm, asyncPromptStore} = await import('../src/lib/stores/AsyncPromptStore.svelte')
+        const first = asyncConfirm('first?')
+        const second = asyncConfirm('second?')
+        expect(await first).toBe(null)          // superseded
+        asyncPromptStore.answerConfirm(true)
+        expect(await second).toBe(true)
+    })
+})
