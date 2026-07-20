@@ -30,6 +30,11 @@ const store = new PageVisitStore()
 
 export function hasVisitedPage(pageKey: PagesVersionsKeys): boolean {
     void store.tick
+    // SSR/prerendering guard (same pattern as PwaStore.load()/GlobalConfigStore.load()): no
+    // localStorage during the build's prerender pass. First real caller is Home.svelte (P3 Task
+    // 8) via its nav cards' "new" badge - nothing called this function before, so the gap was
+    // latent. Default to "visited" (no badge) server-side; the client corrects it post-hydration.
+    if (typeof localStorage === 'undefined') return true
     const visitedPages = JSON.parse(localStorage.getItem(localStorageKey) || '{}')
     const visitedPageVersion = visitedPages[pageKey] ?? -1
     // old: pages at version 0 have no changelog entries to flag, so `usePageVisit`'s state
@@ -41,6 +46,9 @@ export function hasVisitedPage(pageKey: PagesVersionsKeys): boolean {
 }
 
 export function setPageVisited(key: PagesVersionsKeys) {
+    // same SSR guard as hasVisitedPage() above - not yet called from anywhere (no Phase-4 page
+    // wired up), but guarded now to avoid the identical prerender crash the moment one is.
+    if (typeof localStorage === 'undefined') return
     const visitedPages = JSON.parse(localStorage.getItem(localStorageKey) || '{}')
     const currentVersion = PAGES_VERSIONS[key].version
     const visitedVersion = visitedPages[key] ?? -1
