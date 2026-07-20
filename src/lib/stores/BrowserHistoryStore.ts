@@ -1,5 +1,5 @@
 class HistoryTracker {
-    pages: String[] = []
+    pages: string[] = []
 
     get lastPage() {
         return this.pages[this.pages.length - 1]
@@ -9,7 +9,7 @@ class HistoryTracker {
         return this.pages.length > 0
     }
 
-    addPage(page: String) {
+    addPage(page: string) {
         this.pages.push(page)
     }
 }
