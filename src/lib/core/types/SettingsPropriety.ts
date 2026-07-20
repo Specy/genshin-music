@@ -7,6 +7,7 @@
 // `keyof typeof ComposerSettings.data` etc. from the not-yet-ported $lib/BaseSettings.ts itself -
 // circular right now; port them alongside BaseSettings.ts in Task 6 if still needed then).
 import type {InstrumentName} from '../types'
+import type {AppI18N} from '$i18n/i18n'
 
 export type SettingsCategory =
     'keyboard'
@@ -18,12 +19,7 @@ export type SettingsCategory =
     | 'editor_settings'
     | 'player_practice_settings'
 
-// old: `export type NameOrDescriptionKey = keyof AppI18N['settings']['props']`
-// Widened to `string`: i18n scaffolding ($i18n/i18n, AppI18N) is out of scope for this phase
-// (domain-core port) and does not exist in this tree yet. BaseSettings.ts's settings-descriptor
-// objects only need a string-shaped key here; narrow this back to the real i18n key union once
-// $i18n/i18n is ported.
-export type NameOrDescriptionKey = string
+export type NameOrDescriptionKey = keyof AppI18N['settings']['props']
 
 interface BaseSettingsProp {
     name: NameOrDescriptionKey
