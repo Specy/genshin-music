@@ -79,3 +79,9 @@ export const FOLDER_FILTER_TYPES = ['alphabetical', 'date-created'] as const
 export const IS_DEV = import.meta.env.DEV
 // old Config.ts:888 — `export const LANG_PREFERENCE_KEY_NAME = APP_NAME + "_Lang"`
 export const LANG_PREFERENCE_KEY_NAME = APP_NAME + '_Lang'
+// old Config.ts:7-15 — `export const UPDATE_MESSAGE = (APP_NAME === 'Genshin' ? \`...\` :
+// \`...\`).trim()` (changelog-toast body shown by needsUpdate.ts). Game-DEPENDENT (unlike the rest
+// of this section) - both games' literal text already collapsed to one string during the
+// GameDefinition port (P2 Task 2/3 note: pre-existing upstream copy-paste artifact, byte-identical
+// both games), stored as game.i18n.updateMessage.
+export const UPDATE_MESSAGE = game.i18n.updateMessage

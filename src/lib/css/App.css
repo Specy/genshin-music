@@ -190,11 +190,14 @@ input[type="text"], input[type="number"] {
     background-color: red;
 }
 
-/* .logger-*/.pill* below: old src/components/pages/Index/Home.css (NOT App.css) - that file is
-   otherwise Home-overlay-specific (deferred to Task 8) and stays unported, but these particular
-   rules have nothing to do with the Home overlay itself (they style Logger.svelte's toasts/pill,
-   ported in this task), so they move here now instead of waiting on Task 8. Verbatim from
-   Home.css. */
+/* .logger- and .pill- rules below: old src/components/pages/Index/Home.css (NOT App.css) - that
+   file is otherwise Home-overlay-specific (deferred to Task 8) and stays unported, but these
+   particular rules have nothing to do with the Home overlay itself (they style Logger.svelte's
+   toasts/pill, ported in this task), so they move here now instead of waiting on Task 8. Verbatim
+   from Home.css. (P3 Task 7 fix: this comment previously combined a star and a slash mid-sentence,
+   which closed the comment early and dumped the rest of this English text in as invalid CSS -
+   broke the production build at CSS-parse time, uncaught by Task 6's own gates since svelte-check
+   and the dev server do not parse global CSS as strictly as a production build does.) */
 .logger-wrapper {
     display: grid;
     grid-template-columns: 1fr;

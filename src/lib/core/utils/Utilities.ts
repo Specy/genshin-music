@@ -2,6 +2,7 @@ import {type Pitch, PITCHES, TEMPO_CHANGERS} from "$core/legacyConfig"
 import {ColumnNote, NoteColumn, RecordedNote} from "../Songs/SongClasses";
 import {NoteLayer} from "../Songs/Layer";
 import Color, { type ColorInstance } from "color";
+import * as workerTimers from 'worker-timers';
 
 
 class FileDownloader {
@@ -272,6 +273,15 @@ function groupNotesByIndex(column: NoteColumn) {
     return notes.filter(e => Array.isArray(e))
 }
 
+// restored from old $lib/utils/Utilities.ts (P3 Task 7 — needsUpdate.ts's checkIfneedsUpdate is
+// the consumer). worker-timers' setTimeout keeps firing in backgrounded/throttled tabs, unlike
+// the native window.setTimeout the P2-era Utilities.ts deletion note didn't need to worry about.
+function delay(ms: number) {
+    return new Promise(resolve => {
+        workerTimers.setTimeout(resolve, ms)
+    })
+}
+
 function nearestEven(num: number) {
     return 2 * Math.round(num / 2);
 }
@@ -345,6 +355,7 @@ export {
     groupByNotes,
     mergeLayers,
     groupNotesByIndex,
+    delay,
     Array2d,
     MIDINote,
     MIDIShortcut,
