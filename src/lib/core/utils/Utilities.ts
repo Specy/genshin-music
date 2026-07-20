@@ -283,6 +283,29 @@ function clamp(num: number, min: number, max: number) {
 
 type Debouncer = (func: () => void) => void
 
+// relocated verbatim from old $types/GeneralTypes.ts (P3 Task 2 restores it here —
+// createDebouncer/debounce are its only consumers in this tree; ClickType, GeneralTypes.ts's
+// other export, still has no consumer and stays deferred).
+export type Timer = ReturnType<typeof setTimeout> | 0
+
+function createDebouncer(delay: number): Debouncer {
+    let timeoutId: Timer
+    return function (callback: () => void) {
+        clearTimeout(timeoutId)
+        timeoutId = setTimeout(callback, delay)
+    }
+}
+
+// eslint (no-explicit-any / no-unsafe-function-type) forces typed params here; behavior is
+// identical to the old `(fn: Function, ...)` / `(this: any, ...args: any[])` signature.
+export const debounce = (fn: (...args: unknown[]) => void, ms = 300) => {
+    let timeoutId: Timer
+    return function (this: unknown, ...args: unknown[]) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), ms);
+    };
+};
+
 function prettyPrintInstrumentName(name: string) {
     return name.replace("SFX_", "")
 }
@@ -327,6 +350,7 @@ export {
     MIDIShortcut,
     capitalize,
     clamp,
+    createDebouncer,
     nearestEven,
     formatMs,
     calculateSongLength,

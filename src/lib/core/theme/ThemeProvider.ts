@@ -4,6 +4,10 @@ import cloneDeep from 'lodash.clonedeep'
 import Color, { type ColorInstance } from 'color'
 import {baseThemes} from "./defaultThemes";
 import {_themeService} from "../Services/ThemeService";
+// Core importing a store: the old code had the same coupling (ThemeProvider.ts imported
+// ./ThemeStore) - the P2 strip below was temporary until the runes ThemeStore existed
+// (P3 Task 2 restores it). Acceptable and intended here.
+import {themeStore} from '$stores/ThemeStore.svelte'
 
 //TODO cleanup everything here, it's held together with tape
 export type ThemeKeys = keyof typeof ThemeSettings.data
@@ -224,9 +228,9 @@ export class Theme {
         }
     }
     save = () => {
-        // themeStore.setCurrentThemeId(this.getId()) / themeStore.updateTheme(...) stripped here
-        // (Phase-3 runes store re-adds persistence/live-list behavior - see task-6-report.md).
+        themeStore.setCurrentThemeId(this.getId())
         if (!this.state.editable) return
+        return themeStore.updateTheme(this.state.id!, cloneDeep(this.state))
     }
 }
 
