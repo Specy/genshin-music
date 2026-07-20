@@ -1,6 +1,6 @@
 import type {Query} from '$core/Services/Database/Collection'
 import {_themeService} from '$core/Services/ThemeService'
-import type {SerializedTheme} from '$core/theme/ThemeProvider'
+import type {SerializedTheme} from '$core/theme/ThemeProvider.svelte'
 
 class ThemeStore {
     themes: SerializedTheme[] = $state([])

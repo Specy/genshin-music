@@ -33,7 +33,7 @@ export {RecordedSong} from '$core/Songs/RecordedSong'
 export {VsrgHitObject, VsrgSong, VsrgTrack, VsrgTrackModifier} from '$core/Songs/VsrgSong'
 export {Folder} from '$core/Folder'
 // Theme
-export {BaseTheme, Theme, ThemeProvider} from '$core/theme/ThemeProvider'
+export {BaseTheme, Theme, ThemeProvider} from '$core/theme/ThemeProvider.svelte'
 // Settings defaults
 export {
     ComposerSettings,
