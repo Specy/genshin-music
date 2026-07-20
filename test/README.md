@@ -26,12 +26,9 @@ load, so a mobile UA would silently change the `settings-defaults` fixture.
 Fixture directories are named by the legacy `storageId` (`Genshin`/`Sky`),
 not the lowercase `id`.
 
-## Phase 1 status (parked)
+## Phase 2 status (resumed)
 
-The app source this suite verified was removed with the Next app; the suite
-resumes in Phase 2 when `test/imports.ts` is repointed at the ported core
-(`$core/...`). Until then `npm test` fails at import resolution — that is the
-expected state; fixtures remain the untouched ground truth. Env var changed:
-game selection is now `PUBLIC_GAME=genshin|sky` (fixture directories keep
-their legacy cased names `Genshin`/`Sky`; the barrel will export the game's
-`storageId` under the name `APP_NAME` to bridge that).
+The suite runs against the ported core (`test/imports.ts` → `$core/...`,
+`$core/legacyConfig` bridging the old `$config` names — `APP_NAME` is the
+game's `storageId`). Both games green as of Phase 2 close. Fixtures remain
+the untouched Phase-0 ground truth.

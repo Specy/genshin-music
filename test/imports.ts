@@ -23,17 +23,17 @@ export {
     NOTE_MAP_TO_MIDI,
     MIDI_BOUNDS,
     MIDI_PRESETS,
-} from '$config'
+} from '$core/legacyConfig'
 // Domain models
-export {NoteLayer} from '$lib/Songs/Layer'
-export {ColumnNote, NoteColumn, InstrumentData, RecordedNote} from '$lib/Songs/SongClasses'
-export {Song, extractStorable} from '$lib/Songs/Song'
-export {ComposedSong, defaultInstrumentMap} from '$lib/Songs/ComposedSong'
-export {RecordedSong} from '$lib/Songs/RecordedSong'
-export {VsrgHitObject, VsrgSong, VsrgTrack, VsrgTrackModifier} from '$lib/Songs/VsrgSong'
-export {Folder} from '$lib/Folder'
+export {NoteLayer} from '$core/Songs/Layer'
+export {ColumnNote, NoteColumn, InstrumentData, RecordedNote} from '$core/Songs/SongClasses'
+export {Song, extractStorable} from '$core/Songs/Song'
+export {ComposedSong, defaultInstrumentMap} from '$core/Songs/ComposedSong'
+export {RecordedSong} from '$core/Songs/RecordedSong'
+export {VsrgHitObject, VsrgSong, VsrgTrack, VsrgTrackModifier} from '$core/Songs/VsrgSong'
+export {Folder} from '$core/Folder'
 // Theme
-export {BaseTheme, Theme, ThemeProvider} from '$stores/ThemeStore/ThemeProvider'
+export {BaseTheme, Theme, ThemeProvider} from '$core/theme/ThemeProvider'
 // Settings defaults
 export {
     ComposerSettings,
@@ -43,6 +43,6 @@ export {
     VsrgComposerSettings,
     VsrgPlayerSettings,
     ZenKeyboardSettings,
-} from '$lib/BaseSettings'
+} from '$core/BaseSettings'
 // Import pipeline (pulls DbInstance -> ZangoDB -> needs fake-indexeddb from setup)
-export {songService} from '$lib/Services/SongService'
+export {songService} from '$core/Services/SongService'
