@@ -1,4 +1,4 @@
-import type {SerializedTheme} from "./ThemeProvider"
+import type {SerializedTheme} from "./ThemeProvider.svelte"
 
 import {BASE_THEME_CONFIG} from "$core/legacyConfig"
 
