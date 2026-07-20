@@ -2,17 +2,18 @@ import type {SerializedTheme} from "./ThemeProvider"
 
 import {BASE_THEME_CONFIG} from "$core/legacyConfig"
 
-// $img alias doesn't exist in this tree, and the theme-preview PNG/JPG/GIF binaries under
-// src/assets/images/themes/ were deleted in the Phase-1 relocation commit (5455a6cf) - restoring
-// them under static/ is a UI-phase concern, out of scope for this domain-core task (see
-// task-6-report.md, "Theme preview images" concern). These local {src} stand-ins keep every
-// `Xxx_Theme.src` call site below byte-identical to the old file; point at the static/ path the
-// binaries should occupy once restored (mirrors static/assets/images/specy.png's placement).
-const Rainy_Theme = {src: '/assets/images/themes/Rainy_Theme.png'}
-const Liyue_Theme = {src: '/assets/images/themes/Liyue_Theme.jpg'}
-const Snow_Theme = {src: '/assets/images/themes/Snow_Theme.gif'}
-const Legacy_Bg = {src: '/assets/images/themes/Legacy_Bg_Theme.png'}
-const Desert_Theme = {src: '/assets/images/themes/Desert_Theme.jpg'}
+// Real Vite asset imports (binaries restored byte-exact from migration/next16-react19's
+// src/assets/images/themes/ into src/lib/assets/images/themes/). Vite emits hashed URLs for
+// these and rewrites them relative to `base` automatically, so this is safe under the
+// `/genshinMusic` sub-path build - unlike the old hardcoded `/assets/images/themes/...` stand-ins.
+// Deliberate deviation from the old Next.js file below: every `Xxx_Theme.src` usage there
+// becomes plain `Xxx_Theme` here - a vite asset import is the URL string (old Next import was
+// an object with .src).
+import Rainy_Theme from "$lib/assets/images/themes/Rainy_Theme.png"
+import Liyue_Theme from "$lib/assets/images/themes/Liyue_Theme.jpg"
+import Snow_Theme from "$lib/assets/images/themes/Snow_Theme.gif"
+import Legacy_Bg from "$lib/assets/images/themes/Legacy_Bg_Theme.png"
+import Desert_Theme from "$lib/assets/images/themes/Desert_Theme.jpg"
 
 
 const baseThemes: SerializedTheme[] = [
@@ -166,8 +167,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Rainy_Lullaby",
         type: 'theme',
         other: {
-            backgroundImageMain: Rainy_Theme.src,
-            backgroundImageComposer: Rainy_Theme.src,
+            backgroundImageMain: Rainy_Theme,
+            backgroundImageComposer: Rainy_Theme,
             name: "Rainy Lullaby",
         },
         data: {
@@ -240,8 +241,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Liyue",
         type: 'theme',
         other: {
-            backgroundImageMain: Liyue_Theme.src,
-            backgroundImageComposer: Liyue_Theme.src,
+            backgroundImageMain: Liyue_Theme,
+            backgroundImageComposer: Liyue_Theme,
             name: "Liyue",
         },
         data: {
@@ -387,8 +388,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Snowy Night",
         type: 'theme',
         other: {
-            backgroundImageMain: Snow_Theme.src,
-            backgroundImageComposer: Snow_Theme.src,
+            backgroundImageMain: Snow_Theme,
+            backgroundImageComposer: Snow_Theme,
             name: "Snowy Night",
         },
         data: {
@@ -460,8 +461,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Eons of time",
         type: "theme",
         other: {
-            backgroundImageMain: Desert_Theme.src,
-            backgroundImageComposer: Desert_Theme.src,
+            backgroundImageMain: Desert_Theme,
+            backgroundImageComposer: Desert_Theme,
             name: "Eons of times"
         },
         data: {
@@ -532,8 +533,8 @@ const baseThemes: SerializedTheme[] = [
         id: "Sky Music",
         type: "theme",
         other: {
-            backgroundImageMain: Legacy_Bg.src,
-            backgroundImageComposer: Legacy_Bg.src,
+            backgroundImageMain: Legacy_Bg,
+            backgroundImageComposer: Legacy_Bg,
             name: "Sky Music"
         },
         data: {
