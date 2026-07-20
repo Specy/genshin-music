@@ -73,7 +73,7 @@ export class Theme {
 
     constructor(baseTheme: ThemeState) {
         this.baseTheme = cloneDeep(baseTheme)
-        this.state = cloneDeep(baseTheme)
+        this.state = $state(cloneDeep(baseTheme))
     }
 
     static isSerializedType(obj: any) {

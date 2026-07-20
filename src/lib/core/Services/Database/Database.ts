@@ -2,7 +2,7 @@ import ZangoDb from "@insertish/zangodb"
 import {APP_NAME} from "$core/legacyConfig"
 import {type Collection, ZangoCollection} from "./Collection"
 import type {SerializedSong} from "../../Songs/Song"
-import type {SerializedTheme} from "../../theme/ThemeProvider"
+import type {SerializedTheme} from "../../theme/ThemeProvider.svelte"
 import type {SerializedFolder} from "../../Folder"
 import type {AppLanguage, AppI18N} from "$i18n/i18n"
 

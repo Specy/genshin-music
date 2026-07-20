@@ -1,5 +1,5 @@
 import {APP_NAME} from "$core/legacyConfig"
-import {type SerializedTheme, ThemeProvider} from "../theme/ThemeProvider"
+import {type SerializedTheme, ThemeProvider} from "../theme/ThemeProvider.svelte"
 import type {Query} from "./Database/Collection"
 import {DbInstance} from "./Database/Database"
 
