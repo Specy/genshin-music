@@ -8,17 +8,21 @@
     import AsyncPrompt from '$lib/components/shell/AsyncPrompt.svelte'
     import BodyDropper, {type DroppedFile} from '$lib/components/utility/BodyDropper.svelte'
     import AppInit from '$lib/components/shell/AppInit.svelte'
+    import Home from '$lib/components/shell/Home.svelte'
     import {fileService, type UnknownSongImport} from '$core/Services/FileService'
     import {logger} from '$stores/LoggerStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Provider stack final form (P3 Task 7). Order: ThemeVars (CSS vars + background) wraps
-    // everything; BodyDropper is a leaf primitive with no children slot of its own (same shape as
-    // the old React <BodyDropper .../> self-closing element - see old
+    // Provider stack final form (P3 Task 7, Home added in P3 Task 8). Order: ThemeVars (CSS vars
+    // + background) wraps everything; BodyDropper is a leaf primitive with no children slot of
+    // its own (same shape as the old React <BodyDropper .../> self-closing element - see old
     // components/shared/ProviderWrappers/DropZoneProviderWrapper.tsx, which rendered it as a
     // sibling ahead of {children} rather than a wrapper), so it and the rest of the stack sit as
-    // siblings inside ThemeVars rather than nested further; AppInit runs its effects; the route
-    // content renders inside an error boundary.
+    // siblings inside ThemeVars rather than nested further; AppInit runs its effects; Home is the
+    // always-mounted welcome/launcher overlay (old: src/components/AppBase.tsx always rendered
+    // <Home .../> regardless of route - this is that same mount point, one level up now that
+    // AppBase itself isn't ported as a discrete component); the route content renders inside an
+    // error boundary.
     let {children} = $props()
 
     // old DropZoneProviderWrapper.tsx: BodyDropper's onDrop -> fileService.importAndLog, with a
@@ -67,6 +71,7 @@
     <Logger />
     <AsyncPrompt />
     <AppInit />
+    <Home />
     <svelte:boundary onerror={handleShellError}>
         {@render children()}
     </svelte:boundary>
