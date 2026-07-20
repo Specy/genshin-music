@@ -69,3 +69,13 @@ export const MIDI_PRESETS = game.midi.presets
 // ---- folders (game-independent) ----
 // old Config.ts:854 — `export const FOLDER_FILTER_TYPES = ["alphabetical", "date-created"] as const`
 export const FOLDER_FILTER_TYPES = ['alphabetical', 'date-created'] as const
+
+// ---- i18n / misc (game-independent) ----
+// old Config.ts:887 — `export const IS_DEV = process.env.NODE_ENV === "development"`. Derived via
+// Vite's build-time `import.meta.env.DEV` instead of Node's `process.env.NODE_ENV`: same meaning
+// (true outside production builds), but keeps this file framework/tool-agnostic (no SvelteKit
+// `$app/environment` coupling - core must stay importable outside the SvelteKit module graph,
+// e.g. under plain vitest) and matches how Vite itself expects this check to be written.
+export const IS_DEV = import.meta.env.DEV
+// old Config.ts:888 — `export const LANG_PREFERENCE_KEY_NAME = APP_NAME + "_Lang"`
+export const LANG_PREFERENCE_KEY_NAME = APP_NAME + '_Lang'
