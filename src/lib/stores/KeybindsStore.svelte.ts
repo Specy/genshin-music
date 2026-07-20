@@ -2,6 +2,7 @@ import {APP_NAME} from '$core/legacyConfig'
 import {game} from '$game'
 import type {VsrgSongKeys} from '$core/Songs/VsrgSong'
 import cloneDeep from 'lodash.clonedeep'
+import {SvelteMap} from 'svelte/reactivity'
 
 export type Shortcut<T extends string> = {
     name: T
@@ -104,8 +105,8 @@ class KeyBinds {
 
     private shortcuts: Shortcuts = $state(Object.fromEntries(
         Object.entries(defaultShortcuts)
-            .map(([key, value]) => [key, new Map(Object.entries(value))])
-    ) as Shortcuts)
+            .map(([key, value]) => [key, new SvelteMap(Object.entries(value))])
+    ) as unknown as Shortcuts)
 
     private reverseShortcuts: Record<string, Map<string, string>>
 
