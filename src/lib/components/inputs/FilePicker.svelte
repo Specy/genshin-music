@@ -48,38 +48,37 @@
         if (fileList === null) return
         const files = Array.from(fileList)
         if (as === 'file') {
-            pick(files.map(file => ({data: file, file})))
-        } else {
-            const promises: Promise<FileElement<string | ArrayBuffer>>[] = files.map(file => new Promise((resolve, reject) => {
-                const fileReader = new FileReader()
+            return pick(files.map(file => ({data: file, file})))
+        }
+        const promises: Promise<FileElement<string | ArrayBuffer>>[] = files.map(file => new Promise((resolve, reject) => {
+            const fileReader = new FileReader()
 
-                function handleLoad() {
-                    try {
-                        const value = fileReader.result as string | ArrayBuffer
-                        resolve({
-                            data: as === 'json' ? JSON.parse(value as string) : value,
-                            file
-                        })
-                    } catch (e) {
-                        reject(e)
-                    }
-                }
-
+            function handleLoad() {
                 try {
-                    fileReader.addEventListener('loadend', handleLoad, {once: true})
-                    if (as === 'text' || as === 'json') fileReader.readAsText(file)
-                    if (as === 'buffer') fileReader.readAsArrayBuffer(file)
+                    const value = fileReader.result as string | ArrayBuffer
+                    resolve({
+                        data: as === 'json' ? JSON.parse(value as string) : value,
+                        file
+                    })
                 } catch (e) {
                     reject(e)
                 }
-            }))
-            try {
-                const result = await Promise.all(promises)
-                pick(result)
-            } catch (e) {
-                console.error(e)
-                onError?.(e, files)
             }
+
+            try {
+                fileReader.addEventListener('loadend', handleLoad, {once: true})
+                if (as === 'text' || as === 'json') fileReader.readAsText(file)
+                if (as === 'buffer') fileReader.readAsArrayBuffer(file)
+            } catch (e) {
+                reject(e)
+            }
+        }))
+        try {
+            const result = await Promise.all(promises)
+            pick(result)
+        } catch (e) {
+            console.error(e)
+            onError?.(e, files)
         }
         if (input) input.value = ''
     }
