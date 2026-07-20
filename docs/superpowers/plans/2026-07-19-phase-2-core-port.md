@@ -369,7 +369,7 @@ export {songService} from '$core/Services/SongService'
 ```bash
 npm test
 ```
-Expected: **both games green** — 12 test files, 18 passed + 1 skipped (Genshin) / 17 passed + 2 skipped (Sky), exactly the Phase-0 final counts. EVERY failure here is a port bug (fixtures are ground truth — never regenerate): diff the failing value against `git show migration/next16-react19:<old file>` to find the divergence. Iterate until green.
+Expected: **both games green** — 11 test files, 18 passed + 1 skipped (Genshin) / 17 passed + 2 skipped (Sky), exactly the Phase-0 final counts. EVERY failure here is a port bug (fixtures are ground truth — never regenerate): diff the failing value against `git show migration/next16-react19:<old file>` to find the divergence. Iterate until green.
 
 - [ ] **Step 4: Fresh-clone-equivalent vitest verification + dual-game script**
 
@@ -408,7 +408,7 @@ git commit -m "feat: port SongService; repoint golden barrel; suite green both g
 
 ## Phase-2 exit criteria
 
-1. `npm test` green for BOTH games with the exact Phase-0 counts (12 files; 18+1 / 17+2) and zero fixture modifications (`git log --oneline -1 -- test/fixtures` still `5f24ae0e`).
+1. `npm test` green for BOTH games with the exact Phase-0 counts (11 files; 18+1 / 17+2) and zero fixture modifications (`git log --oneline -1 -- test/fixtures` still `5f24ae0e`).
 2. `npm run check` AND `npm run check:sky` green; both game builds succeed.
 3. `GameDefinition` fully implemented for both games; `skeleton.ts` gone; no `$config` references; no mobx/tauri anywhere.
 4. Every ported file is minimal-diff verifiable against `git show migration/next16-react19:<path>` (reviewers spot-checked this per task).
