@@ -15,6 +15,9 @@
 // `instruments.data` has 35 keys but `instruments.list` (INSTRUMENTS roster) has only 34 —
 // `Aurora_Short` is an extra entry (reuses Aurora's samples) with no roster entry of its own.
 import type {GameDefinition} from '../types'
+import CrGlyph from './glyphs/cr.svelte'
+import DmGlyph from './glyphs/dm.svelte'
+import DmcrGlyph from './glyphs/dmcr.svelte'
 
 export const game: GameDefinition = {
     id: 'sky',
@@ -114,8 +117,13 @@ export const game: GameDefinition = {
         defaultIcon: 'cr',
         // VisualSong.ts:18 — APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
         visualNameCasing: 'uppercase',
-        // Glyph components arrive with the UI phases; Partial, so {} type-checks for now.
-        svgGlyphs: {},
+        // Sky's own 3 cr/dm/dmcr glyphs only (Task 9) — Partial, so a per-game module
+        // importing just its own glyphs still type-checks against the shared union.
+        svgGlyphs: {
+            cr: CrGlyph,
+            dm: DmGlyph,
+            dmcr: DmcrGlyph,
+        },
     },
 
     layouts: {
