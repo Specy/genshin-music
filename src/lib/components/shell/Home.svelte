@@ -9,6 +9,7 @@
     import {asyncConfirm} from '$stores/AsyncPromptStore.svelte'
     import {hasVisitedPage} from '$stores/PageVisitStore.svelte'
     import {clearClientCache, isTWA} from '$core/utils/Utilities'
+    import {appPathname} from '$lib/utils/appPathname'
     import {APP_NAME} from '$core/legacyConfig'
     import {IS_BETA} from '$lib/env'
     import type {PagesVersionsKeys} from '$core/PagesVersions'
@@ -46,7 +47,10 @@
     let breakpoint = $state(false)
     let appScale = $state(100)
 
-    const currentPage = $derived(page.url.pathname)
+    // page.url.pathname includes the SvelteKit base prefix on no-root builds (e.g.
+    // /genshinMusic/composer) - appPathname() strips it so these route-literal comparisons
+    // behave like the old Next.js usePathname() did (Phase-3 final review, Important-1).
+    const currentPage = $derived(appPathname(page.url.pathname))
     const homeClass = $derived(homeStore.state.isInPosition ? 'home' : 'home home-visible')
     const backgroundColor = $derived(ThemeProvider.get('background').fade(0.1).toString())
     const cardBackground = $derived(ThemeProvider.layer('primary', 0.15, 0.2).fade(0.15).toString())

@@ -57,6 +57,7 @@
         logger.error(t('logs:error_with_the_app'))
         if (window.location.hostname === 'localhost') {
             console.error('Prevent localhost redirect')
+            reset()
             return
         }
         // resolve() (not a bare string) to satisfy svelte/no-navigation-without-resolve - same
