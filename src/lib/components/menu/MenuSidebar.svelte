@@ -29,9 +29,25 @@
     //                           ComposerMenu.tsx/PlayerMenu.tsx: MenuPanelWrapper is always a
     //                           sibling of MenuSidebar under the same MenuContextProvider). Unused
     //                           by this task's own SimpleMenu, which has no side panel.
+    //   hamburger            -> new (P4a Task 3, P3 Task 8 carry-forward): an optional sibling
+    //                           snippet rendered FIRST inside `.menu-wrapper`, before `.menu`. 4 of
+    //                           the 6 old page menus (Composer/VsrgComposer/VsrgPlayer/ZenKeyboard
+    //                           - e.g. old ZenKeyboardMenu.tsx) render a `.hamburger`/
+    //                           `.hamburger-top` div as MenuContextProvider's FIRST child, ahead of
+    //                           <MenuSidebar>/<MenuPanelWrapper> - this snippet is that slot.
+    //                           Unused (undefined) by SimpleMenu, which has no hamburger of its own.
+    //   wrapperEl            -> new (same carry-forward): a $bindable exposing the `.menu-wrapper`
+    //                           div itself - the Svelte-action equivalent of old
+    //                           MenuContextProvider's forwarded `ref` (old: useClickOutside's
+    //                           returned ref, attached via `ref={menuRef}`, e.g. ZenKeyboardMenu.tsx
+    //                           again). NOT wired to the `clickOutside` action here - the pages that
+    //                           need it (Task 8/9) bind this and apply `use:clickOutside`
+    //                           themselves once they exist.
     let {
         children,
         panel,
+        hamburger,
+        wrapperEl = $bindable(),
         className = '',
         style = '',
         menuStyle = '',
@@ -45,6 +61,8 @@
     }: {
         children?: Snippet
         panel?: Snippet
+        hamburger?: Snippet
+        wrapperEl?: HTMLDivElement
         className?: string
         style?: string
         menuStyle?: string
@@ -72,7 +90,8 @@
     })
 </script>
 
-<div class="menu-wrapper {className}" style={style}>
+<div class="menu-wrapper {className}" style={style} bind:this={wrapperEl}>
+    {@render hamburger?.()}
     <div class="menu {isVisible ? 'menu-visible' : ''}" style="opacity:{opacity ?? ''};{menuStyle}">
         {@render children?.()}
     </div>
