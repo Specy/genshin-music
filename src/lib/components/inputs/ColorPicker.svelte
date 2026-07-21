@@ -84,7 +84,7 @@
         onChange?.(value)
     }
 
-    const HEX_DIGITS = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/
+    const HEX_DIGITS = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/
 
     function handleHexInput(e: Event & {currentTarget: EventTarget & HTMLInputElement}) {
         const digits = e.currentTarget.value
@@ -96,7 +96,8 @@
     )
 </script>
 
-<div class="color-picker" style="position:{absolute ? 'absolute' : 'unset'};{style}">
+<!-- renamed from old .color-picker: the vendor lib uses that exact class internally; Task 9 must point Theme.css's .color-picker rules at .color-picker-wrapper instead (disclosed selector rename) -->
+<div class="color-picker-wrapper" style="position:{absolute ? 'absolute' : 'unset'};{style}">
     <LibColorPicker
         hex={color.hex()}
         isAlpha={false}
@@ -143,7 +144,7 @@
        react-colorful's own class names, which can never appear in this component's DOM now that
        it's built on svelte-awesome-color-picker instead. Task 9 (porting the rest of Theme.css)
        should SKIP that three-rule block for the same reason. */
-    .color-picker {
+    .color-picker-wrapper {
         position: absolute;
         padding: 0.3rem;
         border-radius: 0.6rem;
