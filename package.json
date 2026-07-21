@@ -31,9 +31,11 @@
   "dependencies": {
     "@insertish/zangodb": "^1.0.12-nomemo",
     "@tonejs/midi": "^2.0.28",
+    "@types/fuzzy-search": "^2.1.5",
     "audiobuffer-to-wav": "^1.0.0",
     "color": "^5.0.3",
     "events": "^3.3.0",
+    "fuzzy-search": "^3.2.1",
     "i18next": "^26.3.6",
     "is-mobile": "^5.0.0",
     "lodash.clonedeep": "^4.5.0",
