@@ -21,6 +21,19 @@ import type {SerializedVsrgSong} from "./Songs/VsrgSong"
 // widened from the per-game literal union: cross-game code (toGenshin) needs names from both rosters; runtime behavior is untyped anyway
 export type InstrumentName = string
 
+// old GeneralTypes.ts: `export type NoteStatus = 'clicked' | 'toClick' | 'toClickNext' |
+// 'toClickAndNext' | 'approach-wrong' | 'approach-correct' | ''` - verbatim value union, unlike
+// InstrumentName above. Deferred through Phase 2/3 (no consumer); Phase-4a Task 2's
+// ObservableNote.data (src/lib/audio/Instrument.svelte.ts) is the first real consumer.
+export type NoteStatus =
+    'clicked'
+    | 'toClick'
+    | 'toClickNext'
+    | 'toClickAndNext'
+    | 'approach-wrong'
+    | 'approach-correct'
+    | ''
+
 // ---- SongTypes.ts ----
 
 export type _LegacySongInstruments = [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
