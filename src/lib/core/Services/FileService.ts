@@ -1,6 +1,10 @@
 import {ComposedSong, type OldFormatComposed, type UnknownSerializedComposedSong} from "../Songs/ComposedSong"
 import {type OldFormatRecorded, RecordedSong, type UnknownSerializedRecordedSong} from "../Songs/RecordedSong"
 import {FileDownloader} from "../utils/Utilities"
+// restored P4a Task 2 (audio engine): AudioRecorder.ts (src/lib/audio/AudioRecorder.ts) is the
+// real consumer the P3 Task 7 deferral comment on downloadBlobAsWav below was waiting for -
+// audiobuffer-to-wav is now installed (^1.0.0, matching the old package.json version exactly).
+import toWav from 'audiobuffer-to-wav'
 import {songsStore} from "$stores/SongsStore.svelte"
 import {type SerializedSong, Song} from "../Songs/Song"
 // type-only: @tonejs/midi's CJS build (`main` field) is a minified webpack bundle whose named
@@ -296,21 +300,14 @@ export class FileService {
         FileDownloader.download(JSON.stringify(file), `${fileName}.json`)
     }
 
-    // Phase 4: downloadBlobAsWav (recorded-audio WAV export) needs the `audiobuffer-to-wav` npm
-    // package, which is NOT one of this task's authorized new deps (brief: "worker-timers is the
-    // ONE new dep this task") and has zero consumers until the Player/audio-recording UI lands.
-    // Restore verbatim from the old blob (`toWav(await blobToAudio(urlBlob))` -> Blob -> download)
-    // alongside that Phase-4 work, once `audiobuffer-to-wav` is installed. `blobToAudio` itself
-    // needs no external package (Web Audio API only) so it's kept below, ready for that restore.
-    //
-    // async downloadBlobAsWav(urlBlob: Blob, fileName: string) {
-    //     fileName = fileName.replace(".wav", "")
-    //     const wav = toWav(await blobToAudio(urlBlob))
-    //     const blob = new Blob([new DataView(wav)], {
-    //         type: 'audio/wav'
-    //     })
-    //     FileDownloader.download(blob, fileName + ".wav")
-    // }
+    async downloadBlobAsWav(urlBlob: Blob, fileName: string) {
+        fileName = fileName.replace(".wav", "")
+        const wav = toWav(await blobToAudio(urlBlob))
+        const blob = new Blob([new DataView(wav)], {
+            type: 'audio/wav'
+        })
+        FileDownloader.download(blob, fileName + ".wav")
+    }
 
     downloadBlob(urlBlob: Blob, fileName: string) {
         FileDownloader.download(urlBlob, fileName)

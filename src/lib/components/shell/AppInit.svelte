@@ -12,6 +12,9 @@
     import {keyBinds} from '$stores/KeybindsStore.svelte'
     import {pwaStore} from '$stores/PwaStore.svelte'
     import {KeyboardProvider} from '$lib/providers/KeyboardProvider'
+    import {AudioProvider} from '$lib/providers/AudioProvider'
+    import {MIDIProvider} from '$lib/providers/MIDIProvider'
+    import {metronome} from '$lib/audio/Metronome'
     import {browserHistoryStore} from '$stores/BrowserHistoryStore'
     import {asyncConfirm} from '$stores/AsyncPromptStore.svelte'
     import {logger} from '$stores/LoggerStore.svelte'
@@ -32,10 +35,9 @@
     // effects). This component is the AppBase-equivalent orchestrator the brief describes:
     // effects only, no visual output except the rotate-screen overlay markup below. Each block
     // is commented with the old effect it corresponds to; `// Phase 4:`/`// Phase 5:` markers
-    // stand in for behavior that depends on files not ported yet (audio provider/metronome,
-    // MIDI provider, service worker, analytics). KeyboardProvider (the input provider) IS wired
-    // for real below - it was the one "Phase 4" marker in this file whose dependency (Phase 4a
-    // Task 1) has landed.
+    // stand in for behavior that depends on files not ported yet (service worker, analytics).
+    // KeyboardProvider (Phase 4a Task 1), AudioProvider/metronome/MIDIProvider (Phase 4a Task 2 -
+    // this task) are all wired for real below now.
     //
     // Ordering note: the brief's checklist lists `linkServices()` right after the
     // globalConfigStore/songsStore/.../ThemeProvider.load() batch, but that batch is
@@ -229,9 +231,10 @@
     // practice since AppInit lives for the whole app session in the root layout, same as the old
     // wrapper did, but noted for parity).
     onMount(() => {
-        // Phase 4: AudioProvider.init().catch(console.error); metronome.init(AudioProvider.getAudioContext())
+        AudioProvider.init().catch(console.error)
+        metronome.init(AudioProvider.getAudioContext())
         KeyboardProvider.create()
-        // Phase 4: MIDIProvider.init().catch(console.error)
+        MIDIProvider.init().catch(console.error)
         globalConfigStore.load() //before songsStore
         songsStore.sync().catch(console.error)
         folderStore.sync().catch(console.error)
@@ -243,14 +246,35 @@
         // /transfer page's window-message protocol. Not part of this task's checklist; noted here
         // only because it shared this exact effect in the old blob.
         return () => {
-            // Phase 4: AudioProvider.destroy()
+            AudioProvider.destroy()
             KeyboardProvider.destroy()
-            // Phase 4: MIDIProvider.destroy()
+            MIDIProvider.destroy()
         }
     })
 
-    // Phase 4: old GeneralProvidersWrapper.tsx effect 2 - MIDIProvider.addInputsListener/
-    // removeInputsListener, logging 'MIDI device connected'/'disconnected' on input-count change.
+    // old GeneralProvidersWrapper.tsx effect 2 - MIDI input hotplug: logs a toast whenever the
+    // connected-input count changes (literal English strings in the old blob, not i18n keys -
+    // verified directly, kept as-is for byte parity).
+    onMount(() => {
+        let sources = MIDIProvider.inputs
+        // WebMidi is an ambient global namespace (@types/webmidi, referenced in src/app.d.ts);
+        // plain .ts files resolve it fine (typescript-eslint's recommended config turns off
+        // no-undef there, deferring to tsc), but .svelte script blocks go through
+        // eslint-plugin-svelte's own recommended config, which doesn't carry that same override -
+        // MIDIProvider.ts's identical `WebMidi.MIDIInput[]` usage needs no such disable
+        // eslint-disable-next-line no-undef
+        const cb = (inputs: WebMidi.MIDIInput[]) => {
+            if (sources.length > inputs.length)
+                logger.warn('MIDI device disconnected')
+            else if (inputs.length > 0)
+                logger.warn('MIDI device connected')
+            sources = inputs
+        }
+        MIDIProvider.addInputsListener(cb)
+        return () => {
+            MIDIProvider.removeInputsListener(cb)
+        }
+    })
 </script>
 
 <!-- old AppBase.tsx render tail: rotate-screen overlay, hidden for the blog. CSS (.rotate-screen)
