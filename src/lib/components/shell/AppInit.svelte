@@ -20,6 +20,7 @@
     import {fileService} from '$core/Services/FileService'
     import {checkIfneedsUpdate} from '$core/needsUpdate'
     import {delay} from '$core/utils/Utilities'
+    import {appPathname} from '$lib/utils/appPathname'
     import {APP_NAME, APP_VERSION, LANG_PREFERENCE_KEY_NAME, UPDATE_MESSAGE} from '$core/legacyConfig'
     import {AVAILABLE_LANGUAGES, i18n, setI18nLanguage, type AppLanguage} from '$i18n/i18n'
     import {t} from '$i18n/binding.svelte'
@@ -43,7 +44,9 @@
     // than inventing a new merged order.
 
     let isOnMobile = $state(false)
-    const inBlog = $derived(page.url.pathname.startsWith('/blog'))
+    // page.url.pathname includes the SvelteKit base prefix on no-root builds - appPathname()
+    // strips it before the route-literal comparison (Phase-3 final review, Important-1).
+    const inBlog = $derived(appPathname(page.url.pathname).startsWith('/blog'))
 
     // old providers.tsx effect 1: console.error -> logsStore, skipped entirely on localhost (dev
     // convenience - keep the native console.error there).
