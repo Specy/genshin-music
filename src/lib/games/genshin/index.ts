@@ -11,6 +11,17 @@
 //      defaultNoteBackground, settings defaults, updateMessage); each was re-verified
 //      against its cited old file/line while writing this module.
 import type {GameDefinition} from '../types'
+import DoGlyph from './glyphs/do.svelte'
+import ReGlyph from './glyphs/re.svelte'
+import RebGlyph from './glyphs/reb.svelte'
+import MiGlyph from './glyphs/mi.svelte'
+import MibGlyph from './glyphs/mib.svelte'
+import FaGlyph from './glyphs/fa.svelte'
+import SoGlyph from './glyphs/so.svelte'
+import LaGlyph from './glyphs/la.svelte'
+import LabGlyph from './glyphs/lab.svelte'
+import TiGlyph from './glyphs/ti.svelte'
+import TibGlyph from './glyphs/tib.svelte'
 
 export const game: GameDefinition = {
     id: 'genshin',
@@ -110,8 +121,21 @@ export const game: GameDefinition = {
         defaultIcon: 'do',
         // VisualSong.ts:18 — APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
         visualNameCasing: 'lowercase',
-        // Glyph components arrive with the UI phases; Partial, so {} type-checks for now.
-        svgGlyphs: {},
+        // Genshin's own 11 solfège glyphs only (Task 9) — Partial, so a per-game module
+        // importing just its own glyphs still type-checks against the shared union.
+        svgGlyphs: {
+            do: DoGlyph,
+            re: ReGlyph,
+            reb: RebGlyph,
+            mi: MiGlyph,
+            mib: MibGlyph,
+            fa: FaGlyph,
+            so: SoGlyph,
+            la: LaGlyph,
+            lab: LabGlyph,
+            ti: TiGlyph,
+            tib: TibGlyph,
+        },
     },
 
     layouts: {
