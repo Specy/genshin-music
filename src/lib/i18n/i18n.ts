@@ -63,10 +63,60 @@ i18next.init({
 export const i18n = i18next
 
 // old i18n.ts also exported DEFAULT_ENG_KEYBOARD_MAP (a KeyboardEvent.code -> English-key-label
-// map) used only by $lib/Providers/KeyboardProvider and $lib/audio/Instrument.ts to render key
-// names independently of the app's language. Neither consumer is ported yet (both are
-// future UI/audio-phase files - Phase 4+) - deferred until one of them is ported (YAGNI, same
-// pattern as $core/types.ts's deferred SerializedSongKind).
+// map), used as the fallback in $lib/providers/KeyboardProvider's getTextOfCode() whenever
+// navigator.keyboard.getLayoutMap() hasn't resolved (or the Keyboard API is unavailable) -
+// restored verbatim below now that KeyboardProvider is ported (Phase 4a Task 1; old also had
+// $lib/audio/Instrument.ts as a second consumer, still a future audio-phase file - Task 2+).
+export const DEFAULT_ENG_KEYBOARD_MAP = {
+    "KeyE": "E",
+    "KeyD": "D",
+    "KeyU": "U",
+    "Minus": "-",
+    "KeyH": "H",
+    "KeyZ": "Z",
+    "Equal": "=",
+    "KeyP": "P",
+    "Semicolon": ";",
+    "BracketRight": "]",
+    "Slash": "/",
+    "BracketLeft": "[",
+    "KeyL": "L",
+    "Digit8": "8",
+    "KeyW": "W",
+    "KeyS": "S",
+    "Digit5": "5",
+    "Digit9": "9",
+    "KeyO": "O",
+    "Period": ".",
+    "Digit6": "6",
+    "KeyV": "V",
+    "Digit3": "3",
+    "Backquote": "`",
+    "KeyG": "G",
+    "KeyJ": "J",
+    "KeyQ": "Q",
+    "Digit1": "1",
+    "KeyT": "T",
+    "KeyY": "Y",
+    "Quote": "'",
+    "IntlBackslash": "\\",
+    "Backslash": "\\",
+    "KeyK": "K",
+    "KeyF": "F",
+    "KeyI": "I",
+    "KeyR": "R",
+    "KeyX": "X",
+    "KeyA": "A",
+    "Digit2": "2",
+    "Digit7": "7",
+    "KeyM": "M",
+    "Digit4": "4",
+    "Digit0": "0",
+    "KeyN": "N",
+    "KeyB": "B",
+    "KeyC": "C",
+    "Comma": ","
+} as Record<string, string>
 
 export function isLanguageLoaded(lang: AppLanguage) {
     return i18next.getDataByLanguage(lang) !== undefined
