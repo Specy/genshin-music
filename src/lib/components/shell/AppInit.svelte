@@ -11,6 +11,7 @@
     import {themeStore} from '$stores/ThemeStore.svelte'
     import {keyBinds} from '$stores/KeybindsStore.svelte'
     import {pwaStore} from '$stores/PwaStore.svelte'
+    import {KeyboardProvider} from '$lib/providers/KeyboardProvider'
     import {browserHistoryStore} from '$stores/BrowserHistoryStore'
     import {asyncConfirm} from '$stores/AsyncPromptStore.svelte'
     import {logger} from '$stores/LoggerStore.svelte'
@@ -31,8 +32,10 @@
     // effects). This component is the AppBase-equivalent orchestrator the brief describes:
     // effects only, no visual output except the rotate-screen overlay markup below. Each block
     // is commented with the old effect it corresponds to; `// Phase 4:`/`// Phase 5:` markers
-    // stand in for behavior that depends on files not ported yet (audio/input providers, service
-    // worker, analytics).
+    // stand in for behavior that depends on files not ported yet (audio provider/metronome,
+    // MIDI provider, service worker, analytics). KeyboardProvider (the input provider) IS wired
+    // for real below - it was the one "Phase 4" marker in this file whose dependency (Phase 4a
+    // Task 1) has landed.
     //
     // Ordering note: the brief's checklist lists `linkServices()` right after the
     // globalConfigStore/songsStore/.../ThemeProvider.load() batch, but that batch is
@@ -226,9 +229,9 @@
     // practice since AppInit lives for the whole app session in the root layout, same as the old
     // wrapper did, but noted for parity).
     onMount(() => {
-        // Phase 4: AudioProvider.init().catch(console.error); metronome.init(AudioProvider.getAudioContext());
-        // Phase 4: KeyboardProvider.create(); MIDIProvider.init().catch(console.error)
-        // Phase 4 cleanup: AudioProvider.destroy(); KeyboardProvider.destroy(); MIDIProvider.destroy()
+        // Phase 4: AudioProvider.init().catch(console.error); metronome.init(AudioProvider.getAudioContext())
+        KeyboardProvider.create()
+        // Phase 4: MIDIProvider.init().catch(console.error)
         globalConfigStore.load() //before songsStore
         songsStore.sync().catch(console.error)
         folderStore.sync().catch(console.error)
@@ -239,6 +242,11 @@
         // Phase 4: setupProtocol().catch(console.error) - $lib/Hooks/useWindowProtocol, the
         // /transfer page's window-message protocol. Not part of this task's checklist; noted here
         // only because it shared this exact effect in the old blob.
+        return () => {
+            // Phase 4: AudioProvider.destroy()
+            KeyboardProvider.destroy()
+            // Phase 4: MIDIProvider.destroy()
+        }
     })
 
     // Phase 4: old GeneralProvidersWrapper.tsx effect 2 - MIDIProvider.addInputsListener/

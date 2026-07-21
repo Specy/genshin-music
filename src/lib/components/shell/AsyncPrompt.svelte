@@ -14,27 +14,28 @@
     // + free-text prompt) directly against `asyncPromptStore.promptState` / `.confirmState`
     // rather than re-splitting them into props passed down to two more sub-components.
     //
-    // KeyboardProvider (the old global priority-based key registry) is not ported - out of
-    // scope for this task (brief: "keyboard handling via <svelte:window onkeydown> scoped to
-    // visible state" - see handleWindowKeydown below for how that's implemented). The old
-    // AsyncPrompt additionally had a *second* Enter/Escape handler directly on the <input>'s
-    // onKeyDown; that specific pair collapses harmlessly into the single window-level handler
-    // below (calling `answerPrompt` twice was already harmless in the old code too: the second
-    // call always saw `deferred` already cleared and hit the "No deferred prompt" warn branch).
+    // KeyboardProvider (the old global priority-based key registry) is ported now (Phase 4a
+    // Task 1), but this component still keeps its own `<svelte:window onkeydown>` rather than
+    // routing through `KeyboardProvider.register('Escape'/'Enter', ...)` directly - a
+    // `<svelte:window>` handler that gates itself on each dialog's own `deferred` state is
+    // simpler than standing up two more register-on-mount/unregisterById-on-unmount pairs in a
+    // component that already runs its own overlay-click and blur effects; see handleWindowKeydown
+    // below. The old AsyncPrompt additionally had a *second* Enter/Escape handler directly on
+    // the <input>'s onKeyDown - kept below as its own handlePromptInputKeydown rather than
+    // collapsed into the window handler (see the parity note next).
     //
-    // Disclosed divergence, NOT "no behavior change" overall (Phase-3 final review, Minor-9):
-    // both old handlers were ultimately registered via `KeyboardProvider.register(...)`, whose
-    // `handleEvent` opened with `if (document.activeElement?.tagName === "INPUT") return` - a
-    // GLOBAL guard that silently suppressed every registered handler whenever ANY <input>
-    // anywhere on the page was focused, not just this dialog's own (that guard is in fact why
-    // AsyncPrompt's redundant on-<input> handler above mattered in the old code: it was the
-    // only thing still firing while the prompt's own input had focus, since the window-routed
-    // handler was suppressed by that same guard for as long as the input stayed focused). That
-    // guard is NOT reproduced here: handleWindowKeydown fires on every keydown unconditionally,
-    // and handleConfirmKeydown/handlePromptKeydown only gate on their own dialog's `deferred`
-    // state - so Escape/Enter now also respond while some unrelated <input> elsewhere on the
-    // page is focused, which the old code would have silently ignored. Reconcile when Phase 4
-    // ports KeyboardProvider for real (see ledger).
+    // Parity restored (Phase 4a Task 1) - was a disclosed divergence (Phase-3 final review,
+    // Minor-9): old `KeyboardProvider.handleEvent` opened with
+    // `if (document.activeElement?.tagName === "INPUT") return` - a GLOBAL guard that silently
+    // suppressed every registered handler (both dialogs' Escape/Enter) whenever ANY <input>
+    // anywhere on the page was focused, not just this dialog's own. `handleWindowKeydown` below
+    // now reproduces that exact guard. That guard is also *why* AsyncPrompt's on-<input> handler
+    // mattered in the old code: it's the only thing that still fires while the prompt's own
+    // input has focus, since the window-routed handler is suppressed by that same guard for as
+    // long as the input stays focused - `handlePromptInputKeydown` on the <input> below
+    // reproduces that exact old split byte-for-byte (window-level suppressed while ANY input is
+    // focused; the prompt's own input handles Enter/Escape locally, unconditionally, via a
+    // listener attached directly to it rather than to `window`).
     //
     // `IGNORE_CLICK_CLASS` (old $lib/Hooks/useClickOutside.ts, = 'ignore_click_outside') is kept
     // below as a literal class string for DOM/class parity - the click-outside hook itself has
@@ -132,6 +133,15 @@
         if (e.key === 'Escape' && promptState.cancellable) asyncPromptStore.answerPrompt(null)
     }
 
+    // old AsyncPrompt.tsx's <input onKeyDown>: fires unconditionally (no `deferred` gate - the
+    // input can only be focused while the dialog is visible anyway) so Enter/Escape still work
+    // while the input itself has focus, even though handleWindowKeydown below suppresses
+    // handleConfirmKeydown/handlePromptKeydown for as long as any <input> is focused.
+    function handlePromptInputKeydown(e: KeyboardEvent) {
+        if (e.key === 'Enter' && value) asyncPromptStore.answerPrompt(value)
+        if (e.key === 'Escape' && promptState.cancellable) asyncPromptStore.answerPrompt(null)
+    }
+
     // `<svelte:window>` can only appear once per component and must be top-level (not inside a
     // block) - so unlike the old per-dialog KeyboardProvider effects (which only registered
     // their listener while that dialog's own `deferred` was set), a single window keydown
@@ -139,6 +149,9 @@
     // guards itself on its own dialog's `deferred` state instead ("scoped to visible state" via
     // an internal early-out rather than via conditional mounting).
     function handleWindowKeydown(e: KeyboardEvent) {
+        // old KeyboardProvider.handleEvent's global guard, reproduced here - see the parity note
+        // in the top comment block.
+        if (document.activeElement?.tagName === 'INPUT') return
         handleConfirmKeydown(e)
         handlePromptKeydown(e)
     }
@@ -204,7 +217,7 @@
         size="1.1rem"
     >
         <div style="white-space:pre-wrap">{promptState.question}</div>
-        <input bind:this={inputEl} class="prompt-input" bind:value />
+        <input bind:this={inputEl} class="prompt-input" bind:value onkeydown={handlePromptInputKeydown} />
         <div class="prompt-row">
             <button
                 class="prompt-button"

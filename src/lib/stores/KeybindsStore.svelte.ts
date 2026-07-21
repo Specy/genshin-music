@@ -1,4 +1,5 @@
 import {APP_NAME} from '$core/legacyConfig'
+import {KeyboardProvider} from '$lib/providers/KeyboardProvider'
 import {game} from '$game'
 import type {VsrgSongKeys} from '$core/Songs/VsrgSong'
 import cloneDeep from 'lodash.clonedeep'
@@ -230,12 +231,68 @@ class KeyBinds {
 
 export const keyBinds = new KeyBinds();
 
-// Phase 4: KeyboardProvider-dependent listener factories (createShortcutListener,
-// createKeyboardListener, createKeyComboComposer) and their supporting types
-// (ShortcutDisposer, ShortcutOptions, ShortcutPressEvent, ShortcutListener, KeyComboListener)
-// are deferred until $core/Providers/KeyboardProvider is ported. See old
-// src/stores/KeybindsStore.ts (bottom half, after the `keyBinds` export) for the reference
-// implementation.
+type ShortcutPressEvent<T> = {
+    code: string
+    event: KeyboardEvent
+    shortcut: T
+    isRepeat: boolean
+}
+export type ShortcutDisposer = () => void
+
+export type ShortcutOptions = {
+    repeat?: boolean
+}
+
+export type ShortcutListener<T extends ShortcutPage> = (keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>) => void
+
+export function createShortcutListener<T extends KeysOf<Shortcuts>>(page: T, id: string, callback: ShortcutListener<T>): ShortcutDisposer {
+    return createKeyComboComposer(id, ({code, event, keyCombo}) => {
+        const shortcut = keyBinds.getShortcut(page, keyCombo)
+        if (shortcut !== undefined) {
+            if (!(shortcut as Shortcut<string>).holdable && event.repeat) return
+            callback({code, event, shortcut, isRepeat: event.repeat})
+        }
+    })
+}
+
+export function createKeyboardListener(id: string, callback: ShortcutListener<"keyboard">, options?: ShortcutOptions): ShortcutDisposer {
+    KeyboardProvider.listen(({code, event}) => {
+        if (!options?.repeat && event.repeat) return
+        const shortcut = keyBinds.getShortcut("keyboard", code)
+        if (shortcut !== undefined) {
+            if ((shortcut as Shortcut<string>).holdable && event.repeat) return
+            callback({code, event, shortcut, isRepeat: event.repeat})
+        }
+
+    }, {type: "keydown", id: id + "_keyboard_down"})
+    return () => {
+        KeyboardProvider.unregisterById(id + "_keyboard_down")
+    }
+}
+
+type KeyComboListener = (data: { keyCombo: string[], event: KeyboardEvent, code: string }) => void
+
+export function createKeyComboComposer(id: string, callback: KeyComboListener): ShortcutDisposer {
+    const currentKeybinds: string[] = []
+    KeyboardProvider.listen(({code, event}) => {
+        if (!currentKeybinds.includes(code)) currentKeybinds.push(code)
+        callback({keyCombo: currentKeybinds, event, code})
+    }, {type: "keydown", id: id + "_down"})
+    KeyboardProvider.listen(({code}) => {
+        currentKeybinds.splice(currentKeybinds.indexOf(code), 1)
+    }, {type: "keyup", id: id + "_up"})
+
+    function reset() {
+        currentKeybinds.splice(0, currentKeybinds.length)
+    }
+
+    window.addEventListener("blur", reset)
+    return () => {
+        KeyboardProvider.unregisterById(id + "_down")
+        KeyboardProvider.unregisterById(id + "_up")
+        window.removeEventListener("blur", reset)
+    }
+}
 
 // old: `T extends Map<infer _, infer V> ? V : never` - the unused `infer _` trips
 // @typescript-eslint/no-unused-vars now that eslint parses .svelte.ts; T's key is already
