@@ -21,6 +21,7 @@
     import Row from '../layout/Row.svelte'
     import MenuButton from '../menu/MenuButton.svelte'
     import LanguageSelector from '../i18n/LanguageSelector.svelte'
+    import PromotionCard from '../PromotionCard.svelte'
 
     // Old: src/components/pages/Index/Home.tsx, plus the slice of src/components/AppBase.tsx
     // that ONLY existed to own state/handlers Home itself consumed (hasVisited,
@@ -32,11 +33,12 @@
     // shared store, matching how narrowly AppBase itself scoped them (prop-drilled to Home and
     // nowhere else).
     //
-    // PromotionCard (old: src/components/pages/Promotion/PromotionCard.tsx, shown once
-    // `hasVisited`) and the page-visit "you're new here" indicator's `usePageVisit` STYLE-BADGE
-    // half beyond hasVisitedPage() are NOT ported - PromotionCard isn't in this task's file list
-    // or available-surface, and hasVisitedPage() (PageVisitStore.svelte.ts, ported ahead of this
-    // task) is used directly below for the "new" badge instead.
+    // PromotionCard (old: src/components/pages/Promotion/PromotionCard.tsx) is wired in below,
+    // shown once `hasVisited` - the P3 Task 8 "PromotionCard isn't in this task's file list"
+    // deferral, closed by P4a Task 7 (its own file's header comment has the full port notes). The
+    // page-visit "you're new here" indicator's `usePageVisit` STYLE-BADGE half beyond
+    // hasVisitedPage() is still NOT ported - hasVisitedPage() (PageVisitStore.svelte.ts, ported
+    // ahead of P3 Task 8) is used directly below for the "new" badge instead.
     //
     // Escape-to-close (old: KeyboardProvider.register('Escape', ...)) is deferred - KeyboardProvider
     // itself isn't ported yet (Phase 4, see AppInit.svelte's own "Phase 4: KeyboardProvider.create()"
@@ -352,6 +354,9 @@
                     </button>
                 </div>
             </div>
+        {/if}
+        {#if hasVisited}
+            <PromotionCard style="margin-bottom:0.5rem" onclick={() => homeStore.close()} />
         {/if}
         <div class="home-content">
             <AppLink
