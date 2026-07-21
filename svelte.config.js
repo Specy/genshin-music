@@ -32,6 +32,27 @@ const config = {
             $stores: './src/lib/stores',
             $i18n: './src/lib/i18n',
         },
+        prerender: {
+            // P4a Task 7 (blog): 3 internal links inside the blog posts' prose are broken in the
+            // OLD app too - `/blog/midi-conversion` and `/blog/ai-conversion`
+            // (how-to-use-composer.tsx) don't match any real route, and `/blog/connect-midi-device`
+            // (how-to-use-composer.tsx + how-to-use-player.tsx) is missing the `/posts/` segment
+            // the real route (`/blog/posts/connect-midi-device`) has. Old's Next.js static export
+            // never crawled/validated internal links, so these pre-existing dead links shipped
+            // silently; SvelteKit's prerenderer does crawl+validate them and fails the build on any
+            // 404 by default. Content parity means preserving the dead links exactly (not
+            // "fixing" them to the correct routes) - this allowlists precisely those 3 known paths
+            // (still failing the build on any OTHER/unexpected broken link) per the officially
+            // documented pattern for deliberate prerender-crawl 404s.
+            handleHttpError: ({path, referrer, message}) => {
+                const knownDeadLinks = ['/blog/midi-conversion', '/blog/ai-conversion', '/blog/connect-midi-device']
+                if (knownDeadLinks.includes(path)) {
+                    console.warn(`(preserved dead link, old app quirk) 404 ${path} linked from ${referrer}`)
+                    return
+                }
+                throw new Error(message)
+            },
+        },
     },
 }
 
