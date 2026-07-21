@@ -613,6 +613,8 @@ export interface GameDefinition {
 }
 ```
 
+> Implemented as src/lib/games/types.ts; GlyphComponent tightened to the Svelte component type and formatting normalized to repo style in Phase 3 Task 9.
+
 ## Step 3 self-check
 
 ### A. Every `config-surface.json` top-level key → a named home
