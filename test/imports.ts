@@ -29,7 +29,11 @@ export {NoteLayer} from '$core/Songs/Layer'
 export {ColumnNote, NoteColumn, InstrumentData, RecordedNote} from '$core/Songs/SongClasses'
 export {Song, extractStorable} from '$core/Songs/Song'
 export {ComposedSong, defaultInstrumentMap} from '$core/Songs/ComposedSong'
-export {RecordedSong} from '$core/Songs/RecordedSong'
+// `Chunk` here is RecordedSong's own chunk class (notes/delay pair) - NOT the same class as
+// VisualSong's `Chunk` below (deliberately distinct, see VisualSong.ts's header comment); only one
+// of the two is re-exported under this name from this barrel, so no collision.
+export {Chunk, RecordedSong} from '$core/Songs/RecordedSong'
+export {VisualSong, TempoChunk} from '$core/Songs/VisualSong'
 export {VsrgHitObject, VsrgSong, VsrgTrack, VsrgTrackModifier} from '$core/Songs/VsrgSong'
 export {Folder} from '$core/Folder'
 // Theme

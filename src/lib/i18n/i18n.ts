@@ -65,8 +65,9 @@ export const i18n = i18next
 // old i18n.ts also exported DEFAULT_ENG_KEYBOARD_MAP (a KeyboardEvent.code -> English-key-label
 // map), used as the fallback in $lib/providers/KeyboardProvider's getTextOfCode() whenever
 // navigator.keyboard.getLayoutMap() hasn't resolved (or the Keyboard API is unavailable) -
-// restored verbatim below now that KeyboardProvider is ported (Phase 4a Task 1; old also had
-// $lib/audio/Instrument.ts as a second consumer, still a future audio-phase file - Task 2+).
+// restored verbatim below now that KeyboardProvider is ported (Phase 4a Task 1); old's second
+// consumer, $lib/audio/Instrument.ts, landed as $lib/audio/Instrument.svelte.ts in Phase 4a Task 2
+// (see its getNoteText's "Keyboard layout" branch, line 133) and is wired correctly.
 export const DEFAULT_ENG_KEYBOARD_MAP = {
     "KeyE": "E",
     "KeyD": "D",
