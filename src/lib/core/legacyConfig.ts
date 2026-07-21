@@ -1,8 +1,13 @@
 // DOMAIN-CORE LEGACY ADAPTER.
 // Re-derives every old src/Config.ts constant from the selected GameDefinition
 // so ported domain files change only their import path ($config -> $core/legacyConfig).
-// Frozen at build time BY DESIGN (the $game alias is static). UI code must NOT
-// import this file - it reads $game fields directly (spec §5.2/§5.5).
+// Frozen at build time BY DESIGN (the $game alias is static).
+// UI-TIER IMPORT RULE (amended, Phase-3 final review): UI code MAY import
+// IDENTITY/SHARED constants from this adapter — APP_NAME, APP_VERSION,
+// LANG_PREFERENCE_KEY_NAME, UPDATE_MESSAGE, IS_DEV — because they are
+// identity-locked (APP_NAME = game.storageId) or game-independent.
+// GAME-DATA constants (PITCHES, INSTRUMENTS, LAYOUT_*, MIDI_*, NOTE_*, ...)
+// remain FORBIDDEN in UI code: read those from $game directly (spec §5.2).
 // The config-surface golden fixture is the acceptance test for these derivations.
 import {game} from '$game'
 import type {Pitch, NoteNameType, TempoChanger, MIDIPreset, StorageId} from '../games/types'

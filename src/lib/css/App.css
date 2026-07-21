@@ -1453,3 +1453,41 @@ a {
         padding: 0.4rem 0.7rem;
     }
 }
+
+/* pulled forward from Player/menu.css (P3 final review Important-2) — Phase 4 must SKIP this block when porting menu.css */
+.rotate-screen {
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    position: fixed;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    flex-direction: column;
+    background-color: rgba(var(--primary-rgb), 0.85);
+    backdrop-filter: blur(4px);
+    font-size: 1.5rem;
+}
+
+.rotate-screen p {
+    text-align: center;
+}
+
+.rotate-screen img,
+.rotate-screen svg {
+    width: 60vw;
+    height: 60vw;
+    margin-bottom: 1rem;
+    background-color: rgba(var(--primary-rgb), 1);
+    color: var(--icon-color);
+    filter: brightness(1.1);
+    padding: 1.5rem;
+    border-radius: 1rem;
+}
+
+@media screen and (orientation: portrait) {
+    .rotate-screen {
+        display: flex;
+    }
+}
