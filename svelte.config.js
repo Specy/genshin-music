@@ -5,6 +5,8 @@ import {vitePreprocess} from '@sveltejs/vite-plugin-svelte'
 // The unselected game's module tree is simply never imported.
 const gameId = process.env.PUBLIC_GAME === 'sky' ? 'sky' : 'genshin'
 const outDir = process.env.BUILD_PATH ?? 'build'
+// '' for production build:all; '/skyMusic' | '/genshinMusic' for *-no-root builds
+const basePath = process.env.PUBLIC_BASE_PATH ?? ''
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -18,8 +20,7 @@ const config = {
             strict: true,
         }),
         paths: {
-            // '' for production build:all; '/skyMusic' | '/genshinMusic' for *-no-root builds
-            base: process.env.PUBLIC_BASE_PATH ?? '',
+            base: basePath,
             // absolute asset URLs, mirroring the old app's output; relative refs
             // would break bare /genshinMusic (no trailing slash) on the
             // single-domain deploy
@@ -44,10 +45,30 @@ const config = {
             // "fixing" them to the correct routes) - this allowlists precisely those 3 known paths
             // (still failing the build on any OTHER/unexpected broken link) per the officially
             // documented pattern for deliberate prerender-crawl 404s.
+            //
+            // P4a Task 10 fix: SvelteKit's prerender-crawl `path` always includes the configured
+            // base (e.g. `/skyMusic/blog/midi-conversion` on the *-no-root builds), so the
+            // allowlist below must be base-prefixed too - comparing against the bare `/blog/...`
+            // paths only ever matched on the root build (empty base) and threw a hard build
+            // failure on every *-no-root build (caught by this task's build:all-no-root gate).
+            //
+            // P4a Task 10 fix #2: how-to-use-vsrg-composer/+page.svelte carries its own disclosed
+            // PRESERVED BUG - 2 of its 3 inline images (old's how-to-use-vsrg-composer.tsx too)
+            // are missing the `${base}`/`BASE_PATH` prefix the 3rd image has. Old's Next.js static
+            // export never validated asset references, so this shipped silently as broken <img>s
+            // on old's real single-domain no-root production deploy (deployBetaSingleDomain.yml
+            // -> build:all-no-root); SvelteKit's prerender crawler instead hard-fails the build.
+            // Reproducing the bug pixel-for-pixel means the two <img src> stay UNPREFIXED (not
+            // "fixed" to add `${base}`) - only the build-tool escape hatch is extended, via the
+            // same allowlist mechanism as the dead blog links above. Compared bare (never
+            // base-prefixed): the bug IS the missing prefix, so it only ever surfaces as this
+            // exact unprefixed path regardless of which base the build uses.
             handleHttpError: ({path, referrer, message}) => {
                 const knownDeadLinks = ['/blog/midi-conversion', '/blog/ai-conversion', '/blog/connect-midi-device']
-                if (knownDeadLinks.includes(path)) {
-                    console.warn(`(preserved dead link, old app quirk) 404 ${path} linked from ${referrer}`)
+                    .map(link => `${basePath}${link}`)
+                const knownMissingBaseAssets = ['/assets/blog/help-vsrg-composer.webp', '/assets/blog/help-vsrg-composer-3.webp']
+                if (knownDeadLinks.includes(path) || knownMissingBaseAssets.includes(path)) {
+                    console.warn(`(preserved old app quirk) ${path} linked from ${referrer}`)
                     return
                 }
                 throw new Error(message)
