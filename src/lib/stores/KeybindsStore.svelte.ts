@@ -109,7 +109,18 @@ class KeyBinds {
             .map(([key, value]) => [key, new SvelteMap(Object.entries(value))])
     ) as unknown as Shortcuts)
 
-    private reverseShortcuts: Record<string, Map<string, string>>
+    // FIX (P4a Task 9, caught via keybinds/+page.svelte's own interactive smoke test - not
+    // present in the old blob, which re-rendered wholesale on every mobx-observed change
+    // regardless): was `Record<string, Map<string, string>>` built with plain `new Map(...)`.
+    // `getKeyOfShortcut()` (below) reads this to display "which physical key is this note/shortcut
+    // currently bound to" - since a plain Map is NOT `$state`/reactive, mutating it inside
+    // `setShortcut()` never notified any template reading `getKeyOfShortcut()`. The underlying
+    // rebind DID always persist correctly (`shortcuts`, the real source of truth, IS reactive and
+    // saves to localStorage fine) - only the DISPLAYED "currently bound key" text silently went
+    // stale until the next full reload. `SvelteMap` (already used for `shortcuts` above, the
+    // established "reactive collection in a $state class" convention this file's own header
+    // comment cites) makes `.set()` calls on these reverse maps notify readers too.
+    private reverseShortcuts: Record<string, SvelteMap<string, string>>
 
     constructor() {
         this.reverseShortcuts = this.getReverseShortcuts(this.shortcuts)
@@ -119,7 +130,7 @@ class KeyBinds {
     private getReverseShortcuts(of: Shortcuts) {
         const entries = Object.entries(of)
             .map(([key, value]) => {
-                return [key, new Map([...value.entries()].map(([k, v]) => [v.name, k]))]
+                return [key, new SvelteMap([...value.entries()].map(([k, v]) => [v.name, k]))]
             })
         return Object.fromEntries(entries)
     }

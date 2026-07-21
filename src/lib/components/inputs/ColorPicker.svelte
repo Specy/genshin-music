@@ -96,7 +96,7 @@
     )
 </script>
 
-<!-- renamed from old .color-picker: the vendor lib uses that exact class internally; Task 9 must point Theme.css's .color-picker rules at .color-picker-wrapper instead (disclosed selector rename) -->
+<!-- renamed from old .color-picker: the vendor lib uses that exact class internally; Theme.css (P4a Task 9) points its own .color-picker-wrapper rules at this same renamed class, globally, so this component's styling now comes from there (its own fallback <style> block, present until Task 9 landed, has been removed) -->
 <div class="color-picker-wrapper" style="position:{absolute ? 'absolute' : 'unset'};{style}">
     <LibColorPicker
         hex={color.hex()}
@@ -134,93 +134,3 @@
         </button>
     </div>
 </div>
-
-<style>
-    /* fallback until Theme.css lands (Task 9 removes) */
-    /* Byte-identical values to old src/app/_client-pages/theme/Theme.css's `.color-picker`/
-       `.color-picker-input`/`.color-picker-input *`/`.color-picker-input input`/`.color-picker-row`/
-       `.color-picker-check` rules. Deliberately NOT included: old Theme.css's `.react-colorful`/
-       `.react-colorful__pointer`/`.react-colorful__pointer-fill` overrides - those target
-       react-colorful's own class names, which can never appear in this component's DOM now that
-       it's built on svelte-awesome-color-picker instead. Task 9 (porting the rest of Theme.css)
-       should SKIP that three-rule block for the same reason. */
-    .color-picker-wrapper {
-        position: absolute;
-        padding: 0.3rem;
-        border-radius: 0.6rem;
-        background-color: #efeff0;
-        z-index: 2;
-        right: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        box-shadow: 1px 1px 5px #45455994;
-        animation: show 0.2s;
-        width: 13.6rem;
-    }
-
-    .color-picker-input {
-        display: flex;
-        align-items: center;
-        margin: 0;
-        width: calc(100% - 4.6rem);
-        box-sizing: border-box;
-        border: none;
-        border-radius: 0.4rem;
-        font-size: 1rem;
-        box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
-    }
-
-    .color-picker-input * {
-        transform: translateY(0.05rem);
-    }
-
-    .color-picker-input input {
-        padding: 0.4rem;
-        display: flex;
-        margin: 0;
-        width: 100%;
-        background-color: transparent;
-        box-sizing: border-box;
-        outline: none;
-        border: none;
-    }
-
-    .color-picker-row {
-        display: flex;
-        height: 2rem;
-        margin-top: 0.3rem;
-    }
-
-    .color-picker-check {
-        width: 2rem;
-        height: 2rem;
-        border-radius: 0.4rem;
-        border: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0;
-        margin-left: 0.3rem;
-        padding: 0;
-        cursor: pointer;
-        box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
-    }
-
-    /* `.color-picker`'s `animation: show 0.2s` above references this - old defined `@keyframes
-       show` in the same Theme.css file, not some already-ported global stylesheet, so it's
-       included here too (Svelte scopes local @keyframes per-component, so this can't collide with
-       Theme.css's own copy of the same rule once Task 9 lands it globally). Removed together with
-       the rest of this fallback block when that happens. */
-    @keyframes show {
-        from {
-            opacity: 0;
-            transform: scale(0.95);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-</style>

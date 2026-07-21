@@ -1,6 +1,7 @@
 <script lang="ts">
     import '$lib/css/App.css'
     import '$lib/css/Utility.scss'
+    import '$lib/css/Theme.css'
     import {goto} from '$app/navigation'
     import {resolve} from '$app/paths'
     import ThemeVars from '$lib/components/theme/ThemeVars.svelte'
