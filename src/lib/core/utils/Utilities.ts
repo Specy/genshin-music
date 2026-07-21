@@ -1,6 +1,9 @@
 import {type Pitch, PITCHES, TEMPO_CHANGERS} from "$core/legacyConfig"
 import {ColumnNote, NoteColumn, RecordedNote} from "../Songs/SongClasses";
 import {NoteLayer} from "../Songs/Layer";
+import {Song} from "../Songs/Song";
+import {ComposedSong} from "../Songs/ComposedSong";
+import {RecordedSong} from "../Songs/RecordedSong";
 import Color, { type ColorInstance } from "color";
 import * as workerTimers from 'worker-timers';
 
@@ -150,6 +153,10 @@ function insertionSort<T>(array: T[], compare: (a: T, b: T) => number) {
     return array;
 }
 
+function isComposedOrRecorded(song: Song) {
+    return song instanceof ComposedSong || song instanceof RecordedSong
+}
+
 function formatMs(ms: number) {
     const minutes = Math.floor(ms / 60000);
     const seconds = Number(((ms % 60000) / 1000).toFixed(0))
@@ -212,6 +219,20 @@ export function cn(...args: ConditionalElement<string | undefined>[]) {
         return a;
 
     }).join(" ");
+}
+
+// old: React's `CSSProperties` (react removed from this tree) - `Partial<CSSStyleDeclaration>` is
+// the framework-agnostic DOM-native stand-in for "a plain object of CSS property/value pairs" and
+// is structurally compatible with every real call site (e.g. `{borderColor: 'var(--accent)'}`).
+type CSSProps = Partial<CSSStyleDeclaration>
+
+export function cs(...args: ConditionalElement<CSSProps | undefined>[]) {
+    const parsed = args.map(a => {
+        if (typeof a === "object" && !Array.isArray(a)) return a;
+        if (!a) return {};
+        return a[0] ? a[1] : (a[2] ?? {});
+    });
+    return Object.assign({}, ...parsed);
 }
 
 function groupByNotes(notes: RecordedNote[], threshold: number) {
@@ -377,6 +398,7 @@ export {
     setIfInTWA,
     blurEvent,
     insertionSort,
+    isComposedOrRecorded,
     isFocusable,
     groupArrayEvery,
     isNumberBetween,

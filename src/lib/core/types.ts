@@ -34,6 +34,17 @@ export type NoteStatus =
     | 'approach-correct'
     | ''
 
+// old GeneralTypes.ts: `export type ApproachingScore = {correct: number, wrong: number, score:
+// number, combo: number}` - verbatim. Deferred through Phase 2/3 (no consumer); Phase-4b Task 1's
+// PlayerControlsStore.svelte.ts (src/lib/stores/PlayerControlsStore.svelte.ts) is the first real
+// consumer, same hoisting pattern as VsrgSongKeys/VsrgKeyboardLayout/SnapPoint above.
+export type ApproachingScore = {
+    correct: number
+    wrong: number
+    score: number
+    combo: number
+}
+
 // ---- SongTypes.ts ----
 
 export type _LegacySongInstruments = [InstrumentName, InstrumentName, InstrumentName, InstrumentName]
