@@ -282,6 +282,14 @@ function delay(ms: number) {
     })
 }
 
+// restored from old $lib/utils/Utilities.ts (P4a Task 3 — BaseNote.svelte is the consumer, via
+// its onpointerdown/oncontextmenu handlers). Old signature took `React.MouseEvent`; retyped to
+// the DOM `Event` (a supertype of PointerEvent/MouseEvent) so one helper still covers both
+// handlers, matching how the old function was passed directly as `onContextMenu={preventDefault}`.
+function preventDefault(e: Event) {
+    e.preventDefault()
+}
+
 function nearestEven(num: number) {
     return 2 * Math.round(num / 2);
 }
@@ -356,6 +364,7 @@ export {
     mergeLayers,
     groupNotesByIndex,
     delay,
+    preventDefault,
     Array2d,
     MIDINote,
     MIDIShortcut,
