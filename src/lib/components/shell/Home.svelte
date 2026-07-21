@@ -10,6 +10,7 @@
     import {hasVisitedPage} from '$stores/PageVisitStore.svelte'
     import {clearClientCache, isTWA} from '$core/utils/Utilities'
     import {APP_NAME} from '$core/legacyConfig'
+    import {IS_BETA} from '$lib/env'
     import type {PagesVersionsKeys} from '$core/PagesVersions'
     import {game} from '$game'
     import {ThemeProvider} from '$core/theme/ThemeProvider.svelte'
@@ -40,10 +41,6 @@
     // itself isn't ported yet (Phase 4, see AppInit.svelte's own "Phase 4: KeyboardProvider.create()"
     // markers).
     //
-    // IS_BETA: hardcoded false below - Task 9 wires the real flag. Banner markup stays in place,
-    // just permanently gated off until then.
-    const IS_BETA = false // Task 9: IS_BETA
-
     let hasVisited = $state(false)
     let isTwa = $state(false)
     let breakpoint = $state(false)
@@ -470,7 +467,6 @@
         </Row>
     </div>
     {#if IS_BETA}
-        <!-- Task 9: IS_BETA -->
         <div class="top-right-home-label">
             {t('home:beta')}
         </div>

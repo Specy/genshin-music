@@ -22,6 +22,7 @@ export default ts.config(
         // test/ linting deferred; suite is live since Phase 2 (revisit with formatter/EOL decision in Phase 5)
         // .claude/ is a local-only leftover of deleted worktrees (see
         // .gitignore) — never tracked, not part of this repo's source.
-        ignores: ['build/', '.svelte-kit/', 'static/', 'test/', 'node_modules/', '.claude/'],
+        // src/lib/core: byte-verbatim ported legacy — lint debt accepted until post-migration cleanup (P2 review adjudication)
+        ignores: ['build/', '.svelte-kit/', 'static/', 'test/', 'node_modules/', '.claude/', 'src/lib/core/'],
     }
 )
