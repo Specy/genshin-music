@@ -26,7 +26,7 @@
         description={`Help the development of ${game.id} with a donation.`}
     />
     <div class="donate-text">
-        {t('donate_message')}
+        {t('donate:donate_message')}
     </div>
     <div class="donation-wrapper">
         <a href="https://paypal.me/specyDev" target="_blank" class="paypal" rel="noreferrer">

@@ -147,7 +147,7 @@
         margin: 0.5rem;
     }
 
-    :global(.partner iframe) {
+    .partner iframe {
         border-radius: 0.3rem;
         width: 18.8rem;
         height: 10.5rem;
