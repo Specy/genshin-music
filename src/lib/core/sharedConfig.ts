@@ -7,6 +7,9 @@ export const HAS_BIGINT = typeof BigInt !== 'undefined'
 
 export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
 
+// old Config.ts:854 — `export const FOLDER_FILTER_TYPES = ["alphabetical", "date-created"] as const`
+export const FOLDER_FILTER_TYPES = ['alphabetical', 'date-created'] as const
+
 // old Config.ts:17-19 — `export const UPDATE_URL = process.env.NODE_ENV === 'development' ?
 // '/updates.json' : 'https://raw.githubusercontent.com/Specy/genshin-music/main/public/updates.json'`.
 // Game-independent (same URL both games; needsUpdate.ts's checkIfneedsUpdate() indexes the fetched
