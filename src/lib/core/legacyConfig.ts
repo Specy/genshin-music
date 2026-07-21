@@ -3,25 +3,26 @@
 // so ported domain files change only their import path ($config -> $core/legacyConfig).
 // Frozen at build time BY DESIGN (the $game alias is static).
 // UI-TIER IMPORT RULE (amended, Phase-3 final review; BASE_LAYER_LIMIT added
-// Phase-4a Task 1, closing the P3-final-review Minor-1 residual): UI code MAY
-// import IDENTITY/SHARED constants from this adapter — APP_NAME, APP_VERSION,
-// LANG_PREFERENCE_KEY_NAME, UPDATE_MESSAGE, IS_DEV, BASE_LAYER_LIMIT — because
-// they are identity-locked (APP_NAME = game.storageId), game-independent, or
-// (BASE_LAYER_LIMIT) simply a constant re-exported from sharedConfig — constants
-// re-exported from sharedConfig qualify the same way game-independent ones do.
+// Phase-4a Task 1, closing the P3-final-review Minor-1 residual; FOLDER_FILTER_TYPES added
+// task-5 review): UI code MAY import IDENTITY/SHARED constants from this adapter —
+// APP_NAME, APP_VERSION, LANG_PREFERENCE_KEY_NAME, UPDATE_MESSAGE, IS_DEV,
+// BASE_LAYER_LIMIT, FOLDER_FILTER_TYPES — because they are identity-locked
+// (APP_NAME = game.storageId), game-independent, or simply constants re-exported from
+// sharedConfig — constants re-exported from sharedConfig qualify the same way
+// game-independent ones do.
 // GAME-DATA constants (PITCHES, INSTRUMENTS, LAYOUT_*, MIDI_*, NOTE_*, ...)
 // remain FORBIDDEN in UI code: read those from $game directly (spec §5.2).
 // The config-surface golden fixture is the acceptance test for these derivations.
 import {game} from '$game'
 import type {Pitch, NoteNameType, TempoChanger, MIDIPreset, StorageId} from '../games/types'
-import {APP_VERSION, HAS_BIGINT, BASE_LAYER_LIMIT} from './sharedConfig'
+import {APP_VERSION, HAS_BIGINT, BASE_LAYER_LIMIT, FOLDER_FILTER_TYPES} from './sharedConfig'
 
 // ---- re-exported type aliases (old files import these from $config) ----
 export type {Pitch, NoteNameType, TempoChanger, MIDIPreset}
 export type AppName = StorageId
 
 // ---- re-exported shared (game-independent) constants ----
-export {APP_VERSION, HAS_BIGINT, BASE_LAYER_LIMIT}
+export {APP_VERSION, HAS_BIGINT, BASE_LAYER_LIMIT, FOLDER_FILTER_TYPES}
 
 // ---- identity ----
 export const APP_NAME: AppName = game.storageId
@@ -73,10 +74,6 @@ export const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)
 
 export const MIDI_BOUNDS = game.midi.bounds
 export const MIDI_PRESETS = game.midi.presets
-
-// ---- folders (game-independent) ----
-// old Config.ts:854 — `export const FOLDER_FILTER_TYPES = ["alphabetical", "date-created"] as const`
-export const FOLDER_FILTER_TYPES = ['alphabetical', 'date-created'] as const
 
 // ---- i18n / misc (game-independent) ----
 // old Config.ts:887 — `export const IS_DEV = process.env.NODE_ENV === "development"`. Derived via
