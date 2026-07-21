@@ -15,6 +15,7 @@
     import {AudioProvider} from '$lib/providers/AudioProvider'
     import {MIDIProvider} from '$lib/providers/MIDIProvider'
     import {metronome} from '$lib/audio/Metronome'
+    import {setupProtocol} from '$lib/protocol/appProtocol'
     import {browserHistoryStore} from '$stores/BrowserHistoryStore'
     import {asyncConfirm} from '$stores/AsyncPromptStore.svelte'
     import {logger} from '$stores/LoggerStore.svelte'
@@ -242,9 +243,11 @@
         keyBinds.load()
         pwaStore.load()
         ThemeProvider.load().catch(console.error)
-        // Phase 4: setupProtocol().catch(console.error) - $lib/Hooks/useWindowProtocol, the
-        // /transfer page's window-message protocol. Not part of this task's checklist; noted here
-        // only because it shared this exact effect in the old blob.
+        // Phase 4a Task 8: setupProtocol() wired for real (was a marker-only comment through Task
+        // 2). Old GeneralProvidersWrapper.tsx never disposed the protocol on unmount either (its
+        // cleanup only destroyed Audio/Keyboard/MIDI providers, same trio returned below) -
+        // preserved: no protocol.dispose() call added here.
+        setupProtocol().catch(console.error)
         return () => {
             AudioProvider.destroy()
             KeyboardProvider.destroy()
