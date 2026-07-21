@@ -1768,3 +1768,12 @@ a {
         margin-bottom: 1vh;
     }
 }
+
+/* pulled from sheet-visualizer/SheetVisualizer.css (old: globally imported in app/layout.tsx,
+   loaded on every page, not just sheet-visualizer) — P4b Task 2. Print-only body background,
+   kept global here for the same reason old was. */
+@media print {
+    body {
+        background-color: white !important;
+    }
+}
