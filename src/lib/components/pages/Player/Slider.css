@@ -5,12 +5,27 @@
    Ported here as a plain, UNSCOPED sibling stylesheet (".module" dropped from the filename since
    it is no longer CSS-Modules-hashed), matching the SheetFrame.css precedent (Task 2) rather than
    a per-component Svelte <style> block: the classes below are genuinely split across two separate
-   Svelte components (PlayerSlider.svelte owns .two-way-slider*/.slider-outer/.slider-full/
-   .slider-current/.slider-input; PlayerSongControls.svelte owns .slider-select/.slider-wrapper/
-   .sidebar-metronome-button) - a scoped <style> living in only one of them would never reach the
-   other's elements. Both files `import './Slider.css'` as a side effect so the CSS is present
-   regardless (Vite dedupes the identical module import automatically). Selector names and rule
-   bodies below are byte-identical to the old module. */
+   Svelte components (PlayerSlider.svelte owns .two-way-slider and its .two-way-slider-thumb
+   variants, plus .slider-outer, .slider-full, .slider-current, .slider-input; PlayerSongControls.svelte
+   owns .slider-select, .slider-wrapper, .sidebar-metronome-button) - a scoped <style> living in only
+   one of them would never reach the other's elements. Both files `import './Slider.css'` as a side
+   effect so the CSS is present regardless (Vite dedupes the identical module import automatically).
+   Selector names and rule bodies below are byte-identical to the old module.
+
+   BUILD FIX (Phase 4b Task 7, same bug class as the documented P3 Task 7 incident): this comment
+   previously listed the class names delimiter-separated, and one wildcard-suffix asterisk landed
+   immediately before a delimiter - together those two characters, with nothing between them, form
+   the two-character sequence that closes a CSS comment block, so this whole comment closed early
+   right there, dumping the remaining English prose in as invalid CSS. svelte-check/the dev server
+   never parse global CSS strictly enough to catch it; only `vite build`'s lightningcss minifier
+   does - and nothing reached this file through a real build until this task mounted
+   PlayerSongControls (and therefore this file's `import './Slider.css'`) into the real /player
+   route for the first time (Slider.css was never previously bundled reachably: Task 5's own gates
+   predate any page mounting these components). Reworded above to commas, with every class name
+   fully spelled out, so no asterisk ever sits directly next to a delimiter - zero change to the
+   selectors/rules themselves. (NOTE for future editors: avoid ever placing an asterisk immediately
+   before a forward slash inside a CSS comment, including in prose describing this very bug -
+   deliberately paraphrased in this paragraph for exactly that reason.) */
 
 .two-way-slider {
     position: absolute;
