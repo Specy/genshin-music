@@ -7,6 +7,7 @@
     import FilePicker, {type FileElement} from '$cmp/inputs/FilePicker.svelte'
     import Card from '$cmp/layout/Card.svelte'
     import AppBackground from '$cmp/theme/AppBackground.svelte'
+    import Player from '$cmp/pages/Player/Player.svelte'
     import ThemePropriety from '$cmp/pages/theme/ThemePropriety.svelte'
     import ThemeInput from '$cmp/pages/theme/ThemeInput.svelte'
     import ThemePreview from '$cmp/pages/theme/ThemePreview.svelte'
@@ -32,13 +33,20 @@
     // reactivity, the hook's whole job. `useObservableArray(themeStore.themes)` -> `themeStore.themes`
     // directly (a live `$state` array, ThemeStore.svelte.ts).
     //
-    // DOCUMENTED DEVIATION (this task's brief): the live Player/Composer preview at the bottom
-    // (`<Player inPreview/>` / `<Composer inPreview/>`) is STUBBED with a themed placeholder `Card` -
-    // those pages don't exist yet (Phase 4b). Everything else on this page is full-function (CRUD,
-    // clone-on-edit prompt flow, background image URLs, import/export). Ledger note for 4b: swap the
-    // `{#snippet previewStub}` branches below for the real `<Player>`/`<Composer>` components: the
+    // DOCUMENTED DEVIATION, UPDATED BY PHASE 4b TASK 7: the live Player/Composer preview at the
+    // bottom (`<Player inPreview/>` / `<Composer inPreview/>`) was STUBBED with a themed placeholder
+    // `Card` for both pages while neither existed yet. Player now exists (Phase 4b) - the `'player'`
+    // branch below renders the real `<Player inPreview/>` (see that component's own header comment
+    // for why it never wires `AppBackground` itself: this page supplies it, exactly like old's
+    // `PageBackground` route wrapper did). The `'composer'` branch STILL renders
+    // `{@render previewStub('Composer')}` - Composer doesn't exist until Phase 4c - so this remains a
+    // documented, temporary asymmetry between the two branches, not an inconsistency. Everything
+    // else on this page is (and was already) full-function (CRUD, clone-on-edit prompt flow,
+    // background image URLs, import/export). Ledger note for 4c: swap the remaining
+    // `{#snippet previewStub('Composer')}` call for the real `<Composer inPreview/>` - the
     // surrounding structure (toggle button, `AppBackground` wrapping, `.theme-app-preview` container)
-    // is already wired to old's exact shape so that swap should be a drop-in.
+    // is already wired to old's exact shape so that swap should be a drop-in, the same way Player's
+    // swap was here.
     onMount(() => {
         setPageVisited('theme')
     })
@@ -119,6 +127,9 @@
 </script>
 
 {#snippet previewStub(pageLabel: string)}
+    <!-- Composer-only now (Phase 4b Task 7 swapped the 'player' branch below for the real
+         <Player inPreview/>) - still generic over `pageLabel` since nothing else about this
+         snippet is Composer-specific; 4c's swap removes this snippet's last caller entirely. -->
     <Card
         className="theme-preview-stub"
         background="var(--primary)"
@@ -126,7 +137,7 @@
         style="width:100%;height:100%;align-items:center;justify-content:center;text-align:center;padding:2rem"
     >
         <div style="font-size:1.3rem">{pageLabel}</div>
-        <div style="margin-top:0.5rem;opacity:0.8">Preview — arrives with the player/composer port (4b).</div>
+        <div style="margin-top:0.5rem;opacity:0.8">Preview — arrives with the composer port (4c).</div>
     </Card>
 {/snippet}
 
@@ -220,7 +231,7 @@
         </AppButton>
         {#if selectedPagePreview === 'player'}
             <AppBackground page="Main">
-                {@render previewStub('Player')}
+                <Player inPreview />
             </AppBackground>
         {:else}
             <AppBackground page="Composer">
