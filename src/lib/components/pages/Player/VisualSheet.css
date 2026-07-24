@@ -1,0 +1,41 @@
+/* Old: src/components/pages/Player/VisualSheet.module.css (26 lines), a Next.js CSS Modules file
+   imported (as `s`/`svs`) by both PlayerPagesRenderer.tsx (.player-chunks-page) and
+   PlayerSongControls.tsx (.player-controls) - the same physical module resolves to the same
+   hashed class names for both consumers there.
+
+   Ported here as a plain, UNSCOPED sibling stylesheet (".module" dropped from the filename since
+   it is no longer CSS-Modules-hashed), matching the SheetFrame.css/Slider.css precedent: the two
+   classes below are split across two separate Svelte components (PlayerPagesRenderer.svelte owns
+   .player-chunks-page; PlayerSongControls.svelte owns .player-controls) - a scoped <style> living
+   in only one of them would never reach the other's elements. Both files `import './VisualSheet.css'`
+   as a side effect so the CSS is present regardless (Vite dedupes the identical module import
+   automatically). Selector names and rule bodies below are byte-identical to the old module. */
+
+.player-chunks-page {
+    position: absolute;
+    width: 60vw;
+    max-width: 45rem;
+    margin-left: auto;
+    margin-right: auto;
+    top: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.2rem
+}
+
+@media only screen and (max-width: 920px) {
+    .player-chunks-page {
+        width: 45vw;
+    }
+}
+
+.player-controls {
+    position: absolute;
+    align-items: flex-end;
+    padding: 0.8rem;
+    right: 0.2rem;
+    height: 100%;
+    margin-left: 3.5rem;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
