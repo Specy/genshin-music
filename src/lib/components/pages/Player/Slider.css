@@ -1,0 +1,119 @@
+/* Old: src/components/pages/Player/Slider.module.css (103 lines), a Next.js CSS Modules file
+   imported (as `s`/`sl`) by both PlayerSlider.tsx and PlayerSongControls.tsx - the same physical
+   module resolves to the same hashed class names for both consumers there.
+
+   Ported here as a plain, UNSCOPED sibling stylesheet (".module" dropped from the filename since
+   it is no longer CSS-Modules-hashed), matching the SheetFrame.css precedent (Task 2) rather than
+   a per-component Svelte <style> block: the classes below are genuinely split across two separate
+   Svelte components (PlayerSlider.svelte owns .two-way-slider*/.slider-outer/.slider-full/
+   .slider-current/.slider-input; PlayerSongControls.svelte owns .slider-select/.slider-wrapper/
+   .sidebar-metronome-button) - a scoped <style> living in only one of them would never reach the
+   other's elements. Both files `import './Slider.css'` as a side effect so the CSS is present
+   regardless (Vite dedupes the identical module import automatically). Selector names and rule
+   bodies below are byte-identical to the old module. */
+
+.two-way-slider {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+}
+
+.two-way-slider-thumb {
+    display: flex;
+    transform: translate(-100%, -50%);
+    color: var(--accent);
+    position: absolute;
+    text-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px;
+}
+
+.two-way-slider-thumb svg {
+    transform: rotate(90deg);
+    margin-left: 0.2rem;
+}
+
+.slider-outer {
+    width: 1rem;
+    position: relative;
+    margin-top: 0;
+    touch-action: none;
+    height: 100%;
+    cursor: pointer;
+}
+
+.slider-full {
+    height: 100%;
+    width: 100%;
+    background-color: var(--primary-darken-10);
+    border-radius: 0.2rem;
+    overflow: hidden;
+}
+
+.slider-input {
+    user-select: none;
+    font-family: 'Bonobo';
+    font-weight: bold;
+    width: 4ch;
+    text-align: end;
+    background: transparent;
+    color: var(--accent);
+    border: none;
+}
+
+.slider-input::-webkit-outer-spin-button,
+.slider-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.slider-input {
+    -moz-appearance: textfield;
+}
+
+.slider-current {
+    height: 100%;
+    width: 100%;
+    transform: translateY(100%);
+    transition: all 0.1s linear;
+    background-color: var(--accent);
+    left: 0;
+    top: 0;
+}
+
+.slider-select {
+    font-size: 0.8rem;
+    flex: 1;
+    height: 2rem;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: none;
+    border-radius: 0.3rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+}
+
+.slider-wrapper {
+    height: 100%;
+    align-self: center;
+    width: 100%;
+    align-items: center;
+    gap: 0.4rem;
+    max-height: 25rem;
+}
+
+.slider-wrapper button {
+    margin: 0;
+}
+
+
+@media screen and (max-width: 920px) {
+    .sidebar-metronome-button {
+        position: absolute;
+        right: 0.8rem;
+        bottom: 0.8rem;
+    }
+}
