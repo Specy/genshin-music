@@ -170,7 +170,6 @@ export interface GameDefinition {
             player: NoteNameTypeDefault      // idem
             zen: NoteNameTypeDefault         // Genshin {KeyboardLayout, DoReMi} | Sky {No Text, No Text}
             sheetVisualizer: NoteNameType    // 'Keyboard layout' | 'ABC'
-            playerApproach: NoteNameType     // 'Keyboard layout' | 'ABC'
         }
     }
 

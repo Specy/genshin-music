@@ -30,7 +30,7 @@
     // Two-tier: old's module-level constant `const layoutType = APP_NAME === 'Genshin' ? 'Keyboard
     // layout' : 'ABC'` (computed once, outside the component, game-independent per render) ->
     // `game.settings.defaultNoteNameType.sheetVisualizer` ($lib/games/types.ts:172, both
-    // genshin/index.ts:464 and sky/index.ts:835 already cite this exact old ternary as its source).
+    // genshin/index.ts:466 and sky/index.ts:837 already cite this exact old ternary as its source).
     // Kept as a plain top-level `const` (not `$derived`) - `game` is a fixed, build-time-baked
     // singleton with no reactive dependency, so a derived rune would add reactivity machinery for a
     // value that structurally can never change while the app runs, same as old's own module-constant

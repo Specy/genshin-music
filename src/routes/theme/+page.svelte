@@ -239,12 +239,19 @@
             </AppBackground>
         {/if}
     </div>
-    <!-- Keep this at the bottom, same as old - it gets overwritten by the real preview's OWN
-         PageMetadata once 4b replaces the stub above with the actual Player/Composer pages
-         (matching old's own comment: those page components render their own <title>/<meta>). The
-         stub currently renders no competing PageMetadata of its own, so this second call is
-         presently a harmless no-op duplicate of the one above - kept for structural parity so 4b's
-         swap doesn't also need to re-add it. -->
+    <!-- Keep this at the bottom, same as old - its position after both preview branches above is
+         load-bearing: Svelte compiles a <title> inside <svelte:head> to a plain
+         `document.title = ...` assignment rather than an inserted DOM node (verified against
+         node_modules/svelte's own compiler + SSR renderer source), so when several PageMetadata
+         instances are mounted together the latest one to run simply overwrites the rest - no
+         extra <title> element is ever created. The 'player' branch is no longer a stub (Phase 4b
+         Task 7 swapped it for the real <Player inPreview/> above) and it DOES render its own
+         competing PageMetadata (`home:player_name`, "Player") - this trailing call still runs
+         after it, so the resolved title correctly stays "Themes" (verified live: SSR HTML and the
+         hydrated DOM both show exactly one <title>, reading "Themes", not "Player"). The
+         'composer' branch is unchanged - still `previewStub`, pending Phase 4c - so it renders no
+         competing title of its own yet; once 4c swaps in the real <Composer inPreview/> the same
+         last-wins ordering applies, so it must stay mounted above this call too. -->
     <PageMetadata
         text={t('home:themes_name')}
         description="Change the app theme, set the different colors, backgrounds, opacity and customisations"
