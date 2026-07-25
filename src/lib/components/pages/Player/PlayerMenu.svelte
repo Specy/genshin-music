@@ -105,9 +105,10 @@
     // already byte-verified against copies already inlined elsewhere in this codebase (FloatingDropdown
     // .svelte, ZenKeyboardMenu.svelte, SheetVisualizerMenu.svelte, SongMenuSearch.svelte,
     // PlayerSongRow.svelte's own siblings) - FaSearch itself is this file's own `faSearchIcon`
-    // snippet, byte-identical to SongMenuSearch.svelte's own `searchIcon` snippet (P4a Task 5), not
-    // a fresh icon as an earlier draft of this comment claimed; FaGithub/FaQuestion/RiPlayListFill
-    // freshly sourced (first consumers in this codebase) from the same cited version. RiPlayListFill's own
+    // snippet, identical to SongMenuSearch.svelte's own `searchIcon` snippet apart from one space
+    // before the <path> element's self-closing `/>` (P4a Task 5), not a fresh icon as an earlier
+    // draft of this comment claimed; FaGithub/FaQuestion/RiPlayListFill freshly sourced (first
+    // consumers in this codebase) from the same cited version. RiPlayListFill's own
     // `attr: {fill: "currentColor"}` (baked into its GenIcon call, unlike every FA icon here) is
     // functionally identical to IconBase's own base default fill - both resolve to the same
     // rendered `fill="currentColor"`, so it's written with the same stroke/fill/stroke-width
