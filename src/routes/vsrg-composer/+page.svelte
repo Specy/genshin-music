@@ -256,6 +256,12 @@
         if (selectedType === 'delete') {
             vsrg.removeHitObjectInTrackAtTimestamp(selectedTrack, timestamp, key)
             selectedHitObject = null
+            // FIX (review): refreshVsrg() is required here, matching selectHitObject's own
+            // delete-branch treatment - without it, reassigning selectedHitObject to null when it
+            // is ALREADY null (true after every successful delete) is a no-op $state write that
+            // never retriggers VsrgComposerCanvas.svelte's $effect, so the pixi canvas keeps
+            // showing the deleted hit object until an unrelated redraw-triggering action happens.
+            refreshVsrg()
             return
         }
         const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
