@@ -323,8 +323,7 @@ function clamp(num: number, min: number, max: number) {
 type Debouncer = (func: () => void) => void
 
 // relocated verbatim from old $types/GeneralTypes.ts (P3 Task 2 restores it here —
-// createDebouncer/debounce are its only consumers in this tree; ClickType, GeneralTypes.ts's
-// other export, still has no consumer and stays deferred).
+// createDebouncer/debounce are its only consumers in this tree).
 export type Timer = ReturnType<typeof setTimeout> | 0
 
 function createDebouncer(delay: number): Debouncer {
@@ -333,6 +332,24 @@ function createDebouncer(delay: number): Debouncer {
         clearTimeout(timeoutId)
         timeoutId = setTimeout(callback, delay)
     }
+}
+
+// relocated verbatim from old $types/GeneralTypes.ts (P4c Task 7 restores it here —
+// VsrgComposerRenderer.ts is its first real consumer in this tree; GeneralTypes.ts itself is not
+// ported). Old: `export enum ClickType {Left = 1, Right = 2, Unknown = -1}`.
+export enum ClickType {
+    Left = 1,
+    Right = 2,
+    Unknown = -1
+}
+
+// restored from old $lib/utils/Utilities.ts (P4c Task 7 — VsrgComposerRenderer.ts's snap-point/
+// hit-object/timeline pointer handlers are the consumers, mapping a native PointerEvent's
+// `button` field to a ClickType).
+function parseMouseClick(event: number) {
+    if (event === 0) return ClickType.Left
+    if (event === 2) return ClickType.Right
+    return ClickType.Unknown
 }
 
 // eslint (no-explicit-any / no-unsafe-function-type) forces typed params here; behavior is
@@ -405,4 +422,5 @@ export {
     isNumberCloseTo,
     getNearestTo,
     prettyPrintInstrumentName,
+    parseMouseClick,
 }
