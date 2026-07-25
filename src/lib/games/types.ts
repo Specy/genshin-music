@@ -37,8 +37,10 @@ export type NoteImage =
     'cr' | 'dm' | 'dmcr' | 'do' | 're' | 'reb' | 'mi' | 'mib'
     | 'fa' | 'so' | 'la' | 'lab' | 'ti' | 'tib'
 
-// A Svelte 5 component for one glyph (the SvelteKit port of SvgNotes/*).
-export type GlyphComponent = import('svelte').Component<{background?: string}>
+// A Svelte 5 component for one glyph (the SvelteKit port of SvgNotes/*). `color` restored P4c
+// Task 2 (old: SvgNoteProps.color, src/components/shared/SvgNotes/index.tsx) - see SvgNote.svelte
+// and the 14 glyph components' own header comments for the full per-instrument-tint recipe.
+export type GlyphComponent = import('svelte').Component<{background?: string; color?: string}>
 
 export type LayoutKeys = {                         // typeof LAYOUT_KINDS[keyof …]
     keyboardLayout: string[]

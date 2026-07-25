@@ -42,24 +42,6 @@
     //   INSTRUMENTS_DATA[instrument]?.clickColor / .fill -> game.instruments.data[instrument]?.clickColor / .fill
     //   NOTES_CSS_CLASSES.*                        -> game.notes.cssClasses.*
     //   BASE_THEME_CONFIG.text.*                   -> game.themes.baseConfig.text.*
-    //
-    // FLAGGED FOR REVIEWER (real visual deviation, not a cosmetic nit): old passed a `color` prop to
-    // SvgNote - `color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrument]?.fill :
-    // undefined}` - which old's SvgNote applied as an inline `style={{fill: color, stroke: color}}` on
-    // the glyph, overriding the CSS `fill: var(--accent)` rule (Keyboard.css `.note svg`, this same
-    // task) whenever the current instrument declares a `.fill` AND the user hasn't customized their
-    // theme's accent color away from default (i.e. the common/default case). 8 of Genshin's 14
-    // instruments declare a distinct `.fill` (e.g. Wind Instrument #7FB363) - this is real,
-    // currently-default-visible per-instrument icon tinting, not an edge case. The ported
-    // `SvgNote.svelte` (P3 Task 9, already reviewed/merged) has NO color prop - its `GlyphComponent`
-    // type is locked to `Component<{background?: string}>` (games/types.ts:41) - and this task's brief
-    // says to reuse it as-is, not modify a shared contract ZenNote/ComposerNote also depend on. This is
-    // the FIRST real consumer that would exercise the color prop (BaseNote.svelte's own old blob never
-    // passed `color` either - verified against src/components/shared/Miscellaneous/BaseNote.tsx - so
-    // P3 Task 9 never had to confront this gap). Dropped here, matching SvgNote's real signature;
-    // flagging for a follow-up decision (widen GlyphComponent to `{background?, color?}` and thread it
-    // through all 14 glyph components + every SvgNote caller) rather than silently expanding this
-    // task's scope into already-reviewed shared infrastructure.
     let {
         note,
         data,
@@ -179,6 +161,7 @@
         {/if}
         <SvgNote
             name={note.noteImage}
+            color={theme.isDefault('accent') ? game.instruments.data[data.instrument]?.fill : undefined}
             background={svgBackground}
         />
         <div class={game.notes.cssClasses.noteName} style="color:{textColor}">

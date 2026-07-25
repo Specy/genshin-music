@@ -5,17 +5,19 @@
     // Old: src/components/shared/link/AppLink.tsx, wrapping src/app/_navigation/AppLink.tsx
     // (next/link + a custom NavigationProvider/LeaveGuard system).
     //
-    // Scope note: this ports the STYLED LINK only (display:inline-block,
-    // underline, accent color) using SvelteKit's own navigation - the old
-    // NavigationProvider's `registerLeaveHandler`/LeaveGuard (an
-    // unsaved-changes-before-navigating confirmation system used by editor
-    // pages) is a separate, substantial subsystem with zero consumers this
-    // phase (its only real users - Composer/VSRG Composer - are Phase 4) and
-    // is not in this task's file list; a plain SvelteKit `<a href>` already
-    // gets client-side transitions for free (unlike next/link, no wrapper
-    // component is required for that part), so nothing is lost for the
-    // primitives this phase needs. Revisit when the editor pages need the
-    // leave-guard.
+    // Scope note: this component itself renders the STYLED LINK only
+    // (display:inline-block, underline, accent color) using SvelteKit's own
+    // navigation - a plain `<a href>` already gets client-side transitions
+    // for free (unlike next/link, no wrapper component is required for
+    // that part). The old NavigationProvider's `registerLeaveHandler`/
+    // LeaveGuard (an unsaved-changes-before-navigating confirmation system)
+    // is LIVE as of P4c Task 2, but it is wired once at the shell level
+    // (`src/routes/+layout.svelte`'s `beforeNavigate` handler - see that
+    // file's own header comment for the full mechanism), not inside this
+    // component: every navigation through this link - and every other
+    // in-app navigation, including `goto()` calls and browser back/forward
+    // - is already covered by that single shell-level interception point,
+    // so AppLink itself needs no leave-guard-specific code of its own.
     //
     // `resolve()` (not the deprecated `base` prefixing used elsewhere, e.g.
     // i18nCache.ts) is used for internal hrefs so this satisfies
