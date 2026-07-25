@@ -449,6 +449,7 @@ export class VsrgComposerRenderer {
         if (draggedHitObject) this.callbacks.releaseHitObject()
         setTimeout(() => {
             this.preventClick = false
+            this.draw()
         }, 200)
         if (this.state.scrollSnap) {
             const { snapPoints } = this.state
