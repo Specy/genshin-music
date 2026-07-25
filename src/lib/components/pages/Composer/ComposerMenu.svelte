@@ -1,0 +1,371 @@
+<script lang="ts">
+    import {onMount} from 'svelte'
+    import {isMobile} from 'is-mobile'
+    import Analytics from '$core/Analytics'
+    import {homeStore} from '$stores/HomeStore.svelte'
+    import {logger} from '$stores/LoggerStore.svelte'
+    import {songsStore} from '$stores/SongsStore.svelte'
+    import {folderStore} from '$stores/FoldersStore.svelte'
+    import {globalConfigStore} from '$stores/GlobalConfigStore.svelte'
+    import {asyncConfirm, asyncPrompt} from '$stores/AsyncPromptStore.svelte'
+    import {fileService} from '$core/Services/FileService'
+    import {KeyboardProvider} from '$lib/providers/KeyboardProvider'
+    import {clickOutside} from '$lib/utils/clickOutside'
+    import {isAudioFormat, isMidiFormat, isVideoFormat} from '$core/utils/Utilities'
+    import type {SerializedSong, SongType} from '$core/Songs/Song'
+    import type {ComposerSettingsDataType} from '$core/BaseSettings'
+    import type {SettingUpdate, SettingVolumeUpdate} from '$core/types/SettingsPropriety'
+    import {t} from '$i18n/binding.svelte'
+    import MenuSidebar from '$cmp/menu/MenuSidebar.svelte'
+    import MenuItem from '$cmp/menu/MenuItem.svelte'
+    import MenuButton from '$cmp/menu/MenuButton.svelte'
+    import MenuPanel from '$cmp/menu/MenuPanel.svelte'
+    import MenuPanelWrapper from '$cmp/menu/MenuPanelWrapper.svelte'
+    import SongMenu from '$cmp/SongMenu.svelte'
+    import ComposerSongRow from './ComposerSongRow.svelte'
+    import SettingsPane from '$cmp/settings/SettingsPane.svelte'
+    import Separator from '$cmp/Separator.svelte'
+    import LanguageSelector from '$cmp/i18n/LanguageSelector.svelte'
+    import AppLink from '$cmp/AppLink.svelte'
+    import AppButton from '$cmp/inputs/AppButton.svelte'
+    import FilePicker, {type FileElement} from '$cmp/inputs/FilePicker.svelte'
+    import HelpTooltip from '$cmp/utility/HelpTooltip.svelte'
+    import DonateButton from '$cmp/DonateButton.svelte'
+
+    // Old: src/components/pages/Composer/ComposerMenu.tsx (467 lines, default export `Menu`,
+    // `memo`-wrapped). `MenuContextProvider`/`MenuSidebar`/`MenuPanel`/`MenuPanelWrapper`/
+    // `MenuButton`/`MenuItem`; the Songs panel (`SongMenu` + `ComposerSongRow`, this task's sibling
+    // file); the Settings panel (`SettingsPane` over the composer settings); the help/keybinds/theme
+    // links; `homeStore.open()` for the Home button; the `hasChanges` save indicator; the
+    // `isRecordingAudio` disabled states.
+    //
+    // Structural precedent: this migration's own `PlayerMenu.svelte` (P4b Task 6, same
+    // MenuSidebar/MenuPanelWrapper/panel-snippet/wrapperEl+clickOutside shape) and
+    // `ZenKeyboardMenu.svelte` (P4a Task 3, same `.hamburger`-as-first-child pattern - Composer is
+    // one of the 4 old page menus that render a hamburger div as MenuContextProvider's own first
+    // child, per `MenuSidebar.svelte`'s own header comment). `MenuTabs` type DROPPED (old declared
+    // it purely to type `useState<MenuTabs>`, nothing else ever imported it) - same established
+    // precedent as `PlayerMenu.svelte`'s own identical drop; `MenuSidebar`'s context plumbing takes
+    // a plain `string` for `current`/`setCurrent` regardless.
+    //
+    // `homeStore.open()` used DIRECTLY for the Home button (this task's own instruction) - a
+    // DELIBERATE deviation from old, which routed it through `changePage('Home')`
+    // (`changePage`'s own old body: `if (page === 'Home') return homeStore.open(); await this.props
+    // .navigation.push(page)` - i.e. old's 'Home' branch ALREADY just called `homeStore.open()`
+    // under the hood). `changePage` itself is KEPT as a callback prop (typed `(page: string) =>
+    // void`, dropping the now-unreachable `'Home'` union member) purely for the `/theme` link's
+    // quirk below - Task 6 (the composer page) owns its real implementation.
+    //
+    // `isMobile` (old: `import isMobile from "is-mobile"`, a default import) -> `import {isMobile}
+    // from 'is-mobile'`, matching this migration's own established named-import form (see
+    // `ComposerCanvas.svelte`'s identical import, same task family).
+    //
+    // `useClickOutside<HTMLDivElement>((e) => { if (isMobile()) setVisible(false); else
+    // setOpen(false) }, {active: (isOpen && isVisible), ignoreFocusable: true})` + `ref={menuRef}`
+    // -> `wrapperEl` bound via `MenuSidebar`'s own `bind:wrapperEl`, plus a manually-invoked
+    // `clickOutside(...)` action in an `$effect` - the established pattern for reaching a CHILD
+    // component's DOM node (`PlayerMenu.svelte`/`ZenKeyboardMenu.svelte`/`SheetVisualizerMenu
+    // .svelte`), keyed on `isOpen && isVisible` (old's OWN actual dependency) with the exact
+    // isMobile()-branching close behavior preserved (a real, disclosed per-file difference from
+    // those three siblings, none of which branch on mobile).
+    //
+    // `KeyboardProvider.register("Escape", () => setVisible(false), {id: "composer_menu"})` (old,
+    // registered in a mount-only `useEffect`) -> the SAME raw `KeyboardProvider.register`/
+    // `.unregisterById` call inside `onMount`, NOT the settings-driven `createShortcutListener`
+    // (KeybindsStore) other already-ported menus use for THEIR "Escape"/named shortcuts - old
+    // genuinely bypasses the rebindable-shortcut layer here and hardcodes the literal key, and this
+    // is reproduced exactly, not normalized to the more common `createShortcutListener` idiom.
+    //
+    // i18n: old's `useTranslation([...])` first (default) namespace is 'composer' - every BARE
+    // (unprefixed) `t(...)` call in old's blob is written below with an explicit `composer:` prefix
+    // to resolve to the identical key (verified each one actually exists under `composer:` in the
+    // en bundle, e.g. `create_new_song`/`warning_opening_midi_importer`/etc. - none of these are a
+    // missing-key old bug).
+    //
+    // The FilePicker `onError` handler's old `files?.length > 0` guard drops its `?.` (the ported
+    // `FilePicker.svelte`'s own `onError` type declares `files: File[]` as always-defined,
+    // confirmed against that file directly) - `files.length > 0` is behaviorally identical.
+    // The double `console.error(e)` inside `importFile`'s catch block (old: an unconditional
+    // `console.error(e)` immediately followed by a second, redundant `if (e) console.error(e)`) is
+    // a real old quirk, reproduced byte-for-byte, not deduplicated.
+    let {
+        data,
+        functions,
+        inPreview = false,
+    }: {
+        data: {
+            settings: ComposerSettingsDataType
+            hasChanges: boolean
+            isRecordingAudio: boolean
+        }
+        functions: {
+            loadSong: (song: SerializedSong) => void
+            renameSong: (newName: string, id: string) => void
+            downloadSong: (song: SerializedSong, as: 'song' | 'midi') => void
+            createNewSong: () => void
+            changePage: (page: string) => void
+            updateThisSong: () => void
+            handleSettingChange: (data: SettingUpdate) => void
+            changeVolume: (data: SettingVolumeUpdate) => void
+            changeMidiVisibility: (visible: boolean) => void
+            startRecordingAudio: (override?: boolean) => void
+        }
+        inPreview?: boolean
+    } = $props()
+
+    const excludedSongs: SongType[] = ['vsrg']
+
+    let isOpen = $state(false)
+    let isVisible = $state(false)
+    let selectedMenu = $state('Settings')
+    let wrapperEl: HTMLDivElement | undefined = $state()
+
+    $effect(() => {
+        if (!wrapperEl) return
+        const action = clickOutside(wrapperEl, {
+            active: isOpen && isVisible,
+            ignoreFocusable: true,
+            onOutside: () => {
+                if (isMobile()) {
+                    isVisible = false
+                } else {
+                    isOpen = false
+                }
+            },
+        })
+        return () => action.destroy?.()
+    })
+
+    onMount(() => {
+        KeyboardProvider.register('Escape', () => {
+            isVisible = false
+        }, {id: 'composer_menu'})
+        return () => KeyboardProvider.unregisterById('composer_menu')
+    })
+
+    function toggleMenu(override?: boolean) {
+        isVisible = override !== undefined ? override : !isVisible
+    }
+
+    async function removeSong(name: string, id: string) {
+        const confirm = await asyncConfirm(t('confirm:delete_song', {song_name: name}))
+        if (confirm) {
+            await songsStore.removeSong(id)
+            Analytics.userSongs('delete', {page: 'composer'})
+        }
+    }
+
+    async function createFolder() {
+        const name = await asyncPrompt(t('question:enter_folder_name'))
+        if (!name) return
+        folderStore.createFolder(name)
+    }
+
+    async function importFile(files: FileElement<SerializedSong[] | SerializedSong>[]) {
+        for (const file of files) {
+            try {
+                const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[]
+                await fileService.importAndLog(songs)
+            } catch (e) {
+                console.error(e)
+                if (e) console.error(e)
+                logger.error(t('logs:error_importing_invalid_format'), 8000)
+            }
+        }
+    }
+
+    function jsonImportError(e: unknown, files: File[]) {
+        if (e) console.error(e)
+        if (files.length > 0) {
+            const file = files[0]
+            const name = file.name
+            if (isMidiFormat(name)) logger.warn(t('composer:warning_opening_midi_importer'), 6000)
+            else if (isVideoFormat(name) || isAudioFormat(name)) logger.warn(t('composer:warning_opening_audio_importer'), 6000)
+            else return logger.error(t('composer:error_importing_file_invalid_format'), 8000)
+            functions.changeMidiVisibility(true)
+            toggleMenu()
+        } else {
+            logger.error(t('composer:error_importing_file_invalid_format_audio_video'), 8000)
+        }
+    }
+</script>
+
+{#snippet faBarsIcon()}
+    <!-- react-icons/fa's FaBars (unpkg.com/react-icons@5.6.0/fa/index.mjs); old's `<MemoizedIcon
+         icon={FaBars}/>` call passed no className, unlike the ".icon"-classed icons below. -->
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
+{/snippet}
+
+{#snippet faTimesIcon()}
+    <!-- react-icons/fa's FaTimes, same sourcing; old wrapped it in `<MemoizedIcon
+         className={'icon'}/>`. -->
+    <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 352 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"/></svg>
+{/snippet}
+
+{#snippet faSaveIcon()}
+    <!-- react-icons/fa's FaSave, same sourcing; old wrapped it in `<MemoizedIcon
+         className={'icon'}/>` too. -->
+    <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M433.941 129.941l-83.882-83.882A48 48 0 0 0 316.118 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h352c26.51 0 48-21.49 48-48V163.882a48 48 0 0 0-14.059-33.941zM224 416c-35.346 0-64-28.654-64-64 0-35.346 28.654-64 64-64s64 28.654 64 64c0 35.346-28.654 64-64 64zm96-304.52V212c0 6.627-5.373 12-12 12H76c-6.627 0-12-5.373-12-12V108c0-6.627 5.373-12 12-12h228.52c3.183 0 6.235 1.264 8.485 3.515l3.48 3.48A11.996 11.996 0 0 1 320 111.48z"/></svg>
+{/snippet}
+
+{#snippet faMusicIcon()}
+    <!-- react-icons/fa's FaMusic, same sourcing; old wrapped it in `<MemoizedIcon
+         className={'icon'}/>` too. -->
+    <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M470.38 1.51L150.41 96A32 32 0 0 0 128 126.51v261.41A139 139 0 0 0 96 384c-53 0-96 28.66-96 64s43 64 96 64 96-28.66 96-64V214.32l256-75v184.61a138.4 138.4 0 0 0-32-3.93c-53 0-96 28.66-96 64s43 64 96 64 96-28.65 96-64V32a32 32 0 0 0-41.62-30.49z"/></svg>
+{/snippet}
+
+{#snippet faCogIcon()}
+    <!-- react-icons/fa's FaCog, same sourcing; old wrapped it in `<MemoizedIcon
+         className={'icon'}/>` too. -->
+    <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/></svg>
+{/snippet}
+
+{#snippet faHomeIcon()}
+    <!-- react-icons/fa's FaHome, same sourcing; old wrapped it in `<MemoizedIcon
+         className={'icon'}/>` too. -->
+    <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 576 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M280.37 148.26L96 300.11V464a16 16 0 0 0 16 16l112.06-.29a16 16 0 0 0 15.92-16V368a16 16 0 0 1 16-16h64a16 16 0 0 1 16 16v95.64a16 16 0 0 0 16 16.05L464 480a16 16 0 0 0 16-16V300L295.67 148.26a12.19 12.19 0 0 0-15.3 0zM571.6 251.47L488 182.56V44.05a12 12 0 0 0-12-12h-56a12 12 0 0 0-12 12v72.61L318.47 43a48 48 0 0 0-61 0L4.34 251.47a12 12 0 0 0-1.6 16.9l25.5 31A12 12 0 0 0 45.15 301l235.22-193.74a12.19 12.19 0 0 1 15.3 0L530.9 301a12 12 0 0 0 16.9-1.6l25.5-31a12 12 0 0 0-1.7-16.93z"/></svg>
+{/snippet}
+
+<MenuSidebar
+    bind:wrapperEl
+    style={inPreview ? 'position:absolute' : ''}
+    current={selectedMenu}
+    setCurrent={(c) => selectedMenu = c}
+    open={isOpen}
+    setOpen={(o) => isOpen = o}
+    visible={isVisible}
+    setVisible={(v) => isVisible = v}
+>
+    {#snippet hamburger()}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="hamburger" onclick={() => isVisible = !isVisible}>
+            {@render faBarsIcon()}
+        </div>
+    {/snippet}
+    <MenuButton onclick={() => toggleMenu()} className="close-menu" ariaLabel={t('menu:close_menu')}>
+        {@render faTimesIcon()}
+    </MenuButton>
+    <MenuButton onclick={functions.updateThisSong} className={data.hasChanges ? 'not-saved' : ''} ariaLabel="Save" style="margin-top:auto">
+        {@render faSaveIcon()}
+    </MenuButton>
+    <MenuItem id="Songs" ariaLabel={t('menu:open_songs_menu')}>
+        {@render faMusicIcon()}
+    </MenuItem>
+    <MenuItem id="Settings" ariaLabel={t('menu:open_settings_menu')}>
+        {@render faCogIcon()}
+    </MenuItem>
+    <MenuButton onclick={() => homeStore.open()} ariaLabel="Open home menu" style="border:solid 0.1rem var(--secondary)">
+        {@render faHomeIcon()}
+    </MenuButton>
+
+    {#snippet panel()}
+        <MenuPanelWrapper style={inPreview ? 'position:absolute' : ''}>
+            <MenuPanel id="Songs">
+                <div class="songs-buttons-wrapper">
+                    <HelpTooltip>
+                        <ul>
+                            <li>{t('tutorials:composer.li_1')} </li>
+                            <li>{t('tutorials:composer.li_2')} </li>
+                            <li>{t('tutorials:composer.li_3')} </li>
+                            <li>{t('tutorials:composer.li_4')} </li>
+                            <li>{t('tutorials:composer.li_5')} </li>
+                            <li>{t('tutorials:composer.li_6')} </li>
+                        </ul>
+                    </HelpTooltip>
+                    <AppButton
+                        onclick={() => {
+                            functions.changeMidiVisibility(true)
+                            toggleMenu()
+                        }}
+                        style="margin-left:auto"
+                    >
+                        {t('composer:create_from_midi_or_audio')}
+                    </AppButton>
+                    <AppButton onclick={functions.createNewSong}>
+                        {t('composer:create_new_song')}
+                    </AppButton>
+                </div>
+                <!-- `functions.loadSong`/`.downloadSong`/`.renameSong` are read inline here (not
+                     pre-destructured into a top-level `songFunctions` const) - a top-level const
+                     would only capture $props()'s INITIAL `functions` reference (Svelte's own
+                     `state_referenced_locally` compiler warning flags exactly this, caught by this
+                     task's own `npm run check`), same established convention as `PlayerMenu.svelte`
+                     /`PlayerSongRow.svelte`'s identical note for the same situation. -->
+                <SongMenu
+                    songs={songsStore.songs}
+                    exclude={excludedSongs}
+                    SongComponent={ComposerSongRow}
+                    style="margin-top:0.6rem"
+                    onCreateFolder={createFolder}
+                    componentProps={{
+                        folders: folderStore.folders,
+                        functions: {
+                            loadSong: functions.loadSong,
+                            removeSong,
+                            toggleMenu,
+                            downloadSong: functions.downloadSong,
+                            renameSong: functions.renameSong,
+                        },
+                    }}
+                />
+                <div class="row" style="justify-content:flex-end;gap:0.2rem">
+                    <FilePicker
+                        onPick={importFile}
+                        onError={jsonImportError}
+                        as="json"
+                        multiple={true}
+                    >
+                        <AppButton>
+                            {t('menu:import_song_sheet')}
+                        </AppButton>
+                    </FilePicker>
+                </div>
+                <div class="songs-buttons-wrapper" style="margin-top:auto">
+                    <AppButton
+                        style="margin-top:0.5rem"
+                        className="record-btn"
+                        onclick={() => {
+                            isOpen = false
+                            setTimeout(() => {
+                                functions.startRecordingAudio(!data.isRecordingAudio)
+                            }, 300)
+                        }}
+                        toggled={data.isRecordingAudio}
+                    >
+                        {data.isRecordingAudio ? t('composer:stop_recording_audio') : t('composer:start_recording_audio')}
+                    </AppButton>
+                </div>
+            </MenuPanel>
+            <MenuPanel id="Settings">
+                <SettingsPane
+                    settings={data.settings}
+                    onUpdate={functions.handleSettingChange}
+                    changeVolume={functions.changeVolume}
+                />
+                <Separator background="var(--secondary)" height="0.1rem" verticalMargin="0.5rem" />
+                <div class="settings-row-wrap">
+                    {t('settings:select_language')} <LanguageSelector />
+                </div>
+                <div class="settings-row-wrap">
+                    {#if globalConfigStore.state.IS_MIDI_AVAILABLE}
+                        <AppLink href="/keybinds">
+                            <AppButton style="width:fit-content">
+                                {t('menu:connect_midi_keyboard')}
+                            </AppButton>
+                        </AppLink>
+                    {/if}
+                    <AppLink href="/theme" onclick={(e) => e.preventDefault()}>
+                        <AppButton
+                            onclick={() => functions.changePage('theme')}
+                            style="width:fit-content"
+                        >
+                            {t('menu:change_app_theme')}
+                        </AppButton>
+                    </AppLink>
+                </div>
+                <DonateButton />
+            </MenuPanel>
+        </MenuPanelWrapper>
+    {/snippet}
+</MenuSidebar>
