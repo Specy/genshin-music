@@ -105,11 +105,26 @@
     // the caught error - captured into logsStore automatically via the console.error patch AppInit
     // installs (same mechanism the old code relied on, since that patch wraps console.error itself)
     // - then toast via logger.error, then redirect to /error unless running on localhost (dev
-    // convenience; old: "Prevent localhost redirect"). `reset()` (svelte:boundary's recovery hook,
-    // no old-code equivalent since React's error boundary didn't swap to its own fallback UI
-    // either - render() unconditionally returned children) is called only after the navigation
-    // completes, so the boundary re-renders with the already-navigated /error route's children
-    // instead of retrying the page that just threw.
+    // convenience; old: "Prevent localhost redirect"). Old's redirect used `pushWithoutGuard`, not
+    // the guarded `push` (ErrorBoundaryRedirect.tsx:29) - NavigationProvider.tsx's
+    // `pushWithoutGuard` calls `router.push()` directly and never touches `guard.canLeave()`, so a
+    // crash-recovery redirect always fired regardless of any registered leave handler. This
+    // `goto()` reproduces that exemption via the same `bypassOnce` flag/mechanism as the
+    // approved-navigation path above, set unconditionally right before the call (see below): it
+    // makes the beforeNavigate callback above return at its very first check, before it ever calls
+    // `nav.cancel()` or awaits `canLeave()`, so this specific navigation can never be intercepted by
+    // the leave-guard - regardless of whether a handler happens to be registered (Composer/
+    // VsrgComposer, Tasks 6/8, are the first consumers). Without this bypass, whenever a handler IS
+    // registered, the guard's OWN synchronous `nav.cancel()` (called before its `await
+    // canLeave()`) would make SvelteKit's internal `_before_navigate` resolve this `await goto(...)`
+    // almost immediately - it reads its blocked-state right after firing callbacks via a plain sync
+    // `forEach`, it does not wait for an async callback - so `reset()` below would fire prematurely,
+    // resetting the crashed subtree while the handler's own confirm UI might still be pending on
+    // screen. With the bypass in place, this call is never intercepted, so `reset()` (svelte:
+    // boundary's recovery hook, no old-code equivalent since React's error boundary didn't swap to
+    // its own fallback UI either - render() unconditionally returned children) really is called
+    // only after the navigation completes, so the boundary re-renders with the already-navigated
+    // /error route's children instead of retrying the page that just threw.
     async function handleShellError(error: unknown, reset: () => void) {
         console.error(error)
         logger.error(t('logs:error_with_the_app'))
@@ -118,6 +133,10 @@
             reset()
             return
         }
+        // Unconditional bypass (mirrors the approved-navigation path above; full rationale is in
+        // this function's header comment) - a crash-recovery redirect must never be interceptable
+        // by the leave-guard, matching old's pushWithoutGuard exemption.
+        bypassOnce = true
         // resolve() (not a bare string) to satisfy svelte/no-navigation-without-resolve - same
         // requirement AppLink.svelte's internal hrefs already follow.
         await goto(resolve('/error'))
