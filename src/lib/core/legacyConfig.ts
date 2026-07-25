@@ -4,10 +4,14 @@
 // Frozen at build time BY DESIGN (the $game alias is static).
 // UI-TIER IMPORT RULE (amended, Phase-3 final review; BASE_LAYER_LIMIT added
 // Phase-4a Task 1, closing the P3-final-review Minor-1 residual; FOLDER_FILTER_TYPES added
-// task-5 review; SPEED_CHANGERS/DEFAULT_DOM_RECT added Phase-4b Task 1): UI code MAY import
-// IDENTITY/SHARED constants from this adapter — APP_NAME, APP_VERSION,
+// task-5 review; SPEED_CHANGERS/DEFAULT_DOM_RECT added Phase-4b Task 1; COMPOSER_CACHE_DATA/
+// VSRG_TEMPO_CHANGER/DEFAULT_VSRG_KEYS_MAP/VSRG_SCORE_COLOR_MAP/PIXI_VERTICAL_ALIGN/
+// PIXI_HORIZONTAL_ALIGN/PIXI_CENTER_X_END_Y/PIXI_CENTER_ALIGN added Phase-4c Task 1): UI code MAY
+// import IDENTITY/SHARED constants from this adapter — APP_NAME, APP_VERSION,
 // LANG_PREFERENCE_KEY_NAME, UPDATE_MESSAGE, IS_DEV, BASE_LAYER_LIMIT, FOLDER_FILTER_TYPES,
-// SPEED_CHANGERS, DEFAULT_DOM_RECT — because they are identity-locked
+// SPEED_CHANGERS, DEFAULT_DOM_RECT, COMPOSER_CACHE_DATA, VSRG_TEMPO_CHANGER,
+// DEFAULT_VSRG_KEYS_MAP, VSRG_SCORE_COLOR_MAP, PIXI_VERTICAL_ALIGN, PIXI_HORIZONTAL_ALIGN,
+// PIXI_CENTER_X_END_Y, PIXI_CENTER_ALIGN — because they are identity-locked
 // (APP_NAME = game.storageId), game-independent, or simply constants re-exported from
 // sharedConfig — constants re-exported from sharedConfig qualify the same way
 // game-independent ones do.
@@ -16,14 +20,44 @@
 // The config-surface golden fixture is the acceptance test for these derivations.
 import {game} from '$game'
 import type {Pitch, NoteNameType, TempoChanger, MIDIPreset, StorageId} from '../games/types'
-import {APP_VERSION, HAS_BIGINT, BASE_LAYER_LIMIT, FOLDER_FILTER_TYPES, SPEED_CHANGERS, DEFAULT_DOM_RECT} from './sharedConfig'
+import {
+    APP_VERSION,
+    HAS_BIGINT,
+    BASE_LAYER_LIMIT,
+    FOLDER_FILTER_TYPES,
+    SPEED_CHANGERS,
+    DEFAULT_DOM_RECT,
+    COMPOSER_CACHE_DATA,
+    VSRG_TEMPO_CHANGER,
+    DEFAULT_VSRG_KEYS_MAP,
+    VSRG_SCORE_COLOR_MAP,
+    PIXI_VERTICAL_ALIGN,
+    PIXI_HORIZONTAL_ALIGN,
+    PIXI_CENTER_X_END_Y,
+    PIXI_CENTER_ALIGN,
+} from './sharedConfig'
 
 // ---- re-exported type aliases (old files import these from $config) ----
 export type {Pitch, NoteNameType, TempoChanger, MIDIPreset}
 export type AppName = StorageId
 
 // ---- re-exported shared (game-independent) constants ----
-export {APP_VERSION, HAS_BIGINT, BASE_LAYER_LIMIT, FOLDER_FILTER_TYPES, SPEED_CHANGERS, DEFAULT_DOM_RECT}
+export {
+    APP_VERSION,
+    HAS_BIGINT,
+    BASE_LAYER_LIMIT,
+    FOLDER_FILTER_TYPES,
+    SPEED_CHANGERS,
+    DEFAULT_DOM_RECT,
+    COMPOSER_CACHE_DATA,
+    VSRG_TEMPO_CHANGER,
+    DEFAULT_VSRG_KEYS_MAP,
+    VSRG_SCORE_COLOR_MAP,
+    PIXI_VERTICAL_ALIGN,
+    PIXI_HORIZONTAL_ALIGN,
+    PIXI_CENTER_X_END_Y,
+    PIXI_CENTER_ALIGN,
+}
 
 // ---- identity ----
 export const APP_NAME: AppName = game.storageId
