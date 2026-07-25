@@ -1,0 +1,110 @@
+import {describe, expect, it} from 'vitest'
+import {Midi} from '@tonejs/midi'
+import {MIDI_BOUNDS, MIDI_MAP_TO_NOTE, MidiNote} from './imports'
+
+// Old MidiParser/index.tsx's `convertMidi()` (a bound class-instance method reading/writing
+// `this.state`) is the one place the accidental-counting / out-of-range-bounds / offset math
+// lives, and it is NOT standalone in the old blob (nor is its Svelte-ported equivalent, which reads
+///writes reactive `$state` locals instead - same shape, same coupling). Per this task's brief,
+// that method is NOT restructured into a pure helper just to make it testable - parity first.
+// What IS already standalone, in both the old blob and this port, is the one static call that
+// method makes for every note: `MidiNote.fromMidi(layer, time, midiNote.midi - (track.localOffset
+// ?? offset), track.maxScaling)` (src/lib/core/Songs/SongClasses.ts - a plain static method with
+// zero component coupling, ported long before this task and, until now, with zero consumers and
+// zero test coverage). This suite calls that exact function the exact same way `convertMidi()`
+// does, replicating its surrounding arithmetic inline (not importing anything from the component),
+// against a small hand-built `@tonejs/midi` `Midi`/`Track` (via `midi.addTrack()` +
+// `track.addNote(...)`, real library objects, not a hand-rolled fake shape).
+//
+// Game-dependent: `MIDI_BOUNDS`/`MIDI_MAP_TO_NOTE` differ between Genshin and Sky (see
+// src/lib/games/{genshin,sky}/index.ts), so every fixture number below is DERIVED from the real
+// per-game data (via `findMappedMidi`/`MIDI_BOUNDS`) rather than hardcoded - this file runs green
+// under both `npm run test:genshin` and `npm run test:sky`.
+
+function buildMidiNote(midiNumber: number): number {
+    const midi = new Midi()
+    const track = midi.addTrack()
+    track.addNote({midi: midiNumber, time: 0, duration: 1, velocity: 1})
+    return track.notes[0].midi
+}
+
+// Finds a real MIDI_MAP_TO_NOTE entry with the given accidental flag - dynamic, not hardcoded, so
+// this works against either game's own distinct map.
+function findMappedMidi(isAccidental: boolean): number {
+    for (const [key, value] of MIDI_MAP_TO_NOTE) {
+        if (value[1] === isAccidental) return Number(key)
+    }
+    throw new Error(`No ${isAccidental ? 'accidental' : 'non-accidental'} entry in MIDI_MAP_TO_NOTE`)
+}
+
+describe('MidiParser conversion math (MidiNote.fromMidi)', () => {
+    it('counts accidentals via the real midi-to-note map', () => {
+        const accidentalMidi = buildMidiNote(findMappedMidi(true))
+        const naturalMidi = buildMidiNote(findMappedMidi(false))
+
+        const accidentalNote = MidiNote.fromMidi(0, 0, accidentalMidi, 0)
+        const naturalNote = MidiNote.fromMidi(0, 0, naturalMidi, 0)
+
+        expect(accidentalNote.data.isAccidental).toBe(true)
+        expect(naturalNote.data.isAccidental).toBe(false)
+    })
+
+    it('flags notes outside MIDI_BOUNDS with the correct upper/lower direction', () => {
+        const belowMidi = buildMidiNote(MIDI_BOUNDS.lower - 5)
+        const aboveMidi = buildMidiNote(MIDI_BOUNDS.upper + 5)
+
+        const belowNote = MidiNote.fromMidi(0, 0, belowMidi, 0)
+        const aboveNote = MidiNote.fromMidi(0, 0, aboveMidi, 0)
+
+        expect(belowNote.data.note).toBe(-1)
+        expect(belowNote.data.outOfRangeBound).toBe(-1)
+        expect(aboveNote.data.note).toBe(-1)
+        expect(aboveNote.data.outOfRangeBound).toBe(1)
+    })
+
+    it('the maxScaling octave-shift loop can bring an out-of-range note back in range', () => {
+        // MIDI_BOUNDS.lower is always a real map key in both games (unlike .upper, which Genshin's
+        // own map does not include - verified directly against genshin/index.ts's midi.mapToNote,
+        // whose highest key is 83, one below its own bounds.upper of 84).
+        const belowRangeMidi = buildMidiNote(MIDI_BOUNDS.lower - 8)
+        const expectedNote = MIDI_MAP_TO_NOTE.get(`${MIDI_BOUNDS.lower}`)?.[0]
+
+        const unscaled = MidiNote.fromMidi(0, 0, belowRangeMidi, 0)
+        const scaled = MidiNote.fromMidi(0, 0, belowRangeMidi, 1)
+
+        expect(unscaled.data.outOfRangeBound).toBe(-1)
+        expect(unscaled.data.note).toBe(-1)
+        expect(scaled.data.outOfRangeBound).toBe(0)
+        expect(scaled.data.note).toBe(expectedNote)
+    })
+
+    it('a per-track localOffset overrides the global offset, exactly like `track.localOffset ?? offset`', () => {
+        const rawMidi = buildMidiNote(MIDI_BOUNDS.lower)
+        const expectedNote = MIDI_MAP_TO_NOTE.get(`${MIDI_BOUNDS.lower}`)?.[0]
+
+        // Mirrors convertMidi()'s own per-track/per-call inputs; only the offset resolution
+        // (`track.localOffset ?? offset`) itself is copied inline below, matching the component
+        // exactly rather than importing anything from it.
+        const trackWithNoLocalOffset = {localOffset: null as number | null}
+        const trackWithLocalOffsetZero = {localOffset: 0}
+        const globalOffset = 8
+
+        const usesGlobalOffset = MidiNote.fromMidi(0, 0, rawMidi - (trackWithNoLocalOffset.localOffset ?? globalOffset), 0)
+        const usesLocalOffsetOverGlobal = MidiNote.fromMidi(0, 0, rawMidi - (trackWithLocalOffsetZero.localOffset ?? globalOffset), 0)
+        const usesGlobalOffsetWhenZero = MidiNote.fromMidi(0, 0, rawMidi - (trackWithNoLocalOffset.localOffset ?? 0), 0)
+
+        // No local offset -> the (nonzero) global offset is genuinely subtracted, pushing this
+        // otherwise in-range note out of range.
+        expect(usesGlobalOffset.data.note).toBe(-1)
+        expect(usesGlobalOffset.data.outOfRangeBound).toBe(-1)
+
+        // A per-track localOffset of 0 overrides the nonzero global offset entirely - 0 is a
+        // meaningful override, not "absent" (exactly why the component uses `??`, not `||`, here).
+        expect(usesLocalOffsetOverGlobal.data.note).toBe(expectedNote)
+        expect(usesLocalOffsetOverGlobal.data.outOfRangeBound).toBe(0)
+
+        // No local offset + a zero global offset -> unchanged, still in range.
+        expect(usesGlobalOffsetWhenZero.data.note).toBe(expectedNote)
+        expect(usesGlobalOffsetWhenZero.data.outOfRangeBound).toBe(0)
+    })
+})
