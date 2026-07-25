@@ -26,7 +26,7 @@ export {
 } from '$core/legacyConfig'
 // Domain models
 export {NoteLayer} from '$core/Songs/Layer'
-export {ColumnNote, NoteColumn, InstrumentData, RecordedNote} from '$core/Songs/SongClasses'
+export {ColumnNote, NoteColumn, InstrumentData, MidiNote, RecordedNote} from '$core/Songs/SongClasses'
 export {Song, extractStorable} from '$core/Songs/Song'
 export {ComposedSong, defaultInstrumentMap} from '$core/Songs/ComposedSong'
 // `Chunk` here is RecordedSong's own chunk class (notes/delay pair) - NOT the same class as
