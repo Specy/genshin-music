@@ -101,11 +101,13 @@
     // for the two/three `'/composer?songId=' + encodeURIComponent(...)` hrefs in PlayerSongRow.svelte.
     //
     // Icons: ~15 FA/Ri icons inlined as raw <svg> (react-icons@5.6.0, unpkg.com/react-icons@5.6.0/
-    // {fa,ri}/index.mjs) - FaTimes/FaHome/FaMusic/FaCog/FaDiscord/FaCrosshairs/FaRegCircle already
-    // byte-verified against copies already inlined elsewhere in this codebase (FloatingDropdown
+    // {fa,ri}/index.mjs) - FaTimes/FaHome/FaMusic/FaCog/FaDiscord/FaCrosshairs/FaRegCircle/FaSearch
+    // already byte-verified against copies already inlined elsewhere in this codebase (FloatingDropdown
     // .svelte, ZenKeyboardMenu.svelte, SheetVisualizerMenu.svelte, SongMenuSearch.svelte,
-    // PlayerSongRow.svelte's own siblings); FaGithub/FaQuestion/FaSearch/RiPlayListFill freshly
-    // sourced (first consumers in this codebase) from the same cited version. RiPlayListFill's own
+    // PlayerSongRow.svelte's own siblings) - FaSearch itself is this file's own `faSearchIcon`
+    // snippet, byte-identical to SongMenuSearch.svelte's own `searchIcon` snippet (P4a Task 5), not
+    // a fresh icon as an earlier draft of this comment claimed; FaGithub/FaQuestion/RiPlayListFill
+    // freshly sourced (first consumers in this codebase) from the same cited version. RiPlayListFill's own
     // `attr: {fill: "currentColor"}` (baked into its GenIcon call, unlike every FA icon here) is
     // functionally identical to IconBase's own base default fill - both resolve to the same
     // rendered `fill="currentColor"`, so it's written with the same stroke/fill/stroke-width
