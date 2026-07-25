@@ -1,13 +1,13 @@
 <script lang="ts">
-    // Old: src/components/shared/SvgNotes/genshin/reb.tsx (React). `style`/`color` props
-    // dropped — GlyphComponent's signature is `{background?: string}` (src/lib/games/types.ts);
-    // fill/stroke now come from CSS (Player/Composer `.svg-note`/`.svg-b` rules, ported in
-    // Phase 4). `background` paints a matte behind the flat mark so it reads clearly
-    // against the note glyph body (old: paintOrder 'stroke' + stroke = background).
-    let {background}: {background?: string} = $props()
+    // Old: src/components/shared/SvgNotes/genshin/reb.tsx (React). `color` restored P4c Task 2
+    // (default 'currentColor') - old applied `style={{fill: color, stroke: color}}` to this
+    // glyph's root <svg> (SvgNotes/index.tsx:48-52), separate from `background`, which paints a
+    // matte behind the flat mark so it reads clearly against the note glyph body (old: paintOrder
+    // 'stroke' + stroke = background) - unchanged by this task.
+    let {background, color = 'currentColor'}: {background?: string; color?: string} = $props()
 </script>
 
-<svg class="svg-note" viewBox="0 0 311.9 311.9" xmlns="http://www.w3.org/2000/svg">
+<svg class="svg-note" viewBox="0 0 311.9 311.9" xmlns="http://www.w3.org/2000/svg" style="fill:{color};stroke:{color}">
     <path
         class="svg-b"
         fill-rule="evenodd"
