@@ -565,6 +565,7 @@
             const name = await asyncPrompt(t('question:ask_song_name_cancellable'))
             if (name === null || !mounted) return false
             songToSave.name = name
+            refreshSong()
             changes = 0
             await addSong(songToSave)
             return true
@@ -582,6 +583,7 @@
                 const name = await asyncPrompt(t('composer:ask_song_name_for_composed_song_version'))
                 if (name === null) return false
                 songToSave.name = name
+                refreshSong()
                 addSong(songToSave)
                 return true
             }
