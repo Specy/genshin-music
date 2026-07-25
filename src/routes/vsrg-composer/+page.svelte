@@ -363,8 +363,14 @@
         // if wants to add a tap note
         if (selectedType === 'tap' && type === ClickType.Left) {
             if (firstNote) {
+                // FIX (review): old's own equivalent early return (index.tsx:330) is just
+                // `return this.setState({selectedHitObject: firstNote})` - no vsrg key, since no
+                // vsrg content changed in this branch. The refreshVsrg() previously here was an
+                // unforced, undisclosed deviation that immediately orphaned the just-(re)selected
+                // note (same detachment mechanism as dragHitObject/releaseHitObject above) for
+                // zero behavioral gain - selectedHitObject = firstNote alone already retriggers
+                // the canvas $effect.
                 selectedHitObject = firstNote
-                refreshVsrg()
                 return
             }
             const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key)
@@ -379,8 +385,9 @@
                 selectedHitObject = null
             } else {
                 if (firstNote) {
+                    // FIX (review): same as the 'tap' branch's firstNote check above (old
+                    // index.tsx:341, identical shape) - no refreshVsrg() needed or wanted here.
                     selectedHitObject = firstNote
-                    refreshVsrg()
                     return
                 }
                 const newLastCreatedHitObject = vsrg.createHeldHitObject(selectedTrack, timestamp, key)
@@ -482,9 +489,22 @@
 
     function dragHitObject(newTimestamp: number, key?: number) {
         if (selectedHitObject === null) return
+        // FIX (review): refreshVsrg() deep-clones every hit object (VsrgSong.clone() ->
+        // VsrgTrack.clone() -> VsrgHitObject.clone()), which detaches this retained
+        // selectedHitObject reference from the freshly-cloned vsrg.tracks[...].hitObjects array.
+        // This function runs once per native pointermove for the WHOLE drag gesture
+        // (VsrgComposerRenderer.handleDrag reads its own persistent draggedHitObject field), so
+        // every call after the first was mutating an orphaned object - invisible to rendering,
+        // since the canvas draws strictly from the hit objects found inside the CURRENT
+        // vsrg.tracks[...].hitObjects array - and the final drop position was silently discarded
+        // on release. Re-point selectedHitObject at its counterpart inside the fresh clone by
+        // index immediately after cloning: safe because VsrgTrack.clone()/VsrgSong.clone() both
+        // build their arrays with .map(), which preserves order.
+        const index = vsrg.tracks[selectedTrack].hitObjects.indexOf(selectedHitObject)
         selectedHitObject.timestamp = newTimestamp
         if (key !== undefined && key < settings.keys.value) selectedHitObject.index = key
         refreshVsrg()
+        if (index !== -1) selectedHitObject = vsrg.tracks[selectedTrack].hitObjects[index]
     }
 
     function findClosestSnapPoint(timestamp: number) {
@@ -500,7 +520,15 @@
         const tracks = vsrg.getHitObjectsBetween(selectedHitObject.timestamp, selectedHitObject.timestamp + selectedHitObject.holdDuration, selectedHitObject.index)
         tracks.forEach((track, i) => track.forEach(h => h !== selectedHitObject && vsrg.removeHitObjectInTrackAtTimestamp(i, h.timestamp, h.index)))
         changes++
+        // FIX (review): same refreshVsrg()-detaches-selectedHitObject issue as dragHitObject
+        // above (see its comment for the full mechanism). Captured AFTER the conflict-removal
+        // loop above, not before: that loop can splice sibling entries out of this SAME track's
+        // hitObjects array, which would shift selectedHitObject's own position within it -
+        // indexOf must run against the array's final pre-clone shape for the index to still be
+        // valid once re-applied to the clone below.
+        const index = vsrg.tracks[selectedTrack].hitObjects.indexOf(selectedHitObject)
         refreshVsrg()
+        if (index !== -1) selectedHitObject = vsrg.tracks[selectedTrack].hitObjects[index]
     }
 
     function onTrackChange(track: VsrgTrack, index: number) {
