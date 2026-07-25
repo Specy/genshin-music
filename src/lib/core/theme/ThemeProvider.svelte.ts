@@ -1,5 +1,6 @@
 import {ThemeSettings} from '$core/BaseSettings'
 import {BASE_THEME_CONFIG} from '$core/legacyConfig'
+import {createDebouncer} from '$core/utils/Utilities'
 import cloneDeep from 'lodash.clonedeep'
 import Color, { type ColorInstance } from 'color'
 import {baseThemes} from "./defaultThemes";
@@ -235,6 +236,69 @@ export class Theme {
 }
 
 export const ThemeProvider = new Theme(defaultThemes[0])
+
+// old src/lib/Hooks/useTheme.ts's `subscribeTheme` (spec §6.1's explicit-subscribe-helper for
+// non-component consumers - the three Phase-4c pixi renderer classes are plain TS classes, not
+// Svelte components, so they cannot rely on template-driven `$derived`/`$effect`). Old:
+//   export function subscribeTheme(callback: (theme: Theme) => void) {
+//       const debouncer = createDebouncer(50)
+//       const dispose = observe(ThemeProvider.state.data, () => {
+//           debouncer(() => callback({...ThemeProvider}))
+//       })
+//       const dispose2 = observe(ThemeProvider.state.other, () => {
+//           debouncer(() => callback({...ThemeProvider}))
+//       })
+//       callback({...ThemeProvider})
+//       return () => { dispose(); dispose2() }
+//   }
+// Ported onto `$effect.root` in place of mobx's `observe`: a detached root effect scope is
+// created (the documented mechanism for building effects outside component-init, per Svelte's own
+// `$effect.root` doc comment), holding a single `$effect` that reads BOTH `ThemeProvider.toArray()`
+// (which itself reads every `state.data[key]` - same technique ThemeVars.svelte's `$derived.by`
+// already relies on) and `Object.values(ThemeProvider.state.other)`, mirroring old's two separate
+// `observe(...state.data...)` / `observe(...state.other...)` subscriptions in one effect.
+// CHANGE-DETECTION (`lastSnapshot`, not a first-run boolean): mobx's `observe` never fires on
+// registration, only on a real future mutation - but Svelte's `$effect` always runs at least once
+// to discover its dependencies, and empirically (verified live in this session, not assumed) that
+// mandatory first run is DEFERRED to a later microtask, not synchronous, and is NOT forced by an
+// explicit `flushSync()` call placed here either. A naive `isFirstRun` boolean is UNSAFE as a
+// result: if a real theme mutation happens in the window between subscribing and that deferred
+// first run, the first run observes the ALREADY-mutated value, and a boolean guard would
+// misidentify it as "just establishing deps" and silently swallow a real update - reproduced live
+// in this session (a `set()` called immediately after `subscribeTheme()`, with zero delay, was
+// dropped entirely under a boolean-flag version of this function). The fix compares a cheap
+// snapshot captured at SUBSCRIBE time (the same instant the synchronous `callback(ThemeProvider)`
+// below already reported to the caller) against what the effect observes on each of its runs,
+// firing the debounced callback exactly when they differ - correct regardless of how many times,
+// or exactly when, the underlying effect happens to execute.
+// DEVIATION (disclosed): old passed a SHALLOW COPY `{...ThemeProvider}` to `callback` (spreading a
+// class instance onto a plain object drops its prototype methods - old's consumers survived only
+// because they read plain fields off the copy, never called a method on it). This port passes the
+// LIVE rune-backed `ThemeProvider` singleton instead - the same object every already-ported
+// consumer (ThemeVars.svelte, BaseNote.svelte, PlayerNote.svelte, the /theme route, ...) reads
+// directly, so the Phase-4c renderer classes can call its real methods (`.get()`, `.isDefault()`,
+// ...), not just read plain fields off a snapshot.
+export function subscribeTheme(callback: (theme: Theme) => void): () => void {
+    const debouncer = createDebouncer(50)
+    let lastSnapshot = snapshotTheme()
+    const dispose = $effect.root(() => {
+        $effect(() => {
+            // the read below IS the dependency-tracking step (both halves of the theme, mirroring
+            // old's two separate `observe(...)` calls); the comparison is what makes this safe
+            // against the deferred-first-run race described above
+            const snapshot = snapshotTheme()
+            if (snapshot === lastSnapshot) return
+            lastSnapshot = snapshot
+            debouncer(() => callback(ThemeProvider))
+        })
+    })
+    callback(ThemeProvider)
+    return dispose
+}
+
+function snapshotTheme(): string {
+    return JSON.stringify(ThemeProvider.toArray()) + '|' + JSON.stringify(ThemeProvider.state.other)
+}
 
 export {
     defaultThemes
