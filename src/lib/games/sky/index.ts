@@ -832,9 +832,9 @@ export const game: GameDefinition = {
             // BaseSettings.ts:715 — Sky (else) branch is "No Text", not "Note name"
             zen: {desktop: 'No Text', mobile: 'No Text'},
             // sheet-visualizer/index.tsx — APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'
+            // (also consumed directly by PlayerPagesRenderer.tsx's own identical layoutType ternary —
+            // the two call sites share this one field, there is no separate playerApproach field)
             sheetVisualizer: 'ABC',
-            // PlayerPagesRenderer.tsx — const layoutType = APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'
-            playerApproach: 'ABC',
         },
     },
 
