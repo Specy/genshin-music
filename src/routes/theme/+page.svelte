@@ -5,9 +5,9 @@
     import PageMetadata from '$cmp/shell/PageMetadata.svelte'
     import AppButton from '$cmp/inputs/AppButton.svelte'
     import FilePicker, {type FileElement} from '$cmp/inputs/FilePicker.svelte'
-    import Card from '$cmp/layout/Card.svelte'
     import AppBackground from '$cmp/theme/AppBackground.svelte'
     import Player from '$cmp/pages/Player/Player.svelte'
+    import Composer from '$cmp/pages/Composer/Composer.svelte'
     import ThemePropriety from '$cmp/pages/theme/ThemePropriety.svelte'
     import ThemeInput from '$cmp/pages/theme/ThemeInput.svelte'
     import ThemePreview from '$cmp/pages/theme/ThemePreview.svelte'
@@ -33,20 +33,17 @@
     // reactivity, the hook's whole job. `useObservableArray(themeStore.themes)` -> `themeStore.themes`
     // directly (a live `$state` array, ThemeStore.svelte.ts).
     //
-    // DOCUMENTED DEVIATION, UPDATED BY PHASE 4b TASK 7: the live Player/Composer preview at the
-    // bottom (`<Player inPreview/>` / `<Composer inPreview/>`) was STUBBED with a themed placeholder
-    // `Card` for both pages while neither existed yet. Player now exists (Phase 4b) - the `'player'`
-    // branch below renders the real `<Player inPreview/>` (see that component's own header comment
-    // for why it never wires `AppBackground` itself: this page supplies it, exactly like old's
-    // `PageBackground` route wrapper did). The `'composer'` branch STILL renders
-    // `{@render previewStub('Composer')}` - Composer doesn't exist until Phase 4c - so this remains a
-    // documented, temporary asymmetry between the two branches, not an inconsistency. Everything
+    // DOCUMENTED DEVIATION, RESOLVED BY PHASE 4c TASK 6: the live Player/Composer preview at the
+    // bottom (`<Player inPreview/>` / `<Composer inPreview/>`) was originally STUBBED with a themed
+    // placeholder `Card` for both pages while neither existed yet. Phase 4b Task 7 swapped the
+    // `'player'` branch for the real `<Player inPreview/>`; this task (4c Task 6) swaps the
+    // `'composer'` branch for the real `<Composer inPreview/>` the exact same way, closing the
+    // asymmetry - both branches now render their real page component, neither wires `AppBackground`
+    // itself (see each component's own header comment for why: this page supplies it, exactly like
+    // old's `PageBackground` route wrapper did). The `previewStub` snippet/`Card` import that backed
+    // both placeholders have no remaining callers and are removed in the same change. Everything
     // else on this page is (and was already) full-function (CRUD, clone-on-edit prompt flow,
-    // background image URLs, import/export). Ledger note for 4c: swap the remaining
-    // `{#snippet previewStub('Composer')}` call for the real `<Composer inPreview/>` - the
-    // surrounding structure (toggle button, `AppBackground` wrapping, `.theme-app-preview` container)
-    // is already wired to old's exact shape so that swap should be a drop-in, the same way Player's
-    // swap was here.
+    // background image URLs, import/export).
     onMount(() => {
         setPageVisited('theme')
     })
@@ -125,21 +122,6 @@
         theme.save()
     }
 </script>
-
-{#snippet previewStub(pageLabel: string)}
-    <!-- Composer-only now (Phase 4b Task 7 swapped the 'player' branch below for the real
-         <Player inPreview/>) - still generic over `pageLabel` since nothing else about this
-         snippet is Composer-specific; 4c's swap removes this snippet's last caller entirely. -->
-    <Card
-        className="theme-preview-stub"
-        background="var(--primary)"
-        color="var(--primary-text)"
-        style="width:100%;height:100%;align-items:center;justify-content:center;text-align:center;padding:2rem"
-    >
-        <div style="font-size:1.3rem">{pageLabel}</div>
-        <div style="margin-top:0.5rem;opacity:0.8">Preview — arrives with the composer port (4c).</div>
-    </Card>
-{/snippet}
 
 <DefaultPage>
     <PageMetadata
@@ -235,25 +217,38 @@
             </AppBackground>
         {:else}
             <AppBackground page="Composer">
-                {@render previewStub('Composer')}
+                <Composer inPreview />
             </AppBackground>
         {/if}
     </div>
     <!-- Keep this at the bottom, same as old - its position after both preview branches above is
-         load-bearing: Svelte compiles a <title> inside <svelte:head> to a plain
-         `document.title = ...` assignment rather than an inserted DOM node (verified against
-         node_modules/svelte's own compiler + SSR renderer source), so when several PageMetadata
-         instances are mounted together the latest one to run simply overwrites the rest - no
-         extra <title> element is ever created. The 'player' branch is no longer a stub (Phase 4b
-         Task 7 swapped it for the real <Player inPreview/> above) and it DOES render its own
-         competing PageMetadata (`home:player_name`, "Player") - this trailing call still runs
-         after it, so the resolved title correctly stays "Themes" (verified live: SSR HTML and the
-         hydrated DOM both show exactly one <title>, reading "Themes", not "Player"). The
-         'composer' branch is unchanged - still `previewStub`, pending Phase 4c - so it renders no
-         competing title of its own yet; once 4c swaps in the real <Composer inPreview/> the same
-         last-wins ordering applies, so it must stay mounted above this call too. -->
-    <PageMetadata
-        text={t('home:themes_name')}
-        description="Change the app theme, set the different colors, backgrounds, opacity and customisations"
-    />
+         load-bearing on a FRESH mount: Svelte compiles a <title> inside <svelte:head> to a plain
+         `document.title = ...` assignment inside that component's own mount effect (verified
+         against node_modules/svelte's own compiler + SSR renderer source), so when several
+         PageMetadata instances mount TOGETHER in the same initial pass, the latest one to run
+         simply overwrites the rest - no extra <title> element is ever created, and on a fresh
+         load or an SPA round trip (navigating away and back) this alone is sufficient: verified
+         live, SSR HTML and the hydrated DOM both show exactly one <title>, reading "Themes".
+         REAL BUG CAUGHT (4c Task 6, live-tested): that guarantee does NOT extend to toggling the
+         `selectedPagePreview` button ABOVE while already on this page. Neither preview branch is a
+         stub anymore (the 'player' branch renders the real <Player inPreview/>, Phase 4b Task 7;
+         the 'composer' branch renders the real <Composer inPreview/>, Phase 4c Task 6), and each
+         has its OWN PageMetadata. When the toggle button swaps `{#if}` branches, the NEWLY-MOUNTED
+         branch's PageMetadata runs its title-setting effect fresh - but THIS trailing PageMetadata
+         is already-mounted and static (its own `text` prop never changes), so Svelte has no reason
+         to re-run ITS effect just because a sibling remounted, and "Themes" stays overwritten by
+         whichever branch was just toggled TO. Reproduced live before this fix: clicking "View
+         composer" left the tab title as "Composer - Untitled", and clicking "View player" left it
+         as "Player" - in both directions, not just one. `{#key selectedPagePreview}` below forces
+         THIS PageMetadata to unmount+remount (re-running its own title-setting effect) every time
+         the toggle fires, in the SAME reactive flush as the branch swap and strictly after it in
+         template/tree order - re-verified live after this fix: toggling to composer, back to
+         player, and back to composer again each leave exactly one <title>, correctly "Themes"
+         every time. -->
+    {#key selectedPagePreview}
+        <PageMetadata
+            text={t('home:themes_name')}
+            description="Change the app theme, set the different colors, backgrounds, opacity and customisations"
+        />
+    {/key}
 </DefaultPage>
