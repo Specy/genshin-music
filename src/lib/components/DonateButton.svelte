@@ -10,7 +10,10 @@
     // DonateIcon.tsx (inlined below as a raw <svg> - no react-icons/custom-icon dependency, same
     // convention as every other inlined icon this migration uses; markup/path data copied
     // byte-for-byte from the old blob, which was already a hand-authored SVG, not a react-icons
-    // GenIcon() output).
+    // GenIcon() output) - including its `width="1em" height="1em"`, which the first inlining
+    // dropped: without them the SVG has no intrinsic size, so inside `.donate-button`'s flex row
+    // it stretched to fill the panel as a giant accent-coloured block and pushed the label out of
+    // view. They are what makes `font-size: 1.5rem` above actually size the glyph.
     //
     // isTWA() (src/lib/core/utils/Utilities.ts): a real browser sniff (referrer/UA/display-mode
     // checks) - old ran it inside a useEffect (fires post-mount only, browser globals unsafe during
@@ -33,6 +36,8 @@
     <AppLink className="donate-button" href="/donate" {style}>
         <svg
             style="font-size:1.5rem;margin-left:-1.5rem"
+            width="1em"
+            height="1em"
             viewBox="0 0 512 512"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
