@@ -19,18 +19,19 @@ jobs:
     name: Deploy
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
       - name: Build
         run: npm ci && npm run build:all-no-root
         env:
           CI: false
           PUBLIC_IS_BETA: true
       - name: Publish Genshin/Sky Music Nightly Beta as single domain
-        uses: cloudflare/wrangler-action@3.0.0
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages publish ./build/ --project-name=music-apps-beta
+          command: pages deploy ./build/ --project-name=music-apps-beta

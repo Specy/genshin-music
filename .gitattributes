@@ -1,4 +1,32 @@
-# All Svelte sources are new-world files; keep them LF everywhere.
-# Broader EOL policy deliberately deferred (legacy JS/MD files are mixed) —
-# revisit with the Phase 5 formatter/EOL decision.
+# Phase 5 EOL policy decision (P5 Task 7 — finalizes the "revisit" this file used to defer).
+# Broadened from `*.svelte` alone to every text extension this migration actually authors,
+# proven a content no-op by a node Buffer (byte 13) CR scan over every tracked file BEFORE this
+# rule was added (raw counts in docs/superpowers/sdd/P5-task-7-report.md): *.svelte/*.ts/*.js/
+# *.css/*.scss/*.html were all already 100% CR-free.
+#
+# `*.json` is deliberately NOT added: 21 of 57 tracked .json files already contain CR, scattered
+# across six unrelated pre-migration directories (docs/assets, src/lib/games/*/static,
+# static/locales, static/updates.json, test-songs/, test/inputs/) — renormalizing them is out of
+# scope for this task, and test/fixtures/ (immutable) is itself all .json, so a blanket json rule
+# is the wrong shape of risk to take here. Revisit with a narrower, path-scoped rule if a future
+# phase wants LF-locked JSON.
+#
+# `*.md` and `*.yml` are added, with the handful of pre-existing CRLF outliers carved out by path
+# since each is a single well-identified non-authored file, not migration content:
+# - static/assets/audio/sky/SFX_*/README.md (8 files): bundled third-party asset attribution.
+# - test-songs/ThingsToTest.md: pre-migration legacy test note.
+# - .github/FUNDING.yml: GitHub-native sponsor-button config, not a CI workflow file.
+#
+# No blanket `* text=auto`: that would reclassify every binary/asset path under static/ and
+# test/fixtures/ — fixtures are immutable.
 *.svelte text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+static/assets/audio/sky/SFX_*/README.md -text
+test-songs/ThingsToTest.md -text
+*.yml text eol=lf
+.github/FUNDING.yml -text
