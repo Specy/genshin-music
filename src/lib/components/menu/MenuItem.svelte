@@ -28,10 +28,17 @@
     function handleClick(e: MouseEvent) {
         blurEvent(e)
         onclick?.()
+        // `isActive` MUST be sampled before setCurrent(id) runs. Old React read it from the
+        // render closure, so it was frozen at the value it had when the handler was created and
+        // setCurrent() could not affect it mid-handler. Here it is a live $derived over
+        // ctx.current, so reading it after setCurrent(id) always yields `id === id && open` =
+        // true for the item just clicked - which made `setOpen(!isActive)` CLOSE the menu on
+        // every click instead of switching tabs (clicking Settings while Songs was open shut the
+        // whole sidebar). Sampling first restores old's semantics exactly:
+        // old: `if (isActive) { setOpen(false) } else { setOpen(true) }`.
+        const wasActive = isActive
         ctx.setCurrent(id)
-        // old: `if (isActive) { setOpen(false) } else { setOpen(true) }` - collapsed to the
-        // equivalent `setOpen(!isActive)` below.
-        ctx.setOpen(!isActive)
+        ctx.setOpen(!wasActive)
     }
 </script>
 

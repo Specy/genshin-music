@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {Component, Snippet} from 'svelte'
-    import AppButton from '../inputs/AppButton.svelte'
+    import SongActionButton from '../inputs/SongActionButton.svelte'
 
     // Old: src/components/shared/Utility/FloatingDropdown.tsx
     // The old file also exported `FloatingDropdownRow`/`FloatingDropdownText`
@@ -9,27 +9,16 @@
     // .svelte file can only default-export a single component, mirroring the
     // old three-export surface.
     //
-    // `SongActionButton` (old, the toggle button) was deferred to Phase 4 with
-    // its page-menu consumers (per the phase-3 plan) and wasn't in this task's
-    // file list - it has since landed (SongActionButton.svelte, now used by
-    // ComposerSongRow/PlayerSongRow/VsrgComposerMenu/ThemePreview/
-    // ErrorSongRow), but this file's own toggle button below still uses
-    // `AppButton` instead (a superset of SongActionButtonProps: onClick/style/
-    // tooltip/ariaLabel/className/children) - a deliberate, documented
-    // substitution that renders `.app-button` instead of the old
-    // `.song-button` class.
-    //
-    // Two claims once made alongside that substitution are stale and
-    // corrected here: FloatingDropdown did NOT stay a zero-consumer,
-    // zero-blast-radius file, and its CSS did NOT stay unported. The
-    // `.floating-dropdown*` CSS shipped with Phase 4a Task 3's menu.css port
-    // (App.css). This component plus its FloatingDropdownRow/
-    // FloatingDropdownText siblings now have 15 real import sites across 5
-    // files (each imports all three) - SongFolder.svelte, ComposerSongRow.svelte,
-    // PlayerSongRow.svelte, VsrgComposerSongRow.svelte, VsrgPlayerSongRow.svelte
-    // - so the `AppButton`-over-`SongActionButton` substitution above is no
-    // longer revisitable in isolation with zero blast radius; it would need
-    // re-checking against all 5.
+    // The toggle button uses `SongActionButton`, exactly as old FloatingDropdown.tsx did.
+    // An earlier revision substituted `AppButton` here (a prop superset, so it compiled and
+    // behaved correctly) while SongActionButton was still unported. That substitution was a
+    // VISUAL defect, not a neutral one: it renders `.app-button`, which carries its own padding
+    // and min-width, so the "..." toggle came out roughly 2.5x wider than the `.song-button`
+    // icon buttons sitting immediately to its left in every song row and folder header. Restored
+    // to the old component. Consumers: SongFolder.svelte, ComposerSongRow.svelte,
+    // PlayerSongRow.svelte, VsrgComposerSongRow.svelte, VsrgPlayerSongRow.svelte (each imports
+    // this plus FloatingDropdownRow/FloatingDropdownText); `.floating-dropdown*` CSS shipped
+    // with Phase 4a Task 3's menu.css port into App.css.
     //
     // `FaTimes` (react-icons/fa) is inlined as a raw SVG (no react-icons dep),
     // markup + path data copied byte-for-byte from react-icons@5.6.0
@@ -116,7 +105,7 @@
 </script>
 
 <div class="{className} floating-dropdown {isActive ? 'floating-dropdown-active' : ''}">
-    <AppButton
+    <SongActionButton
         style="margin:0;{style}{isActive ? 'background-color:var(--accent);color:var(--accent-text);' : ''}"
         onclick={toggle}
         ariaLabel={isActive ? 'Close' : 'Open'}
@@ -129,7 +118,7 @@
         {:else}
             <Icon />
         {/if}
-    </AppButton>
+    </SongActionButton>
     <div
         bind:this={ref}
         class="floating-dropdown-children"

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import AppBackground from '$cmp/theme/AppBackground.svelte'
     import {onMount} from 'svelte'
     import {goto} from '$app/navigation'
     import {resolve} from '$app/paths'
@@ -710,78 +711,80 @@
     }
 </script>
 
-<PageMetadata
-    text={`${t('home:vsrg_composer_name')} - ${vsrg.name ?? 'Unnamed'}`}
-    description="Create new VSRG songs using existing background songs and create your own beatmap for it."
-/>
-<VsrgComposerMenu
-    data={{
-        settings,
-        hasChanges: changes > 0,
-        audioSong,
-        trackModifiers: vsrg.trackModifiers,
-    }}
-    functions={{
-        setAudioSong,
-        handleSettingChange,
-        onSave: saveSong,
-        onSongOpen,
-        onCreateSong: createNewSong,
-        onTrackModifierChange,
-    }}
-/>
-<div class="vsrg-page appear-on-mount">
-    <VsrgTop
-        vsrg={vsrg}
-        onBreakpointSelect={onBreakpointSelect}
-        onBreakpointChange={onBreakpointChange}
-        selectedHitObject={selectedHitObject}
-        isHorizontal={!settings.isVertical.value}
-        selectedTrack={selectedTrack}
-        lastCreatedHitObject={lastCreatedHitObject}
-        onTrackAdd={addTrack}
-        onTrackChange={onTrackChange}
-        onTrackDelete={deleteTrack}
-        onTrackSelect={selectTrack}
-        onNoteSelect={onNoteSelect}
-    >
-        <DecoratedCard className="decorated-vsrg-canvas" size="1.2rem">
-            <VsrgComposerCanvas
-                vsrg={vsrg}
-                renderableNotes={renderableNotes}
-                onTimestampChange={onTimestampChange}
-                selectedHitObject={selectedHitObject}
-                isHorizontal={!settings.isVertical.value}
-                tempoChanger={tempoChanger}
-                scrollSnap={settings.scrollSnap.value}
-                maxFps={settings.maxFps.value}
-                scaling={scaling}
-                audioSong={audioSong}
-                snapPoint={snapPoint}
-                snapPoints={snapPoints}
-                isPlaying={isPlaying}
-                onRemoveTime={removeTime}
-                onAddTime={addTime}
-                onKeyDown={startHitObjectTap}
-                onKeyUp={endHitObjectTap}
-                dragHitObject={dragHitObject}
-                releaseHitObject={releaseHitObject}
-                selectHitObject={selectHitObject}
-                onSnapPointSelect={onSnapPointSelect}
-            />
-        </DecoratedCard>
-    </VsrgTop>
-    <VsrgBottom
-        vsrg={vsrg}
-        scaling={scaling}
-        tempoChanger={tempoChanger}
-        onTempoChangerChange={onTempoChangerChange}
-        onScalingChange={onScalingChange}
-        isPlaying={isPlaying}
-        togglePlay={togglePlay}
-        selectedSnapPoint={snapPoint}
-        onSnapPointChange={onSnapPointChange}
-        selectedHitObjectType={selectedType}
-        onHitObjectTypeChange={selectType}
+<AppBackground page="Composer">
+    <PageMetadata
+        text={`${t('home:vsrg_composer_name')} - ${vsrg.name ?? 'Unnamed'}`}
+        description="Create new VSRG songs using existing background songs and create your own beatmap for it."
     />
-</div>
+    <VsrgComposerMenu
+        data={{
+            settings,
+            hasChanges: changes > 0,
+            audioSong,
+            trackModifiers: vsrg.trackModifiers,
+        }}
+        functions={{
+            setAudioSong,
+            handleSettingChange,
+            onSave: saveSong,
+            onSongOpen,
+            onCreateSong: createNewSong,
+            onTrackModifierChange,
+        }}
+    />
+    <div class="vsrg-page appear-on-mount">
+        <VsrgTop
+            vsrg={vsrg}
+            onBreakpointSelect={onBreakpointSelect}
+            onBreakpointChange={onBreakpointChange}
+            selectedHitObject={selectedHitObject}
+            isHorizontal={!settings.isVertical.value}
+            selectedTrack={selectedTrack}
+            lastCreatedHitObject={lastCreatedHitObject}
+            onTrackAdd={addTrack}
+            onTrackChange={onTrackChange}
+            onTrackDelete={deleteTrack}
+            onTrackSelect={selectTrack}
+            onNoteSelect={onNoteSelect}
+        >
+            <DecoratedCard className="decorated-vsrg-canvas" size="1.2rem">
+                <VsrgComposerCanvas
+                    vsrg={vsrg}
+                    renderableNotes={renderableNotes}
+                    onTimestampChange={onTimestampChange}
+                    selectedHitObject={selectedHitObject}
+                    isHorizontal={!settings.isVertical.value}
+                    tempoChanger={tempoChanger}
+                    scrollSnap={settings.scrollSnap.value}
+                    maxFps={settings.maxFps.value}
+                    scaling={scaling}
+                    audioSong={audioSong}
+                    snapPoint={snapPoint}
+                    snapPoints={snapPoints}
+                    isPlaying={isPlaying}
+                    onRemoveTime={removeTime}
+                    onAddTime={addTime}
+                    onKeyDown={startHitObjectTap}
+                    onKeyUp={endHitObjectTap}
+                    dragHitObject={dragHitObject}
+                    releaseHitObject={releaseHitObject}
+                    selectHitObject={selectHitObject}
+                    onSnapPointSelect={onSnapPointSelect}
+                />
+            </DecoratedCard>
+        </VsrgTop>
+        <VsrgBottom
+            vsrg={vsrg}
+            scaling={scaling}
+            tempoChanger={tempoChanger}
+            onTempoChangerChange={onTempoChangerChange}
+            onScalingChange={onScalingChange}
+            isPlaying={isPlaying}
+            togglePlay={togglePlay}
+            selectedSnapPoint={snapPoint}
+            onSnapPointChange={onSnapPointChange}
+            selectedHitObjectType={selectedType}
+            onHitObjectTypeChange={selectType}
+        />
+    </div>
+</AppBackground>

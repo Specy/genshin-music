@@ -28,5 +28,8 @@
     max={data.threshold[1]}
     step={data.step}
     value={value}
-    onchange={handleChange}
+    oninput={handleChange}
 />
+
+<!-- `oninput`, not `onchange`: old Slider.tsx used React's onChange, which fires on the DOM
+     `input` event (live during the drag). See InstrumentInput.svelte's note for the full mapping. -->

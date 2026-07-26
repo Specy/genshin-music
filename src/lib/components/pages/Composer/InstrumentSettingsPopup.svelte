@@ -172,7 +172,7 @@
                 min={0}
                 max={125}
                 value={instrument.volume}
-                onchange={(e) => onChange(instrument.set({volume: Number(e.currentTarget.value)}))}
+                oninput={(e) => onChange(instrument.set({volume: Number(e.currentTarget.value)}))}
             />
             <AppButton
                 className="flex-centered"

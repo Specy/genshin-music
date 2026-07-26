@@ -1,4 +1,5 @@
 <script lang="ts">
+    import AppBackground from '$cmp/theme/AppBackground.svelte'
     import {onMount, untrack} from 'svelte'
     import {t} from '$i18n/binding.svelte'
     import {i18n} from '$i18n/i18n'
@@ -181,25 +182,27 @@
     }
 </script>
 
-<PageMetadata
-    text={t('home:zen_keyboard_name')}
-    description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"
-/>
-<ZenKeyboardMenu
-    settings={settings}
-    isMetronomePlaying={isMetronomePlaying}
-    setIsMetronomePlaying={(val) => isMetronomePlaying = val}
-    onVolumeChange={onVolumeChange}
-    handleSettingChange={handleSettingChange}
-/>
-<div class="flex-centered">
-    <ZenKeypad
-        instrument={instrument}
-        onNoteClick={onNoteClick}
-        noteNameType={settings.noteNameType.value}
-        pitch={settings.pitch.value}
-        scale={settings.keyboardSize.value}
-        keySpacing={settings.keyboardSpacing.value}
-        verticalOffset={settings.keyboardYPosition.value}
+<AppBackground page="Main">
+    <PageMetadata
+        text={t('home:zen_keyboard_name')}
+        description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"
     />
-</div>
+    <ZenKeyboardMenu
+        settings={settings}
+        isMetronomePlaying={isMetronomePlaying}
+        setIsMetronomePlaying={(val) => isMetronomePlaying = val}
+        onVolumeChange={onVolumeChange}
+        handleSettingChange={handleSettingChange}
+    />
+    <div class="flex-centered">
+        <ZenKeypad
+            instrument={instrument}
+            onNoteClick={onNoteClick}
+            noteNameType={settings.noteNameType.value}
+            pitch={settings.pitch.value}
+            scale={settings.keyboardSize.value}
+            keySpacing={settings.keyboardSpacing.value}
+            verticalOffset={settings.keyboardYPosition.value}
+        />
+    </div>
+</AppBackground>

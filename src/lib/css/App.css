@@ -114,6 +114,15 @@ input[type="text"], input[type="number"] {
     flex-direction: row;
     justify-content: center;
     width: 100%;
+    /* NOTE: the shipped app (main:src/pages/App.css:117) also carries `height: 100%` here, and
+       the live deploy serves it. It is deliberately NOT repeated in this rule: under this port's
+       shell, `.app` is a flex item of `.theme-vars-root` (an auto-height flex row), so a
+       percentage height resolves against an indefinite parent and collapses `.app` to content
+       height - measured 338px instead of the full 720px viewport on /, /composer and every other
+       full-page route. Leaving it off lets `align-items: stretch` size `.app`, which is what the
+       live app's own definite-height ancestor chain achieved. The one place that genuinely needs
+       the explicit height is the theme page preview, where `.app` sits in a definite-height BLOCK
+       container instead - see `.theme-app-preview .app` in Theme.css. */
     overflow: hidden;
 }
 
