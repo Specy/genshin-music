@@ -350,18 +350,24 @@ GC (`activate` listener, keyed on `.includes(APP_NAME)`/`.includes('workbox')`)
 and the `MAJOR_VERSION`-bump reload-all-tabs logic (`install` listener) are
 also byte-verified unchanged against this same file.
 
-Flagging, not fixing (already disclosed in `service-worker.ts`'s own header
-comment, re-confirmed this session, not a new finding): in the current
-**production** build only, `PUBLIC_SW_VERSION` is not correctly injected into
-the isolated service-worker bundle SvelteKit builds separately (Kit's isolated
-`vite.build()` call for `src/service-worker.ts` never applies this project's
-`envPrefix`), so today's shipped cache name is literally
-`3-precache-Genshin-undefined` rather than e.g.
-`3-precache-Genshin-2026-7-19_14-25` — a real, already-flagged regression
-versus old (whose webpack `DefinePlugin` substituted the equivalent value
-uniformly, including inside its service worker), not a template mismatch. The
-GC logic is unaffected (it does not compare version segments, only the
-`APP_NAME` substring and the current vs. stored cache-key equality), so stale
-caches still get cleaned up correctly; only the version segment itself is
-wrong. Left exactly as Phase 5 Task 1/2 disclosed it — out of this task's
-comment/doc-only scope to fix.
+Historical note, corrected (this paragraph previously restated a closed issue
+in the present tense as a live production defect, which was false and is now
+fixed): during Phase 5 Task 1's own development, before that task's fix
+landed, reading `PUBLIC_SW_VERSION` via raw `import.meta.env` would not have
+been correctly injected into the isolated service-worker bundle SvelteKit
+builds separately (Kit's isolated `vite.build()` call for
+`src/service-worker.ts` never applies this project's `envPrefix`), which
+would have shipped a cache name literally `3-precache-Genshin-undefined`
+rather than e.g. `3-precache-Genshin-2026-7-19_14-25` — a real risk versus
+old (whose webpack `DefinePlugin` substituted the equivalent value uniformly,
+including inside its service worker). Task 1 closed this by sourcing
+`PUBLIC_SW_VERSION` from `$env/static/public` instead — one of the three
+modules SvelteKit's isolated service-worker build allows, populated by Kit's
+own env scan independently of the skipped `vite.config.ts` — so the value is
+real in production too. `service-worker.ts`'s own header comment documents
+this `import.meta.env` failure mode as the reason for that fix, not as an
+open defect. Re-verified this round: a fresh `npm run build:genshin` emits a
+`service-worker.js` whose cache-name template carries the real build
+timestamp, and the literal substring `Genshin-undefined` does not appear
+anywhere in the built output, on either the root build or the
+`build:all-no-root` subpath build.

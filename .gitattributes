@@ -1,21 +1,26 @@
 # Phase 5 EOL policy decision (P5 Task 7 — finalizes the "revisit" this file used to defer).
 # Broadened from `*.svelte` alone to every text extension this migration actually authors,
-# proven a content no-op by a node Buffer (byte 13) CR scan over every tracked file BEFORE this
-# rule was added (raw counts in docs/superpowers/sdd/P5-task-7-report.md): *.svelte/*.ts/*.js/
-# *.css/*.scss/*.html were all already 100% CR-free.
+# proven a content no-op by a node Buffer (byte 13) CR scan over every tracked file's INDEX
+# blob (`git ls-files -s` -> `git cat-file -p` per sha; the worktree is not authoritative here
+# — see below) BEFORE this rule was added: 170 .svelte / 130 .ts / 5 .js / 5 .css / 1 .scss /
+# 1 .html tracked files, zero CR bytes in any of them.
 #
-# `*.json` is deliberately NOT added: 21 of 57 tracked .json files already contain CR, scattered
-# across six unrelated pre-migration directories (docs/assets, src/lib/games/*/static,
-# static/locales, static/updates.json, test-songs/, test/inputs/) — renormalizing them is out of
-# scope for this task, and test/fixtures/ (immutable) is itself all .json, so a blanket json rule
-# is the wrong shape of risk to take here. Revisit with a narrower, path-scoped rule if a future
-# phase wants LF-locked JSON.
+# `*.json` is deliberately NOT added: of 410 tracked files across these 9 candidate extensions,
+# the same index-blob scan found CR in exactly 3 — all .json, across two pre-migration
+# directories: static/locales/ru.json, and test/inputs/example-composed.skysheet.json +
+# test/inputs/example-recorded.skysheet.json — renormalizing them is out of scope for this
+# task, and test/fixtures/ (immutable) is itself all .json, so a blanket json rule is the wrong
+# shape of risk to take here. Revisit with a narrower, path-scoped rule if a future phase wants
+# LF-locked JSON.
 #
-# `*.md` and `*.yml` are added, with the handful of pre-existing CRLF outliers carved out by path
-# since each is a single well-identified non-authored file, not migration content:
-# - static/assets/audio/sky/SFX_*/README.md (8 files): bundled third-party asset attribution.
-# - test-songs/ThingsToTest.md: pre-migration legacy test note.
-# - .github/FUNDING.yml: GitHub-native sponsor-button config, not a CI workflow file.
+# `*.md` and `*.yml` are added with NO path carve-outs: the index-blob scan found zero CR in any
+# tracked .md or .yml file, including static/assets/audio/sky/SFX_*/README.md (8 files),
+# test-songs/ThingsToTest.md, and .github/FUNDING.yml — those 10 files are pure LF in the repo.
+# (This checkout's worktree copies of them are locally CRLF-ified, a stale local artifact of
+# this environment, not a repo fact — do not scan the worktree for this decision, only the
+# index.) A `-text` carve-out on any of the 10 would disable normalization and let the next
+# `git add` of that path commit its CRLF worktree bytes over the currently-LF index blob —
+# exactly the damage a carve-out is meant to prevent — so none is applied.
 #
 # No blanket `* text=auto`: that would reclassify every binary/asset path under static/ and
 # test/fixtures/ — fixtures are immutable.
@@ -26,7 +31,4 @@
 *.scss text eol=lf
 *.html text eol=lf
 *.md text eol=lf
-static/assets/audio/sky/SFX_*/README.md -text
-test-songs/ThingsToTest.md -text
 *.yml text eol=lf
-.github/FUNDING.yml -text
