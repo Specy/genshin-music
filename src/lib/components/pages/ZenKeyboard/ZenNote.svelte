@@ -65,8 +65,11 @@
     // on the glyph. P4c Task 2 widened `GlyphComponent` (games/types.ts) and `SvgNote.svelte` to
     // re-accept an optional `color` prop (default 'currentColor' - see that file's own header
     // comment) and threaded the equivalent expression through PlayerNote.svelte. This file is the
-    // third and final SvgNote consumer; the JSX below now passes the identical expression,
-    // closing the branch's last open SvgNote-tint gap.
+    // third and last of the THREE consumers old passed `color` to; the JSX below now passes the
+    // identical expression, closing the branch's last open SvgNote-tint gap. BaseNote.svelte
+    // renders SvgNote too (a fourth consumer overall - see games/types.ts's own "Refs:" list) but
+    // old's BaseNote.tsx passes only `name`+`background` with no `color`, so BaseNote.svelte's
+    // tint-free render is correct parity, not a gap.
     //
     // PRESERVED QUIRK (flag, not fixed): old received BOTH a `noteImage: NoteImage` prop AND
     // `note: ObservableNote` (which itself carries `note.noteImage`) - ZenKeypad's only call site
