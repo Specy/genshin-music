@@ -1,33 +1,12 @@
-// Old: src/components/pages/Composer/ComposerCache.ts (229 lines) - pure pixi texture-cache
-// class, ported AS-IS per spec section 6.2 (every Graphics call, Rectangle and
-// app.renderer.generateTexture frame computation kept at parity). Only import changes:
-// - `$config` -> `$game` (game.notes.perColumn) + `COMPOSER_CACHE_DATA` from `$core/legacyConfig`
-//   (Task 1). Old destructured `{horizontalLineBreak, standards, layersCombination, breakpoints}`
-//   off `CACHE_DATA`; `horizontalLineBreak` is the ONE game-DEPENDENT member of that old constant
-//   (old Config.ts:717-748 literally computed it as `NOTES_PER_COLUMN / 3`) and is therefore NOT
-//   part of `COMPOSER_CACHE_DATA` (Task 1 deliberately excluded it) - derived here instead exactly
-//   as the plan's two-tier table prescribes.
-// - `NOTES_PER_COLUMN`/`TEMPO_CHANGERS` (old `$config`) -> `game.notes.perColumn` /
-//   `game.composer.tempoChangers` directly via `$game` (per the P4c two-tier consolidated map;
-//   neither is in the `$core/legacyConfig` UI-allowlist, so this UI-tier file reads them off
-//   `$game` rather than through the adapter).
-// - `$lib/Songs/Layer` -> `$core/Songs/Layer`.
 import {game} from '$game'
 import {COMPOSER_CACHE_DATA} from '$core/legacyConfig'
 import Color, {type ColorInstance} from 'color'
 import {Application, Graphics, Rectangle, Texture} from 'pixi.js'
 import {NoteLayer} from '$core/Songs/Layer'
 
-// `standards` deliberately NOT destructured here (unlike old, which destructured it alongside the
-// others purely to spell `typeof standards` below): it is only ever used in a TYPE position in
-// this file (never as a runtime value), so binding it as a local would be flagged dead by this
-// project's active `no-unused-vars` lint (old's own tooling did not catch this on the equivalent
-// destructure). Referenced directly off `COMPOSER_CACHE_DATA` in the interface below instead.
 const {layersCombination, breakpoints} = COMPOSER_CACHE_DATA
 const NOTES_PER_COLUMN = game.notes.perColumn
 const TEMPO_CHANGERS = game.composer.tempoChangers
-// old Config.ts:717-748's CACHE_DATA.horizontalLineBreak = `NOTES_PER_COLUMN / 3` - the one
-// game-dependent member, derived at the consumer per Task 1's split (see header comment above).
 const horizontalLineBreak = game.notes.perColumn / 3
 
 interface ComposerCacheProps {

@@ -8,40 +8,6 @@
     import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte'
     import SvgNote from '$cmp/SvgNote.svelte'
 
-    // Old: src/components/pages/Player/PlayerNote.tsx (173 lines) - the per-note button rendered by
-    // PlayerKeyboard (sibling file, this task). Richer than the shared BaseNote.svelte (P4a Task 3):
-    // approach circles (practice/approaching-mode ring animation), an `animationId` "pulse" ring on
-    // every click, and the practice-mode toClick/toClickNext/toClickAndNext/approach-correct/
-    // approach-wrong status classes - none of which BaseNote's generic status union covers.
-    // `memo(Note, comparator)` is dropped (same rationale as every other memo drop this migration -
-    // Svelte 5's fine-grained reactivity already only re-runs what changed).
-    //
-    // Reactivity: old read `note.data` via `useObservableObject(note.data)` (a mobx->React bridge
-    // hook returning a plain snapshot, called `state`) AND separately via `note.status`
-    // (ObservableNote's own mobx-observable getter) for `parseClass`'s argument - both paths read the
-    // exact same underlying value (`note.status`'s getter is defined as `return this.data.status`).
-    // Since `note.data` is now `$state(...)`-backed directly (Phase-4a Task 2), both call sites
-    // collapse to one: reading `note.data.status` / `note.data.delay` / `note.data.animationId`
-    // directly below, auto-tracked wherever referenced (brief: "note.data read directly ($state)").
-    // `getTextColor`'s theme reactivity collapses from `mobx.observe(ThemeProvider.state.data, ...)` +
-    // `useState` to a `$derived` reading `theme.get(...)`/`theme.isDefault(...)` - the identical
-    // pattern BaseNote.svelte's own (byte-identical) getTextColor already uses.
-    //
-    // The `animationId !== 0` pulse ring used React's `key={state.animationId}` to force a fresh DOM
-    // node on every click (so the `note-animation` CSS animation, which never restarts on an
-    // unchanged element, replays each time). Svelte's `{#key expr}` block is the direct equivalent -
-    // used below wrapping just that one div - and `{#each approachingNotes as an (an.id)}`'s own
-    // keying already reproduces React's `key={note.id}` list-item semantics for the approach circles
-    // with no extra work.
-    //
-    // Two-tier (UI file, reads $game per the P4b plan's mapping table):
-    //   APP_NAME === 'Genshin'                     -> game.features.hasNoteFrame (GenshinNoteBorder
-    //     render gate + getTextColor's luminosity branch - same collapse BaseNote.svelte uses)
-    //   APP_NAME === 'Sky' ? 5 : 7 (approach-circle row width)   -> game.notes.perRow
-    //   APP_NAME === 'Genshin' ? 100 : 200 (animation-delay compare) -> game.notes.animationDelayMs
-    //   INSTRUMENTS_DATA[instrument]?.clickColor / .fill -> game.instruments.data[instrument]?.clickColor / .fill
-    //   NOTES_CSS_CLASSES.*                        -> game.notes.cssClasses.*
-    //   BASE_THEME_CONFIG.text.*                   -> game.themes.baseConfig.text.*
     let {
         note,
         data,
@@ -145,6 +111,8 @@
         ></div>
     {/each}
     {#if note.data.animationId !== 0}
+        <!-- {#key} forces a fresh DOM node per animationId so the CSS pulse animation restarts on
+             every click - an unchanged element wouldn't replay it. -->
         {#key note.data.animationId}
             <div
                 class={game.notes.cssClasses.noteAnimation}

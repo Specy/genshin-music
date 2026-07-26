@@ -7,9 +7,6 @@
     import {globalConfigStore} from '$stores/GlobalConfigStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/pages/Index/HelpTab/index.tsx's `ComposerShortcuts` export - same shape
-    // as the sibling PlayerShortcuts.svelte (see its header comment for the full rationale), just
-    // reading the "composer" shortcut page/i18n keys instead of "player".
     const composerShortcuts = keyBinds.getShortcutMap('composer')
 </script>
 
