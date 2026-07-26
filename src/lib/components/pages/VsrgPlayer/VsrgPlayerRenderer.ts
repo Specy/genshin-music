@@ -29,8 +29,13 @@
 // parent - unlike VsrgComposerCanvas.tsx, which was a fully prop-controlled dumb component. This
 // port keeps that same split: everything above lives as PRIVATE fields on this class (mirroring
 // old's `this.state`), while only old's real four props (`isPlaying`, `scrollSpeed`,
-// `keyboardLayout`, `maxFps`) plus the three callbacks are pushed reactively from
-// VsrgPlayerCanvas.svelte's own `$effect`, via `update()` - see `VsrgPlayerRendererState` below.
+// `keyboardLayout`, `maxFps`) are pushed reactively from VsrgPlayerCanvas.svelte's own `$effect`,
+// via `update()` - see `VsrgPlayerRendererState` below. The callbacks are a separate,
+// construction-only wire, NOT part of that reactive push: VsrgPlayerCanvas.svelte's `onMount`
+// passes all four (old's three - `onSizeChange`/`onTick`/`playHitObject` - plus the new
+// `onTimestampChange` disclosed below) to the constructor once, via `VsrgPlayerRendererCallbacks`,
+// and `update()`'s own signature never takes them - a renderer instance's callback identity has no
+// reason to change after construction.
 // `keyboardLayout` is accepted for prop-shape parity with old's `VsrgPlayerCanvasProps` but - like
 // old itself - never actually read anywhere in this class's body (verified against the raw old
 // blob: declared in the props interface, never destructured/used in the class); a genuine old

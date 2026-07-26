@@ -1007,12 +1007,12 @@ a {
 }
 
 /* --menu-size/--panel-size root defaults + the bare .icon rule (menu items' icon size), pulled
-   forward from old src/components/pages/Player/menu.css. That file otherwise stays deferred to
-   Phase 4 (same call AppInit.svelte's own ".rotate-screen lives in Player/menu.css, not yet
-   ported" comment already made for the rest of it), but its `:root` block is genuinely global -
-   not Player-page-scoped - and P3 Task 8's own SimpleMenu sidebar is unsized without it, so just
-   these few lines move here now; the rest of Player/menu.css (.hamburger, .rotate-screen,
-   .song-buttons-wrapper, etc.) is real Player-page styling and stays deferred. */
+   forward from old src/components/pages/Player/menu.css ahead of the rest of that file (P3 Task 8):
+   its `:root` block is genuinely global - not Player-page-scoped - and P3 Task 8's own SimpleMenu
+   sidebar was unsized without it, so just these few lines moved here early. The rest of
+   Player/menu.css (.hamburger, .rotate-screen, .song-buttons-wrapper, etc.) was ported in full by
+   Phase 4a Task 3 (see those blocks further down this same file) and is real Player-page styling -
+   no longer deferred. */
 :root {
     --menu-size: 4rem;
     --panel-size: 40vw;

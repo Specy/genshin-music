@@ -46,8 +46,9 @@ export function hasVisitedPage(pageKey: PagesVersionsKeys): boolean {
 }
 
 export function setPageVisited(key: PagesVersionsKeys) {
-    // same SSR guard as hasVisitedPage() above - not yet called from anywhere (no Phase-4 page
-    // wired up), but guarded now to avoid the identical prerender crash the moment one is.
+    // same SSR guard as hasVisitedPage() above - guarded from day one (P3 Task 2), before any real
+    // caller existed, against the prerender crash every one of its now-19 real callers (one per
+    // top-level route's own onMount, e.g. routes/player/+page.svelte) would otherwise hit.
     if (typeof localStorage === 'undefined') return
     const visitedPages = JSON.parse(localStorage.getItem(localStorageKey) || '{}')
     const currentVersion = PAGES_VERSIONS[key].version

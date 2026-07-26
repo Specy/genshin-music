@@ -40,9 +40,12 @@
     // hasVisitedPage() is still NOT ported - hasVisitedPage() (PageVisitStore.svelte.ts, ported
     // ahead of P3 Task 8) is used directly below for the "new" badge instead.
     //
-    // Escape-to-close (old: KeyboardProvider.register('Escape', ...)) is deferred - KeyboardProvider
-    // itself isn't ported yet (Phase 4, see AppInit.svelte's own "Phase 4: KeyboardProvider.create()"
-    // markers).
+    // Escape-to-close (old: KeyboardProvider.register('Escape', ...)) is still deferred, but not for
+    // the reason once written here: KeyboardProvider IS ported now (Phase 4a Task 1,
+    // $lib/providers/KeyboardProvider) and AppInit.svelte calls the real `KeyboardProvider.create()`/
+    // `.destroy()` (no longer a placeholder marker). This file simply hasn't wired the Escape
+    // handler up yet - a real, actionable follow-up now that the blocker is gone, not a hard
+    // dependency on unported infrastructure.
     //
     let hasVisited = $state(false)
     let isTwa = $state(false)
@@ -139,8 +142,10 @@
         }
 
         breakpoint = window.innerWidth > 900
-        // Phase 4: KeyboardProvider.register('Escape', () => homeStore.state.visible &&
-        // homeStore.close(), {id: 'home'}) / unregisterById('home') cleanup.
+        // TODO, still not wired up (see header comment above): `KeyboardProvider.register('Escape',
+        // () => homeStore.state.visible && homeStore.close(), {id: 'home'})` here plus
+        // `unregisterById('home')` in this effect's cleanup would restore old's Escape-to-close -
+        // KeyboardProvider is real now, this is simply unimplemented, not blocked.
     })
 
     $effect(() => {

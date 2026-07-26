@@ -4,7 +4,8 @@
 // `SettingsCategory`, `NameOrDescriptionKey`). `SettingsText`, the `SettingsPropriety` union, and
 // `SettingUpdateKey`/`SettingUpdate`/`SettingVolumeUpdate` were deferred at the time ("port them
 // alongside BaseSettings.ts in Task 6 if still needed then") - added now (Phase 4a Task 4) by the
-// settings-pane family (SettingsPane/SettingsRow/SettingsInput consume all four). Exactly like old
+// settings-pane family (SettingsPane/SettingsRow/SettingsInput consume all five: `SettingsText`,
+// `SettingsPropriety`, `SettingUpdateKey`, `SettingUpdate`, `SettingVolumeUpdate`). Exactly like old
 // SettingsPropriety.ts, `SettingUpdateKey` needs `keyof typeof ComposerSettings.data` etc. from
 // $core/BaseSettings.ts, which itself imports FROM this file (SettingsCheckbox/SettingsInstrument/
 // SettingsNumber/SettingsSelect/SettingsSlider) - old already used `import type` for exactly this
