@@ -24,8 +24,9 @@
     import {settingsService} from '$core/Services/SettingsService'
     import {fileService} from '$core/Services/FileService'
     import {checkIfneedsUpdate} from '$core/needsUpdate'
-    import {delay} from '$core/utils/Utilities'
+    import {delay, setIfInTWA} from '$core/utils/Utilities'
     import {appPathname} from '$lib/utils/appPathname'
+    import * as serviceWorker from '$lib/serviceWorkerRegistration'
     import {APP_NAME, APP_VERSION, LANG_PREFERENCE_KEY_NAME, UPDATE_MESSAGE} from '$core/legacyConfig'
     import {AVAILABLE_LANGUAGES, i18n, setI18nLanguage, type AppLanguage} from '$i18n/i18n'
     import {t} from '$i18n/binding.svelte'
@@ -35,10 +36,12 @@
     // effects, + src/components/shared/ProviderWrappers/GeneralProvidersWrapper.tsx's init
     // effects). This component is the AppBase-equivalent orchestrator the brief describes:
     // effects only, no visual output except the rotate-screen overlay markup below. Each block
-    // is commented with the old effect it corresponds to; `// Phase 4:`/`// Phase 5:` markers
-    // stand in for behavior that depends on files not ported yet (service worker, analytics).
-    // KeyboardProvider (Phase 4a Task 1), AudioProvider/metronome/MIDIProvider (Phase 4a Task 2 -
-    // this task) are all wired for real below now.
+    // is commented with the old effect it corresponds to; a lingering `// Phase 4/5:` marker
+    // stands in for the one remaining bit of behavior that depends on a file not ported yet
+    // (analytics - see Analytics.ts's own header, Phase 5 Task 5). KeyboardProvider (Phase 4a Task 1),
+    // AudioProvider/metronome/MIDIProvider (Phase 4a Task 2), and the service worker
+    // registration + update-prompt flow (Phase 5 Task 2 - this task) are all wired for real below
+    // now.
     //
     // Ordering note: the brief's checklist lists `linkServices()` right after the
     // globalConfigStore/songsStore/.../ThemeProvider.load() batch, but that batch is
@@ -91,9 +94,61 @@
         return () => window.removeEventListener('error', windowInterceptor)
     })
 
-    // Phase 5: service worker registration (old providers.tsx effect 3 - serwist register() +
-    // virtualKeyboard.overlaysContent + the update-available asyncConfirm/SKIP_WAITING/reload
-    // flow). Needs src/service-worker.ts (Phase 5 accumulator item, see progress.md) ported first.
+    // old providers.tsx effect 3: serwist registration + virtual-keyboard overlay + the
+    // update-available asyncConfirm/SKIP_WAITING/reload flow. `getVirtualKeyboard()`/
+    // `VirtualKeyboard` are old module-level bindings (declared above `export default function
+    // Providers`), used only by this one effect - kept at this same script-top-level scope rather
+    // than nested inside the onMount below, matching old's actual structure.
+    //
+    // Old gated the whole `setIfInTWA()` + register() call behind `if (!IS_TAURI)`; spec §8
+    // deletes the Tauri/desktop build from this migration entirely (same precedent as
+    // needsUpdate.ts's identical `!IS_TAURI` collapse), so that branch is always-true and the
+    // guard itself is dropped rather than ported as permanently-dead code.
+    //
+    // Old called `i18n.t('logs:update_available')` - the i18next instance directly, not the
+    // React hook's `t` - because `asyncConfirm`'s question is resolved once at call time, not
+    // re-rendered on language change; `t` from $i18n/binding.svelte exists precisely to give
+    // templates/$derived/$effect that re-render tracking (see that file's own header), which this
+    // one-shot callback has no use for. `i18n.t(...)` reproduces old's call exactly.
+    type VirtualKeyboard = {
+        overlaysContent: boolean
+    }
+
+    function getVirtualKeyboard(): VirtualKeyboard | undefined {
+        return (navigator as Navigator & {virtualKeyboard?: VirtualKeyboard}).virtualKeyboard
+    }
+
+    onMount(() => {
+        async function registerServiceWorker() {
+            try {
+                const virtualKeyboard = getVirtualKeyboard()
+                if (virtualKeyboard) {
+                    virtualKeyboard.overlaysContent = true
+                    console.warn('virtual keyboard supported')
+                } else {
+                    console.warn('virtual keyboard not supported')
+                }
+                setIfInTWA()
+                console.log('Registering service worker')
+                await serviceWorker.register({
+                    onUpdate: async (registration) => {
+                        await delay(3000)
+                        const shouldUpdate = await asyncConfirm(i18n.t('logs:update_available'), false)
+                        if (!shouldUpdate) return
+                        registration.waiting?.postMessage({type: 'SKIP_WAITING'})
+                        localStorage.setItem(APP_NAME + '_repeat_update_notice', 'true')
+                        await delay(1000)
+                        window.location.reload()
+                    },
+                })
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        console.log('Checking for changelog...')
+        void registerServiceWorker()
+    })
 
     // old AppBase.tsx effect 1 (no dependency array - re-runs every render, but net-equivalent to
     // a mount-once listener since each run's cleanup removes exactly that run's own closure
