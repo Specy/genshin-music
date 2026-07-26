@@ -50,8 +50,7 @@
     // own style block is scoped independently (a private per-component hash suffix), so
     // `VsrgKey.svelte`'s copy of this class can never reach elements rendered by THIS file - there
     // is no cross-file sharing mechanism to lean on. This was a real, live regression, not a
-    // narrow one: on the
-    // DEFAULT `keyboardLayout: 'line'` setting (BaseSettings.ts:595), on literal first load, the
+    // narrow one: on the DEFAULT `keyboardLayout: 'line'` setting (BaseSettings.ts:595), on literal first load, the
     // `.vsrg-player-keyboard-control-left`/`-right` wing buttons rendered with only the compound
     // `!important` width/height/rotate overrides below applying - `display`, `background-color`,
     // `color`, `border-radius`, `border`, `font-size`, `justify-content`/`align-items` all fell back
