@@ -5,6 +5,7 @@
     import {beforeNavigate, goto} from '$app/navigation'
     import {resolve} from '$app/paths'
     import ThemeVars from '$lib/components/theme/ThemeVars.svelte'
+    import RootMetadata from '$lib/components/shell/RootMetadata.svelte'
     import Logger from '$lib/components/shell/Logger.svelte'
     import AsyncPrompt from '$lib/components/shell/AsyncPrompt.svelte'
     import BodyDropper, {type DroppedFile} from '$lib/components/utility/BodyDropper.svelte'
@@ -165,3 +166,9 @@
         {@render children()}
     </svelte:boundary>
 </ThemeVars>
+<!-- P5 Task 4: manifest/apple-touch-icon/robots/static-theme-color, mounted as a SIBLING after
+     ThemeVars closes (not nested inside it, not merged into it) so its <svelte:head> content lands
+     after both ThemeVars' own dynamic theme-color and every page's per-route title/description in
+     document order - see RootMetadata.svelte's own header for the full old-head-parity proof and
+     why the ordering matters (the static theme-color must not precede the dynamic one). -->
+<RootMetadata />
