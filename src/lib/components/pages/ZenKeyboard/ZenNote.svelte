@@ -58,14 +58,15 @@
     //   NOTES_CSS_CLASSES.*                    -> game.notes.cssClasses.*
     //   BASE_THEME_CONFIG.text.*               -> game.themes.baseConfig.text.*
     //
-    // FLAGGED FOR REVIEWER (real visual deviation, not a cosmetic nit - same gap already disclosed
-    // and reviewed/approved for PlayerNote.svelte, Task 3; this is the SECOND consumer to hit it):
-    // old passed a `color` prop to SvgNote (`color={ThemeProvider.isDefault('accent') ?
-    // INSTRUMENTS_DATA[instrumentName]?.fill : undefined}`), which old's SvgNote applied as an
-    // inline `style={{fill:color, stroke:color}}` on the glyph. The ported `SvgNote.svelte` (P3
-    // Task 9) has NO color prop (`GlyphComponent` is locked to `Component<{background?: string}>`,
-    // games/types.ts:41) and this task's brief says to reuse it as-is - dropped here, matching
-    // SvgNote's real signature, not silently widening an already-reviewed shared contract.
+    // PARITY CLOSED (was "FLAGGED FOR REVIEWER" before P4c Task 2 widened the shared contract -
+    // both clauses below are corrected, not new claims): old passed a `color` prop to SvgNote
+    // (`color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrumentName]?.fill :
+    // undefined}`), which old's SvgNote applied as an inline `style={{fill:color, stroke:color}}`
+    // on the glyph. P4c Task 2 widened `GlyphComponent` (games/types.ts) and `SvgNote.svelte` to
+    // re-accept an optional `color` prop (default 'currentColor' - see that file's own header
+    // comment) and threaded the equivalent expression through PlayerNote.svelte. This file is the
+    // third and final SvgNote consumer; the JSX below now passes the identical expression,
+    // closing the branch's last open SvgNote-tint gap.
     //
     // PRESERVED QUIRK (flag, not fixed): old received BOTH a `noteImage: NoteImage` prop AND
     // `note: ObservableNote` (which itself carries `note.noteImage`) - ZenKeypad's only call site
@@ -201,7 +202,11 @@
             <GenshinNoteBorder className="genshin-border" fill={parseBorderFill(status)} />
         {/if}
         {#if noteImage}
-            <SvgNote name={note.noteImage} background={svgBackground} />
+            <SvgNote
+                name={note.noteImage}
+                color={theme.isDefault('accent') ? game.instruments.data[instrumentName]?.fill : undefined}
+                background={svgBackground}
+            />
         {/if}
         <div class={game.notes.cssClasses.noteName} style="color:{textColor}">
             {noteText}
