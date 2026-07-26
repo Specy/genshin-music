@@ -12,6 +12,13 @@ const basePath = process.env.PUBLIC_BASE_PATH ?? ''
 const config = {
     preprocess: vitePreprocess(),
     kit: {
+        // Deterministic by default so a comment-only change can be proven to produce
+        // byte-identical build output (scripts/commentOnlyCheck.js pins this via
+        // BUILD_VERSION_NAME for both builds it compares); safe because this app never
+        // reads SvelteKit's version-based update detection (`updated` from
+        // `$app/state`) - it drives update prompts through the service worker's
+        // SKIP_WAITING flow instead, so this value is inert at runtime.
+        version: {name: process.env.BUILD_VERSION_NAME || String(Date.now())},
         adapter: adapter({
             pages: outDir,
             assets: outDir,

@@ -8,7 +8,10 @@ const GAMES = {
 }
 const chosenApp = process.argv[2]
 const date = new Date()
-const SW_VERSION = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}`
+// scripts/commentOnlyCheck.js pins PUBLIC_SW_VERSION so two builds of identical
+// source hash identically; every other caller leaves it unset and gets today's
+// fresh timestamp, same as before this fallback existed.
+const SW_VERSION = process.env.PUBLIC_SW_VERSION || `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}`
 
 if (!['Genshin', 'Sky', 'All'].includes(chosenApp)) {
     console.error('Please specify an app name [Sky / Genshin / All]')
