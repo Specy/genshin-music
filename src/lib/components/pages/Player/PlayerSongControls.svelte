@@ -12,54 +12,6 @@
     import './Slider.css'
     import './VisualSheet.css'
 
-    // Old: src/components/pages/Player/PlayerSongControls.tsx (198 lines) - the bottom controls
-    // bar (record/loop/hide-practice/speed/stop/slider/restart/metronome) plus the approaching-mode
-    // score table and the visual-sheet renderer host. `memo(_PlayerSongControls, comparator)` is
-    // dropped (established precedent, every memo drop this migration).
-    //
-    // `useObservableObject(playerStore.state)` -> direct `playerStore.state.X` reads below (kept
-    // aliased to a local `songData` const for readability/closer old-diffing, same reference so
-    // reads through it stay reactive - `$state`-proxied objects don't lose tracking when aliased,
-    // only when individual primitive fields are destructured out).
-    //
-    // `useTranslation(["player", 'common', "settings", "shortcuts"])`'s implicit default namespace
-    // is the array's first entry, "player" - react-i18next resolves every bare (unprefixed) `t('x')`
-    // call against it. The global `t()` binding this migration uses (`$i18n/binding.svelte`) has no
-    // such per-call default-namespace concept (i18next's own `t()`, which it wraps, only has ONE
-    // global default namespace config) - every old bare `t('x')` below becomes the explicit
-    // `t('player:x')` this migration's `t()` requires everywhere (same established rule as
-    // `MidiSetup.svelte`'s header comment, P4a Task 9); already-prefixed calls (`t('common:stop')`,
-    // `t("shortcuts:props.restart")`, `t("shortcuts:props.restart_description")`,
-    // `t('settings:toggle_metronome')`) are unchanged. The inlined `Score` subcomponent's own
-    // separate `useTranslation("player")` resolves the same way. `<option disabled>Speed</option>`
-    // is a pre-existing hardcoded-English string in old (never run through `t()`) - preserved
-    // verbatim, not translated.
-    //
-    // `needsRefresh`'s reset effect: old's `useEffect(() => setNeedsRefresh(false), [songData.key])`
-    // -> a top-level `$effect` that reads `songData.key` at its synchronous top (the established
-    // `void store.state.key` idiom, e.g. `PlayerKeyboard.svelte`) then resets the flag - reruns on
-    // mount and every `key` bump exactly like old's dependency-array effect.
-    //
-    // Icons: `GiMetronome` (`size={22}`) reused byte-identical from `ZenKeyboardMenu.svelte` (Task 4,
-    // same path data verified against the same pinned unpkg.com/react-icons@5.6.0/gi/index.mjs
-    // source, only the `size` differs: 22 here vs 18 there). `FaEye`/`FaEyeSlash`/`FaStop` and
-    // `VscDebugRestart` are new to this migration, fetched fresh from the same pinned
-    // unpkg.com/react-icons@5.6.0/{fa,vsc}/index.mjs source. None of the five carry a `class`
-    // attribute below (old called all of them bare - either directly, e.g. `<GiMetronome size={22}/>`,
-    // or via `<MemoizedIcon icon={X}/>` with no `className` - `MemoizedIcon` forwards `className`
-    // straight through and old never passed one here, verified against
-    // `src/components/shared/Utility/Memoized.tsx`), matching the established
-    // bare-icon-no-class convention (e.g. `ZenKeyboardMenu.svelte`'s own `giMetronomeIcon`/
-    // `ioMdMusicalNoteIcon`/`mdPianoIcon` snippets). `<MemoizedIcon>`/`<Memoized>` themselves are
-    // dropped (established precedent).
-    //
-    // The raw `<select className={s['slider-select']} onChange={onRawSpeedChange}
-    // style={{backgroundImage: 'none'}}>` is old's own plain `<select>` element (NOT the reusable
-    // ported `Select.svelte`, which applies a different `.select` class + its own background-image
-    // arrow icon that this raw select explicitly cancels via its inline `background-image:none`) -
-    // kept as a raw `<select>` below for the same reason, with `onRawSpeedChange` typed the same
-    // `(e: Event & {currentTarget: EventTarget & HTMLSelectElement}) => void` shape `Select.svelte`
-    // already established for "select changed" callback props in this codebase.
     let {
         onRestart,
         onRawSpeedChange,
@@ -92,6 +44,8 @@
         isRecordingAudio: boolean
     } = $props()
 
+    // Aliasing the whole $state-backed object keeps reads through it reactive - only destructuring
+    // individual primitive fields out would lose tracking.
     const songData = playerStore.state
     let needsRefresh = $state(false)
 
@@ -185,6 +139,9 @@
         </div>
         <div class="row" style="width:100%;gap:0.4rem">
             <div class="{hasTooltip(true)} row">
+                <!-- Deliberately a raw select, not the shared Select.svelte - that component
+                     applies its own .select class and background-image arrow, which this one
+                     explicitly cancels via background-image:none. -->
                 <select
                     class="slider-select"
                     onchange={onRawSpeedChange}

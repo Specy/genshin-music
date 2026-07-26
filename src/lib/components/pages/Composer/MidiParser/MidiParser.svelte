@@ -1,10 +1,6 @@
 <script module lang="ts">
     import type {Track} from '@tonejs/midi'
 
-    // Old: `export type CustomTrack = {...}` (MidiParser/index.tsx:36-48) - re-exported from this
-    // component's own module context (matching `FilePicker.svelte`'s `FileElement<T>` precedent) so
-    // `TrackInfo.svelte` can import it the same way old's `TrackInfo.tsx` did (`import {CustomTrack}
-    // from './index'`).
     export type CustomTrack = {
         track: Track
         selected: boolean
@@ -41,30 +37,14 @@
     import Column from '$cmp/layout/Column.svelte'
     import TrackInfo from './TrackInfo.svelte'
     import NumericalInput from './NumericalInput.svelte'
-    // `Midi`/`Track` stay type-only imports; the RUNTIME `new Midi(...)` calls below go through the
-    // default-import interop shape instead (`TonejsMidiPkg.Midi`) - same fix as `RecordedSong.ts`'s
-    // own `toMidi()` (see that file's header comment): `@tonejs/midi`'s CJS build assigns its named
-    // exports dynamically, which Node's native ESM loader (used verbatim during adapter-static
-    // prerendering, and this component's tree IS reachable from a prerendered route once Task 6
-    // mounts it on /composer and the theme-page Composer preview) can't synthesize a *value* import
-    // of `Midi` from - only the default-import-of-the-whole-module-exports shape works everywhere.
+    // Midi/Track stay type-only imports; the runtime `new Midi(...)` calls below go through the
+    // default-import interop shape instead (TonejsMidiPkg.Midi). @tonejs/midi's CJS build assigns
+    // its named exports dynamically, which the ESM loader used during adapter-static prerendering
+    // can't resolve as a value import - only the default-import-of-the-whole-module-exports shape
+    // works. Same fix as RecordedSong.ts's toMidi().
     import type {Midi} from '@tonejs/midi'
     import TonejsMidiPkg from '@tonejs/midi'
 
-    // Old: src/components/pages/Composer/MidiParser/index.tsx (489 lines, default export
-    // `MidiImport`, a class component). The full-screen MIDI/audio/video import overlay: pick a
-    // file, detect its kind, convert it (directly for MIDI, via `@spotify/basic-pitch` for
-    // audio/video) into a track list, let the user tweak bpm/offset/pitch/scaling/accidentals per
-    // track, then build a `ComposedSong` and hand it to the composer.
-    //
-    // `MidiImportState` fields become `$state` locals below, EXCEPT `theme: Theme` - old re-rendered
-    // via a `mobx.observe(ThemeProvider.state.data, ...)` subscription set up in
-    // `componentDidMount`/torn down in `componentWillUnmount` purely so `render()` could read a
-    // locally-cached theme snapshot; `ThemeProvider` is already a reactive Svelte 5 singleton in
-    // this migration (established precedent throughout Phase 4), so `midiInputsStyle` below reads it
-    // directly via `$derived` and there is no lifecycle/subscription left to port at all.
-    // `warnedOfExperimental` (old: a plain, non-state instance field) stays a plain module-scope
-    // `let`, not `$state` - it's never read by the template, only by `parseAudioToMidi` itself.
     let {
         data,
         functions,
@@ -89,6 +69,7 @@
     let outOfRange = $state(0)
     let totalNotes = $state(0)
     let includeAccidentals = $state(true)
+    // QUIRK: ignoreEmptytracks (not ignoreEmptyTracks) is an intentional preserved typo.
     let ignoreEmptytracks = $state(false)
     let warnedOfExperimental = false
 
@@ -178,15 +159,9 @@
         mandleMidiFile(midi, name)
     }
 
-    // Old typo preserved verbatim (brief-mandated, this task's own instructions call it out by
-    // name): `mandleMidiFile`, not `handleMidiFile`.
+    // QUIRK: mandleMidiFile (not handleMidiFile) is an intentional preserved typo.
     function mandleMidiFile(midi: Midi, name: string) {
         try {
-            // Old destructured a local `const bpm = midi.header.tempos[0]?.bpm` here - harmless in
-            // old (a class method, `this.state.bpm` is a property access, never a bare identifier)
-            // but this port's own `bpm` IS a bare reactive `$state` local, so reusing that name here
-            // would shadow it instead of just reading the midi file's own tempo. Renamed to
-            // `midiBpm` - purely a naming fix forced by the state-shape change, not a logic change.
             const midiBpm = midi.header.tempos[0]?.bpm
             const key = midi.header.keySignatures[0]?.key
             tracks = midi.tracks.map((track, i) => {
@@ -208,10 +183,7 @@
             fileName = name
             bpm = Math.floor(midiBpm * 4) || 220
             offset = 0
-            // Two-tier rule: `PITCHES` is game-data, read from `game.notes.pitches` directly (never
-            // from `$core/legacyConfig`'s re-export, UI-code-forbidden) - same established
-            // precedent as `PitchSelect.svelte`. `as never` (old's own cast) is still needed: the
-            // array is `readonly Pitch[]`, and `key` is a plain `string`.
+            // key is a plain string; `as never` lets it satisfy includes()'s readonly Pitch[] param type.
             pitch = (game.notes.pitches.includes(key as never) ? key : 'C') as Pitch
             if (tracks.length) convertMidi()
         } catch (e) {
@@ -221,18 +193,8 @@
     }
 
     function convertMidi() {
-        // Old destructured `{tracks, bpm, offset, includeAccidentals, pitch} = this.state` here
-        // purely to get bare local names to read below - in this port they're already bare reactive
-        // module-scope `$state` locals, so there is nothing left to destructure.
         const selectedTracks = tracks.filter(track => track.selected)
         const notes: MidiNote[] = []
-        // Old declared fresh `let accidentals/outOfRange/totalNotes` locals here, reusing the SAME
-        // names as the class's own state fields (harmless there: `this.state.accidentals` is a
-        // property access, never a bare identifier) and wrote them back via
-        // `this.setState({accidentals, totalNotes, outOfRange})`. This port's state fields ARE bare
-        // reactive identifiers, so reusing the same names would shadow them instead - these three
-        // running counters are suffixed `Count` and assigned back onto the real `$state` fields
-        // explicitly at the end below.
         let accidentalsCount = 0
         let outOfRangeCount = 0
         let totalNotesCount = 0
@@ -276,11 +238,6 @@
         }
         const columns: NoteColumn[] = []
         let previousTime = 0
-        // Old preserved verbatim below, incl. TWO pre-existing parameter shadows already present in
-        // the OLD blob (both harmless, neither introduced by this port): this callback's own `notes`
-        // parameter shadows the outer `const notes: MidiNote[]` declared above, and the inner
-        // `notes.map(note => ...)`'s own `note` parameter shadows this callback's own `const note =
-        // notes[0]` three lines up.
         groupedNotes.forEach(notes => {
             const note = notes[0]
             if (!note) return
@@ -297,10 +254,6 @@
             columns.push(noteColumn)
         })
         columns.forEach(column => { //merges notes of different layer
-            // Old preserved verbatim: this `groupNotesByIndex(column)` result reuses the name
-            // `groupedNotes`, shadowing the OUTER `groupedNotes` (the time-bucketed groups above,
-            // already fully consumed by the `forEach` right above this one) - a different,
-            // unrelated array, harmless.
             const groupedNotes = groupNotesByIndex(column)
             column.notes = groupedNotes.map(group => {
                 group[0].layer = mergeLayers(group)
@@ -310,7 +263,7 @@
         const song = new ComposedSong("Untitled")
         song.columns = columns
         song.bpm = bpm
-        song.instruments = [] // preserved old dead assignment - unconditionally overwritten by the very next line
+        song.instruments = [] // dead assignment - overwritten unconditionally by the next line
         song.instruments = data.instruments.map(ins => ins.clone())
         song.pitch = pitch
         const lastColumn = data.selectedColumn
@@ -324,10 +277,9 @@
         outOfRange = outOfRangeCount
     }
 
-    // `data` here (the CustomTrack partial) shadows this component's own top-level `data` prop -
-    // harmless: this function never needs to read the outer `data` prop, only mutate `tracks[index]`
-    // (matches old's own parameter name; old had no equivalent collision since `this.props.data` is
-    // a property access, never a bare identifier).
+    // data here shadows this component's own data prop - fine today since this function only
+    // mutates tracks[index], but code added later that needs the outer prop would silently get
+    // this local instead.
     function editTrack(index: number, data: Partial<CustomTrack>) {
         Object.assign(tracks[index], data)
         if (tracks.length > 0) convertMidi()

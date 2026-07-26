@@ -12,22 +12,6 @@
     import {hasTooltip} from '$cmp/utility/tooltip'
     import NumericalInput from './NumericalInput.svelte'
 
-    // Old: src/components/pages/Composer/MidiParser/TrackInfo.tsx (154 lines, exported function
-    // component `TrackInfo`). One row per MIDI track: a checkbox + note-count/instrument-family
-    // summary + layer picker + a settings-gear toggle that expands a details panel (local note
-    // offset, max octave scaling, instrument name, note/accidental/out-of-range counts).
-    //
-    // `theme: Theme` (old, threaded in as a prop from `MidiParser`'s own mobx-observed snapshot) ->
-    // `ThemeProvider` imported directly, same established precedent as every other Phase-4
-    // component (e.g. `ComposerSongRow.svelte`).
-    //
-    // `useDebounce<string>(offset, 600)`'s own internal `useState`+`useEffect` pair -> a `$state` +
-    // a `$effect` owning its own setTimeout/clearTimeout cleanup, the same established precedent as
-    // `BodyDropper.svelte`'s identical `useDebounce(_isHovering, 50)` port (and this task's own
-    // sibling `NumericalInput.svelte`, which needs the same shape for its own debounced value).
-    //
-    // `useCallback` for `onMaxScaleChange` dropped (Svelte 5 fine-grained reactivity, no
-    // memoization ceremony needed - established precedent throughout this migration).
     let {
         data,
         index,
@@ -43,25 +27,14 @@
     let dataShown = $state(false)
     const background = $derived(`background-color:${ThemeProvider.layer('menu_background', 0.15).toString()}`)
 
-    // Old: `const [offset, setOffset] = useState(`${data.localOffset ?? ""}`)` +
-    // `useEffect(() => setOffset(`${data.localOffset ?? ""}`), [data.localOffset])`. A *writable*
-    // `$derived` (Svelte >=5.25) replaces both the `$state` and its resync effect in one: reading
-    // `offset` tracks `data.localOffset` normally, the +/- buttons and the text input below can
-    // still assign `offset = ...` directly to diverge from it locally, and that override is itself
-    // overwritten the next time `data.localOffset` actually changes - the exact same "diverge
-    // locally, resync on prop change" behavior old's separate state+effect pair gave. Same
-    // established precedent as `SettingsRow.svelte`'s `currentValue` (and this task's own sibling
-    // `NumericalInput.svelte`'s `elementValue`).
+    // offset is a writable $derived (Svelte 5.25+), same pattern as NumericalInput.svelte's
+    // elementValue: it tracks data.localOffset, but the +/- buttons and input below can override
+    // it locally until data.localOffset actually changes again.
     let offset = $derived(`${data.localOffset ?? ''}`)
-    // Old: `useDebounce`'s own internal `useState(offset)` seed - a ONE-TIME read with no resync of
-    // its own (only the debounce-timer effect below ever updates it, off of the local `offset`,
-    // never directly off `data.localOffset`) - same established precedent as `SettingsRow.svelte`'s
-    // `volume` (a plain one-time-read `$state`, not a `$derived`).
+    // One-time seed; only the debounce effect below updates it after that.
     // svelte-ignore state_referenced_locally
     let debouncedOffset = $state(`${data.localOffset ?? ''}`)
 
-    // Old: `useEffect(() => { const handler = setTimeout(() => setDebouncedValue(offset), 600);
-    // return () => clearTimeout(handler) }, [offset, 600])` (useDebounce's own internal effect).
     $effect(() => {
         void offset
         const handle = setTimeout(() => {
@@ -70,18 +43,10 @@
         return () => clearTimeout(handle)
     })
 
-    // Old: `useEffect(() => { const parsedOffset = parseInt(debouncedOffset); const localOffset =
-    // Number.isFinite(parsedOffset) ? parsedOffset : null; setOffset(`${localOffset ?? ""}`);
-    // onChange(index, {localOffset}) }, [debouncedOffset, onChange, index])`. `onChange` (=
-    // `MidiParser.svelte`'s `editTrack`) is called through `untrack()`: it funnels into
-    // `convertMidi()`, which reads-then-writes several `$state` fields (e.g. `track
-    // .numberOfAccidentals++`) - left untracked, THIS effect would auto-track those as its own
-    // dependencies and immediately re-invalidate itself the moment a MIDI file is loaded, throwing
-    // `effect_update_depth_exceeded`. Same established fix as `ZenKeyboardStore.svelte.ts`'s
-    // `setKeyboardLayout` effect, `ZenNote.svelte`'s `statusId` write, `Player.svelte`'s
-    // settings-sync effect, and this task's own sibling `NumericalInput.svelte` (same hazard, same
-    // fix) - a required, correctness-preserving adaptation for Svelte's auto-tracking (old's
-    // `useEffect`, keyed on an explicit dependency array, never had this hazard to begin with).
+    // onChange (MidiParser.svelte's editTrack) goes through untrack(): it funnels into
+    // convertMidi(), which mutates several $state fields - left untracked, this effect would pick
+    // those up as dependencies and self-invalidate, throwing effect_update_depth_exceeded the
+    // moment a MIDI file loads. Same hazard as NumericalInput.svelte's identical effect.
     $effect(() => {
         const parsedOffset = parseInt(debouncedOffset)
         const localOffset = Number.isFinite(parsedOffset) ? parsedOffset : null
@@ -98,11 +63,6 @@
     <div class="midi-track-wrapper">
         <div class="midi-track-center">
             <input type="checkbox" onchange={() => onChange(index, {selected: !data.selected})} checked={data.selected} />
-            <!-- Old spread this text across a template-literal expression + 3 separate JSXText
-                 fragments ("(" / "," / ")"), each on its own line - JSX's own whitespace-collapsing
-                 rules (newline-adjacent whitespace is stripped, not converted to a space) reduce
-                 that to the exact same concatenated string a single template literal produces here;
-                 flattened for unambiguous Svelte whitespace handling, byte-identical rendered text. -->
             {`${data.name} (${data.track.notes.length}, ${data.track.instrument.family})`}
         </div>
         <div class="midi-track-center">
@@ -115,15 +75,8 @@
                     <option value={i}>{ins.alias || prettyPrintInstrumentName(ins.name)} - Layer {i + 1}</option>
                 {/each}
             </Select>
-            <!-- react-icons/fa's FaCog (unpkg.com/react-icons@5.6.0/fa/index.mjs), same path data
-                 already byte-verified in this migration (InstrumentControls.svelte/ComposerMenu.svelte).
-                 Old passed size={22} + color={dataShown ? 'var(--secondary)' : 'var(--primary)'} +
-                 cursor='pointer' directly on the icon itself (no wrapping button) - `color` merges
-                 into the rendered `style` (react-icons' IconBase), `cursor` is a plain rest prop
-                 spread straight onto the <svg> as its own attribute (verified against the real
-                 iconBase.mjs source), and `onClick` goes directly on the <svg> too - reproduced with
-                 the same svelte-ignore pair `ComposerMenu.svelte`'s hamburger div already
-                 established for a bare clickable non-button element. -->
+            <!-- This svg is a mouse-only click target (no keyboard equivalent) - an accepted
+                 a11y gap, not wrapped in a button. -->
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <svg
@@ -185,14 +138,10 @@
             <div>{t('composer:midi_parser.out_of_range')}({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
             <Row style="width:fit-content">
                 <Row style="margin-right:0.4rem">
-                    <!-- react-icons/fa's FaArrowUp, viewBox/path fetched live from react-icons@5.6.0
-                         (unpkg.com/react-icons@5.6.0/fa/index.mjs) for this task. Old passed only
-                         `style={{marginRight: '0.2rem'}}` - default 1em size, currentColor fill. -->
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" style="margin-right:0.2rem"><path d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"/></svg>
                     {data.outOfRangeBounds.upper}
                 </Row>
                 <Row>
-                    <!-- react-icons/fa's FaArrowDown, same sourcing. -->
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" style="margin-right:0.2rem"><path d="M413.1 222.5l22.2 22.2c9.4 9.4 9.4 24.6 0 33.9L241 473c-9.4 9.4-24.6 9.4-33.9 0L12.7 278.6c-9.4-9.4-9.4-24.6 0-33.9l22.2-22.2c9.5-9.5 25-9.3 34.3.4L184 343.4V56c0-13.3 10.7-24 24-24h32c13.3 0 24 10.7 24 24v287.4l114.8-120.5c9.3-9.8 24.8-10 34.3-.4z"/></svg>
                     {data.outOfRangeBounds.lower}
                 </Row>
