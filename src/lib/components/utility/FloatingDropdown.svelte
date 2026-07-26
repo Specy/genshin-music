@@ -9,15 +9,27 @@
     // .svelte file can only default-export a single component, mirroring the
     // old three-export surface.
     //
-    // `SongActionButton` (old, the toggle button) is deferred to Phase 4 with
-    // its page-menu consumers (per the phase-3 plan) and isn't in this task's
-    // file list, so the toggle button below uses `AppButton` instead (a
-    // superset of SongActionButtonProps: onClick/style/tooltip/ariaLabel/
-    // className/children) - a deliberate, documented substitution. It renders
-    // `.app-button` instead of the old `.song-button` class; FloatingDropdown
-    // has no consumers yet this phase (its own `.floating-dropdown*` CSS home,
-    // Player/menu.css, isn't ported until the Player page lands either), so
-    // this is revisitable with zero current blast radius.
+    // `SongActionButton` (old, the toggle button) was deferred to Phase 4 with
+    // its page-menu consumers (per the phase-3 plan) and wasn't in this task's
+    // file list - it has since landed (SongActionButton.svelte, now used by
+    // ComposerSongRow/PlayerSongRow/VsrgComposerMenu/ThemePreview/
+    // ErrorSongRow), but this file's own toggle button below still uses
+    // `AppButton` instead (a superset of SongActionButtonProps: onClick/style/
+    // tooltip/ariaLabel/className/children) - a deliberate, documented
+    // substitution that renders `.app-button` instead of the old
+    // `.song-button` class.
+    //
+    // Two claims once made alongside that substitution are stale and
+    // corrected here: FloatingDropdown did NOT stay a zero-consumer,
+    // zero-blast-radius file, and its CSS did NOT stay unported. The
+    // `.floating-dropdown*` CSS shipped with Phase 4a Task 3's menu.css port
+    // (App.css). This component plus its FloatingDropdownRow/
+    // FloatingDropdownText siblings now have 15 real import sites across 5
+    // files (each imports all three) - SongFolder.svelte, ComposerSongRow.svelte,
+    // PlayerSongRow.svelte, VsrgComposerSongRow.svelte, VsrgPlayerSongRow.svelte
+    // - so the `AppButton`-over-`SongActionButton` substitution above is no
+    // longer revisitable in isolation with zero blast radius; it would need
+    // re-checking against all 5.
     //
     // `FaTimes` (react-icons/fa) is inlined as a raw SVG (no react-icons dep),
     // markup + path data copied byte-for-byte from react-icons@5.6.0

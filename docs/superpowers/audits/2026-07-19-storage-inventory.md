@@ -301,3 +301,67 @@ specified:
 - **Route count matched exactly**: 19 + 8 = 27, no deviation from the brief's
   expected shape. `not-found.tsx` / `global-error.tsx` / `layout.tsx` exist as
   App Router special files but are not additional routes.
+
+## Appendix (added Phase 5 Task 8 — final audit)
+
+This document's body above is the immutable pre-SvelteKit baseline (captured on
+`migration/next16-react19`) and is left byte-for-byte as originally written, per
+this migration's own convention. The two rows below are new surface this phase
+newly exercises that the baseline capture predates by construction (they did
+not exist as ported code until Phase 5); they are recorded here as an appendix
+rather than edited into the body above.
+
+### `${APP_NAME}_repeat_update_notice` (localStorage, byte-match confirmed)
+
+Ported byte-identical to the baseline's own row (line 99 above): same key
+template, same `"true"`/`"false"` string values, same three logical
+operations, just consolidated file-wise now that `AppBase.tsx`/`providers.tsx`
+are one `AppInit.svelte`:
+
+| Operation | Old site | New site |
+|---|---|---|
+| Read + reset to `"false"` | `src/components/AppBase.tsx` | `AppInit.svelte:250,257` (update-notice toast effect) |
+| Set to `"true"` on accepting an update | `src/app/providers.tsx:88` | `AppInit.svelte:141` (`serviceWorker.register`'s `onUpdate` callback) |
+
+### Cache Storage names (Phase 5 Task 1/2 — the SvelteKit-native service worker)
+
+`src/service-worker.ts` (verified directly, this session):
+
+```ts
+const APP_NAME = GAME_IDENTITY.storageId
+const CACHE = `${APP_NAME}-${PUBLIC_SW_VERSION}`
+const MAJOR_VERSION = 3
+const PRECACHE_CACHE = `${MAJOR_VERSION}-precache-${CACHE}`
+const RUNTIME_CACHE = `${MAJOR_VERSION}-runtime-${CACHE}`
+```
+
+| Cache | Template | Byte-match vs. this doc's Service-worker section (line 148/151 above) |
+|---|---|---|
+| Precache | `${MAJOR_VERSION}-precache-${APP_NAME}-${SW_VERSION}` | Yes — identical template |
+| Runtime | `${MAJOR_VERSION}-runtime-${APP_NAME}-${SW_VERSION}` | Yes — identical template |
+
+Only the *source* of the two interpolated values changed, not the template or
+the resulting string shape for equivalent inputs: `APP_NAME` now comes from
+`GAME_IDENTITY.storageId` (`$game/identity`, still the legacy-locked
+`'Genshin'`/`'Sky'` casing — see games/types.ts) instead of
+`process.env.NEXT_PUBLIC_APP_NAME`, and `PUBLIC_SW_VERSION` comes from
+`$env/static/public` instead of `process.env.NEXT_PUBLIC_SW_VERSION`. The cache
+GC (`activate` listener, keyed on `.includes(APP_NAME)`/`.includes('workbox')`)
+and the `MAJOR_VERSION`-bump reload-all-tabs logic (`install` listener) are
+also byte-verified unchanged against this same file.
+
+Flagging, not fixing (already disclosed in `service-worker.ts`'s own header
+comment, re-confirmed this session, not a new finding): in the current
+**production** build only, `PUBLIC_SW_VERSION` is not correctly injected into
+the isolated service-worker bundle SvelteKit builds separately (Kit's isolated
+`vite.build()` call for `src/service-worker.ts` never applies this project's
+`envPrefix`), so today's shipped cache name is literally
+`3-precache-Genshin-undefined` rather than e.g.
+`3-precache-Genshin-2026-7-19_14-25` — a real, already-flagged regression
+versus old (whose webpack `DefinePlugin` substituted the equivalent value
+uniformly, including inside its service worker), not a template mismatch. The
+GC logic is unaffected (it does not compare version segments, only the
+`APP_NAME` substring and the current vs. stored cache-key equality), so stale
+caches still get cleaned up correctly; only the version segment itself is
+wrong. Left exactly as Phase 5 Task 1/2 disclosed it — out of this task's
+comment/doc-only scope to fix.

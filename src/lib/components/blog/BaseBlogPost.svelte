@@ -8,8 +8,11 @@
     // Old: src/components/pages/blog/BaseBlogPost.tsx (117 lines) - exports `BaseBlogPost`,
     // `SpecyAuthor`, `useHasVisitedBlogPost`, `BlogNavbar`. `SpecyAuthor`/`hasVisitedBlogPost`/
     // `BlogNavbar` are module-level exports (Svelte 5.5+ snippet-export mechanism for the last one
-    // - see inputs/ComboBox.svelte's note) so routes/blog/+page.svelte can reuse all three exactly
-    // as the old index.tsx reused them from this same file.
+    // - see inputs/ComboBox.svelte's note) so each of this file's real consumers can import
+    // whichever it needs: routes/blog/+page.svelte reuses `blogNavbar`+`hasVisitedBlogPost` only,
+    // exactly as old's index.tsx reused `BlogNavbar`+`useHasVisitedBlogPost` from this same file;
+    // `SpecyAuthor` is instead reused by the 8 individual blog-post files (each one's own
+    // `author: SpecyAuthor` field), matching old's identical split.
     export const SpecyAuthor: BlogAuthor = {
         name: 'Specy',
         picture: `${base}/assets/images/specy.png`

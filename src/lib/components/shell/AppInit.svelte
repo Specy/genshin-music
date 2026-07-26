@@ -418,8 +418,9 @@
 </script>
 
 <!-- old AppBase.tsx render tail: rotate-screen overlay, hidden for the blog. CSS (.rotate-screen)
-     lives in the old Player/menu.css, not yet ported (Phase 4, same as FloatingDropdown's menu.css
-     dependency noted in Task 5) - this markup is unstyled until that file lands. -->
+     was ported into src/lib/css/App.css by Phase 4a Task 3's full Player/menu.css port (the shared
+     --menu-size/--panel-size root vars were pulled forward even earlier, P3 Task 8) - this markup
+     is fully styled. -->
 {#if !inBlog}
     <div class="rotate-screen">
         {#if isOnMobile}
