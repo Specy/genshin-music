@@ -1,0 +1,19 @@
+// Phase 5 Task 1: the DOM-free identity half of this game's GameDefinition (see
+// GameIdentity in ../types for the full rationale). This module exists so a non-UI
+// bundle - today: the service worker, src/service-worker.ts - can resolve this game's
+// storageId without importing games/genshin/index.ts, which pulls in this game's 11
+// .svelte glyph components (notes.svgGlyphs) and would drag the Svelte runtime into a
+// context (self: ServiceWorkerGlobalScope) that has no DOM and never renders anything.
+//
+// Zero imports besides the GameIdentity type - keep it that way. games/genshin/index.ts
+// imports GAME_IDENTITY from here (not the other way around), so this game's 'genshin' /
+// 'Genshin' literals exist exactly once in the whole tree.
+//
+// storageId casing ('Genshin', not 'genshin') is LEGACY-LOCKED - see types.ts's
+// GameId/StorageId header and spec §5.3: it is the IndexedDB database name, every
+// localStorage/sessionStorage key prefix, the serialized `appName` inside songs/backups,
+// and (what this module exists to give the service worker) its cache-name prefix. Never
+// derive it from `id`.
+import type {GameIdentity} from '../types'
+
+export const GAME_IDENTITY: GameIdentity = {id: 'genshin', storageId: 'Genshin'}

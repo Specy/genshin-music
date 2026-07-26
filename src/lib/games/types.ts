@@ -21,6 +21,18 @@
 export type GameId = 'genshin' | 'sky'            // extend per new game
 export type StorageId = 'Genshin' | 'Sky'         // legacy-locked; new games: === id
 
+// Phase 5 Task 1: the DOM-free subset of GameDefinition that non-UI bundles (today: the
+// service worker, src/service-worker.ts) may import. A full GameDefinition transitively
+// pulls in this game's .svelte glyph components (notes.svgGlyphs) via games/<id>/index.ts,
+// which drags the Svelte runtime into a context (self: ServiceWorkerGlobalScope, no DOM)
+// that never renders anything and can't use it. Each games/<id>/identity.ts exports
+// GAME_IDENTITY: GameIdentity with zero imports besides this type, and games/<id>/index.ts
+// imports THAT to fill in its own id/storageId, so each game's literal exists exactly once
+// in the tree. `id` is typed GameId (not the wider `string`) so this stays a real
+// structural subset of GameDefinition - assigning GAME_IDENTITY.id into a GameDefinition's
+// own `id: GameId` field needs no cast.
+export type GameIdentity = {id: GameId, storageId: StorageId}
+
 export type Pitch =
     'C' | 'Db' | 'D' | 'Eb' | 'E' | 'F' | 'Gb' | 'G' | 'Ab' | 'A' | 'Bb' | 'B'
 

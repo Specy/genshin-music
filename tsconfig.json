@@ -1,10 +1,33 @@
 {
   "extends": "./.svelte-kit/tsconfig.json",
-  // NOTE: this REPLACES the generated config's exclude (which covers
-  // src/service-worker.*) — re-add service-worker globs here when Phase 5
-  // introduces src/service-worker.ts, or svelte-check will pull it into
-  // the DOM-lib project.
-  "exclude": ["test"],
+  // NOTE (was a forward-looking reminder through Phase 4c; now a past-tense record):
+  // this "exclude" REPLACES the generated config's own (TypeScript does not merge
+  // "exclude"/"include" across "extends" — the derived config's array wins outright),
+  // so Phase 5 Task 1 re-added the six service-worker globs here when it introduced
+  // src/service-worker.ts, alongside the pre-existing "test".
+  //
+  // The app project (this file) needs `lib: DOM` for every other file in src/; the
+  // service worker needs `lib: webworker` instead (its own `self` is a
+  // ServiceWorkerGlobalScope, not a DOM Window) and svelte-check has no per-file lib
+  // override, so the worker must stay out of this project entirely — it is instead
+  // type-checked standalone (see src/service-worker.ts's header for how/why).
+  //
+  // One correction versus copying these six globs verbatim from the generated
+  // .svelte-kit/tsconfig.json: that file lives one directory down (.svelte-kit/), so
+  // its own globs are "../src/service-worker.ts" etc. This file lives at repo root,
+  // where "exclude" resolves relative to ITS OWN directory — pasting the "../"-prefixed
+  // strings here would resolve one level ABOVE the repo and silently match nothing
+  // (verified empirically: `tsc --listFiles` still listed src/service-worker.ts with
+  // the "../"-prefixed globs; only the root-relative globs below actually exclude it).
+  "exclude": [
+    "test",
+    "src/service-worker.js",
+    "src/service-worker/**/*.js",
+    "src/service-worker.ts",
+    "src/service-worker/**/*.ts",
+    "src/service-worker.d.ts",
+    "src/service-worker/**/*.d.ts"
+  ],
   "compilerOptions": {
     "strict": true,
     "moduleResolution": "bundler",

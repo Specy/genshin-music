@@ -15,13 +15,16 @@
 // `instruments.data` has 35 keys but `instruments.list` (INSTRUMENTS roster) has only 34 —
 // `Aurora_Short` is an extra entry (reuses Aurora's samples) with no roster entry of its own.
 import type {GameDefinition} from '../types'
+import {GAME_IDENTITY} from './identity'
 import CrGlyph from './glyphs/cr.svelte'
 import DmGlyph from './glyphs/dm.svelte'
 import DmcrGlyph from './glyphs/dmcr.svelte'
 
 export const game: GameDefinition = {
-    id: 'sky',
-    storageId: 'Sky',
+    // Phase 5 Task 1: sourced from ./identity so this game's id/storageId literals
+    // exist exactly once in the tree (see GameIdentity in ../types).
+    id: GAME_IDENTITY.id,
+    storageId: GAME_IDENTITY.storageId,
 
     display: {
         name: 'Sky',
