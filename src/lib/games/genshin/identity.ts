@@ -6,8 +6,8 @@
 // context (self: ServiceWorkerGlobalScope) that has no DOM and never renders anything.
 //
 // Zero imports besides the GameIdentity type - keep it that way. games/genshin/index.ts
-// imports GAME_IDENTITY from here (not the other way around), so this game's 'genshin' /
-// 'Genshin' literals exist exactly once in the whole tree.
+// imports GAME_IDENTITY from here (not the other way around), so this game's id/storageId
+// literals exist exactly once in the whole tree.
 //
 // storageId casing ('Genshin', not 'genshin') is LEGACY-LOCKED - see types.ts's
 // GameId/StorageId header and spec §5.3: it is the IndexedDB database name, every
