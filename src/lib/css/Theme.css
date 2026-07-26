@@ -94,6 +94,18 @@
 }
 
 
+/* The shipped app sizes the preview's `.app` through the global `.app, .app-content` rule's
+   `height: 100%` (main:src/pages/App.css:117), which migration/next16-react19 - this port's blob
+   source - had already dropped. Restoring it globally is wrong HERE: see the note in App.css, it
+   collapses every full-page route to content height under this port's flex shell. Scoped to the
+   preview instead, where `.theme-app-preview` is a definite-height (70vh) block container, so the
+   percentage resolves exactly as it does in the live app. Without it the preview's background
+   image and keyboard stopped at content height (338px) inside the 504px dashed box; with it the
+   preview measures 496x755 with a 211x493 keyboard, matching the live app element for element. */
+.theme-app-preview .app {
+    height: 100%;
+}
+
 .theme-app-preview .keyboard {
     transform: scale(0.8) !important;
 }

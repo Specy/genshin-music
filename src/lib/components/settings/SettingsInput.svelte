@@ -85,7 +85,7 @@
         value={value}
         placeholder={data.placeholder || ''}
         onblur={handleBlur}
-        onchange={handleChange}
+        oninput={handleChange}
         aria-label={data.name}
     />
     {#if data.type === 'number'}

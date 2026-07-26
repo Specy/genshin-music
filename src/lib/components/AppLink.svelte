@@ -2,11 +2,27 @@
     import type {Snippet} from 'svelte'
     import {resolve} from '$app/paths'
 
-    // Old: src/components/shared/link/AppLink.tsx, wrapping src/app/_navigation/AppLink.tsx
-    // (next/link + a custom NavigationProvider/LeaveGuard system).
+    // Old: src/app/_navigation/AppLink.tsx (next/link + a custom
+    // NavigationProvider/LeaveGuard system).
     //
-    // Scope note: this component itself renders the STYLED LINK only
-    // (display:inline-block, underline, accent color) using SvelteKit's own
+    // UNSTYLED BY DESIGN. The old tree also held a second, styled wrapper at
+    // src/components/shared/link/AppLink.tsx that added
+    // `display:inline-block; text-decoration:underline; color:var(--accent)`
+    // on top of this one - but that wrapper was DEAD CODE: `git grep
+    // 'components/shared/link/AppLink' migration/next16-react19` matches only
+    // its own definition, zero importers. Every real old call site (Home,
+    // blog index, BaseBlogPost, changelog, backup, 404, PromotionCard,
+    // DonateButton, Composer/Player menus) imported the plain
+    // `_navigation/AppLink` and let CSS classes do any styling.
+    // This port originally folded the dead wrapper's inline style in here,
+    // which underlined and accent-coloured EVERY link in the app - visible as
+    // underlined home-menu entries and blog post titles, and the reason
+    // `.middle-size-page`'s own `text-decoration: unset` (App.css) looked
+    // broken: a stylesheet rule cannot beat an inline style. Callers that DO
+    // want the styled look pass it explicitly via `style` (Home's privacy
+    // links, privacy/+page.svelte) or via a class (`.blog-link`).
+    //
+    // Scope note: this component renders the link only, using SvelteKit's own
     // navigation - a plain `<a href>` already gets client-side transitions
     // for free (unlike next/link, no wrapper component is required for
     // that part). The old NavigationProvider's `registerLeaveHandler`/
@@ -68,7 +84,7 @@
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 <a href={resolvedHref}
     class={className}
-    style="display:inline-block;text-decoration:underline;color:var(--accent);{style}"
+    style={style}
     {onclick}
     {...rest}
 >

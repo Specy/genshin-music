@@ -26,6 +26,13 @@
         onInstrumentPick: (data: SettingUpdate) => void
     } = $props()
 
+    // NOTE (React->Svelte event mapping): old's `onChange` on an <input> is React's synthetic
+    // onChange, which fires on the DOM **input** event (every drag step), NOT the DOM `change`
+    // event (which only fires once the value is committed). Binding this to `onchange` broke the
+    // volume control outright: `onpointerup` fired BEFORE the value had been reported, so
+    // handleVolumePick committed the PREVIOUS `volume` - picking 10% saved nothing, and picking
+    // 50% next saved 10%. `oninput` restores old's ordering (value reported during the drag,
+    // committed on release). Same mapping applies to every ported <input> onChange.
     function handleVolumeChange(e: Event & {currentTarget: EventTarget & HTMLInputElement}) {
         onVolumeChange(Number(e.currentTarget.value))
     }
@@ -57,7 +64,7 @@
         min={1}
         max={100}
         value={volume}
-        onchange={handleVolumeChange}
+        oninput={handleVolumeChange}
         onpointerup={handleVolumePick}
     />
 </div>
