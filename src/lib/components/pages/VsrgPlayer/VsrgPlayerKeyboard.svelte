@@ -11,8 +11,9 @@
 
     // Old: src/components/pages/VsrgPlayer/VsrgPlayerKeyboard.tsx (170 lines, TWO function
     // components - `VsrgPlayerKeyboard` + its own local, non-exported `VsrgPlayerKeyboardKey`) +
-    // VsrgPlayerKeyboard.module.css (96 lines, MINUS the bare `.vsrg-player-key-circle` rule - see
-    // the style block below). Both old components collapse into this ONE file:
+    // VsrgPlayerKeyboard.module.css (96 lines, every rule ported - see the style block below for the
+    // `.vsrg-player-key-circle` rule's fix-round-2 correction). Both old components collapse into
+    // this ONE file:
     // `VsrgPlayerKeyboardKey` becomes a local, parameterized `{#snippet keyboardKey(...)}` - the
     // established idiom for a repeated sub-template used only within its own parent file.
     //
@@ -40,19 +41,25 @@
     // staleness of a closure-over-a-copy, not to change what index gets computed. Disclosed
     // simplification, not a behavior change.
     //
-    // DISCLOSED GAP (do not silently "fix" - see the style block below for the full reasoning):
-    // the bare `.vsrg-player-key-circle` rule is intentionally SKIPPED here per the standing 4c
-    // delimiter (owned by `$cmp/pages/keybinds/VsrgKey.svelte`). Because Svelte scopes each
-    // component's own style block independently, that rule's scope hash never reaches elements
-    // rendered by THIS file, so - when `keyboardLayout` is set to `'circles'` (non-default; the
-    // `keyboardLayout` setting's own default is `'line'`, BaseSettings.ts:595) - the bottom
-    // `.vsrg-player-keyboard-circles` row's key buttons render without that rule's
-    // background-color/color/border/border-radius/font-size/layout declarations (browser defaults
-    // apply instead). In `'line'` mode (the default) the SAME class is only ever used inside the
-    // `.vsrg-player-keyboard-control-left`/`-right` wings, where the compound `!important` override
-    // rule below still applies its own sizing/rotation regardless. This is a real, narrow, disclosed
-    // visual gap - not reachable on first load, only after a user explicitly switches the keyboard
-    // layout setting to "circles".
+    // CORRECTED (fix round 2 - see the style block below for the re-added rule): the bare
+    // `.vsrg-player-key-circle` rule was originally DROPPED here per a standing 4c delimiter that
+    // treated it as already "owned" by `$cmp/pages/keybinds/VsrgKey.svelte`. That delimiter was
+    // valid for old (React): CSS Modules compile every class to ONE shared global identifier, so
+    // `VsrgKey.tsx`'s import of the SAME `VsrgPlayerKeyboard.module.css` genuinely served both
+    // consumers from a single physical rule. It does NOT hold for a Svelte port: each component's
+    // own style block is scoped independently (a private per-component hash suffix), so
+    // `VsrgKey.svelte`'s copy of this class can never reach elements rendered by THIS file - there
+    // is no cross-file sharing mechanism to lean on, and VsrgKey.svelte's own header comment already
+    // says as much from the other side. This was a real, live regression, not a narrow one: on the
+    // DEFAULT `keyboardLayout: 'line'` setting (BaseSettings.ts:595), on literal first load, the
+    // `.vsrg-player-keyboard-control-left`/`-right` wing buttons rendered with only the compound
+    // `!important` width/height/rotate overrides below applying - `display`, `background-color`,
+    // `color`, `border-radius`, `border`, `font-size`, `justify-content`/`align-items` all fell back
+    // to browser defaults for every user, both games (verified live via `getComputedStyle`). The
+    // `'circles'`-layout row (non-default; the setting's own default is `'line'`) loses the exact
+    // same declarations for the same reason. Fixed by re-adding the rule verbatim (byte-identical to
+    // `VsrgKey.svelte`'s copy / old `VsrgPlayerKeyboard.module.css`) to this file's own style block,
+    // in old's original rule order.
     interface VsrgPlayerKeyboardProps {
         hitObjectSize: number
         keyboardLayout: VsrgKeyboardLayout
@@ -156,10 +163,13 @@
 
 <style>
     /* Old: VsrgPlayerKeyboard.module.css (96 lines). Every rule ported verbatim, in the SAME order
-       as old, EXCEPT the bare `.vsrg-player-key-circle` rule (SKIPPED per the standing 4c delimiter
-       - it already lives, scoped to itself, in $cmp/pages/keybinds/VsrgKey.svelte; VsrgKey.svelte's
-       own header comment records the same delimiter from the other side). See this file's script
-       header comment "DISCLOSED GAP" for the resulting, narrow visual consequence. */
+       as old, INCLUDING the bare `.vsrg-player-key-circle` rule (below, restored in its own original
+       position between `.vsrg-player-key-hitbox-line:nth-child(odd)` and `.vsrg-player-key-line`).
+       It was wrongly SKIPPED in the original port per a standing 4c delimiter that assumed this
+       file could share a scoped-style rule with `$cmp/pages/keybinds/VsrgKey.svelte` the way old's
+       CSS Modules shared one compiled class across both consumers - Svelte's per-component style
+       scoping makes that impossible, so the rule is re-added here, byte-identical to VsrgKey.svelte's
+       own copy. See this file's script header comment for the full corrected reasoning. */
     .vsrg-player-keyboard-circles {
         position: absolute;
         bottom: 0;
@@ -231,6 +241,20 @@
 
     .vsrg-player-key-hitbox-line:nth-child(odd) {
         filter: brightness(0.8);
+    }
+
+    .vsrg-player-key-circle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.4rem;
+        background-color: var(--background-layer-10);
+        color: var(--background-text);
+        width: 100%;
+        height: 100%;
+        border-radius: 50rem;
+        margin: -0.15rem;
+        border: solid 0.15rem var(--secondary);
     }
 
     .vsrg-player-key-line {
