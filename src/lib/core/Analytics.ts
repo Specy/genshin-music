@@ -1,10 +1,19 @@
 // old: src/lib/Analytics.ts (49 lines) - byte-verbatim port, zero import changes needed (this
 // file has no imports). Thin gtag wrapper: `window.gtag` is guarded/optional-chained everywhere,
-// so every function here is a safe no-op until Phase 5 actually loads the GA script (AppInit.svelte
-// currently omits analytics init entirely - see progress ledger P4a Task 10 / the P4a final
-// review's "Analytics: NOT yet ported" note). Ported now so the ~8 keyboard-page `Analytics.*`
-// call sites (Player/ZenKeyboard/SheetVisualizer, wired across Tasks 2-7 of this phase) port
-// minimal-diff against a real module instead of being dropped and re-added later.
+// so every function here was a safe no-op through Phase 4 - ported ahead of the GA script itself
+// so the keyboard-page `Analytics.*` call sites could land minimal-diff against a real module
+// instead of being dropped and re-added later. (Re-derived this session, correcting this header's
+// own prior "~8 ... Player/ZenKeyboard/SheetVisualizer" claim: grepping every `Analytics.<method>(`
+// call finds 10 pre-existing sites across Composer.svelte (x3), ComposerMenu.svelte,
+// Player.svelte (x2), PlayerKeyboard.svelte, PlayerMenu.svelte (x2) and
+// sheet-visualizer/+page.svelte - Composer was undercounted by one in the old text and
+// ZenKeyboard, named in it, has none.)
+//
+// As of Phase 5 Task 5 (this task) the no-op era is over: AppInit.svelte's own onMount now injects
+// the real gtag.js script and defines `window.gtag` (old: GoogleAnalyticsScript.tsx - see that
+// onMount's own header for the full port), and separately calls `Analytics.UIEvent`/
+// `Analytics.pageView` itself (old AppBase.tsx effects 6/7), bringing the total to 12 call sites.
+// Every function exported below is therefore live, not a no-op, from this commit onward.
 declare global {
     interface Window {
         gtag?: (...args: any[]) => Promise<void>
