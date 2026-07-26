@@ -58,6 +58,17 @@
     //      `goto(nav.to.url)` - `nav.to.url` is already a fully-resolved URL (SvelteKit computed it
     //      when it determined this navigation's destination), not a hand-written route string, so
     //      it needs no separate `resolve()` call the way a literal path would.
+    // DISCLOSED DEVIATION (popstate/browser-Back only, verified against @sveltejs/kit's own
+    // client.js popstate handler): cancelling a popstate nav makes kit itself counteract the
+    // browser's already-moved history position via `block: () => history.go(-delta)` before this
+    // callback ever runs `canLeave()`, so by the time an approved nav re-issues via
+    // `goto(nav.to.url)` above, history is already back where it started - `goto()` therefore
+    // PUSHES a new entry rather than popping. Net effect after confirming Back: the user lands on
+    // the correct URL, but the history stack gains a forward entry instead of shrinking, unlike
+    // old's `NavigationProvider.back()` -> `router.back()`. Neither registered handler (Composer/
+    // VsrgComposer `prepareToLeave`) reads the target argument, so no prompt text or verdict is
+    // affected - impact is confined to stack shape. A parity fix routing the `'__back__'` case
+    // through `history.back()` instead would race kit's own restore, so it is not attempted here.
     let bypassOnce = false
     beforeNavigate(async (nav) => {
         if (bypassOnce) {
