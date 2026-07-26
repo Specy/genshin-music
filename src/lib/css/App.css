@@ -3012,7 +3012,7 @@ select {
    Theme.css; this insertion instead sits BEFORE the separately-imported Theme.css, the one
    cascade-order inversion this task's selector-intersection guard proves inert (see the task
    report) — P4c Task 2. SKIPS 5 rules already ported verbatim into MultipleOptionSlider.svelte's
-   own <style> block (P4a Task 8; that file's LEDGER NOTE names them): `.multiple-option-slider`,
+   own <style> block (P4a Task 8; that file's own header names them): `.multiple-option-slider`,
    `.multiple-option-slider button` (both the bare rule and its max-width:1000px override),
    `.multiple-options-selected`, `.multiple-option-slider-overlay`. */
 .vsrg-page {

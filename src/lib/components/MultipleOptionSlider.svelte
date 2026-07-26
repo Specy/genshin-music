@@ -2,8 +2,9 @@
     // Old: src/components/pages/VsrgComposer/MultipleOptionSlider.tsx. RELOCATED (per this task's
     // brief) from the vsrg-composer-only folder to this shared components/ directory - backup/
     // +page.svelte (Task 8) is its first consumer, ahead of the vsrg-composer page itself
-    // (Phase 4c). LEDGER NOTE for whoever ports vsrg-composer: import this component, do NOT
-    // re-port a second copy.
+    // (Phase 4c). OWNERSHIP NOTE (was a forward-looking "LEDGER NOTE for whoever ports
+    // vsrg-composer"): Phase 4c's VsrgBottom.svelte (P4c Task 2) imports this component rather
+    // than re-porting a second copy, as intended - see that file's own header.
     //
     // `Option<T>` lives in this module block (unconstrained T, matching old exactly) rather than
     // the generics-attributed instance script below, same split as FilePicker.svelte's own
@@ -90,9 +91,9 @@
        VsrgComposer.css port is complete and correctly SKIPPED `.multiple-option-slider`,
        `.multiple-option-slider button`, `.multiple-options-selected`,
        `.multiple-option-slider-overlay`, and the one `.multiple-option-slider button` line inside
-       the `max-width: 1000px` media query - all already ported here, as that port's own
-       App.css:3005-3012 comment confirms ("SKIPS 5 rules already ported verbatim into
-       MultipleOptionSlider.svelte's own <style> block"). */
+       the `max-width: 1000px` media query - all already ported here, as App.css's own
+       vsrg-composer/VsrgComposer.css port block confirms ("SKIPS 5 rules already ported
+       verbatim into MultipleOptionSlider.svelte's own <style> block"). */
     .multiple-option-slider {
         display: grid;
         grid-auto-columns: minmax(0, 1fr);
