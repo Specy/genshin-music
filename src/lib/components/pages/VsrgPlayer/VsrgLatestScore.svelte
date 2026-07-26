@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {onMount} from 'svelte'
+    import {onMount, untrack} from 'svelte'
     import {VSRG_SCORE_COLOR_MAP} from '$core/legacyConfig'
     import {subscribeVsrgLatestScore, vsrgPlayerStore} from '$stores/VsrgPlayerStore.svelte'
     import type {Timer} from '$core/utils/Utilities'
@@ -59,22 +59,40 @@
     $effect(() => {
         void data
         if (!ref) return
+        const el = ref
         const angle = Math.floor(Math.random() * 25 - 12.5)
         const newColor = VSRG_SCORE_COLOR_MAP[data.type]
-        ref.animate([
-            {transform: styleTransform, color: styleColor},
-            {transform: `rotate(${angle}deg) scale(1.3)`, color: newColor},
-            {transform: `rotate(0) scale(1)`, color: newColor},
-        ], {
-            duration: 150,
-            easing: 'ease-out',
-        })
         // old comment: "don't need 'style' to dep array since we need to animate only when data
-        // changes" - preserved: this effect only tracks `data` (via `void data` above), never
-        // `styleTransform`/`styleColor` themselves, so writing them below does not cause a
-        // self-retriggering loop.
-        styleTransform = `rotate(${angle}deg)`
-        styleColor = newColor
+        // changes" - old's explicit `[data]` React dependency array never re-ran on `style`/
+        // `setStyle`. REAL BUG CAUGHT (not a preserved old quirk - this claim used to say the
+        // opposite and was wrong): `ref.animate(...)` below reads `styleTransform`/`styleColor`
+        // ($state) as WAAPI keyframe values, and the two lines after it write fresh values to both
+        // - a synchronous `$state` read ANYWHERE during a Svelte 5 effect's execution is tracked as
+        // a dependency, even nested inside a function-call argument list, regardless of a top-level
+        // `void data` line. Left untracked, this effect re-triggers on its own write, superseding
+        // the just-started animation with a freshly-random angle every time - an unbounded loop
+        // (live-reproduced: one scored hit fired 37 extra re-runs in a single burst) that only
+        // stops once two consecutive `Math.random()` draws happen to coincide, and can throw
+        // `effect_update_depth_exceeded` on an unlucky run. Same established fix as
+        // `zen-keyboard/+page.svelte`'s `setKeyboardLayout` effect, `ZenNote.svelte`'s `statusId`
+        // write, `Player.svelte`'s settings-sync effect, and `NumericalInput.svelte`'s `onChange`
+        // effect (see that file's own comment for the full precedent list) - `untrack()` confines
+        // this effect's tracked dependencies to exactly `{data, ref}`, matching old's `[data]`-only
+        // array. `el` is a plain local copy of the already-guarded `ref` (not a new `$state` read) -
+        // needed because TypeScript's control-flow narrowing from `if (!ref) return` above does not
+        // carry into the nested `untrack()` closure.
+        untrack(() => {
+            el.animate([
+                {transform: styleTransform, color: styleColor},
+                {transform: `rotate(${angle}deg) scale(1.3)`, color: newColor},
+                {transform: `rotate(0) scale(1)`, color: newColor},
+            ], {
+                duration: 150,
+                easing: 'ease-out',
+            })
+            styleTransform = `rotate(${angle}deg)`
+            styleColor = newColor
+        })
     })
 </script>
 
