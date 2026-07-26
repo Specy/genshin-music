@@ -9,8 +9,11 @@
 // GAME-DATA values that allowlist forbids to UI code, and Pitch/NoteNameType are type-only so
 // were never a value-import concern - this file is audio-engine tier, not UI code, so
 // legacyConfig's header separately carves out this file and MIDIProvider.ts for exactly those
-// GAME-DATA values (whole-branch final review, finding B); each stays a direct `game.*` alias
-// below, so importing it here is behaviorally identical to reading `$game` directly),
+// GAME-DATA values (whole-branch final review, finding B); four of the five stay direct `game.*`
+// aliases there, so importing them here is behaviorally identical to reading `$game` directly,
+// while PITCH_TO_INDEX is a pure build-time derivation of one (over PITCHES = game.notes.pitches)
+// with no `$game` equivalent to read instead - it exists only in the adapter, as it did only in
+// old Config.ts),
 // `$types/GeneralTypes` -> `$core/types` (InstrumentName, NoteStatus - both restored
 // there by this task), `$cmp/shared/SvgNotes` -> `$lib/games/types` (NoteImage - type-only, same
 // precedent as SvgNote.svelte), `../utils/Utilities` -> `$core/utils/Utilities`,
