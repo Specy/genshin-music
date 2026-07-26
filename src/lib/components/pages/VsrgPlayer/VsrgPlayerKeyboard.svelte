@@ -49,8 +49,8 @@
     // consumers from a single physical rule. It does NOT hold for a Svelte port: each component's
     // own style block is scoped independently (a private per-component hash suffix), so
     // `VsrgKey.svelte`'s copy of this class can never reach elements rendered by THIS file - there
-    // is no cross-file sharing mechanism to lean on, and VsrgKey.svelte's own header comment already
-    // says as much from the other side. This was a real, live regression, not a narrow one: on the
+    // is no cross-file sharing mechanism to lean on. This was a real, live regression, not a
+    // narrow one: on the
     // DEFAULT `keyboardLayout: 'line'` setting (BaseSettings.ts:595), on literal first load, the
     // `.vsrg-player-keyboard-control-left`/`-right` wing buttons rendered with only the compound
     // `!important` width/height/rotate overrides below applying - `display`, `background-color`,

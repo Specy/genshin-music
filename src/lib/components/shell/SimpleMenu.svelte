@@ -9,10 +9,12 @@
 
     // Old: src/components/shared/pagesLayout/SimpleMenu.tsx
     // `useAppNavigation().back()` (old) wrapped Next.js's router.back() with the app's
-    // leave-guard NavigationProvider system. That provider is explicitly out of scope this phase
-    // (AppLink.svelte's own comment: zero consumers, deferred until an editor page needs it), so
-    // the back button here calls the plain browser `history.back()` directly - the same
-    // simplification AppLink.svelte already made for its own internal hrefs.
+    // leave-guard NavigationProvider system. That guard is LIVE here too, wired once at the shell
+    // level rather than per-call: `src/routes/+layout.svelte`'s `beforeNavigate` handler (P4c
+    // Task 2) intercepts the `popstate` this button's plain `window.history.back()` produces
+    // exactly like any other in-app navigation, mapping it to the `'__back__'` sentinel - so this
+    // button needs no leave-guard-specific code of its own, the same simplification AppLink.svelte
+    // documents for its own internal hrefs.
     //
     // Icons (react-icons@5.6.0, fetched from unpkg.com/react-icons@5.6.0/fa/index.mjs, inlined as
     // raw <svg> per the repo's "no react-* packages" rule - same approach as Logger.svelte/
