@@ -49,80 +49,6 @@
     import DonateButton from '$cmp/DonateButton.svelte'
     import LibrarySearchedSong, {type SearchedSongType} from '$cmp/LibrarySearchedSong.svelte'
 
-    // Old: src/components/pages/Player/PlayerMenu.tsx (600 lines, default export `Menu`). Big file,
-    // mostly reuse of the already-ported menu/song-menu/settings/utility family (P4a) plus this
-    // task's own HelpTab/DonateButton/LibrarySearchedSong/PlayerSongRow. Structural precedent for
-    // the whole MenuSidebar/MenuPanelWrapper/panel-snippet/wrapperEl+clickOutside shape: this
-    // migration's own SheetVisualizerMenu.svelte (Task 2) and ZenKeyboardMenu.svelte (Task 4).
-    //
-    // `MenuTabs` type DROPPED: old declared (and exported, though nothing else ever imported it -
-    // verified via a repo-wide grep of the whole old branch) a local `'Help'|'Library'|'Songs'|
-    // 'Settings'|'Home'` union purely to type `useState<MenuTabs>`. The ported MenuSidebar's own
-    // context plumbing (`Partial<MenuContextState>`, defaulting `T = string`) takes a plain
-    // `string` for `current`/`setCurrent` regardless - the same "just use plain string literals,
-    // no shared union" idiom SheetVisualizerMenu.svelte/ZenKeyboardMenu.svelte already established
-    // for this exact scenario. Dropping it is a disclosed, zero-behavior-change simplification.
-    //
-    // `theme: Theme` prop (old's `useTheme()`) -> `ThemeProvider` imported directly, same
-    // established convention as SongMenu.svelte/SongFolder.svelte (see PlayerSongRow.svelte's and
-    // LibrarySearchedSong.svelte's own header comments for the same call on their own componentProps).
-    // `useSongs()`/`useFolders()` -> direct `songsStore.songs`/`folderStore.folders` reads (already
-    // the established idiom, e.g. SheetVisualizerMenu.svelte/ZenKeyboardMenu.svelte).
-    // `useConfig().IS_MIDI_AVAILABLE` -> `globalConfigStore.state.IS_MIDI_AVAILABLE`.
-    // `useClickOutside<HTMLDivElement>(cb, {active: isOpen, ignoreFocusable: true})` + `ref=
-    // {menuRef}` -> `wrapperEl` $bindable on MenuSidebar + a manually-invoked `clickOutside(...)`
-    // action in an `$effect`, the same pattern established by SheetVisualizerMenu.svelte/
-    // ZenKeyboardMenu.svelte for reaching a CHILD component's DOM node - but keyed on `isOpen`
-    // (not `selectedMenu !== ''`), since that is old PlayerMenu's OWN actual dependency (verified
-    // against the raw blob - it differs from the other two ports, which each match THEIR OWN old
-    // code's own condition).
-    // `useState(false)`/`useState<MenuTabs>('Songs')`/etc -> plain `$state`.
-    // The mount-once `useEffect(() => {checkStorage(); return createShortcutListener(...)}, [])` ->
-    // `onMount` (fires once, cleanup on unmount - the direct Svelte equivalent of a literal `[]`
-    // React dependency array), not a reactive `$effect` (nothing reactive is tracked in its body).
-    //
-    // `APP_NAME === 'Sky'` (downloadSong/downloadAllSongs) -> `game.features
-    // .downloadsSongsInOldFormat`, the same two-tier substitution already established at
-    // src/routes/error/+page.svelte's own `downloadSong`. `Midi` stays a type-only import (see
-    // FileService.ts's own header comment on why its CJS build can't be value-imported under this
-    // build) - old's `song instanceof Midi` guard is therefore rewritten as `!(song instanceof
-    // RecordedSong) && !(song instanceof ComposedSong)`, logically equivalent given the 3-member
-    // union (`RecordedOrComposed | Midi`) has no other possibility, and TypeScript narrows the
-    // remaining branch to `Midi` correctly via control-flow analysis - a required,
-    // correctness-preserving adaptation, not a behavior change.
-    //
-    // `navigation.push('/composer?showMidi=true')` -> `goto(resolve('/composer?showMidi=true'))`,
-    // the established SvelteKit navigation idiom (src/routes/+layout.svelte's own
-    // `handleShellError`). `resolve()` accepts a route id with a literal `?query` suffix appended
-    // (its own type signature: `RouteIdWithSearchOrHash = RouteId | \`${RouteId}?${string}\` | ...\`)
-    // - verified against the installed @sveltejs/kit source (resolve_route only substitutes
-    // `[param]` segments; a query-suffixed literal with no bracket segments round-trips unchanged).
-    // Same mechanism silently already used by AppLink.svelte's own internal `resolve(href as any)`
-    // for the two/three `'/composer?songId=' + encodeURIComponent(...)` hrefs in PlayerSongRow.svelte.
-    //
-    // Icons: ~15 FA/Ri icons inlined as raw <svg> (react-icons@5.6.0, unpkg.com/react-icons@5.6.0/
-    // {fa,ri}/index.mjs) - FaTimes/FaHome/FaMusic/FaCog/FaDiscord/FaCrosshairs/FaRegCircle/FaSearch
-    // already byte-verified against copies already inlined elsewhere in this codebase (FloatingDropdown
-    // .svelte, ZenKeyboardMenu.svelte, SheetVisualizerMenu.svelte, SongMenuSearch.svelte,
-    // PlayerSongRow.svelte's own siblings) - FaSearch itself is this file's own `faSearchIcon`
-    // snippet, identical to SongMenuSearch.svelte's own `searchIcon` snippet apart from one space
-    // before the <path> element's self-closing `/>` (P4a Task 5), not a fresh icon as an earlier
-    // draft of this comment claimed; FaGithub/FaQuestion/RiPlayListFill freshly sourced (first
-    // consumers in this codebase) from the same cited version. RiPlayListFill's own
-    // `attr: {fill: "currentColor"}` (baked into its GenIcon call, unlike every FA icon here) is
-    // functionally identical to IconBase's own base default fill - both resolve to the same
-    // rendered `fill="currentColor"`, so it's written with the same stroke/fill/stroke-width
-    // attribute order as every other icon snippet in this file for consistency; verified against
-    // the real iconBase.mjs merge order (base defaults -> conf.attr -> icon's own attr -> call-site
-    // svgProps -> height/width/xmlns last).
-    //
-    // `.close-menu` (className on the close button): genuinely UNSTYLED even in old (grepped the
-    // real Player/menu.css - no `.close-menu` rule exists anywhere in it) - reproduced as a
-    // no-op class, not "fixed" by inventing styling for it.
-    // Help panel's two `target="_blank"` anchors have no `rel` attribute in old either (verified
-    // against the raw blob) - reproduced without one, unlike some OTHER already-ported pages whose
-    // OWN old blobs did include `rel="noreferrer"` (SimpleMenu.svelte/partners/+page.svelte) -
-    // this is a real, disclosed difference from those, not an inconsistency introduced here.
     type MenuFunctions = {
         addSong: (song: RecordedSong | ComposedSong) => void
         removeSong: (name: string, id: string) => void
@@ -143,11 +69,9 @@
 
     const excludedSongs: SongType[] = ['vsrg']
 
-    // NOTE: `functions.xxx` is read inline at each call site below (not destructured into local
-    // consts at setup time, unlike old's own `const {handleSettingChange, addSong, removeSong,
-    // renameSong} = functions`) - see PlayerSongRow.svelte's identical note for why (a top-level
-    // destructure of a $props() field only captures its initial value; Svelte's own
-    // `state_referenced_locally` compiler warning flags exactly this).
+    // functions.xxx is read inline at each call site (not destructured into local consts at setup
+    // time): a top-level destructure of a $props() field only captures its initial value, so it
+    // would go stale if the parent later passes new functions. Same reasoning in PlayerSongRow.svelte.
 
     let isOpen = $state(false)
     let selectedMenu = $state('Songs')
@@ -558,18 +482,6 @@
 </MenuSidebar>
 
 <style>
-    /* Old: src/components/pages/Index/HelpTab/HelpTab.module.css (46 lines). Only
-       `.help-icon-wrapper`/`.help-icon` are consumed anywhere in the whole old branch (verified via
-       a repo-wide grep) - by THIS file's own Help panel, above; ported here as plain scoped
-       selectors (no :global() needed - both classes are applied to elements THIS file's own
-       template/snippets render directly, not a child component's root element).
-       The module's other 3 rules (`.help-title`/`.help-margin-left`/`.help-img`) have ZERO
-       consumers anywhere in the old app either (same grep) - dropped as genuinely dead code, same
-       "zero-consumer -> drop, restore if a real consumer ever appears" precedent already applied
-       to the Utilities.ts deletions in P2 Task 5 (a plain, non-:global() port of them would also
-       trip Svelte's own css-unused-selector check, since nothing in this file's template would
-       ever match them). `.keys-table`'s own rules already live in pages/ShortcutsTable.svelte
-       (P4a Task 3) - not repeated here either. */
     .help-icon {
         width: 3rem;
         height: 3rem;

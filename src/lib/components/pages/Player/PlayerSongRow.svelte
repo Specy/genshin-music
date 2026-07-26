@@ -2,11 +2,6 @@
     import type {ComposedSong} from '$core/Songs/ComposedSong'
     import type {RecordedSong} from '$core/Songs/RecordedSong'
 
-    // Local alias for old's `$types/SongTypes.ts` `RecordedOrComposed` - not ported as a shared
-    // types file this task (this is its only real consumer besides PlayerMenu.svelte, which
-    // declares its own copy for the same reason), same "small supporting type lives with its sole
-    // consumer" idiom already used by SongMenu.svelte's `SongMenuRowProps` / LibrarySearchedSong
-    // .svelte's `SearchedSongType`.
     export type RecordedOrComposed = RecordedSong | ComposedSong
 </script>
 
@@ -29,26 +24,6 @@
     import {hasTooltip} from '$cmp/utility/tooltip'
     import AppLink from '$cmp/AppLink.svelte'
 
-    // Old: src/components/pages/Player/PlayerMenu.tsx's local (non-exported) `SongRow` component
-    // (PlayerMenu.tsx lines 452-597). Not literally "inline" here (a sibling file is required -
-    // SongMenu.svelte's `SongComponent` prop needs a real `Component<T>`, not a snippet, same
-    // constraint that already forced SheetVisualizerSongRow.svelte/ErrorSongRow.svelte into their
-    // own files) but otherwise a byte-parity, class-parity port of old's SongRow. Named
-    // PlayerSongRow (not the bare old "SongRow") for the same collision-avoidance reason as those
-    // two siblings. CSS (.song-row/.song-name/.song-name-input/.song-rename/.row/
-    // .song-buttons-wrapper/.dropdown-select/.floating-dropdown*) is already global (App.css) - no
-    // component-local <style> needed.
-    //
-    // `theme: Theme` prop DROPPED (same rationale as LibrarySearchedSong.svelte's own header
-    // comment): imports the `ThemeProvider` singleton directly instead, matching the established
-    // convention (SongMenu.svelte/SongFolder.svelte do the same) rather than threading a live class
-    // instance through componentProps.
-    //
-    // `Midi` stays a type-only import (see FileService.ts's own header comment on why - its CJS
-    // build isn't a value-importable ESM shape under this build). Old's `song instanceof Midi`
-    // branch guard (in PlayerMenu.tsx's `downloadSong`, not this file) is therefore NOT reproduced
-    // here; irrelevant to this file anyway, which only ever calls the `downloadSong` prop, never
-    // branches on the union itself.
     let {
         data,
         folders,
@@ -64,18 +39,14 @@
         }
     } = $props()
 
-    // NOTE: `functions` is read as `functions.xxx` at each call site below (not destructured into
-    // local consts, unlike old's own `const {removeSong, toggleMenu, downloadSong, renameSong} =
-    // functions`) - a plain top-level destructure of a $props() field only captures its INITIAL
-    // value (Svelte compiler warning `state_referenced_locally`), since this script block runs
-    // once at component setup, unlike old's React function body re-running (and re-destructuring)
-    // every render. Reading `functions.xxx` inline instead stays correctly live-bound to whatever
-    // the current `functions` prop is.
+    // functions.xxx is read inline at each call site (not destructured into local consts at setup
+    // time): a top-level destructure of a $props() field only captures its initial value, so it
+    // would go stale if the parent later passes new functions.
     const buttonStyle = $derived(`background-color:${ThemeProvider.layer('primary', 0.15).toString()}`)
 
     let isRenaming = $state(false)
-    // old: `useState(data.name)` + `useEffect(() => setSongName(data.name), [data.name])` - the
-    // same writable-$derived rewrite already established by SongFolder.svelte's own `folderName`.
+    // songName is a $derived directly overridden by the rename input below (Svelte 5.25+ allows
+    // this) - it still resets to data.name whenever that upstream value changes.
     let songName = $derived(data.name)
 
     async function playSong() {
@@ -84,9 +55,6 @@
         functions.toggleMenu(false)
     }
 
-    // old had no keyboard handler on the (bare onClick) song-name div - pre-existing a11y gap,
-    // same additive role/tabindex/onkeydown fix already applied to SongFolder.svelte/
-    // SheetVisualizerSongRow.svelte's own bare-onClick divs in earlier tasks.
     function handleNameKeydown(e: KeyboardEvent) {
         if (e.key !== 'Enter' && e.key !== ' ') return
         e.preventDefault()

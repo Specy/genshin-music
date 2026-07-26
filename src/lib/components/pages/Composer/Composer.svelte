@@ -43,157 +43,6 @@
     import {registerLeaveHandler} from '$stores/navigationGuard.svelte'
     import {calculateSongLength, delay, formatMs} from '$core/utils/Utilities'
 
-    // Old: src/app/_client-pages/composer/index.tsx (991 lines) - the `Composer` class component
-    // (the whole page's implementation) plus its thin default-export wrapper function
-    // `ComposerPage` (searchParams -> songId/showMidi, useSetPageVisited, then
-    // `<Composer .../>`). Per this task's brief, the split is KEPT (not collapsed the way
-    // Player.svelte collapsed its own old wrapper): this file is the class-equivalent
-    // (`songId`/`showMidi`/`inPreview` props, everything else below), and
-    // `src/routes/composer/+page.svelte` is the thin wrapper (searchParams read +
-    // `setPageVisited('composer')` + `<AppBackground page="Composer">`) - see that file's own
-    // header comment. `navigation`/`registerLeaveHandler`/`t` prop-threading is dropped exactly
-    // like every other Phase-4 page: `registerLeaveHandler` is imported directly
-    // (`$stores/navigationGuard.svelte`, P4c Task 2), `t()` is the reactive i18n binding, and
-    // `goto`/`resolve` (`$app/navigation`/`$app/paths`) replace the old React-Router-shaped
-    // `navigation.push`.
-    //
-    // `theme: Theme` (old's constructor: `theme: ThemeProvider`) is DROPPED entirely - it is
-    // never read anywhere in old's own `render()` or any other method (verified against the raw
-    // blob); every descendant that actually needs theming (`ComposerCanvas.svelte`/
-    // `ComposerKeyboard.svelte`/`InstrumentControls.svelte`/etc.) already imports `ThemeProvider`
-    // directly, the established Phase-4 convention. A pure vestigial field, not ported.
-    //
-    // Two-tier (UI file, reads `$game` directly): old's `INSTRUMENTS[0]`/`INSTRUMENTS[1]` ->
-    // `game.instruments.list[0]`/`[1]`, the same substitution Player.svelte/MidiSetup.svelte/
-    // ZenKeyboardMenu.svelte already established. `TEMPO_CHANGERS`/`TempoChanger` ->
-    // `game.composer.tempoChangers` / `(typeof game.composer.tempoChangers)[number]`, matching
-    // this same directory's own `ComposerCache.ts` (P4c Task 1) and `ComposerKeyboard.svelte`
-    // (P4c Task 4) precedent. `APP_NAME === 'Sky'` (old's `downloadSong`) ->
-    // `game.features.downloadsSongsInOldFormat`, the substitution already established at
-    // PlayerMenu.svelte's own `downloadSong`/`error/+page.svelte`'s `downloadSong`. `APP_NAME`
-    // itself (the BroadcastChannel name, the download filename extension) stays a direct
-    // `$core/legacyConfig` import - on the UI-tier identity allowlist.
-    //
-    // REQUIRED RENAMES (parameter/local shadowing a same-named outer `$state` field - old always
-    // disambiguated via `this.state.X` vs a bare local/parameter of the identical name, which has
-    // no equivalent disambiguator once the `this.state.` prefix is gone; same class of rename
-    // already established by Player.svelte's `audioRecording`/PlayerKeyboard.svelte's
-    // `approachingNotesRow`): `loadSong`'s `song` param -> `songToLoad`; `addSong`'s `song` param
-    // -> `songToAdd`; `updateSong`'s `song` param -> `songToSave` (every real call site happens to
-    // pass the same `song` reference, but old still threads it as a parameter - kept that way,
-    // byte-parity, not simplified to a zero-arg function); `syncInstruments`'s `song?` param ->
-    // `songToSync`; `downloadSong`'s `song` param -> `songToDownload` (this one genuinely differs
-    // from the open `song` per-call, per its own `songToDownload.id === song.id` check);
-    // `createNewSong`'s local `const song = new ComposedSong(...)` -> `newSong`; `init`'s
-    // `settings` param -> `loadedSettings`; `changeLayer`'s `layer` param -> `newLayer`;
-    // `changeVolume`'s locally-computed `layer` -> `layerIndex`; `playSound`/`selectColumn`'s own
-    // `layer`/`delay` PARAMETERS are kept byte-identical to old (old itself shadows the
-    // module-level `delay` utility import with a same-named parameter there too, and a plain
-    // function parameter shadowing an outer binding is ordinary, hazard-free JS scoping - not the
-    // same "assign X to X" self-reference risk `changeLayer`'s rename avoids); `copyColumns`/
-    // `eraseColumns`'s `layer` param -> `targetLayer` (the callback TYPE names on
-    // ComposerTools.svelte still say `layer`/parameter names are cosmetic in TS, no mismatch).
-    //
-    // PROMISE-WRAPPER FLATTENING (established `this.setState({field}, callback)` -> direct
-    // assignment + inlined callback precedent, Player.svelte's own header comment): `togglePlay`/
-    // `addColumns` drop their `new Promise(resolve => {...})` wrappers entirely (the function body
-    // is already `async`/returns synchronously-enough that a bare `return`/fall-through gives the
-    // identical resolved-Promise-timing contract to callers, none of whom rely on more than
-    // "awaiting this settles when the work is done"). `updateSong`'s `else` branch specifically
-    // used `new Promise(async resolve => {...})` - an async Promise executor, flagged by
-    // `eslint:recommended`'s `no-async-promise-executor` rule (this project's
-    // `js.configs.recommended`), which would fail the lint gate verbatim - REQUIRED to flatten,
-    // not a style choice; the exact fire-and-forget-recursive-call-then-fall-through-to-`return
-    // true` control flow (the "doesn't exist, rename to Untitled, recurse without awaiting, still
-    // resolve true for THIS call" branch) is preserved precisely.
-    //
-    // REQUIRED ADAPTATION, LOAD-BEARING (a real bug caught + fixed via live testing, not a style
-    // choice): `ComposedSong`/`NoteColumn`/etc. live in `src/lib/core/` and MUST stay
-    // framework-agnostic (byte-verbatim old-model ports, zero runes, per the whole migration's
-    // two-tier architecture) - their mutating methods (`addColumns`/`removeColumns`/
-    // `toggleBreakpoint`/`deleteColumns`/etc.) are all arrow-function CLASS FIELDS, lexically bound
-    // to whichever instance was alive when their constructor ran. Svelte 5's `$state()` runtime
-    // proxy (`node_modules/svelte/src/internal/client/proxy.js`, `proxy()`) explicitly REFUSES to
-    // deep-wrap any value whose prototype isn't `Object.prototype`/`Array.prototype` - a class
-    // instance is stored by bare reference, completely unproxied. `PlayerStore.svelte.ts`'s own
-    // header comment already documents this exact limitation for its `state.song` field, but
-    // Player only ever REPLACES the whole song reference (`play`/`practice`/etc.) and never needs
-    // fine-grained reactivity to a CONTINUOUSLY MUTATED song the way the composer does - old's own
-    // `this.setState({song})` after nearly every mutating call is a React "please re-render, ANY
-    // state object reference is enough for a class component" nudge that has NO working Svelte
-    // equivalent via a plain in-place mutation (confirmed by live testing: clicking a note, adding
-    // columns, etc. mutated the underlying `ComposedSong` data correctly but the DOM never updated,
-    // since `song`'s own top-level signal never received a new value). The fix, applied at every
-    // point old called `this.setState({song, ...})` after a mutation (NOT at points old omitted
-    // it, e.g. `copyColumns`, which is a pure read/return): `refreshSong()` below, which does
-    // `song = song.clone()` - `.clone()` (already used by `addToHistory`'s undo-snapshot, a
-    // pre-existing, tested method every Song class implements) constructs a genuinely NEW instance
-    // via `new ComposedSong(...)`, re-running its constructor and re-binding every arrow-function
-    // field to the FRESH instance, which is both a real new top-level reference (satisfying
-    // Svelte's signal equality check) and internally self-consistent for any further mutations
-    // performed on it. This is a per-user-action cost (a redundant clone of ~100+ typically-small
-    // objects), not a per-frame one, with one disclosed exception: `selectColumn` runs on every
-    // playback tick, so playback pays one clone per beat - acceptable for realistic song sizes,
-    // flagged here as a known trade-off rather than silently accepted. `undo`'s OWN extra
-    // 100ms-delayed, mount-guarded EMPTY `setState({})` (comment: "not sure why this is needed but
-    // it doesn't render") is UNRELATED to this fix (it's a SECOND, separate nudge on top of undo's
-    // own already-real `this.setState({..., song})`, which DOES get its `refreshSong()` below) -
-    // that second, mysterious empty nudge has no Svelte-reactivity analogue and is dropped in full,
-    // not reinstated, per the same reasoning as before.
-    //
-    // `layers` (an ARRAY of `Instrument` instances) does NOT need this treatment: `Array.prototype`
-    // passes the proxy's prototype check, so `$state([...])` deep-wraps the ARRAY itself correctly
-    // (index writes/`splice`/reassignment are all already reactive, the established convention);
-    // only bare (non-Array/Object) CLASS INSTANCES stored directly in `$state()` are affected.
-    //
-    // REAL PRESERVED INCONSISTENCY (flag, not fixed): old's `handleShortcut`'s `toggle_play`
-    // branch broadcasts `this.broadcastChannel?.postMessage?.(isPlaying ? 'play' : 'stop')`, while
-    // the play/pause `AppButton`'s own `onClick` in `render()` broadcasts the OPPOSITE ternary
-    // order, `isPlaying ? 'stop' : 'play'` - two different code paths for the identical
-    // "toggle playback + notify other tabs" gesture, each sending the stale (pre-toggle)
-    // `isPlaying`'s OPPOSITE meaning. Verified directly against the raw blob (not a transcription
-    // slip) - reproduced byte-for-byte below via two SEPARATE `wasPlaying`-captures (frozen at the
-    // top of `handleShortcut`/inside the `onclick` closure respectively, matching old's own
-    // per-call-site capture timing), not unified. This capture is itself a REQUIRED adaptation:
-    // Svelte's `togglePlay` reassigns `isPlaying` SYNCHRONOUSLY as its first statement (before its
-    // first `await`), so a live (non-frozen) read of `isPlaying` on the line AFTER calling
-    // `togglePlay()` would observe the NEW value, not old's own frozen-at-destructure-time value -
-    // capturing `wasPlaying` before calling `togglePlay()` is what actually reproduces old's
-    // observed (React-batching-driven) behavior here, not a stylistic embellishment.
-    //
-    // REAL PRESERVED QUIRK: `removeInstrument`'s confirm-dialog interpolates ``i18n.t('instruments.'
-    // + song.instruments[index].name)`` - a literal DOT, not the `:` namespace separator every
-    // other instrument-label lookup in this codebase uses (e.g. `PitchSelect.svelte`'s
-    // `t('instruments:'+ins)`) - the SAME pre-existing typo already flagged on
-    // `zen-keyboard/+page.svelte`'s loading-pill text. Reproduced byte-for-byte (i18next resolves
-    // it as a literal default-namespace key, not the `instruments` namespace), not corrected.
-    //
-    // REAL PRESERVED DEAD CODE (flag, not fixed): `changeVolume` (keyed `obj.key.split("layer")[1]`)
-    // is unreachable in old too - `ComposerSettingsDataType`/`ComposerSettings.data` (both this
-    // migration's port and the true old `src/lib/BaseSettings.ts`, diffed directly) declare
-    // exactly `bpm`/`beatMarks`/`noteNameType`/`pitch`/`columnsPerCanvas`/`reverb`/`autosave`/
-    // `syncTabs`/`useKeyboardSideButtons`/`lookaheadTime` - no `type: "instrument"`/`layerN` field
-    // anything ever emits a `SettingVolumeUpdate` with a `layerN`-shaped key through
-    // `ComposerMenu`'s `SettingsPane`. Ported verbatim anyway (the brief names it explicitly, and
-    // it's harmless, never-invoked code both before and after this port).
-    //
-    // `changePage`'s ComposerMenu-side contract is `(page: string) => void` (a general runtime
-    // string, only ever called with the literal `'theme'` today) - `resolve()` requires a
-    // compile-time-literal route id, so a dynamic `` `/${page}` `` needs the same `as any` escape
-    // hatch `AppLink.svelte`'s own `resolve(href as any)` already uses for the identical
-    // "generic wrapper around an overloaded, literal-keyed function" situation (see that file's
-    // header comment) - not a new pattern.
-    //
-    // Render: `Memoized`/`MemoizedIcon` dropped (Svelte 5 fine-grained reactivity, established
-    // precedent); old's keyed `<ComposerCanvas key={settings.columnsPerCanvas.value}/>` (forcing a
-    // full unmount+reconstruct on that ONE setting changing) -> `{#key settings.columnsPerCanvas
-    // .value}` wrapping the call site, per `ComposerCanvas.svelte`'s own header comment. The four
-    // `CanvasTool` icons (`AddColumn`/`RemoveColumn` - old local, non-react-icons SVG components;
-    // `FaPlus`/`FaTools` - react-icons/fa, fetched fresh from unpkg.com/react-icons@5.6.0/fa/index
-    // .mjs, byte-verified path data) are supplied here per `CanvasTool.svelte`'s own header comment
-    // ("Task 6 supplies the icon snippets"). `FaPlay`/`FaPause` (the play/pause button) are the
-    // same react-icons/fa source; old's `key='pause'`/`key='play'` React-list-reconciliation hints
-    // have no DOM/Svelte equivalent, dropped.
     let {
         songId = null,
         showMidi = false,
@@ -208,10 +57,8 @@
     let layers: Instrument[] = $state([new Instrument(game.instruments.list[1])]) //TODO not sure if this is the best idea
     //it doesnt change the instrument because it is the same as the one in the base song
     let song: ComposedSong = $state(new ComposedSong('Untitled', [game.instruments.list[0], game.instruments.list[0], game.instruments.list[0]]))
-    // Old: `this.state.song.bpm = settings.bpm.value` runs ONCE inside the constructor, a
-    // deliberate one-time seed (matching old's constructor-only timing exactly) - it must NOT
-    // become reactive to later `settings.bpm` edits (which mutate the SONG's own bpm through
-    // `handleSettingChange`'s `songSetting` branch instead, a completely different code path).
+    // One-time seed, not reactive: later bpm edits flow through handleSettingChange's
+    // songSetting branch instead, which writes song.bpm directly.
     // svelte-ignore state_referenced_locally
     song.bpm = settings.bpm.value
     let layer = $state(0)
@@ -219,10 +66,7 @@
     let undoHistory: NoteColumn[][] = $state([])
     let copiedColumns: NoteColumn[] = $state([])
     let isToolsVisible = $state(false)
-    // Old: `isMidiVisible: this.props.showMidi || false` is also a one-time constructor seed -
-    // this page's own `showMidi` prop is only ever consulted at mount (matching old exactly;
-    // later prop changes, which never happen in practice since callers don't reactively vary it,
-    // are correctly not tracked here either).
+    // One-time seed from the prop; later showMidi changes (callers never send any) are not tracked.
     // svelte-ignore state_referenced_locally
     let isMidiVisible = $state(showMidi || false)
     let isRecordingAudio = $state(false)
@@ -236,9 +80,9 @@
     const currentInstrument = $derived(layers[layer])
     const songLength = $derived(calculateSongLength(song.columns, settings.bpm.value, song.selected))
 
-    // See the header comment's "REQUIRED ADAPTATION, LOAD-BEARING" note - called at every point
-    // old called `this.setState({song, ...})` after a mutation, so template/child-prop reads of
-    // `song`'s fields (columns/selected/instruments/name/breakpoints/...) reactively update.
+    // song is a class instance, and $state() only deep-wraps plain objects/arrays - mutating it
+    // in place would not trigger reactivity. Call this after every mutation; clone() rebuilds a
+    // fresh instance so template/child-prop reads pick up the change.
     function refreshSong() {
         song = song.clone()
     }
@@ -323,17 +167,15 @@
         }
         if (name === 'toggle_play') {
             if (event.repeat) return
-            // old: bare `//@ts-ignore` x2 on `event.target?.tagName`/`event.target?.blur()`
-            // (`event.target` is the generic `EventTarget`, lacking DOM-element members) -
-            // `event.target as HTMLElement | null` avoids the suppression comment entirely,
-            // matching InstrumentControls.svelte's established `e.currentTarget as HTMLElement`
-            // precedent for the identical situation.
             if ((event.target as HTMLElement | null)?.tagName === 'BUTTON') {
                 (event.target as HTMLElement | null)?.blur()
             }
             event.preventDefault()
             togglePlay()
             if (settings.syncTabs.value) {
+                // QUIRK: broadcasts wasPlaying ? 'play' : 'stop'. The play/pause button's own
+                // onclick below broadcasts the opposite mapping for the same toggle gesture -
+                // both intentional and deliberately left inconsistent; do not unify them.
                 broadcastChannel?.postMessage?.(wasPlaying ? 'play' : 'stop')
             }
         }
@@ -420,6 +262,9 @@
     async function removeInstrument(index: number) {
         if (layers.length <= 1) return logger.warn(t('composer:cant_remove_all_layers'))
         const confirm = await asyncConfirm(t('composer:confirm_layer_remove', {
+            // QUIRK: '.' instead of the ':' namespace separator every other instrument-label
+            // lookup uses (e.g. InstrumentControls.svelte's t(`instruments:${ins.name}`)) - a
+            // pre-existing typo kept so the resolved i18next key doesn't change.
             layer_name: song.instruments[index].alias ?? i18n.t('instruments.' + song.instruments[index].name)
         }))
         if (confirm) {
@@ -692,13 +537,6 @@
         isPlaying = newState
         if (isPlaying) selectColumn(song.selected, false, settings.lookaheadTime.value / 1000)
         let delayOffset = 0
-        // old: `let previousTime = Date.now()` initialized here too, but that initial value is
-        // never read (the loop's own first statement always reassigns it before the one place
-        // that reads it, below) - a real pre-existing useless-assignment in old, harmless there
-        // (old's toolchain had no equivalent lint rule) but flagged as an error by this project's
-        // `no-useless-assignment` (new tooling, not an old behavior change) - the initializer is
-        // dropped, TS control-flow analysis confirms `previousTime` is always assigned before its
-        // one read.
         let previousTime: number
         while (isPlaying) {
             const tempoChanger = song.selectedColumn.getTempoChanger().changer
@@ -914,23 +752,14 @@
 </script>
 
 {#snippet playIcon()}
-    <!-- react-icons/fa's FaPlay (unpkg.com/react-icons@5.6.0/fa/index.mjs); old passed size={18}
-         + color='var(--icon-color)' via <FaPlay key='play' .../> (the `key` prop is a
-         React-list-reconciliation hint with no Svelte/DOM equivalent, dropped). -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="18" width="18" xmlns="http://www.w3.org/2000/svg" style="color:var(--icon-color)"><path d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z"/></svg>
 {/snippet}
 
 {#snippet pauseIcon()}
-    <!-- react-icons/fa's FaPause, same sourcing; old passed size={18} + color='var(--icon-color)'
-         via <FaPause key='pause' .../>. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="18" width="18" xmlns="http://www.w3.org/2000/svg" style="color:var(--icon-color)"><path d="M144 479H48c-26.5 0-48-21.5-48-48V79c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v352c0 26.5-21.5 48-48 48zm304-48V79c0-26.5-21.5-48-48-48h-96c-26.5 0-48 21.5-48 48v352c0 26.5 21.5 48 48 48h96c26.5 0 48-21.5 48-48z"/></svg>
 {/snippet}
 
 {#snippet addColumnIcon()}
-    <!-- old: src/components/shared/icons/AddColumn.tsx, a local (non-react-icons) SVG. Rendered
-         via <MemoizedIcon icon={AddColumn} className={'tool-icon'}/> -> MemoizedIcon is a bare
-         pass-through (dropped, established precedent), so this is just <AddColumn
-         className="tool-icon"/> inlined directly, byte-verbatim geometry. -->
     <svg width="194.40327mm" height="290.853mm" viewBox="0 0 194.40327 290.85299" xmlns="http://www.w3.org/2000/svg" class="tool-icon" style="fill:currentcolor">
         <g>
             <rect width="50.962246" height="290.853" x="143.44104" y="2.4868996e-14" rx="15.05095" ry="17.061689"/>
@@ -941,9 +770,6 @@
 {/snippet}
 
 {#snippet removeColumnIcon()}
-    <!-- old: src/components/shared/icons/RemoveColumn.tsx, same local-SVG treatment as
-         AddColumn above; old wrapped it identically via <MemoizedIcon icon={RemoveColumn}
-         className={'tool-icon'}/>. -->
     <svg width="194.40327mm" height="290.853mm" viewBox="0 0 194.40327 290.85299" xmlns="http://www.w3.org/2000/svg" class="tool-icon" style="fill:currentcolor">
         <g>
             <rect width="50.962246" height="290.853" x="143.44104" y="2.4868996e-14" rx="15.05095" ry="17.061689"/>
@@ -953,15 +779,10 @@
 {/snippet}
 
 {#snippet addPageIcon()}
-    <!-- react-icons/fa's FaPlus, same sourcing as playIcon above; old's <MemoizedIcon
-         icon={FaPlus} size={16}/> passed no className (unlike the two local icons above), so no
-         class attribute is rendered here either. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"/></svg>
 {/snippet}
 
 {#snippet toolsIcon()}
-    <!-- react-icons/fa's FaTools, same sourcing; old's <MemoizedIcon icon={FaTools} size={16}/>
-         also passed no className. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M501.1 395.7L384 278.6c-23.1-23.1-57.6-27.6-85.4-13.9L192 158.1V96L64 0 0 64l96 128h62.1l106.6 106.6c-13.6 27.8-9.2 62.3 13.9 85.4l117.1 117.1c14.6 14.6 38.2 14.6 52.7 0l52.7-52.7c14.5-14.6 14.5-38.2 0-52.7zM331.7 225c28.3 0 54.9 11 74.9 31l19.4 19.4c15.8-6.9 30.8-16.5 43.8-29.5 37.1-37.1 49.7-89.3 37.9-136.7-2.2-9-13.5-12.1-20.1-5.5l-74.4 74.4-67.9-11.3L334 98.9l74.4-74.4c6.6-6.6 3.4-17.9-5.7-20.2-47.4-11.7-99.6.9-136.6 37.9-28.5 28.5-41.9 66.1-41.2 103.6l82.1 82.1c8.1-1.9 16.5-2.9 24.7-2.9zm-103.9 82l-56.7-56.7L18.7 402.8c-25 25-25 65.5 0 90.5s65.5 25 90.5 0l123.6-123.6c-7.6-19.9-9.9-41.6-5-62.7zM64 472c-13.2 0-24-10.8-24-24 0-13.3 10.7-24 24-24s24 10.7 24 24c0 13.2-10.7 24-24 24z"/></svg>
 {/snippet}
 
@@ -991,6 +812,7 @@
                 const wasPlaying = isPlaying
                 togglePlay()
                 if (settings.syncTabs.value) {
+                    // QUIRK: opposite ternary from handleShortcut's toggle_play broadcast - see that function.
                     broadcastChannel?.postMessage?.(wasPlaying ? 'stop' : 'play')
                 }
             }}

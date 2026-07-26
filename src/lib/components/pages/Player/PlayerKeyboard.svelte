@@ -16,97 +16,6 @@
     import {t} from '$i18n/binding.svelte'
     import {Song} from '$core/Songs/Song'
 
-    // Old: src/components/pages/Player/PlayerKeyboard.tsx (468 lines, the single most complex file
-    // this wave) - the play/practice/approaching engine, class component -> component conversion.
-    // Class fields become `$state` (only where the render/template genuinely depends on the value -
-    // see below) or plain `let`/`const` closure locals (everything else - internal bookkeeping never
-    // read by the template has no reactivity need, same reasoning already used across this
-    // migration); `componentDidMount`+`componentWillUnmount` collapse into one `onMount` whose
-    // returned function is the unmount cleanup (React's split lifecycle -> Svelte's single hook).
-    // Every method (`playSong`/`practiceSong`/`approachingSong`/`tick`/`handleClick`/etc.) becomes a
-    // plain function/const in this script block - none of them run during the top-to-bottom synchronous
-    // setup (all are only invoked later from onMount's deferred effect, DOM event handlers, or
-    // setInterval/setTimeout callbacks), so declaration order relative to `onMount` doesn't matter.
-    //
-    // WHICH fields became `$state`: only `mode` and `approachRate` and `approachingNotes` are read by
-    // the render output (`hideNotes`/the `data` prop passed to each PlayerNote/the approach-circle
-    // list) - old could get away with `this.mode`/`this.approachRate` being plain (non-`this.state`)
-    // instance fields because React re-renders the WHOLE render() function fresh whenever ANY
-    // `setState` fires anywhere nearby (even for an unrelated field), so by the time render() re-ran
-    // it always picked up the current values. Svelte's reactivity is fine-grained per-expression, not
-    // whole-component, so anything the template reads must itself be reactive to update correctly -
-    // promoted here, not a behavior change (the rendered values still change at exactly the same
-    // points old's did).
-    //
-    // The local `state.keyboard` field is DROPPED ENTIRELY (brief: "the subscribeObservableArray
-    // (playerStore.keyboard) -> read playerStore.keyboard"). Old kept a synced copy purely because
-    // mobx needs an explicit resubscribe to know a plain instance array's splice should re-render;
-    // `playerStore.keyboard` is itself `$state([])`-backed now, so every old `const {keyboard} =
-    // this.state` site below just reads `playerStore.keyboard` directly and is automatically
-    // reactive wherever that read happens inside a derived/template expression - `subscribeObservableArray`
-    // has no Svelte equivalent needed at all.
-    //
-    // The `subscribeObeservableObject(playerStore.state, cb)` mobx subscription (batched via a 4ms
-    // `setTimeout` debounce, comment: "mobx calls for each prop changed while i want to batch it")
-    // becomes an `$effect` inside `onMount` that reads `playerStore.state.key`/`.playId` at its
-    // synchronous top (Global §: "the porting effect MUST read playerStore.state.key/playId so it
-    // re-runs even when the song object is reference-equal") then keeps the EXACT SAME manual
-    // setTimeout(...,4) debounce body old had. KEPT rather than dropped: even though a Svelte effect
-    // scoped to only `state.key`/`state.playId` would already fire once per logical
-    // play/practice/approaching/restartSong/resetSong call (mobx's raw `observe()` fires once per
-    // individual `Object.assign` property write even inside PlayerStore's `@action`-decorated
-    // `setState` - action batching covers autorun/reaction/observer components, not observe()
-    // listeners - so old's subscription really did fire several times per call, which is what the
-    // comment describes), the debounce does a SECOND job independent of coalescing: it defers past
-    // the CURRENT synchronous call stack, so `stopSong()` + the mode dispatch always run after
-    // whatever triggered the change (e.g. `playerStore.play(...)`) has fully returned. That ordering
-    // guarantee is worth keeping regardless of which reactivity system drives it, and this component
-    // isn't mounted until Task 7 (no live smoke of play/practice/approaching mode switches possible
-    // from this task alone) - too risky to drop without one. Flagged for Task 7's live smoke to
-    // re-confirm mode switches behave identically; the debounce can be revisited then with real
-    // evidence if it turns out to be provably redundant under Svelte's own effect batching.
-    //
-    // Two-tier (UI file, reads $game per the P4b plan's mapping table):
-    //   APP_NAME === 'Sky' ? 15 : 21 (approach-array height, x4 call sites) -> game.notes.perColumn
-    //   APP_NAME === 'Genshin' ? 100 : 200 / the inverted `APP_NAME === 'Sky' ? 200 : 100` (same value
-    //     set, x2 call sites: practice-click delay, click-timeout duration) -> game.notes.animationDelayMs
-    //   The render() keyboard-length -> keyboard-5/-4/-3 class logic uses NO APP_NAME check in old (it
-    //     switches on the rendered keyboard's actual note COUNT: 15/14/8/6) - preserved verbatim, not
-    //     part of the two-tier table.
-    //
-    // i18n: old called the raw `i18n.t("common:loading")` directly (bypassing the
-    // `useTranslation()` hook this file's class component never received `t` through) - in a plain,
-    // non-reactive way old's own author likely didn't intend as a deliberate choice (KeyboardPlayer's
-    // parent chain would still occasionally re-render it via other props, papering over the gap).
-    // `t()` from `$i18n/binding.svelte` (the project's established reactive-translation wrapper for
-    // .svelte components, P3 Task 3) is used here instead so the loading text genuinely re-renders on
-    // a language switch - the correct idiomatic port, not a deviation.
-    //
-    // Other disclosed simplifications (all mechanical, zero behavior change):
-    //  - `stopSong` dropped old's `new Promise(res => { ...; this.setState({...}, res) })` wrapper -
-    //    that existed only to delay the returned promise until React's setState commit callback
-    //    fired; Svelte's $state writes are synchronously visible immediately, so the mutations just
-    //    happen directly and the function stays `async` only so `await stopSong()` call sites keep
-    //    working unchanged.
-    //  - `handlePracticeClick`'s trailing `this.setState({songToPractice})` is dropped - `songToPractice`
-    //    is plain (not $state, see below) and was already mutated in place via splice/shift; the old
-    //    setState call existed purely to trigger a React re-render for a field render() never reads.
-    //  - `tick()`'s renamed forEach parameter (`approachingNotesRow` instead of reusing the outer
-    //    `approachingNotes` name) avoids shadowing the module-level `$state` field of the same name -
-    //    naming only, not a behavior change (old's JS scoping allowed the shadow; TS/eslint here would
-    //    rather it not).
-    //  - `tickInterval`/`debouncedStateUpdate`/`timeouts` use the project's `Timer` type
-    //    (`$core/utils/Utilities`, `ReturnType<typeof setTimeout> | 0`) instead of old's
-    //    `setInterval(...) as unknown as number` cast - same underlying ambiguity, already-established
-    //    idiom (`MediaRecorderPolyfill.ts`'s `slicing: Timer | undefined`).
-    //
-    // PRESERVED QUIRKS (flagged, not fixed): the "not sure why i even save the song, i dont use it
-    // anywhere" comment in `approachingSong` (progress-ledger carry-forward, kept verbatim incl. the
-    // commented-out `playerControlsStore.setSong(song)` line below it); `nextChunkDelay` is set once
-    // in `practiceSong` and never read anywhere else in the old file (verified via a whole-branch
-    // grep) - dead write, preserved as a plain field; old also carried a `playTimestamp: Date.now()`
-    // state field set once at construction and never read again anywhere - preserved below as a
-    // (non-reactive - nothing depends on it) plain field for parity.
     let {
         data,
         functions,
@@ -134,8 +43,7 @@
 
     let approachRate = $state(1500)
     let approachingNotesList: ApproachingNote[] = []
-    // dead write, preserved from old (see header comment); old's class-field version wasn't
-    // lint-checked for this the same way a top-level let is here.
+    // QUIRK: written but never read - dead field, preserved rather than removed.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let nextChunkDelay = 0
     const tickTime = 50
@@ -148,8 +56,7 @@
     let mode: 'play' | 'practice' | 'approaching' | undefined = $state('play')
     let songToPractice: Chunk[] = []
     let approachingNotes: ApproachingNote[][] = $state(Array2d.from(game.notes.perColumn))
-    // dead field, preserved from old (see header comment); old's class-field version wasn't
-    // lint-checked for this the same way a top-level let is here.
+    // QUIRK: written once, never read again - dead field, preserved rather than removed.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let playTimestamp = Date.now()
 
@@ -199,7 +106,8 @@
             notes.push(obj)
         }
         await delay(2000) //add an initial delay to let the user prepare
-        //not sure why i even save the song, i dont use it anywhere
+        // QUIRK: playerControlsStore.setSong(song) is intentionally left commented out - nothing
+        // reads the stored song, kept as-is rather than deleted or reinstated.
         //playerControlsStore.setSong(song)
         playerControlsStore.clearPages()
         playerControlsStore.resetScore()
@@ -261,10 +169,6 @@
             functions.onSongFinished()
         }
         playerControlsStore.setCurrent(playerControlsStore.current + removed)
-        // Svelte's $state deep-proxies nested arrays, so the in-place .push/.splice mutations above
-        // are already reactively visible without this reassignment (unlike React, which needed a
-        // fresh top-level reference via .map(arr => arr.slice()) to detect the change) - kept anyway
-        // for exact parity with old and because it's harmless (same defensive-clone cost every tick).
         approachingNotes = stateNotes.map(arr => arr.slice())
     }
 
@@ -449,8 +353,15 @@
         cleanup.push(disposeShortcuts, disposeKeyboard)
 
         $effect(() => {
+            // Reading key/playId here (values otherwise unused) makes this effect rerun on every
+            // play/practice/approaching/restartSong/resetSong call, even when the song object is
+            // reference-equal.
             void playerStore.state.key
             void playerStore.state.playId
+            // This debounce isn't just coalescing multiple fires into one - it defers past the
+            // current synchronous call stack, so stopSong() and the mode dispatch below always run
+            // after whatever triggered the change (e.g. playerStore.play(...)) has fully returned.
+            // Removing it changes that ordering.
             if (debouncedStateUpdate) clearTimeout(debouncedStateUpdate)
             debouncedStateUpdate = setTimeout(async () => {
                 const state = playerStore.state
@@ -511,12 +422,10 @@
         if (len === 6) cls += " keyboard-3"
         return cls
     })
-    // $derived.by(...) (not the bare $derived(expr) sugar) is required here: TypeScript's control
-    // flow analysis narrows `mode` to its initializer literal ('play') when the comparison is
-    // inlined directly as $derived's argument (a false positive - it can't see that mode/etc. are
-    // reassigned later by reactive effects, not by any code that runs before this line in the
-    // synchronous setup); wrapping the same expression in its own arrow-function body (exactly like
-    // keyboardClass above) gives TS a fresh, unnarrowed read of `mode`'s declared type.
+    // $derived.by (not bare $derived(expr)) is required: TypeScript narrows mode to its
+    // initializer literal ('play') at this point, since no synchronous code reassigns it first -
+    // wrapping the expression in an arrow function (like keyboardClass above) forces a fresh,
+    // unnarrowed read of mode's declared type.
     const hideNotes = $derived.by(() => data.hideNotesInPracticeMode && mode === 'practice')
     const wrapperStyle = $derived(`${size !== 1 ? `transform:scale(${size});` : ''}z-index:2;margin-bottom:${size * 6 + (data.keyboardYPosition / 10)}vh`)
 </script>

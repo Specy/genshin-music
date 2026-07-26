@@ -1,17 +1,6 @@
 <script lang="ts">
     import {untrack} from 'svelte'
 
-    // Old: src/components/pages/Composer/MidiParser/Numericalinput.tsx (57 lines, exported
-    // component `NumericalInput`) - the OLD FILENAME itself has a lowercase-`i` typo
-    // (`Numericalinput.tsx`, not `NumericalInput.tsx`). Svelte component filenames are the
-    // component's own identity (unlike a React default export, whose module path is arbitrary),
-    // so this port is named after the exported component itself (`NumericalInput.svelte`) rather
-    // than reproducing the old typo'd path - the typo lived in the filename only, never in the
-    // component name or any call site, so nothing behavioral changes.
-    //
-    // `useDebounce(elementValue, delay)`'s own internal `useState`+`useEffect` pair -> a `$state` +
-    // a `$effect` owning its own setTimeout/clearTimeout cleanup, the same established precedent as
-    // `BodyDropper.svelte`'s identical port of `useDebounce(_isHovering, 50)`.
     let {
         onChange,
         value,
@@ -30,25 +19,14 @@
         style?: string
     } = $props()
 
-    // Old: `const [elementValue, setElementValue] = useState(`${value}`)` +
-    // `useEffect(() => setElementValue(`${value}`), [value])`. A *writable* `$derived` (Svelte
-    // >=5.25) replaces both the `$state` and its resync effect in one: reading `elementValue`
-    // tracks `value` normally, the +/- buttons and the text input below can still assign
-    // `elementValue = ...` directly to diverge from it locally, and that override is itself
-    // overwritten the next time `value` actually changes - the exact same "diverge locally, resync
-    // on prop change" behavior old's separate state+effect pair gave. Same established precedent as
-    // `SettingsRow.svelte`'s `currentValue` (eslint's `svelte/prefer-writable-derived` flags the old
-    // two-piece shape specifically for this rewrite).
+    // elementValue is a writable $derived (Svelte 5.25+): reading it tracks value normally, but
+    // the +/- buttons and the input below can assign to it directly to diverge locally - that
+    // override is overwritten the next time value actually changes.
     let elementValue = $derived(`${value}`)
-    // Old: `useDebounce`'s own internal `useState(value)` seed - a ONE-TIME read with no resync of
-    // its own (only the debounce-timer effect below ever updates it, off of `elementValue`, never
-    // directly off the `value` prop) - same established precedent as `SettingsRow.svelte`'s
-    // `volume` (a plain one-time-read `$state`, not a `$derived`).
+    // One-time seed; only the debounce effect below updates it after that.
     // svelte-ignore state_referenced_locally
     let debounced = $state(`${value}`)
 
-    // Old: `useEffect(() => { const handler = setTimeout(() => setDebouncedValue(value), delay);
-    // return () => clearTimeout(handler) }, [value, delay])` (useDebounce's own internal effect).
     $effect(() => {
         void elementValue
         const handle = setTimeout(() => {
@@ -57,18 +35,10 @@
         return () => clearTimeout(handle)
     })
 
-    // Old: `useEffect(() => { const parsed = Number(debounced); if (Number.isFinite(parsed)) {
-    // onChange(parsed) } else { setElementValue('0') } }, [debounced, onChange])`. `onChange` is
-    // called through `untrack()`: this component's own consumers (`MidiParser.svelte`'s
-    // `changeBpm`/`changeOffset`, `TrackInfo.svelte`'s `onMaxScaleChange`) all funnel into
-    // `convertMidi()`, which reads-then-writes several `$state` fields (e.g. `track
-    // .numberOfAccidentals++`) - left untracked, THIS effect (whichever `$state` those happen to
-    // read) would auto-track those as its own dependencies and immediately re-invalidate itself the
-    // moment a MIDI file is loaded, throwing `effect_update_depth_exceeded`. Same established fix
-    // as `ZenKeyboardStore.svelte.ts`'s `setKeyboardLayout` effect, `ZenNote.svelte`'s `statusId`
-    // write, and `Player.svelte`'s settings-sync effect - a required, correctness-preserving
-    // adaptation for Svelte's auto-tracking (old's `useEffect`, keyed on an explicit dependency
-    // array, never had this hazard to begin with).
+    // onChange goes through untrack(): its consumers (MidiParser.svelte's changeBpm/changeOffset,
+    // TrackInfo.svelte's onMaxScaleChange) funnel into convertMidi(), which mutates several $state
+    // fields - left untracked, this effect would pick those up as dependencies and self-invalidate,
+    // throwing effect_update_depth_exceeded the moment a MIDI file loads.
     $effect(() => {
         const parsed = Number(debounced)
         if (Number.isFinite(parsed)) {

@@ -5,70 +5,11 @@
     import {playerControlsStore} from '$stores/PlayerControlsStore.svelte'
     import './Slider.css'
 
-    // Old: src/components/pages/Player/PlayerSlider.tsx (150 lines) - the two-way vertical drag
-    // slider that sets the practice/approaching start+end range. `memo(_PlayerSlider, (p,v) =>
-    // p.onChange === v.onChange)` is dropped (same rationale as every other memo drop this
-    // migration - Svelte 5's fine-grained reactivity already only re-runs what changed).
-    //
-    // `useObservableObject(playerControlsStore.state)` -> `playerControlsStore.state` is already
-    // `$state`-backed (Task 1); every old `sliderState.X` read below becomes a direct
-    // `playerControlsStore.state.X` read, reactive wherever referenced.
-    //
-    // State split (per brief): `selectedThumb`/`inputDimension`/`inputsEnabled` are genuinely read
-    // inside reactive (`$derived`-adjacent) expressions or need to retrigger the pointerup/blur
-    // effect below, so they are `$state`. `thumb1`/`thumb2`/`slider` are plain (non-`$state`)
-    // `let`s bound via `bind:this` - they are only ever read inside plain, later-invoked pointer
-    // event handlers (never inside a template/`$derived` expression), so a plain mutable `let`
-    // (populated once Svelte attaches the DOM node) is sufficient; the same reasoning already used
-    // for e.g. `PlayerKeyboard.svelte`'s non-reactive closure locals.
-    //
-    // `useEffect(() => {...}, [selectedThumb])` (attach `pointerup`/`blur` listeners on `window`
-    // while a thumb is selected, tear down otherwise/on unmount) -> a top-level `$effect` with the
-    // identical body: it reruns (cleanup then re-setup) on every `selectedThumb` change exactly like
-    // old's dependency-array effect, and Svelte tears it down automatically on unmount the same way
-    // React's cleanup-on-unmount did. The inner `if (selectedThumb !== null) setSelectedThumb(null)`
-    // guard is genuinely redundant in old too (the effect body already early-returns whenever
-    // `selectedThumb` is null, so `resetSelection` can only ever be registered while it's non-null) -
-    // kept verbatim for parity rather than simplified away.
-    //
-    // `worker-timers`' `setTimeout` (imported `* as workerTimers`, matching the established
-    // `$core/utils/Utilities.ts` `delay()` convention, Task 1/P3-7) replaces old's `import
-    // {setTimeout} from "worker-timers"` one-for-one in `enableInputs` - it keeps firing in
-    // backgrounded/throttled tabs, unlike native `window.setTimeout`.
-    //
-    // REAL PORTING DECISION (not a mechanical 1:1 swap): old wired `onChange={e =>
-    // handleSelectChange(+e.target.value, ...)}` on the two `<input type="number">` thumbs. React's
-    // `onChange` for text-like `<input>`s (incl. `type="number"`) is implemented over the native
-    // `input` event, not `change` - it fires on every keystroke, not on blur/commit (well-documented
-    // React behavior, confirmed against old's own `Input.tsx`'s identical `onChange`-per-keystroke +
-    // separate `onBlur`-commit split). The direct-parity Svelte translation is therefore `oninput`
-    // (fires per keystroke, matching old's live-typing behavior), NOT `onchange` (native DOM change,
-    // fires only on blur) - using `onchange` here would silently change interactive behavior (typing
-    // "500" would only commit once on blur instead of clamping live after each digit). `onclick`/
-    // `onblur` below map directly (React's onClick/onBlur already mirror the native click/blur
-    // events one-for-one, no such distinction applies to them).
-    //
-    // `BsTriangleFill` (react-icons/bs, first consumer of the `bs` icon set in this migration) is
-    // inlined below as a raw `<svg>`, sourced from unpkg.com/react-icons@5.6.0/bs/index.mjs (the
-    // same pinned version cited throughout this migration) - `viewBox="0 0 16 16"`,
-    // `fill-rule="evenodd"`. PRESERVED QUIRK (real, non-obvious): old passed `width={16}` to each
-    // `<BsTriangleFill>`. react-icons' `IconBase` only ever derives the rendered `height`/`width`
-    // SVG attributes from a `size` prop (`computedSize = props.size || conf.size || "1em"`), which
-    // is applied to the underlying `<svg>` AFTER any other passthrough props are spread - so a bare
-    // `width` prop (not `size`) is silently overwritten back to the `"1em"` default and has NO
-    // effect on the rendered icon (verified directly against react-icons' `IconBase`/`GenIcon`
-    // source, `lib/iconBase.mjs`). Old's `width={16}` is therefore dead - preserved as such below
-    // (`height="1em" width="1em"`, NOT a literal `16`), not "fixed" to what a naive JSX reading would
-    // suggest. `<Memoized>` (old's no-op memoization wrapper around the icon) is dropped, same
-    // established precedent as every other `Memoized`/`MemoizedIcon` drop this migration.
-    //
-    // PRESERVED QUIRK: `.slider-current`'s inline transform (`translateY(${(100 -
-    // sliderState.current / sliderState.size * 100).toFixed(1)}%)`) divides by `sliderState.size`
-    // with NO zero-guard (unlike the `start`/`end` percentage locals just below it, which do check
-    // `size !== 0`) - when no song is loaded (`size === 0`) this evaluates to `NaN` and renders
-    // `translateY(NaN%)`. Kept byte-verbatim; in practice invisible because the parent
-    // (`PlayerSongControls.svelte`, this task) hides this component's wrapper via `display:none`
-    // whenever there is no song.
+    // QUIRK: the .slider-current transform below divides by playerControlsStore.state.size with
+    // no zero-guard (unlike the start/end $derived values further down, which do check size !== 0)
+    // - when no song is loaded (size === 0) this evaluates to translateY(NaN%). Harmless only
+    // because PlayerSongControls.svelte hides this component's wrapper via display:none whenever
+    // there is no song - don't remove that hiding without also guarding this.
     let {onChange}: {onChange?: (start: number, end: number) => void} = $props()
 
     let selectedThumb: 'start' | 'end' | null = $state(null)
@@ -154,9 +95,7 @@
     const end = $derived(playerControlsStore.state.size !== 0 ? playerControlsStore.state.end / playerControlsStore.state.size * 100 : 100)
 </script>
 
-<!-- old's own div had no ARIA role/keyboard handling on its pointer handlers either (verified
-     against the old blob directly) - suppressed rather than adding a11y attributes old didn't
-     have, same established convention as e.g. ThemePropriety.svelte/ThemePreview.svelte. -->
+<!-- Pointer handlers only, no keyboard equivalent - accepted a11y gap. -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="slider-outer"
@@ -173,6 +112,8 @@
     </div>
     <div class="two-way-slider">
         <div class="two-way-slider-thumb" style="bottom:calc({end}% - 18px)" bind:this={thumb2}>
+            <!-- oninput (not onchange) on both thumbs: commits live per keystroke, matching the
+                 drag-thumb's live feedback - onchange would only commit on blur. -->
             <input
                 type="number"
                 class="slider-input"
