@@ -83,13 +83,16 @@
        <style> block would silently stop applying to this component's internal <button>s once they
        are rendered from an imported child component rather than inline page markup. Keeping the
        component's own responsive behavior with the component, regardless of host page, is the
-       conservative parity-preserving choice (both current consumer - backup - and the future
-       vsrg-composer one get identical behavior).
+       conservative parity-preserving choice (both consumers - backup and vsrg-composer's
+       VsrgBottom.svelte (P4c Task 2) - get identical behavior).
 
-       LEDGER NOTE for Phase 4c (VsrgComposer.css port): SKIP `.multiple-option-slider`,
+       OWNERSHIP NOTE (was a forward-looking "LEDGER NOTE for Phase 4c"): Phase 4c's
+       VsrgComposer.css port is complete and correctly SKIPPED `.multiple-option-slider`,
        `.multiple-option-slider button`, `.multiple-options-selected`,
        `.multiple-option-slider-overlay`, and the one `.multiple-option-slider button` line inside
-       the `max-width: 1000px` media query - all already ported here. */
+       the `max-width: 1000px` media query - all already ported here, as that port's own
+       App.css:3005-3012 comment confirms ("SKIPS 5 rules already ported verbatim into
+       MultipleOptionSlider.svelte's own <style> block"). */
     .multiple-option-slider {
         display: grid;
         grid-auto-columns: minmax(0, 1fr);

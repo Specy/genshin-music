@@ -48,6 +48,8 @@ It is not very detailed but might help to understand how the format works.
 # How to contribute
 Make a new issue saying what you want to work on and wait for me to assign the issue. This way we can also communicate whether or it would be a valid issue to fix/add
 
+No auto-formatter (e.g. Prettier) is used in this repo - the codebase is the result of a full framework migration with thousands of lines ported byte-verbatim from the previous app, and a full-tree reformat would erase that history for no real benefit. Please match the existing style by hand: 4-space indentation, no space just inside `{`/`}`, single quotes, LF line endings. `npm run lint` enforces what eslint can check mechanically.
+
 # Checks to run
 Before opening a PR, make sure the following all pass: `npm test`, `npm run check`, `npm run check:sky`, `npm run lint`, `npm run build:all`.
 

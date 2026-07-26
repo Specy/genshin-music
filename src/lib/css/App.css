@@ -1492,7 +1492,9 @@ a {
     }
 }
 
-/* pulled from Player/menu.css — 4b MUST SKIP this block when porting player styles */
+/* pulled from Player/menu.css — OWNERSHIP NOTE (was a forward-looking "4b MUST SKIP"): Phase 4b's
+   Player page port is complete and correctly did not re-port this block (no `.menu-main-page`
+   definition exists anywhere under src/lib/components/pages/Player/); it stays owned here. */
 .menu-main-page {
     opacity: 0.9;
 }
@@ -1745,7 +1747,10 @@ a {
     }
 }
 
-/* pulled from Player/Keyboard.css (.keyboard/.keyboard-5 only) — 4b MUST SKIP these selectors */
+/* pulled from Player/Keyboard.css (.keyboard/.keyboard-5 only) — OWNERSHIP NOTE (was a
+   forward-looking "4b MUST SKIP"): Phase 4b's Player page port is complete and correctly did not
+   re-define these selectors; PlayerKeyboard.svelte's `keyboardClass` builds `"keyboard"`/
+   `"keyboard-5"` as plain class-name strings and reads their styling from here. */
 .keyboard {
     display: grid;
     width: fit-content;

@@ -31,3 +31,5 @@ jobs:
         run: npm run lint
       - name: Build
         run: npm run build:all
+      - name: Build (no-root)
+        run: npm run build:all-no-root
