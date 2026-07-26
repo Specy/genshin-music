@@ -12,44 +12,42 @@ import path from 'node:path'
 const BUILD_DIR = './build/genshinMusic'
 const SNAPSHOT_PATH = './.superpowers/sdd/build-hashes.json'
 
+// Both scripts/buildApp.js (PUBLIC_SW_VERSION) and svelte.config.js
+// (BUILD_VERSION_NAME) fall back to a fresh timestamp only when these are
+// absent, so pinning them here - identically for the snapshot build and every
+// compare build - is what makes two builds of identical source hash
+// identically. Every other caller (npm run build:genshin directly, CI
+// deploys) leaves them unset and keeps getting a real per-deploy value.
+const FIXED_BUILD_ENV = {
+    PUBLIC_SW_VERSION: 'comment-only-check',
+    BUILD_VERSION_NAME: 'comment-only-check',
+}
+
 // Each entry excludes a whole file from the hash set because its content is,
 // by design, a fresh build-time value rather than a function of the source -
 // comparing it would make the check fail even between two builds of the
 // identical commit. `matches` and the printed description share one entry so
 // the two can't drift apart.
+//
+// service-worker.js and _app/version.json both used to live here too (they
+// embed PUBLIC_SW_VERSION and kit.version.name respectively), but
+// scripts/buildApp.js and svelte.config.js now only fall back to a fresh
+// timestamp when those env vars are absent, and FIXED_BUILD_ENV below pins
+// both to the same literal for every build this script runs - verified by
+// hashing each file across two such builds and getting an identical digest.
+// Neither needs excluding anymore; carrying the exclusion would just hide a
+// real regression if the pinning ever broke.
 const HASH_EXCLUSIONS = [
-    {
-        description: 'service-worker.js',
-        // Embeds PUBLIC_SW_VERSION (src/service-worker.ts's CACHE const),
-        // which scripts/buildApp.js sets to a fresh timestamp on every run.
-        matches: (relativePath) => path.basename(relativePath) === 'service-worker.js',
-    },
     {
         description: 'precache-manifest*.js',
         // src/service-worker.ts passes serwist a literal empty
         // precacheEntries array, so no separate manifest chunk is emitted
-        // today - excluded pre-emptively because, if that ever changes, such
-        // a chunk would embed the same kind of per-build revision list the
-        // service worker above does.
+        // today (confirmed: matches zero files in every run so far) -
+        // excluded pre-emptively because, if that config ever switches to
+        // injectManifest with real entries, such a chunk would embed a
+        // per-build revision list the same way service-worker.js and
+        // _app/version.json used to before they were pinned deterministic.
         matches: (relativePath) => /^precache-manifest.*\.js$/i.test(path.basename(relativePath)),
-    },
-    {
-        description: '_app/version.json',
-        // SvelteKit's own build-metadata file. svelte.config.js sets no
-        // `kit.version.name`, so Kit defaults it to `Date.now()` - verified
-        // by diffing two builds of one unchanged commit: only this file,
-        // service-worker.js, and every content-hashed path under
-        // _app/immutable/ differed. That last part is a known gap this
-        // script does not paper over: the version value is also embedded in
-        // the prerendered HTML and the client entry chunk, and because
-        // built asset filenames are content hashes, that one embed cascades
-        // into a new filename for most of _app/immutable/ on every build,
-        // comment-only or not. Excluding version.json removes the direct
-        // instance of the problem; it does not remove the cascade. See this
-        // task's report for the full reproduction and the fix that clears
-        // it (pinning `kit.version.name`), which is out of this script's
-        // scope to apply.
-        matches: (relativePath) => relativePath === '_app/version.json',
     },
 ]
 
@@ -75,7 +73,7 @@ function walkFiles(dir) {
 }
 
 function buildGenshin() {
-    execSync('npm run build:genshin', {stdio: 'inherit'})
+    execSync('npm run build:genshin', {stdio: 'inherit', env: {...process.env, ...FIXED_BUILD_ENV}})
 }
 
 function hashBuildOutput() {
