@@ -15,6 +15,22 @@ const config = {
         adapter: adapter({
             pages: outDir,
             assets: outDir,
+            // P5 Task 4 DECISION (disclosed deviation, not fixed): this fallback is an
+            // UN-PRERENDERED app shell - no component tree ever renders at build time for it, so
+            // none of +layout.svelte's <svelte:head> content survives into the file (RootMetadata's
+            // manifest/apple-touch-icon/theme-color, ThemeVars' dynamic theme-color, or any page's
+            // own PageMetadata title/description) - only app.html's own static markup (viewport,
+            // favicon) does. Old's Next export PRERENDERED a real not-found.tsx ->
+            // _client-pages/404/index.tsx, so old's 404.html DID carry the full root metadata
+            // cascade plus a real <title>404</title>. Accepted as a disclosed deviation rather than
+            // adding a prerendered 404 route: the browser executes the same app.js immediately
+            // (same script tag as every other page), so the client hydrates and re-renders
+            // identically to a real navigation - full <svelte:head> cascade included, plus
+            // +error.svelte's own <PageMetadata text="404" description="oh no!"/> - and this
+            // fallback is only ever served for a genuinely unmatched path (this app prerenders all
+            // 27 real routes), so the gap is a sub-second first-paint window, not a persistent
+            // difference. Revisit only if Task 9's exit matrix shows a real user-visible
+            // consequence.
             fallback: '404.html',
             precompress: false,
             strict: true,
