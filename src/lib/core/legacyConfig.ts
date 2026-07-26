@@ -17,6 +17,16 @@
 // game-independent ones do.
 // GAME-DATA constants (PITCHES, INSTRUMENTS, LAYOUT_*, MIDI_*, NOTE_*, ...)
 // remain FORBIDDEN in UI code: read those from $game directly (spec §5.2).
+// AUDIO/PROVIDER-TIER CARVE-OUT (whole-branch final review, finding B): the UI-TIER IMPORT RULE
+// above governs UI/component code and its VALUE imports. It does not cover $lib/audio/
+// Instrument.svelte.ts or $lib/providers/MIDIProvider.ts, two non-UI engine/provider files that
+// minimal-diff-ported their old `$config` import lists verbatim and so also import the GAME-DATA
+// values INSTRUMENTS, INSTRUMENTS_DATA, NOTE_SCALE, DO_RE_MI_NOTE_SCALE, PITCH_TO_INDEX
+// (Instrument.svelte.ts) and MIDI_PRESETS (MIDIProvider.ts) from here (Pitch/NoteNameType are
+// type-only imports and were never a value-import concern). This is documentation-only: every one
+// of those is a direct `game.*` alias below, so importing it from here is behaviorally identical
+// to reading `$game` directly, and the carve-out is scoped to exactly these two named files - it
+// is not a license for UI code to do the same.
 // The config-surface golden fixture is the acceptance test for these derivations.
 import {game} from '$game'
 import type {Pitch, NoteNameType, TempoChanger, MIDIPreset, StorageId} from '../games/types'

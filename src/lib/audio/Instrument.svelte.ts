@@ -4,9 +4,14 @@
 // deleted outright (no mobx dependency in this tree). `readonly` semantics are preserved by
 // convention (the field is never reassigned, only mutated in place via `setState`'s
 // `Object.assign`, exactly like the old blob). Everything else is import-path swaps:
-// `$config` -> `$core/legacyConfig` (APP_NAME/INSTRUMENTS/INSTRUMENTS_DATA/NOTE_SCALE/
-// DO_RE_MI_NOTE_SCALE/PITCH_TO_INDEX/Pitch/NoteNameType - all UI-tier-allowed here, see inline
-// notes), `$types/GeneralTypes` -> `$core/types` (InstrumentName, NoteStatus - both restored
+// `$config` -> `$core/legacyConfig` (only APP_NAME here is on legacyConfig's UI-tier identity
+// allowlist; INSTRUMENTS/INSTRUMENTS_DATA/NOTE_SCALE/DO_RE_MI_NOTE_SCALE/PITCH_TO_INDEX are
+// GAME-DATA values that allowlist forbids to UI code, and Pitch/NoteNameType are type-only so
+// were never a value-import concern - this file is audio-engine tier, not UI code, so
+// legacyConfig's header separately carves out this file and MIDIProvider.ts for exactly those
+// GAME-DATA values (whole-branch final review, finding B); each stays a direct `game.*` alias
+// below, so importing it here is behaviorally identical to reading `$game` directly),
+// `$types/GeneralTypes` -> `$core/types` (InstrumentName, NoteStatus - both restored
 // there by this task), `$cmp/shared/SvgNotes` -> `$lib/games/types` (NoteImage - type-only, same
 // precedent as SvgNote.svelte), `../utils/Utilities` -> `$core/utils/Utilities`,
 // `$lib/Providers/KeyboardProvider(/KeyboardTypes)` -> `$lib/providers/KeyboardProvider(/KeyboardTypes)`,
