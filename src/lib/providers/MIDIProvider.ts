@@ -1,6 +1,11 @@
 // old: src/lib/Providers/MIDIProvider.ts - minimal-diff port; imports only (`$lib/Services/SettingsService`
 // -> `$core/Services/SettingsService`; `../BaseSettings` -> `$core/BaseSettings`; `$lib/utils/Utilities`
-// -> `$core/utils/Utilities` (debounce(50) - restored there P3 Task 2); `$config` -> `$core/legacyConfig`).
+// -> `$core/utils/Utilities` (debounce(50) - restored there P3 Task 2); `$config` ->
+// `$core/legacyConfig`, whose MIDI_PRESETS import is a GAME-DATA value outside the UI-tier
+// allowlist - this file is on legacyConfig's audio/provider-tier carve-out for it instead,
+// alongside Instrument.svelte.ts (whole-branch final review, finding B); it stays a direct
+// `game.*` alias below, so importing it here is behaviorally identical to reading `$game`
+// directly).
 // Bare `//@ts-ignore` (banned outside `src/lib/core/`) converted to `@ts-expect-error` with a
 // description, same pattern as KeyboardProvider.ts (Phase-4a Task 1).
 //
