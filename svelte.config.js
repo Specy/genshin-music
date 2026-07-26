@@ -33,6 +33,15 @@ const config = {
             $stores: './src/lib/stores',
             $i18n: './src/lib/i18n',
         },
+        // Phase 5 Task 1: Kit auto-registers src/service-worker.ts by default; this app
+        // registers it manually instead (Task 2), exactly as old's next.config.js set
+        // `register: false` on its `withSerwist` call for the same reason (see
+        // src/service-worker.ts's own header). Must land in the same commit as that file
+        // — without this, Kit's default auto-registration and Task 2's manual one would
+        // both run.
+        serviceWorker: {
+            register: false,
+        },
         prerender: {
             // P4a Task 7 (blog): 3 internal links inside the blog posts' prose are broken in the
             // OLD app too - `/blog/midi-conversion` and `/blog/ai-conversion`

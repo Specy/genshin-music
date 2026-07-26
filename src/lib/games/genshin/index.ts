@@ -11,6 +11,7 @@
 //      defaultNoteBackground, settings defaults, updateMessage); each was re-verified
 //      against its cited old file/line while writing this module.
 import type {GameDefinition} from '../types'
+import {GAME_IDENTITY} from './identity'
 import DoGlyph from './glyphs/do.svelte'
 import ReGlyph from './glyphs/re.svelte'
 import RebGlyph from './glyphs/reb.svelte'
@@ -24,8 +25,10 @@ import TiGlyph from './glyphs/ti.svelte'
 import TibGlyph from './glyphs/tib.svelte'
 
 export const game: GameDefinition = {
-    id: 'genshin',
-    storageId: 'Genshin',
+    // Phase 5 Task 1: sourced from ./identity so this game's id/storageId literals
+    // exist exactly once in the tree (see GameIdentity in ../types).
+    id: GAME_IDENTITY.id,
+    storageId: GAME_IDENTITY.storageId,
 
     display: {
         name: 'Genshin',
