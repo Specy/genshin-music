@@ -1,5 +1,13 @@
 # Style Guide
 
+Assumes Svelte 5.56+, SvelteKit 2.70+, TypeScript 6.0+. Several rules below depend on recent
+additions — `{@attach}` needs 5.29, `class` arrays/objects 5.16, `createContext` 5.40,
+`MediaQuery` 5.7 — so check the floor before applying them to an older project.
+
+Rules marked **[lint]** are enforced by `npm run lint` and will fail CI. Everything else is
+enforced at review. (`any` and `@ts-ignore` become **[lint]** at the end of the refactor's Wave 5;
+until then they are review-only, so a clean lint run does not mean a file complies.)
+
 ## Readability
 
 - **No one-off helper functions.** If a function is called exactly once, from one place, inline it — unless extraction genuinely clarifies (a named guard clause, a recursive step, a pure helper worth unit-testing). A reader should be able to follow a file top to bottom without chasing indirection.
@@ -25,18 +33,18 @@
 ## TypeScript
 
 - **`any` is banned. `@ts-ignore` is banned. `@ts-expect-error` requires a written reason.** All three suppress the type checker instead of fixing what it's complaining about; a required reason at least makes the suppression reviewable and greppable later.
-- **Don't cast — parse.** A string from a `<select>`, `localStorage`, or a URL is not a union member until it's been checked. Validate once at the boundary and return the union (or `undefined`); nothing downstream needs to assert again.
+- **Don't cast — parse.** A string from a `<select>`, `localStorage`, or a URL is not a union member until it's been checked. Validate once at the boundary and return the union (or `undefined`); nothing downstream needs to assert again. This covers the non-null assertion `!` too: `x!` is a cast that claims a value exists without checking, and fails the same way when the claim is wrong.
   ```ts
   // Bad — asserts, doesn't check; wrong at runtime if the value has drifted
   const pitch = value as Pitch
 
-  // Good — checked once at the boundary, union or undefined from here on
+  // Good — checked once at the boundary, and cast-free: because PITCHES is
+  // typed readonly Pitch[], `find` already returns `Pitch | undefined`
   function parsePitch(value: string): Pitch | undefined {
-    return (['C', 'Db', 'D'] as readonly string[]).includes(value)
-      ? (value as Pitch)
-      : undefined
+    return PITCHES.find((pitch) => pitch === value)
   }
   ```
+  Reach for a type predicate (`value is Pitch`) only when the check genuinely cannot be expressed as a lookup — a predicate is still an assertion the compiler takes on trust.
 - **Derive unions from data, so the table and the type cannot drift apart:**
   ```ts
   const PITCHES = ['C', 'Db', 'D'] as const satisfies readonly string[]
