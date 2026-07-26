@@ -42,9 +42,12 @@
     // games, not a per-game value as an earlier pass of this comment mis-stated by quoting
     // `rgb(73, 84, 102)` as if it were "the other game's" theme-color - that number is actually
     // ThemeVars.svelte's own unrelated `:root{--primary:...}` custom property, which happens to sit
-    // a few bytes before the theme-color meta in the same raw <head>. The default theme (including
-    // its `accent`/`primary` entries) lives in core-tier `src/lib/core/theme/defaultThemes.ts`,
-    // which imports nothing from `$game`, so neither game's own data can make this value differ.
+    // a few bytes before the theme-color meta in the same raw <head>. The value rendered here is
+    // `ThemeSettings.accent` in core-tier `src/lib/core/BaseSettings.ts:405-409` (`'#63aea7'`) -
+    // SSR/prerender emits `accent` rather than `primary` because ThemeVars.svelte:48's `mounted`
+    // is false at that point. The `accent` value is a plain game-independent literal (unlike its
+    // sibling `note_background`, which does branch on APP_NAME) - verified identical in both
+    // games' built `<head>`.
     //
     // EXCLUDED, deliberately:
     // - `<link rel="icon">` (favicon): already emitted by src/app.html via `%sveltekit.assets%`

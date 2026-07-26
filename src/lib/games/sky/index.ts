@@ -21,8 +21,8 @@ import DmGlyph from './glyphs/dm.svelte'
 import DmcrGlyph from './glyphs/dmcr.svelte'
 
 export const game: GameDefinition = {
-    // Phase 5 Task 1: sourced from ./identity so this game's id/storageId literals
-    // exist exactly once in the tree (see GameIdentity in ../types).
+    // Phase 5 Task 1: sourced from ./identity, the single source for these two fields
+    // (see GameIdentity in ../types) - this object never restates them independently.
     id: GAME_IDENTITY.id,
     storageId: GAME_IDENTITY.storageId,
 
