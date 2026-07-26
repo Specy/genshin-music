@@ -23,10 +23,14 @@
 // minimal-diff-ported their old `$config` import lists verbatim and so also import the GAME-DATA
 // values INSTRUMENTS, INSTRUMENTS_DATA, NOTE_SCALE, DO_RE_MI_NOTE_SCALE, PITCH_TO_INDEX
 // (Instrument.svelte.ts) and MIDI_PRESETS (MIDIProvider.ts) from here (Pitch/NoteNameType are
-// type-only imports and were never a value-import concern). This is documentation-only: every one
-// of those is a direct `game.*` alias below, so importing it from here is behaviorally identical
-// to reading `$game` directly, and the carve-out is scoped to exactly these two named files - it
-// is not a license for UI code to do the same.
+// type-only imports and were never a value-import concern). This is documentation-only: five of
+// those six are direct `game.*` aliases below, so importing them from here is behaviorally
+// identical to reading `$game` directly; the sixth, PITCH_TO_INDEX, is instead a pure build-time
+// derivation of one (`new Map(PITCHES.map(...))` over PITCHES = game.notes.pitches) that has NO
+// `$game` equivalent to read instead - it exists only here, exactly as it existed only in old
+// Config.ts. Either way no game-selection coupling is added beyond what the adapter already has.
+// The carve-out is scoped to exactly these two named files - it is not a license for UI code to
+// do the same.
 // The config-surface golden fixture is the acceptance test for these derivations.
 import {game} from '$game'
 import type {Pitch, NoteNameType, TempoChanger, MIDIPreset, StorageId} from '../games/types'
