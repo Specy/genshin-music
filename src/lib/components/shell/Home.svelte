@@ -8,6 +8,7 @@
     import {logger} from '$stores/LoggerStore.svelte'
     import {asyncConfirm} from '$stores/AsyncPromptStore.svelte'
     import {hasVisitedPage} from '$stores/PageVisitStore.svelte'
+    import {KeyboardProvider} from '$lib/providers/KeyboardProvider'
     import {clearClientCache, isTWA} from '$core/utils/Utilities'
     import {appPathname} from '$lib/utils/appPathname'
     import {APP_NAME} from '$core/legacyConfig'
@@ -39,14 +40,6 @@
     // page-visit "you're new here" indicator's `usePageVisit` STYLE-BADGE half beyond
     // hasVisitedPage() is still NOT ported - hasVisitedPage() (PageVisitStore.svelte.ts, ported
     // ahead of P3 Task 8) is used directly below for the "new" badge instead.
-    //
-    // Escape-to-close (old: KeyboardProvider.register('Escape', ...)) is still deferred, but not for
-    // the reason once written here: KeyboardProvider IS ported now (Phase 4a Task 1,
-    // $lib/providers/KeyboardProvider) and AppInit.svelte calls the real `KeyboardProvider.create()`/
-    // `.destroy()` (no longer a placeholder marker). This file simply hasn't wired the Escape
-    // handler up yet - a real, actionable follow-up now that the blocker is gone, not a hard
-    // dependency on unported infrastructure.
-    //
     let hasVisited = $state(false)
     let isTwa = $state(false)
     let breakpoint = $state(false)
@@ -142,10 +135,10 @@
         }
 
         breakpoint = window.innerWidth > 900
-        // TODO, still not wired up (see header comment above): `KeyboardProvider.register('Escape',
-        // () => homeStore.state.visible && homeStore.close(), {id: 'home'})` here plus
-        // `unregisterById('home')` in this effect's cleanup would restore old's Escape-to-close -
-        // KeyboardProvider is real now, this is simply unimplemented, not blocked.
+        KeyboardProvider.register('Escape', () => {
+            if (homeStore.state.visible) homeStore.close()
+        }, {id: 'home'})
+        return () => KeyboardProvider.unregisterById('home')
     })
 
     $effect(() => {
