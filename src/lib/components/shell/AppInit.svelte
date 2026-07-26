@@ -3,6 +3,7 @@
     import {afterNavigate} from '$app/navigation'
     import {page} from '$app/state'
     import isMobile from 'is-mobile'
+    import {game} from '$game'
     import {homeStore} from '$stores/HomeStore.svelte'
     import {logsStore} from '$stores/LogsStore.svelte'
     import {globalConfigStore} from '$stores/GlobalConfigStore.svelte'
@@ -24,6 +25,7 @@
     import {settingsService} from '$core/Services/SettingsService'
     import {fileService} from '$core/Services/FileService'
     import {checkIfneedsUpdate} from '$core/needsUpdate'
+    import Analytics from '$core/Analytics'
     import {delay, setIfInTWA} from '$core/utils/Utilities'
     import {appPathname} from '$lib/utils/appPathname'
     import * as serviceWorker from '$lib/serviceWorkerRegistration'
@@ -34,14 +36,14 @@
 
     // Old: src/components/AppBase.tsx (+ src/app/providers.tsx's console.error/window-error/SW
     // effects, + src/components/shared/ProviderWrappers/GeneralProvidersWrapper.tsx's init
-    // effects). This component is the AppBase-equivalent orchestrator the brief describes:
-    // effects only, no visual output except the rotate-screen overlay markup below. Each block
-    // is commented with the old effect it corresponds to; a lingering `// Phase 4/5:` marker
-    // stands in for the one remaining bit of behavior that depends on a file not ported yet
-    // (analytics - see Analytics.ts's own header, Phase 5 Task 5). KeyboardProvider (Phase 4a Task 1),
-    // AudioProvider/metronome/MIDIProvider (Phase 4a Task 2), and the service worker
-    // registration + update-prompt flow (Phase 5 Task 2 - this task) are all wired for real below
-    // now.
+    // effects, + src/components/GoogleAnalyticsScript.tsx - see that block's own header below for
+    // why a separate old component is folded in here instead of a new GoogleAnalytics.svelte).
+    // This component is the AppBase-equivalent orchestrator the brief describes: effects only, no
+    // visual output except the rotate-screen overlay markup below. Each block is commented with
+    // the old effect it corresponds to. KeyboardProvider (Phase 4a Task 1), AudioProvider/
+    // metronome/MIDIProvider (Phase 4a Task 2), the service worker registration + update-prompt
+    // flow (Phase 5 Task 2), and analytics - both the GA script/tag setup and the AppBase.tsx
+    // UIEvent/pageView effects (Phase 5 Task 5, this task) - are all wired for real below now.
     //
     // Ordering note: the brief's checklist lists `linkServices()` right after the
     // globalConfigStore/songsStore/.../ThemeProvider.load() batch, but that batch is
@@ -265,20 +267,100 @@
         checkUpdate()
     })
 
-    // Phase 4/5: analytics — old AppBase.tsx effect 6 (`Analytics.UIEvent('version', {version:
-    // APP_VERSION})`, mount-once) and the `Analytics.pageView({page_title: pagePath})` call inside
-    // effect 7 below are both omitted; GoogleAnalyticsScript/Analytics wiring is page-head
-    // territory for a later phase. The same effect 7's page-tracking half (browserHistoryStore),
-    // which does NOT depend on analytics, is implemented for real below.
+    // Old: src/components/GoogleAnalyticsScript.tsx, mounted as a sibling of <Providers> directly
+    // in src/app/layout.tsx's <body> - i.e. one level ABOVE AppBase.tsx, not one of its numbered
+    // effects - via `next/script`'s DEFAULT strategy, `afterInteractive`. Per Next's own docs that
+    // strategy injects the tag(s) client-side, AFTER hydration, not at initial SSR/HTML-string
+    // time - exactly what a plain `onMount` already gives in a component that itself mounts once
+    // at the SvelteKit root layout (this file, via `<AppInit />` in +layout.svelte). So this is
+    // folded in here as one more onMount block rather than a new `GoogleAnalytics.svelte`
+    // component: this file already exists specifically to consolidate several old always-mounted,
+    // effects-only, no-visible-markup components (providers.tsx, AppBase.tsx,
+    // GeneralProvidersWrapper.tsx - see this file's own header above), and
+    // GoogleAnalyticsScript.tsx is exactly that same shape (old rendered only two invisible
+    // <Script> tags, no markup of its own). A <svelte:head> block was NOT used because
+    // `afterInteractive` is deliberately NOT head-time/SSR-time injection; a literal tag in
+    // app.html was NOT used because that file is game-agnostic (one static shell shared by both
+    // games) and cannot carry a per-game analytics id.
+    //
+    // PRESERVED UPSTREAM QUIRK, not a bug to fix: old's Genshin branch loads
+    // `gtag/js?id=G-T3TJDT2NFS` (the script src) but then calls `gtag('config', 'G-BSC3PC58G4',
+    // ...)` (A DIFFERENT property id) - two distinct GA properties, an upstream bug in old itself.
+    // `game.meta.analytics` already captures this split (tagId vs configId - see
+    // games/genshin/index.ts's own header comment on that field); using tagId for the script src
+    // and configId for the config call below reproduces the split automatically. Sky's tagId and
+    // configId happen to be equal, so nothing is visible there. Do not "fix" Genshin's split.
+    //
+    // NO DEV GUARD, preserved deliberately: old rendered these tags in every environment,
+    // development included (no NODE_ENV/env check anywhere in GoogleAnalyticsScript.tsx or its
+    // call site) - a decision, not an oversight.
+    //
+    // Deviation from old's literal inline-script TEXT (behavior-equivalent, disclosed): old's
+    // second <Script> body is a STRING the browser parses as its own classic (non-module) script,
+    // where a bare top-level `function gtag(){dataLayer.push(arguments)}` implicitly becomes
+    // `window.gtag` (classic-script global scope) and `arguments` collects the call's params.
+    // Here that has to be explicit: `window.gtag` is assigned directly and `arguments` becomes a
+    // `...args` rest parameter. Declared `async` (returning `Promise<void>`) only to satisfy
+    // Analytics.ts's own already-existing `Window.gtag` ambient type
+    // (`(...args: any[]) => Promise<void>`, unchanged by this task, header rewritten below it) -
+    // the body is still the same synchronous `dataLayer.push(...)` queueing, so this is a
+    // type-level formality, not a behavior change (GA's own design tolerates `gtag()` being called
+    // as a fire-and-forget queue function before the real gtag.js has even finished loading).
+    type GtagWindow = Window & {dataLayer?: unknown[][]}
+    onMount(() => {
+        const script = document.createElement('script')
+        script.async = true
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${game.meta.analytics.tagId}`
+        document.head.appendChild(script)
 
-    // old AppBase.tsx effect 7 (page-tracking half only - see marker above): afterNavigate fires
-    // once for the initial load too, so the first call is skipped (old: `hasTrackedInitialPage`
-    // ref) and only real client-side navigations get pushed into browserHistoryStore.
+        const gaWindow = window as GtagWindow
+        gaWindow.dataLayer = gaWindow.dataLayer || []
+        gaWindow.gtag = async (...args: unknown[]) => {
+            gaWindow.dataLayer?.push(args)
+        }
+        gaWindow.gtag?.('js', new Date())
+        gaWindow.gtag?.('config', game.meta.analytics.configId, {send_page_view: false, anonymize_ip: true})
+    })
+
+    // old AppBase.tsx effect 6, mount-once.
+    onMount(() => {
+        Analytics.UIEvent('version', {version: APP_VERSION})
+    })
+
+    // old AppBase.tsx effect 7: fires `Analytics.pageView` on every `pagePath` change INCLUDING
+    // the first (old had no guard around that call), then guards only the
+    // `browserHistoryStore.addPage` half with `hasTrackedInitialPage` - the shape already
+    // implemented below for the addPage half alone; `Analytics.pageView` now joins it ahead of
+    // that guard, inside the same pre-existing `if (url)` check (afterNavigate fires once for the
+    // initial load too, so the first call would otherwise skip nothing for pageView - matching old
+    // firing pageView on the very first render). `pagePath` reuses old's own
+    // `query.length > 0 ? path + '?' + query : path`: raw, un-appPathname'd pathname - this is an
+    // analytics LABEL (GA page_title + the browserHistoryStore entry), not a route comparison, so
+    // the base-path-stripping convention does not apply here, same as this effect's pre-existing
+    // `${url.pathname}${url.search}` form. That form was byte-compared in-session (node) against
+    // old's computation across query-bearing URLs: the two are byte-identical for the
+    // overwhelmingly common case (plain `key=value[&key=value]*` query strings, repeated keys, no
+    // query at all) but NOT universally - two edge cases diverge: (a) `URLSearchParams.toString()`
+    // (old, via `useSearchParams()`) re-serializes percent-encoded reserved characters using
+    // form-encoding rules, e.g. a literal `%20` becomes `+`, while the raw `url.search` used here
+    // keeps whatever encoding was actually in the URL; (b) a valueless param like `?noval`
+    // serializes to `noval=` through `URLSearchParams` but stays `noval` (no `=`) in the raw
+    // `url.search`. Both are cosmetic-only, since this string only ever becomes a GA label and a
+    // history-tracking entry, never a route comparison - so the divergence has no behavioral
+    // consequence, but asserting outright byte-identity here would be false, so it isn't asserted.
+    // (The `if (url)` guard itself is unchanged in shape from before this task; old's own
+    // `path`/`query` were never possibly-undefined, so a `url`-less afterNavigate call, if it ever
+    // happens, now also skips `pageView` alongside `addPage` - a narrow, likely-unreachable
+    // safety net inherited from this file's existing pattern, not a new gap introduced here.)
     let hasTrackedInitialPage = false
     afterNavigate((navigation) => {
         const url = navigation.to?.url
-        if (url && hasTrackedInitialPage) {
-            browserHistoryStore.addPage(`${url.pathname}${url.search}`)
+        if (url) {
+            const pagePath = `${url.pathname}${url.search}`
+            Analytics.pageView({page_title: pagePath})
+            if (hasTrackedInitialPage) {
+                browserHistoryStore.addPage(pagePath)
+            }
         }
         hasTrackedInitialPage = true
     })
