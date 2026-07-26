@@ -18,7 +18,6 @@
 使用 `npm run build:{APPname}-no-root` 构建的静态文件是放在二级目录的，例如：www\*****\skyMuisc\
 
 使用 `npm run preview:genshin`  或  `npm run preview:sky` 来启动已经构建好的服务器 (使用这种方法可以大幅减少资源占用)
-windows构建windows运行，linux构建linux运行
 
 
 # 寻找翻译人员
