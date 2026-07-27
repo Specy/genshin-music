@@ -4,6 +4,7 @@
 
     // Precomputes a LayerStatus (bit pattern 0-15) -> CSS class string lookup, e.g. layer=5
     // (bits 1+3 set) -> "layer-1 layer-3".
+    // QUIRK: the join emits empty tokens, so a layer=0 note's class string carries trailing spaces — reproduced byte-for-byte, do not normalise it. The map covers 0-15 only; LayerStatus also permits 16, which old never produced and this deliberately does not widen to.
     const classNameMap = new Map<LayerStatus, string>(
         new Array(16)
             .fill(0)

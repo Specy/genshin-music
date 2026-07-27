@@ -82,6 +82,7 @@
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="8" width="8" xmlns="http://www.w3.org/2000/svg" style="color:{passiveIcon.hex()};display:block"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8z"/></svg>
                     {/if}
                     {#if ins.icon === 'border'}
+                        <!-- QUIRK: the inline stroke-width:2px deliberately overrides this icon's own stroke-width="0" to outline the glyph over its fill. Old did the same; removing either one changes how it renders. -->
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="12" width="12" xmlns="http://www.w3.org/2000/svg" style="color:{passiveIcon.hex()};display:block;margin-right:-2px;margin-top:-2px;stroke-width:2px"><path d="M17 2H7C4.243 2 2 4.243 2 7v10c0 2.757 2.243 5 5 5h10c2.757 0 5-2.243 5-5V7c0-2.757-2.243-5-5-5zm3 15c0 1.654-1.346 3-3 3H7c-1.654 0-3-1.346-3-3V7c0-1.654 1.346-3 3-3h10c1.654 0 3 1.346 3 3v10z"/></svg>
                     {/if}
                     {#if ins.icon === 'line'}

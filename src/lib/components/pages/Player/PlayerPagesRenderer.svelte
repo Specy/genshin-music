@@ -18,6 +18,7 @@
         class="player-chunks-page"
         style="grid-template-columns:repeat({columns}, 1fr)"
     >
+        <!-- QUIRK: keyed by index on purpose — old reconciled on the array index, and chunks carry no stable id. Switching to a content key changes re-render behaviour, so this is the one place the "never key by index" rule does not apply. -->
         {#each playerControlsStore.pagesState.currentPage as chunk, i (i)}
             <SheetFrame
                 keyboardLayout={layoutType}

@@ -47,6 +47,7 @@
     onMount(() => {
         const loadedSettings = settingsService.getPlayerSettings()
         //for now reset this to prevent users from being confused
+        // QUIRK: practice mode is force-reset on load so a returning user is not dropped into it unexpectedly. Old did this deliberately.
         loadedSettings.hidePracticeMode.value = false
         settings = loadedSettings
         mounted = true
