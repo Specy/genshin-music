@@ -38,7 +38,7 @@
 </script>
 
 <button
-    class="menu-item {isActive ? 'menu-item-active' : ''} {cls}"
+    class={['menu-item', isActive && 'menu-item-active', cls]}
     style={style}
     aria-label={ariaLabel}
     onclick={handleClick}

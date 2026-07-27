@@ -43,6 +43,6 @@
     ].filter(Boolean).join(';'))
 </script>
 
-<div class="{cls} {row ? 'row' : 'column'}" style="{computedStyle};{style}">
+<div class={[cls, row ? 'row' : 'column']} style="{computedStyle};{style}">
     {@render children?.()}
 </div>

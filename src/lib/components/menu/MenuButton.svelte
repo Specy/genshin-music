@@ -27,7 +27,7 @@
 </script>
 
 <button
-    class="menu-item {cls}"
+    class={['menu-item', cls]}
     style={style}
     aria-label={ariaLabel}
     onclick={handleClick}
