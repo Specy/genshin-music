@@ -148,6 +148,7 @@
                     value={speedChanger.name}
                     style="background-image:none"
                 >
+                    <!-- QUIRK: hardcoded English — old never ran this label through t(). Translating it is a behaviour change, not a fix. -->
                     <option disabled>Speed</option>
                     {#each SPEED_CHANGERS as e (e.name)}
                         <option value={e.name}>

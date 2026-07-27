@@ -104,6 +104,7 @@
     {t('composer:tools.move_notes_down')}
 {/snippet}
 
+<!-- QUIRK: this repeats the "floating-tools" token when the tools are visible — old built the same duplicate and browsers dedupe it, so keep it rather than tidying the expression. -->
 <DecoratedCard
     className="floating-tools {data.isToolsVisible ? 'floating-tools tools-visible' : ''}"
     size="1.2rem"
