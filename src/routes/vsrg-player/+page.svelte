@@ -74,6 +74,7 @@
         logger.showPill(t('logs:loading_instruments'))
         if (serializedAudioSong) {
             const parsed = songService.parseSong(serializedAudioSong)
+            // QUIRK: raw field write below, not the .setBasePitch() method AudioPlayer also exposes - functionally identical (setBasePitch is a one-line wrapper around this same field write), but reproduced verbatim to match old rather than "cleaned up" to call the method.
             songAudioPlayer.basePitch = parsed.pitch
             if (parsed instanceof RecordedSong) {
                 audioSong = parsed
