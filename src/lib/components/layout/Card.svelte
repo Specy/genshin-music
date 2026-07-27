@@ -1,11 +1,8 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/layout/Card.tsx
-    // `style` is ported as a plain CSS-text string (Svelte idiom) rather than
-    // a CSSProperties object; callers append their own declarations after the
-    // computed ones below, so a caller value still wins on any shared
-    // property - same override order as the old object spread `...style`.
+    // A caller's `style` is appended after the computed styles below, so a
+    // caller's own declaration still wins on any shared CSS property.
     interface CardProps {
         background?: string
         color?: string
@@ -34,12 +31,6 @@
         withShadow,
     }: CardProps = $props()
 
-    // Old code interpolated `className` unguarded (`${className} ${row ? ... }`),
-    // which rendered the literal string "undefined" into the class list whenever
-    // a caller omitted className (Card.tsx never defaulted it, unlike Column/Row
-    // which use `className ?? ""`). Harmless (no selector ever matches ".undefined")
-    // but clearly unintentional, so normalized here to the safe `?? ''` pattern
-    // Column/Row already used - not a behavior change since no CSS ever targeted it.
     const computedStyle = $derived([
         `background:${background}`,
         `color:${color}`,

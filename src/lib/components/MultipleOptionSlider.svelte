@@ -1,15 +1,7 @@
 <script module lang="ts">
-    // Old: src/components/pages/VsrgComposer/MultipleOptionSlider.tsx. RELOCATED (per this task's
-    // brief) from the vsrg-composer-only folder to this shared components/ directory - backup/
-    // +page.svelte (Task 8) is its first consumer, ahead of the vsrg-composer page itself
-    // (Phase 4c). OWNERSHIP NOTE (was a forward-looking "LEDGER NOTE for whoever ports
-    // vsrg-composer"): Phase 4c's VsrgBottom.svelte (P4c Task 2) imports this component rather
-    // than re-porting a second copy, as intended - see that file's own header.
-    //
-    // `Option<T>` lives in this module block (unconstrained T, matching old exactly) rather than
-    // the generics-attributed instance script below, same split as FilePicker.svelte's own
-    // `FileElement<T>`/`generics="T"` - only a `<script module>` block's exports are real ES
-    // exports consumers can import; a bare `export type` inside the instance script is not valid.
+    // `Option<T>` lives in this module block, not the generics-attributed
+    // instance script below, because only a `<script module>` block's exports
+    // are real ES exports a consumer can import.
     export type Option<T> = {
         value: T
         text: string
@@ -19,8 +11,6 @@
 
 <script lang="ts" generics="T extends string">
     import {capitalize} from '$core/utils/Utilities'
-    // `Option<T>` above (module block) is already in scope here, same-file - no import needed,
-    // same as FilePicker.svelte's instance script referencing its own module-level `FileElement<T>`.
 
     let {options, selected, onChange}: {
         options: Option<T>[]
@@ -33,9 +23,6 @@
 
     const selectedOption = $derived(options.find(option => option.value === selected))
 
-    // old: a `useEffect(..., [ref, options, selected])` that measured the selected <button>'s
-    // DOMRect against the container's. `$effect` re-runs on the same reads (rootEl/options/
-    // selected, via selectedOption) without a dependency array.
     $effect(() => {
         const elements = rootEl?.querySelectorAll('button')
         const index = options.findIndex(e => e.value === selected)
@@ -70,30 +57,10 @@
 </div>
 
 <style>
-    /* Old: src/app/_client-pages/vsrg-composer/VsrgComposer.css - only the 4 selectors this
-       component itself owns (`.multiple-option-slider`, its `button` child, `.multiple-options-
-       selected`, `.multiple-option-slider-overlay`), pulled forward verbatim into this relocated
-       component's own scoped styles. The unrelated `.decorated-vsrg-canvas` rule that was
-       physically interleaved between them in the old file is NOT part of this component and stays
-       behind for Phase 4c's VsrgComposer.css port.
-
-       The one `@media (max-width: 1000px) { .multiple-option-slider button { padding: 0 1rem } }`
-       override (also in VsrgComposer.css, batched with unrelated vsrg-composer-only rules in that
-       same query) is folded in here too, INSTEAD of being left for 4c: Svelte's CSS scoping does
-       not pierce component boundaries, so a copy left behind in the vsrg-composer page's own
-       <style> block would silently stop applying to this component's internal <button>s once they
-       are rendered from an imported child component rather than inline page markup. Keeping the
-       component's own responsive behavior with the component, regardless of host page, is the
-       conservative parity-preserving choice (both consumers - backup and vsrg-composer's
-       VsrgBottom.svelte (P4c Task 2) - get identical behavior).
-
-       OWNERSHIP NOTE (was a forward-looking "LEDGER NOTE for Phase 4c"): Phase 4c's
-       VsrgComposer.css port is complete and correctly SKIPPED `.multiple-option-slider`,
-       `.multiple-option-slider button`, `.multiple-options-selected`,
-       `.multiple-option-slider-overlay`, and the one `.multiple-option-slider button` line inside
-       the `max-width: 1000px` media query - all already ported here, as App.css's own
-       vsrg-composer/VsrgComposer.css port block confirms ("SKIPS 5 rules already ported
-       verbatim into MultipleOptionSlider.svelte's own <style> block"). */
+    /* The max-width:1000px override below lives with this component rather
+       than a page-level stylesheet because scoped CSS can't pierce into a
+       child component from outside - a copy left on a host page would
+       silently stop applying to this component's own buttons. */
     .multiple-option-slider {
         display: grid;
         grid-auto-columns: minmax(0, 1fr);

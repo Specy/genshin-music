@@ -3,14 +3,9 @@
     import type {BlogAuthor} from './types'
     import Row from '../layout/Row.svelte'
 
-    // Old: src/components/pages/blog/BlogMetadataRenderers.tsx (48 lines) - exports
-    // `BlogAuthorRenderer`/`BlogTagsRenderer`. Ported as snippets exported from this module
-    // (Svelte 5.5+, see the note in inputs/ComboBox.svelte for the mechanism) - consumed by both
-    // BaseBlogPost.svelte and routes/blog/+page.svelte.
-    //
-    // Both renderers style purely via inline `style` strings in the old file (no CSS-module class
-    // anywhere in either) - this file needs no style block at all. `BASE_PATH` (old `$config`)
-    // -> `base` from `$app/paths`, the same substitution used throughout this migration.
+    // `blogAuthorRenderer`/`blogTagsRenderer` are snippets defined below and
+    // re-exported here - the Svelte 5.5+ mechanism for exporting a snippet
+    // from a module block.
     export {blogAuthorRenderer, blogTagsRenderer}
 </script>
 
@@ -28,9 +23,9 @@
 {/snippet}
 
 {#snippet blogTagsRenderer(tags: string[], padding: string = '0.2rem 0.5rem')}
-    <!-- old rendered a plain `<div className={'row'}>`, NOT the Row component (unlike
-         blogAuthorRenderer above) - `.row` is the global flex-row utility class (src/lib/css/
-         App.css, already ported) - preserved as the same bare native div. -->
+    <!-- Deliberately a bare div with the global `.row` utility class, not the
+         Row component like blogAuthorRenderer above - both produce the same
+         flex row. -->
     <div class="row" style="flex-wrap:wrap">
         {#each tags as tag (tag)}
             <div style="padding:{padding};border-radius:2rem;background-color:var(--secondary);color:var(--secondary-text)">

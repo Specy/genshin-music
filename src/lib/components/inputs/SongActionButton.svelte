@@ -3,13 +3,8 @@
     import Tooltip from '../utility/Tooltip.svelte'
     import {hasTooltip} from '../utility/tooltip'
 
-    // Old: src/components/shared/Inputs/SongActionButton.tsx
-    // `.song-button` is global CSS, already ported into App.css in Phase 4a Task 3 - no
-    // component-local <style> needed here.
-    // Old's `onClick={onClick || (() => {})}` defensive no-op fallback is dropped: an `undefined`
-    // Svelte event-prop simply attaches no handler, which is behaviorally identical to attaching a
-    // no-op one (clicking does nothing either way) - so the fallback was redundant even under old's
-    // own semantics, just more visible there since React always wants *some* callable in the slot.
+    // `.song-button` is global CSS (App.css) - no component-local <style>
+    // is needed here.
     let {
         onclick,
         children,

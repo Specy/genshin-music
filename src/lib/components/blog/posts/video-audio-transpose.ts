@@ -2,8 +2,7 @@ import {base} from '$app/paths'
 import {SpecyAuthor} from '../BaseBlogPost.svelte'
 import type {BlogMetadata} from '../types'
 
-// Old: metadata const from src/app/_client-pages/blog/posts/video-audio-transpose.tsx
-// (`_aiTransposeMetadata`). See add-to-home-screen.ts for the extraction rationale.
+// See add-to-home-screen.ts for why this lives in its own module.
 export const aiTransposeMetadata: BlogMetadata = {
     title: '🔬 Video/audio to music transposition',
     tags: ['Guide'],

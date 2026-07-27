@@ -2,7 +2,6 @@
     import type {Snippet} from 'svelte'
     import {justifyMap, type Justify} from './layoutConstants'
 
-    // Old: src/components/shared/layout/Row.tsx
     interface RowProps {
         gap?: string
         flex1?: boolean

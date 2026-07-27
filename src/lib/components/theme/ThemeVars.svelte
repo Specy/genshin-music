@@ -53,7 +53,6 @@
 </div>
 
 <style>
-    /* old ThemeProviderWrapper div: display:flex + width:100% + flex:1 inside layout.tsx's body-level column (outer div: min-height:100%). flex:1 has no parent flex until Task 7 assembles the shell — min-height:100% is the literal translation of the old outer sizing. Task 7/8: re-verify against the assembled shell with tall content. */
     .theme-vars-root {
         display: flex;
         width: 100%;

@@ -1,13 +1,6 @@
 <script lang="ts">
     import {ThemeProvider as theme} from '$core/theme/ThemeProvider.svelte'
 
-    // Old: src/components/shared/Inputs/Switch/index.tsx + Switch.module.css
-    // `useTheme()` replaced by a direct import of the reactive ThemeProvider
-    // singleton, same as Select.svelte. The old CSS module was dedicated
-    // entirely to this component, so it inlines below verbatim - Svelte's
-    // own per-component style scoping is the direct equivalent of the CSS
-    // Modules hashing the old file relied on, so the plain class names below
-    // stay local to this component without any import machinery.
     let {
         checked,
         onchange,

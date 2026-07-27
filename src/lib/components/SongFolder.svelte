@@ -15,22 +15,18 @@
     import Column from './layout/Column.svelte'
     import FaEllipsisH from './icons/FaEllipsisH.svelte'
 
-    // Old: src/components/shared/pagesLayout/Folder.tsx (SongFolder export, 175 lines). CSS
-    // (.folder/.folder-header/.folder-header-button/.folder-name/.folder-overflow*/.dropdown-select
-    // etc.) is already global (App.css) - no component-local <style> needed.
+    // CSS (.folder/.folder-header/.folder-header-button/.folder-name/
+    // .folder-overflow* etc.) lives in global App.css; no component-local
+    // <style> is needed here.
     //
-    // FOLDER_FILTER_TYPES: not part of any GameDefinition surface (grepped $lib/games/types.ts -
-    // absent) - it's a plain literal constant defined directly in legacyConfig.ts, identical for
-    // both games by construction (never touches `$game`). Read the same way $core/Folder.ts itself
-    // already does (a direct import from legacyConfig), which the UI-tier two-tier rule's own
-    // rationale ("game-independent... qualify the same way") covers even though it isn't in the
-    // rule comment's illustrative name list - flagged as a judgment call in the task report.
+    // FOLDER_FILTER_TYPES/APP_NAME come from `$core/legacyConfig` even though
+    // this is UI code: both are plain literals identical for both games
+    // (never touch `$game`), so the two-tier rule's `$game`-only requirement
+    // doesn't apply to them.
     //
-    // FaEllipsisH: see icons/FaEllipsisH.svelte's own header comment - FloatingDropdown's `Icon`
-    // prop needs a real Component, not the usual local-snippet icon idiom.
-    // FaPen/FaFilter/FaDownload/FaTrash (this file's own inline icons) stay local snippets, same
-    // convention as SimpleMenu.svelte/ColorPicker.svelte (fetched from the same cited source,
-    // unpkg.com/react-icons@5.6.0/fa/index.mjs).
+    // FaEllipsisH is imported as a component (not inlined like the icons
+    // below) because FloatingDropdown's `Icon` prop needs a real component
+    // reference.
     let {
         children,
         backgroundColor,
@@ -49,28 +45,20 @@
         defaultOpen?: boolean
     } = $props()
 
-    // old: separate `useState(false)` + `useEffect(() => setExpanded(defaultOpen), [defaultOpen])`
-    // (which also fires once on mount, since React effects always run after the first render) - a
-    // writable $derived collapses both into one declaration: initial value already equals
-    // defaultOpen (no old "closed, then immediately corrected" first frame), reading tracks
-    // defaultOpen, and the click handler below can still assign `expanded = ...` to diverge locally
-    // - the exact same "diverge, resync on prop change" shape as SettingsRow's currentValue /
-    // ColorPicker's color (established Phase-4a pattern).
+    // A writable $derived: `expanded` starts equal to `defaultOpen` and tracks
+    // it, but toggleExpanded() below can still locally reassign it to diverge
+    // (Svelte allows assigning to a $derived to override it until its
+    // dependency changes again).
     let expanded = $derived(defaultOpen)
     let isRenaming = $state(false)
-    // old: `useState(data.name)` + `useEffect(() => setFolderName(data.name), [data.name])` - same
-    // writable-$derived rewrite as `expanded` above.
     let folderName = $derived(data.name)
     let ref: HTMLDivElement | undefined = $state()
     let height = $state(0)
 
-    // old: `useEffect(() => {...; const timeout = setTimeout(..., 200); return () =>
-    // clearTimeout(timeout)}, [data.songs, expanded, children])` - old's own comment calls this
-    // "pretty hacky". `data.songs`/`expanded` are read below to track them (real $state/prop
-    // values that can meaningfully change); `children` is NOT tracked - Svelte's snippet props
-    // don't have an equivalent to "a new React children tree every parent render" to key off of,
-    // and the two remaining triggers (folder's own song list changing, expand/collapse toggling)
-    // already cover every case that actually needs a remeasure.
+    // Tracks `data.songs`/`expanded` (real reactive values) to remeasure
+    // height; `children` is deliberately not tracked - Svelte snippet props
+    // have no per-render identity to key a remeasure off of, and the two
+    // tracked triggers already cover every case that needs one.
     $effect(() => {
         void data.songs
         void expanded
@@ -93,9 +81,6 @@
         expanded = !expanded
     }
 
-    // old had no keyboard handler on the (bare onClick) header div - pre-existing a11y gap, same
-    // additive role/tabindex/onkeydown fix already applied to DecoratedCard.svelte/FilePicker.svelte
-    // /Home.svelte's own bare-onClick divs in earlier tasks.
     function handleHeaderKeydown(e: KeyboardEvent) {
         if (e.key !== 'Enter' && e.key !== ' ') return
         e.preventDefault()

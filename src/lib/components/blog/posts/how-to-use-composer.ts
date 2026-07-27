@@ -2,8 +2,7 @@ import {base} from '$app/paths'
 import {SpecyAuthor} from '../BaseBlogPost.svelte'
 import type {BlogMetadata} from '../types'
 
-// Old: metadata const from src/app/_client-pages/blog/posts/how-to-use-composer.tsx
-// (`_composerTutorialMetadata`). See add-to-home-screen.ts for the extraction rationale.
+// See add-to-home-screen.ts for why this lives in its own module.
 export const composerTutorialMetadata: BlogMetadata = {
     title: '📀 How to use the composer',
     tags: ['Guide'],

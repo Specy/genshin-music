@@ -1,21 +1,11 @@
 <script module lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/Inputs/ComboBox/ComboBox.tsx (79 lines) + combobox.module.scss
-    // (67 lines) - exports `ComboBox`, `ComboBoxItem`, `ComboBoxTitle`. Not in this task's file
-    // list by name, but explicitly called for in the brief's own parenthetical for the blog index
-    // page ("tag ComboBox filter") - its ONLY consumer anywhere in the old branch (grepped) is
-    // that one tag-filter dropdown.
-    //
-    // `ComboBoxItem`/`ComboBoxTitle` are ported as snippets exported from this module (Svelte
-    // 5.5+: a snippet declared at a .svelte file's top level that references only module-script
-    // declarations can be exported for other files to `{@render}` - see
-    // https://svelte.dev/docs/svelte/snippet#Exporting-snippets). `ComboBoxItem<T = any>`'s own
-    // generic collapses to `unknown` here - it was never tied to the SAME `T` as its ComboBox
-    // instance even in the old file (independent `<T = any>|`), and the sole real call site only
-    // ever reads `item.selected`, so the snippet takes that boolean directly instead of a whole
-    // generic item object (disclosed simplification - `style`/`className` on ComboBoxItem were
-    // also never passed at the real call site and are dropped the same way).
+    // `comboBoxItem`/`comboBoxTitle` are snippets defined below and
+    // re-exported here - the Svelte 5.5+ mechanism for exporting a snippet
+    // from a module block. `comboBoxItem` takes a plain `selected: boolean`,
+    // not a generic item object, because its only real call site only ever
+    // reads that one field.
     export {comboBoxItem, comboBoxTitle}
 </script>
 
@@ -32,8 +22,6 @@
         position?: 'left' | 'right' | 'center'
         title: Snippet
         onChange: (items: ComboBoxItemData<T>[]) => void
-        // old: `children: (item: ComboBoxItemData<T>, onClick: () => void) => React.ReactNode` - a
-        // render-prop function, the direct Svelte 5 equivalent of a parameterized snippet prop.
         children: Snippet<[ComboBoxItemData<T>, () => void]>
         style?: string
         className?: string
@@ -55,8 +43,6 @@
         className = '',
     }: ComboBoxProps<T> = $props()
 
-    // old: `useClickOutside<HTMLDivElement>(() => setOpen(false), {active: open})` -> the
-    // `clickOutside` action (Task 1), same substitution used throughout this migration.
     let open = $state(false)
 </script>
 
@@ -95,11 +81,10 @@
 </div>
 
 <style>
-    /* Old: src/components/shared/Inputs/ComboBox/combobox.module.scss. Every class here is
-       applied to a native element THIS file's own template/snippets render directly (the wrapper
-       div, its title/items-list children, and the comboBoxItem/comboBoxTitle snippets exported
-       above - which stay part of this file's compiled scope no matter which file `{@render}`s
-       them) - plain scoped CSS reaches all of them, no :global() needed anywhere in this file. */
+    /* No :global() needed anywhere here, even though comboBoxItem/
+       comboBoxTitle are rendered from other files via {@render}: a snippet's
+       compiled style scope stays with the file that defines it, not the file
+       that renders it. */
     .combo-box-title {
         background-color: transparent;
         padding: 0;

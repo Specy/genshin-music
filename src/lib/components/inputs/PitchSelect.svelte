@@ -3,13 +3,11 @@
     import {game} from '$game'
     import type {Pitch} from '$lib/games/types'
 
-    // Old: src/components/shared/Inputs/PitchSelect.tsx
-    // Two-tier rule: PITCHES is game-data, read from `game.notes.pitches` directly (never from
-    // `$core/legacyConfig`'s PITCHES re-export, UI-code-forbidden). `Pitch` itself is a pure type
-    // alias (zero runtime footprint) defined in `$lib/games/types` - imported straight from there,
-    // same as `BaseNote.svelte` already does for `NoteImage` (a sibling shared type from the same
-    // module) - type-only imports of shared game-type ALIASES aren't a game-data-tier concern,
-    // only reading game-data VALUES through the wrong tier is.
+    // PITCHES is game-data: read from `game.notes.pitches` directly, never
+    // `$core/legacyConfig`'s PITCHES re-export. `Pitch` itself is a
+    // zero-runtime type alias, so importing it directly from
+    // `$lib/games/types` isn't a two-tier violation - only reading game-data
+    // VALUES through the wrong tier is.
     let {
         selected,
         onChange,

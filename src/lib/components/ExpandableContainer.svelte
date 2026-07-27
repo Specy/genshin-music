@@ -5,15 +5,6 @@
     import Card from './layout/Card.svelte'
     import Column from './layout/Column.svelte'
 
-    // Old: src/components/shared/expandableContainer/ExpandableContainer.tsx (72 lines) +
-    // expandableContainer.module.scss (23 lines). Not in this task's file list (P4a Task 7 only
-    // names the blog/PromotionCard files) - a hard content dependency instead: grepped the whole
-    // old branch, its ONLY consumer anywhere is the add-to-home-screen blog post (3 call sites,
-    // one per device section), all of them bare (`headerContent` + children only) - no
-    // borderColor/headerBackground/contentBackground/contentColor/expanded/onExpanded/
-    // defaultExpanded/style/className ever passed. Full prop surface still ported below for
-    // parity/future reuse (VsrgComposerHelp and the real Home HelpTab also import ShortcutsTable
-    // from a sibling old file the same way - a general-purpose primitive, not blog-only).
     interface ExpandableContainerProps {
         defaultExpanded?: boolean
         onExpanded?: (expanded: boolean) => void
@@ -46,12 +37,9 @@
         borderColor = 'secondary',
     }: ExpandableContainerProps = $props()
 
-    // old: `useState(_expanded ?? defaultExpanded ?? false)` for the initial value, plus a
-    // `useEffect(() => { if (typeof _expanded !== 'undefined') setExpanded(_expanded) }, [_expanded])`
-    // to keep the internal flag in sync with a CONTROLLED `expanded` prop across later updates.
-    // `untrack()` makes the "only read once" intent explicit (matching `useState`'s own
-    // initializer-only-runs-once semantics) instead of tripping Svelte's state_referenced_locally
-    // hint - the $effect below is what actually keeps it in sync on later prop changes.
+    // `untrack()` makes the "read once for the initial value" intent explicit
+    // (avoids Svelte's state_referenced_locally hint) - the $effect below is
+    // what keeps `expanded` in sync with a controlled prop on later changes.
     let expanded = $state(untrack(() => expandedProp ?? defaultExpanded ?? false))
 
     $effect(() => {
@@ -66,9 +54,6 @@
 </script>
 
 {#snippet chevronRightIcon()}
-    <!-- react-icons/fa's FaChevronRight, fetched from unpkg.com/react-icons@5.6.0/fa/index.mjs
-         (same sourcing convention as icons/FaEllipsisH.svelte and other inlined FA snippets across
-         this migration). Old passed no explicit size, so this keeps the default "1em"/"1em". -->
     <svg
         stroke="currentColor"
         fill="currentColor"
@@ -105,12 +90,11 @@
 </Card>
 
 <style>
-    /* Old: src/components/shared/expandableContainer/expandableContainer.module.scss.
-       `.expandable-container`/`.expandable-container-content` are applied via Card/Column's own
-       `className` prop - elements belonging to THEIR compiled templates, not this file's - so
-       both need :global(). `.expandable-container-header`/`.expandable-container-arrow` are
-       native elements this file's own template renders directly, so plain scoped CSS already
-       reaches them. */
+    /* `.expandable-container`/`.expandable-container-content` are applied via
+       Card/Column's own `className` prop - elements belonging to their compiled
+       templates, not this file's - so both need :global(). The header/arrow
+       classes below are rendered directly by this file's own template, so
+       plain scoped CSS already reaches them. */
     :global(.expandable-container) {
         box-shadow: 0 0.2rem 0.4rem rgba(0, 0, 0, 0.1);
     }

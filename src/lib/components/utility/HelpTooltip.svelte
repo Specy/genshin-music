@@ -1,14 +1,7 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/Utility/HelpTooltip.tsx
-    // `MdHelpOutline` (react-icons/md) is inlined as a raw SVG below (no
-    // react-icons dependency, per the repo-wide "no react-* packages" rule) -
-    // markup + path data copied byte-for-byte from react-icons@5.6.0's
-    // generated output (unpkg.com/react-icons@5.6.0/md/index.mjs, MdHelpOutline)
-    // including its default svg wrapper attributes (stroke/fill/stroke-width,
-    // from react-icons' shared IconBase). `.help-tooltip*` CSS is global
-    // (App.css), ported in the same task.
+    // `.help-tooltip*` CSS lives in global App.css.
     let {
         children,
         maxWidth = 18,

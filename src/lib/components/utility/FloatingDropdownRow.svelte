@@ -2,7 +2,6 @@
     import type {Snippet} from 'svelte'
     import AppButton from '../inputs/AppButton.svelte'
 
-    // Old: src/components/shared/Utility/FloatingDropdown.tsx (FloatingDropdownRow export)
     let {
         children,
         onclick,

@@ -1,20 +1,9 @@
 <script lang="ts">
 </script>
 
-<!--
-    Old: react-icons/fa's FaEllipsisH, fetched from unpkg.com/react-icons@5.6.0/fa/index.mjs.
-
-    A dedicated one-off Component file, NOT the usual local-snippet-icon convention (see
-    SimpleMenu.svelte/changelog's own githubIcon snippet) - this is the first real consumer of
-    FloatingDropdown.svelte's `Icon: Component` prop (SongFolder.svelte, below), which renders it
-    as a dynamic component tag (`<Icon />`), not `{@render ...}`. A #snippet can't satisfy a prop
-    typed `Component`, so an actual .svelte file is required here; placed under a new `icons/`
-    folder as the natural home for any future FloatingDropdown consumer that needs the same thing.
-
-    Old call site (Folder.tsx) passed this bare (`Icon={FaEllipsisH}`, no size/color props), and
-    FloatingDropdown.svelte's own template also renders it bare (`<Icon />`) - so this renders with
-    the react-icons default height/width ("1em") and no color override, matching exactly.
--->
+<!-- A dedicated component file, not the usual local-snippet-icon convention:
+     this exists to satisfy a prop typed `Component` (see FloatingDropdown.svelte),
+     which a #snippet can't satisfy. -->
 <svg
     stroke="currentColor"
     fill="currentColor"

@@ -1,14 +1,7 @@
 import {getContext, setContext} from 'svelte'
 
-// Old: src/components/shared/Menu/MenuContext.ts (React createContext<MenuContextState<string>>
-// + useContext wrapper). Ported as a typed Svelte context: a module-level Symbol key (unique per
-// module instantiation, so it can never collide with an unrelated setContext call elsewhere in
-// the tree - same purpose React's own per-createContext() identity served) plus typed
-// setContext/getContext wrapper functions. The old default context object (current: '',
-// setCurrent/setOpen: no-ops, open: false, visible: true) is preserved verbatim as this module's
-// `defaultState`, returned by getMenuContext() when no MenuSidebar ancestor has called
-// setMenuContext() - mirrors React's createContext(defaultValue) fallback when there's no
-// Provider above the caller.
+// `key` is a module-level Symbol, not a string, so it can never collide with
+// an unrelated setContext call elsewhere in the tree.
 export type MenuContextState<T extends string = string> = {
     current: T
     setCurrent: (current: T) => void

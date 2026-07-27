@@ -21,9 +21,8 @@
     import Tooltip from '../utility/Tooltip.svelte'
     import {hasTooltip} from '../utility/tooltip'
 
-    // Old: src/components/shared/Inputs/AppButton.tsx
-    // CSS (.app-button, .icon-app-button, .active, :disabled, etc.) is global
-    // (App.css), ported alongside this component in the same task.
+    // CSS (.app-button, .icon-app-button, .active, :disabled, etc.) lives in
+    // global App.css.
     let {
         style = '',
         className = '',
