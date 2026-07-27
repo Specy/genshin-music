@@ -50,7 +50,7 @@
 {#snippet comboBoxItem(selected: boolean, onClick: () => void, children: Snippet)}
     <button
         onclick={onClick}
-        class="combo-box-item {selected ? 'combo-box-item-selected' : ''}"
+        class={['combo-box-item', selected && 'combo-box-item-selected']}
     >
         {@render children()}
     </button>
@@ -64,7 +64,7 @@
 
 <div
     use:clickOutside={{active: open, onOutside: () => open = false}}
-    class="combo-box-wrapper {cls}"
+    class={['combo-box-wrapper', cls]}
     {style}
 >
     <button onclick={() => open = !open} class="combo-box-title">

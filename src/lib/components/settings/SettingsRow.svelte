@@ -117,6 +117,10 @@
         align-items: center;
     }
 
+    /* :global() because the input/select this reaches is rendered by a child
+       component's own template (SettingsInput, SettingsSelect, SettingsSlider,
+       InstrumentInput) - not by this component's, so scoped CSS can't cross
+       that component boundary on its own. */
     .settings-row :global(:is(input, select)) {
         background-color: var(--primary);
         color: var(--primary-text);
@@ -127,6 +131,7 @@
         border-radius: 0.2rem;
     }
 
+    /* Same cross-component reason as above, for SettingsSlider/InstrumentInput's range input. */
     .settings-row :global(input[type='range']) {
         padding: 0;
         margin: 0;
