@@ -165,7 +165,9 @@
 </button>
 
 <style>
-    :global(.sky-zen-note) {
+    /* No :global() needed: this class only ever lands on the <div> directly above, which this
+       file's own template creates, so normal Svelte scoping already reaches it. */
+    .sky-zen-note {
         opacity: 0.8;
     }
 </style>

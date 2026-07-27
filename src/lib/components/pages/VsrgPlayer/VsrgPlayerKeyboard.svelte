@@ -62,7 +62,7 @@
             onpointerleave={() => vsrgPlayerStore.releaseKey(index)}
         >
             <div
-                class="vsrg-player-key-circle {data?.isPressed ? 'vsrg-key-pressed' : ''}"
+                class={['vsrg-player-key-circle', data?.isPressed && 'vsrg-key-pressed']}
                 style="width:{size}px;height:{size}px"
             >
                 {data?.key}
@@ -79,7 +79,7 @@
             onpointerleave={() => vsrgPlayerStore.releaseKey(index)}
         >
             <div
-                class="vsrg-player-key-line {data?.isPressed ? 'vsrg-key-pressed' : ''}"
+                class={['vsrg-player-key-line', data?.isPressed && 'vsrg-key-pressed']}
                 style="height:{offset}px"
             ></div>
         </button>

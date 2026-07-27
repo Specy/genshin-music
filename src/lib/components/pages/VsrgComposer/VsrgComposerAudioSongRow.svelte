@@ -29,7 +29,7 @@
 </script>
 
 <div
-    class="song-row {hasTooltip(true)}"
+    class={['song-row', hasTooltip(true)]}
     onclick={selectAsAudioSong}
     onkeydown={handleKeydown}
     role="button"

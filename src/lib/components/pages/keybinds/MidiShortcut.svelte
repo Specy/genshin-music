@@ -15,6 +15,6 @@
     } = $props()
 </script>
 
-<AppButton class="midi-shortcut {status}" toggled={selected} onclick={() => onClick(type)}>
+<AppButton class={['midi-shortcut', status]} toggled={selected} onclick={() => onClick(type)}>
     {t(`keybinds:shortcuts.${type}`)} ({midi === -1 ? 'N/A' : midi})
 </AppButton>

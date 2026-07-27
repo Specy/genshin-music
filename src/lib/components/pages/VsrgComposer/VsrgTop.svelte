@@ -106,7 +106,7 @@
 {/snippet}
 
 {@render children()}
-<div class="vsrg-top-right {lastCreatedHitObject !== null ? 'vsrg-top-right-disabled' : ''}">
+<div class={['vsrg-top-right', lastCreatedHitObject !== null && 'vsrg-top-right-disabled']}>
     {#if isTrackSettingsOpen}
         <VsrgTrackSettings
             track={currentTrack}
