@@ -28,42 +28,6 @@
     import Separator from '$cmp/Separator.svelte'
     import AppLink from '$cmp/AppLink.svelte'
 
-    // Old: src/components/pages/VsrgComposer/VsrgComposerMenu.tsx (409 lines, default export
-    // `VsrgMenu`, `memo`-wrapped). Old's local `SongRow`/`SelectSongRow` sub-components are split
-    // into sibling files this same task (see their own header comments for the "brief-silent
-    // sibling" rationale) - `VsrgComposerSongRow.svelte`/`VsrgComposerAudioSongRow.svelte`.
-    //
-    // `memo(VsrgMenu, (p, n) => p.settings === n.settings && ...)` - old's custom shallow-equality
-    // memo comparator - is DROPPED entirely, same established "Svelte 5 fine-grained reactivity
-    // replaces manual memoization" precedent used throughout this migration (e.g. Composer.svelte's
-    // header comment on `Memoized`/`MemoizedIcon`).
-    //
-    // Structural precedent: this migration's own `ComposerMenu.svelte` (P4c Task 4, same
-    // MenuSidebar/MenuPanelWrapper/panel-snippet/hamburger-as-first-child shape) and
-    // `ZenKeyboardMenu.svelte` (P4a Task 3). `useClickOutside<HTMLDivElement>((e) => setVisible(false),
-    // {active: (isOpen && isVisible), ignoreFocusable: true})` + `ref={menuRef}` -> `wrapperEl` bound
-    // via `MenuSidebar`'s own `bind:wrapperEl`, plus a manually-invoked `clickOutside(...)` action in
-    // an `$effect` - the SAME established pattern (SheetVisualizerMenu.svelte/ZenKeyboardMenu.svelte/
-    // ComposerMenu.svelte) for reaching a CHILD component's DOM node. Unlike ComposerMenu.svelte's own
-    // click-outside callback (which branches on `isMobile()`), old's VSRG version here is the SIMPLER
-    // shape (just `setVisible(false)`, no mobile branch) - matching ZenKeyboardMenu.svelte's own
-    // callback shape instead, a real, disclosed per-file difference (verified against the raw old
-    // blob, not an inconsistency introduced by this port).
-    //
-    // `MenuTabs` type DROPPED (old declared it purely to type `useState<MenuTabs>`, nothing else ever
-    // imported it) - same established precedent as ComposerMenu.svelte/PlayerMenu.svelte's own
-    // identical drop; `MenuSidebar`'s context plumbing takes a plain `string` regardless.
-    //
-    // `ss['settings-group-title']` (old: a CSS-Modules-shared class from Settings.module.css) is
-    // reproduced via a LOCAL scoped .settings-group-title rule in this file's own style block below
-    // (identical declarations to `SettingsPane.svelte`'s own copy of the same old rule) rather than
-    // relying on cross-component class sharing, which Svelte's per-component CSS scoping does not
-    // provide the way CSS Modules did - same established "duplicate the tiny shared rule locally"
-    // precedent as `InstrumentSelect.svelte`/`PitchSelect.svelte`'s own `.select`/`:focus`/
-    // `option:checked` rules (their own header comments document the identical reasoning).
-    //
-    // Two-tier: none of old's `$config`/`$stores` imports here are game-dependent data; `homeStore`/
-    // `folderStore`/`songsStore`/`globalConfigStore` are all UI-tier singletons, not `$core`.
     let {
         data,
         functions,
@@ -92,6 +56,8 @@
     let selectedMenu = $state('Settings')
     let wrapperEl: HTMLDivElement | undefined = $state()
 
+    // QUIRK: no isMobile() branch here (unlike ComposerMenu.svelte's click-outside callback) - a
+    // real difference from old, not an inconsistency to unify.
     $effect(() => {
         if (!wrapperEl) return
         const action = clickOutside(wrapperEl, {
@@ -106,44 +72,34 @@
 </script>
 
 {#snippet faBarsIcon()}
-    <!-- react-icons/fa's FaBars, same source already verified for ComposerMenu.svelte's own copy;
-         old's `<MemoizedIcon icon={FaBars}/>` call passed no className. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
 {/snippet}
 
 {#snippet faTimesIcon()}
-    <!-- react-icons/fa's FaTimes, same source; old wrapped it in `<MemoizedIcon className={'icon'}/>`. -->
     <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 352 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"/></svg>
 {/snippet}
 
 {#snippet faTimesIconBare()}
-    <!-- Same FaTimes path/viewBox as above; old's "remove background song" `SongActionButton`
-         called `<FaTimes/>` bare (no `className`), unlike the menu-close/menu-panel copy above. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 352 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"/></svg>
 {/snippet}
 
 {#snippet faSaveIcon()}
-    <!-- react-icons/fa's FaSave, same source already verified for ComposerMenu.svelte's own copy. -->
     <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M433.941 129.941l-83.882-83.882A48 48 0 0 0 316.118 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h352c26.51 0 48-21.49 48-48V163.882a48 48 0 0 0-14.059-33.941zM224 416c-35.346 0-64-28.654-64-64 0-35.346 28.654-64 64-64s64 28.654 64 64c0 35.346-28.654 64-64 64zm96-304.52V212c0 6.627-5.373 12-12 12H76c-6.627 0-12-5.373-12-12V108c0-6.627 5.373-12 12-12h228.52c3.183 0 6.235 1.264 8.485 3.515l3.48 3.48A11.996 11.996 0 0 1 320 111.48z"/></svg>
 {/snippet}
 
 {#snippet faQuestionIcon()}
-    <!-- react-icons/fa's FaQuestion, same source already verified for PlayerMenu.svelte's own copy. -->
     <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 384 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M202.021 0C122.202 0 70.503 32.703 29.914 91.026c-7.363 10.58-5.093 25.086 5.178 32.874l43.138 32.709c10.373 7.865 25.132 6.026 33.253-4.148 25.049-31.381 43.63-49.449 82.757-49.449 30.764 0 68.816 19.799 68.816 49.631 0 22.552-18.617 34.134-48.993 51.164-35.423 19.86-82.299 44.576-82.299 106.405V320c0 13.255 10.745 24 24 24h72.471c13.255 0 24-10.745 24-24v-5.773c0-42.86 125.268-44.645 125.268-160.627C377.504 66.256 286.902 0 202.021 0zM192 373.459c-38.196 0-69.271 31.075-69.271 69.271 0 38.195 31.075 69.27 69.271 69.27s69.271-31.075 69.271-69.271-31.075-69.27-69.271-69.27z"/></svg>
 {/snippet}
 
 {#snippet faMusicIcon()}
-    <!-- react-icons/fa's FaMusic, same source already verified for ComposerMenu.svelte's own copy. -->
     <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M470.38 1.51L150.41 96A32 32 0 0 0 128 126.51v261.41A139 139 0 0 0 96 384c-53 0-96 28.66-96 64s43 64 96 64 96-28.66 96-64V214.32l256-75v184.61a138.4 138.4 0 0 0-32-3.93c-53 0-96 28.66-96 64s43 64 96 64 96-28.65 96-64V32a32 32 0 0 0-41.62-30.49z"/></svg>
 {/snippet}
 
 {#snippet faCogIcon()}
-    <!-- react-icons/fa's FaCog, same source already verified for ZenKeyboardMenu.svelte's own copy. -->
     <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/></svg>
 {/snippet}
 
 {#snippet faHomeIcon()}
-    <!-- react-icons/fa's FaHome, same source already verified for ComposerMenu.svelte's own copy. -->
     <svg class="icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 576 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M280.37 148.26L96 300.11V464a16 16 0 0 0 16 16l112.06-.29a16 16 0 0 0 15.92-16V368a16 16 0 0 1 16-16h64a16 16 0 0 1 16 16v95.64a16 16 0 0 0 16 16.05L464 480a16 16 0 0 0 16-16V300L295.67 148.26a12.19 12.19 0 0 0-15.3 0zM571.6 251.47L488 182.56V44.05a12 12 0 0 0-12-12h-56a12 12 0 0 0-12 12v72.61L318.47 43a48 48 0 0 0-61 0L4.34 251.47a12 12 0 0 0-1.6 16.9l25.5 31A12 12 0 0 0 45.15 301l235.22-193.74a12.19 12.19 0 0 1 15.3 0L530.9 301a12 12 0 0 0 16.9-1.6l25.5-31a12 12 0 0 0-1.7-16.93z"/></svg>
 {/snippet}
 
@@ -260,10 +216,10 @@
                             <span style="margin-top:0.4rem">
                                 {t('vsrg_composer:instrument_modifiers')}
                             </span>
-                            <!-- old's callback param is genuinely named "visible" even though it
-                                 carries the NEW `hidden` boolean (TrackModifier.svelte's own
-                                 `onVisibilityChange(!data.hidden)` call) - a real, confusing-but-
-                                 correct old naming quirk, reproduced verbatim rather than renamed. -->
+                            <!-- QUIRK: the visible param below is consumed directly as the new
+                                 hidden value (hidden: visible, not !visible) - confusing but
+                                 correct, since TrackModifier already passes !data.hidden. Any
+                                 rename here needs care not to flip the boolean. -->
                             {#each data.trackModifiers as trackModifier, i (i)}
                                 <TrackModifier
                                     data={trackModifier}
@@ -299,10 +255,9 @@
 </MenuSidebar>
 
 <style>
-    /* Old Settings.module.css's `.settings-group-title` rule, shared via CSS Modules in old
-       (SettingsPane.tsx and this file both imported the same module) - duplicated here as a local
-       scoped rule since Svelte's per-component CSS scoping doesn't share classes across files the
-       way CSS Modules did. Identical declarations to SettingsPane.svelte's own copy of this rule. */
+    /* Intentionally duplicated in SettingsPane.svelte too: Svelte's scoped CSS doesn't share
+       classes across files, so each consumer keeps its own copy rather than depending on
+       another file's <style> block. */
     .settings-group-title {
         font-size: 1.3rem;
         margin: 0.5rem 0;

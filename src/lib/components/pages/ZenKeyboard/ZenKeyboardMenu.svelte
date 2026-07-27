@@ -14,41 +14,6 @@
     import type {ZenKeyboardSettingsDataType} from '$core/BaseSettings'
     import type {SettingUpdate, SettingVolumeUpdate} from '$core/types/SettingsPropriety'
 
-    // Old: src/components/pages/ZenKeyboard/ZenKeyboardMenu.tsx (152 lines) - one of the 4 old page
-    // menus (Composer/VsrgComposer/VsrgPlayer/ZenKeyboard) that render a `.hamburger-top` div as
-    // MenuContextProvider's FIRST child; this is the first real consumer of MenuSidebar.svelte's
-    // `hamburger` snippet + `wrapperEl` $bindable (both added ahead of time in Phase-4a Task 3,
-    // never exercised until now). Old's separate `MenuContextProvider`+`MenuSidebar` collapse into
-    // the single ported `MenuSidebar.svelte` (its own header comment documents the fold); the
-    // sibling `MenuPanelWrapper` becomes MenuSidebar's `panel` snippet.
-    //
-    // `useClickOutside<HTMLDivElement>(() => setIsVisible(false), {ignoreFocusable:true, active:
-    // selectedPage !== ""})` + `ref={menuRef}` -> `wrapperEl` bound via MenuSidebar's own
-    // `bind:wrapperEl`, plus a manually-invoked `clickOutside(...)` call in an `$effect` below -
-    // the exact pattern SheetVisualizerMenu.svelte (Task 2) established for this situation (the
-    // click-outside target is a CHILD component's DOM node, so a plain `use:` directive can't reach
-    // it from this file).
-    //
-    // Local React state -> MenuContextState mapping (old names kept for traceability):
-    //   selectedPage (useState("Settings")) -> current/setCurrent
-    //   isOpen (useState(true))             -> open/setOpen
-    //   isVisible (useState(false))         -> visible/setVisible (ALSO toggled directly by the
-    //                                          hamburger div and the close button, exactly like old)
-    //
-    // Icons: FaHome/FaTimes reused byte-identical from the established precedent (SimpleMenu.svelte/
-    // SheetVisualizerMenu.svelte, react-icons@5.6.0 fa/index.mjs). FaBars/FaCog are new to this
-    // migration, sourced the same way (unpkg.com/react-icons@5.6.0/fa/index.mjs). GiMetronome/
-    // IoMdMusicalNote/MdPiano are also new, sourced from unpkg.com/react-icons@5.6.0/{gi,io,md}/index.mjs
-    // respectively - all three carried old's `size={18}` (react-icons IconBase: a numeric `size`
-    // becomes the literal `height`/`width` SVG attributes, not `1em`) into their own snippet markup
-    // below, and NONE of the three carry a `class` attribute (old called all three bare, no
-    // `className`) - unlike FaTimes/FaCog/FaHome, which old wrapped in `<MemoizedIcon .../
-    // className={'icon'}/>` (kept as `class="icon"` below) while FaBars's own `<MemoizedIcon
-    // icon={FaBars}/>` call passed no className either (verified against the old blob directly -
-    // this bars/times/cog/home split is real, not an oversight). MdPiano's first child path
-    // (`fill="none"`, a Material-icon hit-area rect) matches the copy already ported into
-    // Home.svelte's `mdOutlinePianoIcon` snippet byte-for-byte (`MdPiano`/`MdOutlinePiano` share
-    // identical path data upstream - confirmed by diffing both exports directly).
     let {
         settings,
         isMetronomePlaying,

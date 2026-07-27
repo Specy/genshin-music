@@ -12,21 +12,9 @@
     import HelpTooltip from '$cmp/utility/HelpTooltip.svelte'
     import ColorPicker from '$cmp/inputs/ColorPicker.svelte'
 
-    // Old: src/components/pages/VsrgComposer/VsrgTrackSettings.tsx (147 lines) - the floating
-    // per-track settings popup opened from VsrgTop.svelte's TrackSelector gear button.
-    //
-    // `if (!track) return null` (old) is preserved as an `{#if track}` guard below: `track` is typed
-    // non-optional in old's own props interface, but old still defends against it being momentarily
-    // undefined (the parent passes `vsrg.tracks[selectedTrack]`, which can be `undefined` for one
-    // render right after deleting the last/currently-selected track) - reproduced, not "cleaned up"
-    // away just because the type claims otherwise.
-    //
-    // `track.instrument.set({...})` mutates the SAME `InstrumentData` instance the parent's
-    // `vsrg.tracks[selectedTrack]` already holds, THEN calls `onChange(track)` - which is literally
-    // the identical reference being handed back (`vsrg.tracks[index] = track` in the page's
-    // `onTrackChange` is a same-value reassignment) - the REAL effect is the page's own
-    // `refreshVsrg()` that follows, which this component doesn't need to know about (same
-    // callback-prop contract old used).
+    // QUIRK: track's type claims non-optional, but the parent (vsrg.tracks[selectedTrack]) can
+    // pass it as undefined for one render right after deleting the selected track - keep the
+    // {#if track} guard below despite what the type says.
     let {
         track,
         onSave,
@@ -39,13 +27,14 @@
         onChange: (track: VsrgTrack) => void
     } = $props()
 
+    // QUIRK: onChange(track) below always hands back the SAME (mutated in place) VsrgTrack
+    // reference the parent already holds - it is not a "new value" signal. The parent re-triggers
+    // its own refresh on any call regardless of reference equality; don't add a reference-equality
+    // check here or upstream expecting onChange to only fire on a genuine identity change.
     let isColorPickerOpen = $state(false)
 </script>
 
 {#snippet faTrashIcon()}
-    <!-- react-icons/fa's FaTrash (unpkg.com/react-icons@5.6.0/fa/index.mjs), same source already
-         verified for ComposerSongRow.svelte's own copy; old passed color='var(--red)' (a bare CSS
-         color, not the hex literal ComposerSongRow's own delete icon uses) + marginRight 0.3rem. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" style="color:var(--red);margin-right:0.3rem" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"/></svg>
 {/snippet}
 
@@ -94,11 +83,9 @@
         </Row>
         <Row align="center" style="margin-top:1rem">
             {t('instrument_settings:volume')}
-            <!-- old's conditional branch re-set the SAME margin-left:0.4rem the base style already
-                 has (a real, harmless old redundancy - the object-spread `{color, marginLeft:
-                 "0.4rem"}` just re-declares an existing key) - the repeated declaration is dropped
-                 here (svelte/no-dupe-style-properties, a hard lint error) since it is a byte-for-
-                 byte no-op either way: only the `color` addition is the actual conditional effect. -->
+            <!-- old redundantly re-declared margin-left here too (a harmless no-op); dropped to
+                 satisfy svelte/no-dupe-style-properties (a lint error) - only the color addition
+                 below is the real conditional effect. -->
             <span style="margin-left:0.4rem;width:3rem;{track.instrument.volume > 100 ? `color:hsl(0, ${-40 + track.instrument.volume}%, 61%)` : ''}">
                 {track.instrument.volume}%
             </span>

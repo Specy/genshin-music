@@ -5,18 +5,6 @@
     import Tooltip from '$cmp/utility/Tooltip.svelte'
     import {hasTooltip} from '$cmp/utility/tooltip'
 
-    // Old: src/components/pages/VsrgComposer/VsrgComposerMenu.tsx's local (non-exported)
-    // `SelectSongRow` component (lines ~276-300) - the background-audio-song PICKER row (rendered
-    // via the second `SongMenu` in the Settings panel, `exclude={['vsrg']}`). Sibling file NOT
-    // explicitly named in this task's brief, same "brief-silent sibling" rationale as
-    // VsrgComposerSongRow.svelte's own header comment (SongMenu.svelte's generic `SongComponent`
-    // prop needs a real `Component<T>` reference). Named `VsrgComposerAudioSongRow` (not old's
-    // "SelectSongRow", and old's own interface name for this component - "SeelctSongRowProps" - is a
-    // pre-existing TS-only misspelling with zero runtime effect, not reproduced as a type name here).
-    //
-    // PRESERVED QUIRK: the tooltip text "Click to select as background song" is a raw, untranslated
-    // literal in old (not routed through `t(...)`), matching this same file family's disclosed
-    // untranslated-string pattern (see VsrgComposerSongRow.svelte's own header comment).
     let {
         data,
         onClick,
@@ -31,8 +19,8 @@
         onClick(song)
     }
 
-    // old had no keyboard handler on the (bare onClick) row div - pre-existing a11y gap, same
-    // additive role/tabindex/onkeydown fix already applied to every other SongRow sibling.
+    // role/tabindex/onkeydown below make this keyboard-operable - an accessibility addition, not
+    // present in old.
     function handleKeydown(e: KeyboardEvent) {
         if (e.key !== 'Enter' && e.key !== ' ') return
         e.preventDefault()
@@ -51,6 +39,7 @@
     <div class="song-name">
         {data.name}
     </div>
+    <!-- QUIRK: hardcoded English, never routed through t() - matching old, not an oversight. -->
     <Tooltip>
         Click to select as background song
     </Tooltip>

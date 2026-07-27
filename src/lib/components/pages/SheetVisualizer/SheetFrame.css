@@ -1,18 +1,9 @@
-/* Old: src/components/pages/SheetVisualizer/SheetFrame.module.css (119 lines), a Next.js CSS
-   Modules file imported (as `s`) by BOTH SheetFrame.tsx and SheetFrame2.tsx - the same physical
-   module resolves to the same hashed class names for both consumers there.
-
-   Ported here as a plain, UNSCOPED sibling stylesheet (".module" dropped from the filename since
-   it is no longer CSS-Modules-hashed) rather than a per-component Svelte <style> block, because
-   the classes below are genuinely shared by two separate Svelte components (SheetFrame.svelte /
-   SheetFrame2.svelte), each its own compiled scoping unit - a scoped <style> living in only one
-   of them would never reach the other's elements, and different pages currently pull in only one
-   of the two (this task's own /sheet-visualizer route renders only SheetFrame2; Task 5's
-   PlayerPagesRenderer renders only bare SheetFrame). Both files `import './SheetFrame.css'` as a
-   side effect so the CSS is present regardless of which component(s) a given page uses (Vite
-   dedupes the identical module import automatically). Selector names and rule bodies below are
-   byte-identical to the old module, including its two intentionally-empty rules (preserved, not
-   cleaned up). */
+/* QUIRK: deliberately a plain unscoped stylesheet, not a component <style> block. These classes
+   are shared by two separate components (SheetFrame.svelte and SheetFrame2.svelte), each its own
+   compiled scoping unit - a scoped style living in only one of them would never reach the other's
+   elements. Both files `import './SheetFrame.css'` as a side effect so the rules are present
+   regardless of which component a page uses. Do not fold this into either component's <style> per
+   the "styles scoped to the component" rule - that breaks whichever sibling doesn't own it. */
 
 .visualizer-frame {
     width: 94%;
@@ -40,6 +31,7 @@
     font-size: 0.8rem;
     opacity: 0.5;
 }
+/* QUIRK: intentionally empty, preserved byte-for-byte - not a cleanup miss. */
 .frame-empty-counter svg{
 }
 
@@ -58,8 +50,9 @@
     padding-bottom: 49%;
 }
 
-/*
-@supports(aspect-ratio: 1.5) { //apparently ios has a bug with aspect-ratio...
+/* Disabled: iOS has a known aspect-ratio bug, so this fallback path is unused. Kept in case a
+   future browser fix makes it safe to re-enable.
+@supports(aspect-ratio: 1.5) {
 	.frame-outer {
 		padding: unset;
 		aspect-ratio: 1.5;
@@ -131,6 +124,7 @@
         border: none !important;
     }
 
+    /* QUIRK: intentionally empty, preserved byte-for-byte - not a cleanup miss. */
     .frame-outer-background {
     }
 }
