@@ -1,16 +1,11 @@
 <script lang="ts">
-    // Old: src/components/pages/VsrgPlayer/VsrgPlayerCountDown.tsx (33 lines) +
-    // VsrgPlayerCountdown.module.css (9 lines). `memo(_VsrgPlayerCountDown, (p, n) => p.time ===
-    // n.time)` dropped (established precedent, every memo drop this migration).
-    //
-    // Old's `useEffect(() => {...}, [time])` (WAAPI `.animate()` scale-bounce, fires on mount AND on
-    // every `time` change) -> a top-level `$effect` reading `time` at its synchronous top (the
-    // established `void time` idiom, e.g. PlayerKeyboard.svelte/PlayerSongControls.svelte) so it
-    // reruns on mount and every prop change exactly like old's dependency-array effect.
     let {time}: {time: number} = $props()
 
     let ref: HTMLDivElement | undefined = $state()
 
+    // void time forces this effect to track and rerun on every time change, even though time's
+    // value isn't otherwise read below - removing this line would stop the bounce animation from
+    // re-triggering on each countdown tick.
     $effect(() => {
         void time
         if (!ref) return

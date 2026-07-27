@@ -1,19 +1,3 @@
-// Old: src/components/pages/VsrgPlayer/VsgPlayerCache.ts (174 lines) - the old FILENAME is
-// missing an "r" (`VsgPlayerCache.ts` instead of `VsrgPlayerCache.ts`), a plain old typo (the
-// exported class inside it was always correctly spelled `VsrgPlayerCache`). This port corrects
-// the file name only - the class name, every method body and every Graphics/Rectangle/
-// generateTexture call is byte-verbatim, same "port AS-IS" treatment VsrgComposerCache.ts's own
-// header comment already established for its own sibling file. No game-dependent data here either
-// (every value arrives via constructor props), so there is nothing to swap for a `$game`/
-// `$config` import.
-//
-// Only import changes:
-// - `./VsrgPlayerCanvas` -> `./VsrgPlayerRenderer` (type-only): old's three-file collapse
-//   (VsrgPlayerCanvas.tsx + VsrgHitObjectsRenderer.tsx + VsrgPlayerAccuracyRenderer.tsx) into one
-//   `VsrgPlayerRenderer.ts` this same task - see that file's header comment. `VsrgPlayerCanvasColors`/
-//   `VsrgPlayerCanvasSizes` now live there. This is a type-only import so the mutual reference back
-//   (VsrgPlayerRenderer.ts imports the `VsrgPlayerCache` VALUE from here) stays a compile-time-only
-//   cycle, same shape VsrgComposerCache.ts/VsrgComposerRenderer.ts already established.
 import Color from "color"
 import { Application, Graphics, Rectangle, Texture } from 'pixi.js'
 import type { VsrgPlayerCanvasColors, VsrgPlayerCanvasSizes } from "./VsrgPlayerRenderer";

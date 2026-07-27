@@ -1,99 +1,5 @@
-// Old: SIX files collapse into this ONE plain-TS renderer class, per spec section 6.2 and this
-// task's own file list:
-//   - src/components/pages/VsrgComposer/VsrgComposerCanvas.tsx (393 lines, the React class - owned
-//     the wrapper div, the ONE `<Application>`, mount/unmount, theme/store subscriptions, the
-//     wheel/pointer drag state machine, and `setTimestamp`/`selectHitObject`/the playback tick).
-//   - VsrgKeysRenderer.tsx (124) - the per-key hitboxes + labels + accent playbar overlay.
-//   - VsrgScrollableTrackRenderer.tsx (174) - the snap points + per-track hit objects + the
-//     add/remove-time buttons at the end of the song, all riding one scrolling container.
-//   - VsrgTrackRenderer.tsx (123) - one track's hit-object sprites (tap vs. held, selection ring).
-//   - VsrgTimelineRenderer.tsx (117) - the top timeline strip: background, note overlay,
-//     current-time marker, scrub thumb, click/drag-to-seek.
-//   - VsrgTimelineBreakpointsRenderer.tsx (31) - breakpoint markers on that same timeline strip.
-// ONE class, ONE `Application` (old rendered exactly one `<Application>` too - unlike
-// ComposerRenderer.ts's two). Three PERSISTENT containers are added to the stage exactly once, in
-// `init()`, in the SAME z-order old's JSX had (scrollable tracks -> keys -> timeline - see old
-// VsrgComposerCanvas.tsx's `render()`): `scrollableTrackContainer`, `keysContainer`,
-// `timelineContainer`. `draw()` (called from `update()` and every internal mutation) clears and
-// rebuilds each container's CHILDREN every time - the same "full rebuild is cheap and trivially
-// correct" choice ComposerRenderer.ts already made for an equivalent bounded-visible-window
-// problem (here: the `lowerBound`/`upperBound` windowing each old sub-renderer already did).
-//
-// ARCHITECTURAL DIFFERENCE vs. ComposerRenderer.ts (disclosed, not an oversight): old's wheel/
-// pointer handlers (`handleWheel`, `setIsDragging`, `setIsNotDragging`, `handleDrag`) were bound
-// directly on the WRAPPER DIV via JSX props (`onWheel`, `onPointerDown`, ...), not wired by the
-// class onto a canvas element it owns (unlike ComposerRenderer.ts, which called
-// `wheelCanvas.addEventListener('wheel', ...)` itself). This port keeps that exact split: these
-// four methods are PUBLIC here and called directly from VsrgComposerCanvas.svelte's own template
-// bindings (`onwheel={(e) => renderer?.handleWheel(e)}`, etc.) - this class never attaches them to
-// any DOM node itself, matching old's own architecture.
-//
-// TWO-TIER: none of these six old files read ANY game-dependent data (`$game`) - every `$config`
-// import across all six (`DEFAULT_DOM_RECT`, `DEFAULT_VSRG_KEYS_MAP`, `PIXI_CENTER_X_END_Y`,
-// `PIXI_VERTICAL_ALIGN`) is one of Task 1's game-INDEPENDENT `sharedConfig`/`legacyConfig`
-// constants. `is-mobile`: named import (established convention, see ComposerRenderer.ts).
-//
-// RESTORED DEPENDENCY (disclosed, beyond Task 1's stated two-dep Tech Stack list): old's
-// VsrgKeysRenderer.tsx AND VsrgScrollableTrackRenderer.tsx each independently called
-// `useFontFaceObserver([{family: 'Bonobo'}])` (a hook wrapping the `fontfaceobserver` npm package,
-// old dependency `^2.3.0` + `@types/fontfaceobserver ^2.1.3`) to swap key-label/button-label text
-// from "Source Sans Pro" to the custom "Bonobo" webfont once it finishes loading. This is the
-// FIRST real UI consumer of that old dependency in this tree, so it is restored here (exact old
-// version, `package.json`) rather than hand-rolled against the raw `document.fonts` API - a small,
-// well-known, dependency-free-of-its-own package (unlike `@spotify/basic-pitch`'s TensorFlow.js
-// weight), and the conservative, parity-first choice per this wave's own binding conventions
-// (minimal-diff port; restore-with-consumer). CONSOLIDATION (disclosed): old ran this exact same
-// font-load check TWICE (once per component, each with its own local `textStyle` state + its own
-// `useEffect` recomputing the identical formula off the identical flag). This port runs the check
-// ONCE (`init()`) and exposes one shared `getTextStyle()` helper used by both the key labels and
-// the add/remove-time button labels - a safe consolidation (identical resulting TextStyle either
-// way), not a behavior change. Also NOT reproduced: old's brief "white 30px Source Sans Pro" FIRST
-// PAINT (the `defaultVsrgTextStyle` placeholder used before the very first React effect ran) - a
-// one-frame artifact of React's synchronous-render-then-effect model that has no equivalent moment
-// in this synchronous class, same rationale as ComposerRenderer.ts's own disclosed decision not to
-// reproduce ITS OWN two-phase mount-flash (see that file's header comment, item 3).
-//
-// UTILITIES RESTORED (restore-with-consumer): `ClickType` (enum) and `parseMouseClick` - both were
-// deferred (no consumer) since P3 Task 2 relocated `Timer` out of old `$types/GeneralTypes.ts`;
-// this task is their first real consumer (every snap-point/hit-object pointerdown here maps a
-// native `PointerEvent.button` to a `ClickType` exactly like old did) - restored to
-// `$core/utils/Utilities.ts` in this same commit.
-//
-// MOUNT-SEQUENCE SIMPLIFICATION (disclosed, load-bearing - read before "fixing" the call order
-// below): old's `componentDidMount` LOOKS like it triggers `handleThemeChange`/`generateCache`
-// FOUR times (subscribeTheme's synchronous first callback; an explicit `calculateSizes()` call; a
-// dead `this.state.cache?.destroy()` read; and a final explicit `this.handleThemeChange(
-// ThemeProvider)` call). Tracing React's actual ref/commit timing: `wrapperRef.current` is null
-// during the FIRST render, so `<Application>` (and its `onInit={(app) => {this.app = app;
-// this.calculateSizes()}}`, where `this.app` is finally assigned AND `calculateSizes()` runs a
-// further time) is not rendered until a LATER re-render triggered by the very state updates
-// `componentDidMount` schedules - meaning EVERY one of those four EARLIER triggers runs with
-// `this.app` still null, so `generateCache`'s own `if (!this.app) return` guard (ported unchanged
-// below) makes all four a no-op there. The cache is for-real generated exactly ONCE, by that
-// `onInit`-triggered `calculateSizes()` call (which itself calls `generateCache()` at its own
-// tail, and is ALSO what actually assigns `canvas.style.width`/`height` - `calculateSizes()` is
-// the real unit of work here, not `generateCache()` alone). `init()` below reproduces that SAME
-// observable outcome (theme colors known before the Application exists; one real
-// `calculateSizes()` -> `generateCache()` pass once it does) without mechanically replaying dead
-// calls whose old inertness depended on a React ref/batching model this synchronous class doesn't
-// have - replaying them literally here (where field writes ARE synchronous) would actively destroy
-// the just-generated cache via that `this.state.cache?.destroy()` line, a regression old never
-// had. Disclosed deliberately, not silently dropped.
-//
-// CONSOLIDATED: old registered TWO independent `window.addEventListener('blur', ...)` handlers -
-// one in this top-level class (resetting `isPressing`), one inside VsrgTimelineRenderer's own
-// effect (resetting ITS OWN local `isClicking`, tracked here as `isClickingTimeline`). Collapsing
-// six files into one class naturally merges these into a single `handleBlur` resetting both
-// fields, registered once - identical combined behavior, not a behavior change.
-//
-// DROPPED (disclosed, both provably dead in old, not a behavior change): (1) VsrgTimelineRenderer's
-// `hidden` prop - its ONE call site (`<VsrgTimelineRenderer hidden={false} .../>`) always passed
-// `false`, so the `if (hidden) return null` branch never fired; no equivalent field is introduced
-// here. (2) `audioSong` IS kept in `VsrgComposerRendererState` (Task 8 must still supply it per the
-// interface contract) but - matching old exactly - is never actually READ anywhere in this class:
-// VsrgTimelineRenderer.tsx declared `audioSong` in its own props type yet never destructured/used
-// it in the function body either. A genuine old dead-prop, preserved as dead rather than silently
-// wired up to something.
+// This renderer owns the whole vsrg composer canvas - keys, scrollable tracks, timeline, and
+// breakpoints - as one plain-TS class around a single pixi Application.
 import { isMobile } from 'is-mobile'
 import FontFaceObserver from 'fontfaceobserver'
 import {
@@ -120,8 +26,6 @@ import type { RecordedSong } from '$core/Songs/RecordedSong'
 import type { RecordedNote } from '$core/Songs/SongClasses'
 import { VsrgCanvasCache } from './VsrgComposerCache'
 
-// Old: VsrgComposerCanvas.tsx's own exported type, used by both VsrgComposerCache.ts and (per
-// Task 8) the VSRG composer page/keyboard - unchanged shape.
 export type VsrgCanvasSizes = {
     el: DOMRect
     rawWidth: number
@@ -144,8 +48,8 @@ export type VsrgCanvasColors = {
     accent: [string, number]
 }
 
-// Mirrors old `VsrgCanvasProps`'s non-callback fields - the reactive input VsrgComposerCanvas.svelte
-// pushes into `update()` on every relevant change via its own `$effect`.
+// The reactive input VsrgComposerCanvas.svelte pushes into update() on every relevant prop change
+// via its own $effect.
 export interface VsrgComposerRendererState {
     vsrg: VsrgSong
     isHorizontal: boolean
@@ -154,8 +58,8 @@ export interface VsrgComposerRendererState {
     scrollSnap: boolean
     snapPoints: number[]
     selectedHitObject: VsrgHitObject | null
-    // Accepted for prop-shape parity with old (Task 8 supplies it) but never read here - see
-    // header comment "DROPPED" item 2.
+    // QUIRK: accepted for prop-shape parity but never read anywhere in this class - a genuine
+    // dead field, preserved as dead rather than wired up to something.
     audioSong: RecordedSong | null
     scaling: number
     maxFps: number
@@ -163,7 +67,6 @@ export interface VsrgComposerRendererState {
     tempoChanger: number
 }
 
-// Mirrors old `VsrgCanvasProps`'s nine callback fields exactly.
 export interface VsrgComposerRendererCallbacks {
     onKeyDown: (key: number) => void
     onKeyUp: (key: number) => void
@@ -183,9 +86,11 @@ export class VsrgComposerRenderer {
     private throttledEventLoop = new ThrottledEventLoop(() => {}, 48)
     private cumulativeScroll = 0
 
-    // Persistent scene containers (created once per renderer instance, children rebuilt on every
-    // draw() - see header comment for why a full rebuild is used instead of an incremental diff).
-    // Added to the stage, in THIS exact order, once in init() - old's own JSX z-order.
+    // Persistent scene containers, created once per renderer instance; draw() clears and rebuilds
+    // each one's children on every update rather than diffing incrementally.
+    // Ordering requirement: added to the stage in THIS exact order in init() - scrollable tracks,
+    // then keys, then timeline. That's the visual stacking z-order; reordering the addChild calls
+    // changes what draws on top of what.
     private readonly scrollableTrackContainer = new Container()
     private readonly keysContainer = new Container()
     private readonly timelineContainer = new Container()
@@ -218,11 +123,7 @@ export class VsrgComposerRenderer {
     private preventClick = false
     private totalMovement = 0
     private draggedHitObject: VsrgHitObject | null = null
-    // old: VsrgTimelineRenderer's own local `isClicking` state - consolidated here (see header
-    // comment "CONSOLIDATED").
     private isClickingTimeline = false
-    // old: VsrgKeysRenderer's/VsrgScrollableTrackRenderer's own local font-loaded state,
-    // consolidated into one flag (see header comment).
     private isBonoboFontLoaded = false
 
     constructor(
@@ -233,11 +134,16 @@ export class VsrgComposerRenderer {
         this.state = initialState
     }
 
-    // Old: `componentDidMount` + the `<Application onInit>` callback it depended on, collapsed
-    // into one explicit async method (constructors cannot be async) - VsrgComposerCanvas.svelte's
-    // `onMount` awaits this before ever calling `update()`. See header comment "MOUNT-SEQUENCE
-    // SIMPLIFICATION" for why the call order below (theme first, then sizes, THEN the Application)
-    // reproduces old's real observable behavior without replaying its dead/no-op calls.
+    // Constructors cannot be async, so mounting collapses into this explicit async method;
+    // VsrgComposerCanvas.svelte's onMount awaits it before ever calling update().
+    //
+    // QUIRK (load-bearing - read before "fixing" the call order below): the cache is generated
+    // for-real exactly once, after theme colors are known AND the pixi Application exists - hence
+    // theme, then sizes, then the Application, then sizes+draw again. Do not add extra early
+    // cache-generating calls here for the sake of matching some other sequence "more closely":
+    // generateCache()'s own `if (!this.app) return` guard makes an early call a no-op, but a
+    // redundant call placed AFTER the Application exists would regenerate and immediately discard
+    // the just-generated cache.
     async init(): Promise<void> {
         this.themeDispose = subscribeTheme(this.handleThemeChange)
         this.calculateSizes()
@@ -272,19 +178,16 @@ export class VsrgComposerRenderer {
             this.isBonoboFontLoaded = true
             this.draw()
         }).catch(() => {
-            // old (useFontFaceObserver's default Config param): `showErrors: false` - swallow.
+            // Deliberately silent - swallows a font-load failure rather than surfacing it.
         })
 
-        // Old: `<Application onInit={(app) => {this.app = app; this.calculateSizes()}}>` - now
-        // that the Application genuinely exists, re-run calculateSizes() (which sets the canvas's
-        // inline width/height style AND generates the real cache at its own tail - see header
-        // comment "MOUNT-SEQUENCE SIMPLIFICATION") and paint the first frame.
+        // Re-run now that the Application genuinely exists (the earlier call above ran before it
+        // did) - this is the real calculateSizes()/generateCache() pass; it also paints the first frame.
         this.calculateSizes()
         this.draw()
     }
 
-    // Old: `calculateSizes`, bound to the resize listener AND called directly here/on VsrgComposerStore
-    // events. Reads the container's OWN bounding rect (old read `wrapperRef.current.getBoundingClientRect()`).
+    // Bound to the resize listener and called directly here and from VsrgComposerStore events.
     private calculateSizes = () => {
         const wrapperSizes = this.container.getBoundingClientRect()
         const { scaling, vsrg, snapPoint } = this.state
@@ -303,26 +206,19 @@ export class VsrgComposerRenderer {
             scaling: scaling / 100,
             timelineSize,
         }
-        // old: "@pixi/react v8 only applies width/height at <Application> init; resize the
-        // renderer explicitly so the drawing buffer tracks the container (e.g. on window resize)".
-        // This port creates+resizes the Application directly (no @pixi/react layer) but still
-        // needs this explicit resize on every recalculation to keep the drawing buffer in sync -
-        // comment preserved for provenance.
+        // pixi's renderer only applies width/height at Application init; this explicit resize on
+        // every recalculation is what keeps the drawing buffer tracking the container (e.g. on
+        // window resize).
         this.app?.renderer.resize(this.sizes.rawWidth, this.sizes.rawHeight)
         if (this.app) {
-            // old queried `wrapperRef.current.querySelector('canvas')` because it had no direct
-            // handle on the canvas @pixi/react created; this port creates+appends the canvas
-            // itself, so `this.app.canvas` IS that same element - a direct reference, not a
-            // behavior change.
             this.app.canvas.style.width = `${this.sizes.width}px`
             this.app.canvas.style.height = `${this.sizes.height + timelineSize}px`
         }
         this.generateCache()
     }
 
-    // Old: `handleThemeChange`. Unlike ComposerRenderer's own version (which ignores the passed
-    // `theme` param and re-reads the global `ThemeProvider` directly), old's VSRG version genuinely
-    // used the callback argument - ported the same way.
+    // Unlike the sibling ComposerRenderer (which ignores its theme callback param and re-reads
+    // ThemeProvider directly), this one genuinely uses the passed theme argument.
     private handleThemeChange = (theme: Theme) => {
         const bgPlain = theme.get('primary')
         const bgLine = theme.getText('primary')
@@ -343,16 +239,12 @@ export class VsrgComposerRenderer {
         this.generateCache()
     }
 
-    // Old: `generateCache`.
     private generateCache = () => {
         if (!this.app) return
         const trackColors = this.state.vsrg.tracks.map(track => track.color)
-        // old quirk, preserved: sets the live renderer background from `background[0]` - the
-        // DARKENED color's HEX STRING - not `background_plain[1]` (the un-darkened numeric the
-        // Application was actually CREATED with in init()). pixi's ColorSource accepts a hex
-        // string exactly as readily as a number, so this is not a runtime error - just an
-        // apparently-unintended mismatch between the init-time and cache-generation-time
-        // background in old. Flagged, not fixed.
+        // QUIRK: sets the background from the DARKENED color's hex string, not the un-darkened
+        // numeric the Application was created with in init() - an apparent old mismatch, not a
+        // runtime error (pixi's ColorSource accepts either form just as readily). Flagged, not fixed.
         this.app.renderer.background.color = this.canvasColors.background[0]
         const newCache = new VsrgCanvasCache({
             app: this.app,
@@ -364,18 +256,16 @@ export class VsrgComposerRenderer {
         })
         const oldCache = this.cache
         this.cache = newCache
-        // old's automatic React re-render is what refreshed the visible sprites once this state
-        // update landed - this explicit draw() is this port's synchronous equivalent (same
-        // rationale ComposerRenderer.ts already documents for the identical situation).
         this.draw()
-        // old: "//TODO not sure why pixi is still using old textures" - preserved verbatim, incl.
-        // the 500ms delay before tearing down the PREVIOUS cache's textures.
+        // QUIRK: the previous cache's textures are destroyed only after a 500ms delay ("not sure
+        // why pixi is still using old textures" - old's own TODO, preserved). Destroying
+        // immediately caused visible issues; don't remove or shorten this delay without checking that.
         setTimeout(() => {
             oldCache?.destroy()
         }, 500)
     }
 
-    // Old: `handleEvent`, the vsrgComposerStore 'ALL' listener.
+    // The vsrgComposerStore 'ALL' listener.
     private handleEvent = (event: VsrgComposerEvents, data?: unknown) => {
         if (event === 'colorChange') this.generateCache()
         if (event === 'updateKeys') this.calculateSizes()
@@ -388,26 +278,26 @@ export class VsrgComposerRenderer {
         if (event === 'timestampChange') this.setTimestamp(data as number)
     }
 
-    // Old: `handleTick`, the ThrottledEventLoop-driven playback tick.
+    // The ThrottledEventLoop-driven playback tick.
     private handleTick = (_elapsed: number, sinceLast: number) => {
         if (this.state.isPlaying) {
             this.setTimestamp(this.timestamp + sinceLast * this.state.tempoChanger)
         }
     }
 
-    // Old: `handleBlur` - consolidated with VsrgTimelineRenderer's own blur handler (see header
-    // comment "CONSOLIDATED").
+    // Resets both the canvas-wide drag flag and the timeline's own click flag - two independent
+    // blur handlers consolidated into one.
     private handleBlur = () => {
         this.isPressing = false
         this.isClickingTimeline = false
     }
 
-    // ---- wrapper-level wheel/pointer drag handlers (PUBLIC - called directly from
+    // ---- wrapper-level wheel/pointer drag handlers: PUBLIC, called directly from
     // VsrgComposerCanvas.svelte's own onwheel/onpointerdown/onpointerup/onpointerleave/
-    // onpointermove template bindings, matching old's own JSX-level wiring on the wrapper div -
-    // see header comment "ARCHITECTURAL DIFFERENCE") ----
+    // onpointermove template bindings. Unlike the sibling ComposerRenderer (which self-attaches
+    // its own DOM listeners), this class never attaches these to a DOM node itself - the caller
+    // wires them up. ----
 
-    // Old: `handleWheel`.
     handleWheel = (e: WheelEvent) => {
         if (this.state.scrollSnap) {
             this.cumulativeScroll += e.deltaY
@@ -428,7 +318,6 @@ export class VsrgComposerRenderer {
         }
     }
 
-    // Old: `setIsDragging`.
     setIsDragging = (e: PointerEvent) => {
         if ((e.clientY - this.sizes.el.top) > this.sizes.timelineSize) {
             this.isPressing = true
@@ -436,16 +325,12 @@ export class VsrgComposerRenderer {
         }
     }
 
-    // Old: `setIsNotDragging`. Old's own signature accepted a pointer event it never read either -
-    // dropped here (a trivial, disclosed signature simplification; the call sites below simply
-    // don't pass one).
     setIsNotDragging = () => {
         if (!this.isPressing) return
         const draggedHitObject = this.draggedHitObject
         this.isPressing = false
         this.totalMovement = 0
         this.draggedHitObject = null
-        // old: "//dumbass idk how to make otherwise" - preserved verbatim
         if (draggedHitObject) this.callbacks.releaseHitObject()
         setTimeout(() => {
             this.preventClick = false
@@ -454,9 +339,9 @@ export class VsrgComposerRenderer {
         if (this.state.scrollSnap) {
             const { snapPoints } = this.state
             const index = snapPoints.findIndex(s => s > this.timestamp)
-            // old quirk, preserved: `!index` also treats a match at index 0 as "not found" (0 is
-            // falsy in JS), incorrectly skipping the snap for that one case - likely meant
-            // `index === -1`/`index < 0` alone. Flagged, not fixed.
+            // QUIRK: !index also treats a match at index 0 as "not found" (0 is falsy in JS),
+            // incorrectly skipping the snap for that case - likely meant index === -1/index < 0
+            // alone. Flagged, not fixed.
             if (!index || index < 0) return
             const next = snapPoints[index]
             const previous = snapPoints[index - 1]
@@ -465,7 +350,6 @@ export class VsrgComposerRenderer {
         }
     }
 
-    // Old: `handleDrag`.
     handleDrag = (e: PointerEvent) => {
         if (!this.isPressing) return
         const { sizes, timestamp, previousPosition, draggedHitObject, totalMovement } = this
@@ -489,21 +373,18 @@ export class VsrgComposerRenderer {
         this.setTimestamp(min)
     }
 
-    // Old: `selectHitObject`.
     selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => {
         if (clickType !== ClickType.Right) this.draggedHitObject = hitObject
         this.callbacks.selectHitObject(hitObject, trackIndex, clickType)
     }
 
-    // Old: `setTimestamp`.
     setTimestamp = (timestamp: number) => {
         this.timestamp = timestamp
         this.callbacks.onTimestampChange(timestamp)
         this.draw()
     }
 
-    // ---- timeline-internal pointer handlers (old: VsrgTimelineRenderer's own `handleEvent`/
-    // `setClicking`/blur-driven `setNotClicking`) ----
+    // ---- timeline-internal pointer handlers ----
 
     private handleTimelineEvent = (e: FederatedPointerEvent, override = false) => {
         if (!this.isClickingTimeline && !override) return
@@ -528,16 +409,14 @@ export class VsrgComposerRenderer {
         })
     }
 
-    // The ONE entry point VsrgComposerCanvas.svelte's `$effect` calls on every reactive-state
-    // change.
+    // The entry point VsrgComposerCanvas.svelte's $effect calls on every reactive-state change.
     update(state: VsrgComposerRendererState): void {
         this.state = state
         this.draw()
     }
 
-    // Old: the pixi-scene half of `render()` (the DOM half lives in VsrgComposerCanvas.svelte's
-    // template) + the three sub-renderers' own return trees. Rebuilds every container's children
-    // fully on every call - see header comment for why that is the right tradeoff here.
+    // Rebuilds every container's children fully on every call (see the scrollableTrackContainer/
+    // keysContainer/timelineContainer declarations above for why).
     private draw(): void {
         if (!this.app) return
         this.drawKeys()
@@ -553,8 +432,8 @@ export class VsrgComposerRenderer {
         }
     }
 
-    // Old: VsrgKeysRenderer.tsx. Always drawn (old rendered `<VsrgKeysRenderer>` unconditionally,
-    // never gated on `cache`).
+    // Always drawn regardless of cache state - unlike the scrollable-track/timeline draws below,
+    // this one doesn't read from the pixi texture cache at all.
     private drawKeys(): void {
         for (const child of this.keysContainer.removeChildren()) child.destroy({ children: true })
         this.keysContainer.x = 0
@@ -636,7 +515,6 @@ export class VsrgComposerRenderer {
         })
     }
 
-    // Old: VsrgScrollableTrackRenderer.tsx.
     private drawScrollableTracks(): void {
         for (const child of this.scrollableTrackContainer.removeChildren()) child.destroy({ children: true })
         const cache = this.cache
@@ -727,10 +605,6 @@ export class VsrgComposerRenderer {
         }
     }
 
-    // Old: VsrgTrackRenderer.tsx - one track's hit-object sprites, appended directly into
-    // `scrollableTrackContainer` (matching old, where `VsrgTrackRenderer` rendered a `<Fragment>`/
-    // bare list of siblings directly under `VsrgScrollableTrackRenderer`'s own container, not a
-    // per-track wrapper container).
     private drawTrack(track: VsrgTrack, trackIndex: number, cache: VsrgCanvasCache, selectedHitObject: VsrgHitObject | null): void {
         const { isHorizontal, vsrg } = this.state
         const sizes = this.sizes
@@ -815,9 +689,6 @@ export class VsrgComposerRenderer {
         })
     }
 
-    // Old: VsrgTimelineRenderer.tsx + VsrgTimelineBreakpointsRenderer.tsx (inlined here - see
-    // ComposerRenderer.ts's own precedent for inlining a `memo`-wrapped breakpoints sub-component,
-    // same rationale: no separate component tree left to memo against).
     private drawTimeline(): void {
         for (const child of this.timelineContainer.removeChildren()) child.destroy({ children: true })
         const cache = this.cache
@@ -868,12 +739,8 @@ export class VsrgComposerRenderer {
         this.timelineContainer.addChild(thumb)
     }
 
-    // Old: `componentWillUnmount`. The explicit `Application.destroy()` call is a REQUIRED
-    // addition beyond old (which never destroyed the pixi Application itself - `@pixi/react`'s
-    // `<Application>` owned and destroyed it automatically on React unmount, an ownership layer
-    // this port doesn't have - identical rationale to ComposerRenderer.ts's own `destroy()`, see
-    // its header comment item 2). Skipping it would be a genuine WebGL-context/canvas leak on
-    // every unmount, not a preservable old "quirk".
+    // this.app?.destroy() below is REQUIRED: nothing else owns the pixi Application's lifecycle in
+    // this synchronous class. Skipping it would leak a WebGL context/canvas on every unmount.
     destroy(): void {
         window.removeEventListener('resize', this.calculateSizes)
         window.removeEventListener('blur', this.handleBlur)

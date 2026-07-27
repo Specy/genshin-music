@@ -6,29 +6,6 @@
     import AppButton from '$cmp/inputs/AppButton.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/pages/Theme/ThemePropriety.tsx.
-    //
-    // Old imported `capitalize` from `$lib/utils/Utilities` but never actually called it anywhere in
-    // this file (grepped) - a pre-existing dead import, dropped here (this tree's eslint is
-    // stricter than whatever the old CRA-era config enforced, same class of trim as the dropped
-    // `MIDISettings` import noted in `MIDIProvider.ts`'s own header comment).
-    //
-    // Old used react-colorful's `HexAlphaColorPicker`/`HexColorInput alpha` DIRECTLY here (NOT the
-    // shared `ColorPicker.tsx` component, which is hex-only/no-alpha) - `inputs/ColorPicker.svelte`
-    // (Phase-4a Task 4) explicitly called this out as its own out-of-scope companion ("the different
-    // Theme-page-only ThemePropriety.tsx"). This file re-establishes the SAME vendor-library pattern
-    // Task 4 set up (`svelte-awesome-color-picker`, `isDialog={false}`/`isTextInput={false}` +  a
-    // hand-rolled hex text row so the `.color-picker*` DOM/classes stay exactly as old had them) -
-    // just with `isAlpha={true}` and an 8-hex-digit-accepting input regex, matching old's alpha
-    // variant instead of Task 4's non-alpha one.
-    //
-    // Class rename: old's outer wrapper was literally `className="color-picker"` - RENAMED to
-    // `.color-picker-wrapper` here (same rename `inputs/ColorPicker.svelte` already applied, for the
-    // identical reason: `svelte-awesome-color-picker`'s OWN root element carries the literal class
-    // `color-picker` internally - see that library's `ColorPicker.svelte` source - so a same-named
-    // wrapper class would collide with the vendor's own scoped-but-unprefixed class and pick up its
-    // rules unintentionally). Theme.css (this task) defines `.color-picker-wrapper` accordingly - the
-    // Task-4-forecast rename this task closes out.
     let {
         name,
         value,
@@ -49,10 +26,6 @@
         handlePropReset: (name: ThemeKeys) => void
     } = $props()
 
-    // Old: `const [color, setColor] = useState(Color(value))` + `useEffect(() => setColor(Color(value)),
-    // [value])` - collapsed into one writable `$derived`, same pattern `inputs/ColorPicker.svelte`/
-    // `settings/SettingsRow.svelte` already established for this exact "diverge locally while
-    // editing, resync when the prop itself changes" shape.
     let color = $derived(Color(value))
 
     function handleChange(hex: string) {
@@ -65,17 +38,15 @@
         setSelectedProp('')
     }
 
-    // Old's cancel handler reverts the local `color` and closes the picker - unlike
-    // `inputs/ColorPicker.svelte`'s own cancel button, it does NOT call `onChange` (nothing to
-    // commit).
+    // Unlike inputs/ColorPicker.svelte's own cancel button, this one does NOT call onChange - there
+    // is nothing to commit, only the local color needs reverting.
     function cancel() {
         color = Color(value)
         setSelectedProp('')
     }
 
-    // Widened vs `inputs/ColorPicker.svelte`'s own `HEX_DIGITS` (which deliberately DROPS the
-    // 8-digit form for alpha-leak parity there) - this picker IS the alpha one, so 8-digit
-    // (RRGGBBAA) hex must be accepted.
+    // Wider than inputs/ColorPicker.svelte's own HEX_DIGITS (which deliberately excludes the
+    // 8-digit form) - this picker handles alpha, so 8-digit (RRGGBBAA) hex must be accepted here.
     const HEX_DIGITS = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/
 
     function handleHexInput(e: Event & {currentTarget: EventTarget & HTMLInputElement}) {
@@ -108,6 +79,10 @@
             </AppButton>
         {/if}
         {#if isSelected}
+            <!-- QUIRK: named color-picker-wrapper, not the more natural color-picker - the
+                 svelte-awesome-color-picker library's own root element carries the literal class
+                 "color-picker" internally, so a same-named wrapper class here would collide with
+                 the vendor's class and pick up its styles unintentionally. Don't rename this back. -->
             <div class="color-picker-wrapper">
                 <LibColorPicker
                     hex={color.hexa()}

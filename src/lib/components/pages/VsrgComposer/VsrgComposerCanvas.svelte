@@ -7,20 +7,13 @@
     import type {RecordedNote} from '$core/Songs/SongClasses'
     import type {VsrgComposerRenderer} from './VsrgComposerRenderer'
 
-    // Old: src/components/pages/VsrgComposer/VsrgComposerCanvas.tsx (393 lines, class component) -
-    // this file is the "lifecycle only" half of the split described in VsrgComposerRenderer.ts's
-    // header comment (that file owns every pixi object; this one owns the wrapper DOM element,
-    // when the renderer gets constructed/fed/destroyed, and the native wheel/pointer event
-    // bindings old wired directly on this same div via JSX props).
+    // This file owns the wrapper DOM element and the renderer's lifecycle (construct/feed/destroy)
+    // plus native wheel/pointer bindings; VsrgComposerRenderer owns the pixi objects.
     //
-    // Prerender safety (spec's hard constraint): `VsrgComposerRenderer` (and therefore `pixi.js`)
-    // is NEVER statically imported here - only `import type` (fully erased at compile time, zero
-    // runtime import) for typing `renderer`, plus the real `await import('./VsrgComposerRenderer')`
-    // inside `onMount`, which never runs during prerender.
-    //
-    // Old only rendered `<Application>` once `wrapperRef.current` existed - reproduced here by
-    // never even attempting to construct the renderer until `wrapperEl` is bound (matching
-    // ComposerCanvas.svelte's own established `if (cancelled || !xEl) return` gate).
+    // VsrgComposerRenderer (and therefore pixi.js) must never be a static import here - only
+    // `import type` (erased at compile time) for typing `renderer`, plus the dynamic
+    // `await import(...)` inside onMount below, which never runs during prerender. A static
+    // import would pull pixi.js into the prerendered bundle and break it.
     interface VsrgComposerCanvasProps {
         vsrg: VsrgSong
         isHorizontal: boolean
@@ -106,9 +99,8 @@
     })
 </script>
 
-<!-- old's own div had no ARIA role/keyboard handling on its pointer handlers either (verified
-     against the old blob directly) - suppressed rather than adding a11y attributes old didn't
-     have, same established convention as PlayerSlider.svelte/ThemePropriety.svelte/ThemePreview.svelte. -->
+<!-- Pointer-only interactions by design, no ARIA role/keyboard handling - not adding new a11y
+     behavior this control never had. -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="vsrg-top-canvas-wrapper"
