@@ -1,36 +1,18 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/pages/blog/BlogUl.tsx (56 lines) - exported BlogUl/BlogOl/BlogLi/BlogP/
-    // BlogB/BlogIframe/BlogLink, thin per-tag wrappers whose entire job was applying a
-    // blog.module.scss class (Ul/Li applied none at all - CSS Modules only, nothing else).
-    //
-    // DESIGN DEVIATION (disclosed): NOT ported as 7 reusable snippets/components. Svelte
-    // snippets, unlike JSX children, have no anonymous-literal form - every `{@render blogP(x)}`
-    // needs a uniquely-named `{#snippet x()}...{/snippet}` at the call site, and `<BlogP>` alone
-    // appears ~40+ times across the 8 posts (every post's paragraphs). That naming tax is real
-    // transcription risk for content this brief itself calls "bulk-mechanical" and demands
-    // byte-parity for. Instead: each post writes the NATIVE tag directly (`<p class="blog-p">`,
-    // `<li>`, `<ol class="blog-ol">`, `<b class="blog-b">`, `<iframe class="blog-iframe">`, an
-    // `AppLink` with `className="blog-link"`) - the lowest-risk, most literal per-tag JSX->Svelte
-    // translation, identical to how every other primitive (Row/Column/Card/...) is already used
-    // directly with a className prop throughout this migration. This file's job shrinks to: own
-    // the (now-global) CSS for those class names, since Svelte's file-scoped style block can't
-    // reach a native tag authored in a DIFFERENT file - and stay a real (if inert) child of
-    // BaseBlogPost.svelte's `<article>` so that CSS is actually bundled wherever a post renders,
-    // via a transparent pass-through wrapper (`{@render children?.()}`, nothing else).
-    // BlogUl/BlogLi apply no class in old either, so neither gets a rule below.
+    // A no-op pass-through (`{@render children?.()}` only), on purpose: blog
+    // posts author `.blog-p`/`.blog-ol`/`.blog-b`/`.blog-iframe`/`.blog-link`
+    // as native tags directly, not through snippets or components, so this
+    // file's only job is to own their CSS below and stay a real child of
+    // BaseBlogPost.svelte's <article> - Svelte only bundles a component's
+    // styles where the component actually renders.
     let {children}: {children?: Snippet} = $props()
 </script>
 
 {@render children?.()}
 
 <style>
-    /* Old: src/components/pages/blog/blog.module.scss - the 5 selectors this file owns
-       (BaseBlogPost.svelte's own style block owns the other 7 - see that file's header comment for the
-       full split accounting). Every one is :global() now (this file no longer renders any of the
-       tags these classes are applied to - they're authored directly in each of the 8 post files),
-       same treatment the "child rendered by a foreign component" cases elsewhere in this task use. */
     :global(.blog-p) {
         margin: 1rem 0;
         user-select: text;

@@ -6,27 +6,19 @@ import InstrumentInput from './InstrumentInput.svelte'
 import Switch from '../inputs/Switch.svelte'
 import type {SettingsPropriety} from '$core/types/SettingsPropriety'
 
-// Old SettingsRow.tsx picked a component per `SettingsPropriety['type']` via an inline JSX
-// conditional chain (`{type === "select" && <Select .../>}`, ...) with no single place naming the
-// full type -> component mapping. Extracted here as an explicit, exported lookup table - a small,
-// sanctioned refactor purely for testability: this test suite has no component-rendering harness
-// (no @testing-library/svelte or similar), so `test/settingsDispatch.test.ts` can only verify the
-// dispatch by importing component references and comparing identity/coverage, never by mounting
-// SettingsRow and inspecting what it rendered. The `Record<SettingsPropriety['type'], ...>` type
-// annotation itself is a compile-time completeness net (svelte-check errors if a union member's
-// key is ever missing or misspelled); the test adds an independent runtime check on top.
+// A component-per-type lookup table, kept for testability: this test suite
+// has no component-rendering harness, so test/settingsDispatch.test.ts can
+// only verify coverage by comparing component references, not by mounting
+// SettingsRow and inspecting what it rendered. The `Record<...>` annotation
+// below is also a compile-time completeness net (svelte-check errors if a
+// union member's key is missing or misspelled).
 //
-// SettingsRow.svelte's own `{#if}`/`{:else if}` chain (same branch conditions as old, preserved
-// per this task's brief) imports these same five components directly rather than reading through
-// this map, so each branch keeps its own precise, per-component prop types (and the same explicit
-// `as boolean`/`as string | number`/`as number` casts old needed on its shared `currentValue`
-// state - see that file's own comment). That means this map and SettingsRow's template are two
-// independent references to the same five files, not one indirected through the other: if a type
-// is ever re-routed to a different component in ONE of the two places without updating the other,
-// this test won't catch that specific drift (it only knows about this map, not about
-// SettingsRow's template) - a disclosed, low-blast-radius tradeoff, since the far more likely
-// mistake (a NEW settings type added to `SettingsPropriety['type']` without wiring a component
-// anywhere) IS caught, by both the type annotation below and the test's exhaustiveness check.
+// SettingsRow.svelte's own {#if} chain imports these same five components
+// directly rather than reading through this map - so this map and that
+// template are two INDEPENDENT references to the same five files. If a type
+// is ever re-routed to a different component in only ONE of the two places,
+// this test will NOT catch that drift; it only catches a new settings type
+// added without any component wired here.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const settingsComponentByType: Record<SettingsPropriety['type'], Component<any>> = {
     select: SettingsSelect,

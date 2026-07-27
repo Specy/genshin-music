@@ -1,7 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/layout/Grid.tsx
     interface GridProps {
         gap?: string
         columns?: string

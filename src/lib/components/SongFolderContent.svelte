@@ -1,9 +1,8 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/pagesLayout/Folder.tsx (SongFolderContent export). CSS
-    // (.folder-content/.folder-title/.folder-songs-wrapper) is already global (App.css) - no
-    // component-local <style> needed.
+    // CSS (.folder-content/.folder-title/.folder-songs-wrapper) lives in
+    // global App.css; no component-local <style> is needed here.
     let {children, title}: {
         children?: Snippet
         title?: string

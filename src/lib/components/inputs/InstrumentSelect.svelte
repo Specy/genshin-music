@@ -1,15 +1,13 @@
 <script module lang="ts">
     import {game} from '$game'
 
-    // Old: src/components/shared/Inputs/InstrumentSelect.tsx
-    // Two-tier rule (src/lib/core/legacyConfig.ts header): this is UI code, so the instrument list
-    // is read from `game.instruments.list` directly, never from `$core/legacyConfig`'s
-    // `INSTRUMENTS` re-export (that's reserved for CORE files). `game` is a build-time-static
-    // import (the $game alias is frozen at sync time - see legacyConfig.ts's own header comment),
-    // so this grouping is computed once at module load, exactly like old's top-level
-    // (outside-the-component) `prefixes`/`instruments`/`entries` computation - a `<script module>`
-    // block (shared once across every instance) is the direct Svelte 5 equivalent of that old
-    // module-level computation, rather than recomputing it inside every component instance.
+    // Read from `game.instruments.list` directly (not `$core/legacyConfig`'s
+    // `INSTRUMENTS` re-export, reserved for CORE files) per the two-tier rule.
+    //
+    // This grouping lives in `<script module>` (computed once at module load,
+    // shared across every instance) rather than the instance script below,
+    // since `$game` is a build-time-static import and the grouping never
+    // changes per-instance.
     const prefixes = new Set<string>(
         game.instruments.list
             .filter(ins => ins.includes('_'))
@@ -47,8 +45,9 @@
         e.currentTarget.blur()
     }
 
-    // Same inline-SVG-chevron-from-theme-text-color mechanism as `inputs/Select.svelte`
-    // (Phase 3) and `settings/SettingsSelect.svelte` (this task) - kept identical.
+    // Same inline-SVG-chevron-from-theme-text-color mechanism as
+    // inputs/Select.svelte and settings/SettingsSelect.svelte - keep them in
+    // sync if this changes.
     const backgroundImage = $derived(
         `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
     )
@@ -76,14 +75,12 @@
 </select>
 
 <style>
-    /* Old Settings.module.css's `.select`/`:focus`/`option:checked` rules - the same block
-       `inputs/Select.svelte` already inlined (Phase 3 Task 5, see its own comment). Svelte scopes
-       <style> per-component, so old's CSS-Modules-style sharing (one hashed class shared by every
-       importer of Settings.module.css) doesn't carry over automatically - duplicated here rather
-       than promoting it to the global App.css, to keep this task's blast radius to new files only.
-       Unlike `inputs/Select.svelte` (whose <option>s arrive via a caller-supplied snippet, hence
-       needing `:global()`), this file's <option>/<optgroup> elements are rendered directly in its
-       own template below, so plain scoped CSS already reaches them - no `:global()` needed here. */
+    /* Duplicated, not shared/global: Svelte scopes <style> per component, so
+       nothing here carries across files automatically. Unlike
+       inputs/Select.svelte (whose <option>s arrive via a caller-supplied
+       snippet, needing :global()), this file's <option>/<optgroup> render
+       directly in its own template, so plain scoped CSS already reaches
+       them. */
     .select {
         background-color: var(--primary);
         border-radius: 0.2rem;

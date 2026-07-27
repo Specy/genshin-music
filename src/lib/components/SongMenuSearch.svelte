@@ -2,22 +2,12 @@
     import IconButton from './inputs/IconButton.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: the `.search`/fuzzy-search-box half of src/components/shared/pagesLayout/SongMenu.tsx,
-    // extracted into its own non-generic component. Purely a structural split (this component owns
-    // no state/behavior beyond a controlled text input - `value`/`onInput` are the same "diverge
-    // locally? no - old's text input element was already fully controlled by SongMenu's own
-    // searchValue state, preserved as a plain controlled input here too) - SongMenu.svelte itself
-    // stays the file this task's dispatch names, this is just where its own `.search`/`.search
-    // input` CSS (old SongMenu.module.css, 11 lines, never part of App.css's bulk pull) now lives,
-    // since a generics-attributed component combined with a style block empirically trips a
-    // svelte-check tooling limit once the surrounding file is large enough (see SongMenu.svelte's
-    // own top comment) - giving the CSS its own small, non-generic component sidesteps that
-    // entirely.
-    // NOTE for future editors of THIS file: a script comment that spells out a real style-tag or
-    // script-tag substring with actual angle brackets - even describing this very issue - confuses
-    // svelte-check's tag-boundary scan whenever the file also has a real style block, producing
-    // exactly the phantom error this paragraph describes (verified via bisection while porting this
-    // file). Worded around it above on purpose; keep any future edits to this comment doing the same.
+    // This is a separate, small, non-generic component (rather than living in
+    // SongMenu.svelte) because a generics-attributed component combined with
+    // a style block trips a svelte-check tooling bug once a comment in that
+    // file also spells out a literal script or style tag name in brackets -
+    // see SongMenu.svelte's own top comment. Keep this file's comments free
+    // of bracketed tag names too (worded around it on purpose right here).
     let {
         value,
         onInput,
@@ -65,9 +55,8 @@
 </div>
 
 <style>
-    /* Old: src/components/shared/pagesLayout/SongMenu.module.css (11 lines) - this component's own
-       CSS, never part of App.css's bulk pull (unlike the folder/song-row/song-button classes,
-       which already live there - see SongFolder.svelte/pages/ErrorSongRow.svelte). */
+    /* Scoped here, not global App.css: unlike the folder/song-row classes,
+       this component's CSS was never pulled into the global stylesheet. */
     .search {
         border-radius: 0.4rem;
         display: flex;

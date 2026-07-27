@@ -24,30 +24,17 @@
     import LanguageSelector from '../i18n/LanguageSelector.svelte'
     import PromotionCard from '../PromotionCard.svelte'
 
-    // Old: src/components/pages/Index/Home.tsx, plus the slice of src/components/AppBase.tsx
-    // that ONLY existed to own state/handlers Home itself consumed (hasVisited,
-    // closeWelcomeScreen, setDontShowHome, askForStorage). AppBase's other effects (homeStore's
-    // canShow/visible/isInPosition/hasPersistentStorage init, update-check, language detection,
-    // etc.) are already handled by AppInit.svelte (P3 Task 7) - this component only owns what
-    // AppInit does NOT already set: hasVisited/isTwa/breakpoint/appScale are all Home-exclusive
-    // concerns nothing else in the app reads, so they live here as local state instead of on a
-    // shared store, matching how narrowly AppBase itself scoped them (prop-drilled to Home and
-    // nowhere else).
-    //
-    // PromotionCard (old: src/components/pages/Promotion/PromotionCard.tsx) is wired in below,
-    // shown once `hasVisited` - the P3 Task 8 "PromotionCard isn't in this task's file list"
-    // deferral, closed by P4a Task 7 (its own file's header comment has the full port notes). The
-    // page-visit "you're new here" indicator's `usePageVisit` STYLE-BADGE half beyond
-    // hasVisitedPage() is still NOT ported - hasVisitedPage() (PageVisitStore.svelte.ts, ported
-    // ahead of P3 Task 8) is used directly below for the "new" badge instead.
+    // hasVisited/isTwa/breakpoint/appScale below are local $state, not on a
+    // shared store: nothing else in the app reads them (AppInit.svelte owns
+    // every other piece of shared init state - homeStore's canShow/visible/
+    // isInPosition/hasPersistentStorage, update-check, language detection).
     let hasVisited = $state(false)
     let isTwa = $state(false)
     let breakpoint = $state(false)
     let appScale = $state(100)
 
-    // page.url.pathname includes the SvelteKit base prefix on no-root builds (e.g.
-    // /genshinMusic/composer) - appPathname() strips it so these route-literal comparisons
-    // behave like the old Next.js usePathname() did (Phase-3 final review, Important-1).
+    // page.url.pathname includes the SvelteKit base prefix on no-root builds
+    // - appPathname() strips it before the route-literal comparisons below.
     const currentPage = $derived(appPathname(page.url.pathname))
     const homeClass = $derived(homeStore.state.isInPosition ? 'home' : 'home home-visible')
     const backgroundColor = $derived(ThemeProvider.get('background').fade(0.1).toString())
@@ -92,11 +79,6 @@
         homeStore.setState({canShow: override})
     }
 
-    // old (React) rendered this as a plain `<div onClick={...}>` with no keyboard handler -
-    // harmless there since React/JSX a11y linting wasn't blocking, but svelte-check's a11y rules
-    // flag it. Same role/tabindex/onkeydown-on-Enter-or-Space treatment DecoratedCard.svelte
-    // already uses for its own optional onclick div, applied here since this div's onclick is
-    // unconditional.
     function handleDontShowKeydown(e: KeyboardEvent) {
         if (e.key !== 'Enter' && e.key !== ' ') return
         e.preventDefault()

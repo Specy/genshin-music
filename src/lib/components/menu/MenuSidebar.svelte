@@ -2,47 +2,13 @@
     import type {Snippet} from 'svelte'
     import {setMenuContext, type MenuContextState} from './menuContext'
 
-    // Old: src/components/shared/Menu/MenuContent.tsx, which exported TWO components -
-    // MenuSidebar (the narrow icon column, `.menu`) and MenuContextProvider (the context-setting
-    // outer wrapper, `.menu-wrapper`). The new file list collapses that file down to a single
-    // "MenuSidebar.svelte", and every real old call site (SimpleMenu.tsx, ComposerMenu.tsx,
-    // PlayerMenu.tsx, etc.) nested MenuContextProvider directly around MenuSidebar (plus, for the
-    // "full" menus, a sibling MenuPanelWrapper under the same provider) - so both are folded into
-    // this one component, rendering both old divs together.
+    // `style` targets the outer `.menu-wrapper` div; `menuStyle` targets the
+    // inner `.menu` div (renamed from `style` since both live in one
+    // component here).
     //
-    // Prop mapping (renamed only where folding the two old prop sets into one made the original
-    // names ambiguous):
-    //   className / style   -> old MenuContextProviderProps (Partial<MenuContextState> &
-    //                           Stylable): the outer `.menu-wrapper` div. This is the "whole
-    //                           sidebar" customization point real callers used (e.g. SimpleMenu
-    //                           forwarding its own className/style prop).
-    //   menuStyle / opacity -> old MenuProps (style/opacity, on MenuSidebar itself): the inner
-    //                           `.menu` div. Renamed old `style` to `menuStyle` only because
-    //                           `style` was already claimed above for the outer div now that both
-    //                           live in one component.
-    //   current/setCurrent/open/setOpen/visible/setVisible -> unchanged old
-    //                           MenuContextProviderProps names, all optional exactly as before
-    //                           (Partial<MenuContextState<T>>), defaulting the same way the old
-    //                           _MenuContextProvider did.
-    //   panel               -> new: an optional sibling snippet rendered inside `.menu-wrapper`
-    //                           alongside `.menu`, for a Phase-4 MenuPanelWrapper to occupy (see
-    //                           ComposerMenu.tsx/PlayerMenu.tsx: MenuPanelWrapper is always a
-    //                           sibling of MenuSidebar under the same MenuContextProvider). Unused
-    //                           by this task's own SimpleMenu, which has no side panel.
-    //   hamburger            -> new (P4a Task 3, P3 Task 8 carry-forward): an optional sibling
-    //                           snippet rendered FIRST inside `.menu-wrapper`, before `.menu`. 4 of
-    //                           the 6 old page menus (Composer/VsrgComposer/VsrgPlayer/ZenKeyboard
-    //                           - e.g. old ZenKeyboardMenu.tsx) render a `.hamburger`/
-    //                           `.hamburger-top` div as MenuContextProvider's FIRST child, ahead of
-    //                           <MenuSidebar>/<MenuPanelWrapper> - this snippet is that slot.
-    //                           Unused (undefined) by SimpleMenu, which has no hamburger of its own.
-    //   wrapperEl            -> new (same carry-forward): a $bindable exposing the `.menu-wrapper`
-    //                           div itself - the Svelte-action equivalent of old
-    //                           MenuContextProvider's forwarded `ref` (old: useClickOutside's
-    //                           returned ref, attached via `ref={menuRef}`, e.g. ZenKeyboardMenu.tsx
-    //                           again). NOT wired to the `clickOutside` action here - the pages that
-    //                           need it (Task 8/9) bind this and apply `use:clickOutside`
-    //                           themselves once they exist.
+    // `wrapperEl` exposes `.menu-wrapper` via $bindable so a consumer can
+    // apply its own `use:clickOutside` (or similar) externally - this
+    // component doesn't wire one itself.
     let {
         children,
         panel,

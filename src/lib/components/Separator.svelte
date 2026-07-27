@@ -1,24 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/separator/Separator.tsx + separator.module.scss
-    // The old CSS module was dedicated entirely to this component, so it
-    // inlines below verbatim (Svelte's own style scoping replaces the CSS
-    // Modules hashing).
-    //
-    // PRESERVED QUIRK (flagging per the "old code is the behavior spec /
-    // preserve quirks" convention used throughout this migration): the third
-    // `.separator-part` (right side, only rendered when there are children)
-    // sets `background-color: var(--${color})` instead of `background-color:
-    // color` like the first (left) part does. `color` defaults to the string
-    // `'var(--primary-text)'`, which is ALREADY a var() expression, so the
-    // default case resolves to the invalid custom-property reference
-    // `var(--var(--primary-text))` - meaning the right separator part's
-    // background silently falls back to its initial value (transparent) any
-    // time a caller doesn't pass a bare CSS-color-keyword/hex string for
-    // `color`. This is reproduced byte-for-byte below rather than "fixed",
-    // since it is a genuine pre-existing rendering quirk of the old app, not
-    // a transcription slip.
     let {
         background = 'var(--primary)',
         color = 'var(--primary-text)',
@@ -57,6 +39,12 @@
         >
             {@render children()}
         </div>
+        <!-- QUIRK: uses var(--{color}) while the left part above uses {color}
+             directly. `color` defaults to the string 'var(--primary-text)', so
+             the default case doubles the wrapper into an invalid
+             `var(--var(--primary-text))`, and this part's background silently
+             falls back to transparent unless a caller passes a bare color
+             string. Reproduced byte-for-byte, not "fixed". -->
         <div
             class="separator-part"
             style="height:{height};background-color:var(--{color});{shadowDecl}border-top-right-radius:0.6rem;border-bottom-right-radius:0.6rem;"

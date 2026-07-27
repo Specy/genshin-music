@@ -1,5 +1,4 @@
 <script module lang="ts">
-    // Old: src/components/shared/Inputs/FilePicker.tsx
     export interface FileElement<T> {
         data: T
         file: File
@@ -30,15 +29,12 @@
 
     let {children, onPick, style = '', as, multiple = false, onError}: FilePickerProps = $props()
 
-    // `as` and `onPick` are destructured independently from the discriminated
-    // union above, so TS can no longer correlate "as === 'file'" back to
-    // narrowing onPick's parameter type (a well-known TS limitation once a
-    // discriminated union is destructured) - this single loose-typed alias is
-    // used for every onPick(...) call below instead of a `@ts-expect-error` at
-    // each call site; it's exactly as unchecked as the old code's `//@ts-ignore
-    // handled by the union type` on the equivalent call. `$derived` (not a
-    // plain `const`) so it keeps tracking the real `onPick` prop rather than
-    // only capturing whatever reference was passed in at first render.
+    // `as`/`onPick` are destructured independently from the discriminated
+    // union above, so TS can't correlate `as === 'file'` back to narrowing
+    // `onPick`'s parameter type - this one loose-typed alias covers every
+    // onPick(...) call below instead of an assertion at each site. `$derived`
+    // (not `const`) so it keeps tracking the real `onPick` prop, not just
+    // whatever reference was passed at first render.
     const pick = $derived(onPick as (files: FileElement<T | string | ArrayBuffer | File>[]) => void)
 
     let input: HTMLInputElement | undefined = $state()

@@ -34,33 +34,16 @@
     import {t} from '$i18n/binding.svelte'
     import rotateImg from '$lib/assets/images/rotate.svg'
 
-    // Old: src/components/AppBase.tsx (+ src/app/providers.tsx's console.error/window-error/SW
-    // effects, + src/components/shared/ProviderWrappers/GeneralProvidersWrapper.tsx's init
-    // effects, + src/components/GoogleAnalyticsScript.tsx - see that block's own header below for
-    // why a separate old component is folded in here instead of a new GoogleAnalytics.svelte).
-    // This component is the AppBase-equivalent orchestrator the brief describes: effects only, no
-    // visual output except the rotate-screen overlay markup below. Each block is commented with
-    // the old effect it corresponds to. KeyboardProvider (Phase 4a Task 1), AudioProvider/
-    // metronome/MIDIProvider (Phase 4a Task 2), the service worker registration + update-prompt
-    // flow (Phase 5 Task 2), and analytics - both the GA script/tag setup and the AppBase.tsx
-    // UIEvent/pageView effects (Phase 5 Task 5, this task) - are all wired for real below now.
-    //
-    // Ordering note: the brief's checklist lists `linkServices()` right after the
-    // globalConfigStore/songsStore/.../ThemeProvider.load() batch, but that batch is
-    // GeneralProvidersWrapper's effect while linkServices() was actually called from AppBase's
-    // own (separate) effect in the old code. Read as an enumeration of required behavior rather
-    // than a strict single-block ordering mandate, linkServices() below stays where the old
-    // source actually put it (grouped with checkIfneedsUpdate()/the backup warning) - preserving
-    // each old effect's own internal order is more directly verifiable against the cited blobs
-    // than inventing a new merged order.
+    // Effects-only orchestrator: no visual output except the rotate-screen
+    // overlay markup below. Each block is commented with what it does.
 
     let isOnMobile = $state(false)
-    // page.url.pathname includes the SvelteKit base prefix on no-root builds - appPathname()
-    // strips it before the route-literal comparison (Phase-3 final review, Important-1).
+    // page.url.pathname includes the SvelteKit base prefix on no-root builds
+    // - appPathname() strips it before the route-literal comparison below.
     const inBlog = $derived(appPathname(page.url.pathname).startsWith('/blog'))
 
-    // old providers.tsx effect 1: console.error -> logsStore, skipped entirely on localhost (dev
-    // convenience - keep the native console.error there).
+    // Skipped entirely on localhost (dev convenience - keep the native
+    // console.error there).
     onMount(() => {
         if (window.location.hostname === 'localhost') return
         const originalErrorLog = console.error.bind(console)
@@ -83,7 +66,7 @@
         }
     })
 
-    // old providers.tsx effect 2: window 'error' -> logsStore (no localhost guard on this one).
+    // Unlike the error-log override above, this one has no localhost guard.
     onMount(() => {
         const windowInterceptor = (event: ErrorEvent) => {
             const error = event.error instanceof Error ? event.error : undefined
@@ -96,22 +79,6 @@
         return () => window.removeEventListener('error', windowInterceptor)
     })
 
-    // old providers.tsx effect 3: serwist registration + virtual-keyboard overlay + the
-    // update-available asyncConfirm/SKIP_WAITING/reload flow. `getVirtualKeyboard()`/
-    // `VirtualKeyboard` are old module-level bindings (declared above `export default function
-    // Providers`), used only by this one effect - kept at this same script-top-level scope rather
-    // than nested inside the onMount below, matching old's actual structure.
-    //
-    // Old gated the whole `setIfInTWA()` + register() call behind `if (!IS_TAURI)`; spec §8
-    // deletes the Tauri/desktop build from this migration entirely (same precedent as
-    // needsUpdate.ts's identical `!IS_TAURI` collapse), so that branch is always-true and the
-    // guard itself is dropped rather than ported as permanently-dead code.
-    //
-    // Old called `i18n.t('logs:update_available')` - the i18next instance directly, not the
-    // React hook's `t` - because `asyncConfirm`'s question is resolved once at call time, not
-    // re-rendered on language change; `t` from $i18n/binding.svelte exists precisely to give
-    // templates/$derived/$effect that re-render tracking (see that file's own header), which this
-    // one-shot callback has no use for. `i18n.t(...)` reproduces old's call exactly.
     type VirtualKeyboard = {
         overlaysContent: boolean
     }
@@ -135,6 +102,10 @@
                 await serviceWorker.register({
                     onUpdate: async (registration) => {
                         await delay(3000)
+                        // `i18n.t(...)`, not the reactive `t` from
+                        // $i18n/binding.svelte used elsewhere in this file:
+                        // this question is resolved once at call time, not
+                        // re-rendered on language change.
                         const shouldUpdate = await asyncConfirm(i18n.t('logs:update_available'), false)
                         if (!shouldUpdate) return
                         registration.waiting?.postMessage({type: 'SKIP_WAITING'})
@@ -152,9 +123,7 @@
         void registerServiceWorker()
     })
 
-    // old AppBase.tsx effect 1 (no dependency array - re-runs every render, but net-equivalent to
-    // a mount-once listener since each run's cleanup removes exactly that run's own closure
-    // before the next add). Auto-blurs a focused <input> when the window itself loses focus.
+    // Auto-blurs a focused <input> when the window itself loses focus.
     onMount(() => {
         function handleBlur() {
             const active = document.activeElement
@@ -165,12 +134,19 @@
         return () => window.removeEventListener('blur', handleBlur)
     })
 
-    // old AppBase.tsx effect 2: initial homeStore state from the two localStorage flags (blog
-    // pages never show the welcome overlay), mobile detection for the rotate-screen markup below,
-    // the update check, exposing services on window.__link, and the backup-warning nudge.
+    // Initial homeStore state from the two localStorage flags below (blog
+    // pages never show the welcome overlay), mobile detection for the
+    // rotate-screen markup, exposing services via linkServices(), and the
+    // backup-warning nudge.
     onMount(() => {
         let canShowHomeStorage = localStorage.getItem(APP_NAME + '_ShowHome')
         canShowHomeStorage = canShowHomeStorage === null ? 'true' : canShowHomeStorage
+        // QUIRK: raw window.location.pathname.startsWith('/blog'), not
+        // appPathname() (used just above in this file for the same kind of
+        // check) - the one deliberate exception to that convention. Latent
+        // no-root bug: on a no-root deployment the base prefix means this
+        // never matches on a blog page, so the home overlay can incorrectly
+        // show there. Not fixed here - fixing it is a behavior change.
         const canShowHome = canShowHomeStorage === 'true' && !window.location.pathname.startsWith('/blog')
         homeStore.setState({
             canShow: canShowHome,
@@ -188,7 +164,7 @@
         }
     })
 
-    // old AppBase.tsx effect 3: File Handling API launch consumer -> confirm -> fileService.importAndLog.
+    // File Handling API launch consumer -> confirm -> fileService.importAndLog.
     onMount(() => {
         if (!('launchQueue' in window)) return
         async function consumer(launchParams: {files?: FileSystemFileHandle[]}) {
@@ -217,7 +193,7 @@
         }
     })
 
-    // old AppBase.tsx effect 4: stored preference -> navigator -> exact-then-root match -> 'en'.
+    // Stored preference -> navigator -> exact-then-root match -> 'en'.
     onMount(() => {
         try {
             const lang = (localStorage.getItem(LANG_PREFERENCE_KEY_NAME) ?? navigator.language ?? 'en') as string | string[]
@@ -235,13 +211,6 @@
         }
     })
 
-    // old AppBase.tsx effect 5 (update-notice toast). Simplified from the old
-    // `[checkedUpdate]`-dependency re-trigger dance: that second invocation (after
-    // `setCheckedUpdate(true)`) always re-hit its own `if (checkedUpdate) return` guard first
-    // (after another pointless 1s delay) before reaching anything else, and the *first* run's
-    // trailing `if (!visited) return` was already unreachable (the earlier `if (!visited) return`
-    // a few lines up always fires first) - so the old effect's only real, reachable behavior is
-    // exactly the once-per-mount body below (verified against the old blob line-by-line).
     onMount(() => {
         async function checkUpdate() {
             await delay(1000)
@@ -267,45 +236,23 @@
         checkUpdate()
     })
 
-    // Old: src/components/GoogleAnalyticsScript.tsx, mounted as a sibling of <Providers> directly
-    // in src/app/layout.tsx's <body> - i.e. one level ABOVE AppBase.tsx, not one of its numbered
-    // effects - via `next/script`'s DEFAULT strategy, `afterInteractive`. Per Next's own docs that
-    // strategy injects the tag(s) client-side, AFTER hydration, not at initial SSR/HTML-string
-    // time - exactly what a plain `onMount` already gives in a component that itself mounts once
-    // at the SvelteKit root layout (this file, via `<AppInit />` in +layout.svelte). So this is
-    // folded in here as one more onMount block rather than a new `GoogleAnalytics.svelte`
-    // component: this file already exists specifically to consolidate several old always-mounted,
-    // effects-only, no-visible-markup components (providers.tsx, AppBase.tsx,
-    // GeneralProvidersWrapper.tsx - see this file's own header above), and
-    // GoogleAnalyticsScript.tsx is exactly that same shape (old rendered only two invisible
-    // <Script> tags, no markup of its own). A <svelte:head> block was NOT used because
-    // `afterInteractive` is deliberately NOT head-time/SSR-time injection; a literal tag in
-    // app.html was NOT used because that file is game-agnostic (one static shell shared by both
-    // games) and cannot carry a per-game analytics id.
+    // Injected via onMount + document.createElement, not <svelte:head> or a
+    // static tag in app.html: it must run after hydration (not at SSR/head
+    // time), and app.html is a single game-agnostic shell that can't carry a
+    // per-game analytics id.
     //
-    // PRESERVED UPSTREAM QUIRK, not a bug to fix: old's Genshin branch loads
-    // `gtag/js?id=G-T3TJDT2NFS` (the script src) but then calls `gtag('config', 'G-BSC3PC58G4',
-    // ...)` (A DIFFERENT property id) - two distinct GA properties, an upstream bug in old itself.
-    // `game.meta.analytics` already captures this split (tagId vs configId - see
-    // games/genshin/index.ts's own header comment on that field); using tagId for the script src
-    // and configId for the config call below reproduces the split automatically. Sky's tagId and
-    // configId happen to be equal, so nothing is visible there. Do not "fix" Genshin's split.
+    // QUIRK: Genshin's tagId (script src, below) and configId (config call,
+    // below) are two different GA property ids - an upstream bug, not a
+    // transcription error. game.meta.analytics captures the split; Sky's two
+    // ids happen to be equal. Do not "fix" Genshin's split.
     //
-    // NO DEV GUARD, preserved deliberately: old rendered these tags in every environment,
-    // development included (no NODE_ENV/env check anywhere in GoogleAnalyticsScript.tsx or its
-    // call site) - a decision, not an oversight.
+    // QUIRK: no dev-environment guard - this fires in every environment,
+    // development included. A deliberate decision, not an oversight.
     //
-    // Deviation from old's literal inline-script TEXT (behavior-equivalent, disclosed): old's
-    // second <Script> body is a STRING the browser parses as its own classic (non-module) script,
-    // where a bare top-level `function gtag(){dataLayer.push(arguments)}` implicitly becomes
-    // `window.gtag` (classic-script global scope) and `arguments` collects the call's params.
-    // Here that has to be explicit: `window.gtag` is assigned directly and `arguments` becomes a
-    // `...args` rest parameter. Declared `async` (returning `Promise<void>`) only to satisfy
-    // Analytics.ts's own already-existing `Window.gtag` ambient type
-    // (`(...args: any[]) => Promise<void>`, unchanged by this task, header rewritten below it) -
-    // the body is still the same synchronous `dataLayer.push(...)` queueing, so this is a
-    // type-level formality, not a behavior change (GA's own design tolerates `gtag()` being called
-    // as a fire-and-forget queue function before the real gtag.js has even finished loading).
+    // `gtag` below is declared async only to satisfy Analytics.ts's existing
+    // Window.gtag ambient type - the body is still synchronous
+    // dataLayer.push(...) queueing; GA's own design tolerates that as a
+    // fire-and-forget queue.
     type GtagWindow = Window & {dataLayer?: unknown[][]}
     onMount(() => {
         const script = document.createElement('script')
@@ -322,40 +269,20 @@
         gaWindow.gtag?.('config', game.meta.analytics.configId, {send_page_view: false, anonymize_ip: true})
     })
 
-    // old AppBase.tsx effect 6, mount-once.
     onMount(() => {
         Analytics.UIEvent('version', {version: APP_VERSION})
     })
 
-    // old AppBase.tsx effect 7: fires `Analytics.pageView` on every `pagePath` change INCLUDING
-    // the first (old had no guard around that call), then guards only the
-    // `browserHistoryStore.addPage` half with `hasTrackedInitialPage` - the shape already
-    // implemented below for the addPage half alone; `Analytics.pageView` now joins it ahead of
-    // that guard, inside the same pre-existing `if (url)` check (afterNavigate fires once for the
-    // initial load too, so the first call would otherwise skip nothing for pageView - matching old
-    // firing pageView on the very first render). `pagePath` reuses old's own
-    // `query.length > 0 ? path + '?' + query : path`: raw, un-appPathname'd pathname - this is an
-    // analytics LABEL (GA page_title + the browserHistoryStore entry), not a route comparison, so
-    // the base-path-stripping convention does not apply here, same as this effect's pre-existing
-    // `${url.pathname}${url.search}` form. That form was byte-compared in-session (node) against
-    // old's computation across query-bearing URLs: the two are byte-identical for the
-    // overwhelmingly common case (plain `key=value[&key=value]*` query strings, repeated keys, no
-    // query at all) but NOT universally - two edge cases diverge: (a) `URLSearchParams.toString()`
-    // (old, via `useSearchParams()`) re-serializes percent-encoded reserved characters using
-    // form-encoding rules, e.g. a literal `%20` becomes `+`, while the raw `url.search` used here
-    // keeps whatever encoding was actually in the URL; (b) a valueless param like `?noval`
-    // serializes to `noval=` through `URLSearchParams` but stays `noval` (no `=`) in the raw
-    // `url.search`. Both are cosmetic-only, since this string only ever becomes a GA label and a
-    // history-tracking entry, never a route comparison - so the divergence has no behavioral
-    // consequence, but asserting outright byte-identity here would be false, so it isn't asserted.
-    // (The `if (url)` guard itself is unchanged in shape from before this task; old's own
-    // `path`/`query` were never possibly-undefined, so a `url`-less afterNavigate call, if it ever
-    // happens, now also skips `pageView` alongside `addPage` - a narrow, likely-unreachable
-    // safety net inherited from this file's existing pattern, not a new gap introduced here.)
+    // pageView fires unconditionally on every navigation (including the
+    // first); addPage is deliberately gated by hasTrackedInitialPage so the
+    // very first (already-current) page isn't added to history again.
     let hasTrackedInitialPage = false
     afterNavigate((navigation) => {
         const url = navigation.to?.url
         if (url) {
+            // Raw url.pathname/url.search, not appPathname(): this becomes an
+            // analytics LABEL (GA page_title + the history-store entry), not
+            // a route comparison, so base-path-stripping doesn't apply here.
             const pagePath = `${url.pathname}${url.search}`
             Analytics.pageView({page_title: pagePath})
             if (hasTrackedInitialPage) {
@@ -365,9 +292,9 @@
         hasTrackedInitialPage = true
     })
 
-    // old GeneralProvidersWrapper.tsx effect 1 (init batch; unmount cleanup never runs in
-    // practice since AppInit lives for the whole app session in the root layout, same as the old
-    // wrapper did, but noted for parity).
+    // The returned cleanup below never runs in practice - this component
+    // lives for the whole app session in the root layout - but is kept for
+    // parity/correctness.
     onMount(() => {
         AudioProvider.init().catch(console.error)
         metronome.init(AudioProvider.getAudioContext())
@@ -380,10 +307,8 @@
         keyBinds.load()
         pwaStore.load()
         ThemeProvider.load().catch(console.error)
-        // Phase 4a Task 8: setupProtocol() wired for real (was a marker-only comment through Task
-        // 2). Old GeneralProvidersWrapper.tsx never disposed the protocol on unmount either (its
-        // cleanup only destroyed Audio/Keyboard/MIDI providers, same trio returned below) -
-        // preserved: no protocol.dispose() call added here.
+        // QUIRK: setupProtocol() has no matching cleanup below, unlike
+        // Audio/Keyboard/MIDI - preserved as-is, not an oversight.
         setupProtocol().catch(console.error)
         return () => {
             AudioProvider.destroy()
@@ -392,16 +317,14 @@
         }
     })
 
-    // old GeneralProvidersWrapper.tsx effect 2 - MIDI input hotplug: logs a toast whenever the
-    // connected-input count changes (literal English strings in the old blob, not i18n keys -
-    // verified directly, kept as-is for byte parity).
+    // QUIRK: the two toast messages below are hardcoded English, not run
+    // through i18n - not something to translate as a "fix".
     onMount(() => {
         let sources = MIDIProvider.inputs
-        // WebMidi is an ambient global namespace (@types/webmidi, referenced in src/app.d.ts);
-        // plain .ts files resolve it fine (typescript-eslint's recommended config turns off
-        // no-undef there, deferring to tsc), but .svelte script blocks go through
-        // eslint-plugin-svelte's own recommended config, which doesn't carry that same override -
-        // MIDIProvider.ts's identical `WebMidi.MIDIInput[]` usage needs no such disable
+        // `.svelte` script blocks go through eslint-plugin-svelte's own
+        // config (not typescript-eslint's no-undef override), so WebMidi (an
+        // ambient global, @types/webmidi) needs an explicit disable here even
+        // though plain .ts files (e.g. MIDIProvider.ts) resolve it fine.
         // eslint-disable-next-line no-undef
         const cb = (inputs: WebMidi.MIDIInput[]) => {
             if (sources.length > inputs.length)
@@ -417,10 +340,7 @@
     })
 </script>
 
-<!-- old AppBase.tsx render tail: rotate-screen overlay, hidden for the blog. CSS (.rotate-screen)
-     was ported into src/lib/css/App.css by Phase 4a Task 3's full Player/menu.css port (the shared
-     --menu-size/--panel-size root vars were pulled forward even earlier, P3 Task 8) - this markup
-     is fully styled. -->
+<!-- CSS (.rotate-screen) lives in global App.css. -->
 {#if !inBlog}
     <div class="rotate-screen">
         {#if isOnMobile}

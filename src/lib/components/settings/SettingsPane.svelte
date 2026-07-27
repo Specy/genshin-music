@@ -3,7 +3,6 @@
     import {t} from '$i18n/binding.svelte'
     import type {SettingUpdate, SettingUpdateKey, SettingVolumeUpdate, SettingsCategory, SettingsPropriety} from '$core/types/SettingsPropriety'
 
-    // Old: src/components/shared/Settings/SettingsPane.tsx
     let {
         settings,
         changeVolume,
@@ -19,19 +18,12 @@
         settings: Record<string, SettingsPropriety>
     }
 
-    // Old grouped `Object.entries(settings)` into a `Map<String, Group>` (old's own `String` -
-    // the boxed wrapper type, not the `string` primitive - is a harmless pre-existing type-only
-    // quirk with zero runtime effect either way, not reproduced below). Rewritten here as a plain
-    // keyed object instead of a `Map`: this is a scratch structure built fresh and fully consumed
-    // within a single `$derived.by` pass (never held as persistent state), and `SettingsCategory`'s
-    // members are all ordinary (non-index-like) string literals, so `Object.values()` preserves
-    // first-seen insertion order exactly like old's `Map` did - same grouping/order semantics,
-    // without eslint's `svelte/prefer-svelte-reactivity` nudge toward `SvelteMap` (a wrapper meant
-    // for Maps that themselves need to BE reactive state, not a same-pass-only local). `$derived.by`
-    // re-runs this grouping whenever `settings` changes, matching old's per-render rebuild (old
-    // re-grouped on every render regardless of whether `settings` had actually changed;
-    // `$derived.by` only recomputes when its tracked dependencies change - strictly fewer
-    // recomputations, not an observably different result).
+    // A plain object, not a Map: this is a scratch structure, fully consumed
+    // within one $derived.by pass, never held as persistent state - avoids
+    // eslint's svelte/prefer-svelte-reactivity nudge toward SvelteMap.
+    // Object.values() below preserves first-seen insertion order only
+    // because SettingsCategory's members are non-numeric string literals -
+    // integer-like keys would sort numerically first and break this.
     const groups = $derived.by(() => {
         const byCategory: Partial<Record<SettingsCategory, Group>> = {}
         for (const [key, setting] of Object.entries(settings)) {

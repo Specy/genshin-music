@@ -2,18 +2,7 @@
     import {onMount} from 'svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/shared/Utility/BodyDropper.tsx
-    // The old file also exported a separate `DropHoverHinter` sub-component
-    // (itself `memo`-wrapped) that BodyDropper rendered conditionally on
-    // `showDropArea`, and which internally re-checked `isHovering` before
-    // rendering the `.drag-n-drop` div - i.e. the div only ever showed when
-    // BOTH conditions were true. DropHoverHinter had no other consumers on the
-    // parent branch and isn't in this task's file list, so its logic is
-    // flattened directly into the `{#if}` below (same net condition). Both
-    // `memo()` wraps (BodyDropperComponent and DropHoverHinter) are dropped for
-    // the same reason the brief already calls out for Memoized/MemoizedIcon:
-    // a React re-render optimization Svelte's fine-grained reactivity doesn't
-    // need. `.drag-n-drop` CSS is global (App.css), ported in the same task.
+    // `.drag-n-drop` CSS lives in global App.css.
     export interface DroppedFile<T = ArrayBuffer | object | string> {
         data: T
         file: File
@@ -38,8 +27,6 @@
     let isHovering = $state(false)
     let debouncedIsHovering = $state(false)
 
-    // Old: useDebounce(_isHovering, 50) - re-runs the 50ms timer on every change,
-    // clearing the previous one, exactly like the old hook's effect cleanup.
     $effect(() => {
         void isHovering
         const handle = setTimeout(() => {

@@ -2,7 +2,6 @@
     import type {Snippet} from 'svelte'
     import {justifyMap, type Justify} from './layoutConstants'
 
-    // Old: src/components/shared/layout/Column.tsx
     interface ColumnProps {
         gap?: string
         flex1?: boolean

@@ -7,21 +7,9 @@
     import {asyncConfirm} from '$stores/AsyncPromptStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/shared/pagesLayout/SimpleMenu.tsx
-    // `useAppNavigation().back()` (old) wrapped Next.js's router.back() with the app's
-    // leave-guard NavigationProvider system. That guard is LIVE here too, wired once at the shell
-    // level rather than per-call: `src/routes/+layout.svelte`'s `beforeNavigate` handler (P4c
-    // Task 2) intercepts the `popstate` this button's plain `window.history.back()` produces
-    // exactly like any other in-app navigation, mapping it to the `'__back__'` sentinel - so this
-    // button needs no leave-guard-specific code of its own, the same simplification AppLink.svelte
-    // documents for its own internal hrefs.
-    //
-    // Icons (react-icons@5.6.0, fetched from unpkg.com/react-icons@5.6.0/fa/index.mjs, inlined as
-    // raw <svg> per the repo's "no react-* packages" rule - same approach as Logger.svelte/
-    // HelpTooltip.svelte): FaArrowLeft (line 4272), FaDiscord (line 1050), FaHome (line 2979). All
-    // three are called bare except for `className='icon'` in the old JSX, so each renders with
-    // IconBase's default height/width ("1em") and no color/style attributes - only the class
-    // differs from a fully bare icon call.
+    // `window.history.back()` below needs no leave-guard code of its own: the
+    // root layout's `beforeNavigate` handler already intercepts this button's
+    // popstate like any other in-app navigation (same as AppLink.svelte).
     let {children, className = '', style = ''}: {
         children?: Snippet
         className?: string

@@ -2,32 +2,10 @@
     import {logger, LoggerStatus} from '$stores/LoggerStore.svelte'
     import DecoratedCard from '../layout/DecoratedCard.svelte'
 
-    // Old: src/components/pages/Index/Logger.tsx (default-exported there as `FloatingMessage`;
-    // kept this file's own name `Logger.svelte` per this task's brief/file list). `logger.toasts`
-    // / `logger.pillState` are already $state (LoggerStore, P3 Task 1), so no observable-hook
-    // wrapper is needed - reading `.toast`/`.pillState` fields directly in the template below
-    // stays reactive on its own.
-    // The old `Toast` sub-component is inlined into the `{#each}` body rather than split into a
-    // second file - Svelte can't export a second named component per file (same constraint
-    // DecoratedCard's RawDecoratedBox hit in Task 5), and it only ever had one call site here.
+    // The Toast sub-component is inlined into the {#each} below rather than
+    // split into a second file - it only ever had one call site.
     //
-    // Icons: FaCheckCircle / FaExclamationTriangle / FaTimesCircle (react-icons@5.6.0/fa) are
-    // inlined below as raw <svg> - no react-icons dependency, per the repo's "no react-*
-    // packages" rule (same approach HelpTooltip.svelte used for MdHelpOutline in Task 5).
-    // Source: fetched directly from unpkg.com/react-icons@5.6.0/fa/index.mjs - the `viewBox`/
-    // path `d` data below is copied byte-for-byte from that file's FaCheckCircle (line 3885),
-    // FaExclamationTriangle (line 3474) and FaTimesCircle (line 1737) GenIcon() calls. The
-    // wrapper attrs (stroke/fill/stroke-width/xmlns) come from react-icons/lib/iconBase.mjs's
-    // IconBase default svg attrs; `color`/`height`/`width` fold in the old call sites' own
-    // `color={type} size={20}` props (IconBase spreads an icon's `color` prop onto the svg as
-    // both a literal `color` attribute and inline `style="color:..."`, and numeric `size` onto
-    // bare `height`/`width` attributes - reproduced literally below).
-    //
-    // `.logger-*` / `.pill*` CSS: old src/components/pages/Index/Home.css (NOT App.css) - that
-    // file is otherwise Home-overlay-specific (deferred to Task 8) and stays unported, but these
-    // particular rules have nothing to do with the Home overlay itself (they style this
-    // component's toasts/pill), so they move into App.css in this task instead of waiting on
-    // Task 8. Ported verbatim from Home.css.
+    // CSS (.logger-*/.pill*) lives in global App.css.
 </script>
 
 <div class="logger-wrapper">

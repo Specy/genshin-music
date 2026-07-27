@@ -11,15 +11,6 @@
     import AppLink from './AppLink.svelte'
     import AppButton from './inputs/AppButton.svelte'
 
-    // Old: src/components/pages/Promotion/PromotionCard.tsx (78 lines) + promotionCard.module.scss
-    // (30 lines) - the P3 Task 8 Home sweep item (that task's report: "PromotionCard isn't in this
-    // task's file list or available-surface"). Wired into Home.svelte (its old `hasVisited` branch)
-    // and routes/blog/+page.svelte (`alwaysVisible`) in this same task.
-    //
-    // `${APP_NAME} Music Nightly` -> `game.meta.title` (byte-identical output for both games -
-    // `game.meta.title` IS exactly "Genshin Music Nightly"/"Sky Music Nightly" - same substitution
-    // Home.svelte's own P3 Task 8 port already made for its old `{APP_NAME} Music Nightly` header
-    // text). `onClick` -> `onclick` (DOM-style callback prop naming, same convention throughout).
     const promotion = {
         id: '1',
         title: `Help fund ${game.meta.title}!`,
@@ -39,10 +30,9 @@
 
     let visible = $state(false)
 
-    // old: `useEffect(() => {...}, [])` - runs once on mount REGARDLESS of `alwaysVisible` (the
-    // localStorage bookkeeping/first-visit-skip logic below is unconditional; only the final
-    // render decision at the bottom is gated on `alwaysVisible` too) - preserved exactly, incl.
-    // the "never show on the very first visit" quirk (`viewedPromotionsBefore` starts false).
+    // QUIRK: the promotion never shows on a user's very first visit -
+    // `viewedPromotionsBefore` starts false, so `visible` stays false
+    // regardless of `promotionId` until a second visit.
     onMount(() => {
         const viewedPromotionsBefore = Boolean(localStorage.getItem(`${APP_NAME}_viewed_promotions_before`))
         const promotionId = localStorage.getItem(`${APP_NAME}_viewed_promotion`) ?? ''
@@ -59,10 +49,6 @@
 </script>
 
 {#snippet faTimesIcon()}
-    <!-- react-icons/fa's FaTimes, same path data already inlined verbatim in Home.svelte's own
-         faTimesIcon (viewBox "0 0 352 512") - but THAT call site passed explicit size={25}; old
-         PromotionCard's `<FaTimes/>` here is bare, so this copy keeps the react-icons default
-         height/width ("1em"), same convention as icons/FaEllipsisH.svelte. -->
     <svg
         stroke="currentColor"
         fill="currentColor"
@@ -102,11 +88,11 @@
 {/if}
 
 <style>
-    /* Old: src/components/pages/Promotion/promotionCard.module.scss. `.promotion-card`/
-       `.promotion-right-side` are applied via Card/Column's own `className` prop (elements
-       belonging to their compiled templates, not this file's) - both need :global(). `.promotion-
-       image`/`.promotion-close`(:hover) are native elements THIS file's own template renders
-       directly (as Card's/Column's slotted children) - plain scoped CSS already reaches them. */
+    /* `.promotion-card`/`.promotion-right-side` are applied via Card/Column's
+       own `className` prop (elements belonging to their compiled templates,
+       not this file's) - both need :global(). `.promotion-image`/
+       `.promotion-close` are native elements this file's own template
+       renders directly, so plain scoped CSS already reaches them. */
     :global(.promotion-card) {
         position: relative;
         border: solid 0.1rem var(--secondary);

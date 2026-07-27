@@ -1,8 +1,4 @@
 <script lang="ts">
-    // Old: src/components/shared/Miscellaneous/GenshinNoteBorder.tsx (18 lines) - verbatim
-    // conversion (same two props, same viewBox/path data; only the JSX -> Svelte markup syntax
-    // changes). Sole consumer: BaseNote.svelte, which only renders this when
-    // `game.features.hasNoteFrame` is true.
     let {fill, className}: {
         fill?: string
         className?: string

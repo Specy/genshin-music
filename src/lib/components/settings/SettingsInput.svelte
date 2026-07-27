@@ -1,25 +1,9 @@
 <script lang="ts">
     import type {SettingUpdate, SettingUpdateKey, SettingsNumber, SettingsText} from '$core/types/SettingsPropriety'
 
-    // Old: src/components/shared/Settings/Input.tsx (named `Input` there; renamed `SettingsInput`
-    // here to avoid colliding with a plain HTML input, matching this task's own file-list naming).
-    //
-    // Old's number-branch `handleChange` set `el.value = ""` right before calling `onChange`,
-    // commented "have to do this to remove a react bug that adds a 0 at the start". That's a
-    // React controlled-input reconciliation workaround (a leading-zero rendering artifact) - it
-    // never changes what value gets passed to `onChange`, only mutates the raw DOM element's
-    // displayed text a tick early. Svelte doesn't share React's diffing/reconciliation model for
-    // controlled inputs, so this bug class doesn't apply - dropped as a documented React-specific
-    // dead workaround (same class of decision as dropping `memo()` per the Memoized precedent)
-    // rather than porting a no-op DOM mutation that would only risk a visible digit flash.
-    //
-    // FaMinus/FaPlus (react-icons/fa) inlined below as raw <svg>, no react-icons dependency - same
-    // convention as Logger.svelte/HelpTooltip.svelte/FloatingDropdown.svelte (Phase 3). Old had no
-    // consumer of Logger's own icon set here (that's FaCheckCircle/FaExclamationTriangle/
-    // FaTimesCircle, not FaMinus/FaPlus), so these were fetched fresh from the same source version
-    // those files cite (unpkg.com/react-icons@5.6.0/fa/index.mjs, FaMinus/FaPlus GenIcon() calls) -
-    // wrapper attrs (stroke/fill/stroke-width/xmlns, height/width defaulting to "1em" since old
-    // passed no explicit `size`) match that same established pattern.
+    // Old set el.value = '' before calling onChange to dodge a React-only
+    // leading-zero rendering artifact - not ported: Svelte's controlled
+    // inputs don't share that reconciliation quirk.
     let {
         data,
         objectKey,
@@ -57,11 +41,10 @@
 
     function handleBlur() {
         if (data.value === value) return
-        // `data`/`value` are already the same SettingsNumber/SettingsText variant at runtime (this
-        // component's own `data` prop type guarantees it) - the shared `SettingUpdate.data` type
-        // just can't express that narrowing across an object spread, so this cast is type-level
-        // only and changes zero runtime behavior (identical passthrough to old, which used a
-        // locally-loosened `data: any` on its own `onComplete` prop to sidestep the same friction).
+        // `data`/`value` are already the same variant at runtime (this
+        // component's own `data` prop type guarantees it) - the shared
+        // `SettingUpdate.data` type just can't express that narrowing across
+        // an object spread, so this cast is type-level only.
         onComplete({
             key: objectKey,
             data: {...data, value} as SettingUpdate['data']

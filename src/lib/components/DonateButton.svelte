@@ -4,26 +4,8 @@
     import AppLink from './AppLink.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/shared/Miscellaneous/DonateButton.tsx (24 lines) +
-    // donateButton.module.scss (18 lines, inlined below verbatim - a CSS module dedicated entirely
-    // to this component, same convention as Separator.svelte/i18n's LanguageSelector.svelte) +
-    // DonateIcon.tsx (inlined below as a raw <svg> - no react-icons/custom-icon dependency, same
-    // convention as every other inlined icon this migration uses; markup/path data copied
-    // byte-for-byte from the old blob, which was already a hand-authored SVG, not a react-icons
-    // GenIcon() output) - including its `width="1em" height="1em"`, which the first inlining
-    // dropped: without them the SVG has no intrinsic size, so inside `.donate-button`'s flex row
-    // it stretched to fill the panel as a giant accent-coloured block and pushed the label out of
-    // view. They are what makes `font-size: 1.5rem` above actually size the glyph.
-    //
-    // isTWA() (src/lib/core/utils/Utilities.ts): a real browser sniff (referrer/UA/display-mode
-    // checks) - old ran it inside a useEffect (fires post-mount only, browser globals unsafe during
-    // SSR) purely to avoid a server/client render mismatch on first paint; ported as an onMount-set
-    // $state boolean for the same reason (this component can be prerendered - PlayerMenu, Task 7,
-    // mounts inside a prerenderable route).
-    //
-    // `style` prop: old's `React.CSSProperties` -> this migration's established plain CSS-text
-    // string idiom (forwarded straight to AppLink's own `style` prop, which already accepts a
-    // string).
+    // isTwa is set in onMount, not synchronously, to avoid an SSR/client
+    // render mismatch - this component can be prerendered.
     let {style = ''}: {style?: string} = $props()
 
     let isTwa = $state(false)
@@ -34,6 +16,8 @@
 
 {#if !isTwa}
     <AppLink className="donate-button" href="/donate" {style}>
+        <!-- width/height=1em give this an intrinsic size; without them it stretches
+             to fill the flex row and the label gets pushed out of view. -->
         <svg
             style="font-size:1.5rem;margin-left:-1.5rem"
             width="1em"
@@ -65,11 +49,9 @@
 {/if}
 
 <style>
-    /* Old: src/components/shared/Miscellaneous/donateButton.module.scss. `:global()` is required
-       for both selectors - `.donate-button` is applied via AppLink's own `className` prop onto
-       AppLink.svelte's OWN <a> element (that component's compiled scope, not this file's), the
-       same reasoning already documented at every other "className applied to a child component's
-       root element" site in this migration (e.g. error/+page.svelte's `:global(.error-page)`). */
+    /* :global() is required here: `.donate-button` is applied via AppLink's
+       `className` prop onto AppLink's own <a> element - a child component's
+       compiled scope, not this file's - so plain scoped CSS wouldn't reach it. */
     :global(.donate-button) {
         margin-top: auto;
         width: 100%;

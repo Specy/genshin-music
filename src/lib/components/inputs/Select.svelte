@@ -2,19 +2,8 @@
     import type {Snippet} from 'svelte'
     import {ThemeProvider as theme} from '$core/theme/ThemeProvider.svelte'
 
-    // Old: src/components/shared/Inputs/Select.tsx
-    // Old declared a `className` prop in its TS interface but never referenced
-    // it in the render (a pre-existing dead prop) - dropped here since it never
-    // did anything and porting an intentionally-unused destructured prop only
-    // risks an eslint no-unused-vars flag for zero behavioral gain.
-    // `useTheme()` (old, a debounced mobx subscription hook) is replaced by a
-    // direct import of the now-reactive ThemeProvider singleton (Task 4) -
-    // `$derived` below re-runs automatically whenever theme state changes.
-    // The `.select`/`:focus`/`option:checked` rules are the one class this
-    // component uses out of the shared (non-module-dedicated)
-    // Settings.module.css - inlined below rather than the whole shared file,
-    // since the rest of that file belongs to the Settings pane components
-    // deferred to Phase 4.
+    // No `className` prop: old declared one but never used it - dropped
+    // rather than porting a dead, unused prop.
     let {
         onchange,
         value,

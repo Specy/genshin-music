@@ -5,16 +5,10 @@
     import {LANG_PREFERENCE_KEY_NAME} from '$core/legacyConfig'
     import {logger} from '$stores/LoggerStore.svelte'
 
-    // Old: src/components/shared/i18n/LanguageSelector.tsx, which exported TWO components:
-    // `LanguageSelector` (fully controlled: languages/currentLanguage/onChange all required
-    // props) and `DefaultLanguageSelector` (a thin preset wrapping it with
-    // AVAILABLE_LANGUAGES/i18n.language/a setI18nLanguage+pill-feedback onChange). Folded into
-    // one file here (Svelte can't export two named components per file, same constraint hit
-    // repeatedly elsewhere in this migration) by making all three props optional and defaulting
-    // to the old DefaultLanguageSelector's behavior - so `<LanguageSelector/>` bare is exactly
-    // the old `<DefaultLanguageSelector/>`, while a caller can still override any of
-    // languages/currentLanguage/onChange for full control, preserving the old dual-export API's
-    // capabilities.
+    // All three props below are optional: a bare `<LanguageSelector/>` is a
+    // fully self-contained selector (AVAILABLE_LANGUAGES, the current i18n
+    // language, and a pill-feedback onChange), but a caller can override any
+    // of languages/currentLanguage/onChange to fully control it instead.
     const flagsMap: Record<AppLanguage, string> = {
         en: '🇬🇧',
         zh: '🇨🇳',
@@ -54,8 +48,6 @@
         return namesMap[locale]
     }
 
-    // old DefaultLanguageSelector's onChange: pill feedback around setI18nLanguage, persisting
-    // the choice to LANG_PREFERENCE_KEY_NAME on success.
     async function defaultOnChange(lang: AppLanguage) {
         logger.showPill(t('logs:changing_language'))
         const success = await setI18nLanguage(i18n, lang)
@@ -81,9 +73,9 @@
         className?: string
     } = $props()
 
-    // `language()` (not raw `i18n.language`) so this stays reactive to language changes made
-    // elsewhere without a prop override - same role the old `useTranslation()` hook's re-render
-    // played for `i18n.language` in DefaultLanguageSelector.
+    // `language()` (not raw `i18n.language`) so this stays reactive to
+    // language changes made elsewhere when no `currentLanguage` override is
+    // passed.
     const resolvedCurrentLanguage = $derived(currentLanguage ?? language())
 
     function handleChange(e: Event) {
@@ -103,9 +95,6 @@
 </select>
 
 <style>
-    /* Old: src/components/shared/i18n/i18n.module.scss - a CSS Module dedicated entirely to this
-       component (same as Separator.svelte's separator.module.scss), so it inlines below verbatim
-       via Svelte's own scoping rather than moving into the global App.css. */
     .i18n-selector {
         padding: 0.5rem;
         gap: 0.2rem;
