@@ -89,6 +89,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
         return duration
     }
 
+    // QUIRK: does not rewrite data.appName, unlike ComposedSong's and RecordedSong's toGenshin which both set it to 'Genshin' - a converted vsrg song keeps the exporting game's appName.
     toGenshin() {
         const song = this.clone()
         song.tracks.forEach(t => {
@@ -294,6 +295,7 @@ export class VsrgTrackModifier {
         }
     }
 
+    // QUIRK: drops `alias`, unlike serialize/deserialize above which both carry it - a cloned modifier loses its track alias.
     clone() {
         return new VsrgTrackModifier().set({
             hidden: this.hidden,
