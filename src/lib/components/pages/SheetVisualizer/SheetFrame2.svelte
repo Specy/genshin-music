@@ -89,7 +89,7 @@
 
 {#each columnsWithNotes as {column, notes, outerStyle}, i (i)}
     <div class="frame-outer-background" style={outerStyle}>
-        <div class="frame-outer {column.notes.length === 0 ? 'visualizer-ball' : ''}">
+        <div class={['frame-outer', column.notes.length === 0 && 'visualizer-ball']}>
             <!-- Dead code, deliberately kept inert (disabled in old too, never rendered either
                  way): a never-finished "emptyAhead" hourglass-icon counter. Not a cleanup miss -
                  check with product before deleting or reviving it. -->

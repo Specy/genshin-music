@@ -71,7 +71,7 @@
             {t('keybinds:keyboard_keybinds_description')}
         </div>
         <div class="flex-centered">
-            <div class="keyboard {game.notes.perColumn === 15 ? 'keyboard-5' : ''}" style="margin:1rem 0">
+            <div class={['keyboard', game.notes.perColumn === 15 && 'keyboard-5']} style="margin:1rem 0">
                 {#each baseInstrument.notes as note, i (i)}
                     {@const key = keyBinds.getKeyOfShortcut('keyboard', note.noteNames.keyboard)}
                     <BaseNote

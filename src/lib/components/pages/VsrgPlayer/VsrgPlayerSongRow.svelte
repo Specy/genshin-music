@@ -105,10 +105,10 @@
     </div>
 {:else}
     <div class="song-row">
-        <div class="song-name {hasTooltip(true)}" onclick={openSong} onkeydown={handleNameKeydown} role="button" tabindex="0">
+        <div class={['song-name', hasTooltip(true)]} onclick={openSong} onkeydown={handleNameKeydown} role="button" tabindex="0">
             {#if isRenaming}
                 <input
-                    class="song-name-input {isRenaming ? 'song-rename' : ''}"
+                    class={['song-name-input', isRenaming && 'song-rename']}
                     disabled={!isRenaming}
                     oninput={(e) => songName = e.currentTarget.value}
                     style="width:100%;color:var(--primary-text)"
