@@ -1,6 +1,6 @@
 <script lang="ts">
     // background stays unused here - this glyph has no matching sub-path that needs a background
-    // matte (Genshin's flat glyphs - reb/mib/lab/tib - are the only ones that do).
+    // matte. A glyph that needs one renders {background} on that sub-path (Genshin's flats do).
     // QUIRK: version="0.0" below is a harmless leftover from the original export tool - preserved
     // rather than "fixed"; it has no observable effect.
     let {color = 'currentColor'}: {background?: string; color?: string} = $props()
