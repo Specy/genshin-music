@@ -1,65 +1,21 @@
-// SvelteKit's native service-worker entry point (this exact path/name — Kit auto-detects
-// src/service-worker.ts and, when present, bundles it separately with `lib: webworker`
-// and emits it to `${base}/service-worker.js`). svelte.config.js's
-// `kit.serviceWorker: {register: false}` (added in this same commit) stops Kit from
-// auto-registering this file — Task 2 registers it manually, for the same reason old's
-// next.config.js set `register: false`: this app has always driven its own install/update
-// UX (see the SKIP_WAITING message listener below, and Task 2's registration + prompt).
+// SvelteKit auto-detects this exact path, bundles it separately with `lib: webworker` and emits
+// it to `${base}/service-worker.js`. svelte.config.js's `kit.serviceWorker.register: false` is
+// deliberate: the app registers the worker itself ($lib/serviceWorkerRegistration.ts) so it can
+// drive its own install/update prompt — see the SKIP_WAITING listener below.
 //
-// Port of old src/service-worker.ts (128 lines) — same behavior, same order, with two
-// disclosed drops. Both were plumbing for `@serwist/next` (old's Next.js serwist
-// integration), not caching behavior:
-//   1. The `self.__SW_MANIFEST` ambient declaration + the `_precacheManifest` void-read
-//      that followed it. They existed only to give `@serwist/next`'s build plugin an
-//      injection point for a real precache manifest; this worker's `precacheEntries` was
-//      already the literal `[]` in old (runtime-only caching), so the injection point had
-//      nothing to inject. Kit's build has no equivalent injection step and nothing left
-//      for one to point at.
-//   2. The `IS_TAURI` branch of the `runtimeCaching` ternary. Spec §8 deletes the Tauri
-//      desktop build from this migration entirely, so the ternary collapses to old's
-//      non-Tauri branch unconditionally.
+// Import $game/identity, never a full GameDefinition: a GameDefinition transitively pulls in that
+// game's .svelte glyph components, which cannot load in this DOM-free ServiceWorkerGlobalScope.
+// Rationale at GameIdentity in $lib/games/types.ts.
 //
-// GAME_IDENTITY (games/<id>/identity.ts, deliberately NOT games/<id>/index.ts) is one of
-// two new imports versus old: this file must never import a full GameDefinition, because
-// every GameDefinition transitively pulls in that game's .svelte glyph components
-// (notes.svgGlyphs), and this worker runs in a DOM-free ServiceWorkerGlobalScope that
-// never renders anything and can't load the Svelte runtime. See GameIdentity in
-// $lib/games/types.ts for the full rationale.
+// PUBLIC_SW_VERSION must come from $env/static/public, not `import.meta.env`: Kit builds this
+// file in a second, isolated Vite build that never loads the project's vite.config.ts, so its
+// `envPrefix` does not apply there and `import.meta.env.PUBLIC_SW_VERSION` bakes in `undefined` —
+// a cache name frozen across every deploy, which defeats the only thing the version exists for.
+// $env/static/public is populated by Kit's own env scan, which that isolated build does run.
 //
-// PUBLIC_SW_VERSION comes from $env/static/public, not raw `import.meta.env` — a deviation
-// from the original plan, forced by something only empirically discoverable (both facts
-// below were verified by grepping this game's actual built output, not assumed):
-//   - `import.meta.env.PUBLIC_SW_VERSION` DOES work under `npm run dev` — Vite's dev
-//     transform runs this file through the project's real, resolved vite.config.ts, so
-//     `envPrefix: ['VITE_', 'PUBLIC_']` applies and the live value shows up.
-//   - It does NOT work in the production build. SvelteKit builds src/service-worker.ts via
-//     a second, fully isolated `vite.build()` call with `configFile: false`
-//     (node_modules/@sveltejs/kit/src/exports/vite/build/build_service_worker.js) that
-//     never loads this project's vite.config.ts and so never applies its `envPrefix` —
-//     confirmed by grepping a `build:genshin` output: every emitted service-worker.js
-//     baked in the literal, permanent cache name "Genshin-undefined", regardless of the
-//     real timestamp scripts/buildApp.js had actually passed as PUBLIC_SW_VERSION.
-// That is a real, newly-introduced defect, not a preserved old quirk — old's build
-// pipeline (webpack DefinePlugin) substituted `process.env.NEXT_PUBLIC_SW_VERSION`
-// uniformly across its whole bundle including its service worker, so old's equivalent
-// value was real on every build that ever shipped; a cache name that never changes
-// between deploys defeats the one thing PUBLIC_SW_VERSION exists for.
-// $env/static/public is one of exactly three modules SvelteKit's isolated
-// service-worker build allows ($service-worker, $env/static/public, $app/env/public — see
-// that same file's thrown error text) and, unlike `import.meta.env`, it's populated by
-// Kit's own env scan (`get_env`), which runs independently of the isolated build's skipped
-// vite.config.ts — that's why it sees the real value. Its trade-off: importing a name that
-// truly isn't present in `process.env` at sync/build time is a hard compile error, not
-// old's silent "undefined" text (same characteristic $lib/env.ts's header describes for
-// PUBLIC_IS_BETA) — acceptable here because PUBLIC_SW_VERSION is unconditionally set by
-// both scripts/buildApp.js (build) and scripts/startApp.js (dev; updated in this same
-// commit to also set it — it previously didn't, and unlike the isolated production build,
-// this file's dev-mode transform would otherwise hard-fail the moment `$env/static/public`
-// were imported without it).
-//
-// This file is invisible to `svelte-check` by design — see tsconfig.json's "exclude" for
-// why (it needs `lib: webworker`, not the app project's `lib: DOM`) and for how it is
-// instead type-checked standalone.
+// `svelte-check` cannot see this file: it needs `lib: webworker` while the app project uses
+// `lib: DOM` and there is no per-file override — hence tsconfig.json's "exclude", and the
+// standalone type-check that covers it instead.
 /// <reference lib="webworker" />
 import {GAME_IDENTITY} from '$game/identity'
 import {PUBLIC_SW_VERSION} from '$env/static/public'
@@ -121,7 +77,7 @@ const serwist = new Serwist({
 serwist.addEventListeners()
 
 // Manual update prompt: the app posts { type: 'SKIP_WAITING' } when the user
-// accepts an update (see Task 2's registration + prompt code).
+// accepts an update (see $lib/serviceWorkerRegistration.ts).
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         console.log('[ServiceWorker] skip waiting')
