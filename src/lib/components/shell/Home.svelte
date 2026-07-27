@@ -137,7 +137,7 @@
     <AppLink
         href={href}
         onclick={homeStore.close}
-        class="middle-size-page row {isCurrent ? 'current-page' : ''}"
+        class={['middle-size-page', 'row', isCurrent && 'current-page']}
     >
         {@render icon()}
         <span class="row-centered" style="font-size:1rem">{label}</span>
@@ -149,7 +149,7 @@
     <AppLink
         href={href}
         onclick={homeStore.close}
-        class="{visited ? '' : 'non-visited'} {isCurrent ? 'current-page' : ''}"
+        class={[!visited && 'non-visited', isCurrent && 'current-page']}
         style={visited ? undefined : `--new-text:"${t('common:new')}!"`}
     >
         {label}
@@ -262,7 +262,7 @@
 {/snippet}
 
 <div
-    class="{homeClass} ignore_click_outside column"
+    class={[homeClass, 'ignore_click_outside', 'column']}
     style="{!homeStore.state.visible ? 'display:none;' : ''}background-color:{backgroundColor};overflow-x:hidden"
 >
     <MenuButton class="close-home" onclick={homeStore.close} ariaLabel={t('home:close_home_menu')}>
@@ -340,7 +340,7 @@
         {/if}
         <div class="home-content">
             <AppLink
-                class="{hasVisitedPage('composer') ? '' : 'non-visited'} home-content-element {currentPage === '/composer' ? 'current-page' : ''}"
+                class={[!hasVisitedPage('composer') && 'non-visited', 'home-content-element', currentPage === '/composer' && 'current-page']}
                 href="/composer"
                 style={hasVisitedPage('composer') ? undefined : `--new-text:"${t('common:new')}!"`}
                 onclick={homeStore.close}
@@ -359,7 +359,7 @@
                 </div>
             </AppLink>
             <AppLink
-                class="{hasVisitedPage('player') ? '' : 'non-visited'} home-content-element {(currentPage === '/' || currentPage === '/player') ? 'current-page' : ''}"
+                class={[!hasVisitedPage('player') && 'non-visited', 'home-content-element', (currentPage === '/' || currentPage === '/player') && 'current-page']}
                 href="/"
                 style={hasVisitedPage('player') ? undefined : `--new-text:"${t('common:new')}!"`}
                 onclick={homeStore.close}

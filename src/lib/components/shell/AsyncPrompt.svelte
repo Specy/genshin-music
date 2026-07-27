@@ -3,7 +3,6 @@
     import isMobile from 'is-mobile'
     import {asyncPromptStore} from '$stores/AsyncPromptStore.svelte'
     import {ThemeProvider} from '$core/theme/ThemeProvider.svelte'
-    import {cn} from '$core/utils/Utilities'
     import {t} from '$i18n/binding.svelte'
     import DecoratedCard from '../layout/DecoratedCard.svelte'
 
@@ -141,10 +140,10 @@
 <div
     style={!confirmIsMounted ? 'display:none' : ''}
     onclick={handleConfirmOverlayClick}
-    class={cn('prompt-overlay ignore_click_outside', [!confirmState.deferred, 'prompt-overlay-hidden'])}
+    class={['prompt-overlay', 'ignore_click_outside', !confirmState.deferred && 'prompt-overlay-hidden']}
 >
     <DecoratedCard
-        class={cn('floating-prompt ignore_click_outside', [!confirmState.deferred, 'floating-prompt-hidden'])}
+        class={['floating-prompt', 'ignore_click_outside', !confirmState.deferred && 'floating-prompt-hidden']}
         isRelative={false}
         size="1.1rem"
     >
@@ -174,10 +173,10 @@
 <div
     style={!promptIsMounted ? 'display:none' : ''}
     onclick={handlePromptOverlayClick}
-    class={cn('prompt-overlay ignore_click_outside', [!promptState.deferred, 'prompt-overlay-hidden'])}
+    class={['prompt-overlay', 'ignore_click_outside', !promptState.deferred && 'prompt-overlay-hidden']}
 >
     <DecoratedCard
-        class={cn('floating-prompt ignore_click_outside', [!promptState.deferred, 'floating-prompt-hidden'])}
+        class={['floating-prompt', 'ignore_click_outside', !promptState.deferred && 'floating-prompt-hidden']}
         isRelative={false}
         size="1.1rem"
     >
@@ -196,7 +195,7 @@
                 Cancel
             </button>
             <button
-                class={cn('prompt-button', [!value, 'disabled'])}
+                class={['prompt-button', !value && 'disabled']}
                 disabled={!value}
                 style="background-color:{color};color:white"
                 onclick={() => asyncPromptStore.answerPrompt(value)}

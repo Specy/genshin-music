@@ -71,6 +71,6 @@
         </DecoratedCard>
     {/each}
 </div>
-<div class="flex-centered pill {logger.pillState.visible ? 'pill-visible' : ''}">
+<div class={['flex-centered', 'pill', logger.pillState.visible && 'pill-visible']}>
     {logger.pillState.text}
 </div>
