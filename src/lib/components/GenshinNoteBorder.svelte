@@ -1,14 +1,16 @@
 <script lang="ts">
-    let {fill, className}: {
+    import type {ClassValue} from 'svelte/elements'
+
+    let {fill, class: cls}: {
         fill?: string
-        className?: string
+        class?: ClassValue
     } = $props()
 </script>
 
 <svg
     width="156mm"
     height="156mm"
-    class={className}
+    class={cls}
     viewBox="0 0 156 156"
     xmlns="http://www.w3.org/2000/svg"
     style="fill:{fill || '#eae5ce'}"

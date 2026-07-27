@@ -13,7 +13,7 @@
 {#if page.status === 404}
     <DefaultPage>
         <PageMetadata text="404" description="oh no!" />
-        <AppLink href="/" className="link" style="text-align:center">
+        <AppLink href="/" class="link" style="text-align:center">
             <div style="font-size:6rem">404</div>
             <div>{t('page404:page_not_found')}</div>
         </AppLink>

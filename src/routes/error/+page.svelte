@@ -66,7 +66,7 @@
     }
 </script>
 
-<DefaultPage className="error-page">
+<DefaultPage class="error-page">
     <PageMetadata
         text={t('common:error')}
         description="View the errors that happened in the app to send bug reports and to try to recover your songs"
@@ -106,7 +106,7 @@
 
 <style>
     /* :global() is required for .error-page only - it's applied to DefaultPage's OWN outer
-       wrapper via its className prop (foreign element), not this file's own template. The other
+       wrapper via its class prop (foreign element), not this file's own template. The other
        selectors below target elements this file authors directly as DefaultPage's slotted
        children, which keep this file's scoping hash - no :global() needed for those. */
     :global(.error-page) {

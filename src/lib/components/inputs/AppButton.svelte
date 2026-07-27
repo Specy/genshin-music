@@ -1,10 +1,11 @@
 <script module lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import type {TooltipPosition} from '../utility/tooltip'
 
     export interface AppButtonProps {
         style?: string
-        className?: string
+        class?: ClassValue
         onclick?: (e: MouseEvent) => void
         children?: Snippet
         toggled?: boolean
@@ -25,7 +26,7 @@
     // global App.css.
     let {
         style = '',
-        className = '',
+        class: cls = '',
         cssVar,
         children,
         toggled = false,
@@ -45,7 +46,7 @@
 </script>
 
 <button
-    class="app-button {className} {toggled ? 'active' : ''} {hasTooltip(tooltip)}"
+    class="app-button {cls} {toggled ? 'active' : ''} {hasTooltip(tooltip)}"
     style={computedStyle}
     aria-label={ariaLabel}
     {onclick}

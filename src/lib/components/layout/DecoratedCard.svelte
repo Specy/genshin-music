@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
 
     // The star decoration is a local snippet, not a separate component: it
     // has no consumers outside this file, and Svelte can't export two named
@@ -14,7 +15,7 @@
         isRelative?: boolean
         onclick?: () => void
         offset?: string
-        className?: string
+        class?: ClassValue
         style?: string
     }
 
@@ -25,7 +26,7 @@
         isRelative = true,
         onclick,
         offset = '0',
-        className,
+        class: cls,
         style = '',
     }: DecoratedCardProps = $props()
 
@@ -67,7 +68,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
     style="{isRelative ? 'position:relative;' : ''}{style}"
-    class={className}
+    class={cls}
     {onclick}
     role={onclick ? 'button' : undefined}
     tabindex={onclick ? 0 : undefined}

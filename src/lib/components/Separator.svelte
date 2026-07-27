@@ -1,12 +1,13 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
 
     let {
         background = 'var(--primary)',
         color = 'var(--primary-text)',
         height = '0.3rem',
         style = '',
-        className = '',
+        class: cls = '',
         children,
         pillBackground,
         verticalMargin = '0.2rem',
@@ -17,7 +18,7 @@
         height?: string
         verticalMargin?: string
         style?: string
-        className?: string
+        class?: ClassValue
         pillBackground?: string
         shadow?: boolean | string
         children?: Snippet
@@ -27,7 +28,7 @@
     const shadowDecl = $derived(shadow ? `box-shadow:0 0rem 0.6rem ${shadowColor};` : '')
 </script>
 
-<div class="separator {className}" style="color:{color};margin:{verticalMargin} 0;{style}">
+<div class="separator {cls}" style="color:{color};margin:{verticalMargin} 0;{style}">
     <div
         class="separator-part"
         style="background-color:{background};height:{height};{shadowDecl}border-top-left-radius:0.6rem;border-bottom-left-radius:0.6rem;"

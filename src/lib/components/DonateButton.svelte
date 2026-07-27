@@ -15,7 +15,7 @@
 </script>
 
 {#if !isTwa}
-    <AppLink className="donate-button" href="/donate" {style}>
+    <AppLink class="donate-button" href="/donate" {style}>
         <!-- width/height=1em give this an intrinsic size; without them it stretches
              to fill the flex row and the label gets pushed out of view. -->
         <svg
@@ -50,7 +50,7 @@
 
 <style>
     /* :global() is required here: `.donate-button` is applied via AppLink's
-       `className` prop onto AppLink's own <a> element - a child component's
+       `class` prop onto AppLink's own <a> element - a child component's
        compiled scope, not this file's - so plain scoped CSS wouldn't reach it. */
     :global(.donate-button) {
         margin-top: auto;

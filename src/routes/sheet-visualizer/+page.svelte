@@ -89,10 +89,10 @@
     const pageTitle = $derived(`${t('home:sheet_visualizer_name')}${currentSong ? ` - ${currentSong.name}` : ''}`)
 </script>
 
-<DefaultPage excludeMenu={true} className="page-no-print">
+<DefaultPage excludeMenu={true} class="page-no-print">
     {#snippet menu()}
         <SheetVisualizerMenu
-            className="no-print"
+            class="no-print"
             onSongLoaded={(song) => currentSong = song}
             {currentSong}
         />
@@ -184,7 +184,7 @@
 </DefaultPage>
 
 <style>
-    /* :global() is required for .page-no-print/.no-print - both are applied via a className prop
+    /* :global() is required for .page-no-print/.no-print - both are applied via a class prop
        forwarded into CHILD components' own elements (DefaultPage's outer div, and two layers
        deeper, SheetVisualizerMenu -> MenuSidebar's outer div), not elements this file's own
        template renders directly. The other selectors below target elements this file authors

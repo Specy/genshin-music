@@ -85,8 +85,8 @@
     {@const visited = mounted && hasVisitedBlogPost(metadata.relativeUrl)}
     {@const date = new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(metadata.createdAt)}
     <AppLink href="/blog/posts/{metadata.relativeUrl}">
-        <Card className="blog-card {visited ? '' : 'blog-card-new'}" style="height:100%">
-            <Header type="h2" className="blog-card-title" style="margin-bottom:-1.5rem">
+        <Card class="blog-card {visited ? '' : 'blog-card-new'}" style="height:100%">
+            <Header type="h2" class="blog-card-title" style="margin-bottom:-1.5rem">
                 <div class="blog-card-image" style="background-image:url('{metadata.image}')"></div>
                 <div class="blog-card-title-content">
                     {metadata.title}
@@ -97,7 +97,7 @@
                     </div>
                 {/if}
             </Header>
-            <Column padding="1rem" style="padding-top:0.5rem" className="blog-card-description">
+            <Column padding="1rem" style="padding-top:0.5rem" class="blog-card-description">
                 {metadata.description}
             </Column>
             <Row justify="between" align="end" style="padding:0.5rem" flex1>
@@ -152,7 +152,7 @@
 
 <style>
     /* .blog-card/.blog-card-title/.blog-card-description are applied via Card/Header/Column's
-       className prop (foreign elements), so they need :global() - as do the .blog-card:hover
+       class prop (foreign elements), so they need :global() - as do the .blog-card:hover
        rules, rooted at that same foreign class. .blog-card-image/.blog-card-title-content are
        native divs passed as those components' CHILDREN, compiled as part of THIS file's
        template, so plain scoped CSS reaches them - only the base (non-hover) .blog-card-image

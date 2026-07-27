@@ -1,16 +1,17 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
 
     interface GridProps {
         gap?: string
         columns?: string
         rows?: string
-        className?: string
+        class?: ClassValue
         style?: string
         children?: Snippet
     }
 
-    let {gap, rows, columns, style = '', className, children}: GridProps = $props()
+    let {gap, rows, columns, style = '', class: cls, children}: GridProps = $props()
 
     const computedStyle = $derived([
         'display:grid',
@@ -20,6 +21,6 @@
     ].filter(Boolean).join(';'))
 </script>
 
-<div style="{computedStyle};{style}" class={className}>
+<div style="{computedStyle};{style}" class={cls}>
     {@render children?.()}
 </div>

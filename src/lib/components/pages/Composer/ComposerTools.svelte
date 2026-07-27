@@ -106,7 +106,7 @@
 
 <!-- QUIRK: this repeats the "floating-tools" token when the tools are visible — old built the same duplicate and browsers dedupe it, so keep it rather than tidying the expression. -->
 <DecoratedCard
-    className="floating-tools {data.isToolsVisible ? 'floating-tools tools-visible' : ''}"
+    class="floating-tools {data.isToolsVisible ? 'floating-tools tools-visible' : ''}"
     size="1.2rem"
     isRelative={false}
     offset="0.1rem"
@@ -163,7 +163,7 @@
         <div class="tools-right column">
             <AppButton
                 style="margin-bottom:0.2rem"
-                className={hasTooltip(true)}
+                class={hasTooltip(true)}
                 toggled={selectionType === 'all'}
                 onclick={() => selectionType = 'all'}
             >
@@ -176,7 +176,7 @@
             </AppButton>
             <AppButton
                 style="margin-bottom:0.2rem"
-                className={hasTooltip(true)}
+                class={hasTooltip(true)}
                 toggled={selectionType === 'layer'}
                 onclick={() => selectionType = 'layer'}
             >

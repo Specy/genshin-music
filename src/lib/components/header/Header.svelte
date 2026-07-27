@@ -5,11 +5,12 @@
 
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
 
     interface HeaderProps {
         textSize?: string
         style?: string
-        className?: string
+        class?: ClassValue
         type?: HeaderType | string
         margin?: string
         children?: Snippet
@@ -27,7 +28,7 @@
         h6: '1rem',
     }
 
-    let {className, style = '', textSize, children, type = 'h1', margin = '0'}: HeaderProps = $props()
+    let {class: cls, style = '', textSize, children, type = 'h1', margin = '0'}: HeaderProps = $props()
 
     const tag = $derived((HEADER_TYPES as readonly string[]).includes(type) ? (type as HeaderType) : 'h6')
     const computedStyle = $derived(
@@ -35,6 +36,6 @@
     )
 </script>
 
-<svelte:element this={tag} class={className} style={computedStyle}>
+<svelte:element this={tag} class={cls} style={computedStyle}>
     {@render children?.()}
 </svelte:element>

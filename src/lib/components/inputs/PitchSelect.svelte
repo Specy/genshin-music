@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import {game} from '$game'
     import type {Pitch} from '$lib/games/types'
 
@@ -13,13 +14,13 @@
         onChange,
         style = '',
         children,
-        className = '',
+        class: cls = '',
     }: {
         selected: Pitch
         onChange: (pitch: Pitch) => void
         style?: string
         children?: Snippet
-        className?: string
+        class?: ClassValue
     } = $props()
 
     function handleChange(e: Event & {currentTarget: EventTarget & HTMLSelectElement}) {
@@ -29,7 +30,7 @@
 </script>
 
 <select
-    class="select {className}"
+    class="select {cls}"
     style="width:100%;padding:0.3rem;{style}"
     onchange={handleChange}
     value={selected}

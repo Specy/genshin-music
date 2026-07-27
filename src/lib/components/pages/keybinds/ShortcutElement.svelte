@@ -59,7 +59,7 @@
                 {@render faCheckIcon()}
             </IconButton>
         {/if}
-        <AppButton className="shortcut-button" onclick={() => setSelected(mapKey)}>
+        <AppButton class="shortcut-button" onclick={() => setSelected(mapKey)}>
             {newKey}
         </AppButton>
     </Row>
@@ -96,7 +96,7 @@
     }
 
     /* QUIRK: :global() below is REQUIRED, not a scoping violation to "fix". This class is threaded
-       through AppButton's className prop and lands on a <button> that AppButton.svelte's own
+       through AppButton's class prop and lands on a <button> that AppButton.svelte's own
        template writes - a plain scoped selector here could never reach it. Same reasoning as
        MidiShortcut.svelte's own comment. */
     :global(.shortcut-button) {

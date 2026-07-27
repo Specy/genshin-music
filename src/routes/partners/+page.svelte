@@ -13,7 +13,7 @@
     })
 </script>
 
-<DefaultPage className="partners-page">
+<DefaultPage class="partners-page">
     <PageMetadata
         text={t('home:partners_name')}
         description="Learn about our partners who helped the development and to make the app more famous"

@@ -125,7 +125,7 @@
         style="transition:{transitionStyle};{noteBackgroundColor ? `background-color:${noteBackgroundColor}` : ''}"
     >
         {#if game.features.hasNoteFrame}
-            <GenshinNoteBorder className="genshin-border" fill={borderFill} />
+            <GenshinNoteBorder class="genshin-border" fill={borderFill} />
         {/if}
         <SvgNote
             name={note.noteImage}

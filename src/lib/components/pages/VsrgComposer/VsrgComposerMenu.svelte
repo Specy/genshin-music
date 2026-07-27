@@ -119,10 +119,10 @@
             {@render faBarsIcon()}
         </div>
     {/snippet}
-    <MenuButton onclick={() => isVisible = !isVisible} className="close-menu" ariaLabel="Close menu">
+    <MenuButton onclick={() => isVisible = !isVisible} class="close-menu" ariaLabel="Close menu">
         {@render faTimesIcon()}
     </MenuButton>
-    <MenuButton onclick={functions.onSave} style="margin-top:auto" className={data.hasChanges ? 'not-saved' : ''} ariaLabel={t('common:save')}>
+    <MenuButton onclick={functions.onSave} style="margin-top:auto" class={data.hasChanges ? 'not-saved' : ''} ariaLabel={t('common:save')}>
         {@render faSaveIcon()}
     </MenuButton>
     <MenuItem id="Help" ariaLabel={t('menu:help')}>

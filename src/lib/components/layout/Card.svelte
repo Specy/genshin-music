@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
 
     // A caller's `style` is appended after the computed styles below, so a
     // caller's own declaration still wins on any shared CSS property.
@@ -12,7 +13,7 @@
         row?: boolean
         border?: string
         withShadow?: boolean
-        className?: string
+        class?: ClassValue
         style?: string
         children?: Snippet
     }
@@ -23,7 +24,7 @@
         gap,
         radius = '0.4rem',
         padding,
-        className = '',
+        class: cls = '',
         style = '',
         row = false,
         border,
@@ -42,6 +43,6 @@
     ].filter(Boolean).join(';'))
 </script>
 
-<div class="{className} {row ? 'row' : 'column'}" style="{computedStyle};{style}">
+<div class="{cls} {row ? 'row' : 'column'}" style="{computedStyle};{style}">
     {@render children?.()}
 </div>

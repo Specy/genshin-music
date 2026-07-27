@@ -687,7 +687,7 @@
             onTrackSelect={selectTrack}
             onNoteSelect={onNoteSelect}
         >
-            <DecoratedCard className="decorated-vsrg-canvas" size="1.2rem">
+            <DecoratedCard class="decorated-vsrg-canvas" size="1.2rem">
                 <VsrgComposerCanvas
                     vsrg={vsrg}
                     renderableNotes={renderableNotes}

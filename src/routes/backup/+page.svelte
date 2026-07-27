@@ -242,7 +242,7 @@
     <Row gap="0.5rem" style="margin-top:1rem;padding-left:1.5rem">
         <AppButton
             tooltip={t('backup:download_all_backup_tooltip')}
-            className="flex-centered"
+            class="flex-centered"
             onclick={async () => {
                 const songs = await validateSongs()
                 if (!songs) return
@@ -269,7 +269,7 @@
         </AppButton>
         <AppButton
             tooltip={t('backup:download_songs_tooltip')}
-            className="flex-centered"
+            class="flex-centered"
             onclick={async () => {
                 const songs = await validateSongs()
                 if (!songs) return
@@ -292,7 +292,7 @@
         </AppButton>
         <AppButton
             tooltip={t('backup:download_themes_tooltip')}
-            className="flex-centered"
+            class="flex-centered"
             onclick={async () => {
                 const themes = await validateThemes()
                 if (!themes) return
@@ -323,7 +323,7 @@
             onError={() => logger.error(t('backup:error_reading_file'))}
         >
             <AppButton
-                className="flex-centered"
+                class="flex-centered"
                 tooltip={t('backup:import_backup_tooltip')}
                 style="margin-top:1rem;background-color:var(--accent);color:var(--accent-text);padding:0.8rem"
             >
@@ -351,7 +351,7 @@
     </div>
     <Row gap="0.5rem" style="margin-top:1rem;padding-left:1.5rem">
         <AppButton
-            className="flex-centered"
+            class="flex-centered"
             tooltip={t('backup:delete_songs_and_folders_tooltip')}
             tooltipPosition="top"
             style="background-color:var(--red-bg);color:var(--red-text)"
@@ -361,7 +361,7 @@
             {t('backup:delete_songs_and_folders')}
         </AppButton>
         <AppButton
-            className="flex-centered"
+            class="flex-centered"
             tooltip={t('backup:delete_themes_tooltip')}
             tooltipPosition="top"
             style="background-color:var(--red-bg);color:var(--red-text)"

@@ -155,7 +155,7 @@
                 onClose={() => isRenaming = false}
             >
                 <AppButton
-                    className="row row-centered"
+                    class="row row-centered"
                     style="padding:0.4rem"
                     onclick={toggleRename}
                 >
