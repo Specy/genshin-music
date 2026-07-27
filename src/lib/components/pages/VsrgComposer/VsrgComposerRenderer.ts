@@ -331,6 +331,10 @@ export class VsrgComposerRenderer {
         this.isPressing = false
         this.totalMovement = 0
         this.draggedHitObject = null
+        // QUIRK: preventClick resets via a 200ms setTimeout here, not synchronously - resetting it
+        // immediately would let the pointerup that ends a drag also register as a click on a snap
+        // point (see the preventClick read in drawScrollableTracks' handleSnapPointClick). Don't
+        // shorten or remove this delay.
         if (draggedHitObject) this.callbacks.releaseHitObject()
         setTimeout(() => {
             this.preventClick = false

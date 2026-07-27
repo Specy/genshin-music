@@ -45,10 +45,11 @@
 
 <style>
     /* QUIRK: animation: fadeIn 0.4s below references a keyframe that isn't defined anywhere
-       globally (App.css/Theme.css have no @keyframes fadeIn; the only such keyframes are scoped
-       inside other components' own <style> blocks) - a harmless no-op, not newly introduced here.
-       The same undefined reference recurs elsewhere in this codebase's CSS; don't "fix" it here by
-       inventing a keyframe, or drop it as unused without checking those other sites too. */
+       globally (App.css/Theme.css have no @keyframes fadeIn) - any @keyframes fadeIn that exist
+       are scoped inside other components' <style> blocks, not global, so this is a harmless no-op,
+       not newly introduced here. The same undefined reference recurs elsewhere in this codebase's
+       CSS; don't "fix" it here by inventing a keyframe, or drop it as unused without checking those
+       other sites too. */
     .vsrg-player-score {
         position: absolute;
         top: 2.4rem;
