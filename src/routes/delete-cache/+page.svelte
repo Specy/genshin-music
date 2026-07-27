@@ -12,29 +12,10 @@
     import {t} from '$i18n/binding.svelte'
     import {game} from '$game'
 
-    // Old: src/app/_client-pages/delete-cache/index.tsx (63 lines).
-    //
-    // No PageMetadata call in old code (grepped: absent), and no page-level Next `metadata`
-    // export either (src/app/delete-cache/page.tsx has none) - this route genuinely inherited the
-    // ROOT title ("Genshin Music Nightly"/"Sky Music Nightly", no per-page override) in old.
-    // SvelteKit's <svelte:head> has no automatic cross-navigation fallback the way Next's
-    // metadata-cascade does (a page that renders no <title> leaves the PREVIOUS page's title
-    // showing, not the root default), so the root title is reproduced explicitly here via
-    // PageMetadata rather than adding a title old never actually had for this route.
-    //
-    // clearClientCache: $core/utils/Utilities.ts already carries this (restored in an earlier
-    // Phase-4a task - Home.svelte's own clearCache() already consumes it) - nothing to newly
-    // port, just a new caller here.
-    //
-    // BASE_PATH (old $config) -> `base` from $app/paths, the same substitution Home.svelte's
-    // clearCache() already established.
-    //
-    // PRESERVED BUG: the manual clearCache() button handler below calls logger.success/error with
-    // the RAW i18n key strings 'home:cache_cleared'/'home:error_clearing_cache' (not wrapped in
-    // t(...)), while the automatic on-mount run() DOES call t(...) correctly - a pre-existing
-    // inconsistency in old code (clicking the button shows the literal text "home:cache_cleared"
-    // as the toast, not the translated "Cache cleared"). Reproduced byte-for-byte per this
-    // migration's "preserve quirks, flag don't silently fix" rule - not unified into one function.
+    // SvelteKit's <svelte:head> has no cross-navigation fallback the way Next's metadata cascade
+    // did - a page that renders no <title> leaves the PREVIOUS page's title showing, not a root
+    // default. PageMetadata below reproduces the root title explicitly for that reason, even
+    // though old never had a metadata call for this specific route.
     onMount(() => {
         setPageVisited('deleteCache')
         run()
@@ -57,6 +38,9 @@
     function clearCache() {
         clearClientCache()
             .then(() => {
+                // QUIRK: raw i18n key strings below, not wrapped in t(...) - unlike run()'s
+                // t(...) calls above, this shows the literal text "home:cache_cleared" as the
+                // toast, not a translation. Preserved inconsistency, not unified with run().
                 logger.success('home:cache_cleared')
                 setTimeout(() => {
                     window.location.href = base || '/'

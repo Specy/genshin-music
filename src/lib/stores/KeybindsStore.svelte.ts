@@ -54,11 +54,6 @@ const defaultShortcuts = {
         "ShiftLeft+KeyR": createShortcut("restart", false, "restart_description"),
         "Escape": createShortcut("stop", false, "stop_description"),
     },
-    // old: Object.fromEntries((APP_NAME === "Genshin" ? [21-key row] : [15-key row]).map(...)) —
-    // the two hardcoded rows are now game.layouts.defaultKeyboardKeys (P3 Task 2; stores are
-    // UI-tier and read $game directly). Each game module's own defaultKeyboardKeys literal is
-    // already commented "KeybindsStore.ts:56 ... Genshin/Sky branch (21/15 keys)" and was
-    // verified equal to this old ternary's output when written (P2 GameDefinition audit).
     keyboard: Object.fromEntries(game.layouts.defaultKeyboardKeys.map(key => [`Key${key}`, createShortcut(key, false)]))
 } as const  satisfies Record<string, Record<string, Shortcut<string>>>
 
@@ -109,17 +104,10 @@ class KeyBinds {
             .map(([key, value]) => [key, new SvelteMap(Object.entries(value))])
     ) as unknown as Shortcuts)
 
-    // FIX (P4a Task 9, caught via keybinds/+page.svelte's own interactive smoke test - not
-    // present in the old blob, which re-rendered wholesale on every mobx-observed change
-    // regardless): was `Record<string, Map<string, string>>` built with plain `new Map(...)`.
-    // `getKeyOfShortcut()` (below) reads this to display "which physical key is this note/shortcut
-    // currently bound to" - since a plain Map is NOT `$state`/reactive, mutating it inside
-    // `setShortcut()` never notified any template reading `getKeyOfShortcut()`. The underlying
-    // rebind DID always persist correctly (`shortcuts`, the real source of truth, IS reactive and
-    // saves to localStorage fine) - only the DISPLAYED "currently bound key" text silently went
-    // stale until the next full reload. `SvelteMap` (already used for `shortcuts` above, the
-    // established "reactive collection in a $state class" convention this file's own header
-    // comment cites) makes `.set()` calls on these reverse maps notify readers too.
+    // Must be SvelteMap, not a plain Map: getKeyOfShortcut() reads this to display "which
+    // physical key is this bound to". A plain Map isn't reactive, so mutating it in setShortcut()
+    // would never notify a template reading getKeyOfShortcut() - the real rebind (`shortcuts`
+    // above) would still persist correctly, but the displayed text would silently go stale.
     private reverseShortcuts: Record<string, SvelteMap<string, string>>
 
     constructor() {
@@ -178,7 +166,6 @@ class KeyBinds {
         newKey = KeyBinds.getShortcutName(newKey)
         const oldShortcut = this.shortcuts[page].get(oldKey)
         const newKeyExists = this.shortcuts[page].get(newKey)
-        //TODO this was !oldShortcut === undefined ???
         if (oldShortcut === undefined || oldShortcut === null) return undefined
         if (newKeyExists !== undefined) return newKeyExists as MapValues<Shortcuts[T]> | undefined
         this.shortcuts[page].delete(oldKey)
@@ -305,8 +292,7 @@ export function createKeyComboComposer(id: string, callback: KeyComboListener): 
     }
 }
 
-// old: `T extends Map<infer _, infer V> ? V : never` - the unused `infer _` trips
-// @typescript-eslint/no-unused-vars now that eslint parses .svelte.ts; T's key is already
-// constrained to `string` above, so matching against the literal type is equivalent and needs
-// no inferred (and discarded) key type parameter.
+// Matches against the literal `string` key type instead of `infer _, infer V` (T's key is
+// already constrained to `string` above) so there's no unused, discarded type parameter for
+// @typescript-eslint/no-unused-vars to flag.
 type MapValues<T extends Map<string, Shortcut<string>>> = T extends Map<string, infer V> ? V : never

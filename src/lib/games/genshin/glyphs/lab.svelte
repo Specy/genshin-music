@@ -1,9 +1,6 @@
 <script lang="ts">
-    // Old: src/components/shared/SvgNotes/genshin/lab.tsx (React). `color` restored P4c Task 2
-    // (default 'currentColor') - old applied `style={{fill: color, stroke: color}}` to this
-    // glyph's root <svg> (SvgNotes/index.tsx:48-52), separate from `background`, which paints a
-    // matte behind the flat mark so it reads clearly against the note glyph body (old: paintOrder
-    // 'stroke' + stroke = background) - unchanged by this task.
+    // background paints a matte behind the flat mark so it reads clearly against the note glyph
+    // body (paintOrder: 'stroke' with stroke = background).
     let {background, color = 'currentColor'}: {background?: string; color?: string} = $props()
 </script>
 

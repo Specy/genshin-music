@@ -9,22 +9,6 @@
     import {keyBinds} from '$stores/KeybindsStore.svelte'
     import {howUseVsrgComposerMetadata} from '$cmp/blog/posts/how-to-use-vsrg-composer'
 
-    // Old: src/app/_client-pages/blog/posts/how-to-use-vsrg-composer.tsx (194 lines). Same
-    // substitutions as how-to-use-player.tsx (BlogP/BlogOl/BlogLi/BlogB -> native tags, raw
-    // AppLink, shortcutsTable snippet + keyBinds.getShortcutMap('vsrg_composer'),
-    // globalConfigStore.state.IS_MOBILE). `Key` -> the `keyBadge` snippet (also from
-    // pages/ShortcutsTable.svelte). `keyBinds.getVsrgKeybinds(6)` - same method/arg, already
-    // reactive (KeybindsStore.svelte.ts's own `$state`-held SvelteMap/array), no observable-hook
-    // wrapper needed.
-    //
-    // PRESERVED BUG: this post's own metadata.ts (how-to-use-vsrg-composer.ts) already flags the
-    // metadata `image` gap; the SAME gap repeats on 2 of its 3 inline images below - `-3.webp` and
-    // the bare `help-vsrg-composer.webp` (reused from the metadata image) have NO `${base}` prefix,
-    // while `-2.webp` does. All 3 reproduced exactly as old had them.
-    //
-    // old also wrapped its whole return value in a redundant `<><BaseBlogPost>...</BaseBlogPost></>`
-    // fragment - a no-op (BaseBlogPost is already the single child), dropped as a disclosed no-op
-    // simplification.
     const vsrgKeys = keyBinds.getVsrgKeybinds(6)
     const vsrgComposerShortcuts = keyBinds.getShortcutMap('vsrg_composer')
 </script>
@@ -114,6 +98,8 @@
         place
         notes
     </p>
+    <!-- QUIRK: missing the ${base} prefix (unlike help-vsrg-composer-2.webp above) - matches the
+         same gap in this post's own metadata.ts image. Preserved, not fixed. -->
     <BlogImage
         src="/assets/blog/help-vsrg-composer-3.webp"
         alt="VSRG song settings"
@@ -140,6 +126,8 @@
         add a "held" hit object, or remove one.
         You can select which of the 3 actions you want to do by pressing the selector on the bottom left.
     </p>
+    <!-- QUIRK: missing the ${base} prefix, same preserved gap as help-vsrg-composer-3.webp above
+         and this post's own metadata.ts image. -->
     <BlogImage
         src="/assets/blog/help-vsrg-composer.webp"
         alt="tutorial for the vsrg composer page"

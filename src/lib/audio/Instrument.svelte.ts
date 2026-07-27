@@ -1,28 +1,5 @@
-// old: src/lib/audio/Instrument.ts - minimal-diff port. The one reactive-model change (Phase-4a
-// Task 2 brief): `ObservableNote.data` was `@observable readonly data: NoteDataState` (mobx,
-// `makeObservable(this)` in the constructor) - now `data: NoteDataState = $state({...})`, mobx
-// deleted outright (no mobx dependency in this tree). `readonly` semantics are preserved by
-// convention (the field is never reassigned, only mutated in place via `setState`'s
-// `Object.assign`, exactly like the old blob). Everything else is import-path swaps:
-// `$config` -> `$core/legacyConfig` (only APP_NAME here is on legacyConfig's UI-tier identity
-// allowlist; INSTRUMENTS/INSTRUMENTS_DATA/NOTE_SCALE/DO_RE_MI_NOTE_SCALE/PITCH_TO_INDEX are
-// GAME-DATA values that allowlist forbids to UI code, and Pitch/NoteNameType are type-only so
-// were never a value-import concern - this file is audio-engine tier, not UI code, so
-// legacyConfig's header separately carves out this file and MIDIProvider.ts for exactly those
-// GAME-DATA values (whole-branch final review, finding B); four of the five stay direct `game.*`
-// aliases there, so importing them here is behaviorally identical to reading `$game` directly,
-// while PITCH_TO_INDEX is a pure build-time derivation of one (over PITCHES = game.notes.pitches)
-// with no `$game` equivalent to read instead - it exists only in the adapter, as it did only in
-// old Config.ts),
-// `$types/GeneralTypes` -> `$core/types` (InstrumentName, NoteStatus - both restored
-// there by this task), `$cmp/shared/SvgNotes` -> `$lib/games/types` (NoteImage - type-only, same
-// precedent as SvgNote.svelte), `../utils/Utilities` -> `$core/utils/Utilities`,
-// `$lib/Providers/KeyboardProvider(/KeyboardTypes)` -> `$lib/providers/KeyboardProvider(/KeyboardTypes)`,
-// `$stores/KeybindsStore` -> `$stores/KeybindsStore.svelte`, `BASE_PATH` (old `$config`, itself
-// `NEXT_PUBLIC_BASE_PATH ?? ''`) -> `base` from `$app/paths` (same kit.paths.base contract, see
-// svelte.config.js). The audio-URL/noteImage-default APP_NAME expressions are kept as the adapter
-// ternary/`.toLowerCase()` form verbatim (byte-parity per brief - both are on the legacyConfig
-// UI-tier identity allowlist).
+// Imports value data directly from $core/legacyConfig rather than $game - see that file's own
+// header for the audio-engine-tier carve-out this file and MIDIProvider.ts are on.
 import {base} from '$app/paths'
 import {
     APP_NAME,
@@ -49,8 +26,8 @@ type Layouts = {
     playstation: string[]
     switch: string[]
 }
-// plain non-reactive module-level cache (matches old: never @observable/wrapped in mobx either) -
-// not UI-observed state, so a real Map (not SvelteMap) is correct here, not just lint-suppressed.
+// QUIRK: deliberately a plain Map, not SvelteMap - this is a module-level cache, not UI-observed
+// state, so making it reactive would be pointless overhead.
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>()
 
@@ -84,9 +61,6 @@ export class Instrument {
 
     constructor(name: InstrumentName = INSTRUMENTS[0]) {
         this.name = name
-        // old: `!INSTRUMENTS.includes(this.name as any)` - the `as any` cast is no longer needed
-        // (InstrumentName widened to `string` in $core/types, Task 5 of P2; INSTRUMENTS is already
-        // `readonly string[]`), so `.includes()` type-checks directly - dropped, not disabled.
         if (!INSTRUMENTS.includes(this.name)) this.name = INSTRUMENTS[0]
         this.instrumentData = {...INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA]}
         const layouts = this.instrumentData.layout
@@ -94,10 +68,8 @@ export class Instrument {
             keyboard: [...layouts.keyboardLayout],
             abc: [...layouts.abcLayout],
             playstation: [...layouts.playstationLayout],
-            // LayoutKeys.numberLayout is typed optional (some other LayoutKeys-shaped record could
-            // omit it) but every INSTRUMENTS_DATA entry in both games' GameDefinitions always sets
-            // it (verified: every `layout:` literal in genshin/index.ts and sky/index.ts includes
-            // numberLayout) - old code assumed a plain string[] here, so `!` preserves that.
+            // numberLayout is typed optional, but every layout entry in both GameDefinitions sets
+            // it, so this assertion is safe.
             number: [...layouts.numberLayout!],
             switch: [...layouts.switchLayout]
         }
@@ -151,7 +123,7 @@ export class Instrument {
             if (type === "Playstation") return layout.playstation[index]
             if (type === "Switch") return layout.switch[index]
         } catch {
-            // old blob: silently swallow index/lookup errors here (byte-verbatim, no behavior change)
+            // QUIRK: intentionally silent - swallows any index/lookup error without logging.
         }
         return ''
     }
@@ -255,9 +227,8 @@ export class ObservableNote {
     url: string
     baseNote: BaseNote = "C"
     buffer: ArrayBuffer = new ArrayBuffer(8)
-    // old: `@observable readonly data: NoteDataState = {...}` + `makeObservable(this)` in the
-    // constructor (mobx). Now a Svelte 5 rune: `readonly` is preserved by convention only (never
-    // reassigned below - `setState` mutates in place via `Object.assign`, same as old).
+    // Treated as readonly by convention only - always mutated in place via setState()'s
+    // Object.assign, never reassigned.
     data: NoteDataState = $state({
         status: '',
         delay: 0,

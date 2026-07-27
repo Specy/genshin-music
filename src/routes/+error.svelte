@@ -5,13 +5,9 @@
     import AppLink from '$cmp/AppLink.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old had a DEDICATED route for 404 (src/app/_client-pages/404/index.tsx, 21 lines, `page404`
-    // i18n ns, rendered via src/app/not-found.tsx) - SvelteKit's own +error.svelte already covers
-    // "route not found" (and every other thrown/load error) in one place, so old's 404-only content
-    // is ported into the status===404 branch here rather than as a separate route (adjudicated per
-    // this task's brief). Every OTHER status keeps the pre-existing generic fallback below,
-    // unchanged. Old's 404 page had no useSetPageVisited call and PAGES_VERSIONS has no '404'/
-    // 'notFound' key either - correctly not wired here either.
+    // SvelteKit's +error.svelte covers "route not found" and every other thrown/load error in one
+    // place: status===404 gets its own content below; every other status falls through to the
+    // generic fallback. No setPageVisited call here - PAGES_VERSIONS has no '404' key.
 </script>
 
 {#if page.status === 404}

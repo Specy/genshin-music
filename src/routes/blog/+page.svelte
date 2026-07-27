@@ -9,17 +9,10 @@
     import {aiTransposeMetadata} from '$cmp/blog/posts/video-audio-transpose'
     import {howUseVsrgComposerMetadata} from '$cmp/blog/posts/how-to-use-vsrg-composer'
 
-    // Old: src/app/_client-pages/blog/index.tsx (171 lines) + blog.module.scss (66 lines).
-    //
-    // `posts`/`tags` are module-level consts (computed once, like old's own module-level consts,
-    // not per-render) - same literal array order as old's `posts` array; `Array.prototype.sort`
-    // has been spec-guaranteed stable since ES2019, so the 6 posts sharing the same 2024/03/19
-    // `createdAt` keep old's exact relative order (composer, player, midi-transpose,
-    // connect-midi-device, video-audio-transpose, vsrg-composer) after the descending sort, same
-    // as old relied on implicitly. `new Date(x).getTime()`/`.values()` (old's `new
-    // Date(b.createdAt).getTime()`/`new Set(...).values()`) drop their redundant wrapping - both
-    // no-ops here (`createdAt` is already a Date; `Array.from` already iterates a Set's values) -
-    // disclosed no-op simplifications.
+    // posts/tags are computed once at module scope, not per-render. Array.prototype.sort is
+    // spec-guaranteed stable since ES2019, so the 6 posts sharing the 2024/03/19 createdAt
+    // (composer, player, midi-transpose, connect-midi-device, video-audio-transpose,
+    // vsrg-composer) keep this array's literal order after the descending sort below.
     const posts: BlogMetadata[] = [
         addToHomeScreenMetadata,
         easyplay1sMetadata,
@@ -53,13 +46,12 @@
     import {createMediaQuery} from '$lib/utils/mediaQuery.svelte'
     import {setPageVisited} from '$stores/PageVisitStore.svelte'
 
-    // old: `useSetPageVisited('blog')` (the generic page-visit tracker - distinct from the
-    // per-post `${APP_NAME}_visited_blog_posts` map BaseBlogPost.svelte owns).
+    // Distinct from BaseBlogPost.svelte's own per-post visited map: this call is the page-level
+    // visit tracker only.
     //
-    // old: `useHasVisitedBlogPost` reads its map ONCE after mount (`useState(false)` initial
-    // value, corrected in a `useEffect(..., [])`) - `mounted` reproduces that exact timing so
-    // prerendered/SSR output and the first client paint both start every card "not visited"
-    // (shows "New!"), exactly like old, then corrects once real localStorage is available.
+    // mounted starts false and flips true onMount so prerendered/SSR output and the first client
+    // paint both start every card "not visited" (shows "New!"), then correct once real
+    // localStorage is available post-hydration.
     let mounted = $state(false)
 
     onMount(() => {
@@ -67,25 +59,21 @@
         mounted = true
     })
 
-    // old: `useState(() => tags.map(i => ({item: i, selected: false})))`.
     let selectedTags = $state(tags.map(item => ({item, selected: false})))
 
-    // old: `useMemo(() => {...}, [selectedTags])`.
     const filteredPosts = $derived(
         selectedTags.every(t => !t.selected)
             ? posts
             : posts.filter(p => selectedTags.some(t => t.selected && p.tags.includes(t.item)))
     )
 
-    // old: `useMediaQuery("(orientation: portrait)") && IS_MOBILE`.
     const isPortrait = createMediaQuery('(orientation: portrait)')
     const closeMenu = $derived(isPortrait.matches && globalConfigStore.state.IS_MOBILE)
 </script>
 
 {#snippet indexNavChildren()}
-    <!-- old: both "Home" and "Player" link to '/' - a pre-existing duplicate-href quirk,
-         reproduced exactly (not this file's BlogNavbar - BaseBlogPost.svelte's own post-page
-         navbar uses "Posts"/"Player"/"Composer" instead, a genuinely different label set). -->
+    <!-- QUIRK: both Home and Player link to "/" - a preserved duplicate-href bug, reproduced
+         exactly. -->
     <AppLink href="/">Home</AppLink>
     <AppLink href="/">Player</AppLink>
     <AppLink href="/composer">Composer</AppLink>
@@ -116,9 +104,6 @@
                 <Row style="font-size:0.8rem">
                     {@render blogTagsRenderer(metadata.tags)}
                 </Row>
-                <!-- old also passed `suppressHydrationWarning={true}` here - a React-only escape
-                     hatch with nothing to port it to, same call as ChangelogRow.svelte's/
-                     BaseBlogPost.svelte's identical case. -->
                 <div>{date}</div>
             </Row>
         </Card>
@@ -166,20 +151,12 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/blog/blog.module.scss (this page's own module - distinct from
-       the shared components/pages/blog/blog.module.scss split across BaseBlogPost.svelte/
-       BlogElements.svelte). `.blog-card`/`.blog-card-title`/`.blog-card-description` are applied
-       via Card/Header/Column's `className` prop (foreign elements) - all need :global(), as does
-       the `.blog-card:hover` / `.blog-card:hover .blog-card-image` pair (rooted at the same
-       foreign `.blog-card`). `.blog-card-new::after` is likewise foreign-rooted. `.blog-card-image`/
-       `.blog-card-title-content` are native divs passed as Header's CHILDREN content - children
-       are compiled as part of THIS file's template (not the child component's), so plain scoped
-       CSS reaches them; only the base (non-hover) `.blog-card-image` rule needs no :global().
-       Old's `.blog-image {}` rule is dropped entirely (unlike `.blog-back`/`.blog-tag`/
-       SettingsRow.svelte's `.invalid`, which are dead-but-non-empty and preserved wrapped in
-       :global()) - it was ALREADY empty in old (no declarations, no consumer either), so unlike
-       those it has zero effect whether present or not; keeping it would only trip svelte-check's
-       separate "empty ruleset" warning for no behavioral gain. */
+    /* .blog-card/.blog-card-title/.blog-card-description are applied via Card/Header/Column's
+       className prop (foreign elements), so they need :global() - as do the .blog-card:hover
+       rules, rooted at that same foreign class. .blog-card-image/.blog-card-title-content are
+       native divs passed as those components' CHILDREN, compiled as part of THIS file's
+       template, so plain scoped CSS reaches them - only the base (non-hover) .blog-card-image
+       rule can skip :global(). */
     :global(.blog-card) {
         position: relative;
         transition: transform 0.3s, box-shadow 0.3s;
