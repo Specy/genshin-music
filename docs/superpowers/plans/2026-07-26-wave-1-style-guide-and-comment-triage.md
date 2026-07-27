@@ -164,6 +164,10 @@ node scripts/commentOnlyCheck.js snapshot
 
 - [ ] **Step 2: Triage every comment in scope**
 
+**READ THIS FIRST — the failure mode Task 3 actually hit.** A single paragraph is very often BOTH archaeology AND quirk documentation: it opens with "old's ComposerTools.tsx built the className like this…" and closes with "…so the duplicate class token is reproduced byte-for-byte rather than cleaned up". Deleting the paragraph as archaeology silently deletes the quirk. Task 3 lost eleven such facts this way, three of which described the exact things later waves rewrite (a duplicated class token, a two-space class string, an index-keyed each block that the style guide's own "never key by index" rule would have "fixed" into a parity break).
+
+So: **before deleting any paragraph, extract the fact.** Ask "does this tell me something that is deliberately not what it looks like?" If yes, that sentence survives as a one-line `QUIRK:` at the code site even though everything around it goes. Grep your own deletions for `deliberate`, `intentional`, `preserved`, `byte-for-byte`, `reproduced`, `not collapsed`, `not widened`, `quirk`, `dead code`, `unreachable` before you commit — every hit needs either a surviving marker or a written reason in your report for why it was pure archaeology.
+
 Three outcomes only:
 - **DELETE** — port archaeology. Old file paths, prop-rename tables, "React did X so we do Y", "ported in Phase N Task M", justifications for choices that are now simply the code. Git holds this; `migration/next16-react19` still exists.
 - **KEEP, compressed to 1–2 lines** — anything a reader needs in order not to break the code: quirk/preserved-bug rationale (prefix `QUIRK:`), non-obvious ordering requirements, load-bearing CSS notes, browser workarounds. Rewrite in the de-quantified, mechanism-stating form the style guide requires.
