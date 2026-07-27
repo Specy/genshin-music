@@ -1,25 +1,4 @@
-// old: src/lib/Providers/MIDIProvider.ts - minimal-diff port; imports only (`$lib/Services/SettingsService`
-// -> `$core/Services/SettingsService`; `../BaseSettings` -> `$core/BaseSettings`; `$lib/utils/Utilities`
-// -> `$core/utils/Utilities` (debounce(50) - restored there P3 Task 2); `$config` ->
-// `$core/legacyConfig`, whose MIDI_PRESETS import is a GAME-DATA value outside the UI-tier
-// allowlist - this file is on legacyConfig's audio/provider-tier carve-out for it instead,
-// alongside Instrument.svelte.ts (whole-branch final review, finding B); it stays a direct
-// `game.*` alias below, so importing it here is behaviorally identical to reading `$game`
-// directly).
-// Bare `//@ts-ignore` (banned outside `src/lib/core/`) converted to `@ts-expect-error` with a
-// description, same pattern as KeyboardProvider.ts (Phase-4a Task 1).
-//
-// PRESERVED QUIRK (do not fix, per spec): `destroy()`'s `this.currentMIDISource` is NOT a
-// declared field anywhere on this class (only `connectedMidiSources` is) - a pre-existing dead
-// reference in the old blob (verified against `migration/next16-react19` directly), always
-// `undefined` at runtime, so that line's `?.removeEventListener(...)` is a permanent no-op; the
-// `midimessage` listeners attached in `setSourcesAndConnect` are never actually removed by
-// `destroy()`. Kept byte-verbatim (flagged in the task report, not fixed here).
 import {settingsService} from "$core/Services/SettingsService"
-// old blob imported the `MIDISettings` default-settings object alongside the type but never
-// actually referenced it (verified: only `MidiSettingsType` is used anywhere below) - dropped
-// here since this tree's eslint (no-unused-vars) is stricter than whatever the old CRA-era config
-// enforced; zero behavior change, an import-list-only trim.
 import type {MidiSettingsType} from "$core/BaseSettings"
 import {debounce, MIDINote, type MIDINoteStatus} from "$core/utils/Utilities";
 import {MIDI_PRESETS, type MIDIPreset} from "$core/legacyConfig";
@@ -79,8 +58,10 @@ export class MIDIListener {
         this.listeners = []
         this.inputs = []
         this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess)
-        // @ts-expect-error currentMIDISource is not a declared field on this class (pre-existing
-        // dead reference in the old blob - always undefined, this line is a no-op; preserved verbatim)
+        // @ts-expect-error currentMIDISource is not a declared field on this class
+        // QUIRK: always undefined at runtime (dead reference, preserved bug-for-bug) - this makes
+        // the line above a permanent no-op, so setSourcesAndConnect's midimessage listeners are
+        // never actually detached here.
         this.currentMIDISource?.removeEventListener('midimessage', this.handleEvent)
         this.MIDIAccess = null
     }

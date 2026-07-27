@@ -1,9 +1,8 @@
 import {base} from '$app/paths'
 
 /**
- * Pathname with the SvelteKit base prefix stripped — the equivalent of the
- * old Next.js usePathname(). NEVER compare page.url.pathname to route
- * literals directly; use this. (Phase-3 final review, Important-1.)
+ * Pathname with the SvelteKit base prefix stripped. Never compare
+ * `page.url.pathname` to route literals directly - use this instead.
  */
 export function appPathname(pathname: string): string {
     if (base && pathname.startsWith(base)) {

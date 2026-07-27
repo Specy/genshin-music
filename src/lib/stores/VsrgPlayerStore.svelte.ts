@@ -1,21 +1,3 @@
-// old src/stores/VsrgPlayerStore.ts (195 lines) - mobx -> Svelte 5 runes port, same pattern as
-// PlayerStore.svelte.ts/PlayerControlsStore.svelte.ts/ZenKeyboardStore.svelte.ts:
-// `@observable`/`@observable.shallow`/`makeObservable` all dropped; the constructor (which only
-// ever called `makeObservable(this)`) is removed entirely; each of the three observable fields
-// becomes its own top-level `$state(...)` class field (no wrapping getter layer - old exposed
-// `keyboard`/`currentSong`/`score` as direct top-level properties, not nested under a `state`
-// sub-object the way PlayerControlsStore does, so the port keeps that shape). Every method body is
-// byte-verbatim, including `setLayout`'s in-place `splice(0, len, ...)` form (same idiom
-// ZenKeyboardStore.svelte.ts's `setKeyboardLayout` already established) and `incrementScore`'s
-// combo/score math EXACTLY as old wrote it (`type === 'miss' ? 0 : combo + 1`,
-// `score + getScore(type) * combo`, the `baseScoreMap[type] ?? 0` fallback that is dead in
-// practice since `VsrgPlayerHitType` and `baseScoreMap`'s keys are the same 6-member union, but
-// preserved as-is). `listeners`/`keyboardListeners` stay plain arrays (not reactive `$state`):
-// like VsrgComposerStore.svelte.ts's `listeners` Map, neither is ever read from a Svelte
-// template/`$derived`/`$effect` - they only exist to be pushed/filtered/iterated imperatively by
-// `addEventListener`/`removeEventListener`/`emitEvent` and the keyboard-listener trio - so there is
-// no reactivity for a Svelte-reactivity wrapper to provide here (do not read this as a missed
-// convention). Import-path swap: `$lib/Songs/VsrgSong` -> `$core/Songs/VsrgSong`.
 import {VsrgSong} from '$core/Songs/VsrgSong'
 
 export type KeyboardKey = {
@@ -91,6 +73,9 @@ class VsrgPlayerStore {
             combo: 0
         }
     })
+    // Deliberately plain arrays, not $state: neither is ever read from a template/$derived/$effect
+    // - they only exist to be pushed/filtered/iterated imperatively by
+    // addEventListener/removeEventListener/emitEvent and the keyboard-listener trio.
     private listeners: VsrgPlayerCallback[] = []
     private keyboardListeners: VsrcPlayerKeyboardCallback[] = []
 
@@ -149,6 +134,9 @@ class VsrgPlayerStore {
         })
     }
     private getScore = (type: VsrgPlayerHitType) => {
+        // QUIRK: the `?? 0` fallback is dead code - VsrgPlayerHitType and baseScoreMap's keys are
+        // the same union, so baseScoreMap[type] can never be undefined. Preserved rather than
+        // simplified.
         return baseScoreMap[type] ?? 0
     }
     playSong = (song: VsrgSong) => {
@@ -186,49 +174,30 @@ class VsrgPlayerStore {
 
 export const vsrgPlayerStore = new VsrgPlayerStore()
 
-// The three subscribers below replace old's `mobx.observe`-based equivalents with
-// `$effect.root`-built ones (spec §6.1's non-component subscribe-helper pattern - same mechanism
-// `ThemeProvider.svelte.ts`'s `subscribeTheme` uses, see that function's header comment for the
-// full `$effect.root` mechanics, incl. why a plain "skip the first run" boolean flag is UNSAFE).
-// All three keep their old names, signatures and payload shapes EXACTLY, including two real
-// old-code quirks documented per-function below. Two structural deviations apply to all three
-// alike, disclosed once here rather than three times:
-//   (1) NO INITIAL CALLBACK: none of these three old functions ever called `callback` at subscribe
-//   time (unlike `subscribeTheme`) - a consumer had to read the store's current value directly for
-//   its initial render and use these subscribers purely for update notifications. That is
-//   preserved: none of the three below call `callback` synchronously either. What changes is HOW
-//   "no callback until a real change" is achieved: Svelte's `$effect` always runs at least once to
-//   discover its dependencies, and (verified live in this session, see `subscribeTheme`'s comment)
-//   that mandatory first run is deferred, not synchronous, and can end up observing a mutation that
-//   happened to land in the window before it executes. A naive `isFirstRun` boolean would
-//   misidentify that as "just establishing deps" and silently swallow a real update. Each effect
-//   below instead captures a cheap snapshot of what it's tracking at SUBSCRIBE time and only calls
-//   `callback` when a LATER run observes something that differs from that snapshot - correct
-//   regardless of how many times, or exactly when, the effect happens to execute.
-//   (2) FIRE-COUNT/GRANULARITY: mobx's `observe` notifies once per individual property SET on the
-//   observed object; `incrementScore`/`resetScore` each write several `score` fields in one
-//   `Object.assign` call, so old's raw mobx listener could in principle fire multiple times per
-//   single store-method call, and (since `Object.assign` writes keys one at a time) a listener
-//   could theoretically observe a transiently PARTIAL snapshot mid-assignment. Svelte's `$effect`
-//   instead coalesces every synchronous `$state` write into a single batched re-run, so the port
-//   always delivers the fully-settled post-call state exactly once. This is an inherent difference
-//   between the two reactivity models, not a bug: every consumer of these three subscribers only
-//   ever cares about the latest value, never about an intermediate one, so the coalesced firing is
-//   strictly safer and the "final value delivered" contract is unchanged.
+// The three subscribers below use $effect.root (spec §6.1's non-component subscribe-helper
+// pattern - see ThemeProvider.svelte.ts's subscribeTheme for the full $effect.root mechanics,
+// including why a plain "skip the first run" boolean flag is unsafe). Two things apply to all
+// three alike, disclosed once here:
+//
+// (1) None of the three ever calls `callback` at subscribe time - callers must read the store's
+// current value directly for their initial render and use these purely for update notifications.
+// Each effect instead captures a snapshot of what it's tracking at subscribe time and only calls
+// `callback` when a LATER run observes something that differs from that snapshot. This is needed
+// because $effect's mandatory first run is deferred, not synchronous, and can end up observing a
+// mutation that landed in the window before it executes - a naive "isFirstRun" boolean would
+// misidentify that as "just establishing deps" and silently swallow a real update.
+//
+// (2) $effect coalesces every synchronous $state write into a single batched re-run, so
+// incrementScore/resetScore's several Object.assign-driven field writes always deliver as one
+// fully-settled callback, never a transiently partial one. Every consumer of these three
+// subscribers only cares about the latest value, so this is strictly safe.
 
-// old:
-//   export function subscribeCurrentVsrgSong(callback: (data: VsrgPlayerSong) => void) {
-//       const dispose = observe(vsrgPlayerStore.currentSong, () => {
-//           callback(vsrgPlayerStore.currentSong)
-//       })
-//       return dispose
-//   }
-// PRESERVED QUIRK: passes the LIVE `vsrgPlayerStore.currentSong` object itself (not a copy) -
-// unlike the other two subscribers below, which both pass a shallow-copied snapshot. Kept exactly
-// as-is (not "fixed" for consistency with its two siblings).
+// QUIRK: passes the live vsrgPlayerStore.currentSong object itself (not a copy) - unlike the
+// other two subscribers below, which both pass a shallow-copied snapshot. Kept as-is, not
+// "fixed" for consistency with its siblings.
 export function subscribeCurrentVsrgSong(callback: (data: VsrgPlayerSong) => void): () => void {
-    // `song` is always REASSIGNED wholesale (never mutated in place - `playSong`/`stopSong` both
-    // do `this.currentSong.song = ...`), so reference equality is a correct and cheap change test.
+    // song is always reassigned wholesale (never mutated in place - playSong/stopSong both do
+    // this.currentSong.song = ...), so reference equality is a correct and cheap change test.
     let lastSong = vsrgPlayerStore.currentSong.song
     let lastType = vsrgPlayerStore.currentSong.type
     return $effect.root(() => {
@@ -244,18 +213,11 @@ export function subscribeCurrentVsrgSong(callback: (data: VsrgPlayerSong) => voi
     })
 }
 
-// old:
-//   export function subscribeVsrgScore(callback: (data: VsrgPlayerScore) => void) {
-//       const dispose = observe(vsrgPlayerStore.score, () => {
-//           callback({...vsrgPlayerStore.score})
-//       })
-//       return dispose
-//   }
 export function subscribeVsrgScore(callback: (data: VsrgPlayerScore) => void): () => void {
-    // `score` is a small plain-data object (no class instances), so a JSON snapshot is cheap and
-    // correct; it also naturally covers `lastScore` (which `incrementScore`/`resetScore` always
-    // REPLACE wholesale via `Object.assign`, never mutate in place), mirroring old's un-scoped
-    // `observe(vsrgPlayerStore.score, ...)` without needing a second, separate tracked read.
+    // score's own object reference never changes (incrementScore/resetScore mutate it in place
+    // via Object.assign), so a JSON snapshot - not reference equality - is what actually detects
+    // a change here. This is cheap since score is a small plain-data object, and it naturally
+    // covers lastScore too, which is always replaced wholesale.
     let lastSnapshot = JSON.stringify(vsrgPlayerStore.score)
     return $effect.root(() => {
         $effect(() => {
@@ -267,19 +229,11 @@ export function subscribeVsrgScore(callback: (data: VsrgPlayerScore) => void): (
     })
 }
 
-// old:
-//   export function subscribeVsrgLatestScore(callback: (data: VsrgLatestScore) => void) {
-//       const dispose = observe(vsrgPlayerStore.score, () => {
-//           callback({...vsrgPlayerStore.score.lastScore})
-//       })
-//       return dispose
-//   }
-// PRESERVED QUIRK: old observes the WHOLE `score` object (same scope as `subscribeVsrgScore`
-// above), not just `lastScore` - so this fires on ANY score-level mutation (e.g. `showScore()`'s
-// bare `scoreVisible` toggle, which never touches `lastScore` at all), even though the callback
-// only ever reports `lastScore`. Kept exactly as-is (not narrowed to only fire on real `lastScore`
-// changes) - the snapshot below is deliberately of the WHOLE `score` object, same as
-// `subscribeVsrgScore`, to preserve that exact coarse-grained firing scope.
+// QUIRK: fires on ANY score-level mutation (e.g. showScore()'s bare scoreVisible toggle, which
+// never touches lastScore at all), not just changes to lastScore - even though the callback only
+// ever reports lastScore. The snapshot below is deliberately of the WHOLE score object, matching
+// subscribeVsrgScore, to preserve that coarse-grained firing scope; narrowing it to only watch
+// lastScore would change behavior.
 export function subscribeVsrgLatestScore(callback: (data: VsrgLatestScore) => void): () => void {
     let lastSnapshot = JSON.stringify(vsrgPlayerStore.score)
     return $effect.root(() => {

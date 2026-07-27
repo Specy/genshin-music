@@ -4,9 +4,8 @@
     import PageMetadata from '$cmp/shell/PageMetadata.svelte'
     import {setPageVisited} from '$stores/PageVisitStore.svelte'
 
-    // Old: src/app/_client-pages/privacy/index.tsx (28 lines). Fully static text, no i18n (old
-    // had zero t() calls anywhere in this file - the whole page is hardcoded English, preserved
-    // verbatim rather than newly translated).
+    // QUIRK: this whole page is hardcoded English, no t() calls anywhere - preserved as-is, not
+    // a missed translation.
     onMount(() => {
         setPageVisited('privacy')
     })

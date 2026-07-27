@@ -14,15 +14,10 @@
     import {game} from '$game'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/app/_client-pages/transfer/index.tsx (169) + transfer.module.css (inlined below,
-    // the two selectors ImportedRow itself owns). `domains` (old: an APP_NAME.toLowerCase()-derived
-    // array with a dev-only localhost entry) -> `game.display.transferOrigins` (the id-derived,
-    // env-independent GameDefinition list, see genshin/index.ts's own comment) + the same `IS_DEV`
-    // dev-entry append used by $lib/protocol/appProtocol.ts's OWN (different-purpose) domains list -
-    // this is the exact P2-era transferOrigins reconciliation the task brief flags: THIS page's
-    // dropdown list is GameDefinition data (no localhost baked in), while the WindowProtocol's
-    // validDomains allowlist (appProtocol.ts) is a separate, wider, env-derived list. Both are
-    // correct for their own purpose.
+    // game.display.transferOrigins (the dropdown list below) and appProtocol.ts's own
+    // validDomains allowlist are two separate lists for two separate purposes - this page's
+    // dropdown is env-independent GameDefinition data, while validDomains is a wider,
+    // IS_DEV-derived list. Both are correct for their own purpose, not a duplicate to merge.
     const domains = [...game.display.transferOrigins, ...(IS_DEV ? ['http://localhost:3000'] : [])]
 
     let selectedDomain = $state('')
@@ -30,13 +25,6 @@
     let error = $state<string | undefined>(undefined)
     let importedData = $state<UnknownFileTypes[] | null>(null)
 
-    // old: a `useCallback` wrapping this same body, deps [selectedDomain, t] - no memoization
-    // primitive needed here (selectedDomain is read fresh off $state on every call already).
-    //
-    // PRESERVED DEAD CODE: the trailing `return () => {...}` below is old's own leftover - this
-    // function is wired as a plain onClick handler (never a useEffect body), so whatever it
-    // returns is discarded by the caller; the cleanup closure it builds is never invoked. Kept
-    // verbatim rather than dropped, per this migration's preserve-quirks rule.
     async function fetchData() {
         const frame = document.createElement('iframe')
         frame.src = selectedDomain
@@ -60,6 +48,8 @@
         }
         logger.hidePill()
         frame.remove()
+        // QUIRK: this cleanup closure is dead code - fetchData is a plain onClick handler, not an
+        // effect, so its return value is never used or invoked. Preserved rather than dropped.
         return () => {
             logger.hidePill()
             frame.remove()
@@ -74,11 +64,9 @@
         setupProtocol().catch(console.error)
     })
 
-    // old ImportedRow's local `name` derivation: `if (data.type === "theme") name = data.other?.name;
-    // else name = data.name` - UnknownFileTypes's non-theme members don't uniformly carry a `.name`
-    // field TS can prove across the whole union (same "genuinely can't be typed more precisely"
-    // situation as FileService.ts's own getUnknownErrors()), so the same narrowly-scoped `any`
-    // escape hatch is used here instead of fighting the union type.
+    // UnknownFileTypes's non-theme members don't uniformly carry a `.name` field TS can prove
+    // across the whole union, so a narrowly-scoped `any` escape hatch is used here instead of
+    // fighting the union type.
     function importedRowName(data: UnknownFileTypes): string {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see comment above
         const anyData = data as any
@@ -159,7 +147,6 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/transfer/transfer.module.css - both selectors, ImportedRow's own. */
     :global(.import-row) {
         background-color: var(--primary);
         color: var(--primary-text);

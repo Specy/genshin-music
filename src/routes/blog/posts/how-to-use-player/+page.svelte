@@ -10,18 +10,6 @@
     import {keyBinds} from '$stores/KeybindsStore.svelte'
     import {playerTutorialMetadata} from '$cmp/blog/posts/how-to-use-player'
 
-    // Old: src/app/_client-pages/blog/posts/how-to-use-player.tsx (188 lines). BlogP/BlogOl/BlogLi/
-    // BlogB -> native tags; raw AppLink (not BlogLink); `ShortcutsTable`/`useObservableMap` ->
-    // shortcutsTable snippet reading `keyBinds.getShortcutMap('player')` directly (a reactive
-    // SvelteMap already - see pages/ShortcutsTable.svelte's header comment). `useConfig().IS_MOBILE`
-    // -> `globalConfigStore.state.IS_MOBILE`. `APP_NAME !== "Genshin"` kept as a literal APP_NAME
-    // compare (identity check, on the legacyConfig UI-allowlist - not a game-DATA read the
-    // two-tier rule would redirect to $game). Content: 3 headers, 3 paragraphs (incl. the intro's
-    // 3 <br/>-separated blocks, preserved), 2 ordered lists (10 + 6 items), 1 unordered-ish 13-item
-    // settings list, 3 images, 4 internal links (1 broken: `/blog/connect-midi-device` doesn't
-    // match the real `/blog/posts/connect-midi-device` route - a PRESERVED dead link, same class
-    // of bug as how-to-use-composer's own 2 broken blog links), 1 conditional paragraph, 1
-    // conditional shortcuts section - verified against the old blob.
     const playerShortcuts = keyBinds.getShortcutMap('player')
 </script>
 
@@ -40,6 +28,8 @@
 
         If you have a MIDI keyboard, you can connect it to your device, follow the <AppLink
         href="/blog/connect-midi-device">MIDI device </AppLink>
+        <!-- QUIRK: /blog/connect-midi-device above is a broken link (missing /posts/) - same
+             preserved bug as how-to-use-composer.tsx's equivalent link. -->
     </p>
 
     <Header margin="1rem 0">

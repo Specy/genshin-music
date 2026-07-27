@@ -23,41 +23,6 @@
     import SheetVisualizerMenu from '$cmp/pages/SheetVisualizer/SheetVisualizerMenu.svelte'
     import SheetFrame2 from '$cmp/pages/SheetVisualizer/SheetFrame2.svelte'
 
-    // Old: src/app/_client-pages/sheet-visualizer/index.tsx (186 lines) + its route wrapper
-    // src/app/sheet-visualizer/page.tsx (a plain re-export, folded away - SvelteKit's own
-    // +page.svelte already IS the route).
-    //
-    // `useTheme()` -> the reactive `ThemeProvider` singleton (aliased `theme`, same alias
-    // Switch.svelte/Select.svelte/BaseNote.svelte already use).
-    //
-    // `useSetPageVisited('sheetVisualizer')` -> `setPageVisited('sheetVisualizer')` in `onMount`
-    // (this store's plain-function form, P4b Task 1... no, P3 Task 2/PageVisitStore - see that
-    // store's own header comment).
-    //
-    // Two-tier: `APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'` (keyboardLayout initial state)
-    // -> `game.settings.defaultNoteNameType.sheetVisualizer`; `NOTE_NAME_TYPES` -> `game.notes.nameTypes`;
-    // `{APP_NAME} Music Nightly` print heading -> `{game.i18n.interpolation.APP_NAME} Music Nightly`
-    // - all three per the P4b plan's own consolidated old->$game mapping table (UI file, reads
-    // `$game` directly).
-    //
-    // `ref.current.children[0].children[0]` (old's DOM-measure for the +/- frame-count buttons) ->
-    // `ref.children[0]?.children[0]` via `bind:this` (no `.current` indirection needed in Svelte).
-    //
-    // `loadSong`'s try/catch/fallback ladder (VisualSong.from -> recorded-fallback -> error) is
-    // byte-parity including the `isComposedOrRecorded` guard and the `(temp as RecordedSong |
-    // ComposedSong).toRecordedSong()` cast old's second try block needed (VsrgSong has no
-    // `toRecordedSong` method, so TS can't narrow that far on its own - same cast old used).
-    //
-    // The `useEffect([currentSong, hasText, keyboardLayout, loadSong, flattenSpaces])` dependency
-    // array listed `hasText` even though `loadSong`'s own body never reads it - old re-fires
-    // `loadSong` (and its `Analytics.songEvent` call) whenever the note-name-text toggle changes,
-    // not just when it would actually change the visual sheet. Svelte's `$effect` tracks whatever
-    // is actually READ during the callback (not a manually declared array), so this quirk is
-    // preserved via an explicit no-op `void hasText` read below - dropping it would silently change
-    // behavior (fewer Analytics fires than old).
-    //
-    // `Switch`/`Select`'s `onChange`/`checked`/`value` map onto the ported components' own
-    // `onchange`/`checked`/`value` props (Phase 4a).
     let sheet = $state<VisualSong | null>(null)
     let framesPerRow = $state(7)
     let currentSong = $state<SerializedSong | null>(null)
@@ -113,6 +78,10 @@
     }
 
     $effect(() => {
+        // QUIRK: void hasText is a deliberate no-op read - it makes this $effect re-fire (and
+        // re-send Analytics.songEvent) whenever the note-name-text toggle changes, even though
+        // loadSong's own body never reads hasText. Matches old's explicit effect-dependency list.
+        // Removing this read would silently fire fewer Analytics events than old did.
         void hasText
         if (currentSong) loadSong(currentSong, keyboardLayout)
     })
@@ -215,17 +184,10 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/sheet-visualizer/SheetVisualizer.module.css (65 lines), a CSS
-       Modules file used ONLY by this page (unlike the shared SheetFrame.module.css - see
-       SheetFrame2.svelte's own header comment). Co-located here per this migration's established
-       "CSS module dedicated entirely to this component" idiom (Switch.svelte/Select.svelte).
-
-       :global() is required for `.page-no-print`/`.no-print` specifically - both are applied via a
-       `className` PROP forwarded into CHILD components' own top-level elements (DefaultPage's outer
-       div and, two layers deeper, SheetVisualizerMenu -> MenuSidebar's outer div respectively), not
-       elements this file's own template renders directly - a plain scoped selector would never
-       match them (same reasoning already established at error/+page.svelte's own `:global(.error-page)`
-       rule). The other four selectors below target elements THIS file's own template authors
+    /* :global() is required for .page-no-print/.no-print - both are applied via a className prop
+       forwarded into CHILD components' own elements (DefaultPage's outer div, and two layers
+       deeper, SheetVisualizerMenu -> MenuSidebar's outer div), not elements this file's own
+       template renders directly. The other selectors below target elements this file authors
        directly, so they keep normal Svelte scoping. */
     .visualizer-plus-minus {
         width: 2rem;

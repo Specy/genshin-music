@@ -35,56 +35,22 @@
     import {setPageVisited} from '$stores/PageVisitStore.svelte'
     import {logger} from '$stores/LoggerStore.svelte'
 
-    // Old: src/app/_client-pages/vsrg-composer/index.tsx (707 lines) - the `VsrgComposer` class
-    // component (the whole page) plus its thin default-export wrapper function `VsrgcomposerPage`
-    // (`useSetPageVisited('vsrgComposer')` then `<VsrgComposer navigation={...}
-    // registerLeaveHandler={...} t={...}/>`).
+    // This whole file IS the page (state, lifecycle, every method, the render tree) - unlike
+    // Composer.svelte/Player.svelte, which split into a $cmp component + thin route wrapper
+    // because both are also mounted a second time in preview mode from theme/+page.svelte. This
+    // page has no such second caller, so there's no split to make.
     //
-    // FILE-SPLIT DECISION (per this task's own brief): unlike Composer.svelte/Player.svelte, which
-    // split their old class body into a `$cmp/pages/X/X.svelte` component + a thin
-    // `src/routes/X/+page.svelte` route wrapper (because BOTH of those pages are also mounted a
-    // SECOND time, in preview mode, from `theme/+page.svelte`), the vsrg-composer page has NO
-    // preview consumer anywhere on this branch (grepped `src/routes/theme/+page.svelte`: zero `Vsrg`
-    // references) - so there is no second caller that would need the class/route split. This whole
-    // file IS the page: state, lifecycle, every method, and the render tree all live directly here,
-    // a deliberate choice stated explicitly per the brief rather than mirroring the composer split
-    // by reflex.
+    // QUIRK (load-bearing - read before touching any vsrg mutation in this file): vsrg is a
+    // VsrgSong class instance. Svelte 5's $state() runtime proxy never wraps it - only
+    // Object.prototype/Array.prototype-rooted values are deep-proxied - so in-place mutations
+    // (vsrg.tracks.push(...), vsrg.set({...}), etc.) are invisible to any $derived/template/
+    // $effect reading vsrg UNLESS the top-level vsrg variable itself is reassigned. refreshVsrg()
+    // below (vsrg = vsrg.clone()) is called after every mutation that needs to be observed.
     //
-    // `navigation`/`registerLeaveHandler`/`t` prop-threading is dropped exactly like every other
-    // Phase-4 page: `registerLeaveHandler` is imported directly (`$stores/navigationGuard.svelte`,
-    // P4c Task 2), `t()` is the reactive i18n binding, and `goto`/`resolve` (`$app/navigation`/
-    // `$app/paths`) replace the old React-Router-shaped `navigation.push` (used only by the dead
-    // `changePage` below - see its own note).
-    //
-    // REQUIRED ADAPTATION, LOAD-BEARING (same class of fix as Composer.svelte's own documented
-    // `refreshSong()`, and VsrgComposerStore.svelte.ts's own header note that this class instance is
-    // NOT deep-proxied by `$state()`): `vsrg` is a `VsrgSong` class instance - Svelte 5's `$state()`
-    // runtime proxy never wraps it (only `Object.prototype`/`Array.prototype`-rooted values are deep-
-    // proxied), so in-place mutations (`vsrg.tracks.push(...)`, `vsrg.set({...})`, etc.) are
-    // invisible to any `$derived`/template/`$effect` reading `vsrg` UNLESS the top-level `vsrg`
-    // variable itself is reassigned. `refreshVsrg()` below (`vsrg = vsrg.clone()`) is called at
-    // EVERY point old's own `this.setState({vsrg, ...})` included `vsrg` as a key - reproducing old's
-    // own (React-driven, "any setState re-renders everything downstream") rendering trigger as
-    // literally as possible - PLUS one place old's setState omitted `vsrg` but this port still needs
-    // it (`setAudioSong`'s `vsrg.setAudioSong(...)` call, which reassigns `vsrg.trackModifiers` -
-    // read directly by `VsrgComposerMenu`'s own `data.trackModifiers` template prop; see that
-    // function's own comment for the full reasoning, since old's coarse full-tree React re-render
-    // papered over the exact same gap).
-    //
-    // NOT a correctness gap needing `refreshVsrg()`, even though the underlying pixi renderer
-    // (`VsrgComposerCanvas.svelte`/`VsrgComposerRenderer.ts`, Task 7) is fed the SAME live `vsrg`
-    // reference: that renderer's OWN `vsrgComposerStore.addEventListener('ALL', ...)` mechanism
-    // (`handleEvent` -> `calculateSizes()`/`generateCache()` -> `draw()`) reads its retained
-    // `this.state.vsrg` directly on every relevant `vsrgComposerStore.emitEvent(...)` call - since
-    // that retained reference is the SAME live object this page mutates in place, its CONTENTS are
-    // always current regardless of whether the renderer's OWN field was just reassigned by a fresh
-    // `update()` call. Every `vsrgComposerStore.emitEvent(...)` call site below is ported at the
-    // EXACT same point old's own code emitted it, for exactly this reason.
-    //
-    // `heldKeys`/`pressedDownHitObjects`/`lastTimestamp`/`playbackTimestamp`/`mounted`/`cleanup` are
-    // old class-instance fields the render tree never reads directly - plain (non-`$state`) closure
-    // variables here, same established "only promote to $state what the template/a derived/an effect
-    // actually reads" convention used throughout this migration.
+    // The pixi renderer (VsrgComposerCanvas.svelte/VsrgComposerRenderer.ts) does NOT need
+    // refreshVsrg() to see a change: it holds the SAME live vsrg reference and reads it directly
+    // from its own vsrgComposerStore-event-driven draw() calls, not through Svelte reactivity -
+    // its content is always current regardless of whether the Svelte-facing vsrg was reassigned.
     let settings = $state(settingsService.getDefaultVsrgComposerSettings())
     let vsrg: VsrgSong = $state(new VsrgSong('Untitled'))
     // svelte-ignore state_referenced_locally
@@ -257,11 +223,10 @@
         if (selectedType === 'delete') {
             vsrg.removeHitObjectInTrackAtTimestamp(selectedTrack, timestamp, key)
             selectedHitObject = null
-            // FIX (review): refreshVsrg() is required here, matching selectHitObject's own
-            // delete-branch treatment - without it, reassigning selectedHitObject to null when it
-            // is ALREADY null (true after every successful delete) is a no-op $state write that
-            // never retriggers VsrgComposerCanvas.svelte's $effect, so the pixi canvas keeps
-            // showing the deleted hit object until an unrelated redraw-triggering action happens.
+            // Also needs refreshVsrg(): selectedHitObject is already null here after every
+            // successful delete, so reassigning it to null is a no-op $state write that alone
+            // wouldn't retrigger VsrgComposerCanvas.svelte's $effect - the canvas would keep
+            // showing the deleted hit object until an unrelated redraw happened.
             refreshVsrg()
             return
         }
@@ -283,12 +248,10 @@
     function handleSettingChange({key, data}: SettingUpdate) {
         // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
         settings[key] = {...settings[key], value: data.value}
-        // PRESERVED QUIRK: old special-cases exactly `keys`/`bpm`/`difficulty` here (NOT a generic
-        // `songSetting` flag branch the way Composer.svelte's own handleSettingChange does) - even
-        // though `pitch` is ALSO marked `songSetting: true` in VsrgComposerSettings.data, old never
-        // propagates a "pitch" setting change into `vsrg.pitch` for an ALREADY-OPEN song (only
-        // `createNewSong` ever seeds `vsrg.pitch` from the settings). Reproduced exactly - not
-        // generalized to match Composer's own different (and, for THIS page, more complete) idiom.
+        // QUIRK: only keys/bpm/difficulty are special-cased here - pitch is ALSO marked
+        // songSetting: true in VsrgComposerSettings.data, but changing it never propagates into
+        // vsrg.pitch for an already-open song (only createNewSong seeds vsrg.pitch). Preserved,
+        // not generalized to cover pitch too.
         if (key === 'keys') {
             vsrg.changeKeys(data.value as VsrgSongKeys)
         }
@@ -314,12 +277,9 @@
         return (await saveSong()) !== null
     }
 
-    // DEAD CODE, preserved: old's own `changePage` is defined but never wired to any child prop
-    // (grepped the raw blob: `VsrgComposerMenu`'s props/JSX call site here never included a
-    // `changePage`/theme-link callback the way Composer.svelte's/PlayerMenu.svelte's own menus do) -
-    // this page has no "change app theme" link at all. Ported anyway per this task's own brief
-    // (which explicitly lists it among the methods to port), unreachable in both old and here.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- unreachable in old too, see comment above
+    // QUIRK: dead code - changePage is never wired to any child prop (this page has no
+    // "change app theme" link). Unreachable, preserved rather than removed.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- unreachable, see comment above
     async function changePage(page: string) {
         if (page === 'Home') return homeStore.open()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see AppLink.svelte's identical resolve(href as any) note; page is a general runtime string, not a literal route id
@@ -364,13 +324,9 @@
         // if wants to add a tap note
         if (selectedType === 'tap' && type === ClickType.Left) {
             if (firstNote) {
-                // FIX (review): old's own equivalent early return (index.tsx:330) is just
-                // `return this.setState({selectedHitObject: firstNote})` - no vsrg key, since no
-                // vsrg content changed in this branch. The refreshVsrg() previously here was an
-                // unforced, undisclosed deviation that immediately orphaned the just-(re)selected
-                // note (same detachment mechanism as dragHitObject/releaseHitObject above) for
-                // zero behavioral gain - selectedHitObject = firstNote alone already retriggers
-                // the canvas $effect.
+                // No refreshVsrg() needed here - no vsrg content changed in this branch.
+                // selectedHitObject = firstNote alone already retriggers the canvas $effect;
+                // calling refreshVsrg() here would just orphan this reference for no gain.
                 selectedHitObject = firstNote
                 return
             }
@@ -386,8 +342,7 @@
                 selectedHitObject = null
             } else {
                 if (firstNote) {
-                    // FIX (review): same as the 'tap' branch's firstNote check above (old
-                    // index.tsx:341, identical shape) - no refreshVsrg() needed or wanted here.
+                    // Same as the 'tap' branch's firstNote check above - no refreshVsrg() needed.
                     selectedHitObject = firstNote
                     return
                 }
@@ -418,15 +373,9 @@
         }
         const parsed = songService.parseSong(song)
         if (parsed instanceof RecordedSong) {
-            // REQUIRED ADAPTATION (beyond old's own `this.setState({audioSong, renderableNotes})`,
-            // which omits `vsrg`): `vsrg.setAudioSong(parsed)` (below) reassigns
-            // `vsrg.trackModifiers` to a brand-new array whenever a DIFFERENT background song is
-            // picked - `VsrgComposerMenu`'s own `data.trackModifiers` prop reads that field directly
-            // in its template, which needs `vsrg` itself refreshed to pick it up (see this file's own
-            // header comment "REQUIRED ADAPTATION, LOAD-BEARING" for the general mechanism). Old
-            // never needed this because ANY `setState` call - even one that omits `vsrg` - forced
-            // React to re-render the WHOLE tree, so `VsrgMenu`'s own `trackModifiers={vsrg
-            // .trackModifiers}` prop read the CURRENT (just-mutated) value regardless.
+            // vsrg.setAudioSong (below) reassigns vsrg.trackModifiers to a new array -
+            // VsrgComposerMenu reads that field directly off vsrg, so refreshVsrg() below is
+            // required for it to see the update (see this file's header QUIRK note).
             vsrg.setAudioSong(parsed)
             parsed.startPlayback(lastTimestamp)
             vsrg.setDurationFromNotes(parsed.notes)
@@ -490,17 +439,13 @@
 
     function dragHitObject(newTimestamp: number, key?: number) {
         if (selectedHitObject === null) return
-        // FIX (review): refreshVsrg() deep-clones every hit object (VsrgSong.clone() ->
-        // VsrgTrack.clone() -> VsrgHitObject.clone()), which detaches this retained
-        // selectedHitObject reference from the freshly-cloned vsrg.tracks[...].hitObjects array.
-        // This function runs once per native pointermove for the WHOLE drag gesture
-        // (VsrgComposerRenderer.handleDrag reads its own persistent draggedHitObject field), so
-        // every call after the first was mutating an orphaned object - invisible to rendering,
-        // since the canvas draws strictly from the hit objects found inside the CURRENT
-        // vsrg.tracks[...].hitObjects array - and the final drop position was silently discarded
-        // on release. Re-point selectedHitObject at its counterpart inside the fresh clone by
-        // index immediately after cloning: safe because VsrgTrack.clone()/VsrgSong.clone() both
-        // build their arrays with .map(), which preserves order.
+        // QUIRK (load-bearing): refreshVsrg() deep-clones every hit object, which detaches this
+        // retained selectedHitObject reference from the freshly-cloned tracks[...].hitObjects
+        // array. This runs once per pointermove for the whole drag gesture, so every call after
+        // the first would mutate an orphaned, invisible object without the re-point below - the
+        // final drop position would be silently lost on release. Re-pointing by index after
+        // cloning is safe because VsrgTrack.clone()/VsrgSong.clone() both build arrays with
+        // .map(), which preserves order.
         const index = vsrg.tracks[selectedTrack].hitObjects.indexOf(selectedHitObject)
         selectedHitObject.timestamp = newTimestamp
         if (key !== undefined && key < settings.keys.value) selectedHitObject.index = key
@@ -521,12 +466,11 @@
         const tracks = vsrg.getHitObjectsBetween(selectedHitObject.timestamp, selectedHitObject.timestamp + selectedHitObject.holdDuration, selectedHitObject.index)
         tracks.forEach((track, i) => track.forEach(h => h !== selectedHitObject && vsrg.removeHitObjectInTrackAtTimestamp(i, h.timestamp, h.index)))
         changes++
-        // FIX (review): same refreshVsrg()-detaches-selectedHitObject issue as dragHitObject
-        // above (see its comment for the full mechanism). Captured AFTER the conflict-removal
-        // loop above, not before: that loop can splice sibling entries out of this SAME track's
-        // hitObjects array, which would shift selectedHitObject's own position within it -
-        // indexOf must run against the array's final pre-clone shape for the index to still be
-        // valid once re-applied to the clone below.
+        // Same refreshVsrg()-detaches-selectedHitObject mechanism as dragHitObject above.
+        // Captured AFTER the conflict-removal loop above, not before: that loop can splice
+        // sibling entries out of this same track's hitObjects array, shifting selectedHitObject's
+        // own position - indexOf must run against the array's final pre-clone shape for the index
+        // to still be valid once re-applied to the clone below.
         const index = vsrg.tracks[selectedTrack].hitObjects.indexOf(selectedHitObject)
         refreshVsrg()
         if (index !== -1) selectedHitObject = vsrg.tracks[selectedTrack].hitObjects[index]
@@ -541,12 +485,8 @@
     function onNoteSelect(note: number) {
         selectedHitObject?.toggleNote(note)
         audioPlayer.playNoteOfInstrument(selectedTrack, note)
-        // old's own `this.setState({selectedHitObject})` re-passes the SAME reference (mutated in
-        // place by `.toggleNote()` above) - any React setState still forces a re-render there. Here,
-        // `selectedHitObject` needs a genuinely NEW reference for Svelte to notice: `VsrgHitObject`'s
-        // own (cheap - a handful of primitive fields, no track/instrument data) `.clone()` gives one,
-        // reflecting the just-toggled `.notes` array in both the canvas AND VsrgTop's own
-        // `VsrgComposerKeyboard` `selected` prop.
+        // selectedHitObject needs a genuinely new reference for Svelte to notice the mutation
+        // .toggleNote() just made in place - .clone() is cheap (a handful of primitive fields).
         if (selectedHitObject) selectedHitObject = selectedHitObject.clone()
     }
 

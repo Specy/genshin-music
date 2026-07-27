@@ -25,25 +25,6 @@
     import {setPageVisited} from '$stores/PageVisitStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/app/_client-pages/theme/index.tsx (220 lines). `useTheme()` (a mobx-observe -> React-
-    // state bridge, `[theme] = useTheme()`) is dropped entirely: `ThemeProvider` (imported here as
-    // `theme`, the same alias convention `BaseNote.svelte`/`AppBackground.svelte`/every other
-    // ThemeProvider consumer already uses) is ITSELF `$state`-backed (`ThemeProvider.svelte.ts`) -
-    // reading its accessor methods directly inside the template already tracks fine-grained
-    // reactivity, the hook's whole job. `useObservableArray(themeStore.themes)` -> `themeStore.themes`
-    // directly (a live `$state` array, ThemeStore.svelte.ts).
-    //
-    // DOCUMENTED DEVIATION, RESOLVED BY PHASE 4c TASK 6: the live Player/Composer preview at the
-    // bottom (`<Player inPreview/>` / `<Composer inPreview/>`) was originally STUBBED with a themed
-    // placeholder `Card` for both pages while neither existed yet. Phase 4b Task 7 swapped the
-    // `'player'` branch for the real `<Player inPreview/>`; this task (4c Task 6) swaps the
-    // `'composer'` branch for the real `<Composer inPreview/>` the exact same way, closing the
-    // asymmetry - both branches now render their real page component, neither wires `AppBackground`
-    // itself (see each component's own header comment for why: this page supplies it, exactly like
-    // old's `PageBackground` route wrapper did). The `previewStub` snippet/`Card` import that backed
-    // both placeholders have no remaining callers and are removed in the same change. Everything
-    // else on this page is (and was already) full-function (CRUD, clone-on-edit prompt flow,
-    // background image URLs, import/export).
     onMount(() => {
         setPageVisited('theme')
     })
@@ -221,30 +202,18 @@
             </AppBackground>
         {/if}
     </div>
-    <!-- Keep this at the bottom, same as old - its position after both preview branches above is
-         load-bearing on a FRESH mount: Svelte compiles a <title> inside <svelte:head> to a plain
-         `document.title = ...` assignment inside that component's own mount effect (verified
-         against node_modules/svelte's own compiler + SSR renderer source), so when several
-         PageMetadata instances mount TOGETHER in the same initial pass, the latest one to run
-         simply overwrites the rest - no extra <title> element is ever created, and on a fresh
-         load or an SPA round trip (navigating away and back) this alone is sufficient: verified
-         live, SSR HTML and the hydrated DOM both show exactly one <title>, reading "Themes".
-         REAL BUG CAUGHT (4c Task 6, live-tested): that guarantee does NOT extend to toggling the
-         `selectedPagePreview` button ABOVE while already on this page. Neither preview branch is a
-         stub anymore (the 'player' branch renders the real <Player inPreview/>, Phase 4b Task 7;
-         the 'composer' branch renders the real <Composer inPreview/>, Phase 4c Task 6), and each
-         has its OWN PageMetadata. When the toggle button swaps `{#if}` branches, the NEWLY-MOUNTED
-         branch's PageMetadata runs its title-setting effect fresh - but THIS trailing PageMetadata
-         is already-mounted and static (its own `text` prop never changes), so Svelte has no reason
-         to re-run ITS effect just because a sibling remounted, and "Themes" stays overwritten by
-         whichever branch was just toggled TO. Reproduced live before this fix: clicking "View
-         composer" left the tab title as "Composer - Untitled", and clicking "View player" left it
-         as "Player" - in both directions, not just one. `{#key selectedPagePreview}` below forces
-         THIS PageMetadata to unmount+remount (re-running its own title-setting effect) every time
-         the toggle fires, in the SAME reactive flush as the branch swap and strictly after it in
-         template/tree order - re-verified live after this fix: toggling to composer, back to
-         player, and back to composer again each leave exactly one <title>, correctly "Themes"
-         every time. -->
+    <!-- QUIRK (load-bearing, read before restructuring this page): must stay at the bottom, after
+         both preview branches. Svelte compiles a <title> inside <svelte:head> to a plain
+         document.title assignment in that component's own mount effect, so when several
+         PageMetadata instances mount together, the LAST one to run wins - this trailing instance
+         being last is what makes "Themes" the final title on a fresh load.
+         That alone isn't enough once toggling `selectedPagePreview` is possible: neither preview
+         branch is a stub, so each one has its OWN PageMetadata too. Swapping the {#if} branch
+         re-runs the newly-mounted branch's title effect, but this trailing PageMetadata is
+         already mounted with an unchanged `text` prop, so its own effect never re-runs - the tab
+         title stays stuck on whatever the branch just switched to. {#key selectedPagePreview}
+         below forces this PageMetadata to unmount+remount (re-running its title effect) on every
+         toggle, strictly after the branch swap in template order, restoring "Themes". -->
     {#key selectedPagePreview}
         <PageMetadata
             text={t('home:themes_name')}

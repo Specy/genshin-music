@@ -9,38 +9,15 @@
     import {APP_NAME} from '$core/legacyConfig'
     import {cn} from '$core/utils/Utilities'
 
-    // Old: src/app/_client-pages/uma-mode/index.tsx (168 lines) + UmaMode.module.scss (inlined
-    // below - no real SCSS features used, so it drops in as plain CSS like every other .module.scss
-    // this migration has ported). Every string literal below (the passphrase-flow copy, including
-    // the zalgo/glitch-text ones) was extracted programmatically from the old blob via a small node
-    // script rather than hand-typed, to guarantee the combining-diacritic sequences transcribe
-    // byte-exact - a manual retype of text like "T̶́h..." risks silently dropping a
-    // combining mark, exactly the kind of transcription error this migration's conventions warn
-    // against.
-    //
-    // Effect merge (svelte-ize per this task's brief): old had THREE separate effects - (1)
-    // `[ref]` -> measure `bounds` once, (2) `[bounds]` -> populate the initial particle batch
-    // (reading `${APP_NAME}_uma_mode` straight from localStorage, NOT the reactive config store -
-    // preserved below, see the comment at that read), (3) `[bounds, IS_UMA_MODE]` -> a
-    // setInterval(50) that respawns dead particles, restarting the whole interval whenever
-    // IS_UMA_MODE changed so future spawns pick up the new emoji pool. Collapsed into one onMount
-    // below: `isUmaMode` is a $derived reactive read, so the SAME long-lived interval (never torn
-    // down/recreated) already sees the current value on every tick without a restart - functionally
-    // identical end behavior (every qualifying respawn after a toggle uses the new pool), just
-    // without old's incidental interval-phase reset on each toggle (imperceptible at 50ms).
-    //
-    // Dropped as inert: ParticleElement's own `key={emoji}` (a React quirk) - React `key` only
-    // affects reconciliation at the exact `.map()` call site producing the sibling list; here that
-    // site is `particles.map(...)` in the OLD parent, keyed correctly by `particle.id` (unique) -
-    // the inner key on ParticleElement's own returned div is a plain prop React silently drops,
-    // dead code with zero observable effect. The Svelte {#each} block below is keyed by
-    // `particle.id` only, same as the outer (real) old key.
+    // The setInterval below runs once for the page's lifetime and re-reads isUmaMode (a $derived
+    // value) on every tick, so toggling uma mode doesn't need to restart it - new spawns pick up
+    // the new emoji pool automatically.
     const nonUmaModeEmojis = ["👻", "👾", "👺", "👹", "👿", "🔥"]
     const umaModeEmojis = ["💀", "🦴", "☠️", "🪦", "⚰️"]
     const umaModeText = umaModeEmojis.join(' ')
-    let particleId = 0 // old: module-scope `let id = 0` (persists across remounts); here it's
-    // component-instance-scoped (resets on each mount) - unobservable either way, this id is never
-    // rendered, only used as the {#each} key for the CURRENT particles array.
+    // Resets each mount - fine, since this is only used as the {#each} key for the current
+    // particles array, never rendered.
+    let particleId = 0
 
     type Particle = {
         emoji: string
@@ -87,9 +64,9 @@
         setPageVisited('umaMode')
         const bounds = buttonEl?.getBoundingClientRect()
         if (!bounds) return
-        // old: reads localStorage directly (NOT globalConfigStore.state.IS_UMA_MODE) for the
-        // INITIAL particle batch only - preserved exactly, a deliberate-looking but undocumented
-        // divergence from the reactive value used everywhere else on this page.
+        // QUIRK: reads localStorage directly here (not the reactive isUmaMode derived below,
+        // which the respawn logic further down DOES use) for the initial particle batch only - a
+        // deliberate-looking but undocumented divergence, preserved as-is.
         const isUmaModeAtMount = JSON.parse(localStorage.getItem(`${APP_NAME}_uma_mode`) || 'false')
         particles = new Array(AMOUNT_OF_PARTICLES).fill(0).map(() =>
             createRandomParticle(bounds, isUmaModeAtMount ? umaModeEmojis : nonUmaModeEmojis)
@@ -169,8 +146,6 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/uma-mode/UmaMode.module.scss - inlined verbatim (no SCSS nesting/
-       variables/mixins used in the source). */
     .uma-mode-button {
         border: none;
         background-color: unset;

@@ -6,14 +6,6 @@
     import Header from '$cmp/header/Header.svelte'
     import {midiTransposeMetadata} from '$cmp/blog/posts/midi-transpose'
 
-    // Old: src/app/_client-pages/blog/posts/midi-transpose.tsx (107 lines). BlogP/BlogOl/BlogLi ->
-    // native tags; raw AppLink (not BlogLink) -> plain AppLink, no blog-link class/target. Content:
-    // 3 headers, 3 paragraphs, 3 images, 2 ordered lists (9 + 2 items), 2 internal links.
-    //
-    // PRESERVED QUIRK: the "Now click..." paragraph is NOT wrapped in a <BlogP> in the old file -
-    // it's a bare text node (with one inline AppLink) sitting directly under <BaseBlogPost>'s
-    // <article>, unlike every other paragraph in this post. Reproduced exactly: no <p>/blog-p
-    // class around that one block below.
 </script>
 
 <BaseBlogPost metadata={midiTransposeMetadata}>
@@ -31,6 +23,8 @@
         Once you found your MIDI file, visit the <AppLink href="/composer">composer</AppLink> and open the song
         menu.
     </p>
+    <!-- QUIRK: this paragraph is deliberately not wrapped in <p class="blog-p"> like every other
+         paragraph in this post - reproduced exactly. -->
     Now click the "Create from MIDI/Audio", it will open the MIDI transposition tool, and select your file after
     pressing the
     "Open MIDI/Audio/Video file" button. If you want to import a video or audio file instead, visit the <AppLink

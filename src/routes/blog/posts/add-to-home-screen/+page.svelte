@@ -11,15 +11,6 @@
     import {pwaStore} from '$stores/PwaStore.svelte'
     import {addToHomeScreenMetadata} from '$cmp/blog/posts/add-to-home-screen'
 
-    // Old: src/app/_client-pages/blog/posts/add-to-home-screen.tsx (92 lines). BlogP -> native
-    // `<p class="blog-p">`. `useObservableObject(pwaStore.state)` -> `pwaStore.state` read
-    // directly (already `$state`-backed - PwaStore.svelte.ts, P3 Task 1 - no subscription wrapper
-    // needed, same substitution Home.svelte's own identical install-button block already uses).
-    // `<FaDownload/>` - same react-icons path data already inlined in Home.svelte's own
-    // faDownloadIcon snippet (viewBox "0 0 512 512"), copied verbatim here (that call site is
-    // bare too, so both share the same default "1em"/"1em" sizing - no size mismatch to disclose,
-    // unlike PromotionCard.svelte's FaTimes). `ExpandableContainer` (not in this task's file list;
-    // ported ahead of this consumer - see that file's own header comment) - all 3 call sites bare.
 </script>
 
 {#snippet faDownloadIcon()}

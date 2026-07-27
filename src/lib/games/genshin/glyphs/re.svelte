@@ -1,8 +1,6 @@
 <script lang="ts">
-    // Old: src/components/shared/SvgNotes/genshin/re.tsx (React). `color` restored P4c Task 2
-    // (default 'currentColor') - old applied `style={{fill: color, stroke: color}}` to this
-    // glyph's root <svg> (SvgNotes/index.tsx:48-52). `background` stays unused here - this glyph
-    // has no flat-mark sub-path to paint a matte behind (see reb/mib/lab/tib for the ones that do).
+    // background stays unused here - this glyph has no flat-mark sub-path to paint a matte
+    // behind (see reb/mib/lab/tib for the ones that do).
     let {color = 'currentColor'}: {background?: string; color?: string} = $props()
 </script>
 

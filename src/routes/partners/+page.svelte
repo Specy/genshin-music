@@ -8,12 +8,6 @@
     import skyMusicianNetwork from '$lib/assets/images/partners/sky-musician-network.jpg'
     import skyMemories from '$lib/assets/images/partners/theskymemories.jpg'
 
-    // Old: src/app/_client-pages/partners/index.tsx (128 lines) + Partners.module.css (48 lines).
-    //
-    // Partner structure inlined (old helper components converted to template blocks).
-    // Partners.module.css inlined. Iframes keep old src urls exactly. Images via asset imports.
-    // setPageVisited('partners') verified in PAGES_VERSIONS (PagesVersions.ts, v1).
-
     onMount(() => {
         setPageVisited('partners')
     })
@@ -116,7 +110,6 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/partners/Partners.module.css */
     :global(.partners-page) {
         padding: 1rem;
         padding-left: 4rem;

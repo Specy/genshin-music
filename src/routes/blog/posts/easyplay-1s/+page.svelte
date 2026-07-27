@@ -6,16 +6,6 @@
     import {base} from '$app/paths'
     import {easyplay1sMetadata} from '$cmp/blog/posts/easyplay-1s'
 
-    // Old: src/app/_client-pages/blog/posts/easyplay-1s.tsx (67 lines). BlogUl/BlogLi/BlogP/
-    // BlogIframe/BlogLink -> native tags + AppLink (see BlogElements.svelte's own header comment
-    // for the rationale). Content: 3 headers, 3 paragraphs, 1 unordered list (4 items), 1 image
-    // (link-wrapped), 1 iframe, 3 links (2 external, 1 not) - verified against the old blob,
-    // nothing added/dropped.
-    //
-    // PRESERVED QUIRK: the 2nd BlogLink (wrapping the image) does NOT pass `external` even though
-    // it's the exact same external kickstarter URL as the 1st/3rd links (which DO pass it) - so
-    // only that one link doesn't open in a new tab. Reproduced exactly (no target="_blank" on that
-    // one AppLink only).
 </script>
 
 <BaseBlogPost metadata={easyplay1sMetadata}>
@@ -29,6 +19,9 @@
         to compose songs and to learn them. <AppLink target="_blank" href="https://summertones-1.kckb.me/18287a61" className="blog-link">You
         can find the keyboard on kickstarter here</AppLink>.
     </p>
+    <!-- QUIRK: this link doesn't get target="_blank" even though it's the exact same external
+         kickstarter URL as the two text links above/below, which do. Reproduced exactly - only
+         this one link doesn't open in a new tab. -->
     <AppLink href="https://summertones-1.kckb.me/18287a61" className="blog-link">
         <BlogImage
             src="{base}/assets/blog/easyplay.webp"

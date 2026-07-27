@@ -4,12 +4,6 @@
     import Header from '$cmp/header/Header.svelte'
     import {midiDeviceMetadata} from '$cmp/blog/posts/connect-midi-device'
 
-    // Old: src/app/_client-pages/blog/posts/connect-midi-device.tsx (95 lines). BlogP -> native
-    // `<p class="blog-p">`; raw `$cmp/shared/link/AppLink` (not BlogLink, same as video-audio-
-    // transpose.tsx) -> plain AppLink, no blog-link class/target. Content: the old file wraps
-    // everything in one bare (unstyled) `<div>` - preserved for DOM/class parity even though it
-    // has no visible effect either way. 3 headers, 7 paragraphs, 3 internal links (2 to /keybinds,
-    // 1 to /zen-keyboard) - verified against the old blob.
 </script>
 
 <BaseBlogPost metadata={midiDeviceMetadata}>

@@ -1,15 +1,8 @@
-// old: src/lib/audio/MediaRecorderPolyfill.ts (Original source: https://github.com/ai/audio-recorder-polyfill).
-// VERBATIM runtime port (Phase-4a Task 2) - the stringified-worker (`createWorker`'s
-// `fn.toString()` blob trick) and the `ScriptProcessorNode`-based encode pipeline are both
-// deprecated browser mechanisms, kept AS-IS per this task's brief ("flag deprecation, do NOT
-// modernize"). Only two classes of change were made, both compiler/lint-forced with zero runtime
-// behavior change: (1) `Timer` now imported from `$core/utils/Utilities` (old `$types/GeneralTypes`
-// doesn't exist in this tree - Timer relocated there in P3 Task 2); (2) every bare `// @ts-ignore`
-// (banned outright by this repo's `@typescript-eslint/ban-ts-comment` outside `src/lib/core/`)
-// converted to `// @ts-expect-error <reason>` or a targeted `eslint-disable-next-line` where the
-// underlying value is genuinely dynamic (see each comment below) - same fix pattern as
-// KeyboardProvider.ts (Phase-4a Task 1) and PwaStore.svelte.ts (Phase-3 Task 2).
-// ScriptProcessorNode: deprecated in favor of AudioWorkletNode; not modernized here (out of scope).
+// Vendored port of https://github.com/ai/audio-recorder-polyfill, kept verbatim. QUIRK: the
+// stringified-worker (createWorker's fn.toString() blob trick) and the ScriptProcessorNode-based
+// encode pipeline both use deprecated browser mechanisms (ScriptProcessorNode in favor of
+// AudioWorkletNode) - that's intentional, not an oversight; this file is not modernized. Every
+// type-suppression comment below documents its own specific reason at its own site.
 
 import type {Timer} from "$core/utils/Utilities"
 

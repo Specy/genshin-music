@@ -28,28 +28,6 @@
     import {t} from '$i18n/binding.svelte'
     import {strToU8, zip} from 'fflate'
 
-    // Old: src/app/_client-pages/backup/index.tsx (373 lines). NEW DEP fflate (strToU8/zip, already
-    // typed - no @types/fflate package exists or is needed). `songs`/`userThemes` (old: useSongs()/
-    // useObservableArray(themeStore.themes), both just reactive mirrors of the same stores) read
-    // directly off songsStore.songs/themeStore.themes below - same replacement as every other
-    // ported page this migration (e.g. error/+page.svelte's songsStore.songs). `theme` (old:
-    // useTheme()) replaced by the reactive ThemeProvider singleton import, same as Select.svelte/
-    // ThemeVars.svelte.
-    //
-    // Two pre-existing BUGS preserved byte-for-byte (flagged, not fixed) per this migration's
-    // quirk-preservation rule:
-    // (1) validateThemes()'s per-theme try/catch has an EMPTY try body - nothing inside it can ever
-    //     throw, so `errors` is always [] and the whole per-theme validation is dead code (unlike
-    //     validateSongs/validateFolders, which really do call songService.parseSong/Folder.deserialize
-    //     inside their try blocks). The theme-import-error toast is consequently unreachable.
-    // (2) All three validate*() functions gate on `asyncPrompt(...)` (a free-text prompt) rather
-    //     than `asyncConfirm(...)` (a real yes/no dialog) for their "continue anyway?" question -
-    //     `if (!keepDownloading) return null` only works because any non-empty typed string is
-    //     truthy; it's a semantic mismatch (a text prompt used as a boolean gate) but exactly what
-    //     old does.
-    // (3) the three backup-download button handlers are asymmetric in their catch blocks: the
-    //     "download all" button's catch only shows the error toast, while the songs-only and
-    //     themes-only buttons' catches ALSO console.error(e) - preserved exactly, not normalized.
     type BackupFormat = 'json' | 'zip'
 
     const iconStyle = 'margin-right:0.3rem;margin-left:-0.4rem'
@@ -58,8 +36,6 @@
 
     onMount(() => {
         setPageVisited('backup')
-        // old: a separate mount-once effect whose only job was this cleanup - merged into this
-        // same onMount (both were unconditional/mount-once, so the merge is behavior-neutral).
         return () => logger.hidePill()
     })
 
@@ -77,6 +53,10 @@
             }
         }
         if (errors.length > 0) {
+            // QUIRK: gates on asyncPrompt (a free-text prompt), not asyncConfirm (a real yes/no
+            // dialog) - `if (!keepDownloading)` only works because any non-empty typed string is
+            // truthy. A text prompt used as a boolean gate, but exactly what old does. Same
+            // pattern in validateFolders/validateThemes below.
             const keepDownloading = await asyncPrompt(t('backup:confirm_after_songs_validation_error'))
             if (!keepDownloading) return null
         }
@@ -111,7 +91,10 @@
         const errors: SerializedTheme[] = []
         for (const theme of themes) {
             try {
-                // old: empty try body - see the BUG (1) note above, preserved verbatim.
+                // QUIRK: empty try body - nothing inside can ever throw, so `errors` is always []
+                // and this per-theme validation is dead code (unlike validateSongs/validateFolders
+                // above, which really do call a parse/deserialize that can throw). The
+                // theme-import-error toast below is consequently unreachable. Preserved as-is.
             } catch (e) {
                 console.error(e)
                 errors.push(theme)
@@ -165,14 +148,10 @@
         } else {
             try {
                 logger.showPill(`${t('backup:zipping_files')}...`)
-                // old: `new Promise<any>(...)` - typed as Uint8Array here (matching fflate's own
-                // FlateCallback `data` param, threaded through to `resolve(data)` below) since bare
-                // `any` trips @typescript-eslint/no-explicit-any outside src/lib/core (this file is
-                // not core - compiler/lint-forced, same class of change as every other new provider
-                // file this migration). Same reasoning for the `as const` on each fileEntries tuple
-                // below: without it each entry widens to `(string | Uint8Array)[]`, which
-                // Object.fromEntries (typed `Iterable<readonly [PropertyKey, T]>`) rejects under
-                // strict mode - old's untyped JS had no such check.
+                // Typed Uint8Array (matches fflate's own FlateCallback `data` param) rather than
+                // `any`, which is banned. `as const` on each fileEntries tuple below is required:
+                // without it each entry widens to (string | Uint8Array)[], which
+                // Object.fromEntries (typed Iterable<readonly [PropertyKey, T]>) rejects.
                 const result = await new Promise<Uint8Array>((resolve, reject) => {
                     const fileEntries = files.map(file => {
                         const nameAndFormat = fileService.getUnknownFileExtensionAndName(file)
@@ -278,12 +257,9 @@
                     logger.success(t('backup:backup_downloaded'))
                     settingsService.setLastBackupWarningTime(Date.now())
                 } catch {
-                    // old: `catch (e) { logger.error(...) }` - `e` was never read here (unlike the
-                    // songs-only/themes-only buttons' catches below, which DO console.error(e) -
-                    // BUG (3) in the header comment, preserved). The binding is simply omitted
-                    // (valid ES2019+ optional catch binding) rather than kept-but-unused, to
-                    // satisfy no-unused-vars without adding the console.error(e) call old's own
-                    // asymmetry deliberately leaves out here.
+                    // QUIRK: unlike the songs-only/themes-only buttons' catches below, this one
+                    // doesn't console.error(e) - old's own asymmetry, reproduced. The binding is
+                    // omitted (valid ES2019+ optional catch binding) rather than kept-but-unused.
                     logger.error(t('backup:backup_download_error'))
                 }
             }}

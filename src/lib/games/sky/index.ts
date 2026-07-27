@@ -1,19 +1,4 @@
-// Sky GameDefinition.
-//
-// Source of truth (authority order):
-//   1. test/fixtures/Sky/config-surface.json — the committed serialization of the
-//      old Config.ts output; every fixture-backed field below is a direct transform of it.
-//   2. git show migration/next16-react19:src/Config.ts — structure + fields not carried
-//      by the fixture (see per-field comments for the exact old symbol).
-//   3. docs/superpowers/audits/2026-07-19-app-name-audit.md — reference table for the
-//      non-fixture fields (perRow, animationDelayMs, composerRowHeightScale, defaultIcon,
-//      visualNameCasing, defaultKeyboardKeys, company, analytics, transferOrigins,
-//      defaultNoteBackground, settings defaults, updateMessage); each was re-verified
-//      against its cited old file/line while writing this module.
-//
-// Known quirk, preserved deliberately (see task brief + audit's per-game asset inventory):
-// `instruments.data` has 35 keys but `instruments.list` (INSTRUMENTS roster) has only 34 —
-// `Aurora_Short` is an extra entry (reuses Aurora's samples) with no roster entry of its own.
+// Sky GameDefinition. Checked against test/fixtures/Sky/config-surface.json.
 import type {GameDefinition} from '../types'
 import {GAME_IDENTITY} from './identity'
 import CrGlyph from './glyphs/cr.svelte'
@@ -21,18 +6,16 @@ import DmGlyph from './glyphs/dm.svelte'
 import DmcrGlyph from './glyphs/dmcr.svelte'
 
 export const game: GameDefinition = {
-    // Phase 5 Task 1: sourced from ./identity, the single source for these two fields
-    // (see GameIdentity in ../types) - this object never restates them independently.
+    // Sourced from ./identity, the single source for these two fields (see GameIdentity in
+    // ../types) - this object never restates them independently.
     id: GAME_IDENTITY.id,
     storageId: GAME_IDENTITY.storageId,
 
     display: {
         name: 'Sky',
-        // Home.tsx:157 (no_affiliation) + :316 (rights) — both 'thatgamecompany'/'TGC' for Sky.
         company: {name: 'thatgamecompany', shortName: 'TGC'},
-        // transfer/index.tsx domains array, APP_NAME.toLowerCase()-derived (id-derived,
-        // per types.ts). Dev-only `http://localhost:3000` entry excluded: GameDefinition
-        // is static data with no env reads; that concern belongs to the consuming code.
+        // QUIRK: no dev-only localhost entry here - GameDefinition is static data with no env
+        // reads. transfer/+page.svelte appends one itself when IS_DEV.
         transferOrigins: [
             'https://sky-music.specy.app',
             'https://beta.sky-music.specy.app',
@@ -44,14 +27,14 @@ export const game: GameDefinition = {
         title: 'Sky Music Nightly',
         description: 'Sky music nightly, a website to play, practice and compose songs',
         themeColor: '#63aea7',
-        // GoogleAnalyticsScript.tsx Sky branch: script-src id and gtag config id are equal (unlike Genshin's, which differ upstream).
+        // QUIRK: tagId and configId are equal here, unlike Genshin's (see that file), which are
+        // deliberately two different GA properties.
         analytics: {tagId: 'G-YEHPSLXGYT', configId: 'G-YEHPSLXGYT'},
         updateChannelKey: 'Sky',
     },
 
     notes: {
         perColumn: 15,
-        // PlayerNote.tsx getApproachCircleColor: numOfNotes = APP_NAME === "Sky" ? 5 : 7
         perRow: 5,
         pitches: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
         scale: {
@@ -112,16 +95,12 @@ export const game: GameDefinition = {
         nameTypes: ['Note name', 'Keyboard layout', 'Your Keyboard layout', 'Do Re Mi', 'ABC', 'No Text', 'Playstation', 'Switch', '1 2 3'],
         composerPositions: [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 19, 18, 17, 16, 15],
         importPositions: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        // ZenKeyboardStore.ts:23 / PlayerStore.ts:56 — delay: APP_NAME === 'Genshin' ? 100 : 200
         animationDelayMs: 200,
-        // ComposerCanvas.tsx: `if (APP_NAME === "Sky") height = nearestEven(height * 0.95)`.
         composerRowHeightScale: 0.95,
-        // Instrument.ts:217 — noteImage: NoteImage = APP_NAME === "Genshin" ? "do" : "cr"
         defaultIcon: 'cr',
-        // VisualSong.ts:18 — APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
         visualNameCasing: 'uppercase',
-        // Sky's own 3 cr/dm/dmcr glyphs only (Task 9) — Partial, so a per-game module
-        // importing just its own glyphs still type-checks against the shared union.
+        // Sky's own 3 cr/dm/dmcr glyphs only - the shared type is Partial, so a per-game module
+        // importing just its own glyphs still type-checks against the union.
         svgGlyphs: {
             cr: CrGlyph,
             dm: DmGlyph,
@@ -130,7 +109,7 @@ export const game: GameDefinition = {
     },
 
     layouts: {
-        // Unconditional in old Config.ts (LAYOUT_KINDS): shared by both games, not APP_NAME-branched.
+        // Shared verbatim by both games' GameDefinitions, not APP_NAME-branched.
         layoutKinds: {
             defaultGenshin: {
                 keyboardLayout: ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'],
@@ -161,7 +140,7 @@ export const game: GameDefinition = {
                 numberLayout: ['1', '2', '3', '1̇', '2̇', '3̇'],
             },
         },
-        // Unconditional in old Config.ts (LAYOUT_ICONS_KINDS): shared by both games.
+        // Shared verbatim by both games' GameDefinitions.
         iconKinds: {
             defaultSky: ['dmcr', 'dm', 'cr', 'dm', 'cr', 'cr', 'dm', 'dmcr', 'dm', 'cr', 'cr', 'dm', 'cr', 'dm', 'dmcr'],
             defaultSkyDrums: ['cr', 'dm', 'cr', 'dm', 'cr', 'dm', 'cr', 'dm'],
@@ -171,7 +150,7 @@ export const game: GameDefinition = {
             defaultGenshin: ['do', 're', 'mi', 'fa', 'so', 'la', 'ti', 'do', 're', 'mi', 'fa', 'so', 'la', 'ti', 'do', 're', 'mi', 'fa', 'so', 'la', 'ti'],
             genshinVintageLyre: ['do', 'reb', 'mib', 'fa', 'so', 'lab', 'tib', 'do', 're', 'mib', 'fa', 'so', 'la', 'tib', 'do', 're', 'mib', 'fa', 'so', 'la', 'tib'],
         },
-        // Unconditional in old Config.ts (INSTRUMENT_NOTE_LAYOUT_KINDS): shared by both games.
+        // Shared verbatim by both games' GameDefinitions.
         noteLayoutKinds: {
             defaultSky: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'],
             defaultGenshin: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B'],
@@ -183,7 +162,7 @@ export const game: GameDefinition = {
             genshinVintageLyre: ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D', 'Eb', 'F', 'G', 'A', 'Bb', 'C', 'D', 'Eb', 'F', 'G', 'A', 'Bb'],
             genshinUkulele: ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'G', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B'],
         },
-        // Unconditional in old Config.ts (INSTRUMENT_MIDI_LAYOUT_KINDS): shared by both games.
+        // Shared verbatim by both games' GameDefinitions.
         midiLayoutKinds: {
             defaultSky: [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
             defaultGenshin: [72, 74, 76, 77, 79, 81, 83, 60, 62, 64, 65, 67, 69, 71, 48, 50, 52, 53, 55, 57, 59],
@@ -193,7 +172,6 @@ export const game: GameDefinition = {
             skySFX6: [60, 62, 64, 65, 67, 69],
             skySFX14: [61, 64, 67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100],
         },
-        // KeybindsStore.ts:56 default `keyboard` shortcuts row, Sky branch (15 keys).
         defaultKeyboardKeys: ['Q', 'W', 'E', 'R', 'T', 'A', 'S', 'D', 'F', 'G', 'Z', 'X', 'C', 'V', 'B'],
     },
 
@@ -490,6 +468,9 @@ export const game: GameDefinition = {
                 icons: ['dmcr', 'dm', 'cr', 'dm', 'cr', 'cr', 'dm', 'dmcr', 'dm', 'cr', 'cr', 'dm', 'cr', 'dm', 'dmcr'],
                 midiNotes: [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
             },
+            // QUIRK: no matching entry in `list` above (34 names) even though this key exists
+            // here in `data` (35 keys) - reuses Aurora's samples under a second, orphaned name.
+            // Deliberately preserved, not a roster omission to "fix".
             Aurora_Short: {
                 notes: 15,
                 family: 'vocal',
@@ -822,21 +803,16 @@ export const game: GameDefinition = {
                 note: '#eae8e6',
             },
         },
-        // BaseSettings.ts:434 — value: APP_NAME === 'Genshin' ? '#fff9ef' : '#495466'
         defaultNoteBackground: '#495466',
     },
 
     settings: {
         defaultNoteNameType: {
-            // BaseSettings.ts:86 — APP_NAME === "Genshin" ? (isMobile() ? "Do Re Mi" : "Keyboard layout") : "Note name"
             composer: {desktop: 'Note name', mobile: 'Note name'},
-            // BaseSettings.ts:251 — identical Sky (else) branch to composer's
             player: {desktop: 'Note name', mobile: 'Note name'},
-            // BaseSettings.ts:715 — Sky (else) branch is "No Text", not "Note name"
             zen: {desktop: 'No Text', mobile: 'No Text'},
-            // sheet-visualizer/index.tsx — APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'
-            // (also consumed directly by PlayerPagesRenderer.tsx's own identical layoutType ternary —
-            // the two call sites share this one field, there is no separate playerApproach field)
+            // Also read directly by PlayerPagesRenderer's own layoutType ternary - the two share
+            // this one field.
             sheetVisualizer: 'ABC',
         },
     },
@@ -848,8 +824,8 @@ export const game: GameDefinition = {
 
     i18n: {
         interpolation: {APP_NAME: 'Sky'},
-        // Config.ts:7-15 UPDATE_MESSAGE — both branches are currently identical text (incl. the
-        // "(genshin)" mention, which is a pre-existing upstream copy-paste artifact, not ours).
+        // QUIRK: mentions "Harmonic Key (genshin)" - Harmonic Key is Genshin-only. Sky's message
+        // is a preserved copy-paste artifact, not a game-detection bug to fix.
         updateMessage: 'Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout',
         overrides: undefined,
     },
