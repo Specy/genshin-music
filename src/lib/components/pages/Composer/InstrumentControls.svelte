@@ -62,7 +62,7 @@
         {@const passiveIconBase = ThemeProvider.getText('primary')}
         {@const passiveIcon = passiveIconBase.isDark() ? passiveIconBase.lighten(0.2) : passiveIconBase.darken(0.15)}
         <div
-            class="instrument-button flex-centered {isSelected ? 'instrument-button-selected' : ''}"
+            class={['instrument-button', 'flex-centered', isSelected && 'instrument-button-selected']}
             style={isSelected ? `background-color:${ThemeProvider.get('primary').mix(ThemeProvider.get('accent')).toString()}` : ''}
             use:scrollIntoViewOnSelect={isSelected}
         >

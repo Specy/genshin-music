@@ -14,7 +14,7 @@
     let {onclick, children, tooltip, style, ariaLabel}: TimelineButtonProps = $props()
 </script>
 
-<button class="timeline-button {hasTooltip(tooltip)}" {onclick} {style} aria-label={ariaLabel}>
+<button class={['timeline-button', hasTooltip(tooltip)]} {onclick} {style} aria-label={ariaLabel}>
     {@render children()}
     {#if tooltip}
         <Tooltip>
