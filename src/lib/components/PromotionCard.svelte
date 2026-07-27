@@ -62,7 +62,7 @@
 {/snippet}
 
 {#if visible || alwaysVisible}
-    <Card radius="0.4rem" {style} class="{cls} promotion-card">
+    <Card radius="0.4rem" {style} class={[cls, 'promotion-card']}>
         <img src={promotion.image} alt={promotion.title} class="promotion-image" />
 
         <Row style="z-index:2" justify="between">

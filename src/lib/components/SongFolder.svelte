@@ -118,7 +118,7 @@
     }
 </script>
 
-<div class="folder {expanded ? 'folder-expanded' : ''}" style={wrapperStyle}>
+<div class={['folder', expanded && 'folder-expanded']} style={wrapperStyle}>
     <div class="folder-header">
         <div
             onclick={toggleExpanded}
