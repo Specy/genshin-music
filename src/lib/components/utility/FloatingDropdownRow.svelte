@@ -15,7 +15,7 @@
 
 <AppButton
     ariaLabel="Floating Dropdown Button"
-    className="row row-centered"
+    class="row row-centered"
     style="padding:0.4rem;min-width:unset;{style}"
     {onclick}
 >

@@ -16,13 +16,13 @@
     <p class="blog-p">
         The EASYPLAY 1s is a keyboard that uses the same layout as Sky Music Nightly, and you can use it in the app
         to help you
-        to compose songs and to learn them. <AppLink target="_blank" href="https://summertones-1.kckb.me/18287a61" className="blog-link">You
+        to compose songs and to learn them. <AppLink target="_blank" href="https://summertones-1.kckb.me/18287a61" class="blog-link">You
         can find the keyboard on kickstarter here</AppLink>.
     </p>
     <!-- QUIRK: this link doesn't get target="_blank" even though it's the exact same external
          kickstarter URL as the two text links above/below, which do. Reproduced exactly - only
          this one link doesn't open in a new tab. -->
-    <AppLink href="https://summertones-1.kckb.me/18287a61" className="blog-link">
+    <AppLink href="https://summertones-1.kckb.me/18287a61" class="blog-link">
         <BlogImage
             src="{base}/assets/blog/easyplay.webp"
             alt="Easyplay 1S"
@@ -54,7 +54,7 @@
     <!-- svelte-ignore a11y_missing_attribute -->
     <iframe src="https://www.youtube.com/embed/l64Qdm-FpVU?si=NmbU0nVSrLlWTsBh" class="blog-iframe"></iframe>
     <p class="blog-p">
-        If you are interested, <AppLink target="_blank" href="https://summertones-1.kckb.me/18287a61" className="blog-link">you can find the
+        If you are interested, <AppLink target="_blank" href="https://summertones-1.kckb.me/18287a61" class="blog-link">you can find the
         keyboard on kickstarter here</AppLink>.
     </p>
 </BaseBlogPost>

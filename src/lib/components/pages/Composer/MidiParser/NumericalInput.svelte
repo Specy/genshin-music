@@ -1,5 +1,6 @@
 <script lang="ts">
     import {untrack} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
 
     let {
         onChange,
@@ -8,12 +9,12 @@
         step = 1,
         style = '',
         placeholder,
-        className = '',
+        class: cls = '',
     }: {
         onChange: (value: number) => void
         value: number
         placeholder?: string
-        className?: string
+        class?: ClassValue
         delay?: number
         step?: number
         style?: string
@@ -49,7 +50,7 @@
     })
 </script>
 
-<div style="display:flex;justify-content:flex-end" class={className}>
+<div style="display:flex;justify-content:flex-end" class={cls}>
     <button onclick={() => elementValue = `${Number(elementValue) - step}`} class="midi-btn-small" {style}>-</button>
     <input
         type="text"

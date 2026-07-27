@@ -144,7 +144,7 @@
     class={cn('prompt-overlay ignore_click_outside', [!confirmState.deferred, 'prompt-overlay-hidden'])}
 >
     <DecoratedCard
-        className={cn('floating-prompt ignore_click_outside', [!confirmState.deferred, 'floating-prompt-hidden'])}
+        class={cn('floating-prompt ignore_click_outside', [!confirmState.deferred, 'floating-prompt-hidden'])}
         isRelative={false}
         size="1.1rem"
     >
@@ -177,7 +177,7 @@
     class={cn('prompt-overlay ignore_click_outside', [!promptState.deferred, 'prompt-overlay-hidden'])}
 >
     <DecoratedCard
-        className={cn('floating-prompt ignore_click_outside', [!promptState.deferred, 'floating-prompt-hidden'])}
+        class={cn('floating-prompt ignore_click_outside', [!promptState.deferred, 'floating-prompt-hidden'])}
         isRelative={false}
         size="1.1rem"
     >

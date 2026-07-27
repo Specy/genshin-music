@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type {ClassValue} from 'svelte/elements'
     import {AVAILABLE_LANGUAGES, setI18nLanguage, i18n, type AppLanguage} from '$i18n/i18n'
     import {t, language} from '$i18n/binding.svelte'
     import {capitalize} from '$core/utils/Utilities'
@@ -64,13 +65,13 @@
         currentLanguage,
         onChange = defaultOnChange,
         style = '',
-        className = '',
+        class: cls = '',
     }: {
         languages?: readonly AppLanguage[]
         currentLanguage?: string
         onChange?: (language: AppLanguage) => void
         style?: string
-        className?: string
+        class?: ClassValue
     } = $props()
 
     // `language()` (not raw `i18n.language`) so this stays reactive to
@@ -86,7 +87,7 @@
 <select
     value={resolvedCurrentLanguage}
     onchange={handleChange}
-    class="i18n-selector {className}"
+    class="i18n-selector {cls}"
     style={style}
 >
     {#each languages as lang (lang)}

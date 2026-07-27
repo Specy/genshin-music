@@ -1,5 +1,6 @@
 <script lang="ts">
     import {onMount} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import {base} from '$app/paths'
     import {APP_NAME} from '$core/legacyConfig'
     import {game} from '$game'
@@ -23,10 +24,10 @@
         onclick?: (e: MouseEvent) => void
         alwaysVisible?: boolean
         style?: string
-        className?: string
+        class?: ClassValue
     }
 
-    let {onclick, alwaysVisible = false, style = '', className = ''}: PromotionCardProps = $props()
+    let {onclick, alwaysVisible = false, style = '', class: cls = ''}: PromotionCardProps = $props()
 
     let visible = $state(false)
 
@@ -61,7 +62,7 @@
 {/snippet}
 
 {#if visible || alwaysVisible}
-    <Card radius="0.4rem" {style} className="{className} promotion-card">
+    <Card radius="0.4rem" {style} class="{cls} promotion-card">
         <img src={promotion.image} alt={promotion.title} class="promotion-image" />
 
         <Row style="z-index:2" justify="between">
@@ -71,7 +72,7 @@
                     {promotion.description}
                 </div>
             </Column>
-            <Column justify="end" padding="0.5rem" className="promotion-right-side">
+            <Column justify="end" padding="0.5rem" class="promotion-right-side">
                 {#if !alwaysVisible}
                     <button class="promotion-close" onclick={close} title={t('home:close_promotion')}>
                         {@render faTimesIcon()}
@@ -89,7 +90,7 @@
 
 <style>
     /* `.promotion-card`/`.promotion-right-side` are applied via Card/Column's
-       own `className` prop (elements belonging to their compiled templates,
+       own `class` prop (elements belonging to their compiled templates,
        not this file's) - both need :global(). `.promotion-image`/
        `.promotion-close` are native elements this file's own template
        renders directly, so plain scoped CSS already reaches them. */

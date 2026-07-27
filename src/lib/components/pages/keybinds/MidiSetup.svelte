@@ -267,11 +267,11 @@
                     {/each}
                 </optgroup>
             </select>
-            <AppButton onclick={() => deletePreset(currentPreset)} className="flex items-center" style="gap:0.5rem">
+            <AppButton onclick={() => deletePreset(currentPreset)} class="flex items-center" style="gap:0.5rem">
                 {@render faTrashIcon()}
                 {t('keybinds:delete_midi_preset')}
             </AppButton>
-            <AppButton onclick={createPreset} className="flex items-center" style="gap:0.5rem">
+            <AppButton onclick={createPreset} class="flex items-center" style="gap:0.5rem">
                 {@render faPlusIcon()}
                 {t('keybinds:create_midi_preset')}
             </AppButton>
@@ -313,7 +313,7 @@
 
 <style>
     /* QUIRK: the :global(.midi-shortcut*) rules below are REQUIRED, not a scoping violation to
-       "fix" - that class is threaded through MidiShortcut.svelte's own AppButton className prop,
+       "fix" - that class is threaded through MidiShortcut.svelte's own AppButton class prop,
        landing on a <button> that its own template writes, which a plain scoped selector here could
        never reach. */
     .midi-setup-content {

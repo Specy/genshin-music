@@ -119,7 +119,7 @@
             </Row>
         </Column>
         <Row justify="between" style="margin-top:0.4rem">
-            <AppButton className="row-centered" style="padding:0.4rem;width:fit-content" onclick={onDelete}>
+            <AppButton class="row-centered" style="padding:0.4rem;width:fit-content" onclick={onDelete}>
                 {@render faTrashIcon()}
                 {t('common:delete')}
             </AppButton>

@@ -1,6 +1,7 @@
 <script lang="ts">
     import {untrack} from 'svelte'
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import type {ThemeKeys} from '$core/theme/ThemeProvider.svelte'
     import Card from './layout/Card.svelte'
     import Column from './layout/Column.svelte'
@@ -16,7 +17,7 @@
         headerContent: Snippet
         headerStyle?: string
         contentStyle?: string
-        className?: string
+        class?: ClassValue
         style?: string
         children?: Snippet
     }
@@ -29,7 +30,7 @@
         onExpanded,
         contentStyle = '',
         headerStyle = '',
-        className = '',
+        class: cls = '',
         style = '',
         headerBackground = 'primary',
         contentBackground = 'var(--background-layer-10)',
@@ -69,7 +70,7 @@
 
 <Card
     radius="0.4rem"
-    className="expandable-container {className}"
+    class="expandable-container {cls}"
     background="var(--{headerBackground})"
     style="border:solid 0.1rem var(--{borderColor}-layer-10);{style}"
 >
@@ -81,7 +82,7 @@
     </button>
     {#if expanded}
         <Column
-            className="expandable-container-content"
+            class="expandable-container-content"
             style="border-top:0.1rem solid var(--{borderColor}-layer-10);background-color:{contentBackground};color:{contentColor};{contentStyle}"
         >
             {@render children?.()}
@@ -91,7 +92,7 @@
 
 <style>
     /* `.expandable-container`/`.expandable-container-content` are applied via
-       Card/Column's own `className` prop - elements belonging to their compiled
+       Card/Column's own `class` prop - elements belonging to their compiled
        templates, not this file's - so both need :global(). The header/arrow
        classes below are rendered directly by this file's own template, so
        plain scoped CSS already reaches them. */

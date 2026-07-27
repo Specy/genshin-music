@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import {setMenuContext, type MenuContextState} from './menuContext'
 
     // `style` targets the outer `.menu-wrapper` div; `menuStyle` targets the
@@ -14,7 +15,7 @@
         panel,
         hamburger,
         wrapperEl = $bindable(),
-        className = '',
+        class: cls = '',
         style = '',
         menuStyle = '',
         opacity,
@@ -29,7 +30,7 @@
         panel?: Snippet
         hamburger?: Snippet
         wrapperEl?: HTMLDivElement
-        className?: string
+        class?: ClassValue
         style?: string
         menuStyle?: string
         opacity?: string
@@ -56,7 +57,7 @@
     })
 </script>
 
-<div class="menu-wrapper {className}" style={style} bind:this={wrapperEl}>
+<div class="menu-wrapper {cls}" style={style} bind:this={wrapperEl}>
     {@render hamburger?.()}
     <div class="menu {isVisible ? 'menu-visible' : ''}" style="opacity:{opacity ?? ''};{menuStyle}">
         {@render children?.()}

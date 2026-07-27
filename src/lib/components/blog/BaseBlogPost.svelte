@@ -29,7 +29,7 @@
 </script>
 
 {#snippet blogNavbar(children: Snippet, style: string = '')}
-    <Row justify="between" {style} className="blog-nav">
+    <Row justify="between" {style} class="blog-nav">
         {@render children()}
     </Row>
 {/snippet}
@@ -96,7 +96,7 @@
         />
         <div class="blog-image-mask"></div>
         <div class="blog-header-content">
-            <Header className="blog-title" style="padding:1rem;font-weight:bold;font-size:2.5rem">
+            <Header class="blog-title" style="padding:1rem;font-weight:bold;font-size:2.5rem">
                 {metadata.title}
             </Header>
         </div>
@@ -122,7 +122,7 @@
 </DefaultPage>
 
 <style>
-    /* `.blog-nav`/`.blog-title` are applied via Row/Header's `className` prop
+    /* `.blog-nav`/`.blog-title` are applied via Row/Header's `class` prop
        (foreign elements); `.blog-nav a` (plain and :hover) targets an <a> two
        component boundaries away (Row, then AppLink) - all need :global().
        QUIRK: `.blog-back`/`.blog-tag` below are unused - no current template

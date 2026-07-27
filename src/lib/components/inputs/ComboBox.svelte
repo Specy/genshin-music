@@ -10,6 +10,7 @@
 </script>
 
 <script lang="ts" generics="T">
+    import type {ClassValue} from 'svelte/elements'
     import {clickOutside} from '$lib/utils/clickOutside'
 
     interface ComboBoxItemData<T> {
@@ -24,7 +25,7 @@
         onChange: (items: ComboBoxItemData<T>[]) => void
         children: Snippet<[ComboBoxItemData<T>, () => void]>
         style?: string
-        className?: string
+        class?: ClassValue
     }
 
     const positionMap = {
@@ -40,7 +41,7 @@
         title,
         position = 'left',
         style = '',
-        className = '',
+        class: cls = '',
     }: ComboBoxProps<T> = $props()
 
     let open = $state(false)
@@ -63,7 +64,7 @@
 
 <div
     use:clickOutside={{active: open, onOutside: () => open = false}}
-    class="combo-box-wrapper {className}"
+    class="combo-box-wrapper {cls}"
     {style}
 >
     <button onclick={() => open = !open} class="combo-box-title">

@@ -59,7 +59,7 @@
     }
 </script>
 
-<Column gap="0.5rem" className="midi-track-column" style={background}>
+<Column gap="0.5rem" class="midi-track-column" style={background}>
     <div class="midi-track-wrapper">
         <div class="midi-track-center">
             <input type="checkbox" onchange={() => onChange(index, {selected: !data.selected})} checked={data.selected} />

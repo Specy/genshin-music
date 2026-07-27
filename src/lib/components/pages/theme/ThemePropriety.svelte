@@ -74,7 +74,7 @@
     </div>
     <div class="color-input-wrapper">
         {#if canReset && isModified}
-            <AppButton onclick={() => handlePropReset(name)} toggled={isModified} className="theme-reset">
+            <AppButton onclick={() => handlePropReset(name)} toggled={isModified} class="theme-reset">
                 {t('common:reset').toUpperCase()}
             </AppButton>
         {/if}

@@ -806,7 +806,7 @@
 <div class="composer-grid appear-on-mount">
     <div class="column composer-left-control">
         <AppButton
-            className="flex-centered"
+            class="flex-centered"
             style="height:3rem;min-height:3rem;border-radius:0.3rem;background-color:var(--primary-darken-10)"
             onclick={() => {
                 const wasPlaying = isPlaying

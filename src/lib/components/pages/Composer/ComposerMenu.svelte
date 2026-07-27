@@ -179,10 +179,10 @@
             {@render faBarsIcon()}
         </div>
     {/snippet}
-    <MenuButton onclick={() => toggleMenu()} className="close-menu" ariaLabel={t('menu:close_menu')}>
+    <MenuButton onclick={() => toggleMenu()} class="close-menu" ariaLabel={t('menu:close_menu')}>
         {@render faTimesIcon()}
     </MenuButton>
-    <MenuButton onclick={functions.updateThisSong} className={data.hasChanges ? 'not-saved' : ''} ariaLabel="Save" style="margin-top:auto">
+    <MenuButton onclick={functions.updateThisSong} class={data.hasChanges ? 'not-saved' : ''} ariaLabel="Save" style="margin-top:auto">
         {@render faSaveIcon()}
     </MenuButton>
     <MenuItem id="Songs" ariaLabel={t('menu:open_songs_menu')}>
@@ -257,7 +257,7 @@
                 <div class="songs-buttons-wrapper" style="margin-top:auto">
                     <AppButton
                         style="margin-top:0.5rem"
-                        className="record-btn"
+                        class="record-btn"
                         onclick={() => {
                             isOpen = false
                             setTimeout(() => {

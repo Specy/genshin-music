@@ -75,7 +75,7 @@
 </script>
 
 {#snippet importedRow(data: UnknownFileTypes, onImport: (data: UnknownFileTypes) => void)}
-    <Row align="center" className="import-row">
+    <Row align="center" class="import-row">
         <div class="import-type">
             {data.type}
         </div>

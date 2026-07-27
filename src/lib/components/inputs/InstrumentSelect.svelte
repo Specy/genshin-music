@@ -23,6 +23,7 @@
 </script>
 
 <script lang="ts">
+    import type {ClassValue} from 'svelte/elements'
     import {ThemeProvider as theme} from '$core/theme/ThemeProvider.svelte'
     import {capitalize} from '$core/utils/Utilities'
     import {t} from '$i18n/binding.svelte'
@@ -32,12 +33,12 @@
         selected,
         onChange,
         style = '',
-        className = '',
+        class: cls = '',
     }: {
         selected: InstrumentName
         onChange: (instrument: InstrumentName) => void
         style?: string
-        className?: string
+        class?: ClassValue
     } = $props()
 
     function handleChange(e: Event & {currentTarget: EventTarget & HTMLSelectElement}) {
@@ -54,7 +55,7 @@
 </script>
 
 <select
-    class="select {className}"
+    class="select {cls}"
     style="width:100%;padding:0.3rem;background-image:{backgroundImage};{style}"
     onchange={handleChange}
     value={selected}

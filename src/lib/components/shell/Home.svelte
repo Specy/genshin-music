@@ -137,7 +137,7 @@
     <AppLink
         href={href}
         onclick={homeStore.close}
-        className="middle-size-page row {isCurrent ? 'current-page' : ''}"
+        class="middle-size-page row {isCurrent ? 'current-page' : ''}"
     >
         {@render icon()}
         <span class="row-centered" style="font-size:1rem">{label}</span>
@@ -149,7 +149,7 @@
     <AppLink
         href={href}
         onclick={homeStore.close}
-        className="{visited ? '' : 'non-visited'} {isCurrent ? 'current-page' : ''}"
+        class="{visited ? '' : 'non-visited'} {isCurrent ? 'current-page' : ''}"
         style={visited ? undefined : `--new-text:"${t('common:new')}!"`}
     >
         {label}
@@ -265,7 +265,7 @@
     class="{homeClass} ignore_click_outside column"
     style="{!homeStore.state.visible ? 'display:none;' : ''}background-color:{backgroundColor};overflow-x:hidden"
 >
-    <MenuButton className="close-home" onclick={homeStore.close} ariaLabel={t('home:close_home_menu')}>
+    <MenuButton class="close-home" onclick={homeStore.close} ariaLabel={t('home:close_home_menu')}>
         {@render faTimesIcon()}
     </MenuButton>
     <div class="home-padded column">
@@ -340,7 +340,7 @@
         {/if}
         <div class="home-content">
             <AppLink
-                className="{hasVisitedPage('composer') ? '' : 'non-visited'} home-content-element {currentPage === '/composer' ? 'current-page' : ''}"
+                class="{hasVisitedPage('composer') ? '' : 'non-visited'} home-content-element {currentPage === '/composer' ? 'current-page' : ''}"
                 href="/composer"
                 style={hasVisitedPage('composer') ? undefined : `--new-text:"${t('common:new')}!"`}
                 onclick={homeStore.close}
@@ -359,7 +359,7 @@
                 </div>
             </AppLink>
             <AppLink
-                className="{hasVisitedPage('player') ? '' : 'non-visited'} home-content-element {(currentPage === '/' || currentPage === '/player') ? 'current-page' : ''}"
+                class="{hasVisitedPage('player') ? '' : 'non-visited'} home-content-element {(currentPage === '/' || currentPage === '/player') ? 'current-page' : ''}"
                 href="/"
                 style={hasVisitedPage('player') ? undefined : `--new-text:"${t('common:new')}!"`}
                 onclick={homeStore.close}
@@ -415,19 +415,19 @@
     </div>
 
     <div class="home-bottom">
-        <Row align="center" className="home-app-scaling">
+        <Row align="center" class="home-app-scaling">
             <span>
                 {t('home:scale')}
             </span>
             <AppButton
                 ariaLabel="Decrease app scale"
-                className="flex-centered"
+                class="flex-centered"
                 onclick={decreaseScale}
             >
                 {@render faMinusIcon()}
             </AppButton>
             <AppButton
-                className="flex-centered"
+                class="flex-centered"
                 ariaLabel="Increase app scale"
                 style="margin-right:0.5rem"
                 onclick={increaseScale}

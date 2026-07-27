@@ -310,9 +310,9 @@
     }
 </script>
 
-<DecoratedCard className="floating-midi" size="1.2rem" isRelative={false} offset="0.1rem">
-    <Column className="floating-midi-content" gap="0.3rem">
-        <Row className="separator-border" align="center" style="width:100%">
+<DecoratedCard class="floating-midi" size="1.2rem" isRelative={false} offset="0.1rem">
+    <Column class="floating-midi-content" gap="0.3rem">
+        <Row class="separator-border" align="center" style="width:100%">
             <FilePicker onPick={handleFile} as="buffer">
                 <button class="midi-btn" style="{midiInputsStyle};white-space:nowrap">
                     {t('composer:midi_parser.open_midi_audio_file')}
@@ -358,7 +358,7 @@
             </Row>
         </Row>
         {#if tracks.length > 0}
-            <Column className="separator-border" style="width:100%">
+            <Column class="separator-border" style="width:100%">
                 <Column style="width:100%">
                     <div style="text-align:center">{t('composer:midi_parser.select_midi_tracks')}</div>
                     {#each tracks as track, i (i)}

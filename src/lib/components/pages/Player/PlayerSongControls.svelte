@@ -188,7 +188,7 @@
     <IconButton
         toggled={isMetronomePlaying}
         onclick={onToggleMetronome}
-        className="sidebar-metronome-button metronome-button"
+        class="sidebar-metronome-button metronome-button"
         ariaLabel={t('settings:toggle_metronome')}
     >
         {@render giMetronomeIcon()}

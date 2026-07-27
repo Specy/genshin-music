@@ -49,7 +49,7 @@
     <InstrumentSelect
         selected={instrument}
         onChange={handleInstrument}
-        className="select"
+        class="select"
         style="text-align:left;padding-left:0.4rem;"
     />
     <input
