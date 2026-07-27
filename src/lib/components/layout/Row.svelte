@@ -25,6 +25,6 @@
     ].filter(Boolean).join(';'))
 </script>
 
-<div class="row {cls}" style="{computedStyle};{style}">
+<div class={['row', cls]} style="{computedStyle};{style}">
     {@render children?.()}
 </div>

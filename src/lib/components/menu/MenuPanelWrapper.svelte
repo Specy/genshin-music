@@ -17,6 +17,6 @@
     const isOpen = $derived(ctx.open && ctx.visible)
 </script>
 
-<div class="side-menu {isOpen ? 'side-menu-open' : ''} {cls}" style={style}>
+<div class={['side-menu', isOpen && 'side-menu-open', cls]} style={style}>
     {@render children?.()}
 </div>

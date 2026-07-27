@@ -57,9 +57,9 @@
     })
 </script>
 
-<div class="menu-wrapper {cls}" style={style} bind:this={wrapperEl}>
+<div class={['menu-wrapper', cls]} style={style} bind:this={wrapperEl}>
     {@render hamburger?.()}
-    <div class="menu {isVisible ? 'menu-visible' : ''}" style="opacity:{opacity ?? ''};{menuStyle}">
+    <div class={['menu', isVisible && 'menu-visible']} style="opacity:{opacity ?? ''};{menuStyle}">
         {@render children?.()}
     </div>
     {@render panel?.()}
