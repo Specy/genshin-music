@@ -804,6 +804,9 @@ export const i18n_en = {
         "3-6-4": {
             "title": "Chinese localization expansion",
             "change-1": "Added Chinese (Hong Kong), Chinese (Taiwan), Japanese and Korean translation",
+            // QUIRK: key typo'd "chance-2" instead of "change-2" - ChangelogRow.svelte looks up
+            // versions:<v>.change-N by index, so this entry is never resolved and this line never
+            // displays. Preserved as-is, not renamed.
             "chance-2": "Improved Turkish translation"
         },
         "3-6-3": {

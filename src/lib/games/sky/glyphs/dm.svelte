@@ -1,11 +1,8 @@
 <script lang="ts">
-    // Old: src/components/shared/SvgNotes/sky/dm.tsx (React). `color` restored P4c Task 2
-    // (default 'currentColor') - old applied `style={{fill: color, stroke: color}}` to this
-    // glyph's root <svg> (SvgNotes/index.tsx:48-52). `background` stays unused here - this glyph
-    // has no matching sub-path that needs a background matte (Genshin's flat glyphs - reb/mib/
-    // lab/tib - are the only ones that do).
-    // `version="0.0"` is a harmless leftover from the original export tool — preserved
-    // verbatim rather than "fixed" (old code is the behavior spec; not observably harmful).
+    // background stays unused here - this glyph has no matching sub-path that needs a background
+    // matte (Genshin's flat glyphs - reb/mib/lab/tib - are the only ones that do).
+    // QUIRK: version="0.0" below is a harmless leftover from the original export tool - preserved
+    // rather than "fixed"; it has no observable effect.
     let {color = 'currentColor'}: {background?: string; color?: string} = $props()
 </script>
 

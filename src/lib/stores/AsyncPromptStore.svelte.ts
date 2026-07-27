@@ -1,9 +1,5 @@
-// Old: src/components/shared/Utility/AsyncPrompts.ts (mobx AsyncPromptStore class + the
-// asyncPrompt/asyncConfirm free functions). Deferred-resolver semantics are EXACT: a new
-// prompt()/confirm() call while one is already pending first resolves the OLD promise with
-// null (supersede-cancel), then synchronously installs the new question/cancellable/deferred -
-// same single Object.assign-driven state transition as the old code, just backed by $state
-// instead of a mobx @observable.
+// Calling prompt()/confirm() again while one is already pending first resolves the pending
+// promise with null (supersede-cancel), then installs the new question/cancellable/deferred.
 
 export type AsyncPromptState = {
     question: string

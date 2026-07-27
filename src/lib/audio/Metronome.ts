@@ -1,6 +1,3 @@
-// old: src/lib/audio/Metronome.ts - minimal-diff port; imports only (BASE_PATH -> `base` from
-// $app/paths, same kit.paths.base contract; `./Instrument` -> `./Instrument.svelte`;
-// `../utils/Utilities` -> `$core/utils/Utilities`).
 import {base} from "$app/paths"
 import {fetchAudioBuffer} from "./Instrument.svelte"
 import {delay} from "$core/utils/Utilities"

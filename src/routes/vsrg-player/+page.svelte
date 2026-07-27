@@ -25,52 +25,13 @@
     import {setPageVisited} from '$stores/PageVisitStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: THREE files collapse into this ONE route, per this task's brief - same
-    // shape/rationale vsrg-composer/+page.svelte (P4c Task 8) already established for its own
-    // sibling page ("no separate preview consumer anywhere on this branch, so there is no second
-    // caller that would need a $cmp/Page.svelte + route split the way Player.svelte/Composer.svelte
-    // needed" - re-verified true here too: grepped `src/routes/theme/+page.svelte`, zero `Vsrg`
-    // references):
-    //   - src/app/vsrg-player/page.tsx (6 lines): `<PageBackground page="Main"><ClientPage/>
-    //     </PageBackground>` -> the `<AppBackground page="Main">` wrapper below, at the route level
-    //     (same established mapping as /player/+page.svelte's own identical wrapper).
-    //   - src/app/_client-pages/vsrg-player/index.tsx's own default-exported `VsrgPlayerPage`
-    //     wrapper function: `useSetPageVisited('vsrgPlayer')` then `<VsrgPlayer/>` -> the
-    //     `setPageVisited('vsrgPlayer')` call inside `onMount` below (React's commit order runs a
-    //     parent's own effect AFTER its child's - i.e. after old's `VsrgPlayer` class's own
-    //     `componentDidMount` already ran - so it is placed at the END of `onMount` here, matching
-    //     that real observable order, not just textual position).
-    //   - The `VsrgPlayer` class itself (`componentDidMount`/`componentWillUnmount`/every method/
-    //     the render tree) - ported directly below, PascalCase methods become plain functions,
-    //     `this.state.X` becomes a top-level `$state` (or a plain closure variable for the two
-    //     fields the render tree never reads - `lastTimestamp` and the two `AudioPlayer` instances,
-    //     matching the established "only promote to $state what's actually read reactively"
-    //     convention already used by every other Phase-4 page port, e.g. vsrg-composer/+page.svelte's
-    //     own `audioPlayer`/`lastTimestamp`).
-    //
-    // `currentLayout: keyBinds.getVsrgKeybinds(4)` (old: a constructor-time class-state field, read
-    // exactly ONCE, in `componentDidMount`, and never again - not even by `render()`) is inlined
-    // directly at its one real call site in `onMount` below rather than kept as its own field - a
-    // disclosed, zero-behavior-change simplification.
-    //
-    // `defaultVsrgPlayerSizes` is duplicated here VERBATIM from VsrgPlayerRenderer.ts's own export,
-    // for the SAME reason old itself already duplicated it (old's own comment: "Defined locally
-    // (mirrors VsrgPlayerCanvas' export) so the page does not statically import the pixi module.")
-    // - importing the VALUE from VsrgPlayerRenderer.ts would statically pull in `pixi.js`, breaking
-    // this route's prerender safety; `VsrgPlayerCanvasSizes` above is a TYPE-only import (fully
-    // erased at compile time, zero runtime import) so it carries no such risk.
-    //
-    // `songAudioPlayer`/`keyboardAudioPlayer` both construct `new AudioPlayer('C')` - a literal,
-    // hardcoded base pitch (NOT derived from any setting - `VsrgPlayerSettingsDataType` has no
-    // `pitch` field at all), matching old exactly; `onSongSelect` below re-assigns
-    // `songAudioPlayer.basePitch` via a RAW field write (`songAudioPlayer.basePitch = parsed.pitch`),
-    // not the `.setBasePitch()` method AudioPlayer also exposes - old's own exact quirk (functionally
-    // identical either way, `setBasePitch` is a one-line wrapper around the same field write),
-    // reproduced verbatim rather than "cleaned up" to call the method.
     let settings = $state(settingsService.getDefaultVsrgPlayerSettings())
     let song: VsrgSong | null = $state(null)
     let songDuration = $state(0)
     let audioSong: RecordedSong | null = $state(null)
+    // QUIRK (load-bearing): duplicated verbatim from VsrgPlayerRenderer.ts's own
+    // defaultVsrgPlayerSizes export - this route must never statically import that module (it
+    // touches pixi.js, which would break prerendering), so it keeps its own copy instead.
     let canvasSizes: VsrgPlayerCanvasSizes = $state({
         el: {...DEFAULT_DOM_RECT},
         rawWidth: 0,
@@ -84,6 +45,8 @@
     })
     let isPlaying = $state(false)
 
+    // Hardcoded 'C' base pitch below (not settings-derived - VsrgPlayerSettingsDataType has no
+    // pitch field), matching old.
     const songAudioPlayer = new AudioPlayer('C')
     const keyboardAudioPlayer = new AudioPlayer('C')
     let lastTimestamp = 0
@@ -137,8 +100,7 @@
 
     function handleSettingChange(setting: SettingUpdate) {
         const {data} = setting
-        // @ts-expect-error SettingUpdateKey spans all settings families; narrower here by design -
-        // old's own `//@ts-ignore` on the equivalent line.
+        // @ts-expect-error SettingUpdateKey spans all settings families; narrower here by design.
         settings[setting.key] = {...settings[setting.key], value: data.value}
         updateSettings()
         if (setting.key === 'maxFps') vsrgPlayerStore.emitEvent('fpsChange')

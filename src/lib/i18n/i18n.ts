@@ -6,14 +6,9 @@ import {I18nCacheInstance} from '$i18n/i18nCache'
 
 export type EngI18n = typeof i18n_en
 
-// old i18n.ts used `Record<string, any>` here (twice); swapped for `Record<string, unknown>` -
-// type-level only (erased at compile time, zero runtime/emit difference) and behaviorally
-// identical for this recursive check: a nested-namespace object's values are all assignable to
-// `unknown` just as they were to `any` (so it still recurses), while a leaf string never
-// structurally matches an index-signature type regardless of the value type parameter (so it
-// still bottoms out at `string`). Done to keep this port lint-clean under this repo's
-// `@typescript-eslint/no-explicit-any` (verified with `npm run check`/`check:sky` unchanged at
-// 0 errors both games after the swap).
+// Recurses via structural assignability to `unknown` - a nested-namespace object is still
+// assignable to it (so the branch recurses) while a leaf string never matches the index-signature
+// branch (so it bottoms out at `string`).
 type ToStringObject<T extends Record<string, unknown> | string> = {
     [K in keyof T]: T[K] extends Record<string, unknown> ? ToStringObject<T[K]> : string
 }
@@ -45,11 +40,7 @@ export const AVAILABLE_LANGUAGES = [
 ] as const
 export type AppLanguage = typeof AVAILABLE_LANGUAGES[number]
 
-// old i18n.ts did `i18next.use(initReactI18next).init({...})` on the default i18next singleton
-// (not createInstance() - there was only ever one instance). react-i18next is a Svelte port, so
-// the plugin is dropped; init() is called directly on the same default singleton, otherwise
-// identical (i18next docs: `.init()` works standalone with no `.use()` plugins for core-only
-// usage - see "Initialize i18next with Basic Usage").
+// No .use() plugins needed - i18next's init() works standalone for core-only usage.
 i18next.init({
     debug: IS_DEV,
     pluralSeparator: '+',
@@ -62,12 +53,9 @@ i18next.init({
 })
 export const i18n = i18next
 
-// old i18n.ts also exported DEFAULT_ENG_KEYBOARD_MAP (a KeyboardEvent.code -> English-key-label
-// map), used as the fallback in $lib/providers/KeyboardProvider's getTextOfCode() whenever
-// navigator.keyboard.getLayoutMap() hasn't resolved (or the Keyboard API is unavailable) -
-// restored verbatim below now that KeyboardProvider is ported (Phase 4a Task 1); old's second
-// consumer, $lib/audio/Instrument.ts, landed as $lib/audio/Instrument.svelte.ts in Phase 4a Task 2
-// (see its getNoteText's "Keyboard layout" branch, line 133) and is wired correctly.
+// KeyboardEvent.code -> English-key-label fallback map, used by KeyboardProvider.getTextOfCode()
+// and Instrument.svelte.ts's getNoteText() "Keyboard layout" branch whenever the Keyboard API's
+// layout map hasn't resolved (or is unavailable).
 export const DEFAULT_ENG_KEYBOARD_MAP = {
     "KeyE": "E",
     "KeyD": "D",

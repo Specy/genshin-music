@@ -1,5 +1,3 @@
-// src/lib/games/types.ts  (Phase 2 target — this is the audited final shape)
-//
 // SIDE-EFFECT-FREE DATA MODULE CONTRACT (spec §5.5):
 //   Each game's definition is a plain data object (component references for glyphs
 //   are fine). No top-level browser access, no computed singletons. Shared components
@@ -17,11 +15,11 @@
 //               WindowProtocol/BroadcastChannel identifiers. NEVER derived from `id`
 //               (always explicit); new games set `storageId === id`.
 
-// ---- primitive aliases (mirror src/Config.ts) ----
+// ---- primitive aliases ----
 export type GameId = 'genshin' | 'sky'            // extend per new game
 export type StorageId = 'Genshin' | 'Sky'         // legacy-locked; new games: === id
 
-// Phase 5 Task 1: the DOM-free subset of GameDefinition that non-UI bundles (today: the
+// The DOM-free subset of GameDefinition that non-UI bundles (today: the
 // service worker, src/service-worker.ts) may import. A full GameDefinition transitively
 // pulls in this game's .svelte glyph components (notes.svgGlyphs) via games/<id>/index.ts,
 // which drags the Svelte runtime into a context (self: ServiceWorkerGlobalScope, no DOM)
@@ -49,9 +47,8 @@ export type NoteImage =
     'cr' | 'dm' | 'dmcr' | 'do' | 're' | 'reb' | 'mi' | 'mib'
     | 'fa' | 'so' | 'la' | 'lab' | 'ti' | 'tib'
 
-// A Svelte 5 component for one glyph (the SvelteKit port of SvgNotes/*). `color` restored P4c
-// Task 2 (old: SvgNoteProps.color, src/components/shared/SvgNotes/index.tsx) - see SvgNote.svelte
-// and the 14 glyph components' own header comments for the full per-instrument-tint recipe.
+// A Svelte 5 component for one glyph. See SvgNote.svelte and the glyph components' own header
+// comments for the full per-instrument-tint recipe.
 export type GlyphComponent = import('svelte').Component<{background?: string; color?: string}>
 
 export type LayoutKeys = {                         // typeof LAYOUT_KINDS[keyof …]
@@ -136,8 +133,7 @@ export interface GameDefinition {
         composerRowHeightScale: number                      // ComposerCanvas (1 | 0.95)
         defaultIcon: NoteImage                              // ObservableNote default ('do' | 'cr')
         visualNameCasing: 'lowercase' | 'uppercase'         // VisualSong note-name transform
-        // Partial: each game supplies ONLY its own glyphs (Genshin solfège vs Sky cr/dm/dmcr),
-        // fixing the current index.tsx that imports both games' glyphs into one module map (§5.5).
+        // Partial: each game supplies only its own glyphs (Genshin solfège vs Sky cr/dm/dmcr).
         svgGlyphs: Readonly<Partial<Record<NoteImage, GlyphComponent>>> // per-game SvgNote glyph map
     }
 
@@ -161,7 +157,6 @@ export interface GameDefinition {
     // ── MIDI ──────────────────────────────────────────────────────────────────
     midi: {
         mapToNote: Readonly<Record<number, [number, boolean]>> // MIDI_MAP_TO_NOTE (built into a Map)
-        // noteMapToMidi is DERIVED from mapToNote (non-accidentals), Config.ts:870-871
         bounds: { upper: number; lower: number }               // MIDI_BOUNDS
         presets: MIDIPreset[]                                  // MIDI_PRESETS
     }

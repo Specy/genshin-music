@@ -15,25 +15,6 @@
     import {setPageVisited} from '$stores/PageVisitStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/app/_client-pages/changelog/index.tsx (79 lines) + ChangelogRow (own file).
-    //
-    // `process.env.NEXT_PUBLIC_SW_VERSION` -> `import.meta.env.PUBLIC_SW_VERSION ?? ''` per the
-    // dispatch. Brand new env var, nothing sets it yet anywhere in this tree (grepped) - vite.config
-    // ts's `envPrefix: ['VITE_', 'PUBLIC_']` (P3 Task 9) already covers 'PUBLIC_', so this resolves
-    // fine to `undefined` -> '' today, exactly like old's own dev-mode `process.env` value did
-    // (falls through to the `|| 'DEV'` display below either way).
-    //
-    // FaGithub (react-icons/fa) inlined as a raw <svg> local snippet, same convention as
-    // SimpleMenu.svelte's faDiscordIcon/faHomeIcon/faArrowLeftIcon (fetched from
-    // unpkg.com/react-icons@5.6.0/fa/index.mjs). Old passed only `className='icon'` (no explicit
-    // size/color), so this renders with IconBase's default height/width ("1em").
-    //
-    // clearClientCache: already restored in $core/utils/Utilities.ts (Home.svelte already consumes
-    // it) - just a new caller here, same as delete-cache/+page.svelte.
-    //
-    // PRESERVED BUG (matches delete-cache/+page.svelte's own identical bug): the .catch() branch
-    // below calls `logger.error('cache:error_clearing_cache')` with the RAW i18n key string, not
-    // wrapped in t(...) - old's own literal code, reproduced byte-for-byte.
     const cacheVersion = import.meta.env.PUBLIC_SW_VERSION ?? ''
 
     onMount(() => {
@@ -50,6 +31,8 @@
             })
             .catch((e) => {
                 console.error(e)
+                // QUIRK: raw i18n key string, not wrapped in t(...) - intentional, not a missed
+                // translation call. delete-cache/+page.svelte has the identical pattern.
                 logger.error('cache:error_clearing_cache')
             })
     }
@@ -107,8 +90,6 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/changelog/Changelog.module.css - only the 2 selectors this page
-       itself references (ChangelogRow.svelte owns the other 6). */
     .changelog-page-title {
         font-size: 2.5rem;
         color: var(--background-text);

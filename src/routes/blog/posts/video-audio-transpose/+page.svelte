@@ -4,16 +4,11 @@
     import Header from '$cmp/header/Header.svelte'
     import {aiTransposeMetadata} from '$cmp/blog/posts/video-audio-transpose'
 
-    // Old: src/app/_client-pages/blog/posts/video-audio-transpose.tsx (68 lines). BlogP -> native
-    // `<p class="blog-p">` (see BlogElements.svelte's header comment for the rationale). This post
-    // is the ONE that already imported the raw `$cmp/shared/link/AppLink` directly (not BlogLink) -
-    // preserved: its 2 links get NO `blog-link` class and NO target="_blank" (neither the old
-    // component nor its call sites here ever added either), unlike easyplay-1s's BlogLink uses.
-    // Content: 1 header (unstyled "Warnings"/"Best practices"/"How to" via margin prop), 4
-    // paragraphs, 2 links (1 external, 1 internal) - verified against the old blob.
 </script>
 
 <BaseBlogPost metadata={aiTransposeMetadata}>
+    <!-- QUIRK: this AppLink and the one below get no blog-link class and no target="_blank",
+         unlike every other post's links - preserved as-is, not a missed styling/target fix. -->
     <p class="blog-p">
         In the V3.3 release, a new experimental feature has been added that allows you to convert any video/audio
         into a

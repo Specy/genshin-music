@@ -19,30 +19,6 @@
     import {game} from '$game'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/app/_client-pages/error/index.tsx (149 lines) + local SongRow (ported as
-    // pages/ErrorSongRow.svelte, a sibling component - see its own header comment).
-    //
-    // Namespace resolution: old's `useTranslation(['error','logs', 'confirm', 'common'])` makes
-    // 'error' the implicit default ns for every bare (unprefixed) t() call below - each is written
-    // out with its real, explicit ns per this codebase's established colon-namespace convention
-    // (confirmed against the en locale bundle: confirm_delete_all_songs/settings_reset_notice/
-    // error_page_description/reset_settings/delete_all_songs/error_logs/download_logs all live
-    // under the `error:` key, not `confirm:`, despite 'confirm' being a separately-loaded ns old
-    // also listed).
-    //
-    // DEAD-KEY QUIRK PRESERVED (per this task's dispatch): resetSettings removes BOTH
-    // `${APP_NAME}_Composer_Settings` (the real key) and `${APP_NAME}_Main_Settings` (a dead key -
-    // per the Phase-0 storage audit, nothing in this app ever writes to `_Main_Settings`, so this
-    // second removeItem is a permanent no-op) - reproduced byte-for-byte, not "fixed" to whatever
-    // the real settings key is.
-    //
-    // downloadsSongsInOldFormat (game.features, via $game) replaces old's `APP_NAME === 'Sky'`
-    // check per the dispatch - same two-tier rule already established throughout Phase 3/4a
-    // (game-conditional BEHAVIOR reads from $game, not a literal APP_NAME string compare).
-    //
-    // SongMenu called with only `SongComponent`/`songs`/`componentProps` (old passed no `exclude`/
-    // `baseType`/`onCreateFolder` either) - shows all three default song-type folders, none
-    // pre-expanded, no "create folder" button, matching old exactly.
     onMount(() => {
         setPageVisited('error')
     })
@@ -60,6 +36,9 @@
     }
 
     const resetSettings = () => {
+        // QUIRK: also removes `${APP_NAME}_Main_Settings`, a key nothing in this app ever writes
+        // to - a dead, permanent no-op removeItem. Reproduced byte-for-byte, not "fixed" to
+        // whatever the real settings key is.
         localStorage.removeItem(`${APP_NAME}_Composer_Settings`)
         localStorage.removeItem(`${APP_NAME}_Main_Settings`)
         logger.success(t('error:settings_reset_notice'))
@@ -126,16 +105,10 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/error/ErrorPage.module.scss, inlined verbatim (no actual SCSS
-       features used in the source - nesting/variables/mixins - so this ports as plain CSS). */
-
-    /* :global() is required for this ONE selector - `.error-page` is applied to DefaultPage's OWN
-       outer wrapper div via its `className` prop (a plain string), an element belonging to
-       DefaultPage.svelte's compiled template/scope, not this file's - a plain scoped `.error-page`
-       rule here would never match it. The other 4 selectors below target elements THIS component's
-       own template authors directly (as DefaultPage's slotted children), which DO keep this file's
-       scoping hash even though they're ultimately rendered inside DefaultPage's DOM - no :global()
-       needed for those. */
+    /* :global() is required for .error-page only - it's applied to DefaultPage's OWN outer
+       wrapper via its className prop (foreign element), not this file's own template. The other
+       selectors below target elements this file authors directly as DefaultPage's slotted
+       children, which keep this file's scoping hash - no :global() needed for those. */
     :global(.error-page) {
         background-color: #863545;
         color: white;

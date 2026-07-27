@@ -8,13 +8,6 @@
     import kofi from '$lib/assets/images/donate/kofi.png'
     import paypalme from '$lib/assets/images/donate/paypalme.png'
 
-    // Old: src/app/_client-pages/donate/index.tsx (18 lines) + Donate.module.css (23 lines).
-    //
-    // next/image → plain <img> with Vite asset imports. Donate.module.css inlined.
-    // i18n ns donate+home via the reactive `t`. game.id used instead of APP_NAME.toLowerCase()
-    // (game.id = 'genshin' | 'sky', same as old APP_NAME.toLowerCase()).
-    // setPageVisited('donate') verified in PAGES_VERSIONS (PagesVersions.ts, v0).
-
     onMount(() => {
         setPageVisited('donate')
     })
@@ -39,7 +32,6 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/app/_client-pages/donate/Donate.module.css */
     .donate-text {
         margin: 0 1rem;
         line-height: 1.3rem;

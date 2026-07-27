@@ -11,25 +11,6 @@
     import {keyBinds} from '$stores/KeybindsStore.svelte'
     import {composerTutorialMetadata} from '$cmp/blog/posts/how-to-use-composer'
 
-    // Old: src/app/_client-pages/blog/posts/how-to-use-composer.tsx (272 lines, the largest post).
-    // Same substitutions as how-to-use-player.tsx (BlogP/BlogOl/BlogLi/BlogB -> native tags, raw
-    // AppLink, shortcutsTable snippet + keyBinds.getShortcutMap('composer'), APP_NAME identity
-    // compare kept literal, globalConfigStore.state.IS_MOBILE). `NoteLayer.MAX_LAYERS` (old:
-    // `$lib/Songs/Layer`) -> `$core/Songs/Layer`, same class/static both branches.
-    //
-    // PRESERVED QUIRKS: (1) 2 broken internal links - `/blog/midi-conversion` and
-    // `/blog/ai-conversion` don't match the real `/blog/posts/midi-transpose` /
-    // `/blog/posts/video-audio-transpose` routes (a 3rd broken link, `/blog/connect-midi-device`,
-    // matches how-to-use-player.tsx's own instance of the same bug); (2) the "Bpm" list item uses
-    // a nested `<BlogP>` instead of `<BlogB>` (every sibling item uses BlogB for its bold term) -
-    // reproduced as a nested `<p class="blog-p">` instead of `<b class="blog-b">`, the same
-    // inconsistency old has. NORMALIZED (disclosed, not content-affecting): old's own source has
-    // one stray `< br/>` (a literal space between `<` and the tag name, TSX's JSX parser tolerates
-    // it, HTML/Svelte's does not) in the "erase"/"move notes" list item - written as plain `<br/>`
-    // here, identical rendered output. Content: 1 header-less intro paragraph pair, 2 headers with
-    // margin, 5 images, 4 ordered lists (6 + 5 + 2 + 9 items) + 1 more 8-item list, 4 internal
-    // links, 1 conditional paragraph, 1 conditional shortcuts section - verified against the old
-    // blob.
     const composerShortcuts = keyBinds.getShortcutMap('composer')
 </script>
 
@@ -79,6 +60,9 @@
     <Header>
         Composer Tools
     </Header>
+    <!-- QUIRK: /blog/midi-conversion and /blog/ai-conversion below are broken links - the real
+         routes are /blog/posts/midi-transpose and /blog/posts/video-audio-transpose. Preserved
+         from old, not fixed. -->
     <p class="blog-p">
 
         The composer has useful tools that you can use to make it easier to edit/compose a song. <br />
@@ -151,6 +135,8 @@
     </p>
     <ol class="blog-ol">
         <li>
+            <!-- QUIRK: nested <p> instead of <b class="blog-b"> like every sibling item below -
+                 preserved inconsistency, not a missed markup fix. -->
             <p class="blog-p">Bpm</p>: This setting will set the Beats Per Minute of the whole song, one column will last
             for as long as
             (60000ms / bpm), for example
@@ -210,6 +196,8 @@
             <b class="blog-b">Connect MIDI keyboard</b>: You can use a MIDI keyboard to make it easier to compose a song,
             by using the
             keyboard to select/deselect notes.
+            <!-- QUIRK: /blog/connect-midi-device is a broken link (missing /posts/) - same
+                 preserved bug as how-to-use-player.tsx's equivalent link. -->
             <br /> If you want to know how to connect your MIDI keyboard, follow the <AppLink
             href="/blog/connect-midi-device">connect MIDI device</AppLink> guide.
         </li>

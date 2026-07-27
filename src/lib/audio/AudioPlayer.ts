@@ -1,7 +1,3 @@
-// old: src/lib/audio/AudioPlayer.ts - minimal-diff port; imports only. `$config` -> `$core/legacyConfig`
-// (Pitch, type-only); `$lib/audio/Instrument` -> `$lib/audio/Instrument.svelte`; `../Providers/AudioProvider`
-// -> `../providers/AudioProvider` (lowercase, same relative depth); `../Songs/SongClasses` ->
-// `$core/Songs/SongClasses` (SongClasses.ts relocated under `core/` - alias avoids relative-depth math).
 import type {Pitch} from "$core/legacyConfig";
 import {Instrument} from '$lib/audio/Instrument.svelte'
 import {AudioProvider} from "../providers/AudioProvider";

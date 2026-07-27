@@ -1,11 +1,3 @@
-// old: src/stores/PlayerControlsStore.ts (169 lines) - mobx -> Svelte 5 runes port, same pattern
-// as the sibling PlayerStore.svelte.ts: `@observable`/`makeObservable`/`@action` dropped, each of
-// the three observable fields becomes its own `$state(...)`, method bodies otherwise
-// byte-verbatim (incl. the `incrementChunkPositionAndSetCurrent` early-return-without-updating-
-// `current` quirk when already on the last chunk of the last page - preserved, not a bug fix
-// target). Import-path swaps: `$lib/Songs/RecordedSong` -> `$core/Songs/RecordedSong` (already
-// exports `Chunk`, see its own class at the bottom of that file); `$types/GeneralTypes` ->
-// `$core/types` (`ApproachingScore`, hoisted there by this task for this store).
 import {Chunk, RecordedSong} from "$core/Songs/RecordedSong"
 import type {ApproachingScore} from "$core/types"
 
@@ -138,6 +130,9 @@ class PlayerControlsStore {
         current = current ?? this.current
         const nextChunkPosition = this.currentChunkIndex + 1
         if (nextChunkPosition >= (pages[currentPageIndex]?.length ?? 0)) {
+            // QUIRK: early-returns without applying `current` when already on the last chunk of
+            // the last page, unlike the other two branches below (both call setState({current})).
+            // Preserved as-is, not a bug to fix.
             if (currentPageIndex === pages.length - 1) return
             this.setPagesState({
                 currentPageIndex: currentPageIndex + 1,

@@ -1,4 +1,4 @@
-// Phase 5 Task 1: the DOM-free identity half of this game's GameDefinition (see
+// The DOM-free identity half of this game's GameDefinition (see
 // GameIdentity in ../types for the full rationale). This module exists so a non-UI
 // bundle - today: the service worker, src/service-worker.ts - can resolve this game's
 // storageId without importing games/sky/index.ts, which pulls in this game's 3 .svelte

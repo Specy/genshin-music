@@ -1,17 +1,11 @@
-// old src/stores/VsrgComposerStore.ts (39 lines) - verbatim port. No mobx in the original (unlike
-// PlayerStore/VsrgPlayerStore) - it was already a plain event-emitter class, so this is a
-// straight copy, not a runes conversion: zero `@observable`/`makeObservable` to strip, zero
-// `$state` to introduce. `listeners` stays a plain `Map` (not `SvelteMap`) DELIBERATELY: it is
-// never read from a Svelte template/`$derived`/`$effect` - `addEventListener`/`removeEventListener`
-// /`emitEvent` are the only three operations on it, all imperative, called by the Phase-4c
-// VsrgComposer page and its pixi renderer class - so there is no reactivity for `SvelteMap` to
-// provide here (do not read this as a missed convention). `data?: any` (both here and on
-// `VsrcComposerEventCallback.callback`) is preserved from old byte-for-byte: `emitEvent`'s payload
-// genuinely varies by event (e.g. `timestampChange` passes a breakpoint object, most others pass
-// nothing), so `any` is the correct type-level bound, matching the established
-// `WindowProtocol.ts` precedent (Phase-4a Task 8) for the same situation - `eslint-disable-next-line`
-// at each of the two use sites rather than narrowing to `unknown` (which would force every future
-// consumer to cast anyway, with zero added safety).
+// `listeners` is deliberately a plain Map, not SvelteMap: it's never read from a Svelte
+// template/$derived/$effect (addEventListener/removeEventListener/emitEvent are the only
+// operations on it, all imperative), so there's no reactivity for SvelteMap to provide here.
+//
+// data?: any (here and on VsrcComposerEventCallback.callback) is deliberate: emitEvent's payload
+// genuinely varies by event (e.g. timestampChange passes a breakpoint object, most others pass
+// nothing), so `any` is the correct type-level bound - narrowing to `unknown` would just force
+// every consumer to cast anyway, with no added safety.
 export type VsrgComposerEvents =
     'ALL'
     | 'colorChange'

@@ -1,9 +1,3 @@
-// old: src/lib/Providers/AudioProvider/index.ts - minimal-diff port; reverb chain byte-parity
-// (gain 2.5, reverb4.wav fetched from `${base}/assets/audio/reverb4.wav`). Imports only:
-// `BASE_PATH` (old `$config`) -> `base` from `$app/paths`; `$lib/audio/AudioRecorder` alias
-// resolves unchanged (SvelteKit's built-in `$lib` alias). Bare `// @ts-ignore` (banned by
-// `@typescript-eslint/ban-ts-comment` outside `src/lib/core/`) converted to `// @ts-expect-error`
-// with a description, same pattern as KeyboardProvider.ts (Phase-4a Task 1).
 import {base} from "$app/paths"
 import AudioRecorder from "$lib/audio/AudioRecorder"
 

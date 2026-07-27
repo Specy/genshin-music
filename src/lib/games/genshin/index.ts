@@ -1,15 +1,4 @@
-// Genshin GameDefinition.
-//
-// Source of truth (authority order):
-//   1. test/fixtures/Genshin/config-surface.json — the committed serialization of the
-//      old Config.ts output; every fixture-backed field below is a direct transform of it.
-//   2. git show migration/next16-react19:src/Config.ts — structure + fields not carried
-//      by the fixture (see per-field comments for the exact old symbol).
-//   3. docs/superpowers/audits/2026-07-19-app-name-audit.md — reference table for the
-//      non-fixture fields (perRow, animationDelayMs, composerRowHeightScale, defaultIcon,
-//      visualNameCasing, defaultKeyboardKeys, company, analytics, transferOrigins,
-//      defaultNoteBackground, settings defaults, updateMessage); each was re-verified
-//      against its cited old file/line while writing this module.
+// Genshin GameDefinition. Checked against test/fixtures/Genshin/config-surface.json.
 import type {GameDefinition} from '../types'
 import {GAME_IDENTITY} from './identity'
 import DoGlyph from './glyphs/do.svelte'
@@ -25,18 +14,16 @@ import TiGlyph from './glyphs/ti.svelte'
 import TibGlyph from './glyphs/tib.svelte'
 
 export const game: GameDefinition = {
-    // Phase 5 Task 1: sourced from ./identity, the single source for these two fields
-    // (see GameIdentity in ../types) - this object never restates them independently.
+    // Sourced from ./identity, the single source for these two fields (see GameIdentity in
+    // ../types) - this object never restates them independently.
     id: GAME_IDENTITY.id,
     storageId: GAME_IDENTITY.storageId,
 
     display: {
         name: 'Genshin',
-        // Home.tsx:157 (no_affiliation) + :316 (rights) — both 'HoYoverse' for Genshin.
         company: {name: 'HoYoverse', shortName: 'HoYoverse'},
-        // transfer/index.tsx domains array, APP_NAME.toLowerCase()-derived (id-derived,
-        // per types.ts). Dev-only `http://localhost:3000` entry excluded: GameDefinition
-        // is static data with no env reads; that concern belongs to the consuming code.
+        // QUIRK: no dev-only localhost entry here - GameDefinition is static data with no env
+        // reads. transfer/+page.svelte appends one itself when IS_DEV.
         transferOrigins: [
             'https://genshin-music.specy.app',
             'https://beta.genshin-music.specy.app',
@@ -48,14 +35,14 @@ export const game: GameDefinition = {
         title: 'Genshin Music Nightly',
         description: 'Genshin music, a website to play, practice and compose songs',
         themeColor: '#63aea7',
-        // GoogleAnalyticsScript.tsx else-branch (Genshin): script-src id vs gtag config id differ upstream.
+        // QUIRK: tagId and configId are deliberately different Google Analytics properties, not
+        // a copy-paste bug. Sky's two ids (in that file) are equal, by contrast.
         analytics: {tagId: 'G-T3TJDT2NFS', configId: 'G-BSC3PC58G4'},
         updateChannelKey: 'Genshin',
     },
 
     notes: {
         perColumn: 21,
-        // PlayerNote.tsx getApproachCircleColor: numOfNotes = APP_NAME === "Sky" ? 5 : 7
         perRow: 7,
         pitches: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
         scale: {
@@ -116,16 +103,12 @@ export const game: GameDefinition = {
         nameTypes: ['Note name', 'Keyboard layout', 'Your Keyboard layout', 'Do Re Mi', 'ABC', 'No Text', '1 2 3'],
         composerPositions: [6, 5, 4, 3, 2, 1, 0, 13, 12, 11, 10, 9, 8, 7, 20, 19, 18, 17, 16, 15, 14],
         importPositions: [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0],
-        // ZenKeyboardStore.ts:23 / PlayerStore.ts:56 — delay: APP_NAME === 'Genshin' ? 100 : 200
         animationDelayMs: 100,
-        // ComposerCanvas.tsx: `if (APP_NAME === "Sky") height = nearestEven(height * 0.95)` — no scaling for Genshin.
         composerRowHeightScale: 1,
-        // Instrument.ts:217 — noteImage: NoteImage = APP_NAME === "Genshin" ? "do" : "cr"
         defaultIcon: 'do',
-        // VisualSong.ts:18 — APP_NAME === 'Genshin' ? text.toLowerCase() : text.toUpperCase()
         visualNameCasing: 'lowercase',
-        // Genshin's own 11 solfège glyphs only (Task 9) — Partial, so a per-game module
-        // importing just its own glyphs still type-checks against the shared union.
+        // Genshin's own 11 solfège glyphs only - the shared type is Partial, so a per-game module
+        // importing just its own glyphs still type-checks against the union.
         svgGlyphs: {
             do: DoGlyph,
             re: ReGlyph,
@@ -142,7 +125,7 @@ export const game: GameDefinition = {
     },
 
     layouts: {
-        // Unconditional in old Config.ts (LAYOUT_KINDS): shared by both games, not APP_NAME-branched.
+        // Shared verbatim by both games' GameDefinitions, not APP_NAME-branched.
         layoutKinds: {
             defaultGenshin: {
                 keyboardLayout: ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'],
@@ -173,7 +156,7 @@ export const game: GameDefinition = {
                 numberLayout: ['1', '2', '3', '1̇', '2̇', '3̇'],
             },
         },
-        // Unconditional in old Config.ts (LAYOUT_ICONS_KINDS): shared by both games.
+        // Shared verbatim by both games' GameDefinitions.
         iconKinds: {
             defaultSky: ['dmcr', 'dm', 'cr', 'dm', 'cr', 'cr', 'dm', 'dmcr', 'dm', 'cr', 'cr', 'dm', 'cr', 'dm', 'dmcr'],
             defaultSkyDrums: ['cr', 'dm', 'cr', 'dm', 'cr', 'dm', 'cr', 'dm'],
@@ -183,7 +166,7 @@ export const game: GameDefinition = {
             defaultGenshin: ['do', 're', 'mi', 'fa', 'so', 'la', 'ti', 'do', 're', 'mi', 'fa', 'so', 'la', 'ti', 'do', 're', 'mi', 'fa', 'so', 'la', 'ti'],
             genshinVintageLyre: ['do', 'reb', 'mib', 'fa', 'so', 'lab', 'tib', 'do', 're', 'mib', 'fa', 'so', 'la', 'tib', 'do', 're', 'mib', 'fa', 'so', 'la', 'tib'],
         },
-        // Unconditional in old Config.ts (INSTRUMENT_NOTE_LAYOUT_KINDS): shared by both games.
+        // Shared verbatim by both games' GameDefinitions.
         noteLayoutKinds: {
             defaultSky: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'],
             defaultGenshin: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B'],
@@ -195,7 +178,7 @@ export const game: GameDefinition = {
             genshinVintageLyre: ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D', 'Eb', 'F', 'G', 'A', 'Bb', 'C', 'D', 'Eb', 'F', 'G', 'A', 'Bb'],
             genshinUkulele: ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'G', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B'],
         },
-        // Unconditional in old Config.ts (INSTRUMENT_MIDI_LAYOUT_KINDS): shared by both games.
+        // Shared verbatim by both games' GameDefinitions.
         midiLayoutKinds: {
             defaultSky: [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
             defaultGenshin: [72, 74, 76, 77, 79, 81, 83, 60, 62, 64, 65, 67, 69, 71, 48, 50, 52, 53, 55, 57, 59],
@@ -205,7 +188,6 @@ export const game: GameDefinition = {
             skySFX6: [60, 62, 64, 65, 67, 69],
             skySFX14: [61, 64, 67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100],
         },
-        // KeybindsStore.ts:56 default `keyboard` shortcuts row, Genshin branch (21 keys).
         defaultKeyboardKeys: ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'],
     },
 
@@ -451,21 +433,16 @@ export const game: GameDefinition = {
                 note: '#aaaa82',
             },
         },
-        // BaseSettings.ts:434 — value: APP_NAME === 'Genshin' ? '#fff9ef' : '#495466'
         defaultNoteBackground: '#fff9ef',
     },
 
     settings: {
         defaultNoteNameType: {
-            // BaseSettings.ts:86 — APP_NAME === "Genshin" ? (isMobile() ? "Do Re Mi" : "Keyboard layout") : "Note name"
             composer: {desktop: 'Keyboard layout', mobile: 'Do Re Mi'},
-            // BaseSettings.ts:251 — identical Genshin branch to composer's
             player: {desktop: 'Keyboard layout', mobile: 'Do Re Mi'},
-            // BaseSettings.ts:715 — identical Genshin branch (Sky uses "No Text" instead)
             zen: {desktop: 'Keyboard layout', mobile: 'Do Re Mi'},
-            // sheet-visualizer/index.tsx — APP_NAME === 'Genshin' ? 'Keyboard layout' : 'ABC'
-            // (also consumed directly by PlayerPagesRenderer.tsx's own identical layoutType ternary —
-            // the two call sites share this one field, there is no separate playerApproach field)
+            // Also read directly by PlayerPagesRenderer's own layoutType ternary - the two share
+            // this one field.
             sheetVisualizer: 'Keyboard layout',
         },
     },
@@ -477,7 +454,6 @@ export const game: GameDefinition = {
 
     i18n: {
         interpolation: {APP_NAME: 'Genshin'},
-        // Config.ts:7-15 UPDATE_MESSAGE — both branches are currently identical text.
         updateMessage: 'Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout',
         overrides: undefined,
     },
