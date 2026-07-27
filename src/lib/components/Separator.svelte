@@ -28,7 +28,7 @@
     const shadowDecl = $derived(shadow ? `box-shadow:0 0rem 0.6rem ${shadowColor};` : '')
 </script>
 
-<div class="separator {cls}" style="color:{color};margin:{verticalMargin} 0;{style}">
+<div class={['separator', cls]} style="color:{color};margin:{verticalMargin} 0;{style}">
     <div
         class="separator-part"
         style="background-color:{background};height:{height};{shadowDecl}border-top-left-radius:0.6rem;border-bottom-left-radius:0.6rem;"

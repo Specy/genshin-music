@@ -30,7 +30,7 @@
 </script>
 
 <div
-    class="default-page {cls}"
+    class={['default-page', cls]}
     style="--left-mobile-padding:{hasMenu ? '5rem' : '1rem'};--right-mobile-padding:{hasMenu ? '1.4rem' : '1rem'};{pageStyle}"
 >
     {#if menu}

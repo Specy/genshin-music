@@ -70,7 +70,7 @@
 
 <Card
     radius="0.4rem"
-    class="expandable-container {cls}"
+    class={['expandable-container', cls]}
     background="var(--{headerBackground})"
     style="border:solid 0.1rem var(--{borderColor}-layer-10);{style}"
 >
