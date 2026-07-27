@@ -8,13 +8,6 @@
     import {createKeyComboComposer, type Shortcut} from '$stores/KeybindsStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: the local (non-exported) `ShortcutElement` function component inside
-    // src/components/pages/Keybinds/ShortcutEditor.tsx - split into its own file, same extraction
-    // convention this task applies to `VsrgKey` (see that file's own header comment) and per the
-    // brief's own "small sanctioned refactor" allowance: Svelte has no equivalent of "two function
-    // components defined in one module", each one needing its own component-instance state/effects
-    // for a KEYED list (this row's `newKey` must persist per-row across the parent's re-renders,
-    // which a plain snippet - re-inlined, no component-instance identity of its own - can't give).
     let {mapKey, value, selected, setSelected, onChangeShortcut}: {
         mapKey: K
         value: V
@@ -23,36 +16,22 @@
         onChangeShortcut: (key: K, shortcut: V) => void
     } = $props()
 
-    // Old: `const [newKey, setNewKey] = useState<K>(mapKey)` + `useEffect(() => setNewKey(mapKey),
-    // [mapKey, selected])` (a second effect that discards any in-progress, unconfirmed key-combo
-    // edit whenever this row is deselected - e.g. the user clicked a DIFFERENT row without
-    // confirming this one - not just when `mapKey` itself changes). Collapsed into one *writable*
-    // `$derived.by` (Svelte >=5.25): reading `newKey` tracks both `mapKey` and `selected` (the
-    // `void selected` forces the second dependency even though it isn't part of the returned
-    // value, matching old's explicit `[mapKey, selected]` array - same idiom as
-    // `$i18n/binding.svelte.ts`'s `void binding.tick`); the key-combo-capture effect below can
-    // still assign `newKey = ...` directly to diverge from it locally while the user types a new
-    // combo, and that override is itself overwritten the next time `mapKey`/`selected` change -
-    // the same "diverge locally, resync on prop change" shape `inputs/ColorPicker.svelte`/
-    // `settings/SettingsRow.svelte` already established, just with two tracked dependencies
-    // instead of one (`$derived`'s single-expression form can't `void`-track a second value, so
-    // `$derived.by` is used here instead of the bare `$derived(...)` those two files use).
+    // newKey is a writable $derived.by: it normally mirrors mapKey, but the void selected read
+    // forces it to also reset whenever selected changes (discarding any in-progress, unconfirmed
+    // key-combo edit when this row is deselected). The effect below can still assign newKey
+    // directly while the user types a new combo; that override is itself discarded next time
+    // mapKey/selected change.
     let newKey: K = $derived.by(() => {
         void selected
         return mapKey
     })
 
-    // Old: `useEffect(() => { if (!selected) return; return createKeyComboComposer(...) }, [selected,
-    // value])`. `createKeyComboComposer`'s id is old's own literal `` `shortcut_${value}` `` -
-    // PRESERVED QUIRK (flagged, not fixed): `value` is the whole `Shortcut<string>` object, not
-    // `value.name`, so this string-interpolates to the literal `"shortcut_[object Object]"` for
-    // EVERY row, not a per-row-unique id (almost certainly meant `value.name`). Harmless in
-    // practice: only one `ShortcutElement` is ever `selected` at a time (the parent `ShortcutEditor`
-    // holds a single shared `selected` key), so at most one instance's listener is ever registered
-    // under this id simultaneously - reproduced byte-for-byte per the "preserve old quirks/bugs"
-    // convention.
     $effect(() => {
         if (!selected) return
+        // QUIRK: value here is the whole Shortcut object, not value.name, so this interpolates to
+        // the literal "shortcut_[object Object]" for every row instead of a per-row-unique id
+        // (almost certainly meant value.name). Harmless: only one row is ever selected at a time,
+        // so at most one listener is registered under this id. Flagged, not fixed.
         return createKeyComboComposer(`shortcut_${value}`, ({keyCombo}) => {
             newKey = keyCombo.join('+') as K
         })
@@ -92,9 +71,6 @@
 </div>
 
 <style>
-    /* Old: src/components/pages/Keybinds/ShortcutEditor.module.css, byte-verbatim (the whole
-       module belonged exclusively to this row - see Separator.svelte's own header comment for the
-       same "CSS Module dedicated entirely to this component" precedent). */
     .shortcut-element {
         display: flex;
         align-items: center;
@@ -119,10 +95,10 @@
         outline: solid 0.1rem var(--accent);
     }
 
-    /* :global() - this class is threaded through AppButton's `className` prop and lands on a
-       <button> AppButton.svelte itself writes; a plain scoped selector here could never reach it
-       (Svelte only scope-hashes elements a component's OWN template literally writes - same
-       cross-component-boundary reasoning as MidiShortcut.svelte's own header comment). */
+    /* QUIRK: :global() below is REQUIRED, not a scoping violation to "fix". This class is threaded
+       through AppButton's className prop and lands on a <button> that AppButton.svelte's own
+       template writes - a plain scoped selector here could never reach it. Same reasoning as
+       MidiShortcut.svelte's own comment. */
     :global(.shortcut-button) {
         background-color: var(--secondary);
         color: var(--secondary-text);

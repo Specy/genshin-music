@@ -9,74 +9,10 @@
     import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte'
     import SvgNote from '$cmp/SvgNote.svelte'
 
-    // Old: src/components/pages/ZenKeyboard/ZenNote.tsx (134 lines) - the per-note button rendered
-    // by ZenKeypad (sibling file, this task). Unlike PlayerNote.svelte (Task 3), this note's
-    // rendered className/animation state is driven by a LOCAL `status`/`statusId` pair, not by
-    // `note.data.status` directly - old never reads `note.data.status` for rendering at all, only
-    // for detecting THAT a change happened (see the effect below).
-    //
-    // `useCallback`-wrapped `handleClick` collapses to a plain function (no memoization needed -
-    // Svelte's fine-grained reactivity, same rationale used throughout this migration).
-    //
-    // Reactivity - the note.data subscription (this file's most subtle piece):
-    // old's `useEffect(() => { function onStatusChange() {...}; return
-    // subscribeObeservableObject(note.data, onStatusChange) }, [note, ref])`. Verified directly
-    // against `$lib/Hooks/useObservable.ts`'s real implementation (not assumed):
-    // `subscribeObeservableObject` both (a) subscribes via mobx `observe()` to fire on every FUTURE
-    // change to ANY property of `note.data`, AND (b) invokes the callback ONCE IMMEDIATELY,
-    // synchronously, the moment the effect (re)runs - `const dispose = observe(target, cb);
-    // callback({...target}); return dispose`. A Svelte `$effect` reproduces BOTH halves in one
-    // idiom: its body also runs once immediately, and reruns whenever a tracked reactive read
-    // changes. Reading all three `note.data` fields below (not just whichever one a given call
-    // happens to touch) is required so the effect reruns on ANY of them changing, matching mobx's
-    // whole-object `observe()` rather than a narrower per-field subscription - the same reasoning
-    // PlayerKeyboard.svelte's own `playerStore.state` effect documents for itself. Reading `note`
-    // itself (a prop) also makes this rerun whenever the parent swaps in a brand-new
-    // ObservableNote instance (old's `[note, ref]` dep array resubscribing on note identity
-    // change) - Svelte's props are reactive too, so no extra plumbing is needed for that half.
-    //
-    // PRESERVED QUIRK (flag, not fixed): because of the immediate-invoke behavior above, this
-    // effect firing once on initial mount means every zen-keyboard note plays its "clicked" pulse
-    // (Genshin) / flip animation (Sky) once automatically as soon as the page loads (and again
-    // every time the instrument is swapped, since `setKeyboardLayout` constructs brand-new
-    // ObservableNote instances). Verified directly against the old blob's `subscribeObeservableObject`
-    // source - not a porting bug, a faithful reproduction of an existing, slightly odd old behavior.
-    // Likewise, old's `setTimeout(() => setStatus(""), 100)` is never cleared/cancelled (no cleanup
-    // returned from its effect) - a pre-existing race is possible if this effect reruns within
-    // 100ms of a previous run (an earlier scheduled reset could fire after a newer 'clicked' status
-    // was just set). Kept exactly as-is below, per the parity-first mandate, rather than "fixed"
-    // with a clearTimeout old never had.
-    //
-    // Theme reactivity: old's `useEffect(() => subscribeObeservableObject(ThemeProvider.state.data,
-    // () => setTextColor(getTextColor())), [])` collapses to a `$derived` reading `theme.get(...)` -
-    // the identical pattern BaseNote.svelte/PlayerNote.svelte's own (byte-identical) getTextColor
-    // already uses.
-    //
-    // Two-tier (UI file, reads $game per the P4b plan's mapping table):
-    //   APP_NAME === 'Genshin'                -> game.features.hasNoteFrame
-    //   INSTRUMENTS_DATA[instrumentName]?.clickColor -> game.instruments.data[instrumentName]?.clickColor
-    //   NOTES_CSS_CLASSES.*                    -> game.notes.cssClasses.*
-    //   BASE_THEME_CONFIG.text.*               -> game.themes.baseConfig.text.*
-    //
-    // PARITY CLOSED (was "FLAGGED FOR REVIEWER" before P4c Task 2 widened the shared contract -
-    // both clauses below are corrected, not new claims): old passed a `color` prop to SvgNote
-    // (`color={ThemeProvider.isDefault('accent') ? INSTRUMENTS_DATA[instrumentName]?.fill :
-    // undefined}`), which old's SvgNote applied as an inline `style={{fill:color, stroke:color}}`
-    // on the glyph. P4c Task 2 widened `GlyphComponent` (games/types.ts) and `SvgNote.svelte` to
-    // re-accept an optional `color` prop (default 'currentColor' - see that file's own header
-    // comment) and threaded the equivalent expression through PlayerNote.svelte. This file is the
-    // third and last of the THREE consumers old passed `color` to; the JSX below now passes the
-    // identical expression, closing the branch's last open SvgNote-tint gap. BaseNote.svelte
-    // renders SvgNote too (a fourth consumer overall - see games/types.ts's own "Refs:" list) but
-    // old's BaseNote.tsx passes only `name`+`background` with no `color`, so BaseNote.svelte's
-    // tint-free render is correct parity, not a gap.
-    //
-    // PRESERVED QUIRK (flag, not fixed): old received BOTH a `noteImage: NoteImage` prop AND
-    // `note: ObservableNote` (which itself carries `note.noteImage`) - ZenKeypad's only call site
-    // always passes `noteImage={note.noteImage}`, so the two are always equal. Old's JSX only ever
-    // uses the PROP as a truthiness gate (`{noteImage && <SvgNote name={note.noteImage} .../>}`)
-    // and reads the actual glyph key from `note.noteImage` instead - a redundant-but-harmless prop
-    // (always truthy in practice). Kept verbatim below rather than simplified away.
+    // QUIRK: noteImage is a redundant prop, always equal to note.noteImage (ZenKeypad's only call
+    // site passes noteImage={note.noteImage}) - used only as the truthiness gate in the template
+    // below, while the actual glyph name passed to SvgNote reads from note.noteImage instead. Kept
+    // as two separate reads rather than simplified into one.
     let {
         note,
         onClick,
@@ -143,22 +79,31 @@
         }
     }
 
+    // void-reads all three note.data fields (not just whichever the body below touches) so this
+    // effect reruns on ANY of them changing, matching a whole-object observer rather than a
+    // narrower per-field subscription. Don't trim these to "just the fields used".
+    //
+    // QUIRK: this effect also fires once immediately on mount, so every zen-keyboard note
+    // auto-plays its "clicked"/flip animation once on page load, and again whenever the instrument
+    // is swapped (a fresh ObservableNote) - a faithful reproduction of existing old behavior, not a
+    // bug to suppress. Likewise, the setTimeout below that clears status is never cancelled - if
+    // this effect reruns within 100ms of a previous run, an earlier scheduled reset can clear a
+    // newer "clicked" status. A pre-existing race, kept as-is rather than given a clearTimeout old
+    // never had.
+    //
+    // QUIRK (load-bearing, a real bug this port found - not old parity): statusId += 1 below reads
+    // and writes the same $state within this effect's own run - without untrack(), that's
+    // effect_update_depth_exceeded (reproduced live). untrack() confines the increment's read so
+    // it isn't tracked as this effect's own dependency; {#key statusId} still re-keys normally,
+    // since untrack only suppresses THIS effect's tracking, not the write's propagation to other
+    // subscribers. Do not remove untrack() here. Same fix pattern in VsrgLatestScore.svelte,
+    // Player.svelte, NumericalInput.svelte, zen-keyboard/+page.svelte.
     $effect(() => {
         void note.data.status
         void note.data.delay
         void note.data.animationId
         if (game.features.hasNoteFrame) {
             status = 'clicked'
-            // REAL BUG CAUGHT (not a preserved old quirk - React's `setStatusId(v => v + 1)` has no
-            // equivalent failure mode): `statusId += 1` reads AND writes `statusId` within this
-            // SAME effect run - the textbook `effect_update_depth_exceeded` trigger Svelte's own
-            // error page documents almost verbatim (reproduced live via console instrumentation
-            // before this fix; the other half of the same crash was zen-keyboard/+page.svelte's
-            // `setKeyboardLayout` call, see that file's own comment). `untrack()` confines the
-            // increment's OWN read of the current value so it isn't ALSO registered as this
-            // effect's dependency - `{#key statusId}` below still re-keys normally, since untrack
-            // only suppresses tracking for the currently-running reactive context (this effect),
-            // not the write's normal propagation to other subscribers.
             untrack(() => {
                 statusId += 1
             })
@@ -174,12 +119,11 @@
     const textColor = $derived(getTextColor())
     const clickColor = $derived(game.instruments.data[instrumentName]?.clickColor)
     const animationBorderColor = $derived(clickColor && theme.isDefault('accent') ? clickColor : undefined)
-    // $derived.by(...) (not the bare $derived(expr) sugar) is required here: TypeScript narrows
-    // `status`'s type to its `$state('')` initializer literal when the comparison is inlined
-    // directly as $derived's argument (it can't see that `status` is reassigned later inside the
-    // $effect above) - wrapping the same expression in its own arrow-function body gives it a
-    // fresh, unnarrowed read, the identical fix PlayerKeyboard.svelte's own `hideNotes`/`keyboardClass`
-    // already documents for the same TS control-flow quirk.
+    // $derived.by(...) (not the bare $derived(expr) sugar) is required: TypeScript narrows status's
+    // type to its $state('') initializer literal when the comparison is inlined directly as
+    // $derived's argument, since it can't see the reassignment inside the $effect above - wrapping
+    // in its own arrow function gives a fresh, unnarrowed read (the same fix PlayerKeyboard.svelte
+    // uses for its hideNotes/keyboardClass).
     const svgBackground = $derived.by(() => status === 'clicked'
         ? ((clickColor && theme.isDefault('accent')) ? clickColor : 'var(--accent)')
         : 'var(--note-background)')
@@ -205,6 +149,9 @@
             <GenshinNoteBorder className="genshin-border" fill={parseBorderFill(status)} />
         {/if}
         {#if noteImage}
+            <!-- QUIRK: BaseNote.svelte's SvgNote render passes no color prop (untinted) while this
+                 one does - both are correct, deliberate parity with old. Don't "fix" the asymmetry
+                 by adding color to BaseNote's render. -->
             <SvgNote
                 name={note.noteImage}
                 color={theme.isDefault('accent') ? game.instruments.data[instrumentName]?.fill : undefined}

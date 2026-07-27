@@ -13,43 +13,10 @@
     import SongMenu from '$cmp/SongMenu.svelte'
     import SheetVisualizerSongRow from './SheetVisualizerSongRow.svelte'
 
-    // Old: src/components/pages/SheetVisualizer/SheetVisualizerMenu.tsx (111 lines). Old's
-    // `MenuContextProvider` + `MenuSidebar` pair collapses into the single ported MenuSidebar.svelte
-    // (P4a Task 3 - it already folds both old components together, see its own header comment).
-    //
-    // `useAppNavigation().back()` -> plain `history.back()`: no leave-guard navigation provider this
-    // phase (Global Constraints - deferred to 4c editor pages), same substitution SimpleMenu.svelte
-    // already established for its own back button.
-    //
-    // `useClickOutside<HTMLDivElement>(cb, {ignoreFocusable, active})` returning a ref attached to
-    // MenuContextProvider's own outer div -> MenuSidebar's `wrapperEl` $bindable (the exact `.menu-
-    // wrapper` div old's ref pointed at) plus a manually-driven `clickOutside` action call in an
-    // `$effect` below. This is the first real consumer of `wrapperEl` (MenuSidebar.svelte's own
-    // header comment pre-positioned it for exactly this: "the pages that need it bind this and apply
-    // `use:clickOutside` themselves"). A plain `use:clickOutside` directive cannot be written here
-    // because `wrapperEl` is a DOM node owned by a CHILD component's template (MenuSidebar.svelte),
-    // not an element in THIS file's own markup - `use:` only attaches to elements a component renders
-    // itself. Calling the action function directly is the documented escape hatch (Svelte actions are
-    // plain `(node, params) => {update?, destroy?}` functions - nothing requires the `use:` sugar).
-    // The effect depends on `wrapperEl` and `selectedPage` (old's own `active: selectedPage !== ""`
-    // dependency) - `open` is read only inside the `onOutside` closure, not the effect body, so
-    // toggling `open` alone does not tear down/reattach the listener, matching old's real dependency
-    // shape (old's effect array was keyed on `active`/`ignoreFocusable`, not `open`).
-    //
-    // `useSongs()` -> `songsStore.songs` direct read (SongMenu.svelte's own established prop shape).
-    //
-    // `SongRow` (old's local, non-exported component) -> sibling SheetVisualizerSongRow.svelte (see
-    // its own header comment for why a separate file is required here).
-    //
-    // Icons (react-icons/fa, fetched from unpkg.com/react-icons@5.6.0/fa/index.mjs, same version
-    // cited throughout this migration): FaArrowLeft/FaHome path data reused byte-identical from
-    // SimpleMenu.svelte (already inlined there); FaTimes reused byte-identical from
-    // FloatingDropdown.svelte/PromotionCard.svelte/Home.svelte (already inlined, cross-checked
-    // identical across all three); FaMusic freshly sourced (first consumer in this codebase) from
-    // Font Awesome Free 5.15.4's own solid/music.svg, the confirmed upstream source react-icons@5.6.0
-    // generates its /fa icons from (verified: FaHome's path fetched fresh from that same FA source
-    // came back byte-identical to the copy already in this tree). All four render bare
-    // (`className='icon'` only in old, no size/color overrides), matching react-icons' default 1em.
+    // wrapperEl is owned by the child MenuSidebar's own template, not this file's markup, so a
+    // `use:clickOutside` directive can't attach to it (use: only attaches within the component that
+    // renders the element) - calling the action function directly inside an effect below is the
+    // documented escape hatch.
     let {
         currentSong,
         onSongLoaded,
@@ -66,6 +33,9 @@
     let open = $state(false)
     let wrapperEl: HTMLDivElement | undefined = $state()
 
+    // QUIRK: open is read only inside the onOutside closure below, not the effect body, so toggling
+    // open does not retrigger this effect - only wrapperEl/selectedPage do. Reading it directly here
+    // instead would retrigger a teardown/reattach of the listener on every open toggle.
     $effect(() => {
         if (!wrapperEl) return
         const action = clickOutside(wrapperEl, {

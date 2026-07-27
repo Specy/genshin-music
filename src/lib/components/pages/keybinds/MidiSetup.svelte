@@ -19,61 +19,15 @@
     import Separator from '$cmp/Separator.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/pages/MidiSetup/index.tsx (354 lines) - a React class component (`class
-    // MidiSetup extends Component<...>`), the largest single conversion in Phase 4a. Converted to
-    // flat Svelte-5-runes state/functions (this migration's established class-component ->
-    // component-script conversion pattern): `this.state.X`/`this.setState({X})` -> individual
-    // top-level `let X = $state(...)` bindings reassigned directly; `componentDidMount`/
-    // `componentWillUnmount` -> `onMount(() => { init(); return () => {...cleanup...} })`;
-    // `this.mounted` (an unmount-race guard, NOT just a React-render-warning suppressant - it
-    // actively destroys a late-resolving AudioPlayer load in `loadInstrument`, real cleanup
-    // behavior) -> a plain non-reactive `let mounted = true` flag, same semantics.
-    //
-    // `withTranslation('keybinds')(MidiSetup)` (default ns 'keybinds') -> every bare old `t('x')`
-    // call becomes the explicit `t('keybinds:x')` the global `t()` binding requires everywhere in
-    // this migration (no implicit-default-namespace convenience).
-    //
-    // REACTIVITY NOTE (the one real semantic adaptation this file makes, applied consistently
-    // throughout): `MIDINote`/`MIDIShortcut` (`$core/utils/Utilities.ts`) are plain, non-`$state`
-    // classes - byte-verbatim-ported "core" files never use runes (`$state` only works in
-    // `.svelte`/`.svelte.ts`). Old mutated their fields in place (`note.status = ...`) then called
-    // `this.setState({notes})` with the SAME array reference purely to force an unconditional React
-    // re-render (React re-renders on any setState regardless of whether the passed value is
-    // referentially new). Svelte 5's `$state` explicitly does NOT deep-proxy class instances (only
-    // plain objects/arrays/Map/Set - see `ObservableNote.data`'s own `$state` field in
-    // `Instrument.svelte.ts` for the same problem solved a different way, by making the class's OWN
-    // field a rune) and SKIPS notifying subscribers when a reassignment is referentially unchanged -
-    // so a bare `notes = notes` here would silently no-op. Every old `setState({notes: ...})` /
-    // `setState({shortcuts: ...})` call site below is therefore ported as a fresh-array reassignment
-    // (`notes = [...MIDIProvider.notes]` / `shortcuts = [...MIDIProvider.settings.shortcuts]`) so the
-    // already-in-place-mutated elements become visible again, regardless of whether the underlying
-    // provider array reference itself actually changed.
-    //
-    // Two-tier rule: `INSTRUMENTS[0]` (old, from `$config`) -> `game.instruments.list[0]` (UI code
-    // reads `$game` directly, never the `$core/legacyConfig` GAME-DATA re-export); `MIDI_PRESETS`
-    // (old, from `$config`) -> `game.midi.presets`, same reason. `APP_NAME === 'Genshin' ? "keyboard"
-    // : "keyboard keyboard-5"` -> `game.notes.perColumn === 15 ? 'keyboard keyboard-5' : 'keyboard'`
-    // (Sky's 15-per-column layout is what old's `!== 'Genshin'` ternary was really keying off of -
-    // same substitution `keybinds/+page.svelte` makes for its own keyboard grid, per this task's
-    // brief).
-    //
-    // Dropped: the state field `selectedSource: WebMidi.MIDIInput | null` - declared, initialized to
-    // `null`, destructured in `render()`, but grepped the whole old file: NEVER once assigned to
-    // (no `setState({selectedSource...})` anywhere) or read in the JSX. 100% dead state, dropped
-    // rather than carried forward as an inert `$state` binding (which would also need an
-    // eslint-disable for an always-unused variable) - same class of decision as `capitalize`'s
-    // unused-import drop in ThemePropriety.svelte.
-    //
-    // `audioPlayer` is NOT `$state` here (unlike old's `this.state.audioPlayer`): nothing in this
-    // template reads it reactively (it's only ever called imperatively from `playSound`/
-    // `loadInstrument`) - old's own `this.setState({audioPlayer})` call in `loadInstrument` existed
-    // solely to force a React re-render after the async load, which Svelte doesn't need.
+    // mounted is an unmount-race guard, not just a redundant flag: loadInstrument below actively
+    // destroys a late-resolving AudioPlayer load when it resolves after unmount - real cleanup
+    // behavior, not decoration to remove.
 
     // WebMidi is an ambient global namespace (@types/webmidi, referenced in src/app.d.ts); plain
     // .ts files resolve it fine (typescript-eslint's recommended config turns off no-undef there,
     // deferring to tsc), but .svelte script blocks go through eslint-plugin-svelte's own
-    // recommended config, which doesn't carry that same override - same gap + same fix already
-    // established in AppInit.svelte's identical `WebMidi.MIDIInput[]` usage (P3 Task 7).
+    // recommended config, which doesn't carry that same override - same gap fixed in AppInit.svelte's
+    // identical WebMidi.MIDIInput[] usage.
     type MidiAccessStatus =
         // eslint-disable-next-line no-undef
         | {status: 'granted'; midiAccess: WebMidi.MIDIAccess}
@@ -85,6 +39,13 @@
     const audioPlayer = new AudioPlayer('C')
     let mounted = true
 
+    // QUIRK (load-bearing): MIDINote/MIDIShortcut are plain, non-reactive classes - their fields
+    // are mutated in place (e.g. note.status = ...) rather than through $state. $state does not
+    // deep-proxy class instances and skips notifying on a referentially-unchanged reassignment, so
+    // every `notes = [...notes]` / `shortcuts = [...MIDIProvider.settings.shortcuts]` below is
+    // forcing a fresh array reference to make the already-mutated elements visible again - it is
+    // not redundant spreading to "clean up". Removing any of these silently breaks reactivity for
+    // that update.
     let notes: MIDINote[] = $state(MIDIProvider.notes)
     let currentPreset = $state('default')
     let midiAccess: MidiAccessStatus = $state({status: 'pending'})
@@ -351,20 +312,10 @@
 </div>
 
 <style>
-    /* Old: src/components/pages/MidiSetup/MidiSetup.module.css, byte-verbatim. `.midi-setup-content`/
-       `.midi-shortcuts-wrapper`/`.midi-shortcuts` style elements this file renders directly (plain
-       scoped selectors reach them fine). `.midi-shortcut*` are `:global()` - that class is threaded
-       through `MidiShortcut.svelte`'s own `AppButton` `className` prop, landing on a `<button>`
-       AppButton.svelte itself writes (see MidiShortcut.svelte's header comment for the full
-       cross-component-boundary reasoning, same pattern as AppButton's own `.app-button` living in
-       the global App.css). `.midi-shortcut.selected` is PRESERVED DEAD CSS: `status` (the value
-       `s[status]`/here the plain class token is derived from) is only ever 'wrong'|'right'|'clicked'
-       (MIDIShortcut's own status union in Utilities.ts) - the literal string 'selected' is never
-       actually produced by that lookup anywhere, so this rule can never match in practice, in the
-       old app either (verified against the old blob's own MIDIShortcut.tsx className expression).
-       `.midi-setup-column` (inside the old `@media (max-width: 920px)` block) is ALSO dead - grepped
-       the whole old branch: no element anywhere is ever given that class - but is OMITTED rather
-       than kept (see the comment at the bottom of this block, near where it would have gone). */
+    /* QUIRK: the :global(.midi-shortcut*) rules below are REQUIRED, not a scoping violation to
+       "fix" - that class is threaded through MidiShortcut.svelte's own AppButton className prop,
+       landing on a <button> that its own template writes, which a plain scoped selector here could
+       never reach. */
     .midi-setup-content {
         display: flex;
         flex-direction: column;
@@ -408,16 +359,13 @@
         background-color: var(--secondary);
     }
 
+    /* QUIRK: dead CSS - status only ever resolves to 'wrong'/'right'/'clicked' (MIDIShortcut's own
+       status union), never the literal "selected", so this rule can never match. Kept anyway
+       (unlike a since-omitted sibling dead rule targeting an equally-unused class, which would
+       have tripped svelte-check's unused-selector lint as a plain scoped selector - this one's
+       :global() wrapper exempts it from that check). Flagged, not fixed - don't wire "selected"
+       into the class string above to "make this work". */
     :global(.midi-shortcut.selected) {
         background-color: var(--accent);
     }
-
-    /* old's `@media (max-width: 920px) { .midi-setup-column { width: 100% } }` is OMITTED: unlike
-       `.midi-shortcut.selected` above (a genuine but merely-inert dead rule, kept via `:global()`
-       for byte-parity), this selector is scoped/analyzable and `svelte-check` flags it as an
-       unused-CSS-selector warning (this migration's gate bar is 0 warnings, not just 0 errors) -
-       zero observable/functional difference either way (the class is never applied to any element
-       in old or new), so omitting rather than suppressing a real compiler diagnostic for a
-       provably-inert rule is the same class of call as dropping the unused `capitalize` import in
-       ThemePropriety.svelte. */
 </style>

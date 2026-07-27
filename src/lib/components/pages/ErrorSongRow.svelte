@@ -5,28 +5,8 @@
     import {t} from '$i18n/binding.svelte'
     import SongActionButton from '$cmp/inputs/SongActionButton.svelte'
 
-    // Old: src/app/_client-pages/error/index.tsx's local (non-exported) SongRow component, the
-    // error page's own SongMenu row. Named ErrorSongRow (not the bare "SongRow" old used) since
-    // every future SongMenu consumer (Composer/Player/VsrgComposer/VsrgPlayer/SheetVisualizer
-    // menus, Phase 4b) needs its OWN row component with a different componentProps shape - a
-    // shared bare name would collide.
-    //
-    // CSS (.song-row/.song-name/.song-buttons-wrapper/.song-button) is already global (App.css) -
-    // no component-local <style> needed.
-    //
-    // Old rendered raw `<button className="song-button">` twice rather than reusing the
-    // ALREADY-EXISTING (in old code too) `SongActionButton` component - an old inconsistency (the
-    // component predates this file and produces byte-identical DOM/classes: `.song-button
-    // {hasTooltip} {className}`, aria-label, onClick, children). Substituted here for the
-    // already-ported inputs/SongActionButton.svelte instead of re-inlining a second copy of the
-    // same button markup - zero DOM/class difference, matches this migration's established
-    // component-reuse convention.
-    //
-    // FaDownload/FaTrash (react-icons/fa) inlined as raw <svg> local snippets, fetched from
-    // unpkg.com/react-icons@5.6.0/fa/index.mjs - old passed these bare (default 1em) except FaTrash's
-    // `color="#ed4557"` (maps to an inline `style="color:#ed4557"` per react-icons' IconBase source:
-    // `style: {color: props.color || conf.color, ...}` - since fill stays "currentColor", the CSS
-    // `color` property is what actually drives the paint).
+    // .song-row/.song-name/.song-buttons-wrapper/.song-button are styled globally in App.css;
+    // no component-local <style> needed here.
     let {
         data,
         deleteSong,

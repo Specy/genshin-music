@@ -1,7 +1,6 @@
 <script lang="ts">
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/pages/Changelog/ChangelogRow.tsx (53 lines).
     interface ChangelogRowProps {
         version: string | number
         changes: string[]
@@ -11,25 +10,14 @@
     let {version, date, changes: rawChanges}: ChangelogRowProps = $props()
 
     const v = $derived(`${version}`.replaceAll('.', '-'))
-    // old: `t(\`${v}.title\`)` under `useTranslation('versions')` (a single-string namespace, so
-    // the implicit default ns *is* 'versions') -> explicit colon-namespace form.
     const title = $derived(t(`versions:${v}.title`))
 
-    // old only ever reads `_changes`' LENGTH (via `.map((_, i) => ...)`, discarding each element) -
-    // the actually-displayed text comes entirely from the `versions:<v>.change-<N>` locale keys,
-    // never from the `changes` prop's own string values. Preserved exactly: `rawChanges` here is
-    // used purely as a counter, same as old's underscore-discarded `_`.
+    // QUIRK: rawChanges' own string values are never shown — only its length is used, as a loop
+    // counter into the versions:<v>.change-N locale keys. Don't "simplify" this into using the
+    // array's actual content.
     const changes = $derived(rawChanges.map((_, i) => t(`versions:${v}.change-${i + 1}`)))
 
-    // old: `useMemo(() => new Intl.DateTimeFormat(...).format(date), [date])`. A plain $derived is
-    // the direct Svelte 5 equivalent of a memo keyed on one dependency.
     const localDate = $derived(new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(date))
-    // old also passed `suppressHydrationWarning={true}` on the date div - a React-only escape
-    // hatch for a locale-format SSR/hydration text mismatch (server locale vs browser locale can
-    // legitimately differ). Svelte's hydration reconciliation has no per-element opt-out to port
-    // this to; dropped as a React-specific mechanism with nothing on the other side to attach it
-    // to (same class of decision as SettingsInput's dropped `el.value = ""` React-reconciliation
-    // workaround).
 </script>
 
 <div>
@@ -42,10 +30,9 @@
         <ul>
             {#each changes as change, i (i)}
                 <li>
-                    <!-- old: e.split('$l').map((item, i) => i === 0 ? <div>{item}</div> : <p class="cll-new-line">{item}</p>) -
-                         a custom in-string line-break marker; currently inert against the EN bundle
-                         (no versions:*.change-* value contains "$l" today) but preserved so a future
-                         translation using the marker still renders correctly. -->
+                    <!-- QUIRK: splits on a "$l" in-string marker for manual line breaks. No current
+                         locale string contains it, so this looks unused — kept so a future
+                         translation can still use it. -->
                     {#each change.split('$l') as part, j (j)}
                         {#if j === 0}
                             <div>{part}</div>
@@ -60,9 +47,8 @@
 </div>
 
 <style>
-    /* Old: src/app/_client-pages/changelog/Changelog.module.css - only the 6 selectors this
-       component actually references (the sibling page owns the other 2, .changelog-page-title/
-       .changelog-ending - see changelog/+page.svelte's own <style>). */
+    /* The remaining two selectors from this feature's stylesheet (.changelog-page-title,
+       .changelog-ending) are owned by the changelog route's own +page.svelte, not this file. */
     .changelog-title {
         display: flex;
         width: 100%;

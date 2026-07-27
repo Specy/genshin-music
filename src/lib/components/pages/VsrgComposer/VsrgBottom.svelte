@@ -1,10 +1,6 @@
 <script module lang="ts">
-    // Old: src/components/pages/VsrgComposer/VsrgBottom.tsx (123 lines). `SnapPoint` was already
-    // hoisted to `$core/types.ts` ahead of this task (P4c Task 1 - VsrgSong.ts needs it before this
-    // UI file exists; that file's own header comment cites this exact file as SnapPoint's original
-    // home). `VsrgHitObjectType` has no core consumer, so it stays declared HERE (its own old home),
-    // exported from this file's `<script module>` block so the page (`vsrg-composer/+page.svelte`)
-    // can import it the same way old's page imported it from this same file.
+    // VsrgHitObjectType has no consumer outside the UI layer, so it stays declared here (rather
+    // than in $core/types) and is exported for vsrg-composer/+page.svelte to import.
     export type VsrgHitObjectType = 'hold' | 'tap' | 'delete'
 </script>
 
@@ -17,14 +13,6 @@
     import Select from '$cmp/inputs/Select.svelte'
     import MultipleOptionSlider, {type Option} from '$cmp/MultipleOptionSlider.svelte'
 
-    // `MultipleOptionSlider` imported from `$cmp` (relocated P4a Task 8) - NOT re-ported, per this
-    // task's own carry-forward ledger item.
-    //
-    // Old's `useMemo(() => [...], [t, i18n.language])` collapses to a plain `$derived`: `t(...)`
-    // (`$i18n/binding.svelte`) is itself reactive (its own `tick` $state counter bumps on any
-    // language change, documented in that file's header) - reading it inside `$derived` already
-    // re-derives on language change with no separate dependency array needed, the same established
-    // simplification used everywhere else in this migration that ports a `useMemo([t, i18n.language])`.
     let {
         selectedSnapPoint,
         isPlaying,
@@ -71,13 +59,10 @@
 </script>
 
 {#snippet faPlayIcon()}
-    <!-- react-icons/fa's FaPlay, same source already verified for Composer.svelte's own copy; old
-         passed size={20}, no color. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z"/></svg>
 {/snippet}
 
 {#snippet faPauseIcon()}
-    <!-- react-icons/fa's FaPause, same source; old passed size={20}, no color. -->
     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M144 479H48c-26.5 0-48-21.5-48-48V79c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v352c0 26.5-21.5 48-48 48zm304-48V79c0-26.5-21.5-48-48-48h-96c-26.5 0-48 21.5-48 48v352c0 26.5 21.5 48 48 48h96c26.5 0 48-21.5 48-48z"/></svg>
 {/snippet}
 

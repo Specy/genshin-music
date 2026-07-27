@@ -5,17 +5,6 @@
     import {logger} from '$stores/LoggerStore.svelte'
     import type {SerializedTheme} from '$core/theme/ThemeProvider.svelte'
 
-    // Old: src/components/pages/Theme/ThemePreview.tsx. `FaDownload`/`FaTrash` (react-icons/fa) are
-    // rendered DIRECTLY (no wrapping button) in old, with `onClick`/`cursor='pointer'` passed
-    // straight through as props on the icon itself - react-icons' IconBase spreads unrecognized
-    // props (onClick, cursor - a real SVG presentation attribute) onto the underlying `<svg>`. Ported
-    // as bare `<svg onclick ... cursor="pointer">` below (no wrapping `<button>`, matching old's
-    // actual DOM exactly - NOT the `<SongActionButton>`-wrapped convention `ErrorSongRow.svelte`
-    // uses, since old THIS file never had that button wrapper).
-    //
-    // `APP_NAME` (identity-locked, `$core/legacyConfig`'s UI-tier allowlist) - matches the SAME
-    // `.${APP_NAME.toLowerCase()}theme` extension convention `backup/+page.svelte` (Phase-4a Task 8)
-    // already established for the sibling `.${...}backup` extension.
     let {theme, onClick, onDelete, current, downloadable}: {
         theme: SerializedTheme
         current: boolean

@@ -1,9 +1,8 @@
 <script module lang="ts">
     import {Instrument} from '$lib/audio/Instrument.svelte'
 
-    // Same module-scope-singleton rationale as the sibling SheetFrame.svelte - old declared this
-    // at file top-level too (a SEPARATE instance from SheetFrame.tsx's own `baseInstrument`, not
-    // shared across the two files either there or here).
+    // Own module-scope singleton (see SheetFrame.svelte) - a separate Instrument instance, not
+    // shared with that file's baseInstrument.
     const baseInstrument = new Instrument()
 </script>
 
@@ -14,19 +13,9 @@
     import type {NoteNameType} from '$lib/games/types'
     import './SheetFrame.css'
 
-    // Old: src/components/pages/SheetVisualizer/SheetFrame2.tsx (127 lines). The tempo-bracketed
-    // sheet-music frame row the sheet-visualizer page (this task) actually renders - one call per
+    // The tempo-bracketed sheet-music frame row the sheet-visualizer page renders - one call per
     // `VisualSong` chunk, each producing 1+ column tiles (tempo-changer brackets can group several
     // `TempoChunkColumn`s into one visual chunk).
-    //
-    // `memo(_SheetFrame2, customComparator)` dropped - same rationale as the sibling SheetFrame.svelte
-    // (Svelte 5's fine-grained reactivity has no equivalent need for a manual shallow-prop guard).
-    //
-    // Old did NOT import `cn`/`cs` here (only SheetFrame.tsx did) - classes/styles below are built
-    // as plain template strings, matching old's own template-literal className/inline-style-object
-    // approach 1:1 in spirit.
-    //
-    // Two-tier: `APP_NAME === 'Genshin' ? 7 : 5` -> `game.notes.perRow` (UI file, table row 2).
     let {
         chunk,
         rows,
@@ -48,8 +37,6 @@
         return `var(--tempo-changer-${tempoChanger})`
     }
 
-    // old returned a `React.CSSProperties` object; ported as a CSS-text fragment (Svelte's `style`
-    // attribute is string-only) - same values, same two-branch/else-empty shape.
     function getBorderStyle(index: number, total: number): string {
         if (index === 0) {
             return 'border-top-left-radius:0.5rem;border-bottom-left-radius:0.5rem'
@@ -82,13 +69,9 @@
             ]
         }
     })
-    // old built this same per-column `notes` boolean array inline inside its `.map()` callback
-    // (recomputed fresh every render, no memoization) - ported as a single $derived producing the
-    // {column, notes, outerStyle} triples the template below iterates, the direct Svelte equivalent
-    // of that same per-render (here: per-dependency-change) recomputation. `outerStyle` folds
-    // together old's `background`/`getBorderStyle(...)` spread into one CSS-text string per column
-    // (computed here rather than inline in the template attribute, purely to keep that attribute a
-    // simple single-expression interpolation - same values/branches as old, no behavior change).
+    // Produces the {column, notes, outerStyle} triples the template below iterates; outerStyle
+    // folds the background/getBorderStyle(...) values into one CSS-text string per column so the
+    // template attribute stays a simple single-expression interpolation.
     const columnsWithNotes = $derived.by(() => {
         return chunk.columns.map((column, i) => {
             const notes = new Array(columnsPerRow * rows).fill(false)
@@ -107,18 +90,9 @@
 {#each columnsWithNotes as {column, notes, outerStyle}, i (i)}
     <div class="frame-outer-background" style={outerStyle}>
         <div class="frame-outer {column.notes.length === 0 ? 'visualizer-ball' : ''}">
-            <!--
-                PRESERVED (commented out in old too, kept inert - JSX comment syntax translated to
-                Svelte's equivalent, structure/intent unchanged, never rendered either way):
-            {#if chunk.emptyAhead && i === chunk.columns.length - 1}
-                <div class="frame-empty-counter">
-                    <span style="font-size:0.6rem">
-                        [FaHourglass icon]
-                    </span>
-                    {chunk.emptyAhead}
-                </div>
-            {/if}
-            -->
+            <!-- Dead code, deliberately kept inert (disabled in old too, never rendered either
+                 way): a never-finished "emptyAhead" hourglass-icon counter. Not a cleanup miss -
+                 check with product before deleting or reviving it. -->
             {#if column.notes.length === 0}
                 <div></div>
             {:else}

@@ -1,20 +1,3 @@
-// Old: src/components/pages/VsrgComposer/VsrgComposerCache.ts (458 lines) - `VsrgCanvasCache`
-// ports AS-IS per spec section 6.2 (every Graphics call, Rectangle and
-// app.renderer.generateTexture frame computation kept at parity, incl. the `destroy()` texture
-// teardown). This file has NO game-dependent data at all (unlike ComposerCache.ts) - every value
-// it needs (`colors`, `sizes`, `trackColors`, `isHorizontal`, `playbarOffset`) arrives via its own
-// constructor props, so there is no `$config`/`$game` import to swap here. Only import changes:
-// - `$lib/utils/Utilities` -> `$core/utils/Utilities` (`clamp`).
-// - `is-mobile`: old used the default import (`import isMobile from "is-mobile"`); this port uses
-//   the NAMED import (`import {isMobile} from 'is-mobile'`), matching the established convention
-//   (ComposerRenderer.ts, AppInit.svelte, BaseSettings.ts, GlobalConfigStore.svelte.ts).
-// - `VsrgCanvasColors`/`VsrgCanvasSizes` now come from `./VsrgComposerRenderer` (old's six-file
-//   VsrgComposerCanvas.tsx + VsrgKeysRenderer.tsx + VsrgScrollableTrackRenderer.tsx +
-//   VsrgTrackRenderer.tsx + VsrgTimelineRenderer.tsx + VsrgTimelineBreakpointsRenderer.tsx collapse
-//   into that ONE renderer file this same task - see its header comment) instead of
-//   `./VsrgComposerCanvas`; this is a type-only import so the mutual reference back (that file
-//   imports the `VsrgCanvasCache` VALUE from here) stays a compile-time-only cycle, same shape old
-//   already had between VsrgComposerCache.ts and VsrgComposerCanvas.tsx.
 import Color from "color"
 import { Application, Graphics, Rectangle, Texture, } from 'pixi.js'
 import type { VsrgCanvasColors, VsrgCanvasSizes } from "./VsrgComposerRenderer";

@@ -1,88 +1,13 @@
-// Old: THREE files collapse into this ONE plain-TS renderer class, per this task's brief and the
-// same "Canvas.tsx owns pixi, Canvas.svelte owns lifecycle DOM" split VsrgComposerRenderer.ts (P4c
-// Task 7) already established:
-//   - src/components/pages/VsrgPlayer/VsrgPlayerCanvas.tsx (385 lines, the React class - owned the
-//     wrapper div, the ONE `<Application>`, mount/unmount, keyboard/theme/current-song/event-bus
-//     subscriptions, `calculateSizes`/`generateCache`/`generateAccuracyBounds`/`getHitRating`, the
-//     keyboard-press hit-detection state machine, and the `ThrottledEventLoop`-driven playback tick).
-//   - VsrgHitObjectsRenderer.tsx (101 lines) - the one pixi sub-tree old's canvas class rendered:
-//     a single scrolling container holding every currently-visible hit-object's sprites (tap vs.
-//     held, plus the connecting "line" sprite between simultaneous notes on different keys).
-//   - VsrgPlayerAccuracyRenderer.tsx (17 lines) - DROPPED, not ported as a method: verified via a
-//     repo-wide grep of the whole old branch that NOTHING ever imports it (old's own canvas class
-//     never rendered `<VsrgPlayerAccuracyRenderer>` either), and its own body is a bare
-//     `<pixiContainer></pixiContainer>` behind a `//TODO might implement` comment - a stub with zero
-//     observable behavior. There is nothing here to reproduce; collapsing a no-op into this file
-//     would add a private method that is never called, not "cover" any missing behavior.
+// This renderer owns the vsrg player canvas - one pixi Application with a single scrolling
+// container of hit-object sprites (tap vs. held, plus the connecting "line" sprite between
+// simultaneous notes on different keys).
 //
-// ONE class, ONE `Application` (old rendered exactly one `<Application>` too). ONE persistent
-// container (`hitObjectsContainer`) is added to the stage exactly once, in `init()` - old's own
-// pixi tree was already just the single `VsrgHitObjectsRenderer` sub-tree, unlike
-// VsrgComposerRenderer.ts's three. `draw()` (called from every internal mutation that would have
-// triggered an old React re-render) clears and rebuilds the container's children every time - the
-// same "full rebuild is cheap and trivially correct" choice VsrgComposerRenderer.ts already made.
-//
-// ARCHITECTURAL DIFFERENCE vs. VsrgComposerRenderer.ts (disclosed, not an oversight): old's
-// VsrgPlayerCanvas OWNED `song`/`timestamp`/`accuracy`/`sizes`/`colors`/`cache`/
-// `renderableHitObjects`/`accuracyBounds` as its OWN React state (subscribing directly to
-// `subscribeCurrentVsrgSong` itself to learn which song to play), NOT as props threaded in from its
-// parent - unlike VsrgComposerCanvas.tsx, which was a fully prop-controlled dumb component. This
-// port keeps that same split: everything above lives as PRIVATE fields on this class (mirroring
-// old's `this.state`), while only old's real four props (`isPlaying`, `scrollSpeed`,
-// `keyboardLayout`, `maxFps`) are pushed reactively from VsrgPlayerCanvas.svelte's own `$effect`,
-// via `update()` - see `VsrgPlayerRendererState` below. The callbacks are a separate,
-// construction-only wire, NOT part of that reactive push: VsrgPlayerCanvas.svelte's `onMount`
-// passes all four (old's three - `onSizeChange`/`onTick`/`playHitObject` - plus the new
-// `onTimestampChange` disclosed below) to the constructor once, via `VsrgPlayerRendererCallbacks`,
-// and `update()`'s own signature never takes them - a renderer instance's callback identity has no
-// reason to change after construction.
-// `keyboardLayout` is accepted for prop-shape parity with old's `VsrgPlayerCanvasProps` but - like
-// old itself - never actually read anywhere in this class's body (verified against the raw old
-// blob: declared in the props interface, never destructured/used in the class); a genuine old
-// dead-prop, preserved as dead rather than silently wired up to something (same treatment
-// VsrgComposerRendererState.audioSong already got from Task 7).
-//
-// NEW CALLBACK (disclosed, beyond old's exact three - `onSizeChange`/`onTick`/`playHitObject`):
-// `onTimestampChange`. Old's own `render()` used its internal `timestamp` (+ the `scrollSpeed` prop)
-// to decide whether to show the DOM `<VsrgPlayerCountDown>` sibling and what number to give it
-// (`(timestamp + scrollSpeed) < 0 ? Math.abs(Math.ceil((timestamp + scrollSpeed) / 1000 * 2)) + 1 :
-// hidden`) - trivial for old, since that DOM child lived in the SAME React class as this pixi state.
-// This port's Canvas.svelte owns that DOM sibling instead (matching the Composer/VsrgComposer split:
-// renderer-internal, DOM-only derived values cross the class boundary via a callback, e.g.
-// ComposerRenderer.ts's `onGeometryChange`) - so this renderer reports raw `timestamp` on every
-// change and Canvas.svelte recomputes the identical formula itself with its own `scrollSpeed` prop.
-//
-// TWO-TIER: no `$config`/`$game` data at all in any of the three old files (same as
-// VsrgComposerRenderer.ts) - `DEFAULT_DOM_RECT`/`PIXI_CENTER_X_END_Y` are Task 1's game-independent
-// `sharedConfig` constants (re-exported through the `legacyConfig` allowlist).
-//
-// PRESERVED QUIRKS (verified against the raw old blob, not fixed):
-// (1) `handleKeyboard` mutates `rho.status` on an existing `RenderableHitObject` DIRECTLY, without
-//     ever calling `setState` - old's own key-press visual feedback therefore never repaints
-//     immediately on keydown/keyup; it only becomes visible on the NEXT `ThrottledEventLoop` tick
-//     (whose `validateHitObjects` call always ends in a real `setState`/here, `draw()`). This port
-//     reproduces the same latency: `handleKeyboard` below mutates `.status` and does NOT call
-//     `draw()` itself.
-// (2) `componentWillUnmount` resets the shared `vsrgPlayerStore`'s keyboard layout to the 4-key
-//     keybind mapping UNCONDITIONALLY on destroy, regardless of what layout (4 or 6 keys) was
-//     active - reproduced verbatim in `destroy()` below.
-// (3) `calculateSizes`'s `this.props.onSizeChange(sizes)` call is UNGATED on the Application
-//     existing (it fires from `componentDidMount`, a window resize, `onSongPick`, and the `onInit`
-//     callback alike) - `onSizeChange` below is called every time `calculateSizes()` runs, even
-//     during the brief window before `this.app` exists, exactly matching old.
-// (4) `getScore`'s `baseScoreMap[type] ?? 0` fallback (VsrgPlayerStore.svelte.ts, not this file) and
-//     this file's OWN "accuracy" field are unchanged old constants, not reproduced here again.
-//
-// MOUNT-SEQUENCE (same reasoning as VsrgComposerRenderer.ts's own header comment, "MOUNT-SEQUENCE
-// SIMPLIFICATION" - not repeated in full here): old's `componentDidMount` synchronously subscribes
-// to theme (whose FIRST callback fires synchronously, per that same established mechanism) and
-// calls `calculateSizes()` once, both while `this.app` is still null (pixi.js v8's `Application
-// .init()` is asynchronous, so `<Application onInit>` cannot fire until a LATER microtask at the
-// earliest) - so `generateCache`'s `if (!app) return` guard makes every pre-Application call a
-// no-op, and the cache is for-real generated exactly once, by the `onInit`-triggered
-// `calculateSizes()` -> `generateCache()` pass. `init()` below reproduces that same observable
-// outcome directly (theme subscribe -> sizes -> create+await the real Application -> sizes again,
-// which now actually builds the cache) rather than mechanically replaying dead calls.
+// Unlike VsrgComposerRenderer (which is pushed props reactively via update() for everything it
+// tracks), this renderer owns song/timestamp/accuracy/sizes/colors/cache/renderableHitObjects/
+// accuracyBounds as its own private fields, subscribing directly to subscribeCurrentVsrgSong
+// itself. Only isPlaying/scrollSpeed/keyboardLayout/maxFps are pushed reactively via update() (see
+// VsrgPlayerRendererState below); the callbacks are wired once at construction instead and never
+// change identity afterward.
 import { Application, Container, Sprite } from 'pixi.js'
 import { subscribeTheme } from '$core/theme/ThemeProvider.svelte'
 import type { Theme } from '$core/theme/ThemeProvider.svelte'
@@ -106,8 +31,6 @@ import type { VsrgAccuracyBounds, VsrgHitObject } from '$core/Songs/VsrgSong'
 import type { VsrgKeyboardLayout } from './VsrgPlayerKeyboard.svelte'
 import { VsrgPlayerCache } from './VsrgPlayerCache'
 
-// Old: VsrgPlayerCanvas.tsx's own exported type - unchanged shape, now the shared home for
-// VsrgPlayerCache.ts's type-only import back (see that file's header comment).
 export type VsrgPlayerCanvasColors = {
     background_plain: [string, number]
     background_layer_10: [string, number]
@@ -119,8 +42,6 @@ export type VsrgPlayerCanvasColors = {
     accent: [string, number]
 }
 
-// Old: VsrgPlayerCanvas.tsx's own exported type - **exported**, per this task's brief: the page
-// holds it in state and feeds `verticalOffset`/`hitObjectSize` to VsrgPlayerKeyboard.svelte.
 export type VsrgPlayerCanvasSizes = {
     el: DOMRect
     rawWidth: number
@@ -133,9 +54,9 @@ export type VsrgPlayerCanvasSizes = {
     verticalOffset: number
 }
 
-// Old: VsrgPlayerCanvas.tsx's own exported default - defined here (the renderer module) AND
-// separately, verbatim, in the +page.svelte route (see that file's own comment for why: the page
-// must never statically import this module, since importing it pulls in `pixi.js`).
+// QUIRK: duplicated verbatim in the vsrg-player +page.svelte route too - the page must never
+// statically import this module (it touches pixi.js, which would break prerendering), so it
+// keeps its own copy of this default instead of importing it from here.
 export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
     el: { ...DEFAULT_DOM_RECT },
     rawWidth: 0,
@@ -148,7 +69,6 @@ export const defaultVsrgPlayerSizes: VsrgPlayerCanvasSizes = {
     verticalOffset: 0,
 }
 
-// Old: VsrgPlayerCanvas.tsx's own exported enum/class - unchanged.
 export enum HitObjectStatus {
     Idle,
     Pressed,
@@ -169,18 +89,17 @@ export class RenderableHitObject {
     }
 }
 
-// Mirrors old `VsrgPlayerCanvasProps`'s four non-callback fields - the reactive input
-// VsrgPlayerCanvas.svelte pushes into `update()` on every relevant change via its own `$effect`.
+// The reactive input VsrgPlayerCanvas.svelte pushes into update() on every relevant change via its
+// own $effect.
 export interface VsrgPlayerRendererState {
     isPlaying: boolean
     scrollSpeed: number
-    // Dead prop, kept for parity - see header comment.
+    // QUIRK: accepted for prop-shape parity but never read anywhere in this class's body - a
+    // genuine dead field, preserved as dead rather than wired up to something.
     keyboardLayout: VsrgKeyboardLayout
     maxFps: number
 }
 
-// Mirrors old `VsrgPlayerCanvasProps`'s three callback fields, plus the one new
-// `onTimestampChange` addition disclosed in the header comment above.
 export interface VsrgPlayerRendererCallbacks {
     onSizeChange: (sizes: VsrgPlayerCanvasSizes) => void
     onTick: (timestamp: number) => void
@@ -195,14 +114,14 @@ export class VsrgPlayerRenderer {
     private currentSongDispose: (() => void) | null = null
     private throttledEventLoop: ThrottledEventLoop
 
-    // Persistent scene container (created once per renderer instance, children rebuilt on every
-    // draw() - see header comment). Added to the stage once in init().
+    // Persistent scene container, created once per renderer instance; draw() clears and rebuilds
+    // its children on every update rather than diffing incrementally. Added to the stage once in
+    // init().
     private readonly hitObjectsContainer = new Container()
 
     private state: VsrgPlayerRendererState
 
-    // ---- old: VsrgPlayerCanvas.tsx's OWN React state (`this.state`), not pushed from outside -
-    // see header comment "ARCHITECTURAL DIFFERENCE". ----
+    // ---- private fields, not pushed reactively via update() (see this class's own header note) ----
     private song: VsrgSong = new VsrgSong('')
     private timestamp = 0
     private readonly accuracy = 150
@@ -226,17 +145,19 @@ export class VsrgPlayerRenderer {
         private readonly callbacks: VsrgPlayerRendererCallbacks,
     ) {
         this.state = initialState
-        // Old: `this.throttledEventLoop = new ThrottledEventLoop(() => {}, this.props.maxFps)` -
-        // read directly at construction time (unlike VsrgComposerRenderer.ts's own hardcoded-48
-        // placeholder - old's VsrgPlayerCanvas constructor genuinely had `this.props` available
-        // immediately via `super(props)`, so this port matches that exactly).
+        // Read directly from initialState here, unlike VsrgComposerRenderer's hardcoded-48
+        // placeholder - this class's constructor has the real maxFps available immediately.
         this.throttledEventLoop = new ThrottledEventLoop(() => {}, initialState.maxFps)
     }
 
-    // Old: `componentDidMount` + the `<Application onInit>` callback it depended on, collapsed into
-    // one explicit async method (constructors cannot be async) - VsrgPlayerCanvas.svelte's
-    // `onMount` awaits this before ever calling `update()`. See header comment "MOUNT-SEQUENCE" for
-    // why the call order below reproduces old's real observable behavior.
+    // Constructors cannot be async, so mounting collapses into this explicit async method;
+    // VsrgPlayerCanvas.svelte's onMount awaits it before ever calling update().
+    //
+    // QUIRK (load-bearing - read before "fixing" the call order below): same reasoning as
+    // VsrgComposerRenderer's own init() - the cache is generated for-real exactly once, after the
+    // pixi Application exists. Do not add extra early cache-generating calls here: generateCache()'s
+    // own `if (!app) return` guard makes an early call harmless, but a redundant later call would
+    // regenerate and discard the just-generated cache.
     async init(): Promise<void> {
         this.themeDispose = subscribeTheme(this.handleThemeChange)
         vsrgPlayerStore.addKeyboardListener({ callback: this.handleKeyboard, id: 'vsrg-player-canvas' })
@@ -263,14 +184,12 @@ export class VsrgPlayerRenderer {
         this.throttledEventLoop.changeMaxFps(this.state.maxFps)
         this.throttledEventLoop.start()
 
-        // Old: `<Application onInit={(app) => { this.app = app; this.calculateSizes() }}>` - now
-        // that the Application genuinely exists, re-run calculateSizes() (which now actually builds
-        // the cache at its own tail - see header comment) and paint the first frame.
+        // Re-run now that the Application genuinely exists (the earlier call above ran before it
+        // did) - this is the real calculateSizes()/generateCache() pass; it also paints the first frame.
         this.calculateSizes()
         this.draw()
     }
 
-    // Old: `onSongPick` (the `subscribeCurrentVsrgSong` callback).
     private onSongPick = ({ type, song }: VsrgPlayerSong) => {
         vsrgPlayerStore.resetScore()
         const { scrollSpeed } = this.state
@@ -293,13 +212,12 @@ export class VsrgPlayerRenderer {
         }
     }
 
-    // Old: `componentWillUnmount`. The explicit `Application.destroy()` call is a REQUIRED addition
-    // beyond old (same rationale as VsrgComposerRenderer.ts's own `destroy()` - `@pixi/react` owned
-    // and destroyed the Application automatically on React unmount, an ownership layer this port
-    // doesn't have; skipping it would be a genuine WebGL-context/canvas leak on every unmount).
+    // this.app?.destroy() below is REQUIRED: nothing else owns the pixi Application's lifecycle in
+    // this synchronous class. Skipping it would leak a WebGL context/canvas on every unmount.
     destroy(): void {
         this.throttledEventLoop.stop()
-        // Old quirk, preserved verbatim - see header comment (2).
+        // QUIRK: resets the shared vsrgPlayerStore's keyboard layout to the 4-key mapping
+        // UNCONDITIONALLY, regardless of whether a 4-key or 6-key layout was active. Flagged, not fixed.
         vsrgPlayerStore.setLayout(keyBinds.getVsrgKeybinds(4))
         vsrgPlayerStore.removeKeyboardListener({ id: 'vsrg-player-canvas' })
         this.currentSongDispose?.()
@@ -311,13 +229,14 @@ export class VsrgPlayerRenderer {
         this.app = null
     }
 
-    // Old: `handleVsrgEvent`, the vsrgPlayerStore event-bus listener.
     private handleVsrgEvent = (data: VsrgPlayerEvent) => {
         if (data === 'fpsChange') this.throttledEventLoop.changeMaxFps(this.state.maxFps)
     }
 
-    // Old: `handleKeyboard`. See header comment preserved-quirk (1): mutates `.status` directly,
-    // no `draw()` call here - the next tick's `validateHitObjects` is what repaints it.
+    // QUIRK: mutates rho.status directly below and never calls draw() itself, so a key-press
+    // never repaints immediately on keydown/keyup - it only becomes visible on the next
+    // ThrottledEventLoop tick (whose validateHitObjects call ends in a real draw()). Flagged, not
+    // fixed - don't add a draw() call here for "responsiveness" without checking the timing.
     private handleKeyboard = (key: KeyboardKey, type: VsrgKeyboardPressType) => {
         const { renderableHitObjects, timestamp, accuracy } = this
         // rho = renderable hit object
@@ -348,8 +267,7 @@ export class VsrgPlayerRenderer {
         }
     }
 
-    // Old: `calculateSizes`, bound to the resize listener AND called directly at mount/song-pick.
-    // See header comment preserved-quirk (3): `onSizeChange` fires unconditionally here.
+    // Bound to the resize listener and called directly at mount/song-pick.
     private calculateSizes = () => {
         const el = this.container
         const width = el.clientWidth
@@ -367,20 +285,18 @@ export class VsrgPlayerRenderer {
             verticalOffset: 15,
         }
         this.app?.renderer.resize(sizes.width, sizes.height)
-        // Old queried `wrapperRef.current.querySelector('canvas')` since it had no direct handle on
-        // the canvas @pixi/react created; this port creates+appends the canvas itself, so
-        // `this.app.canvas` IS that same element - a direct reference, not a behavior change (same
-        // established rationale as VsrgComposerRenderer.ts's own `calculateSizes`).
         if (this.app) {
             this.app.canvas.style.width = `${sizes.width}px`
             this.app.canvas.style.height = `${sizes.height}px`
         }
+        // QUIRK: fires unconditionally, even during the brief window before this.app exists (this
+        // method runs at construction time, on window resize, and on song-pick alike) - unlike
+        // generateCache() below, this call is not gated behind an `if (this.app)` check.
         this.callbacks.onSizeChange(sizes)
         this.sizes = sizes
         this.generateCache()
     }
 
-    // Old: `generateCache`.
     private generateCache = () => {
         const app = this.app
         if (!app) return
@@ -393,19 +309,18 @@ export class VsrgPlayerRenderer {
         const oldCache = this.cache
         this.cache = newCache
         this.draw()
-        // old: "//TODO not sure why pixi reuses textures from the old cache" - preserved verbatim,
-        // incl. the 500ms delay before tearing down the PREVIOUS cache's textures.
+        // QUIRK: the previous cache's textures are destroyed only after a 500ms delay ("not sure
+        // why pixi reuses textures from the old cache" - old's own TODO, preserved). Destroying
+        // immediately caused visible issues; don't remove or shorten this delay without checking that.
         setTimeout(() => {
             oldCache?.destroy()
         }, 500)
     }
 
-    // Old: `generateAccuracyBounds`.
     private generateAccuracyBounds = () => {
         this.accuracyBounds = this.song.getAccuracyBounds()
     }
 
-    // Old: `getHitRating`.
     private getHitRating = (hitObject: VsrgHitObject, timestamp: number): VsrgPlayerHitType => {
         const { accuracyBounds } = this
         const diff = Math.abs(timestamp - hitObject.timestamp)
@@ -417,7 +332,6 @@ export class VsrgPlayerRenderer {
         return 'miss'
     }
 
-    // Old: `handleThemeChange`.
     private handleThemeChange = (theme: Theme) => {
         const bgPlain = theme.get('primary')
         const bgLine = theme.getText('primary')
@@ -440,7 +354,7 @@ export class VsrgPlayerRenderer {
         this.generateCache()
     }
 
-    // Old: `handleTick`, the ThrottledEventLoop-driven playback tick.
+    // The ThrottledEventLoop-driven playback tick.
     private handleTick = (_elapsed: number, sinceLast: number) => {
         const { isPlaying, scrollSpeed } = this.state
         if (!isPlaying) return
@@ -459,7 +373,6 @@ export class VsrgPlayerRenderer {
         this.callbacks.onTick(timestamp)
     }
 
-    // Old: `validateHitObjects`.
     private validateHitObjects = (timestamp: number, renderableHitObjects: RenderableHitObject[], previousTimestamp: number) => {
         const { accuracy } = this
         const keyboard = vsrgPlayerStore.keyboard
@@ -495,13 +408,11 @@ export class VsrgPlayerRenderer {
         this.draw()
     }
 
-    // The ONE entry point VsrgPlayerCanvas.svelte's `$effect` calls on every reactive-prop change.
+    // The entry point VsrgPlayerCanvas.svelte's $effect calls on every reactive-prop change.
     update(state: VsrgPlayerRendererState): void {
         this.state = state
     }
 
-    // Old: the pixi-scene half of `render()` (the DOM half - the wrapper div + countdown - lives in
-    // VsrgPlayerCanvas.svelte's template) + VsrgHitObjectsRenderer.tsx's own return tree.
     private draw(): void {
         if (!this.app) return
         const hasCache = this.cache !== null
@@ -513,7 +424,6 @@ export class VsrgPlayerRenderer {
         }
     }
 
-    // Old: VsrgHitObjectsRenderer.tsx.
     private drawHitObjects(): void {
         for (const child of this.hitObjectsContainer.removeChildren()) child.destroy({ children: true })
         const cache = this.cache

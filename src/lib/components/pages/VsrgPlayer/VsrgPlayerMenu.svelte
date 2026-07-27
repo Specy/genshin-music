@@ -21,52 +21,8 @@
     import AppLink from '$cmp/AppLink.svelte'
     import AppButton from '$cmp/inputs/AppButton.svelte'
 
-    // Old: src/components/pages/VsrgPlayer/VsrgPlayerMenu.tsx (265 lines, default export `VsrgMenu`,
-    // `memo`-wrapped). Old's local `SongRow` sub-component is split into its own sibling file this
-    // same task (see VsrgPlayerSongRow.svelte's own header comment for the "brief-silent sibling"
-    // rationale).
-    //
-    // `memo(VsrgMenu, (p, n) => p.settings === n.settings)` DROPPED (established
-    // "Svelte 5 fine-grained reactivity replaces manual memoization" precedent, every memo drop
-    // this migration).
-    //
-    // Structural precedent: VsrgComposerMenu.svelte (P4c Task 8, same MenuSidebar/
-    // MenuPanelWrapper/panel-snippet/hamburger-as-first-child/wrapperEl+clickOutside shape).
-    // `useClickOutside<HTMLDivElement>((e) => { setIsVisible(false) }, {active: isOpen && isVisible,
-    // ignoreFocusable: true})` + `ref={menuRef}` -> `wrapperEl` bound via MenuSidebar's own
-    // `bind:wrapperEl`, plus a manually-invoked `clickOutside(...)` action in an `$effect` - the
-    // same established pattern. Old's own callback here is the SIMPLE shape (just
-    // `setIsVisible(false)`, no mobile branch) - matching ZenKeyboardMenu.svelte's/
-    // VsrgComposerMenu.svelte's own identical callback shape (verified against the raw old blob,
-    // not an inconsistency introduced here).
-    //
-    // TWO REAL, DISCLOSED DIFFERENCES from VsrgComposerMenu.svelte's own otherwise-identical shape
-    // (verified against the raw old blob, not normalized away to match its sibling):
-    // (1) `isVisible` starts `true` here (old: `useState(true)`), not `false` - this menu is
-    //     VISIBLE by default; VsrgComposerMenu's own starts hidden (mobile-collapsed).
-    // (2) The hamburger div's class is the bare `"hamburger-top"` (old: `className="hamburger-top"`,
-    //     no "vsrg-hamburger" modifier), and BOTH the hamburger's and the close button's onClick
-    //     handlers are UNCONDITIONAL sets (`() => setIsVisible(true)` / `() => setIsVisible(false)`),
-    //     NOT toggles - unlike VsrgComposerMenu.svelte's own toggle-shaped
-    //     `onclick={() => isVisible = !isVisible}` on both. `.hamburger-top` is the SAME already-
-    //     ported global class ZenKeyboardMenu.svelte's own hamburger uses (App.css:1500/1518,
-    //     P4a Task 3 CSS pull-forward) - no new CSS needed here either.
-    //
-    // No `createShortcutListener`/`onMount` at all here (verified against the raw old blob: old's
-    // `VsrgMenu` registers no keyboard shortcut of its own, unlike ComposerMenu.svelte/PlayerMenu
-    // .svelte/VsrgComposerMenu.svelte, which each register their own toggle_menu/close_menu
-    // shortcut) - the outer VsrgPlayer PAGE registers `restart`/`stop` shortcuts instead (this
-    // task's own +page.svelte route).
-    //
-    // `useTheme()`/`useFolders()`/`useSongs()`/`useConfig().IS_MOBILE` -> direct
-    // `songsStore.songs`/`folderStore.folders`/`globalConfigStore.state.IS_MOBILE` reads (already
-    // the established idiom); `theme` itself is no longer threaded through `componentProps` at all
-    // (VsrgPlayerSongRow.svelte imports `ThemeProvider` directly, same as every other SongRow
-    // sibling this migration ported).
-    //
-    // Icons: FaBars/FaTimes/FaMusic/FaCog/FaHome all byte-matched against the copies already
-    // inlined in VsrgComposerMenu.svelte (P4c Task 8, same pinned react-icons@5.6.0 source) - not
-    // re-fetched, since the shipped SVG is identical either way.
+    // No shortcut listener in this file - the vsrg-player page route registers restart/stop
+    // shortcuts instead.
     let {
         settings,
         onSongSelect,
@@ -80,6 +36,11 @@
     const excludedSongs: SongType[] = ['composed', 'recorded']
 
     let isOpen = $state(false)
+    // QUIRK: two real, deliberate differences from the otherwise-identical VsrgComposerMenu.svelte:
+    // isVisible starts true (this menu is visible by default; VsrgComposerMenu's starts hidden),
+    // and the hamburger/close handlers below are UNCONDITIONAL sets (isVisible = true / = false),
+    // not toggles like VsrgComposerMenu's onclick={() => isVisible = !isVisible}. Don't "unify"
+    // these to match that sibling.
     let isVisible = $state(true)
     let selectedMenu = $state('Settings')
     let wrapperEl: HTMLDivElement | undefined = $state()

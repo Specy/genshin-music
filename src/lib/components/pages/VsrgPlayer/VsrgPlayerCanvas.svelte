@@ -6,38 +6,18 @@
     import type {VsrgKeyboardLayout} from './VsrgPlayerKeyboard.svelte'
     import VsrgPlayerCountDown from './VsrgPlayerCountDown.svelte'
 
-    // Old: src/components/pages/VsrgPlayer/VsrgPlayerCanvas.tsx (385 lines, class component) - this
-    // file is the "lifecycle only" half of the split described in VsrgPlayerRenderer.ts's header
-    // comment (that file owns every pixi object + old's own React state; this one owns the wrapper
-    // DOM element, when the renderer gets constructed/fed/destroyed, and the DOM-only
-    // `<VsrgPlayerCountDown>` sibling old rendered from the SAME class).
+    // This file owns the wrapper DOM element, the renderer's lifecycle (construct/feed/destroy),
+    // and the DOM-only VsrgPlayerCountDown sibling; VsrgPlayerRenderer owns the pixi objects.
     //
-    // Prerender safety (spec's hard constraint): `VsrgPlayerRenderer` (and therefore `pixi.js`) is
-    // NEVER statically imported here - only `import type` (fully erased at compile time, zero
-    // runtime import) for typing `renderer`, plus the real `await import('./VsrgPlayerRenderer')`
-    // inside `onMount`, which never runs during prerender.
+    // VsrgPlayerRenderer (and therefore pixi.js) must never be a static import here - only
+    // `import type` (erased at compile time) for typing `renderer`, plus the dynamic
+    // `await import(...)` inside onMount below, which never runs during prerender. A static
+    // import would pull pixi.js into the prerendered bundle and break it.
     //
-    // Old only rendered `<Application>` once `wrapperRef.current` existed - reproduced here by
-    // never even attempting to construct the renderer until `wrapperEl` is bound (matching
-    // VsrgComposerCanvas.svelte's own established `if (cancelled || !xEl) return` gate).
-    //
-    // `colors.background_layer_10` (the wrapper div's own inline background-color, old:
-    // `style={{backgroundColor: colors.background_layer_10[0]}}`) is recomputed HERE directly from
-    // `ThemeProvider`, duplicating the identical formula VsrgPlayerRenderer.ts's own
-    // `handleThemeChange` uses (`theme.layer('background', 0.18, 0.06)`) - same disclosed-duplication
-    // precedent ComposerCanvas.svelte's own header comment already established for its own
-    // `sideButtonsRgb`/`timelineHex`/`backgroundHex` (a renderer-internal color the Svelte-owned DOM
-    // also needs cannot be re-derived by the template on its own the other way around, but CAN be
-    // independently recomputed here since `ThemeProvider` is a global reactive singleton every
-    // component can read directly - cheaper and more idiomatic than adding a callback for a value
-    // nothing inside the pixi scene itself ever reads, see VsrgPlayerRenderer.ts's header comment
-    // confirming `background_layer_10` has zero pixi-side consumers).
-    //
-    // `timestamp` (old: internal React state, read directly by this SAME class's `render()` to
-    // gate/compute `<VsrgPlayerCountDown>`) crosses the renderer/Svelte-component boundary via the
-    // new `onTimestampChange` callback disclosed in VsrgPlayerRenderer.ts's header comment - this
-    // file recomputes old's EXACT formula itself once it has both `timestamp` and its own
-    // `scrollSpeed` prop.
+    // backgroundLayer10 below independently recomputes the identical formula VsrgPlayerRenderer.ts's
+    // own handleThemeChange uses for its own pixi-side background - duplicated deliberately
+    // (ThemeProvider is a global singleton either side can read directly) since nothing inside the
+    // pixi scene needs this DOM div's background color, and vice versa.
     interface VsrgPlayerCanvasProps {
         isPlaying: boolean
         scrollSpeed: number
@@ -63,8 +43,6 @@
     let timestamp = $state(0)
 
     const backgroundLayer10 = $derived(ThemeProvider.layer('background', 0.18, 0.06).hex())
-    // Old: `(timestamp + scrollSpeed) < 0 && <VsrgPlayerCountDown time={Math.abs(Math.ceil((timestamp
-    // + scrollSpeed) / 1000 * 2)) + 1}/>` - identical formula, recomputed here.
     const countdownTime = $derived((timestamp + scrollSpeed) < 0 ? Math.abs(Math.ceil((timestamp + scrollSpeed) / 1000 * 2)) + 1 : null)
 
     onMount(() => {
@@ -110,14 +88,11 @@
 </div>
 
 <style>
-    /* Old: src/components/pages/VsrgPlayer/VsrgPlayerCanvas.module.css (19 lines) - both rules
-       ported verbatim. `.vsrg-player-canvas canvas` targets the pixi canvas element, which is
-       appended programmatically by VsrgPlayerRenderer.ts (not written in this file's own
-       template), so it carries no Svelte scoping hash - `:global(canvas)` keeps the selector's LEFT
-       side (`.vsrg-player-canvas`) scoped to this component while leaving the descendant `canvas`
-       unscoped, exactly matching the compiled shape Svelte would otherwise be unable to produce for
-       an element it doesn't control (same mechanism required by ANY component that appends a real
-       DOM/canvas node outside its own template). */
+    /* QUIRK: :global(canvas) below is REQUIRED, not a scoping violation to "fix". The actual
+       <canvas> element is appended programmatically by VsrgPlayerRenderer.ts, not written in this
+       file's own template, so it carries no Svelte scoping hash. :global() is what lets this
+       selector reach an element outside this component's own markup - removing it would silently
+       stop matching the canvas. */
     .vsrg-player-canvas {
         position: absolute;
         bottom: 0;

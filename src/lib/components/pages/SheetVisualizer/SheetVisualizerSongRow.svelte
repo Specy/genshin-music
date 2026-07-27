@@ -4,20 +4,7 @@
     import {logger} from '$stores/LoggerStore.svelte'
     import {t} from '$i18n/binding.svelte'
 
-    // Old: src/components/pages/SheetVisualizer/SheetVisualizerMenu.tsx's local (non-exported)
-    // `SongRow` component, the sheet-visualizer menu's own SongMenu row. Not literally named in
-    // this task's brief Files list (the brief describes it as "inline SongRow" living inside
-    // SheetVisualizerMenu.tsx, matching old's file layout) - but SongMenu.svelte's own generics
-    // contract requires an actual `Component<T>` reference for its `SongComponent` prop (a real
-    // capitalized component, not a snippet - see SongMenu.svelte's own header comment), so a
-    // sibling file is required the same way ErrorSongRow.svelte already was for the error page's
-    // own row (P4a Task 5) - same "restore/add-with-consumer" disclosure category. Named
-    // SheetVisualizerSongRow (not old's bare "SongRow") for the same collision-avoidance reason
-    // ErrorSongRow was: every future SongMenu consumer (Composer/Player/VsrgComposer/VsrgPlayer
-    // menus, still to come) needs its own row component with a different componentProps shape.
-    //
-    // CSS (.song-row/.song-name) is already global (App.css) - no component-local <style> needed,
-    // same as ErrorSongRow.svelte.
+    // .song-row/.song-name are styled globally in App.css; no component-local <style> needed here.
     let {
         data,
         current,
@@ -28,10 +15,6 @@
         onClick: (song: SerializedSong) => void
     } = $props()
 
-    // old: `current?.id === data.id ? {backgroundColor: 'rgb(124, 116, 106)'} : {}`, spread before
-    // a literal `padding: '0.5rem 0.8rem'` in the same style object - ported as a plain CSS-text
-    // string (this migration's established idiom for inline style objects, e.g. Card.svelte), same
-    // rgb() literal preserved verbatim.
     const selectedStyle = $derived(current?.id === data.id ? 'background-color:rgb(124, 116, 106);' : '')
 
     async function handleClick() {
@@ -42,9 +25,8 @@
         setTimeout(() => logger.hidePill(), 300)
     }
 
-    // old had no keyboard handler on the (bare onClick) row div - pre-existing a11y gap, same
-    // additive role/tabindex/onkeydown fix already applied to SongFolder.svelte/DecoratedCard.svelte
-    // /Home.svelte's own bare-onClick divs in earlier tasks.
+    // role/tabindex/onkeydown below make this keyboard-operable (a div has no native button
+    // semantics) - an accessibility addition, not present in old.
     function handleKeydown(e: KeyboardEvent) {
         if (e.key !== 'Enter' && e.key !== ' ') return
         e.preventDefault()
