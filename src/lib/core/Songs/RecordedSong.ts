@@ -72,6 +72,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const song = Song.deserializeTo(new RecordedSong(name || 'Untitled'), obj)
         song.reverb = obj.reverb ?? false
         if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
+        // QUIRK: a v1 note's layer is a decimal number, but RecordedNote.deserialize feeds it to NoteLayer.deserializeHex - so a decimal layer is read as hex (10 becomes 16). Harmless for the `|| 1` default; preserved so old saves keep decoding exactly as they always have.
         if (version === 1) {
             const clonedNotes = Array.isArray(notes) ? clonedeep(notes) : []
             song.notes = clonedNotes.map(note => {

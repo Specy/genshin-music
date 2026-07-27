@@ -101,7 +101,7 @@ const serwist = new Serwist({
             handler: new NetworkFirst({cacheName: RUNTIME_CACHE}),
         },
         {
-            // Audio. NOTE: shadowed by the catch-all above, preserved as in the
+            // Audio. QUIRK: shadowed by the catch-all above, preserved as in the
             // original worker. Reorder before the catch-all if CacheFirst-for-audio
             // is actually intended.
             matcher: ({url}) => {
