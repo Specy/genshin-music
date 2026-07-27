@@ -1,8 +1,9 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import {resolve} from '$app/paths'
 
-    // Unstyled by design - callers pass `style`/`className` explicitly for any
+    // Unstyled by design - callers pass `style`/`class` explicitly for any
     // visual styling (e.g. Home's privacy links, `.blog-link`).
     //
     // Leave-guard (unsaved-changes) confirmation is wired once at the shell
@@ -16,14 +17,14 @@
         href,
         children,
         style = '',
-        className,
+        class: cls,
         onclick,
         ...rest
     }: {
         href: string
         children?: Snippet
         style?: string
-        className?: string
+        class?: ClassValue
         onclick?: (e: MouseEvent) => void
         [key: string]: unknown
     } = $props()
@@ -41,7 +42,7 @@
      lint rule can't trace that at the runtime branch, so it's suppressed here. -->
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 <a href={resolvedHref}
-    class={className}
+    class={cls}
     style={style}
     {onclick}
     {...rest}

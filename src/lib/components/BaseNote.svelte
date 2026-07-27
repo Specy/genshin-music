@@ -84,7 +84,7 @@
 >
     <div bind:this={noteRef} class={className} style="border-color:{borderColor}">
         {#if game.features.hasNoteFrame}
-            <GenshinNoteBorder className="genshin-border" fill={borderColor} />
+            <GenshinNoteBorder class="genshin-border" fill={borderColor} />
         {/if}
         {#if noteImage}
             <SvgNote

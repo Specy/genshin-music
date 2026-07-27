@@ -3,6 +3,7 @@
     import {songsStore} from '$stores/SongsStore.svelte'
     import {browserHistoryStore} from '$stores/BrowserHistoryStore'
     import {homeStore} from '$stores/HomeStore.svelte'
+    import type {ClassValue} from 'svelte/elements'
     import {clickOutside} from '$lib/utils/clickOutside'
     import {t} from '$i18n/binding.svelte'
     import MenuSidebar from '$cmp/menu/MenuSidebar.svelte'
@@ -20,12 +21,12 @@
     let {
         currentSong,
         onSongLoaded,
-        className = '',
+        class: cls = '',
         style = '',
     }: {
         currentSong: SerializedSong | null
         onSongLoaded: (song: SerializedSong) => void
-        className?: string
+        class?: ClassValue
         style?: string
     } = $props()
 
@@ -103,7 +104,7 @@
 
 <MenuSidebar
     bind:wrapperEl
-    {className}
+    class={cls}
     {style}
     menuStyle="justify-content:flex-end"
     current={selectedPage}
@@ -133,7 +134,7 @@
             <MenuPanel id="Songs">
                 <SongMenu
                     songs={songsStore.songs}
-                    className="noprint"
+                    class="noprint"
                     exclude={['vsrg']}
                     SongComponent={SheetVisualizerSongRow}
                     componentProps={{current: currentSong, onClick: onSongLoaded}}

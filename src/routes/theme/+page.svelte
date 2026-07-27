@@ -185,7 +185,7 @@
     </div>
     <div class="theme-app-preview">
         <AppButton
-            className="box-shadow"
+            class="box-shadow"
             toggled={true}
             style="position:absolute;right:0;top:0;z-index:90"
             onclick={() => (selectedPagePreview = selectedPagePreview === 'composer' ? 'player' : 'composer')}

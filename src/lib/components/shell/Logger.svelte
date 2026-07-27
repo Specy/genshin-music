@@ -12,7 +12,7 @@
     {#each logger.toasts as toast (toast.id)}
         {@const isBig = toast.text.length > 150}
         <DecoratedCard
-            className={toast.visible ? 'logger-toast' : 'logger-toast logger-toast-hidden'}
+            class={toast.visible ? 'logger-toast' : 'logger-toast logger-toast-hidden'}
             style="max-width:{isBig ? '24rem' : '19rem'}"
             onclick={() => logger.removeToast(toast.id)}
         >

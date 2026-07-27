@@ -146,7 +146,7 @@
     {/if}
     <div bind:this={ref} class={className}>
         {#if game.features.hasNoteFrame}
-            <GenshinNoteBorder className="genshin-border" fill={parseBorderFill(status)} />
+            <GenshinNoteBorder class="genshin-border" fill={parseBorderFill(status)} />
         {/if}
         {#if noteImage}
             <!-- QUIRK: BaseNote.svelte's SvgNote render passes no color prop (untinted) while this

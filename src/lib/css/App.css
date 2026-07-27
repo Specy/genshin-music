@@ -1034,7 +1034,7 @@ a {
 /* ==================================================================================
    Home overlay (the launcher/welcome screen). Old: src/components/pages/Index/Home.css.
    Global for the same cross-component-boundary reason as the menu system above: Home.svelte
-   (P3 Task 8) applies most of these classes via `className`/`style` props into child components
+   (P3 Task 8) applies most of these classes via `class`/`style` props into child components
    (AppLink, AppButton, Row) that have no <style> block of their own to scope against, so a
    scoped block in Home.svelte would silently fail to match them. Ported verbatim MINUS lines
    41-157 of the old file (the `.logger-*`/`.pill*` block) - that block was already relocated into

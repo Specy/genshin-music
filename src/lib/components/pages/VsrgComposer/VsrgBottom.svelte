@@ -112,7 +112,7 @@
                 <option value={snapPoint}>{t('vsrg_composer:snap')}: 1/{snapPoint}</option>
             {/each}
         </Select>
-        <AppButton className="vsrg-play-button flex-centered" onclick={togglePlay}>
+        <AppButton class="vsrg-play-button flex-centered" onclick={togglePlay}>
             {#if isPlaying}
                 {@render faPauseIcon()}
             {:else}

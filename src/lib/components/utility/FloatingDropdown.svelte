@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {Component, Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import SongActionButton from '../inputs/SongActionButton.svelte'
 
     // `.floating-dropdown*` CSS lives in global App.css.
@@ -12,7 +13,7 @@
     let {
         children,
         Icon,
-        className = '',
+        class: cls = '',
         style = '',
         onClose,
         tooltip,
@@ -22,7 +23,7 @@
         children: Snippet
         tooltip?: string
         Icon: Component
-        className?: string
+        class?: ClassValue
         offset?: number
         style?: string
         ignoreClickOutside?: boolean
@@ -83,7 +84,7 @@
     }
 </script>
 
-<div class="{className} floating-dropdown {isActive ? 'floating-dropdown-active' : ''}">
+<div class="{cls} floating-dropdown {isActive ? 'floating-dropdown-active' : ''}">
     <SongActionButton
         style="margin:0;{style}{isActive ? 'background-color:var(--accent);color:var(--accent-text);' : ''}"
         onclick={toggle}

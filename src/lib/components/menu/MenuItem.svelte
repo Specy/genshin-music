@@ -1,17 +1,18 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import {blurEvent} from '$core/utils/Utilities'
     import {getMenuContext} from './menuContext'
 
     let {
-        className = '',
+        class: cls = '',
         style = '',
         onclick,
         children,
         ariaLabel,
         id,
     }: {
-        className?: string
+        class?: ClassValue
         style?: string
         onclick?: () => void
         children?: Snippet
@@ -37,7 +38,7 @@
 </script>
 
 <button
-    class="menu-item {isActive ? 'menu-item-active' : ''} {className}"
+    class="menu-item {isActive ? 'menu-item-active' : ''} {cls}"
     style={style}
     aria-label={ariaLabel}
     onclick={handleClick}

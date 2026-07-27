@@ -96,7 +96,7 @@
         <AppButton
             onclick={() => selected && (isTrackSettingsOpen = !isTrackSettingsOpen)}
             style="background-color:{buttonBackground}"
-            className="vsrg-track-left flex-centered"
+            class="vsrg-track-left flex-centered"
         >
             {#if selected}
                 {@render faCogIcon(buttonText)}
@@ -115,7 +115,7 @@
             onChange={(track) => onTrackChange(track, selectedTrack)}
         />
     {/if}
-    <Row align="center" className="vsrg-breakpoints-buttons" style="margin-bottom:0.4rem">
+    <Row align="center" class="vsrg-breakpoints-buttons" style="margin-bottom:0.4rem">
         <AppButton style="margin-left:0" onclick={() => onBreakpointSelect(-1)}>{@render faStepBackwardIcon()}</AppButton>
         <AppButton onclick={() => onBreakpointChange(true)}>{@render faMinusIcon()}</AppButton>
         <AppButton onclick={() => onBreakpointChange(false)}>{@render faPlusIcon()}</AppButton>
@@ -134,7 +134,7 @@
                 }, 50)
             }}
             ariaLabel={t('common:add_new_instrument')}
-            className="flex-centered"
+            class="flex-centered"
             style="margin-top:auto;padding:0.3rem"
         >
             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="16" width="16" xmlns="http://www.w3.org/2000/svg" style="color:var(--icon-color)"><path d="M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"/></svg>

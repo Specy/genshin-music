@@ -140,7 +140,7 @@
                 oninput={(e) => onChange(instrument.set({volume: Number(e.currentTarget.value)}))}
             />
             <AppButton
-                className="flex-centered"
+                class="flex-centered"
                 toggled={instrument.muted}
                 style="padding:0;min-width:unset;width:1.6rem;height:1.6rem;border-radius:2rem"
                 onclick={() => {
@@ -159,7 +159,7 @@
             <AppButton
                 onclick={() => onChangePosition(-1)}
                 disabled={currentLayer === 0}
-                className="flex-centered"
+                class="flex-centered"
                 style="padding:0.5rem;flex:1;margin-right:0.4rem"
             >
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" style="margin-right:0.2rem" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"/></svg>
@@ -168,7 +168,7 @@
             <AppButton
                 onclick={() => onChangePosition(1)}
                 disabled={currentLayer === instruments.length - 1}
-                className="flex-centered"
+                class="flex-centered"
                 style="padding:0.5rem;flex:1"
             >
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" style="margin-right:0.2rem" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M413.1 222.5l22.2 22.2c9.4 9.4 9.4 24.6 0 33.9L241 473c-9.4 9.4-24.6 9.4-33.9 0L12.7 278.6c-9.4-9.4-9.4-24.6 0-33.9l22.2-22.2c9.5-9.5 25-9.3 34.3.4L184 343.4V56c0-13.3 10.7-24 24-24h32c13.3 0 24 10.7 24 24v287.4l114.8-120.5c9.3-9.8 24.8-10 34.3-.4z"/></svg>
@@ -177,7 +177,7 @@
         </div>
         <div class="row space-between" style="margin-top:0.4rem">
             <AppButton
-                className="row-centered"
+                class="row-centered"
                 style="padding:0.4rem;width:fit-content"
                 onclick={onDelete}
             >

@@ -81,7 +81,7 @@
 <IconButton
     toggled={isMetronomePlaying}
     onclick={() => setIsMetronomePlaying(!isMetronomePlaying)}
-    className="metronome-button"
+    class="metronome-button"
     style="position:absolute;top:0.5rem;right:5.1rem;border-radius:1rem;border:solid 0.1rem var(--secondary)"
     ariaLabel={t('settings:toggle_metronome')}
 >

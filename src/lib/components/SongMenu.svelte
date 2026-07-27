@@ -23,6 +23,7 @@
 
 <script lang="ts" generics="T extends SongMenuRowProps">
     import type {Component} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import FuzzySearch from 'fuzzy-search'
     import {Folder} from '$core/Folder'
     import type {SongType} from '$core/Songs/Song'
@@ -39,7 +40,7 @@
         songs,
         SongComponent,
         componentProps,
-        className = '',
+        class: cls = '',
         style = '',
         baseType,
         exclude,
@@ -48,7 +49,7 @@
         songs: SongStorable[]
         SongComponent: Component<T>
         componentProps: Omit<T, 'data'>
-        className?: string
+        class?: ClassValue
         style?: string
         baseType?: SongType
         exclude?: SongType[]
@@ -102,7 +103,7 @@
     }
 </script>
 
-<div class={className} style={style}>
+<div class={cls} style={style}>
     <Row justify="between" gap="0.5rem">
         <SongMenuSearch
             value={searchValue}

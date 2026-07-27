@@ -174,7 +174,7 @@
         {/if}
     </div>
 
-    <Column className="folder-overflow" style="max-height:{expanded ? height + 'px' : '0'}">
+    <Column class="folder-overflow" style="max-height:{expanded ? height + 'px' : '0'}">
         <div class="column folder-overflow-expandible" bind:this={ref}>
             {@render children?.()}
         </div>

@@ -286,7 +286,7 @@
     visible={true}
 >
     {#if isOpen}
-        <MenuButton onclick={toggleMenu} className="close-menu" ariaLabel={t('menu:close_menu')}>
+        <MenuButton onclick={toggleMenu} class="close-menu" ariaLabel={t('menu:close_menu')}>
             {@render faTimesCloseIcon()}
         </MenuButton>
     {/if}

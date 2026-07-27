@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import SimpleMenu from './SimpleMenu.svelte'
 
     // Deliberately does NOT render AppBackground: each page wires its own
@@ -8,7 +9,7 @@
         excludeMenu = false,
         children,
         menu,
-        className = '',
+        class: cls = '',
         style = '',
         contentStyle = '',
         cropped = true,
@@ -16,7 +17,7 @@
         excludeMenu?: boolean
         children?: Snippet
         menu?: Snippet
-        className?: string
+        class?: ClassValue
         style?: string
         contentStyle?: string
         cropped?: boolean
@@ -29,7 +30,7 @@
 </script>
 
 <div
-    class="default-page {className}"
+    class="default-page {cls}"
     style="--left-mobile-padding:{hasMenu ? '5rem' : '1rem'};--right-mobile-padding:{hasMenu ? '1.4rem' : '1rem'};{pageStyle}"
 >
     {#if menu}

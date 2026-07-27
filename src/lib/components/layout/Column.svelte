@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
+    import type {ClassValue} from 'svelte/elements'
     import {justifyMap, type Justify} from './layoutConstants'
 
     interface ColumnProps {
@@ -8,12 +9,12 @@
         justify?: Justify
         align?: Justify
         padding?: string
-        className?: string
+        class?: ClassValue
         style?: string
         children?: Snippet
     }
 
-    let {children, className = '', style = '', gap, flex1, justify, align, padding}: ColumnProps = $props()
+    let {children, class: cls = '', style = '', gap, flex1, justify, align, padding}: ColumnProps = $props()
 
     const computedStyle = $derived([
         gap !== undefined ? `gap:${gap}` : '',
@@ -24,6 +25,6 @@
     ].filter(Boolean).join(';'))
 </script>
 
-<div class="column {className}" style="{computedStyle};{style}">
+<div class="column {cls}" style="{computedStyle};{style}">
     {@render children?.()}
 </div>
