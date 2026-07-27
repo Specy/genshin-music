@@ -7,6 +7,7 @@
 </script>
 
 <BaseBlogPost metadata={midiDeviceMetadata}>
+    <!-- QUIRK: this bare, unstyled <div> wrapper is kept for DOM/class parity with the old file — it has no visible styling effect, but removing it changes the emitted DOM structure. -->
     <div>
         <p class="blog-p">
             Since vesion V2.3 there has been the possibility to connect a MIDI keyboard to the app. This
