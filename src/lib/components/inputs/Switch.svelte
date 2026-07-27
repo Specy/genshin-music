@@ -19,7 +19,7 @@
     aria-label={checked ? 'Switch to off' : 'Switch to on'}
 >
     <div
-        class="switch-inner {checked ? 'switch-inner-on' : ''}"
+        class={['switch-inner', checked && 'switch-inner-on']}
         style="background-color:{(checked ? theme.get('accent') : theme.layer('primary', 0.4)).toString()}"
     ></div>
 </button>

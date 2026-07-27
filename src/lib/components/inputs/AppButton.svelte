@@ -46,7 +46,7 @@
 </script>
 
 <button
-    class="app-button {cls} {toggled ? 'active' : ''} {hasTooltip(tooltip)}"
+    class={['app-button', cls, toggled && 'active', hasTooltip(tooltip)]}
     style={computedStyle}
     aria-label={ariaLabel}
     {onclick}
