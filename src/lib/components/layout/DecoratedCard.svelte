@@ -1,19 +1,12 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/layout/DecoratedCard.tsx
-    // The old file also exported `RawDecoratedBox` (the 4-corner star decoration)
-    // as a standalone component, but nothing outside this file ever imported it
-    // (verified via repo-wide grep on the parent branch) and Svelte can't export a
-    // second named component from one .svelte file - so per the brief's fallback
-    // ("RawDecoratedBox if separable; else one file with snippet") it is inlined
-    // below as a local #snippet instead of a sibling file. Its old props
-    // (decorationColor/size/offset) are simply DecoratedCard's own same-named
-    // props, exactly as the old DecoratedCard passed them straight through.
-    // `forwardRef` (old, for external DOM-node access) is also dropped: it had
-    // zero consumers on the parent branch and Svelte has no equivalent
-    // ceremony - a future caller can reach the root div directly via `bind:this`
-    // if one is ever needed.
+    // The star decoration is a local snippet, not a separate component: it
+    // has no consumers outside this file, and Svelte can't export two named
+    // components from one file.
+    //
+    // No ref-forwarding: a future caller can reach the root div directly via
+    // bind:this if one is ever needed.
     interface DecoratedCardProps {
         children: Snippet
         size?: string

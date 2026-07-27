@@ -1,9 +1,4 @@
 <script module lang="ts">
-    // Old: src/types/GeneralTypes.ts's `SearchedSongType` (3 fields) - not ported as a shared
-    // types file this task (only this component and its sole consumer, PlayerMenu.svelte, need
-    // it), so it's declared here instead and re-exported for PlayerMenu.svelte to import, the
-    // same "component file also hosts its own small supporting type" idiom already established by
-    // SongMenu.svelte's `SongMenuRowProps` / FilePicker.svelte's `FileElement`.
     export type SearchedSongType = {
         name: string
         file: string
@@ -18,26 +13,12 @@
     import type {ComposedSong} from '$core/Songs/ComposedSong'
     import type {RecordedSong} from '$core/Songs/RecordedSong'
 
-    // Old: src/components/shared/Miscellaneous/LibrarySearchedSong.tsx (66 lines, default export
-    // `SearchedSong`). CSS (.song-row/.song-name/.song-buttons-wrapper/.song-button) is already
-    // global (App.css) - no component-local <style> needed, same as ErrorSongRow.svelte/
-    // SheetVisualizerSongRow.svelte.
+    // CSS (.song-row/.song-name/.song-buttons-wrapper/.song-button) lives in
+    // global App.css; no component-local <style> is needed here.
     //
-    // `theme: Theme` prop DROPPED: old's sole call site (PlayerMenu.tsx) always passed the same
-    // `useTheme()` singleton through as a prop; every already-ported component that needs the
-    // current theme (SongMenu.svelte, SongFolder.svelte, etc.) instead imports the `ThemeProvider`
-    // singleton directly rather than threading a live class instance through props - the
-    // established convention this file follows too. Zero behavioral difference (ThemeProvider IS
-    // the same singleton `useTheme()` always returned); disclosed here since it changes this
-    // component's prop surface vs the literal old one.
-    //
-    // No i18n: old imported no `useTranslation` here at all (aria-label and the two logger.error
-    // calls are raw, un-translated English literals) - a genuine pre-existing gap in the old app,
-    // reproduced byte-for-byte rather than "fixed" by adding translation now.
-    //
-    // FaDownload/FaSpinner (react-icons/fa) inlined as raw <svg> local snippets, fetched from
-    // unpkg.com/react-icons@5.6.0/fa/index.mjs - old passed both bare (default 1em, no
-    // className/style), reproduced the same way.
+    // QUIRK: aria-label below and the two logger.error() messages are
+    // hardcoded English, never run through i18n - a pre-existing gap, not
+    // something to translate as a "fix".
     let {
         onClick,
         importSong,
@@ -85,9 +66,6 @@
         }
     }
 
-    // old had no keyboard handler on the (bare onClick) row div - pre-existing a11y gap, same
-    // additive role/tabindex/onkeydown fix already applied to SongFolder.svelte/
-    // SheetVisualizerSongRow.svelte's own bare-onClick divs in earlier tasks.
     function handleKeydown(e: KeyboardEvent) {
         if (e.key !== 'Enter' && e.key !== ' ') return
         e.preventDefault()

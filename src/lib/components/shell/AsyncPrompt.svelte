@@ -7,53 +7,19 @@
     import {t} from '$i18n/binding.svelte'
     import DecoratedCard from '../layout/DecoratedCard.svelte'
 
-    // Old: src/components/shared/Utility/AsyncPrompt.tsx - three React components in one file
-    // (AsyncPromptWrapper, AsyncConfirm, AsyncPrompt). Svelte can't export more than one named
-    // component per file (same constraint DecoratedCard's RawDecoratedBox hit in Task 5), so
-    // this single file plays the old AsyncPromptWrapper's role: it mounts BOTH dialogs (confirm
-    // + free-text prompt) directly against `asyncPromptStore.promptState` / `.confirmState`
-    // rather than re-splitting them into props passed down to two more sub-components.
+    // One file renders both dialogs (confirm + free-text prompt) directly
+    // against asyncPromptStore's state, rather than splitting into
+    // sub-components - Svelte can't export two named components per file.
     //
-    // KeyboardProvider (the old global priority-based key registry) is ported now (Phase 4a
-    // Task 1), but this component still keeps its own `<svelte:window onkeydown>` rather than
-    // routing through `KeyboardProvider.register('Escape'/'Enter', ...)` directly - a
-    // `<svelte:window>` handler that gates itself on each dialog's own `deferred` state is
-    // simpler than standing up two more register-on-mount/unregisterById-on-unmount pairs in a
-    // component that already runs its own overlay-click and blur effects; see handleWindowKeydown
-    // below. The old AsyncPrompt additionally had a *second* Enter/Escape handler directly on
-    // the <input>'s onKeyDown - kept below as its own handlePromptInputKeydown rather than
-    // collapsed into the window handler (see the parity note next).
+    // Uses its own <svelte:window onkeydown> (below) rather than routing
+    // through KeyboardProvider.register(...) like other global shortcuts -
+    // simpler than standing up two more register/unregister pairs in a
+    // component that already runs its own overlay-click and blur effects.
     //
-    // Parity restored (Phase 4a Task 1) - was a disclosed divergence (Phase-3 final review,
-    // Minor-9): old `KeyboardProvider.handleEvent` opened with
-    // `if (document.activeElement?.tagName === "INPUT") return` - a GLOBAL guard that silently
-    // suppressed every registered handler (both dialogs' Escape/Enter) whenever ANY <input>
-    // anywhere on the page was focused, not just this dialog's own. `handleWindowKeydown` below
-    // now reproduces that exact guard. That guard is also *why* AsyncPrompt's on-<input> handler
-    // mattered in the old code: it's the only thing that still fires while the prompt's own
-    // input has focus, since the window-routed handler is suppressed by that same guard for as
-    // long as the input stays focused - `handlePromptInputKeydown` on the <input> below
-    // reproduces that exact old split byte-for-byte (window-level suppressed while ANY input is
-    // focused; the prompt's own input handles Enter/Escape locally, unconditionally, via a
-    // listener attached directly to it rather than to `window`).
-    //
-    // `IGNORE_CLICK_CLASS` (old $lib/Hooks/useClickOutside.ts, = 'ignore_click_outside') is kept
-    // below as a literal class string for DOM/class parity - the click-outside hook itself has
-    // no consumer yet in this port and isn't part of this task's file list (same "keep the dead
-    // class for parity" treatment as Task 5's `#__next` in App.css).
-    //
-    // `useTheme()` -> direct `ThemeProvider` reads (same replacement Switch.svelte/Select.svelte
-    // used in Task 5): a `$derived` on `ThemeProvider.layer(...)` replaces the old
-    // subscribeTheme-driven `color` state + effect.
-    //
-    // `e.nativeEvent.composedPath()[0] !== ref.current` (old overlay-click-to-cancel guard) ->
-    // `e.target !== e.currentTarget`: equivalent here (no shadow DOM anywhere in this component
-    // tree) and avoids needing a bound ref just for the comparison.
-    //
-    // Quirk preserved deliberately: AsyncConfirm's Yes/No buttons are translated (`t('common:
-    // yes')` / `t('common:no')`), but AsyncPrompt's Cancel/Ok buttons are literal English text -
-    // exactly like the old file (AsyncConfirm called `useTranslation('common')` + `t(...)`;
-    // AsyncPrompt never did).
+    // `ignore_click_outside` (below, on both dialogs) is read by other
+    // components' `use:clickOutside` actions (see clickOutside.ts's
+    // hasFocusable) - it's what lets a click landing inside this dialog NOT
+    // count as an "outside" click for whatever else is open.
 
     onMount(() => {
         return () => {
@@ -133,24 +99,23 @@
         if (e.key === 'Escape' && promptState.cancellable) asyncPromptStore.answerPrompt(null)
     }
 
-    // old AsyncPrompt.tsx's <input onKeyDown>: fires unconditionally (no `deferred` gate - the
-    // input can only be focused while the dialog is visible anyway) so Enter/Escape still work
-    // while the input itself has focus, even though handleWindowKeydown below suppresses
-    // handleConfirmKeydown/handlePromptKeydown for as long as any <input> is focused.
+    // Fires unconditionally (no `deferred` gate - the input can only be
+    // focused while the dialog is visible anyway) so Enter/Escape still work
+    // while the input itself has focus, even while handleWindowKeydown below
+    // is suppressed for as long as this input is focused.
     function handlePromptInputKeydown(e: KeyboardEvent) {
         if (e.key === 'Enter' && value) asyncPromptStore.answerPrompt(value)
         if (e.key === 'Escape' && promptState.cancellable) asyncPromptStore.answerPrompt(null)
     }
 
-    // `<svelte:window>` can only appear once per component and must be top-level (not inside a
-    // block) - so unlike the old per-dialog KeyboardProvider effects (which only registered
-    // their listener while that dialog's own `deferred` was set), a single window keydown
-    // listener is always attached for the lifetime of this component, and each handler below
-    // guards itself on its own dialog's `deferred` state instead ("scoped to visible state" via
-    // an internal early-out rather than via conditional mounting).
+    // `<svelte:window>` can only appear once per component and must be
+    // top-level, so a single listener stays attached for this component's
+    // whole lifetime; each handler below guards itself on its own dialog's
+    // `deferred` state instead of being conditionally mounted.
     function handleWindowKeydown(e: KeyboardEvent) {
-        // old KeyboardProvider.handleEvent's global guard, reproduced here - see the parity note
-        // in the top comment block.
+        // Global guard: bails whenever ANY <input> anywhere is focused, not
+        // just this dialog's own - handlePromptInputKeydown above is what
+        // still handles Enter/Escape while the prompt's own input has focus.
         if (document.activeElement?.tagName === 'INPUT') return
         handleConfirmKeydown(e)
         handlePromptKeydown(e)
@@ -164,7 +129,7 @@
     only interactive purpose is dismissing the dialog on an outside click, and that action is
     already fully keyboard-reachable via the window Escape handler above plus the explicit
     No/Cancel buttons inside. Giving a full-viewport backdrop its own role="button"/tabindex (the
-    fix svelte-check suggests, and the one DecoratedCard applies for its own onclick in Task 5)
+    fix svelte-check suggests, and the one DecoratedCard applies for its own onclick)
     would be a real a11y regression here, not an improvement: it would insert a screen-reader-
     focusable stop the size of the whole screen ahead of the actual dialog content. Suppressing
     both rules is therefore the deliberate, correct call for this specific "backdrop" pattern -
@@ -219,6 +184,10 @@
         <div style="white-space:pre-wrap">{promptState.question}</div>
         <input bind:this={inputEl} class="prompt-input" bind:value onkeydown={handlePromptInputKeydown} />
         <div class="prompt-row">
+            <!-- QUIRK: Cancel/Ok below are literal English, unlike the
+                 confirm dialog's Yes/No above (t('common:yes')/t('common:no')) -
+                 this dialog was never wired to i18n. Not something to
+                 translate as a "fix". -->
             <button
                 class="prompt-button"
                 style="background-color:{color};color:white"

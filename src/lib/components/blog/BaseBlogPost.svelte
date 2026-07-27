@@ -5,14 +5,9 @@
     import type {BlogAuthor} from './types'
     import Row from '../layout/Row.svelte'
 
-    // Old: src/components/pages/blog/BaseBlogPost.tsx (117 lines) - exports `BaseBlogPost`,
-    // `SpecyAuthor`, `useHasVisitedBlogPost`, `BlogNavbar`. `SpecyAuthor`/`hasVisitedBlogPost`/
-    // `BlogNavbar` are module-level exports (Svelte 5.5+ snippet-export mechanism for the last one
-    // - see inputs/ComboBox.svelte's note) so each of this file's real consumers can import
-    // whichever it needs: routes/blog/+page.svelte reuses `blogNavbar`+`hasVisitedBlogPost` only,
-    // exactly as old's index.tsx reused `BlogNavbar`+`useHasVisitedBlogPost` from this same file;
-    // `SpecyAuthor` is instead reused by the 8 individual blog-post files (each one's own
-    // `author: SpecyAuthor` field), matching old's identical split.
+    // `blogNavbar` is a snippet defined in the markup below (not inside this
+    // module script) and re-exported here via `export {blogNavbar}` - the
+    // Svelte 5.5+ mechanism for exporting a snippet from a module block.
     export const SpecyAuthor: BlogAuthor = {
         name: 'Specy',
         picture: `${base}/assets/images/specy.png`
@@ -20,13 +15,10 @@
 
     const visitedBlogPostsKey = `${APP_NAME}_visited_blog_posts`
 
-    // old: `useHasVisitedBlogPost` (a `useState(false)` + one-time `useEffect(() => {...}, [])`
-    // hook - reads the map ONCE after mount, never subscribes to later changes) -> a plain
-    // function (the "-> store helper" the brief calls for, same naming convention as
-    // PageVisitStore.svelte.ts's `hasVisitedPage`). Callers that need the old hook's "corrects
-    // once after mount" timing (routes/blog/+page.svelte, so prerendered/SSR output and the first
-    // client paint both start from the same "not visited" state, exactly like old's `useState(false)`
-    // initial value) gate their own call behind a local mounted flag - see that file.
+    // Reads localStorage synchronously - unlike a mount-gated hook, this has
+    // no built-in SSR safety. Callers that render during SSR/prerender must
+    // gate their own call behind a mounted flag to avoid a hydration
+    // mismatch (see routes/blog/+page.svelte).
     export function hasVisitedBlogPost(name: string): boolean {
         if (typeof localStorage === 'undefined') return false
         const visited = JSON.parse(localStorage.getItem(visitedBlogPostsKey) ?? '{}')
@@ -62,27 +54,19 @@
 
     let {metadata, cropped = true, children}: BaseBlogPostProps = $props()
 
-    // old: `useEffect(() => { const visited = JSON.parse(...); visited[metadata.relativeUrl] =
-    // true; localStorage.setItem(...) }, [metadata.relativeUrl])` - onMount is the direct
-    // equivalent (this post's `relativeUrl` never changes across the component's own lifetime, so
-    // there's nothing for a dependency-array re-run to do here that onMount-once doesn't already
-    // cover).
     onMount(() => {
         const visited = JSON.parse(localStorage.getItem(visitedBlogPostsKey) ?? '{}')
         visited[metadata.relativeUrl] = true
         localStorage.setItem(visitedBlogPostsKey, JSON.stringify(visited))
     })
 
-    // old: `useMemo(() => new Intl.DateTimeFormat(...).format(metadata.createdAt), [metadata.createdAt])`.
+    // Locale-dependent (Intl.DateTimeFormat with the runtime's own locale), so
+    // server- and client-rendered text can differ - this can produce a
+    // hydration warning in the console; it's expected, not a bug to chase.
     const date = $derived(
         new Intl.DateTimeFormat(Intl.DateTimeFormat().resolvedOptions().locale).format(metadata.createdAt)
     )
-    // old also passed `suppressHydrationWarning={true}` on the date div - a React-only escape
-    // hatch with nothing to port it to, same call as ChangelogRow.svelte's identical case.
 
-    // old: `useMediaQuery("(orientation: portrait)") && IS_MOBILE` -> `createMediaQuery` ($lib/
-    // utils/mediaQuery.svelte.ts) + globalConfigStore.state.IS_MOBILE (GlobalConfigStore.svelte.ts,
-    // already loaded by AppInit).
     const isPortrait = createMediaQuery('(orientation: portrait)')
     const closeMenu = $derived(isPortrait.matches && globalConfigStore.state.IS_MOBILE)
 </script>
@@ -118,13 +102,6 @@
         </div>
     </div>
 
-    <!-- old: `<article className={\`${s['blog-article']}\`} style={...}>` - `blog-article` is
-         never defined anywhere in blog.module.scss (grepped), so the CSS-module import produced
-         `undefined`, and the template literal rendered the literal string "undefined" as the
-         class attribute (a dead, purposeless class matching no rule either way). Same class of
-         artifact Card.svelte's own port already normalized away (its header comment: "rendered
-         the literal string 'undefined'... harmless... clearly unintentional") - no class attribute
-         emitted here, matching that precedent; the visible/functional result is identical. -->
     <article
         style={cropped
             ? `max-width:60rem;margin:0 auto;padding:2rem;padding-left:${closeMenu ? '2rem' : 'calc(var(--menu-size) + 2rem)'}`
@@ -145,16 +122,13 @@
 </DefaultPage>
 
 <style>
-    /* Old: src/components/pages/blog/blog.module.scss - this file's 7 selectors (BlogElements.svelte
-       owns the other 5 - see that file's own style block for the split accounting). `.blog-nav`/
-       `.blog-title` are applied via Row/Header's `className` prop (foreign elements); `.blog-nav a`
-       (both its plain and :hover forms) targets an `<a>` that's TWO component-boundaries removed
-       (Row, then AppLink, both foreign) - all four need :global(). `.blog-back`/`.blog-tag` are
-       dead in the old app too (grepped: no `s['blog-back']`/`s['blog-tag']` reference anywhere) -
-       ported anyway wrapped in :global() so svelte-check's unused-selector check doesn't flag them,
-       same disclosed-preservation call as SettingsRow.svelte's `.invalid` rule. `.blog-header`/
-       `.blog-header-content`/`.blog-image-mask` are native divs this file's own template renders
-       directly - plain scoped CSS already reaches them. */
+    /* `.blog-nav`/`.blog-title` are applied via Row/Header's `className` prop
+       (foreign elements); `.blog-nav a` (plain and :hover) targets an <a> two
+       component boundaries away (Row, then AppLink) - all need :global().
+       QUIRK: `.blog-back`/`.blog-tag` below are unused - no current template
+       applies either class to an element - but are kept, wrapped in
+       :global(), so svelte-check's unused-selector check doesn't flag them.
+       Not dead code to prune. */
     :global(.blog-nav) {
         display: flex;
         align-items: center;

@@ -3,24 +3,15 @@
     import {ThemeProvider as theme} from '$core/theme/ThemeProvider.svelte'
     import type {SettingUpdate, SettingUpdateKey, SettingsSelect} from '$core/types/SettingsPropriety'
 
-    // Old: src/components/shared/Settings/Select.tsx - the settings-pane-specific select, DISTINCT
-    // from the generic `inputs/Select.svelte` (old `Inputs/Select.tsx`, ported Phase 3 Task 5).
-    // Renamed `SettingsSelect` (matching this task's file list) to avoid colliding with that
-    // sibling component's name.
+    // Named `SettingsSelect` to avoid colliding with the generic
+    // `inputs/Select.svelte` sibling component.
     //
-    // Old took `theme: Theme` as a prop, threaded all the way down from SettingsPane -> SettingsRow
-    // -> Select. Every other already-ported component in this tree instead imports the reactive
-    // `ThemeProvider` singleton directly (established Phase 3 - see `inputs/Select.svelte`,
-    // `BaseNote.svelte`); done the same way here, dropping the `theme` prop (SettingsRow.svelte's
-    // own local `theme`/`useTheme()` is dropped the same way).
+    // No separate `type` prop: `data.options[0]`'s typeof (below) tells this
+    // whether to parseInt the changed value, since `data` already carries it.
     //
-    // Old also took a separate `type: string | number` prop, always called by its only caller
-    // (SettingsRow) as `data.options[0]` - since `data` is passed in as its own prop anyway,
-    // `data.options[0]` is read directly below instead of threading a second, fully-derivable prop.
-    //
-    // The inline SVG chevron built from the theme's text color is the exact same `$derived`
-    // mechanism `inputs/Select.svelte` already established - kept identical here (byte-for-byte),
-    // per this task's dispatch.
+    // Same inline-SVG-chevron-from-theme-text-color mechanism as
+    // inputs/Select.svelte and InstrumentSelect.svelte - keep them in sync
+    // if this changes.
     let {
         value,
         onChange,

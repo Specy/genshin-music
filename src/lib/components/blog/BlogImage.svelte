@@ -1,10 +1,6 @@
 <script lang="ts">
     import Row from '../layout/Row.svelte'
 
-    // Old: src/components/pages/blog/BlogImage.tsx (26 lines) - a single component (unlike its
-    // BlogUl.tsx/BlogMetadataRenderers.tsx siblings), ported the same way as any other primitive
-    // (BlogImage.tsx.svelte default export), matching the brief's own file list. Styles purely via
-    // an inline `style` string (no CSS-module class in the old file) - no style block needed.
     interface BlogImageProps {
         src: string
         alt: string
@@ -14,9 +10,8 @@
 
     let {src, alt, height, width}: BlogImageProps = $props()
 
-    // old: `maxHeight: height ?? (width ? undefined : 'min(20rem, 70vh)')` - if an explicit
-    // height is given it wins; otherwise a width-only image gets no max-height cap, but an image
-    // with neither falls back to the default cap.
+    // If height is given, it wins. Otherwise a width-only image gets no
+    // max-height cap; an image with neither falls back to the default cap.
     const maxHeight = $derived(height ?? (width ? undefined : 'min(20rem, 70vh)'))
 
     const computedStyle = $derived([

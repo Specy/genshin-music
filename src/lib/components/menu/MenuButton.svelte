@@ -2,10 +2,9 @@
     import type {Snippet} from 'svelte'
     import {blurEvent} from '$core/utils/Utilities'
 
-    // Old: src/components/shared/Menu/MenuItem.tsx (MenuButton export). Unlike MenuItem, this
-    // never reads menu context - it's a plain action button styled like a menu item (used by
-    // SimpleMenu/Home for back/discord/home-open/close-home, none of which switch a "current"
-    // panel).
+    // Unlike MenuItem (sibling file), this never reads menu context - it's a
+    // plain action button styled like a menu item, for actions that don't
+    // switch a "current" panel (back/discord/home-open/close-home).
     let {
         className = '',
         style = '',

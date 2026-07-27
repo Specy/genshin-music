@@ -3,25 +3,19 @@
     import {clickOutside} from '$lib/utils/clickOutside'
     import IconButton from '../inputs/IconButton.svelte'
 
-    // Old: src/components/shared/FloatingSelection/FloatingSelection.tsx (75 lines) - the
-    // icon-triggered floating value picker ZenKeyboardMenu.svelte uses for its pitch/instrument
-    // pickers (this task).
+    // The icon-triggered floating value picker ZenKeyboardMenu.svelte uses
+    // for its pitch/instrument pickers.
     //
-    // `Icon: IconType` (old, a react-icons component reference rendered via `<Icon size={18}/>`)
-    // becomes `Icon: Snippet` here, rendered via `{@render Icon()}` - a Snippet, not a Component
-    // reference, is the mechanism every other ported menu/page file in this migration uses to pass
-    // one-off inlined-SVG icon content across a component boundary (e.g. MenuButton/MenuItem's own
-    // `children: Snippet`); a Component-typed prop would force each one-off icon into its own
-    // dedicated .svelte file, which no real (non-FloatingDropdown) caller in this codebase does.
-    // The `size={18}` old baked into the icon call is instead baked directly into each snippet's
-    // own `height`/`width` attributes by the caller (see ZenKeyboardMenu.svelte).
+    // `Icon` here is a Snippet, not a Component (contrast
+    // FloatingDropdown.svelte's `Icon: Component`) - a Snippet is this
+    // migration's normal way to pass one-off inlined-SVG icon content across
+    // a component boundary; Component is reserved for cases where a real
+    // .svelte file is required (see icons/FaEllipsisH.svelte).
     //
-    // `useClickOutside<HTMLDivElement>(() => setOpen(false), {active: open})` (no `ignoreFocusable`
-    // here, unlike ZenKeyboardMenu's OWN click-outside call) -> the `clickOutside` action (Phase-4a
-    // Task 1) applied directly via `use:` on this component's own root div - no manual $effect
-    // indirection needed (unlike SheetVisualizerMenu.svelte, which binds into a CHILD component's
-    // DOM node); this component renders its own wrapper directly, so a plain `use:` directive
-    // reaches it.
+    // `use:clickOutside` is applied directly on this component's own root div
+    // below - no manual $effect indirection needed, since this component
+    // (unlike some sibling menu files) renders its own wrapper directly
+    // rather than binding into a child component's DOM node.
     let {
         items,
         value,
@@ -70,10 +64,6 @@
 </div>
 
 <style>
-    /* Old FloatingSelection.module.scss, ported verbatim - inline here rather than promoted to
-       global App.css (same "keep this task's blast radius to new files only" rationale
-       InstrumentSelect.svelte's own comment documents for its identical CSS-Modules-inlining
-       situation). */
     .floating-selection-card {
         display: flex;
         flex-direction: column;

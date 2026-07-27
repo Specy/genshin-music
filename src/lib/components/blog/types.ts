@@ -1,5 +1,3 @@
-// Old: src/components/pages/blog/types.ts (verbatim - a plain type-only file, nothing to
-// translate).
 export type BlogMetadata = {
     title: string,
     tags: string[]

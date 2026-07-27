@@ -1,11 +1,8 @@
 <script lang="ts">
     import type {Snippet} from 'svelte'
 
-    // Old: src/components/shared/Miscellaneous/PageMetadata.tsx. That file rendered
-    // <title>/<meta>/{children} as a bare fragment and relied on React 19's automatic hoisting of
-    // those elements into <head>; Svelte has no such hoisting, so the same fragment is wrapped in
-    // an explicit <svelte:head> below (children included - the old component's children were
-    // themselves always more head-only elements, e.g. extra <meta>/<link> tags from call sites).
+    // Everything below, including `children`, must be inside <svelte:head>
+    // explicitly - unlike React, Svelte doesn't auto-hoist head elements.
     let {text, description, image, children}: {
         text: string
         description?: string

@@ -2,10 +2,8 @@
     import type {Snippet} from 'svelte'
     import SimpleMenu from './SimpleMenu.svelte'
 
-    // Old: src/components/shared/pagesLayout/DefaultPage.tsx. Deliberately does NOT wrap
-    // AppBackground (theme/AppBackground.svelte, already ported in P3 Task 4) - verified against
-    // the old blob, which never references it either; AppBackground is wired directly by
-    // individual page components in Phase 4, not by this shared chrome.
+    // Deliberately does NOT render AppBackground: each page wires its own
+    // directly, not this shared chrome.
     let {
         excludeMenu = false,
         children,
@@ -25,9 +23,8 @@
     } = $props()
 
     const hasMenu = $derived(Boolean(menu) || !excludeMenu)
-    // old: `!cropped ? {...style, padding: 0} : style` - padding:0 applied first so an explicit
-    // `style` prop (appended after, CSS-cascade-last-wins) can still override it, same effective
-    // precedence as the old object-spread order.
+    // padding:0 comes first so a caller's own `style` (appended after) can
+    // still override it.
     const pageStyle = $derived(cropped ? style : `padding:0;${style}`)
 </script>
 

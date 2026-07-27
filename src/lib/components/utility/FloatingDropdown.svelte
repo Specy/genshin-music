@@ -2,38 +2,13 @@
     import type {Component, Snippet} from 'svelte'
     import SongActionButton from '../inputs/SongActionButton.svelte'
 
-    // Old: src/components/shared/Utility/FloatingDropdown.tsx
-    // The old file also exported `FloatingDropdownRow`/`FloatingDropdownText`
-    // as separate named components; ported as sibling files
-    // (FloatingDropdownRow.svelte / FloatingDropdownText.svelte) since one
-    // .svelte file can only default-export a single component, mirroring the
-    // old three-export surface.
+    // `.floating-dropdown*` CSS lives in global App.css.
     //
-    // The toggle button uses `SongActionButton`, exactly as old FloatingDropdown.tsx did.
-    // An earlier revision substituted `AppButton` here (a prop superset, so it compiled and
-    // behaved correctly) while SongActionButton was still unported. That substitution was a
-    // VISUAL defect, not a neutral one: it renders `.app-button`, which carries its own padding
-    // and min-width, so the "..." toggle came out roughly 2.5x wider than the `.song-button`
-    // icon buttons sitting immediately to its left in every song row and folder header. Restored
-    // to the old component. Consumers: SongFolder.svelte, ComposerSongRow.svelte,
-    // PlayerSongRow.svelte, VsrgComposerSongRow.svelte, VsrgPlayerSongRow.svelte (each imports
-    // this plus FloatingDropdownRow/FloatingDropdownText); `.floating-dropdown*` CSS shipped
-    // with Phase 4a Task 3's menu.css port into App.css.
-    //
-    // `FaTimes` (react-icons/fa) is inlined as a raw SVG (no react-icons dep),
-    // markup + path data copied byte-for-byte from react-icons@5.6.0
-    // (unpkg.com/react-icons@5.6.0/fa/index.mjs, FaTimes) including its default
-    // svg wrapper attributes.
-    //
-    // `useClickOutside` (old hook) is inlined below rather than ported as a
-    // reusable file, since it isn't in this task's file list and FloatingDropdown
-    // is its only consumer. Behavior preserved exactly: the document click
-    // listener is only attached while `isActive` is true (old: the hook's effect
-    // early-returned when `options.active` was false), and `ignoreClickOutside`
-    // is checked inside the callback rather than gating attachment (matching the
-    // old call site, which hardcoded `ignoreFocusable: true` and passed
-    // `ignoreClickOutside` through the callback body, not through the hook's
-    // options).
+    // QUIRK: the toggle button below MUST use SongActionButton, not AppButton
+    // - AppButton compiles fine (a compatible prop superset) but renders
+    // `.app-button` instead of `.song-button`, which carries different
+    // padding/min-width and makes the "..." toggle ~2.5x wider than the icon
+    // buttons beside it.
     let {
         children,
         Icon,
@@ -58,6 +33,10 @@
     let overflows = $state(false)
     let ref: HTMLDivElement | undefined = $state()
 
+    // Own local click-outside handling below (hasFocusable + the $effect
+    // further down), not the shared `clickOutside` action from
+    // $lib/utils/clickOutside.ts - `ignoreClickOutside` here is checked inside
+    // the click callback itself, not via the action's `active` gating.
     function hasFocusable(e: MouseEvent): boolean {
         const path = e.composedPath()
         return path.some(el => {

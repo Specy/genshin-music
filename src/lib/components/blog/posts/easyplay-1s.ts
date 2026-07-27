@@ -2,14 +2,12 @@ import {base} from '$app/paths'
 import {SpecyAuthor} from '../BaseBlogPost.svelte'
 import type {BlogMetadata} from '../types'
 
-// Old: metadata const from src/app/_client-pages/blog/posts/easyplay-1s.tsx (`_easyplay1sMetadata`).
-// See add-to-home-screen.ts for the extraction rationale.
+// See add-to-home-screen.ts for why this lives in its own module.
 //
-// PRESERVED CONTENT QUIRK: the description (and the post body itself) hardcode "Sky Music
-// Nightly" literally - this post is genuinely Sky-specific content (the EASYPLAY 1s keyboard
-// matches Sky's layout) that old shipped unconditionally on BOTH game builds, with no APP_NAME
-// interpolation at all. NOT the `${APP_NAME} Music Nightly}` -> `${game.meta.title}` substitution
-// applied elsewhere in this task (there's no template to substitute - it's plain hardcoded prose).
+// QUIRK: description below hardcodes "Sky Music Nightly" - this post is
+// genuinely Sky-specific (the EASYPLAY 1s keyboard matches Sky's layout) and
+// ships unconditionally on both game builds with no game-title interpolation.
+// Not an oversight to "fix" with `${game.meta.title}`.
 export const easyplay1sMetadata: BlogMetadata = {
     title: '🎹 EASYPLAY 1s',
     tags: ['Product'],

@@ -3,11 +3,6 @@
     import type {SettingUpdate, SettingUpdateKey, SettingVolumeUpdate, SettingsInstrument} from '$core/types/SettingsPropriety'
     import InstrumentSelect from '../inputs/InstrumentSelect.svelte'
 
-    // Old: src/components/shared/Settings/InstrumentInput.tsx
-    // Old declared a `theme: Theme` prop but never referenced it anywhere in its own body (its
-    // <InstrumentSelect> call didn't pass a theme prop either, even in old) - a pre-existing dead
-    // prop, dropped here the same way `inputs/Select.svelte` already dropped its own dead
-    // `className` prop (Phase 3 Task 5 precedent).
     let {
         data,
         volume,
@@ -26,13 +21,11 @@
         onInstrumentPick: (data: SettingUpdate) => void
     } = $props()
 
-    // NOTE (React->Svelte event mapping): old's `onChange` on an <input> is React's synthetic
-    // onChange, which fires on the DOM **input** event (every drag step), NOT the DOM `change`
-    // event (which only fires once the value is committed). Binding this to `onchange` broke the
-    // volume control outright: `onpointerup` fired BEFORE the value had been reported, so
-    // handleVolumePick committed the PREVIOUS `volume` - picking 10% saved nothing, and picking
-    // 50% next saved 10%. `oninput` restores old's ordering (value reported during the drag,
-    // committed on release). Same mapping applies to every ported <input> onChange.
+    // MUST be `oninput`, not `onchange`, below: `onchange` only fires once
+    // the value is committed, so `onpointerup` (handleVolumePick) would fire
+    // and commit the PREVIOUS value before the new one was ever reported -
+    // picking 10% saved nothing, picking 50% next saved 10%. `oninput` fires
+    // on every drag step, ahead of the pointerup commit.
     function handleVolumeChange(e: Event & {currentTarget: EventTarget & HTMLInputElement}) {
         onVolumeChange(Number(e.currentTarget.value))
     }

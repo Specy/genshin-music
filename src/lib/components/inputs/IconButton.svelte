@@ -1,7 +1,6 @@
 <script lang="ts">
     import AppButton, {type AppButtonProps} from './AppButton.svelte'
 
-    // Old: src/components/shared/Inputs/IconButton.tsx
     interface IconButtonProps extends AppButtonProps {
         size?: string
     }
