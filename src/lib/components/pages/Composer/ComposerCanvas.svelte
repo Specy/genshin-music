@@ -138,21 +138,21 @@
 {/snippet}
 
 <div
-    class="canvas-wrapper {inPreview ? 'canvas-wrapper-in-preview' : ''}"
+    class={['canvas-wrapper', inPreview && 'canvas-wrapper-in-preview']}
     style="width:{width}px;background-color:{hasCache ? 'unset' : backgroundHex}"
 >
     <div class="canvas-relative" bind:this={notesContainerEl}>
         {#if !settings.useKeyboardSideButtons.value}
             <button
                 onpointerdown={() => selectColumn(selected - 1)}
-                class="canvas-buttons {!isPlaying ? 'canvas-buttons-visible' : ''}"
+                class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
                 style="left:0;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
             >
                 {@render chevronLeftIcon()}
             </button>
             <button
                 onpointerdown={() => selectColumn(selected + 1)}
-                class="canvas-buttons {!isPlaying ? 'canvas-buttons-visible' : ''}"
+                class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
                 style="right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
             >
                 {@render chevronRightIcon()}

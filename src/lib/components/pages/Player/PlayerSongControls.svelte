@@ -138,7 +138,7 @@
             </AppButton>
         </div>
         <div class="row" style="width:100%;gap:0.4rem">
-            <div class="{hasTooltip(true)} row">
+            <div class={[hasTooltip(true), 'row']}>
                 <!-- Deliberately a raw select, not the shared Select.svelte - that component
                      applies its own .select class and background-image arrow, which this one
                      explicitly cancels via background-image:none. -->
