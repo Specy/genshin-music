@@ -45,6 +45,7 @@
 </script>
 
 {#if !instrument}
+    <!-- QUIRK: two spaces between the class tokens is old's typo, kept byte-for-byte — HTML ignores it. The has-instrument branch below has one space, also matching old. -->
     <div class="floating-instrument-settings  box-shadow">
         {t('instrument_settings:no_instrument_selected')}
     </div>
