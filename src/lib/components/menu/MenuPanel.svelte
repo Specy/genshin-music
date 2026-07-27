@@ -16,7 +16,7 @@
     const isVisible = $derived(ctx.current === id)
 </script>
 
-<div class="menu-panel {isVisible ? 'menu-panel-visible' : ''}">
+<div class={['menu-panel', isVisible && 'menu-panel-visible']}>
     {#if title}
         <div class="menu-title">{title}</div>
     {/if}

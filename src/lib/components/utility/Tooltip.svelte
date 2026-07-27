@@ -7,6 +7,6 @@
     let {children, position = 'bottom', style}: {children: Snippet, position?: TooltipPosition, style?: string} = $props()
 </script>
 
-<span class="tooltip tooltip-{position}" {style}>
+<span class={['tooltip', `tooltip-${position}`]} {style}>
     {@render children()}
 </span>

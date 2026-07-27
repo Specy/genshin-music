@@ -84,7 +84,7 @@
     }
 </script>
 
-<div class="{cls} floating-dropdown {isActive ? 'floating-dropdown-active' : ''}">
+<div class={[cls, 'floating-dropdown', isActive && 'floating-dropdown-active']}>
     <SongActionButton
         style="margin:0;{style}{isActive ? 'background-color:var(--accent);color:var(--accent-text);' : ''}"
         onclick={toggle}
