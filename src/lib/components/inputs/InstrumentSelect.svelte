@@ -55,7 +55,7 @@
 </script>
 
 <select
-    class="select {cls}"
+    class={['select', cls]}
     style="width:100%;padding:0.3rem;background-image:{backgroundImage};{style}"
     onchange={handleChange}
     value={selected}

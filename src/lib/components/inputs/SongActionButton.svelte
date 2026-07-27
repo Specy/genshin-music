@@ -23,7 +23,7 @@
     } = $props()
 </script>
 
-<button class="song-button {hasTooltip(tooltip)} {cls}" {onclick} {style} aria-label={ariaLabel}>
+<button class={['song-button', hasTooltip(tooltip), cls]} {onclick} {style} aria-label={ariaLabel}>
     {@render children()}
     {#if tooltip}
         <Tooltip>

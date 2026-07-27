@@ -30,7 +30,7 @@
 </script>
 
 <select
-    class="select {cls}"
+    class={['select', cls]}
     style="width:100%;padding:0.3rem;{style}"
     onchange={handleChange}
     value={selected}

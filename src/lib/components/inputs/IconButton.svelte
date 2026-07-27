@@ -12,6 +12,6 @@
     )
 </script>
 
-<AppButton {...rest} style={computedStyle} class="icon-app-button flex-centered {cls}">
+<AppButton {...rest} style={computedStyle} class={['icon-app-button', 'flex-centered', cls]}>
     {@render children?.()}
 </AppButton>
