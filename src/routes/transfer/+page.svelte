@@ -147,6 +147,8 @@
 </DefaultPage>
 
 <style>
+    /* :global() because "import-row" is handed to Row's class prop and lands on Row's OWN root
+       element, which carries that component's scoping hash, not this page's. */
     :global(.import-row) {
         background-color: var(--primary);
         color: var(--primary-text);

@@ -110,6 +110,9 @@
 </DefaultPage>
 
 <style>
+    /* :global() because "partners-page" is handed to DefaultPage's class prop and lands on
+       DefaultPage's OWN root element, which carries that component's scoping hash, not this
+       page's - scoped CSS here would never match it. */
     :global(.partners-page) {
         padding: 1rem;
         padding-left: 4rem;

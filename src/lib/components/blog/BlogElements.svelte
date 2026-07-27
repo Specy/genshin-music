@@ -13,6 +13,10 @@
 {@render children?.()}
 
 <style>
+    /* Every rule below needs :global(): this component's template is nothing but
+       {@render children?.()}, so it creates no element of its own for Svelte to attach a
+       scoping hash to. The classes are written in the blog posts' own markup under
+       src/routes/blog/posts/, which scoped CSS from here cannot reach. */
     :global(.blog-p) {
         margin: 1rem 0;
         user-select: text;
