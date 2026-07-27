@@ -52,7 +52,7 @@
     <button
         disabled={opts.disabled}
         onclick={opts.onClick}
-        class="flex-centered tools-button {opts.active ? 'tools-button-highlighted' : ''} {hasTooltip(opts.tooltip)}"
+        class={['flex-centered', 'tools-button', opts.active && 'tools-button-highlighted', hasTooltip(opts.tooltip)]}
         style="grid-area:{opts.area ?? ''};{opts.style ?? ''}"
     >
         {@render content()}

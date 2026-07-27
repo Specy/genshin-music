@@ -14,7 +14,7 @@
     let {onclick, children, tooltip, style, ariaLabel}: CanvasToolProps = $props()
 </script>
 
-<button class="tool {hasTooltip(tooltip)}" {onclick} {style} aria-label={ariaLabel}>
+<button class={['tool', hasTooltip(tooltip)]} {onclick} {style} aria-label={ariaLabel}>
     {@render children()}
     {#if tooltip}
         <Tooltip>

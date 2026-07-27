@@ -82,7 +82,7 @@
         {#if data.settings.useKeyboardSideButtons.value}
             <button
                 onpointerdown={() => functions.selectColumnFromDirection(-1)}
-                class="keyboard-column-selection-buttons {!data.isPlaying ? 'keyboard-column-selection-buttons-visible' : ''}"
+                class={['keyboard-column-selection-buttons', !data.isPlaying && 'keyboard-column-selection-buttons-visible']}
                 style="padding-right:0.5rem;justify-content:flex-end;visibility:{data.isPlaying ? 'hidden' : 'visible'}"
             >
                 {@render chevronLeftIcon()}
@@ -111,14 +111,14 @@
         {#if data.settings.useKeyboardSideButtons.value}
             <button
                 onpointerdown={() => functions.selectColumnFromDirection(1)}
-                class="keyboard-column-selection-buttons {!data.isPlaying ? 'keyboard-column-selection-buttons-visible' : ''}"
+                class={['keyboard-column-selection-buttons', !data.isPlaying && 'keyboard-column-selection-buttons-visible']}
                 style="padding-left:0.5rem;justify-content:flex-start;visibility:{data.isPlaying ? 'hidden' : 'visible'}"
             >
                 {@render chevronRightIcon()}
             </button>
         {/if}
     </div>
-    <div class="tempo-changers-wrapper {data.isPlaying ? 'tempo-changers-wrapper-hidden' : ''}">
+    <div class={['tempo-changers-wrapper', data.isPlaying && 'tempo-changers-wrapper-hidden']}>
         <div class="bottom-right-text">
             {t('composer:tempo')}
         </div>
