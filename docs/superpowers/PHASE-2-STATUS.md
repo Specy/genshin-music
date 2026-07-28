@@ -4,12 +4,12 @@
 
 ## Stack
 
-| Package         | Version  |
-|-----------------|----------|
-| Next.js         | 16.2.9   |
-| React           | 19.2.7   |
-| pixi.js         | 8.19.0   |
-| @pixi/react     | 8.0.5    |
+| Package     | Version |
+| ----------- | ------- |
+| Next.js     | 16.2.9  |
+| React       | 19.2.7  |
+| pixi.js     | 8.19.0  |
+| @pixi/react | 8.0.5   |
 
 ## Gate Results
 

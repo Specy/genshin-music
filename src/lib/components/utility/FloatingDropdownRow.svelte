@@ -1,23 +1,23 @@
 <script lang="ts">
-    import type {Snippet} from 'svelte'
-    import AppButton from '../inputs/AppButton.svelte'
+  import type { Snippet } from 'svelte';
+  import AppButton from '../inputs/AppButton.svelte';
 
-    let {
-        children,
-        onclick,
-        style = '',
-    }: {
-        children: Snippet
-        onclick?: () => void
-        style?: string
-    } = $props()
+  let {
+    children,
+    onclick,
+    style = '',
+  }: {
+    children: Snippet;
+    onclick?: () => void;
+    style?: string;
+  } = $props();
 </script>
 
 <AppButton
-    ariaLabel="Floating Dropdown Button"
-    class="row row-centered"
-    style="padding:0.4rem;min-width:unset;{style}"
-    {onclick}
+  ariaLabel="Floating Dropdown Button"
+  class="row row-centered"
+  style="padding:0.4rem;min-width:unset;{style}"
+  {onclick}
 >
-    {@render children()}
+  {@render children()}
 </AppButton>

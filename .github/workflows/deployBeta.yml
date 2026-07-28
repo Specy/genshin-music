@@ -9,7 +9,7 @@ on:
         description: Void
         default: v0
         required: false
-        
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

@@ -1,298 +1,335 @@
-import {APP_NAME} from '$core/legacyConfig'
-import {KeyboardProvider} from '$lib/providers/KeyboardProvider'
-import {game} from '$game'
-import type {VsrgSongKeys} from '$core/Songs/VsrgSong'
-import cloneDeep from 'lodash.clonedeep'
-import {SvelteMap} from 'svelte/reactivity'
+import { APP_NAME } from '$core/legacyConfig';
+import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
+import { game } from '$game';
+import type { VsrgSongKeys } from '$core/Songs/VsrgSong';
+import cloneDeep from 'lodash.clonedeep';
+import { SvelteMap } from 'svelte/reactivity';
 
 export type Shortcut<T extends string> = {
-    name: T
-    holdable: boolean
-    description?: string
-}
+  name: T;
+  holdable: boolean;
+  description?: string;
+};
 
-function createShortcut<T extends string>(name: T, isHoldable: boolean, description?: string): Shortcut<T> {
-    return {name, holdable: isHoldable, description} as const
+function createShortcut<T extends string>(
+  name: T,
+  isHoldable: boolean,
+  description?: string
+): Shortcut<T> {
+  return { name, holdable: isHoldable, description } as const;
 }
 
 const defaultShortcuts = {
-    composer: {
-        "Space": createShortcut("toggle_play", false, "toggle_play_description"),
-        "KeyA": createShortcut("previous_column", true, "previous_column_description"),
-        "KeyD": createShortcut("next_column", true, "next_column_description"),
-        "KeyQ": createShortcut("remove_column", true, "remove_column_description"),
-        "KeyE": createShortcut("add_column", true, "add_column_description"),
-        "ArrowUp": createShortcut("previous_layer", true, "previous_layer_description"),
-        "ArrowDown": createShortcut("next_layer", true, "next_layer_description"),
-        "ArrowRight": createShortcut("next_breakpoint", true, "next_breakpoint_description"),
-        "ArrowLeft": createShortcut("previous_breakpoint", true, "previous_breakpoint_description"),
-    },
-    player: {
-        "Space": createShortcut("toggle_record", false, "toggle_record_description"),
-        "ShiftLeft+KeyS": createShortcut("stop", false, "stop_description"),
-        "ShiftLeft+KeyR": createShortcut("restart", false, "restart_description"),
-        "ShiftLeft+KeyM": createShortcut("toggle_menu", false, "toggle_menu_description"),
-        "Escape": createShortcut("close_menu", false, "close_menu_description"),
-    },
-    vsrg_composer: {
-        "ShiftLeft+KeyW": createShortcut("move_up", true, "move_up_description"),
-        "ShiftLeft+KeyS": createShortcut("move_down", true, "move_down_description"),
-        "ShiftLeft+KeyA": createShortcut("move_left", true, "move_left_description"),
-        "ShiftLeft+KeyD": createShortcut("move_right", true, "move_right_description"),
-        "Escape": createShortcut("deselect", false, "deselect_description"),
-        "Backspace": createShortcut("delete", false, "delete_description"),
-        "ArrowRight": createShortcut("next_breakpoint", true, "next_breakpoint_description"),
-        "ArrowLeft": createShortcut("previous_breakpoint", true, "previous_breakpoint_description"),
-        "ArrowUp": createShortcut("previous_track", true, "previous_track_description"),
-        "ArrowDown": createShortcut("next_track", true, "next_track_description"),
-        "Space": createShortcut("toggle_play", false, "toggle_play_description"),
-        "Digit1": createShortcut("set_tap_hand", false, "set_tap_hand_description"),
-        "Digit2": createShortcut("set_hold_hand", false, "set_hold_hand_description"),
-        "Digit3": createShortcut("set_delete_hand", false, "set_delete_hand_description"),
-    },
-    vsrg_player: {
-        "ShiftLeft+KeyR": createShortcut("restart", false, "restart_description"),
-        "Escape": createShortcut("stop", false, "stop_description"),
-    },
-    keyboard: Object.fromEntries(game.layouts.defaultKeyboardKeys.map(key => [`Key${key}`, createShortcut(key, false)]))
-} as const  satisfies Record<string, Record<string, Shortcut<string>>>
+  composer: {
+    Space: createShortcut('toggle_play', false, 'toggle_play_description'),
+    KeyA: createShortcut('previous_column', true, 'previous_column_description'),
+    KeyD: createShortcut('next_column', true, 'next_column_description'),
+    KeyQ: createShortcut('remove_column', true, 'remove_column_description'),
+    KeyE: createShortcut('add_column', true, 'add_column_description'),
+    ArrowUp: createShortcut('previous_layer', true, 'previous_layer_description'),
+    ArrowDown: createShortcut('next_layer', true, 'next_layer_description'),
+    ArrowRight: createShortcut('next_breakpoint', true, 'next_breakpoint_description'),
+    ArrowLeft: createShortcut('previous_breakpoint', true, 'previous_breakpoint_description'),
+  },
+  player: {
+    Space: createShortcut('toggle_record', false, 'toggle_record_description'),
+    'ShiftLeft+KeyS': createShortcut('stop', false, 'stop_description'),
+    'ShiftLeft+KeyR': createShortcut('restart', false, 'restart_description'),
+    'ShiftLeft+KeyM': createShortcut('toggle_menu', false, 'toggle_menu_description'),
+    Escape: createShortcut('close_menu', false, 'close_menu_description'),
+  },
+  vsrg_composer: {
+    'ShiftLeft+KeyW': createShortcut('move_up', true, 'move_up_description'),
+    'ShiftLeft+KeyS': createShortcut('move_down', true, 'move_down_description'),
+    'ShiftLeft+KeyA': createShortcut('move_left', true, 'move_left_description'),
+    'ShiftLeft+KeyD': createShortcut('move_right', true, 'move_right_description'),
+    Escape: createShortcut('deselect', false, 'deselect_description'),
+    Backspace: createShortcut('delete', false, 'delete_description'),
+    ArrowRight: createShortcut('next_breakpoint', true, 'next_breakpoint_description'),
+    ArrowLeft: createShortcut('previous_breakpoint', true, 'previous_breakpoint_description'),
+    ArrowUp: createShortcut('previous_track', true, 'previous_track_description'),
+    ArrowDown: createShortcut('next_track', true, 'next_track_description'),
+    Space: createShortcut('toggle_play', false, 'toggle_play_description'),
+    Digit1: createShortcut('set_tap_hand', false, 'set_tap_hand_description'),
+    Digit2: createShortcut('set_hold_hand', false, 'set_hold_hand_description'),
+    Digit3: createShortcut('set_delete_hand', false, 'set_delete_hand_description'),
+  },
+  vsrg_player: {
+    'ShiftLeft+KeyR': createShortcut('restart', false, 'restart_description'),
+    Escape: createShortcut('stop', false, 'stop_description'),
+  },
+  keyboard: Object.fromEntries(
+    game.layouts.defaultKeyboardKeys.map((key) => [`Key${key}`, createShortcut(key, false)])
+  ),
+} as const satisfies Record<string, Record<string, Shortcut<string>>>;
 
-type ValuesOf<T> = T[keyof T]
-type KeysOf<T> = keyof T
+type ValuesOf<T> = T[keyof T];
+type KeysOf<T> = keyof T;
 type ShortcutsToMap<T> = {
-    [K in keyof T]: Map<string, ValuesOf<T[K]>>
-}
-export type Shortcuts = ShortcutsToMap<typeof defaultShortcuts>
+  [K in keyof T]: Map<string, ValuesOf<T[K]>>;
+};
+export type Shortcuts = ShortcutsToMap<typeof defaultShortcuts>;
 //extract all the name: string values from the shortcuts
-export type ShortcutPage = KeysOf<Shortcuts>
+export type ShortcutPage = KeysOf<Shortcuts>;
 
 interface SerializedKeybinds {
-    version: number
-    vsrg: {
-        k4: string[]
-        k6: string[]
-    }
+  version: number;
+  vsrg: {
+    k4: string[];
+    k6: string[];
+  };
 
-    shortcuts: {
-        composer: {
-            [key: string]: MapValues<Shortcuts['composer']>
-        }
-        player: {
-            [key: string]: MapValues<Shortcuts['player']>
-        }
-        keyboard: {
-            [key: string]: MapValues<Shortcuts['keyboard']>
-        }
-        vsrg_composer: {
-            [key: string]: MapValues<Shortcuts['vsrg_composer']>
-        }
-        vsrg_player: {
-            [key: string]: MapValues<Shortcuts['vsrg_player']>
-        }
-    }
+  shortcuts: {
+    composer: {
+      [key: string]: MapValues<Shortcuts['composer']>;
+    };
+    player: {
+      [key: string]: MapValues<Shortcuts['player']>;
+    };
+    keyboard: {
+      [key: string]: MapValues<Shortcuts['keyboard']>;
+    };
+    vsrg_composer: {
+      [key: string]: MapValues<Shortcuts['vsrg_composer']>;
+    };
+    vsrg_player: {
+      [key: string]: MapValues<Shortcuts['vsrg_player']>;
+    };
+  };
 }
 
 class KeyBinds {
-    version: number = 13 //change only if breaking changes are made, creating or removing a key is not a breaking change
-    private vsrg = $state({
-        k4: ['A', 'S', 'J', 'K'],
-        k6: ['A', 'S', 'D', 'H', 'J', 'K'],
-    })
+  version: number = 13; //change only if breaking changes are made, creating or removing a key is not a breaking change
+  private vsrg = $state({
+    k4: ['A', 'S', 'J', 'K'],
+    k6: ['A', 'S', 'D', 'H', 'J', 'K'],
+  });
 
-    private shortcuts: Shortcuts = $state(Object.fromEntries(
-        Object.entries(defaultShortcuts)
-            .map(([key, value]) => [key, new SvelteMap(Object.entries(value))])
-    ) as unknown as Shortcuts)
+  private shortcuts: Shortcuts = $state(
+    Object.fromEntries(
+      Object.entries(defaultShortcuts).map(([key, value]) => [
+        key,
+        new SvelteMap(Object.entries(value)),
+      ])
+    ) as unknown as Shortcuts
+  );
 
-    // Must be SvelteMap, not a plain Map: getKeyOfShortcut() reads this to display "which
-    // physical key is this bound to". A plain Map isn't reactive, so mutating it in setShortcut()
-    // would never notify a template reading getKeyOfShortcut() - the real rebind (`shortcuts`
-    // above) would still persist correctly, but the displayed text would silently go stale.
-    private reverseShortcuts: Record<string, SvelteMap<string, string>>
+  // Must be SvelteMap, not a plain Map: getKeyOfShortcut() reads this to display "which
+  // physical key is this bound to". A plain Map isn't reactive, so mutating it in setShortcut()
+  // would never notify a template reading getKeyOfShortcut() - the real rebind (`shortcuts`
+  // above) would still persist correctly, but the displayed text would silently go stale.
+  private reverseShortcuts: Record<string, SvelteMap<string, string>>;
 
-    constructor() {
-        this.reverseShortcuts = this.getReverseShortcuts(this.shortcuts)
-    }
+  constructor() {
+    this.reverseShortcuts = this.getReverseShortcuts(this.shortcuts);
+  }
 
+  private getReverseShortcuts(of: Shortcuts) {
+    const entries = Object.entries(of).map(([key, value]) => {
+      return [key, new SvelteMap([...value.entries()].map(([k, v]) => [v.name, k]))];
+    });
+    return Object.fromEntries(entries);
+  }
 
-    private getReverseShortcuts(of: Shortcuts) {
-        const entries = Object.entries(of)
-            .map(([key, value]) => {
-                return [key, new SvelteMap([...value.entries()].map(([k, v]) => [v.name, k]))]
-            })
-        return Object.fromEntries(entries)
-    }
+  getVsrgKeybinds(keyCount: VsrgSongKeys) {
+    return this.vsrg[`k${keyCount}`];
+  }
 
-    getVsrgKeybinds(keyCount: VsrgSongKeys) {
-        return this.vsrg[`k${keyCount}`]
-    }
+  setVsrgKeybind(keyCount: VsrgSongKeys, index: number, keybind: string) {
+    this.vsrg[`k${keyCount}`][index] = keybind;
+    this.save();
+  }
 
-    setVsrgKeybind(keyCount: VsrgSongKeys, index: number, keybind: string) {
-        this.vsrg[`k${keyCount}`][index] = keybind
-        this.save()
-    }
+  setVsrgKeybinds(keyCount: VsrgSongKeys, keybinds: string[]) {
+    this.vsrg[`k${keyCount}`].splice(0, keybinds.length, ...keybinds);
+    this.save();
+  }
 
-    setVsrgKeybinds(keyCount: VsrgSongKeys, keybinds: string[]) {
-        this.vsrg[`k${keyCount}`].splice(0, keybinds.length, ...keybinds)
-        this.save()
-    }
+  getKeyboardKeybinds() {
+    return this.shortcuts.keyboard;
+  }
 
-    getKeyboardKeybinds() {
-        return this.shortcuts.keyboard
-    }
+  getShortcutMap<T extends ShortcutPage>(page: T) {
+    return this.shortcuts[page];
+  }
 
-    getShortcutMap<T extends ShortcutPage>(page: T) {
-        return this.shortcuts[page]
-    }
+  setKeyboardKeybind(layoutKey: string, keybind: string) {
+    const oldEntry = Array.from(this.shortcuts.keyboard.entries()).find(
+      (entry) => entry[1].name === layoutKey
+    );
+    if (!oldEntry) return;
+    const possibleExisting = this.setShortcut('keyboard', oldEntry[0], keybind);
+    return possibleExisting;
+  }
 
-    setKeyboardKeybind(layoutKey: string, keybind: string) {
-        const oldEntry = Array.from(this.shortcuts.keyboard.entries()).find(entry => entry[1].name === layoutKey)
-        if (!oldEntry) return
-        const possibleExisting = this.setShortcut("keyboard", oldEntry[0], keybind)
-        return possibleExisting
-    }
+  getKeyOfShortcut<T extends ShortcutPage>(page: T, value: string): string | undefined {
+    return this.reverseShortcuts[page].get(value);
+  }
 
-    getKeyOfShortcut<T extends ShortcutPage>(page: T, value: string): string | undefined {
-        return this.reverseShortcuts[page].get(value)
-    }
+  getShortcut<T extends ShortcutPage>(
+    page: T,
+    key: string | string[]
+  ): MapValues<Shortcuts[T]> | undefined {
+    if (Array.isArray(key)) key = key.join('+');
+    return this.shortcuts[page].get(key) as MapValues<Shortcuts[T]> | undefined;
+  }
 
-    getShortcut<T extends ShortcutPage>(page: T, key: string | string[]): MapValues<Shortcuts[T]> | undefined {
-        if (Array.isArray(key)) key = key.join("+")
-        return this.shortcuts[page].get(key) as MapValues<Shortcuts[T]> | undefined
-    }
+  setShortcut<T extends ShortcutPage>(
+    page: T,
+    oldKey: string | string[],
+    newKey: string | string[]
+  ): MapValues<Shortcuts[T]> | undefined {
+    oldKey = KeyBinds.getShortcutName(oldKey);
+    newKey = KeyBinds.getShortcutName(newKey);
+    const oldShortcut = this.shortcuts[page].get(oldKey);
+    const newKeyExists = this.shortcuts[page].get(newKey);
+    if (oldShortcut === undefined || oldShortcut === null) return undefined;
+    if (newKeyExists !== undefined) return newKeyExists as MapValues<Shortcuts[T]> | undefined;
+    this.shortcuts[page].delete(oldKey);
+    this.shortcuts[page].set(newKey, oldShortcut);
+    // @ts-expect-error oldShortcut?.name is the value-union's `name` field, not provably a
+    // key of this specific page's reverse map from a generic T - runtime-correct (mirrors
+    // getReverseShortcuts' own construction), narrowing isn't expressible here
+    this.reverseShortcuts[page].set(oldShortcut?.name, newKey);
+    this.save();
+  }
 
-    setShortcut<T extends ShortcutPage>(page: T, oldKey: string | string[], newKey: string | string[]): MapValues<Shortcuts[T]> | undefined {
-        oldKey = KeyBinds.getShortcutName(oldKey)
-        newKey = KeyBinds.getShortcutName(newKey)
-        const oldShortcut = this.shortcuts[page].get(oldKey)
-        const newKeyExists = this.shortcuts[page].get(newKey)
-        if (oldShortcut === undefined || oldShortcut === null) return undefined
-        if (newKeyExists !== undefined) return newKeyExists as MapValues<Shortcuts[T]> | undefined
-        this.shortcuts[page].delete(oldKey)
-        this.shortcuts[page].set(newKey, oldShortcut)
-        // @ts-expect-error oldShortcut?.name is the value-union's `name` field, not provably a
-        // key of this specific page's reverse map from a generic T - runtime-correct (mirrors
-        // getReverseShortcuts' own construction), narrowing isn't expressible here
-        this.reverseShortcuts[page].set(oldShortcut?.name, newKey)
-        this.save()
-    }
+  static getShortcutName(key: string | string[]) {
+    if (typeof key === 'string') return key;
+    if (key.length === 1) return key[0];
+    return key.sort().join('+');
+  }
 
-    static getShortcutName(key: string | string[]) {
-        if (typeof key === "string") return key
-        if (key.length === 1) return key[0]
-        return key.sort().join("+")
-    }
-
-    load() {
-        if (typeof window === 'undefined') return
-        try {
-            const data = localStorage.getItem(`${APP_NAME}_keybinds`)
-            if (data) {
-                const parsed = JSON.parse(data) as SerializedKeybinds
-                if (parsed.version !== this.version) return
-                this.vsrg = parsed.vsrg
-                //.map(([key, value]) => [key, new Map(Object.entries(value))])
-                for (const outer of Object.entries(parsed.shortcuts)) {
-                    const [pageKey, pageValue] = outer as [ShortcutPage, SerializedKeybinds['shortcuts'][ShortcutPage]]
-                    for (const inner of Object.entries(pageValue)) {
-                        const [shortcutKey, shortcutValue] = inner
-                        const key = this.getKeyOfShortcut(pageKey, shortcutValue.name)
-                        if (!key) {
-                            console.warn("Skipping keybind", pageKey, shortcutKey, shortcutValue)
-                            continue
-                        }
-                        this.setShortcut(pageKey, key, shortcutKey)
-                    }
-                }
+  load() {
+    if (typeof window === 'undefined') return;
+    try {
+      const data = localStorage.getItem(`${APP_NAME}_keybinds`);
+      if (data) {
+        const parsed = JSON.parse(data) as SerializedKeybinds;
+        if (parsed.version !== this.version) return;
+        this.vsrg = parsed.vsrg;
+        //.map(([key, value]) => [key, new Map(Object.entries(value))])
+        for (const outer of Object.entries(parsed.shortcuts)) {
+          const [pageKey, pageValue] = outer as [
+            ShortcutPage,
+            SerializedKeybinds['shortcuts'][ShortcutPage],
+          ];
+          for (const inner of Object.entries(pageValue)) {
+            const [shortcutKey, shortcutValue] = inner;
+            const key = this.getKeyOfShortcut(pageKey, shortcutValue.name);
+            if (!key) {
+              console.warn('Skipping keybind', pageKey, shortcutKey, shortcutValue);
+              continue;
             }
-        } catch (e) {
-            console.error(e)
+            this.setShortcut(pageKey, key, shortcutKey);
+          }
         }
-
+      }
+    } catch (e) {
+      console.error(e);
     }
+  }
 
-    save() {
-        localStorage.setItem(`${APP_NAME}_keybinds`, JSON.stringify(this.serialize()))
-    }
+  save() {
+    localStorage.setItem(`${APP_NAME}_keybinds`, JSON.stringify(this.serialize()));
+  }
 
-    serialize(): SerializedKeybinds {
-        return {
-            version: this.version,
-            vsrg: cloneDeep(this.vsrg),
-            shortcuts: Object.fromEntries(
-                Object.entries(this.shortcuts)
-                    .map(([key, value]) => [key, Object.fromEntries(value)])
-            ) as SerializedKeybinds['shortcuts']
-        }
-    }
+  serialize(): SerializedKeybinds {
+    return {
+      version: this.version,
+      vsrg: cloneDeep(this.vsrg),
+      shortcuts: Object.fromEntries(
+        Object.entries(this.shortcuts).map(([key, value]) => [key, Object.fromEntries(value)])
+      ) as SerializedKeybinds['shortcuts'],
+    };
+  }
 }
 
 export const keyBinds = new KeyBinds();
 
 type ShortcutPressEvent<T> = {
-    code: string
-    event: KeyboardEvent
-    shortcut: T
-    isRepeat: boolean
-}
-export type ShortcutDisposer = () => void
+  code: string;
+  event: KeyboardEvent;
+  shortcut: T;
+  isRepeat: boolean;
+};
+export type ShortcutDisposer = () => void;
 
 export type ShortcutOptions = {
-    repeat?: boolean
-}
+  repeat?: boolean;
+};
 
-export type ShortcutListener<T extends ShortcutPage> = (keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>) => void
+export type ShortcutListener<T extends ShortcutPage> = (
+  keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>
+) => void;
 
-export function createShortcutListener<T extends KeysOf<Shortcuts>>(page: T, id: string, callback: ShortcutListener<T>): ShortcutDisposer {
-    return createKeyComboComposer(id, ({code, event, keyCombo}) => {
-        const shortcut = keyBinds.getShortcut(page, keyCombo)
-        if (shortcut !== undefined) {
-            if (!(shortcut as Shortcut<string>).holdable && event.repeat) return
-            callback({code, event, shortcut, isRepeat: event.repeat})
-        }
-    })
-}
-
-export function createKeyboardListener(id: string, callback: ShortcutListener<"keyboard">, options?: ShortcutOptions): ShortcutDisposer {
-    KeyboardProvider.listen(({code, event}) => {
-        if (!options?.repeat && event.repeat) return
-        const shortcut = keyBinds.getShortcut("keyboard", code)
-        if (shortcut !== undefined) {
-            if ((shortcut as Shortcut<string>).holdable && event.repeat) return
-            callback({code, event, shortcut, isRepeat: event.repeat})
-        }
-
-    }, {type: "keydown", id: id + "_keyboard_down"})
-    return () => {
-        KeyboardProvider.unregisterById(id + "_keyboard_down")
+export function createShortcutListener<T extends KeysOf<Shortcuts>>(
+  page: T,
+  id: string,
+  callback: ShortcutListener<T>
+): ShortcutDisposer {
+  return createKeyComboComposer(id, ({ code, event, keyCombo }) => {
+    const shortcut = keyBinds.getShortcut(page, keyCombo);
+    if (shortcut !== undefined) {
+      if (!(shortcut as Shortcut<string>).holdable && event.repeat) return;
+      callback({ code, event, shortcut, isRepeat: event.repeat });
     }
+  });
 }
 
-type KeyComboListener = (data: { keyCombo: string[], event: KeyboardEvent, code: string }) => void
+export function createKeyboardListener(
+  id: string,
+  callback: ShortcutListener<'keyboard'>,
+  options?: ShortcutOptions
+): ShortcutDisposer {
+  KeyboardProvider.listen(
+    ({ code, event }) => {
+      if (!options?.repeat && event.repeat) return;
+      const shortcut = keyBinds.getShortcut('keyboard', code);
+      if (shortcut !== undefined) {
+        if ((shortcut as Shortcut<string>).holdable && event.repeat) return;
+        callback({ code, event, shortcut, isRepeat: event.repeat });
+      }
+    },
+    { type: 'keydown', id: id + '_keyboard_down' }
+  );
+  return () => {
+    KeyboardProvider.unregisterById(id + '_keyboard_down');
+  };
+}
+
+type KeyComboListener = (data: { keyCombo: string[]; event: KeyboardEvent; code: string }) => void;
 
 export function createKeyComboComposer(id: string, callback: KeyComboListener): ShortcutDisposer {
-    const currentKeybinds: string[] = []
-    KeyboardProvider.listen(({code, event}) => {
-        if (!currentKeybinds.includes(code)) currentKeybinds.push(code)
-        callback({keyCombo: currentKeybinds, event, code})
-    }, {type: "keydown", id: id + "_down"})
-    KeyboardProvider.listen(({code}) => {
-        currentKeybinds.splice(currentKeybinds.indexOf(code), 1)
-    }, {type: "keyup", id: id + "_up"})
+  const currentKeybinds: string[] = [];
+  KeyboardProvider.listen(
+    ({ code, event }) => {
+      if (!currentKeybinds.includes(code)) currentKeybinds.push(code);
+      callback({ keyCombo: currentKeybinds, event, code });
+    },
+    { type: 'keydown', id: id + '_down' }
+  );
+  KeyboardProvider.listen(
+    ({ code }) => {
+      currentKeybinds.splice(currentKeybinds.indexOf(code), 1);
+    },
+    { type: 'keyup', id: id + '_up' }
+  );
 
-    function reset() {
-        currentKeybinds.splice(0, currentKeybinds.length)
-    }
+  function reset() {
+    currentKeybinds.splice(0, currentKeybinds.length);
+  }
 
-    window.addEventListener("blur", reset)
-    return () => {
-        KeyboardProvider.unregisterById(id + "_down")
-        KeyboardProvider.unregisterById(id + "_up")
-        window.removeEventListener("blur", reset)
-    }
+  window.addEventListener('blur', reset);
+  return () => {
+    KeyboardProvider.unregisterById(id + '_down');
+    KeyboardProvider.unregisterById(id + '_up');
+    window.removeEventListener('blur', reset);
+  };
 }
 
 // Matches against the literal `string` key type instead of `infer _, infer V` (T's key is
 // already constrained to `string` above) so there's no unused, discarded type parameter for
 // @typescript-eslint/no-unused-vars to flag.
-type MapValues<T extends Map<string, Shortcut<string>>> = T extends Map<string, infer V> ? V : never
+type MapValues<T extends Map<string, Shortcut<string>>> =
+  T extends Map<string, infer V> ? V : never;

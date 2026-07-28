@@ -31,42 +31,44 @@ cd zango-spike && npm install
 npm install @insertish/zangodb@1.0.12-nomemo
 ```
 
-| Tool | Version | Notes |
-|---|---|---|
-| `create-vite` | 9.1.1 | latest at spike time |
-| `vite` | **8.1.5** (`^8.1.1` scaffolded) | same major/minor already resolved in the main repo's own `node_modules` (pulled in transitively via Vitest, `package-lock.json:6368` allows `^6.0.0 \|\| ^7.0.0 \|\| ^8.0.0`) — this spike used the same version Phase 0's test infra already exercises, not a hypothetical future one |
-| `typescript` | ~6.0.2 | scaffold default |
-| `@insertish/zangodb` | 1.0.12-nomemo | exact repo pin, installed un-ranged per brief |
-| `events` | ^3.3.0 (installed 3.3.0) | **added to unblock dev mode**, see below |
-| node / npm | v24.6.0 / 11.6.2 | host versions |
+| Tool                 | Version                         | Notes                                                                                                                                                                                                                                                                                  |
+| -------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create-vite`        | 9.1.1                           | latest at spike time                                                                                                                                                                                                                                                                   |
+| `vite`               | **8.1.5** (`^8.1.1` scaffolded) | same major/minor already resolved in the main repo's own `node_modules` (pulled in transitively via Vitest, `package-lock.json:6368` allows `^6.0.0 \|\| ^7.0.0 \|\| ^8.0.0`) — this spike used the same version Phase 0's test infra already exercises, not a hypothetical future one |
+| `typescript`         | ~6.0.2                          | scaffold default                                                                                                                                                                                                                                                                       |
+| `@insertish/zangodb` | 1.0.12-nomemo                   | exact repo pin, installed un-ranged per brief                                                                                                                                                                                                                                          |
+| `events`             | ^3.3.0 (installed 3.3.0)        | **added to unblock dev mode**, see below                                                                                                                                                                                                                                               |
+| node / npm           | v24.6.0 / 11.6.2                | host versions                                                                                                                                                                                                                                                                          |
 
 `npm install @insertish/zangodb@1.0.12-nomemo` printed one unrelated
 deprecation notice (informational only, not a blocker):
+
 ```
 npm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library...
 ```
+
 (zangodb depends on `q` internally for its promise implementation.)
 
 Probe (`src/main.ts`), written verbatim from the brief:
 
 ```ts
-import ZangoDb from '@insertish/zangodb'
+import ZangoDb from '@insertish/zangodb';
 
-const out = document.querySelector<HTMLDivElement>('#app')!
+const out = document.querySelector<HTMLDivElement>('#app')!;
 
 async function probe() {
-    try {
-        const db = new ZangoDb.Db('SpikeTest', 1, {songs: []})
-        const songs = db.collection('songs')
-        await songs.insert({id: 'spike-1', name: 'hello zango'})
-        const found = await songs.find({id: 'spike-1'}).toArray()
-        out.textContent = 'ZANGO_OK ' + JSON.stringify(found.map(f => f.name))
-    } catch (e) {
-        out.textContent = 'ZANGO_FAIL ' + String(e)
-    }
+  try {
+    const db = new ZangoDb.Db('SpikeTest', 1, { songs: [] });
+    const songs = db.collection('songs');
+    await songs.insert({ id: 'spike-1', name: 'hello zango' });
+    const found = await songs.find({ id: 'spike-1' }).toArray();
+    out.textContent = 'ZANGO_OK ' + JSON.stringify(found.map((f) => f.name));
+  } catch (e) {
+    out.textContent = 'ZANGO_FAIL ' + String(e);
+  }
 }
 
-probe()
+probe();
 ```
 
 ## Finding 1 (blocking until fixed): `events` externalized by Vite's dep optimizer
@@ -93,9 +95,11 @@ Vite's esbuild dependency optimizer has no real package to resolve `events`
 to (it isn't in the project's `node_modules` by default), so it substitutes
 its standard browser-external stub — a warning-only Proxy object, confirmed
 present in the generated chunk:
+
 ```
 Module "events" has been externalized for browser compatibility. Cannot access "events.${key}" in client code.
 ```
+
 That stub is a plain object, not a function, so Babel's `_inherits` helper
 throws when it tries to use it as a superclass. This exception fires at
 **module-evaluation time** (top-level `import`), before `probe()` ever runs,
@@ -116,9 +120,11 @@ changes that resolution precedence, the documented fallback is an explicit
 
 After `npm install events` and restarting `vite` with `--force` (to bust the
 stale dep-optimizer cache), the browser showed:
+
 ```
 ZANGO_OK ["hello zango"]
 ```
+
 `node_modules/.vite/deps/@insertish_zangodb.js` no longer contained the
 externalization warning string. No `optimizeDeps.include` entry was needed for
 `@insertish/zangodb` itself — Vite's crawler auto-discovered it from the
@@ -135,9 +141,11 @@ code path may not execute at module-init). Phase 1's scaffold must add
 
 `npm run build` runs `tsc && vite build` (scaffold default). With the
 verbatim probe, `tsc` failed before Vite ever ran:
+
 ```
 src/main.ts(11,73): error TS2339: Property 'name' does not exist on type 'Object'.
 ```
+
 zangodb's shipped ambient typings (`node_modules/@insertish/zangodb/src/zangodb.d.ts`)
 type `Cursor.toArray(): Promise<Object[]>` — the TypeScript global `Object`
 type, which has no index/property access — rather than `any` or a generic.
@@ -174,19 +182,24 @@ dist/assets/index-Co71VE5l.js  127.57 kB │ gzip: 31.37 kB
 
 ✓ built in 98ms
 ```
+
 Clean build: no errors, and — better than the brief's "CJS interop warnings
 are acceptable" allowance — **no warnings of any kind**, including none about
 CJS/ESM interop for zangodb, `q`, `clone`, `deepmerge`, `object-hash`, or
 `events`.
 
 `npm run preview` (rollup output, served statically) then the browser:
+
 ```
 ZANGO_OK ["hello zango"]
 ```
+
 Reloading the same URL once more (persistence check, brief Step 4):
+
 ```
 ZANGO_OK ["hello zango","hello zango"]
 ```
+
 Two entries confirm the IndexedDB row from the first load survived the
 reload — the probe's `insert` has no unique constraint on the app-level `id`
 field (matching the real app's schema, see

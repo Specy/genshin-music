@@ -1,19 +1,19 @@
 type Log = {
-    error?: Error
-    message: string
-}
+  error?: Error;
+  message: string;
+};
 
 class LogsStore {
-    logs: Log[] = $state([])
+  logs: Log[] = $state([]);
 
-    addLog(log: Log) {
-        //prevent duplicate of the same error
-        if (this.logs.find(l => l.error === log.error)) return
-        this.logs.push(log)
-    }
+  addLog(log: Log) {
+    //prevent duplicate of the same error
+    if (this.logs.find((l) => l.error === log.error)) return;
+    this.logs.push(log);
+  }
 
-    clearLogs() {
-        this.logs.splice(0, this.logs.length)
-    }
+  clearLogs() {
+    this.logs.splice(0, this.logs.length);
+  }
 }
-export const logsStore = new LogsStore()
+export const logsStore = new LogsStore();

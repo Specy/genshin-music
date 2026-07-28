@@ -14,4 +14,4 @@
 // on) — undefined when unset, the literal string when set. Verified empirically via
 // `PUBLIC_IS_BETA=true npm run build:genshin` + grepping the emitted output for the
 // inlined `true`.
-export const IS_BETA = import.meta.env.PUBLIC_IS_BETA === 'true'
+export const IS_BETA = import.meta.env.PUBLIC_IS_BETA === 'true';

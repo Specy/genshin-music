@@ -25,7 +25,7 @@ flagged the gap. Static reasoning about CSS is not evidence per that plan; the n
   `read_page`, `get_page_text`, and `computer` clicks all worked — arguably stronger evidence than
   a screenshot anyway, since it reads exact string values instead of eyeballing pixels.
 - **Matched viewport**: both tabs resized to `1280x800` before the headline comparisons. A first
-  pass (below, "viewport-mismatch control") was taken *before* the resize with the two tabs at
+  pass (below, "viewport-mismatch control") was taken _before_ the resize with the two tabs at
   different viewport heights (old explicitly `1280x720`, new left at its default `1280x900`) and is
   kept here deliberately: it shows exactly the divergence you'd expect (`.column`'s viewport-relative
   height tracking each tab's own height, 720px vs 900px, every other property still identical) —
@@ -57,16 +57,16 @@ before/after pairs. All 306 reduce to exactly **8 unique before→after pairs**,
 (identical token content and order on both sides — only leading/trailing/doubled spaces that clsx
 drops differ):
 
-| Count | Before | After |
-|---:|---|---|
-| 167 | `"row "` | `"row"` |
-| 53 | `"menu-item "` | `"menu-item"` |
-| 27 | `"menu-wrapper "` | `"menu-wrapper"` |
-| 21 | `"menu-item  "` | `"menu-item"` |
-| 17 | `"menu-panel "` | `"menu-panel"` |
-| 10 | `"column "` | `"column"` |
-| 8 | `"side-menu  "` | `"side-menu"` |
-| 3 | `"menu "` | `"menu"` |
+| Count | Before            | After            |
+| ----: | ----------------- | ---------------- |
+|   167 | `"row "`          | `"row"`          |
+|    53 | `"menu-item "`    | `"menu-item"`    |
+|    27 | `"menu-wrapper "` | `"menu-wrapper"` |
+|    21 | `"menu-item  "`   | `"menu-item"`    |
+|    17 | `"menu-panel "`   | `"menu-panel"`   |
+|    10 | `"column "`       | `"column"`       |
+|     8 | `"side-menu  "`   | `"side-menu"`    |
+|     3 | `"menu "`         | `"menu"`         |
 
 Since HTML tokenizes `class` on whitespace, a whitespace-only difference cannot change which CSS
 rules match an element — this is why the live numbers below come out identical.
@@ -83,76 +83,76 @@ otherwise flagged.
 one of the three sites the review round flagged as unexercised by the static corpus; now
 live-verified):
 
-| Property | Old | New |
-|---|---|---|
-| class | `menu_side-menu__pcB3K undefined ` | `side-menu` |
-| padding | `16px` | `16px` |
-| margin | `0px` | `0px` |
-| background-color | `rgba(237, 229, 216, 0.95)` | `rgba(237, 229, 216, 0.95)` |
-| color | `rgb(21, 20, 20)` | `rgb(21, 20, 20)` |
-| border | `0px none rgb(21, 20, 20)` | `0px none rgb(21, 20, 20)` |
-| border-radius | `0px 4.8px 4.8px 0px` | `0px 4.8px 4.8px 0px` |
-| width | `512px` | `512px` |
-| height | `800px` | `800px` |
-| gap | `normal` | `normal` |
+| Property         | Old                                | New                         |
+| ---------------- | ---------------------------------- | --------------------------- |
+| class            | `menu_side-menu__pcB3K undefined ` | `side-menu`                 |
+| padding          | `16px`                             | `16px`                      |
+| margin           | `0px`                              | `0px`                       |
+| background-color | `rgba(237, 229, 216, 0.95)`        | `rgba(237, 229, 216, 0.95)` |
+| color            | `rgb(21, 20, 20)`                  | `rgb(21, 20, 20)`           |
+| border           | `0px none rgb(21, 20, 20)`         | `0px none rgb(21, 20, 20)`  |
+| border-radius    | `0px 4.8px 4.8px 0px`              | `0px 4.8px 4.8px 0px`       |
+| width            | `512px`                            | `512px`                     |
+| height           | `800px`                            | `800px`                     |
+| gap              | `normal`                           | `normal`                    |
 
 **`.menu-panel` / `.menu-panel-visible`** (`MenuPanel.svelte`):
 
-| Property | Old | New |
-|---|---|---|
-| class | `menu_menu-panel__52O_y menu_menu-panel-visible__vEqiD` | `menu-panel menu-panel-visible` |
-| padding | `0px` | `0px` |
-| margin | `0px` | `0px` |
-| background-color | `rgba(0, 0, 0, 0)` | `rgba(0, 0, 0, 0)` |
-| color | `rgb(21, 20, 20)` | `rgb(21, 20, 20)` |
-| border | `0px none rgb(21, 20, 20)` | `0px none rgb(21, 20, 20)` |
-| border-radius | `0px` | `0px` |
-| width | `480px` | `480px` |
-| height | `768px` | `768px` |
-| gap | `normal` | `normal` |
+| Property         | Old                                                     | New                             |
+| ---------------- | ------------------------------------------------------- | ------------------------------- |
+| class            | `menu_menu-panel__52O_y menu_menu-panel-visible__vEqiD` | `menu-panel menu-panel-visible` |
+| padding          | `0px`                                                   | `0px`                           |
+| margin           | `0px`                                                   | `0px`                           |
+| background-color | `rgba(0, 0, 0, 0)`                                      | `rgba(0, 0, 0, 0)`              |
+| color            | `rgb(21, 20, 20)`                                       | `rgb(21, 20, 20)`               |
+| border           | `0px none rgb(21, 20, 20)`                              | `0px none rgb(21, 20, 20)`      |
+| border-radius    | `0px`                                                   | `0px`                           |
+| width            | `480px`                                                 | `480px`                         |
+| height           | `768px`                                                 | `768px`                         |
+| gap              | `normal`                                                | `normal`                        |
 
 **`.menu-item`** (the `close-home` `MenuButton` instance):
 
-| Property | Old | New |
-|---|---|---|
-| padding | `8px` | `8px` |
-| margin | `0px` | `0px` |
-| background-color | `rgb(73, 84, 102)` | `rgb(73, 84, 102)` |
-| color | `rgb(211, 189, 142)` | `rgb(211, 189, 142)` |
-| border-radius | `8px` | `8px` |
-| width | `44.7969px` | `44.7969px` |
-| height | `44.7969px` | `44.7969px` |
+| Property         | Old                  | New                  |
+| ---------------- | -------------------- | -------------------- |
+| padding          | `8px`                | `8px`                |
+| margin           | `0px`                | `0px`                |
+| background-color | `rgb(73, 84, 102)`   | `rgb(73, 84, 102)`   |
+| color            | `rgb(211, 189, 142)` | `rgb(211, 189, 142)` |
+| border-radius    | `8px`                | `8px`                |
+| width            | `44.7969px`          | `44.7969px`          |
+| height           | `44.7969px`          | `44.7969px`          |
 
 **`.menu-item-active`** (`MenuItem.svelte`, the "Library" item — required unwinding a real quirk:
 the `close-home` button's coordinate click didn't actually flip `homeStore.state.visible`, which
 gates `MenuItem`'s `isActive`; switching to `element.click()` fixed it, confirmed by reading
 `.home`'s inline `style` before/after):
 
-| Property | Old | New |
-|---|---|---|
-| class | `menu_menu-item__srmws menu_menu-item-active__ddcQB undefined` | `menu-item menu-item-active` |
-| padding | `1px 6px` | `1px 6px` |
-| margin | `0px` | `0px` |
-| background-color | `rgb(73, 84, 102)` | `rgb(73, 84, 102)` |
-| color | `rgb(211, 189, 142)` | `rgb(211, 189, 142)` |
-| border | `0px none rgb(211, 189, 142)` | `0px none rgb(211, 189, 142)` |
-| border-radius | `8px` | `8px` |
-| width | `44.7969px` | `44.7969px` |
-| height | `44.7969px` | `44.7969px` |
-| gap | `normal` | `normal` |
+| Property         | Old                                                            | New                           |
+| ---------------- | -------------------------------------------------------------- | ----------------------------- |
+| class            | `menu_menu-item__srmws menu_menu-item-active__ddcQB undefined` | `menu-item menu-item-active`  |
+| padding          | `1px 6px`                                                      | `1px 6px`                     |
+| margin           | `0px`                                                          | `0px`                         |
+| background-color | `rgb(73, 84, 102)`                                             | `rgb(73, 84, 102)`            |
+| color            | `rgb(211, 189, 142)`                                           | `rgb(211, 189, 142)`          |
+| border           | `0px none rgb(211, 189, 142)`                                  | `0px none rgb(211, 189, 142)` |
+| border-radius    | `8px`                                                          | `8px`                         |
+| width            | `44.7969px`                                                    | `44.7969px`                   |
+| height           | `44.7969px`                                                    | `44.7969px`                   |
+| gap              | `normal`                                                       | `normal`                      |
 
 **`.row`** (`Row.svelte`, `middle-size-pages-wrapper` and its child link) — viewport-independent,
 so this pair is valid even from the pre-resize round:
 
-| Property | Old (wrapper / child) | New (wrapper / child) |
-|---|---|---|
-| padding | `0px` / `9.6px 16px` | `0px` / `9.6px 16px` |
-| margin | `16px 0px 0px` / `0px` | `16px 0px 0px` / `0px` |
+| Property         | Old (wrapper / child)              | New (wrapper / child)              |
+| ---------------- | ---------------------------------- | ---------------------------------- |
+| padding          | `0px` / `9.6px 16px`               | `0px` / `9.6px 16px`               |
+| margin           | `16px 0px 0px` / `0px`             | `16px 0px 0px` / `0px`             |
 | background-color | `rgba(0,0,0,0)` / `rgb(73,84,102)` | `rgba(0,0,0,0)` / `rgb(73,84,102)` |
-| border-radius | `0px` / `8px` | `0px` / `8px` |
-| width | `640px` / `202.656px` | `640px` / `202.656px` |
-| height | `59.1875px` / `59.1875px` | `59.1875px` / `59.1875px` |
-| gap | `16px` / `16px` | `16px` / `16px` |
+| border-radius    | `0px` / `8px`                      | `0px` / `8px`                      |
+| width            | `640px` / `202.656px`              | `640px` / `202.656px`              |
+| height           | `59.1875px` / `59.1875px`          | `59.1875px` / `59.1875px`          |
+| gap              | `16px` / `16px`                    | `16px` / `16px`                    |
 
 **`.floating-dropdown` / `.floating-dropdown-active`** (`FloatingDropdown.svelte`, the "..." toggle
 on a song row — added in a follow-up pass; this document's first pass waved this site off instead
@@ -164,22 +164,22 @@ closed → click its toggle (`button[aria-label="Open"]`) → read both again op
 prop default; no real caller passes one) and `isActive` starts `false` (its `$state` default) in
 both states measured, i.e. the real, only-ever state every instance is in — not a synthetic one:
 
-| | Old | New |
-|---|---|---|
-| class (closed) | `" floating-dropdown "` (leading **and** trailing space) | `"floating-dropdown"` |
-| class (open) | `" floating-dropdown floating-dropdown-active"` (leading space only) | `"floating-dropdown floating-dropdown-active"` |
+|                | Old                                                                  | New                                            |
+| -------------- | -------------------------------------------------------------------- | ---------------------------------------------- |
+| class (closed) | `" floating-dropdown "` (leading **and** trailing space)             | `"floating-dropdown"`                          |
+| class (open)   | `" floating-dropdown floating-dropdown-active"` (leading space only) | `"floating-dropdown floating-dropdown-active"` |
 
-| Property | Old (closed / open) | New (closed / open) |
-|---|---|---|
-| padding | `0px` / `0px` | `0px` / `0px` |
-| margin | `0px` / `0px` | `0px` / `0px` |
-| background-color | `rgba(0, 0, 0, 0)` / `rgba(0, 0, 0, 0)` | `rgba(0, 0, 0, 0)` / `rgba(0, 0, 0, 0)` |
-| color | `rgb(234, 232, 230)` / `rgb(234, 232, 230)` | `rgb(234, 232, 230)` / `rgb(234, 232, 230)` |
-| border | `0px none rgb(234, 232, 230)` / same | `0px none rgb(234, 232, 230)` / same |
-| border-radius | `0px` / `0px` | `0px` / `0px` |
-| width | `32px` / `32px` | `32px` / `32px` |
-| height | `32px` / `32px` | `32px` / `32px` |
-| gap | `normal` / `normal` | `normal` / `normal` |
+| Property         | Old (closed / open)                         | New (closed / open)                         |
+| ---------------- | ------------------------------------------- | ------------------------------------------- |
+| padding          | `0px` / `0px`                               | `0px` / `0px`                               |
+| margin           | `0px` / `0px`                               | `0px` / `0px`                               |
+| background-color | `rgba(0, 0, 0, 0)` / `rgba(0, 0, 0, 0)`     | `rgba(0, 0, 0, 0)` / `rgba(0, 0, 0, 0)`     |
+| color            | `rgb(234, 232, 230)` / `rgb(234, 232, 230)` | `rgb(234, 232, 230)` / `rgb(234, 232, 230)` |
+| border           | `0px none rgb(234, 232, 230)` / same        | `0px none rgb(234, 232, 230)` / same        |
+| border-radius    | `0px` / `0px`                               | `0px` / `0px`                               |
+| width            | `32px` / `32px`                             | `32px` / `32px`                             |
+| height           | `32px` / `32px`                             | `32px` / `32px`                             |
+| gap              | `normal` / `normal`                         | `normal` / `normal`                         |
 
 Every property matched old vs new in both states. Expected: `.floating-dropdown`'s only rule is
 `position: relative`, and `.floating-dropdown-active` alone (no descendant) styles nothing on this
@@ -197,12 +197,12 @@ evidence the method works.
 
 ### `/composer`, matched viewport `1280x800`, Home closed, "Songs" panel opened
 
-| Class | Property | Old | New |
-|---|---|---|---|
-| `.row` (`middle-size-pages-wrapper`) | padding/margin/background-color/color/border/border-radius/width/height/gap | `0px` / `16px 0px 0px` / `rgba(0,0,0,0)` / `rgb(234,232,230)` / `0px none ...` / `0px` / `auto` / `auto` / `16px` | identical on every property |
+| Class                                            | Property                                                                                   | Old                                                                                                                                 | New                                                                                                                                                                                       |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.row` (`middle-size-pages-wrapper`)             | padding/margin/background-color/color/border/border-radius/width/height/gap                | `0px` / `16px 0px 0px` / `rgba(0,0,0,0)` / `rgb(234,232,230)` / `0px none ...` / `0px` / `auto` / `auto` / `16px`                   | identical on every property                                                                                                                                                               |
 | `.column` (`.home`, now closed → `display:none`) | class, padding, margin, background-color, color, border, border-radius, width, height, gap | `home ignore_click_outside column`; `0px`/`0px`/`rgba(57,66,72,0.9)`/`rgb(234,232,230)`/`0px none ...`/`0px`/`100%`/`100%`/`normal` | identical on every property (both report the literal `100%`/`100%`, not a resolved pixel value, because both are `display:none` at measurement time — expected, and identical either way) |
-| `.side-menu-open` (Songs panel) | padding/margin/background-color/color/border/border-radius/width/height/gap | `16px`/`0px`/`rgba(237,229,216,0.95)`/`rgb(21,20,20)`/`0px none ...`/`0px 4.8px 4.8px 0px`/`512px`/`800px`/`normal` | identical on every property |
-| `.menu-panel-visible` (Songs panel) | padding/margin/background-color/color/border/border-radius/width/height/gap | `0px`/`0px`/`rgba(0,0,0,0)`/`rgb(21,20,20)`/`0px none ...`/`0px`/`480px`/`768px`/`normal` | identical on every property |
+| `.side-menu-open` (Songs panel)                  | padding/margin/background-color/color/border/border-radius/width/height/gap                | `16px`/`0px`/`rgba(237,229,216,0.95)`/`rgb(21,20,20)`/`0px none ...`/`0px 4.8px 4.8px 0px`/`512px`/`800px`/`normal`                 | identical on every property                                                                                                                                                               |
+| `.menu-panel-visible` (Songs panel)              | padding/margin/background-color/color/border/border-radius/width/height/gap                | `0px`/`0px`/`rgba(0,0,0,0)`/`rgb(21,20,20)`/`0px none ...`/`0px`/`480px`/`768px`/`normal`                                           | identical on every property                                                                                                                                                               |
 
 No console errors on either origin during the `/player` and `/composer` passes above
 (`read_console_messages`, `onlyErrors`). The one exception, from the follow-up
@@ -239,14 +239,14 @@ the first time now in section B:
   diff.
 - **`FloatingDropdown.svelte`'s leading-`cls` branch — this document's earlier closure was wrong;
   corrected here.** The first pass called it "genuinely unexercised, on both sides equally" and
-  stopped there. That conflated two different things: whether the *static* corpus reaches this
+  stopped there. That conflated two different things: whether the _static_ corpus reaches this
   branch (it doesn't — see below) and whether the branch itself ever runs with real values (it
   does, on every render). Re-grepped this session: there are 5 real `<FloatingDropdown` call sites
   in `src/` (`SongFolder.svelte`, `ComposerSongRow.svelte`, `PlayerSongRow.svelte`,
   `VsrgComposerSongRow.svelte`, `VsrgPlayerSongRow.svelte` — 5, not the first pass's claimed 6),
   and none passes a `class` prop, so `cls` is `''` at every one of them. `isActive`'s `$state(false)`
   default is the state every instance mounts in. That's not an edge case this component sometimes
-  hits — `cls=''` with `isActive` closed-then-open is the *only* state `FloatingDropdown` is ever
+  hits — `cls=''` with `isActive` closed-then-open is the _only_ state `FloatingDropdown` is ever
   really in. Hand-derived and now live-confirmed (section B): closed, old `" floating-dropdown "`
   (leading **and** trailing space) vs new `"floating-dropdown"`; open, old
   `" floating-dropdown floating-dropdown-active"` (leading space only) vs new
@@ -263,7 +263,7 @@ the first time now in section B:
   here.
 - **`MenuPanelWrapper.svelte`'s `isOpen === true` branch — closed above.** See `.side-menu-open` in
   section B (`/player` and `/composer`, real numbers, both identical old vs new). It remains true
-  that the *static* corpus alone never reaches this state (it's gated by user interaction, which
+  that the _static_ corpus alone never reaches this state (it's gated by user interaction, which
   `classAttrCheck`'s build-only scan cannot produce) — that part of the original observation stands
   — but it is no longer unverified: live interaction now covers it.
 

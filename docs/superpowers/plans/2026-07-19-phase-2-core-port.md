@@ -30,11 +30,13 @@
 ### Task 1: Dependencies, `GameDefinition` types, shared core constants
 
 **Files:**
+
 - Create: `src/lib/games/types.ts`
 - Create: `src/lib/core/sharedConfig.ts`
 - Modify: `package.json` + `package-lock.json` (deps only)
 
 **Interfaces:**
+
 - Consumes: the audit doc's final interface text.
 - Produces: `GameDefinition`, `GameId`, `StorageId`, `Pitch`, `BaseNote`, `NoteNameType`, `NoteImage`, `GlyphComponent`, `LayoutKeys`, `InstrumentDataType`, `TempoChanger`, `MIDIPreset`, `NotesCssClasses`, `BaseThemeConfig`, `NoteNameTypeDefault` from `$game/../types` (i.e. `src/lib/games/types.ts`); `APP_VERSION: '3.7.0'`, `HAS_BIGINT: boolean`, `BASE_LAYER_LIMIT: number` from `$core/sharedConfig`. Tasks 2-7 import these exact names.
 
@@ -44,6 +46,7 @@
 npm install @insertish/zangodb@1.0.12-nomemo @tonejs/midi@latest lodash.clonedeep@latest color@latest is-mobile@latest
 npm install -D @types/lodash.clonedeep@latest @types/color@latest
 ```
+
 Expected: clean install, no peer errors. Record resolved versions in the report.
 
 - [ ] **Step 2: Write `src/lib/games/types.ts`**
@@ -58,11 +61,11 @@ Values verbatim from the old `src/Config.ts` (verify against `git show migration
 // Shared, game-INDEPENDENT constants. BASE_LAYER_LIMIT is deliberately NOT in
 // GameDefinition: it is BigInt-capability-based, not game data (audit Step-3
 // documented exception; both games' config-surface fixtures carry 52).
-export const APP_VERSION = '3.7.0' as const
+export const APP_VERSION = '3.7.0' as const;
 
-export const HAS_BIGINT = typeof BigInt !== 'undefined'
+export const HAS_BIGINT = typeof BigInt !== 'undefined';
 
-export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
+export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30;
 ```
 
 If the old Config.ts computes any of these differently (e.g. `HAS_BIGINT` via a different probe), copy the OLD expression verbatim instead of the sketch above and note it in the report.
@@ -80,10 +83,12 @@ git commit -m "feat: GameDefinition types, shared core constants, phase-2 deps"
 ### Task 2: Genshin `GameDefinition` data module
 
 **Files:**
+
 - Rewrite: `src/lib/games/genshin/index.ts` (replaces the `GameSkeleton` stub)
 - Modify: `src/routes/+page.svelte`, `src/lib/components/PageStub.svelte` (only the `game.displayName` → `game.meta.title` read)
 
 **Interfaces:**
+
 - Consumes: `GameDefinition` from `../types` (Task 1).
 - Produces: `export const game: GameDefinition` for genshin — the shape every later task and UI phase reads. (`sky/index.ts` still exports the old skeleton until Task 3; the app must keep building for BOTH games throughout, so do not touch shared code in ways that assume the new shape beyond the two title-read lines.)
 
@@ -131,6 +136,7 @@ npx cross-env PUBLIC_GAME=genshin npm run build
 npx cross-env PUBLIC_GAME=sky npm run build
 grep -c "Sky Music Nightly" build/index.html
 ```
+
 Expected: check 0 errors; both builds pass; Sky title present (skeleton still working).
 
 - [ ] **Step 5: LF check, commit**
@@ -145,10 +151,12 @@ git commit -m "feat: genshin GameDefinition data module"
 ### Task 3: Sky `GameDefinition` data module + skeleton retirement
 
 **Files:**
+
 - Rewrite: `src/lib/games/sky/index.ts`
 - Delete: `src/lib/games/skeleton.ts`
 
 **Interfaces:**
+
 - Consumes: `GameDefinition` (Task 1); the extraction method of Task 2.
 - Produces: `export const game: GameDefinition` for sky. After this task BOTH game modules satisfy `GameDefinition` and nothing imports `skeleton.ts`.
 
@@ -178,10 +186,12 @@ git commit -m "feat: sky GameDefinition data module; retire skeleton"
 ### Task 4: Legacy adapter + core types
 
 **Files:**
+
 - Create: `src/lib/core/legacyConfig.ts`
 - Create: `src/lib/core/types.ts` (ported subset of old `src/types/GeneralTypes.ts` + `src/types/SongTypes.ts`)
 
 **Interfaces:**
+
 - Consumes: `$game` (`game: GameDefinition`), `$core/sharedConfig`.
 - Produces (from `$core/legacyConfig`, names EXACTLY as the old `$config` exported them — this is what the barrel and every ported file consume): `APP_NAME` (= `game.storageId`), `APP_VERSION`, `HAS_BIGINT`, `BASE_LAYER_LIMIT`, `PITCHES`, `PITCH_TO_INDEX` (if old files import it — check), `INSTRUMENTS`, `INSTRUMENTS_DATA`, `NOTES_PER_COLUMN`, `NOTE_SCALE`, `DO_RE_MI_NOTE_SCALE`, `INSTRUMENT_NOTE_LAYOUT_KINDS`, `INSTRUMENT_MIDI_LAYOUT_KINDS`, `LAYOUT_KINDS`, `LAYOUT_ICONS_KINDS`, `TEMPO_CHANGERS`, `COMPOSER_NOTE_POSITIONS`, `IMPORT_NOTE_POSITIONS`, `NOTES_CSS_CLASSES`, `BASE_THEME_CONFIG`, `NOTE_NAME_TYPES`, `MIDI_MAP_TO_NOTE` (a `Map`, built from `game.midi.mapToNote`), `NOTE_MAP_TO_MIDI` (derived — copy the old derivation loop from `git show migration/next16-react19:src/Config.ts` around lines 860-880 EXACTLY), `MIDI_BOUNDS`, `MIDI_PRESETS`, `FOLDER_FILTER_TYPES`, plus the type aliases old files import from `$config` (`Pitch`, `NoteNameType`, `TempoChanger`, `MIDIPreset`, `AppName` — alias `AppName = StorageId`).
 - From `$core/types`: `InstrumentName` and the old SongTypes types (`OldFormat`, `OldNote`, `SerializedSongKind`, `_LegacySongInstruments`) — port them from `git show migration/next16-react19:src/types/GeneralTypes.ts` and `.../SongTypes.ts` with ONE permitted widening: if `InstrumentName` was `typeof INSTRUMENTS[number]`, define `export type InstrumentName = string` with a comment (`// widened from the per-game literal union: cross-game code (toGenshin) needs names from both rosters; runtime behavior is untyped anyway`). Everything else verbatim.
@@ -199,7 +209,7 @@ Header comment (verbatim):
 // The config-surface golden fixture is the acceptance test for these derivations.
 ```
 
-Every export is a one-liner deriving from `game.*` per the audit's Step-3 mapping table (e.g. `export const INSTRUMENTS = game.instruments.list`, `export const NOTES_PER_COLUMN = game.notes.perColumn`, …). The two non-trivial ones: `MIDI_MAP_TO_NOTE = new Map(Object.entries(game.midi.mapToNote).map(...))` shaped exactly like the old Map (string keys? CHECK the old Config — the old Map's keys were STRINGS per `MIDI_MAP_TO_NOTE.get(\`${midiNote}\`)`; preserve that), and the `NOTE_MAP_TO_MIDI` derivation loop copied verbatim from old Config. `FOLDER_FILTER_TYPES = ['alphabetical', 'date-created'] as const` (game-independent — verify old spelling via `git show migration/next16-react19:src/Config.ts | grep FOLDER_FILTER`).
+Every export is a one-liner deriving from `game.*` per the audit's Step-3 mapping table (e.g. `export const INSTRUMENTS = game.instruments.list`, `export const NOTES_PER_COLUMN = game.notes.perColumn`, …). The two non-trivial ones: `MIDI_MAP_TO_NOTE = new Map(Object.entries(game.midi.mapToNote).map(...))` shaped exactly like the old Map (string keys? CHECK the old Config — the old Map's keys were STRINGS per `MIDI_MAP_TO_NOTE.get(\`${midiNote}\`)`; preserve that), and the `NOTE_MAP_TO_MIDI`derivation loop copied verbatim from old Config.`FOLDER_FILTER_TYPES = ['alphabetical', 'date-created'] as const`(game-independent — verify old spelling via`git show migration/next16-react19:src/Config.ts | grep FOLDER_FILTER`).
 
 - [ ] **Step 2: Port the type modules**
 
@@ -210,6 +220,7 @@ git show migration/next16-react19:src/lib/Songs/ComposedSong.ts | head -20
 git show migration/next16-react19:src/lib/Songs/RecordedSong.ts | head -12
 git show migration/next16-react19:src/lib/BaseSettings.ts | head -25
 ```
+
 Port exactly the types those imports need into `$core/types.ts` (from the old `$types/*` files), nothing more (YAGNI). `SettingsPropriety` types (imported by BaseSettings from `$types/SettingsPropriety`) — port that file too, verbatim, as `src/lib/core/types/SettingsPropriety.ts` if BaseSettings needs it (it does — check its import list).
 
 - [ ] **Step 3: Smoke the derivations against a fixture value**
@@ -218,6 +229,7 @@ Port exactly the types those imports need into `$core/types.ts` (from the old `$
 node -e "console.log('deferred to task 8 - type-level check only here')"
 npm run check
 ```
+
 Expected: check 0 errors (this proves `GameDefinition` → adapter → type-consumers all line up for the genshin build). Then also: `npx cross-env PUBLIC_GAME=sky npx svelte-kit sync && npx cross-env PUBLIC_GAME=sky npx svelte-check --tsconfig ./tsconfig.json` — 0 errors for sky too (the ledger's dual-game check concern; the adapter is the first file where the two data modules could diverge in shape).
 
 - [ ] **Step 4: LF, commit**
@@ -232,9 +244,11 @@ git commit -m "feat: legacy config adapter derived from GameDefinition; core typ
 ### Task 5: Port the pure model layer (Layer, SongClasses, Song, Folder, utils)
 
 **Files:**
+
 - Create: `src/lib/core/Songs/Layer.ts`, `src/lib/core/Songs/SongClasses.ts`, `src/lib/core/Songs/Song.ts`, `src/lib/core/Folder.ts`, `src/lib/core/utils/Utilities.ts`, `src/lib/core/Errors.ts`
 
 **Interfaces:**
+
 - Consumes: `$core/legacyConfig`, `$core/types`, `$core/sharedConfig`.
 - Produces: the classes/exports the barrel needs (`NoteLayer`; `ColumnNote`, `NoteColumn`, `InstrumentData`, `RecordedNote`; `Song`, `extractStorable`; `Folder`) plus `getSongType`, `groupByNotes`, `groupNotesByIndex`, `mergeLayers`, `clamp`, `MIDIShortcut`, `AppError` for later tasks — exact old signatures.
 
@@ -242,14 +256,14 @@ git commit -m "feat: legacy config adapter derived from GameDefinition; core typ
 
 For each: `git show migration/next16-react19:<old path> > <new path>`, then apply ONLY:
 
-| File | Transformations |
-|---|---|
-| `src/lib/Songs/Layer.ts` → `core/Songs/Layer.ts` | import `{BASE_LAYER_LIMIT, HAS_BIGINT}` from `$core/sharedConfig` (was `$config`); `./SongClasses` unchanged. NOTHING else. |
-| `src/lib/Songs/SongClasses.ts` → `core/Songs/SongClasses.ts` | `$config` imports → `$core/legacyConfig`; `$types/GeneralTypes` → `$core/types`. NOTHING else (the `ApproachingNote`/`MidiNote` classes port as-is even though unused by tests — minimal diff beats pruning). |
-| `src/lib/Songs/Song.ts` → `core/Songs/Song.ts` | `$config` → `$core/legacyConfig`. |
-| `src/lib/Folder.ts` → `core/Folder.ts` | `$config` → `$core/legacyConfig`; `./Songs/Song` unchanged. |
-| `src/lib/utils/Utilities.ts` → `core/utils/Utilities.ts` | `$config` → `$core/legacyConfig`; `$types/*` → `$core/types`; DELETE any import/usage of pixi, react, or `$cmp` if present (check the old file top — if a function body needs a deleted import, delete that FUNCTION and list it in the report; expected deletions are UI-only helpers like `blurEvent`/`isFocusable` ONLY IF they import UI modules — plain-DOM ones stay). Keep `setIfInTWA`/`isTwa` (sessionStorage at call time is fine). |
-| `src/lib/Errors.ts` → `core/Errors.ts` | verbatim (check imports; expected none beyond std). |
+| File                                                         | Transformations                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/Songs/Layer.ts` → `core/Songs/Layer.ts`             | import `{BASE_LAYER_LIMIT, HAS_BIGINT}` from `$core/sharedConfig` (was `$config`); `./SongClasses` unchanged. NOTHING else.                                                                                                                                                                                                                                                                                                                   |
+| `src/lib/Songs/SongClasses.ts` → `core/Songs/SongClasses.ts` | `$config` imports → `$core/legacyConfig`; `$types/GeneralTypes` → `$core/types`. NOTHING else (the `ApproachingNote`/`MidiNote` classes port as-is even though unused by tests — minimal diff beats pruning).                                                                                                                                                                                                                                 |
+| `src/lib/Songs/Song.ts` → `core/Songs/Song.ts`               | `$config` → `$core/legacyConfig`.                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `src/lib/Folder.ts` → `core/Folder.ts`                       | `$config` → `$core/legacyConfig`; `./Songs/Song` unchanged.                                                                                                                                                                                                                                                                                                                                                                                   |
+| `src/lib/utils/Utilities.ts` → `core/utils/Utilities.ts`     | `$config` → `$core/legacyConfig`; `$types/*` → `$core/types`; DELETE any import/usage of pixi, react, or `$cmp` if present (check the old file top — if a function body needs a deleted import, delete that FUNCTION and list it in the report; expected deletions are UI-only helpers like `blurEvent`/`isFocusable` ONLY IF they import UI modules — plain-DOM ones stay). Keep `setIfInTWA`/`isTwa` (sessionStorage at call time is fine). |
+| `src/lib/Errors.ts` → `core/Errors.ts`                       | verbatim (check imports; expected none beyond std).                                                                                                                                                                                                                                                                                                                                                                                           |
 
 - [ ] **Step 2: Check + dual-game check, LF, commit**
 
@@ -259,6 +273,7 @@ npx cross-env PUBLIC_GAME=sky npx svelte-check --tsconfig ./tsconfig.json
 git add src/lib/core
 git commit -m "feat: port pure model layer (Layer, SongClasses, Song, Folder, utils, errors)"
 ```
+
 Expected: 0 errors both games. If a ported file drags an import you weren't told about (e.g. Utilities needs `color`), it's in this phase's dep list — wire it; anything OUTSIDE the dep list → BLOCKED report.
 
 ---
@@ -266,26 +281,29 @@ Expected: 0 errors both games. If a ported file drags an import you weren't told
 ### Task 6: Port the storage layer (Database, Collections, Settings/Theme/Folder services)
 
 **Files:**
+
 - Create: `src/lib/core/Services/Database/Database.ts`, `src/lib/core/Services/Database/Collection.ts`, `src/lib/core/Services/SettingsService.ts`, `src/lib/core/Services/ThemeService.ts`, `src/lib/core/Services/FolderService.ts`, `src/lib/core/BaseSettings.ts`, `src/lib/core/types/SettingsPropriety.ts` (if not already in Task 4)
 
 **Interfaces:**
+
 - Consumes: everything prior.
 - Produces: `DbInstance` (ZangoDB, name = `APP_NAME` from the adapter = `game.storageId`, version 4, four collections), `settingsService`, `_themeService`, `_folderService`, and the seven settings-default exports the barrel needs (`ComposerSettings`, `PlayerSettings`, `MIDISettings`, `ThemeSettings`, `VsrgComposerSettings`, `VsrgPlayerSettings`, `ZenKeyboardSettings`).
 
 - [ ] **Step 1: Port with these transformations**
 
-| File | Transformations |
-|---|---|
-| `Database/Collection.ts` | DELETE the entire `TauriCollection` class and its exports/imports (spec §8); keep `Collection` interface + `ZangoCollection` verbatim. |
-| `Database/Database.ts` | `$config` → `$core/legacyConfig`; DELETE the `IS_TAURI` import and the whole `if (IS_TAURI) {...} else {...}` — keep only the Zango branch's body; DELETE the `TauriCollection` import; `$i18n/i18nCache` type import (`SerializedLocale`) → declare the type locally in this file (copy the real shape: `git show migration/next16-react19:src/i18n/i18nCache.ts | grep -B2 -A6 "SerializedLocale"`); `$stores/ThemeStore/ThemeProvider` type import (`SerializedTheme`) → `import type {SerializedTheme} from '../theme/ThemeProvider'` — valid because the theme model is ported in THIS task (Step 2), which is exactly why it lives here and not in Task 7. |
-| `SettingsService.ts` | `$config` → `$core/legacyConfig`; `$lib/BaseSettings` → `$core/BaseSettings`; strip any store imports if present (check old file — expected: none; it's localStorage only). |
-| `ThemeService.ts` | `$lib/Services/Database/Database` → relative `./Database/Database`; strip store imports if present (expected: none). |
-| `FolderService.ts` | same pattern; if it imports `folderStore` (check!), DELETE that import and any lines using it, listing each deleted line in the report (stores are Phase 3; the service keeps only its DB methods). |
-| `BaseSettings.ts` | `$config` → `$core/legacyConfig`; `$types/SettingsPropriety` → `$core/types/SettingsPropriety` (port that file verbatim); `$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard` type import (`VsrgKeyboardLayout`) → define in `$core/types.ts`: copy the type's definition from the old component file (`git show migration/next16-react19:src/components/pages/VsrgPlayer/VsrgPlayerKeyboard.tsx | grep -B2 -A8 "VsrgKeyboardLayout"`) and import from there; `./utils/Utilities` (MIDIShortcut) → `$core/utils/Utilities` or relative; `./Songs/VsrgSong` type (`VsrgSongKeys`) → relative to Task 7's file (type-only; svelte-check passes once Task 7 lands — see Step 3 note). Per-game default VALUES stay EXACTLY as the old file computes them (`APP_NAME === 'Genshin' ? … : …` ternaries keep working via the adapter's APP_NAME) — do NOT rewrite them to read `game.settings.*`; that refactor is not this phase (fixtures lock the ternary outputs either way). |
+| File                     | Transformations                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Database/Collection.ts` | DELETE the entire `TauriCollection` class and its exports/imports (spec §8); keep `Collection` interface + `ZangoCollection` verbatim.                                                                                                                                                                                                                                                  |
+| `Database/Database.ts`   | `$config` → `$core/legacyConfig`; DELETE the `IS_TAURI` import and the whole `if (IS_TAURI) {...} else {...}` — keep only the Zango branch's body; DELETE the `TauriCollection` import; `$i18n/i18nCache` type import (`SerializedLocale`) → declare the type locally in this file (copy the real shape: `git show migration/next16-react19:src/i18n/i18nCache.ts                       | grep -B2 -A6 "SerializedLocale"`); `$stores/ThemeStore/ThemeProvider` type import (`SerializedTheme`) → `import type {SerializedTheme} from '../theme/ThemeProvider'` — valid because the theme model is ported in THIS task (Step 2), which is exactly why it lives here and not in Task 7.                                                                                                                                                                                                                                                                       |
+| `SettingsService.ts`     | `$config` → `$core/legacyConfig`; `$lib/BaseSettings` → `$core/BaseSettings`; strip any store imports if present (check old file — expected: none; it's localStorage only).                                                                                                                                                                                                             |
+| `ThemeService.ts`        | `$lib/Services/Database/Database` → relative `./Database/Database`; strip store imports if present (expected: none).                                                                                                                                                                                                                                                                    |
+| `FolderService.ts`       | same pattern; if it imports `folderStore` (check!), DELETE that import and any lines using it, listing each deleted line in the report (stores are Phase 3; the service keeps only its DB methods).                                                                                                                                                                                     |
+| `BaseSettings.ts`        | `$config` → `$core/legacyConfig`; `$types/SettingsPropriety` → `$core/types/SettingsPropriety` (port that file verbatim); `$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard` type import (`VsrgKeyboardLayout`) → define in `$core/types.ts`: copy the type's definition from the old component file (`git show migration/next16-react19:src/components/pages/VsrgPlayer/VsrgPlayerKeyboard.tsx | grep -B2 -A8 "VsrgKeyboardLayout"`) and import from there; `./utils/Utilities`(MIDIShortcut) →`$core/utils/Utilities`or relative;`./Songs/VsrgSong` type (`VsrgSongKeys`) → relative to Task 7's file (type-only; svelte-check passes once Task 7 lands — see Step 3 note). Per-game default VALUES stay EXACTLY as the old file computes them (`APP_NAME === 'Genshin' ? … : …`ternaries keep working via the adapter's APP_NAME) — do NOT rewrite them to read`game.settings.*`; that refactor is not this phase (fixtures lock the ternary outputs either way). |
 
 - [ ] **Step 2: Port the theme model into this task**
 
 `src/stores/ThemeStore/ThemeProvider.ts` → `src/lib/core/theme/ThemeProvider.ts`, transformations:
+
 - DELETE `import {observable} from "mobx"`; in the `Theme` class constructor, `observable(cloneDeep(baseTheme))` → `cloneDeep(baseTheme)`.
 - DELETE `import {logger} from '$stores/LoggerStore'`; every `logger.<x>(...)` call line → `console.error(...)` with the same message argument (list each replaced line in the report).
 - `$lib/BaseSettings` → `$core/BaseSettings`; `$config` → `$core/legacyConfig`; `$lib/Services/ThemeService` → `../Services/ThemeService`.
@@ -309,9 +327,11 @@ git commit -m "feat: port storage layer, settings, and theme model (mobx/tauri s
 ### Task 7: Port the song models (Composed, Recorded, Vsrg + import-graph closure)
 
 **Files:**
+
 - Create: `src/lib/core/Songs/ComposedSong.ts`, `src/lib/core/Songs/RecordedSong.ts`, `src/lib/core/Songs/VsrgSong.ts`; plus `src/lib/core/Songs/Track.ts` and/or `src/lib/core/Songs/MidiSong.ts` ONLY IF the three primary files import them (follow the import graph; check first: `git show migration/next16-react19:src/lib/Songs/RecordedSong.ts | grep -n "import"` etc.)
 
 **Interfaces:**
+
 - Consumes: Tasks 4-6.
 - Produces: `ComposedSong`, `defaultInstrumentMap`; `RecordedSong`; `VsrgSong`, `VsrgTrack`, `VsrgTrackModifier`, `VsrgHitObject` — exact old exports.
 
@@ -333,10 +353,12 @@ git commit -m "feat: port song models (quirks preserved byte-identical)"
 ### Task 8: SongService, barrel repoint, suite green (the phase gate)
 
 **Files:**
+
 - Create: `src/lib/core/Services/SongService.ts`
 - Modify: `test/imports.ts` (paths only), `test/README.md` (parked → resumed paragraph), `package.json` (add `check:sky` script)
 
 **Interfaces:**
+
 - Consumes: everything.
 - Produces: `songService` (with `parseSong`); the resumed suite as the phase gate.
 
@@ -369,6 +391,7 @@ export {songService} from '$core/Services/SongService'
 ```bash
 npm test
 ```
+
 Expected: **both games green** — 11 test files, 18 passed + 1 skipped (Genshin) / 17 passed + 2 skipped (Sky), exactly the Phase-0 final counts. EVERY failure here is a port bug (fixtures are ground truth — never regenerate): diff the failing value against `git show migration/next16-react19:<old file>` to find the divergence. Iterate until green.
 
 - [ ] **Step 4: Fresh-clone-equivalent vitest verification + dual-game script**
@@ -377,6 +400,7 @@ Expected: **both games green** — 11 test files, 18 passed + 1 skipped (Genshin
 rm -rf .svelte-kit
 npm test
 ```
+
 Expected: still green (ledger carry-forward: vitest-through-sveltekit-plugin works without a pre-existing `.svelte-kit`; if it crashes at CONFIG level, apply the Phase-1-plan's pre-approved fallback — standalone `vitest.config.ts` mirroring the aliases — and record which variant landed).
 
 Add to `package.json` scripts: `"check:sky": "cross-env PUBLIC_GAME=sky npm run check"` and run it once green.

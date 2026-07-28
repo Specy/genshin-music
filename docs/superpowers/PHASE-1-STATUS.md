@@ -11,22 +11,24 @@ Phase 1 complete on branch `migration/next16-react19`.
 
 ## Gate results (2026-06-25)
 
-| Check | Result |
-|---|---|
-| `tsc --noEmit` | 1 error, in `VsrgPlayerCanvas.tsx` only (expected pixi breakage) |
-| `node ./scripts/buildApp.js Sky` | PASSED — `build/skyMusic/service-worker.js` present |
-| `node ./scripts/buildApp.js Genshin` | PASSED — `build/genshinMusic/service-worker.js` present |
+| Check                                | Result                                                           |
+| ------------------------------------ | ---------------------------------------------------------------- |
+| `tsc --noEmit`                       | 1 error, in `VsrgPlayerCanvas.tsx` only (expected pixi breakage) |
+| `node ./scripts/buildApp.js Sky`     | PASSED — `build/skyMusic/service-worker.js` present              |
+| `node ./scripts/buildApp.js Genshin` | PASSED — `build/genshinMusic/service-worker.js` present          |
 
 ## Known broken until Phase 2
 
 The following pages and files are broken at runtime (pixi canvas):
 
 **Pages:**
+
 - `/composer`
 - `/vsrg-composer`
 - `/vsrg-player`
 
 **Files with expected `tsc` errors (import `@pixi/react`, `pixi.js`, or `@pixi/graphics-smooth`):**
+
 - `src/components/pages/Composer/ComposerCanvas.tsx`
 - `src/components/pages/Composer/RenderColumn.tsx`
 - `src/components/pages/Composer/ComposerBreakpointsRenderer.tsx`
@@ -38,7 +40,7 @@ The following pages and files are broken at runtime (pixi canvas):
 - `src/components/pages/VsrgComposer/VsrgTrackRenderer.tsx`
 - `src/components/pages/VsrgComposer/VsrgTimelineRenderer.tsx`
 - `src/components/pages/VsrgComposer/VsrgTimelineBreakpointsRenderer.tsx`
-- `src/components/pages/VsrgPlayer/VsrgPlayerCanvas.tsx`  ← only file with active `tsc` error
+- `src/components/pages/VsrgPlayer/VsrgPlayerCanvas.tsx` ← only file with active `tsc` error
 - `src/components/pages/VsrgPlayer/VsgPlayerCache.ts`
 - `src/components/pages/VsrgPlayer/VsrgHitObjectsRenderer.tsx`
 - `src/components/pages/VsrgPlayer/VsrgPlayerAccuracyRenderer.tsx`

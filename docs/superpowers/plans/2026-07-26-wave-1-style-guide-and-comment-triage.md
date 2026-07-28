@@ -14,14 +14,14 @@
 
 Every task's requirements implicitly include this section.
 
-1. **Comments and docs only.** No code, markup, CSS or import changes. If a comment is wrong *about the code*, fix the comment — never the code. Flag code defects in the report instead.
+1. **Comments and docs only.** No code, markup, CSS or import changes. If a comment is wrong _about the code_, fix the comment — never the code. Flag code defects in the report instead.
 2. **Never delete quirk documentation.** The preserved-bug list in §"Preserved bugs" below is binding. Each entry must end this wave with a `QUIRK:` marker at its code site.
 3. **LF only.** Byte-check every touched file with a Node `Buffer` scan for byte 13. Do not trust `grep`.
 4. **Measure the index, not the worktree,** for any EOL claim: this checkout has locally CRLF-ified tracked files whose committed blobs are LF. Use `git cat-file -p` on `git ls-files -s` shas.
 5. **Explicit-path staging only.** Never `git add -A` — untracked `.claude/` and `.superpowers/` scratch exist on disk.
 6. **Nothing merges to `main`; nothing is pushed.**
 7. **Gates before every commit:** `npm run check`, `npm run check:sky`, `npm run lint`, and `npm test`. Comment-only changes cannot break these, so a failure means something non-comment was touched.
-8. **Old app for reference:** `git show migration/next16-react19:<path>`. It is *not* a spec in this wave — deleting a comment that describes it is the point.
+8. **Old app for reference:** `git show migration/next16-react19:<path>`. It is _not_ a spec in this wave — deleting a comment that describes it is the point.
 
 ## Preserved bugs — the binding keep-list
 
@@ -46,9 +46,11 @@ Every one of these must carry a one-line `QUIRK:` comment at its site by the end
 ### Task 1: Write the style guide
 
 **Files:**
+
 - Create: `docs/STYLE_GUIDE.md`
 
 **Interfaces:**
+
 - Produces: the rules every later task and every later wave is reviewed against. Task 2+ cite it by section.
 
 - [ ] **Step 1: Write the guide**
@@ -56,29 +58,33 @@ Every one of these must carry a one-line `QUIRK:` comment at its site by the end
 Sections and required content:
 
 **Readability**
+
 - No one-off helper functions. If a function is called exactly once from one place, inline it — unless extraction genuinely clarifies (a named guard, a recursive step, a pure helper worth unit-testing). Rationale: the reader should follow a file top to bottom without chasing indirection.
-- Comments explain *why*, never *what was ported*.
+- Comments explain _why_, never _what was ported_.
 - Long design rationale lives in `docs/`, not in a file header. Leave a one-line pointer.
 
 **Comment rules** — these are not style preferences; each was learned from a defect that survived multiple review rounds on this branch:
+
 - **Never write another file's line numbers into a comment.** Cite by stable content: a quoted fragment, a selector, a symbol name. Line numbers are invalidated by any edit above them — including the author's own edit in the same commit.
-- **Never write repo-wide quantifiers** ("exactly once in the whole tree", "the only", "all N sites"). They are unmaintainable by construction. State the *mechanism* instead — "this module is the single source for X; Y imports it" — because mechanisms stay true and counts do not.
+- **Never write repo-wide quantifiers** ("exactly once in the whole tree", "the only", "all N sites"). They are unmaintainable by construction. State the _mechanism_ instead — "this module is the single source for X; Y imports it" — because mechanisms stay true and counts do not.
 - **Re-derive any factual claim in the session you write it.** Build it, grep it, paste it. Never restate an earlier draft's reasoning.
 - **Run the grep the sentence licenses, not the grep you meant.** If the two disagree, the sentence is wrong.
 - **After rewriting a claim, re-verify it under the new wording** before committing. A fix must verify its own output, not just its input.
 - **`QUIRK:` marks deliberate bug-for-bug behaviour.** Never delete one. It is what stops someone helpfully "fixing" a preserved upstream bug.
 
 **TypeScript**
+
 - `any` is banned; `@ts-ignore` is banned; `@ts-expect-error` requires a written reason.
 - Don't cast — parse. A string from a `<select>`, `localStorage` or a URL is not a union member until checked. Validate at the boundary, return the union; the interior then needs no assertions.
 - Derive unions from data so table and type cannot drift:
   ```ts
-  const PITCHES = ['C', 'Db', 'D'] as const satisfies readonly string[]
-  type Pitch = (typeof PITCHES)[number]
+  const PITCHES = ['C', 'Db', 'D'] as const satisfies readonly string[];
+  type Pitch = (typeof PITCHES)[number];
   ```
 - `satisfies` for data tables. `unknown` + narrowing at genuine boundaries.
 
 **Svelte**
+
 - `{@attach}` over `use:` actions. `$derived` over `$effect`; never assign state inside an effect.
 - `<svelte:window>`/`<svelte:document>` or `svelte/events`'s `on()` over manual `addEventListener`.
 - `createContext` over `setContext`/`getContext`.
@@ -88,6 +94,7 @@ Sections and required content:
 - Styles scoped to the component; CSS custom properties let a parent influence a child.
 
 **Component API**
+
 - The class prop is `class`, typed `ClassValue` — not `className`.
 - Props derived from other props use `$derived`.
 - Snippets over wrapper elements.
@@ -99,6 +106,7 @@ node -e "const b=require('fs').readFileSync('docs/STYLE_GUIDE.md');console.log('
 git add docs/STYLE_GUIDE.md
 git commit -m "docs: add project style guide"
 ```
+
 Expected: `CR 0`.
 
 ---
@@ -106,9 +114,11 @@ Expected: `CR 0`.
 ### Task 2: Establish the comment-only proof harness
 
 **Files:**
+
 - Create: `scripts/commentOnlyCheck.js`
 
 **Interfaces:**
+
 - Produces: `node scripts/commentOnlyCheck.js snapshot|compare` — the mechanism every triage task uses to prove it changed no behaviour. Tasks 3–7 all depend on it.
 
 **Why:** production builds strip comments, so if a change is comment-only the built assets are byte-identical. This turns "I only touched comments" from a claim into a measurement.
@@ -116,6 +126,7 @@ Expected: `CR 0`.
 - [ ] **Step 1: Write the script**
 
 It must:
+
 1. Run `npm run build:genshin`.
 2. Walk `build/genshinMusic` and record `sha256` per file, relative path sorted.
 3. **Exclude the service worker** (`service-worker.js` and any precache manifest): it embeds a build timestamp that changes every run, so it would always differ. Record its exclusion in the output so the exclusion is visible, not silent.
@@ -125,6 +136,7 @@ It must:
 - [ ] **Step 2: Prove it detects a real change**
 
 Negative control — this is required evidence, not optional:
+
 ```bash
 node scripts/commentOnlyCheck.js snapshot
 # introduce a deliberate one-character runtime change in any component, e.g. a class name
@@ -132,6 +144,7 @@ node scripts/commentOnlyCheck.js compare   # MUST exit non-zero and name the cha
 git checkout -- <that file>
 node scripts/commentOnlyCheck.js compare   # MUST exit zero
 ```
+
 Paste both outputs in the report. A harness that cannot fail proves nothing.
 
 - [ ] **Step 3: Commit**
@@ -147,12 +160,12 @@ git commit -m "chore: add comment-only build-hash check for the refactor waves"
 
 All four follow the identical procedure below. They differ only in scope. Run them in this order; each is its own commit.
 
-| Task | Scope | Files | Comment lines |
-|---|---|---|---|
-| 3 | `src/lib/components/pages/` — Player + Composer trees | ~35 | ~1600 |
-| 4 | `src/lib/components/pages/` — Vsrg*, ZenKeyboard, keybinds, blog, HelpTab, SheetVisualizer | ~33 | ~1400 |
-| 5 | `src/lib/components/` (shared, non-`pages/`) | 78 | ~1380 |
-| 6 | `src/routes/` (30 files) + `src/lib/{stores,audio,providers,utils,i18n,games}` (58) | 88 | ~1700 |
+| Task | Scope                                                                                      | Files | Comment lines |
+| ---- | ------------------------------------------------------------------------------------------ | ----- | ------------- |
+| 3    | `src/lib/components/pages/` — Player + Composer trees                                      | ~35   | ~1600         |
+| 4    | `src/lib/components/pages/` — Vsrg*, ZenKeyboard, keybinds, blog, HelpTab, SheetVisualizer | ~33   | ~1400         |
+| 5    | `src/lib/components/` (shared, non-`pages/`)                                               | 78    | ~1380         |
+| 6    | `src/routes/` (30 files) + `src/lib/{stores,audio,providers,utils,i18n,games}` (58)        | 88    | ~1700         |
 
 **Procedure for each task:**
 
@@ -169,6 +182,7 @@ node scripts/commentOnlyCheck.js snapshot
 So: **before deleting any paragraph, extract the fact.** Ask "does this tell me something that is deliberately not what it looks like?" If yes, that sentence survives as a one-line `QUIRK:` at the code site even though everything around it goes. Grep your own deletions for `deliberate`, `intentional`, `preserved`, `byte-for-byte`, `reproduced`, `not collapsed`, `not widened`, `quirk`, `dead code`, `unreachable` before you commit — every hit needs either a surviving marker or a written reason in your report for why it was pure archaeology.
 
 Three outcomes only:
+
 - **DELETE** — port archaeology. Old file paths, prop-rename tables, "React did X so we do Y", "ported in Phase N Task M", justifications for choices that are now simply the code. Git holds this; `migration/next16-react19` still exists.
 - **KEEP, compressed to 1–2 lines** — anything a reader needs in order not to break the code: quirk/preserved-bug rationale (prefix `QUIRK:`), non-obvious ordering requirements, load-bearing CSS notes, browser workarounds. Rewrite in the de-quantified, mechanism-stating form the style guide requires.
 - **MOVE** — substantial design rationale worth keeping but not worth a file header. Move to `docs/` and leave a one-line pointer.
@@ -180,6 +194,7 @@ While triaging, apply the style guide's comment rules to every surviving comment
 ```bash
 node scripts/commentOnlyCheck.js compare
 ```
+
 Expected: exit 0, no changed paths. **If this fails, you changed code** — find it and revert that part.
 
 - [ ] **Step 4: Gates + LF, then commit**
@@ -215,6 +230,7 @@ grep -rEn '(svelte|ts|css|js):[0-9]+' src --include=*.svelte --include=*.ts | gr
 # repo-wide quantifiers in comments
 grep -rniE '(exactly once|the only|in the whole tree|all [0-9]+ (sites|files|call))' src --include=*.svelte --include=*.ts
 ```
+
 Every surviving hit must be justified in the report or fixed.
 
 - [ ] **Step 4: Full gate matrix**
@@ -225,7 +241,7 @@ npm test && npm run check && npm run check:sky && npm run lint && npm run build:
 
 - [ ] **Step 5: Whole-wave comment-only proof**
 
-Compare the build hashes against a snapshot taken at the wave's base commit (`31bf806c`), not just per task — this proves the *cumulative* wave changed no behaviour.
+Compare the build hashes against a snapshot taken at the wave's base commit (`31bf806c`), not just per task — this proves the _cumulative_ wave changed no behaviour.
 
 - [ ] **Step 6: Append the ledger block and commit**
 

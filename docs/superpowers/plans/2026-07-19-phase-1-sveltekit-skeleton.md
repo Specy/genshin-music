@@ -30,12 +30,14 @@
 ### Task 1: Branch, relocations, deletions
 
 **Files:**
+
 - Branch: create `migration/sveltekit`
 - Move: `public/assets` → `static/assets`; `public/locales` → `static/locales`; `public/updates.json` → `static/updates.json`
 - Move: `src/appData/genshin` → `src/lib/games/genshin/static`; `src/appData/sky` → `src/lib/games/sky/static`
 - Delete (tracked): rest of `src/`, rest of `public/`, `src-tauri/`, `target/`, `next.config.js`, `next-env.d.ts`, `.eslintrc.json`, `tsconfig.json`, `tsconfig.tsbuildinfo`, `.env.example`, `vitest.config.ts`, `.github/workflows/BuildTauri.yml`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: the directory contract every later task assumes — `static/{assets,locales,updates.json}` committed; `src/lib/games/{genshin,sky}/static/` each containing exactly `favicon.ico`, `logo192.png`, `logo512.png`, `manifest.json`, `robots.txt`, `manifestData/`; `test/`, `test-songs/`, `docs/`, `scripts/`, `.github/` (3 workflows), `README*`, `LICENSE`, `.gitignore`, `.npmrc`, `package.json` still present (rewritten by later tasks).
 
@@ -44,6 +46,7 @@
 ```bash
 git checkout -b migration/sveltekit
 ```
+
 Expected: on `migration/sveltekit`, clean status (only untracked `.claude/`, which is never touched).
 
 - [ ] **Step 2: Relocate shared public assets (history-preserving)**
@@ -65,6 +68,7 @@ mkdir -p src/lib/games
 git mv appData-tmp/genshin src/lib/games/genshin/static
 git mv appData-tmp/sky src/lib/games/sky/static
 ```
+
 (`appData-tmp` is now empty and gone from the index automatically.)
 
 - [ ] **Step 4: Delete the old app + Tauri + stale files**
@@ -87,6 +91,7 @@ ls static
 ls test | head -5
 git ls-files src | grep -v "^src/lib/games/" | wc -l
 ```
+
 Expected: `src/lib/games/{genshin,sky}/static/` each show `favicon.ico logo192.png logo512.png manifest.json manifestData robots.txt`; `static` shows `assets locales updates.json`; the final count is `0` (nothing tracked in src outside games); `test/` intact.
 
 History check (spot): `git log --follow --oneline -- static/updates.json | head -3` shows pre-move history.
@@ -106,11 +111,13 @@ removal). Old implementation remains on migration/next16-react19."
 ### Task 2: SvelteKit scaffold (buildable for both games)
 
 **Files:**
+
 - Create: `package.json` (full rewrite), `svelte.config.js`, `vite.config.ts`, `tsconfig.json`, `src/app.html`, `src/app.d.ts`, `src/lib/games/skeleton.ts`, `src/lib/games/genshin/index.ts`, `src/lib/games/sky/index.ts`, `src/routes/+layout.ts`, `src/routes/+layout.svelte`, `src/routes/+page.svelte`
 - Modify: `.gitignore`
 - Delete: `.npmrc`, `package-lock.json` (regenerated)
 
 **Interfaces:**
+
 - Consumes: Task 1's directory contract.
 - Produces: `$game` alias resolving to `src/lib/games/<id>` from env `PUBLIC_GAME` (`'sky'` → sky, anything else → genshin); each game module exports `const game: GameSkeleton` where `GameSkeleton = {id: 'genshin'|'sky', storageId: 'Genshin'|'Sky', displayName: string}`; `npm run build` = `vite build` honoring `BUILD_PATH`/`PUBLIC_BASE_PATH`; aliases `$core`, `$cmp`, `$stores`, `$i18n` pre-declared for later phases.
 
@@ -158,68 +165,69 @@ Then delete `.npmrc` (the babel/eslint peer conflict left with the React stack �
 rm .npmrc package-lock.json
 npm install -D @sveltejs/kit@latest @sveltejs/adapter-static@latest @sveltejs/vite-plugin-svelte@latest svelte@latest vite@latest svelte-check@latest typescript@latest sass@latest vitest@latest jsdom@latest fake-indexeddb@latest eslint@latest eslint-plugin-svelte@latest typescript-eslint@latest globals@latest cross-env@latest fs-extra@latest cli-color@latest url-join@latest
 ```
+
 Expected: clean install with NO peer-dependency errors and NO `.npmrc` present (record resolved major versions in your report). If ERESOLVE appears, STOP and report — do not re-add legacy-peer-deps.
 
 - [ ] **Step 2: Write svelte.config.js**
 
 ```js
-import adapter from '@sveltejs/adapter-static'
-import {vitePreprocess} from '@sveltejs/vite-plugin-svelte'
+import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 // Build-time game selection (spec §5.5): lowercase game id via PUBLIC_GAME.
 // The unselected game's module tree is simply never imported.
-const gameId = process.env.PUBLIC_GAME === 'sky' ? 'sky' : 'genshin'
-const outDir = process.env.BUILD_PATH ?? 'build'
+const gameId = process.env.PUBLIC_GAME === 'sky' ? 'sky' : 'genshin';
+const outDir = process.env.BUILD_PATH ?? 'build';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-    preprocess: vitePreprocess(),
-    kit: {
-        adapter: adapter({
-            pages: outDir,
-            assets: outDir,
-            fallback: '404.html',
-            precompress: false,
-            strict: true,
-        }),
-        paths: {
-            // '' for production build:all; '/skyMusic' | '/genshinMusic' for *-no-root builds
-            base: process.env.PUBLIC_BASE_PATH ?? '',
-            // absolute asset URLs, mirroring the old app's output; relative refs
-            // would break bare /genshinMusic (no trailing slash) on the
-            // single-domain deploy
-            relative: false,
-        },
-        alias: {
-            $game: `./src/lib/games/${gameId}`,
-            $core: './src/lib/core',
-            $cmp: './src/lib/components',
-            $stores: './src/lib/stores',
-            $i18n: './src/lib/i18n',
-        },
+  preprocess: vitePreprocess(),
+  kit: {
+    adapter: adapter({
+      pages: outDir,
+      assets: outDir,
+      fallback: '404.html',
+      precompress: false,
+      strict: true,
+    }),
+    paths: {
+      // '' for production build:all; '/skyMusic' | '/genshinMusic' for *-no-root builds
+      base: process.env.PUBLIC_BASE_PATH ?? '',
+      // absolute asset URLs, mirroring the old app's output; relative refs
+      // would break bare /genshinMusic (no trailing slash) on the
+      // single-domain deploy
+      relative: false,
     },
-}
+    alias: {
+      $game: `./src/lib/games/${gameId}`,
+      $core: './src/lib/core',
+      $cmp: './src/lib/components',
+      $stores: './src/lib/stores',
+      $i18n: './src/lib/i18n',
+    },
+  },
+};
 
-export default config
+export default config;
 ```
 
 - [ ] **Step 3: Write vite.config.ts**
 
 ```ts
-import {sveltekit} from '@sveltejs/kit/vite'
-import {defineConfig} from 'vite'
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-    plugins: [sveltekit()],
-    // Golden-fixture suite (parked until Phase 2 repoints test/imports.ts).
-    // jsdom's default UA is desktop — REQUIRED: settings fixtures were
-    // captured with desktop defaults (see test/README.md).
-    test: {
-        environment: 'jsdom',
-        setupFiles: ['./test/setup.ts'],
-        include: ['test/**/*.test.ts'],
-    },
-})
+  plugins: [sveltekit()],
+  // Golden-fixture suite (parked until Phase 2 repoints test/imports.ts).
+  // jsdom's default UA is desktop — REQUIRED: settings fixtures were
+  // captured with desktop defaults (see test/README.md).
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
+    include: ['test/**/*.test.ts'],
+  },
+});
 ```
 
 - [ ] **Step 4: Write tsconfig.json, app.html, app.d.ts**
@@ -257,16 +265,16 @@ export default defineConfig({
 
 ```ts
 declare global {
-    namespace App {
-        // interface Error {}
-        // interface Locals {}
-        // interface PageData {}
-        // interface PageState {}
-        // interface Platform {}
-    }
+  namespace App {
+    // interface Error {}
+    // interface Locals {}
+    // interface PageData {}
+    // interface PageState {}
+    // interface Platform {}
+  }
 }
 
-export {}
+export {};
 ```
 
 - [ ] **Step 5: Write the game skeleton modules**
@@ -277,37 +285,37 @@ export {}
 // Phase-1 placeholder shape. Phase 2 replaces this with the full
 // GameDefinition from docs/superpowers/audits/2026-07-19-app-name-audit.md.
 export interface GameSkeleton {
-    /** lowercase id: asset paths, PUBLIC_GAME env, folder names */
-    id: 'genshin' | 'sky'
-    /** LEGACY-LOCKED cased id: IndexedDB name, localStorage prefixes,
-     *  appName inside serialized songs. Never derived from `id`. */
-    storageId: 'Genshin' | 'Sky'
-    displayName: string
+  /** lowercase id: asset paths, PUBLIC_GAME env, folder names */
+  id: 'genshin' | 'sky';
+  /** LEGACY-LOCKED cased id: IndexedDB name, localStorage prefixes,
+   *  appName inside serialized songs. Never derived from `id`. */
+  storageId: 'Genshin' | 'Sky';
+  displayName: string;
 }
 ```
 
 `src/lib/games/genshin/index.ts`:
 
 ```ts
-import type {GameSkeleton} from '../skeleton'
+import type { GameSkeleton } from '../skeleton';
 
 export const game: GameSkeleton = {
-    id: 'genshin',
-    storageId: 'Genshin',
-    displayName: 'Genshin Music Nightly',
-}
+  id: 'genshin',
+  storageId: 'Genshin',
+  displayName: 'Genshin Music Nightly',
+};
 ```
 
 `src/lib/games/sky/index.ts`:
 
 ```ts
-import type {GameSkeleton} from '../skeleton'
+import type { GameSkeleton } from '../skeleton';
 
 export const game: GameSkeleton = {
-    id: 'sky',
-    storageId: 'Sky',
-    displayName: 'Sky Music Nightly',
-}
+  id: 'sky',
+  storageId: 'Sky',
+  displayName: 'Sky Music Nightly',
+};
 ```
 
 - [ ] **Step 6: Write the root layout and home stub**
@@ -316,14 +324,14 @@ export const game: GameSkeleton = {
 
 ```ts
 // Spec §4.2: every route prerenders at build time; no runtime server.
-export const prerender = true
+export const prerender = true;
 ```
 
 `src/routes/+layout.svelte`:
 
 ```svelte
 <script lang="ts">
-    let {children} = $props()
+  let { children } = $props();
 </script>
 
 {@render children()}
@@ -333,16 +341,16 @@ export const prerender = true
 
 ```svelte
 <script lang="ts">
-    import {game} from '$game'
+  import { game } from '$game';
 </script>
 
 <svelte:head>
-    <title>{game.displayName}</title>
+  <title>{game.displayName}</title>
 </svelte:head>
 
 <main>
-    <h1>{game.displayName}</h1>
-    <p>SvelteKit skeleton — Phase 1. Pages arrive in Phase 4.</p>
+  <h1>{game.displayName}</h1>
+  <p>SvelteKit skeleton — Phase 1. Pages arrive in Phase 4.</p>
 </main>
 ```
 
@@ -393,6 +401,7 @@ npx cross-env PUBLIC_GAME=sky npm run build
 grep -c "Sky Music Nightly" build/index.html
 ls build | head
 ```
+
 Expected: both builds succeed; each grep ≥ 1 (prerendered title/h1 in the HTML — proves the `$game` alias switches by env); `build/` contains `index.html` and `404.html` (flat files, no `index/` directory).
 
 - [ ] **Step 9: Commit**
@@ -407,10 +416,12 @@ git commit -m "feat: SvelteKit 2 skeleton with env-selected \$game alias, static
 ### Task 3: All route stubs (27 pages + error page)
 
 **Files:**
+
 - Create: `src/lib/components/PageStub.svelte`, `src/routes/+error.svelte`
 - Create: one `+page.svelte` per route listed in Step 2's table (26 new files; home exists from Task 2)
 
 **Interfaces:**
+
 - Consumes: `$game` (`game.displayName`), `PageStub` component.
 - Produces: URL surface identical to the current app — later phases replace stub bodies in place, never move routes.
 
@@ -420,18 +431,18 @@ git commit -m "feat: SvelteKit 2 skeleton with env-selected \$game alias, static
 
 ```svelte
 <script lang="ts">
-    import {game} from '$game'
+  import { game } from '$game';
 
-    let {title}: {title: string} = $props()
+  let { title }: { title: string } = $props();
 </script>
 
 <svelte:head>
-    <title>{title} - {game.displayName}</title>
+  <title>{title} - {game.displayName}</title>
 </svelte:head>
 
 <main>
-    <h1>{title}</h1>
-    <p>Stub — ported in Phase 4.</p>
+  <h1>{title}</h1>
+  <p>Stub — ported in Phase 4.</p>
 </main>
 ```
 
@@ -439,12 +450,12 @@ git commit -m "feat: SvelteKit 2 skeleton with env-selected \$game alias, static
 
 ```svelte
 <script lang="ts">
-    import {page} from '$app/state'
+  import { page } from '$app/state';
 </script>
 
 <main>
-    <h1>{page.status}</h1>
-    <p>{page.error?.message ?? 'Something went wrong'}</p>
+  <h1>{page.status}</h1>
+  <p>{page.error?.message ?? 'Something went wrong'}</p>
 </main>
 ```
 
@@ -454,40 +465,40 @@ Each file below is EXACTLY this content, with its row's title substituted:
 
 ```svelte
 <script lang="ts">
-    import PageStub from '$cmp/PageStub.svelte'
+  import PageStub from '$cmp/PageStub.svelte';
 </script>
 
 <PageStub title="Player" />
 ```
 
-| Route file | title |
-|---|---|
-| `src/routes/player/+page.svelte` | Player |
-| `src/routes/composer/+page.svelte` | Composer |
-| `src/routes/vsrg-composer/+page.svelte` | Vsrg Composer |
-| `src/routes/vsrg-player/+page.svelte` | Vsrg Player |
-| `src/routes/zen-keyboard/+page.svelte` | Zen Keyboard |
-| `src/routes/sheet-visualizer/+page.svelte` | Sheet Visualizer |
-| `src/routes/theme/+page.svelte` | Theme |
-| `src/routes/keybinds/+page.svelte` | Keybinds |
-| `src/routes/backup/+page.svelte` | Backup |
-| `src/routes/transfer/+page.svelte` | Transfer |
-| `src/routes/changelog/+page.svelte` | Changelog |
-| `src/routes/partners/+page.svelte` | Partners |
-| `src/routes/donate/+page.svelte` | Donate |
-| `src/routes/privacy/+page.svelte` | Privacy |
-| `src/routes/delete-cache/+page.svelte` | Delete Cache |
-| `src/routes/error/+page.svelte` | Error |
-| `src/routes/uma-mode/+page.svelte` | Uma Mode |
-| `src/routes/blog/+page.svelte` | Blog |
-| `src/routes/blog/posts/add-to-home-screen/+page.svelte` | Add To Home Screen |
-| `src/routes/blog/posts/connect-midi-device/+page.svelte` | Connect Midi Device |
-| `src/routes/blog/posts/easyplay-1s/+page.svelte` | Easyplay 1s |
-| `src/routes/blog/posts/how-to-use-composer/+page.svelte` | How To Use Composer |
-| `src/routes/blog/posts/how-to-use-player/+page.svelte` | How To Use Player |
+| Route file                                                    | title                    |
+| ------------------------------------------------------------- | ------------------------ |
+| `src/routes/player/+page.svelte`                              | Player                   |
+| `src/routes/composer/+page.svelte`                            | Composer                 |
+| `src/routes/vsrg-composer/+page.svelte`                       | Vsrg Composer            |
+| `src/routes/vsrg-player/+page.svelte`                         | Vsrg Player              |
+| `src/routes/zen-keyboard/+page.svelte`                        | Zen Keyboard             |
+| `src/routes/sheet-visualizer/+page.svelte`                    | Sheet Visualizer         |
+| `src/routes/theme/+page.svelte`                               | Theme                    |
+| `src/routes/keybinds/+page.svelte`                            | Keybinds                 |
+| `src/routes/backup/+page.svelte`                              | Backup                   |
+| `src/routes/transfer/+page.svelte`                            | Transfer                 |
+| `src/routes/changelog/+page.svelte`                           | Changelog                |
+| `src/routes/partners/+page.svelte`                            | Partners                 |
+| `src/routes/donate/+page.svelte`                              | Donate                   |
+| `src/routes/privacy/+page.svelte`                             | Privacy                  |
+| `src/routes/delete-cache/+page.svelte`                        | Delete Cache             |
+| `src/routes/error/+page.svelte`                               | Error                    |
+| `src/routes/uma-mode/+page.svelte`                            | Uma Mode                 |
+| `src/routes/blog/+page.svelte`                                | Blog                     |
+| `src/routes/blog/posts/add-to-home-screen/+page.svelte`       | Add To Home Screen       |
+| `src/routes/blog/posts/connect-midi-device/+page.svelte`      | Connect Midi Device      |
+| `src/routes/blog/posts/easyplay-1s/+page.svelte`              | Easyplay 1s              |
+| `src/routes/blog/posts/how-to-use-composer/+page.svelte`      | How To Use Composer      |
+| `src/routes/blog/posts/how-to-use-player/+page.svelte`        | How To Use Player        |
 | `src/routes/blog/posts/how-to-use-vsrg-composer/+page.svelte` | How To Use Vsrg Composer |
-| `src/routes/blog/posts/midi-transpose/+page.svelte` | Midi Transpose |
-| `src/routes/blog/posts/video-audio-transpose/+page.svelte` | Video Audio Transpose |
+| `src/routes/blog/posts/midi-transpose/+page.svelte`           | Midi Transpose           |
+| `src/routes/blog/posts/video-audio-transpose/+page.svelte`    | Video Audio Transpose    |
 
 (The 8 blog slugs are verbatim from the current `src/app/blog/posts/` on the parent branch — also listed in `docs/superpowers/audits/2026-07-19-storage-inventory.md`.)
 
@@ -507,6 +518,7 @@ if (missing.length || missingPosts.length) { console.error('MISSING', missing, m
 console.log('ROUTE SURFACE OK:', got.length, 'root html files,', posts.filter(p=>p.endsWith('.html')).length, 'blog posts');
 "
 ```
+
 Expected: `ROUTE SURFACE OK: 20 root html files, 8 blog posts`. (Flat `.html` naming throughout — if you see `player/index.html`, `trailingSlash` got changed somewhere: stop and fix that instead.)
 
 - [ ] **Step 4: Commit**
@@ -521,20 +533,22 @@ git commit -m "feat: stub all 27 routes with prerendered flat-html output parity
 ### Task 4: Per-game build & dev scripts
 
 **Files:**
+
 - Create: `scripts/gameStatic.js` (shared helper)
 - Rewrite: `scripts/buildApp.js`, `scripts/startApp.js`
 - Delete: `scripts/buildAndPrepareTauriRelease.js`, `scripts/checkAppRouterMigration.mjs`
 
 **Interfaces:**
+
 - Consumes: game payloads at `src/lib/games/<id>/static/`; `npm run build` (Task 2); env contract `PUBLIC_GAME`/`PUBLIC_BASE_PATH`/`BUILD_PATH`/`PUBLIC_SW_VERSION`.
 - Produces: the exact npm-script surface named in Global Constraints, producing `build/{skyMusic,genshinMusic}` (or root `build/`); `prepareGameStatic(id: string, basePath: string): Promise<void>` from `scripts/gameStatic.js` (copies the game payload into `static/` and rewrites the manifest for the base path).
 
 - [ ] **Step 0: Write the shared helper scripts/gameStatic.js**
 
 ```js
-import fse from 'fs-extra'
-import urlJoin from 'url-join'
-import clc from 'cli-color'
+import fse from 'fs-extra';
+import urlJoin from 'url-join';
+import clc from 'cli-color';
 
 /**
  * Copy src/lib/games/<id>/static into static/ (gitignored overlay paths)
@@ -542,25 +556,33 @@ import clc from 'cli-color'
  * Mirrors the old public/-copy + updateManifest behavior byte-for-byte.
  */
 export async function prepareGameStatic(id, basePath) {
-    await fse.copy(`./src/lib/games/${id}/static`, './static', {overwrite: true})
-    try {
-        const manifest = await fse.readJson('./static/manifest.json')
-        if (manifest.icons) manifest.icons = manifest.icons.map(icon => ({...icon, src: urlJoin(basePath, icon.src)}))
-        if (manifest.start_url) manifest.start_url = basePath || '.'
-        if (manifest.screenshots) manifest.screenshots = manifest.screenshots.map(screenshot => ({...screenshot, src: urlJoin(basePath, screenshot.src)}))
-        if (manifest.file_handlers) {
-            manifest.file_handlers = manifest.file_handlers.map(handler => {
-                const icons = handler.icons.map(icon => ({...icon, src: urlJoin(basePath, icon.src)}))
-                const action = basePath || '.'
-                return {...handler, icons, action}
-            })
-        }
-        await fse.writeFile('./static/manifest.json', JSON.stringify(manifest, null, 2))
-    } catch (e) {
-        console.log(clc.red('[Error]: There was an error updating the manifest'))
-        console.error(e)
-        process.exit(1)
+  await fse.copy(`./src/lib/games/${id}/static`, './static', { overwrite: true });
+  try {
+    const manifest = await fse.readJson('./static/manifest.json');
+    if (manifest.icons)
+      manifest.icons = manifest.icons.map((icon) => ({
+        ...icon,
+        src: urlJoin(basePath, icon.src),
+      }));
+    if (manifest.start_url) manifest.start_url = basePath || '.';
+    if (manifest.screenshots)
+      manifest.screenshots = manifest.screenshots.map((screenshot) => ({
+        ...screenshot,
+        src: urlJoin(basePath, screenshot.src),
+      }));
+    if (manifest.file_handlers) {
+      manifest.file_handlers = manifest.file_handlers.map((handler) => {
+        const icons = handler.icons.map((icon) => ({ ...icon, src: urlJoin(basePath, icon.src) }));
+        const action = basePath || '.';
+        return { ...handler, icons, action };
+      });
     }
+    await fse.writeFile('./static/manifest.json', JSON.stringify(manifest, null, 2));
+  } catch (e) {
+    console.log(clc.red('[Error]: There was an error updating the manifest'));
+    console.error(e);
+    process.exit(1);
+  }
 }
 ```
 
@@ -569,55 +591,55 @@ export async function prepareGameStatic(id, basePath) {
 - [ ] **Step 1: Rewrite scripts/buildApp.js**
 
 ```js
-import clc from 'cli-color'
-import {execSync} from 'child_process'
-import {prepareGameStatic} from './gameStatic.js'
+import clc from 'cli-color';
+import { execSync } from 'child_process';
+import { prepareGameStatic } from './gameStatic.js';
 
 const GAMES = {
-    Sky: {id: 'sky', outDir: 'skyMusic'},
-    Genshin: {id: 'genshin', outDir: 'genshinMusic'},
-}
-const chosenApp = process.argv[2]
-const date = new Date()
-const SW_VERSION = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}`
+  Sky: { id: 'sky', outDir: 'skyMusic' },
+  Genshin: { id: 'genshin', outDir: 'genshinMusic' },
+};
+const chosenApp = process.argv[2];
+const date = new Date();
+const SW_VERSION = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}`;
 
 if (!['Genshin', 'Sky', 'All'].includes(chosenApp)) {
-    console.error('Please specify an app name [Sky / Genshin / All]')
-    process.exit(1)
+  console.error('Please specify an app name [Sky / Genshin / All]');
+  process.exit(1);
 }
 
 async function execute() {
-    const toBuild = chosenApp === 'All' ? ['Sky', 'Genshin'] : [chosenApp]
-    try {
-        for (const app of toBuild) {
-            const {id, outDir} = GAMES[app]
-            // Historical quirk, preserved: NO third argv → base '' (production
-            // build:all); ANY third argv (scripts pass "false") → subpath base.
-            const basePath = Boolean(process.argv[3]) ? `/${outDir}` : ''
-            console.log(clc.bold.yellow(`Building ${app}...`))
-            await prepareGameStatic(id, basePath)
-            execSync('npm run build', {
-                stdio: 'inherit',
-                env: {
-                    ...process.env,
-                    PUBLIC_GAME: id,
-                    PUBLIC_SW_VERSION: SW_VERSION,
-                    PUBLIC_BASE_PATH: basePath,
-                    BUILD_PATH: `./build/${outDir}`,
-                },
-            })
-            console.log(clc.green(`${app} build complete \n`))
-        }
-        console.log(clc.bold.green('Build complete \n'))
-        process.exit(0)
-    } catch (e) {
-        console.log(clc.red('[Error]: There was an error building'))
-        console.error(e)
-        process.exit(1)
+  const toBuild = chosenApp === 'All' ? ['Sky', 'Genshin'] : [chosenApp];
+  try {
+    for (const app of toBuild) {
+      const { id, outDir } = GAMES[app];
+      // Historical quirk, preserved: NO third argv → base '' (production
+      // build:all); ANY third argv (scripts pass "false") → subpath base.
+      const basePath = Boolean(process.argv[3]) ? `/${outDir}` : '';
+      console.log(clc.bold.yellow(`Building ${app}...`));
+      await prepareGameStatic(id, basePath);
+      execSync('npm run build', {
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          PUBLIC_GAME: id,
+          PUBLIC_SW_VERSION: SW_VERSION,
+          PUBLIC_BASE_PATH: basePath,
+          BUILD_PATH: `./build/${outDir}`,
+        },
+      });
+      console.log(clc.green(`${app} build complete \n`));
     }
+    console.log(clc.bold.green('Build complete \n'));
+    process.exit(0);
+  } catch (e) {
+    console.log(clc.red('[Error]: There was an error building'));
+    console.error(e);
+    process.exit(1);
+  }
 }
 
-execute()
+execute();
 ```
 
 (Cross-platform note: the old script had Windows/Linux `set X=…&&` branches; passing `env:` to `execSync` replaces both — keep it that way.)
@@ -625,32 +647,32 @@ execute()
 - [ ] **Step 2: Rewrite scripts/startApp.js**
 
 ```js
-import clc from 'cli-color'
-import {execSync} from 'child_process'
-import {prepareGameStatic} from './gameStatic.js'
+import clc from 'cli-color';
+import { execSync } from 'child_process';
+import { prepareGameStatic } from './gameStatic.js';
 
 const GAMES = {
-    Sky: {id: 'sky'},
-    Genshin: {id: 'genshin'},
-}
-const chosenApp = process.argv[2]
+  Sky: { id: 'sky' },
+  Genshin: { id: 'genshin' },
+};
+const chosenApp = process.argv[2];
 
 if (!['Genshin', 'Sky'].includes(chosenApp)) {
-    console.error('Please specify an app name [Sky/Genshin]')
-    process.exit(1)
+  console.error('Please specify an app name [Sky/Genshin]');
+  process.exit(1);
 }
 
 async function execute() {
-    const {id} = GAMES[chosenApp]
-    await prepareGameStatic(id, '')
-    console.log(clc.yellow.bold(`Starting ${chosenApp} dev server`))
-    execSync('npm run dev', {
-        stdio: 'inherit',
-        env: {...process.env, PUBLIC_GAME: id},
-    })
+  const { id } = GAMES[chosenApp];
+  await prepareGameStatic(id, '');
+  console.log(clc.yellow.bold(`Starting ${chosenApp} dev server`));
+  execSync('npm run dev', {
+    stdio: 'inherit',
+    env: { ...process.env, PUBLIC_GAME: id },
+  });
 }
 
-execute()
+execute();
 ```
 
 - [ ] **Step 3: Delete the obsolete scripts**
@@ -669,6 +691,7 @@ node -e "const m=require('fs').readFileSync('build/genshinMusic/manifest.json','
 npm run build:all-no-root
 grep -c "/genshinMusic/_app" build/genshinMusic/index.html
 ```
+
 Expected: `build:all` → both dirs exist with flat `player.html`, Sky title in Sky build, manifest `start_url: .` (empty base). `build:all-no-root` → asset URLs prefixed `/genshinMusic` (base path applied). Note `build:all` overwrites the per-game dirs from the previous run — expected.
 
 Dev smoke:
@@ -678,6 +701,7 @@ npm run dev:genshin &   # or run_in_background
 sleep 6 && curl -s http://localhost:5173 | grep -c "Genshin Music Nightly"
 kill %1
 ```
+
 Expected: `1` (title served). (On Windows, kill the background process via the harness's background-task stop instead of `kill %1`.)
 
 - [ ] **Step 5: Commit**
@@ -692,41 +716,43 @@ git commit -m "feat: per-game build/dev scripts for SvelteKit (env contract pres
 ### Task 5: Lint, check, and parked-test wiring
 
 **Files:**
+
 - Create: `eslint.config.js`
 - Modify: `test/README.md` (one paragraph — the ONLY permitted test/ edit)
 
 **Interfaces:**
+
 - Consumes: toolchain devDeps from Task 2.
 - Produces: `npm run check` and `npm run lint` green; `npm test` in its documented parked state.
 
 - [ ] **Step 1: Write eslint.config.js (flat config)**
 
 ```js
-import js from '@eslint/js'
-import ts from 'typescript-eslint'
-import svelte from 'eslint-plugin-svelte'
-import globals from 'globals'
+import js from '@eslint/js';
+import ts from 'typescript-eslint';
+import svelte from 'eslint-plugin-svelte';
+import globals from 'globals';
 
 export default ts.config(
-    js.configs.recommended,
-    ...ts.configs.recommended,
-    ...svelte.configs['flat/recommended'],
-    {
-        languageOptions: {
-            globals: {...globals.browser, ...globals.node},
-        },
+  js.configs.recommended,
+  ...ts.configs.recommended,
+  ...svelte.configs['flat/recommended'],
+  {
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
     },
-    {
-        files: ['**/*.svelte'],
-        languageOptions: {
-            parserOptions: {parser: ts.parser},
-        },
+  },
+  {
+    files: ['**/*.svelte'],
+    languageOptions: {
+      parserOptions: { parser: ts.parser },
     },
-    {
-        // Parked until Phase 2 repoints the barrel; fixtures are data.
-        ignores: ['build/', '.svelte-kit/', 'static/', 'test/', 'node_modules/'],
-    }
-)
+  },
+  {
+    // Parked until Phase 2 repoints the barrel; fixtures are data.
+    ignores: ['build/', '.svelte-kit/', 'static/', 'test/', 'node_modules/'],
+  }
+);
 ```
 
 (If the installed `eslint-plugin-svelte` major exposes `svelte.configs.recommended` instead of `['flat/recommended']`, use the installed package's documented flat-config export — check its README in node_modules; adjust only that line.)
@@ -737,6 +763,7 @@ export default ts.config(
 npm run check
 npm run lint
 ```
+
 Expected: `svelte-check` → 0 errors, 0 warnings; eslint → no output (clean). If svelte-check reports errors inside `test/` (it should not — `test/` is outside the generated include set), add `"exclude": ["test"]` next to `"extends"` in `tsconfig.json` and re-run.
 
 - [ ] **Step 3: Document the parked suite**
@@ -760,29 +787,33 @@ their legacy cased names `Genshin`/`Sky`; the barrel will export the game's
 ```bash
 npm run test:genshin; echo "exit: $?"
 ```
+
 Expected: vitest fails during COLLECTION with unresolved imports (e.g. `Failed to resolve import "$lib/Songs/Layer"` or `$config`) — NOT with a config/plugin crash. Exit code nonzero. If the failure is a vite/sveltekit plugin crash instead of import resolution, replace the `test` block approach: create `vitest.config.ts` WITHOUT the sveltekit plugin, mirroring the aliases manually:
 
 ```ts
-import {defineConfig} from 'vitest/config'
-import path from 'node:path'
+import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 
 export default defineConfig({
-    test: {
-        environment: 'jsdom',
-        setupFiles: ['./test/setup.ts'],
-        include: ['test/**/*.test.ts'],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
+    include: ['test/**/*.test.ts'],
+  },
+  resolve: {
+    alias: {
+      $game: path.resolve(
+        `./src/lib/games/${process.env.PUBLIC_GAME === 'sky' ? 'sky' : 'genshin'}`
+      ),
+      $core: path.resolve('./src/lib/core'),
+      $cmp: path.resolve('./src/lib/components'),
+      $stores: path.resolve('./src/lib/stores'),
+      $i18n: path.resolve('./src/lib/i18n'),
     },
-    resolve: {
-        alias: {
-            $game: path.resolve(`./src/lib/games/${process.env.PUBLIC_GAME === 'sky' ? 'sky' : 'genshin'}`),
-            $core: path.resolve('./src/lib/core'),
-            $cmp: path.resolve('./src/lib/components'),
-            $stores: path.resolve('./src/lib/stores'),
-            $i18n: path.resolve('./src/lib/i18n'),
-        },
-    },
-})
+  },
+});
 ```
+
 (and remove the `test` block from `vite.config.ts`). Record which variant you landed in the report.
 
 - [ ] **Step 5: Commit**
@@ -797,9 +828,11 @@ git commit -m "chore: eslint flat config, svelte-check green, golden suite parke
 ### Task 6: CI workflows
 
 **Files:**
+
 - Modify: `.github/workflows/Deploy.yml`, `.github/workflows/deployBeta.yml`, `.github/workflows/deployBetaSingleDomain.yml`
 
 **Interfaces:**
+
 - Consumes: npm scripts from Task 4 (names unchanged, so build steps keep working by name).
 - Produces: CI that builds the SvelteKit app and publishes to the SAME Cloudflare Pages projects and directories as today.
 
@@ -821,6 +854,7 @@ grep -rn "npm ci\|npm i" .github/workflows
 grep -rn "build:all" .github/workflows
 ls .github/workflows
 ```
+
 Expected: every `node-version: 22`; zero `NEXT_PUBLIC` hits; `npm ci` in all three; `build:all`/`build:all-no-root` intact; exactly 3 workflow files (BuildTauri.yml gone since Task 1).
 
 - [ ] **Step 3: Commit**
@@ -845,6 +879,7 @@ node -e "const p=require('./package.json');const all={...p.dependencies,...p.dev
 git ls-files | grep -iE "tauri|next\.config|\.eslintrc" ; echo "expect no output above"
 git grep -l "NEXT_PUBLIC" -- ':!docs' ':!test' ; echo "expect no output above (docs/test keep historical references)"
 ```
+
 Expected: `DEPS CLEAN`; no tracked tauri/next files; no `NEXT_PUBLIC` outside docs/ and the parked test/ barrel.
 
 - [ ] **Step 2: Full build-matrix run**
@@ -855,6 +890,7 @@ npm run build:all-no-root
 npm run check
 npm run lint
 ```
+
 Expected: all green. Confirm once more: `ls build/genshinMusic | grep -c "\.html$"` ≥ 20 (flat files).
 
 - [ ] **Step 3: Survivor spot-checks**
@@ -865,6 +901,7 @@ ls static/locales
 node -e "console.log(Object.keys(require('./static/updates.json')))"
 git log --oneline -1 -- test/fixtures
 ```
+
 Expected: audio folders (`genshin`, `sky`, `MetronomeSFX`, …), 9 locale JSONs, updates.json parses, and the fixtures' last commit is still the Phase-0 one (untouched this phase).
 
 - [ ] **Step 4: Commit any verification fixes; final ledger note**
