@@ -179,8 +179,9 @@ export class ComposerRenderer {
   private cache: ComposerCache | null = null;
   private themeDispose: (() => void) | null = null;
 
-  // Persistent scene objects (created once per renderer instance, children rebuilt on every
-  // draw() - see that method for why a full rebuild is used instead of an incremental diff).
+  // Persistent scene objects (created once per renderer instance, children rebuilt and explicitly
+  // repainted by draw() - see that method for why a full rebuild is used instead of an incremental
+  // diff).
   private readonly notesColumnsContainer = new Container();
   private readonly timelineContentContainer = new Container();
   private readonly viewportGraphics = new Graphics();
@@ -259,6 +260,7 @@ export class ComposerRenderer {
       height: this.height,
       background: this.stageBackgroundColor,
       autoDensity: true,
+      autoStart: false,
       antialias: true,
       resolution: window.devicePixelRatio ?? 1.4,
     });
@@ -281,6 +283,7 @@ export class ComposerRenderer {
       height: this.timelineHeight,
       backgroundAlpha: 0,
       autoDensity: true,
+      autoStart: false,
       antialias: true,
       resolution: window.devicePixelRatio ?? 1.4,
     });
@@ -335,7 +338,7 @@ export class ComposerRenderer {
         isMobile() ? 25 : 30
       );
       this.notifyGeometry();
-      // draw() must be called explicitly - nothing else re-renders after the cache regenerates.
+      // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
       this.draw();
       // QUIRK: destroying the previous cache is delayed 500ms after the new one is created -
       // destroying it immediately causes visible texture glitches (found empirically; root
@@ -540,9 +543,10 @@ export class ComposerRenderer {
     this.draw();
   }
 
-  // Rebuilds all visible columns from scratch on every call rather than diffing - the visible
-  // window is at most numberOfColumnsPerCanvas/2+2 columns per side, so a full rebuild is cheap
-  // and avoids stale-sprite bookkeeping after a resize/theme/cache change or a plain state update.
+  // Rebuilds and explicitly repaints both static scenes on every call rather than diffing - the
+  // visible window is at most numberOfColumnsPerCanvas/2+2 columns per side, so a full rebuild is
+  // cheap and avoids stale-sprite bookkeeping after a resize/theme/cache change or a plain state
+  // update.
   private draw(): void {
     if (!this.notesApp || !this.timelineApp) return;
     const cacheData = this.cache?.cache;
@@ -559,6 +563,8 @@ export class ComposerRenderer {
 
     this.drawNotesStage(cacheData, sizes, xPosition, counterLimit);
     this.drawTimelineStage(cacheData, relativeColumnWidth, timelineWidth, timelinePosition);
+    this.notesApp.render();
+    this.timelineApp.render();
   }
 
   private drawNotesStage(
