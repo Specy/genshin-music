@@ -167,14 +167,19 @@ describe('ComposerRenderer rendering', () => {
     renderer.update(initialState);
 
     expect(pixi.applications).toHaveLength(2);
+    const initialRenderCounts = pixi.applications.map(
+      (application) => application.render.mock.calls.length
+    );
+
+    vi.advanceTimersByTime(32);
+    expect(pixi.applications.map((application) => application.render.mock.calls.length)).toEqual(
+      initialRenderCounts
+    );
+    expect(initialRenderCounts).toEqual([1, 1]);
     expect(pixi.applications.map((application) => application.initOptions?.autoStart)).toEqual([
       false,
       false,
     ]);
-    expect(pixi.applications.map((application) => application.render.mock.calls.length)).toEqual([1, 1]);
-
-    vi.advanceTimersByTime(32);
-    expect(pixi.applications.map((application) => application.render.mock.calls.length)).toEqual([1, 1]);
 
     renderer.update({ ...initialState, selected: 1 });
     expect(pixi.applications.map((application) => application.render.mock.calls.length)).toEqual([2, 2]);
