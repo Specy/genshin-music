@@ -21,7 +21,7 @@ jobs:
           node-version: 24.18.0
           cache: 'npm'
       - name: Build
-        run: npm ci && npm run build:all
+        run: npm install && npm run build:all
         env:
           CI: false
       - name: Publish Genshin Music Nightly
