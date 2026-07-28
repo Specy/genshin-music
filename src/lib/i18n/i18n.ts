@@ -39,9 +39,11 @@ export const AVAILABLE_LANGUAGES = [
 ] as const;
 export type AppLanguage = (typeof AVAILABLE_LANGUAGES)[number];
 
+const IS_TEST = import.meta.env.MODE === 'test' || Boolean(import.meta.env.VITEST);
+
 // No .use() plugins needed - i18next's init() works standalone for core-only usage.
 i18next.init({
-  debug: IS_DEV,
+  debug: IS_DEV && !IS_TEST,
   pluralSeparator: '+',
   supportedLngs: AVAILABLE_LANGUAGES,
   fallbackLng: 'en',
