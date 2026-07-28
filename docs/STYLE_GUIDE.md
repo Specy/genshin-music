@@ -11,17 +11,17 @@ until then they are review-only, so a clean lint run does not mean a file compli
 ## Readability
 
 - **No one-off helper functions.** If a function is called exactly once, from one place, inline it — unless extraction genuinely clarifies (a named guard clause, a recursive step, a pure helper worth unit-testing). A reader should be able to follow a file top to bottom without chasing indirection.
-- **Comments explain *why*, never *what was ported*.** Old file paths, prop-rename tables, "React did X so we do Y" — that belongs in git history, not in code every future reader has to read.
+- **Comments explain _why_, never _what was ported_.** Old file paths, prop-rename tables, "React did X so we do Y" — that belongs in git history, not in code every future reader has to read.
 - **Long design rationale lives in `docs/`, not in a file header.** Leave a one-line pointer from the file to the doc. A header is not the place for an essay; it pushes the code a reader came for below the fold.
 
 ## Comment rules
 
-*Not style preferences. Every rule below is the exact wording pattern that let a real defect survive multiple review rounds on this branch — treat them as hard rules.*
+_Not style preferences. Every rule below is the exact wording pattern that let a real defect survive multiple review rounds on this branch — treat them as hard rules._
 
 - **Never write another file's line numbers into a comment.** Cite by stable content instead: a quoted fragment, a selector, a symbol name. Line numbers are invalidated by any edit above them — including the author's own edit in the same commit.
-  - Bad: `// see the guard at parser.ts:42`  Good: `// see the guard in parser.ts`
+  - Bad: `// see the guard at parser.ts:42` Good: `// see the guard in parser.ts`
 - **Never write repo-wide quantifiers** — "exactly once in the whole tree", "the only place", "all 12 sites". They're unmaintainable by construction: the next edit anywhere in the tree makes them false, and nothing flags it. State the mechanism instead, because mechanisms stay true and counts don't.
-  - Bad: `// the only place that parses this format`  Good: `// single source for parsing this format; every caller imports it`
+  - Bad: `// the only place that parses this format` Good: `// single source for parsing this format; every caller imports it`
 - **Re-derive any factual claim in the session you write it.** Build it, grep it, paste the output. Never restate an earlier draft's reasoning as though it were freshly checked.
 - **Run the grep the sentence licenses, not the grep you meant.** If the two disagree, the sentence is wrong — rewrite the sentence, don't rationalize the mismatch.
 - **After rewriting a claim, re-verify it under the new wording, before committing.** A fix must verify its own output, not just the input it started from.
@@ -36,19 +36,19 @@ until then they are review-only, so a clean lint run does not mean a file compli
 - **Don't cast — parse.** A string from a `<select>`, `localStorage`, or a URL is not a union member until it's been checked. Validate once at the boundary and return the union (or `undefined`); nothing downstream needs to assert again. This covers the non-null assertion `!` too: `x!` is a cast that claims a value exists without checking, and fails the same way when the claim is wrong.
   ```ts
   // Bad — asserts, doesn't check; wrong at runtime if the value has drifted
-  const pitch = value as Pitch
+  const pitch = value as Pitch;
 
   // Good — checked once at the boundary, and cast-free: because PITCHES is
   // typed readonly Pitch[], `find` already returns `Pitch | undefined`
   function parsePitch(value: string): Pitch | undefined {
-    return PITCHES.find((pitch) => pitch === value)
+    return PITCHES.find((pitch) => pitch === value);
   }
   ```
   Reach for a type predicate (`value is Pitch`) only when the check genuinely cannot be expressed as a lookup — a predicate is still an assertion the compiler takes on trust.
 - **Derive unions from data, so the table and the type cannot drift apart:**
   ```ts
-  const PITCHES = ['C', 'Db', 'D'] as const satisfies readonly string[]
-  type Pitch = (typeof PITCHES)[number]
+  const PITCHES = ['C', 'Db', 'D'] as const satisfies readonly string[];
+  type Pitch = (typeof PITCHES)[number];
   ```
 - **Use `satisfies` for data tables** (config objects, settings definitions, game data) so excess-property checks still apply without widening the literal types away. **Use `unknown` + narrowing at genuine boundaries** (JSON, dynamic imports) — it forces a check before the value can be used for anything, where `any` would not.
 
@@ -58,11 +58,13 @@ until then they are review-only, so a clean lint run does not mean a file compli
 - **`$derived` over `$effect` for anything computed. Never assign state inside an effect.**
   ```ts
   // Bad — a second, effect-driven source of truth for something computable
-  let doubled = $state(0)
-  $effect(() => { doubled = count * 2 })
+  let doubled = $state(0);
+  $effect(() => {
+    doubled = count * 2;
+  });
 
   // Good
-  let doubled = $derived(count * 2)
+  let doubled = $derived(count * 2);
   ```
   State written inside an effect can run after whatever it depends on has already changed elsewhere — a timing bug `$derived` structurally can't have.
 - **`<svelte:window>` / `<svelte:document>`, or `on()` from `svelte/events`, over manual `addEventListener`.** A manual listener needs a manual, matching removal on every exit path; these clean up automatically when the component is destroyed, so there's no separate step to forget.
@@ -85,7 +87,7 @@ until then they are review-only, so a clean lint run does not mean a file compli
 - **The class prop is `class`, typed `ClassValue` — not `className`.** `className` is a React-ism the port carried over; `class` is what Svelte and HTML actually call it. `class` is a reserved word, so destructuring still needs a local alias — that's a JS syntax limit, not license to rename the prop itself:
   ```ts
   // ClassValue comes from 'svelte/elements'
-  let { class: cls }: { class?: ClassValue } = $props()
+  let { class: cls }: { class?: ClassValue } = $props();
   ```
 - **Props derived from other props use `$derived`, never a one-time computation.** A one-time computation is correct until the source prop changes, then silently stale.
 - **Snippets over wrapper elements** where markup is passed through. A snippet hands over markup without forcing an extra DOM node the parent never asked for.

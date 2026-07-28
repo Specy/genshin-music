@@ -69,17 +69,17 @@ Each route receives a small Server Component `page.tsx` that imports the corresp
 
 Global styles also move under the private client-page tree and are imported by `app/layout.tsx`. No `src/pages` directory remains after the migration. This private boundary exists for routing correctness and to keep the client implementation reusable by the root and `/player` route wrappers; it is not a new application layer.
 
-| Current URL | App Router target |
-| --- | --- |
-| `/` and `/player` | one shared Player Client Component, rendered by `app/page.tsx` and `app/player/page.tsx` |
-| `/composer` | `app/composer/page.tsx` plus Composer Client Component and Composer background wrapper |
-| `/vsrg-composer` | `app/vsrg-composer/page.tsx` plus VSRG Composer Client Component and Composer background wrapper |
-| `/vsrg-player` | `app/vsrg-player/page.tsx` plus VSRG Player Client Component and Main background wrapper |
-| `/zen-keyboard` | `app/zen-keyboard/page.tsx` plus Main background wrapper |
-| ordinary static pages | matching `app/<route>/page.tsx` plus Client Component |
-| `/blog` and its post pages | matching nested `app/blog/.../page.tsx` files |
-| former `pages/404` UI and unmatched paths | `app/not-found.tsx` |
-| `/error` | preserved as normal `app/error/page.tsx` route |
+| Current URL                               | App Router target                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `/` and `/player`                         | one shared Player Client Component, rendered by `app/page.tsx` and `app/player/page.tsx`         |
+| `/composer`                               | `app/composer/page.tsx` plus Composer Client Component and Composer background wrapper           |
+| `/vsrg-composer`                          | `app/vsrg-composer/page.tsx` plus VSRG Composer Client Component and Composer background wrapper |
+| `/vsrg-player`                            | `app/vsrg-player/page.tsx` plus VSRG Player Client Component and Main background wrapper         |
+| `/zen-keyboard`                           | `app/zen-keyboard/page.tsx` plus Main background wrapper                                         |
+| ordinary static pages                     | matching `app/<route>/page.tsx` plus Client Component                                            |
+| `/blog` and its post pages                | matching nested `app/blog/.../page.tsx` files                                                    |
+| former `pages/404` UI and unmatched paths | `app/not-found.tsx`                                                                              |
+| `/error`                                  | preserved as normal `app/error/page.tsx` route                                                   |
 
 The former `getLayout` properties are removed. Their `AppBackground` wrapping moves into a focused route layout or route wrapper, preserving the existing `Main` versus `Composer` background selection without adding a new visual hierarchy.
 

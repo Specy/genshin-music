@@ -1,10 +1,10 @@
-import type {Component} from 'svelte'
-import SettingsSelect from './SettingsSelect.svelte'
-import SettingsInput from './SettingsInput.svelte'
-import SettingsSlider from './SettingsSlider.svelte'
-import InstrumentInput from './InstrumentInput.svelte'
-import Switch from '../inputs/Switch.svelte'
-import type {SettingsPropriety} from '$core/types/SettingsPropriety'
+import type { Component } from 'svelte';
+import SettingsSelect from './SettingsSelect.svelte';
+import SettingsInput from './SettingsInput.svelte';
+import SettingsSlider from './SettingsSlider.svelte';
+import InstrumentInput from './InstrumentInput.svelte';
+import Switch from '../inputs/Switch.svelte';
+import type { SettingsPropriety } from '$core/types/SettingsPropriety';
 
 // A component-per-type lookup table, kept for testability: this test suite
 // has no component-rendering harness, so test/settingsDispatch.test.ts can
@@ -21,10 +21,10 @@ import type {SettingsPropriety} from '$core/types/SettingsPropriety'
 // added without any component wired here.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const settingsComponentByType: Record<SettingsPropriety['type'], Component<any>> = {
-    select: SettingsSelect,
-    number: SettingsInput,
-    text: SettingsInput,
-    checkbox: Switch,
-    slider: SettingsSlider,
-    instrument: InstrumentInput,
-}
+  select: SettingsSelect,
+  number: SettingsInput,
+  text: SettingsInput,
+  checkbox: Switch,
+  slider: SettingsSlider,
+  instrument: InstrumentInput,
+};

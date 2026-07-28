@@ -19,7 +19,7 @@ Replace the unmaintained `next-pwa` (incompatible with Next 16) with a maintaine
 
 The dependency chain forces an unavoidable "broken window": the moment React 19 is installed, `@pixi/react` v7 (peer-deps React ≤18) stops compiling, and it can only be fixed by going to `@pixi/react` v8, which itself requires React 19. We therefore upgrade pixi **immediately after** the React bump, and do the App Router migration last:
 
-1. **Phase 1 — Next 16 + React 19 + PWA replacement** (stay on Pages Router). Pixi is knowingly broken; the build gate is relaxed *for pixi only*.
+1. **Phase 1 — Next 16 + React 19 + PWA replacement** (stay on Pages Router). Pixi is knowingly broken; the build gate is relaxed _for pixi only_.
 2. **Phase 2 — pixi-react 8 + pixi.js 8** (stay on Pages Router). The app is whole again; full strict typecheck/build restored.
 3. **Phase 3 — Pages Router → App Router** (static export preserved). Runs under full strict typechecking.
 
@@ -98,8 +98,8 @@ Key facts the plan relies on:
 2. **Pages:** each `src/pages/<r>/index.tsx` → `app/<r>/page.tsx` with `"use client"`; co-located CSS moved alongside. `src/pages/index.tsx` (re-exports player) → `app/page.tsx`. `src/pages/404/index.tsx` → `app/not-found.tsx`. `/error` stays a normal route (`app/error/page.tsx`). The 5 `getLayout` pages (composer, vsrg-composer, zen-keyboard, vsrg-player, player) → nested `app/<r>/layout.tsx`.
 3. **`next/router` → `next/navigation`** (8 files): `router.pathname`→`usePathname()`; `router.push`/`router.back`→`useRouter()` (navigation); `router.query`→`useSearchParams()` (only `composer/index.tsx`). The two class components keep their functional hook-wrapper, now fed by `next/navigation` hooks. `routeChangeBugFix` (strips `BASE_PATH`) stays.
 4. **`router.events` redesign** (no direct equivalent — main behavioral risk):
-   - *Analytics page-views* (`AppBase`): a `usePathname()` + `useSearchParams()` effect firing on route change (replacing `beforeHistoryChange`).
-   - *Unsaved-changes guard* (composer, vsrg-composer): a `useUnsavedChangesGuard` hook combining `beforeunload` (tab close/reload) with an in-app navigation interceptor that confirms before `<Link>`/programmatic navigations when state is dirty. **Flag for user review** — exact fidelity to the old `routeChangeStart` abort/redirect behavior is the trickiest part.
+   - _Analytics page-views_ (`AppBase`): a `usePathname()` + `useSearchParams()` effect firing on route change (replacing `beforeHistoryChange`).
+   - _Unsaved-changes guard_ (composer, vsrg-composer): a `useUnsavedChangesGuard` hook combining `beforeunload` (tab close/reload) with an in-app navigation interceptor that confirms before `<Link>`/programmatic navigations when state is dirty. **Flag for user review** — exact fidelity to the old `routeChangeStart` abort/redirect behavior is the trickiest part.
 5. **Metadata:** use **React 19's native `<title>`/`<meta>` hoisting** — `PageMetadata` (~20 pages) renders `<title>`/`<meta>` directly from a client component (no `next/head`); the dynamic `theme-color` `<meta>` in `ThemeProviderWrapper` works the same way. Build-time prerender bakes default (English) titles into the static HTML, matching today's behavior.
 6. **`next/link` / `next/image` / `next/script`:** port as-is (all already in modern form). Delete `src/pages/` (incl. `_app.tsx`/`_document.tsx`) once `app/` is complete.
 7. **PWA under App Router:** confirm the Serwist worker + `output:'export'` still emits/registers correctly with the `app/` structure (re-run the Phase 1 smoke test).

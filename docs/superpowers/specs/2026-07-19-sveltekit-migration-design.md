@@ -6,22 +6,22 @@
 
 ## 1. Goal
 
-Rewrite the webapp from Next.js 16 / React 19 to **SvelteKit 2 / Svelte 5**, with **full feature and behavior parity**, and restructure all game-specific code behind a **`GameDefinition`** abstraction so the app supports *any* game — Genshin and Sky today, more later — selected **at build time** (runtime switching is future work this design must not block). Remove the Tauri desktop wrapper entirely.
+Rewrite the webapp from Next.js 16 / React 19 to **SvelteKit 2 / Svelte 5**, with **full feature and behavior parity**, and restructure all game-specific code behind a **`GameDefinition`** abstraction so the app supports _any_ game — Genshin and Sky today, more later — selected **at build time** (runtime switching is future work this design must not block). Remove the Tauri desktop wrapper entirely.
 
 Motivation (user): recurring friction with the React ecosystem and unsatisfying performance, particularly around the pixi-heavy pages.
 
 ## 2. Decisions (locked during brainstorming)
 
-| Question | Decision |
-|---|---|
-| Existing user data | **Full transparent compatibility.** Same IndexedDB database names (`Genshin`, `Sky`), same localStorage key prefixes, same serialized song/theme/folder/backup formats, same URLs. An existing user opens the new app and everything is there. |
-| Repo strategy | **Same repo, replace in place.** New branch `migration/sveltekit` forked from `migration/next16-react19` (the newest code: Next 16 + pixi 8 + App Router). The SvelteKit app replaces the root; old code stays reachable via git. Nothing merges to `main` until parity is proven. |
-| Svelte state idiom | **Runes**: singleton classes with `$state` fields in `.svelte.ts` files. No `svelte/store` writables. |
-| Parity verification | **Golden-format tests (Vitest) + structured manual checklist per page.** No E2E suite. |
-| Migration approach | **A — abstract while porting.** Design `GameDefinition` first from an audit of all current `APP_NAME` references, then port each file exactly once, directly against it. |
-| Pixi | **Raw `pixi.js` v8** (keep current pixi version), no `@pixi/react`, no svelte-pixi wrapper. |
-| i18n | **Keep i18next core** (drop only react-i18next), custom ~50-line Svelte binding. |
-| Tauri | **Delete entirely** (it is already inert: `IS_TAURI` is hardcoded false). This supersedes the June decision to leave it as-is. |
+| Question            | Decision                                                                                                                                                                                                                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Existing user data  | **Full transparent compatibility.** Same IndexedDB database names (`Genshin`, `Sky`), same localStorage key prefixes, same serialized song/theme/folder/backup formats, same URLs. An existing user opens the new app and everything is there.                                     |
+| Repo strategy       | **Same repo, replace in place.** New branch `migration/sveltekit` forked from `migration/next16-react19` (the newest code: Next 16 + pixi 8 + App Router). The SvelteKit app replaces the root; old code stays reachable via git. Nothing merges to `main` until parity is proven. |
+| Svelte state idiom  | **Runes**: singleton classes with `$state` fields in `.svelte.ts` files. No `svelte/store` writables.                                                                                                                                                                              |
+| Parity verification | **Golden-format tests (Vitest) + structured manual checklist per page.** No E2E suite.                                                                                                                                                                                             |
+| Migration approach  | **A — abstract while porting.** Design `GameDefinition` first from an audit of all current `APP_NAME` references, then port each file exactly once, directly against it.                                                                                                           |
+| Pixi                | **Raw `pixi.js` v8** (keep current pixi version), no `@pixi/react`, no svelte-pixi wrapper.                                                                                                                                                                                        |
+| i18n                | **Keep i18next core** (drop only react-i18next), custom ~50-line Svelte binding.                                                                                                                                                                                                   |
+| Tauri               | **Delete entirely** (it is already inert: `IS_TAURI` is hardcoded false). This supersedes the June decision to leave it as-is.                                                                                                                                                     |
 
 ## 3. Current-state summary (what is being ported)
 
@@ -183,14 +183,14 @@ The pixi pages in Phase 4 are roughly half the total effort; the implementation 
 
 ## 11. Risks & mitigations
 
-| Risk | Mitigation |
-|---|---|
-| `@insertish/zangodb` misbehaves under Vite bundling | Phase-0 spike, before any commitment. Fallback: patch/fork the package or vendor it; the `Collection` interface isolates the blast radius. |
-| `GameDefinition` shape proves wrong mid-port | Interface is derived empirically from the full 232-reference audit before any UI port; escape hatch absorbs stragglers without blocking. |
-| Serialization drift corrupts user data | Golden fixtures generated from current code; byte-for-byte reproduction required from Phase 2 onward. |
-| Pixi rewrite behavior drift (scroll, zoom, selection, timing) | Renderer classes port the existing imperative logic (already class-shaped); per-canvas parity checklists include interaction inventories. |
-| Prerender breaks on browser-global access at module scope | The code already survives Next static export's server render; same guards carry over. `svelte-check` + a build per page during Phase 4 catches regressions early. |
-| SW cache naming/URL drift logs out installed PWAs from offline use | Cache names, manifest URL, and asset URL structure are locked in §5.3/§6.6; Phase 5 verifies an in-place update of an installed PWA. |
+| Risk                                                               | Mitigation                                                                                                                                                        |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@insertish/zangodb` misbehaves under Vite bundling                | Phase-0 spike, before any commitment. Fallback: patch/fork the package or vendor it; the `Collection` interface isolates the blast radius.                        |
+| `GameDefinition` shape proves wrong mid-port                       | Interface is derived empirically from the full 232-reference audit before any UI port; escape hatch absorbs stragglers without blocking.                          |
+| Serialization drift corrupts user data                             | Golden fixtures generated from current code; byte-for-byte reproduction required from Phase 2 onward.                                                             |
+| Pixi rewrite behavior drift (scroll, zoom, selection, timing)      | Renderer classes port the existing imperative logic (already class-shaped); per-canvas parity checklists include interaction inventories.                         |
+| Prerender breaks on browser-global access at module scope          | The code already survives Next static export's server render; same guards carry over. `svelte-check` + a build per page during Phase 4 catches regressions early. |
+| SW cache naming/URL drift logs out installed PWAs from offline use | Cache names, manifest URL, and asset URL structure are locked in §5.3/§6.6; Phase 5 verifies an in-place update of an installed PWA.                              |
 
 ## 12. Out of scope
 

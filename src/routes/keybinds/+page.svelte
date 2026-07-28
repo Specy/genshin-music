@@ -1,155 +1,159 @@
 <script lang="ts">
-    import {onMount} from 'svelte'
-    import {game} from '$game'
-    import DefaultPage from '$cmp/shell/DefaultPage.svelte'
-    import PageMetadata from '$cmp/shell/PageMetadata.svelte'
-    import BaseNote from '$cmp/BaseNote.svelte'
-    import {KeyboardProvider} from '$lib/providers/KeyboardProvider'
-    import type {KeyboardCode} from '$lib/providers/KeyboardProvider/KeyboardTypes'
-    import type {VsrgSongKeys} from '$core/Songs/VsrgSong'
-    import {keyBinds} from '$stores/KeybindsStore.svelte'
-    import {Instrument} from '$lib/audio/Instrument.svelte'
-    import {logger} from '$stores/LoggerStore.svelte'
-    import ShortcutEditor from '$cmp/pages/keybinds/ShortcutEditor.svelte'
-    import VsrgKey from '$cmp/pages/keybinds/VsrgKey.svelte'
-    import MidiSetup from '$cmp/pages/keybinds/MidiSetup.svelte'
-    import {globalConfigStore} from '$stores/GlobalConfigStore.svelte'
-    import {setPageVisited} from '$stores/PageVisitStore.svelte'
-    import {t} from '$i18n/binding.svelte'
+  import { onMount } from 'svelte';
+  import { game } from '$game';
+  import DefaultPage from '$cmp/shell/DefaultPage.svelte';
+  import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import BaseNote from '$cmp/BaseNote.svelte';
+  import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
+  import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
+  import type { VsrgSongKeys } from '$core/Songs/VsrgSong';
+  import { keyBinds } from '$stores/KeybindsStore.svelte';
+  import { Instrument } from '$lib/audio/Instrument.svelte';
+  import { logger } from '$stores/LoggerStore.svelte';
+  import ShortcutEditor from '$cmp/pages/keybinds/ShortcutEditor.svelte';
+  import VsrgKey from '$cmp/pages/keybinds/VsrgKey.svelte';
+  import MidiSetup from '$cmp/pages/keybinds/MidiSetup.svelte';
+  import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
+  import { setPageVisited } from '$stores/PageVisitStore.svelte';
+  import { t } from '$i18n/binding.svelte';
 
-    // KeyboardProvider.listen() is registered once in onMount (not re-subscribed per `selected`
-    // change) - `selected` is $state, so the closure always reads its latest value regardless of
-    // when the listener was registered.
-    const baseInstrument = new Instrument()
+  // KeyboardProvider.listen() is registered once in onMount (not re-subscribed per `selected`
+  // change) - `selected` is $state, so the closure always reads its latest value regardless of
+  // when the listener was registered.
+  const baseInstrument = new Instrument();
 
-    let selected = $state<{type: string; index: number}>({type: '', index: -1})
+  let selected = $state<{ type: string; index: number }>({ type: '', index: -1 });
 
-    const composerShortcuts = keyBinds.getShortcutMap('composer')
-    const playerShortcuts = keyBinds.getShortcutMap('player')
-    const vsrgComposerShortcuts = keyBinds.getShortcutMap('vsrg_composer')
-    const vsrgPlayerShortcuts = keyBinds.getShortcutMap('vsrg_player')
+  const composerShortcuts = keyBinds.getShortcutMap('composer');
+  const playerShortcuts = keyBinds.getShortcutMap('player');
+  const vsrgComposerShortcuts = keyBinds.getShortcutMap('vsrg_composer');
+  const vsrgPlayerShortcuts = keyBinds.getShortcutMap('vsrg_player');
 
-    onMount(() => {
-        setPageVisited('keybinds')
-        KeyboardProvider.listen(
-            ({letter, code}) => {
-                if (letter === 'Escape') {
-                    selected = {type: '', index: -1}
-                    return
-                }
-                const {type, index} = selected
-                const note = baseInstrument.getNoteFromIndex(index)
-                if (type === 'keyboard' && index !== -1) {
-                    // note is non-null whenever `index` came from a real note-grid click below.
-                    const existing = keyBinds.setKeyboardKeybind(note!.noteNames.keyboard, code)
-                    if (existing !== undefined) logger.warn(t('keybinds:already_used_keybind', {note_name: existing.name}))
-                    selected = {type: '', index: -1}
-                }
-                if (['k4', 'k6', 'k8'].includes(type) && index !== -1) {
-                    const kind = Number(type.replace('k', '')) as VsrgSongKeys
-                    keyBinds.setVsrgKeybind(kind, index, letter)
-                    selected = {type: '', index: -1}
-                }
-            },
-            {id: 'keybinds'}
-        )
-        return () => KeyboardProvider.unregisterById('keybinds')
-    })
+  onMount(() => {
+    setPageVisited('keybinds');
+    KeyboardProvider.listen(
+      ({ letter, code }) => {
+        if (letter === 'Escape') {
+          selected = { type: '', index: -1 };
+          return;
+        }
+        const { type, index } = selected;
+        const note = baseInstrument.getNoteFromIndex(index);
+        if (type === 'keyboard' && index !== -1) {
+          // note is non-null whenever `index` came from a real note-grid click below.
+          const existing = keyBinds.setKeyboardKeybind(note!.noteNames.keyboard, code);
+          if (existing !== undefined)
+            logger.warn(t('keybinds:already_used_keybind', { note_name: existing.name }));
+          selected = { type: '', index: -1 };
+        }
+        if (['k4', 'k6', 'k8'].includes(type) && index !== -1) {
+          const kind = Number(type.replace('k', '')) as VsrgSongKeys;
+          keyBinds.setVsrgKeybind(kind, index, letter);
+          selected = { type: '', index: -1 };
+        }
+      },
+      { id: 'keybinds' }
+    );
+    return () => KeyboardProvider.unregisterById('keybinds');
+  });
 </script>
 
 <DefaultPage>
-    <PageMetadata text={t('home:keybinds_or_midi_name')} description="Change the app keyboard keybinds and MIDI input keys" />
+  <PageMetadata
+    text={t('home:keybinds_or_midi_name')}
+    description="Change the app keyboard keybinds and MIDI input keys"
+  />
+  <h1>
+    {t('keybinds:midi_keybinds')}
+  </h1>
+  <MidiSetup />
+  {#if !globalConfigStore.state.IS_MOBILE}
     <h1>
-        {t('keybinds:midi_keybinds')}
+      {t('keybinds:keyboard_keybinds')}
     </h1>
-    <MidiSetup />
-    {#if !globalConfigStore.state.IS_MOBILE}
-        <h1>
-            {t('keybinds:keyboard_keybinds')}
-        </h1>
-        <div>
-            {t('keybinds:keyboard_keybinds_description')}
-        </div>
-        <div class="flex-centered">
-            <div class={['keyboard', game.notes.perColumn === 15 && 'keyboard-5']} style="margin:1rem 0">
-                {#each baseInstrument.notes as note, i (i)}
-                    {@const key = keyBinds.getKeyOfShortcut('keyboard', note.noteNames.keyboard)}
-                    <BaseNote
-                        data={{status: selected.type === 'keyboard' && i === selected.index ? 'clicked' : ''}}
-                        noteImage={baseInstrument.notes[i].noteImage}
-                        noteText={key ? (KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key) : '???'}
-                        handleClick={() => {
-                            selected = {type: 'keyboard', index: selected.index === i ? -1 : i}
-                        }}
-                    />
-                {/each}
-            </div>
-        </div>
+    <div>
+      {t('keybinds:keyboard_keybinds_description')}
+    </div>
+    <div class="flex-centered">
+      <div class={['keyboard', game.notes.perColumn === 15 && 'keyboard-5']} style="margin:1rem 0">
+        {#each baseInstrument.notes as note, i (i)}
+          {@const key = keyBinds.getKeyOfShortcut('keyboard', note.noteNames.keyboard)}
+          <BaseNote
+            data={{ status: selected.type === 'keyboard' && i === selected.index ? 'clicked' : '' }}
+            noteImage={baseInstrument.notes[i].noteImage}
+            noteText={key ? (KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key) : '???'}
+            handleClick={() => {
+              selected = { type: 'keyboard', index: selected.index === i ? -1 : i };
+            }}
+          />
+        {/each}
+      </div>
+    </div>
 
-        <h1>
-            {t('keybinds:composer_shortcuts')}
-        </h1>
-        <div class="column">
-            <ShortcutEditor
-                map={composerShortcuts}
-                onChangeShortcut={(oldKey, newKey) => {
-                    if (oldKey === newKey) return
-                    const existing = keyBinds.setShortcut('composer', oldKey, newKey)
-                    if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
-                }}
-            />
-        </div>
-        <h1>
-            {t('keybinds:player_shortcuts')}
-        </h1>
-        <div class="column">
-            <ShortcutEditor
-                map={playerShortcuts}
-                onChangeShortcut={(oldKey, newKey) => {
-                    if (oldKey === newKey) return
-                    const existing = keyBinds.setShortcut('player', oldKey, newKey)
-                    if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
-                }}
-            />
-        </div>
-        <h1>
-            {t('keybinds:vsrg_composer_shortcuts')}
-        </h1>
-        <div class="column">
-            <ShortcutEditor
-                map={vsrgComposerShortcuts}
-                onChangeShortcut={(oldKey, newKey) => {
-                    if (oldKey === newKey) return
-                    const existing = keyBinds.setShortcut('vsrg_composer', oldKey, newKey)
-                    if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
-                }}
-            />
-        </div>
-        <h1>
-            {t('keybinds:vsrg_player_shortcuts')}
-        </h1>
-        <div class="column">
-            <ShortcutEditor
-                map={vsrgPlayerShortcuts}
-                onChangeShortcut={(oldKey, newKey) => {
-                    if (oldKey === newKey) return
-                    const existing = keyBinds.setShortcut('vsrg_player', oldKey, newKey)
-                    if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`)
-                }}
-            />
-        </div>
-        <h1>
-            {t('keybinds:vsrg_keybinds')}
-        </h1>
-        <div class="column" style="margin-left:1rem">
-            {@render vsrgKeyGroup('k4', keyBinds.getVsrgKeybinds(4))}
-            {@render vsrgKeyGroup('k6', keyBinds.getVsrgKeybinds(6))}
-        </div>
-    {/if}
+    <h1>
+      {t('keybinds:composer_shortcuts')}
+    </h1>
+    <div class="column">
+      <ShortcutEditor
+        map={composerShortcuts}
+        onChangeShortcut={(oldKey, newKey) => {
+          if (oldKey === newKey) return;
+          const existing = keyBinds.setShortcut('composer', oldKey, newKey);
+          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+        }}
+      />
+    </div>
+    <h1>
+      {t('keybinds:player_shortcuts')}
+    </h1>
+    <div class="column">
+      <ShortcutEditor
+        map={playerShortcuts}
+        onChangeShortcut={(oldKey, newKey) => {
+          if (oldKey === newKey) return;
+          const existing = keyBinds.setShortcut('player', oldKey, newKey);
+          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+        }}
+      />
+    </div>
+    <h1>
+      {t('keybinds:vsrg_composer_shortcuts')}
+    </h1>
+    <div class="column">
+      <ShortcutEditor
+        map={vsrgComposerShortcuts}
+        onChangeShortcut={(oldKey, newKey) => {
+          if (oldKey === newKey) return;
+          const existing = keyBinds.setShortcut('vsrg_composer', oldKey, newKey);
+          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+        }}
+      />
+    </div>
+    <h1>
+      {t('keybinds:vsrg_player_shortcuts')}
+    </h1>
+    <div class="column">
+      <ShortcutEditor
+        map={vsrgPlayerShortcuts}
+        onChangeShortcut={(oldKey, newKey) => {
+          if (oldKey === newKey) return;
+          const existing = keyBinds.setShortcut('vsrg_player', oldKey, newKey);
+          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+        }}
+      />
+    </div>
+    <h1>
+      {t('keybinds:vsrg_keybinds')}
+    </h1>
+    <div class="column" style="margin-left:1rem">
+      {@render vsrgKeyGroup('k4', keyBinds.getVsrgKeybinds(4))}
+      {@render vsrgKeyGroup('k6', keyBinds.getVsrgKeybinds(6))}
+    </div>
+  {/if}
 </DefaultPage>
 
 {#snippet vsrgKeyGroup(type: 'k4' | 'k6', keys: string[])}
-    <!-- Fixed Svelte-specific reactivity bug, flagged so it isn't reintroduced: wrapping
+  <!-- Fixed Svelte-specific reactivity bug, flagged so it isn't reintroduced: wrapping
          keyBinds.getVsrgKeybinds(n)'s live $state-backed array in an intermediate literal (e.g. a
          local `[k4, k6]`) broke Svelte's fine-grained per-element tracking through nested
          each-blocks - the store update persisted correctly but the rendered letter stayed stale
@@ -158,18 +162,18 @@
          template position with nothing between it and the {#each keys as key, i (i)} that indexes
          it. One snippet + two call sites, since Svelte has no equivalent of iterating over named
          local variables the way [k4, k6].map(...) does. -->
-    <h2>
-        {keys.length} keys
-    </h2>
-    <div class="row">
-        {#each keys as key, i (i)}
-            <VsrgKey
-                letter={key}
-                isActive={selected.type === type && selected.index === i}
-                handleClick={(willBeSelected) => {
-                    selected = {type, index: willBeSelected ? i : -1}
-                }}
-            />
-        {/each}
-    </div>
+  <h2>
+    {keys.length} keys
+  </h2>
+  <div class="row">
+    {#each keys as key, i (i)}
+      <VsrgKey
+        letter={key}
+        isActive={selected.type === type && selected.index === i}
+        handleClick={(willBeSelected) => {
+          selected = { type, index: willBeSelected ? i : -1 };
+        }}
+      />
+    {/each}
+  </div>
 {/snippet}

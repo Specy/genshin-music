@@ -41,7 +41,7 @@ and future work follows it. Every rule below is enforceable by review, and sever
   unit-testing). The reader should be able to follow a file top to bottom without chasing
   indirection. The port created dozens of `handleX` wrappers purely to mirror React handler names;
   those go.
-- **Comments explain *why*, never *what was ported*.** Port archaeology belongs in git.
+- **Comments explain _why_, never _what was ported_.** Port archaeology belongs in git.
 - **Preserved quirks must be marked.** Any deliberate bug-for-bug behaviour carries a one-line
   `QUIRK:` comment so it is greppable and nobody "fixes" it. This is the one comment category that
   must never be deleted.
@@ -56,8 +56,8 @@ and future work follows it. Every rule below is enforceable by review, and sever
   interior then needs no assertions.
 - **Derive unions from data**, so the table and the type cannot drift:
   ```ts
-  const PITCHES = ['C', 'Db', 'D', /* … */] as const satisfies readonly string[]
-  type Pitch = (typeof PITCHES)[number]
+  const PITCHES = ['C', 'Db', 'D' /* … */] as const satisfies readonly string[];
+  type Pitch = (typeof PITCHES)[number];
   ```
 - **`satisfies` for data tables** — config objects, settings definitions, game data — so excess
   property checks apply while literal types are preserved.
@@ -99,6 +99,7 @@ Baseline measured at `4906b7b4`: **6,510 comment lines of 39,605 total — 16%**
 `+layout.svelte` 51%.
 
 Triage policy — approved default:
+
 - **Delete** pure port archaeology (old paths, prop-rename tables, "React did X, we do Y").
 - **Keep, compressed to 1–2 lines** quirk and preserved-bug rationale, prefixed `QUIRK:`.
 - **Move** substantial design rationale to `docs/` or the ledger, leaving a one-line pointer.
@@ -150,6 +151,7 @@ Effects that remain must be justified in a comment.
 This wave carries the highest bug-prevention value: both the menu-switching bug and the volume
 off-by-one shipped in the port were reactivity-timing defects that no gate caught. Specific
 hazards to sweep for, both already found in production code here:
+
 - reading a live `$derived` after mutating one of its dependencies inside the same handler (React's
   frozen render closure does not translate);
 - state assigned inside `$effect` where `$derived` was meant.
@@ -197,13 +199,13 @@ Per-wave, and per-family inside Wave 2:
 
 ## 6. Risks
 
-| Risk | Mitigation |
-|---|---|
-| Wave 2 silently breaks visual parity | Split per component family; measure built HTML + live DOM between each |
-| Comment triage deletes a real warning | `QUIRK:` category never deleted; cross-checked against the ledger's preserved-bug watchlist |
-| `core/` type work alters serialization | Types/annotations only; golden fixtures green at every commit |
-| Reactivity conversions change timing | Live interaction checklists, not just type-checking |
-| Cleanup rots back | Lint guardrails flipped to errors at the end of Wave 5 |
+| Risk                                   | Mitigation                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Wave 2 silently breaks visual parity   | Split per component family; measure built HTML + live DOM between each                      |
+| Comment triage deletes a real warning  | `QUIRK:` category never deleted; cross-checked against the ledger's preserved-bug watchlist |
+| `core/` type work alters serialization | Types/annotations only; golden fixtures green at every commit                               |
+| Reactivity conversions change timing   | Live interaction checklists, not just type-checking                                         |
+| Cleanup rots back                      | Lint guardrails flipped to errors at the end of Wave 5                                      |
 
 ## 7. Success criteria
 

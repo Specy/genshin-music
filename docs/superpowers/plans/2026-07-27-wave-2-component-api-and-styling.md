@@ -46,7 +46,7 @@ Wave 1 could prove itself with build hashes because comments vanish from the bui
 Done in ONE commit across the whole codebase, because a half-renamed tree silently drops the prop at every boundary where the two conventions meet. A pure rename emits identical DOM, so it is fully verifiable.
 
 - [ ] **Step 1: Snapshot** — `node scripts/classAttrCheck.js snapshot`.
-- [ ] **Step 2: Rename.** Declarations become `class: cls` (the local alias is required — `class` is reserved), typed with `ClassValue` from `svelte/elements`. Call sites pass `class={...}`. Where a component forwards to a child, forward the renamed prop. Do not change any class *value* in this task — only the prop's name and type.
+- [ ] **Step 2: Rename.** Declarations become `class: cls` (the local alias is required — `class` is reserved), typed with `ClassValue` from `svelte/elements`. Call sites pass `class={...}`. Where a component forwards to a child, forward the renamed prop. Do not change any class _value_ in this task — only the prop's name and type.
 - [ ] **Step 3: Verify** — `node scripts/classAttrCheck.js compare` must exit 0 with **zero** differences. A pure rename cannot change emitted classes; any difference is a bug you introduced.
 - [ ] **Step 4:** Gates, LF scan, commit as `refactor: className -> class prop typed ClassValue`.
 
@@ -54,13 +54,13 @@ Done in ONE commit across the whole codebase, because a half-renamed tree silent
 
 ### Tasks 3–7: clsx + `:global` reduction, per family
 
-| Task | Family |
-|---|---|
-| 3 | `src/lib/components/inputs/` + `src/lib/components/settings/` |
-| 4 | `src/lib/components/menu/` + `utility/` + `layout/` |
-| 5 | `src/lib/components/` top level + `shell/` + `blog/` |
-| 6 | `src/lib/components/pages/Player/` + `Composer/` + `HelpTab/` |
-| 7 | `src/lib/components/pages/` remainder (Vsrg*, ZenKeyboard, keybinds, SheetVisualizer) + `src/routes/` |
+| Task | Family                                                                                                |
+| ---- | ----------------------------------------------------------------------------------------------------- |
+| 3    | `src/lib/components/inputs/` + `src/lib/components/settings/`                                         |
+| 4    | `src/lib/components/menu/` + `utility/` + `layout/`                                                   |
+| 5    | `src/lib/components/` top level + `shell/` + `blog/`                                                  |
+| 6    | `src/lib/components/pages/Player/` + `Composer/` + `HelpTab/`                                         |
+| 7    | `src/lib/components/pages/` remainder (Vsrg*, ZenKeyboard, keybinds, SheetVisualizer) + `src/routes/` |
 
 **Identical procedure for each:**
 

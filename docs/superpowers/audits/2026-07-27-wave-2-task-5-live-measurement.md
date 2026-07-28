@@ -1,11 +1,12 @@
 # Wave 2 Task 5 (shared+shell+blog) — verification-record correction
 
 Corrects two problems in `61180100`'s own commit message ("refactor: clsx classes + scoped styles
+
 - shared+shell+blog", Wave 2 Task 5). Both are corrections to the verification record, not to code
-— none of the 8 `.svelte` files that commit touched need a change for either. Follows the precedent
-`docs/superpowers/audits/2026-07-27-wave-2-task-4-live-measurement.md` set for Task 4's own
-after-the-fact correction, and the style guide's "re-derive any factual claim in the session you
-write it": every number below was re-run this session, not copied from an earlier draft.
+  — none of the 8 `.svelte` files that commit touched need a change for either. Follows the precedent
+  `docs/superpowers/audits/2026-07-27-wave-2-task-4-live-measurement.md` set for Task 4's own
+  after-the-fact correction, and the style guide's "re-derive any factual claim in the session you
+  write it": every number below was re-run this session, not copied from an earlier draft.
 
 ## 1. `.default-page` did not match old vs new on blog-post pages
 
@@ -22,11 +23,11 @@ pre-migration Next.js build (`document.scripts` shows `/_next/static/chunks/...`
 
 **`.default-page` on `/blog/posts/how-to-use-player`:**
 
-| | Old | New |
-|---|---|---|
-| class | `"default-page "` | `"default-page"` |
+|                       | Old                                                                                                                         | New                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| class                 | `"default-page "`                                                                                                           | `"default-page"`                                                                                                            |
 | raw `style` attribute | `--left-mobile-padding:5rem;--right-mobile-padding:1.4rem;padding-left:var(--menu-size);gap:1rem;line-height:1.5;padding:0` | `--left-mobile-padding:5rem;--right-mobile-padding:1.4rem;padding:0;padding-left:var(--menu-size);gap:1rem;line-height:1.5` |
-| computed `padding` | `0px` (all four sides) | `0px 0px 0px 64px` |
+| computed `padding`    | `0px` (all four sides)                                                                                                      | `0px 0px 0px 64px`                                                                                                          |
 
 **Root cause**, read from source rather than guessed: `BaseBlogPost.svelte` passes `DefaultPage`
 `cropped={false}` and `style="padding-left:var(--menu-size);gap:1rem;line-height:1.5"`.
@@ -34,7 +35,7 @@ pre-migration Next.js build (`document.scripts` shows `/_next/static/chunks/...`
 `cropped={false}` the element's actual inline style becomes
 `padding:0;padding-left:var(--menu-size);...` — shorthand first, longhand second, so the longhand
 `padding-left` survives the shorthand and the other three sides stay `0`. The old app's own inline
-style places its `padding-left` *before* its trailing `padding:0` (see the raw attribute above,
+style places its `padding-left` _before_ its trailing `padding:0` (see the raw attribute above,
 right column vs left) — opposite order — so its shorthand overwrites the longhand and every side
 ends at `0`. Same CSS cascade rule on both sides (a later inline declaration beats an earlier one
 covering the same longhand), different source-side declaration order, different visible result: a
@@ -77,14 +78,14 @@ The parenthetical sums to 20, not 5.
 Re-derived by grepping each named file for actual `:global(` selector occurrences (excluding each
 file's own prose comments that mention ":global()" without opening a rule):
 
-| File | `:global(` sites |
-|---|---:|
-| `ExpandableContainer.svelte` | 2 |
-| `PromotionCard.svelte` | 2 |
-| `DonateButton.svelte` | 2 |
-| `BaseBlogPost.svelte` | 7 |
-| `BlogElements.svelte` | 7 |
-| **Total** | **20** |
+| File                         | `:global(` sites |
+| ---------------------------- | ---------------: |
+| `ExpandableContainer.svelte` |                2 |
+| `PromotionCard.svelte`       |                2 |
+| `DonateButton.svelte`        |                2 |
+| `BaseBlogPost.svelte`        |                7 |
+| `BlogElements.svelte`        |                7 |
+| **Total**                    |           **20** |
 
 "5" was likely meant as "5 files," not "5 sites." **Correction: 20 total `:global()` sites across
 5 files, not 5.** Grepped `docs/superpowers/` for the parenthetical's file list and for "5
@@ -101,19 +102,19 @@ removed.** Independently re-tokenized with a fresh script (not the implementer's
 Task 4): the 421 changed lines reduce to exactly **11 unique before→after pairs**, every one
 whitespace-only — same token set, same order, on both sides of all 11:
 
-| Count | Before | After |
-|---:|---|---|
-| 200 | `" "` | `""` |
-| 78 | `"middle-size-page row "` | `"middle-size-page row"` |
-| 51 | `" home-content-element "` | `"home-content-element"` |
-| 27 | `"flex-centered pill "` | `"flex-centered pill"` |
-| 18 | `"default-page "` | `"default-page"` |
-| 17 | `"folder "` | `"folder"` |
-| 16 | `" current-page"` | `"current-page"` |
-| 7 | `"separator  svelte-cysdcr"` | `"separator svelte-cysdcr"` |
-| 3 | `"expandable-container  column"` | `"expandable-container column"` |
-| 3 | `" home-content-element current-page"` | `"home-content-element current-page"` |
-| 1 | `" promotion-card column"` | `"promotion-card column"` |
+| Count | Before                                 | After                                 |
+| ----: | -------------------------------------- | ------------------------------------- |
+|   200 | `" "`                                  | `""`                                  |
+|    78 | `"middle-size-page row "`              | `"middle-size-page row"`              |
+|    51 | `" home-content-element "`             | `"home-content-element"`              |
+|    27 | `"flex-centered pill "`                | `"flex-centered pill"`                |
+|    18 | `"default-page "`                      | `"default-page"`                      |
+|    17 | `"folder "`                            | `"folder"`                            |
+|    16 | `" current-page"`                      | `"current-page"`                      |
+|     7 | `"separator  svelte-cysdcr"`           | `"separator svelte-cysdcr"`           |
+|     3 | `"expandable-container  column"`       | `"expandable-container column"`       |
+|     3 | `" home-content-element current-page"` | `"home-content-element current-page"` |
+|     1 | `" promotion-card column"`             | `"promotion-card column"`             |
 
 Matches the commit's own claimed "421 changed... 11 unique before->after pairs, every one
 whitespace-only" exactly.
