@@ -1,151 +1,198 @@
 <script lang="ts">
-    import {untrack} from 'svelte'
-    import type {CustomTrack} from './MidiParser.svelte'
-    import type {InstrumentData} from '$core/Songs/SongClasses'
-    import {ThemeProvider} from '$core/theme/ThemeProvider.svelte'
-    import {prettyPrintInstrumentName} from '$core/utils/Utilities'
-    import {t} from '$i18n/binding.svelte'
-    import Row from '$cmp/layout/Row.svelte'
-    import Column from '$cmp/layout/Column.svelte'
-    import Select from '$cmp/inputs/Select.svelte'
-    import Tooltip from '$cmp/utility/Tooltip.svelte'
-    import {hasTooltip} from '$cmp/utility/tooltip'
-    import NumericalInput from './NumericalInput.svelte'
+  import { untrack } from 'svelte';
+  import type { CustomTrack } from './MidiParser.svelte';
+  import type { InstrumentData } from '$core/Songs/SongClasses';
+  import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
+  import { prettyPrintInstrumentName } from '$core/utils/Utilities';
+  import { t } from '$i18n/binding.svelte';
+  import Row from '$cmp/layout/Row.svelte';
+  import Column from '$cmp/layout/Column.svelte';
+  import Select from '$cmp/inputs/Select.svelte';
+  import Tooltip from '$cmp/utility/Tooltip.svelte';
+  import { hasTooltip } from '$cmp/utility/tooltip';
+  import NumericalInput from './NumericalInput.svelte';
 
-    let {
-        data,
-        index,
-        onChange,
-        instruments,
-    }: {
-        data: CustomTrack
-        index: number
-        instruments: InstrumentData[]
-        onChange: (index: number, data: Partial<CustomTrack>) => void
-    } = $props()
+  let {
+    data,
+    index,
+    onChange,
+    instruments,
+  }: {
+    data: CustomTrack;
+    index: number;
+    instruments: InstrumentData[];
+    onChange: (index: number, data: Partial<CustomTrack>) => void;
+  } = $props();
 
-    let dataShown = $state(false)
-    const background = $derived(`background-color:${ThemeProvider.layer('menu_background', 0.15).toString()}`)
+  let dataShown = $state(false);
+  const background = $derived(
+    `background-color:${ThemeProvider.layer('menu_background', 0.15).toString()}`
+  );
 
-    // offset is a writable $derived (Svelte 5.25+), same pattern as NumericalInput.svelte's
-    // elementValue: it tracks data.localOffset, but the +/- buttons and input below can override
-    // it locally until data.localOffset actually changes again.
-    let offset = $derived(`${data.localOffset ?? ''}`)
-    // One-time seed; only the debounce effect below updates it after that.
-    // svelte-ignore state_referenced_locally
-    let debouncedOffset = $state(`${data.localOffset ?? ''}`)
+  // offset is a writable $derived (Svelte 5.25+), same pattern as NumericalInput.svelte's
+  // elementValue: it tracks data.localOffset, but the +/- buttons and input below can override
+  // it locally until data.localOffset actually changes again.
+  let offset = $derived(`${data.localOffset ?? ''}`);
+  // One-time seed; only the debounce effect below updates it after that.
+  // svelte-ignore state_referenced_locally
+  let debouncedOffset = $state(`${data.localOffset ?? ''}`);
 
-    $effect(() => {
-        void offset
-        const handle = setTimeout(() => {
-            debouncedOffset = offset
-        }, 600)
-        return () => clearTimeout(handle)
-    })
+  $effect(() => {
+    void offset;
+    const handle = setTimeout(() => {
+      debouncedOffset = offset;
+    }, 600);
+    return () => clearTimeout(handle);
+  });
 
-    // onChange (MidiParser.svelte's editTrack) goes through untrack(): it funnels into
-    // convertMidi(), which mutates several $state fields - left untracked, this effect would pick
-    // those up as dependencies and self-invalidate, throwing effect_update_depth_exceeded the
-    // moment a MIDI file loads. Same hazard as NumericalInput.svelte's identical effect.
-    $effect(() => {
-        const parsedOffset = parseInt(debouncedOffset)
-        const localOffset = Number.isFinite(parsedOffset) ? parsedOffset : null
-        offset = `${localOffset ?? ''}`
-        untrack(() => onChange(index, {localOffset}))
-    })
+  // onChange (MidiParser.svelte's editTrack) goes through untrack(): it funnels into
+  // convertMidi(), which mutates several $state fields - left untracked, this effect would pick
+  // those up as dependencies and self-invalidate, throwing effect_update_depth_exceeded the
+  // moment a MIDI file loads. Same hazard as NumericalInput.svelte's identical effect.
+  $effect(() => {
+    const parsedOffset = parseInt(debouncedOffset);
+    const localOffset = Number.isFinite(parsedOffset) ? parsedOffset : null;
+    offset = `${localOffset ?? ''}`;
+    untrack(() => onChange(index, { localOffset }));
+  });
 
-    function onMaxScaleChange(maxScaling: number) {
-        onChange(index, {maxScaling: Math.max(0, maxScaling)})
-    }
+  function onMaxScaleChange(maxScaling: number) {
+    onChange(index, { maxScaling: Math.max(0, maxScaling) });
+  }
 </script>
 
 <Column gap="0.5rem" class="midi-track-column" style={background}>
-    <div class="midi-track-wrapper">
-        <div class="midi-track-center">
-            <input type="checkbox" onchange={() => onChange(index, {selected: !data.selected})} checked={data.selected} />
-            {`${data.name} (${data.track.notes.length}, ${data.track.instrument.family})`}
-        </div>
-        <div class="midi-track-center">
-            <Select
-                onchange={(e) => onChange(index, {layer: Number(e.currentTarget.value)})}
-                value={data.layer}
-                style="margin-left:0.2rem;padding-right:1.5rem"
-            >
-                {#each instruments as ins, i (i)}
-                    <option value={i}>{ins.alias || prettyPrintInstrumentName(ins.name)} - Layer {i + 1}</option>
-                {/each}
-            </Select>
-            <!-- This svg is a mouse-only click target (no keyboard equivalent) - an accepted
-                 a11y gap, not wrapped in a button. -->
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <svg
-                stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512"
-                height="22" width="22" xmlns="http://www.w3.org/2000/svg"
-                style="color:{dataShown ? 'var(--secondary)' : 'var(--primary)'}"
-                cursor="pointer"
-                onclick={() => dataShown = !dataShown}
-            ><path d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/></svg>
-        </div>
+  <div class="midi-track-wrapper">
+    <div class="midi-track-center">
+      <input
+        type="checkbox"
+        onchange={() => onChange(index, { selected: !data.selected })}
+        checked={data.selected}
+      />
+      {`${data.name} (${data.track.notes.length}, ${data.track.instrument.family})`}
     </div>
-    <Column
-        padding="0.4rem"
-        gap="0.2rem"
-        style="display:{dataShown ? 'flex' : 'none'};border-top:solid 0.1rem var(--secondary)"
-    >
-        <Row align="center" justify="between">
-            <div class={hasTooltip(true)}>
-                <Tooltip>
-                    {t('composer:midi_parser.local_note_offset_description')}
-                </Tooltip>
-                {t('composer:midi_parser.local_note_offset')}
-            </div>
-            <Row gap="0.3rem">
-                <button onclick={() => offset = `${Number(offset) - 1}`} class="midi-btn-small">-</button>
-                <input
-                    type="text"
-                    value={offset}
-                    placeholder="No offset"
-                    class="midi-input"
-                    style="width:4rem"
-                    oninput={(e) => offset = e.currentTarget.value}
-                />
-                <button onclick={() => offset = `${Number(offset) + 1}`} class="midi-btn-small">+</button>
-            </Row>
+    <div class="midi-track-center">
+      <Select
+        onchange={(e) => onChange(index, { layer: Number(e.currentTarget.value) })}
+        value={data.layer}
+        style="margin-left:0.2rem;padding-right:1.5rem"
+      >
+        {#each instruments as ins, i (i)}
+          <option value={i}
+            >{ins.alias || prettyPrintInstrumentName(ins.name)} - Layer {i + 1}</option
+          >
+        {/each}
+      </Select>
+      <!-- This svg is a mouse-only click target (no keyboard equivalent) - an accepted
+                 a11y gap, not wrapped in a button. -->
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <svg
+        stroke="currentColor"
+        fill="currentColor"
+        stroke-width="0"
+        viewBox="0 0 512 512"
+        height="22"
+        width="22"
+        xmlns="http://www.w3.org/2000/svg"
+        style="color:{dataShown ? 'var(--secondary)' : 'var(--primary)'}"
+        cursor="pointer"
+        onclick={() => (dataShown = !dataShown)}
+        ><path
+          d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"
+        /></svg
+      >
+    </div>
+  </div>
+  <Column
+    padding="0.4rem"
+    gap="0.2rem"
+    style="display:{dataShown ? 'flex' : 'none'};border-top:solid 0.1rem var(--secondary)"
+  >
+    <Row align="center" justify="between">
+      <div class={hasTooltip(true)}>
+        <Tooltip>
+          {t('composer:midi_parser.local_note_offset_description')}
+        </Tooltip>
+        {t('composer:midi_parser.local_note_offset')}
+      </div>
+      <Row gap="0.3rem">
+        <button onclick={() => (offset = `${Number(offset) - 1}`)} class="midi-btn-small">-</button>
+        <input
+          type="text"
+          value={offset}
+          placeholder="No offset"
+          class="midi-input"
+          style="width:4rem"
+          oninput={(e) => (offset = e.currentTarget.value)}
+        />
+        <button onclick={() => (offset = `${Number(offset) + 1}`)} class="midi-btn-small">+</button>
+      </Row>
+    </Row>
+    <Row align="center" justify="between">
+      <div class={hasTooltip(true)}>
+        <Tooltip>
+          {t('composer:midi_parser.max_octave_scaling_description')}
+        </Tooltip>
+        {t('composer:midi_parser.max_octave_scaling')}
+      </div>
+      <NumericalInput
+        value={data.maxScaling}
+        placeholder="No scaling"
+        onChange={onMaxScaleChange}
+      />
+    </Row>
+    <Row align="center" justify="between">
+      <div>{t('common:instrument')}</div>
+      <div>{data.track.instrument.name}</div>
+    </Row>
+    <Row align="center" justify="between">
+      <div>{t('composer:midi_parser.number_of_notes')}</div>
+      <div>{data.track.notes.length}</div>
+    </Row>
+    <Row align="center" justify="between">
+      <div>{t('composer:midi_parser.accidentals')}</div>
+      <div>{data.numberOfAccidentals}</div>
+    </Row>
+    <Row align="center" justify="between">
+      <div>
+        {t('composer:midi_parser.out_of_range')}({data.outOfRangeBounds.upper +
+          data.outOfRangeBounds.lower})
+      </div>
+      <Row style="width:fit-content">
+        <Row style="margin-right:0.4rem">
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            stroke-width="0"
+            viewBox="0 0 448 512"
+            height="1em"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+            style="margin-right:0.2rem"
+            ><path
+              d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"
+            /></svg
+          >
+          {data.outOfRangeBounds.upper}
         </Row>
-        <Row align="center" justify="between">
-            <div class={hasTooltip(true)}>
-                <Tooltip>
-                    {t('composer:midi_parser.max_octave_scaling_description')}
-                </Tooltip>
-                {t('composer:midi_parser.max_octave_scaling')}
-            </div>
-            <NumericalInput value={data.maxScaling} placeholder="No scaling" onChange={onMaxScaleChange} />
+        <Row>
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            stroke-width="0"
+            viewBox="0 0 448 512"
+            height="1em"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+            style="margin-right:0.2rem"
+            ><path
+              d="M413.1 222.5l22.2 22.2c9.4 9.4 9.4 24.6 0 33.9L241 473c-9.4 9.4-24.6 9.4-33.9 0L12.7 278.6c-9.4-9.4-9.4-24.6 0-33.9l22.2-22.2c9.5-9.5 25-9.3 34.3.4L184 343.4V56c0-13.3 10.7-24 24-24h32c13.3 0 24 10.7 24 24v287.4l114.8-120.5c9.3-9.8 24.8-10 34.3-.4z"
+            /></svg
+          >
+          {data.outOfRangeBounds.lower}
         </Row>
-        <Row align="center" justify="between">
-            <div>{t('common:instrument')}</div>
-            <div>{data.track.instrument.name}</div>
-        </Row>
-        <Row align="center" justify="between">
-            <div>{t('composer:midi_parser.number_of_notes')}</div>
-            <div>{data.track.notes.length}</div>
-        </Row>
-        <Row align="center" justify="between">
-            <div>{t('composer:midi_parser.accidentals')}</div>
-            <div>{data.numberOfAccidentals}</div>
-        </Row>
-        <Row align="center" justify="between">
-            <div>{t('composer:midi_parser.out_of_range')}({data.outOfRangeBounds.upper + data.outOfRangeBounds.lower})</div>
-            <Row style="width:fit-content">
-                <Row style="margin-right:0.4rem">
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" style="margin-right:0.2rem"><path d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"/></svg>
-                    {data.outOfRangeBounds.upper}
-                </Row>
-                <Row>
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" style="margin-right:0.2rem"><path d="M413.1 222.5l22.2 22.2c9.4 9.4 9.4 24.6 0 33.9L241 473c-9.4 9.4-24.6 9.4-33.9 0L12.7 278.6c-9.4-9.4-9.4-24.6 0-33.9l22.2-22.2c9.5-9.5 25-9.3 34.3.4L184 343.4V56c0-13.3 10.7-24 24-24h32c13.3 0 24 10.7 24 24v287.4l114.8-120.5c9.3-9.8 24.8-10 34.3-.4z"/></svg>
-                    {data.outOfRangeBounds.lower}
-                </Row>
-            </Row>
-        </Row>
-    </Column>
+      </Row>
+    </Row>
+  </Column>
 </Column>

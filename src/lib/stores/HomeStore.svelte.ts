@@ -1,33 +1,33 @@
 type HomeStoreState = {
-    canShow: boolean
-    visible: boolean
-    isInPosition: boolean
-    hasPersistentStorage: boolean
-}
+  canShow: boolean;
+  visible: boolean;
+  isInPosition: boolean;
+  hasPersistentStorage: boolean;
+};
 
 class HomeStore {
-    state: HomeStoreState = $state({
-        canShow: false,
-        visible: false,
-        isInPosition: false,
-        hasPersistentStorage: false
-    })
+  state: HomeStoreState = $state({
+    canShow: false,
+    visible: false,
+    isInPosition: false,
+    hasPersistentStorage: false,
+  });
 
-    open = () => {
-        this.setState({visible: true, isInPosition: false})
-    }
-    close = () => {
-        this.setState({isInPosition: true})
-        setTimeout(() => {
-            this.setState({visible: false})
-        }, 150)
-    }
-    override = (override: boolean) => {
-        if (override) this.open()
-        else this.close()
-    }
-    setState = (state: Partial<HomeStoreState>) => {
-        Object.assign(this.state, state)
-    }
+  open = () => {
+    this.setState({ visible: true, isInPosition: false });
+  };
+  close = () => {
+    this.setState({ isInPosition: true });
+    setTimeout(() => {
+      this.setState({ visible: false });
+    }, 150);
+  };
+  override = (override: boolean) => {
+    if (override) this.open();
+    else this.close();
+  };
+  setState = (state: Partial<HomeStoreState>) => {
+    Object.assign(this.state, state);
+  };
 }
-export const homeStore = new HomeStore()
+export const homeStore = new HomeStore();

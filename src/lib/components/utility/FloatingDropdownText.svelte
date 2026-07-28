@@ -1,7 +1,7 @@
 <script lang="ts">
-    let {text}: {text: string} = $props()
+  let { text }: { text: string } = $props();
 </script>
 
 <div class="floating-dropdown-text">
-    {text}
+  {text}
 </div>

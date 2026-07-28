@@ -29,10 +29,12 @@
 ### Task 1: Runes store infrastructure — the six simple shell stores
 
 **Files:**
+
 - Create: `src/lib/stores/LoggerStore.svelte.ts`, `src/lib/stores/LogsStore.svelte.ts`, `src/lib/stores/HomeStore.svelte.ts`, `src/lib/stores/GlobalConfigStore.svelte.ts`, `src/lib/stores/PwaStore.svelte.ts`, `src/lib/stores/BrowserHistoryStore.ts`
 - Create: `test/stores.test.ts`
 
 **Interfaces:**
+
 - Consumes: `$core/legacyConfig` (`APP_NAME`, `BASE_LAYER_LIMIT`), `$core/Songs/Layer` (`NoteLayer`), `$core/Errors` (`AppError`), `is-mobile`.
 - Produces: singletons `logger`, `logsStore`, `homeStore`, `globalConfigStore`, `pwaStore`, `browserHistoryStore` with the OLD public APIs (old paths: `src/stores/{LoggerStore,LogsStore,HomeStore,GlobalConfigStore,PwaStore,BrowserHistoryStore}.ts` on the parent branch — port each class 1:1, `@observable` field → `$state` field, `makeObservable`/mobx imports deleted, everything else same names/signatures). `LoggerStatus` enum values are CSS colors — preserve exactly.
 
@@ -42,32 +44,32 @@ Pattern (this is the normative shape — apply to each old class):
 
 ```ts
 // src/lib/stores/LoggerStore.svelte.ts  (old: src/stores/LoggerStore.ts)
-import {AppError} from '$core/Errors'
+import { AppError } from '$core/Errors';
 
 export enum LoggerStatus {
-    ERROR = 'var(--red)',
-    WARN = 'var(--orange)',
-    SUCCESS = 'var(--accent)',
+  ERROR = 'var(--red)',
+  WARN = 'var(--orange)',
+  SUCCESS = 'var(--accent)',
 }
 
 export type ToastState = {
-    timestamp: number
-    visible: boolean
-    text: string
-    timeout: number
-    id: number
-    type: LoggerStatus
-}
-export type PillState = {visible: boolean, text: string}
+  timestamp: number;
+  visible: boolean;
+  text: string;
+  timeout: number;
+  id: number;
+  type: LoggerStatus;
+};
+export type PillState = { visible: boolean; text: string };
 
 class LoggerStore {
-    toasts: ToastState[] = $state([])
-    pillState: PillState = $state({visible: false, text: ''})
-    private lastId = 0
-    // ...every method from the old class, bodies unchanged except
-    // observable-mutation idioms that translate directly (push/splice work on $state arrays)
+  toasts: ToastState[] = $state([]);
+  pillState: PillState = $state({ visible: false, text: '' });
+  private lastId = 0;
+  // ...every method from the old class, bodies unchanged except
+  // observable-mutation idioms that translate directly (push/splice work on $state arrays)
 }
-export const logger = new LoggerStore()
+export const logger = new LoggerStore();
 ```
 
 Port ALL methods with old signatures: `log(text, timeout = 4500, type = LoggerStatus.SUCCESS)`, `error`, `success`, `warn`, `logAppError`, `showPill`, `hidePill`, `clearToasts`, `hideToast(id)`, `removeToast(id)`, `setState`, `setPillState`. Same for the other five (old blobs are the spec; `GlobalConfigStore.load()` keeps `is-mobile`, the `${APP_NAME}_uma_mode` key, and `NoteLayer.setMaxLayerCount(1024|BASE_LAYER_LIMIT)`; `PwaStore` keeps the `isTWA()` skip and `beforeinstallprompt` wiring with SSR guards (`if (typeof window === 'undefined') return`); `BrowserHistoryStore` stays a plain non-reactive class exactly as old).
@@ -77,56 +79,56 @@ Port ALL methods with old signatures: `log(text, timeout = 4500, type = LoggerSt
 `test/stores.test.ts`:
 
 ```ts
-import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {logger, LoggerStatus} from '../src/lib/stores/LoggerStore.svelte'
-import {homeStore} from '../src/lib/stores/HomeStore.svelte'
-import {logsStore} from '../src/lib/stores/LogsStore.svelte'
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { logger, LoggerStatus } from '../src/lib/stores/LoggerStore.svelte';
+import { homeStore } from '../src/lib/stores/HomeStore.svelte';
+import { logsStore } from '../src/lib/stores/LogsStore.svelte';
 
 describe('LoggerStore', () => {
-    beforeEach(() => {
-        vi.useFakeTimers()
-        logger.clearToasts()
-    })
-    it('log pushes a toast and auto-hides then removes it', () => {
-        logger.log('hello', 1000, LoggerStatus.SUCCESS)
-        expect(logger.toasts.length).toBe(1)
-        expect(logger.toasts[0].text).toBe('hello')
-        expect(logger.toasts[0].visible).toBe(true)
-        vi.advanceTimersByTime(1001)
-        expect(logger.toasts[0]?.visible ?? false).toBe(false)
-        vi.advanceTimersByTime(300)
-        expect(logger.toasts.length).toBe(0)
-    })
-    it('pill shows and hides', () => {
-        logger.showPill('working')
-        expect(logger.pillState).toEqual({visible: true, text: 'working'})
-        logger.hidePill()
-        expect(logger.pillState.visible).toBe(false)
-    })
-})
+  beforeEach(() => {
+    vi.useFakeTimers();
+    logger.clearToasts();
+  });
+  it('log pushes a toast and auto-hides then removes it', () => {
+    logger.log('hello', 1000, LoggerStatus.SUCCESS);
+    expect(logger.toasts.length).toBe(1);
+    expect(logger.toasts[0].text).toBe('hello');
+    expect(logger.toasts[0].visible).toBe(true);
+    vi.advanceTimersByTime(1001);
+    expect(logger.toasts[0]?.visible ?? false).toBe(false);
+    vi.advanceTimersByTime(300);
+    expect(logger.toasts.length).toBe(0);
+  });
+  it('pill shows and hides', () => {
+    logger.showPill('working');
+    expect(logger.pillState).toEqual({ visible: true, text: 'working' });
+    logger.hidePill();
+    expect(logger.pillState.visible).toBe(false);
+  });
+});
 
 describe('HomeStore', () => {
-    it('open/close set the old flag semantics', () => {
-        vi.useFakeTimers()
-        homeStore.open()
-        expect(homeStore.state.visible).toBe(true)
-        expect(homeStore.state.isInPosition).toBe(false)
-        homeStore.close()
-        expect(homeStore.state.isInPosition).toBe(true)
-        vi.advanceTimersByTime(151)
-        expect(homeStore.state.visible).toBe(false)
-    })
-})
+  it('open/close set the old flag semantics', () => {
+    vi.useFakeTimers();
+    homeStore.open();
+    expect(homeStore.state.visible).toBe(true);
+    expect(homeStore.state.isInPosition).toBe(false);
+    homeStore.close();
+    expect(homeStore.state.isInPosition).toBe(true);
+    vi.advanceTimersByTime(151);
+    expect(homeStore.state.visible).toBe(false);
+  });
+});
 
 describe('LogsStore', () => {
-    it('dedupes by error identity', () => {
-        logsStore.clearLogs()
-        const err = new Error('x')
-        logsStore.addLog({error: err, message: 'a'})
-        logsStore.addLog({error: err, message: 'b'})
-        expect(logsStore.logs.length).toBe(1)
-    })
-})
+  it('dedupes by error identity', () => {
+    logsStore.clearLogs();
+    const err = new Error('x');
+    logsStore.addLog({ error: err, message: 'a' });
+    logsStore.addLog({ error: err, message: 'b' });
+    expect(logsStore.logs.length).toBe(1);
+  });
+});
 ```
 
 (If direct `.svelte.ts` importing needs the barrel treatment instead, route these imports through new named exports added to `test/imports.ts` — new names are allowed — and note it.)
@@ -140,11 +142,13 @@ describe('LogsStore', () => {
 ### Task 2: Service-backed stores + Theme.save() restoration + definition-consistency guard
 
 **Files:**
+
 - Create: `src/lib/stores/SongsStore.svelte.ts`, `src/lib/stores/FoldersStore.svelte.ts`, `src/lib/stores/KeybindsStore.svelte.ts`, `src/lib/stores/ThemeStore.svelte.ts`
 - Modify: `src/lib/core/utils/Utilities.ts` (restore `createDebouncer`, `debounce`, `Timer` type — byte-verbatim from the old blob, reuniting the orphaned `Debouncer` export), `src/lib/core/theme/ThemeProvider.ts` (restore the two stripped `themeStore` lines in `save()` — importing the NEW runes `themeStore`)
 - Create: `test/serviceStores.test.ts`, `test/gameDefinitionConsistency.test.ts`
 
 **Interfaces:**
+
 - Consumes: `$core/Services/*` singletons, `$core/Folder`, `$core/Songs/Song` (`extractStorable`, `SongStorable`), the restored `createDebouncer`.
 - Produces: `songsStore` (10ms-trailing-debounced `sync` exactly as old `src/stores/SongsStore.ts` — the debounce is HERE, not in folders), `folderStore` (non-debounced sync + `removeFolder` cascading `songsStore.clearSongsInFolder`), `keyBinds` (localStorage `${APP_NAME}_keybinds`, `version = 13`, per-game `keyboard` defaults read from `game.layouts.defaultKeyboardKeys` — VERIFY equal to the old ternary lists, they are fixture-checked below; the three `KeyboardProvider` listener factories DEFERRED with `// Phase 4:` markers), `themeStore` (themes list `$state`, `sync/add/update/remove/getCurrentThemeId/setCurrentThemeId` proxying `_themeService`). `Theme.save()` works again: `themeStore.setCurrentThemeId(this.getId())` + editable-guarded `themeStore.updateTheme(...)` — the old lines restored verbatim with the new import.
 
@@ -159,45 +163,47 @@ describe('LogsStore', () => {
 `test/serviceStores.test.ts` (fake-indexeddb is already in the setup):
 
 ```ts
-import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {themeStore} from '../src/lib/stores/ThemeStore.svelte'
-import {songsStore} from '../src/lib/stores/SongsStore.svelte'
-import {keyBinds} from '../src/lib/stores/KeybindsStore.svelte'
-import {BaseTheme, ThemeProvider} from './imports'
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { themeStore } from '../src/lib/stores/ThemeStore.svelte';
+import { songsStore } from '../src/lib/stores/SongsStore.svelte';
+import { keyBinds } from '../src/lib/stores/KeybindsStore.svelte';
+import { BaseTheme, ThemeProvider } from './imports';
 
 describe('theme persistence (P2 Important-1 acceptance: "theme edit persists across reload")', () => {
-    it('Theme.save() persists the current theme id and the edited doc', async () => {
-        const custom = new BaseTheme('My custom')
-        const id = await themeStore.addTheme(custom.serialize())
-        ThemeProvider.loadFromTheme({...custom.serialize(), id})
-        ThemeProvider.set('accent', '#123456')
-        await ThemeProvider.save()
-        expect(themeStore.getCurrentThemeId()).toBe(id)
-        await themeStore.sync()
-        const persisted = themeStore.themes.find(t => t.id === id)
-        expect(persisted?.data.accent.value).toBe('#123456')
-    })
-})
+  it('Theme.save() persists the current theme id and the edited doc', async () => {
+    const custom = new BaseTheme('My custom');
+    const id = await themeStore.addTheme(custom.serialize());
+    ThemeProvider.loadFromTheme({ ...custom.serialize(), id });
+    ThemeProvider.set('accent', '#123456');
+    await ThemeProvider.save();
+    expect(themeStore.getCurrentThemeId()).toBe(id);
+    await themeStore.sync();
+    const persisted = themeStore.themes.find((t) => t.id === id);
+    expect(persisted?.data.accent.value).toBe('#123456');
+  });
+});
 
 describe('songsStore debounced sync', () => {
-    it('collapses burst syncs into one read after 10ms', async () => {
-        vi.useFakeTimers()
-        const spy = vi.spyOn(await import('./imports').then(m => m.songService), 'getStorableSongs')
-        songsStore.sync(); songsStore.sync(); songsStore.sync()
-        await vi.advanceTimersByTimeAsync(15)
-        expect(spy).toHaveBeenCalledTimes(1)
-        vi.useRealTimers()
-    })
-})
+  it('collapses burst syncs into one read after 10ms', async () => {
+    vi.useFakeTimers();
+    const spy = vi.spyOn(await import('./imports').then((m) => m.songService), 'getStorableSongs');
+    songsStore.sync();
+    songsStore.sync();
+    songsStore.sync();
+    await vi.advanceTimersByTimeAsync(15);
+    expect(spy).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+});
 
 describe('keybinds persistence', () => {
-    it('round-trips serialize/load at version 13 under the legacy key', () => {
-        keyBinds.save()
-        const raw = localStorage.getItem(`${'Genshin' /* replaced below */}_keybinds`)
-        expect(raw).toBeTruthy()
-        expect(JSON.parse(raw!).version).toBe(13)
-    })
-})
+  it('round-trips serialize/load at version 13 under the legacy key', () => {
+    keyBinds.save();
+    const raw = localStorage.getItem(`${'Genshin' /* replaced below */}_keybinds`);
+    expect(raw).toBeTruthy();
+    expect(JSON.parse(raw!).version).toBe(13);
+  });
+});
 ```
 
 Adapt the storage-key literal to read `APP_NAME` from `./imports` (works per-game). If `ThemeProvider.set`'s exact signature differs from the old blob (`set(name, value)`), match the old blob — the test adapts to the REAL API, never the reverse.
@@ -205,28 +211,39 @@ Adapt the storage-key literal to read `APP_NAME` from `./imports` (works per-gam
 `test/gameDefinitionConsistency.test.ts` (P2 Important-2 — locks definition fields to the legacy-computed values):
 
 ```ts
-import {describe, expect, it} from 'vitest'
-import {game} from '$game'
+import { describe, expect, it } from 'vitest';
+import { game } from '$game';
 import {
-    APP_NAME, ComposerSettings, INSTRUMENTS, NOTES_PER_COLUMN, PlayerSettings,
-    ThemeSettings, ZenKeyboardSettings,
-} from './imports'
-import {InstrumentData} from './imports'
+  APP_NAME,
+  ComposerSettings,
+  INSTRUMENTS,
+  NOTES_PER_COLUMN,
+  PlayerSettings,
+  ThemeSettings,
+  ZenKeyboardSettings,
+} from './imports';
+import { InstrumentData } from './imports';
 
 describe('GameDefinition fields match legacy-computed values (drift guard)', () => {
-    it('identity + geometry', () => {
-        expect(game.storageId).toBe(APP_NAME)
-        expect(game.notes.perColumn).toBe(NOTES_PER_COLUMN)
-        expect(game.instruments.list).toEqual(INSTRUMENTS)
-    })
-    it('defaults duplicated in core ternaries', () => {
-        expect(new InstrumentData().volume).toBe(game.instruments.defaultVolume)
-        expect(ThemeSettings.data.note_background.value).toBe(game.themes.defaultNoteBackground)
-        expect(ComposerSettings.data.noteNameType.value).toBe(game.settings.defaultNoteNameType.composer.desktop)
-        expect(PlayerSettings.data.noteNameType.value).toBe(game.settings.defaultNoteNameType.player.desktop)
-        expect(ZenKeyboardSettings.data.noteNameType.value).toBe(game.settings.defaultNoteNameType.zen.desktop)
-    })
-})
+  it('identity + geometry', () => {
+    expect(game.storageId).toBe(APP_NAME);
+    expect(game.notes.perColumn).toBe(NOTES_PER_COLUMN);
+    expect(game.instruments.list).toEqual(INSTRUMENTS);
+  });
+  it('defaults duplicated in core ternaries', () => {
+    expect(new InstrumentData().volume).toBe(game.instruments.defaultVolume);
+    expect(ThemeSettings.data.note_background.value).toBe(game.themes.defaultNoteBackground);
+    expect(ComposerSettings.data.noteNameType.value).toBe(
+      game.settings.defaultNoteNameType.composer.desktop
+    );
+    expect(PlayerSettings.data.noteNameType.value).toBe(
+      game.settings.defaultNoteNameType.player.desktop
+    );
+    expect(ZenKeyboardSettings.data.noteNameType.value).toBe(
+      game.settings.defaultNoteNameType.zen.desktop
+    );
+  });
+});
 ```
 
 (The settings paths reference the OLD BaseSettings shapes — verify the exact property paths against `$core/BaseSettings.ts` and adjust the accessors to the real shape; the ASSERTION pairs are the requirement. jsdom UA is desktop, so `.value` holds the desktop branch.)
@@ -240,11 +257,13 @@ describe('GameDefinition fields match legacy-computed values (drift guard)', () 
 ### Task 3: i18n system (i18next core + runes binding + narrowed types)
 
 **Files:**
+
 - Create: `src/lib/i18n/i18n.ts` (init + `setI18nLanguage` + types — old `src/i18n/i18n.ts` minus `initReactI18next`), `src/lib/i18n/i18nCache.ts` (old file, `BASE_PATH` → SvelteKit `base` from `$app/paths`), `src/lib/i18n/locales/en/index.ts` (old 1066-line bundle verbatim; its type imports point at `$core`), `src/lib/i18n/binding.svelte.ts` (NEW — the runes binding)
 - Modify: `src/lib/core/Services/Database/Database.ts` (narrow `SerializedLocale` back to `{id: AppLanguage, version: number, locale: AppI18N}` importing the real types), `src/lib/core/types/SettingsPropriety.ts` (narrow `NameOrDescriptionKey` back to the old i18n-keyed type — copy the old definition), `src/lib/core/legacyConfig.ts` (add `LANG_PREFERENCE_KEY_NAME` + `IS_DEV` if missing — derive/copy from old Config exactly), `package.json` (+`i18next`)
 - Create: `test/i18n.test.ts`
 
 **Interfaces:**
+
 - Consumes: `DbInstance.collections.translation`, `$app/paths` `base`.
 - Produces: `i18n` instance, `setI18nLanguage(i18n, lang): Promise<boolean>`, `AVAILABLE_LANGUAGES`, `AppLanguage`, `AppI18N`, `isLanguageLoaded`; from the binding: `t` — a reactive translate function usable in components (`t('menu:settings')`), implemented as a `$state` tick bumped on i18next `languageChanged` + `loaded` + `added` events with `export function t(key, opts?) { void tick.value; return i18n.t(key, opts) }` shaped for runes tracking (the binding file is ~50 lines; design it so plain non-reactive `i18n.t` remains available for services — FileService uses that).
 
@@ -255,23 +274,25 @@ describe('GameDefinition fields match legacy-computed values (drift guard)', () 
 - [ ] **Step 5:** `test/i18n.test.ts`:
 
 ```ts
-import {describe, expect, it} from 'vitest'
-import {i18n, isLanguageLoaded, setI18nLanguage} from '../src/lib/i18n/i18n'
+import { describe, expect, it } from 'vitest';
+import { i18n, isLanguageLoaded, setI18nLanguage } from '../src/lib/i18n/i18n';
 
 describe('i18n core', () => {
-    it('boots with bundled english and translates a known key', () => {
-        expect(isLanguageLoaded('en')).toBe(true)
-        expect(i18n.t('common:confirm')).toBeTypeOf('string')
-        expect(i18n.t('common:confirm').length).toBeGreaterThan(0)
-    })
-    it('setI18nLanguage falls back gracefully for an unfetchable locale', async () => {
-        const ok = await setI18nLanguage(i18n, 'ja')  // fetch fails in vitest (no server) -> cache miss -> false
-        expect(ok).toBe(false)
-        expect(i18n.language ?? 'en').toBeTruthy()
-    })
-})
+  it('boots with bundled english and translates a known key', () => {
+    expect(isLanguageLoaded('en')).toBe(true);
+    expect(i18n.t('common:confirm')).toBeTypeOf('string');
+    expect(i18n.t('common:confirm').length).toBeGreaterThan(0);
+  });
+  it('setI18nLanguage falls back gracefully for an unfetchable locale', async () => {
+    const ok = await setI18nLanguage(i18n, 'ja'); // fetch fails in vitest (no server) -> cache miss -> false
+    expect(ok).toBe(false);
+    expect(i18n.language ?? 'en').toBeTruthy();
+  });
+});
 ```
+
 (Adjust the known-key assertion to a real key from the en bundle — check `locales/en/index.ts` for one, e.g. `common` namespace; the requirement is a non-empty translation, not a specific string.)
+
 - [ ] **Step 6:** Full `npm test` both games + checks + LF; commit → `feat: i18n system (i18next core, runes binding, narrowed core types)`
 
 ---
@@ -279,12 +300,14 @@ describe('i18n core', () => {
 ### Task 4: Reactive theme + CSS-variable injector
 
 **Files:**
+
 - Rename/convert: `src/lib/core/theme/ThemeProvider.ts` → `src/lib/core/theme/ThemeProvider.svelte.ts` (git mv; then `this.state = observable-era plain clone` becomes `$state`: the class field `state: ThemeState` initialized with `$state(cloneDeep(baseTheme))` — the ONE reactive change; everything else untouched)
 - Modify: `test/imports.ts` (ThemeProvider specifier gains `.svelte` — names unchanged)
 - Create: `src/lib/components/theme/ThemeVars.svelte`, `src/lib/components/theme/AppBackground.svelte`
 - Create: `test/reactiveTheme.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ThemeProvider` (now reactive), `TEMPO_CHANGERS` via `game.composer.tempoChangers`, `color`.
 - Produces: `<ThemeVars>{children}</ThemeVars>` — wraps content in the flex div carrying ALL inline CSS vars + emits the `:root` style block + `theme-color` meta; recomputes via `$derived` on the reactive theme state (the old 50ms debounce becomes unnecessary — runes are fine-grained; note this as a deliberate improvement). `AppBackground.svelte` (`page: 'Composer'|'Main'`) reading `theme.getOther('backgroundImage'+page)`.
 
@@ -293,59 +316,79 @@ describe('i18n core', () => {
 
 ```svelte
 <script lang="ts">
-    import Color from 'color'
-    import {ThemeProvider as theme} from '$core/theme/ThemeProvider.svelte'
-    import {game} from '$game'
-    import {colorToRGB} from '$core/utils/Utilities'
+  import Color from 'color';
+  import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
+  import { game } from '$game';
+  import { colorToRGB } from '$core/utils/Utilities';
 
-    let {children} = $props()
+  let { children } = $props();
 
-    const vars = $derived.by(() => {
-        const map = new Map<string, string>()
-        const clickColor = theme.get('accent').isDark()
-            ? theme.get('accent').mix(theme.get('note_background')).lighten(0.1)
-            : theme.get('accent').mix(theme.get('note_background')).lighten(0.2)
-        const backgroundDesaturate = theme.get('note_background').desaturate(0.6)
-        const borderFill = backgroundDesaturate.isDark()
-            ? backgroundDesaturate.lighten(0.50).toString()
-            : backgroundDesaturate.darken(0.18).toString()
-        map.set('--clicked-note', clickColor.toString())
-        map.set('--note-border-fill', borderFill)
-        for (const e of theme.toArray()) {
-            const layers = [10, 20]
-            const layersMore = [10, 15, 20]
-            map.set(`--${e.css}`, e.value)
-            map.set(`--${e.css}-rgb`, colorToRGB(theme.get(e.name)).join(','))
-            map.set(`--${e.css}-text`, e.text)
-            layers.forEach(v => map.set(`--${e.css}-darken-${v}`, theme.get(e.name).darken(v / 100).toString()))
-            layers.forEach(v => map.set(`--${e.css}-lighten-${v}`, theme.get(e.name).lighten(v / 100).toString()))
-            layersMore.forEach(v => map.set(`--${e.css}-layer-${v}`, theme.layer(e.name, v / 100).toString()))
-        }
-        for (const t of game.composer.tempoChangers) {
-            map.set(`--tempo-changer-${t.id}`, Color(t.color).toString())
-        }
-        return map
-    })
-    const styleString = $derived([...vars].map(([k, v]) => `${k}:${v}`).join(';'))
-    const rootBlock = $derived(`:root{--html-background:${theme.get('background').alpha(1).toString()};--background:${theme.get('background').toString()};--primary:${theme.get('primary').toString()};--background-text:${theme.getText('background')};}`)
+  const vars = $derived.by(() => {
+    const map = new Map<string, string>();
+    const clickColor = theme.get('accent').isDark()
+      ? theme.get('accent').mix(theme.get('note_background')).lighten(0.1)
+      : theme.get('accent').mix(theme.get('note_background')).lighten(0.2);
+    const backgroundDesaturate = theme.get('note_background').desaturate(0.6);
+    const borderFill = backgroundDesaturate.isDark()
+      ? backgroundDesaturate.lighten(0.5).toString()
+      : backgroundDesaturate.darken(0.18).toString();
+    map.set('--clicked-note', clickColor.toString());
+    map.set('--note-border-fill', borderFill);
+    for (const e of theme.toArray()) {
+      const layers = [10, 20];
+      const layersMore = [10, 15, 20];
+      map.set(`--${e.css}`, e.value);
+      map.set(`--${e.css}-rgb`, colorToRGB(theme.get(e.name)).join(','));
+      map.set(`--${e.css}-text`, e.text);
+      layers.forEach((v) =>
+        map.set(
+          `--${e.css}-darken-${v}`,
+          theme
+            .get(e.name)
+            .darken(v / 100)
+            .toString()
+        )
+      );
+      layers.forEach((v) =>
+        map.set(
+          `--${e.css}-lighten-${v}`,
+          theme
+            .get(e.name)
+            .lighten(v / 100)
+            .toString()
+        )
+      );
+      layersMore.forEach((v) =>
+        map.set(`--${e.css}-layer-${v}`, theme.layer(e.name, v / 100).toString())
+      );
+    }
+    for (const t of game.composer.tempoChangers) {
+      map.set(`--tempo-changer-${t.id}`, Color(t.color).toString());
+    }
+    return map;
+  });
+  const styleString = $derived([...vars].map(([k, v]) => `${k}:${v}`).join(';'));
+  const rootBlock = $derived(
+    `:root{--html-background:${theme.get('background').alpha(1).toString()};--background:${theme.get('background').toString()};--primary:${theme.get('primary').toString()};--background-text:${theme.getText('background')};}`
+  );
 </script>
 
 <svelte:head>
-    {@html `<${'style'}>${rootBlock}</${'style'}>`}
-    <meta name="theme-color" content={theme.get('primary').toString()} />
+  {@html `<${'style'}>${rootBlock}</${'style'}>`}
+  <meta name="theme-color" content={theme.get('primary').toString()} />
 </svelte:head>
 
 <div style={styleString} class="theme-vars-root">
-    {@render children()}
+  {@render children()}
 </div>
 
 <style>
-    .theme-vars-root {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-    }
+  .theme-vars-root {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
 </style>
 ```
 
@@ -354,22 +397,23 @@ describe('i18n core', () => {
 - [ ] **Step 3:** `test/reactiveTheme.test.ts` — non-component-level (component testing needs extra infra; test the reactive model instead):
 
 ```ts
-import {describe, expect, it} from 'vitest'
-import {ThemeProvider} from './imports'
+import { describe, expect, it } from 'vitest';
+import { ThemeProvider } from './imports';
 
 describe('reactive theme model', () => {
-    it('set() updates value and recomputes text color', () => {
-        ThemeProvider.set('accent', '#000000')
-        expect(ThemeProvider.getValue('accent')).toBe('#000000')
-        expect(ThemeProvider.getText('accent').toString().toLowerCase()).not.toBe('#000000')
-    })
-    it('layer() lightens dark colors', () => {
-        ThemeProvider.set('primary', '#101010')
-        const layered = ThemeProvider.layer('primary', 0.15)
-        expect(layered.luminosity()).toBeGreaterThan(ThemeProvider.get('primary').luminosity())
-    })
-})
+  it('set() updates value and recomputes text color', () => {
+    ThemeProvider.set('accent', '#000000');
+    expect(ThemeProvider.getValue('accent')).toBe('#000000');
+    expect(ThemeProvider.getText('accent').toString().toLowerCase()).not.toBe('#000000');
+  });
+  it('layer() lightens dark colors', () => {
+    ThemeProvider.set('primary', '#101010');
+    const layered = ThemeProvider.layer('primary', 0.15);
+    expect(layered.luminosity()).toBeGreaterThan(ThemeProvider.get('primary').luminosity());
+  });
+});
 ```
+
 - [ ] **Step 4:** Full test/check/LF gates; commit → `feat: reactive theme model + CSS-variable injector`
 
 ---
@@ -377,11 +421,13 @@ describe('reactive theme model', () => {
 ### Task 5: Global CSS, fonts, and shell primitives
 
 **Files:**
+
 - Create: `src/lib/css/App.css`, `src/lib/css/Utility.scss` (ported from old `src/app/_client-pages/App.css` + `Utility.scss` verbatim; `@font-face` URLs repointed to the restored fonts)
 - Restore (byte-exact from parent branch): `src/lib/assets/font/*` (`git ls-tree migration/next16-react19 src/assets/font` for the list)
 - Create (Svelte conversions of old `src/components/shared/...`): `src/lib/components/layout/{Card,Column,Row,Grid,DecoratedCard}.svelte`, `src/lib/components/layout/layoutConstants.ts`, `src/lib/components/header/Header.svelte`, `src/lib/components/inputs/{AppButton,IconButton,Select,Switch,FilePicker}.svelte`, `src/lib/components/utility/{Tooltip.svelte,tooltip.ts,BodyDropper.svelte,FloatingDropdown.svelte,HelpTooltip.svelte}`, `src/lib/components/AppLink.svelte`, `src/lib/components/Separator.svelte`
 
 **Interfaces:**
+
 - Consumes: theme CSS vars (Task 4).
 - Produces: the primitive library later tasks compose. Conversion rules (normative for every component this phase): props via `$props()` with the old prop names; `children`/named snippets replace React children/render-props; `onClick`→`onclick` etc.; `style`/`className` props preserved where the old component exposed them; component-scoped CSS moves into `<style>`; module-scoped old `.module.css` content inlines into the component's `<style>`; `hasTooltip(text)` helper stays a plain ts export. `Memoized`/`MemoizedIcon` are NOT ported (React-perf idiom; Svelte doesn't need it — record as a documented omission).
 
@@ -396,9 +442,11 @@ describe('reactive theme model', () => {
 ### Task 6: Toasts, async prompts, drop zone
 
 **Files:**
+
 - Create: `src/lib/stores/AsyncPromptStore.svelte.ts` (old `shared/Utility/AsyncPrompts.ts` — the `asyncPrompt`/`asyncConfirm` deferred-resolver API, `$state` fields), `src/lib/components/shell/Logger.svelte` (old `pages/Index/Logger.tsx` — toasts + pill; icons: inline the 3 SVGs from react-icons' fa Check/ExclamationTriangle/Times paths — copy the `d` attributes from the old rendered output or the react-icons source; no react-icons dep), `src/lib/components/shell/AsyncPrompt.svelte` (old `shared/Utility/AsyncPrompt.tsx` — prompt + confirm dialogs, Escape/Enter handling, overlay-click cancel, DecoratedCard chrome)
 
 **Interfaces:**
+
 - Consumes: `logger` store, `DecoratedCard`, `AppButton`, i18n `t`.
 - Produces: `asyncPrompt(question: string): Promise<string|null>`, `asyncConfirm(question: string, cancellable = true): Promise<boolean|null>` — EXACT old semantics (a new call cancels the prior via `deferred(null)`); `<Logger/>` + `<AsyncPromptWrapper/>` mountables.
 
@@ -408,17 +456,20 @@ describe('reactive theme model', () => {
 
 ```ts
 describe('async prompts', () => {
-    it('asyncConfirm resolves via answer and cancels prior prompt', async () => {
-        const {asyncConfirm, asyncPromptStore} = await import('../src/lib/stores/AsyncPromptStore.svelte')
-        const first = asyncConfirm('first?')
-        const second = asyncConfirm('second?')
-        expect(await first).toBe(null)          // superseded
-        asyncPromptStore.answerConfirm(true)
-        expect(await second).toBe(true)
-    })
-})
+  it('asyncConfirm resolves via answer and cancels prior prompt', async () => {
+    const { asyncConfirm, asyncPromptStore } =
+      await import('../src/lib/stores/AsyncPromptStore.svelte');
+    const first = asyncConfirm('first?');
+    const second = asyncConfirm('second?');
+    expect(await first).toBe(null); // superseded
+    asyncPromptStore.answerConfirm(true);
+    expect(await second).toBe(true);
+  });
+});
 ```
+
 (Adapt export names to the real ported surface — old file's exports are the contract.)
+
 - [ ] **Step 4:** Gates; commit → `feat: toasts, async prompts, body drop zone`
 
 ---
@@ -426,37 +477,39 @@ describe('async prompts', () => {
 ### Task 7: FileService, shell orchestration, and the real root layout
 
 **Files:**
+
 - Create: `src/lib/core/Services/FileService.ts` (minimal-diff port of old `src/lib/Services/FileService.ts`: store imports → the new runes stores, `$i18n/i18n` → `$lib/i18n/i18n`, everything else verbatim; brings `SerializedSongKind` into `$core/types.ts` — old definition now constructible), `src/lib/core/Services/globalServices.ts` (verbatim port incl. the `themeSerivce` misspelling), `src/lib/core/needsUpdate.ts` (old file; `IS_TAURI` branch deleted; `delay` restored to Utilities byte-verbatim WITH `worker-timers` — install it), `src/lib/core/PagesVersions.ts` (old file; the `APP_NAME === "Genshin"` ternary PRESERVED via the adapter — documented decision: faithful parity beats inventing an overrides convention now), `src/lib/core/changelog.ts` (verbatim port)
 - Create: `src/lib/stores/PageVisitStore.svelte.ts` (old `shared/PageVisit/pageVisit.tsx`'s internal store + helpers, sans React hooks — expose `hasVisitedPage(key)`, `setPageVisited(key)`, reading `${APP_NAME}_visited_pages`)
 - Create: `src/lib/components/shell/AppInit.svelte` (the AppBase-equivalent orchestrator — effects only, no visual output except the rotate-screen overlay; see checklist), `src/lib/components/shell/PageMetadata.svelte` (svelte:head title+og/description)
 - Modify: `src/routes/+layout.svelte` (final form — the provider stack), `package.json` (+`worker-timers`)
 
 **Interfaces:**
+
 - Consumes: everything prior.
 - Produces: the working shell. Root layout final structure:
 
 ```svelte
 <script lang="ts">
-    import '$lib/css/App.css'
-    import '$lib/css/Utility.scss'
-    import ThemeVars from '$lib/components/theme/ThemeVars.svelte'
-    import Logger from '$lib/components/shell/Logger.svelte'
-    import AsyncPrompt from '$lib/components/shell/AsyncPrompt.svelte'
-    import BodyDropper from '$lib/components/utility/BodyDropper.svelte'
-    import AppInit from '$lib/components/shell/AppInit.svelte'
+  import '$lib/css/App.css';
+  import '$lib/css/Utility.scss';
+  import ThemeVars from '$lib/components/theme/ThemeVars.svelte';
+  import Logger from '$lib/components/shell/Logger.svelte';
+  import AsyncPrompt from '$lib/components/shell/AsyncPrompt.svelte';
+  import BodyDropper from '$lib/components/utility/BodyDropper.svelte';
+  import AppInit from '$lib/components/shell/AppInit.svelte';
 
-    let {children} = $props()
+  let { children } = $props();
 </script>
 
 <ThemeVars>
-    <BodyDropper>
-        <Logger />
-        <AsyncPrompt />
-        <AppInit />
-        <svelte:boundary onerror={handleShellError}>
-            {@render children()}
-        </svelte:boundary>
-    </BodyDropper>
+  <BodyDropper>
+    <Logger />
+    <AsyncPrompt />
+    <AppInit />
+    <svelte:boundary onerror={handleShellError}>
+      {@render children()}
+    </svelte:boundary>
+  </BodyDropper>
 </ThemeVars>
 ```
 
@@ -475,11 +528,13 @@ describe('async prompts', () => {
 ### Task 8: Menu system, DefaultPage, Home overlay
 
 **Files:**
+
 - Create: `src/lib/components/menu/{menuContext.ts,MenuSidebar.svelte,MenuItem.svelte,MenuButton.svelte,MenuPanelWrapper.svelte,MenuPanel.svelte}` (old `shared/Menu/*` — React context → `setContext`/`getContext` with a typed key)
 - Create: `src/lib/components/shell/{DefaultPage.svelte,SimpleMenu.svelte,AppBackground already exists — wire it}`, `src/lib/components/shell/Home.svelte` + its CSS (old `pages/Index/Home.tsx` + `Home.css` — the 430-line launcher: nav cards for all pages, `DefaultLanguageSelector`, font-size control (`${APP_NAME}-font-size`), cache clear, PWA install via `pwaStore.install()`, TWA checks, persistent-storage ask), `src/lib/components/i18n/LanguageSelector.svelte` (+`DefaultLanguageSelector` wiring incl. the pill feedback)
 - Modify: `src/lib/components/PageStub.svelte` (wrap its content in `DefaultPage` so every stub route exercises the real chrome), `src/routes/+layout.svelte` (mount `<Home/>` at shell level per old AppBase)
 
 **Interfaces:**
+
 - Consumes: everything.
 - Produces: every route showing the real sidebar (back via `browserHistoryStore`, Discord link with leave-confirm via `asyncConfirm`, Home button opening the overlay), the Home overlay with working language switch + theme-aware styling. Old blobs are the specs; DOM/class parity so old CSS applies.
 
@@ -495,6 +550,7 @@ describe('async prompts', () => {
 ### Task 9: Glyphs, IS_BETA, types finale, CI, exit verification
 
 **Files:**
+
 - Create: `src/lib/games/genshin/glyphs/*.svelte` (11 — converted from old `shared/SvgNotes/genshin/*.tsx`), `src/lib/games/sky/glyphs/*.svelte` (3), each game's `index.ts` populating `notes.svgGlyphs`; `src/lib/components/SvgNote.svelte` (lookup by `NoteImage` key)
 - Modify: `src/lib/games/types.ts` — `GlyphComponent` → `import('svelte').Component<{background?: string}>` AND reformat the whole file to 4-space (the verbatim-vs-audit era ends HERE, in this same commit — note it in the audit doc with a one-line addendum "implemented as src/lib/games/types.ts; formatting normalized in <sha>")
 - Create: `src/lib/env.ts` — `export const IS_BETA = PUBLIC_IS_BETA === 'true'` via `$env/static/public` (with the `PUBLIC_IS_BETA` optional-var handling kit requires — check kit's static-env optionality; if absent-var breaks the build, source from `import.meta.env` with a comment); consume it in Home's beta banner (old Home.tsx line ~328)

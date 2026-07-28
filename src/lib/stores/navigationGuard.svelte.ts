@@ -8,35 +8,35 @@
 // and must decide synchronously whether to cancel it. Without this synchronous check,
 // +layout.svelte would have to cancel+reissue every in-app navigation just to await canLeave()
 // and find out it didn't need to.
-export type NavigationTarget = string | '__back__'
+export type NavigationTarget = string | '__back__';
 
-export type LeaveHandler = (target: NavigationTarget) => Promise<boolean>
+export type LeaveHandler = (target: NavigationTarget) => Promise<boolean>;
 
 export class LeaveGuard {
-    private handler: LeaveHandler | null = null
+  private handler: LeaveHandler | null = null;
 
-    get hasHandler(): boolean {
-        return this.handler !== null
-    }
+  get hasHandler(): boolean {
+    return this.handler !== null;
+  }
 
-    async canLeave(target: NavigationTarget): Promise<boolean> {
-        return this.handler === null ? true : this.handler(target)
-    }
+  async canLeave(target: NavigationTarget): Promise<boolean> {
+    return this.handler === null ? true : this.handler(target);
+  }
 
-    register(handler: LeaveHandler): () => void {
-        this.handler = handler
-        return () => {
-            if (this.handler === handler) this.handler = null
-        }
-    }
+  register(handler: LeaveHandler): () => void {
+    this.handler = handler;
+    return () => {
+      if (this.handler === handler) this.handler = null;
+    };
+  }
 }
 
-export const navigationGuard = new LeaveGuard()
+export const navigationGuard = new LeaveGuard();
 
 export function registerLeaveHandler(handler: LeaveHandler): () => void {
-    return navigationGuard.register(handler)
+  return navigationGuard.register(handler);
 }
 
 export function canLeave(target: NavigationTarget): Promise<boolean> {
-    return navigationGuard.canLeave(target)
+  return navigationGuard.canLeave(target);
 }

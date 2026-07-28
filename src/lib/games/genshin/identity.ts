@@ -18,6 +18,6 @@
 // localStorage/sessionStorage key prefix, the serialized `appName` inside songs/backups,
 // and (what this module exists to give the service worker) its cache-name prefix. Never
 // derive it from `id`.
-import type {GameIdentity} from '../types'
+import type { GameIdentity } from '../types';
 
-export const GAME_IDENTITY: GameIdentity = {id: 'genshin', storageId: 'Genshin'}
+export const GAME_IDENTITY: GameIdentity = { id: 'genshin', storageId: 'Genshin' };

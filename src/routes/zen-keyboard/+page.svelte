@@ -1,140 +1,142 @@
 <script lang="ts">
-    import AppBackground from '$cmp/theme/AppBackground.svelte'
-    import {onMount, untrack} from 'svelte'
-    import {t} from '$i18n/binding.svelte'
-    import {i18n} from '$i18n/i18n'
-    import ZenKeypad from '$cmp/pages/ZenKeyboard/ZenKeypad.svelte'
-    import ZenKeyboardMenu from '$cmp/pages/ZenKeyboard/ZenKeyboardMenu.svelte'
-    import PageMetadata from '$cmp/shell/PageMetadata.svelte'
-    import {ZenKeyboardSettings, type ZenKeyboardSettingsDataType} from '$core/BaseSettings'
-    import {Instrument, type ObservableNote} from '$lib/audio/Instrument.svelte'
-    import {metronome} from '$lib/audio/Metronome'
-    import {AudioProvider} from '$lib/providers/AudioProvider'
-    import {MIDIProvider} from '$lib/providers/MIDIProvider'
-    import {settingsService} from '$core/Services/SettingsService'
-    import {logger} from '$stores/LoggerStore.svelte'
-    import {zenKeyboardStore} from '$stores/ZenKeyboardStore.svelte'
-    import {setPageVisited} from '$stores/PageVisitStore.svelte'
-    import type {InstrumentName} from '$core/types'
-    import type {SettingUpdate, SettingVolumeUpdate} from '$core/types/SettingsPropriety'
+  import AppBackground from '$cmp/theme/AppBackground.svelte';
+  import { onMount, untrack } from 'svelte';
+  import { t } from '$i18n/binding.svelte';
+  import { i18n } from '$i18n/i18n';
+  import ZenKeypad from '$cmp/pages/ZenKeyboard/ZenKeypad.svelte';
+  import ZenKeyboardMenu from '$cmp/pages/ZenKeyboard/ZenKeyboardMenu.svelte';
+  import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import { ZenKeyboardSettings, type ZenKeyboardSettingsDataType } from '$core/BaseSettings';
+  import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
+  import { metronome } from '$lib/audio/Metronome';
+  import { AudioProvider } from '$lib/providers/AudioProvider';
+  import { MIDIProvider } from '$lib/providers/MIDIProvider';
+  import { settingsService } from '$core/Services/SettingsService';
+  import { logger } from '$stores/LoggerStore.svelte';
+  import { zenKeyboardStore } from '$stores/ZenKeyboardStore.svelte';
+  import { setPageVisited } from '$stores/PageVisitStore.svelte';
+  import type { InstrumentName } from '$core/types';
+  import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
 
-    let settings: ZenKeyboardSettingsDataType = $state(ZenKeyboardSettings.data)
-    let instrument: Instrument = $state(new Instrument())
-    let isMetronomePlaying = $state(false)
+  let settings: ZenKeyboardSettingsDataType = $state(ZenKeyboardSettings.data);
+  let instrument: Instrument = $state(new Instrument());
+  let isMetronomePlaying = $state(false);
 
-    onMount(() => {
-        setPageVisited('zenKeyboard')
-    })
+  onMount(() => {
+    setPageVisited('zenKeyboard');
+  });
 
-    onMount(() => {
-        const loaded = settingsService.getZenKeyboardSettings()
-        metronome.bpm = loaded.metronomeBpm.value
-        instrument = new Instrument(loaded.instrument.value)
-        settings = loaded
-        AudioProvider.setReverb(loaded.reverb.value)
-        return () => logger.hidePill()
-    })
+  onMount(() => {
+    const loaded = settingsService.getZenKeyboardSettings();
+    metronome.bpm = loaded.metronomeBpm.value;
+    instrument = new Instrument(loaded.instrument.value);
+    settings = loaded;
+    AudioProvider.setReverb(loaded.reverb.value);
+    return () => logger.hidePill();
+  });
 
-    $effect(() => {
-        const currentInstrument = instrument
-        // QUIRK (load-bearing): zenKeyboardStore.setKeyboardLayout does a splice that reads
-        // keyboard.length (for the delete count) and writes to that same $state array in one
-        // call. Svelte auto-tracks any reactive read anywhere in an $effect's call stack, so that
-        // .length read became a tracked dependency of THIS effect too, and the splice's own write
-        // immediately invalidated it - an infinite effect_update_depth_exceeded reschedule loop.
-        // untrack() confines tracking to the explicit `instrument` read above, so this still
-        // reruns whenever `instrument` is reassigned without also tracking setKeyboardLayout's
-        // own internal bookkeeping read.
-        untrack(() => {
-            zenKeyboardStore.setKeyboardLayout(currentInstrument.notes)
+  $effect(() => {
+    const currentInstrument = instrument;
+    // QUIRK (load-bearing): zenKeyboardStore.setKeyboardLayout does a splice that reads
+    // keyboard.length (for the delete count) and writes to that same $state array in one
+    // call. Svelte auto-tracks any reactive read anywhere in an $effect's call stack, so that
+    // .length read became a tracked dependency of THIS effect too, and the splice's own write
+    // immediately invalidated it - an infinite effect_update_depth_exceeded reschedule loop.
+    // untrack() confines tracking to the explicit `instrument` read above, so this still
+    // reruns whenever `instrument` is reassigned without also tracking setKeyboardLayout's
+    // own internal bookkeeping read.
+    untrack(() => {
+      zenKeyboardStore.setKeyboardLayout(currentInstrument.notes);
+    });
+  });
+
+  $effect(() => {
+    // Snapshots `instrument` here (not read fresh inside load()/the cleanup) - otherwise the
+    // cleanup below would read whatever `instrument` has ALREADY been reassigned to by the
+    // time it runs (a brand-new, not-yet-loaded Instrument whose .endNode is still null),
+    // silently leaking the true previous instrument's connected audio nodes on every swap.
+    const currentInstrument = instrument;
+    async function load() {
+      // QUIRK: 'instruments.' + ... below is a literal dot, not the ':' namespace separator
+      // every other instrument-label lookup in this codebase uses - i18next resolves this
+      // as a literal key path instead of the `instruments` namespace, so the pill likely
+      // shows a raw untranslated key fragment. Preserved from old, not "fixed" to a colon.
+      logger.showPill(
+        i18n.t('zen_keyboard:loading_instrument', {
+          instrument: i18n.t('instruments.' + settings.instrument.value),
         })
-    })
-
-    $effect(() => {
-        // Snapshots `instrument` here (not read fresh inside load()/the cleanup) - otherwise the
-        // cleanup below would read whatever `instrument` has ALREADY been reassigned to by the
-        // time it runs (a brand-new, not-yet-loaded Instrument whose .endNode is still null),
-        // silently leaking the true previous instrument's connected audio nodes on every swap.
-        const currentInstrument = instrument
-        async function load() {
-            // QUIRK: 'instruments.' + ... below is a literal dot, not the ':' namespace separator
-            // every other instrument-label lookup in this codebase uses - i18next resolves this
-            // as a literal key path instead of the `instruments` namespace, so the pill likely
-            // shows a raw untranslated key fragment. Preserved from old, not "fixed" to a colon.
-            logger.showPill(i18n.t('zen_keyboard:loading_instrument', {
-                instrument: i18n.t('instruments.' + settings.instrument.value),
-            }))
-            await currentInstrument.load(AudioProvider.getAudioContext())
-            logger.hidePill()
-            AudioProvider.connect(currentInstrument.endNode, null)
-        }
-
-        load()
-        return () => {
-            AudioProvider.disconnect(currentInstrument.endNode)
-        }
-    })
-
-    $effect(() => {
-        // QUIRK: no cleanup here (or anywhere else in this file) to stop the metronome - matches
-        // old exactly. Navigating away from this page while the metronome is running leaves it
-        // ticking in the background indefinitely.
-        if (isMetronomePlaying) metronome.start()
-        else metronome.stop()
-    })
-
-    function updateSettings(settings: ZenKeyboardSettingsDataType) {
-        settingsService.updateZenKeyboardSettings(settings)
+      );
+      await currentInstrument.load(AudioProvider.getAudioContext());
+      logger.hidePill();
+      AudioProvider.connect(currentInstrument.endNode, null);
     }
 
-    function handleSettingChange(setting: SettingUpdate) {
-        const {data} = setting
-        // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
-        settings[setting.key] = {...settings[setting.key], value: data.value}
-        if (setting.key === 'instrument') {
-            instrument = new Instrument(data.value as InstrumentName)
-        }
-        if (setting.key === 'reverb') {
-            AudioProvider.setReverb(data.value as boolean)
-        }
-        if (setting.key === 'metronomeBpm') metronome.bpm = data.value as number
-        if (setting.key === 'metronomeBeats') metronome.beats = data.value as number
-        if (setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number)
-        updateSettings(settings)
-    }
+    load();
+    return () => {
+      AudioProvider.disconnect(currentInstrument.endNode);
+    };
+  });
 
-    function onNoteClick(note: ObservableNote) {
-        instrument.play(note.index, settings.pitch.value)
-        zenKeyboardStore.animateNote(note.index)
-        MIDIProvider.broadcastNoteClick(note.midiNote)
-    }
+  $effect(() => {
+    // QUIRK: no cleanup here (or anywhere else in this file) to stop the metronome - matches
+    // old exactly. Navigating away from this page while the metronome is running leaves it
+    // ticking in the background indefinitely.
+    if (isMetronomePlaying) metronome.start();
+    else metronome.stop();
+  });
 
-    function onVolumeChange(data: SettingVolumeUpdate) {
-        instrument.changeVolume(data.value)
+  function updateSettings(settings: ZenKeyboardSettingsDataType) {
+    settingsService.updateZenKeyboardSettings(settings);
+  }
+
+  function handleSettingChange(setting: SettingUpdate) {
+    const { data } = setting;
+    // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
+    settings[setting.key] = { ...settings[setting.key], value: data.value };
+    if (setting.key === 'instrument') {
+      instrument = new Instrument(data.value as InstrumentName);
     }
+    if (setting.key === 'reverb') {
+      AudioProvider.setReverb(data.value as boolean);
+    }
+    if (setting.key === 'metronomeBpm') metronome.bpm = data.value as number;
+    if (setting.key === 'metronomeBeats') metronome.beats = data.value as number;
+    if (setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number);
+    updateSettings(settings);
+  }
+
+  function onNoteClick(note: ObservableNote) {
+    instrument.play(note.index, settings.pitch.value);
+    zenKeyboardStore.animateNote(note.index);
+    MIDIProvider.broadcastNoteClick(note.midiNote);
+  }
+
+  function onVolumeChange(data: SettingVolumeUpdate) {
+    instrument.changeVolume(data.value);
+  }
 </script>
 
 <AppBackground page="Main">
-    <PageMetadata
-        text={t('home:zen_keyboard_name')}
-        description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"
+  <PageMetadata
+    text={t('home:zen_keyboard_name')}
+    description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"
+  />
+  <ZenKeyboardMenu
+    {settings}
+    {isMetronomePlaying}
+    setIsMetronomePlaying={(val) => (isMetronomePlaying = val)}
+    {onVolumeChange}
+    {handleSettingChange}
+  />
+  <div class="flex-centered">
+    <ZenKeypad
+      {instrument}
+      {onNoteClick}
+      noteNameType={settings.noteNameType.value}
+      pitch={settings.pitch.value}
+      scale={settings.keyboardSize.value}
+      keySpacing={settings.keyboardSpacing.value}
+      verticalOffset={settings.keyboardYPosition.value}
     />
-    <ZenKeyboardMenu
-        settings={settings}
-        isMetronomePlaying={isMetronomePlaying}
-        setIsMetronomePlaying={(val) => isMetronomePlaying = val}
-        onVolumeChange={onVolumeChange}
-        handleSettingChange={handleSettingChange}
-    />
-    <div class="flex-centered">
-        <ZenKeypad
-            instrument={instrument}
-            onNoteClick={onNoteClick}
-            noteNameType={settings.noteNameType.value}
-            pitch={settings.pitch.value}
-            scale={settings.keyboardSize.value}
-            keySpacing={settings.keyboardSpacing.value}
-            verticalOffset={settings.keyboardYPosition.value}
-        />
-    </div>
+  </div>
 </AppBackground>

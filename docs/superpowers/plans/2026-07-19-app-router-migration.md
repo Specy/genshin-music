@@ -26,17 +26,17 @@
 
 ### New framework and validation files
 
-| File | Responsibility |
-| --- | --- |
-| src/app/layout.tsx | Root HTML/body, global styles, default metadata, analytics, providers. |
-| src/app/providers.tsx | Client provider tree and the _app.tsx browser effects. |
-| src/app/site-metadata.ts | Sky/Genshin root Metadata and Viewport builders. |
-| src/app/global-error.tsx | Framework-level fallback for failures above the client shell. |
-| src/app/not-found.tsx | Static-host 404 fallback using the former pages/404 UI. |
+| File                                       | Responsibility                                                                          |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| src/app/layout.tsx                         | Root HTML/body, global styles, default metadata, analytics, providers.                  |
+| src/app/providers.tsx                      | Client provider tree and the _app.tsx browser effects.                                  |
+| src/app/site-metadata.ts                   | Sky/Genshin root Metadata and Viewport builders.                                        |
+| src/app/global-error.tsx                   | Framework-level fallback for failures above the client shell.                           |
+| src/app/not-found.tsx                      | Static-host 404 fallback using the former pages/404 UI.                                 |
 | src/app/_navigation/NavigationProvider.tsx | Single registered asynchronous leave handler plus guarded push/replace/back operations. |
-| src/app/_navigation/AppLink.tsx | Internal App Router link that delegates navigation through the provider. |
-| src/app/_navigation/types.ts | Navigation types shared by the provider and editor adapters. |
-| scripts/checkAppRouterMigration.mjs | Source-tree and exported-artifact assertions. |
+| src/app/_navigation/AppLink.tsx            | Internal App Router link that delegates navigation through the provider.                |
+| src/app/_navigation/types.ts               | Navigation types shared by the provider and editor adapters.                            |
+| scripts/checkAppRouterMigration.mjs        | Source-tree and exported-artifact assertions.                                           |
 
 ### Route implementation move
 
@@ -44,35 +44,35 @@ Move src/pages/ to src/app/_client-pages/ with git mv after verifying the resolv
 
 Every remaining entry module in the private tree begins with use client. The public wrapper files are exactly:
 
-| App wrapper | Client implementation import |
-| --- | --- |
-| src/app/page.tsx | $pages/player |
-| src/app/player/page.tsx | $pages/player |
-| src/app/backup/page.tsx | $pages/backup |
-| src/app/blog/page.tsx | $pages/blog |
-| src/app/blog/posts/add-to-home-screen/page.tsx | $pages/blog/posts/add-to-home-screen |
-| src/app/blog/posts/connect-midi-device/page.tsx | $pages/blog/posts/connect-midi-device |
-| src/app/blog/posts/easyplay-1s/page.tsx | $pages/blog/posts/easyplay-1s |
-| src/app/blog/posts/how-to-use-composer/page.tsx | $pages/blog/posts/how-to-use-composer |
-| src/app/blog/posts/how-to-use-player/page.tsx | $pages/blog/posts/how-to-use-player |
+| App wrapper                                          | Client implementation import               |
+| ---------------------------------------------------- | ------------------------------------------ |
+| src/app/page.tsx                                     | $pages/player                              |
+| src/app/player/page.tsx                              | $pages/player                              |
+| src/app/backup/page.tsx                              | $pages/backup                              |
+| src/app/blog/page.tsx                                | $pages/blog                                |
+| src/app/blog/posts/add-to-home-screen/page.tsx       | $pages/blog/posts/add-to-home-screen       |
+| src/app/blog/posts/connect-midi-device/page.tsx      | $pages/blog/posts/connect-midi-device      |
+| src/app/blog/posts/easyplay-1s/page.tsx              | $pages/blog/posts/easyplay-1s              |
+| src/app/blog/posts/how-to-use-composer/page.tsx      | $pages/blog/posts/how-to-use-composer      |
+| src/app/blog/posts/how-to-use-player/page.tsx        | $pages/blog/posts/how-to-use-player        |
 | src/app/blog/posts/how-to-use-vsrg-composer/page.tsx | $pages/blog/posts/how-to-use-vsrg-composer |
-| src/app/blog/posts/midi-transpose/page.tsx | $pages/blog/posts/midi-transpose |
-| src/app/blog/posts/video-audio-transpose/page.tsx | $pages/blog/posts/video-audio-transpose |
-| src/app/changelog/page.tsx | $pages/changelog |
-| src/app/composer/page.tsx | $pages/composer |
-| src/app/delete-cache/page.tsx | $pages/delete-cache |
-| src/app/donate/page.tsx | $pages/donate |
-| src/app/error/page.tsx | $pages/error |
-| src/app/keybinds/page.tsx | $pages/keybinds |
-| src/app/partners/page.tsx | $pages/partners |
-| src/app/privacy/page.tsx | $pages/privacy |
-| src/app/sheet-visualizer/page.tsx | $pages/sheet-visualizer |
-| src/app/theme/page.tsx | $pages/theme |
-| src/app/transfer/page.tsx | $pages/transfer |
-| src/app/uma-mode/page.tsx | $pages/uma-mode |
-| src/app/vsrg-composer/page.tsx | $pages/vsrg-composer |
-| src/app/vsrg-player/page.tsx | $pages/vsrg-player |
-| src/app/zen-keyboard/page.tsx | $pages/zen-keyboard |
+| src/app/blog/posts/midi-transpose/page.tsx           | $pages/blog/posts/midi-transpose           |
+| src/app/blog/posts/video-audio-transpose/page.tsx    | $pages/blog/posts/video-audio-transpose    |
+| src/app/changelog/page.tsx                           | $pages/changelog                           |
+| src/app/composer/page.tsx                            | $pages/composer                            |
+| src/app/delete-cache/page.tsx                        | $pages/delete-cache                        |
+| src/app/donate/page.tsx                              | $pages/donate                              |
+| src/app/error/page.tsx                               | $pages/error                               |
+| src/app/keybinds/page.tsx                            | $pages/keybinds                            |
+| src/app/partners/page.tsx                            | $pages/partners                            |
+| src/app/privacy/page.tsx                             | $pages/privacy                             |
+| src/app/sheet-visualizer/page.tsx                    | $pages/sheet-visualizer                    |
+| src/app/theme/page.tsx                               | $pages/theme                               |
+| src/app/transfer/page.tsx                            | $pages/transfer                            |
+| src/app/uma-mode/page.tsx                            | $pages/uma-mode                            |
+| src/app/vsrg-composer/page.tsx                       | $pages/vsrg-composer                       |
+| src/app/vsrg-player/page.tsx                         | $pages/vsrg-player                         |
+| src/app/zen-keyboard/page.tsx                        | $pages/zen-keyboard                        |
 
 Change the TypeScript $pages/* alias from pages/* to app/_client-pages/*. Relative page styles and the pre-existing $pages imports then continue to resolve without a mechanical import rewrite.
 
@@ -94,7 +94,7 @@ Change the TypeScript $pages/* alias from pages/* to app/_client-pages/*. Relati
 
 Create scripts/checkAppRouterMigration.mjs. It intentionally fails before the cutover because the App Router wrappers do not yet exist and src/pages still contains route files.
 
-~~~
+```
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
@@ -179,24 +179,24 @@ if (mode === 'source') {
 }
 
 if (process.exitCode === undefined) console.log('App Router migration ' + mode + ' check passed.');
-~~~
+```
 
 - [x] **Step 2: Run the contract before implementation**
 
 Run:
 
-~~~powershell
+```powershell
 node scripts/checkAppRouterMigration.mjs source
-~~~
+```
 
 Expected: non-zero exit with missing src/app wrappers and legacy src/pages route source. This proves the contract detects the pre-migration state.
 
 - [x] **Step 3: Commit only the contract file**
 
-~~~powershell
+```powershell
 git add -- scripts/checkAppRouterMigration.mjs
 git commit -m "test: add app router migration contracts"
-~~~
+```
 
 Do not modify or stage package.json or package-lock.json. The existing working-tree line-ending changes in those files are user-owned and no dependency or script change is needed for this migration.
 
@@ -219,7 +219,7 @@ Do not modify or stage package.json or package-lock.json. The existing working-t
 
 Create src/app/_navigation/types.ts:
 
-~~~
+```
 export type NavigationTarget = string | '__back__';
 
 export type LeaveHandler = (target: NavigationTarget) => Promise<boolean>;
@@ -239,7 +239,7 @@ export type AppNavigation = {
   ) => void;
   registerLeaveHandler: (handler: LeaveHandler) => () => void;
 };
-~~~
+```
 
 - [x] **Step 2: Implement the client provider**
 
@@ -247,7 +247,7 @@ Create src/app/_navigation/NavigationProvider.tsx with a React context and a use
 
 The implementation must follow this behavior:
 
-~~~
+```
 const handlerRef = useRef<LeaveHandler | null>(null);
 
 const canLeave = useCallback(async (target: NavigationTarget) => {
@@ -268,7 +268,7 @@ const registerLeaveHandler = useCallback((handler: LeaveHandler) => {
     if (handlerRef.current === handler) handlerRef.current = null;
   };
 }, []);
-~~~
+```
 
 Implement replace and back with the same rule. Export NavigationProvider, which takes ReactNode children, and useAppNavigation, which throws a descriptive Error outside the provider.
 
@@ -276,12 +276,12 @@ Implement replace and back with the same rule. Export NavigationProvider, which 
 
 Create src/app/_navigation/AppLink.tsx as a Client Component. Use next/link and ComponentProps<typeof NextLink> to derive the supported anchor props without adding broad types. Its props are the Next link props except href and onNavigate, plus:
 
-~~~
+```
 type AppLinkProps = Omit<ComponentProps<typeof NextLink>, 'href' | 'onNavigate'> & {
   href: string;
   onNavigate?: NonNullable<ComponentProps<typeof NextLink>['onNavigate']>;
 };
-~~~
+```
 
 On Next onNavigate, call event.preventDefault, call the caller-provided handler if present, then call navigation.replace when replace is true or navigation.push otherwise. Pass the incoming scroll option. Leave normal link rendering, prefetching, modified-click behavior, target behavior, and accessibility to Next Link.
 
@@ -293,18 +293,18 @@ Change src/components/shared/link/AppLink.tsx to import the navigation primitive
 
 Run:
 
-~~~powershell
+```powershell
 npx tsc --noEmit
-~~~
+```
 
 Expected before Task 3: the navigation seam compiles while Pages Router sources remain unchanged. Do not try to make the source-tree contract pass yet.
 
 - [x] **Step 6: Commit the isolated seam**
 
-~~~powershell
+```powershell
 git add -- src/app/_navigation src/components/shared/link/AppLink.tsx
 git commit -m "feat: add guarded app navigation"
-~~~
+```
 
 Do not include user-owned package or generated-manifest changes.
 
@@ -325,7 +325,7 @@ Delete the moved _app.tsx, _document.tsx, and root index.tsx using apply_patch. 
 
 Change the $pages/* tsconfig alias to app/_client-pages/*. Add a leading use client directive to every remaining private entry:
 
-~~~
+```
 404/index.tsx
 backup/index.tsx
 blog/index.tsx
@@ -353,7 +353,7 @@ uma-mode/index.tsx
 vsrg-composer/index.tsx
 vsrg-player/index.tsx
 zen-keyboard/index.tsx
-~~~
+```
 
 - [x] **Step 2: Recreate the global shell as App Router files**
 
@@ -369,7 +369,7 @@ Create src/app/layout.tsx as a Server Component. It imports all former _app glob
 
 Create src/app/providers.tsx as a Client Component. Preserve the three existing browser effects from _app.tsx exactly in behavior: console-error capture/restoration, window error logging, virtual-keyboard setup plus Serwist update registration. Replace the old Page Router composition with:
 
-~~~
+```
 <ThemeProviderWrapper>
   <DropZoneProviderWrapper>
     <GeneralProvidersWrapper>
@@ -387,7 +387,7 @@ Create src/app/providers.tsx as a Client Component. Preserve the three existing 
     </GeneralProvidersWrapper>
   </DropZoneProviderWrapper>
 </ThemeProviderWrapper>
-~~~
+```
 
 Use explicit local types for browser extensions rather than adding new ts-ignore or any values.
 
@@ -437,7 +437,7 @@ In each moved editor entry:
 
 Composer prepareToLeave must preserve the existing save semantics:
 
-~~~
+```
 prepareToLeave = async (): Promise<boolean> => {
   const {song, settings} = this.state;
   if (this.changes === 0) return true;
@@ -451,7 +451,7 @@ prepareToLeave = async (): Promise<boolean> => {
   if (!shouldSave) return true;
   return this.updateSong(song);
 };
-~~~
+```
 
 VSRG Composer follows the same prompt behavior and returns true only when its saveSong call succeeds. The approved guard scope is app-controlled internal links, programmatic navigation, and visible Back buttons; browser toolbar Back and Forward remain unguarded.
 
@@ -461,7 +461,7 @@ After the conversions, run rg for routeChangeBugFix. Delete the helper from Util
 
 Create the 27 public wrappers in the table above. Ordinary wrappers use this shape:
 
-~~~
+```
 import ClientPage from '$pages/privacy';
 
 export const metadata = {
@@ -472,7 +472,7 @@ export const metadata = {
 export default function PrivacyPage() {
   return <ClientPage />;
 }
-~~~
+```
 
 The root and player wrappers render Player inside PageBackground with page=Main. Composer and vsrg-composer render their client implementations inside PageBackground with page=Composer. Vsrg-player and zen-keyboard render inside PageBackground with page=Main. The remaining wrappers directly render their private client page.
 
@@ -482,22 +482,22 @@ Keep literal server metadata on Privacy and add simple literal title/description
 
 Run:
 
-~~~powershell
+```powershell
 node scripts/checkAppRouterMigration.mjs source
 rg -n "from ['\"]next/(router|head)['\"]" src
 rg -n "routeChangeBugFix" src
 npx tsc --noEmit
-~~~
+```
 
 Expected: the migration contract passes; the two rg checks find no matches; TypeScript compiles. If a check fails, correct the App Router conversion rather than weakening the contract.
 
 - [x] **Step 7: Commit the atomic route cutover**
 
-~~~powershell
+```powershell
 git add -- src/app src/components src/lib/utils/Utilities.ts tsconfig.json
 git add -u -- src/pages
 git commit -m "refactor: migrate static site to app router"
-~~~
+```
 
 Before committing, inspect git diff --cached --stat and git diff --cached. Include the user’s composer and vsrg-composer edits only because their files were moved as part of this explicitly authorized migration. Exclude next-env.d.ts, package.json, package-lock.json, public/manifest.json, and .claude.
 
@@ -512,16 +512,16 @@ Before committing, inspect git diff --cached --stat and git diff --cached. Inclu
 
 Run the contract and type check from Task 3 once more from a clean build state:
 
-~~~powershell
+```powershell
 node scripts/checkAppRouterMigration.mjs source
 npx tsc --noEmit
-~~~
+```
 
 - [x] **Step 2: Protect user-owned generated files and build both products**
 
 Use one scoped PowerShell try/finally block. It must back up the current public/manifest.json and next-env.d.ts before build scripts execute, run both existing product builds unchanged, validate each export, and restore those two user-owned files even if a build fails:
 
-~~~powershell
+```powershell
 $taskTemp = Join-Path ([System.IO.Path]::GetTempPath()) ('genshin-music-app-router-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $taskTemp | Out-Null
 $manifestBackup = Join-Path $taskTemp 'manifest.json'
@@ -538,7 +538,7 @@ try {
   Copy-Item -LiteralPath $nextEnvBackup -Destination 'next-env.d.ts' -Force
   Remove-Item -LiteralPath $taskTemp -Recurse -Force
 }
-~~~
+```
 
 If the existing scripts place the export directly below a different configured BUILD_PATH, pass that path to the contract instead of modifying buildApp.js. Do not change the existing scripts to accommodate the check.
 
@@ -546,11 +546,11 @@ If the existing scripts place the export directly below a different configured B
 
 Launch the Genshin app without the manifest-mutating helper, on an available explicit local port:
 
-~~~powershell
+```powershell
 $env:NEXT_PUBLIC_APP_NAME = 'Genshin'
 $env:NEXT_PUBLIC_BASE_PATH = ''
 npm run dev -- --port 3001
-~~~
+```
 
 Using the browser-control workflow, visit:
 
@@ -565,12 +565,12 @@ Capture screenshots or browser inspection evidence for the three Pixi routes. Ch
 
 Run:
 
-~~~powershell
+```powershell
 git diff --check
 git status --short
 git diff --ignore-space-at-eol -- next-env.d.ts package.json package-lock.json public/manifest.json
 rg -n "from ['\"]next/(router|head)['\"]" src
-~~~
+```
 
 Expected:
 

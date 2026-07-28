@@ -42,16 +42,16 @@ Both apps were built **measured, not estimated** — both builds ran on this mac
 
 ## Whole-build totals
 
-| Metric | Old (Next.js) | New (SvelteKit) | New vs old |
-|---|---:|---:|---|
-| `build/genshinMusic` total size | 32,566,946 B (31.06 MB) | 30,733,459 B (29.31 MB) | 94.4% — 5.6% smaller |
-| `assets/audio/**` (excluded below) | 19,283,301 B (18.39 MB) | 19,283,309 B (18.39 MB) | identical (8-byte diff, noise) |
-| **App bundle (total − audio)** | **13,283,645 B (12.67 MB)** | **11,450,150 B (10.92 MB)** | **86.2% — 13.8% smaller** |
-| Total `.js` bytes (whole build, all routes + lazy chunks + service worker) | 4,064,871 B (3.88 MB) | 2,680,866 B (2.56 MB) | 66.0% — 34.0% smaller |
-| Total `.css` bytes (whole build) | 77,880 B | 84,424 B | 108.4% — 8.4% larger |
-| Total `.html` bytes (whole build) | 639,538 B (21 top-level + 8 blog = 29 pages, incl. `_not-found.html`) | 1,412,181 B (20 top-level + 8 blog = 28 pages) | 220.8% — larger, see note below |
-| `service-worker.js` (top-level, not counted in the "entry graph" below) | 110,780 B | 32,985 B | 29.8% — much smaller |
-| Total files in build output | 1,064 | 903 | fewer files overall |
+| Metric                                                                     |                                                         Old (Next.js) |                                New (SvelteKit) | New vs old                      |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------: | ---------------------------------------------: | ------------------------------- |
+| `build/genshinMusic` total size                                            |                                               32,566,946 B (31.06 MB) |                        30,733,459 B (29.31 MB) | 94.4% — 5.6% smaller            |
+| `assets/audio/**` (excluded below)                                         |                                               19,283,301 B (18.39 MB) |                        19,283,309 B (18.39 MB) | identical (8-byte diff, noise)  |
+| **App bundle (total − audio)**                                             |                                           **13,283,645 B (12.67 MB)** |                    **11,450,150 B (10.92 MB)** | **86.2% — 13.8% smaller**       |
+| Total `.js` bytes (whole build, all routes + lazy chunks + service worker) |                                                 4,064,871 B (3.88 MB) |                          2,680,866 B (2.56 MB) | 66.0% — 34.0% smaller           |
+| Total `.css` bytes (whole build)                                           |                                                              77,880 B |                                       84,424 B | 108.4% — 8.4% larger            |
+| Total `.html` bytes (whole build)                                          | 639,538 B (21 top-level + 8 blog = 29 pages, incl. `_not-found.html`) | 1,412,181 B (20 top-level + 8 blog = 28 pages) | 220.8% — larger, see note below |
+| `service-worker.js` (top-level, not counted in the "entry graph" below)    |                                                             110,780 B |                                       32,985 B | 29.8% — much smaller            |
+| Total files in build output                                                |                                                                 1,064 |                                            903 | fewer files overall             |
 
 `assets/audio/**` is confirmed (not assumed) to be the bulk of both builds and effectively
 byte-identical between apps — this is the reason the brief calls for excluding it from the "app
@@ -77,47 +77,47 @@ completed within the initial page-parse; **none arrived late**.
 
 **OLD entry-graph JS** — 29 files, 1,185,758 bytes total
 
-| Bytes | File |
-|---:|---|
-| 227,424 | `/_next/static/chunks/3794-41fb2f3e75f382b5.js` |
-| 199,870 | `/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js` |
-| 146,364 | `/_next/static/chunks/2429-b83a6c08514b0e18.js` |
-| 100,730 | `/_next/static/chunks/6759-10242ab37835ac52.js` |
-| 62,014 | `/_next/static/chunks/1359-61b6e0e4a7e7f2f7.js` |
-| 59,429 | `/_next/static/chunks/app/layout-b78f3d6822b8a1aa.js` |
-| 57,029 | `/_next/static/chunks/6468630d-f8aff360fd9f5748.js` |
-| 51,782 | `/_next/static/chunks/7647-cf45f641be61f64b.js` |
-| 51,139 | `/_next/static/chunks/971-8efdfacde9889f81.js` |
-| 41,921 | `/_next/static/chunks/5073-975cd4aef0abeed5.js` |
-| 28,900 | `/_next/static/chunks/9316-f74ac1ed9e2d6e1a.js` |
-| 28,731 | `/_next/static/chunks/8e1d74a4-724ee81d56ba7c6e.js` |
-| 24,878 | `/_next/static/chunks/1476-1cdf17fe0a43caaa.js` |
-| 16,008 | `/_next/static/chunks/5772-76eae80bd7a9b7c2.js` |
-| 15,583 | `/_next/static/chunks/9786-5655b4c9373c71f5.js` |
-| 15,349 | `/_next/static/chunks/5279-21fc980fcb17b777.js` |
-| 14,788 | `/_next/static/chunks/8368-85f7c569ebd3121f.js` |
-| 12,784 | `/_next/static/chunks/5000-b742f3097f94de36.js` |
-| 9,988 | `/_next/static/chunks/9756-0080e44c96a33c28.js` |
-| 6,825 | `/_next/static/chunks/app/not-found-b599380ee8aa1a91.js` |
-| 5,434 | `/_next/static/chunks/webpack-1ef969dbe873894d.js` |
-| 2,309 | `/_next/static/chunks/795d4814-5433f5fc74622a78.js` |
-| 2,243 | `/_next/static/chunks/app/page-daf94bd96bcce49a.js` |
-| 1,123 | `/_next/static/chunks/385cb88d-9a2bf3ff5f1558fe.js` |
-| 1,060 | `/_next/static/chunks/0e762574-2389d1bdf0e763e5.js` |
-| 660 | `/_next/static/chunks/app/global-error-da3d0b5b91a64108.js` |
-| 484 | `/_next/static/chunks/main-app-df48c81117d3c951.js` |
-| 462 | `/_next/static/chunks/94730671-89e0de256b5f17df.js` |
-| 447 | `/_next/static/chunks/578c2090-542c5a67dc0d1eb2.js` |
+|   Bytes | File                                                        |
+| ------: | ----------------------------------------------------------- |
+| 227,424 | `/_next/static/chunks/3794-41fb2f3e75f382b5.js`             |
+| 199,870 | `/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js`         |
+| 146,364 | `/_next/static/chunks/2429-b83a6c08514b0e18.js`             |
+| 100,730 | `/_next/static/chunks/6759-10242ab37835ac52.js`             |
+|  62,014 | `/_next/static/chunks/1359-61b6e0e4a7e7f2f7.js`             |
+|  59,429 | `/_next/static/chunks/app/layout-b78f3d6822b8a1aa.js`       |
+|  57,029 | `/_next/static/chunks/6468630d-f8aff360fd9f5748.js`         |
+|  51,782 | `/_next/static/chunks/7647-cf45f641be61f64b.js`             |
+|  51,139 | `/_next/static/chunks/971-8efdfacde9889f81.js`              |
+|  41,921 | `/_next/static/chunks/5073-975cd4aef0abeed5.js`             |
+|  28,900 | `/_next/static/chunks/9316-f74ac1ed9e2d6e1a.js`             |
+|  28,731 | `/_next/static/chunks/8e1d74a4-724ee81d56ba7c6e.js`         |
+|  24,878 | `/_next/static/chunks/1476-1cdf17fe0a43caaa.js`             |
+|  16,008 | `/_next/static/chunks/5772-76eae80bd7a9b7c2.js`             |
+|  15,583 | `/_next/static/chunks/9786-5655b4c9373c71f5.js`             |
+|  15,349 | `/_next/static/chunks/5279-21fc980fcb17b777.js`             |
+|  14,788 | `/_next/static/chunks/8368-85f7c569ebd3121f.js`             |
+|  12,784 | `/_next/static/chunks/5000-b742f3097f94de36.js`             |
+|   9,988 | `/_next/static/chunks/9756-0080e44c96a33c28.js`             |
+|   6,825 | `/_next/static/chunks/app/not-found-b599380ee8aa1a91.js`    |
+|   5,434 | `/_next/static/chunks/webpack-1ef969dbe873894d.js`          |
+|   2,309 | `/_next/static/chunks/795d4814-5433f5fc74622a78.js`         |
+|   2,243 | `/_next/static/chunks/app/page-daf94bd96bcce49a.js`         |
+|   1,123 | `/_next/static/chunks/385cb88d-9a2bf3ff5f1558fe.js`         |
+|   1,060 | `/_next/static/chunks/0e762574-2389d1bdf0e763e5.js`         |
+|     660 | `/_next/static/chunks/app/global-error-da3d0b5b91a64108.js` |
+|     484 | `/_next/static/chunks/main-app-df48c81117d3c951.js`         |
+|     462 | `/_next/static/chunks/94730671-89e0de256b5f17df.js`         |
+|     447 | `/_next/static/chunks/578c2090-542c5a67dc0d1eb2.js`         |
 
 **OLD entry-graph CSS** — 5 files, 77,352 bytes total
 
-| Bytes | File |
-|---:|---|
+|  Bytes | File                                     |
+| -----: | ---------------------------------------- |
 | 29,493 | `/_next/static/css/fd79334dc5777c0f.css` |
 | 27,354 | `/_next/static/css/e0d167afa0855a0e.css` |
 | 19,824 | `/_next/static/css/4db1a6a69c513344.css` |
-| 418 | `/_next/static/css/77a47b5832853b27.css` |
-| 263 | `/_next/static/css/498255f8da3e0ca9.css` |
+|    418 | `/_next/static/css/77a47b5832853b27.css` |
+|    263 | `/_next/static/css/498255f8da3e0ca9.css` |
 
 Plus, separately: one `service-worker.js` request (110,780 B — registration is a distinct browser
 API call, not part of the page's module graph) and one preload hint for
@@ -141,98 +141,98 @@ bytes, arrived late, zero interaction) stands regardless of the exact trigger.
 
 **NEW entry-graph JS** — 61 files, 703,399 bytes total (`deferred` = the 2 late arrivals above)
 
-| Bytes | File | |
-|---:|---|---|
-| 200,733 | `/_app/immutable/chunks/D_tAr9fP.js` | |
-| 89,797 | `/_app/immutable/chunks/DAoFvUEl.js` | |
-| 66,557 | `/_app/immutable/chunks/FFVeDe9o.js` | |
-| 55,881 | `/_app/immutable/chunks/zu2fwW_k.js` | |
-| 47,707 | `/_app/immutable/chunks/DP0M5v9t.js` | |
-| 47,497 | `/_app/immutable/nodes/0.Bw8TS3tQ.js` | |
-| 31,215 | `/_app/immutable/chunks/BFKZj-CU.js` | |
-| 27,683 | `/_app/immutable/chunks/BILRat5T.js` | |
-| 18,655 | `/_app/immutable/chunks/BF5Erawy.js` | |
-| 14,949 | `/_app/immutable/chunks/4A1uEjJn.js` | |
-| 13,047 | `/_app/immutable/entry/app.Bo3HO_jW.js` | |
-| 8,675 | `/_app/immutable/chunks/BVbKDkAw.js` | |
-| 8,497 | `/_app/immutable/chunks/DMBXPzoC.js` | |
-| 7,125 | `/_app/immutable/chunks/BuKZf0EF.js` | |
-| 6,417 | `/_app/immutable/chunks/DPuGHaJY.js` | |
-| 4,741 | `/_app/immutable/chunks/BqwLIKyN.js` | deferred |
-| 4,480 | `/_app/immutable/chunks/e1-CWjRs.js` | |
-| 3,937 | `/_app/immutable/chunks/DeuEmH-Y2.js` | |
-| 3,806 | `/_app/immutable/chunks/CDeUXB6k.js` | |
-| 3,197 | `/_app/immutable/chunks/BUtV7Wkr2.js` | |
-| 3,072 | `/_app/immutable/chunks/DRsWFebE.js` | |
-| 2,864 | `/_app/immutable/chunks/DslqU6hv.js` | |
-| 2,077 | `/_app/immutable/chunks/kan7a7Rv.js` | |
-| 1,859 | `/_app/immutable/chunks/dLGyfg8H.js` | |
-| 1,766 | `/_app/immutable/chunks/rv3zOK1l.js` | |
-| 1,612 | `/_app/immutable/chunks/BCAZOQCo.js` | |
-| 1,593 | `/_app/immutable/chunks/ueCFrOy_.js` | |
-| 1,585 | `/_app/immutable/chunks/DpWah9iJ2.js` | |
-| 1,307 | `/_app/immutable/chunks/DFwJ1rGJ.js` | |
-| 1,269 | `/_app/immutable/chunks/DAXXjFlN.js` | |
-| 1,263 | `/_app/immutable/chunks/Bl8kVQfW.js` | |
-| 1,257 | `/_app/immutable/chunks/DNla_7DB.js` | |
-| 1,217 | `/_app/immutable/chunks/DvZlqoez.js` | |
-| 1,211 | `/_app/immutable/chunks/HclGiUj8.js` | |
-| 1,192 | `/_app/immutable/chunks/cLcH4equ.js` | |
-| 1,098 | `/_app/immutable/nodes/1.DxIM4h5b.js` | deferred |
-| 1,022 | `/_app/immutable/chunks/DwnaZb43.js` | |
-| 918 | `/_app/immutable/chunks/Btq3misP.js` | |
-| 911 | `/_app/immutable/chunks/CJ9F15v7.js` | |
-| 902 | `/_app/immutable/chunks/DNwRadYC.js` | |
-| 828 | `/_app/immutable/chunks/i3D63YkO.js` | |
-| 813 | `/_app/immutable/chunks/jBZXc_BA.js` | |
-| 713 | `/_app/immutable/chunks/B9Lr3zRv.js` | |
-| 656 | `/_app/immutable/chunks/XKEAtkz1.js` | |
-| 653 | `/_app/immutable/chunks/DczWwzFA.js` | |
-| 639 | `/_app/immutable/chunks/pd6Afm5s.js` | |
-| 617 | `/_app/immutable/chunks/BtxIrx8r2.js` | |
-| 576 | `/_app/immutable/chunks/v-3Ko4C_.js` | |
-| 548 | `/_app/immutable/chunks/QnxAG1jT.js` | |
-| 455 | `/_app/immutable/chunks/CT5xzYlX.js` | |
-| 399 | `/_app/immutable/chunks/Zyt-d2_w.js` | |
-| 393 | `/_app/immutable/nodes/2.DxSrsp7x.js` | |
-| 392 | `/_app/immutable/chunks/BYdpDu-X.js` | |
-| 330 | `/_app/immutable/chunks/CUW1rZWG.js` | |
-| 275 | `/_app/immutable/chunks/DH7Y8sHu.js` | |
-| 172 | `/_app/immutable/chunks/CBtQCMJc2.js` | |
-| 141 | `/_app/immutable/chunks/Bw18Plvx.js` | |
-| 82 | `/_app/immutable/entry/start.BcBLENrs.js` | |
-| 65 | `/_app/immutable/chunks/xihTtKlq.js` | |
-| 39 | `/_app/immutable/chunks/CprhWfk9.js` | |
-| 22 | `/_app/immutable/chunks/CBxoRSH6.js` | |
+|   Bytes | File                                      |          |
+| ------: | ----------------------------------------- | -------- |
+| 200,733 | `/_app/immutable/chunks/D_tAr9fP.js`      |          |
+|  89,797 | `/_app/immutable/chunks/DAoFvUEl.js`      |          |
+|  66,557 | `/_app/immutable/chunks/FFVeDe9o.js`      |          |
+|  55,881 | `/_app/immutable/chunks/zu2fwW_k.js`      |          |
+|  47,707 | `/_app/immutable/chunks/DP0M5v9t.js`      |          |
+|  47,497 | `/_app/immutable/nodes/0.Bw8TS3tQ.js`     |          |
+|  31,215 | `/_app/immutable/chunks/BFKZj-CU.js`      |          |
+|  27,683 | `/_app/immutable/chunks/BILRat5T.js`      |          |
+|  18,655 | `/_app/immutable/chunks/BF5Erawy.js`      |          |
+|  14,949 | `/_app/immutable/chunks/4A1uEjJn.js`      |          |
+|  13,047 | `/_app/immutable/entry/app.Bo3HO_jW.js`   |          |
+|   8,675 | `/_app/immutable/chunks/BVbKDkAw.js`      |          |
+|   8,497 | `/_app/immutable/chunks/DMBXPzoC.js`      |          |
+|   7,125 | `/_app/immutable/chunks/BuKZf0EF.js`      |          |
+|   6,417 | `/_app/immutable/chunks/DPuGHaJY.js`      |          |
+|   4,741 | `/_app/immutable/chunks/BqwLIKyN.js`      | deferred |
+|   4,480 | `/_app/immutable/chunks/e1-CWjRs.js`      |          |
+|   3,937 | `/_app/immutable/chunks/DeuEmH-Y2.js`     |          |
+|   3,806 | `/_app/immutable/chunks/CDeUXB6k.js`      |          |
+|   3,197 | `/_app/immutable/chunks/BUtV7Wkr2.js`     |          |
+|   3,072 | `/_app/immutable/chunks/DRsWFebE.js`      |          |
+|   2,864 | `/_app/immutable/chunks/DslqU6hv.js`      |          |
+|   2,077 | `/_app/immutable/chunks/kan7a7Rv.js`      |          |
+|   1,859 | `/_app/immutable/chunks/dLGyfg8H.js`      |          |
+|   1,766 | `/_app/immutable/chunks/rv3zOK1l.js`      |          |
+|   1,612 | `/_app/immutable/chunks/BCAZOQCo.js`      |          |
+|   1,593 | `/_app/immutable/chunks/ueCFrOy_.js`      |          |
+|   1,585 | `/_app/immutable/chunks/DpWah9iJ2.js`     |          |
+|   1,307 | `/_app/immutable/chunks/DFwJ1rGJ.js`      |          |
+|   1,269 | `/_app/immutable/chunks/DAXXjFlN.js`      |          |
+|   1,263 | `/_app/immutable/chunks/Bl8kVQfW.js`      |          |
+|   1,257 | `/_app/immutable/chunks/DNla_7DB.js`      |          |
+|   1,217 | `/_app/immutable/chunks/DvZlqoez.js`      |          |
+|   1,211 | `/_app/immutable/chunks/HclGiUj8.js`      |          |
+|   1,192 | `/_app/immutable/chunks/cLcH4equ.js`      |          |
+|   1,098 | `/_app/immutable/nodes/1.DxIM4h5b.js`     | deferred |
+|   1,022 | `/_app/immutable/chunks/DwnaZb43.js`      |          |
+|     918 | `/_app/immutable/chunks/Btq3misP.js`      |          |
+|     911 | `/_app/immutable/chunks/CJ9F15v7.js`      |          |
+|     902 | `/_app/immutable/chunks/DNwRadYC.js`      |          |
+|     828 | `/_app/immutable/chunks/i3D63YkO.js`      |          |
+|     813 | `/_app/immutable/chunks/jBZXc_BA.js`      |          |
+|     713 | `/_app/immutable/chunks/B9Lr3zRv.js`      |          |
+|     656 | `/_app/immutable/chunks/XKEAtkz1.js`      |          |
+|     653 | `/_app/immutable/chunks/DczWwzFA.js`      |          |
+|     639 | `/_app/immutable/chunks/pd6Afm5s.js`      |          |
+|     617 | `/_app/immutable/chunks/BtxIrx8r2.js`     |          |
+|     576 | `/_app/immutable/chunks/v-3Ko4C_.js`      |          |
+|     548 | `/_app/immutable/chunks/QnxAG1jT.js`      |          |
+|     455 | `/_app/immutable/chunks/CT5xzYlX.js`      |          |
+|     399 | `/_app/immutable/chunks/Zyt-d2_w.js`      |          |
+|     393 | `/_app/immutable/nodes/2.DxSrsp7x.js`     |          |
+|     392 | `/_app/immutable/chunks/BYdpDu-X.js`      |          |
+|     330 | `/_app/immutable/chunks/CUW1rZWG.js`      |          |
+|     275 | `/_app/immutable/chunks/DH7Y8sHu.js`      |          |
+|     172 | `/_app/immutable/chunks/CBtQCMJc2.js`     |          |
+|     141 | `/_app/immutable/chunks/Bw18Plvx.js`      |          |
+|      82 | `/_app/immutable/entry/start.BcBLENrs.js` |          |
+|      65 | `/_app/immutable/chunks/xihTtKlq.js`      |          |
+|      39 | `/_app/immutable/chunks/CprhWfk9.js`      |          |
+|      22 | `/_app/immutable/chunks/CBxoRSH6.js`      |          |
 
 **NEW entry-graph CSS** — 10 files, 55,797 bytes total
 
-| Bytes | File |
-|---:|---|
-| 48,174 | `/_app/immutable/assets/0.CJstL0Y2.css` |
-| 2,009 | `/_app/immutable/assets/Player.SECfc_oT.css` |
-| 1,868 | `/_app/immutable/assets/SettingsPane.Ba7Fs0DO.css` |
-| 1,366 | `/_app/immutable/assets/SheetFrame.RZouecfD.css` |
-| 798 | `/_app/immutable/assets/PromotionCard.Dn5oOJ9h.css` |
-| 452 | `/_app/immutable/assets/Switch.B89aDc-p.css` |
-| 379 | `/_app/immutable/assets/DonateButton.MZbDwf4m.css` |
-| 256 | `/_app/immutable/assets/SongMenu.DKxAYxzD.css` |
-| 253 | `/_app/immutable/assets/Separator.CW8BWwH8.css` |
-| 242 | `/_app/immutable/assets/LanguageSelector.DC8illDR.css` |
+|  Bytes | File                                                   |
+| -----: | ------------------------------------------------------ |
+| 48,174 | `/_app/immutable/assets/0.CJstL0Y2.css`                |
+|  2,009 | `/_app/immutable/assets/Player.SECfc_oT.css`           |
+|  1,868 | `/_app/immutable/assets/SettingsPane.Ba7Fs0DO.css`     |
+|  1,366 | `/_app/immutable/assets/SheetFrame.RZouecfD.css`       |
+|    798 | `/_app/immutable/assets/PromotionCard.Dn5oOJ9h.css`    |
+|    452 | `/_app/immutable/assets/Switch.B89aDc-p.css`           |
+|    379 | `/_app/immutable/assets/DonateButton.MZbDwf4m.css`     |
+|    256 | `/_app/immutable/assets/SongMenu.DKxAYxzD.css`         |
+|    253 | `/_app/immutable/assets/Separator.CW8BWwH8.css`        |
+|    242 | `/_app/immutable/assets/LanguageSelector.DC8illDR.css` |
 
 Plus, separately: one `service-worker.js` request (32,985 B) and one `BonoboBold` font file
 (`.ttf`, not part of the JS/CSS totals above).
 
 ### Entry-graph summary
 
-| | Old | New | New vs old |
-|---|---:|---:|---|
-| JS requests (immediate) | 29 | 59 | 2.03× as many |
-| JS requests (total incl. deferred) | 29 | 61 | 2.10× as many |
-| JS bytes | 1,185,758 B | 703,399 B (697,560 B immediate-only) | 59.3% — 40.7% smaller |
-| CSS requests | 5 | 10 | 2× as many |
-| CSS bytes | 77,352 B | 55,797 B | 72.1% — 27.9% smaller |
-| JS + CSS bytes | 1,263,110 B | 759,196 B | 60.1% — 39.9% smaller |
+|                                    |         Old |                                  New | New vs old            |
+| ---------------------------------- | ----------: | -----------------------------------: | --------------------- |
+| JS requests (immediate)            |          29 |                                   59 | 2.03× as many         |
+| JS requests (total incl. deferred) |          29 |                                   61 | 2.10× as many         |
+| JS bytes                           | 1,185,758 B | 703,399 B (697,560 B immediate-only) | 59.3% — 40.7% smaller |
+| CSS requests                       |           5 |                                   10 | 2× as many            |
+| CSS bytes                          |    77,352 B |                             55,797 B | 72.1% — 27.9% smaller |
+| JS + CSS bytes                     | 1,263,110 B |                            759,196 B | 60.1% — 39.9% smaller |
 
 The new app makes roughly **twice as many** JS requests for the home page, but ships roughly
 **40% fewer total bytes** doing it — a direct, measured consequence of Vite/Rollup's much
@@ -252,18 +252,18 @@ whole client build, summing to 4,797,271 bytes of **pre-minification rendered so
 larger than the 2,680,866-byte on-disk total above because it is measured before esbuild's final
 minification pass; the two numbers are not meant to match, they measure different stages).
 
-| Rendered bytes | gzip (visualizer est.) | Module | In chunk |
-|---:|---:|---|---|
-| 73,681 | 18,006 | `node_modules/i18next/dist/esm/i18next.js` | `DAoFvUEl.js` |
-| 52,154 | 6,556 | `node_modules/@tensorflow/tfjs-backend-webgl/dist/shader_compiler.js` | `CSF64Mxn2.js` |
-| 50,269 | 14,172 | `src/lib/i18n/locales/en/index.ts` | `DAoFvUEl.js` |
-| 48,498 | 11,970 | `node_modules/object-hash/dist/object_hash.js` | `D_tAr9fP.js` |
-| 40,010 | 10,930 | `node_modules/@sveltejs/kit/src/runtime/client/client.js` | `BILRat5T.js` |
-| 36,516 | 4,029 | `src/lib/games/genshin/index.ts` | `D_tAr9fP.js` |
-| 35,657 | 6,425 | `node_modules/@tensorflow/tfjs-layers/dist/layers/recurrent.js` | `CSF64Mxn2.js` |
-| 35,147 | 9,180 | `src/lib/components/pages/Player/PlayerMenu.svelte` | `FFVeDe9o.js` |
-| 32,958 | 8,609 | `src/lib/components/pages/Composer/Composer.svelte` | (composer-only chunk) |
-| 32,212 | 6,987 | `node_modules/q/q.js` | `D_tAr9fP.js` |
+| Rendered bytes | gzip (visualizer est.) | Module                                                                | In chunk              |
+| -------------: | ---------------------: | --------------------------------------------------------------------- | --------------------- |
+|         73,681 |                 18,006 | `node_modules/i18next/dist/esm/i18next.js`                            | `DAoFvUEl.js`         |
+|         52,154 |                  6,556 | `node_modules/@tensorflow/tfjs-backend-webgl/dist/shader_compiler.js` | `CSF64Mxn2.js`        |
+|         50,269 |                 14,172 | `src/lib/i18n/locales/en/index.ts`                                    | `DAoFvUEl.js`         |
+|         48,498 |                 11,970 | `node_modules/object-hash/dist/object_hash.js`                        | `D_tAr9fP.js`         |
+|         40,010 |                 10,930 | `node_modules/@sveltejs/kit/src/runtime/client/client.js`             | `BILRat5T.js`         |
+|         36,516 |                  4,029 | `src/lib/games/genshin/index.ts`                                      | `D_tAr9fP.js`         |
+|         35,657 |                  6,425 | `node_modules/@tensorflow/tfjs-layers/dist/layers/recurrent.js`       | `CSF64Mxn2.js`        |
+|         35,147 |                  9,180 | `src/lib/components/pages/Player/PlayerMenu.svelte`                   | `FFVeDe9o.js`         |
+|         32,958 |                  8,609 | `src/lib/components/pages/Composer/Composer.svelte`                   | (composer-only chunk) |
+|         32,212 |                  6,987 | `node_modules/q/q.js`                                                 | `D_tAr9fP.js`         |
 
 Note the `@tensorflow/tfjs-*` entries (rows 2 and 7): they live in chunk `CSF64Mxn2.js`
 (1,002,100 bytes on disk, by far the single largest client chunk in the whole build) — the
@@ -302,7 +302,61 @@ Captured from `build/genshinMusic/index.html` in the old-app worktree before it 
 copied out programmatically (not retyped) to guarantee byte accuracy. 3,497 bytes.
 
 ```html
-<head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"/><link rel="stylesheet" href="/_next/static/css/e0d167afa0855a0e.css" data-precedence="next"/><link rel="stylesheet" href="/_next/static/css/fd79334dc5777c0f.css" data-precedence="next"/><link rel="stylesheet" href="/_next/static/css/4db1a6a69c513344.css" data-precedence="next"/><link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/webpack-1ef969dbe873894d.js"/><script src="/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js" async=""></script><script src="/_next/static/chunks/3794-41fb2f3e75f382b5.js" async=""></script><script src="/_next/static/chunks/main-app-df48c81117d3c951.js" async=""></script><script src="/_next/static/chunks/8e1d74a4-724ee81d56ba7c6e.js" async=""></script><script src="/_next/static/chunks/6468630d-f8aff360fd9f5748.js" async=""></script><script src="/_next/static/chunks/0e762574-2389d1bdf0e763e5.js" async=""></script><script src="/_next/static/chunks/795d4814-5433f5fc74622a78.js" async=""></script><script src="/_next/static/chunks/6759-10242ab37835ac52.js" async=""></script><script src="/_next/static/chunks/2429-b83a6c08514b0e18.js" async=""></script><script src="/_next/static/chunks/9756-0080e44c96a33c28.js" async=""></script><script src="/_next/static/chunks/9316-f74ac1ed9e2d6e1a.js" async=""></script><script src="/_next/static/chunks/5772-76eae80bd7a9b7c2.js" async=""></script><script src="/_next/static/chunks/8368-85f7c569ebd3121f.js" async=""></script><script src="/_next/static/chunks/5073-975cd4aef0abeed5.js" async=""></script><script src="/_next/static/chunks/971-8efdfacde9889f81.js" async=""></script><script src="/_next/static/chunks/7647-cf45f641be61f64b.js" async=""></script><script src="/_next/static/chunks/5000-b742f3097f94de36.js" async=""></script><script src="/_next/static/chunks/app/layout-b78f3d6822b8a1aa.js" async=""></script><script src="/_next/static/chunks/app/not-found-b599380ee8aa1a91.js" async=""></script><script src="/_next/static/chunks/385cb88d-9a2bf3ff5f1558fe.js" async=""></script><script src="/_next/static/chunks/94730671-89e0de256b5f17df.js" async=""></script><script src="/_next/static/chunks/578c2090-542c5a67dc0d1eb2.js" async=""></script><script src="/_next/static/chunks/9786-5655b4c9373c71f5.js" async=""></script><script src="/_next/static/chunks/5279-21fc980fcb17b777.js" async=""></script><script src="/_next/static/chunks/1476-1cdf17fe0a43caaa.js" async=""></script><script src="/_next/static/chunks/1359-61b6e0e4a7e7f2f7.js" async=""></script><script src="/_next/static/chunks/app/page-daf94bd96bcce49a.js" async=""></script><script src="/_next/static/chunks/app/global-error-da3d0b5b91a64108.js" async=""></script><link rel="preload" href="/_next/static/css/77a47b5832853b27.css" as="style"/><link rel="preload" href="/_next/static/css/498255f8da3e0ca9.css" as="style"/><link rel="preload" href="https://www.googletagmanager.com/gtag/js?id=G-T3TJDT2NFS" as="script"/><meta name="theme-color" content="rgb(99, 174, 167)"/><meta name="theme-color" content="#63aea7"/><title>Genshin Music Nightly</title><meta name="description" content="Genshin music, a website to play, practice and compose songs"/><link rel="manifest" href="/manifest.json"/><link rel="icon" href="/favicon.ico"/><link rel="apple-touch-icon" href="/logo192.png"/><script src="/_next/static/chunks/polyfills-42372ed130431b0a.js" noModule=""></script></head>
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"
+  />
+  <link rel="stylesheet" href="/_next/static/css/e0d167afa0855a0e.css" data-precedence="next" />
+  <link rel="stylesheet" href="/_next/static/css/fd79334dc5777c0f.css" data-precedence="next" />
+  <link rel="stylesheet" href="/_next/static/css/4db1a6a69c513344.css" data-precedence="next" />
+  <link
+    rel="preload"
+    as="script"
+    fetchpriority="low"
+    href="/_next/static/chunks/webpack-1ef969dbe873894d.js"
+  />
+  <script src="/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js" async=""></script>
+  <script src="/_next/static/chunks/3794-41fb2f3e75f382b5.js" async=""></script>
+  <script src="/_next/static/chunks/main-app-df48c81117d3c951.js" async=""></script>
+  <script src="/_next/static/chunks/8e1d74a4-724ee81d56ba7c6e.js" async=""></script>
+  <script src="/_next/static/chunks/6468630d-f8aff360fd9f5748.js" async=""></script>
+  <script src="/_next/static/chunks/0e762574-2389d1bdf0e763e5.js" async=""></script>
+  <script src="/_next/static/chunks/795d4814-5433f5fc74622a78.js" async=""></script>
+  <script src="/_next/static/chunks/6759-10242ab37835ac52.js" async=""></script>
+  <script src="/_next/static/chunks/2429-b83a6c08514b0e18.js" async=""></script>
+  <script src="/_next/static/chunks/9756-0080e44c96a33c28.js" async=""></script>
+  <script src="/_next/static/chunks/9316-f74ac1ed9e2d6e1a.js" async=""></script>
+  <script src="/_next/static/chunks/5772-76eae80bd7a9b7c2.js" async=""></script>
+  <script src="/_next/static/chunks/8368-85f7c569ebd3121f.js" async=""></script>
+  <script src="/_next/static/chunks/5073-975cd4aef0abeed5.js" async=""></script>
+  <script src="/_next/static/chunks/971-8efdfacde9889f81.js" async=""></script>
+  <script src="/_next/static/chunks/7647-cf45f641be61f64b.js" async=""></script>
+  <script src="/_next/static/chunks/5000-b742f3097f94de36.js" async=""></script>
+  <script src="/_next/static/chunks/app/layout-b78f3d6822b8a1aa.js" async=""></script>
+  <script src="/_next/static/chunks/app/not-found-b599380ee8aa1a91.js" async=""></script>
+  <script src="/_next/static/chunks/385cb88d-9a2bf3ff5f1558fe.js" async=""></script>
+  <script src="/_next/static/chunks/94730671-89e0de256b5f17df.js" async=""></script>
+  <script src="/_next/static/chunks/578c2090-542c5a67dc0d1eb2.js" async=""></script>
+  <script src="/_next/static/chunks/9786-5655b4c9373c71f5.js" async=""></script>
+  <script src="/_next/static/chunks/5279-21fc980fcb17b777.js" async=""></script>
+  <script src="/_next/static/chunks/1476-1cdf17fe0a43caaa.js" async=""></script>
+  <script src="/_next/static/chunks/1359-61b6e0e4a7e7f2f7.js" async=""></script>
+  <script src="/_next/static/chunks/app/page-daf94bd96bcce49a.js" async=""></script>
+  <script src="/_next/static/chunks/app/global-error-da3d0b5b91a64108.js" async=""></script>
+  <link rel="preload" href="/_next/static/css/77a47b5832853b27.css" as="style" />
+  <link rel="preload" href="/_next/static/css/498255f8da3e0ca9.css" as="style" />
+  <link rel="preload" href="https://www.googletagmanager.com/gtag/js?id=G-T3TJDT2NFS" as="script" />
+  <meta name="theme-color" content="rgb(99, 174, 167)" />
+  <meta name="theme-color" content="#63aea7" />
+  <title>Genshin Music Nightly</title>
+  <meta name="description" content="Genshin music, a website to play, practice and compose songs" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/logo192.png" />
+  <script src="/_next/static/chunks/polyfills-42372ed130431b0a.js" nomodule=""></script>
+</head>
 ```
 
 ### Element order that matters for Task 4 (extracted from the raw head above)
@@ -365,4 +419,3 @@ to the bigger per-page preload-link list) — and it is smaller while shipping s
 surface, not less, because the heaviest new dependencies (pixi.js, `@spotify/basic-pitch`/
 tensorflow) are proven, at the live network level in this session, to never load on the page that
 was measured.**
-
