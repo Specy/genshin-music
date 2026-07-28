@@ -130,9 +130,8 @@
       <!-- QUIRK: nested <p> instead of <b class="blog-b"> like every sibling item below -
                  preserved inconsistency, not a missed markup fix. -->
       <p class="blog-p">Bpm</p>
-      : This setting will set the Beats Per Minute of the whole song, one column will last for as
-      long as (60000ms / bpm), for example with a bpm of 200, one column will last for (60000ms /
-      200) = 300ms.
+      : This setting will set the Beats Per Minute of the whole song, one column will last for as long
+      as (60000ms / bpm), for example with a bpm of 200, one column will last for (60000ms / 200) = 300ms.
     </li>
     <li>
       <b class="blog-b">Base pitch</b>: This is the default pitch of all instruments, you can
