@@ -28,7 +28,7 @@ const config = {
     // reads SvelteKit's version-based update detection (`updated` from
     // `$app/state`) - it drives update prompts through the service worker's
     // SKIP_WAITING flow instead, so this value is inert at runtime.
-    version: { name: process.env.BUILD_VERSION_NAME || String(Date.now()) },
+    version: { name: process.env.BUILD_VERSION_NAME || 'dev' },
     adapter: adapter({
       pages: outDir,
       assets: outDir,
