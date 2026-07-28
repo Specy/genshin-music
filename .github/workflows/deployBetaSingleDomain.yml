@@ -25,7 +25,7 @@ jobs:
           node-version: 24.18.0
           cache: 'npm'
       - name: Build
-        run: npm ci && npm run build:all-no-root
+        run: npm install && npm run build:all-no-root
         env:
           CI: false
           PUBLIC_IS_BETA: true
