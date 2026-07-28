@@ -15,7 +15,7 @@ export default class AudioRecorder {
     if (!('MediaRecorder' in window)) {
       console.log('Audio recorder Polyfill');
       this.recorder = new (createAudioRecorderPolyfill(
-      // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
+        // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
         window.AudioContext || window.webkitAudioContext
       ))(this.node?.stream!) as unknown as MediaRecorder; // eslint-disable-line @typescript-eslint/no-non-null-asserted-optional-chain
     } else {
