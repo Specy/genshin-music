@@ -46,8 +46,8 @@ export class AudioProviderClass {
     return this.reverbLoading;
   };
   getAudioContext = (): AudioContext => {
-    // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
     if (!this.audioContext)
+    // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     return this.audioContext;
   };
@@ -57,8 +57,8 @@ export class AudioProviderClass {
     }
   };
   init = async () => {
-    // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
     this.audioContext =
+    // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
       this.audioContext ?? new (window.AudioContext || window.webkitAudioContext)();
     this.recorder = new AudioRecorder(this.audioContext);
     await this.loadReverb();
