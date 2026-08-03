@@ -1,7 +1,15 @@
-import {APP_NAME, IMPORT_NOTE_POSITIONS, INSTRUMENTS_DATA, PITCHES} from "$core/legacyConfig"
-import {ColumnNote, InstrumentData, NoteColumn, RecordedNote, type SerializedRecordedNote} from "./SongClasses"
+import {APP_NAME, INSTRUMENTS_DATA, PITCHES} from "$core/legacyConfig"
+import {
+    ColumnNote,
+    InstrumentData,
+    NoteColumn,
+    RecordedNote,
+    type SerializedInstrumentData,
+    type SerializedRecordedNoteV2,
+    type SerializedRecordedTrack,
+} from "./SongClasses"
 import {ComposedSong, defaultInstrumentMap} from "./ComposedSong"
-import {groupByNotes, groupNotesByIndex, mergeLayers} from "../utils/Utilities";
+import {groupByNotes} from "../utils/Utilities"
 import clonedeep from 'lodash.clonedeep'
 import {NoteLayer} from "./Layer"
 // P3 Task 7 fix: see the matching comment in $core/Services/FileService.ts - a value import of
@@ -16,26 +24,38 @@ import TonejsMidiPkg from "@tonejs/midi"
 import type {InstrumentName} from "$core/types"
 import {type SerializedSong, Song} from "./Song"
 import type {OldFormat, OldNote} from "$core/types"
+import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
+import {foldIdIntoRange} from "./noteIds"
 
-
-export type SerializedRecordedSong = SerializedSong & {
+/** Legacy (≤v2): flat index+layer notes, top-level instruments. */
+export type SerializedRecordedSongV2 = SerializedSong & {
     type: 'recorded'
     reverb: boolean
-    notes: SerializedRecordedNote[]
+    notes: SerializedRecordedNoteV2[]
+    instruments: SerializedInstrumentData[]
 }
-export type OldFormatRecorded = SerializedRecordedSong & OldFormat
+/** Current format (v3): per-track Note Id notes. */
+export type SerializedRecordedSong = SerializedSong & {
+    type: 'recorded'
+    version: 3
+    reverb: boolean
+    tracks: SerializedRecordedTrack[]
+}
+/** Old-format export shape: the legacy V2 wire format plus the pre-versioned extras. */
+export type OldFormatRecorded = SerializedRecordedSongV2 & OldFormat
 
-export type UnknownSerializedRecordedSong = SerializedRecordedSong
+export type UnknownSerializedRecordedSong = SerializedRecordedSongV2 | SerializedRecordedSong
 
 export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     instruments: InstrumentData[]
+    /** Flat, time-sorted; each note is track-tagged (per-track model, column-free timeline). */
     notes: RecordedNote[]
     timestamp = 0
     reverb = false
     private lastPlayedNote = -1
 
     constructor(name: string, notes?: RecordedNote[], instruments: InstrumentName[] = []) {
-        super(name, 2, 'recorded', {
+        super(name, 3, 'recorded', {
             isComposed: false,
             isComposedVersion: false,
             appName: APP_NAME
@@ -49,38 +69,137 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         return false
     }
 
+    /** How many (time-grouped) notes toOldFormat() would drop — ids without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
+    countOldFormatDroppedNotes(): number {
+        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+        const seen = new Set<string>()
+        let dropped = 0
+        this.notes.forEach(note => {
+            if (defaultTable.indexOf(note.id) !== -1) return
+            const key = `${note.time}-${note.id}`
+            if (seen.has(key)) return
+            seen.add(key)
+            dropped++
+        })
+        return dropped
+    }
+
+    /**
+     * Old-format export. Emits the legacy V2 wire shape (version 2, flat [index, time,
+     * hexLayer] notes via the frozen default table, top-level instruments) so files keep
+     * round-tripping through the well-tested v2 import path and stay byte-compatible with
+     * what the pre-v3 exporter produced. Notes whose id has no frozen-default-table
+     * button are dropped.
+     */
     toOldFormat = () => {
+        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+        //regroup per-track notes into the legacy merged shape: one entry per (time, index)
+        //with the track set as a NoteLayer bitmask
+        const merged = new Map<string, { index: number, time: number, layer: NoteLayer }>()
+        const legacyNotes: { index: number, time: number, layer: NoteLayer }[] = []
+        this.notes.forEach(note => {
+            const index = defaultTable.indexOf(note.id)
+            if (index === -1) return
+            const key = `${note.time}-${index}`
+            const existing = merged.get(key)
+            if (existing) {
+                existing.layer.set(note.trackIndex, true)
+            } else {
+                const layer = new NoteLayer()
+                layer.set(note.trackIndex, true)
+                const entry = {index, time: note.time, layer}
+                merged.set(key, entry)
+                legacyNotes.push(entry)
+            }
+        })
         const song: OldFormatRecorded = {
-            ...this.serialize(),
+            name: this.name,
+            type: 'recorded',
+            folderId: this.folderId,
+            instruments: this.instruments.map(instrument => instrument.serialize()),
+            //old-format consumers were built against the legacy version
+            version: 2,
+            pitch: this.pitch,
+            bpm: this.bpm,
+            reverb: this.reverb,
+            data: {...this.data},
+            notes: legacyNotes.map(note => [note.index, note.time, note.layer.serializeHex()] as SerializedRecordedNoteV2),
+            id: this.id,
             isComposed: false,
             pitchLevel: PITCHES.indexOf(this.pitch),
             bitsPerPage: 16,
             isEncrypted: false,
-            songNotes: this.notes.map(note => {
-                return {
-                    time: note.time,
-                    key: "1Key" + note.index
-                }
-            })
+            songNotes: legacyNotes.map(note => ({
+                time: note.time,
+                key: "1Key" + note.index
+            }))
         }
         return song
     }
 
-    static deserialize(obj: SerializedRecordedSong): RecordedSong {
-        const {notes, name} = obj
+    /**
+     * `importInto`: legacy-cross-game target (see ComposedSong.deserialize). Reproduces
+     * the historic deserialize-then-toGenshin pipeline: indices remapped through the
+     * target's frozen importPositions; instruments deliberately left as the source
+     * game's names (historic quirk — they fall back to the default instrument at
+     * runtime, and the frozen tables replicate exactly that for id-ification).
+     */
+    static deserialize(obj: UnknownSerializedRecordedSong, importInto?: 'Genshin' | 'Sky'): RecordedSong {
+        const {name} = obj
         const version = obj.version || 1
         const song = Song.deserializeTo(new RecordedSong(name || 'Untitled'), obj)
         song.reverb = obj.reverb ?? false
+        if (version === 3) {
+            const tracks = (obj as SerializedRecordedSong).tracks ?? []
+            song.instruments = tracks.map(track => InstrumentData.deserialize(track.instrument))
+            if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
+            const notes: RecordedNote[] = []
+            tracks.forEach((track, trackIndex) => {
+                track.notes.forEach(note => notes.push(RecordedNote.deserialize(note, trackIndex)))
+            })
+            //stable: equal times keep track order
+            song.notes = notes.sort((a, b) => a.time - b.time)
+            return song
+        }
+        //legacy (v1/v2) path: decode flat index+layer notes, expand per track
         if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
-        // QUIRK: a v1 note's layer is a decimal number, but RecordedNote.deserialize feeds it to NoteLayer.deserializeHex - so a decimal layer is read as hex (10 becomes 16). Harmless for the `|| 1` default; preserved so old saves keep decoding exactly as they always have.
+        const legacy = obj as SerializedRecordedSongV2
+        const crossGame = importInto !== undefined && song.data.appName !== importInto
+        if (crossGame) song.data.appName = importInto
+        const appName = isLegacyAppName(song.data.appName) ? song.data.appName : (APP_NAME as 'Genshin' | 'Sky')
+        const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
+        // QUIRK: a v1 note's layer is a decimal number, but the legacy decoder fed it to
+        // NoteLayer.deserializeHex - so a decimal layer is read as hex (10 becomes 16).
+        // Harmless for the `|| 1` default; preserved so old saves keep decoding exactly
+        // as they always have.
+        const rawNotes: { index: number, time: number, layer: NoteLayer }[] = []
         if (version === 1) {
-            const clonedNotes = Array.isArray(notes) ? clonedeep(notes) : []
-            song.notes = clonedNotes.map(note => {
-                return RecordedNote.deserialize([note[0], note[1], note[2] || 1] as SerializedRecordedNote)
+            const clonedNotes = Array.isArray(legacy.notes) ? clonedeep(legacy.notes) : []
+            clonedNotes.forEach(note => {
+                rawNotes.push({
+                    index: note[0],
+                    time: note[1],
+                    layer: NoteLayer.deserializeHex(`${note[2] || 1}`)
+                })
             })
         } else if (version === 2) {
-            song.notes = notes.map(note => RecordedNote.deserialize(note))
+            (legacy.notes ?? []).forEach(note => {
+                rawNotes.push({index: note[0], time: note[1], layer: NoteLayer.deserializeHex(note[2])})
+            })
         }
+        song.notes = []
+        rawNotes.forEach(note => {
+            const index = importPositions ? (importPositions[note.index] ?? -1) : note.index
+            if (index === -1) return
+            for (let trackIndex = 0; trackIndex < song.instruments.length; trackIndex++) {
+                if (!note.layer.test(trackIndex)) continue
+                const id = legacyIndexToId(appName, song.instruments[trackIndex].name, index)
+                if (id === null) continue
+                song.notes.push(new RecordedNote(id, note.time, 0, trackIndex))
+            }
+        })
         return song
     }
 
@@ -100,17 +219,22 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
 
     serialize = (): SerializedRecordedSong => {
+        const tracks: SerializedRecordedTrack[] = this.instruments.map((instrument, trackIndex) => ({
+            instrument: instrument.serialize(),
+            notes: this.notes
+                .filter(note => note.trackIndex === trackIndex)
+                .map(note => note.serialize())
+        }))
         return {
             name: this.name,
             type: 'recorded',
             folderId: this.folderId,
-            instruments: this.instruments.map(instrument => instrument.serialize()),
-            version: this.version,
+            version: 3,
             pitch: this.pitch,
             bpm: this.bpm,
             reverb: this.reverb,
             data: {...this.data},
-            notes: this.notes.map(note => note.serialize()),
+            tracks,
             id: this.id
         }
     }
@@ -173,16 +297,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 if (emptyColumns > -1) new Array(emptyColumns).fill(0).forEach(() => columns.push(new NoteColumn())) // adds empty columns
                 const noteColumn = new NoteColumn()
                 noteColumn.notes = notes.map(note => {
-                    return new ColumnNote(note.index, note.layer.clone())
+                    return new ColumnNote(note.trackIndex, note.id)
                 })
                 columns.push(noteColumn)
-            })
-            columns.forEach(column => { //merges notes of different layer
-                const groupedNotes = groupNotesByIndex(column)
-                column.notes = groupedNotes.map(group => {
-                    group[0].layer = mergeLayers(group)
-                    return group[0]
-                })
             })
             converted = columns
         } else {
@@ -197,11 +314,11 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             for (let i = 0; i < grouped.length; i++) {
                 const column = new NoteColumn()
                 column.notes = grouped[i].map(note => {
-                    return new ColumnNote(note.index, note.layer.clone())
+                    return new ColumnNote(note.trackIndex, note.id)
                 })
-                const next = grouped[i + 1] || [[0, 0, 0]]
+                const next = grouped[i + 1]
                 const paddingColumns = [] as number[]
-                let difference = next[0].time - grouped[i][0].time
+                let difference = (next?.[0]?.time ?? 0) - grouped[i][0].time
                 while (difference >= combinations[3]) {
                     if (difference / combinations[0] >= 1) {
                         difference -= combinations[0]
@@ -221,7 +338,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                     }
                 }
                 column.tempoChanger = paddingColumns.shift() || 0
-                const finalPadding = paddingColumns.map((col, i) => {
+                const finalPadding = paddingColumns.map(col => {
                     const column = new NoteColumn()
                     column.tempoChanger = col
                     return column
@@ -230,28 +347,19 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             }
         }
         song.columns = converted
-        //merge duplicates notes
+        //merge duplicate notes (same track + id in one column)
         for (const col of song.columns) {
-            const grouped = {} as { [key: number]: ColumnNote }
-            for (const notes of col.notes) {
-                if (grouped[notes.index]) {
-                    grouped[notes.index].layer.merge(notes.layer)
-                } else {
-                    grouped[notes.index] = notes
-                }
-            }
-            col.notes = Object.values(grouped)
+            const seen = new Set<string>()
+            col.notes = col.notes.filter(note => {
+                const key = `${note.trackIndex}-${note.id}`
+                if (seen.has(key)) return false
+                seen.add(key)
+                return true
+            })
         }
-
-        const highestLayer = NoteLayer.maxLayer(song.columns.flatMap(column => column.notes.map(note => note.layer)))
-        song.instruments = highestLayer.toString(2).split("").map((_, i) => {
-            const ins = new InstrumentData()
-            ins.icon = defaultInstrumentMap[i % 3]
-            return ins
-        })
-        this.instruments.forEach((ins, i) => {
-            song.instruments[i] = ins
-        })
+        song.instruments = this.instruments.map(ins => ins.clone())
+        if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
+        song.ensureInstruments()
         return song
     }
 
@@ -291,17 +399,16 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             ticks: 0,
         })
         midi.name = this.name
-        const highestLayer = NoteLayer.maxLayer(this.notes.map(note => note.layer))
-        const numberOfTracks = highestLayer.toString(2).length
-        for (let i = 0; i < numberOfTracks; i++) {
-            const notes = this.notes.filter(note => note.layer.test(i))
+        for (let trackIndex = 0; trackIndex < this.instruments.length; trackIndex++) {
+            const notes = this.notes.filter(note => note.trackIndex === trackIndex)
             if (!notes.length) continue
             const track = midi.addTrack()
-            track.name = `Layer ${i + 1}`
+            track.name = `Layer ${trackIndex + 1}`
             notes.forEach(note => {
                 track.addNote({
                     time: note.time / 1000,
-                    duration: 1,
+                    //held notes export their real length; taps keep the historical 1s
+                    duration: note.duration > 0 ? note.duration / 1000 : 1,
                     midi: note.toMidi() || 0,
                 })
             })
@@ -321,15 +428,28 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                         return n.key.split('Key')[1] === note.key.split('Key')[1] && n.time === note.time
                     })
             )
+            //old-sky files carry the OTHER game's index space; the frozen importPositions
+            //of the RUNNING game receive it (identity on Sky, the historic remap on Genshin)
+            const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+            const parsed: { index: number, time: number, layer: NoteLayer }[] = []
             notes.forEach((note) => {
                 const data = note.key.split("Key")
                 const layer = new NoteLayer((note.l ?? Number(data[0])) || 1)
-                const recordedNote = new RecordedNote(IMPORT_NOTE_POSITIONS[Number(data[1])], note.time, layer)
-                converted.notes.push(recordedNote)
+                const index = legacyTables.importPositions[Number(data[1])] ?? -1
+                if (index === -1) return
+                parsed.push({index, time: note.time, layer})
             })
-            const highestLayer = NoteLayer.maxLayer(converted.notes.map(note => note.layer))
+            const highestLayer = NoteLayer.maxLayer(parsed.map(note => note.layer))
             const numberOfInstruments = highestLayer.toString(2).length
             converted.instruments = new Array(numberOfInstruments).fill(0).map(_ => new InstrumentData())
+            parsed.forEach(note => {
+                for (let trackIndex = 0; trackIndex < converted.instruments.length; trackIndex++) {
+                    if (!note.layer.test(trackIndex)) continue
+                    const id = legacyIndexToId(APP_NAME as 'Genshin' | 'Sky', converted.instruments[trackIndex].name, note.index)
+                    if (id === null) continue
+                    converted.notes.push(new RecordedNote(id, note.time, 0, trackIndex))
+                }
+            })
             if ([true, "true"].includes(song.isComposed)) {
                 return converted.toComposedSong()
             }
@@ -339,16 +459,26 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             return null
         }
     }
+    /** NEW-format cross-game conversion (see ComposedSong.toGenshin). Instruments untouched — historic quirk preserved: source-game names fall back to the default instrument at runtime. */
     toGenshin = () => {
         const clone = this.clone()
-        if (clone.data.appName === 'Genshin') {
-            console.warn("Song already in Genshin format")
+        if (clone.data.appName === APP_NAME) {
+            console.warn("Song already in " + APP_NAME + " format")
             return clone
         }
-        clone.data.appName = "Genshin"
+        clone.data.appName = APP_NAME
         clone.notes = clone.notes.map(note => {
-            note.index = IMPORT_NOTE_POSITIONS[note.index]
+            //unknown (source-game) instrument names resolve to the default instrument's table
+            note.id = foldIdIntoRange(clone.instruments[note.trackIndex]?.name ?? '', note.id)
             return note
+        })
+        //fold can collide (e.g. 84 folding onto an existing 72): same-track same-time duplicates merge
+        const seen = new Set<string>()
+        clone.notes = clone.notes.filter(note => {
+            const key = `${note.time}-${note.trackIndex}-${note.id}`
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
         })
         return clone
     }

@@ -100,6 +100,23 @@ export type LayoutKeys = {
   switchLayout: string[];
 };
 
+/** A loop region inside a note sample, in seconds. */
+export type LoopRegion = { start: number; end: number };
+
+/**
+ * Sustain capability of an instrument (spec 2026-08-03 §7). Absent = one-shot
+ * instrument (every pre-format-v4 instrument). While a note is held the engine loops
+ * the region; on release it gain-ramps to silence over `release` seconds.
+ */
+export type InstrumentSustainConfig = {
+  /** Release ramp length in seconds. */
+  release: number;
+  /** Default loop region, used for every note without an override. */
+  loop: LoopRegion;
+  /** Per-note (button-indexed) overrides; null entries fall back to `loop`. */
+  noteLoops?: readonly (LoopRegion | null)[];
+};
+
 export type InstrumentDataType = {
   // src/Config.ts InstrumentDataType
   notes: number;
@@ -111,6 +128,7 @@ export type InstrumentDataType = {
   midiNotes: readonly number[];
   clickColor?: string;
   fill?: string;
+  sustain?: InstrumentSustainConfig;
 };
 
 export type TempoChanger = {

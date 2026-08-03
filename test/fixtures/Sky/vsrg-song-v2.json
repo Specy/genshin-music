@@ -1,0 +1,196 @@
+{
+  "serialized": {
+    "name": "Golden vsrg",
+    "type": "vsrg",
+    "bpm": 140,
+    "pitch": "C",
+    "version": 2,
+    "keys": 6,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "id": null,
+    "audioSongId": null,
+    "folderId": null,
+    "duration": 30000,
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "lead",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "hitObjects": [
+          [
+            0,
+            500,
+            0,
+            []
+          ],
+          [
+            3,
+            1250,
+            0,
+            []
+          ]
+        ],
+        "color": "#FF0000"
+      }
+    ],
+    "instruments": [],
+    "trackModifiers": [
+      {
+        "hidden": false,
+        "muted": true,
+        "alias": "muted layer"
+      }
+    ],
+    "breakpoints": [],
+    "difficulty": 7,
+    "snapPoint": 1
+  },
+  "roundtrip": {
+    "name": "Golden vsrg",
+    "type": "vsrg",
+    "bpm": 140,
+    "pitch": "C",
+    "version": 2,
+    "keys": 6,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "id": null,
+    "audioSongId": null,
+    "folderId": null,
+    "duration": 30000,
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "lead",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "hitObjects": [
+          [
+            0,
+            500,
+            0,
+            []
+          ],
+          [
+            3,
+            1250,
+            0,
+            []
+          ]
+        ],
+        "color": "#FF0000"
+      }
+    ],
+    "instruments": [],
+    "trackModifiers": [
+      {
+        "hidden": false,
+        "muted": true,
+        "alias": "muted layer"
+      }
+    ],
+    "breakpoints": [],
+    "difficulty": 7,
+    "snapPoint": 1
+  },
+  "fromLegacyV1": {
+    "name": "Golden vsrg",
+    "type": "vsrg",
+    "bpm": 140,
+    "pitch": "C",
+    "version": 2,
+    "keys": 6,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "id": null,
+    "audioSongId": null,
+    "folderId": null,
+    "duration": 30000,
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "lead",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "hitObjects": [
+          [
+            0,
+            500,
+            0,
+            []
+          ],
+          [
+            3,
+            1250,
+            0,
+            []
+          ]
+        ],
+        "color": "#FF0000"
+      }
+    ],
+    "instruments": [],
+    "trackModifiers": [
+      {
+        "hidden": false,
+        "muted": true,
+        "alias": "muted layer"
+      }
+    ],
+    "breakpoints": [],
+    "difficulty": 7,
+    "snapPoint": 1
+  },
+  "defaults": {
+    "name": "Empty vsrg",
+    "type": "vsrg",
+    "bpm": 100,
+    "pitch": "C",
+    "version": 2,
+    "keys": 4,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "id": null,
+    "audioSongId": null,
+    "folderId": null,
+    "duration": 60000,
+    "tracks": [],
+    "instruments": [],
+    "trackModifiers": [],
+    "breakpoints": [],
+    "difficulty": 5,
+    "snapPoint": 1
+  }
+}

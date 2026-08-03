@@ -1,6 +1,6 @@
-import {describe, it} from 'vitest'
-import {songService} from './imports'
-import {expectGolden} from './golden'
+import {describe, expect, it} from 'vitest'
+import {ComposedSong, RecordedSong, songService} from './imports'
+import {expectGolden, readFixture} from './golden'
 
 function clone<T>(value: T): T {
     return JSON.parse(JSON.stringify(value))
@@ -49,16 +49,25 @@ function buildOldFormatPayload(isComposed: boolean) {
 describe('old-format (pre-versioned Sky) import', () => {
     it('recorded and composed old-format payloads parse through songService.parseSong', () => {
         // isComposed: true makes fromOldFormat itself route the parsed RecordedSong
-        // through toComposedSong() before returning (see the source, ~line 324);
+        // through toComposedSong() before returning (see the source);
         // isComposed: false returns the RecordedSong as-is. Runs on both games:
-        // IMPORT_NOTE_POSITIONS is per-game, so the resulting note indexes differ
+        // the frozen importPositions are per-game, so the resulting Note Ids differ
         // between the Genshin and Sky fixtures even though the input songNotes
         // (key indexes) are identical — that's the point of running both.
+        // Format rewrite (2026-08-03): `old-format-import.json` holds the PRE-v4 parser's
+        // output (legacy serializations) and serves as the conversion parity reference.
         const recordedPayload = buildOldFormatPayload(false)
         const composedPayload = buildOldFormatPayload(true)
-        expectGolden('old-format-import', {
-            recorded: songService.parseSong(clone(recordedPayload)).serialize(),
-            composed: songService.parseSong(clone(composedPayload)).serialize(),
+        const recorded = songService.parseSong(clone(recordedPayload))
+        const composed = songService.parseSong(clone(composedPayload))
+        expectGolden('old-format-import-v4', {
+            recorded: recorded.serialize(),
+            composed: composed.serialize(),
         })
+        const preV4 = readFixture('old-format-import')
+        expect(clone(RecordedSong.deserialize(preV4.recorded).serialize()))
+            .toEqual(clone(recorded.serialize()))
+        expect(clone(ComposedSong.deserialize(preV4.composed).serialize()))
+            .toEqual(clone(composed.serialize()))
     })
 })

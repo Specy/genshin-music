@@ -1,8 +1,8 @@
 import {Buffer} from 'node:buffer'
-import {describe, it} from 'vitest'
-import {APP_NAME, songService} from './imports'
+import {describe, expect, it} from 'vitest'
+import {APP_NAME, ComposedSong, songService, VsrgSong} from './imports'
 import {buildComposedSong, buildRecordedSong} from './builders'
-import {expectGolden} from './golden'
+import {expectGolden, readFixture} from './golden'
 
 // A serialized Sky composed song, crafted as the SKY build would emit it.
 // Kept inline (not built via classes) so the Genshin run has a Sky payload to import.
@@ -50,16 +50,26 @@ const SKY_VSRG_PAYLOAD = {
 }
 
 describe('cross-game import conversion (Genshin build only)', () => {
+    // Format-v4 rewrite (2026-08-03): `conversion.json` / `vsrg-conversion.json` hold the
+    // PRE-v4 converter's output (legacy Genshin serializations) and now serve as parity
+    // references: converting them through the new deserializers must equal converting the
+    // original Sky payloads directly — proof the historic cross-game remap is reproduced.
     it.runIf(APP_NAME === 'Genshin')('Sky composed song converts via parseSong', () => {
         const parsed = songService.parseSong(JSON.parse(JSON.stringify(SKY_COMPOSED_PAYLOAD)))
-        expectGolden('conversion', {
+        expectGolden('conversion-v4', {
             skyComposedToGenshin: parsed.serialize(),
         })
+        const preV4Output = readFixture('conversion').skyComposedToGenshin
+        expect(JSON.parse(JSON.stringify(ComposedSong.deserialize(preV4Output).serialize())))
+            .toEqual(JSON.parse(JSON.stringify(parsed.serialize())))
     })
 
     it.runIf(APP_NAME === 'Genshin')('Sky vsrg song converts via parseSong', () => {
         const parsed = songService.parseSong(JSON.parse(JSON.stringify(SKY_VSRG_PAYLOAD)))
-        expectGolden('vsrg-conversion', parsed.serialize())
+        expectGolden('vsrg-conversion-v2', parsed.serialize())
+        const preV2Output = readFixture('vsrg-conversion')
+        expect(JSON.parse(JSON.stringify(VsrgSong.deserialize(preV2Output).serialize())))
+            .toEqual(JSON.parse(JSON.stringify(parsed.serialize())))
     })
 
     it.runIf(APP_NAME === 'Sky')('Genshin song is rejected by the Sky build', () => {

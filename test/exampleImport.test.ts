@@ -1,6 +1,6 @@
-import {describe, it} from 'vitest'
+import {describe, expect, it} from 'vitest'
 import {ComposedSong, Folder, RecordedSong, songService, Theme, VsrgSong} from './imports'
-import {expectGolden, readInput} from './golden'
+import {expectGolden, readFixture, readInput} from './golden'
 
 // Both example files are arrays (the backup/multi-song download format:
 // FileService.downloadFiles writes JSON.stringify(files)).
@@ -12,10 +12,18 @@ function parseAll(fileName: string) {
 
 describe('real example files parse through the import pipeline', () => {
     it('example .skysheet files import identically', () => {
-        expectGolden('example-import', {
-            composed: parseAll('example-composed.skysheet.json'),
-            recorded: parseAll('example-recorded.skysheet.json'),
-        })
+        // Format rewrite (2026-08-03): `example-import.json` holds the PRE-v4 parser's output
+        // (legacy serializations) and serves as the conversion parity reference below.
+        const composed = parseAll('example-composed.skysheet.json')
+        const recorded = parseAll('example-recorded.skysheet.json')
+        expectGolden('example-import-v4', {composed, recorded})
+        const preV4 = readFixture('example-import')
+        expect(preV4.composed.map((file: any) =>
+            JSON.parse(JSON.stringify(ComposedSong.deserialize(file).serialize()))
+        )).toEqual(composed)
+        expect(preV4.recorded.map((file: any) =>
+            JSON.parse(JSON.stringify(RecordedSong.deserialize(file).serialize()))
+        )).toEqual(recorded)
     })
 })
 

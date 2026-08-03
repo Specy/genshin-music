@@ -12,6 +12,7 @@
   import MidiParser from './MidiParser/MidiParser.svelte';
   import ComposerTools from './ComposerTools.svelte';
   import ComposerKeyboard from './ComposerKeyboard.svelte';
+  import ComposerDurationPopover from './ComposerDurationPopover.svelte';
   import ComposerCanvas from './ComposerCanvas.svelte';
   import ComposerMenu from './ComposerMenu.svelte';
   import CanvasTool from './CanvasTool.svelte';
@@ -169,7 +170,7 @@
     const shouldEditKeyboard = isPlaying || event.shiftKey;
     if (shouldEditKeyboard) {
       const note = currentInstrument.getNoteFromCode(shortcut.name);
-      if (note !== null) handleClick(note);
+      if (note !== null) toggleNoteImmediate(note);
     }
   };
 
@@ -224,7 +225,7 @@
     if (MIDIProvider.isDown(eventType) && velocity !== 0) {
       const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note);
       keyboardNotes.forEach((keyboardNote) => {
-        handleClick(currentInstrument.notes[keyboardNote.index]);
+        toggleNoteImmediate(currentInstrument.notes[keyboardNote.index]);
       });
       const shortcut = MIDIProvider.settings.shortcuts.find((e) => e.midi === note);
       if (!shortcut) return;
@@ -389,13 +390,30 @@
     }
   }
 
-  function playSound(layer: number, index: number, delay?: number) {
+  function playSound(layer: number, index: number, delay?: number, durationMs?: number) {
     const instrument = layers[layer];
     const note = instrument?.notes[index];
     if (note === undefined) return;
     if (song.instruments[layer].muted) return;
     const pitch = song.instruments[layer].pitch || settings.pitch.value;
-    instrument.play(note.index, pitch, delay);
+    if (durationMs !== undefined && instrument.supportsSustain) {
+      //spanned note on a sustaining instrument: hold for its musical length, then release
+      instrument.pressNote(note.index, pitch, { delay, durationMs });
+    } else {
+      instrument.play(note.index, pitch, delay);
+    }
+  }
+
+  /** Real length in ms of a note's column span starting at the currently selected column (same math as the playback tick). */
+  function spanDurationMs(span: number): number | undefined {
+    if (span <= 1) return undefined;
+    const msPerBeat = 60000 / settings.bpm.value;
+    let ms = 0;
+    for (let i = song.selected; i < song.selected + span; i++) {
+      const changer = song.columns[i]?.getTempoChanger().changer ?? 1;
+      ms += Song.roundTime(msPerBeat * changer);
+    }
+    return ms;
   }
 
   function changePitch(value: Pitch) {
@@ -403,23 +421,144 @@
     updateSettings();
   }
 
+  // ── note press state machine (spec 2026-08-03 §2 "Composer duration UX") ─────────
+  // pointerdown creates a missing note immediately (the common tap feel); removal of an
+  // existing note is deferred to the short-press RELEASE so a long-press can open the
+  // duration popover without deleting the note first. Buttons covered by an earlier
+  // note's span obey the occupancy rule: no new note, long-press edits the covering one.
+  let durationPopover: {
+    startColumn: number;
+    trackIndex: number;
+    id: number;
+    anchor: { x: number; y: number; width: number };
+  } | null = $state(null);
+  let notePress: {
+    id: number;
+    existedAtPress: boolean;
+    coveringStart: number | null;
+    longPressFired: boolean;
+  } | null = null;
+
   function handleClick(note: ObservableNote) {
-    const column = song.selectedColumn;
-    const index = column.getNoteIndex(note.index);
-    if (index === null) {
-      //if it doesn't exist, create a new one
-      const columnNote = column.addNote(note.index);
-      columnNote.setLayer(layer, true);
+    //the clicked button's Note Id on the current layer's instrument
+    const id = note.midiNote;
+    playSound(layer, note.index);
+    const covering = song.getSpanCovering(song.selected, layer, id);
+    if (covering) {
+      notePress = {
+        id,
+        existedAtPress: false,
+        coveringStart: covering.startColumn,
+        longPressFired: false,
+      };
+      return;
+    }
+    const existing = song.selectedColumn.findNote(layer, id);
+    if (existing === null) {
+      song.selectedColumn.addNote(layer, id);
+      refreshSong();
+      handleAutoSave();
+      notePress = { id, existedAtPress: false, coveringStart: null, longPressFired: false };
     } else {
-      //if it exists, toggle the current layer and if it's 000 delete it
-      const currentNote = column.notes[index];
-      currentNote.toggleLayer(layer);
-      if (currentNote.layer.isEmpty()) column.removeAtIndex(index);
+      notePress = { id, existedAtPress: true, coveringStart: null, longPressFired: false };
+    }
+  }
+
+  /** Physical-keyboard / MIDI note entry: no pointer gesture exists there, so toggling stays immediate (the pre-popover behavior), occupancy rule included. */
+  function toggleNoteImmediate(note: ObservableNote) {
+    const id = note.midiNote;
+    playSound(layer, note.index);
+    if (song.getSpanCovering(song.selected, layer, id)) return;
+    const existing = song.selectedColumn.findNote(layer, id);
+    if (existing === null) {
+      song.selectedColumn.addNote(layer, id);
+    } else {
+      song.selectedColumn.removeNote(layer, id);
     }
     refreshSong();
     handleAutoSave();
-    playSound(layer, note.index);
   }
+
+  function handleNoteRelease(note: ObservableNote) {
+    const press = notePress;
+    notePress = null;
+    if (!press || press.longPressFired || press.id !== note.midiNote) return;
+    if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
+    if (press.existedAtPress) {
+      song.selectedColumn.removeNote(layer, press.id);
+      refreshSong();
+      handleAutoSave();
+    }
+  }
+
+  function handleNoteLongPress(note: ObservableNote, anchor: DOMRect) {
+    const press = notePress;
+    if (!press || press.id !== note.midiNote) return;
+    press.longPressFired = true;
+    const startColumn = press.coveringStart ?? song.selected;
+    if (!song.columns[startColumn]?.findNote(layer, press.id)) return;
+    addToHistory();
+    durationPopover = {
+      startColumn,
+      trackIndex: layer,
+      id: press.id,
+      anchor: { x: anchor.x, y: anchor.y, width: anchor.width },
+    };
+  }
+
+  const popoverNote = $derived.by(() => {
+    const popover = durationPopover;
+    if (!popover) return null;
+    return song.columns[popover.startColumn]?.findNote(popover.trackIndex, popover.id) ?? null;
+  });
+  const popoverMaxSpan = $derived.by(() => {
+    const popover = durationPopover;
+    if (!popover) return 1;
+    return song.maxSpanAt(popover.startColumn, popover.trackIndex, popover.id);
+  });
+
+  function setPopoverSpan(span: number) {
+    if (!durationPopover) return;
+    song.setNoteSpan(
+      durationPopover.startColumn,
+      durationPopover.trackIndex,
+      durationPopover.id,
+      span
+    );
+    refreshSong();
+    handleAutoSave();
+  }
+
+  function closeDurationPopover() {
+    durationPopover = null;
+  }
+
+  /** Buttons of the current layer's instrument occupied by a span in the selected column (tails, plus span starts so a long note reads as long). */
+  const heldButtons = $derived.by(() => {
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt wholesale by this derived, never mutated after return
+    const held = new Set<number>();
+    const keyboard = layers[layer];
+    if (!keyboard) return held;
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe set
+    const seen = new Set<number>();
+    for (let start = song.selected - 1; start >= 0; start--) {
+      for (const spanNote of song.columns[start]?.notesOfTrack(layer) ?? []) {
+        if (seen.has(spanNote.id)) continue;
+        seen.add(spanNote.id);
+        if (start + spanNote.span > song.selected) {
+          const button = keyboard.getButtonFromId(spanNote.id);
+          if (button !== -1) held.add(button);
+        }
+      }
+    }
+    for (const spanNote of song.selectedColumn?.notesOfTrack(layer) ?? []) {
+      if (spanNote.span > 1) {
+        const button = keyboard.getButtonFromId(spanNote.id);
+        if (button !== -1) held.add(button);
+      }
+    }
+    return held;
+  });
 
   async function renameSong(newName: string, id: string) {
     await songsStore.renameSong(id, newName);
@@ -573,6 +712,8 @@
   async function togglePlay(override?: boolean): Promise<void> {
     const newState = typeof override === 'boolean' ? override : !isPlaying;
     isPlaying = newState;
+    //stopping playback releases voices still held from spanned notes
+    if (!isPlaying) layers.forEach((layer) => layer?.releaseAllNotes());
     if (isPlaying) selectColumn(song.selected, false, settings.lookaheadTime.value / 1000);
     let delayOffset = 0;
     let previousTime: number;
@@ -635,6 +776,8 @@
 
   function selectColumn(index: number, ignoreAudio?: boolean, delay?: number) {
     if (index < 0 || index > song.columns.length - 1) return;
+    //moving to another column dismisses the duration popover (spec §2 dismissal rules)
+    if (durationPopover !== null && index !== song.selected) durationPopover = null;
     song.selected = index;
     if (isToolsVisible && copiedColumns.length === 0) {
       selectedColumns.push(index);
@@ -647,9 +790,9 @@
     delay = delay ? delay + (isRecordingAudio ? 0.5 : 0) : 0;
     if (ignoreAudio) return;
     song.selectedColumn.notes.forEach((note) => {
-      layers.forEach((_, i) => {
-        if (note.isLayerToggled(i)) playSound(i, note.index, delay);
-      });
+      const button = layers[note.trackIndex]?.getButtonFromId(note.id) ?? -1;
+      if (button === -1) return; //stranded on its instrument = silent
+      playSound(note.trackIndex, button, delay, spanDurationMs(note.span));
     });
   }
 
@@ -659,6 +802,7 @@
 
   function changeLayer(newLayer: number) {
     layer = newLayer;
+    durationPopover = null;
   }
 
   function toggleTools() {
@@ -771,12 +915,15 @@
         const parsed = songService.parseSong(songToDownload);
         songToDownload.data.appName = APP_NAME;
         const songName = songToDownload.name;
-        const converted = [
+        const usesOldFormat =
           game.features.downloadsSongsInOldFormat &&
-          (parsed instanceof ComposedSong || parsed instanceof RecordedSong)
-            ? parsed.toOldFormat()
-            : parsed.serialize(),
-        ];
+          (parsed instanceof ComposedSong || parsed instanceof RecordedSong);
+        if (usesOldFormat) {
+          const dropped = parsed.countOldFormatDroppedNotes();
+          if (dropped > 0)
+            logger.warn(t('logs:old_format_export_dropped_notes', { count: dropped }), 8000);
+        }
+        const converted = [usesOldFormat ? parsed.toOldFormat() : parsed.serialize()];
         fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
         logger.success(t('logs:song_downloaded'));
         Analytics.userSongs('download', { page: 'composer' });
@@ -1008,6 +1155,8 @@
   <ComposerKeyboard
     functions={{
       handleClick,
+      handleNoteRelease,
+      handleNoteLongPress,
       startRecordingAudio,
       selectColumnFromDirection,
       handleTempoChanger,
@@ -1020,10 +1169,20 @@
       instruments: song.instruments,
       keyboard: layers[layer],
       currentColumn: song.selectedColumn,
+      heldButtons,
       pitch: song.instruments[layer]?.pitch || settings.pitch.value,
       noteNameType: settings.noteNameType.value,
     }}
   />
+  {#if durationPopover && popoverNote}
+    <ComposerDurationPopover
+      span={popoverNote.span}
+      maxSpan={popoverMaxSpan}
+      anchor={durationPopover.anchor}
+      onChange={setPopoverSpan}
+      onClose={closeDurationPopover}
+    />
+  {/if}
 </div>
 <ComposerMenu
   data={{

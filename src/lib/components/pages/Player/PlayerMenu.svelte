@@ -20,7 +20,7 @@
   import { _folderService } from '$core/Services/FolderService';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong, type UnknownSerializedComposedSong } from '$core/Songs/ComposedSong';
-  import { RecordedSong, type SerializedRecordedSong } from '$core/Songs/RecordedSong';
+  import { RecordedSong, type UnknownSerializedRecordedSong } from '$core/Songs/RecordedSong';
   import type { SerializedSong, SongType } from '$core/Songs/Song';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
@@ -161,6 +161,11 @@
       return;
     }
     const songName = song.name;
+    if (game.features.downloadsSongsInOldFormat) {
+      const dropped = song.countOldFormatDroppedNotes();
+      if (dropped > 0)
+        logger.warn(t('logs:old_format_export_dropped_notes', { count: dropped }), 8000);
+    }
     const converted = [
       game.features.downloadsSongsInOldFormat ? song.toOldFormat() : song.serialize(),
     ];
@@ -201,15 +206,24 @@
   async function downloadAllSongs() {
     try {
       const songs = await songService.getSongs();
+      let droppedNotes = 0;
       const toDownload = songs.map((song) => {
         if (game.features.downloadsSongsInOldFormat) {
-          if (song.type === 'composed')
-            return ComposedSong.deserialize(song as UnknownSerializedComposedSong).toOldFormat();
-          if (song.type === 'recorded')
-            return RecordedSong.deserialize(song as SerializedRecordedSong).toOldFormat();
+          if (song.type === 'composed') {
+            const parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong);
+            droppedNotes += parsed.countOldFormatDroppedNotes();
+            return parsed.toOldFormat();
+          }
+          if (song.type === 'recorded') {
+            const parsed = RecordedSong.deserialize(song as UnknownSerializedRecordedSong);
+            droppedNotes += parsed.countOldFormatDroppedNotes();
+            return parsed.toOldFormat();
+          }
         }
         return song;
       });
+      if (droppedNotes > 0)
+        logger.warn(t('logs:old_format_export_dropped_notes', { count: droppedNotes }), 8000);
       const date = new Date().toISOString().split('T')[0];
       const folders = await _folderService.getFolders();
       const files = [...folders, ...toDownload];

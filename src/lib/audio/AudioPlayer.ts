@@ -67,15 +67,45 @@ export class AudioPlayer {
     return Promise.all(promises);
   }
 
-  playNoteOfInstrument(instrumentIndex: number, note: number, pitch?: Pitch) {
+  /** Play a Note Id on one instrument — resolves the id to that instrument's button (stranded = silent). */
+  playNoteOfInstrument(instrumentIndex: number, id: number, pitch?: Pitch) {
     const instrumentData = this.instruments[instrumentIndex];
-    this.audioInstruments[instrumentIndex].play(
-      note,
-      pitch ?? (instrumentData.pitch || this.basePitch)
-    );
+    const audioInstrument = this.audioInstruments[instrumentIndex];
+    if (!audioInstrument || !instrumentData) return;
+    const button = audioInstrument.getButtonFromId(id);
+    if (button === -1) return;
+    audioInstrument.play(button, pitch ?? (instrumentData.pitch || this.basePitch));
   }
 
-  playNotesOfInstrument(instrumentIndex: number, notes: number[], pitch?: Pitch) {
-    notes.forEach((note) => this.playNoteOfInstrument(instrumentIndex, note, pitch));
+  playNotesOfInstrument(instrumentIndex: number, ids: number[], pitch?: Pitch) {
+    ids.forEach((id) => this.playNoteOfInstrument(instrumentIndex, id, pitch));
+  }
+
+  /** Play a raw BUTTON position on one instrument (UI surfaces that are button-addressed, e.g. MIDI setup). */
+  playButtonOfInstrument(instrumentIndex: number, button: number, pitch?: Pitch) {
+    const instrumentData = this.instruments[instrumentIndex];
+    const audioInstrument = this.audioInstruments[instrumentIndex];
+    if (!audioInstrument || !instrumentData) return;
+    audioInstrument.play(button, pitch ?? (instrumentData.pitch || this.basePitch));
+  }
+
+  /** Like playNoteOfInstrument, but holds for `durationMs` when the instrument sustains (VSRG hold notes); one-shot otherwise. */
+  pressNoteOfInstrument(instrumentIndex: number, id: number, durationMs?: number, pitch?: Pitch) {
+    const instrumentData = this.instruments[instrumentIndex];
+    const audioInstrument = this.audioInstruments[instrumentIndex];
+    if (!audioInstrument || !instrumentData) return;
+    const button = audioInstrument.getButtonFromId(id);
+    if (button === -1) return;
+    const resolvedPitch = pitch ?? (instrumentData.pitch || this.basePitch);
+    if (durationMs !== undefined && durationMs > 0 && audioInstrument.supportsSustain) {
+      audioInstrument.pressNote(button, resolvedPitch, { durationMs });
+    } else {
+      audioInstrument.play(button, resolvedPitch);
+    }
+  }
+
+  /** Release every held/scheduled voice on every instrument (playback stop). */
+  releaseAllNotes() {
+    this.audioInstruments.forEach((instrument) => instrument.releaseAllNotes());
   }
 }

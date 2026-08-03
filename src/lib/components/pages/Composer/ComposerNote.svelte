@@ -32,6 +32,9 @@
     layer,
     instrument,
     clickAction,
+    releaseAction,
+    longPressAction,
+    held = false,
     noteText,
     noteImage,
   }: {
@@ -39,9 +42,35 @@
     layer: LayerStatus;
     instrument: InstrumentName;
     clickAction: (data: ObservableNote) => void;
+    /** Pointer released/left the button — completes the press gesture (short press). */
+    releaseAction?: (data: ObservableNote) => void;
+    /** Held ~450ms without release — opens the duration popover for this note. */
+    longPressAction?: (data: ObservableNote, anchor: DOMRect) => void;
+    /** The current column is covered by this button's note span on the current layer. */
+    held?: boolean;
     noteText: string;
     noteImage: NoteImage;
   } = $props();
+
+  const LONG_PRESS_MS = 450;
+  let longPressTimeout: ReturnType<typeof setTimeout> | 0 = 0;
+  let buttonElement: HTMLButtonElement | undefined = $state();
+
+  function startLongPress() {
+    if (!longPressAction) return;
+    clearTimeout(longPressTimeout);
+    longPressTimeout = setTimeout(() => {
+      longPressTimeout = 0;
+      const anchor = buttonElement?.getBoundingClientRect();
+      if (anchor) longPressAction(data, anchor);
+    }, LONG_PRESS_MS);
+  }
+
+  function endPress() {
+    clearTimeout(longPressTimeout);
+    longPressTimeout = 0;
+    releaseAction?.(data);
+  }
 
   let colors = $state({
     note_background: ThemeProvider.get('note_background').desaturate(0.6).toString(),
@@ -62,10 +91,15 @@
 </script>
 
 <button
+  bind:this={buttonElement}
   onpointerdown={(e) => {
     preventDefault(e);
     clickAction(data);
+    startLongPress();
   }}
+  onpointerup={endPress}
+  onpointerleave={endPress}
+  onpointercancel={endPress}
   class="button-hitbox"
   oncontextmenu={preventDefault}
 >
@@ -80,6 +114,11 @@
     />
     <div class="layer-3-ball-bigger"></div>
     <div class="layer-4-line"></div>
+    {#if held}
+      <div
+        style="position:absolute;bottom:6%;left:20%;right:20%;height:0.25rem;border-radius:0.2rem;background-color:var(--accent);pointer-events:none"
+      ></div>
+    {/if}
     <div class={game.features.hasNoteFrame ? 'note-name' : 'note-name-sky'}>
       {noteText}
     </div>

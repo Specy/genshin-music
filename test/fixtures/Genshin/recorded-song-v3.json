@@ -1,0 +1,317 @@
+{
+  "serialized": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 3,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Genshin"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            72,
+            100
+          ],
+          [
+            60,
+            350
+          ],
+          [
+            48,
+            900
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            77,
+            350
+          ],
+          [
+            60,
+            350
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "roundtrip": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 3,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Genshin"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            72,
+            100
+          ],
+          [
+            60,
+            350
+          ],
+          [
+            48,
+            900
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            77,
+            350
+          ],
+          [
+            60,
+            350
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromLegacyV1": {
+    "name": "Legacy v1",
+    "type": "recorded",
+    "folderId": null,
+    "version": 3,
+    "pitch": "C",
+    "bpm": 220,
+    "reverb": false,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Genshin"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            72,
+            100
+          ],
+          [
+            81,
+            400
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromLegacyV2": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 3,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Genshin"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            72,
+            100
+          ],
+          [
+            60,
+            350
+          ],
+          [
+            48,
+            900
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            77,
+            350
+          ],
+          [
+            60,
+            350
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "oldFormatExport": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "instruments": [
+      {
+        "name": "Lyre",
+        "volume": 90,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      {
+        "name": "Vintage-Lyre",
+        "volume": 90,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "version": 2,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Genshin"
+    },
+    "notes": [
+      [
+        0,
+        100,
+        "1"
+      ],
+      [
+        3,
+        350,
+        "2"
+      ],
+      [
+        7,
+        350,
+        "3"
+      ],
+      [
+        14,
+        900,
+        "1"
+      ]
+    ],
+    "id": null,
+    "isComposed": false,
+    "pitchLevel": 2,
+    "bitsPerPage": 16,
+    "isEncrypted": false,
+    "songNotes": [
+      {
+        "time": 100,
+        "key": "1Key0"
+      },
+      {
+        "time": 350,
+        "key": "1Key3"
+      },
+      {
+        "time": 350,
+        "key": "1Key7"
+      },
+      {
+        "time": 900,
+        "key": "1Key14"
+      }
+    ]
+  }
+}

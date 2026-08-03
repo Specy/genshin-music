@@ -55,6 +55,7 @@ class PlayerStore {
       note.setState({
         status: '',
         delay: APP_NAME === 'Genshin' ? 100 : 200,
+        holdMs: 0,
       })
     );
   };

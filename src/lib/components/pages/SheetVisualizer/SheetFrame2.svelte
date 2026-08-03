@@ -66,9 +66,10 @@
   // template attribute stays a simple single-expression interpolation.
   const columnsWithNotes = $derived.by(() => {
     return chunk.columns.map((column, i) => {
-      const notes = new Array(columnsPerRow * rows).fill(false);
+      const notes: (false | { held: boolean })[] = new Array(columnsPerRow * rows).fill(false);
       column.notes.forEach((note) => {
-        notes[note.note] = true;
+        const existing = notes[note.note];
+        notes[note.note] = { held: note.held || (existing !== false && existing.held) };
       });
       const background =
         chunk.columns.length - 1 === i && chunk.endingTempoChanger !== chunk.tempoChanger
@@ -95,9 +96,17 @@
               class={exists ? 'frame-note-s' : 'frame-note-ns'}
               style="{!exists
                 ? `background-color:${colors.none};`
-                : ''}--selected-note-background:{colors.rows[Math.floor(j / columnsPerRow)]}"
+                : 'position:relative;'}--selected-note-background:{colors.rows[
+                Math.floor(j / columnsPerRow)
+              ]}"
             >
               {exists && hasText ? baseInstrument.getNoteText(j, keyboardLayout, 'C') : ''}
+              {#if exists && exists.held}
+                <!-- held-note marker (Duration over the visual threshold) -->
+                <div
+                  style="position:absolute;bottom:8%;left:22%;right:22%;height:0.14rem;border-radius:1rem;background-color:currentColor;opacity:0.75;pointer-events:none"
+                ></div>
+              {/if}
             </div>
           {/each}
         </div>

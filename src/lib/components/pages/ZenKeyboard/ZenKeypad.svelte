@@ -28,6 +28,7 @@
     scale,
     noteNameType,
     keySpacing,
+    onNoteRelease,
   }: {
     instrument: Instrument;
     pitch: Pitch;
@@ -36,16 +37,26 @@
     keySpacing: number;
     verticalOffset: number;
     onNoteClick: (note: ObservableNote) => void;
+    onNoteRelease?: (note: ObservableNote) => void;
   } = $props();
 
   // Registered once here, not re-run when instrument/onNoteClick change: the callback below reads
   // both fresh at call time since they're live reactive bindings, so they can never go stale.
   onMount(() => {
-    return createKeyboardListener('zen_keyboard', ({ shortcut, event }) => {
-      if (event.repeat) return;
-      const note = instrument.getNoteFromCode(shortcut.name);
-      if (note !== null) onNoteClick(note);
-    });
+    return createKeyboardListener(
+      'zen_keyboard',
+      ({ shortcut, event }) => {
+        if (event.repeat) return;
+        const note = instrument.getNoteFromCode(shortcut.name);
+        if (note !== null) onNoteClick(note);
+      },
+      {
+        onRelease: ({ shortcut }) => {
+          const note = instrument.getNoteFromCode(shortcut.name);
+          if (note !== null) onNoteRelease?.(note);
+        },
+      }
+    );
   });
 
   const keyboardClass = $derived(keyboardClasses.get(zenKeyboardStore.keyboard.length) || cssBase);
@@ -63,6 +74,7 @@
       noteImage={note.noteImage}
       {note}
       onClick={onNoteClick}
+      onRelease={onNoteRelease}
     />
   {/each}
 </div>

@@ -280,7 +280,10 @@ export function createShortcutListener<T extends KeysOf<Shortcuts>>(
 export function createKeyboardListener(
   id: string,
   callback: ShortcutListener<'keyboard'>,
-  options?: ShortcutOptions
+  options?: ShortcutOptions & {
+    /** Fired on key-up of a bound note key — the release half of hold-to-sustain. */
+    onRelease?: ShortcutListener<'keyboard'>;
+  }
 ): ShortcutDisposer {
   KeyboardProvider.listen(
     ({ code, event }) => {
@@ -293,8 +296,21 @@ export function createKeyboardListener(
     },
     { type: 'keydown', id: id + '_keyboard_down' }
   );
+  const { onRelease } = options ?? {};
+  if (onRelease) {
+    KeyboardProvider.listen(
+      ({ code, event }) => {
+        const shortcut = keyBinds.getShortcut('keyboard', code);
+        if (shortcut !== undefined) {
+          onRelease({ code, event, shortcut, isRepeat: false });
+        }
+      },
+      { type: 'keyup', id: id + '_keyboard_up' }
+    );
+  }
   return () => {
     KeyboardProvider.unregisterById(id + '_keyboard_down');
+    KeyboardProvider.unregisterById(id + '_keyboard_up');
   };
 }
 
