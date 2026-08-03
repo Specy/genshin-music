@@ -3,6 +3,7 @@
   import Color from 'color';
   import { game } from '$game';
   import type { VsrgHitObject, VsrgSong, VsrgTrack } from '$core/Songs/VsrgSong';
+  import { noteIdToButton } from '$core/Songs/noteIds';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { t } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
@@ -224,7 +225,9 @@
   </div>
   <VsrgComposerKeyboard
     elements={keyboardElements}
-    selected={selectedHitObject?.notes}
+    selected={selectedHitObject?.notes
+      .map((id) => noteIdToButton(currentTrack?.instrument.name ?? '', id))
+      .filter((button) => button !== -1)}
     perRow={game.notes.perRow}
     onClick={onNoteSelect}
   />

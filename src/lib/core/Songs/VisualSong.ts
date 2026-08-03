@@ -18,10 +18,11 @@
 // distinct constructor/identity). SheetFrame (Task 2) imports THIS Chunk as its prop type while
 // being fed RecordedSong chunks at runtime by PlayerPagesRenderer (duck-typed - both shapes are
 // `{notes, delay}`) - preserved exactly as old wired it, not unified.
-import {APP_NAME, type NoteNameType} from "$core/legacyConfig"
+import {APP_NAME, SUSTAIN_VISUAL_THRESHOLD_MS, type NoteNameType} from "$core/legacyConfig"
 import {ComposedSong} from "./ComposedSong"
 import {RecordedSong} from "./RecordedSong"
 import {ColumnNote, NoteColumn, RecordedNote} from "./SongClasses"
+import {canonicalButtonForId} from "./noteIds"
 import {Instrument} from '$lib/audio/Instrument.svelte'
 import {Song} from "./Song"
 
@@ -170,16 +171,23 @@ export class VisualSong {
 
 
 class TempoChunkNote {
+    /** BUTTON position on the default instrument (display concern), resolved from the song note's id. */
     note: number
+    /** Deliberately-held note (composed span > 1, recorded duration over the visual threshold) — grid display cue only; toText() ignores it (the shared text format is unchanged). */
+    held: boolean
 
-    constructor(note: number) {
+    constructor(note: number, held: boolean = false) {
         this.note = note
+        this.held = held
     }
 
-    static from(note: ColumnNote | RecordedNote) {
-        return new TempoChunkNote(
-            note.index
-        )
+    static from(note: ColumnNote | RecordedNote): TempoChunkNote | null {
+        const button = canonicalButtonForId(note.id)
+        if (button === -1) return null
+        const held = note instanceof ColumnNote
+            ? note.span > 1
+            : note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
+        return new TempoChunkNote(button, held)
     }
 
     toText(type: NoteNameType) {
@@ -209,15 +217,23 @@ class TempoChunkColumn {
     }
 
     static from(column: NoteColumn | RecordedNote[]) {
-        if (column instanceof NoteColumn) {
-            return new TempoChunkColumn(
-                column.notes.map(note => TempoChunkNote.from(note))
-            )
-        } else {
-            return new TempoChunkColumn(
-                column.map(note => TempoChunkNote.from(note))
-            )
+        const source = column instanceof NoteColumn ? column.notes : column
+        //same id doubled on several tracks was ONE merged entry pre-v4 — dedupe by button
+        //(a held contribution wins over a tap on the same button)
+        const seen = new Map<number, TempoChunkNote>()
+        const notes: TempoChunkNote[] = []
+        for (const note of source) {
+            const chunkNote = TempoChunkNote.from(note)
+            if (chunkNote === null) continue
+            const existing = seen.get(chunkNote.note)
+            if (existing) {
+                if (chunkNote.held) existing.held = true
+                continue
+            }
+            seen.set(chunkNote.note, chunkNote)
+            notes.push(chunkNote)
         }
+        return new TempoChunkColumn(notes)
     }
 
     toText(type: NoteNameType) {

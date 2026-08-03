@@ -1,6 +1,6 @@
 import {describe, it} from 'vitest'
 import {INSTRUMENTS, VsrgHitObject, VsrgSong, VsrgTrack, VsrgTrackModifier} from './imports'
-import {expectGolden} from './golden'
+import {expectGolden, readFixture} from './golden'
 
 function buildVsrgSong(): VsrgSong {
     const song = new VsrgSong('Golden vsrg')
@@ -21,13 +21,18 @@ function buildVsrgSong(): VsrgSong {
     return song
 }
 
+// vsrg-v2 rewrite (2026-08-03): `vsrg-song.json` is the frozen pre-v2 fixture — its
+// `serialized` member is a real v1 file (hitObject.notes as keyboard indices) and now
+// serves as the LEGACY INPUT; v2 outputs (notes as Note Ids) live in `vsrg-song-v2.json`.
 describe('VsrgSong formats', () => {
-    it('serialize and roundtrip are stable', () => {
+    it('v2 serialize / roundtrip / legacy v1 conversion are stable', () => {
+        const legacy = readFixture('vsrg-song')
         const song = buildVsrgSong()
         const serialized = song.serialize()
-        expectGolden('vsrg-song', {
+        expectGolden('vsrg-song-v2', {
             serialized,
             roundtrip: VsrgSong.deserialize(serialized).serialize(),
+            fromLegacyV1: VsrgSong.deserialize(legacy.serialized).serialize(),
             defaults: new VsrgSong('Empty vsrg').serialize(),
         })
     })

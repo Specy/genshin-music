@@ -1,0 +1,150 @@
+{
+  "recorded": {
+    "name": "Old recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 3,
+    "pitch": "C",
+    "bpm": 220,
+    "reverb": false,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Genshin"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            48,
+            0
+          ],
+          [
+            50,
+            100
+          ],
+          [
+            52,
+            300
+          ],
+          [
+            55,
+            400
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            57,
+            200
+          ],
+          [
+            55,
+            400
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "composed": {
+    "name": "Old composed",
+    "type": "composed",
+    "bpm": 220,
+    "pitch": "C",
+    "version": 4,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": false,
+    "breakpoints": [
+      0
+    ],
+    "columnTempos": [
+      2,
+      2,
+      2,
+      2,
+      0
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            48
+          ],
+          [
+            1,
+            50
+          ],
+          [
+            3,
+            52
+          ],
+          [
+            4,
+            55
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            2,
+            57
+          ],
+          [
+            4,
+            55
+          ]
+        ]
+      }
+    ],
+    "id": null
+  }
+}

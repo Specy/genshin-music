@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { ClickType, clamp, isFocusable } from '$core/utils/Utilities';
+  import { buttonToNoteId } from '$core/Songs/noteIds';
   import { DEFAULT_VSRG_KEYS_MAP } from '$core/legacyConfig';
   import { t } from '$i18n/binding.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -512,9 +513,13 @@
     syncInstruments();
   }
 
-  function onNoteSelect(note: number) {
-    selectedHitObject?.toggleNote(note);
-    audioPlayer.playNoteOfInstrument(selectedTrack, note);
+  function onNoteSelect(button: number) {
+    //the picker passes button positions; hit objects store Note Ids of the track's instrument.
+    //Buttons past a short instrument's range were silent pseudo-notes pre-v2 — no id, not stored.
+    const id = buttonToNoteId(vsrg.tracks[selectedTrack]?.instrument.name ?? '', button);
+    if (id === null) return;
+    selectedHitObject?.toggleNote(id);
+    audioPlayer.playNoteOfInstrument(selectedTrack, id);
     // selectedHitObject needs a genuinely new reference for Svelte to notice the mutation
     // .toggleNote() just made in place - .clone() is cheap (a handful of primitive fields).
     if (selectedHitObject) selectedHitObject = selectedHitObject.clone();
@@ -528,10 +533,22 @@
     }
     if (audioSong) audioSong.startPlayback(lastTimestamp);
     isPlaying = !isPlaying;
+    //stopping playback releases voices still held from hold notes
+    if (!isPlaying) {
+      audioPlayer?.releaseAllNotes();
+      audioPlaybackPlayer?.releaseAllNotes();
+    }
   }
 
   function playHitObject(hitObject: VsrgHitObject, trackIndex: number) {
-    audioPlayer.playNotesOfInstrument(trackIndex, hitObject.notes);
+    hitObject.notes.forEach((n) => {
+      //hold notes sustain for their hold length when the track's instrument supports it
+      audioPlayer.pressNoteOfInstrument(
+        trackIndex,
+        n,
+        hitObject.isHeld ? hitObject.holdDuration : undefined
+      );
+    });
   }
 
   function onTimestampChange(timestamp: number) {
@@ -555,11 +572,8 @@
       if (audioSong) {
         const notes = audioSong.tickPlayback(timestamp);
         notes.forEach((n) => {
-          const layers = n.layer.toArray();
-          layers.forEach((l, i) => {
-            if (l === 0 || vsrg.trackModifiers[i].muted) return;
-            audioPlaybackPlayer.playNoteOfInstrument(i, n.index);
-          });
+          if (vsrg.trackModifiers[n.trackIndex]?.muted) return;
+          audioPlaybackPlayer.playNoteOfInstrument(n.trackIndex, n.id);
         });
       }
       const tracks = vsrg.tickPlayback(timestamp);

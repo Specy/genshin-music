@@ -25,14 +25,8 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong';
   import { ColumnNote, MidiNote, NoteColumn, type InstrumentData } from '$core/Songs/SongClasses';
-  import { NoteLayer } from '$core/Songs/Layer';
-  import {
-    delay,
-    groupNotesByIndex,
-    isAudioFormat,
-    isVideoFormat,
-    mergeLayers,
-  } from '$core/utils/Utilities';
+  import { buttonToNoteId } from '$core/Songs/noteIds';
+  import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
   import Switch from '$cmp/inputs/Switch.svelte';
@@ -216,7 +210,8 @@
           track.layer,
           Math.floor(midiNote.time * 1000),
           midiNote.midi - (track.localOffset ?? offset),
-          track.maxScaling
+          track.maxScaling,
+          Math.floor(midiNote.duration * 1000)
         );
         if (note.data.isAccidental) {
           accidentalsCount++;
@@ -255,23 +250,39 @@
       previousTime = note.time;
       if (emptyColumns > -1)
         new Array(emptyColumns).fill(0).forEach(() => columns.push(new NoteColumn())); // adds empty columns
-      noteColumn.notes = notes.map((note) => {
-        const layer = new NoteLayer();
-        layer.set(note.layer, true);
-        return new ColumnNote(note.data.note, layer);
+      noteColumn.notes = notes.flatMap((note) => {
+        //note.data.note is the legacy MIDI_MAP_TO_NOTE index; resolve it to the Note Id
+        //of the target layer's instrument (out-of-range on short instruments = silent
+        //in the legacy runtime = dropped)
+        const id = buttonToNoteId(data.instruments[note.layer]?.name ?? '', note.data.note);
+        if (id === null) return [];
+        //the file's real note length becomes a column span (min 1; the invariant pass
+        //below truncates spans that would overlap a following same-id note)
+        const span = Math.max(1, Math.round(note.durationMs / bpmToMs));
+        return [new ColumnNote(note.layer, id, span)];
       });
       columns.push(noteColumn);
     });
     columns.forEach((column) => {
-      //merges notes of different layer
-      const groupedNotes = groupNotesByIndex(column);
-      column.notes = groupedNotes.map((group) => {
-        group[0].layer = mergeLayers(group);
-        return group[0];
+      //merge duplicates (same track + id) coming from overlapping midi notes — the
+      //longest span wins
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe map, never UI-observed
+      const seen = new Map<string, ColumnNote>();
+      column.notes = column.notes.filter((note) => {
+        const key = `${note.trackIndex}-${note.id}`;
+        const existing = seen.get(key);
+        if (existing) {
+          existing.span = Math.max(existing.span, note.span);
+          return false;
+        }
+        seen.set(key, note);
+        return true;
       });
     });
     const song = new ComposedSong('Untitled');
     song.columns = columns;
+    //enforce the no-overlap Duration invariant over the imported spans
+    song.normalizeSpans();
     song.bpm = bpm;
     song.instruments = []; // dead assignment - overwritten unconditionally by the next line
     song.instruments = data.instruments.map((ins) => ins.clone());

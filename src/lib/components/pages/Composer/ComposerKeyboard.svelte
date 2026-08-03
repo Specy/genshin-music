@@ -3,6 +3,7 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType, Pitch } from '$lib/games/types';
   import type { LayerStatus } from '$core/Songs/Layer';
+  import { computeRowLayerStatuses } from '$core/Songs/noteIds';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
@@ -25,9 +26,12 @@
       settings: ComposerSettingsDataType;
       isPlaying: boolean;
       noteNameType: NoteNameType;
+      heldButtons: Set<number>;
     };
     functions: {
       handleClick: (note: ObservableNote) => void;
+      handleNoteRelease: (note: ObservableNote) => void;
+      handleNoteLongPress: (note: ObservableNote, anchor: DOMRect) => void;
       startRecordingAudio: (override?: boolean) => void;
       selectColumnFromDirection: (direction: number) => void;
       handleTempoChanger: (tempoChanger: (typeof game.composer.tempoChangers)[number]) => void;
@@ -38,13 +42,12 @@
   // renders bare "Err" text in that note's place when this catches.
   function getNoteLayerOrError(index: number): LayerStatus | 'Err' {
     try {
-      const foundIndex = data.currentColumn.notes.findIndex((e) => e.index === index);
-      return foundIndex >= 0
-        ? data.currentColumn.notes[foundIndex].layer.toLayerStatus(
-            data.currentLayer,
-            data.instruments
-          )
-        : 0;
+      const statuses = computeRowLayerStatuses(
+        data.currentColumn.notes,
+        data.currentLayer,
+        data.instruments
+      );
+      return (statuses.get(index) ?? 0) as LayerStatus;
     } catch {
       return 'Err';
     }
@@ -137,6 +140,9 @@
             instrument={data.keyboard.name}
             noteImage={note.noteImage}
             clickAction={functions.handleClick}
+            releaseAction={functions.handleNoteRelease}
+            longPressAction={functions.handleNoteLongPress}
+            held={data.heldButtons.has(i)}
           />
         {/if}
       {/each}

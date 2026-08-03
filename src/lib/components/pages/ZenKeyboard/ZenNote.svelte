@@ -16,6 +16,7 @@
   let {
     note,
     onClick,
+    onRelease,
     noteImage,
     noteText,
     instrumentName,
@@ -27,6 +28,7 @@
     instrumentName: InstrumentName;
     keyPadding: number;
     onClick: (note: ObservableNote) => void;
+    onRelease?: (note: ObservableNote) => void;
   } = $props();
 
   let status: NoteStatus = $state('');
@@ -142,6 +144,9 @@
 
 <button
   onpointerdown={handleClick}
+  onpointerup={() => onRelease?.(note)}
+  onpointerleave={() => onRelease?.(note)}
+  onpointercancel={() => onRelease?.(note)}
   oncontextmenu={preventDefault}
   class="button-hitbox-bigger"
   style="padding:{keyPadding}rem"

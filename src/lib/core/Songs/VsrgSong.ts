@@ -1,7 +1,9 @@
-import {IMPORT_NOTE_POSITIONS} from "$core/legacyConfig";
+import {APP_NAME} from "$core/legacyConfig";
 // SnapPoint normally lives in $cmp/pages/VsrgComposer/VsrgBottom.tsx (not ported until the UI
 // phase) - hoisted into $core/types.ts instead, same pattern as VsrgKeyboardLayout (Task 6).
 import type {SnapPoint} from "$core/types";
+import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables";
+import {foldIdIntoRange} from "./noteIds";
 import type {InstrumentName} from "$core/types";
 import {RecordedSong} from "./RecordedSong";
 import {type SerializedSong, Song} from "./Song";
@@ -32,7 +34,7 @@ export type VsrgAccuracyBounds = [
     bad: number,
 ]
 
-export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
+export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
     tracks: VsrgTrack[] = []
     keys: VsrgSongKeys = 4
     duration: number = 60000
@@ -43,11 +45,19 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
     snapPoint: SnapPoint = 1
 
     constructor(name: string) {
-        super(name, 1, "vsrg")
+        super(name, 2, "vsrg")
         this.bpm = 100
     }
 
-    static deserialize(obj: SerializedVsrgSong): VsrgSong {
+    /**
+     * v1 hit objects stored keyboard note INDICES; v2 stores Note Ids. `importInto` is
+     * the legacy-cross-game target (see ComposedSong.deserialize): reproduces the
+     * historic toGenshin() — every track forced to DunDun, indices remapped through
+     * the target's frozen importPositions before id-ification. QUIRK preserved:
+     * unlike composed/recorded, cross-game vsrg conversion does NOT rewrite
+     * data.appName — a converted vsrg song keeps the exporting game's appName.
+     */
+    static deserialize(obj: SerializedVsrgSong, importInto?: 'Genshin' | 'Sky'): VsrgSong {
         const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
         song.tracks = (obj.tracks ?? []).map(track => VsrgTrack.deserialize(track))
         song.audioSongId = obj.audioSongId ?? null
@@ -57,6 +67,28 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
         song.breakpoints = obj.breakpoints ?? []
         song.difficulty = obj.difficulty ?? 5
         song.snapPoint = obj.snapPoint ?? 1
+        const version = obj.version === 2 ? 2 : 1
+        if (version === 1) {
+            const crossGame = importInto !== undefined && song.data.appName !== importInto
+            const appName = crossGame
+                ? importInto
+                : (isLegacyAppName(song.data.appName) ? song.data.appName : (APP_NAME as 'Genshin' | 'Sky'))
+            const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
+            song.tracks.forEach(track => {
+                if (crossGame) track.instrument.name = "DunDun"
+                track.hitObjects.forEach(hitObject => {
+                    const ids: number[] = []
+                    hitObject.notes.forEach(note => {
+                        const index = importPositions ? (importPositions[note] ?? -1) : note
+                        if (index === -1) return
+                        //out-of-table indices were silent in the legacy runtime — dropped
+                        const id = legacyIndexToId(appName, track.instrument.name, index)
+                        if (id !== null && !ids.includes(id)) ids.push(id)
+                    })
+                    hitObject.notes = ids
+                })
+            })
+        }
         return song
     }
 
@@ -90,12 +122,18 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
     }
 
     // QUIRK: does not rewrite data.appName, unlike ComposedSong's and RecordedSong's toGenshin which both set it to 'Genshin' - a converted vsrg song keeps the exporting game's appName.
+    /** NEW-format (v2) cross-game conversion: tracks forced to the historic DunDun target, ids octave-folded into its range (fold collisions dedupe). Legacy v1 files never reach this — their conversion happens inside deserialize(importInto). */
     toGenshin() {
         const song = this.clone()
         song.tracks.forEach(t => {
             t.instrument.name = "DunDun"
             t.hitObjects.forEach(h => {
-                h.notes = h.notes.map(n => IMPORT_NOTE_POSITIONS[n])
+                const ids: number[] = []
+                h.notes.forEach(n => {
+                    const folded = foldIdIntoRange("DunDun", n)
+                    if (!ids.includes(folded)) ids.push(folded)
+                })
+                h.notes = ids
             })
         })
         return song
@@ -144,11 +182,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
         const notes: RecordedNote[] = []
         const trackModifiers = this.trackModifiers.map(modifier => !modifier.hidden)
         song.notes.forEach(note => {
-            const renderable = trackModifiers.some((value, i) => {
-                if (value) return note.layer.test(i)
-                return false
-            })
-            if (renderable) notes.push(note)
+            if (trackModifiers[note.trackIndex]) notes.push(note)
         })
         return notes
     }
@@ -224,7 +258,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 1> {
             type: "vsrg",
             bpm: this.bpm,
             pitch: this.pitch,
-            version: 1,
+            version: 2,
             keys: this.keys,
             data: this.data,
             id: this.id,

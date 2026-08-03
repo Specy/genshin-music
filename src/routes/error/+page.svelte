@@ -48,12 +48,15 @@
     try {
       const songName = song.name;
       const parsed = songService.parseSong(song);
-      const converted = [
+      const usesOldFormat =
         game.features.downloadsSongsInOldFormat &&
-        (parsed instanceof ComposedSong || parsed instanceof RecordedSong)
-          ? parsed.toOldFormat()
-          : parsed.serialize(),
-      ];
+        (parsed instanceof ComposedSong || parsed instanceof RecordedSong);
+      if (usesOldFormat) {
+        const dropped = parsed.countOldFormatDroppedNotes();
+        if (dropped > 0)
+          logger.warn(t('logs:old_format_export_dropped_notes', { count: dropped }), 8000);
+      }
+      const converted = [usesOldFormat ? parsed.toOldFormat() : parsed.serialize()];
       fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
       logger.success(t('logs:song_downloaded'));
     } catch (e) {

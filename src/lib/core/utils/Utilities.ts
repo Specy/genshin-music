@@ -1,6 +1,5 @@
 import {type Pitch, PITCHES, TEMPO_CHANGERS} from "$core/legacyConfig"
-import {ColumnNote, NoteColumn, RecordedNote} from "../Songs/SongClasses";
-import {NoteLayer} from "../Songs/Layer";
+import {NoteColumn, RecordedNote} from "../Songs/SongClasses";
 import {Song} from "../Songs/Song";
 import {ComposedSong} from "../Songs/ComposedSong";
 import {RecordedSong} from "../Songs/RecordedSong";
@@ -187,14 +186,16 @@ function getSongType(song: any): 'oldSky' | 'none' | 'newComposed' | 'newRecorde
             //current format
             if (song.type === 'vsrg') return 'vsrg'
             if (song.type === 'composed' || song.data.isComposedVersion === true) {
-                if (Array.isArray(song.columns)) {
+                //legacy (≤v3): columns; v4: per-track notes
+                if (Array.isArray(song.columns) || Array.isArray(song.tracks)) {
                     return "newComposed"
                 } else {
                     return "none"
                 }
             }
             if (song.type === 'recorded' || song.data.isComposedVersion === false) {
-                if (Array.isArray(song.notes)) {
+                //legacy (≤v2): flat notes; v3: per-track notes
+                if (Array.isArray(song.notes) || Array.isArray(song.tracks)) {
                     return "newRecorded"
                 } else {
                     return "none"
@@ -269,29 +270,6 @@ function calculateSongLength(columns: NoteColumn[], bpm: number, end: number) {
         total: totalLength,
         current: currentLength
     }
-}
-
-function mergeLayers(notes: ColumnNote[]) {
-    const merged = new NoteLayer()
-    notes.forEach(note => {
-        note.layer.toArray().forEach((e, i) => {
-            if (e === 1) merged.set(i, true)
-        })
-    })
-    return merged
-}
-
-
-function groupNotesByIndex(column: NoteColumn) {
-    const notes: ColumnNote[][] = []
-    column.notes.forEach(note => {
-        if (notes[note.index]) {
-            notes[note.index].push(note)
-        } else {
-            notes[note.index] = [note]
-        }
-    })
-    return notes.filter(e => Array.isArray(e))
 }
 
 // restored from old $lib/utils/Utilities.ts (P3 Task 7 — needsUpdate.ts's checkIfneedsUpdate is
@@ -399,8 +377,6 @@ export {
     getPitchChanger,
     getSongType,
     groupByNotes,
-    mergeLayers,
-    groupNotesByIndex,
     delay,
     preventDefault,
     Array2d,

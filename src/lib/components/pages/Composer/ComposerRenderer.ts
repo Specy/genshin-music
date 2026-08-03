@@ -24,6 +24,11 @@ import { ThemeProvider, subscribeTheme } from '$core/theme/ThemeProvider.svelte'
 import { clamp, colorToRGB, nearestEven } from '$core/utils/Utilities';
 import type { Timer } from '$core/utils/Utilities';
 import type { NoteColumn, ColumnNote, InstrumentData } from '$core/Songs/SongClasses';
+import {
+  computeRowLayerStatuses,
+  computeStrandedRows,
+  displayButtonForId,
+} from '$core/Songs/noteIds';
 import type { ComposedSong } from '$core/Songs/ComposedSong';
 import type { ComposerSettingsDataType } from '$core/BaseSettings';
 import { ComposerCache, type ComposerCacheData } from './ComposerCache';
@@ -79,8 +84,18 @@ export function isColumnVisible(pos: number, currentPos: number, numberOfColumns
   return currentPos - threshold < pos && pos < currentPos + threshold;
 }
 
+/** One span-tail segment crossing (or starting in) a column, at a display row. */
+export interface TailSegment {
+  button: number;
+  isCurrentLayer: boolean;
+  /** true in the span's start column: draw only the right half (a stub out of the note icon). */
+  isStart: boolean;
+}
+
 interface RenderColumnParams {
   notes: ColumnNote[];
+  tails: TailSegment[];
+  accentColor: number;
   currentLayer: number;
   instruments: InstrumentData[];
   index: number;
@@ -97,6 +112,8 @@ interface RenderColumnParams {
 // container.
 function renderColumn({
   notes,
+  tails,
+  accentColor,
   index,
   sizes,
   cache,
@@ -127,11 +144,29 @@ function renderColumn({
   }
   columnContainer.addChild(background);
 
-  for (const note of notes) {
-    const layerStatus = note.layer.toLayerStatus(currentLayer, instruments);
+  //span tails render UNDER the note icons: a connector bar through covered columns
+  //(right-half stub in the start column), accent for the current layer, dim otherwise
+  if (tails.length > 0) {
+    const rowHeight = sizes.height / NOTES_PER_COLUMN;
+    const tailHeight = Math.max(2, rowHeight * 0.22);
+    const tailGraphics = new Graphics();
+    for (const tail of tails) {
+      const y = COMPOSER_NOTE_POSITIONS[tail.button] * rowHeight + (rowHeight - tailHeight) / 2;
+      const x = tail.isStart ? sizes.width * 0.55 : 0;
+      tailGraphics.rect(x, y, sizes.width - x, tailHeight).fill({
+        color: tail.isCurrentLayer ? accentColor : 0x888888,
+        alpha: tail.isCurrentLayer ? 0.75 : 0.35,
+      });
+    }
+    columnContainer.addChild(tailGraphics);
+  }
+  const strandedRows = computeStrandedRows(notes, instruments);
+  for (const [button, layerStatus] of computeRowLayerStatuses(notes, currentLayer, instruments)) {
     if (layerStatus === 0) continue;
     const noteSprite = new Sprite(cache.notes[layerStatus]);
-    noteSprite.y = (COMPOSER_NOTE_POSITIONS[note.index] * sizes.height) / NOTES_PER_COLUMN;
+    noteSprite.y = (COMPOSER_NOTE_POSITIONS[button] * sizes.height) / NOTES_PER_COLUMN;
+    //stranded notes (id has no button on its own instrument) are visibly dimmed
+    if (strandedRows.has(button)) noteSprite.alpha = 0.45;
     columnContainer.addChild(noteSprite);
   }
   return columnContainer;
@@ -538,6 +573,8 @@ export class ComposerRenderer {
     const visible = Boolean(cacheData) && !this.state.isRecordingAudio;
     this.notesColumnsContainer.visible = visible;
     if (!visible || !cacheData) return;
+    const tailsByColumn = this.computeTailsByColumn();
+    const accentColor = ThemeProvider.get('accent').rgbNumber();
     this.state.columns.forEach((column, i) => {
       if (!isColumnVisible(i, this.state.selected, this.numberOfColumnsPerCanvas)) return;
       const tempoChangersCache = (i + 1) % 4 === 0 ? cacheData.columnsLarger : cacheData.columns;
@@ -550,6 +587,8 @@ export class ComposerRenderer {
         renderColumn({
           cache: cacheData,
           notes: column.notes,
+          tails: tailsByColumn.get(i) ?? [],
+          accentColor,
           index: i,
           sizes,
           instruments: this.state.song.instruments,
@@ -561,6 +600,30 @@ export class ComposerRenderer {
         })
       );
     });
+  }
+
+  /** Tail segments per column for every visible span note (start stub + full-width covered columns). One pass over all notes per draw. */
+  private computeTailsByColumn(): Map<number, TailSegment[]> {
+    const tails = new Map<number, TailSegment[]>();
+    const { columns, song, currentLayer } = this.state;
+    columns.forEach((column, start) => {
+      column.notes.forEach((note) => {
+        if (note.span <= 1) return;
+        const instrument = song.instruments[note.trackIndex];
+        const isCurrentLayer = note.trackIndex === currentLayer;
+        if (!isCurrentLayer && !instrument?.visible) return;
+        const button = displayButtonForId(instrument?.name ?? '', note.id);
+        if (button === -1) return;
+        const end = Math.min(start + note.span, columns.length);
+        for (let i = start; i < end; i++) {
+          const segment: TailSegment = { button, isCurrentLayer, isStart: i === start };
+          const existing = tails.get(i);
+          if (existing) existing.push(segment);
+          else tails.set(i, [segment]);
+        }
+      });
+    });
+    return tails;
   }
 
   private drawTimelineStage(

@@ -12,7 +12,7 @@
 // `check:sky` clean). No eslint import/no-cycle rule is configured in this repo's eslint.config.js
 // either.
 import type {UnknownSerializedComposedSong} from "./Songs/ComposedSong"
-import type {SerializedRecordedSong} from "./Songs/RecordedSong"
+import type {UnknownSerializedRecordedSong} from "./Songs/RecordedSong"
 import type {SerializedVsrgSong} from "./Songs/VsrgSong"
 
 // ---- GeneralTypes.ts ----
@@ -71,7 +71,7 @@ export type OldNote = {
 // SerializedRecordedSong | SerializedVsrgSong`. Deferred through Phase 2 (P2 Task 7: "no
 // Phase-2 consumer") - now constructible since ComposedSong.ts/RecordedSong.ts/VsrgSong.ts all
 // exist, and needed by FileService.ts (P3 Task 7), its first real consumer.
-export type SerializedSongKind = UnknownSerializedComposedSong | SerializedRecordedSong | SerializedVsrgSong
+export type SerializedSongKind = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedVsrgSong
 
 // ---- hoisted for BaseSettings.ts (Task 6) ----
 

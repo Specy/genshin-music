@@ -62,11 +62,11 @@ describe('MidiParser conversion math (MidiNote.fromMidi)', () => {
         expect(aboveNote.data.outOfRangeBound).toBe(1)
     })
 
-    it('the maxScaling octave-shift loop can bring an out-of-range note back in range', () => {
+    it('the maxScaling octave-shift loop transposes by REAL octaves (±12 — the pre-v4 ±8 was a deliberate fix, spec 2026-08-03 §7)', () => {
         // MIDI_BOUNDS.lower is always a real map key in both games (unlike .upper, which Genshin's
         // own map does not include - verified directly against genshin/index.ts's midi.mapToNote,
         // whose highest key is 83, one below its own bounds.upper of 84).
-        const belowRangeMidi = buildMidiNote(MIDI_BOUNDS.lower - 8)
+        const belowRangeMidi = buildMidiNote(MIDI_BOUNDS.lower - 12)
         const expectedNote = MIDI_MAP_TO_NOTE.get(`${MIDI_BOUNDS.lower}`)?.[0]
 
         const unscaled = MidiNote.fromMidi(0, 0, belowRangeMidi, 0)
@@ -74,8 +74,12 @@ describe('MidiParser conversion math (MidiNote.fromMidi)', () => {
 
         expect(unscaled.data.outOfRangeBound).toBe(-1)
         expect(unscaled.data.note).toBe(-1)
+        //one octave up lands exactly on the same pitch class, in range
         expect(scaled.data.outOfRangeBound).toBe(0)
         expect(scaled.data.note).toBe(expectedNote)
+
+        //the note's file duration is carried for span conversion
+        expect(MidiNote.fromMidi(0, 0, belowRangeMidi, 0, 750).durationMs).toBe(750)
     })
 
     it('a per-track localOffset overrides the global offset, exactly like `track.localOffset ?? offset`', () => {
