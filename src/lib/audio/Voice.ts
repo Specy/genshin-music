@@ -57,6 +57,10 @@ export class Voice {
     return this.releaseScheduledAt !== null;
   }
 
+  get isDisposed() {
+    return this.disposed;
+  }
+
   /** Release now (live key-up). */
   release = () => {
     this.releaseAt(this.context.currentTime);
@@ -64,9 +68,13 @@ export class Voice {
 
   /** Release at an absolute context time — sample-accurate scheduling for playback. Never before the voice has started. */
   releaseAt = (when: number) => {
-    if (this.disposed || this.releaseScheduledAt !== null) return;
+    if (this.disposed) return;
     const at = Math.max(when, this.startedAt, this.context.currentTime);
+    // A stop/blur may need to bring a future song-playback release forward. Later
+    // requests remain no-ops, preserving idempotence for repeated key-up events.
+    if (this.releaseScheduledAt !== null && this.releaseScheduledAt <= at) return;
     this.releaseScheduledAt = at;
+    this.gain.gain.cancelScheduledValues(at);
     this.gain.gain.setValueAtTime(this.gain.gain.value, at);
     this.gain.gain.linearRampToValueAtTime(0, at + this.releaseS);
     try {
