@@ -1,10 +1,14 @@
-import {describe, it} from 'vitest'
+import {describe, expect, it} from 'vitest'
 import {RecordedSong} from './imports'
 import {buildRecordedSong} from './builders'
-import {expectGolden} from './golden'
+import {expectGolden, readFixture} from './golden'
 
+// Format-v3 rewrite (2026-08-03): `recorded-song.json` is the frozen pre-v3 fixture —
+// its `serialized` member is a real v2 file and now serves as the LEGACY INPUT; the
+// v3 outputs live in `recorded-song-v3.json`. The old fixture is never regenerated.
 describe('RecordedSong formats', () => {
-    it('serialize / deserialize / legacy v1 / old-format export are stable', () => {
+    it('v3 serialize / roundtrip / legacy v1+v2 conversion / old-format export are stable', () => {
+        const legacy = readFixture('recorded-song')
         const song = buildRecordedSong()
         const serialized = song.serialize()
 
@@ -15,11 +19,19 @@ describe('RecordedSong formats', () => {
             notes: [[0, 100], [5, 400]],
         }
 
-        expectGolden('recorded-song', {
+        expectGolden('recorded-song-v3', {
             serialized,
             roundtrip: RecordedSong.deserialize(serialized).serialize(),
-            deserializedV1: RecordedSong.deserialize(v1Payload as any).serialize(),
+            fromLegacyV1: RecordedSong.deserialize(v1Payload as any).serialize(),
+            fromLegacyV2: RecordedSong.deserialize(legacy.serialized).serialize(),
             oldFormatExport: song.toOldFormat(),
         })
+    })
+
+    it('a converted legacy v2 song reproduces the pre-v3 old-format export byte-for-byte', () => {
+        const legacy = readFixture('recorded-song')
+        const converted = RecordedSong.deserialize(legacy.serialized)
+        expect(JSON.parse(JSON.stringify(converted.toOldFormat())))
+            .toEqual(legacy.oldFormatExport)
     })
 })

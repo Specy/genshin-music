@@ -21,7 +21,9 @@ export interface SerializedSong {
     bpm: number,
     pitch: Pitch,
     version: number,
-    instruments: SerializedInstrumentData[]
+    // Absent in composed v4 / recorded v3, where each serialized track embeds its own
+    // instrument; still present in vsrg and every legacy version.
+    instruments?: SerializedInstrumentData[]
 }
 
 export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number> {

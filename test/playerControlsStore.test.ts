@@ -49,7 +49,7 @@ describe('setPages (clone depth)', () => {
         expect(playerControlsStore.pagesState.pages[0][0].notes).not.toBe(original[0][0].notes)
         // content is preserved by Chunk.clone()/RecordedNote.clone() despite the new identities
         expect(playerControlsStore.pagesState.pages[0][0].delay).toBe(10)
-        expect(playerControlsStore.pagesState.pages[0][0].notes[0].index).toBe(0)
+        expect(playerControlsStore.pagesState.pages[0][0].notes[0].id).toBe(0)
 
         // currentPage mirrors the FIRST cloned page's content. NOTE for reviewer: under Svelte 5
         // runes this is content-equal but NOT reference-equal (`.toBe` fails here) - `setPagesState`
@@ -90,7 +90,7 @@ describe('incrementChunkPositionAndSetCurrent (page/chunk advance)', () => {
         expect(playerControlsStore.pagesState.currentPageIndex).toBe(1)
         expect(playerControlsStore.pagesState.currentChunkIndex).toBe(0)
         expect(playerControlsStore.current).toBe(6)
-        expect(playerControlsStore.currentChunk?.notes[0].index).toBe(2) // chunkC (cloned)
+        expect(playerControlsStore.currentChunk?.notes[0].id).toBe(2) // chunkC (cloned)
 
         // last chunk of the LAST page: old quirk - early `return` before any setState/setPagesState,
         // so `current` is NOT updated to 7 either (byte-parity with old PlayerControlsStore.ts).
@@ -114,12 +114,14 @@ describe('incrementChunkPositionAndSetCurrent (page/chunk advance)', () => {
 
 describe('setSong', () => {
     it('sets size from notes.length and resets position/current/pages', () => {
-        const song = buildRecordedSong() // 4 notes, see test/builders.ts
+        // 5 flat notes under the per-track model (the pre-v3 builder's 4th entry was one
+        // merged two-layer note; it's now one note per track), see test/builders.ts
+        const song = buildRecordedSong()
         playerControlsStore.setPages([[new Chunk([], 0)]])
 
         playerControlsStore.setSong(song)
 
-        expect(playerControlsStore.size).toBe(4)
+        expect(playerControlsStore.size).toBe(5)
         expect(playerControlsStore.position).toBe(0)
         expect(playerControlsStore.current).toBe(0)
         expect(playerControlsStore.pagesState.pages).toEqual([])

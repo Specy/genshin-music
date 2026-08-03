@@ -1,5 +1,6 @@
 <script lang="ts">
   import { game } from '$game';
+  import { SUSTAIN_VISUAL_THRESHOLD_MS } from '$core/legacyConfig';
   import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
   import { preventDefault } from '$core/utils/Utilities';
   import type { ObservableNote } from '$lib/audio/Instrument.svelte';
@@ -15,6 +16,7 @@
     noteText,
     hideNote,
     handleClick,
+    handleRelease,
   }: {
     note: ObservableNote;
     data: {
@@ -25,6 +27,7 @@
     noteText: string;
     hideNote: boolean;
     handleClick: (note: ObservableNote) => void;
+    handleRelease?: (note: ObservableNote) => void;
   } = $props();
 
   function getTextColor() {
@@ -117,15 +120,21 @@
     e.preventDefault();
     handleClick(note);
   }}
+  onpointerup={() => handleRelease?.(note)}
+  onpointerleave={() => handleRelease?.(note)}
+  onpointercancel={() => handleRelease?.(note)}
   oncontextmenu={preventDefault}
   class="button-hitbox-bigger"
 >
   {#each approachingNotes as approachingNote (approachingNote.id)}
+    <!-- held notes get a dashed outer ring as the "keep it pressed" cue -->
     <div
       class={game.notes.cssClasses.approachCircle}
       style="animation:approach {data.approachRate}ms linear;border-color:{getApproachCircleColor(
         approachingNote.index
-      )}"
+      )};{approachingNote.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
+        ? `outline:2px dashed ${getApproachCircleColor(approachingNote.index)};outline-offset:3px`
+        : ''}"
     ></div>
   {/each}
   {#if note.data.animationId !== 0}
@@ -152,6 +161,12 @@
       color={theme.isDefault('accent') ? game.instruments.data[data.instrument]?.fill : undefined}
       background={svgBackground}
     />
+    {#if note.data.holdMs > 0 && !hideNote}
+      <!-- practice hold hint: this note should be kept pressed -->
+      <div
+        style="position:absolute;bottom:6%;left:20%;right:20%;height:0.25rem;border-radius:0.2rem;background-color:var(--accent);pointer-events:none"
+      ></div>
+    {/if}
     <div class={game.notes.cssClasses.noteName} style="color:{textColor}">
       {noteText}
     </div>

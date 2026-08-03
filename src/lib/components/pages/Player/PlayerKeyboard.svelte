@@ -1,17 +1,22 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { game } from '$game';
-  import { SPEED_CHANGERS, type NoteNameType, type Pitch } from '$core/legacyConfig';
+  import {
+    SPEED_CHANGERS,
+    SUSTAIN_VISUAL_THRESHOLD_MS,
+    type NoteNameType,
+    type Pitch,
+  } from '$core/legacyConfig';
   import PlayerNote from './PlayerNote.svelte';
   import { playerStore } from '$stores/PlayerStore.svelte';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
   import { Array2d, clamp, delay, groupArrayEvery, type Timer } from '$core/utils/Utilities';
   import Analytics from '$core/Analytics';
   import { ApproachingNote, type RecordedNote } from '$core/Songs/SongClasses';
+  import { displayButtonForId } from '$core/Songs/noteIds';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
-  import type { NoteLayer } from '$core/Songs/Layer';
   import {
     createKeyboardListener,
     createShortcutListener,
@@ -39,7 +44,9 @@
       hideNotesInPracticeMode: boolean;
     };
     functions: {
-      playSound: (index: number, layer?: NoteLayer) => void;
+      playSound: (index: number, songNote?: RecordedNote) => void;
+      releaseSound: (index: number) => void;
+      releaseAllSounds: () => void;
       setHasSong: (override: boolean) => void;
       onSongFinished: () => void;
     };
@@ -76,7 +83,18 @@
   function handleMidi([eventType, note, velocity]: MIDIEvent) {
     if (!mounted) return;
     const instrument = data.instrument;
-    if (MIDIProvider.isDown(eventType) && velocity !== 0) {
+    //running-status zero-velocity note-on is the classic note-off alias
+    const isRelease =
+      MIDIProvider.isUp(eventType) || (MIDIProvider.isDown(eventType) && velocity === 0);
+    if (isRelease) {
+      const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note);
+      keyboardNotes.forEach((keyboardNote) => {
+        const observableNote = instrument.notes[keyboardNote.index];
+        if (observableNote) handleRelease(observableNote);
+      });
+      return;
+    }
+    if (MIDIProvider.isDown(eventType)) {
       const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note);
       keyboardNotes.forEach((keyboardNote) => {
         handleClick(instrument.notes[keyboardNote.index]);
@@ -92,6 +110,12 @@
     }
   };
 
+  //release unconditionally (even if shift is down by now) — releasing an unheld button is a no-op
+  const handleKeyboardRelease: ShortcutListener<'keyboard'> = ({ shortcut }) => {
+    const note = data.instrument.getNoteFromCode(shortcut.name);
+    if (note !== null) handleRelease(note);
+  };
+
   async function approachingSong(song: RecordedSong, start = 0, end?: number) {
     mode = 'approaching';
     setTicker(true);
@@ -103,9 +127,12 @@
     const startOffset = song.notes[start] !== undefined ? song.notes[start].time : 0;
     for (let i = start; i < end && i < song.notes.length; i++) {
       const note = song.notes[i];
+      //stranded/out-of-grid notes can't be practiced — skip (they were unplayable rows before too)
+      if (note.displayButton < 0 || note.displayButton >= game.notes.perColumn) continue;
       const obj = new ApproachingNote({
         time: Song.roundTime((note.time - startOffset) / speedChanger.value + startDelay),
-        index: note.index,
+        index: note.displayButton,
+        duration: note.duration,
       });
       notes.push(obj);
     }
@@ -134,6 +161,7 @@
           time: approachRate,
           index: notes[i].index,
           id: Math.floor(Math.random() * 10000),
+          duration: notes[i].duration,
         });
         stateNotes[notes[i].index].push(newNote);
         notes.splice(i, 1);
@@ -180,8 +208,15 @@
     const { speedChanger } = data;
     return notes.map((note) => {
       note.time = note.time / speedChanger.value;
+      //held lengths scale with playback speed like everything else
+      note.duration = note.duration / speedChanger.value;
       return note;
     });
+  }
+
+  function handleRelease(note: ObservableNote) {
+    if (!note) return;
+    functions.releaseSound(note.index);
   }
 
   async function playSong(song: RecordedSong, start = 0, end?: number) {
@@ -204,7 +239,7 @@
       previous = notes[i].time;
       if (delayTime > 16) await delay(delayTime + delayOffset);
       if (!mounted || songTimestamp !== song.timestamp) return;
-      handleClick(keyboard[notes[i].index], notes[i].layer);
+      handleClick(keyboard[notes[i].displayButton], notes[i]);
       if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
         chunkPlayedNotes = 1;
         playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1);
@@ -229,14 +264,15 @@
     nextChunkDelay = 0;
     const firstChunk = chunks[0];
     firstChunk.notes.forEach((note) => {
-      playerStore.setNoteState(note.index, {
+      playerStore.setNoteState(note.displayButton, {
         status: 'toClick',
         delay: game.notes.animationDelayMs,
+        holdMs: note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS ? note.duration : 0,
       });
     });
     const secondChunk = chunks[1];
     secondChunk?.notes.forEach((note) => {
-      const keyboardNote = keyboard[note.index];
+      const keyboardNote = keyboard[note.displayButton];
       if (keyboardNote.status === 'toClick') return keyboardNote.setStatus('toClickAndNext');
       keyboardNote.setStatus('toClickNext');
     });
@@ -260,6 +296,8 @@
     approachingNotesList = [];
     songToPractice = [];
     approachingNotes = Array2d.from(game.notes.perColumn);
+    //stopping playback releases every still-held voice (live and scheduled)
+    functions.releaseAllSounds();
     functions.setHasSong(false);
   }
 
@@ -280,7 +318,9 @@
   function handlePracticeClick(note: ObservableNote) {
     const keyboard = playerStore.keyboard;
     if (songToPractice.length > 0) {
-      const clickedNoteIndex = songToPractice[0]?.notes.findIndex((e) => e.index === note.index);
+      const clickedNoteIndex = songToPractice[0]?.notes.findIndex(
+        (e) => e.displayButton === note.index
+      );
       if (clickedNoteIndex !== -1) {
         songToPractice[0].notes.splice(clickedNoteIndex, 1);
         if (songToPractice[0].notes.length === 0) {
@@ -294,14 +334,15 @@
           const nextChunk = songToPractice[0];
           const nextNextChunk = songToPractice[1];
           nextChunk.notes.forEach((note) => {
-            playerStore.setNoteState(note.index, {
+            playerStore.setNoteState(note.displayButton, {
               status: 'toClick',
               delay: nextChunk.delay,
+              holdMs: note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS ? note.duration : 0,
             });
           });
           if (nextNextChunk) {
             nextNextChunk?.notes.forEach((note) => {
-              const keyboardNote = keyboard[note.index];
+              const keyboardNote = keyboard[note.displayButton];
               if (keyboardNote.status === 'toClick')
                 return keyboardNote.setStatus('toClickAndNext');
               keyboardNote.setStatus('toClickNext');
@@ -313,7 +354,7 @@
     }
   }
 
-  function handleClick(note: ObservableNote, layers?: NoteLayer) {
+  function handleClick(note: ObservableNote, songNote?: RecordedNote) {
     const keyboard = playerStore.keyboard;
     const hasAnimation = data.hasAnimation;
     if (!note) return;
@@ -321,13 +362,14 @@
     playerStore.setNoteState(note.index, {
       status: 'clicked',
       delay: playerStore.eventType !== 'play' ? game.notes.animationDelayMs : 0,
+      holdMs: 0,
       animationId:
         hasAnimation && playerStore.eventType !== 'approaching'
           ? Math.floor(Math.random() * 10000) + Date.now()
           : 0,
     });
     handlePracticeClick(note);
-    functions.playSound(note.index, layers);
+    functions.playSound(note.index, songNote);
     const status = handleApproachClick(note);
     if (playerStore.eventType === 'approaching') {
       playerStore.setNoteState(note.index, { status });
@@ -336,6 +378,8 @@
     //TODO could add this to the player store
     if ((timeouts[note.index] as number) > 0 && playerStore.eventType === 'play')
       clearTimeout(timeouts[note.index]);
+    //held playback notes keep the button lit for their (speed-scaled) duration
+    const litDuration = Math.max(game.notes.animationDelayMs, songNote?.duration ?? 0);
     timeouts[note.index] = setTimeout(() => {
       timeouts[note.index] = 0;
       if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[note.index].status))
@@ -343,7 +387,7 @@
       if (prevStatus === 'toClickNext')
         return playerStore.setNoteState(note.index, { status: prevStatus });
       playerStore.setNoteState(note.index, { status: '' });
-    }, game.notes.animationDelayMs);
+    }, litDuration);
   }
 
   onMount(() => {
@@ -359,7 +403,9 @@
         if (data.hasSong) stopAndClear();
       }
     });
-    const disposeKeyboard = createKeyboardListener('player_keyboard_keys', handleKeyboard);
+    const disposeKeyboard = createKeyboardListener('player_keyboard_keys', handleKeyboard, {
+      onRelease: handleKeyboardRelease,
+    });
     cleanup.push(disposeShortcuts, disposeKeyboard);
 
     $effect(() => {
@@ -384,6 +430,13 @@
         } else {
           if (!song) return;
           const lostReference = song.isComposed ? song.toRecordedSong().clone() : song.clone();
+          //resolve each note's display button once, from its own track's instrument;
+          //stranded notes are dropped — they had no playable/renderable row before either
+          const songInstruments = lostReference.instruments;
+          lostReference.notes.forEach((n) => {
+            n.displayButton = displayButtonForId(songInstruments[n.trackIndex]?.name ?? '', n.id);
+          });
+          lostReference.notes = lostReference.notes.filter((n) => n.displayButton !== -1);
 
           lostReference.timestamp = Date.now();
           const end = state.end || lostReference?.notes?.length || 0;
@@ -451,6 +504,7 @@
         hideNote={hideNotes}
         approachingNotes={approachingNotes[note.index]}
         {handleClick}
+        {handleRelease}
         noteText={data.instrument.getNoteText(note.index, data.noteNameType, data.pitch)}
       />
     {/each}

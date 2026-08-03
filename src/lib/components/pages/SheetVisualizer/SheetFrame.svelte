@@ -8,7 +8,9 @@
 
 <script lang="ts">
   import { game } from '$game';
+  import { SUSTAIN_VISUAL_THRESHOLD_MS } from '$core/legacyConfig';
   import type { Chunk } from '$core/Songs/VisualSong';
+  import { canonicalButtonForId } from '$core/Songs/noteIds';
   import type { Theme } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType } from '$lib/games/types';
   import { cn, cs } from '$core/utils/Utilities';
@@ -35,9 +37,17 @@
   const columnsPerRow = $derived(game.notes.perRow);
   const color = $derived(theme.layer('primary', 0.2).toString());
   const notes = $derived.by(() => {
-    const result = new Array(columnsPerRow * rows).fill(false);
+    const result: (false | { held: boolean })[] = new Array(columnsPerRow * rows).fill(false);
     chunk.notes.forEach((note) => {
-      result[note.index] = true;
+      //the player pipeline resolves displayButton at queue-build; anything unresolved
+      //falls back to the canonical (default-instrument) position of the note's id
+      const button = note.displayButton !== -1 ? note.displayButton : canonicalButtonForId(note.id);
+      if (button >= 0 && button < result.length) {
+        const existing = result[button];
+        const held =
+          note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS || (existing !== false && existing.held);
+        result[button] = { held };
+      }
     });
     return result;
   });
@@ -60,9 +70,15 @@
       {#each notes as exists, i (i)}
         <div
           class={exists ? 'frame-note-s' : 'frame-note-ns'}
-          style={!exists ? `background-color:${color}` : ''}
+          style={!exists ? `background-color:${color}` : 'position:relative'}
         >
           {exists && hasText ? baseInstrument.getNoteText(i, keyboardLayout, 'C') : ''}
+          {#if exists && exists.held}
+            <!-- held-note marker (Duration over the visual threshold) -->
+            <div
+              style="position:absolute;bottom:8%;left:22%;right:22%;height:0.14rem;border-radius:1rem;background-color:currentColor;opacity:0.75;pointer-events:none"
+            ></div>
+          {/if}
         </div>
       {/each}
     </div>

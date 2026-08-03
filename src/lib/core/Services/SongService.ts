@@ -127,10 +127,22 @@ class SongService {
             throw new Error("Error Invalid song, it's not a Sky song")
         }
         if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
-            if (song.type === 'vsrg') return VsrgSong.deserialize(song).toGenshin()
+            //two cross-game paths (spec 2026-08-03 §6): legacy files reproduce the historic
+            //index remap inside deserialize(importInto); new-format files carry their Note
+            //Ids and octave-fold via toGenshin()
+            if (song.type === 'vsrg') {
+                if (song.version === 2) return VsrgSong.deserialize(song).toGenshin()
+                return VsrgSong.deserialize(song, APP_NAME)
+            }
             //always put those below because of the legacy format
-            if (song.type === 'composed' || song.data?.isComposedVersion === true) return ComposedSong.deserialize(song).toGenshin()
-            if (song.type === 'recorded' || song.data?.isComposedVersion === false) return RecordedSong.deserialize(song).toGenshin()
+            if (song.type === 'composed' || song.data?.isComposedVersion === true) {
+                if (song.version === 4) return ComposedSong.deserialize(song).toGenshin()
+                return ComposedSong.deserialize(song, APP_NAME)
+            }
+            if (song.type === 'recorded' || song.data?.isComposedVersion === false) {
+                if (song.version === 3) return RecordedSong.deserialize(song).toGenshin()
+                return RecordedSong.deserialize(song, APP_NAME)
+            }
         }
         if (type === 'vsrg') return VsrgSong.deserialize(song)
         if (type === 'newComposed') return ComposedSong.deserialize(song)

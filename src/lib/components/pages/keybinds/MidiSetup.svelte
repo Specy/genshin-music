@@ -181,7 +181,8 @@
 
   function playSound(note: MIDINote) {
     if (note === undefined) return;
-    audioPlayer.playNoteOfInstrument(0, note.index);
+    //MIDINote.index is a BUTTON position (hardware presets are button-addressed)
+    audioPlayer.playButtonOfInstrument(0, note.index);
   }
 
   async function createPreset() {

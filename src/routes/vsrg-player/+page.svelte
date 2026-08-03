@@ -122,6 +122,9 @@
   function onStopSong() {
     isPlaying = false;
     song = null;
+    //stopping playback releases voices still held from hold notes
+    keyboardAudioPlayer?.releaseAllNotes();
+    songAudioPlayer?.releaseAllNotes();
     vsrgPlayerStore.stopSong();
   }
 
@@ -141,11 +144,8 @@
     if (audioSong) {
       const notes = audioSong.tickPlayback(timestamp + settings.offset.value);
       notes.forEach((n) => {
-        const layers = n.layer.toArray();
-        layers.forEach((l, i) => {
-          if (l === 0 || song!.trackModifiers[i].muted) return;
-          songAudioPlayer.playNoteOfInstrument(i, n.index);
-        });
+        if (song!.trackModifiers[n.trackIndex]?.muted) return;
+        songAudioPlayer.playNoteOfInstrument(n.trackIndex, n.id);
       });
     }
   }
@@ -153,7 +153,12 @@
   function playHitObject(hitObject: VsrgHitObject, instrumentIndex: number) {
     if (keyboardAudioPlayer) {
       hitObject.notes.forEach((n) => {
-        keyboardAudioPlayer.playNoteOfInstrument(instrumentIndex, n);
+        //hold notes sustain for their hold length when the track's instrument supports it
+        keyboardAudioPlayer.pressNoteOfInstrument(
+          instrumentIndex,
+          n,
+          hitObject.isHeld ? hitObject.holdDuration : undefined
+        );
       });
     }
   }

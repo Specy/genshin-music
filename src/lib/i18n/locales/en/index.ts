@@ -24,6 +24,8 @@ export const i18n_en = {
     error_importing_file_generic: 'Error importing file',
     error_importing_invalid_format: `Error importing file, invalid format`,
     song_backup_downloaded: 'Song backup downloaded',
+    old_format_export_dropped_notes:
+      '{{count}} note(s) could not be included in the old-format file (they have no position on the default instrument)',
     no_songs_to_backup: 'There are no songs to backup',
     no_empty_name: 'Please write a non empty name',
     cloned_song: `Cloned song: "{{song_name}}"`,
@@ -642,6 +644,7 @@ export const i18n_en = {
     previous_breakpoint: 'Previous Breakpoint', //breakpoint is a sort of point to "jump", a sort of bookmark
     next_breakpoint: 'Next Breakpoint',
     tempo: 'Tempo', //this is musical tempo
+    note_duration: 'Note duration', //in columns, shown in the long-press duration popover
     error_with_this_layer: 'There was an error with this layer',
     recording_audio: 'Recording Audio',
     tools: {

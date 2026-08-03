@@ -1,15 +1,5 @@
-import {
-    APP_NAME,
-    INSTRUMENTS,
-    MIDI_BOUNDS,
-    MIDI_MAP_TO_NOTE,
-    NOTE_MAP_TO_MIDI,
-    type Pitch,
-    TEMPO_CHANGERS,
-    type TempoChanger
-} from "$core/legacyConfig"
+import {APP_NAME, INSTRUMENTS, MIDI_BOUNDS, MIDI_MAP_TO_NOTE, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
-import {NoteLayer} from "./Layer"
 // InstrumentNoteIcon used to live in Songs/ComposedSong.ts (old SongClasses.ts imported it FROM
 // there). Task 5 relocated the canonical definition here instead (needed for
 // InstrumentData/SerializedInstrumentData before ComposedSong.ts was ported). Task 7's
@@ -17,7 +7,57 @@ import {NoteLayer} from "./Layer"
 // single source; do not duplicate the declaration.
 export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
 
-export type SerializedColumn = [tempoChanger: number, notes: SerializedColumnNote[]]
+// ---------------------------------------------------------------------------
+// Serialized shapes.
+// V3-and-earlier COMPOSED columns and V2-and-earlier RECORDED notes stored a
+// layout index + NoteLayer bitmask; they survive only as deserialization inputs
+// (format spec 2026-08-03, ADR-0002). The current formats are per-track:
+// every note belongs to exactly one track and stores a Note Id (ADR-0001).
+// ---------------------------------------------------------------------------
+
+/** Legacy (composed ≤v3): [index, hex-or-bin layer bitmask]. */
+export type SerializedColumnNoteV3 = [index: number, layer: string]
+/** Legacy (composed ≤v3): [tempoChanger, notes]. */
+export type SerializedColumnV3 = [tempoChanger: number, notes: SerializedColumnNoteV3[]]
+
+/** Composed v4: [column, noteId] or [column, noteId, span] (span omitted when 1). */
+export type SerializedTrackNote = [column: number, id: number, span?: number]
+export type SerializedComposedTrack = {
+    instrument: SerializedInstrumentData
+    notes: SerializedTrackNote[]
+}
+
+/** Legacy (recorded ≤v2): [index, timeMs, hex layer bitmask]. */
+export type SerializedRecordedNoteV2 = [index: number, time: number, layer: string]
+
+/** Recorded v3: [noteId, timeMs] or [noteId, timeMs, durationMs] (duration omitted when 0). */
+export type SerializedRecordedTrackNote = [id: number, time: number, duration?: number]
+export type SerializedRecordedTrack = {
+    instrument: SerializedInstrumentData
+    notes: SerializedRecordedTrackNote[]
+}
+
+// ---------------------------------------------------------------------------
+// Composed-song column model (in-memory). Column-major for editing/rendering:
+// each column holds track-tagged notes; serialization groups them per track.
+// ---------------------------------------------------------------------------
+
+export class ColumnNote {
+    trackIndex: number
+    id: number
+    /** Duration in columns, ≥1. 1 = the pre-sustain behavior. */
+    span: number
+
+    constructor(trackIndex: number, id: number, span: number = 1) {
+        this.trackIndex = trackIndex
+        this.id = id
+        this.span = span
+    }
+
+    clone() {
+        return new ColumnNote(this.trackIndex, this.id, this.span)
+    }
+}
 
 export class NoteColumn {
     notes: ColumnNote[]
@@ -35,30 +75,28 @@ export class NoteColumn {
     }
 
     addNote(note: ColumnNote): ColumnNote
-    addNote(index: number, layer?: NoteLayer): ColumnNote
-    addNote(indexOrNote: number | ColumnNote, layer?: NoteLayer) {
-        if (indexOrNote instanceof ColumnNote) {
-            this.notes.push(indexOrNote)
-            return indexOrNote
+    addNote(trackIndex: number, id: number, span?: number): ColumnNote
+    addNote(trackIndexOrNote: number | ColumnNote, id?: number, span?: number) {
+        if (trackIndexOrNote instanceof ColumnNote) {
+            this.notes.push(trackIndexOrNote)
+            return trackIndexOrNote
         }
-        const note = new ColumnNote(indexOrNote, layer)
+        const note = new ColumnNote(trackIndexOrNote, id!, span ?? 1)
         this.notes.push(note)
         return note
     }
 
-    serialize(): SerializedColumn {
-        return [this.tempoChanger, this.notes.map(note => note.serialize())]
+    findNote(trackIndex: number, id: number): ColumnNote | null {
+        return this.notes.find(n => n.trackIndex === trackIndex && n.id === id) ?? null
     }
 
-    static deserialize(data: SerializedColumn): NoteColumn {
-        const column = new NoteColumn()
-        column.tempoChanger = data[0]
-        column.notes = data[1].map(note => ColumnNote.deserialize(note)).filter(note => !note.layer.isEmpty())
-        return column
+    notesOfTrack(trackIndex: number): ColumnNote[] {
+        return this.notes.filter(n => n.trackIndex === trackIndex)
     }
 
-    addColumnNote(note: ColumnNote) {
-        this.notes.push(note.clone())
+    removeNote(trackIndex: number, id: number) {
+        const index = this.notes.findIndex(n => n.trackIndex === trackIndex && n.id === id)
+        if (index !== -1) this.notes.splice(index, 1)
     }
 
     removeAtIndex(index: number) {
@@ -67,11 +105,6 @@ export class NoteColumn {
 
     setTempoChanger(changer: TempoChanger) {
         this.tempoChanger = changer.id
-    }
-
-    getNoteIndex(index: number): number | null {
-        const result = this.notes.findIndex((n) => index === n.index)
-        return result === -1 ? null : result
     }
 
     getTempoChanger() {
@@ -146,121 +179,69 @@ export class InstrumentData {
     }
 }
 
-export type SerializedColumnNote = [index: number, layer: string]
-const SPLIT_EMPTY_LAYER = "0000".split("")
-
-export class ColumnNote {
-    index: number
-    layer: NoteLayer
-
-    constructor(index: number, layer?: NoteLayer) {
-        this.index = index
-        this.layer = layer || new NoteLayer()
-    }
-
-    static deserializeLayer = (layer: string): String => {
-        for (let i = 0; i < layer.length; i++) {
-            SPLIT_EMPTY_LAYER[i] = layer[i]
-        }
-        return SPLIT_EMPTY_LAYER.join('')
-    }
-
-    static deserialize(serialized: SerializedColumnNote): ColumnNote {
-        return new ColumnNote(serialized[0], NoteLayer.deserializeHex(serialized[1]))
-    }
-
-    serialize(): SerializedColumnNote {
-        return [this.index, this.layer.serializeHex()]
-    }
-
-    switchLayer(from: number, to: number) {
-        const isToggled = this.layer.test(from)
-        if (isToggled) this.layer.set(to, true)
-        this.layer.set(from, false)
-    }
-
-    swapLayer(layer1: number, layer2: number) {
-        const tmp = this.layer.test(layer1)
-        this.layer.set(layer1, this.layer.test(layer2))
-        this.layer.set(layer2, tmp)
-    }
-
-    clearLayer() {
-        this.layer.clear()
-    }
-
-    setLayer(layerIndex: number, value: boolean) {
-        this.layer.set(layerIndex, value)
-        return this.layer
-    }
-
-    toggleLayer(layerIndex: number) {
-        this.layer.toggle(layerIndex)
-        return this.layer
-    }
-
-    isLayerToggled(layerIndex: number) {
-        return this.layer.test(layerIndex)
-    }
-
-
-    clone() {
-        return new ColumnNote(this.index, this.layer.clone())
-    }
-}
-
 interface ApproachingNoteProps {
     time: number
     index: number
     clicked?: boolean
     id?: number
+    duration?: number
 }
 
+/** Player practice-mode runtime object; `index` is a BUTTON on the player's instrument, resolved from the song note's id at queue-build time. Never serialized. */
 export class ApproachingNote {
     time: number
     index: number
     clicked: boolean
     id: number
+    /** Song note's sustain duration in ms (0 = tap) — display cue only. */
+    duration: number
 
-    constructor({time, index, clicked = false, id = 0}: ApproachingNoteProps) {
+    constructor({time, index, clicked = false, id = 0, duration = 0}: ApproachingNoteProps) {
         this.time = time
         this.index = index
         this.clicked = clicked
         this.id = id
+        this.duration = duration
     }
 }
 
-export type SerializedRecordedNote = [index: number, time: number, layer: string]
-
 export class RecordedNote {
-    index: number
+    /** Note Id (nominal MIDI number) — not a button. */
+    id: number
     time: number
-    layer: NoteLayer
+    /** Sustain duration in ms; 0 = one-shot (the pre-sustain behavior). */
+    duration: number
+    trackIndex: number
+    /**
+     * UI-resolved display button (the player/sheet pipelines fill it at queue-build via
+     * displayButtonForId with the note's own track instrument); -1 = stranded. Runtime
+     * only — never serialized.
+     */
+    displayButton: number = -1
 
-    constructor(index?: number, time?: number, layer?: NoteLayer) {
-        this.index = index || 0
+    constructor(id?: number, time?: number, duration?: number, trackIndex?: number) {
+        this.id = id || 0
         this.time = time || 0
-        this.layer = layer || new NoteLayer(1)
-    }
-
-    setLayer(layer: number, value: boolean) {
-        this.layer.set(layer, value)
+        this.duration = duration || 0
+        this.trackIndex = trackIndex || 0
     }
 
     toMidi() {
-        return NOTE_MAP_TO_MIDI.get(this.index)
+        return this.id
     }
 
-    serialize(): SerializedRecordedNote {
-        return [this.index, this.time, this.layer.serializeHex()]
+    serialize(): SerializedRecordedTrackNote {
+        return this.duration > 0 ? [this.id, this.time, this.duration] : [this.id, this.time]
     }
 
-    static deserialize(data: SerializedRecordedNote) {
-        return new RecordedNote(data[0], data[1], NoteLayer.deserializeHex(data[2]))
+    static deserialize(data: SerializedRecordedTrackNote, trackIndex: number) {
+        return new RecordedNote(data[0], data[1], data[2] ?? 0, trackIndex)
     }
 
     clone() {
-        return new RecordedNote(this.index, this.time, this.layer.clone())
+        const clone = new RecordedNote(this.id, this.time, this.duration, this.trackIndex)
+        clone.displayButton = this.displayButton
+        return clone
     }
 }
 
@@ -277,11 +258,24 @@ export class Recording {
         this.startTimestamp = Date.now() - 100
         console.log("Started new recording")
     }
-    addNote = (index: number) => {
+    addNote = (id: number) => {
         if (this.notes.length === 0) this.start()
         const currentTime = Date.now()
-        const note: RecordedNote = new RecordedNote(index, currentTime - this.startTimestamp)
+        const note: RecordedNote = new RecordedNote(id, currentTime - this.startTimestamp)
         this.notes.push(note)
+    }
+    /**
+     * Close the most recent still-open note of this id, stamping its press→release
+     * duration. Captured on EVERY instrument, sustaining or not (spec 2026-08-03) —
+     * re-instrumenting a recording onto a sustaining instrument then just works.
+     */
+    releaseNote = (id: number) => {
+        for (let i = this.notes.length - 1; i >= 0; i--) {
+            const note = this.notes[i]
+            if (note.id !== id || note.duration !== 0) continue
+            note.duration = Math.max(0, Date.now() - this.startTimestamp - note.time)
+            return
+        }
     }
 }
 
@@ -300,8 +294,10 @@ export class MidiNote {
     time: number
     data: ParsedMidiNote
     layer: number
+    /** Real note length from the MIDI file, in ms (0 when unknown) — becomes a column span at import. */
+    durationMs: number
 
-    constructor(time: number, layer: number, data?: ParsedMidiNote,) {
+    constructor(time: number, layer: number, data?: ParsedMidiNote, durationMs: number = 0) {
         this.time = time
         this.data = data || {
             note: -1,
@@ -309,16 +305,21 @@ export class MidiNote {
             outOfRangeBound: 0
         }
         this.layer = layer
+        this.durationMs = durationMs
     }
 
-    static fromMidi(layer: number, time: number, midiNote: number, octavesScale: number) {
-        const toReturn = new MidiNote(time, layer)
+    static fromMidi(layer: number, time: number, midiNote: number, octavesScale: number, durationMs: number = 0) {
+        const toReturn = new MidiNote(time, layer, undefined, durationMs)
         for (let i = 0; i < octavesScale; i++) {
+            //±12 = a real octave. The pre-v4 code shifted by ±8 (a long-preserved bug that
+            //transposed out-of-range notes off-key); fixed deliberately with the format
+            //rewrite — import is lossy authoring, not a serialization-compat surface
+            //(spec 2026-08-03 §7).
             if (midiNote < MIDI_BOUNDS.lower) {
-                midiNote += 8
+                midiNote += 12
             }
             if (midiNote > MIDI_BOUNDS.upper) {
-                midiNote -= 8
+                midiNote -= 12
             }
         }
         const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean]

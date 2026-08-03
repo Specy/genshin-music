@@ -21,10 +21,9 @@
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import { delay } from '$core/utils/Utilities';
   import Analytics from '$core/Analytics';
-  import { InstrumentData, Recording } from '$core/Songs/SongClasses';
+  import { InstrumentData, Recording, type RecordedNote } from '$core/Songs/SongClasses';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { ComposedSong } from '$core/Songs/ComposedSong';
-  import type { NoteLayer } from '$core/Songs/Layer';
   import type { InstrumentName } from '$core/types';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
@@ -60,6 +59,14 @@
       if (name === 'toggle_record') toggleRecord();
     });
     cleanup.push(disposeShortcuts);
+    //missed key-up guards: leaving the tab releases every held voice (spec §12 stuck-voice risk)
+    const releaseOnLeave = () => releaseAllSounds();
+    window.addEventListener('blur', releaseOnLeave);
+    document.addEventListener('visibilitychange', releaseOnLeave);
+    cleanup.push(() => {
+      window.removeEventListener('blur', releaseOnLeave);
+      document.removeEventListener('visibilitychange', releaseOnLeave);
+    });
 
     // init() is intentionally not awaited: $effect below must be registered synchronously,
     // before any await, or Svelte throws effect_orphan. Fire-and-forget is safe here since
@@ -223,19 +230,41 @@
     updateSettings();
   }
 
-  function playSound(index: number, layers?: NoteLayer) {
-    if (isRecording) handleRecording(index);
-    if (!layers) {
-      instruments[0].play(index, settings.pitch.value);
+  function playSound(index: number, songNote?: RecordedNote) {
+    if (!songNote) {
+      //live playing on the main instrument; the recording stores the button's Note Id.
+      //pressNote = one-shot on non-sustaining instruments, held Voice on sustaining ones
+      //(released by releaseSound on key/pointer up)
+      if (isRecording) handleRecording(instruments[0]?.getNoteFromIndex(index)?.midiNote ?? 0);
+      instruments[0].pressNote(index, settings.pitch.value);
     } else {
-      instruments.forEach((ins, i) => {
-        const insData = instrumentsData[i];
-        if (layers.test(i) && !insData?.muted) {
-          const pitch = insData?.pitch || settings.pitch.value;
-          ins.play(index, pitch);
-        }
-      });
+      //song playback: the note belongs to exactly one track — play it on that track's
+      //instrument at ITS button for the id (stranded = silent). Notes with a duration
+      //self-release after it (speed-scaled upstream) when the instrument sustains.
+      if (isRecording) handleRecording(songNote.id);
+      const ins = instruments[songNote.trackIndex];
+      const insData = instrumentsData[songNote.trackIndex];
+      if (!ins || insData?.muted) return;
+      const button = ins.getButtonFromId(songNote.id);
+      if (button === -1) return;
+      const pitch = insData?.pitch || settings.pitch.value;
+      if (songNote.duration > 0 && ins.supportsSustain) {
+        ins.pressNote(button, pitch, { durationMs: songNote.duration });
+      } else {
+        ins.play(button, pitch);
+      }
     }
+  }
+
+  function releaseSound(index: number) {
+    const note = instruments[0]?.getNoteFromIndex(index);
+    if (!note) return;
+    if (isRecording) recording.releaseNote(note.midiNote);
+    instruments[0].releaseNote(index);
+  }
+
+  function releaseAllSounds() {
+    instruments.forEach((ins) => ins.releaseAllNotes());
   }
 
   function updateSettings(override?: PlayerSettingsDataType) {
@@ -288,9 +317,9 @@
     await songsStore.renameSong(id, newName);
   }
 
-  function handleRecording(index: number) {
+  function handleRecording(id: number) {
     if (isRecording) {
-      recording.addNote(index);
+      recording.addNote(id);
     }
   }
 
@@ -394,6 +423,8 @@
       }}
       functions={{
         playSound,
+        releaseSound,
+        releaseAllSounds,
         setHasSong,
         onSongFinished,
       }}

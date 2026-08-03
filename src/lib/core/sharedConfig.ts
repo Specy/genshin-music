@@ -7,6 +7,12 @@ export const HAS_BIGINT = typeof BigInt !== 'undefined'
 
 export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
 
+// Minimum recorded-note duration (ms) that UI surfaces treat as a deliberate hold.
+// Post-format-v3, EVERY recorded note carries its press→release time — ordinary taps
+// land well under this, so hold visuals (practice bars, approach rings, sheet markers)
+// only appear for genuinely held notes. Composed spans are explicit and don't use this.
+export const SUSTAIN_VISUAL_THRESHOLD_MS = 250
+
 // old Config.ts:854 — `export const FOLDER_FILTER_TYPES = ["alphabetical", "date-created"] as const`
 export const FOLDER_FILTER_TYPES = ['alphabetical', 'date-created'] as const
 

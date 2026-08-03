@@ -13,7 +13,8 @@ import {
 } from '$core/legacyConfig';
 import type { InstrumentName, NoteStatus } from '$core/types';
 import { capitalize, getPitchChanger } from '$core/utils/Utilities';
-import type { BaseNote, NoteImage } from '$lib/games/types';
+import type { BaseNote, InstrumentSustainConfig, NoteImage } from '$lib/games/types';
+import { Voice } from '$lib/audio/Voice';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
 import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
 import { keyBinds } from '$stores/KeybindsStore.svelte';
@@ -49,9 +50,24 @@ export class Instrument {
   isDeleted: boolean = false;
   isLoaded: boolean = false;
   audioContext: AudioContext | null = null;
+  /** Sounding sustained voices (pruned opportunistically); engine state, never UI-observed. */
+  private activeVoices: Voice[] = [];
+  /** Live (key-still-down) voice per button, for release-by-button. */
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine state, never UI-observed
+  private heldVoices = new Map<number, Voice>();
+  private static readonly MAX_VOICES = 32;
 
   get endNode() {
     return this.volumeNode;
+  }
+
+  get sustainConfig(): InstrumentSustainConfig | null {
+    return this.instrumentData.sustain ?? null;
+  }
+
+  /** Whether this instrument can hold notes (spec 2026-08-03: capability, per instrument). */
+  get supportsSustain() {
+    return this.sustainConfig !== null;
   }
 
   static clearPool() {
@@ -94,6 +110,10 @@ export class Instrument {
   getNoteFromCode = (code: string) => {
     const index = this.getNoteIndexFromCode(code);
     return index !== -1 ? this.notes[index] : null;
+  };
+  /** Button playing a Note Id on this instrument, -1 when the id is stranded on it. */
+  getButtonFromId = (id: number) => {
+    return this.notes.findIndex((note) => note.midiNote === id);
   };
   getNoteFromIndex = (index: number) => {
     return this.notes[index] ?? null;
@@ -161,6 +181,69 @@ export class Instrument {
 
     player.addEventListener('ended', handleEnd, { once: true });
   };
+
+  /**
+   * Press a button. Non-sustaining instruments take the exact one-shot `play()` path
+   * (returns null). Sustaining instruments start a looped Voice that sounds until
+   * `releaseNote(button)` — or self-releases after `durationMs` (song playback,
+   * scheduled sample-accurately on the audio timeline at start).
+   */
+  pressNote = (
+    button: number,
+    pitch: Pitch,
+    options?: { delay?: number; durationMs?: number }
+  ): Voice | null => {
+    const sustain = this.sustainConfig;
+    if (!sustain) {
+      this.play(button, pitch, options?.delay);
+      return null;
+    }
+    if (this.isDeleted || !this.volumeNode || !this.audioContext) return null;
+    const buffer = this.buffers[button];
+    if (!buffer) return null;
+    //retrigger: a still-held voice on the same button releases naturally first
+    this.releaseNote(button);
+    this.pruneVoices();
+    if (this.activeVoices.length >= Instrument.MAX_VOICES) {
+      //oldest-first stealing keeps the newest notes audible on constrained devices
+      this.activeVoices.shift()?.stop();
+    }
+    const voice = new Voice({
+      context: this.audioContext,
+      buffer,
+      destination: this.volumeNode,
+      playbackRate: getPitchChanger(pitch),
+      loop: sustain.noteLoops?.[button] ?? sustain.loop,
+      release: sustain.release,
+      delay: options?.delay,
+    });
+    this.activeVoices.push(voice);
+    if (options?.durationMs !== undefined) {
+      voice.releaseAt(voice.startedAt + options.durationMs / 1000);
+    } else {
+      this.heldVoices.set(button, voice);
+    }
+    return voice;
+  };
+
+  /** Release the live voice held on a button (no-op for one-shot instruments and unheld buttons). */
+  releaseNote = (button: number) => {
+    const voice = this.heldVoices.get(button);
+    if (!voice) return;
+    this.heldVoices.delete(button);
+    voice.release();
+  };
+
+  /** Release everything sounding — ramped (blur/visibility loss, playback stop) or hard (teardown). */
+  releaseAllNotes = (hard = false) => {
+    this.heldVoices.clear();
+    this.activeVoices.forEach((voice) => (hard ? voice.stop() : voice.release()));
+    this.activeVoices = [];
+  };
+
+  private pruneVoices = () => {
+    this.activeVoices = this.activeVoices.filter((voice) => !voice.isReleased);
+  };
   load = async (audioContext: AudioContext) => {
     this.audioContext = audioContext;
     this.volumeNode = audioContext.createGain();
@@ -194,6 +277,7 @@ export class Instrument {
     this.volumeNode?.connect(node);
   };
   dispose = () => {
+    this.releaseAllNotes(true);
     this.disconnect();
     this.isDeleted = true;
     this.buffers = [];
@@ -228,6 +312,8 @@ export type NoteDataState = {
   status: NoteStatus;
   delay: number;
   animationId: number;
+  /** Practice-mode hold hint (ms) shown as a bar on the button; 0 = none. */
+  holdMs: number;
 };
 
 export class ObservableNote {
@@ -245,6 +331,7 @@ export class ObservableNote {
     status: '',
     delay: 0,
     animationId: 0,
+    holdMs: 0,
   });
 
   constructor(

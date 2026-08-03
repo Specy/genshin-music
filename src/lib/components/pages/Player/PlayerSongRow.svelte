@@ -1,6 +1,6 @@
 <script module lang="ts">
   import type { ComposedSong } from '$core/Songs/ComposedSong';
-  import type { RecordedSong } from '$core/Songs/RecordedSong';
+  import { RecordedSong } from '$core/Songs/RecordedSong';
 
   export type RecordedOrComposed = RecordedSong | ComposedSong;
 </script>
@@ -65,13 +65,15 @@
 
   async function practiceSong() {
     const parsed = (await songService.fromStorableSong(data)) as RecordedOrComposed;
-    playerStore.practice(parsed, 0, parsed.notes.length);
+    //composed songs pass 0 (the pre-v4 vestigial `notes` field was always empty on them);
+    //PlayerKeyboard falls back to the converted song's real length
+    playerStore.practice(parsed, 0, parsed instanceof RecordedSong ? parsed.notes.length : 0);
     functions.toggleMenu(false);
   }
 
   async function approachSong() {
     const parsed = (await songService.fromStorableSong(data)) as RecordedOrComposed;
-    playerStore.approaching(parsed, 0, parsed.notes.length);
+    playerStore.approaching(parsed, 0, parsed instanceof RecordedSong ? parsed.notes.length : 0);
     functions.toggleMenu(false);
   }
 

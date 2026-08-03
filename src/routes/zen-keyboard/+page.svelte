@@ -73,7 +73,21 @@
 
     load();
     return () => {
+      //hard-release held voices before the node is disconnected (instrument swap mid-hold)
+      currentInstrument.releaseAllNotes(true);
       AudioProvider.disconnect(currentInstrument.endNode);
+    };
+  });
+
+  $effect(() => {
+    //missed key-up guards: leaving the tab releases every held voice
+    const currentInstrument = instrument;
+    const releaseOnLeave = () => currentInstrument.releaseAllNotes();
+    window.addEventListener('blur', releaseOnLeave);
+    document.addEventListener('visibilitychange', releaseOnLeave);
+    return () => {
+      window.removeEventListener('blur', releaseOnLeave);
+      document.removeEventListener('visibilitychange', releaseOnLeave);
     };
   });
 
@@ -106,9 +120,14 @@
   }
 
   function onNoteClick(note: ObservableNote) {
-    instrument.play(note.index, settings.pitch.value);
+    //one-shot on non-sustaining instruments (exact old path), held Voice on sustaining ones
+    instrument.pressNote(note.index, settings.pitch.value);
     zenKeyboardStore.animateNote(note.index);
     MIDIProvider.broadcastNoteClick(note.midiNote);
+  }
+
+  function onNoteRelease(note: ObservableNote) {
+    instrument.releaseNote(note.index);
   }
 
   function onVolumeChange(data: SettingVolumeUpdate) {
@@ -130,6 +149,7 @@
   />
   <div class="flex-centered">
     <ZenKeypad
+      {onNoteRelease}
       {instrument}
       {onNoteClick}
       noteNameType={settings.noteNameType.value}

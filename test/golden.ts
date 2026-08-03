@@ -42,3 +42,13 @@ export function expectGolden(name: string, value: unknown): void {
 export function readInput(name: string): any {
     return JSON.parse(fs.readFileSync(path.join(HERE, 'inputs', name), 'utf8'))
 }
+
+/**
+ * Read a committed per-game fixture as an INPUT. Format-v4/v3/vsrg-v2 rewrite
+ * (2026-08-03): fixtures captured from the pre-refactor code (legacy wire bytes)
+ * stay committed forever and feed the legacy deserializers — the conversion tests
+ * assert the new model reproduces them. Never regenerate these.
+ */
+export function readFixture(name: string): any {
+    return JSON.parse(fs.readFileSync(path.join(FIXTURE_DIR, `${name}.json`), 'utf8'))
+}
