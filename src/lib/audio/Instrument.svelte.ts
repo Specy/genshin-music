@@ -242,7 +242,9 @@ export class Instrument {
   };
 
   private pruneVoices = () => {
-    this.activeVoices = this.activeVoices.filter((voice) => !voice.isReleased);
+    // A voice with a future release scheduled is still sounding and must continue to
+    // count toward the cap (and remain available to releaseAllNotes on stop/blur).
+    this.activeVoices = this.activeVoices.filter((voice) => !voice.isDisposed);
   };
   load = async (audioContext: AudioContext) => {
     this.audioContext = audioContext;
