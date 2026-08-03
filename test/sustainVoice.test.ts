@@ -19,6 +19,9 @@ function fakeGainParam(calls: Call[]) {
         linearRampToValueAtTime(value: number, time: number) {
             calls.push({method: 'linearRampToValueAtTime', args: [value, time]})
         },
+        cancelScheduledValues(time: number) {
+            calls.push({method: 'cancelScheduledValues', args: [time]})
+        },
     }
 }
 
@@ -148,6 +151,16 @@ describe('Voice', () => {
         const source = created.sources[0]
         voice.releaseAt(10.2)
         expect(source.calls).toContainEqual({method: 'stop', args: [11.2]})
+    })
+
+    it('release() brings a future scheduled release forward so playback stop cannot leave a voice sounding', () => {
+        const {voice, created} = makeVoice()
+        const source = created.sources[0]
+        const gain = created.gains[1]
+        voice.releaseAt(20)
+        voice.release()
+        expect(gain.calls).toContainEqual({method: 'cancelScheduledValues', args: [10]})
+        expect(source.calls).toContainEqual({method: 'stop', args: [10.2]})
     })
 
     it('stop() hard-stops and disconnects both nodes', () => {

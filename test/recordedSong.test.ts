@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {RecordedSong} from './imports'
+import {INSTRUMENTS, RecordedNote, RecordedSong} from './imports'
 import {buildRecordedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
 
@@ -26,6 +26,19 @@ describe('RecordedSong formats', () => {
             fromLegacyV2: RecordedSong.deserialize(legacy.serialized).serialize(),
             oldFormatExport: song.toOldFormat(),
         })
+    })
+
+    it('converts durations to spans only after laying out the composed tempo grid', () => {
+        const recorded = new RecordedSong('held', [
+            new RecordedNote(60, 0, 1900, 0),
+            new RecordedNote(62, 2000, 3000, 0),
+        ], [INSTRUMENTS[0]])
+        recorded.bpm = 60
+        const composed = recorded.toComposedSong(4)
+        const first = composed.columns.flatMap(column => column.notes).find(note => note.id === 60)!
+        const second = composed.columns.flatMap(column => column.notes).find(note => note.id === 62)!
+        expect(first.span).toBe(1) // only one complete 1000ms column fits in 1900ms
+        expect(second.span).toBe(3)
     })
 
     it('a converted legacy v2 song reproduces the pre-v3 old-format export byte-for-byte', () => {
