@@ -1716,8 +1716,7 @@ export const game: GameDefinition = {
       // DUMMY SUSTAINING INSTRUMENT (2026-08-04): Aurora's samples copied to
       // static/assets/audio/sky/test_sustain, plus a `sustain` config so the hold
       // features (Voice engine, composer spans, practice tails, VSRG holds) are
-      // testable before a real sustaining instrument is authored. Loop points are a
-      // rough guess over the ~2s vocal samples — tune by ear or delete the instrument
+      // testable before a real sustaining instrument is authored. Delete the instrument
       // (and its audio folder + i18n entry + list entry) once a real one exists.
       // Post-freeze instrument: deliberately ABSENT from legacyNoteTables (no legacy
       // song can reference it) — excluded in gameDefinitionConsistency.test.ts.
@@ -1817,26 +1816,26 @@ export const game: GameDefinition = {
         midiNotes: [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
         sustain: {
           release: 0.3,
-          //fallback only — every note below overrides it
-          loop: { start: 0.6, end: 1.2 },
-          //per-note regions from measured sample lengths (2.71s-3.34s): loop ends at
-          //~42% of each sample, before the vocal decay thins the loop. Tune by ear.
+          //fallback only — every note below overrides it. The per-note points are
+          //48 kHz decoded-frame boundaries selected at matching positive-going phase
+          //crossings, with level and the surrounding waveform matched across the splice.
+          loop: { start: 0.929563, end: 1.074792 },
           noteLoops: [
-            { start: 0.6, end: 1.25 - 0.5},
-            { start: 0.6, end: 1.4 - 0.5},
-            { start: 0.6, end: 1.3 - 0.5},
-            { start: 0.6, end: 1.28 - 0.5},
-            { start: 0.6, end: 1.19 - 0.5},
-            { start: 0.6, end: 1.21 - 0.5},
-            { start: 0.6, end: 1.24 - 0.5},
-            { start: 0.6, end: 1.36 - 0.5},
-            { start: 0.6, end: 1.29 - 0.5},
-            { start: 0.6, end: 1.22 - 0.5},
-            { start: 0.6, end: 1.25 - 0.5},
-            { start: 0.6, end: 1.14 - 0.5},
-            { start: 0.6, end: 1.17 - 0.5},
-            { start: 0.6, end: 1.19 - 0.5},
-            { start: 0.6, end: 1.18 - 0.5},
+            { start: 0.929563, end: 1.074792 },
+            { start: 0.702271, end: 0.841604 },
+            { start: 0.602396, end: 0.738729 },
+            { start: 0.995667, end: 1.172458 },
+            { start: 0.495667, end: 0.739708 },
+            { start: 1.029021, end: 1.176958 },
+            { start: 1.101417, end: 1.274375 },
+            { start: 0.574896, end: 0.749854 },
+            { start: 0.610854, end: 0.857896 },
+            { start: 0.573208, end: 0.718604 },
+            { start: 0.649146, end: 0.806771 },
+            { start: 0.8615, end: 1.065604 },
+            { start: 1.011125, end: 1.289646 },
+            { start: 0.642104, end: 0.804375 },
+            { start: 1.008833, end: 1.184875 },
           ],
         },
       },
