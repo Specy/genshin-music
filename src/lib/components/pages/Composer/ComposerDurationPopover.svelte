@@ -1,9 +1,12 @@
 <script lang="ts">
   // Duration popover (spec 2026-08-03 §2 "Composer duration UX"): opened by long-pressing
-  // a composer keyboard button; drag the slider right to lengthen the hold, `<`/`>` step
-  // ±1 column; dismissed by outside click, the X button, or a column/layer change (the
-  // owner handles those two). The opening long-press's own pointerup can't dismiss it:
-  // dismissal listens for pointerDOWN outside, and the opening gesture has none left.
+  // a composer keyboard button. The slider edits the EXTRA hold length in columns
+  // (0 = plain note, i.e. span - 1): visual range 0–20, and the `>` stepper keeps going
+  // past 20 — both steppers stay enabled and simply clamp against how far the hold can
+  // still grow (next same-id note / song end, via maxSpan). Dismissed by outside click,
+  // the X button, or a column/layer change (the owner handles those two). The opening
+  // long-press's own pointerup can't dismiss it: dismissal listens for pointerDOWN
+  // outside, and the opening gesture has none left.
   import { t } from '$i18n/binding.svelte';
 
   let {
@@ -15,27 +18,40 @@
   }: {
     span: number;
     maxSpan: number;
-    /** Bounding rect of the long-pressed button, in viewport coordinates. */
-    anchor: { x: number; y: number; width: number };
+    /** The long-pressed button element — a live reference so the popover follows window resizes. */
+    anchor: HTMLElement;
     onChange: (span: number) => void;
     onClose: () => void;
   } = $props();
 
   let popoverElement: HTMLDivElement | undefined = $state();
+  //measured by bind:offsetWidth (the CSS width is viewport-relative)
+  let popoverWidth = $state(280);
+  //bumped on window resize so the anchor rect and clamps recompute
+  let resizeTick = $state(0);
 
-  const POPOVER_WIDTH = 280;
-  const left = $derived(
-    Math.max(
+  const SLIDER_MAX = 20;
+  //extra hold columns beyond the note itself
+  const holdAmount = $derived(span - 1);
+  const maxHoldAmount = $derived(Math.max(0, maxSpan - 1));
+  const anchorRect = $derived.by(() => {
+    void resizeTick;
+    return anchor.getBoundingClientRect();
+  });
+  const left = $derived.by(() => {
+    void resizeTick;
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : popoverWidth;
+    return Math.max(
       8,
       Math.min(
-        anchor.x + anchor.width / 2 - POPOVER_WIDTH / 2,
-        (typeof window !== 'undefined' ? window.innerWidth : POPOVER_WIDTH) - POPOVER_WIDTH - 8
+        anchorRect.x + anchorRect.width / 2 - popoverWidth / 2,
+        viewportWidth - popoverWidth - 8
       )
-    )
-  );
+    );
+  });
 
-  function step(amount: number) {
-    onChange(Math.max(1, Math.min(maxSpan, span + amount)));
+  function setHoldAmount(amount: number) {
+    onChange(Math.max(0, Math.min(maxHoldAmount, amount)) + 1);
   }
 
   function handleOutsidePointerDown(e: PointerEvent) {
@@ -43,34 +59,88 @@
   }
 </script>
 
-<svelte:window onpointerdown={handleOutsidePointerDown} />
+<svelte:window onpointerdown={handleOutsidePointerDown} onresize={() => resizeTick++} />
+
+{#snippet chevronLeftIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 320 512"
+    height="0.9em"
+    width="0.9em"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M34.52 239.03L228.87 44.69c9.37-9.37 24.57-9.37 33.94 0l22.67 22.67c9.36 9.36 9.37 24.52.04 33.9L131.49 256l154.02 154.75c9.34 9.38 9.32 24.54-.04 33.9l-22.67 22.67c-9.37 9.37-24.57 9.37-33.94 0L34.52 272.97c-9.37-9.37-9.37-24.57 0-33.94z"
+    /></svg
+  >
+{/snippet}
+
+{#snippet chevronRightIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 320 512"
+    height="0.9em"
+    width="0.9em"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"
+    /></svg
+  >
+{/snippet}
+
+{#snippet timesIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 352 512"
+    height="0.9em"
+    width="0.9em"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"
+    /></svg
+  >
+{/snippet}
 
 <div
   bind:this={popoverElement}
+  bind:offsetWidth={popoverWidth}
   class="duration-popover"
-  style="left:{left}px;bottom:calc(100vh - {anchor.y}px + 0.6rem);width:{POPOVER_WIDTH}px"
+  style="left:{left}px;bottom:calc(100vh - {anchorRect.y}px + 0.6rem)"
   role="dialog"
   aria-label={t('composer:note_duration')}
 >
-  <button class="duration-popover-step" onclick={() => step(-1)} disabled={span <= 1}>
-    &lt;
+  <button
+    class="duration-popover-step"
+    onclick={() => setHoldAmount(holdAmount - 1)}
+    aria-label="-1"
+  >
+    {@render chevronLeftIcon()}
   </button>
   <input
     type="range"
-    min="1"
-    max={maxSpan}
-    value={span}
-    oninput={(e) => onChange(parseInt(e.currentTarget.value))}
+    min="0"
+    max={SLIDER_MAX}
+    value={Math.min(holdAmount, SLIDER_MAX)}
+    oninput={(e) => setHoldAmount(parseInt(e.currentTarget.value))}
     style="flex:1;accent-color:var(--accent)"
   />
-  <button class="duration-popover-step" onclick={() => step(1)} disabled={span >= maxSpan}>
-    &gt;
+  <button
+    class="duration-popover-step"
+    onclick={() => setHoldAmount(holdAmount + 1)}
+    aria-label="+1"
+  >
+    {@render chevronRightIcon()}
   </button>
   <div class="duration-popover-value">
-    {span}
+    {holdAmount}
   </div>
   <button class="duration-popover-step" onclick={onClose} aria-label={t('common:close')}>
-    ✕
+    {@render timesIcon()}
   </button>
 </div>
 
@@ -83,6 +153,7 @@
     gap: 0.4rem;
     padding: 0.5rem 0.6rem;
     border-radius: 0.5rem;
+    width: min(max(25rem, 18vw), 50vw);
     background-color: var(--menu-background);
     color: var(--menu-background-text);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
@@ -94,18 +165,16 @@
     justify-content: center;
     width: 1.8rem;
     height: 1.8rem;
+    border: none;
     border-radius: 0.3rem;
     background-color: var(--primary);
     color: var(--primary-text);
+    cursor: pointer;
     flex-shrink: 0;
-
-    &:disabled {
-      opacity: 0.4;
-    }
   }
 
   .duration-popover-value {
-    min-width: 2rem;
+    min-width: 1.6rem;
     text-align: center;
     font-weight: bold;
   }

@@ -29,6 +29,7 @@ import {
 import {type SerializedSong, Song} from "./Song"
 import {clamp} from "../utils/Utilities"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
+import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
 import {buttonToNoteId, displayButtonForId, foldIdIntoRange, getNoteIdTable} from "./noteIds"
 
 interface OldFormatNoteType {
@@ -102,7 +103,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
      * deserialize-then-toGenshin pipeline in one step: indices remapped through the
      * TARGET's frozen importPositions, roster reset to the target's default instrument
      * (icon cycle preserved), ids from the target's frozen default table. v4 songs
-     * ignore it (their cross-game path is toGenshin()'s id-fold).
+     * ignore it (their cross-game path is toOtherGame's similarity-swap + id-fold).
      */
     static deserialize(song: UnknownSerializedComposedSong, importInto?: 'Genshin' | 'Sky'): ComposedSong {
         //@ts-ignore
@@ -114,16 +115,28 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             parsed.instruments = (song.tracks ?? []).map(track => InstrumentData.deserialize(track.instrument))
             parsed.columns = (song.columnTempos ?? []).map(tempo => {
                 const column = new NoteColumn()
-                column.tempoChanger = tempo
+                //invalid tempo ids would dereference TEMPO_CHANGERS[undefined] at playback
+                column.tempoChanger = Number.isInteger(tempo) && TEMPO_CHANGERS[tempo] !== undefined ? tempo : 0
                 return column
             })
             ;(song.tracks ?? []).forEach((track, trackIndex) => {
-                track.notes.forEach(([columnIndex, id, span]) => {
+                //defensive: hand-edited/malformed files must import cleanly, not throw
+                (track.notes ?? []).forEach(([columnIndex, id, span]) => {
+                    if (!Number.isInteger(columnIndex) || !Number.isFinite(id)) return
                     const column = parsed.columns[columnIndex]
                     if (column === undefined) return
-                    column.addNote(trackIndex, id, span ?? 1)
+                    const safeSpan = Number.isFinite(span as number) ? (span as number) : 1
+                    //duplicate (column, track, id) entries merge keeping the longest span
+                    const existing = column.findNote(trackIndex, id)
+                    if (existing) {
+                        existing.span = Math.max(existing.span, safeSpan)
+                        return
+                    }
+                    column.addNote(trackIndex, id, safeSpan)
                 })
             })
+            //file spans are untrusted input — sanitize + re-enforce the no-overlap invariant
+            parsed.normalizeSpans()
             if (parsed.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${parsed.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
             return parsed
         }
@@ -462,12 +475,15 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     /**
      * Re-enforce the no-overlap invariant after bulk edits (paste, move, column removal):
      * spans reaching the next same-(track, id) note truncate to just before it; spans
-     * overhanging the song end clamp to it. One ascending walk per call.
+     * overhanging the song end clamp to it. Spans are also sanitized to finite integers
+     * ≥ 1 first (untrusted/hand-edited files can carry NaN/fractional/zero values that
+     * the overlap pass alone would miss). One ascending walk per call.
      */
     normalizeSpans() {
         const open = new Map<string, { note: ColumnNote, startColumn: number }>()
         this.columns.forEach((column, columnIndex) => {
             column.notes.forEach(note => {
+                note.span = Number.isFinite(note.span) ? Math.max(1, Math.round(note.span)) : 1
                 const key = `${note.trackIndex}-${note.id}`
                 const previous = open.get(key)
                 if (previous && previous.startColumn + previous.note.span > columnIndex) {
@@ -483,19 +499,55 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         })
     }
 
+    /**
+     * Insert columns after `position`. A sustained note whose span the insertion point
+     * falls strictly INSIDE stretches by the inserted amount (its musical end stays on
+     * the same column content); inserting exactly where a note ends — or anywhere
+     * outside its span — leaves it unchanged (decided 2026-08-04).
+     */
     addColumns = (amount: number, position: number | 'end') => {
         const columns = new Array(amount).fill(0).map(() => new NoteColumn())
         if (position === "end") {
             this.columns.push(...columns)
         } else {
-            this.columns.splice(position + 1, 0, ...columns)
+            const insertionIndex = position + 1
+            this.columns.forEach((column, startColumn) => {
+                column.notes.forEach(note => {
+                    //covered tail range is (startColumn, startColumn + span - 1]
+                    if (startColumn < insertionIndex && insertionIndex <= startColumn + note.span - 1) {
+                        note.span += amount
+                    }
+                })
+            })
+            this.columns.splice(insertionIndex, 0, ...columns)
         }
     }
+    /**
+     * Remove `amount` columns from `position`. A sustained note loses one span per
+     * removed TAIL column (its start column being removed removes the note itself);
+     * normalizeSpans then handles any remaining overlap/end clamping.
+     */
     removeColumns = (amount: number, position: number) => {
+        this.adjustSpansForRemovedColumns(new Set(new Array(amount).fill(0).map((_, i) => position + i)))
         this.columns.splice(position, amount)
         this.validateBreakpoints()
         //removing columns shrinks distances — spans may now overlap a following note
         this.normalizeSpans()
+    }
+
+    /** Shrink every span by the number of its covered TAIL columns present in `removed` (decided 2026-08-04). Notes whose start column is removed die with it and are skipped. */
+    private adjustSpansForRemovedColumns(removed: Set<number>) {
+        this.columns.forEach((column, startColumn) => {
+            if (removed.has(startColumn)) return
+            column.notes.forEach(note => {
+                if (note.span <= 1) return
+                let removedTails = 0
+                for (let i = startColumn + 1; i <= startColumn + note.span - 1; i++) {
+                    if (removed.has(i)) removedTails++
+                }
+                if (removedTails > 0) note.span = Math.max(1, note.span - removedTails)
+            })
+        })
     }
 
     /** Move every note of track `from` onto track `to` (ids kept — a note is a pitch identity, not a button), merging with existing notes. */
@@ -664,6 +716,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         return copiedColumns
     }
     deleteColumns = (selectedColumns: number[]) => {
+        //same rule as removeColumns: spans shrink by their removed tail columns
+        this.adjustSpansForRemovedColumns(new Set(selectedColumns))
         this.columns = this.columns.filter((e, i) => !selectedColumns.includes(i))
         let min = Math.min(...selectedColumns)
         this.selected = clamp(min, 0, this.columns.length - 1)
@@ -676,37 +730,54 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         this.breakpoints = this.breakpoints.filter(breakpoint => breakpoint < this.columns.length)
     }
     /**
-     * NEW-format cross-game conversion (v4 songs imported into the other game's build):
-     * swap every track's instrument to this build's default and octave-fold ids into
-     * its range (ids landing on scale gaps stay as stranded notes — never rewritten
-     * further). Legacy (≤v3) files never reach this: their cross-game path remaps
-     * indices inside deserialization via the frozen tables, reproducing the historic
-     * converter byte-for-byte.
+     * NEW-format cross-game conversion (v4 songs imported into another game's build,
+     * many-to-many by design): each track's instrument swaps to the target game's most
+     * similar instrument (instrumentSimilarity map; target default when unmapped),
+     * keeping the track's volume/pitch/icon/alias; ids octave-fold into the mapped
+     * instrument's range (ids landing on scale gaps stay as stranded notes — never
+     * rewritten further); fold collisions merge keeping the longest span; the Duration
+     * no-overlap invariant is re-enforced. Legacy (≤v3) files never reach this: their
+     * cross-game path remaps indices inside deserialization via the frozen tables,
+     * reproducing the historic converter byte-for-byte.
+     *
+     * Note ids can only fold against the RUNNING game's live tables, so `target` must
+     * be it — the parameter exists so call sites already express the many-to-many
+     * intent (game #3 needs no signature change).
      */
-    toGenshin = () => {
+    toOtherGame = (target: string) => {
         const clone = this.clone()
-        if (clone.data.appName === APP_NAME) {
-            console.warn("Song already in " + APP_NAME + " format")
+        if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
+        if (clone.data.appName === target) {
+            console.warn("Song already in " + target + " format")
             return clone
         }
-        clone.data.appName = APP_NAME
-        clone.instruments = clone.instruments.map((_, i) => {
-            const ins = new InstrumentData({name: INSTRUMENTS[0]})
-            ins.icon = defaultInstrumentMap[i % 3]
-            return ins
+        const sourceGame = clone.data.appName
+        clone.data.appName = target
+        clone.instruments = clone.instruments.map(ins => {
+            const similar = findSimilarInstrument(sourceGame, ins.name, target as ConversionGame)
+            const swapped = ins.clone()
+            swapped.name = (similar ?? INSTRUMENTS[0]) as InstrumentName
+            return swapped
         })
         clone.columns.forEach(column => {
             column.notes.forEach(note => {
-                note.id = foldIdIntoRange(INSTRUMENTS[0], note.id)
+                note.id = foldIdIntoRange(clone.instruments[note.trackIndex]?.name ?? INSTRUMENTS[0], note.id)
             })
-            const seen = new Set<string>()
+            //fold collisions merge, keeping the longest span
+            const seen = new Map<string, ColumnNote>()
             column.notes = column.notes.filter(note => {
                 const key = `${note.trackIndex}-${note.id}`
-                if (seen.has(key)) return false
-                seen.add(key)
+                const existing = seen.get(key)
+                if (existing) {
+                    existing.span = Math.max(existing.span, note.span)
+                    return false
+                }
+                seen.set(key, note)
                 return true
             })
         })
+        //folding can land a held note onto a later same-id note — re-enforce the invariant
+        clone.normalizeSpans()
         return clone
     }
     toMidi = (): Midi => {

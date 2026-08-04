@@ -234,10 +234,6 @@ export class RecordedNote {
         return this.duration > 0 ? [this.id, this.time, this.duration] : [this.id, this.time]
     }
 
-    static deserialize(data: SerializedRecordedTrackNote, trackIndex: number) {
-        return new RecordedNote(data[0], data[1], data[2] ?? 0, trackIndex)
-    }
-
     clone() {
         const clone = new RecordedNote(this.id, this.time, this.duration, this.trackIndex)
         clone.displayButton = this.displayButton
@@ -248,6 +244,12 @@ export class RecordedNote {
 export class Recording {
     startTimestamp: number
     notes: RecordedNote[]
+    /**
+     * When false (recording on a non-sustaining instrument — user decision 2026-08-04)
+     * notes never receive durations: releases, retrigger-closes and closeAllOpenNotes
+     * are no-ops, so every note serializes as a plain tap.
+     */
+    captureDurations = true
 
     constructor() {
         this.startTimestamp = Date.now()
@@ -258,24 +260,47 @@ export class Recording {
         this.startTimestamp = Date.now() - 100
         console.log("Started new recording")
     }
+    /**
+     * A re-press of a still-open id closes the previous press first (exact
+     * press↔release pairing, mirroring the audio engine's one-voice-per-button
+     * retrigger) — at most one note per id is ever open, so releases are unambiguous
+     * even with concurrent keyboard/pointer/MIDI input on the same button.
+     */
     addNote = (id: number) => {
         if (this.notes.length === 0) this.start()
+        if (this.captureDurations) this.releaseNote(id)
         const currentTime = Date.now()
         const note: RecordedNote = new RecordedNote(id, currentTime - this.startTimestamp)
         this.notes.push(note)
     }
     /**
-     * Close the most recent still-open note of this id, stamping its press→release
-     * duration. Captured on EVERY instrument, sustaining or not (spec 2026-08-03) —
+     * Close the still-open note of this id, stamping its press→release duration
+     * (floored to 1ms so a closed instant tap is distinguishable from an open note).
+     * Captured on EVERY instrument, sustaining or not (spec 2026-08-03) —
      * re-instrumenting a recording onto a sustaining instrument then just works.
      */
     releaseNote = (id: number) => {
+        if (!this.captureDurations) return
         for (let i = this.notes.length - 1; i >= 0; i--) {
             const note = this.notes[i]
             if (note.id !== id || note.duration !== 0) continue
-            note.duration = Math.max(0, Date.now() - this.startTimestamp - note.time)
+            note.duration = Math.max(1, Date.now() - this.startTimestamp - note.time)
             return
         }
+    }
+    /**
+     * Close every still-open note at the current time — a physical release will never
+     * arrive for them (recording stopped, or the window lost focus mid-hold; audio
+     * playback itself continues in the background, but held KEYS can't be trusted
+     * past a blur since their key-up is delivered elsewhere).
+     */
+    closeAllOpenNotes = () => {
+        if (!this.captureDurations) return
+        const now = Date.now()
+        this.notes.forEach(note => {
+            if (note.duration !== 0) return
+            note.duration = Math.max(1, now - this.startTimestamp - note.time)
+        })
     }
 }
 

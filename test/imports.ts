@@ -34,6 +34,8 @@ export {ComposedSong, defaultInstrumentMap} from '$core/Songs/ComposedSong'
 // of the two is re-exported under this name from this barrel, so no collision.
 export {Chunk, RecordedSong} from '$core/Songs/RecordedSong'
 export {VisualSong, TempoChunk} from '$core/Songs/VisualSong'
+export {LEGACY_NOTE_TABLES} from '$core/Songs/legacyNoteTables'
+export {SIMILAR_INSTRUMENTS} from '$core/Songs/instrumentSimilarity'
 export {VsrgHitObject, VsrgSong, VsrgTrack, VsrgTrackModifier} from '$core/Songs/VsrgSong'
 export {Folder} from '$core/Folder'
 // Theme

@@ -252,10 +252,13 @@
         new Array(emptyColumns).fill(0).forEach(() => columns.push(new NoteColumn())); // adds empty columns
       noteColumn.notes = notes.flatMap((note) => {
         //note.data.note is the legacy MIDI_MAP_TO_NOTE index; resolve it to the Note Id
-        //of the target layer's instrument (out-of-range on short instruments = silent
-        //in the legacy runtime = dropped)
+        //of the target layer's instrument. Notes past a short instrument's button range
+        //are dropped — count them as out of range so the importer UI reflects the loss
         const id = buttonToNoteId(data.instruments[note.layer]?.name ?? '', note.data.note);
-        if (id === null) return [];
+        if (id === null) {
+          outOfRangeCount++;
+          return [];
+        }
         //the file's real note length becomes a column span (min 1; the invariant pass
         //below truncates spans that would overlap a following same-id note)
         const span = Math.max(1, Math.round(note.durationMs / bpmToMs));

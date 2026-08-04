@@ -13,6 +13,7 @@
   import { Array2d, clamp, delay, groupArrayEvery, type Timer } from '$core/utils/Utilities';
   import Analytics from '$core/Analytics';
   import { ApproachingNote, type RecordedNote } from '$core/Songs/SongClasses';
+  import type { NoteStatus } from '$core/types';
   import { displayButtonForId } from '$core/Songs/noteIds';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
@@ -132,7 +133,8 @@
       const obj = new ApproachingNote({
         time: Song.roundTime((note.time - startOffset) / speedChanger.value + startDelay),
         index: note.displayButton,
-        duration: note.duration,
+        //durations scale with playback speed like the times do (matches applySpeedChange)
+        duration: note.duration / speedChanger.value,
       });
       notes.push(obj);
     }
@@ -204,6 +206,10 @@
     approachingNotes = stateNotes.map((arr) => arr.slice());
   }
 
+  // Mutates in place BY DESIGN: callers only ever pass notes of `lostReference`, the
+  // per-play clone built in the state effect below — the store's song (and anything
+  // persisted) is never touched, and every replay re-clones from the pristine original,
+  // so repeated speed changes cannot compound.
   function applySpeedChange(notes: RecordedNote[]) {
     const { speedChanger } = data;
     return notes.map((note) => {
@@ -214,9 +220,32 @@
     });
   }
 
+  //live presses currently held down, with what to restore when they lift.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping only; the visible status lives in playerStore
+  const heldVisualPresses = new Map<number, { prevStatus: NoteStatus; pressedAt: number }>();
+
+  function scheduleStatusReset(noteIndex: number, prevStatus: NoteStatus, delayMs: number) {
+    const keyboard = playerStore.keyboard;
+    timeouts[noteIndex] = setTimeout(() => {
+      timeouts[noteIndex] = 0;
+      if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[noteIndex].status))
+        return;
+      if (prevStatus === 'toClickNext')
+        return playerStore.setNoteState(noteIndex, { status: prevStatus });
+      playerStore.setNoteState(noteIndex, { status: '' });
+    }, delayMs);
+  }
+
   function handleRelease(note: ObservableNote) {
     if (!note) return;
     functions.releaseSound(note.index);
+    const held = heldVisualPresses.get(note.index);
+    if (held) {
+      heldVisualPresses.delete(note.index);
+      //stay lit at least as long as a quick tap used to (the press animation length)
+      const remaining = Math.max(0, game.notes.animationDelayMs - (Date.now() - held.pressedAt));
+      scheduleStatusReset(note.index, held.prevStatus, remaining);
+    }
   }
 
   async function playSong(song: RecordedSong, start = 0, end?: number) {
@@ -292,6 +321,7 @@
 
   async function stopSong(): Promise<void> {
     songTimestamp = 0;
+    heldVisualPresses.clear();
     playerStore.resetKeyboardLayout();
     approachingNotesList = [];
     songToPractice = [];
@@ -378,16 +408,23 @@
     //TODO could add this to the player store
     if ((timeouts[note.index] as number) > 0 && playerStore.eventType === 'play')
       clearTimeout(timeouts[note.index]);
-    //held playback notes keep the button lit for their (speed-scaled) duration
-    const litDuration = Math.max(game.notes.animationDelayMs, songNote?.duration ?? 0);
-    timeouts[note.index] = setTimeout(() => {
-      timeouts[note.index] = 0;
-      if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[note.index].status))
-        return;
-      if (prevStatus === 'toClickNext')
-        return playerStore.setNoteState(note.index, { status: prevStatus });
-      playerStore.setNoteState(note.index, { status: '' });
-    }, litDuration);
+    if (songNote) {
+      //held playback notes keep the button lit for their (speed-scaled) duration
+      scheduleStatusReset(
+        note.index,
+        prevStatus,
+        Math.max(game.notes.animationDelayMs, songNote.duration)
+      );
+    } else if (data.instrument.supportsSustain) {
+      //live press on a sustaining instrument: the button stays visually pressed until
+      //handleRelease lifts it — clear any pending reset from a previous tap so it
+      //can't unlight the hold
+      if ((timeouts[note.index] as number) > 0) clearTimeout(timeouts[note.index]);
+      heldVisualPresses.set(note.index, { prevStatus, pressedAt: Date.now() });
+    } else {
+      //non-sustaining instruments keep the plain tap animation
+      scheduleStatusReset(note.index, prevStatus, game.notes.animationDelayMs);
+    }
   }
 
   onMount(() => {
@@ -405,6 +442,20 @@
     });
     const disposeKeyboard = createKeyboardListener('player_keyboard_keys', handleKeyboard, {
       onRelease: handleKeyboardRelease,
+    });
+    //visual counterpart of Player's audio blur guard: lift held-pressed buttons whose
+    //key-up will never arrive
+    const releaseVisualsOnLeave = () => {
+      const keyboard = playerStore.keyboard;
+      [...heldVisualPresses.keys()].forEach((index) => {
+        if (keyboard[index]) handleRelease(keyboard[index]);
+      });
+    };
+    window.addEventListener('blur', releaseVisualsOnLeave);
+    document.addEventListener('visibilitychange', releaseVisualsOnLeave);
+    cleanup.push(() => {
+      window.removeEventListener('blur', releaseVisualsOnLeave);
+      document.removeEventListener('visibilitychange', releaseVisualsOnLeave);
     });
     cleanup.push(disposeShortcuts, disposeKeyboard);
 
@@ -439,7 +490,9 @@
           lostReference.notes = lostReference.notes.filter((n) => n.displayButton !== -1);
 
           lostReference.timestamp = Date.now();
-          const end = state.end || lostReference?.notes?.length || 0;
+          //clamp to the filtered count so `end` can never exceed the score `size`
+          //when stranded notes were dropped above
+          const end = Math.min(state.end || lostReference.notes.length, lostReference.notes.length);
           if (type === 'play') {
             playSong(lostReference, state.start, end);
           }
