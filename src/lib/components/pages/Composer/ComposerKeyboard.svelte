@@ -9,6 +9,7 @@
   import { t } from '$i18n/binding.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import Header from '$cmp/header/Header.svelte';
+  import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import ComposerNote from './ComposerNote.svelte';
 
   let {
@@ -43,16 +44,6 @@
     } catch {
       return null;
     }
-  });
-
-  const keyboardClass = $derived.by(() => {
-    let cls = 'keyboard';
-    const len = data.keyboard?.notes.length ?? 0;
-    if (len === 15) cls += ' keyboard-5';
-    if (len === 14) cls += ' keyboard-5';
-    if (len === 8) cls += ' keyboard-4';
-    if (len === 6) cls += ' keyboard-3';
-    return cls;
   });
 </script>
 
@@ -116,28 +107,36 @@
         {@render chevronLeftIcon()}
       </button>
     {/if}
-    <div class={keyboardClass}>
-      {#if data.keyboard.notes.length === 0}
+    {#if data.keyboard.notes.length === 0}
+      <div class="keyboard">
         <div class="loading">Loading...</div>
-      {/if}
-      {#each data.keyboard.notes as note, i (note.index)}
-        {#if layerStatuses === null}
-          Err
-        {:else}
-          <ComposerNote
-            layer={layerStatuses.get(i) ?? 0}
-            data={note}
-            noteText={data.keyboard.getNoteText(i, data.noteNameType, data.pitch)}
-            instrument={data.keyboard.name}
-            noteImage={note.noteImage}
-            clickAction={functions.handleClick}
-            releaseAction={functions.handleNoteRelease}
-            longPressAction={functions.handleNoteLongPress}
-            held={data.heldButtons.has(i)}
-          />
-        {/if}
-      {/each}
-    </div>
+      </div>
+    {:else}
+      <ShapeKeyboard
+        shape={data.keyboard.shape}
+        count={data.keyboard.notes.length}
+        class="keyboard"
+      >
+        {#snippet button(i)}
+          {@const note = data.keyboard.notes[i]}
+          {#if layerStatuses === null}
+            Err
+          {:else}
+            <ComposerNote
+              layer={layerStatuses.get(i) ?? 0}
+              data={note}
+              noteText={data.keyboard.getNoteText(i, data.noteNameType, data.pitch)}
+              instrument={data.keyboard.name}
+              noteImage={note.noteImage}
+              clickAction={functions.handleClick}
+              releaseAction={functions.handleNoteRelease}
+              longPressAction={functions.handleNoteLongPress}
+              held={data.heldButtons.has(i)}
+            />
+          {/if}
+        {/snippet}
+      </ShapeKeyboard>
+    {/if}
     {#if data.settings.useKeyboardSideButtons.value}
       <button
         onpointerdown={() => functions.selectColumnFromDirection(1)}

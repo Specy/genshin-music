@@ -1,4 +1,4 @@
-import { APP_NAME } from '$core/legacyConfig';
+import { NOTE_ANIMATION_DELAY_MS } from '$core/legacyConfig';
 import { type NoteDataState, ObservableNote } from '$lib/audio/Instrument.svelte';
 import type { NoteStatus } from '$core/types';
 
@@ -15,7 +15,7 @@ class ZenKeyboardStore {
     this.keyboard.forEach((note) =>
       note.setState({
         status: '',
-        delay: APP_NAME === 'Genshin' ? 100 : 200,
+        delay: NOTE_ANIMATION_DELAY_MS,
       })
     );
   };

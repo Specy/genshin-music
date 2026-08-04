@@ -1,14 +1,12 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
-  import { game } from '$game';
+  import { PITCHES } from '$core/sharedConfig';
   import type { Pitch } from '$lib/games/types';
 
-  // PITCHES is game-data: read from `game.notes.pitches` directly, never
-  // `$core/legacyConfig`'s PITCHES re-export. `Pitch` itself is a
-  // zero-runtime type alias, so importing it directly from
-  // `$lib/games/types` isn't a two-tier violation - only reading game-data
-  // VALUES through the wrong tier is.
+  // PITCHES stopped being game-data with ADR-0003: it is shared music theory
+  // (was byte-identical in both GameDefinitions), so it now lives in
+  // $core/sharedConfig — a legitimate shared-constant import for UI code.
   let {
     selected,
     onChange,
@@ -36,7 +34,7 @@
   value={selected}
 >
   {@render children?.()}
-  {#each game.notes.pitches as pitch (pitch)}
+  {#each PITCHES as pitch (pitch)}
     <option>{pitch}</option>
   {/each}
 </select>

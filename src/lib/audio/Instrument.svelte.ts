@@ -1,8 +1,12 @@
 // Imports value data directly from $core/legacyConfig rather than $game - see that file's own
 // header for the audio-engine-tier carve-out this file and MIDIProvider.ts are on.
+// EXCEPTION (ADR-0003): the Shape registry is code, not adapter data — it rides on the
+// GameDefinition itself, so `game` is imported for `game.shapes` (and game.id for the
+// URL-locked audio path, which equals the old APP_NAME.toLowerCase()).
 import { base } from '$app/paths';
+import { game } from '$game';
 import {
-  APP_NAME,
+  DEFAULT_NOTE_ICON,
   DO_RE_MI_NOTE_SCALE,
   INSTRUMENTS,
   INSTRUMENTS_DATA,
@@ -13,7 +17,7 @@ import {
 } from '$core/legacyConfig';
 import type { InstrumentName, NoteStatus } from '$core/types';
 import { capitalize, getPitchChanger } from '$core/utils/Utilities';
-import type { BaseNote, InstrumentSustainConfig, NoteImage } from '$lib/games/types';
+import type { BaseNote, InstrumentSustain, NoteImage, ShapeDefinition } from '$lib/games/types';
 import { Voice } from '$lib/audio/Voice';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
 import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
@@ -61,13 +65,18 @@ export class Instrument {
     return this.volumeNode;
   }
 
-  get sustainConfig(): InstrumentSustainConfig | null {
+  get sustainConfig(): InstrumentSustain | null {
     return this.instrumentData.sustain ?? null;
   }
 
   /** Whether this instrument can hold notes (spec 2026-08-03: capability, per instrument). */
   get supportsSustain() {
     return this.sustainConfig !== null;
+  }
+
+  /** The instrument's Shape (ADR-0003) — keyboard surfaces render through this. */
+  get shape(): ShapeDefinition {
+    return game.shapes[this.instrumentData.shape];
   }
 
   static clearPool() {
@@ -77,32 +86,26 @@ export class Instrument {
   constructor(name: InstrumentName = INSTRUMENTS[0]) {
     this.name = name;
     if (!INSTRUMENTS.includes(this.name)) this.name = INSTRUMENTS[0];
-    this.instrumentData = { ...INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA] };
-    const layouts = this.instrumentData.layout;
+    this.instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA];
+    // Label Sets ride on the Shape, not the instrument (ADR-0003).
+    const labels = this.shape.labels;
     this.layouts = {
-      keyboard: [...layouts.keyboardLayout],
-      abc: [...layouts.abcLayout],
-      playstation: [...layouts.playstationLayout],
-      // numberLayout is typed optional, but every layout entry in both GameDefinitions sets
-      // it, so this assertion is safe.
-      number: [...layouts.numberLayout!],
-      switch: [...layouts.switchLayout],
+      keyboard: [...labels.keyboard],
+      abc: [...labels.abc],
+      playstation: [...labels.playstation],
+      number: [...labels.number],
+      switch: [...labels.switch],
     };
-    for (let i = 0; i < this.instrumentData.notes; i++) {
+    for (const [i, configNote] of this.instrumentData.notes.entries()) {
       const noteName = this.layouts.keyboard[i];
       const noteNames = {
         keyboard: noteName,
       };
-      const url = `${base}/assets/audio/${APP_NAME.toLowerCase()}/${this.name}/${i}.mp3`;
-      const note = new ObservableNote(
-        i,
-        noteNames,
-        url,
-        this.instrumentData.baseNotes[i],
-        this.instrumentData.midiNotes[i] ?? 0
-      );
+      // URL-locked path (§5.3 / ADR-0003): game id = the old APP_NAME.toLowerCase().
+      const url = `${base}/assets/audio/${game.id}/${this.name}/${configNote.file}`;
+      const note = new ObservableNote(i, noteNames, url, configNote.baseNote, configNote.midi ?? 0);
       note.instrument = this.name;
-      note.noteImage = this.instrumentData.icons[i];
+      note.noteImage = configNote.icon;
       this.notes.push(note);
     }
   }
@@ -219,7 +222,8 @@ export class Instrument {
       buffer,
       destination: this.volumeNode,
       playbackRate: getPitchChanger(pitch),
-      loop: sustain.noteLoops?.[button] ?? sustain.loop,
+      // per-note loop override lives on the note itself (ADR-0003)
+      loop: this.instrumentData.notes[button]?.loop ?? sustain.loop,
       release: sustain.release,
       crossfade: sustain.crossfade,
       delay: options?.delay,
@@ -337,7 +341,7 @@ export type NoteDataState = {
 
 export class ObservableNote {
   index: number;
-  noteImage: NoteImage = APP_NAME === 'Genshin' ? 'do' : 'cr';
+  noteImage: NoteImage = DEFAULT_NOTE_ICON;
   midiNote: number;
   instrument: InstrumentName = INSTRUMENTS[0];
   noteNames: NoteName;

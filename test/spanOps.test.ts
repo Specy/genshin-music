@@ -4,7 +4,7 @@ import {describe, expect, it} from 'vitest'
 import {ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, NoteColumn} from './imports'
 
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].midiNotes[button]
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
 }
 
 function makeSong(): ComposedSong {

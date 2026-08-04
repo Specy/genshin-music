@@ -108,10 +108,10 @@ describe('VisualSong short-instrument rows (pre-v4 parity)', () => {
     it("a short instrument's notes render at their OWN button, not the default instrument's position for that id", () => {
         // pre-v4, the stored index WAS the own-instrument button — the row must not move
         const short = INSTRUMENTS.find(name =>
-            INSTRUMENTS_DATA[name].midiNotes.length < INSTRUMENTS_DATA[INSTRUMENTS[0]].midiNotes.length
+            INSTRUMENTS_DATA[name].notes.length < INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.length
         )
         if (!short) throw new Error('no short instrument in this game to test with')
-        const table = INSTRUMENTS_DATA[short].midiNotes
+        const table = INSTRUMENTS_DATA[short].notes.map((n) => n.midi)
         const button = table.length - 1
         const song = new ComposedSong('short', [short])
         song.columns[0].addNote(0, table[button])

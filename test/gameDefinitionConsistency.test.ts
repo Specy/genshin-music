@@ -28,14 +28,20 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
     // fails because an instrument was DELIBERATELY retuned: do NOT edit the frozen
     // tables (they must stay as the legacy formats knew them); update or remove this
     // test consciously instead.
-    it('every frozen table equals the live midiNotes of the same instrument', () => {
+    it('every frozen table equals the live Note Ids of the same instrument', () => {
         const frozen = LEGACY_NOTE_TABLES[APP_NAME]
         expect(frozen.defaultInstrument).toBe(INSTRUMENTS[0])
         expect(frozen.perColumn).toBe(NOTES_PER_COLUMN)
+        // Names whose LIVE data entry was removed (ADR-0003): Aurora_Short was an
+        // orphaned data key with no audio folder, unreachable through the INSTRUMENTS
+        // constructor guard. Its frozen table stays (legacy files may name it), but
+        // there is deliberately no live instrument to compare against anymore.
+        const DROPPED_LIVE_INSTRUMENTS = new Set(['Aurora_Short'])
         for (const [name, table] of Object.entries(frozen.tables)) {
+            if (DROPPED_LIVE_INSTRUMENTS.has(name)) continue
             const live = game.instruments.data[name]
             expect(live, `frozen table for unknown instrument "${name}"`).toBeTruthy()
-            expect([...table], `table mismatch for "${name}"`).toEqual([...live.midiNotes])
+            expect([...table], `table mismatch for "${name}"`).toEqual(live.notes.map((n) => n.midi))
         }
         //and every live instrument has a frozen table (new instruments added after the
         //freeze belong in the similarity map + live data only, never in the freeze —

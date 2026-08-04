@@ -91,47 +91,8 @@ export type NoteImage =
 // comments for the full per-instrument-tint recipe.
 export type GlyphComponent = import('svelte').Component<{ background?: string; color?: string }>;
 
-export type LayoutKeys = {
-  // typeof LAYOUT_KINDS[keyof …]
-  keyboardLayout: string[];
-  numberLayout?: string[];
-  abcLayout: string[];
-  playstationLayout: string[];
-  switchLayout: string[];
-};
-
 /** A loop region inside a note sample, in seconds. */
 export type LoopRegion = { start: number; end: number };
-
-/**
- * Sustain capability of an instrument (spec 2026-08-03 §7). Absent = one-shot
- * instrument (every pre-format-v4 instrument). While a note is held the engine loops
- * the region; on release it crossfades into the sample's natural post-loop tail.
- */
-export type InstrumentSustainConfig = {
-  /** Safety fade at the end of the sample tail; also used when no tail is available. */
-  release: number;
-  /** Sustain-loop to natural-tail crossfade in seconds (default 0.02). */
-  crossfade?: number;
-  /** Default loop region, used for every note without an override. */
-  loop: LoopRegion;
-  /** Per-note (button-indexed) overrides; null entries fall back to `loop`. */
-  noteLoops?: readonly (LoopRegion | null)[];
-};
-
-export type InstrumentDataType = {
-  // src/Config.ts InstrumentDataType
-  notes: number;
-  family: string;
-  midiName: string;
-  baseNotes: readonly BaseNote[];
-  layout: LayoutKeys;
-  icons: readonly NoteImage[];
-  midiNotes: readonly number[];
-  clickColor?: string;
-  fill?: string;
-  sustain?: InstrumentSustainConfig;
-};
 
 // ---- folder-based config runtime types (ADR-0003) ----------------------------
 // The normalized shapes the registry produces from the authored JSON (see
@@ -268,13 +229,13 @@ export interface GameDefinition {
     updateChannelKey: StorageId; // key into updates.json (= storageId)
   };
 
-  // ── note geometry / rendering data ────────────────────────────────────────
+  // ── note rendering data + the game-canonical Song Grid ────────────────────
+  // Song-wide surfaces (composer canvas, sheet visualizer, VSRG) render THIS
+  // grid regardless of any instrument's Shape. Music theory (pitches/scales)
+  // lives in $core/sharedConfig since ADR-0003, not here.
   notes: {
     perColumn: number; // NOTES_PER_COLUMN (21 | 15)
-    perRow: number; // keyboard cols/row (7 | 5)
-    pitches: readonly Pitch[]; // PITCHES
-    scale: Readonly<Record<BaseNote, readonly string[]>>; // NOTE_SCALE
-    doReMiScale: Readonly<Record<BaseNote, readonly string[]>>; // DO_RE_MI_NOTE_SCALE
+    perRow: number; // Song Grid cols/row (7 | 5)
     cssClasses: NotesCssClasses; // NOTES_CSS_CLASSES
     nameTypes: NoteNameType[]; // NOTE_NAME_TYPES
     composerPositions: number[]; // COMPOSER_NOTE_POSITIONS
@@ -287,21 +248,16 @@ export interface GameDefinition {
     svgGlyphs: Readonly<Partial<Record<NoteImage, GlyphComponent>>>; // per-game SvgNote glyph map
   };
 
-  // ── instrument layout building blocks (referenced by instruments.data) ─────
-  layouts: {
-    layoutKinds: Readonly<Record<string, LayoutKeys>>; // LAYOUT_KINDS
-    iconKinds: Readonly<Record<string, readonly NoteImage[]>>; // LAYOUT_ICONS_KINDS
-    noteLayoutKinds: Readonly<Record<string, readonly BaseNote[]>>; // INSTRUMENT_NOTE_LAYOUT_KINDS
-    midiLayoutKinds: Readonly<Record<string, readonly number[]>>; // INSTRUMENT_MIDI_LAYOUT_KINDS
-    defaultKeyboardKeys: string[]; // KeybindsStore default row
-  };
+  // ── Shapes (ADR-0003): the game's registered keyboard arrangements ─────────
+  shapes: Readonly<Record<ShapeId, ShapeDefinition>>;
 
-  // ── instruments ───────────────────────────────────────────────────────────
+  // ── instruments (normalized from the game folder's JSON by defineGame) ─────
   instruments: {
-    list: readonly string[]; // INSTRUMENTS (song appName-independent order)
-    data: Readonly<Record<string, InstrumentDataType>>; // INSTRUMENTS_DATA (may hold extra keys, e.g. Sky Aurora_Short)
+    list: readonly string[]; // INSTRUMENTS (ordered menu roster)
+    // Every instruments/<Name>/ folder, INCLUDING Unlisted Instruments (in data,
+    // absent from list — loadable by the engine, hidden from menus).
+    data: Readonly<Record<string, InstrumentDefinition>>; // INSTRUMENTS_DATA
     defaultVolume: number; // Track/SongClasses default (90 | 100)
-    audioFolder: GameId; // audio sample dir (= id); URL locked §5.3
   };
 
   // ── MIDI ──────────────────────────────────────────────────────────────────

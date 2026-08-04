@@ -18,7 +18,7 @@
 
 <script lang="ts">
   import { base } from '$app/paths';
-  import { game } from '$game';
+  import { PITCHES } from '$core/sharedConfig';
   import type { Pitch } from '$lib/games/types';
   import { basicPitchLoader } from '$lib/audio/BasicPitchLoader';
   import { logger } from '$stores/LoggerStore.svelte';
@@ -184,7 +184,7 @@
       fileName = name;
       bpm = Math.floor(midiBpm * 4) || 220;
       offset = 0;
-      pitch = game.notes.pitches.find((candidate) => candidate === key) ?? 'C';
+      pitch = PITCHES.find((candidate) => candidate === key) ?? 'C';
       if (tracks.length) convertMidi();
     } catch (e) {
       console.error(e);

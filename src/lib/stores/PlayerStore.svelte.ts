@@ -7,7 +7,7 @@
 // instance with a custom prototype is stored by reference, unproxied. instanceof
 // RecordedSong/ComposedSong checks on playerStore.song downstream therefore see the real
 // instance, not a proxy.
-import { APP_NAME } from '$core/legacyConfig';
+import { NOTE_ANIMATION_DELAY_MS } from '$core/legacyConfig';
 import { type NoteDataState, ObservableNote } from '$lib/audio/Instrument.svelte';
 import { ComposedSong } from '$core/Songs/ComposedSong';
 import { RecordedSong } from '$core/Songs/RecordedSong';
@@ -54,7 +54,7 @@ class PlayerStore {
     this.keyboard.forEach((note) =>
       note.setState({
         status: '',
-        delay: APP_NAME === 'Genshin' ? 100 : 200,
+        delay: NOTE_ANIMATION_DELAY_MS,
         holdMs: 0,
       })
     );

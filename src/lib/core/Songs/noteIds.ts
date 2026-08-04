@@ -24,12 +24,19 @@ function isInstrumentName(name: RuntimeInstrumentName): name is keyof Instrument
     return name in INSTRUMENTS_DATA
 }
 
+// Per-instrument id tables derived once from the note structs (ADR-0003: notes are
+// {midi, ...} entities; the old parallel `midiNotes` array is derived, not stored).
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- build-time constants cache
+const idTableCache = new Map<string, readonly number[]>()
+
 /** Ordered Note Id list (button b plays table[b]) of an instrument; unknown names use the default instrument's, matching the legacy `new Instrument(name)` guard. */
 export function getNoteIdTable(instrumentName: RuntimeInstrumentName): readonly number[] {
-    const data = isInstrumentName(instrumentName)
-        ? INSTRUMENTS_DATA[instrumentName]
-        : INSTRUMENTS_DATA[DEFAULT_INSTRUMENT]
-    return data.midiNotes
+    const name = isInstrumentName(instrumentName) ? instrumentName : DEFAULT_INSTRUMENT
+    const cached = idTableCache.get(name)
+    if (cached) return cached
+    const table = INSTRUMENTS_DATA[name].notes.map((note) => note.midi)
+    idTableCache.set(name, table)
+    return table
 }
 
 // QUIRK: plain module-level Map cache, not reactive - instrument tables are build-time
