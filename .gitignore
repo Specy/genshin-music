@@ -16,6 +16,10 @@
 /static/robots.txt
 /static/manifest.json
 /static/manifestData
+# per-game audio overlay (ADR-0003: samples live in src/lib/games/<id>/instruments/,
+# copied to the URL-locked paths by scripts/gameStatic.js)
+/static/assets/audio/genshin
+/static/assets/audio/sky
 
 # testing
 /coverage

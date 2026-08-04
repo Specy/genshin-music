@@ -1,0 +1,48 @@
+{
+  "displayName": "HandPan",
+  "family": "percussive",
+  "midiName": "steel drums",
+  "shape": "sky-2x4",
+  "notes": [
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "cr"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "midi": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 77,
+      "baseNote": "F",
+      "icon": "cr"
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "dm"
+    },
+    {
+      "midi": 81,
+      "baseNote": "A",
+      "icon": "cr"
+    },
+    {
+      "midi": 84,
+      "baseNote": "C",
+      "icon": "dm"
+    }
+  ]
+}

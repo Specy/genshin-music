@@ -1,0 +1,48 @@
+{
+  "displayName": "Bells",
+  "family": "chromatic percussion",
+  "midiName": "tubular bells",
+  "shape": "sky-2x4",
+  "notes": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "midi": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "midi": 81,
+      "baseNote": "A",
+      "icon": "dm"
+    }
+  ]
+}

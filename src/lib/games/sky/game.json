@@ -1,0 +1,195 @@
+{
+  "id": "sky",
+  "storageId": "Sky",
+  "display": {
+    "name": "Sky",
+    "company": {
+      "name": "thatgamecompany",
+      "shortName": "TGC"
+    },
+    "transferOrigins": [
+      "https://sky-music.specy.app",
+      "https://beta.sky-music.specy.app",
+      "https://specy.github.io/skyMusic"
+    ]
+  },
+  "meta": {
+    "title": "Sky Music Nightly",
+    "description": "Sky music nightly, a website to play, practice and compose songs",
+    "themeColor": "#63aea7",
+    "analytics": {
+      "tagId": "G-YEHPSLXGYT",
+      "configId": "G-YEHPSLXGYT"
+    },
+    "updateChannelKey": "Sky"
+  },
+  "notes": {
+    "perColumn": 15,
+    "perRow": 5,
+    "cssClasses": {
+      "noteComposer": "note-composer-sky",
+      "note": "note-sky",
+      "noteAnimation": "note-animation-sky",
+      "approachCircle": "approach-circle-sky",
+      "noteName": "note-name-sky"
+    },
+    "nameTypes": [
+      "Note name",
+      "Keyboard layout",
+      "Your Keyboard layout",
+      "Do Re Mi",
+      "ABC",
+      "No Text",
+      "Playstation",
+      "Switch",
+      "1 2 3"
+    ],
+    "composerPositions": [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 19, 18, 17, 16, 15],
+    "importPositions": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    "animationDelayMs": 200,
+    "composerRowHeightScale": 0.95,
+    "defaultIcon": "cr",
+    "visualNameCasing": "uppercase"
+  },
+  "instruments": {
+    "list": [
+      "Piano",
+      "GrandPiano",
+      "Contrabass",
+      "Guitar",
+      "LightGuitar",
+      "Harp",
+      "Horn",
+      "Trumpet",
+      "Pipa",
+      "WinterPiano",
+      "Xylophone",
+      "Flute",
+      "Panflute",
+      "Ocarina",
+      "MantaOcarina",
+      "Aurora",
+      "test_sustain",
+      "Kalimba",
+      "ToyUkulele",
+      "Drum",
+      "Bells",
+      "DunDun",
+      "HandPan",
+      "SFX_SineSynth",
+      "SFX_BassSynth",
+      "SFX_ChimeSynth",
+      "SFX_TR-909",
+      "SFX_Dance",
+      "SFX_BirdCall",
+      "SFX_CrabCall",
+      "SFX_FishCall",
+      "SFX_SpiritMantaCall",
+      "SFX_JellyCall",
+      "SFX_MantaCall",
+      "SFX_MothCall"
+    ],
+    "defaultVolume": 100
+  },
+  "midi": {
+    "mapToNote": {
+      "60": [60, false],
+      "61": [60, true],
+      "62": [62, false],
+      "63": [62, true],
+      "64": [64, false],
+      "65": [65, false],
+      "66": [65, true],
+      "67": [67, false],
+      "68": [67, true],
+      "69": [69, false],
+      "70": [69, true],
+      "71": [71, false],
+      "72": [72, false],
+      "73": [72, true],
+      "74": [74, false],
+      "75": [74, true],
+      "76": [76, false],
+      "77": [77, false],
+      "78": [77, true],
+      "79": [79, false],
+      "80": [79, true],
+      "81": [81, false],
+      "82": [81, true],
+      "83": [83, false],
+      "84": [84, false]
+    },
+    "bounds": {
+      "upper": 84,
+      "lower": 60
+    },
+    "presets": [
+      {
+        "name": "default",
+        "notes": [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84]
+      }
+    ]
+  },
+  "composer": {
+    "tempoChangers": [
+      {
+        "id": 0,
+        "text": "1",
+        "changer": 1,
+        "color": 5332079
+      },
+      {
+        "id": 1,
+        "text": "1/2",
+        "changer": 0.5,
+        "color": 5338451
+      },
+      {
+        "id": 2,
+        "text": "1/4",
+        "changer": 0.25,
+        "color": 4410493
+      },
+      {
+        "id": 3,
+        "text": "1/8",
+        "changer": 0.125,
+        "color": 7818605
+      }
+    ]
+  },
+  "themes": {
+    "baseConfig": {
+      "text": {
+        "light": "#eae8e6",
+        "dark": "#151414",
+        "note": "#eae8e6"
+      }
+    },
+    "defaultNoteBackground": "#495466"
+  },
+  "settings": {
+    "defaultNoteNameType": {
+      "composer": {
+        "desktop": "Note name",
+        "mobile": "Note name"
+      },
+      "player": {
+        "desktop": "Note name",
+        "mobile": "Note name"
+      },
+      "zen": {
+        "desktop": "No Text",
+        "mobile": "No Text"
+      },
+      "sheetVisualizer": "ABC"
+    }
+  },
+  "features": {
+    "hasNoteFrame": false,
+    "downloadsSongsInOldFormat": true
+  },
+  "i18n": {
+    "updateMessage": "Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout"
+  }
+}

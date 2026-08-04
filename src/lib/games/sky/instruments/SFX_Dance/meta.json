@@ -1,0 +1,38 @@
+{
+  "displayName": "Dance",
+  "family": "percussive",
+  "midiName": "synth drum",
+  "shape": "sky-2x3",
+  "notes": [
+    {
+      "midi": 60,
+      "baseNote": "",
+      "icon": "cr"
+    },
+    {
+      "midi": 62,
+      "baseNote": "",
+      "icon": "dm"
+    },
+    {
+      "midi": 64,
+      "baseNote": "",
+      "icon": "cr"
+    },
+    {
+      "midi": 65,
+      "baseNote": "",
+      "icon": "cr"
+    },
+    {
+      "midi": 67,
+      "baseNote": "",
+      "icon": "dm"
+    },
+    {
+      "midi": 69,
+      "baseNote": "",
+      "icon": "cr"
+    }
+  ]
+}
