@@ -1,0 +1,115 @@
+{
+  "displayName": "Vintage Lyre",
+  "family": "strings",
+  "midiName": "pizzicato strings",
+  "fill": "#7FB363",
+  "clickColor": "#7FB363",
+  "shape": "genshin-3x7",
+  "notes": [
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 74,
+      "baseNote": "Db",
+      "icon": "reb"
+    },
+    {
+      "midi": 76,
+      "baseNote": "Eb",
+      "icon": "mib"
+    },
+    {
+      "midi": 77,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 81,
+      "baseNote": "Ab",
+      "icon": "lab"
+    },
+    {
+      "midi": 83,
+      "baseNote": "Bb",
+      "icon": "tib"
+    },
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 64,
+      "baseNote": "Eb",
+      "icon": "mib"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "midi": 71,
+      "baseNote": "Bb",
+      "icon": "tib"
+    },
+    {
+      "midi": 48,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 50,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 52,
+      "baseNote": "Eb",
+      "icon": "mib"
+    },
+    {
+      "midi": 53,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 55,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 57,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "midi": 59,
+      "baseNote": "Bb",
+      "icon": "tib"
+    }
+  ]
+}

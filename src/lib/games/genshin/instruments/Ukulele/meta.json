@@ -1,0 +1,9 @@
+{
+  "displayName": "Ukulele",
+  "family": "strings",
+  "midiName": "pizzicato strings",
+  "fill": "#4d719a",
+  "clickColor": "#6586d9",
+  "shape": "genshin-3x7",
+  "notes": "ukulele-21"
+}
