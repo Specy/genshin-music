@@ -430,7 +430,7 @@
     startColumn: number;
     trackIndex: number;
     id: number;
-    anchor: { x: number; y: number; width: number };
+    anchor: HTMLElement;
   } | null = $state(null);
   let notePress: {
     id: number;
@@ -491,7 +491,10 @@
     }
   }
 
-  function handleNoteLongPress(note: ObservableNote, anchor: DOMRect) {
+  function handleNoteLongPress(note: ObservableNote, anchor: HTMLElement) {
+    //durations are only authorable on instruments that can actually sustain — long-press
+    //does nothing on the others (the press still completes as a normal tap)
+    if (!layers[layer]?.supportsSustain) return;
     const press = notePress;
     if (!press || press.id !== note.midiNote) return;
     press.longPressFired = true;
@@ -502,7 +505,7 @@
       startColumn,
       trackIndex: layer,
       id: press.id,
-      anchor: { x: anchor.x, y: anchor.y, width: anchor.width },
+      anchor,
     };
   }
 
@@ -792,7 +795,8 @@
     song.selectedColumn.notes.forEach((note) => {
       const button = layers[note.trackIndex]?.getButtonFromId(note.id) ?? -1;
       if (button === -1) return; //stranded on its instrument = silent
-      playSound(note.trackIndex, button, delay, spanDurationMs(note.span));
+      //held length only during playback — manually browsing columns previews a short tap
+      playSound(note.trackIndex, button, delay, isPlaying ? spanDurationMs(note.span) : undefined);
     });
   }
 

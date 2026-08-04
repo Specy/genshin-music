@@ -129,18 +129,18 @@ class SongService {
         if (APP_NAME === 'Genshin' && song.data?.appName === 'Sky') {
             //two cross-game paths (spec 2026-08-03 §6): legacy files reproduce the historic
             //index remap inside deserialize(importInto); new-format files carry their Note
-            //Ids and octave-fold via toGenshin()
+            //Ids and convert via toOtherGame (similar-instrument roster + octave-fold)
             if (song.type === 'vsrg') {
-                if (song.version === 2) return VsrgSong.deserialize(song).toGenshin()
+                if (song.version === 2) return VsrgSong.deserialize(song).toOtherGame(APP_NAME)
                 return VsrgSong.deserialize(song, APP_NAME)
             }
             //always put those below because of the legacy format
             if (song.type === 'composed' || song.data?.isComposedVersion === true) {
-                if (song.version === 4) return ComposedSong.deserialize(song).toGenshin()
+                if (song.version === 4) return ComposedSong.deserialize(song).toOtherGame(APP_NAME)
                 return ComposedSong.deserialize(song, APP_NAME)
             }
             if (song.type === 'recorded' || song.data?.isComposedVersion === false) {
-                if (song.version === 3) return RecordedSong.deserialize(song).toGenshin()
+                if (song.version === 3) return RecordedSong.deserialize(song).toOtherGame(APP_NAME)
                 return RecordedSong.deserialize(song, APP_NAME)
             }
         }

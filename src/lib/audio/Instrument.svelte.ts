@@ -234,7 +234,17 @@ export class Instrument {
     voice.release();
   };
 
-  /** Release everything sounding — ramped (blur/visibility loss, playback stop) or hard (teardown). */
+  /**
+   * Release only the LIVE held voices (key-still-down registry) — the missed-key-up
+   * guard for blur/visibility loss. Scheduled playback voices are untouched so music
+   * keeps playing in a background tab.
+   */
+  releaseHeldNotes = () => {
+    this.heldVoices.forEach((voice) => voice.release());
+    this.heldVoices.clear();
+  };
+
+  /** Release everything sounding, live and scheduled — ramped (playback stop) or hard (teardown). */
   releaseAllNotes = (hard = false) => {
     this.heldVoices.clear();
     this.activeVoices.forEach((voice) => (hard ? voice.stop() : voice.release()));

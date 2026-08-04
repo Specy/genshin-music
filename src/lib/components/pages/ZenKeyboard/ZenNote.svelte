@@ -21,6 +21,7 @@
     noteText,
     instrumentName,
     keyPadding,
+    held = false,
   }: {
     note: ObservableNote;
     noteText: string;
@@ -29,11 +30,53 @@
     keyPadding: number;
     onClick: (note: ObservableNote) => void;
     onRelease?: (note: ObservableNote) => void;
+    /** Button is currently physically held (pointer or bound key) — shown pressed-down. */
+    held?: boolean;
   } = $props();
 
   let status: NoteStatus = $state('');
   let statusId = $state(0);
   let ref: HTMLDivElement | undefined = $state();
+
+  // ── held-note animation sequencing (sustaining instruments only — `held` is never
+  // set for the others, which keep the single fire-and-forget press animation) ──
+  // Press: the usual start animation fires via the store (animationId effect below);
+  // AFTER it, the button settles into the pressed-down look. Release: the pressed look
+  // lifts and the same animation replays as the release flourish. Sequencing instead
+  // of firing both at once is what removes the choppiness.
+  const START_ANIMATION_MS = game.features.hasNoteFrame ? 120 : 250;
+  let pressedVisual = $state(false);
+  let pressTimeout: ReturnType<typeof setTimeout> | 0 = 0;
+
+  $effect(() => {
+    if (held) {
+      clearTimeout(pressTimeout);
+      pressTimeout = setTimeout(() => {
+        pressedVisual = true;
+      }, START_ANIMATION_MS);
+    } else {
+      clearTimeout(pressTimeout);
+      pressTimeout = 0;
+      if (untrack(() => pressedVisual)) {
+        pressedVisual = false;
+        playReleaseAnimation();
+      }
+    }
+  });
+
+  function playReleaseAnimation() {
+    if (game.features.hasNoteFrame) {
+      status = 'clicked';
+      untrack(() => {
+        statusId += 1;
+      });
+      setTimeout(() => {
+        status = '';
+      }, 100);
+    } else {
+      ref?.animate(skyKeyframes, { duration: 400 });
+    }
+  }
 
   // No explicit `Keyframe[]` annotation (TS infers it structurally, which is all
   // `.animate()` needs) - the global `Keyframe` type identifier trips this repo's plain
@@ -159,7 +202,13 @@
       ></div>
     {/key}
   {/if}
-  <div bind:this={ref} class={className}>
+  <div
+    bind:this={ref}
+    class={className}
+    style="transition:transform 120ms ease,filter 120ms ease;{pressedVisual
+      ? 'transform:scale(0.88);filter:brightness(1.15)'
+      : ''}"
+  >
     {#if game.features.hasNoteFrame}
       <GenshinNoteBorder class="genshin-border" fill={parseBorderFill(status)} />
     {/if}

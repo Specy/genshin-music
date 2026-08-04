@@ -35,22 +35,48 @@ export class Voice {
 
   constructor(options: VoiceOptions) {
     this.context = options.context;
-    this.releaseS = options.release;
+    //instrument metadata is authored data — sanitize before it reaches Web Audio, where
+    //negative/NaN values throw or produce browser-dependent behavior
+    this.releaseS = Number.isFinite(options.release)
+      ? Math.min(60, Math.max(0, options.release))
+      : 0.1;
     this.gain = options.context.createGain();
     this.gain.gain.value = 1;
     this.source = options.context.createBufferSource();
     this.source.buffer = options.buffer;
-    this.source.playbackRate.value = options.playbackRate;
-    if (options.loop) {
+    this.source.playbackRate.value =
+      Number.isFinite(options.playbackRate) && options.playbackRate > 0 ? options.playbackRate : 1;
+    const loop = Voice.sanitizeLoop(options.loop, options.buffer.duration);
+    if (loop) {
       this.source.loop = true;
-      this.source.loopStart = options.loop.start;
-      this.source.loopEnd = options.loop.end;
+      this.source.loopStart = loop.start;
+      this.source.loopEnd = loop.end;
     }
     this.source.connect(this.gain);
     this.gain.connect(options.destination);
-    this.startedAt = options.context.currentTime + (options.delay ?? 0);
-    this.source.start(options.delay ? this.startedAt : undefined);
+    const delay =
+      Number.isFinite(options.delay as number) && (options.delay as number) > 0
+        ? (options.delay as number)
+        : 0;
+    this.startedAt = options.context.currentTime + delay;
+    this.source.start(delay ? this.startedAt : undefined);
     this.source.addEventListener('ended', this.dispose, { once: true });
+  }
+
+  /** A loop region is used only when its bounds are finite, ordered, and inside the sample; anything else falls back to one-shot playback (still audible, never invalid automation). */
+  private static sanitizeLoop(
+    loop: LoopRegion | null | undefined,
+    bufferDuration: number
+  ): LoopRegion | null {
+    if (!loop) return null;
+    if (!Number.isFinite(loop.start) || !Number.isFinite(loop.end)) return null;
+    const start = Math.max(0, loop.start);
+    const end =
+      Number.isFinite(bufferDuration) && bufferDuration > 0
+        ? Math.min(loop.end, bufferDuration)
+        : loop.end;
+    if (end <= start) return null;
+    return { start, end };
   }
 
   get isReleased() {

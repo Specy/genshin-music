@@ -1,6 +1,6 @@
 import {Buffer} from 'node:buffer'
 import {describe, expect, it} from 'vitest'
-import {APP_NAME, ComposedSong, songService, VsrgSong} from './imports'
+import {APP_NAME, ComposedSong, RecordedSong, songService, VsrgSong} from './imports'
 import {buildComposedSong, buildRecordedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
 
@@ -70,6 +70,77 @@ describe('cross-game import conversion (Genshin build only)', () => {
         const preV2Output = readFixture('vsrg-conversion')
         expect(JSON.parse(JSON.stringify(VsrgSong.deserialize(preV2Output).serialize())))
             .toEqual(JSON.parse(JSON.stringify(parsed.serialize())))
+    })
+
+    // NEW-format (v4/v3/vsrg-v2) cross-game path: toOtherGame — similar-instrument roster
+    // swap + octave-fold + invariant re-enforcement. This is the branch the legacy payloads
+    // above never reach.
+    it.runIf(APP_NAME === 'Genshin')('Sky v4 composed song converts via toOtherGame (similarity roster, fold, span invariant)', () => {
+        const skyInstrument = (name: string) => ({
+            name, volume: 100, pitch: '', visible: true,
+            icon: 'circle', alias: '', muted: false, reverbOverride: null,
+        })
+        const payload = {
+            id: null, folderId: null, name: 'Sky v4 import', type: 'composed', version: 4,
+            bpm: 220, pitch: 'C',
+            data: {isComposed: true, isComposedVersion: true, appName: 'Sky'},
+            reverb: false, breakpoints: [0],
+            columnTempos: [0, 0, 0, 0, 0, 0],
+            tracks: [
+                //id 84 (Sky top C) held 5 columns + a plain id 72 at column 2: the fold
+                //lands 84 on 72, and the span must truncate before the column-2 note
+                {instrument: skyInstrument('Harp'), notes: [[0, 84, 5], [2, 72]]},
+                {instrument: skyInstrument('Bells'), notes: [[1, 79]]},
+            ],
+        }
+        const parsed = songService.parseSong(JSON.parse(JSON.stringify(payload))) as ComposedSong
+        //similar-instrument roster swap (settings preserved, name swapped)
+        expect(parsed.instruments[0].name).toBe('Lyre')
+        expect(parsed.instruments[1].name).toBe('HarmonicKey')
+        expect(parsed.data.appName).toBe('Genshin')
+        //84 folded into Lyre's range → 72; collision-free here, span truncated at column 2
+        const held = parsed.columns[0].findNote(0, 72)!
+        expect(held.span).toBe(2)
+        expect(parsed.columns[2].findNote(0, 72)).toBeTruthy()
+        expectGolden('new-format-conversion', parsed.serialize())
+    })
+
+    it.runIf(APP_NAME === 'Genshin')('Sky v3 recorded fold collisions keep the longest duration', () => {
+        const payload = {
+            id: null, folderId: null, name: 'Sky v3 import', type: 'recorded', version: 3,
+            bpm: 220, pitch: 'C', reverb: false,
+            data: {isComposed: false, isComposedVersion: false, appName: 'Sky'},
+            tracks: [{
+                instrument: {
+                    name: 'Harp', volume: 100, pitch: '', visible: true,
+                    icon: 'circle', alias: '', muted: false, reverbOverride: null,
+                },
+                //same timestamp: a tap on 72 and a 2s hold on 84 (folds onto 72) —
+                //the merged note must keep the hold, not become a tap
+                notes: [[72, 1000], [84, 1000, 2000]],
+            }],
+        }
+        const parsed = songService.parseSong(JSON.parse(JSON.stringify(payload))) as RecordedSong
+        expect(parsed.instruments[0].name).toBe('Lyre')
+        const notesAt1000 = parsed.notes.filter(n => n.time === 1000)
+        expect(notesAt1000.length).toBe(1)
+        expect(notesAt1000[0].id).toBe(72)
+        expect(notesAt1000[0].duration).toBe(2000)
+    })
+
+    it.runIf(APP_NAME === 'Genshin')('Sky vsrg v2 converts via toOtherGame and rewrites appName', () => {
+        const payload = {
+            ...JSON.parse(JSON.stringify(SKY_VSRG_PAYLOAD)),
+            version: 2,
+        }
+        //v2 hit objects hold ids already
+        payload.tracks[0].instrument.name = 'Bells'
+        payload.tracks[0].hitObjects = [[0, 500, 0, [60, 79]]]
+        const parsed = songService.parseSong(payload) as VsrgSong
+        expect(parsed.tracks[0].instrument.name).toBe('HarmonicKey')
+        //unlike the legacy quirk, the new-format path rewrites appName (converts once)
+        expect(parsed.data.appName).toBe('Genshin')
+        expect(parsed.tracks[0].hitObjects[0].notes).toEqual([60, 79])
     })
 
     it.runIf(APP_NAME === 'Sky')('Genshin song is rejected by the Sky build', () => {

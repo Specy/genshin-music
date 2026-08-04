@@ -127,15 +127,25 @@
   class="button-hitbox-bigger"
 >
   {#each approachingNotes as approachingNote (approachingNote.id)}
-    <!-- held notes get a dashed outer ring as the "keep it pressed" cue -->
+    <!-- held notes get a dashed outer ring plus their hold length as the "keep it pressed for N seconds" cue -->
     <div
       class={game.notes.cssClasses.approachCircle}
       style="animation:approach {data.approachRate}ms linear;border-color:{getApproachCircleColor(
         approachingNote.index
       )};{approachingNote.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
-        ? `outline:2px dashed ${getApproachCircleColor(approachingNote.index)};outline-offset:3px`
+        ? `outline:2px dashed ${getApproachCircleColor(approachingNote.index)};outline-offset:3px;display:flex;align-items:center;justify-content:center`
         : ''}"
-    ></div>
+    >
+      {#if approachingNote.duration >= SUSTAIN_VISUAL_THRESHOLD_MS}
+        <span
+          style="font-size:0.65rem;font-weight:bold;color:{getApproachCircleColor(
+            approachingNote.index
+          )};pointer-events:none"
+        >
+          {(approachingNote.duration / 1000).toFixed(1)}s
+        </span>
+      {/if}
+    </div>
   {/each}
   {#if note.data.animationId !== 0}
     <!-- {#key} forces a fresh DOM node per animationId so the CSS pulse animation restarts on

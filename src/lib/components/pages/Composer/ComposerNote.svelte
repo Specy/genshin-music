@@ -44,8 +44,8 @@
     clickAction: (data: ObservableNote) => void;
     /** Pointer released/left the button — completes the press gesture (short press). */
     releaseAction?: (data: ObservableNote) => void;
-    /** Held ~450ms without release — opens the duration popover for this note. */
-    longPressAction?: (data: ObservableNote, anchor: DOMRect) => void;
+    /** Held ~450ms without release — opens the duration popover for this note, anchored to the button element (live element so the popover can follow resizes). */
+    longPressAction?: (data: ObservableNote, anchor: HTMLElement) => void;
     /** The current column is covered by this button's note span on the current layer. */
     held?: boolean;
     noteText: string;
@@ -61,8 +61,7 @@
     clearTimeout(longPressTimeout);
     longPressTimeout = setTimeout(() => {
       longPressTimeout = 0;
-      const anchor = buttonElement?.getBoundingClientRect();
-      if (anchor) longPressAction(data, anchor);
+      if (buttonElement) longPressAction(data, buttonElement);
     }, LONG_PRESS_MS);
   }
 

@@ -1,8 +1,9 @@
-import {APP_NAME} from "$core/legacyConfig";
+import {APP_NAME, INSTRUMENTS} from "$core/legacyConfig";
 // SnapPoint normally lives in $cmp/pages/VsrgComposer/VsrgBottom.tsx (not ported until the UI
 // phase) - hoisted into $core/types.ts instead, same pattern as VsrgKeyboardLayout (Task 6).
 import type {SnapPoint} from "$core/types";
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables";
+import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity";
 import {foldIdIntoRange} from "./noteIds";
 import type {InstrumentName} from "$core/types";
 import {RecordedSong} from "./RecordedSong";
@@ -121,16 +122,27 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
         return duration
     }
 
-    // QUIRK: does not rewrite data.appName, unlike ComposedSong's and RecordedSong's toGenshin which both set it to 'Genshin' - a converted vsrg song keeps the exporting game's appName.
-    /** NEW-format (v2) cross-game conversion: tracks forced to the historic DunDun target, ids octave-folded into its range (fold collisions dedupe). Legacy v1 files never reach this — their conversion happens inside deserialize(importInto). */
-    toGenshin() {
+    /**
+     * NEW-format (v2) cross-game conversion: each track swaps to the target game's most
+     * similar instrument (settings kept; target default when unmapped), ids octave-fold
+     * into the mapped instrument's range (fold collisions dedupe), and — unlike the
+     * legacy path, which keeps the historic appName-preservation quirk — data.appName
+     * IS rewritten, so the song converts once instead of on every load. Legacy v1 files
+     * never reach this: their conversion happens inside deserialize(importInto).
+     */
+    toOtherGame(target: string) {
         const song = this.clone()
+        if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
+        if (song.data.appName === target) return song
+        const sourceGame = song.data.appName
+        song.data.appName = target
         song.tracks.forEach(t => {
-            t.instrument.name = "DunDun"
+            const similar = findSimilarInstrument(sourceGame, t.instrument.name, target as ConversionGame)
+            t.instrument.name = (similar ?? INSTRUMENTS[0]) as InstrumentName
             t.hitObjects.forEach(h => {
                 const ids: number[] = []
                 h.notes.forEach(n => {
-                    const folded = foldIdIntoRange("DunDun", n)
+                    const folded = foldIdIntoRange(t.instrument.name, n)
                     if (!ids.includes(folded)) ids.push(folded)
                 })
                 h.notes = ids

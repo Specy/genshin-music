@@ -31,7 +31,7 @@
     functions: {
       handleClick: (note: ObservableNote) => void;
       handleNoteRelease: (note: ObservableNote) => void;
-      handleNoteLongPress: (note: ObservableNote, anchor: DOMRect) => void;
+      handleNoteLongPress: (note: ObservableNote, anchor: HTMLElement) => void;
       startRecordingAudio: (override?: boolean) => void;
       selectColumnFromDirection: (direction: number) => void;
       handleTempoChanger: (tempoChanger: (typeof game.composer.tempoChangers)[number]) => void;

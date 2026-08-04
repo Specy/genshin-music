@@ -826,6 +826,7 @@ export const i18n_en = {
     Ocarina: 'Ocarina',
     MantaOcarina: 'Manta Ocarina',
     Aurora: 'Aurora', //leave as is
+    test_sustain: 'Test Sustain', //dummy sustaining instrument (Aurora samples) for testing hold features
     Kalimba: 'Kalimba',
     ToyUkulele: 'Toy Ukulele',
     Drum: 'Drum',

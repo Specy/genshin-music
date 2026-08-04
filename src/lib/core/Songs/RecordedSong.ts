@@ -1,4 +1,4 @@
-import {APP_NAME, INSTRUMENTS_DATA, PITCHES, TEMPO_CHANGERS} from "$core/legacyConfig"
+import {APP_NAME, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES, TEMPO_CHANGERS} from "$core/legacyConfig"
 import {
     ColumnNote,
     InstrumentData,
@@ -25,6 +25,7 @@ import type {InstrumentName} from "$core/types"
 import {type SerializedSong, Song} from "./Song"
 import type {OldFormat, OldNote} from "$core/types"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
+import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
 import {foldIdIntoRange} from "./noteIds"
 
 /** Legacy (≤v2): flat index+layer notes, top-level instruments. */
@@ -157,7 +158,16 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
             const notes: RecordedNote[] = []
             tracks.forEach((track, trackIndex) => {
-                track.notes.forEach(note => notes.push(RecordedNote.deserialize(note, trackIndex)))
+                //defensive: untrusted files — non-finite ids/times would poison sorting,
+                //conversion and MIDI export; bad durations are coerced to one-shot
+                (track.notes ?? []).forEach(note => {
+                    const [id, time, duration] = note
+                    if (!Number.isFinite(id) || !Number.isFinite(time)) return
+                    const safeDuration = Number.isFinite(duration as number) && (duration as number) > 0
+                        ? (duration as number)
+                        : 0
+                    notes.push(new RecordedNote(id, time, safeDuration, trackIndex))
+                })
             })
             //stable: equal times keep track order
             song.notes = notes.sort((a, b) => a.time - b.time)
@@ -397,6 +407,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                     if (!song.columns[columnIndex + offset]) song.columns.push(new NoteColumn())
                     const candidate = song.columns[columnIndex + offset]
                     const columnMs = Song.roundTime(msPerBeat * TEMPO_CHANGERS[candidate.tempoChanger].changer)
+                    //guard: at absurd bpm a column can round to 0ms — without this the
+                    //`elapsed + 0 > duration` exit never fires and the loop grows forever
+                    if (columnMs <= 0) break
                     if (elapsed + columnMs > duration) break
                     elapsed += columnMs
                     span++
@@ -506,25 +519,37 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             return null
         }
     }
-    /** NEW-format cross-game conversion (see ComposedSong.toGenshin). Instruments untouched — historic quirk preserved: source-game names fall back to the default instrument at runtime. */
-    toGenshin = () => {
+    /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (settings kept), ids fold into the mapped instrument's range, fold collisions merge keeping the longest duration. */
+    toOtherGame = (target: string) => {
         const clone = this.clone()
-        if (clone.data.appName === APP_NAME) {
-            console.warn("Song already in " + APP_NAME + " format")
+        if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
+        if (clone.data.appName === target) {
+            console.warn("Song already in " + target + " format")
             return clone
         }
-        clone.data.appName = APP_NAME
+        const sourceGame = clone.data.appName
+        clone.data.appName = target
+        clone.instruments = clone.instruments.map(ins => {
+            const similar = findSimilarInstrument(sourceGame, ins.name, target as ConversionGame)
+            const swapped = ins.clone()
+            swapped.name = (similar ?? INSTRUMENTS[0]) as InstrumentName
+            return swapped
+        })
         clone.notes = clone.notes.map(note => {
-            //unknown (source-game) instrument names resolve to the default instrument's table
-            note.id = foldIdIntoRange(clone.instruments[note.trackIndex]?.name ?? '', note.id)
+            note.id = foldIdIntoRange(clone.instruments[note.trackIndex]?.name ?? INSTRUMENTS[0], note.id)
             return note
         })
-        //fold can collide (e.g. 84 folding onto an existing 72): same-track same-time duplicates merge
-        const seen = new Set<string>()
+        //fold can collide (e.g. 84 folding onto an existing 72): same-track same-time
+        //duplicates merge, keeping the longest duration (a folded hold must not become a tap)
+        const seen = new Map<string, RecordedNote>()
         clone.notes = clone.notes.filter(note => {
             const key = `${note.time}-${note.trackIndex}-${note.id}`
-            if (seen.has(key)) return false
-            seen.add(key)
+            const existing = seen.get(key)
+            if (existing) {
+                existing.duration = Math.max(existing.duration, note.duration)
+                return false
+            }
+            seen.set(key, note)
             return true
         })
         return clone

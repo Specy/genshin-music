@@ -180,6 +180,22 @@ describe('Voice', () => {
         source.emitEnded()
         expect(source.calls.filter((c: Call) => c.method === 'disconnect').length).toBe(1)
     })
+
+    it('sanitizes authored metadata: reversed/NaN loop bounds fall back to one-shot, loop end clamps to the sample, bad release/rate get safe defaults', () => {
+        const reversed = makeVoice({loop: {start: 2.5, end: 0.5}})
+        expect(reversed.created.sources[0].loop).toBe(false)
+        const nan = makeVoice({loop: {start: NaN, end: 2}})
+        expect(nan.created.sources[0].loop).toBe(false)
+        const overlong = makeVoice({loop: {start: 0.5, end: 99}}) // buffer duration is 3
+        expect(overlong.created.sources[0].loop).toBe(true)
+        expect(overlong.created.sources[0].loopEnd).toBe(3)
+        const badRelease = makeVoice({release: -5})
+        badRelease.voice.release()
+        //negative release clamps to 0: ramp and stop land AT the release time
+        expect(badRelease.created.sources[0].calls).toContainEqual({method: 'stop', args: [10]})
+        const badRate = makeVoice({playbackRate: NaN})
+        expect(badRate.created.sources[0].playbackRate.value).toBe(1)
+    })
 })
 
 const SUSTAIN = {
@@ -279,20 +295,34 @@ describe('Recording duration capture', () => {
         expect(recording.notes[0].duration).toBe(400)
     })
 
-    it('same-id overlapping notes close LIFO and already-closed notes are skipped', () => {
+    it('re-pressing an open id closes the previous press first (exact pairing, mirrors voice retrigger)', () => {
         vi.setSystemTime(2000_000)
         const recording = new Recording()
-        recording.addNote(60)
+        recording.addNote(60) // time 100 (start() backdates by 100ms)
         vi.setSystemTime(2000_200)
-        recording.addNote(60)
+        recording.addNote(60) // retrigger: closes the first press at 200ms elapsed
+        expect(recording.notes[0].duration).toBe(200)
         vi.setSystemTime(2000_500)
-        recording.releaseNote(60) // closes the SECOND press (300ms)
+        recording.releaseNote(60) // unambiguous: only the second press is open
         expect(recording.notes[1].duration).toBe(300)
-        expect(recording.notes[0].duration).toBe(0)
         vi.setSystemTime(2000_900)
-        recording.releaseNote(60) // now closes the first: elapsed 1000 - its time 100 = 900
-        expect(recording.notes[0].duration).toBe(900)
+        recording.releaseNote(60) // nothing open — no-op, durations unchanged
+        expect(recording.notes[0].duration).toBe(200)
+        expect(recording.notes[1].duration).toBe(300)
         //releasing an id with no open notes is a no-op
         recording.releaseNote(99)
+    })
+
+    it('closeAllOpenNotes stamps every held note (recording stop / window blur) and instant taps close as 1ms', () => {
+        vi.setSystemTime(3000_000)
+        const recording = new Recording()
+        recording.addNote(60)
+        recording.addNote(62)
+        recording.releaseNote(62) // same-ms tap: floors to 1ms so it reads as closed
+        expect(recording.notes[1].duration).toBe(1)
+        vi.setSystemTime(3000_600)
+        recording.closeAllOpenNotes()
+        expect(recording.notes[0].duration).toBe(600) // elapsed 700 - time 100
+        expect(recording.notes[1].duration).toBe(1) // already closed — untouched
     })
 })

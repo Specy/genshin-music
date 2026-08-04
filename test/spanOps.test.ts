@@ -58,12 +58,13 @@ describe('setNoteSpan / maxSpanAt', () => {
 })
 
 describe('normalizeSpans after bulk edits', () => {
-    it('column removal inside a span re-truncates it against the note that moved closer', () => {
+    it('column removal shrinks spans by their removed tail columns, then re-truncates against neighbors (decided 2026-08-04)', () => {
         const song = makeSong()
         song.columns[0].addNote(0, idOf(0), 5) // covers 0..4
         song.columns[6].addNote(0, idOf(0))
-        song.removeColumns(3, 2) // note at 6 moves to 3; span 5 would now overlap it
-        expect(song.columns[0].findNote(0, idOf(0))?.span).toBe(3)
+        song.removeColumns(3, 2) // removes covered tails 2,3,4 → span 5-3 = 2; the note at 6 moves to 3, no overlap left
+        expect(song.columns[0].findNote(0, idOf(0))?.span).toBe(2)
+        expect(song.columns[3].findNote(0, idOf(0))).toBeTruthy()
     })
 
     it('insert-paste merging keeps the invariant', () => {
@@ -87,6 +88,63 @@ describe('normalizeSpans after bulk edits', () => {
         expect(track1Notes).toContainEqual([2, idOf(3), 4])
         const roundtrip = ComposedSong.deserialize(serialized)
         expect(roundtrip.columns[2].findNote(1, idOf(3))?.span).toBe(4)
+    })
+
+    it('removing tail columns shrinks the span; removing the start removes the note (decided 2026-08-04)', () => {
+        const song = makeSong()
+        song.columns[0].addNote(0, idOf(0), 5) // covers 0..4
+        song.removeColumns(2, 2) // removes covered tail columns 2 and 3
+        expect(song.columns[0].findNote(0, idOf(0))?.span).toBe(3)
+        song.removeColumns(1, 0) // removes the start column — the note goes with it
+        expect(song.columns.flatMap(c => c.notes).length).toBe(0)
+    })
+
+    it('inserting inside a span stretches it; inserting exactly at its end does not (decided 2026-08-04)', () => {
+        const song = makeSong()
+        song.columns[1].addNote(0, idOf(0), 3) // covers 1..3
+        song.addColumns(2, 1) // insertion point 2 — strictly inside
+        expect(song.columns[1].findNote(0, idOf(0))?.span).toBe(5)
+        song.addColumns(1, 5) // insertion point 6 — exactly past the last covered column (5): unchanged
+        expect(song.columns[1].findNote(0, idOf(0))?.span).toBe(5)
+        song.addColumns(1, 0) // insertion before the start: note shifts, span unchanged
+        expect(song.columns[2].findNote(0, idOf(0))?.span).toBe(5)
+    })
+
+    it('normalizeSpans sanitizes NaN/fractional/zero spans to finite integers ≥ 1', () => {
+        const song = makeSong()
+        song.columns[0].addNote(0, idOf(0), NaN)
+        song.columns[1].addNote(0, idOf(1), 2.6)
+        song.columns[2].addNote(0, idOf(2), 0)
+        song.normalizeSpans()
+        expect(song.columns[0].findNote(0, idOf(0))?.span).toBe(1)
+        expect(song.columns[1].findNote(0, idOf(1))?.span).toBe(3)
+        expect(song.columns[2].findNote(0, idOf(2))?.span).toBe(1)
+    })
+
+    it('malformed v4 files import cleanly: spans clamp, duplicates merge, missing notes array tolerated', () => {
+        const instrument = {
+            name: INSTRUMENTS[0], volume: 100, pitch: '', visible: true,
+            icon: 'circle', alias: '', muted: false, reverbOverride: null,
+        }
+        const payload = {
+            id: null, folderId: null, name: 'malformed', type: 'composed', version: 4,
+            bpm: 220, pitch: 'C',
+            data: {isComposed: true, isComposedVersion: true, appName: makeSong().data.appName},
+            reverb: false, breakpoints: [],
+            columnTempos: [0, 0, 0],
+            tracks: [
+                {instrument, notes: [[0, idOf(0), 99], [1, idOf(0)], [1, idOf(0), 5]]},
+                {instrument}, //no notes array at all
+            ],
+        }
+        const parsed = ComposedSong.deserialize(payload as any)
+        //span 99 clamps at the next same-id note (column 1)
+        expect(parsed.columns[0].findNote(0, idOf(0))?.span).toBe(1)
+        //duplicate (column, track, id) entries merged keeping the longest span — then
+        //clamped to the 3-column timeline (5 → 2 columns remain from column 1)
+        expect(parsed.columns[1].notesOfTrack(0).length).toBe(1)
+        expect(parsed.columns[1].findNote(0, idOf(0))?.span).toBe(2)
+        expect(parsed.instruments.length).toBe(2)
     })
 
     it('toRecordedSong turns spans into summed column ms (span 1 stays duration-less)', () => {
