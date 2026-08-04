@@ -62,8 +62,8 @@ function fakeContext(currentTime = 10) {
                 disconnect() {
                     calls.push({method: 'disconnect', args: []})
                 },
-                start(when?: number) {
-                    calls.push({method: 'start', args: [when]})
+                start(when?: number, offset?: number) {
+                    calls.push({method: 'start', args: offset === undefined ? [when] : [when, offset]})
                 },
                 stop(when?: number) {
                     calls.push({method: 'stop', args: [when]})
@@ -125,42 +125,75 @@ describe('Voice', () => {
         expect(source.calls).toContainEqual({method: 'start', args: [10.5]})
     })
 
-    it('release() ramps gain to 0 over the release time and stops the source at ramp end', () => {
+    it('release() crossfades into the natural post-loop tail and safety-fades its end', () => {
         const {voice, created} = makeVoice()
-        const source = created.sources[0]
-        const gain = created.gains[1]
+        const sustainSource = created.sources[0]
+        const sustainGain = created.gains[1]
         voice.release()
+        const releaseSource = created.sources[1]
+        const releaseGain = created.gains[2]
         expect(voice.isReleased).toBe(true)
-        expect(gain.calls).toContainEqual({method: 'setValueAtTime', args: [1, 10]})
-        expect(gain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, 10.2]})
-        expect(source.calls).toContainEqual({method: 'stop', args: [10.2]})
+        expect(sustainGain.calls).toContainEqual({method: 'setValueAtTime', args: [1, 10]})
+        expect(sustainGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, 10.02]})
+        expect(sustainSource.calls).toContainEqual({method: 'stop', args: [10.02]})
+        expect(releaseSource.buffer).toBe(FAKE_BUFFER)
+        expect(releaseSource.loop).toBe(false)
+        expect(releaseSource.playbackRate.value).toBe(1.5)
+        expect(releaseSource.calls).toContainEqual({method: 'start', args: [10, 2.5]})
+        expect(releaseGain.calls).toContainEqual({method: 'setValueAtTime', args: [0, 10]})
+        expect(releaseGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [1, 10.02]})
+        const finalRamp = releaseGain.calls.at(-1)
+        expect(finalRamp?.method).toBe('linearRampToValueAtTime')
+        expect(finalRamp?.args[0]).toBe(0)
+        expect(finalRamp?.args[1]).toBeCloseTo(10 + (3 - 2.5) / 1.5)
     })
 
     it('release is idempotent — a second release/releaseAt schedules nothing new', () => {
         const {voice, created} = makeVoice()
-        const gain = created.gains[1]
         voice.release()
-        const callsAfterFirst = gain.calls.length
+        const callsAfterFirst = created.gains.reduce((count, gain) => count + gain.calls.length, 0)
         voice.release()
         voice.releaseAt(99)
-        expect(gain.calls.length).toBe(callsAfterFirst)
+        expect(created.gains.reduce((count, gain) => count + gain.calls.length, 0)).toBe(callsAfterFirst)
+        expect(created.sources).toHaveLength(2)
     })
 
     it('releaseAt clamps to the voice start time (never releases before it starts)', () => {
         const {voice, created} = makeVoice({delay: 1}) // startedAt = 11
-        const source = created.sources[0]
         voice.releaseAt(10.2)
-        expect(source.calls).toContainEqual({method: 'stop', args: [11.2]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [11.02]})
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [11, 2.5]})
     })
 
     it('release() brings a future scheduled release forward so playback stop cannot leave a voice sounding', () => {
         const {voice, created} = makeVoice()
-        const source = created.sources[0]
         const gain = created.gains[1]
         voice.releaseAt(20)
         voice.release()
         expect(gain.calls).toContainEqual({method: 'cancelScheduledValues', args: [10]})
-        expect(source.calls).toContainEqual({method: 'stop', args: [10.2]})
+        expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [undefined]})
+        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [10, 2.5]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
+    })
+
+    it('fadeOut skips the release tail and choke uses only the short crossfade', () => {
+        const faded = makeVoice()
+        faded.voice.fadeOut()
+        expect(faded.created.sources).toHaveLength(1)
+        expect(faded.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.2]})
+
+        const choked = makeVoice()
+        choked.voice.choke()
+        expect(choked.created.sources).toHaveLength(1)
+        expect(choked.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
+    })
+
+    it('fadeOut cancels a delayed voice before it can make a late sound', () => {
+        const {voice, created} = makeVoice({delay: 0.5})
+        voice.fadeOut()
+        expect(voice.isDisposed).toBe(true)
+        expect(created.sources).toHaveLength(1)
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [undefined]})
     })
 
     it('stop() hard-stops and disconnects both nodes', () => {
@@ -181,6 +214,15 @@ describe('Voice', () => {
         expect(source.calls.filter((c: Call) => c.method === 'disconnect').length).toBe(1)
     })
 
+    it('sustain-source end does not dispose a voice until its release tail also ends', () => {
+        const {voice, created} = makeVoice()
+        voice.release()
+        created.sources[0].emitEnded()
+        expect(voice.isDisposed).toBe(false)
+        created.sources[1].emitEnded()
+        expect(voice.isDisposed).toBe(true)
+    })
+
     it('sanitizes authored metadata: reversed/NaN loop bounds fall back to one-shot, loop end clamps to the sample, bad release/rate get safe defaults', () => {
         const reversed = makeVoice({loop: {start: 2.5, end: 0.5}})
         expect(reversed.created.sources[0].loop).toBe(false)
@@ -189,9 +231,9 @@ describe('Voice', () => {
         const overlong = makeVoice({loop: {start: 0.5, end: 99}}) // buffer duration is 3
         expect(overlong.created.sources[0].loop).toBe(true)
         expect(overlong.created.sources[0].loopEnd).toBe(3)
-        const badRelease = makeVoice({release: -5})
+        const badRelease = makeVoice({release: -5, loop: null})
         badRelease.voice.release()
-        //negative release clamps to 0: ramp and stop land AT the release time
+        //negative fallback release clamps to 0: ramp and stop land AT the release time
         expect(badRelease.created.sources[0].calls).toContainEqual({method: 'stop', args: [10]})
         const badRate = makeVoice({playbackRate: NaN})
         expect(badRate.created.sources[0].playbackRate.value).toBe(1)
@@ -216,7 +258,7 @@ function sustainingInstrument() {
 }
 
 describe('Instrument sustain', () => {
-    it('supportsSustain reflects the instrument data; every shipped instrument is one-shot', () => {
+    it('supportsSustain reflects the selected instrument data', () => {
         expect(new Instrument(INSTRUMENTS[0]).supportsSustain).toBe(false)
         const {instrument} = sustainingInstrument()
         expect(instrument.supportsSustain).toBe(true)
@@ -243,6 +285,7 @@ describe('Instrument sustain', () => {
         expect(created.sources[1].loopStart).toBe(0.2) // per-note override
         instrument.releaseNote(1)
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(true)
+        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [10, 1.2]})
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
         //releasing an unheld button is a no-op
         instrument.releaseNote(5)
@@ -253,17 +296,29 @@ describe('Instrument sustain', () => {
         instrument.pressNote(0, 'C')
         instrument.pressNote(0, 'C')
         expect(created.sources.length).toBe(2)
-        expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(true)
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+    })
+
+    it('same note on separate instrument instances has independent voice and release state', () => {
+        const first = sustainingInstrument()
+        const second = sustainingInstrument()
+        first.instrument.pressNote(0, 'C')
+        second.instrument.pressNote(0, 'C')
+        first.instrument.releaseNote(0)
+        expect(first.created.sources).toHaveLength(2) // sustain + its release tail
+        expect(second.created.sources).toHaveLength(1)
+        expect(second.created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
     it('a durationMs press self-releases on the audio timeline and is not registered as held', () => {
         const {instrument, created} = sustainingInstrument()
         const voice = instrument.pressNote(0, 'C', {durationMs: 500})
         expect(voice?.isReleased).toBe(true) // scheduled release counts as released
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.8]}) // 10 + 0.5 + 0.3 release
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.52]})
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10.5, 1.9]})
         instrument.releaseNote(0) // no live voice to release
-        expect(created.sources.length).toBe(1)
+        expect(created.sources.length).toBe(2)
     })
 
     it('releaseAllNotes releases every sounding voice (ramped) or hard-stops on teardown', () => {
@@ -271,6 +326,7 @@ describe('Instrument sustain', () => {
         instrument.pressNote(0, 'C')
         instrument.pressNote(1, 'C')
         instrument.releaseAllNotes()
+        expect(created.sources).toHaveLength(2) // global stop fades; it does not spawn tails
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(true)
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(true)
 
