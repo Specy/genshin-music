@@ -1,0 +1,163 @@
+{
+  "standard-15": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "dmcr"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "dm"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "cr"
+    },
+    {
+      "midi": 71,
+      "baseNote": "B",
+      "icon": "dm"
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "dmcr"
+    },
+    {
+      "midi": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 76,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "midi": 77,
+      "baseNote": "F",
+      "icon": "cr"
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "dm"
+    },
+    {
+      "midi": 81,
+      "baseNote": "A",
+      "icon": "cr"
+    },
+    {
+      "midi": 83,
+      "baseNote": "B",
+      "icon": "dm"
+    },
+    {
+      "midi": 84,
+      "baseNote": "C",
+      "icon": "dmcr"
+    }
+  ],
+  "drums-8": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "dm"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "midi": 71,
+      "baseNote": "B",
+      "icon": "cr"
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "dm"
+    }
+  ],
+  "synth-8": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "dmcr"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "dm"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "midi": 71,
+      "baseNote": "B",
+      "icon": "cr"
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "dmcr"
+    }
+  ]
+}

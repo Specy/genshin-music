@@ -1,0 +1,258 @@
+{
+  "standard-21": [
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 74,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 76,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "midi": 77,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 81,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "midi": 83,
+      "baseNote": "B",
+      "icon": "ti"
+    },
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "midi": 71,
+      "baseNote": "B",
+      "icon": "ti"
+    },
+    {
+      "midi": 48,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 50,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 52,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "midi": 53,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 55,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 57,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "midi": 59,
+      "baseNote": "B",
+      "icon": "ti"
+    }
+  ],
+  "ukulele-21": [
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 74,
+      "baseNote": "Db",
+      "icon": "re"
+    },
+    {
+      "midi": 76,
+      "baseNote": "Eb",
+      "icon": "mi"
+    },
+    {
+      "midi": 77,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 81,
+      "baseNote": "Ab",
+      "icon": "la"
+    },
+    {
+      "midi": 83,
+      "baseNote": "G",
+      "icon": "ti"
+    },
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "midi": 71,
+      "baseNote": "B",
+      "icon": "ti"
+    },
+    {
+      "midi": 48,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 50,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 52,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "midi": 53,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 55,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "midi": 57,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "midi": 59,
+      "baseNote": "B",
+      "icon": "ti"
+    }
+  ],
+  "drums-8": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "do"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "re"
+    },
+    {
+      "midi": 71,
+      "baseNote": "B",
+      "icon": "mi"
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "fa"
+    }
+  ]
+}
