@@ -173,6 +173,36 @@ export type InstrumentNote = {
   loop?: LoopRegion;
 };
 
+/** Props every Shape arrangement component receives (default impl: shapes/GridShape.svelte). */
+export type ShapeComponentProps = {
+  shape: ShapeDefinition;
+  /** Buttons actually rendered (≤ shape.capacity). */
+  count: number;
+  /** Renders the button at a Button index; the surface closes over its own data. */
+  button: import('svelte').Snippet<[number]>;
+  /** Extra classes/styles for the arrangement container (surfaces keep their page styling). */
+  class?: string;
+  style?: string;
+};
+
+/**
+ * One registered Shape (ADR-0003): the named arrangement implementation
+ * instruments reference via meta.json `shape`. `component` is the per-shape code
+ * branch — common grids share GridShape; a future exotic arrangement (side
+ * buttons + center circle, …) registers its own component under a new id.
+ * Per-game/per-shape BUTTON components will also hang here when button behavior
+ * forks by game (today the note components still branch on features.hasNoteFrame).
+ */
+export type ShapeDefinition = {
+  id: ShapeId;
+  /** Max buttons the arrangement holds; every labels array has exactly this length. */
+  capacity: number;
+  /** Primary row length; grid shapes render this many columns. */
+  columns: number;
+  labels: ShapeLabels;
+  component: import('svelte').Component<ShapeComponentProps>;
+};
+
 /** A fully-normalized instrument: what the app consumes at runtime. */
 export type InstrumentDefinition = {
   /** Folder name = runtime key = audio URL segment = what songs reference. */
